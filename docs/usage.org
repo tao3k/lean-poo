@@ -203,18 +203,32 @@ touched by a patch, and whether it needs a new proof.
 
 For agent-authored recursive slot computations, ~Object.Debug.Program~
 provides an explicit self-read function. ~runTrace fuel key~ returns typed
-enter, resolve, missing, cycle, and exhaustion events alongside the result.
+enter, resolve, missing, cycle, and exhaustion events, the result, and
+~stepsUsed~. The fuel is shared by every read in one run, including sibling
+reads; event recording uses a reverse accumulator to keep each append constant
+time.
 ~run fuel key~ returns only the result. Both report a cycle with its
 complete key path or stop when the fuel budget is exhausted.
 [[file:../Examples/DebugObject.lean][DebugObject.lean]] shows a two-slot
-cycle, a productive dependency, and a fuel exhaustion result.
-The bounded run covers recursive reads made through this interface. Lean cannot
-guarantee termination of arbitrary functions inside a slot body, and
-ordinary ~Memoized.read~ still has the original lazy semantics. Callers
-that need a bounded failure result must use the debug execution interface.
-The public debug API can be imported by downstream users. ~just check-debug~
-checks its examples in a separate Lean process with a 30-second timeout,
-2048 MB Lean memory ceiling, and allocation budget.
+cycle, a productive dependency, and a branching case that exhausts the shared
+budget.
+The shared budget covers reads made through this interface. An opaque Lean
+callback can still block without making another read, and ordinary
+~Memoized.read~ retains its original lazy semantics. Callers needing a
+bounded process must run diagnostics in an isolated Lean process with an
+external deadline. The public debug API can be imported by downstream users.
+~just check-debug~ verifies normal traces with a 30-second process timeout,
+2048 MB Lean memory ceiling, and allocation budget. It also runs an opaque
+blocking callback in a separate process and checks that the two-second
+external timeout terminates it. These limits protect the test process; they
+do not prove termination of an arbitrary callback or bound the total memory
+of another host application embedding this API.
+
+~just check-proof-reuse~ constructs 10,000 independent obligations through
+the public Debug impact API. A single-key patch selects one for repair and
+reports 9,999 reusable obligations. This checks dependency selection at scale;
+it does not measure theorem replay time or represent a large Cedar policy
+corpus.
 
 * Commands
 

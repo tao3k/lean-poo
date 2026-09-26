@@ -72,6 +72,12 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Invalidation
     lake build LeanPoo.Proof.Object
     lake build LeanPoo.Proof.Product
+    just check-proof-reuse
+
+# Exercise the public invalidation report over a large independent corpus.
+check-proof-reuse:
+    lake build LeanPoo.Object.Debug
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/ProofReuseScale.lean
 
 # Elaborate the independent PO examples.
 check-example: check-compose
@@ -91,7 +97,9 @@ check-example: check-compose
 
 # Run diagnostic object examples in a bounded Lean process.
 check-debug:
+    lake build LeanPoo.Object.Debug
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean
+    @debug_rc=0; timeout --signal=TERM --kill-after=1s 2s lake env lean -M 2048 -T 10000000 Examples/DebugUnboundedBody.lean >/dev/null 2>&1 || debug_rc=$?; test "$debug_rc" -eq 124
 
 # Compile the complete executable PO core and its usage examples.
 check-po: check-example check-docs
