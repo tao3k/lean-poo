@@ -13,6 +13,7 @@ import LeanPoo.Prototype.Lens
 import LeanPoo.Prototype.SlotSpec
 import LeanPoo.Object.Resolve
 import LeanPoo.Object.Instance
+import LeanPoo.Object.Ranked
 import LeanPoo.Compose
 import LeanPoo.Slots
 import LeanPoo.Object.Memo

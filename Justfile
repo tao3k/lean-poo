@@ -51,6 +51,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Schema
     lake build LeanPoo.Object.Resolve
     lake build LeanPoo.Object.Instance
+    lake build LeanPoo.Object.Ranked
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
@@ -58,6 +59,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
+    lake env lean Examples/RankedObject.lean
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object

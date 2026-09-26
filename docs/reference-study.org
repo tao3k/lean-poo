@@ -113,6 +113,10 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Instance.lean~ states the fixed-point equation for an open
   recursive object. Closed plans can be instantiated directly; instance
   preparation and caching share the validated plan and final self.
+- ~LeanPoo/Object/Ranked.lean~ constructs a total fixed-point instance for
+  plans whose resolved slots read self only at strictly smaller natural-number
+  ranks. The locality proof connects that well-founded evaluation to the
+  ordinary C4 resolver, and the resulting instance uses the existing cache API.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
   ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
@@ -183,7 +187,8 @@ the new certificate from reused and newly discharged obligations. The
 library constructs closed instances with ~Object.Closed.instantiate~ and
 executes general open recursion with ~Plan.memoize~. The executable thunk
 knot is partial, so it does not by itself provide the equation required by
-~Object.Instance~; proof-bearing clients supply that equation explicitly. No
+~Object.Instance~; proof-bearing clients supply that equation explicitly or
+construct it from ~Object.Ranked~ for well-founded dependencies. No
 concrete policy semantics domain is part of this repository yet.
 
 * Paper-derived boundaries
@@ -201,7 +206,7 @@ and class layers use native types rather than Scheme's dynamic MOP.
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|
 | Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint; ~rebaseInstanceCacheByValue~ can compare cached keys when their values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. Reusing them requires a sound footprint for all computed dependents and a connection between the executable fixed point and the certified instance; neither follows from direct slot edits alone. Value comparison is a sound but potentially expensive fallback. |
-| Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ therefore still requires a supplied next instance and state-alignment proof. |
+| Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. ~Object.Ranked.instantiate~ constructs that equation by well-founded recursion for ranked self dependencies. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ still requires a next instance and state-alignment proof; ranked plans can supply the instance when their locality condition holds. |
 | Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
 
 The first two rows are integration boundaries for this project's incremental
