@@ -1,0 +1,260 @@
+#+TITLE: Implementing the POOF Model in Lean
+
+* Goal and sources
+
+The goal is to implement the constructive prototype object orientation model
+in [[https://fare.tunes.org/files/cs/poof.pdf][POOF]] by François-René Rideau, Alex Knauth, and Nada Amin. The path starts
+with ~fix~ and ~mix~ for open recursion and inheritance, then builds
+generators, delayed prototypes, slot-bearing objects, and multiple
+inheritance. Lean's types, functions, and thunks determine the API.
+Gerbil-POO is an implementation reference for object behavior. C4-Mixins is
+the reference for the C4 ordering used here. Their API shapes and Scheme
+macros are not design requirements for Lean.
+
+* Constructions from the paper
+
+| Paper construction | Lean interface | Executable meaning |
+|--------------------+----------------+--------------------|
+| Prototype wrapper | ~Prototype.Proto~ | Pass final self and inherited input separately. |
+| ~mix~ and identity | ~Prototype.compose~, ~identity~, ~Chain~ | A child wraps its parent; Lean checks heterogeneous intermediate types. |
+| ~fix~ | ~Prototype.instantiate~ | Tie open recursion for a function-valued instance. |
+| Prototype to generator | ~Generator.ofProto~, ~applyProto~, ~instantiate~ | Keep inherited computation open until instantiation. |
+| ~δmix~ and ~δfix~ | ~DelayedProto.compose~, ~Chain~, ~instantiate~ | Delay parent and final self with ~Thunk~; check intermediate types and support instances that are not functions. |
+| Record prototypes | ~Prototype.Record.slotGen~, ~slot~, ~modify~, ~compute~ | Derive typed slot increments from one open-recursive constructor. |
+| Slot-bearing objects | ~Object.Declaration~, ~SlotSpec~, ~Plan~ | Compose slot methods, defaults, and final self through one resolver. |
+| First-class prototype and instance | ~Prototype.Object~ | Retain a delayed instance and its reusable prototype together. |
+| First-class record slot | ~Prototype.Object.recordSlotGen~ | Delay final self and inherited slot until lookup; recomposition rebinds final self. |
+| Typed slot object | ~Plan.toFirstClassObject~, ~Memoized.toFirstClassObject~ | Project a C4 plan or a memoized instance into a first-class object. |
+| Multiple inheritance | ~C4.linearize~ | Compute prototype order separately; slot composition consumes that order. |
+| Classes | ~Prototype.DescriptorClass~ | Compose runtime type descriptors through delayed prototypes. |
+| Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
+| Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
+| Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
+| Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
+| Typed lens | ~Object.Lens~ | Get, set, modify, and compose typed views; slot changes recompile a fresh C4 object. |
+| Heterogeneous tuple | ~Prototype.HList~, ~Descriptors~ | Keep component types in a type-level list and derive runtime checking and JSON. |
+
+The minimal paper model does not require Scheme dictionaries. Lean instead
+uses ~Value : Key → Type~ to assign each slot its value type. The four
+~SlotSpec~ constructors represent a constant, a thunk, a final-self
+computation, and a computation over delayed inherited behavior.
+[[file:../Examples/PrototypeCore.lean][PrototypeCore.lean]] executes the prototype,
+generator, and delayed constructions, yielding ~(6, 1)~, ~(6, 1)~, ~6~,
+and ~7~.
+[[file:../Examples/PrototypeFunctions.lean][PrototypeFunctions.lean]] shows
+that the same composition constructs a numeric function rather than an
+object; its results are ~[27, 8, 0, 1, 27]~.
+[[file:../Examples/RecordPrototype.lean][RecordPrototype.lean]] directly
+implements the paper's record-as-function construction with typed keys. Its
+self-dependent composed result is ~(6, 2, 8)~; reversing an inherited-slot
+modifier and an override changes the result from ~6~ to ~3~.
+[[file:../Examples/FirstClassObject.lean][FirstClassObject.lean]] constructs
+and extends an object after instantiation, yielding ~(3, 6)~. Mixing two
+instantiated objects through their retained prototypes yields ~(2, 6)~.
+
+* Object layer
+
+~Plan~ compiles C4 precedence once. ~Memoized~ allocates a shared ~Thunk~ for
+each declared key, evaluates on demand, and retains the plan for further
+~extend~, ~mix~, ~plus~, or ~clone~ operations. ~Prepared~ stores assembled
+slot functions; ~Cache~ is an explicit immutable value cache.
+~Declaration.fromValues~, ~fromMap~, and ~fromFunction~ provide finite typed
+value sources. ~allSlots~, ~foldSlots~, ~values~, and ~force~ provide object
+inspection and materialization.
+~LeanPoo.mixC4~ accepts full C4 node metadata when an object needs multiple
+local parent orders or suffix behavior; the simpler ~mix~ supplies one flat
+parent order.
+~Plan.toDelayedProto~ maps a typed C4 plan into the paper's delayed prototype
+type without a second slot evaluator. ~Plan.toFirstClassObject~ closes that
+prototype into an instance/prototype pair. ~Memoized.toFirstClassObject~
+retains the current object's per-slot call-by-need cells while keeping the
+C4 plan as its reusable prototype. This bridge uses ~Plan.resolve~ for
+future composition, so ~Memoized~ remains the optimized slot representation
+of the same plan.
+
+[[file:../Examples/LayeredObject.lean][LayeredObject.lean]] executes single
+inheritance, independent object mixing, cloning, persistent declaration
+revision, and a diamond with a shared ancestor. The diamond order is
+~Diamond -> Left -> Right -> Base~ and its resulting slot value is ~13~.
+The same plan also runs as a first-class object and yields the same slot
+value. [[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] executes
+a descriptor class, extends it after instantiation, and derives a list
+descriptor. [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows a
+cell holding a pure object whose revised declaration yields a new instance.
+[[file:../Examples/LensPrototype.lean][LensPrototype.lean]] uses the appendix's
+getter/wrapper/setter construction to compose two updates to one component
+of a computation, yielding ~(9, true)~.
+
+* Integrated execution
+
+[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one construction all the way through
+C4 precedence, typed slot composition, lazy object execution, first-class
+projection, a later override, and a mutable identity. The diamond order is
+~Diamond -> Left -> Right -> Base~. Its inherited slot is ~13~ and its
+final-self-dependent slot is ~26~. The first-class projection observes the
+same ~26~. Extending the object with an override of the inherited slot
+changes the derived value to ~10~; an old immutable snapshot still reads
+~26~ after the mutable identity installs the extension. Updating the new
+root's direct value then recomputes that dependent slot as ~14~. This uses one
+compiled precedence and one slot evaluator, rather than a separate
+implementation for each representation.
+
+The same first-class projection can be extended with an ordinary delayed
+prototype. In the integrated example, both that functional extension and
+a new C4 declaration rebind final self and produce ~10~. A descriptor-class
+prototype recognizes the original value ~26~ and rejects the derived value
+~10~; this demonstrates the class construction on values produced by the
+same object model. Lean-native ~Option~, product, and sum descriptors retain
+runtime recognition. A JSON codec attached through Lean's ~ToJson~ and
+~FromJson~ type classes composes through these descriptors. Decoding checks
+the descriptor refinement; it rejects the encoded value ~10~ while ~26~
+round-trips.
+~Object.Generic.fromSlot~ selects its method through the same memoized C4
+slot lookup. The integrated example observes scale factors ~2~ and ~3~
+before and after extension, yielding ~6~ and ~9~ on input ~3~; a missing
+method uses the fallback and yields ~3~. A typed missing-slot callback via
+~Memoized.refWith~ yields ~99~. ~Generic.fromType~ supports an
+explicit descriptor-based selector. This is Lean's typed function interface
+for generic dispatch, without Scheme's macro or dynamic MOP machinery.
+~Object.ClassSpec~ describes a typed object shape and generates a declaration
+for the same C4 evaluator. The integrated class accepts the original object,
+rejects the lower derived value, and instantiates an object whose computed
+slot is ~24~. A ~ClassSpec.layer~ is a delayed prototype for the class
+descriptor itself: an inherited class with a fixed scale of ~3~ accepts a
+new high-value object and rejects the original. Its JSON boundary serializes
+codec-bearing direct slots without fixed or computed definitions;
+~decodeObjectJson~ recompiles the class
+declaration, validates the result, and preserves the computed slot
+prototype, yielding ~26~. A sealed class rejects unknown JSON fields.
+~SlotRule.fromDescriptor~ shares a slot's refinement and JSON codec with its
+type descriptor. A pure slot lens changes the inherited value from ~13~ to
+~15~, which recomputes the dependent total as ~30~ while the original
+object still reads ~26~. ~ClassSpec.effectiveRules~ applies last-write-wins
+to duplicate slot rules so construction, validation, and JSON use the same
+effective class definition.
+~Descriptor.fin~ represents a bounded natural with a Lean proof, and its
+decoder rejects an out-of-range number. Array and string-map descriptors
+reuse element codecs. Tagged ~Option~ JSON distinguishes ~some null~ from
+~none~. Byte arrays have a numeric JSON codec and a length refinement.
+Runtime union and intersection compose recognizers; a function descriptor
+relies on Lean for its static arrow type and checks domain and codomain
+refinements at calls. Heterogeneous tuples use ~HList~ and descriptor lists;
+~TypedValue~ pairs a descriptor with a statically typed accepted value.
+Integer ranges, fixed-width bitvectors, and normalized rationals have
+checked runtime descriptors. A validated descriptor prototype value can
+seed a class slot. ~Descriptor.encodeText~ and ~decodeText~ use JSON text;
+~Descriptor.encodeBytes~ and ~decodeBytes~
+provide a checked UTF-8 JSON byte representation; this is a Lean-native
+format, not Gerbil's binary marshal format.
+
+* Source operation inventory
+
+The inventory records behavior rather than matching Scheme names or calling
+conventions. A Lean type and its type-class instances may replace a runtime
+Scheme type object when the same operation is available to a Lean caller.
+
+| Reference family | Semantic operation | Lean-native construction |
+|------------------+--------------------+--------------------------|
+| ~proto.ss~ | Instantiate, compose, identity, ordered chain | ~Proto~, ~DelayedProto~, ~Generator~, ~Chain~, shared fixed point |
+| ~object.ss~ | Direct values, lazy values, final self, inherited next method | Dependent ~Declaration~, four ~SlotSpec~ forms, one ~Plan.resolve~ |
+| ~object.ss~ | Multiple inheritance, lookup, cached lookup, enumeration | ~C4.linearize~, ~Memoized~, ~Cache.peek~, ~allSlots~, ~foldSlots~ |
+| ~object.ss~ | Mix, extend, override, clone, direct slot change | ~Memoized.mix~, ~extend~, ~plus~, ~clone~, ~Mutable~, ~Lens.slot~ |
+| ~mop.ss~ | Instance and type method selection with fallback | ~Generic.fromSlot~, ~fromType~, ~call~ |
+| ~mop.ss~ | Class, slot rule, validation, construction, lens | ~DescriptorClass~, ~ClassSpec~, ~SlotRule~, ~Object.Lens~ |
+| ~type.ss~ | Tuple, list, pair, sum, optional, map, record | ~HList~, ~List~, product, ~Sum~, ~Option~, ~Std.HashMap~, ~ClassSpec~ descriptors |
+| ~type.ss~ | Top, bottom, singleton, enum, union | ~Descriptor.top~, ~bottom~, ~exactly~, ~oneOf~, ~union~, ~intersect~ |
+| ~type.ss~ | Bytes, bounded bytes, typed value pair, rational | ~ByteArray~, ~bytesN~, ~TypedValue~, ~Rat~ descriptors |
+| ~number.ss~ | Integer ranges and fixed-width numbers | ~Descriptor.intRange~, ~Fin~, ~BitVec~, Lean arithmetic type classes |
+| ~io.ss~ | Text, JSON, and byte input/output with validation | ~JsonCodec~, ~TextCodec~, ~encodeText~, ~decodeText~, ~encodeBytes~, ~decodeBytes~ |
+
+The Scheme-specific macro surface, open runtime MOP, S-expression syntax,
+and binary marshal wire format are not target interfaces. Lean's indexed
+types, static function types, tagged sums, JSON text, and UTF-8 bytes supply
+the corresponding construction and I/O capabilities. The table is the
+operation-family coverage ledger for the Lean-native target.
+
+* Coverage against Gerbil-POO
+
+The implementation target is the paper's Lean-native prototype model.
+Gerbil-POO provides a broader Scheme implementation and a useful comparison,
+but its syntax and dynamic MOP are not required interfaces for Lean.
+The statuses describe Lean-native semantic breadth, not lines translated or
+Scheme API compatibility.
+
+| Scope | Current status | Evidence and boundary |
+|-------+----------------+-----------------------|
+| POOF functional prototype construction | Implemented | Open recursion, composition, generators, delayed values, first-class pairing, C4 object execution, classes, generalized method fragments, and pure-to-mutable storage run. The general fixed point has the Lean runtime boundary below. |
+| Gerbil ~proto.ss~ semantic concepts | Implemented | ~Proto~, typed chains, shared fixed points, and explicit bases cover the core; Scheme's variadic syntax and universal bottom are language-specific. |
+| Gerbil ~object.ss~ semantic behavior | Implemented in Lean-native form | C4, four slot forms, defaults, lookup, cached values, composition, clone, enumeration, missing-slot callbacks, and persistent mutation run. |
+| Gerbil ~mop.ss~ and ~type.ss~ semantic behavior | Implemented in Lean-native form | Instance/type generic dispatch, class/slot descriptions, typed lens, construction and validation, heterogeneous and composite types, text/JSON/byte boundaries, and number refinements run or use Lean's native types. |
+| In-scope Lean-native PO capability | Complete | The source operation inventory maps the prototype, object, class, type, number, and I/O families; the integrated execution and ~just check~ build receipt close the implementation target. |
+
+~Memoized~ is the C4-aware first-class object in the Lean implementation:
+it retains both its compiled plan and its lazy instance, and its ~extend~
+operation validates a new graph. ~Prototype.Object~ expresses the paper's
+more general functional instance/prototype pair. Projecting a ~Memoized~
+value into that generic pair retains the functional prototype; C4-aware
+graph operations remain on the source ~Memoized~ value. These are two Lean
+views of the same plan rather than competing slot evaluators. The general
+fixed-point implementation retains the reference-cycle limit below.
+
+* Generalized method fragments
+
+The paper derives classes from prototypes in section 5 and discusses
+CLOS generic functions and method combinations in Appendix B. Its
+generalized prototype constructor is a sketch; a complete account is left
+for future work. ~Prototype.lensGen~ implements that constructor as a normal
+delayed prototype. It introduces neither Lisp-style declaration syntax nor
+a separate object evaluator or runtime MOP.
+
+* Fixed-point boundary in Lean
+
+A general fixed point may diverge, so Lean's kernel cannot certify it as a
+total function. Function-valued ~Prototype.instantiate~ ties one shared
+recursive result and is declared ~unsafe def~. This follows the paper's
+shared construction, rather than rebuilding the prototype on each recursive
+call. ~FixedFunction~ gives the callable instance a runtime representation
+that Lean does not eta-expand into a fresh prototype application. General
+delayed instantiation uses the same shared fixed-point constructor and is
+also ~unsafe def~. A private cell ties each knot; it does not escape the
+constructor, but recursive instances may form reference cycles that Lean's
+reference-counting runtime cannot reclaim automatically. These are executable
+recursion boundaries. Prototype
+composition, slot types, C4 data, and typed builders remain type checked.
+
+* Conclusion
+
+The POOF PO construction has an executable Lean main path:
+~prototype -> composition -> generator/delay -> fixed point -> object -> C4 composition~.
+The independent [[file:../Examples/PrototypeCore.lean][prototype core]] and
+[[file:../Examples/FirstClassObject.lean][first-class object]],
+[[file:../Examples/LayeredObject.lean][typed slot object]],
+[[file:../Examples/DescriptorClass.lean][class]], and
+[[file:../Examples/MutableObject.lean][mutable object]] examples, together with
+~just check-po~, provide executable receipts. The C4 plan connects the
+general first-class object construction to typed slot resolution. Descriptor
+classes and a pure-to-mutable cell cover the paper's constructive extensions.
+The paper's constructive prototype path and the in-scope Gerbil-POO
+semantic capabilities are implemented in Lean-native form. The operation
+inventory above gives the correspondence and ~just check~ executes the
+integrated construction. This is a complete implementation conclusion for
+the stated Lean-native scope, not a claim of Scheme API, macro, or wire-format
+compatibility. Gerbil's dynamic MOP and mutable hash-table optimization are
+language-specific implementation choices.
+
+* Completion gates
+
+The target is semantic capability using Lean's own types, functions, and
+type classes. Reproducing Scheme's dynamic MOP, macro syntax, or binary wire
+format is outside this target. These gates close the Lean-native PO
+reproduction.
+
+| Gate | State | Evidence |
+|------+-------+----------|
+| Paper prototype construction | Closed | The module map and independent examples cover each constructive step; the fixed-point runtime boundary is recorded above. |
+| C4-aware first-class composition | Closed | ~Memoized~ retains plan and lazy instance with extension and mixing; diamond, suffix, parent-order, and rejection cases execute. |
+| Generic and type-directed behavior | Closed | The integrated object runs instance- and class-descriptor-selected methods with fallback. |
+| Object classes and runtime types | Closed | Class inheritance, construction, validation, typed composites, and JSON/text/byte round-trips execute. |
+| Pure and mutable object behavior | Closed | Direct slot/default changes rebuild the lazy instance; integrated receipts show recomputation and old snapshot retention. |
+| Integrated executable receipt | Closed | ~just check-po~ builds the object layers, executes the integrated example, and parses Org documentation. |
+| Upstream semantic inventory | Closed | The source operation table maps each PO operation family to a Lean-native construction. |

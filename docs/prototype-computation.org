@@ -1,0 +1,46 @@
+#+TITLE: Generator and Delayed Prototype Construction
+
+* Scope
+
+This stage builds directly on the [[file:prototype-mvp.org][prototype MVP]]. Import
+~LeanPoo.Prototype.Computation~ for the MVP plus generator application and
+delayed prototypes. It follows POOF's construction of single inheritance
+through generators and its extension from function instances to delayed
+computations. It does not introduce an object syntax or runtime MOP.
+
+* Generator application
+
+~Generator Self Result~ is a function from final self to a result.
+~Generator.ofProto p base~ fixes a prototype's inherited input while
+leaving final self open. ~Generator.applyProto child parent~ supplies the
+parent generator's result to the child. Its Lean-checked equation says that
+applying a child to a generator made from a parent equals making a generator
+from their composition. ~Generator.instantiate~ closes a function-valued
+generator with the same shared fixed-point implementation as the MVP.
+
+* Delayed computations
+
+~DelayedProto Self Parent Result~ receives ~Thunk Self~ and ~Thunk Parent~.
+~DelayedProto.compose~ delays the parent, so a child that overrides inherited
+behavior need not evaluate it. ~DelayedProto.instantiate~ ties a shared
+delayed final self. Lean's native ~Thunk~ evaluates and caches its result on
+first force. ~DelayedProto.Chain~ checks heterogeneous intermediate result
+types, such as a ~Bool~ parent result consumed by a ~Nat~ child.
+
+* Executable acceptance
+
+Run ~just check-computation~. It builds the public import, runs the MVP
+examples, and elaborates two further standalone examples:
+
+- [[file:../Examples/PrototypeCore.lean][PrototypeCore.lean]] gives ~(6, 1)~ through direct composition and the same
+  ~(6, 1)~ through generator application. It also yields ~6~ from delayed
+  composition and ~7~ from a chain with a ~Bool~ intermediate value.
+- [[file:../Examples/DelayedNumbers.lean][DelayedNumbers.lean]] implements the paper's number-thunk example. Adding
+  after doubling ~30~ yields ~61~; doubling after adding yields ~62~.
+
+The general delayed fixed point remains ~unsafe~ because forcing an
+unproductive self-reference can diverge. The MVP's reference-cycle limit
+also applies to this stage.
+
+The next construction is the [[file:first-class-object.org][first-class object]], which retains the prototype
+with its delayed instance.

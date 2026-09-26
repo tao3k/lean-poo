@@ -1,0 +1,33 @@
+#+TITLE: lean-poo
+
+A modular Lean implementation of the functional prototype model in
+[[https://github.com/metareflection/poof][POOF]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs object-level implementation choices; Faré's
+[[https://github.com/fare/c4-mixins][C4-Mixins]] is the reference for C4 linearization. Lean types, functions,
+and thunks determine this project's API.
+
+The [[file:docs/prototype-mvp.org][prototype MVP]] is the smallest executable paper-model entry point.
+[[file:docs/prototype-computation.org][Generator and delayed computation]] form the next constructive layer.
+[[file:docs/first-class-object.org][First-class objects]] retain a prototype with each lazy instance.
+The [[file:docs/replication.org][implementation assessment]] maps the current PO construction to Lean modules,
+an integrated C4-to-object execution path, and its remaining boundaries.
+[[file:docs/usage.org][Usage]] lists the API; the
+[[file:docs/use-case.md][use case]] shows object construction and evaluation.
+
+* Credits
+
+The prototype object orientation ideas and Gerbil-POO implementation on which
+this project builds are the work of *François-René Rideau (Faré)*.
+Gerbil-POO states *Copyright 2020 François-René Rideau* and is licensed under
+Apache License 2.0. Its [[https://github.com/tao3k/gerbil-poo#copyright-and-license][copyright and license statement]] remains the authority
+for that upstream work.
+
+The [[https://github.com/metareflection/poof][POOF paper and code]] are credited to *François-René Rideau, Alex Knauth,
+and Nada Amin*. The POOF repository also uses Apache License 2.0. We thank
+these authors for the model and its explanation.
+
+[[https://github.com/fare/c4-mixins][C4-Mixins]] is by *François-René Rideau (Faré)* and offers a choice of Apache
+License 2.0 or the No Problem Bugroff License; its own [[https://github.com/fare/c4-mixins/blob/main/LICENSE][LICENSE]] governs that
+implementation.
+
+This repository's [[file:LICENSE][LICENSE]] is Apache License 2.0. The Lean translations
+retain attribution to Faré and the applicable upstream license notices.

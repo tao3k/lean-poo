@@ -1,0 +1,114 @@
+#+TITLE: POOF prototype and object expression in Lean
+
+* Source ownership
+
+The semantic model starts with Faré, Knauth, and Amin's
+[[https://github.com/metareflection/poof][POOF paper]].
+~Prototype.Generator~ and ~Prototype.DelayedProto~ now encode the paper's
+generator and delayed fixed-point constructions directly. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] provides
+an executable object-level reference; its layers are distinct:
+
+| Gerbil source | Responsibility | Lean owner |
+|---------------+----------------+------------|
+| ~proto.ss~ | Open recursion, identity, ordered composition | ~LeanPoo.Prototype.Compose~ |
+| ~object.ss~ | Slot specs, inheritance, instance evaluation, cache | ~LeanPoo.Prototype.SlotSpec~ and ~LeanPoo.Object~ |
+| ~mop.ss~ | Generic method selection and runtime type descriptors | Descriptor behavior is represented with Lean values; no dynamic MOP is copied. |
+| ~type.ss~ | Runtime type descriptors and conversions | Lean's dependent value families and native inductive types where object semantics need them |
+| ~brace.ss~ and ~object.ss~ macros | Convenient source syntax and lexical slot binding | Lean functions and indexed types express the semantics without copying Lisp syntax. |
+
+The C4 ordering algorithm is owned separately by [[https://github.com/fare/c4-mixins][C4-Mixins]] and the Gerbil
+runtime. Object syntax must consume that ordering rather than reimplement it.
+
+* Lean encoding decisions
+
+~proto.ss~ uses ~compose-proto*~ for an indexed sequence whose intermediate
+types may differ. Lean's ~Prototype.Chain~ expresses those links in its type;
+~Chain.append~ composes such sequences only when their endpoints match.
+Lean proves the identity and associativity laws for both ~Proto.compose~ and
+~Chain.append~, and proves that interpreting an appended chain agrees with
+prototype composition. ~composeAll~ reuses its interpreter for the homogeneous
+case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
+
+1. The four semantic slot forms in ~object.ss~ become one indexed Lean
+   ~SlotSpec Self α~ inductive type. A single ~eval~ handles constant, thunk,
+   self-dependent, and inherited-computation forms. The inherited computation
+   remains a thunk, so an override does not evaluate it accidentally.
+   ~Method.compose~ owns that delayed inheritance chain; the object resolver
+   folds C4 declarations with it instead of carrying a second composition
+   implementation.
+   ~Declaration.withSlot~ and ~Declaration.withDefault~ use one dependent
+   ~Entry.lookup~ / ~Entry.replace~ pair for ordered typed values, without a
+   dynamic property map or a parallel runtime type hierarchy.
+   ~Declaration.fromValues~ accepts dependent key/value pairs, while
+   ~fromFunction~ creates lazy direct slots from a typed function.
+   ~LeanPoo.mix~, ~LeanPoo.extend~, and ~LeanPoo.plus~ translate the corresponding
+   Gerbil operations to immutable graph construction and C4 compilation.
+   ~LeanPoo.clone~ translates ~.cc~ by copying a direct declaration and
+   topology, then replacing typed constant slots once per key.
+   ~LeanPoo.allSlots~ derives the finite key order from those entries and C4
+   precedence; no caller-maintained candidate list is needed.
+2. ~.defgeneric~ is Gerbil's way to select and invoke a method. Lean's type
+   classes provide static method resolution, and ordinary functions or
+   structures can carry explicit behavior. The Lean design should use those
+   native mechanisms for its own public interface; a dynamic MOP is not an
+   implementation target.
+3. ~define-type~ builds a runtime descriptor in Gerbil because Scheme does
+   not enforce the paper's type notation. Lean already has ~structure~,
+   ~inductive~, dependent functions, and type classes. ~Object.Schema~ uses
+   ~Value : Key → Type~ so the type of every slot is fixed by its key;
+   ~Prototype.Chain~ makes intermediate prototype types match at each link.
+   These are the type-level parts relevant to POO composition. Serialization
+   formats from ~type.ss~ are separate interoperability concerns, not the
+   foundation of LeanPoo's class model. [[file:../Examples/TypedSlots.lean][TypedSlots.lean]] shows the class-side
+   encoding using an inductive key and a dependent ~Value~ family.
+4. Gerbil ~defrules~, brace notation, and lexical slot identifiers normalize
+   source forms before evaluation. Lean notation is enough for simple
+   operations such as prototype composition; ~syntax~ and ~macro_rules~ are
+   appropriate for recurring compound forms. A custom elaborator is justified
+   only when the syntax needs type or local-context information. All syntax
+   must expand to the same definitions, without a second evaluator.
+5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
+   resolution when possible, so its inheritance mechanism is not the C4
+   object semantics being translated here.
+
+* Optimization boundary
+
+Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
+snapshot is requested; it computes the precedence list and assembled slot
+functions once, then caches evaluated slot values in the instance. These are
+three different caches with different invalidation rules. Lean's ~Plan~
+shares a validated C4 precedence list across key lookups. ~Prepared~ uses
+~Std.DHashMap~ to keep assembled slot functions for selected keys, with
+per-entry agreement proofs against ~Plan.resolve~. ~Cache~ stores evaluated
+values in a separate immutable map; a cache miss returns a new cache. Each
+entry is tied to the same prepared resolver and self. Absent results leave
+the cache unchanged, while ~peek~ observes cached entries without evaluation.
+~Object.Instance~
+connects that final self to the plan's fixed-point equation, and its
+~cachedRead~ theorem relates cached reads to instance values. Closed plans
+have a total constructor. ~Plan.memoize~ ties a shared table of Lean ~Thunk~
+cells for executable
+open recursion. Each declared key computes at most once when forced;
+unproductive cycles may diverge. Proof-bearing open-recursive plans require a
+supplied fixed-point equation. C4 merge and lookup use ~Std.HashMap~; graph
+validation and deduplication use ~Std.HashSet~.
+
+Mathlib provides proof infrastructure when the project needs it. The current
+finite C4 traversal and dependency-key filtering use Lean's ~Std~ collections
+directly; adding Mathlib alone would not speed up those executable algorithms.
+
+* Implementation sequence
+
+1. The typed object representation, four slot forms, lazy inherited
+   computations, and C4-ordered resolution are implemented.
+2. Proof objects, patches, append, right-side override, reuse, pending
+   obligation discharge, and rebinding a certified object to an overridden
+   instance are implemented with Lean-checked definitions and theorems.
+3. Typed declaration builders and a scoped prototype-composition operator
+   reuse the current resolver; further syntax should expand to the same
+   constructors rather than define a second evaluator.
+4. Precedence computation, method assembly, and evaluated-value caching have
+   separate representations, following ~object.ss~.
+5. Executable open recursion uses a shared thunk table and reuses
+   ~Plan.resolve~ without introducing a second slot evaluator. Its partiality
+   is explicit at the API boundary.

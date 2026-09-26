@@ -1,0 +1,199 @@
+#+TITLE: LeanPoo API usage
+
+The object workflow is in [[file:use-case.md][the PO use case]].
+This page is a compact map of the current Lean API.
+
+* Build an object
+
+~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
+~Prototype.Generator~ keeps an inherited computation open, while
+~Prototype.DelayedProto~ uses Lean ~Thunk~ for non-function lazy instances.
+[[file:../Examples/PrototypeCore.lean][PrototypeCore.lean]] runs these constructions directly.
+~Prototype.Object~ pairs a lazy instance with its reusable prototype;
+[[file:../Examples/FirstClassObject.lean][FirstClassObject.lean]] shows extension
+and object-to-object mixing after instantiation.
+~Object.recordSlotGen~ builds a delayed typed record slot without forcing
+final self while assembling the record. [[file:../Examples/FirstClassRecord.lean][FirstClassRecord.lean]] shows a
+computed slot observing a later override through the new final self.
+
+~Prototype.Chain~ composes prototypes whose intermediate types differ;
+~Chain.append~ joins chains only when their endpoint types match, and Lean
+checks its associativity and interpretation laws.
+~Prototype.composeAll~ handles a homogeneous list through the same chain.
+~DelayedProto.Chain~ gives the delayed construction the same type-indexed
+composition; its homogeneous list form uses that chain's interpreter.
+~Prototype.constant~ can close a chain without using the external base;
+[[file:../Examples/PrototypeFunctions.lean][PrototypeFunctions.lean]] uses it
+to compose a numeric function from reusable increments.
+~Prototype.lensGen~ is the appendix's typed getter/wrapper/setter constructor
+for a method fragment. It returns a normal delayed prototype;
+[[file:../Examples/LensPrototype.lean][LensPrototype.lean]] shows its use.
+~Prototype.Record~ is the direct record-as-function model from the paper.
+~Record.slotGen~ owns its slot construction, with ~slot~, ~modify~, and
+~compute~ as specializations. ~Record.instantiate~ closes a composed record
+prototype; [[file:../Examples/RecordPrototype.lean][RecordPrototype.lean]]
+shows self-dependent slots and inheritance order.
+~Prototype.instantiate~
+ties a function-valued prototype to one shared open-recursive result. Such a
+prototype uses ~FixedFunction Input Output~ as its instance type; ~CoeFun~
+lets that value be called with ordinary function syntax. The additional
+runtime field prevents Lean from eta-expanding prototype construction into
+each call. The general recursive knot is ~unsafe~ because it may diverge; it
+does not require an ~Inhabited~ result type.
+
+| Operation | Role |
+|-----------+------|
+| ~Object.Declaration.empty~ | Start a typed declaration. |
+| ~Declaration.withSlot~ / ~withDefault~ | Add a slot computation or base default at a typed key. |
+| ~Declaration.fromValues~ / ~fromFunction~ / ~fromMap~ | Build ordered direct slots from typed values, a lazy function, or a sorted dependent map. |
+| ~LeanPoo.mix~ | Add a node with ordered direct supers and compile its C4 plan. |
+| ~LeanPoo.mixC4~ | Add a node with complete C4 parent orders and suffix metadata. |
+| ~LeanPoo.extend~ | Add a node with one parent and compile its C4 plan. |
+| ~LeanPoo.plus~ | Apply Gerbil's ~.+~ shape to a flat override and base. |
+| ~LeanPoo.clone~ | Copy one object's direct slots, defaults, and topology, replacing selected typed values. |
+| ~Memoized.extend~ / ~mix~ / ~plus~ / ~clone~ | Continue composition from an executable object and create a fresh lazy instance. |
+| ~Plan.toFirstClassObject~ | Construct the paper's first-class instance/prototype pair from a typed C4 slot plan. |
+| ~Memoized.toFirstClassObject~ | Project a C4 object into that pair while retaining its memoized current instance. |
+| ~Memoized.mixWith~ | Compose independently built objects after rejecting colliding node names. |
+| ~Memoized.reviseSlot~ / ~reviseDefault~ | Persistently update a prototype declaration and instantiate its new result. |
+
+The resulting ~Object.Plan~ contains its C4 precedence and a proof that the
+linearizer returned that order. ~plus~ rejects an override with multiple
+C++ local parent orders rather than flattening them silently. ~clone~ rejects
+duplicate override keys and validates its new node through C4.
+
+[[file:../Examples/TypedSlots.lean][TypedSlots.lean]] is a standalone Lean example of a key-indexed value family:
+one slot contains ~Bool~, another contains ~Nat~, and a computed slot can
+read final self and its inherited value with those types checked by Lean.
+[[file:../Examples/LayeredObject.lean][LayeredObject.lean]] runs a complete ~mix~ / ~extend~ / ~memoize~ / ~read~ path.
+It also clones the executable child with a new direct value. Composition
+reuses the object's prototype information; the derived object receives its
+own memoized values. The same example mixes two independently built object
+families and reads both inherited slots. A diamond with a shared base shows
+C4's precedence and the order of inherited method composition.
+[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one C4 diamond through memoized
+execution, first-class projection, a new override, and a mutable snapshot.
+
+* Read slots
+
+| Operation | Role |
+|-----------+------|
+| ~Plan.resolve~ | Query a typed slot; absence is ~none~. |
+| ~Plan.ref~ | Require a slot; absence is ~noApplicableMethod~. |
+| ~Plan.memoize~ | Build a shared lazy instance of an open-recursive plan. |
+| ~Memoized.read~ / ~ref~ / ~refWith~ / ~values~ | Read one slot, handle a missing slot explicitly, or materialize all slots from the shared instance. |
+| ~LeanPoo.hasSlot~ | Check whether a key is declared in the C4 chain. |
+| ~LeanPoo.hasSlots~ | Check several required keys in one compiled plan. |
+| ~LeanPoo.allSlots~ | Enumerate declared keys in least-specific-first order. |
+| ~LeanPoo.allSlotsSorted~ | Sort declared keys by an explicit Lean comparator. |
+| ~LeanPoo.prepareDeclared~ | Store assembled slot functions in a dependent hash map. |
+| ~Cache.read~ / ~Cache.ref~ | Return a value and an updated immutable instance cache. |
+| ~Cache.peek~ | Inspect an existing cache entry without evaluating a slot. |
+| ~Cache.force~ | Fill cache entries for a finite set of keys. |
+| ~Object.Closed.instantiate~ | Construct an instance when slots are independent of self. |
+| ~Object.Instance.prepare~ / ~cache~ | Prepare and cache slots for one fixed-point instance. |
+| ~Object.Instance.prepareDeclared~ / ~cacheDeclared~ | Use all declaration-owned keys. |
+| ~Object.Cache.forceDeclared~ | Evaluate all declared keys into the explicit cache. |
+| ~Object.Instance.values~ | Materialize typed key/value pairs in declaration order. |
+| ~Object.Instance.select~ / ~Memoized.select~ | Read an ordered selection of typed keys. |
+| ~Memoized.foldSlots~ | Traverse all declared typed values in object order. |
+| ~Memoized.force~ / ~valuesSorted~ | Force every slot or export typed values in caller-chosen key order. |
+| ~Object.Instance.cachedRead~ | Relate a cached result to the instance value. |
+
+The declarations own their finite key order even when the Lean key type is
+infinite. Cached functions and values carry proofs that they agree
+with ~Plan.resolve~; the cache does not define another slot evaluator. Missing
+slots do not grow the value cache. ~memoize~ uses Lean's call-by-need ~Thunk~
+for each declared key; an unproductive cycle can diverge. A proof-bearing
+declaration needs an explicitly supplied ~Object.Instance~ whose state satisfies the
+resolver equation.
+Prototype revisions return a fresh plan and memoized instance; an already
+instantiated object retains its values.
+
+* Classes and mutable objects
+
+~Prototype.DescriptorClass~ is a delayed prototype for a runtime
+~Descriptor α~. Lean's ~α~ supplies the static type; ~accepts~ can recognize
+a refinement. ~Descriptor.refine~ composes runtime predicates;
+~listOf~, ~arrayOf~, ~optionOf~, ~pairOf~, ~sumOf~, and ~stringMapOf~ construct
+descriptors over Lean's native type constructors; ~exactly~ and ~oneOf~ refine
+one type by equality or finite enumeration. ~Descriptor.withJson~ uses Lean's ~ToJson~ and
+~FromJson~ instances, and ~encodeJson~ / ~decodeJson~ enforce the refinement
+at the JSON boundary. ~encodeText~ / ~decodeText~ use JSON text, while
+~encodeBytes~ / ~decodeBytes~ use the same checked codec in a Lean-native
+UTF-8 JSON representation. ~Descriptor.fin~ uses a
+bounded Lean natural with a checked decoder; ~top~ and ~bottom~ recognize
+every value and no value, respectively. ~Descriptor.bytes~ accepts arbitrary
+byte arrays, while ~bytesN~ checks a fixed size. ~union~ and ~intersect~
+combine refinements over one Lean type. ~functionOf~ records a typed function
+shape, and ~checkedCall~ checks argument and result refinements.
+~Descriptor.mapOf~ uses an explicit ~TextCodec~ for non-string map keys and
+rejects collisions after decoding. ~withPrototypeValue~ validates a
+descriptor's default value; parameterized list, array, map, and option
+descriptors supply their native empty value.
+~Prototype.HList~ represents heterogeneous tuples with a type-level list;
+~Descriptors~ derive their runtime recognizer and JSON codec. ~TypedValue~
+stores a descriptor, value, and proof of acceptance together. Number
+descriptors include integer ranges, fixed-width ~BitVec~, and normalized
+~Rat~ values.
+[[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] demonstrates
+inheritance and parameterization. ~Object.Mutable~ holds a persistent
+~Memoized~ object in an ~IO.Ref~. ~reviseDeclaration~ and ~extend~ install a
+fresh C4-validated instance on success. The example in
+[[file:../Examples/MutableObject.lean][MutableObject.lean]] shows this path.
+~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration
+and replace its lazy instance. Existing snapshots retain their old values;
+[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
+~putValue~.
+~Object.Generic.fromSlot~ selects a typed method value from that same
+memoized instance; ~Generic.fromType~ selects from an explicit descriptor.
+~Generic.call~ applies the chosen method or a typed fallback. The integrated
+example uses a numeric method value to scale an input before and after C4
+extension.
+~Object.ClassSpec~ and dependent ~SlotRule~ values describe required,
+optional, fixed, and computed slots. ~ClassSpec.toDeclaration~ creates a
+normal C4 declaration; ~toDescriptor~ checks an existing memoized object.
+~ClassSpec.instantiate~ constructs one from its defaults and computations.
+~ClassSpec.layer~ makes a delayed class prototype whose child rules override
+matching parent rules; an ordinary ~Prototype.Object~ retains that class
+prototype with its derived descriptor.
+~ClassSpec.effectiveRules~ resolves repeated declarations of one key once
+for construction, validation, and JSON conversion.
+~encodeJson~ / ~decodeJson~ use explicit slot codecs and preserve computed
+specifications when direct values are decoded. ~SlotRule.fromDescriptor~
+shares validation and JSON behavior with a typed descriptor. Fixed and
+computed slots are rebuilt from the class instead of appearing in encoded
+JSON. ~decodeObjectJson~ compiles
+and validates a full object. A sealed class rejects unknown JSON fields.
+~Object.Lens.slot~ gets, sets, or modifies a typed slot through persistent
+C4 recompilation; ~Lens.compose~ combines two typed lenses.
+
+* Compose proofs
+
+| Operation | Role |
+|-----------+------|
+| ~Proof.Obligation~ | State a proposition, its dependency keys, and a stability proof. |
+| ~Proof.Patch~ | Change state with an explicit touched-key set and frame proof. |
+| ~Proof.Patch.set~ | Override one typed key with an automatically derived frame proof. |
+| ~Proof.Patch.setMany~ | Apply ordered typed overrides; the final write at a repeated key wins. |
+| ~Proof.Patch.composeAll~ | Compose existing patches in order through one fold. |
+| ~Proof.pending~ | Select old obligations affected by touched keys, plus new obligations. |
+| ~Proof.closePending~ | Build a certificate from reused and newly discharged proofs. |
+| ~Proof.invalidatedNodes~ | Compute graph nodes affected by a structural change. |
+| ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
+| ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
+| ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
+
+The domain supplies its concrete keys, values, propositions, and
+instances. Structural node invalidation and value-key dependency
+selection are separate operations. ~append_composeAll~ proves batch append
+agrees with stepwise append; ~unaffected_composeAll_iff~ characterizes proof
+reuse across the entire batch.
+
+* Commands
+
+~just check-c4~, ~just check-object~, ~just check-compose~,
+~just check-po~, and ~just check-proof~ compile the respective layers.
+~just check~ compiles the
+complete library. These are Lean elaboration and theorem checks, not a
+duplicate upstream reference-test suite.
