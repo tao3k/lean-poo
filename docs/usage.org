@@ -97,6 +97,7 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Cache.read~ / ~Cache.ref~ | Return a value and an updated immutable instance cache. |
 | ~Cache.peek~ | Inspect an existing cache entry without evaluating a slot. |
 | ~Cache.rebase~ | Carry only selected evaluated entries into a new resolver and self, with a proof that each retained result is unchanged. |
+| ~Proof.rebaseInstanceCacheByValue~ | Compare old and new fixed-point values for cached keys and reuse only equal entries. |
 | ~Cache.force~ | Fill cache entries for a finite set of keys. |
 | ~Object.Closed.instantiate~ | Construct an instance when slots are independent of self. |
 | ~Object.Instance.prepare~ / ~cache~ | Prepare and cache slots for one fixed-point instance. |
@@ -122,8 +123,14 @@ read path on the new object. ~Proof.rebaseInstanceCache~ derives that equality
 for keys outside a patch's *value-change footprint* from the old and new
 ~Object.Instance~ equations, the patch frame, and state alignment. Computed
 slots whose values change must also be in that footprint, even when the edit
-directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates the
-transfer and recomputation.
+directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates both
+single-slot reuse and a computed dependent that must be invalidated with its
+source slot. The footprint is supplied with a proof of state alignment; this
+API does not infer arbitrary slot dependencies. When dependent values have
+decidable equality, ~Proof.rebaseInstanceCacheByValue~ can instead compare the
+old and new instance values of cached keys. This detects changed computed
+slots without a supplied footprint, but may evaluate both instances and does
+not reuse the executable ~Memoized~ thunks.
 Prototype revisions return a fresh plan and memoized instance; an already
 instantiated object retains its values.
 

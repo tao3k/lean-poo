@@ -64,12 +64,79 @@ private def reused : Object.Cache (next.prepare [false, true]) next.state :=
   Proof.rebaseInstanceCache current next patch aligned
     [false, true] oldCache
 
+private def compared : Object.Cache (next.prepare [false, true]) next.state :=
+  Proof.rebaseInstanceCacheByValue current next (fun _ => inferInstance)
+    [false, true] oldCache
+
 #guard oldCache.peek false == some (some 10)
 #guard oldCache.peek true == some (some 20)
 #guard reused.peek false == some (some 10)
 #guard reused.peek true == none
 #guard (reused.read true).1 == some 30
+#guard compared.peek false == some (some 10)
+#guard compared.peek true == none
 
 example : (reused.read false).1 = next.state false := by
   rw [reused.read_sound, (next.prepare [false, true]).resolve_sound]
   exact next.agrees false
+
+namespace ComputedDependency
+
+private def declaration (changed : Nat) : Object.Declaration Bool Values :=
+  Object.Declaration.empty
+    |>.withValue true changed
+    |>.withSlot false (.self fun self => (self true).map (· + 1))
+
+private def schema (changed : Nat) : Object.Schema Bool Values :=
+  { graph
+    declaration := fun name =>
+      if name == "Base" then some (declaration changed) else none }
+
+private def plan (changed : Nat) : Object.Plan Bool Values :=
+  { schema := schema changed
+    root := "Base"
+    precedence := ["Base"]
+    valid := by
+      change C4.linearize graph "Base" = .ok ["Base"]
+      native_decide }
+
+private def current : Object.Instance Bool Values (plan 20) :=
+  { state := fun key => if key then some 20 else some 21
+    agrees := by
+      intro key
+      cases key <;> native_decide }
+
+private def next : Object.Instance Bool Values (plan 30) :=
+  { state := fun key => if key then some 30 else some 31
+    agrees := by
+      intro key
+      cases key <;> native_decide }
+
+-- Both the edited slot and its computed dependent changed value.
+private def patch : Proof.Patch Bool (fun key => Option (Values key)) :=
+  Proof.Patch.setMany [⟨true, some 30⟩, ⟨false, some 31⟩]
+
+private theorem aligned : next.state = patch.apply current.state := by
+  funext key
+  cases key <;> rfl
+
+private def oldCache : Object.Cache (current.prepare [false, true]) current.state :=
+  (current.cache [false, true]).force [false, true]
+
+private def reused : Object.Cache (next.prepare [false, true]) next.state :=
+  Proof.rebaseInstanceCache current next patch aligned
+    [false, true] oldCache
+
+private def compared : Object.Cache (next.prepare [false, true]) next.state :=
+  Proof.rebaseInstanceCacheByValue current next (fun _ => inferInstance)
+    [false, true] oldCache
+
+#guard oldCache.peek false == some (some 21)
+#guard oldCache.peek true == some (some 20)
+#guard reused.peek false == none
+#guard reused.peek true == none
+#guard (reused.read false).1 == some 31
+#guard compared.peek false == none
+#guard compared.peek true == none
+
+end ComputedDependency

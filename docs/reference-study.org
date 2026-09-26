@@ -97,8 +97,10 @@ The Lean modules are separated by semantic responsibility:
   that it computes the same value as ~Plan.resolve~.
 - ~LeanPoo/Object/Cache.lean~ stores evaluated values in an explicit immutable
   cache. Its read operations return the updated cache, and the soundness
-  theorems connect cached results back to the resolver. ~peek~ inspects only
-  cached values; an absent resolution does not insert an entry.
+  theorems connect cached results back to the resolver. ~Cache.rebase~ carries
+  entries to another resolver only with a proof of equal resolved values.
+  ~peek~ inspects only cached values; an absent resolution does not insert an
+  entry.
 - ~LeanPoo/Prototype/Class.lean~ owns composable runtime descriptors and
   JSON/text/byte codecs. ~Types.lean~ adds heterogeneously typed tuples,
   descriptor/value pairs, fixed-width integers, integer ranges, and
@@ -156,7 +158,11 @@ produced by the earlier one. ~mem_pending_iff~ proves that the executable
 pending list selects exactly affected old obligations and new obligations.
 ~CertifiedObject.applyValues~ binds an ordered batch of typed overrides to
 the next resolved instance, using the same certificate transport as
-~applyPatch~. ~invalidatedNodes~ follows reverse
+~applyPatch~. ~rebaseInstanceCache~ transports evaluated values outside the
+patch footprint using the old and new instance equations and the patch frame
+proof. ~rebaseInstanceCacheByValue~ compares old and new fixed-point values
+of cached keys, covering computed dependents without a supplied footprint;
+this can force both instances. ~invalidatedNodes~ follows reverse
 inheritance edges for structure-level invalidation. Its step is monotone;
 ~Descendant~ indexes an inheritance path by edge count. Lean proves that
 changed nodes remain in the result and that every descendant reachable within
@@ -193,7 +199,7 @@ and class layers use native types rather than Scheme's dynamic MOP.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|
-| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | The reported impact does not yet preserve unaffected runtime thunk values across the edit. Such reuse needs sound dependencies for computed slots, not just an obligation's declared proof dependencies. |
+| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint; ~rebaseInstanceCacheByValue~ can compare cached keys when their values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. Reusing them requires a sound footprint for all computed dependents and a connection between the executable fixed point and the certified instance; neither follows from direct slot edits alone. Value comparison is a sound but potentially expensive fallback. |
 | Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ therefore still requires a supplied next instance and state-alignment proof. |
 | Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
 
