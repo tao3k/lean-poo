@@ -101,7 +101,8 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Cache.force~ | Fill cache entries for a finite set of keys. |
 | ~Object.Closed.instantiate~ | Construct an instance when slots are independent of self. |
 | ~Object.Ranked.instantiate~ | Construct a total fixed-point instance when every self dependency has a smaller natural-number rank. |
-| ~Object.Dependencies.inferRanked~ | Infer and verify a rank from declared self dependencies; return blocked keys for a cycle or missing dependency. |
+| ~Object.Dependencies.inferRanked~ | Infer and verify a rank from declared self dependencies; identify missing sources and blocked cycles separately. |
+| ~Object.Dependencies.instantiate~ | Construct a proof-bearing fixed-point instance from checked finite dependencies. |
 | ~Object.Instance.prepare~ / ~cache~ | Prepare and cache slots for one fixed-point instance. |
 | ~Object.Instance.prepareDeclared~ / ~cacheDeclared~ | Use all declaration-owned keys. |
 | ~Object.Cache.forceDeclared~ | Evaluate all declared keys into the explicit cache. |
@@ -120,7 +121,9 @@ declaration needs an ~Object.Instance~ whose state satisfies the resolver
 equation. ~Object.Ranked~ supplies one without unsafe recursion when the caller
 proves that each resolved slot depends on self only at smaller ranks. For a
 finite dependency support, ~Object.Dependencies.inferRanked~ schedules the
-declared edges and checks the derived rank before constructing ~Ranked~. The
+declared edges, reports an undeclared source with its reader, and checks the
+derived rank before constructing ~Ranked~. ~Dependencies.instantiate~ then
+returns the same proof-bearing instance in one call. The
 caller proves that each slot reads only its declared dependencies; arbitrary
 Lean functions cannot be inspected to infer that claim automatically.
 [[file:../Examples/RankedObject.lean][RankedObject.lean]] constructs a child-computed slot over an inherited base

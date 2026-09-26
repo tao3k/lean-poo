@@ -61,6 +61,7 @@ structure Dependencies (Key : Type u) (Value : Key → Type v)
     plan.resolve key left = plan.resolve key right
 
 inductive DependencyError (Key : Type u) where
+  | unknownDependency (key dependency : Key)
   | blocked (remaining : List Key)
   | invalidOrder (order : List Key)
   deriving Repr
@@ -88,11 +89,16 @@ where
                 (key :: done) (doneSet.insert key) fuel
 
 /-- Infer a rank from declared dependencies, then check every edge before
-producing a proof-bearing ranked plan. Cycles return the blocked keys. -/
+producing a proof-bearing ranked plan. An absent source identifies its reader;
+after that check, a blocked remainder contains a dependency cycle. -/
 def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
     Except (DependencyError Key) (Ranked Key Value plan) := do
+  for key in spec.keys do
+    for dependency in spec.reads key do
+      unless spec.keys.contains dependency do
+        throw (.unknownDependency key dependency)
   let order ← Dependencies.schedule spec.keys spec.reads
   let rank := fun key => order.idxOf key
   if checked : spec.keys.all (fun key =>
@@ -112,5 +118,14 @@ def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
         exact of_decide_eq_true edgeChecked }
   else
     throw (.invalidOrder order)
+
+/-- Construct a fixed-point instance directly from a checked finite
+dependency declaration. The returned state satisfies the original plan's
+resolver equation. -/
+def Dependencies.instantiate {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
+    Except (DependencyError Key) (Instance Key Value plan) :=
+  spec.inferRanked.map Ranked.instantiate
 
 end LeanPoo.Object

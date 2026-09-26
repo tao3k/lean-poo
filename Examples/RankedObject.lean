@@ -67,7 +67,7 @@ private def dependencies : Object.Dependencies Bool Values plan :=
 
 private def inferred : Except (Object.DependencyError Bool)
     (Object.Instance Bool Values plan) :=
-  dependencies.inferRanked.map Object.Ranked.instantiate
+  dependencies.instantiate
 
 #guard match inferred with
   | .ok instanceValue =>
@@ -107,8 +107,8 @@ private def missingSource : Object.Dependencies Bool Values plan :=
           rw [equal true (by simp)]
       | true => rfl }
 
-#guard match missingSource.inferRanked with
-  | .error (.blocked remaining) => remaining == [false]
+#guard match missingSource.instantiate with
+  | .error (.unknownDependency key dependency) => key == false && dependency == true
   | _ => false
 
 private def object : Object.Instance Bool Values plan :=

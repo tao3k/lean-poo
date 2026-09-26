@@ -116,7 +116,9 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Ranked.lean~ constructs a total fixed-point instance for
   plans whose resolved slots read self only at strictly smaller natural-number
   ranks. ~Dependencies.inferRanked~ schedules finite declared dependencies,
-  rejects blocked graphs, and checks every edge before producing the rank.
+  identifies missing sources by reader and key, rejects blocked cycles, and
+  checks every edge before producing the rank. ~Dependencies.instantiate~
+  returns the proof-bearing instance directly.
   Its locality proof connects that well-founded evaluation to the ordinary C4
   resolver, including inherited declarations. The resulting instance uses the
   existing certificate and cache APIs.
