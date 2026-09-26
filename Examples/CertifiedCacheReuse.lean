@@ -65,8 +65,8 @@ private def reused : Object.Cache (next.prepare [false, true]) next.state :=
     [false, true] oldCache
 
 private def compared : Object.Cache (next.prepare [false, true]) next.state :=
-  Proof.rebaseInstanceCacheByValue current next (fun _ => inferInstance)
-    [false, true] oldCache
+  Proof.rebaseInstanceCacheByValue current next [false, true]
+    (fun _ _ => inferInstance) oldCache
 
 #guard oldCache.peek false == some (some 10)
 #guard oldCache.peek true == some (some 20)
@@ -128,8 +128,8 @@ private def reused : Object.Cache (next.prepare [false, true]) next.state :=
     [false, true] oldCache
 
 private def compared : Object.Cache (next.prepare [false, true]) next.state :=
-  Proof.rebaseInstanceCacheByValue current next (fun _ => inferInstance)
-    [false, true] oldCache
+  Proof.rebaseInstanceCacheByValue current next [false, true]
+    (fun _ _ => inferInstance) oldCache
 
 #guard oldCache.peek false == some (some 21)
 #guard oldCache.peek true == some (some 20)

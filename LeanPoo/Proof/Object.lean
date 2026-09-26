@@ -29,28 +29,20 @@ def rebaseInstanceCache {Key : Type} {Value : Key → Type}
       exact ((congrFun aligned key).trans
         (patch.frame current.state key untouched)).symm)
 
-/-- Reuse exactly the evaluated entries whose old and new instance values
-compare equal. This checks computed dependents too, without asking the caller
-to provide a patch footprint. Comparison may evaluate both instance states. -/
+/-- Reuse exactly the evaluated entries whose cached and new resolved values
+compare equal. This checks computed dependents without a patch footprint and
+does not recompute the old instance. -/
 def rebaseInstanceCacheByValue {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     {oldPlan newPlan : Object.Plan Key Value}
     (current : Object.Instance Key Value oldPlan)
     (next : Object.Instance Key Value newPlan)
-    (decideSame : (key : Key) → Decidable (current.state key = next.state key))
     (keys : List Key)
+    (decideSame : (key : Key) → (value : Option (Value key)) →
+      Decidable (value = (next.prepare keys).resolve key next.state))
     (cache : Object.Cache (current.prepare keys) current.state) :
     Object.Cache (next.prepare keys) next.state :=
-  letI : DecidablePred (fun key => current.state key = next.state key) := decideSame
-  cache.rebase (next.prepare keys) next.state
-    (fun key => current.state key = next.state key) (by
-      intro key same
-      rw [(current.prepare keys).resolve_sound,
-        (next.prepare keys).resolve_sound]
-      change oldPlan.resolve key current.state =
-        newPlan.resolve key next.state
-      rw [current.agrees key, next.agrees key]
-      exact same)
+  cache.rebaseByValue (next.prepare keys) next.state decideSame
 
 /-- Proof obligations over the resolved object's values. -/
 def proofObjectOfInstance {Key : Type} {Value : Key → Type}

@@ -51,6 +51,25 @@ def Cache.rebase {before : Prepared Key Value} {oldSelf : Self Key Value}
     ({} : Std.DHashMap Key (CachedValue after newSelf))
   ⟨entries⟩
 
+/-- Compare an already evaluated entry with the new resolver before carrying
+it forward. The old resolver is not evaluated again: its result is the
+proof-bearing value in the cache. -/
+def Cache.rebaseByValue {before : Prepared Key Value} {oldSelf : Self Key Value}
+    (cache : Cache before oldSelf) (after : Prepared Key Value)
+    (newSelf : Self Key Value)
+    (decideSame : (key : Key) → (value : Option (Value key)) →
+      Decidable (value = after.resolve key newSelf)) :
+    Cache after newSelf :=
+  let entries := (Cache.entries cache).toList.foldl (fun result item =>
+    let key := item.1
+    let value := CachedValue.value (prepared := before) (self := oldSelf)
+      (key := key) item.2
+    if same : value = after.resolve key newSelf then
+      result.insert key ⟨value, same⟩
+    else result)
+    ({} : Std.DHashMap Key (CachedValue after newSelf))
+  ⟨entries⟩
+
 /-- A miss evaluates one slot and caches an actual value; absence leaves the
 cache unchanged, following object.ss .ref. -/
 def Cache.read {prepared : Prepared Key Value} {self : Self Key Value}

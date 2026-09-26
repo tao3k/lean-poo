@@ -160,9 +160,10 @@ pending list selects exactly affected old obligations and new obligations.
 the next resolved instance, using the same certificate transport as
 ~applyPatch~. ~rebaseInstanceCache~ transports evaluated values outside the
 patch footprint using the old and new instance equations and the patch frame
-proof. ~rebaseInstanceCacheByValue~ compares old and new fixed-point values
-of cached keys, covering computed dependents without a supplied footprint;
-this can force both instances. ~invalidatedNodes~ follows reverse
+proof. ~rebaseInstanceCacheByValue~ compares stored values with the new
+resolver, covering computed dependents without a supplied footprint and
+without rerunning the old resolver; it can force the new instance.
+~invalidatedNodes~ follows reverse
 inheritance edges for structure-level invalidation. Its step is monotone;
 ~Descendant~ indexes an inheritance path by edge count. Lean proves that
 changed nodes remain in the result and that every descendant reachable within
