@@ -14,6 +14,7 @@ check-merge: check-types
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
     lake build LeanPoo.C4.Linearize
+    lake env lean Examples/C4SuffixOrder.lean
 
 # Check the paper's executable prototype nucleus.
 check-mvp:
@@ -55,6 +56,8 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Class
     lake build LeanPoo.Object.Prototype
     lake build LeanPoo.Object.Debug
+    lake env lean Examples/ComputedDefault.lean
+    lake env lean Examples/MapDeclaration.lean
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
@@ -107,6 +110,11 @@ check-po: check-example check-docs
 # Parse every maintained Org page, including the root README.
 check-docs:
     emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (cons "README.org" (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
+
+# Measure wide declaration construction separately from correctness checks.
+benchmark-declaration:
+    lake build LeanPoo.Object.Schema
+    lake env lean --run Examples/DeclarationScale.lean
 
 check: check-proof check-example check-docs
     lake build

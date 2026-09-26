@@ -93,11 +93,12 @@ def ClassSpec.toDeclaration {Key : Type u} {Value : Key → Type v}
     [DecidableEq Key] (classSpec : ClassSpec Key Value) :
     Declaration Key Value :=
   classSpec.effectiveRules.foldl (fun declaration rule =>
+    let declaration := match rule.default with
+      | some value => declaration.withDefault rule.key value
+      | none => declaration
     match rule.compute with
     | some specification => declaration.withSlot rule.key specification
-    | none => match rule.default with
-      | some value => declaration.withDefault rule.key value
-      | none => declaration) Declaration.empty
+    | none => declaration) Declaration.empty
 
 /-- Build a standalone instance from the class prototype using the same C4
 compiler and memoized evaluator as every other object. -/

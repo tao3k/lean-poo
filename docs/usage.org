@@ -62,6 +62,13 @@ linearizer returned that order. ~plus~ rejects an override with multiple
 C++ local parent orders rather than flattening them silently. ~clone~ rejects
 duplicate override keys and validates its new node through C4.
 
+For wide sets of direct values, ~Declaration.fromMap~ sorts the map entries
+once and builds the ordered slot list directly. It avoids repeated list
+replacement during bulk construction. ~fromValues~ retains its
+~DecidableEq~-only key requirement and first-position/last-value behavior for
+duplicate input keys. ~just benchmark-declaration~ measures these paths;
+the fixture is a construction benchmark, not a theorem replay benchmark.
+
 [[file:../Examples/TypedSlots.lean][TypedSlots.lean]] is a standalone Lean example of a key-indexed value family:
 one slot contains ~Bool~, another contains ~Nat~, and a computed slot can
 read final self and its inherited value with those types checked by Lean.

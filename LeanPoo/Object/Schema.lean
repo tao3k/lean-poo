@@ -89,8 +89,11 @@ This is the typed analogue of object<-hash's sorted traversal. -/
 def Declaration.fromMap [DecidableEq Key] [BEq Key] [Hashable Key]
     (entries : Std.DHashMap Key Value) (lessEq : Key → Key → Bool) :
     Declaration Key Value :=
-  Declaration.fromValues (entries.toList.mergeSort
-    (fun left right => lessEq left.1 right.1))
+  let ordered := entries.toList.mergeSort
+    (fun left right => lessEq left.1 right.1)
+  { slots := ordered.map fun ⟨key, value⟩ =>
+      ⟨key, .constant (some value), fun _ => inferInstance⟩
+    defaults := [] }
 
 /-- Translate object.ss object<-fun; values are requested only at lookup. -/
 def Declaration.fromFunction [DecidableEq Key]
