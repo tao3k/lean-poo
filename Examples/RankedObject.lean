@@ -18,24 +18,28 @@ private instance [DecidableEq α] [DecidableEq β] :
 private abbrev Values (_ : Bool) := Nat
 
 private def graph : C4.Graph :=
-  { nodes := [{ name := "Base" }] }
+  { nodes := [{ name := "Base" },
+      { name := "Child", parentOrders := [["Base"]] }] }
 
-private def declaration : Object.Declaration Bool Values :=
-  Object.Declaration.empty
-    |>.withValue true 20
-    |>.withSlot false (.self fun self => (self true).map (· + 1))
+private def base : Object.Declaration Bool Values :=
+  Object.Declaration.empty.withValue true 20
+
+private def child : Object.Declaration Bool Values :=
+  Object.Declaration.empty.withSlot false
+    (.self fun self => (self true).map (· + 1))
 
 private def schema : Object.Schema Bool Values :=
   { graph
     declaration := fun name =>
-      if name == "Base" then some declaration else none }
+      if name == "Base" then some base
+      else if name == "Child" then some child else none }
 
 private def plan : Object.Plan Bool Values :=
   { schema
-    root := "Base"
-    precedence := ["Base"]
+    root := "Child"
+    precedence := ["Child", "Base"]
     valid := by
-      change C4.linearize graph "Base" = .ok ["Base"]
+      change C4.linearize graph "Child" = .ok ["Child", "Base"]
       native_decide }
 
 /-- The computed false slot reads only true, which has smaller rank. -/

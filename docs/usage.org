@@ -118,8 +118,9 @@ for each declared key; an unproductive cycle can diverge. A proof-bearing
 declaration needs an ~Object.Instance~ whose state satisfies the resolver
 equation. ~Object.Ranked~ supplies one without unsafe recursion when the caller
 proves that each resolved slot depends on self only at smaller ranks.
-[[file:../Examples/RankedObject.lean][RankedObject.lean]] constructs a computed slot, its fixed-point instance,
-and a sound cache. This discipline covers well-founded dependencies; it does
+[[file:../Examples/RankedObject.lean][RankedObject.lean]] constructs a child-computed slot over an inherited base
+value, its fixed-point instance, and a sound cache. This discipline covers
+well-founded dependencies; it does
 not decide whether arbitrary Lean slot functions terminate.
 ~Cache.rebase~ is a sound reuse primitive for the explicit immutable cache:
 the caller selects reusable keys and proves equality of their old and new
@@ -130,7 +131,9 @@ for keys outside a patch's *value-change footprint* from the old and new
 slots whose values change must also be in that footprint, even when the edit
 directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates both
 single-slot reuse and a computed dependent that must be invalidated with its
-source slot. The footprint is supplied with a proof of state alignment; this
+source slot. The dependent example now constructs both instances through
+~Object.Ranked~, closes a relation certificate after the patch, and rebases
+the old cache. The footprint is supplied with a proof of state alignment; this
 API does not infer arbitrary slot dependencies. When dependent values have
 decidable equality, ~Proof.rebaseInstanceCacheByValue~ can instead compare each
 stored value with the new resolver. This detects changed computed slots without

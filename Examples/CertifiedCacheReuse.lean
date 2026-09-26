@@ -1,4 +1,5 @@
 import LeanPoo.Proof.Object
+import LeanPoo.Object.Ranked
 
 open LeanPoo
 
@@ -100,17 +101,21 @@ private def plan (changed : Nat) : Object.Plan Bool Values :=
       change C4.linearize graph "Base" = .ok ["Base"]
       native_decide }
 
+private def ranked (changed : Nat) : Object.Ranked Bool Values (plan changed) :=
+  { rank := fun key => if key then 0 else 1
+    dependsOnLower := by
+      intro key left right lower
+      cases key with
+      | false =>
+          change (left true).map (· + 1) = (right true).map (· + 1)
+          rw [lower true (by decide)]
+      | true => rfl }
+
 private def current : Object.Instance Bool Values (plan 20) :=
-  { state := fun key => if key then some 20 else some 21
-    agrees := by
-      intro key
-      cases key <;> native_decide }
+  (ranked 20).instantiate
 
 private def next : Object.Instance Bool Values (plan 30) :=
-  { state := fun key => if key then some 30 else some 31
-    agrees := by
-      intro key
-      cases key <;> native_decide }
+  (ranked 30).instantiate
 
 -- Both the edited slot and its computed dependent changed value.
 private def patch : Proof.Patch Bool (fun key => Option (Values key)) :=
@@ -118,7 +123,7 @@ private def patch : Proof.Patch Bool (fun key => Option (Values key)) :=
 
 private theorem aligned : next.state = patch.apply current.state := by
   funext key
-  cases key <;> rfl
+  cases key <;> native_decide
 
 private def oldCache : Object.Cache (current.prepare [false, true]) current.state :=
   (current.cache [false, true]).force [false, true]
@@ -138,5 +143,44 @@ private def compared : Object.Cache (next.prepare [false, true]) next.state :=
 #guard (reused.read false).1 == some 31
 #guard compared.peek false == none
 #guard compared.peek true == none
+
+private def relation : Proof.Obligation Bool (fun key => Option (Values key)) :=
+  { dependencies := [false, true]
+    holds := fun state => state false = (state true).map (· + 1)
+    stable := by
+      intro before after equal holds
+      calc
+        after false = before false := (equal false (by simp)).symm
+        _ = (before true).map (· + 1) := holds
+        _ = (after true).map (· + 1) := by rw [equal true (by simp)] }
+
+private def certified : Proof.CertifiedObject Bool Values (plan 20) :=
+  { instanceValue := current
+    obligations := [relation]
+    certificate := by
+      intro obligation member
+      have same : obligation = relation := by
+        simpa [Proof.proofObjectOfInstance] using member
+      subst obligation
+      change relation.holds current.state
+      change current.state false = (current.state true).map (· + 1)
+      native_decide }
+
+private def revised : Proof.CertifiedObject Bool Values (plan 30) :=
+  certified.applyPatch patch next aligned (by
+    intro obligation member
+    rcases (Proof.mem_pending_iff _ _ _).mp member with old | fresh
+    · have same : obligation = relation := by
+        simpa [certified, Proof.proofObjectOfInstance] using old.1
+      subst obligation
+      change relation.holds next.state
+      change next.state false = (next.state true).map (· + 1)
+      native_decide
+    · simp [patch, Proof.Patch.setMany] at fresh)
+
+example : relation.holds revised.instanceValue.state :=
+  revised.certificate relation (by
+    change relation ∈ [relation] ++ []
+    simp)
 
 end ComputedDependency

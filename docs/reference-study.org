@@ -116,7 +116,8 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Ranked.lean~ constructs a total fixed-point instance for
   plans whose resolved slots read self only at strictly smaller natural-number
   ranks. The locality proof connects that well-founded evaluation to the
-  ordinary C4 resolver, and the resulting instance uses the existing cache API.
+  ordinary C4 resolver, including inherited declarations. The resulting
+  instance uses the existing certificate and cache APIs.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
   ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
