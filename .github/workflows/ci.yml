@@ -23,7 +23,7 @@ jobs:
           test: false
           lint: false
       - uses: taiki-e/install-action@just
-      - name: Install Org parser
-        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+      - name: Install project shell and Org parser
+        run: sudo apt-get update && sudo apt-get install -y zsh emacs-nox
       - name: Check Lean modules, examples, debug, and Org docs
         run: just check
