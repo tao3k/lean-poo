@@ -70,6 +70,7 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Batch
     lake build LeanPoo.Proof.Invalidation
     lake build LeanPoo.Proof.Object
+    lake build LeanPoo.Proof.Product
 
 # Elaborate the independent PO examples.
 check-example: check-compose

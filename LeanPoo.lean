@@ -25,3 +25,4 @@ import LeanPoo.Object.Prepare
 import LeanPoo.Object.Cache
 import LeanPoo.Proof.Object
 import LeanPoo.Proof.Batch
+import LeanPoo.Proof.Product

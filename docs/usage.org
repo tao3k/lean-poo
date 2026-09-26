@@ -183,6 +183,9 @@ C4 recompilation; ~Lens.compose~ combines two typed lenses.
 | ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
 | ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
 | ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
+| ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
+| ~Proof.Certificate.pair~ | Combine their certificates without replaying either proof. |
+| ~Proof.Patch.left~ / ~right~ | Lift a patch into one side while preserving the other side. |
 
 The domain supplies its concrete keys, values, propositions, and
 instances. Structural node invalidation and value-key dependency
