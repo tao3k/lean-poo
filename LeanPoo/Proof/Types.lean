@@ -28,4 +28,22 @@ structure ProofObject (Key : Type u) (Value : Key → Type v) where
 def Certificate (object : ProofObject Key Value) : Prop :=
   ∀ obligation, obligation ∈ object.obligations → obligation.holds object.state
 
+/-- Attach a relation between existing components without changing their state. -/
+def ProofObject.withObligation (object : ProofObject Key Value)
+    (obligation : Obligation Key Value) : ProofObject Key Value where
+  state := object.state
+  obligations := object.obligations ++ [obligation]
+
+theorem Certificate.withObligation (object : ProofObject Key Value)
+    (certificate : Certificate object)
+    (obligation : Obligation Key Value)
+    (holds : obligation.holds object.state) :
+    Certificate (object.withObligation obligation) := by
+  intro candidate membership
+  rcases List.mem_append.mp membership with old | added
+  · exact certificate candidate old
+  · have same : candidate = obligation := by simpa using added
+    subst candidate
+    exact holds
+
 end LeanPoo.Proof

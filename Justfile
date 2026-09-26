@@ -54,6 +54,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
     lake build LeanPoo.Object.Prototype
+    lake build LeanPoo.Object.Debug
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
@@ -86,6 +87,11 @@ check-example: check-compose
     lake env lean Examples/TypedSlots.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/IntegratedPrototype.lean
+    just check-debug
+
+# Run diagnostic object examples in a bounded Lean process.
+check-debug:
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean
 
 # Compile the complete executable PO core and its usage examples.
 check-po: check-example check-docs

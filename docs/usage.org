@@ -186,12 +186,35 @@ C4 recompilation; ~Lens.compose~ combines two typed lenses.
 | ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
 | ~Proof.Certificate.pair~ | Combine their certificates without replaying either proof. |
 | ~Proof.Patch.left~ / ~right~ | Lift a patch into one side while preserving the other side. |
+| ~Proof.ProofObject.withObligation~ | Attach a relation that spans composed components. |
 
 The domain supplies its concrete keys, values, propositions, and
 instances. Structural node invalidation and value-key dependency
 selection are separate operations. ~append_composeAll~ proves batch append
 agrees with stepwise append; ~unaffected_composeAll_iff~ characterizes proof
 reuse across the entire batch.
+
+* Debugging recursive objects
+
+~Object.Debug.Plan.explain~ reports C4 precedence and the nodes that
+declare a requested slot without forcing its value.
+~Proof.Debug.explainPatch~ reports each obligation's dependencies, the keys
+touched by a patch, and whether it needs a new proof.
+
+For agent-authored recursive slot computations, ~Object.Debug.Program~
+provides an explicit self-read function. ~runTrace fuel key~ returns typed
+enter, resolve, missing, cycle, and exhaustion events alongside the result.
+~run fuel key~ returns only the result. Both report a cycle with its
+complete key path or stop when the fuel budget is exhausted.
+[[file:../Examples/DebugObject.lean][DebugObject.lean]] shows a two-slot
+cycle, a productive dependency, and a fuel exhaustion result.
+The bounded run covers recursive reads made through this interface. Lean cannot
+guarantee termination of arbitrary functions inside a slot body, and
+ordinary ~Memoized.read~ still has the original lazy semantics. Callers
+that need a bounded failure result must use the debug execution interface.
+The public debug API can be imported by downstream users. ~just check-debug~
+checks its examples in a separate Lean process with a 30-second timeout,
+2048 MB Lean memory ceiling, and allocation budget.
 
 * Commands
 
