@@ -178,3 +178,26 @@ executes general open recursion with ~Plan.memoize~. The executable thunk
 knot is partial, so it does not by itself provide the equation required by
 ~Object.Instance~; proof-bearing clients supply that equation explicitly. No
 concrete policy semantics domain is part of this repository yet.
+
+* Paper-derived boundaries
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the
+~ProofObject~ / ~Patch~ / ~Certificate~ interface. Its section 1 identifies
+prototype composition as an associative operation with an identity; Lean's
+~Prototype.compose~ and typed chain have those laws. Sections 4.2 and 4.3
+pair an instance with its reusable prototype and compute an inheritance
+order; ~Memoized~ retains the compiled plan with the lazy instance, while
+the separate C4 source supplies this project's ordering algorithm. Section
+5 derives classes from prototypes for type descriptors; Lean's descriptor
+and class layers use native types rather than Scheme's dynamic MOP.
+
+| Boundary in the paper | Current Lean behavior | Remaining connection |
+|-----------------------+-----------------------+----------------------|
+| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | The reported impact does not yet preserve unaffected runtime thunk values across the edit. Such reuse needs sound dependencies for computed slots, not just an obligation's declared proof dependencies. |
+| Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ therefore still requires a supplied next instance and state-alignment proof. |
+| Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
+
+The first two rows are integration boundaries for this project's incremental
+proof-reuse goal. They do not undo the implemented paper-model construction.
+The paper's optional runtime descriptors and future method-combination
+mechanisms are not a conformance checklist for Lean's static type system.
