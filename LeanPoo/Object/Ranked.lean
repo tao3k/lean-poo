@@ -47,4 +47,70 @@ def Ranked.instantiate {Key : Type u} {Value : Key → Type v}
       rw [same]
       exact (Ranked.eval.eq_1 ranked key).symm }
 
+/-- Explicit self-dependency claims with finite support. The locality
+proof makes the declaration authoritative even though Lean functions are
+otherwise opaque to dependency inspection. -/
+structure Dependencies (Key : Type u) (Value : Key → Type v)
+    (plan : Plan Key Value) where
+  keys : List Key
+  reads : Key → List Key
+  supported : ∀ key dependency, dependency ∈ reads key → key ∈ keys
+  dependsOnlyOn : ∀ key (left right : Self Key Value),
+    (∀ dependency, dependency ∈ reads key →
+      left dependency = right dependency) →
+    plan.resolve key left = plan.resolve key right
+
+inductive DependencyError (Key : Type u) where
+  | blocked (remaining : List Key)
+  | invalidOrder (order : List Key)
+  deriving Repr
+
+/-- A bounded dependency-first scheduler. A blocked remainder contains a
+cycle or a dependency absent from the supplied finite key list. -/
+private def Dependencies.schedule [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (keys : List Key) (reads : Key → List Key) :
+    Except (DependencyError Key) (List Key) :=
+  go keys [] {} keys.length
+where
+  go (remaining done : List Key) (doneSet : Std.HashSet Key) : Nat →
+      Except (DependencyError Key) (List Key)
+    | 0 =>
+        if remaining.isEmpty then .ok done.reverse
+        else .error (.blocked remaining)
+    | fuel + 1 =>
+        if remaining.isEmpty then .ok done.reverse
+        else
+          match remaining.find? (fun key =>
+              (reads key).all fun dependency => doneSet.contains dependency) with
+          | none => .error (.blocked remaining)
+          | some key =>
+              go (remaining.filter (fun candidate => candidate != key))
+                (key :: done) (doneSet.insert key) fuel
+
+/-- Infer a rank from declared dependencies, then check every edge before
+producing a proof-bearing ranked plan. Cycles return the blocked keys. -/
+def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
+    Except (DependencyError Key) (Ranked Key Value plan) := do
+  let order ← Dependencies.schedule spec.keys spec.reads
+  let rank := fun key => order.idxOf key
+  if checked : spec.keys.all (fun key =>
+      (spec.reads key).all (fun dependency =>
+        decide (rank dependency < rank key))) = true then
+    return {
+      rank
+      dependsOnLower := by
+        intro key left right lower
+        apply spec.dependsOnlyOn key left right
+        intro dependency membership
+        apply lower dependency
+        have keyChecked := List.all_eq_true.mp checked key
+          (spec.supported key dependency membership)
+        have edgeChecked :=
+          List.all_eq_true.mp keyChecked dependency membership
+        exact of_decide_eq_true edgeChecked }
+  else
+    throw (.invalidOrder order)
+
 end LeanPoo.Object

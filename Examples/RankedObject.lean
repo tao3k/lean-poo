@@ -53,6 +53,64 @@ private def ranked : Object.Ranked Bool Values plan :=
           rw [lower true (by decide)]
       | true => rfl }
 
+private def dependencies : Object.Dependencies Bool Values plan :=
+  { keys := [false, true]
+    reads := fun key => if key then [] else [true]
+    supported := by intro key dependency membership; cases key <;> simp
+    dependsOnlyOn := by
+      intro key left right equal
+      cases key with
+      | false =>
+          change (left true).map (· + 1) = (right true).map (· + 1)
+          rw [equal true (by simp)]
+      | true => rfl }
+
+private def inferred : Except (Object.DependencyError Bool)
+    (Object.Instance Bool Values plan) :=
+  dependencies.inferRanked.map Object.Ranked.instantiate
+
+#guard match inferred with
+  | .ok instanceValue =>
+      instanceValue.state true == some 20 &&
+      instanceValue.state false == some 21
+  | .error _ => false
+
+private def cyclic : Object.Dependencies Bool Values plan :=
+  { keys := [false, true]
+    reads := fun key => if key then [false] else [true]
+    supported := by intro key dependency membership; cases key <;> simp
+    dependsOnlyOn := by
+      intro key left right equal
+      cases key with
+      | false =>
+          change (left true).map (· + 1) = (right true).map (· + 1)
+          rw [equal true (by simp)]
+      | true => rfl }
+
+#guard match cyclic.inferRanked with
+  | .error (.blocked remaining) => remaining == [false, true]
+  | _ => false
+
+private def missingSource : Object.Dependencies Bool Values plan :=
+  { keys := [false]
+    reads := fun key => if key then [] else [true]
+    supported := by
+      intro key dependency membership
+      cases key with
+      | false => simp
+      | true => simp at membership
+    dependsOnlyOn := by
+      intro key left right equal
+      cases key with
+      | false =>
+          change (left true).map (· + 1) = (right true).map (· + 1)
+          rw [equal true (by simp)]
+      | true => rfl }
+
+#guard match missingSource.inferRanked with
+  | .error (.blocked remaining) => remaining == [false]
+  | _ => false
+
 private def object : Object.Instance Bool Values plan :=
   ranked.instantiate
 
