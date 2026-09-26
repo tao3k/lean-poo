@@ -28,6 +28,29 @@ def Cache.peek {prepared : Prepared Key Value} {self : Self Key Value}
   ((Cache.entries cache).get? key).map
     (CachedValue.value (prepared := prepared) (self := self) (key := key))
 
+/-- Carry previously evaluated entries to a new resolver only where the
+caller proves that the resolved value is unchanged. A rejected entry is
+absent from the new cache and will be evaluated by the ordinary read path. -/
+def Cache.rebase {before : Prepared Key Value} {oldSelf : Self Key Value}
+    (cache : Cache before oldSelf) (after : Prepared Key Value)
+    (newSelf : Self Key Value) (reusable : Key → Prop)
+    [DecidablePred reusable]
+    (stable : ∀ key, reusable key →
+      before.resolve key oldSelf = after.resolve key newSelf) :
+    Cache after newSelf :=
+  let entries := (Cache.entries cache).toList.foldl (fun result item =>
+    let key := item.1
+    let cached := item.2
+    if canReuse : reusable key then
+      result.insert key
+        ⟨CachedValue.value (prepared := before) (self := oldSelf)
+            (key := key) cached,
+          (CachedValue.sound (prepared := before) (self := oldSelf)
+            (key := key) cached).trans (stable key canReuse)⟩
+    else result)
+    ({} : Std.DHashMap Key (CachedValue after newSelf))
+  ⟨entries⟩
+
 /-- A miss evaluates one slot and caches an actual value; absence leaves the
 cache unchanged, following object.ss .ref. -/
 def Cache.read {prepared : Prepared Key Value} {self : Self Key Value}

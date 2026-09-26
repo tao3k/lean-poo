@@ -96,6 +96,7 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~LeanPoo.prepareDeclared~ | Store assembled slot functions in a dependent hash map. |
 | ~Cache.read~ / ~Cache.ref~ | Return a value and an updated immutable instance cache. |
 | ~Cache.peek~ | Inspect an existing cache entry without evaluating a slot. |
+| ~Cache.rebase~ | Carry only selected evaluated entries into a new resolver and self, with a proof that each retained result is unchanged. |
 | ~Cache.force~ | Fill cache entries for a finite set of keys. |
 | ~Object.Closed.instantiate~ | Construct an instance when slots are independent of self. |
 | ~Object.Instance.prepare~ / ~cache~ | Prepare and cache slots for one fixed-point instance. |
@@ -114,6 +115,15 @@ slots do not grow the value cache. ~memoize~ uses Lean's call-by-need ~Thunk~
 for each declared key; an unproductive cycle can diverge. A proof-bearing
 declaration needs an explicitly supplied ~Object.Instance~ whose state satisfies the
 resolver equation.
+~Cache.rebase~ is a sound reuse primitive for the explicit immutable cache:
+the caller selects reusable keys and proves equality of their old and new
+resolved values. A key without that proof is omitted and follows the ordinary
+read path on the new object. ~Proof.rebaseInstanceCache~ derives that equality
+for keys outside a patch's *value-change footprint* from the old and new
+~Object.Instance~ equations, the patch frame, and state alignment. Computed
+slots whose values change must also be in that footprint, even when the edit
+directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates the
+transfer and recomputation.
 Prototype revisions return a fresh plan and memoized instance; an already
 instantiated object retains its values.
 
@@ -190,6 +200,7 @@ C4 recompilation; ~Lens.compose~ combines two typed lenses.
 | ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
 | ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
 | ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
+| ~Proof.rebaseInstanceCache~ | Preserve cached values outside a proved patch footprint while rebinding to a new C4-valid instance. |
 | ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
 | ~Proof.Certificate.pair~ | Combine their certificates without replaying either proof. |
 | ~Proof.Patch.left~ / ~right~ | Lift a patch into one side while preserving the other side. |

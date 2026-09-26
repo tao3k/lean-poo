@@ -20,7 +20,7 @@ inductive Error where
   | inconsistentOrder
   | incompatibleSuffixes
   | suffixOrderViolation
-  deriving Repr, BEq, Inhabited
+  deriving Repr, BEq, DecidableEq, Inhabited
 
 /-- The metadata C4 needs while walking an inheritance graph. -/
 structure Linearization where

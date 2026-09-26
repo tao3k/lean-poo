@@ -58,6 +58,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
+    lake env lean Examples/CertifiedCacheReuse.lean
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
