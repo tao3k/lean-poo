@@ -1,0 +1,180 @@
+#+TITLE: POOF, Gerbil-POO, and C4-Mixins: source map
+
+| Repository | Source | Role |
+|------------+--------+------|
+| [[https://github.com/metareflection/poof][POOF]] | ~poof-code-only.rkt~ | Functional account and executable Racket examples |
+| [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] | ~proto.ss~, ~object.ss~, ~mop.ss~, ~type.ss~ | Prototype, object, and expression layers |
+| [[https://github.com/fare/c4-mixins][C4-Mixins]] | ~include/c4/linearize.hpp~ | C++20 C4 linearizer |
+
+* What the sources establish
+
+1. *Start with prototype composition and instantiation.* POOF's
+   ~poof-code-only.rkt~ defines ~fix~ and ~mix~, then demonstrates slot
+   constructors that can use ~self~, an inherited value, or both. Gerbil-POO's
+   ~proto.ss~ gives the corresponding small ~instantiate-proto~,
+   ~compose-proto~, and ~instantiate-protos~ layer. This is the smallest
+   semantic core for the later Lean object layer.
+2. *Keep a prototype distinct from its computed instance.* Gerbil-POO's
+   ~doc/poo.md~ explains the distinction, while ~object.ss~ stores direct
+   slots, supers, computed slot functions, a precedence list, and a cached
+   instance. A Lean model should say which of these are mathematical values
+   and which are implementation caches before adopting the Gerbil structure.
+3. *Treat multiple inheritance as a separate layer.* The POOF Racket example
+   contains ~c3-compute-precedence-list~, not C4. Gerbil-POO
+   ~object.ss~ calls Gerbil runtime ~c4-linearize~, checks cycles, and uses the
+   resulting order to assemble inherited slot functions. POOF is useful for
+   the prototype model, but cannot by itself serve as a C4 oracle.
+4. *Add types and generic dispatch after the object core.* Gerbil-POO's
+   ~mop.ss~ defines generic functions that dispatch through prototype slots
+   and runtime type descriptors; ~type.ss~ then builds tuples, lists, unions,
+   records, and other descriptors. These are useful reference designs, but
+   should not be presumed part of the minimal POO model.
+5. *Use the actual C++ source for C4.* POOF's ~cpp/README.md~ points to
+   ~fare/c4-mixins~; it does not contain the implementation. C4-Mixins has a
+   generic linearizer in ~include/c4/linearize.hpp~, a mixin adapter in
+   ~include/c4/mixins.hpp~. Its API supports multiple local parent orders and
+   suffix classes; Gerbil-POO's object surface does not expose all those inputs.
+
+* Lean rewrite status
+
+The Lean modules are separated by semantic responsibility:
+
+- ~LeanPoo/C4/Types.lean~ owns named nodes, local parent orders, suffix flags,
+  errors, and graph validation.
+- ~LeanPoo/C4/Merge.lean~ owns the ordered C3 candidate merge used inside C4.
+- ~LeanPoo/C4/Linearize.lean~ owns the C4 translation: parent precedence lists,
+  inherited suffix selection, suffix-tail restriction, prefix merge, and final
+  precedence list. It validates only the root's reachable inheritance graph;
+  unrelated declarations do not affect that root. All loops are bounded by
+  finite input sizes; no ~partial def~ is used.
+- ~LeanPoo/Prototype/Compose.lean~ owns the open-recursive prototype type,
+  identity, pairwise composition, and a type-indexed ~Chain~ for changing
+  intermediate types. Lean proves identity, associativity, typed chain
+  concatenation, and agreement between chain interpretation and composition.
+  This realizes the POOF paper's composition laws and part of its hypothetical
+  dependent type notation directly in Lean. Homogeneous list composition reuses that chain.
+  ~instantiate~ and ~instantiateAll~
+  provide the function-valued fixed point from ~proto.ss~.
+- ~LeanPoo/Prototype/SlotSpec.lean~ owns the four semantic slot-spec forms and
+  their single evaluator. Its delayed ~Method.compose~ is the one composition
+  operation used to assemble inherited slot computations.
+- ~LeanPoo/Object/Schema.lean~ gives slots dependent value types and keeps
+  ordered direct slot/default entries as the only declaration source, separate
+  from the C4 graph. One generic dependent ~Entry~ supplies typed lookup and
+  ordered replacement for both entry kinds. ~fromValues~ and ~fromFunction~ translate the Gerbil
+  direct-value and lazy-function constructors. ~fromMap~ accepts a typed
+  dependent map and orders keys with a caller-supplied comparator.
+- ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
+  in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
+  ~resolve_compiled~ proves it agrees with the one-shot entry point. ~Plan.ref~
+  reports a missing required slot explicitly.
+- ~LeanPoo/Compose.lean~ exposes ~LeanPoo.mix~, ~LeanPoo.extend~, and
+  ~LeanPoo.plus~, and ~LeanPoo.clone~ as immutable graph constructors that
+  compile a C4 plan. They correspond to Gerbil's ~.mix~, ~.extend~, ~.+~,
+  and ~.cc~. ~.+~ accepts the flat parent order exposed by Gerbil and rejects
+  C++ multiple-order input. ~clone~ preserves the source node's topology and
+  defaults, replaces only requested direct slots, and rejects duplicate keys.
+- ~LeanPoo/Slots.lean~ exposes ~LeanPoo.hasSlot~, ~LeanPoo.allSlots~,
+  and ~LeanPoo.prepareDeclared~. Enumeration follows the C4 chain from least
+  to most specific and reads keys directly from the ordered declarations.
+  Instance preparation, cache creation, and cache forcing can consume that
+  same order without a caller-provided key list. ~collectValues~ handles
+  caller-selected keys once; ~Object.Instance.values~ and ~Memoized.values~
+  reuse it for the full declaration order.
+- ~LeanPoo/Object/Memo.lean~ ties a lazy thunk table across declared keys.
+  ~Plan.memoize~ builds an executable open-recursive object with one shared
+  call-by-need cell per key; ~Memoized.values~ materializes its values.
+  ~Memoized.extend~, ~mix~, ~plus~, and ~clone~ keep the prototype and
+  executable instance together while deriving a fresh object. ~Memoized.foldSlots~
+  traverses typed values in declaration order. ~Schema.mergeDisjoint~ and
+  ~Memoized.mixWith~ compose separate object families with explicit node-name
+  collision reporting. ~reviseSlot~ and ~reviseDefault~ persistently update an
+  existing prototype declaration, recompile C4, and allocate a fresh lazy
+  instance; ~force~ and ~valuesSorted~ cover eager materialization and sorted
+  export.
+- ~LeanPoo/Object/Prepare.lean~ stores preassembled, dependently typed slot
+  functions in ~Std.DHashMap~ for selected keys. Each entry carries a proof
+  that it computes the same value as ~Plan.resolve~.
+- ~LeanPoo/Object/Cache.lean~ stores evaluated values in an explicit immutable
+  cache. Its read operations return the updated cache, and the soundness
+  theorems connect cached results back to the resolver. ~peek~ inspects only
+  cached values; an absent resolution does not insert an entry.
+- ~LeanPoo/Prototype/Class.lean~ owns composable runtime descriptors and
+  JSON/text/byte codecs. ~Types.lean~ adds heterogeneously typed tuples,
+  descriptor/value pairs, fixed-width integers, integer ranges, and
+  rationals using Lean's type system. A descriptor may supply a validated
+  prototype value for a class slot.
+- ~LeanPoo/Object/Generic.lean~ selects typed methods from instance slots or
+  class/type descriptors. ~Class.lean~ maps typed slot rules to the existing
+  declaration and C4 evaluator, including class inheritance and JSON object
+  reconstruction. ~Lens.lean~ implements persistent slot get/set/modify.
+- ~LeanPoo/Object/Instance.lean~ states the fixed-point equation for an open
+  recursive object. Closed plans can be instantiated directly; instance
+  preparation and caching share the validated plan and final self.
+- ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
+  ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
+  override, obligation transport, pending obligations, descendant
+  invalidation, and certificates over typed object instances.
+  ~Batch.lean~ folds typed patches and proves agreement with sequential append,
+  exact touched-key order, last-write precedence, and the condition for
+  reusing an obligation through every patch in the batch.
+- ~Justfile~ offers module-scoped compilation commands. ~just check~ builds
+  the complete Lean library, executes the integrated examples, and parses
+  every maintained Org page.
+
+The C4 rewrite follows these source operations:
+
+| C4-Mixins ~linearize.hpp~ | Lean translation |
+|---------------------------+------------------|
+| ~concat_unique_all_t<parent_orders>~ | ~parents~ |
+| ~parent_precedence_lists_t~ | ~parentResults~ |
+| ~merge_parent_suffixes_t~ | ~inheritedSuffix~ selection |
+| ~suffix_tail_t~ and suffix order check | ~inheritedTail~ and ~respectsSuffixTail~ |
+| ~remove_all_from_lists_t~ | ~withoutTail~ on candidate lists |
+| ~c3_merge_t~ | ~merge~ |
+| ~cons_t<Node, prefix ++ tail>~ | final ~precedence~ |
+
+Lean evaluates the finite graph in dependency order instead of using C++
+template recursion. ~merge~ follows the C++ ancestor-counting update: count
+candidate tails once and decrement counts when a selected head exposes a new
+head. ~Std.HashMap~ stores both those counts and completed precedence lists;
+~Std.HashSet~ handles duplicate detection and order-preserving deduplication.
+The integrated example executes both a suffix-tail graph and multiple local
+parent orders from C4-Mixins, as well as cycle and conflicting-order
+rejection.
+
+* Proof composition boundary
+
+An obligation declares the keys on which its proposition depends and carries
+a proof that equal values at those keys preserve it. A patch declares its
+touched keys and proves that all other keys retain their values. ~Patch.set~
+constructs the frame proof for a typed single-key override. ~reuse~ then
+transports an existing certificate across an unaffected patch; ~closePending~
+requires fresh proofs only for touched obligations and newly added ones.
+~Patch.then~ applies patches in order, so the later patch receives the state
+produced by the earlier one. ~mem_pending_iff~ proves that the executable
+pending list selects exactly affected old obligations and new obligations.
+~CertifiedObject.applyValues~ binds an ordered batch of typed overrides to
+the next resolved instance, using the same certificate transport as
+~applyPatch~. ~invalidatedNodes~ follows reverse
+inheritance edges for structure-level invalidation. Its step is monotone;
+~Descendant~ indexes an inheritance path by edge count. Lean proves that
+changed nodes remain in the result and that every descendant reachable within
+the graph's finite propagation bound is selected. Conversely, every selected
+node has such a path. ~mem_invalidated_iff_bounded_descendant~ is the exact
+specification of the executable result. It states the bound explicitly rather
+than assuming that arbitrary cyclic paths are short. ~C4.Graph.validate~
+checks name uniqueness and parent references; the linearizer detects cycles
+operationally, but there is not yet a theorem extracting a global rank from a
+successful linearization.
+
+~Object.Instance~ states the self equation for a validated compiled plan, and
+~CertifiedObject~ binds its obligation certificate to that instance. The
+~CertifiedObject.applyPatch~ operation accepts a C4-valid next instance,
+checks that its state is the patch result, and uses ~closePending~ to assemble
+the new certificate from reused and newly discharged obligations. The
+library constructs closed instances with ~Object.Closed.instantiate~ and
+executes general open recursion with ~Plan.memoize~. The executable thunk
+knot is partial, so it does not by itself provide the equation required by
+~Object.Instance~; proof-bearing clients supply that equation explicitly. No
+concrete policy semantics domain is part of this repository yet.

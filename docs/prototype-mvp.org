@@ -1,0 +1,55 @@
+#+TITLE: POOF Prototype MVP
+
+* Purpose
+
+This MVP implements the paper's functional prototype nucleus in Lean. It is
+an executable construction, not a new proof of the POOF model. The public
+import is ~LeanPoo.Prototype.MVP~. The implementation uses Lean functions,
+dependent types, and thunks rather than a host-language object system.
+
+* Paper construction and Lean implementation
+
+| POOF construction | Lean construction | Meaning |
+|-------------------+-------------------+---------|
+| Prototype ~(self, super) -> value~ | ~Proto Self Parent Result~ | Final self and inherited input are distinct. |
+| ~mix~ and identity | ~compose~, ~identity~ | Child wraps parent; both receive final self. |
+| Terminal prototype | ~constant~ | Close a chain with a supplied value. |
+| ~fix~ | ~instantiate~, ~Record.instantiate~ | Tie one shared recursive instance. |
+| Record as key-to-value function | ~Record Key Value~ | A key determines the slot's Lean type. |
+| ~$slot-gen~ | ~Record.slotGen~ | Compute a slot from final self and delayed inherited value. |
+| Slot examples | ~slot~, ~modify~, ~compute~ | Specializations of ~slotGen~. |
+
+The core modules are [[file:../LeanPoo/Prototype/Compose.lean][Compose.lean]] and
+[[file:../LeanPoo/Prototype/Record.lean][Record.lean]]. The shared recursive knot is in
+[[file:../LeanPoo/Prototype/FixedPoint.lean][FixedPoint.lean]]. ~Chain~ is a Lean-native, type-indexed way to compose
+prototypes whose intermediate types differ; the simple ~compose~ operation
+remains the direct paper construction.
+
+* Executable acceptance
+
+Run ~just check-mvp~. It builds the public import and elaborates two
+standalone examples:
+
+- [[file:../Examples/PrototypeFunctions.lean][PrototypeFunctions.lean]] composes function prototypes, uses final-self
+  recursion, and evaluates to ~[27, 8, 0, 1, 27]~.
+- [[file:../Examples/RecordPrototype.lean][RecordPrototype.lean]] composes a computed slot, inherited-slot modification,
+  and constant slots. Its values are ~(some 6, some 2, some 8)~; reversing an
+  override and modifier produces ~(some 6, some 3)~.
+
+The examples exercise the paper's essential distinction between final self
+and inherited value, including the observable effect of composition order.
+
+* MVP boundary
+
+This entry point covers prototype composition, fixed-point instantiation,
+and record slots. Generator conversion, delayed prototypes, first-class
+objects, C4 inheritance, classes, and mutable extensions are subsequent
+layers in this repository. The immediate next layer is documented in
+[[file:prototype-computation.org][Generator and delayed computation]]; see [[file:replication.org][the broader implementation map]] for all
+remaining constructions.
+
+The fixed point is marked ~unsafe~ because arbitrary open recursion may
+diverge. It uses a private cell to share the recursive result. Recursive
+instances may create reference cycles, which Lean's reference-counting
+runtime does not reclaim automatically. This runtime limit is part of the
+MVP's current operational boundary.

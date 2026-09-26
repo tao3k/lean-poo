@@ -1,0 +1,45 @@
+#+TITLE: First-Class Objects in the POOF Prototype
+
+* Construction
+
+The paper combines two aspects of an object: its instance and the prototype
+used to construct it. ~Prototype.Object Self Parent~ retains a delayed
+~result~, its reusable ~prototype~, and the inherited ~base~. The Lean
+structure keeps those roles explicit. ~Object.ofPrototype~ ties one fixed
+point. ~Object.extend~ and ~Object.mix~ compose retained prototypes and
+instantiate a fresh result, so the new layers share one final self.
+
+For key-indexed records, ~Object.recordSlotGen~ receives a delayed final
+self and a delayed inherited slot. It assembles a ~Record~ without forcing
+either computation. A lookup can then read final self, inherit a previous
+slot, or override it. Lean's ~Value : Key → Type~ checks each slot's result
+type. This is the direct typed record analogue of the paper's object-level
+slot generator.
+
+For a compiled C4 object, ~Memoized.toFirstClassObject~ projects the already
+executable object into the same instance/prototype pair. Its current
+instance reads the memoized slot cells; its retained prototype uses the
+validated C4 plan when it is composed again. ~Plan.toFirstClassObject~ is
+the more general projection that does not require hashable slot keys and
+constructs an open-recursive instance directly from the plan.
+
+* Executable acceptance
+
+Run ~just check-first-class~. It includes the earlier prototype stages and
+elaborates two independent examples:
+
+- [[file:../Examples/FirstClassObject.lean][FirstClassObject.lean]] constructs an object, extends it after
+  instantiation, mixes two retained prototypes, and uses a heterogeneous
+  chain. Its observed values are ~(3, 6)~, ~(2, 6)~, and ~10~.
+- [[file:../Examples/FirstClassRecord.lean][FirstClassRecord.lean]] sets ~x=3~ and computes a second slot from final
+  self, producing ~(some 3, some 6)~. Extending the instantiated object with
+  ~x=4~ rebinds that final self and yields ~(some 4, some 8)~.
+
+The full [[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] path also projects a C4 diamond from a
+memoized object and preserves the resulting object across a mutable update.
+
+This layer is the functional instance/prototype pairing. The paper's
+subsequent multiple-inheritance construction requires a precedence graph;
+the repository's C4 object plan supplies that separately. General
+open-recursive instantiation retains the ~unsafe~ divergence and reference
+cycle boundary described in the [[file:prototype-mvp.org][MVP]].
