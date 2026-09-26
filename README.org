@@ -1,17 +1,56 @@
-#+TITLE: lean-poo
+#+TITLE: LeanPoo
 
-A modular Lean implementation of the functional prototype model in
-[[https://github.com/metareflection/poof][POOF]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs object-level implementation choices; Faré's
-[[https://github.com/fare/c4-mixins][C4-Mixins]] is the reference for C4 linearization. Lean types, functions,
-and thunks determine this project's API.
+LeanPoo is a Lean 4 library for prototype-oriented object composition and
+incremental proof reuse. It implements the functional prototype construction
+described in [[https://github.com/metareflection/poof][POOF]] with Lean's types, functions, and thunks. Its C4
+linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
-The [[file:docs/prototype-mvp.org][prototype MVP]] is the smallest executable paper-model entry point.
-[[file:docs/prototype-computation.org][Generator and delayed computation]] form the next constructive layer.
-[[file:docs/first-class-object.org][First-class objects]] retain a prototype with each lazy instance.
-The [[file:docs/replication.org][implementation assessment]] maps the current PO construction to Lean modules,
-an integrated C4-to-object execution path, and its remaining boundaries.
-[[file:docs/usage.org][Usage]] lists the API; the
-[[file:docs/use-case.md][use case]] shows object construction and evaluation.
+The library is domain-neutral: applications supply their own typed keys,
+values, obligations, and dependency graph. It does not define a policy
+language or a domain-specific proof system.
+
+* What it provides
+
+| Layer | Public capability |
+|-------+-------------------|
+| ~LeanPoo.Prototype~ | Open-recursive prototypes, ordered composition, delayed instances, first-class objects, and classes. |
+| ~LeanPoo.C4~ and ~LeanPoo.Object~ | C4 precedence, typed slots, inheritance, override, mix, clone, lazy reads, and persistent revisions. |
+| ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
+| ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
+
+Lean's type system expresses slot families and composition boundaries. The
+general open-recursive fixed point is executable and may diverge; the debug
+API bounds reads made through that API, while the example runner adds process
+time and memory limits. The [[file:docs/replication.org][implementation assessment]] records the precise scope and
+runtime boundary.
+
+* Get started
+
+Install the Lean toolchain named in [[file:lean-toolchain][lean-toolchain]]. Build the library with
+~lake build~. The full project check uses ~just~, ~zsh~, Emacs for Org parsing,
+and a ~timeout~ command:
+
+#+begin_src sh
+lake build
+just check
+#+end_src
+
+The smaller Justfile targets include ~check-c4~, ~check-object~,
+~check-proof~, ~check-debug~, and ~check-docs~. Run ~just --list~ for the full
+command list. The [[file:Examples/IntegratedPrototype.lean][integrated object example]] follows C4 resolution, lazy execution,
+extension, and revision. [[file:Examples/ProofReuseScale.lean][ProofReuseScale.lean]] exercises proof invalidation and reuse;
+[[file:Examples/DebugObject.lean][DebugObject.lean]] demonstrates the public tracing API.
+
+* Documentation
+
+- [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
+- [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the
+  paper-model construction.
+- [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
+- [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
+
+Documentation is maintained in Org. Lean examples live in ~Examples/~;
+the library modules live in ~LeanPoo/~.
 
 * Credits
 
