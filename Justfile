@@ -58,7 +58,6 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
-    lake env lean Examples/CertifiedCacheReuse.lean
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
@@ -76,6 +75,7 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Invalidation
     lake build LeanPoo.Proof.Object
     lake build LeanPoo.Proof.Product
+    lake env lean Examples/CertifiedCacheReuse.lean
     just check-proof-reuse
 
 # Exercise the public invalidation report over a large independent corpus.
