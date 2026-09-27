@@ -10,6 +10,7 @@ import LeanPoo.Prototype.Object
 import LeanPoo.Prototype.Class
 import LeanPoo.Prototype.Types
 import LeanPoo.Prototype.Lens
+import LeanPoo.Prototype.SkewLens
 import LeanPoo.Prototype.SlotSpec
 import LeanPoo.Object.Resolve
 import LeanPoo.Object.Builder

@@ -40,6 +40,7 @@ check-prototype: check-first-class
     lake build LeanPoo.Prototype.Class
     lake build LeanPoo.Prototype.Types
     lake build LeanPoo.Prototype.Lens
+    lake build LeanPoo.Prototype.SkewLens
     lake build LeanPoo.Prototype.SlotSpec
 
 # Check typed generic selection over the object's existing slot evaluator.
@@ -117,6 +118,7 @@ check-example: check-compose
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
     lake env lean Examples/DeclarationBuilder.lean
+    lake env lean Examples/FocusedSpecification.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/IntegratedPrototype.lean
     just check-debug

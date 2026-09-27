@@ -72,9 +72,14 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Builder.lean~ provides a Lean-native expression layer over
   those declarations. Its pure ~StateM~ programs compose with ~do~ notation;
   ~buildOn~ supports reuse, and reduction theorems connect the builder to the
-  existing direct-value and inherited-method operations. This follows the
+  existing direct-value and inherited-method operations. A focused inherited
+  update lifts a monomorphic lens through the same delayed method form. This follows the
   upstream separation between convenient expression and object semantics
   without translating Scheme macro syntax into Lean.
+- ~LeanPoo/Prototype/SkewLens.lean~ implements the paper's distinction between
+  the context viewed by a lens and the extension it updates. Identity and
+  composition are proved associative; a getter/setter pair supplies the
+  monomorphic special case used by nested specification updates.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -284,6 +289,11 @@ instantiate only the final object. Each layer still rejects a duplicate name
 or a revision of an unknown node at the point where it is applied. Arbitrary
 effect layers retain sequential execution, as does direct application to a
 shared mutable identity.
+Section 9 separates a skew lens's viewed context from its extension update;
+~Prototype.SkewLens~ implements this higher-order shape and its composition,
+while ~Builder.focusInherited~ applies a composed field focus within a C4
+declaration. This is a focused specification operation, not a new inheritance
+algorithm.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

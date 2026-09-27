@@ -70,6 +70,11 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    declaration operations. Lean proves that builder values and inherited
    modifiers reduce to those same operations. The builder does not define
    another object evaluator or duplicate the Gerbil macro grammar.
+   ~Prototype.SkewLens~ implements the paper's separate view and extension
+   focus as two typed functions. Its identity and composition laws are proved.
+   A monomorphic lens built from a getter and setter can focus an inherited
+   update on a nested field through ~Builder.focusInherited~. C4 assembles the
+   method; the inherited result remains delayed until the slot is read.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.

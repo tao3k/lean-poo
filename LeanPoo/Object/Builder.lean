@@ -1,4 +1,5 @@
 import LeanPoo.Object.Schema
+import LeanPoo.Prototype.SkewLens
 
 /-!
 Lean's `do` notation provides an ordered, typed declaration surface without
@@ -56,6 +57,13 @@ def modifyInherited {Key : Type u} {Value : Key → Type v}
     Declaration.Builder Key Value PUnit :=
   slot key (.computed fun _ inherited => change (inherited ()))
 
+/-- Lift a focused value change into a delayed inherited slot method. -/
+def focusInherited {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (key : Key)
+    (focus : Prototype.MonoLens (Value key) Part)
+    (change : Part → Part) : Declaration.Builder Key Value PUnit :=
+  modifyInherited key (Option.map (focus.modify change))
+
 end Declaration.Builder
 
 theorem Declaration.buildOn_value {Key : Type u} {Value : Key → Type v}
@@ -72,5 +80,16 @@ theorem Declaration.buildOn_modifyInherited {Key : Type u}
       (Declaration.Builder.modifyInherited key change) =
       declaration.withSlot key
         (.computed fun _ inherited => change (inherited ())) := rfl
+
+theorem Declaration.buildOn_focusInherited {Key : Type u}
+    {Value : Key → Type v} [DecidableEq Key]
+    (declaration : Declaration Key Value) (key : Key)
+    (focus : Prototype.MonoLens (Value key) Part)
+    (change : Part → Part) :
+    Declaration.buildOn declaration
+      (Declaration.Builder.focusInherited key focus change) =
+      declaration.withSlot key
+        (.computed fun _ inherited =>
+          Option.map (focus.modify change) (inherited ())) := rfl
 
 end LeanPoo.Object

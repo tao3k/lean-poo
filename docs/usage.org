@@ -46,6 +46,8 @@ does not require an ~Inhabited~ result type.
 | ~Object.Declaration.empty~ | Start a typed declaration. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
+| ~Prototype.SkewLens~ / ~MonoLens~ | Compose typed views and extension updates; construct a field focus from Lean getter and setter functions. |
+| ~Declaration.Builder.focusInherited~ | Apply a focused change to an inherited slot value while retaining the rest of the value. |
 | ~Declaration.withSlot~ / ~withDefault~ | Add a slot computation or base default at a typed key. |
 | ~Declaration.fromValues~ / ~fromValuesIndexed~ / ~fromFunction~ / ~fromMap~ | Build ordered direct slots from typed values, a hash-indexed value stream, a lazy function, or a sorted dependent map. |
 | ~LeanPoo.mix~ | Add a node with ordered direct supers and compile its C4 plan. |
@@ -80,6 +82,10 @@ read final self and its inherited value with those types checked by Lean.
 builder to express ordered heterogeneous declarations with native ~do~ notation.
 Its direct-value declaration is definitionally equal to the corresponding
 ~withValue~ chain; the example also evaluates an inherited method through C4.
+[[file:../Examples/FocusedSpecification.lean][FocusedSpecification.lean]] composes two
+field focuses, updates one nested retry count through inherited computation,
+and checks that neighboring fields keep their inherited values after C4
+resolution.
 [[file:../Examples/LayeredObject.lean][LayeredObject.lean]] runs a complete ~mix~ / ~extend~ / ~memoize~ / ~read~ path.
 It also clones the executable child with a new direct value. Composition
 reuses the object's prototype information; the derived object receives its
