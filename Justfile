@@ -119,6 +119,7 @@ check-example: check-compose
     lake env lean Examples/TypedSlots.lean
     lake env lean Examples/DeclarationBuilder.lean
     lake env lean Examples/FocusedSpecification.lean
+    lake env lean Examples/SkewExtension.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/IntegratedPrototype.lean
     just check-debug

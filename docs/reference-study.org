@@ -78,8 +78,11 @@ The Lean modules are separated by semantic responsibility:
   without translating Scheme macro syntax into Lean.
 - ~LeanPoo/Prototype/SkewLens.lean~ implements the paper's distinction between
   the context viewed by a lens and the extension it updates. Identity and
-  composition are proved associative; a getter/setter pair supplies the
-  monomorphic special case used by nested specification updates.
+  composition are proved associative. ~SkewLens.focus~ translates the paper's
+  ~skew-ext~ onto the existing open ~Proto~, with a proof that focusing through
+  composed lenses equals successive focusing. ~refocusUpdate~ narrows only
+  the update target; a getter/setter pair supplies the monomorphic special
+  case used by nested specification updates.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -291,6 +294,7 @@ effect layers retain sequential execution, as does direct application to a
 shared mutable identity.
 Section 9 separates a skew lens's viewed context from its extension update;
 ~Prototype.SkewLens~ implements this higher-order shape and its composition,
+and ~SkewLens.focus~ lifts an open prototype by the paper's ~skew-ext~ rule,
 while ~Builder.focusInherited~ applies a composed field focus within a C4
 declaration. This is a focused specification operation, not a new inheritance
 algorithm.

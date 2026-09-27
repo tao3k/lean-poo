@@ -71,7 +71,9 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    modifiers reduce to those same operations. The builder does not define
    another object evaluator or duplicate the Gerbil macro grammar.
    ~Prototype.SkewLens~ implements the paper's separate view and extension
-   focus as two typed functions. Its identity and composition laws are proved.
+   focus as two typed functions. ~SkewLens.focus~ is the paper's ~skew-ext~:
+   it lifts an open ~Proto~ into a wider context. Identity, composition, and
+   agreement between composed and successive focusing are proved.
    A monomorphic lens built from a getter and setter can focus an inherited
    update on a nested field through ~Builder.focusInherited~. C4 assembles the
    method; the inherited result remains delayed until the slot is read.
