@@ -28,17 +28,21 @@ private def child : Object.Declaration String (fun _ => Nat) :=
         fun _ => inferInstance⟩ ]
     defaults := (Object.Declaration.empty.withDefault "x" 5).defaults }
 
-private def observed : Option (List (Option Nat) × List (Option Nat)) := do
+private def observed : Option
+    (List (Option Nat) × List (Option Nat) × List (Option Nat)) := do
   let basePlan ← (LeanPoo.mix empty "Base" [] base).toOption
   let parentPlan ← (LeanPoo.extend basePlan.schema "Parent" "Base" parent).toOption
   let plan ← (LeanPoo.extend parentPlan.schema "Child" "Parent" child).toOption
   let sparse := plan.memoize
   let compiled := plan.memoizeCompiled
+  let indexed := plan.memoizeIndexed
   let keys := ["x", "y", "z", "missing"]
-  return (keys.map sparse.read, keys.map compiled.read)
+  return (keys.map sparse.read, keys.map compiled.read,
+    keys.map indexed.read)
 
 example : observed = some
     ([some 14, some 4, some 18, none],
+     [some 14, some 4, some 18, none],
      [some 14, some 4, some 18, none]) := by
   native_decide
 
@@ -49,6 +53,8 @@ private def evolved : Option Bool := do
   let parentPlan ← (LeanPoo.extend basePlan.schema "Parent" "Base" parent).toOption
   let plan ← (LeanPoo.extend parentPlan.schema "Child" "Parent" child).toOption
   let source := plan.memoizeCompiled
+  let indexedSource := plan.memoizeIndexed
+  let indexedRevised ← (indexedSource.reviseDefault "Child" "x" 7).toOption
   let revised ← (source.reviseDefault "Child" "x" 7).toOption
   let extended ← (revised.extend "Extra"
     (Object.Declaration.empty.withSlot "x"
@@ -61,6 +67,8 @@ private def evolved : Option Bool := do
   let joinedOpposite ← (otherPlan.memoize.mixWith cloned "JoinedOpposite"
     Object.Declaration.empty).toOption
   return source.mode == .compiled && revised.mode == .compiled &&
+    indexedSource.mode == .indexed && indexedRevised.mode == .indexed &&
+    indexedRevised.read "x" == revised.read "x" &&
     extended.mode == .compiled && cloned.mode == .compiled &&
     joined.mode == .compiled && joinedOpposite.mode == .onDemand &&
     revised.read "x" == some 18 &&
@@ -73,7 +81,8 @@ example : evolved = some true := by
   native_decide
 
 /-- The one-pass table also follows the validated C4 diamond order. -/
-private def diamond : Option (List String × Option Nat × Option Nat) := do
+private def diamond : Option
+    (List String × Option Nat × Option Nat × Option Nat) := do
   let root ← (LeanPoo.mix empty "Root" []
     (Object.Declaration.empty.withValue "x" 1)).toOption
   let left ← (LeanPoo.extend root.schema "Left" "Root"
@@ -85,10 +94,11 @@ private def diamond : Option (List String × Option Nat × Option Nat) := do
   let top ← (LeanPoo.mix right.schema "Diamond" ["Left", "Right"]
     (Object.Declaration.empty.withSlot "x"
       (.computed fun _ inherited => (inherited ()).map (· + 3)))).toOption
-  return (top.precedence, top.memoize.read "x", top.memoizeCompiled.read "x")
+  return (top.precedence, top.memoize.read "x", top.memoizeCompiled.read "x",
+    top.memoizeIndexed.read "x")
 
 example : diamond = some
-    (["Diamond", "Left", "Right", "Root"], some 15, some 15) := by
+    (["Diamond", "Left", "Right", "Root"], some 15, some 15, some 15) := by
   native_decide
 
 end CompiledMemoExample

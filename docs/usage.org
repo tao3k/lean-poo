@@ -89,6 +89,7 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Plan.ref~ | Require a slot; absence is ~noApplicableMethod~. |
 | ~Plan.memoize~ | Build a shared lazy instance of an open-recursive plan. |
 | ~Plan.memoizeCompiled~ | Assemble the effective method table once, then keep values lazy; useful for dense reads of a wide object. |
+| ~Plan.memoizeIndexed~ | Index every declaration once, then compose a slot's method when its value is forced; ~IndexedPlan.resolve_sound~ proves its resolver agrees with ~Plan.resolve~ for every key and open self. |
 | ~Memoized.read~ / ~ref~ / ~refWith~ / ~values~ | Read one slot, handle a missing slot explicitly, or materialize all slots from the shared instance. |
 | ~LeanPoo.hasSlot~ | Check whether a key is declared in the C4 chain. |
 | ~LeanPoo.hasSlots~ | Check several required keys in one compiled plan. |
@@ -128,7 +129,10 @@ for every key and open self. ~Entry.toMap_get?~ separately proves that the
 compiled path's local slot table keeps last-write-wins declarations.
 The optimized table is an executable projection; it does not itself carry a
 Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
-read many declared slots; sparse reads can favor ~memoize~.
+read many declared slots. ~memoizeIndexed~ preindexes each declaration and
+keeps the same lazy values; its resolver has a general Lean soundness theorem.
+The two accelerated paths have different construction/read costs, while
+sparse reads can favor ~memoize~.
 ~Memoized.mode~ records the chosen strategy. Derived objects from ~extend~,
 ~mix~, ~plus~, ~clone~, and declaration revision retain that strategy; when
 ~mixWith~ joins independent families, the left receiver supplies it.
@@ -382,8 +386,9 @@ corpus.
 declaration-only revision on a synthetic 64-node chain. It measures topology
 updates, not object reads or cross-platform performance.
 ~just benchmark-memoization~ compares sparse and dense reads of 256 direct
-slots through the lazy and compiled method paths. It is a synthetic local
-measurement; the workload should determine which constructor to use.
+slots through the on-demand, one-pass compiled, and indexed paths. It is a synthetic local
+measurement and also runs a 64-node chain. The workload should determine
+which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.

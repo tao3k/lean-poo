@@ -73,6 +73,11 @@ The Lean modules are separated by semantic responsibility:
   specific, and ~Plan.resolve_eq_compileSlot~ proves equality with the
   original most-specific-first C4 fold for every key and open self. ~Plan.ref~
   reports a missing required slot explicitly.
+- ~LeanPoo/Object/Indexed.lean~ indexes each declaration's defaults and slot
+  methods in dependent hash maps. ~IndexedPlan~ carries an alignment proof;
+  ~IndexedPlan.resolve_sound~ proves its resolver equals ~Plan.resolve~ for
+  every key and open self. The construction uses ~Entry.toMap_get?~ and the
+  same C4 parent-first fold.
 - ~LeanPoo/Compose.lean~ exposes ~LeanPoo.mix~, ~LeanPoo.extend~, and
   ~LeanPoo.plus~, and ~LeanPoo.clone~ as immutable graph constructors that
   compile a C4 plan. They correspond to Gerbil's ~.mix~, ~.extend~, ~.+~,
@@ -96,8 +101,10 @@ The Lean modules are separated by semantic responsibility:
   behavior, including a C4 diamond. The forward-fold theorem proves the
   composition order, and ~Entry.toMap_get?~ proves the local duplicate-slot
   normalization used by the table builder. A general theorem about the
-  resulting cross-node hash table remains open. The executable
-  object's ~ResolutionMode~ keeps that method-building choice through derived
+  resulting cross-node hash table remains open. ~Plan.memoizeIndexed~ has a
+  general resolver soundness theorem and a different performance profile.
+  The executable object's ~ResolutionMode~ keeps the chosen method-building
+  strategy through derived
   objects and mutable revisions; mixing independent objects follows the left
   receiver's mode.
   ~Memoized.extend~, ~mix~, ~plus~, and ~clone~ keep the prototype and

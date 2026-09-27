@@ -13,24 +13,27 @@ private def plan (count : Nat) : Except C4.Error
         if name == "Base" then some declaration else none }
   Object.compile schema "Base"
 
-private def sample (compiledMethods dense : Bool) (rounds count : Nat)
+private def sample (mode : Object.ResolutionMode) (dense : Bool) (rounds count : Nat)
     (source : Object.Plan Nat (fun _ => Nat)) : IO Unit := do
   let started ← IO.monoNanosNow
   let mut checksum := 0
   for _ in [:rounds] do
-    let object := if compiledMethods then source.memoizeCompiled
-      else source.memoize
+    let object := source.memoizeUsing mode
     if dense then
       for key in [:count] do
         checksum := checksum + (object.read key).getD 0
     else
       checksum := checksum + (object.read (count - 1)).getD 0
   let elapsedUs := ((← IO.monoNanosNow) - started) / 1000
-  IO.println s!"compiled={compiledMethods} dense={dense} keys={count} rounds={rounds} elapsed_us={elapsedUs} checksum={checksum}"
+  let modeName := match mode with
+    | .onDemand => "onDemand"
+    | .compiled => "compiled"
+    | .indexed => "indexed"
+  IO.println s!"mode={modeName} dense={dense} keys={count} rounds={rounds} elapsed_us={elapsedUs} checksum={checksum}"
 
 def main : IO Unit := do
   let .ok source := plan 256 | throw (IO.userError "C4 plan failed")
-  sample false false 10 256 source
-  sample true false 10 256 source
-  sample false true 10 256 source
-  sample true true 10 256 source
+  for dense in [false, true] do
+    for mode in [Object.ResolutionMode.onDemand,
+        .compiled, .indexed] do
+      sample mode dense 10 256 source

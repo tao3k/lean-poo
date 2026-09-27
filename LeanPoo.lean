@@ -12,6 +12,7 @@ import LeanPoo.Prototype.Types
 import LeanPoo.Prototype.Lens
 import LeanPoo.Prototype.SlotSpec
 import LeanPoo.Object.Resolve
+import LeanPoo.Object.Indexed
 import LeanPoo.Object.Instance
 import LeanPoo.Object.Ranked
 import LeanPoo.Object.Incremental

@@ -67,6 +67,14 @@ private def run : IO Bool := do
       (← layers.instantiate basePlan.memoizeCompiled).toOption
     | return false
   let inheritedSnapshot ← inheritedMode.snapshot
+  let some indexedObject :=
+      (← layers.instantiate basePlan.memoizeIndexed).toOption
+    | return false
+  let indexedBefore ← indexedObject.read "count"
+  let indexedUpdated ← indexedObject.reviseDeclaration "Base"
+    (fun declaration => declaration.withValue "count" 4)
+  let indexedSnapshot ← indexedObject.snapshot
+  let indexedAfter ← indexedObject.read "count"
   let update := Prototype.MutableProto.compose
     (.revise "Base" fun declaration => declaration.withValue "count" 4)
     layers
@@ -118,6 +126,8 @@ private def run : IO Bool := do
     compiledSnapshot.mode == .compiled &&
     compiledRevisedCount == some 10 &&
     inheritedSnapshot.mode == .compiled &&
+    indexedBefore == firstCount && indexedUpdated.toOption.isSome &&
+    indexedSnapshot.mode == .indexed && indexedAfter == some 10 &&
     firstCount == some 6 && firstDerived == some 16 &&
     sequentialSucceeded &&
     sequentialCount == firstCount && sequentialDerived == firstDerived &&

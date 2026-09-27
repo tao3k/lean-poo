@@ -1,4 +1,5 @@
 import LeanPoo.Slots
+import LeanPoo.Object.Indexed
 
 namespace LeanPoo.Object
 
@@ -24,6 +25,7 @@ private partial def Plan.buildThunks {Key : Type u} {Value : Key → Type v}
 inductive ResolutionMode where
   | onDemand
   | compiled
+  | indexed
   deriving Repr, DecidableEq
 
 structure Memoized (Key : Type u) (Value : Key → Type v)
@@ -78,6 +80,14 @@ def Plan.memoizeCompiled {Key : Type u} {Value : Key → Type v}
       | none => none
   ⟨plan, plan.buildThunks keys resolve, .compiled⟩
 
+/-- Index direct declarations once and retain lazy slot values. The index's
+resolver is proved equal to `Plan.resolve` for every key and open self. -/
+def Plan.memoizeIndexed {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) : Memoized Key Value :=
+  let indexed := plan.index
+  ⟨plan, plan.buildThunks (LeanPoo.allSlots plan) indexed.resolve, .indexed⟩
+
 /-- Select how effective methods are built while retaining lazy values. -/
 def Plan.memoizeUsing {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -85,6 +95,7 @@ def Plan.memoizeUsing {Key : Type u} {Value : Key → Type v}
   match mode with
   | .onDemand => plan.memoize
   | .compiled => plan.memoizeCompiled
+  | .indexed => plan.memoizeIndexed
 
 /-- Rebuild a derived object with the receiver's resolution strategy. -/
 def Memoized.rebuild {Key : Type u} {Value : Key → Type v}

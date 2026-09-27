@@ -50,6 +50,7 @@ check-generic: check-prototype
 check-object: check-c4 check-generic
     lake build LeanPoo.Object.Schema
     lake build LeanPoo.Object.Resolve
+    lake build LeanPoo.Object.Indexed
     lake build LeanPoo.Object.Instance
     lake build LeanPoo.Object.Ranked
     lake build LeanPoo.Object.Incremental
@@ -140,10 +141,11 @@ benchmark-revision:
     lake build LeanPoo.Object.Resolve
     lake env lean --run Examples/RevisionScale.lean
 
-# Compare lazy per-slot compilation with a Gerbil-style compiled method table.
+# Compare demand-driven, one-pass, and proof-backed indexed method resolution.
 benchmark-memoization:
     lake build LeanPoo.Object.Memo
     lake env lean --run Examples/MemoizationScale.lean
+    lake env lean --run Examples/MemoizationChainScale.lean
 
 # Compare sequential layer installation with one private final allocation.
 benchmark-mutable-prototype:
