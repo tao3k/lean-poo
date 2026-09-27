@@ -4,16 +4,17 @@ namespace LeanPoo.Object
 
 universe u v
 
-/-- One memoizing thunk per declared slot. The recursive reference to the
-table ties the open-recursive knot without rebuilding inherited methods. -/
+/-- Allocate one memoizing thunk per declared slot using the caller's method
+resolver. The recursive table ties the final self exactly once. -/
 private partial def Plan.buildThunks {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
-    (plan : Plan Key Value) :
+    (_plan : Plan Key Value) (keys : List Key)
+    (resolve : (key : Key) → Self Key Value → Option (Value key)) :
     Std.DHashMap Key (fun key => Thunk (Option (Value key))) :=
   let rec table : Std.DHashMap Key (fun key => Thunk (Option (Value key))) :=
-    (LeanPoo.allSlots plan).foldl (fun current key =>
+    keys.foldl (fun current key =>
       current.insert key <| Thunk.mk (fun _ =>
-        plan.resolve key (fun nextKey =>
+        resolve key (fun nextKey =>
           match table.get? nextKey with
           | some thunk => thunk.get
           | none => none))) {}
@@ -29,7 +30,49 @@ structure Memoized (Key : Type u) (Value : Key → Type v)
 def Plan.memoize {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) : Memoized Key Value :=
-  ⟨plan, plan.buildThunks⟩
+  ⟨plan, plan.buildThunks (LeanPoo.allSlots plan) plan.resolve⟩
+
+/-- Compile defaults and effective methods in one least-specific-to-most-
+specific traversal, following Gerbil-POO's method-table construction. The
+method algebra is still `SlotSpec.toMethod` and `Method.compose`. -/
+private def Plan.compileEffective {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) (keys : List Key) :
+    Std.DHashMap Key (fun key => Self Key Value → Option (Value key)) := Id.run do
+  let mut defaults : Std.DHashMap Key Value := {}
+  let mut methods : Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key))) := {}
+  for name in plan.precedence.reverse do
+    if let some declaration := plan.schema.declaration name then
+      for entry in declaration.defaults do
+        defaults := defaults.insert entry.key entry.value
+      let localSlots := declaration.slots.foldl (fun table entry =>
+        table.insert entry.key entry.value)
+        ({} : Std.DHashMap Key (SlotPayload Key Value))
+      for entry in localSlots.toList do
+        let inherited := (methods.get? entry.1).getD Prototype.Method.identity
+        methods := methods.insert entry.1
+          (Prototype.Method.compose entry.2.toMethod inherited)
+  let mut effective : Std.DHashMap Key
+      (fun key => Self Key Value → Option (Value key)) := {}
+  for key in keys do
+    let method := (methods.get? key).getD Prototype.Method.identity
+    let base := defaults.get? key
+    effective := effective.insert key (fun self => method self (fun _ => base))
+  return effective
+
+/-- Precompute every effective method in one pass, then keep slot values
+lazy. This favors objects whose callers read many declared slots. -/
+def Plan.memoizeCompiled {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) : Memoized Key Value :=
+  let keys := LeanPoo.allSlots plan
+  let effective := plan.compileEffective keys
+  let resolve : (key : Key) → Self Key Value → Option (Value key) :=
+    fun key self => match effective.get? key with
+      | some method => method self
+      | none => none
+  ⟨plan, plan.buildThunks keys resolve⟩
 
 /-- An executable object can itself be extended: the new object keeps the
 source schema and receives a fresh lazy instance. -/

@@ -84,13 +84,18 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Memo.lean~ ties a lazy thunk table across declared keys.
   ~Plan.memoize~ builds an executable open-recursive object with one shared
   call-by-need cell per key; ~Memoized.values~ materializes its values.
+  ~Plan.memoizeCompiled~ optionally assembles effective methods in one
+  base-to-child pass before creating those cells, reflecting Gerbil-POO's
+  ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
+  ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
+  behavior, while a general equivalence theorem remains open.
   ~Memoized.extend~, ~mix~, ~plus~, and ~clone~ keep the prototype and
   executable instance together while deriving a fresh object. ~Memoized.foldSlots~
   traverses typed values in declaration order. ~Schema.mergeDisjoint~ and
   ~Memoized.mixWith~ compose separate object families with explicit node-name
   collision reporting. ~reviseSlot~ and ~reviseDefault~ persistently update an
-  existing prototype declaration, recompile C4, and allocate a fresh lazy
-  instance; ~force~ and ~valuesSorted~ cover eager materialization and sorted
+  existing prototype declaration, preserve C4 when topology is unchanged,
+  and allocate a fresh lazy instance; ~force~ and ~valuesSorted~ cover eager materialization and sorted
   export.
 - ~LeanPoo/Object/Prepare.lean~ stores preassembled, dependently typed slot
   functions in ~Std.DHashMap~ for selected keys. Each entry carries a proof
@@ -224,6 +229,12 @@ order; ~Memoized~ retains the compiled plan with the lazy instance, while
 the separate C4 source supplies this project's ordering algorithm. Section
 5 derives classes from prototypes for type descriptors; Lean's descriptor
 and class layers use native types rather than Scheme's dynamic MOP.
+Section 6.1.3 expresses mutable prototypes as effects on one object identity,
+with parent effects preceding child effects. ~Prototype.MutableProto~ provides
+that effect order over ~Object.Mutable~; its named slot constructor uses the
+same C4 plan and slot evaluator as the pure path. It reproduces the observable
+composition behavior without claiming the paper's in-place hash-table
+optimization.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

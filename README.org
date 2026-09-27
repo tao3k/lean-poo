@@ -44,6 +44,7 @@ extension, and revision. [[file:Examples/ProofReuseScale.lean][ProofReuseScale.l
 [[file:Examples/DebugObject.lean][DebugObject.lean]] demonstrates the public tracing API.
 [[file:Examples/IncrementalObject.lean][IncrementalObject.lean]] carries unaffected cached values and proof obligations across an inherited source-slot edit, then installs the certified revision in a versioned mutable cell.
 [[file:Examples/MutableObject.lean][MutableObject.lean]] shows ordered declaration edits across an inherited base and child, with one atomic installation and rollback on error.
+[[file:Examples/MutablePrototype.lean][MutablePrototype.lean]] shows parent-before-child mutable prototype composition on one object identity and compares it with pure C4 extension.
 
 * Documentation
 

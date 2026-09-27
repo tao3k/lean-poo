@@ -24,6 +24,7 @@ import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
 import LeanPoo.Object.Prototype
 import LeanPoo.Object.Mutable
+import LeanPoo.Prototype.Mutable
 import LeanPoo.Object.Prepare
 import LeanPoo.Object.Cache
 import LeanPoo.Proof.Object

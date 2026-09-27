@@ -28,6 +28,7 @@ macros are not design requirements for Lean.
 | Multiple inheritance | ~C4.linearize~ | Compute prototype order separately; slot composition consumes that order. |
 | Classes | ~Prototype.DescriptorClass~ | Compose runtime type descriptors through delayed prototypes. |
 | Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
+| Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; instantiate a private cell and return it only after every layer succeeds. |
 | Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
 | Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
 | Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
@@ -58,6 +59,13 @@ instantiated objects through their retained prototypes yields ~(2, 6)~.
 each declared key, evaluates on demand, and retains the plan for further
 ~extend~, ~mix~, ~plus~, or ~clone~ operations. ~Prepared~ stores assembled
 slot functions; ~Cache~ is an explicit immutable value cache.
+~Plan.memoizeCompiled~ optionally compiles one effective method table from
+least-specific to most-specific declarations, following Gerbil-POO's runtime
+shape. It uses the existing slot-spec method algebra and still computes slot
+values lazily. ~memoize~ remains the default for sparse reads; the compiled
+path favors dense reads but has no general proof of equivalence to
+~Plan.resolve~. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
+default, duplicate-declaration, self, and missing-slot behavior.
 ~Plan.reviseDeclaration~ keeps its validated C4 precedence when only a
 declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
 order. ~Memoized~ allocates one new lazy instance after a successful batch,
@@ -89,6 +97,12 @@ cell holding a pure object whose revised declaration yields a new instance.
 Its batch scenario revises an inherited base and child computation together,
 checks the preserved precedence, and rejects a batch with an unknown node
 without changing the installed instance.
+[[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] implements the
+paper's parent-before-child effect order using one mutable object identity.
+Its named slot layer composes an inherited override, while an earlier
+~self~-dependent slot sees the final override. The example compares its
+results with the ordinary pure C4 extension path and checks that a failed
+construction does not return the private cell.
 [[file:../Examples/LensPrototype.lean][LensPrototype.lean]] uses the appendix's
 getter/wrapper/setter construction to compose two updates to one component
 of a computation, yielding ~(9, true)~.

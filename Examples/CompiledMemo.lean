@@ -1,0 +1,45 @@
+import LeanPoo.Object.Memo
+
+open LeanPoo
+
+namespace CompiledMemoExample
+
+private def empty : Object.Schema String (fun _ => Nat) :=
+  { graph := { nodes := [] }, declaration := fun _ => none }
+
+private def base : Object.Declaration String (fun _ => Nat) :=
+  Object.Declaration.empty
+    |>.withDefault "x" 3
+    |>.withValue "y" 4
+
+private def parent : Object.Declaration String (fun _ => Nat) :=
+  Object.Declaration.empty |>.withSlot "x"
+    (.computed fun _ inherited => (inherited ()).map (· + 2))
+
+/-- The final direct declaration at `x` wins within this node. -/
+private def child : Object.Declaration String (fun _ => Nat) :=
+  { slots := [
+      ⟨"x", .computed (fun _ inherited => (inherited ()).map (· + 100)),
+        fun _ => inferInstance⟩,
+      ⟨"x", .computed (fun _ inherited => (inherited ()).map (· * 2)),
+        fun _ => inferInstance⟩,
+      ⟨"z", .self (fun self =>
+        some ((self "x").getD 0 + (self "y").getD 0)),
+        fun _ => inferInstance⟩ ]
+    defaults := (Object.Declaration.empty.withDefault "x" 5).defaults }
+
+private def observed : Option (List (Option Nat) × List (Option Nat)) := do
+  let basePlan ← (LeanPoo.mix empty "Base" [] base).toOption
+  let parentPlan ← (LeanPoo.extend basePlan.schema "Parent" "Base" parent).toOption
+  let plan ← (LeanPoo.extend parentPlan.schema "Child" "Parent" child).toOption
+  let sparse := plan.memoize
+  let compiled := plan.memoizeCompiled
+  let keys := ["x", "y", "z", "missing"]
+  return (keys.map sparse.read, keys.map compiled.read)
+
+example : observed = some
+    ([some 14, some 4, some 18, none],
+     [some 14, some 4, some 18, none]) := by
+  native_decide
+
+end CompiledMemoExample

@@ -88,6 +88,7 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Plan.resolve~ | Query a typed slot; absence is ~none~. |
 | ~Plan.ref~ | Require a slot; absence is ~noApplicableMethod~. |
 | ~Plan.memoize~ | Build a shared lazy instance of an open-recursive plan. |
+| ~Plan.memoizeCompiled~ | Assemble the effective method table once, then keep values lazy; useful for dense reads of a wide object. |
 | ~Memoized.read~ / ~ref~ / ~refWith~ / ~values~ | Read one slot, handle a missing slot explicitly, or materialize all slots from the shared instance. |
 | ~LeanPoo.hasSlot~ | Check whether a key is declared in the C4 chain. |
 | ~LeanPoo.hasSlots~ | Check several required keys in one compiled plan. |
@@ -113,10 +114,18 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Object.Instance.cachedRead~ | Relate a cached result to the instance value. |
 
 The declarations own their finite key order even when the Lean key type is
-infinite. Cached functions and values carry proofs that they agree
-with ~Plan.resolve~; the cache does not define another slot evaluator. Missing
-slots do not grow the value cache. ~memoize~ uses Lean's call-by-need ~Thunk~
-for each declared key; an unproductive cycle can diverge. A proof-bearing
+infinite. ~Prepared~ functions and ~Cache~ values carry proofs that they agree
+with ~Plan.resolve~. Missing slots do not grow the value cache. ~memoize~ uses
+Lean's call-by-need ~Thunk~ for each declared key.
+~memoizeCompiled~ follows Gerbil-POO's base-to-child method-table pass,
+including per-node last-write-wins declarations, and shares the same
+~SlotSpec.toMethod~ and ~Method.compose~ operations. It moves method assembly
+to object creation. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks the lazy and compiled paths on inherited defaults,
+overrides, repeated local declarations, final-self reads, and missing keys.
+The optimized table is an executable projection; it does not itself carry a
+Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
+read many declared slots; sparse reads can favor ~memoize~.
+An unproductive cycle can diverge in either executable path. A proof-bearing
 declaration needs an ~Object.Instance~ whose state satisfies the resolver
 equation. ~Object.Ranked~ supplies one without unsafe recursion when the caller
 proves that each resolved slot depends on self only at smaller ranks. For a
@@ -242,6 +251,18 @@ fresh C4-validated instance on success. The example in
 operation. If any edit fails, the old object and its cached reads remain
 current. The same example edits an inherited base and child computation
 together, then checks rollback for an unknown node.
+~Prototype.MutableProto~ is the paper's one-identity mutable wrapper in
+Lean. ~compose child parent~ runs the parent first and then the child on the
+same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
+~extend~, ~slot~, and ~revise~ construct layers from the existing C4 object
+operations. ~instantiate~ starts from a memoized base and exposes the cell
+only when every layer succeeds. ~instantiateCompiled~ selects the optional
+precompiled effective method table for the final instance. Applying a layer directly to an already
+shared cell has ordinary sequential effect semantics, so a later failure may
+leave earlier layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares this path with pure extension, checks a late
+override of a ~self~-dependent slot, and checks a failed private build.
+The standard path retains ~Plan.resolve~; the compiled path uses the same
+~SlotSpec~ method algebra with a preassembled effective table.
 ~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration
 and replace its lazy instance. Existing snapshots retain their old values;
 [[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
@@ -345,6 +366,9 @@ corpus.
 ~just benchmark-revision~ compares full C4 recompilation with a
 declaration-only revision on a synthetic 64-node chain. It measures topology
 updates, not object reads or cross-platform performance.
+~just benchmark-memoization~ compares sparse and dense reads of 256 direct
+slots through the lazy and compiled method paths. It is a synthetic local
+measurement; the workload should determine which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.

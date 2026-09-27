@@ -61,6 +61,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
+    lake env lean Examples/CompiledMemo.lean
     lake env lean Examples/RankedObject.lean
 
 # Check certified dependency propagation; opt into the impact trace on demand.
@@ -77,6 +78,7 @@ check-compose: check-object
     lake build LeanPoo.Slots
     lake build LeanPoo.Object.Memo
     lake build LeanPoo.Object.Mutable
+    lake build LeanPoo.Prototype.Mutable
 
 # Check the proof-composition extension.
 check-proof: check-compose
@@ -109,6 +111,7 @@ check-example: check-compose
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/DescriptorClass.lean
     lake env lean Examples/MutableObject.lean
+    lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/IntegratedPrototype.lean
@@ -136,6 +139,11 @@ benchmark-declaration:
 benchmark-revision:
     lake build LeanPoo.Object.Resolve
     lake env lean --run Examples/RevisionScale.lean
+
+# Compare lazy per-slot compilation with a Gerbil-style compiled method table.
+benchmark-memoization:
+    lake build LeanPoo.Object.Memo
+    lake env lean --run Examples/MemoizationScale.lean
 
 check: check-proof check-example check-docs
     lake build
