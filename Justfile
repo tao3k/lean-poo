@@ -114,6 +114,7 @@ check-example: check-compose
     lake env lean Examples/FirstClassObject.lean
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/DescriptorClass.lean
+    lake env lean Examples/ClassInstanceMethods.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean

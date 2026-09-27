@@ -36,6 +36,15 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    ~Method.compose~ owns that delayed inheritance chain; the object resolver
    folds C4 declarations with it instead of carrying a second composition
    implementation.
+   ~SlotSpec.instanceMethod~ focuses a class contribution onto an eventual
+   receiver. Its ~next~ argument calls the method accumulated from later C4
+   ancestors; the receiver need not have the class's own static type.
+   ~baseInstanceMethod~ supplies a method that never requests its parent.
+   A Lean ~Thunk~ shares the inherited effective method across calls while
+   keeping it unforced when the body never calls ~next~.
+   These are typed wrappers over the same slot evaluator, not a second method
+   dispatcher. [[file:../Examples/ClassInstanceMethods.lean][ClassInstanceMethods.lean]] composes a base area method with two
+   mixins in a diamond and calls the resulting method on the final receiver.
    ~Declaration.withSlot~ and ~Declaration.withDefault~ use one dependent
    ~Entry.lookup~ / ~Entry.replace~ pair for ordered typed values, without a
    dynamic property map or a parallel runtime type hierarchy.
