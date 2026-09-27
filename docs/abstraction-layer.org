@@ -14,7 +14,7 @@ an executable object-level reference; its layers are distinct:
 | ~object.ss~ | Slot specs, inheritance, instance evaluation, cache | ~LeanPoo.Prototype.SlotSpec~ and ~LeanPoo.Object~ |
 | ~mop.ss~ | Generic method selection and runtime type descriptors | Descriptor behavior is represented with Lean values; no dynamic MOP is copied. |
 | ~type.ss~ | Runtime type descriptors and conversions | Lean's dependent value families and native inductive types where object semantics need them |
-| ~brace.ss~ and ~object.ss~ macros | Convenient source syntax and lexical slot binding | Lean functions and indexed types express the semantics without copying Lisp syntax. |
+| ~brace.ss~ and ~object.ss~ macros | Convenient source syntax and lexical slot binding | A pure ~StateM~ builder, Lean ~do~, and indexed types express ordered declarations without copying Lisp syntax. |
 
 The C4 ordering algorithm is owned separately by [[https://github.com/fare/c4-mixins][C4-Mixins]] and the Gerbil
 runtime. Object syntax must consume that ordering rather than reimplement it.
@@ -62,11 +62,14 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    foundation of LeanPoo's class model. [[file:../Examples/TypedSlots.lean][TypedSlots.lean]] shows the class-side
    encoding using an inductive key and a dependent ~Value~ family.
 4. Gerbil ~defrules~, brace notation, and lexical slot identifiers normalize
-   source forms before evaluation. Lean notation is enough for simple
-   operations such as prototype composition; ~syntax~ and ~macro_rules~ are
-   appropriate for recurring compound forms. A custom elaborator is justified
-   only when the syntax needs type or local-context information. All syntax
-   must expand to the same definitions, without a second evaluator.
+   source forms before evaluation. Lean's native expression layer is the
+   public ~Declaration.Builder~: ~StateM~, ~do~ notation, dependent key/value
+   typing, and ordinary higher-order functions. ~build~ starts an empty
+   declaration; ~buildOn~ applies a reusable program to an existing one.
+   ~value~, ~default~, ~slot~, ~modifyInherited~, and ~edit~ invoke the existing
+   declaration operations. Lean proves that builder values and inherited
+   modifiers reduce to those same operations. The builder does not define
+   another object evaluator or duplicate the Gerbil macro grammar.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
@@ -104,9 +107,9 @@ directly; adding Mathlib alone would not speed up those executable algorithms.
 2. Proof objects, patches, append, right-side override, reuse, pending
    obligation discharge, and rebinding a certified object to an overridden
    instance are implemented with Lean-checked definitions and theorems.
-3. Typed declaration builders and a scoped prototype-composition operator
-   reuse the current resolver; further syntax should expand to the same
-   constructors rather than define a second evaluator.
+3. The typed declaration builder and scoped prototype-composition operator
+   reuse the current resolver. The builder is a public Lean API in
+   ~LeanPoo/Object/Builder.lean~; the executable usage example is separate.
 4. Precedence computation, method assembly, and evaluated-value caching have
    separate representations, following ~object.ss~.
 5. Executable open recursion uses a shared thunk table and reuses

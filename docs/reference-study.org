@@ -69,6 +69,12 @@ The Lean modules are separated by semantic responsibility:
   dependent map and orders keys with a caller-supplied comparator.
   ~Entry.toMap_get?~ proves that materializing an ordered declaration list
   into a dependent hash map preserves last-write-wins lookup for every key.
+- ~LeanPoo/Object/Builder.lean~ provides a Lean-native expression layer over
+  those declarations. Its pure ~StateM~ programs compose with ~do~ notation;
+  ~buildOn~ supports reuse, and reduction theorems connect the builder to the
+  existing direct-value and inherited-method operations. This follows the
+  upstream separation between convenient expression and object semantics
+  without translating Scheme macro syntax into Lean.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The

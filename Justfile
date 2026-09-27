@@ -50,6 +50,7 @@ check-generic: check-prototype
 # Check typed object declarations and C4-ordered slot resolution.
 check-object: check-c4 check-generic
     lake build LeanPoo.Object.Schema
+    lake build LeanPoo.Object.Builder
     lake build LeanPoo.Object.Resolve
     lake build LeanPoo.Object.Indexed
     lake build LeanPoo.Object.Instance
@@ -115,6 +116,7 @@ check-example: check-compose
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
+    lake env lean Examples/DeclarationBuilder.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/IntegratedPrototype.lean
     just check-debug
