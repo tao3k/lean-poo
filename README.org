@@ -42,7 +42,7 @@ Run ~just --list~ for the full
 command list. The [[file:Examples/IntegratedPrototype.lean][integrated object example]] follows C4 resolution, lazy execution,
 extension, and revision. [[file:Examples/ProofReuseScale.lean][ProofReuseScale.lean]] exercises proof invalidation and reuse;
 [[file:Examples/DebugObject.lean][DebugObject.lean]] demonstrates the public tracing API.
-[[file:Examples/IncrementalObject.lean][IncrementalObject.lean]] carries unaffected cached values across an inherited source-slot edit.
+[[file:Examples/IncrementalObject.lean][IncrementalObject.lean]] carries unaffected cached values and proof obligations across an inherited source-slot edit.
 
 * Documentation
 

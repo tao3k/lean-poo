@@ -129,12 +129,15 @@ The Lean modules are separated by semantic responsibility:
   ~Object.Debug.Revision.explainImpact~ reports the direct edit and affected
   reads without adding instrumentation to each slot.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
-  ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
+  ~Invalidation.lean~, ~Object.lean~, and ~Revision.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
   invalidation, and certificates over typed object instances.
   ~Batch.lean~ folds typed patches and proves agreement with sequential append,
   exact touched-key order, last-write precedence, and the condition for
   reusing an obligation through every patch in the batch.
+  ~Revision.lean~ projects a checked object update into the existing patch
+  algebra, proves that applying it yields the new fixed point, and closes the
+  certificate using only pending obligations.
 - ~Justfile~ offers module-scoped compilation commands. ~just check~ builds
   the complete Lean library, executes the integrated examples, and parses
   every maintained Org page.
@@ -178,6 +181,10 @@ patch footprint using the old and new instance equations and the patch frame
 proof. ~rebaseInstanceCacheByValue~ compares stored values with the new
 resolver, covering computed dependents without a supplied footprint and
 without rerunning the old resolver; it can force the new instance.
+~Proof.patchOfRevision~ derives a finite patch from a checked ~Object.Revision~.
+Its alignment theorem covers keys outside the finite declaration support as
+well as unaffected declared keys. ~CertifiedObject.applyRevision~ then uses
+the existing pending-obligation and certificate machinery.
 ~invalidatedNodes~ follows reverse
 inheritance edges for structure-level invalidation. Its step is monotone;
 ~Descendant~ indexes an inheritance path by edge count. Lean proves that

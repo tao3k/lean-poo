@@ -148,6 +148,52 @@ def Revision.instanceValue {Key : Type u} {Value : Key → Type v}
     Instance Key Value plan :=
   revision.scheduled.ranked.instantiate
 
+/-- A finite write footprint for the next resolved state. It includes direct
+edits even when their keys are not in the declared finite support. -/
+def Revision.touched {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {plan : Plan Key Value} {spec : Dependencies Key Value plan}
+    {roots keys : List Key} (revision : Revision spec roots keys) : List Key :=
+  roots ++ spec.keys.filter revision.impact.affected
+
+/-- Values outside the finite write footprint agree across the two fixed
+points. Keys outside the declared support have no self reads by `supported`. -/
+theorem Revision.stableOutside {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq Key]
+    {oldPlan newPlan : Plan Key Value}
+    {spec : Dependencies Key Value newPlan}
+    {roots keys : List Key} (revision : Revision spec roots keys)
+    (current : Instance Key Value oldPlan)
+    (sameResolver : ∀ key, key ∉ roots →
+      oldPlan.resolve key current.state =
+        newPlan.resolve key current.state)
+    (key : Key) (untouched : key ∉ revision.touched) :
+    current.state key = revision.instanceValue.state key := by
+  have notRoot : key ∉ roots := by
+    intro membership
+    exact untouched (List.mem_append.mpr (Or.inl membership))
+  by_cases listed : key ∈ spec.keys
+  · have notAffected : revision.impact.affected key = false := by
+      cases affected : revision.impact.affected key with
+      | false => rfl
+      | true =>
+          have inFilter : key ∈ spec.keys.filter revision.impact.affected :=
+            List.mem_filter.mpr ⟨listed, affected⟩
+          exact False.elim (untouched (List.mem_append.mpr (Or.inr inFilter)))
+    exact revision.scheduled.stableState roots revision.impact
+      current revision.instanceValue sameResolver key notAffected
+  · have noReads : ∀ dependency, dependency ∈ spec.reads key → False := by
+      intro dependency membership
+      exact listed (spec.supported key dependency membership)
+    calc
+      current.state key = oldPlan.resolve key current.state :=
+        (current.agrees key).symm
+      _ = newPlan.resolve key current.state := sameResolver key notRoot
+      _ = newPlan.resolve key revision.instanceValue.state :=
+        spec.dependsOnlyOn key current.state revision.instanceValue.state
+          (by intro dependency membership; exact False.elim (noReads dependency membership))
+      _ = revision.instanceValue.state key := revision.instanceValue.agrees key
+
 /-- Revise a checked finite-dependency object in one operation: construct
 the next fixed point, propagate changed roots, and transfer only values
 proved stable. -/

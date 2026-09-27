@@ -141,6 +141,12 @@ the new instance. ~Dependencies.revise~ packages scheduling, impact checking,
 fixed-point construction, and cache transfer in one declared update. The
 caller supplies the unchanged-resolver proof; a change
 to an opaque slot body cannot be inferred automatically.
+~Proof.patchOfRevision~ turns that checked update into a patch over resolved
+values. ~patchOfRevision_aligned~ proves that it produces the next fixed-point
+state. ~CertifiedObject.applyRevision~ reuses obligations outside the
+footprint and requests proofs for ~pendingRevision~. The integrated example
+has two obligations: editing one inherited source selects its computed
+relation for repair while reusing the independent relation.
 [[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] uses a C4 child
 with two computed branches. Editing one inherited source invalidates its
 dependent branch while preserving the independent source and computed cache.

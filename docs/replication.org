@@ -231,6 +231,11 @@ source and two computed branches. This certified incremental path requires a
 proof that resolver bodies outside the edited roots are unchanged at the old
 self. It does not claim to instrument arbitrary Lean function bodies or reuse
 the executable ~Memoized~ thunks.
+The proof layer projects this revision into its ordinary patch algebra. The
+projection carries a frame proof and an alignment theorem, so
+~CertifiedObject.applyRevision~ reuses certificates outside the affected
+footprint. The same example checks that only the relation over the edited
+branch is pending.
 
 * Conclusion
 

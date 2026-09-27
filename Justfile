@@ -61,11 +61,11 @@ check-object: check-c4 check-generic
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
     lake env lean Examples/RankedObject.lean
-    just check-incremental
 
 # Check certified dependency propagation; opt into the impact trace on demand.
 check-incremental verbose="false":
     lake build LeanPoo.Object.Debug
+    lake build LeanPoo.Proof.Revision
     @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; fi
 
 # Check the public LeanPoo composition operations.
@@ -83,7 +83,9 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Batch
     lake build LeanPoo.Proof.Invalidation
     lake build LeanPoo.Proof.Object
+    lake build LeanPoo.Proof.Revision
     lake build LeanPoo.Proof.Product
+    just check-incremental
     lake env lean Examples/CertifiedCacheReuse.lean
     just check-proof-reuse
 

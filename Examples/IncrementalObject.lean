@@ -1,4 +1,5 @@
 import LeanPoo.Object.Debug
+import LeanPoo.Proof.Revision
 
 open LeanPoo
 
@@ -87,11 +88,102 @@ private theorem sameResolver (current : Object.Instance Key Values (plan 20))
   | stableSource => rfl
   | stableDerived => rfl
 
+private def changedRelation : Proof.Obligation Key
+    (fun key => Option (Values key)) :=
+  { dependencies := [.derived, .source]
+    holds := fun state => state .derived = (state .source).map (· + 1)
+    stable := by
+      intro before after equal holds
+      calc
+        after .derived = before .derived :=
+          (equal .derived (by simp)).symm
+        _ = (before .source).map (· + 1) := holds
+        _ = (after .source).map (· + 1) := by
+          rw [equal .source (by simp)] }
+
+private def stableRelation : Proof.Obligation Key
+    (fun key => Option (Values key)) :=
+  { dependencies := [.stableDerived, .stableSource]
+    holds := fun state => state .stableDerived =
+      (state .stableSource).map (· * 2)
+    stable := by
+      intro before after equal holds
+      calc
+        after .stableDerived = before .stableDerived :=
+          (equal .stableDerived (by simp)).symm
+        _ = (before .stableSource).map (· * 2) := holds
+        _ = (after .stableSource).map (· * 2) := by
+          rw [equal .stableSource (by simp)] }
+
+private theorem changedRelationHolds (changed : Nat)
+    (instanceValue : Object.Instance Key Values (plan changed)) :
+    changedRelation.holds instanceValue.state := by
+  change instanceValue.state .derived =
+    (instanceValue.state .source).map (· + 1)
+  rw [← instanceValue.agrees .derived]
+  rfl
+
+private theorem stableRelationHolds (changed : Nat)
+    (instanceValue : Object.Instance Key Values (plan changed)) :
+    stableRelation.holds instanceValue.state := by
+  change instanceValue.state .stableDerived =
+    (instanceValue.state .stableSource).map (· * 2)
+  rw [← instanceValue.agrees .stableDerived]
+  rfl
+
+private def certified (current : Object.Instance Key Values (plan 20)) :
+    Proof.CertifiedObject Key Values (plan 20) :=
+  { instanceValue := current
+    obligations := [changedRelation, stableRelation]
+    certificate := by
+      intro obligation membership
+      have owned : obligation = changedRelation ∨
+          obligation = stableRelation := by
+        simpa [Proof.proofObjectOfInstance] using membership
+      rcases owned with changed | stable
+      · subst obligation
+        exact changedRelationHolds 20 current
+      · subst obligation
+        exact stableRelationHolds 20 current }
+
+private def certifiedRevision
+    (current : Object.Instance Key Values (plan 20))
+    (revision : Object.Revision (dependencies 30) [.source]
+      [.source, .derived, .stableSource, .stableDerived]) :
+    Proof.CertifiedObject Key Values (plan 30) :=
+  (certified current).applyRevision revision (sameResolver current) [] (by
+    intro obligation membership
+    have selected := (Proof.mem_pending_iff
+      (Proof.proofObjectOfInstance current
+        [changedRelation, stableRelation])
+      (Proof.patchOfRevision revision) obligation).mp membership
+    rcases selected with ⟨owned, _⟩ | fresh
+    · have choice : obligation = changedRelation ∨
+          obligation = stableRelation := by
+        simpa [Proof.proofObjectOfInstance] using owned
+      rcases choice with changed | stable
+      · subst obligation
+        exact changedRelationHolds 30 revision.instanceValue
+      · subst obligation
+        exact stableRelationHolds 30 revision.instanceValue
+    · simp [Proof.patchOfRevision] at fresh)
+
+example (current : Object.Instance Key Values (plan 20))
+    (revision : Object.Revision (dependencies 30) [.source]
+      [.source, .derived, .stableSource, .stableDerived]) :
+    stableRelation.holds
+      (certifiedRevision current revision).instanceValue.state :=
+  (certifiedRevision current revision).certificate stableRelation (by
+    change stableRelation ∈
+      [changedRelation, stableRelation] ++ []
+    simp)
+
 private structure Outcome where
   invalidated : List Key
   retained : List Key
   stableValue : Option (Option Nat)
   recomputedValue : Option Nat
+  repairs : List Bool
   deriving DecidableEq, Repr
 
 private def observed : Option Outcome := do
@@ -101,13 +193,19 @@ private def observed : Option Outcome := do
   let oldCache := (current.cache keys).force keys
   let revision ← ((dependencies 30).revise [.source] current keys oldCache
     (sameResolver current)).toOption
+  let certifiedNext := certifiedRevision current revision
   let impact := revision.impact
   let reused := revision.cache
+  let proofImpact := Proof.Debug.explainPatch
+    (Proof.proofObjectOfInstance current
+      [changedRelation, stableRelation])
+    (Proof.patchOfRevision revision)
   return {
     invalidated := keys.filter impact.affected
     retained := keys.filter fun key => (reused.peek key).isSome
     stableValue := reused.peek .stableDerived
-    recomputedValue := (reused.read .derived).1
+    recomputedValue := certifiedNext.instanceValue.state .derived
+    repairs := proofImpact.map Proof.Debug.Impact.needsRepair
   }
 
 example : observed = some {
@@ -115,6 +213,7 @@ example : observed = some {
     retained := [.stableSource, .stableDerived]
     stableValue := some (some 14)
     recomputedValue := some 31
+    repairs := [true, false]
   } := by
   native_decide
 
