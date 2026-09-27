@@ -362,3 +362,12 @@ value-sensitive after either cache hit, and registration clears caches in
 the new immutable dispatch value.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.
+
+Section 10 also describes small per-site field-offset caches and a cache
+shared by sites reading the same field name. ~PolySlotAccessSite~ retains four
+offsets, while ~SharedSlotOffsets~ retains eight learned offsets per name.
+Local hits do not write the shared cache. Every speculative
+offset is checked against the current layout before a lazy cell is read; a
+miss falls back to ordinary keyed lookup and teaches both levels. The
+~read_sound~ theorem states equality with ordinary object reads, including
+after a layout change or an absent field.

@@ -11,6 +11,7 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:ExtensibleDispatch.lean][ExtensibleDispatch]] | A plugin adds pair-specific and value-guarded methods to an existing two-axis generic. |
 | [[file:QualifiedCombination.lean][QualifiedCombination]] | A caller-defined interpreter groups typed qualifiers after two-axis dispatch. |
 | [[file:BoundedDispatch.lean][BoundedDispatch]] | Many runtime dispatch shapes retain eight recent candidate sequences and resolve evicted shapes again. |
+| [[file:SharedFieldAccess.lean][SharedFieldAccess]] | Two field readers share learned offsets across object layouts with different field positions. |
 | [[file:ProofReuse.lean][ProofReuse]] | A quota patch preserves an independent certified identity obligation through the public reuse theorem. |
 | [[file:LiveRevision.lean][LiveRevision]] | A derived slot before and after a live declaration revision; the old snapshot remains readable. |
 | [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |

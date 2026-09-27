@@ -207,4 +207,88 @@ theorem SlotAccessSite.read_sound {Key : Type u} {Value : Key → Type v}
           rw [checked] at sound
           cases hit <;> simpa [checked] using sound
 
+/-- Recently learned offsets for each field name, shared by independently
+created access sites. Offsets are speculative: every use checks the layout. -/
+structure SharedSlotOffsets (Key : Type u) [BEq Key] [Hashable Key] where
+  recent : Std.HashMap Key (List Nat) := {}
+
+namespace SharedSlotOffsets
+
+def capacity : Nat := 8
+
+def candidates {Key : Type u} [BEq Key] [Hashable Key]
+    (cache : SharedSlotOffsets Key) (key : Key) : List Nat :=
+  (cache.recent.get? key).getD []
+
+def remember {Key : Type u} [BEq Key] [Hashable Key]
+    (cache : SharedSlotOffsets Key) (key : Key) (offset : Nat) :
+    SharedSlotOffsets Key :=
+  if (cache.candidates key).head? == some offset then cache
+  else
+    { recent := cache.recent.insert key
+        ((offset :: (cache.candidates key).filter (· != offset)).take capacity) }
+
+end SharedSlotOffsets
+
+/-- A polymorphic field access site keeps four recently successful offsets.
+Its field key is fixed, while the object layout may vary on every call. -/
+structure PolySlotAccessSite (Key : Type u) where
+  key : Key
+  recent : List Nat := []
+
+namespace PolySlotAccessSite
+
+def capacity : Nat := 4
+
+def remember (site : PolySlotAccessSite Key) (offset : Nat) :
+    PolySlotAccessSite Key :=
+  if site.recent.head? == some offset then site
+  else { site with recent :=
+      (offset :: site.recent.filter (· != offset)).take capacity }
+
+/-- A checked probe does not evaluate the object on a mismatch. -/
+private def matching {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (layout : SlotLayout Key Value) (key : Key) (offsets : List Nat) :
+    Option Nat :=
+  offsets.find? (layout.matchesAt · key)
+
+/-- The Boolean pair records a local or shared hit. A local hit leaves the
+shared cache alone. On a cold miss, keyed lookup supplies the authoritative
+value and teaches both levels. -/
+def read {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (site : PolySlotAccessSite Key) (shared : SharedSlotOffsets Key)
+    (layout : SlotLayout Key Value) :
+    Option (Value site.key) × PolySlotAccessSite Key ×
+      SharedSlotOffsets Key × Bool × Bool :=
+  match matching layout site.key site.recent with
+  | some offset =>
+      ((layout.readAtChecked offset site.key).1, site.remember offset,
+        shared, true, false)
+  | none =>
+      match matching layout site.key (shared.candidates site.key) with
+      | some offset =>
+          ((layout.readAtChecked offset site.key).1, site.remember offset,
+            shared.remember site.key offset, false, true)
+      | none =>
+          let updated := layout.offsets.get? site.key
+          (layout.read site.key,
+            updated.elim site site.remember,
+            updated.elim shared (shared.remember site.key), false, false)
+
+theorem read_sound {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (site : PolySlotAccessSite Key) (shared : SharedSlotOffsets Key)
+    (layout : SlotLayout Key Value) :
+    (site.read shared layout).1 = layout.object.read site.key := by
+  unfold read
+  split
+  · exact layout.readAtChecked_sound _ _
+  · split
+    · exact layout.readAtChecked_sound _ _
+    · exact layout.read_sound _
+
+end PolySlotAccessSite
+
 end LeanPoo.Object

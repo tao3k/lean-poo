@@ -45,6 +45,25 @@ private def siteLoop (layout : Object.SlotLayout String (fun _ => Nat))
       otherSite := updated
   checksum.get
 
+private def sharedSiteLoop (layout : Object.SlotLayout String (fun _ => Nat))
+    (count : Nat) : IO Nat := do
+  let checksum ← IO.mkRef 0
+  let mut shared : Object.SharedSlotOffsets String := {}
+  let mut site32 : Object.PolySlotAccessSite String := ⟨"field-32", []⟩
+  let mut site33 : Object.PolySlotAccessSite String := ⟨"field-33", []⟩
+  for i in [:count] do
+    if i % 2 == 0 then
+      let (value, site, cache, _, _) := site32.read shared layout
+      checksum.modify (· + value.getD 0)
+      site32 := site
+      shared := cache
+    else
+      let (value, site, cache, _, _) := site33.read shared layout
+      checksum.modify (· + value.getD 0)
+      site33 := site
+      shared := cache
+  checksum.get
+
 def main : IO Unit := do
   let count := ((← IO.getEnv "LEANPOO_BENCH_CALLS").getD "100000")
     |>.toNat?.getD 100000
@@ -63,10 +82,13 @@ def main : IO Unit := do
   let startedSite ← IO.monoNanosNow
   let siteValue ← siteLoop layout count
   let siteNs := (← IO.monoNanosNow) - startedSite
-  if keyed != offsetValue || keyed != siteValue ||
+  let startedShared ← IO.monoNanosNow
+  let sharedValue ← sharedSiteLoop layout count
+  let sharedNs := (← IO.monoNanosNow) - startedShared
+  if keyed != offsetValue || keyed != siteValue || keyed != sharedValue ||
       keyed != (count / 2) * 65 + (count % 2) * 32 then
     throw (IO.userError "layout read differs from keyed read")
-  IO.println s!"calls={count} fields={layout.fields.size} checksum={keyed} keyed_ns={keyedNs} offset_ns={offsetNs} site_ns={siteNs}"
+  IO.println s!"calls={count} fields={layout.fields.size} checksum={keyed} keyed_ns={keyedNs} offset_ns={offsetNs} site_ns={siteNs} shared_site_ns={sharedNs}"
 
 end LeanPoo.Benchmarks.LayoutScale
 

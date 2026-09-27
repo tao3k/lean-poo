@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: lean-poo-check
+        name: LeanPoo Lean and Org checks
+        entry: just check
+        language: system
+        pass_filenames: false
+        always_run: true

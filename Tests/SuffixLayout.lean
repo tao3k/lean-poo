@@ -82,4 +82,38 @@ private def observed : Option Bool := do
 
 example : observed = some true := by native_decide
 
+private def sharedObserved : Option Bool := do
+  let childPlan ← (Object.compile schema "Child").toOption
+  let specialPlan ← (Object.compile schema "ChildSpecial").toOption
+  let child := childPlan.memoizeCompiled.layout
+  let special := specialPlan.memoizeCompiled.layout
+  let empty : Object.SharedSlotOffsets String := {}
+  let first : Object.PolySlotAccessSite String := ⟨"other", []⟩
+  let (one, first, shared, local1, shared1) := first.read empty child
+  let (two, first, shared, local2, shared2) := first.read shared special
+  let (three, _, shared, local3, shared3) := first.read shared child
+  let second : Object.PolySlotAccessSite String := ⟨"other", []⟩
+  let (four, _, _, local4, shared4) := second.read shared special
+  let missing : Object.PolySlotAccessSite String := ⟨"absent", []⟩
+  let (absent, _, _, absentLocal, absentShared) := missing.read shared child
+  return one == some 3 && two == some 3 && three == some 3 &&
+    four == some 3 && absent == none &&
+    !local1 && !shared1 && !local2 && !shared2 &&
+    local3 && !shared3 && !local4 && shared4 &&
+    !absentLocal && !absentShared &&
+    shared.candidates "other" == [3, 2] &&
+    shared.candidates "absent" == []
+
+example : sharedObserved = some true := by native_decide
+
+example :
+    let cache : Object.SharedSlotOffsets String := {}
+    ((List.range 12).foldl (fun current offset =>
+      current.remember "key" offset) cache).candidates "key" =
+      [11, 10, 9, 8, 7, 6, 5, 4] := by native_decide
+
+example :
+    ((List.range 8).foldl (fun (site : Object.PolySlotAccessSite String) offset =>
+      site.remember offset) ⟨"key", []⟩).recent = [7, 6, 5, 4] := by native_decide
+
 end LeanPoo.Tests.SuffixLayout

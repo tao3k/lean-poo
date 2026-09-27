@@ -121,6 +121,7 @@ check-example: check-compose
     lake env lean Examples/ExtensibleDispatch.lean
     lake env lean Examples/QualifiedCombination.lean
     lake env lean Examples/BoundedDispatch.lean
+    lake env lean Examples/SharedFieldAccess.lean
     lake env lean Examples/ProofReuse.lean
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/DebugTrace.lean
