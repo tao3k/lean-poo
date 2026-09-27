@@ -234,7 +234,10 @@ with parent effects preceding child effects. ~Prototype.MutableProto~ provides
 that effect order over ~Object.Mutable~; its named slot constructor uses the
 same C4 plan and slot evaluator as the pure path. It reproduces the observable
 composition behavior without claiming the paper's in-place hash-table
-optimization.
+optimization. For private construction, standard declaration layers compose
+their plan transformations and instantiate only the final object. Arbitrary
+effect layers retain sequential execution, as does direct application to a
+shared mutable identity.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

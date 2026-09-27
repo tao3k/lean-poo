@@ -256,11 +256,16 @@ Lean. ~compose child parent~ runs the parent first and then the child on the
 same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
 ~extend~, ~slot~, and ~revise~ construct layers from the existing C4 object
 operations. ~instantiate~ starts from a memoized base and exposes the cell
-only when every layer succeeds. ~instantiateCompiled~ selects the optional
-precompiled effective method table for the final instance. Applying a layer directly to an already
-shared cell has ordinary sequential effect semantics, so a later failure may
-leave earlier layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares this path with pure extension, checks a late
-override of a ~self~-dependent slot, and checks a failed private build.
+only when every layer succeeds. A composition made entirely of these standard
+layers transforms the private C4 plan first, then allocates one final lazy
+instance. A custom ~apply~ effect falls back to sequential private execution.
+~instantiateCompiled~ selects the optional precompiled effective method table
+for the final instance. Applying a layer directly to an already shared cell
+always has sequential effect semantics, so a later failure may leave earlier
+layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares the batched and sequential paths with pure
+extension, checks a late override of a ~self~-dependent slot, custom-effect
+fallback, and failed private and shared builds. The identity prototype keeps
+the supplied memoized base, including its existing lazy cells.
 The standard path retains ~Plan.resolve~; the compiled path uses the same
 ~SlotSpec~ method algebra with a preassembled effective table.
 ~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration

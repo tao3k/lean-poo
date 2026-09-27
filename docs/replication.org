@@ -28,7 +28,7 @@ macros are not design requirements for Lean.
 | Multiple inheritance | ~C4.linearize~ | Compute prototype order separately; slot composition consumes that order. |
 | Classes | ~Prototype.DescriptorClass~ | Compose runtime type descriptors through delayed prototypes. |
 | Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
-| Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; instantiate a private cell and return it only after every layer succeeds. |
+| Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; standard private layers instantiate their final C4 plan once, and arbitrary effects fall back to sequential execution. |
 | Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
 | Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
 | Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
@@ -99,6 +99,10 @@ checks the preserved precedence, and rejects a batch with an unknown node
 without changing the installed instance.
 [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] implements the
 paper's parent-before-child effect order using one mutable object identity.
+It compares private plan-first construction with sequential effects and checks
+that a custom effect takes the latter path. The synthetic
+~just benchmark-mutable-prototype~ target compares both paths without changing
+the result; its timing is workload-specific.
 Its named slot layer composes an inherited override, while an earlier
 ~self~-dependent slot sees the final override. The example compares its
 results with the ordinary pure C4 extension path and checks that a failed

@@ -8,25 +8,49 @@ mutable cell, while composition runs the parent before its child.
 
 namespace LeanPoo.Prototype
 
+/-- Private construction can retain its base or compose C4 plan edits before
+allocating the final executable object. -/
+inductive PlanPath (Key : Type) (Value : Key → Type) where
+  | identity
+  | edit (run : Object.Plan Key Value →
+      Except C4.Error (Object.Plan Key Value))
+
+private def PlanPath.compose (child parent : PlanPath Key Value) :
+    PlanPath Key Value :=
+  match child, parent with
+  | .identity, path => path
+  | path, .identity => path
+  | .edit childRun, .edit parentRun =>
+      .edit fun plan => do
+        let inherited ← parentRun plan
+        childRun inherited
+
 /-- An effectful prototype layer receives one mutable object identity.
 Its current value represents inherited behavior; later layers rebuild the
 same identity with their final self. -/
 structure MutableProto (Key : Type) (Value : Key → Type)
     [BEq Key] [LawfulBEq Key] [Hashable Key] where
   apply : Object.Mutable Key Value → IO (Except C4.Error Unit)
+  /-- Standard declaration layers can transform a private C4 plan before a
+  single executable instance is allocated. Arbitrary effects use `apply`. -/
+  plan? : Option (PlanPath Key Value) := none
 
 def MutableProto.identity {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key] : MutableProto Key Value :=
-  ⟨fun _ => pure (.ok ())⟩
+  ⟨fun _ => pure (.ok ()), some .identity⟩
 
 /-- The parent acts first, then the child acts on that same identity. -/
 def MutableProto.compose {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (child parent : MutableProto Key Value) : MutableProto Key Value :=
-  ⟨fun object => do
-    match ← parent.apply object with
-    | .error error => return .error error
-    | .ok _ => child.apply object⟩
+  { apply := fun object => do
+      match ← parent.apply object with
+      | .error error => return .error error
+      | .ok _ => child.apply object
+    plan? := do
+      let parentPlan ← parent.plan?
+      let childPlan ← child.plan?
+      some (PlanPath.compose childPlan parentPlan) }
 
 /-- Compose a most-specific-first list, as for pure prototypes. -/
 def MutableProto.composeAll {Key : Type} {Value : Key → Type}
@@ -39,7 +63,9 @@ def MutableProto.extend {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (name : String) (declaration : Object.Declaration Key Value) :
     MutableProto Key Value :=
-  ⟨fun object => object.extend name declaration⟩
+  { apply := fun object => object.extend name declaration
+    plan? := some <| .edit fun plan =>
+      LeanPoo.extend plan.schema name plan.root declaration }
 
 /-- One named slot increment. `SlotSpec.computed` may request the inherited
 method, while `SlotSpec.self` reads the final composed object. -/
@@ -57,19 +83,28 @@ def MutableProto.revise {Key : Type} {Value : Key → Type}
     (name : String)
     (update : Object.Declaration Key Value → Object.Declaration Key Value) :
     MutableProto Key Value :=
-  ⟨fun object => object.reviseDeclaration name update⟩
+  { apply := fun object => object.reviseDeclaration name update
+    plan? := some <| .edit fun plan => plan.reviseDeclaration name update }
 
-/-- Allocate a private identity, apply the complete mutable prototype, and
-return it only on success. Failed construction does not expose the cell. -/
+/-- Build a private identity and return it only on success. Standard layers
+compile their plan before allocating one executable instance; arbitrary
+effect layers run sequentially on a private cell. -/
 def MutableProto.instantiate {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (prototype : MutableProto Key Value)
     (base : Object.Memoized Key Value) :
     IO (Except C4.Error (Object.Mutable Key Value)) := do
-  let object ← Object.Mutable.new base
-  match ← prototype.apply object with
-  | .error error => return .error error
-  | .ok _ => return .ok object
+  match prototype.plan? with
+  | some .identity => return .ok (← Object.Mutable.new base)
+  | some (.edit compile) =>
+      match compile base.plan with
+      | .error error => return .error error
+      | .ok final => return .ok (← Object.Mutable.new final.memoize)
+  | none =>
+    let object ← Object.Mutable.new base
+    match ← prototype.apply object with
+    | .error error => return .error error
+    | .ok _ => return .ok object
 
 /-- Build the same identity with its final effective method table compiled
 once. The object remains private until the whole prototype succeeds. -/

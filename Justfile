@@ -145,6 +145,11 @@ benchmark-memoization:
     lake build LeanPoo.Object.Memo
     lake env lean --run Examples/MemoizationScale.lean
 
+# Compare sequential layer installation with one private final allocation.
+benchmark-mutable-prototype:
+    lake build LeanPoo.Prototype.Mutable
+    lake env lean --run Examples/MutablePrototypeScale.lean
+
 check: check-proof check-example check-docs
     lake build
 

@@ -47,6 +47,13 @@ private def run : IO Bool := do
   let first ← object.snapshot
   let firstCount ← object.read "count"
   let firstDerived ← object.read "derived"
+  let sequential ← Object.Mutable.new basePlan.memoize
+  let sequentialResult ← layers.apply sequential
+  let sequentialSucceeded := match sequentialResult with
+    | .ok () => true
+    | .error _ => false
+  let sequentialCount ← sequential.read "count"
+  let sequentialDerived ← sequential.read "derived"
   let some compiledObject :=
       (← layers.instantiateCompiled basePlan.memoize).toOption
     | return false
@@ -78,15 +85,30 @@ private def run : IO Bool := do
   let bad := Prototype.MutableProto.compose
     (.extend "Parent" parent) (.extend "Parent" parent)
   let rejected ← bad.instantiate basePlan.memoize
+  let shared ← Object.Mutable.new basePlan.memoize
+  let sharedResult ← bad.apply shared
+  let sharedCount ← shared.read "count"
   let duplicateRejected := match rejected with
     | .error (.duplicateNode "Parent") => true
     | _ => false
+  let sharedPartial := match sharedResult with
+    | .error (.duplicateNode "Parent") => sharedCount == some 3
+    | _ => false
+  let custom : Prototype.MutableProto String (fun _ => Nat) :=
+    { apply := fun target => target.extend "Custom" child }
+  let some fallback :=
+      (← (Prototype.MutableProto.compose custom
+        (.extend "Parent" parent)).instantiate basePlan.memoize).toOption
+    | return false
+  let fallbackCount ← fallback.read "count"
   return first.plan.precedence == ["Child", "Parent", "Base"] &&
     first.plan.precedence == expected.precedence &&
     firstCount == expected.memoize.read "count" &&
     firstDerived == expected.memoize.read "derived" &&
     compiledCount == firstCount && compiledDerived == firstDerived &&
     firstCount == some 6 && firstDerived == some 16 &&
+    sequentialSucceeded &&
+    sequentialCount == firstCount && sequentialDerived == firstDerived &&
     second.plan.precedence == first.plan.precedence &&
     secondCount == some 10 && secondDerived == some 20 &&
     secondCount == expectedRevised.memoize.read "count" &&
@@ -96,7 +118,7 @@ private def run : IO Bool := do
     scaledDerived == expectedScaled.memoize.read "derived" &&
     basePlan.memoize.read "count" == some 2 &&
     (first.read "count", first.read "derived") == (some 6, some 16) &&
-    duplicateRejected
+    duplicateRejected && sharedPartial && fallbackCount == some 6
 
 #eval (do
   unless ← run do
