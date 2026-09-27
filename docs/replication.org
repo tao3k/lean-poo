@@ -62,9 +62,8 @@ slot functions; ~Cache~ is an explicit immutable value cache.
 ~Plan.memoizeCompiled~ optionally compiles one effective method table from
 least-specific to most-specific declarations, following Gerbil-POO's runtime
 shape. It uses the existing slot-spec method algebra and still computes slot
-values lazily. ~memoize~ remains the default for sparse reads; the compiled
-path favors dense reads but has no general proof of equivalence to
-~Plan.resolve~. The builder now folds each declaration's slots directly into
+values lazily. ~memoize~ remains the default for sparse reads. The builder
+folds each declaration's slots directly into
 the effective table, without materializing and iterating a temporary local
 hash map. ~Declaration.compileLocalMethods_get?~ proves that each local write
 uses the prior C4 layers and that the final direct declaration wins.
@@ -73,8 +72,14 @@ default, duplicate-declaration, self, missing-slot, and C4 diamond behavior.
 ~Plan.resolve_eq_compileSlot~ proves that the parent-first method fold used by
 the standard resolver equals the original C4 fold for every key and self; the
 ~Entry.foldMap_get?_lookup~ proves the dependent ordered-write invariant used
-by the local builder. Cross-node hash-table materialization still needs its own
-general proof.
+by the local builder. ~compileTablesFor_default_get?~ and
+~compileTablesFor_method_getD~ prove the cross-node folds for every key;
+~Plan.compiledTables_resolve~ equates their application with ~Plan.resolve~
+for any open self. ~Plan.compileEffective_get?_mem~ proves the final table
+lookup for every key included in the finite materialization list. The
+recursive thunk fixed point is executable and can still diverge for an
+unguarded self reference; these table theorems do not assert totality of
+arbitrary recursive objects.
 ~Plan.memoizeIndexed~ instead indexes each declaration once and composes a
 requested slot from those tables. ~IndexedPlan.resolve_sound~ proves that this
 cross-node resolver equals ~Plan.resolve~ for every key and open self, including

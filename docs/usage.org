@@ -131,9 +131,9 @@ for every key and open self. ~Entry.toMap_get?~ separately proves that the
 compiled path's direct local writes keep last-write-wins declarations;
 ~Declaration.compileLocalMethods_get?~ specializes that fact to effective
 methods. The builder makes no temporary per-declaration hash table.
-The optimized table is an executable projection; it does not itself carry a
-Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
-read many declared slots. ~memoizeIndexed~ preindexes each declaration and
+The optimized table now carries a Lean equivalence theorem to ~Plan.resolve~
+for every materialized key and open-recursive self. Choose it for workloads
+that read many declared slots. ~memoizeIndexed~ preindexes each declaration and
 keeps the same lazy values; its resolver has a general Lean soundness theorem.
 The two accelerated paths have different construction/read costs, while
 sparse reads can favor ~memoize~.

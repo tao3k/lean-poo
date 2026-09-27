@@ -78,28 +78,203 @@ private theorem Declaration.compileLocalMethods_get?
     (Declaration.localMethod inherited) key]
   cases Entry.lookup declaration.slots key <;> rfl
 
+private abbrev CompiledTables {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [Hashable Key] :=
+  Std.DHashMap Key Value ×
+    Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key)))
+
+/-- A single C4 traversal builds defaults and methods together. -/
+private def compileTablesFor {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (schema : Schema Key Value) (names : List String) :
+    CompiledTables (Key := Key) (Value := Value) :=
+  names.foldl (fun tables name =>
+    match schema.declaration name with
+    | none => tables
+    | some declaration =>
+        (declaration.defaults.foldl (fun defaults entry =>
+          defaults.insert entry.key entry.value) tables.1,
+         declaration.compileLocalMethods tables.2)) ({}, {})
+
+/-- The compiled base is the last default on the parent-first C4 path. -/
+private theorem compileTablesFor_default_get?
+    {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (schema : Schema Key Value) (names : List String) (key : Key) :
+    (compileTablesFor schema names).1.get? key =
+    names.foldl (fun inherited name =>
+      match schema.declaration name with
+      | none => inherited
+      | some declaration =>
+          match declaration.default key with
+          | none => inherited
+          | some value => some value) none := by
+  unfold compileTablesFor
+  have go (rest : List String) (tables : CompiledTables (Key := Key) (Value := Value)) :
+      (rest.foldl (fun tables name =>
+        match schema.declaration name with
+        | none => tables
+        | some declaration =>
+            (declaration.defaults.foldl (fun defaults entry =>
+              defaults.insert entry.key entry.value) tables.1,
+             declaration.compileLocalMethods tables.2)) tables).1.get? key =
+      rest.foldl (fun inherited name =>
+        match schema.declaration name with
+        | none => inherited
+        | some declaration =>
+            match declaration.default key with
+            | none => inherited
+            | some value => some value) (tables.1.get? key) := by
+    induction rest generalizing tables with
+    | nil => rfl
+    | cons name tail ih =>
+        simp only [List.foldl_cons]
+        rw [ih]
+        cases schema.declaration name with
+        | none => rfl
+        | some declaration =>
+            simp only
+            rw [Entry.foldMap_get?_lookup declaration.defaults tables.1
+              (fun _ value => value) key]
+            unfold Declaration.default
+            cases Entry.lookup declaration.defaults key <;> rfl
+  simpa using go names ({}, {})
+
+/-- The compiled method for any key is the parent-first C4 composition,
+including keys with no direct method in a given declaration. -/
+private theorem compileTablesFor_method_getD
+    {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (schema : Schema Key Value) (names : List String) (key : Key) :
+    ((compileTablesFor schema names).2.get? key).getD
+      Prototype.Method.identity =
+    names.foldl (fun inherited name =>
+      match schema.declaration name with
+      | none => inherited
+      | some declaration =>
+          match declaration.slot key with
+          | none => inherited
+          | some spec => Prototype.Method.compose spec.toMethod inherited)
+      Prototype.Method.identity := by
+  unfold compileTablesFor
+  have go (rest : List String) (tables : CompiledTables (Key := Key) (Value := Value)) :
+      ((rest.foldl (fun tables name =>
+        match schema.declaration name with
+        | none => tables
+        | some declaration =>
+            (declaration.defaults.foldl (fun defaults entry =>
+              defaults.insert entry.key entry.value) tables.1,
+             declaration.compileLocalMethods tables.2)) tables).2.get? key).getD
+        Prototype.Method.identity =
+      rest.foldl (fun inherited name =>
+        match schema.declaration name with
+        | none => inherited
+        | some declaration =>
+            match declaration.slot key with
+            | none => inherited
+            | some spec => Prototype.Method.compose spec.toMethod inherited)
+        ((tables.2.get? key).getD Prototype.Method.identity) := by
+    induction rest generalizing tables with
+    | nil => rfl
+    | cons name tail ih =>
+        simp only [List.foldl_cons]
+        rw [ih]
+        cases found : schema.declaration name with
+        | none => simp
+        | some declaration =>
+            simp only
+            rw [Declaration.compileLocalMethods_get?]
+            cases declaration.slot key <;> rfl
+  simpa using go names ({}, {})
+
+/-- The compiled tables give the same open-recursive result as the canonical
+resolver for every key, before the final finite-key projection. -/
+private theorem Plan.compiledTables_resolve
+    {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) (key : Key) (self : Self Key Value) :
+    let tables := compileTablesFor plan.schema plan.precedence.reverse
+    ((tables.2.get? key).getD Prototype.Method.identity) self
+      (fun _ => tables.1.get? key) = plan.resolve key self := by
+  simp only
+  rw [compileTablesFor_method_getD, compileTablesFor_default_get?]
+  rfl
+
+private theorem foldInsert_preserve {Key : Type u} {Result : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (keys : List Key) (table : Std.DHashMap Key Result)
+    (f : (key : Key) → Result key) (key : Key)
+    (present : table.get? key = some (f key)) :
+    (keys.foldl (fun current next => current.insert next (f next)) table).get? key =
+      some (f key) := by
+  induction keys generalizing table with
+  | nil => exact present
+  | cons next rest ih =>
+      simp only [List.foldl_cons]
+      apply ih
+      rw [Std.DHashMap.get?_insert]
+      by_cases same : key = next
+      · subst next
+        simp
+      · have reverse : next ≠ key := by intro h; exact same h.symm
+        simpa [reverse, same] using present
+
+private theorem foldInsert_mem {Key : Type u} {Result : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (keys : List Key) (table : Std.DHashMap Key Result)
+    (f : (key : Key) → Result key) (key : Key)
+    (member : key ∈ keys) :
+    (keys.foldl (fun current next => current.insert next (f next)) table).get? key =
+      some (f key) := by
+  induction keys generalizing table with
+  | nil => cases member
+  | cons next rest ih =>
+      simp only [List.foldl_cons]
+      by_cases same : key = next
+      · subst next
+        apply foldInsert_preserve
+        simp
+      · have tailMember : key ∈ rest := by
+          simpa [same] using member
+        exact ih (table.insert next (f next)) tailMember
+
 /-- Compile defaults and effective methods in one least-specific-to-most-
 specific traversal, following Gerbil-POO's method-table construction. The
 method algebra is still `SlotSpec.toMethod` and `Method.compose`. -/
 private def Plan.compileEffective {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) (keys : List Key) :
-    Std.DHashMap Key (fun key => Self Key Value → Option (Value key)) := Id.run do
-  let mut defaults : Std.DHashMap Key Value := {}
-  let mut methods : Std.DHashMap Key
-      (fun key => Prototype.Method (Self Key Value) (Option (Value key))) := {}
-  for name in plan.precedence.reverse do
-    if let some declaration := plan.schema.declaration name then
-      for entry in declaration.defaults do
-        defaults := defaults.insert entry.key entry.value
-      methods := declaration.compileLocalMethods methods
-  let mut effective : Std.DHashMap Key
-      (fun key => Self Key Value → Option (Value key)) := {}
-  for key in keys do
+    Std.DHashMap Key (fun key => Self Key Value → Option (Value key)) :=
+  let (defaults, methods) := compileTablesFor plan.schema plan.precedence.reverse
+  keys.foldl (fun effective key =>
     let method := (methods.get? key).getD Prototype.Method.identity
     let base := defaults.get? key
-    effective := effective.insert key (fun self => method self (fun _ => base))
-  return effective
+    effective.insert key (fun self => method self (fun _ => base))) {}
+
+/-- Every materialized key in the compiled table resolves exactly as the
+canonical C4 plan, for any open-recursive self. -/
+private theorem Plan.compileEffective_get?_mem
+    {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) (keys : List Key) (key : Key)
+    (member : key ∈ keys) :
+    (plan.compileEffective keys).get? key = some (plan.resolve key) := by
+  let tables := compileTablesFor plan.schema plan.precedence.reverse
+  have lookup : (plan.compileEffective keys).get? key =
+      some (fun self =>
+        ((tables.2.get? key).getD Prototype.Method.identity) self
+          (fun _ => tables.1.get? key)) := by
+    unfold Plan.compileEffective
+    exact foldInsert_mem keys
+      ({} : Std.DHashMap Key (fun key => Self Key Value → Option (Value key)))
+      (fun key self =>
+        ((tables.2.get? key).getD Prototype.Method.identity) self
+          (fun _ => tables.1.get? key)) key member
+  rw [lookup]
+  congr 1
+  funext self
+  exact plan.compiledTables_resolve key self
 
 /-- Precompute every effective method in one pass, then keep slot values
 lazy. This favors objects whose callers read many declared slots. -/
