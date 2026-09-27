@@ -33,26 +33,30 @@ def branching : Program Key Value :=
     |>.withSlot .b (fun _ => pure (some 1)))
     |>.withSlot .c (fun _ => pure (some 2))
 
-#guard match (cyclic.runTrace 8 .a).result with
-  | .error (.cycle [.a, .b, .a]) => true
-  | _ => false
-#guard match (finite.runTrace 2 .a).result with
-  | .ok (some 42) => true
-  | _ => false
-#guard match (branching.runTrace 2 .a).result with
-  | .error (.fuelExhausted [.a, .c]) => true
-  | _ => false
-#guard match (branching.runTrace 3 .a).result with
-  | .ok (some 2) => true
-  | _ => false
-#guard match (branching.runTrace 2 .a).events with
-  | [.enter .a, .enter .b, .resolved .b, .exhausted [.a, .c]] => true
-  | _ => false
-#guard (branching.runTrace 2 .a).stepsUsed == 2
-#guard (branching.runTrace 3 .a).stepsUsed == 3
+private def diagnosticsHold : Bool :=
+  (match (cyclic.runTrace 8 .a).result with
+    | .error (.cycle [.a, .b, .a]) => true
+    | _ => false) &&
+  (match (finite.runTrace 2 .a).result with
+    | .ok (some 42) => true
+    | _ => false) &&
+  (match (branching.runTrace 2 .a).result with
+    | .error (.fuelExhausted [.a, .c]) => true
+    | _ => false) &&
+  (match (branching.runTrace 3 .a).result with
+    | .ok (some 2) => true
+    | _ => false) &&
+  (match (branching.runTrace 2 .a).events with
+    | [.enter .a, .enter .b, .resolved .b, .exhausted [.a, .c]] => true
+    | _ => false) &&
+  (branching.runTrace 2 .a).stepsUsed == 2 &&
+  (branching.runTrace 3 .a).stepsUsed == 3
 
-#eval cyclic.runTrace 8 .a
-#eval finite.runTrace 8 .a
-#eval finite.runTrace 1 .a
+example : diagnosticsHold = true := by native_decide
+
+#eval (do
+  if (← IO.getEnv "LEANPOO_VERBOSE") == some "1" then
+    IO.println (repr (cyclic.runTrace 8 .a,
+      finite.runTrace 8 .a, finite.runTrace 1 .a)) : IO Unit)
 
 end DebugObjectExample

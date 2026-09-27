@@ -222,6 +222,16 @@ reference-counting runtime cannot reclaim automatically. These are executable
 recursion boundaries. Prototype
 composition, slot types, C4 data, and typed builders remain type checked.
 
+For finite, declared self dependencies, ~Dependencies.scheduleRanked~ checks
+the dependency order and constructs a total fixed-point instance instead of
+using the general thunk knot. ~Dependencies.revise~ then propagates edited
+keys through that dependency graph and reuses only cached values proved
+unchanged. [[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] exercises this path across a C4 inherited
+source and two computed branches. This certified incremental path requires a
+proof that resolver bodies outside the edited roots are unchanged at the old
+self. It does not claim to instrument arbitrary Lean function bodies or reuse
+the executable ~Memoized~ thunks.
+
 * Conclusion
 
 The POOF PO construction has an executable Lean main path:

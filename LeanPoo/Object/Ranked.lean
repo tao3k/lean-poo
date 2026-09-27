@@ -66,6 +66,15 @@ inductive DependencyError (Key : Type u) where
   | invalidOrder (order : List Key)
   deriving Repr
 
+/-- A dependency-first schedule with the edge ordering needed for induction
+over resolved values. -/
+structure Scheduled {Key : Type u} {Value : Key → Type v}
+    {plan : Plan Key Value} (spec : Dependencies Key Value plan) where
+  order : List Key
+  ranked : Ranked Key Value plan
+  edgeLower : ∀ key dependency, dependency ∈ spec.reads key →
+    ranked.rank dependency < ranked.rank key
+
 /-- A bounded dependency-first scheduler. A blocked remainder contains a
 cycle or a dependency absent from the supplied finite key list. -/
 private def Dependencies.schedule [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -91,10 +100,10 @@ where
 /-- Infer a rank from declared dependencies, then check every edge before
 producing a proof-bearing ranked plan. An absent source identifies its reader;
 after that check, a blocked remainder contains a dependency cycle. -/
-def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
+def Dependencies.scheduleRanked {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
-    Except (DependencyError Key) (Ranked Key Value plan) := do
+    Except (DependencyError Key) (Scheduled spec) := do
   for key in spec.keys do
     for dependency in spec.reads key do
       unless spec.keys.contains dependency do
@@ -104,20 +113,33 @@ def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
   if checked : spec.keys.all (fun key =>
       (spec.reads key).all (fun dependency =>
         decide (rank dependency < rank key))) = true then
+    have edgeLower : ∀ key dependency, dependency ∈ spec.reads key →
+        rank dependency < rank key := by
+      intro key dependency membership
+      have keyChecked := List.all_eq_true.mp checked key
+        (spec.supported key dependency membership)
+      have edgeChecked :=
+        List.all_eq_true.mp keyChecked dependency membership
+      exact of_decide_eq_true edgeChecked
     return {
-      rank
-      dependsOnLower := by
-        intro key left right lower
-        apply spec.dependsOnlyOn key left right
-        intro dependency membership
-        apply lower dependency
-        have keyChecked := List.all_eq_true.mp checked key
-          (spec.supported key dependency membership)
-        have edgeChecked :=
-          List.all_eq_true.mp keyChecked dependency membership
-        exact of_decide_eq_true edgeChecked }
+      order
+      ranked := {
+        rank
+        dependsOnLower := by
+          intro key left right lower
+          apply spec.dependsOnlyOn key left right
+          intro dependency membership
+          exact lower dependency (edgeLower key dependency membership) }
+      edgeLower }
   else
     throw (.invalidOrder order)
+
+/-- Forget the schedule while retaining its fixed-point construction. -/
+def Dependencies.inferRanked {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
+    Except (DependencyError Key) (Ranked Key Value plan) :=
+  spec.scheduleRanked.map Scheduled.ranked
 
 /-- Construct a fixed-point instance directly from a checked finite
 dependency declaration. The returned state satisfies the original plan's
@@ -126,6 +148,6 @@ def Dependencies.instantiate {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
     Except (DependencyError Key) (Instance Key Value plan) :=
-  spec.inferRanked.map Ranked.instantiate
+  spec.scheduleRanked.map (fun scheduled => scheduled.ranked.instantiate)
 
 end LeanPoo.Object

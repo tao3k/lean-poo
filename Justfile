@@ -52,6 +52,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Resolve
     lake build LeanPoo.Object.Instance
     lake build LeanPoo.Object.Ranked
+    lake build LeanPoo.Object.Incremental
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
@@ -60,6 +61,12 @@ check-object: check-c4 check-generic
     lake env lean Examples/ComputedDefault.lean
     lake env lean Examples/MapDeclaration.lean
     lake env lean Examples/RankedObject.lean
+    just check-incremental
+
+# Check certified dependency propagation; opt into the impact trace on demand.
+check-incremental verbose="false":
+    lake build LeanPoo.Object.Debug
+    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; fi
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
@@ -102,9 +109,9 @@ check-example: check-compose
     just check-debug
 
 # Run diagnostic object examples in a bounded Lean process.
-check-debug:
+check-debug verbose="false":
     lake build LeanPoo.Object.Debug
-    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean
+    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean; fi
     @debug_rc=0; timeout --signal=TERM --kill-after=1s 2s lake env lean -M 2048 -T 10000000 Examples/DebugUnboundedBody.lean >/dev/null 2>&1 || debug_rc=$?; test "$debug_rc" -eq 124
 
 # Compile the complete executable PO core and its usage examples.

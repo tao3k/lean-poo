@@ -122,6 +122,12 @@ The Lean modules are separated by semantic responsibility:
   Its locality proof connects that well-founded evaluation to the ordinary C4
   resolver, including inherited declarations. The resulting instance uses the
   existing certificate and cache APIs.
+- ~LeanPoo/Object/Incremental.lean~ computes a conservative reverse-dependency
+  footprint from that schedule, checks closure, proves old and new instance
+  values equal outside the footprint, and rebases only those cached entries.
+  ~Dependencies.revise~ combines those steps into one checked update.
+  ~Object.Debug.Revision.explainImpact~ reports the direct edit and affected
+  reads without adding instrumentation to each slot.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
   ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
@@ -210,7 +216,7 @@ and class layers use native types rather than Scheme's dynamic MOP.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|
-| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint; ~rebaseInstanceCacheByValue~ can compare cached keys when their values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. Reusing them requires a sound footprint for all computed dependents and a connection between the executable fixed point and the certified instance; neither follows from direct slot edits alone. Value comparison is a sound but potentially expensive fallback. |
+| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint. ~Scheduled.impact~ propagates changed roots through finite declared dependencies, checks closure, and ~Scheduled.rebaseCache~ reuses only proved-stable values; ~rebaseInstanceCacheByValue~ remains available when values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. The checked incremental path applies to proof-bearing instances whose dependencies are declared and whose unchanged resolver bodies are proved equal at the old self. Arbitrary Lean callbacks cannot be inspected to derive that premise. |
 | Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. ~Object.Ranked.instantiate~ constructs that equation by well-founded recursion for ranked self dependencies. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ still requires a next instance and state-alignment proof; ranked plans can supply the instance when their locality condition holds. |
 | Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
 
