@@ -62,7 +62,10 @@ The Lean modules are separated by semantic responsibility:
   ordered direct slot/default entries as the only declaration source, separate
   from the C4 graph. One generic dependent ~Entry~ supplies typed lookup and
   ordered replacement for both entry kinds. ~fromValues~ and ~fromFunction~ translate the Gerbil
-  direct-value and lazy-function constructors. ~fromMap~ accepts a typed
+  direct-value and lazy-function constructors. ~fromValuesIndexed~ uses a
+  hash-indexed array position to retain first-key order and last-value
+  semantics for wide typed value streams, following Section 10's finite-map
+  representation argument. ~fromMap~ accepts a typed
   dependent map and orders keys with a caller-supplied comparator.
   ~Entry.toMap_get?~ proves that materializing an ordered declaration list
   into a dependent hash map preserves last-write-wins lookup for every key.

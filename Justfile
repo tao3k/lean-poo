@@ -131,7 +131,7 @@ check-po: check-example check-docs
 check-docs:
     emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (cons "README.org" (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
 
-# Measure wide declaration construction separately from correctness checks.
+# Compare equality-only, hash-indexed ordered, and sorted-map construction.
 benchmark-declaration:
     lake build LeanPoo.Object.Schema
     lake env lean --run Examples/DeclarationScale.lean

@@ -86,8 +86,8 @@ declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
 order. ~Memoized~ allocates one new lazy instance after a successful batch,
 and ~Mutable.reviseDeclarations~ installs it in one cell operation or retains
 the old object on error. Topology-changing ~extend~ and ~mix~ still run C4.
-~Declaration.fromValues~, ~fromMap~, and ~fromFunction~ provide finite typed
-value sources. ~allSlots~, ~foldSlots~, ~values~, and ~force~ provide object
+~Declaration.fromValues~, ~fromValuesIndexed~, ~fromMap~, and ~fromFunction~
+provide finite typed value sources. ~allSlots~, ~foldSlots~, ~values~, and ~force~ provide object
 inspection and materialization.
 ~LeanPoo.mixC4~ accepts full C4 node metadata when an object needs multiple
 local parent orders or suffix behavior; the simpler ~mix~ supplies one flat

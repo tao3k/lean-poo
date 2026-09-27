@@ -122,6 +122,22 @@ def Declaration.fromValues [DecidableEq Key]
   entries.foldl (fun declaration entry =>
     declaration.withValue entry.1 entry.2) .empty
 
+/-- Hash-indexed bulk construction with the same first-position/last-value
+rule as `fromValues`. The ordered array owns declaration order; the map only
+finds an existing position, so no hash-map iteration order escapes. -/
+def Declaration.fromValuesIndexed
+    [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (entries : List (Sigma Value)) : Declaration Key Value :=
+  let (_, ordered) := entries.foldl (fun (positions, ordered) entry =>
+    match positions.get? entry.1 with
+    | some index => (positions, ordered.set! index entry)
+    | none =>
+        (positions.insert entry.1 ordered.size, ordered.push entry))
+    (({} : Std.HashMap Key Nat), (#[] : Array (Sigma Value)))
+  { slots := ordered.toList.map fun ⟨key, value⟩ =>
+      ⟨key, .constant (some value), fun _ => inferInstance⟩
+    defaults := [] }
+
 /-- Build direct values from a dependent map in caller-chosen key order.
 This is the typed analogue of object<-hash's sorted traversal. -/
 def Declaration.fromMap [DecidableEq Key] [BEq Key] [Hashable Key]
