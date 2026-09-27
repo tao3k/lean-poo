@@ -192,8 +192,10 @@ The C4 rewrite follows these source operations:
 | ~c3_merge_t~ | ~merge~ |
 | ~cons_t<Node, prefix ++ tail>~ | final ~precedence~ |
 
-Lean evaluates the finite graph in dependency order instead of using C++
-template recursion. ~merge~ follows the C++ ancestor-counting update: count
+Lean evaluates the finite graph with bounded parent-first recursion and a
+table of completed results instead of C++ template recursion. Each reachable
+node's precedence is computed once; cycles exhaust the finite node-depth
+bound. ~merge~ follows the C++ ancestor-counting update: count
 candidate tails once and decrement counts when a selected head exposes a new
 head. ~Std.HashMap~ stores both those counts and completed precedence lists;
 ~Std.HashSet~ handles duplicate detection and order-preserving deduplication.

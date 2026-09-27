@@ -81,16 +81,21 @@ private def computeNode (table : Table) (node : Node) :
     mostSpecificSuffix := if node.suffix then some node.name else inheritedSuffix
   }
 
-/-- Add nodes whose parents are already in the table; preserve declaration order. -/
-private def pass (nodes : List Node) (table : Table) : Except Error Table :=
-  nodes.foldl (fun state node => do
-    let ready ← state
-    if (lookup ready node.name).isSome then
-      return ready
-    if !(parents node).all (fun parent => (lookup ready parent).isSome) then
-      return ready
-    let result ← computeNode ready node
-    return ready.insert node.name result) (.ok table)
+/-- Resolve a node only after its parents, retaining each completed C4 result.
+The remaining node count bounds recursion, including cyclic graphs. -/
+private def resolveNode (index : Std.HashMap String Node) (root name : String)
+    (table : Table) : Nat → Except Error Table
+  | 0 =>
+      if (lookup table name).isSome then .ok table else .error (.cycle root)
+  | fuel + 1 => do
+      if (lookup table name).isSome then
+        return table
+      let some node := index.get? name | throw (.unknownNode name)
+      let mut ready := table
+      for parent in parents node do
+        ready ← resolveNode index root parent ready fuel
+      let result ← computeNode ready node
+      return ready.insert name result
 
 /-- First declarations own name lookup until duplicate validation reports an
 error; indexing avoids repeated linear searches while discovering reachability. -/
@@ -126,10 +131,11 @@ def linearize (graph : Graph) (root : String) : Except Error (List String) := do
   if (index.get? root).isNone then
     throw (.unknownNode root)
   let names := reachable graph index root
-  let nodes := graph.nodes.filter (fun node => names.contains node.name)
+  let namesSet := names.foldl (fun seen name => seen.insert name)
+    ({} : Std.HashSet String)
+  let nodes := graph.nodes.filter (fun node => namesSet.contains node.name)
   ({ nodes } : Graph).validate
-  let table ← (List.range nodes.length).foldl
-    (fun state _ => state.bind (pass nodes)) (.ok {} : Except Error Table)
+  let table ← resolveNode index root root {} nodes.length
   let some result := lookup table root | throw (.cycle root)
   return result.precedence
 

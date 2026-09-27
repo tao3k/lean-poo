@@ -16,6 +16,12 @@ private def cycle : Graph :=
   { nodes := [{ name := "A", parentOrders := [["B"]] },
       { name := "B", parentOrders := [["A"]] }] }
 
+private def diamond : Graph :=
+  { nodes := [{ name := "O" },
+      { name := "A", parentOrders := [["O"]] },
+      { name := "B", parentOrders := [["O"]] },
+      { name := "Root", parentOrders := [["A", "B"]] }] }
+
 example : (match linearize duplicateReachable "Root" with
     | .error (.duplicateNode name) => name == "A"
     | _ => false) = true := by
@@ -33,5 +39,10 @@ example : (match linearize unknownParent "Root" with
 
 example : (match linearize cycle "A" with
     | .error (.cycle name) => name == "A"
+    | _ => false) = true := by
+  native_decide
+
+example : (match linearize diamond "Root" with
+    | .ok order => order == ["Root", "A", "B", "O"]
     | _ => false) = true := by
   native_decide

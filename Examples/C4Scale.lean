@@ -23,6 +23,6 @@ private def sample (shape : String) (graph : Graph) (root : String) : IO Unit :=
   IO.println s!"shape={shape} nodes={graph.nodes.length} elapsed_us={elapsedUs} precedence={order.length}"
 
 def main : IO Unit := do
-  for count in [32, 64, 128] do
+  for count in [32, 64, 128, 256] do
     sample "chain" (chain count) (toString (count - 1))
     sample "fanIn" (fanIn count) "Root"
