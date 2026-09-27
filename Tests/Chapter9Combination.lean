@@ -1,7 +1,7 @@
 import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.Chapter9Combination
+namespace LeanPoo.Tests.Chapter9Combination
 
 abbrev Payload : String → Type := fun _ => Nat
 abbrev Call := Object.Plan String Payload × Nat
@@ -141,4 +141,4 @@ def preparedExercise : Except String
   | .ok (1112, 1115, 1, 0, 11117, 1115, 0, 114) => true
   | _ => false
 
-end LeanPoo.Examples.Chapter9Combination
+end LeanPoo.Tests.Chapter9Combination

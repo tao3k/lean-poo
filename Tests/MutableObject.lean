@@ -1,6 +1,6 @@
 import LeanPoo.Object.Mutable
 
-namespace LeanPoo.Examples.MutableObject
+namespace LeanPoo.Tests.MutableObject
 
 def run : IO (Except LeanPoo.C4.Error (Option Nat × Option Nat)) := do
   let empty : LeanPoo.Object.Schema String (fun _ => Nat) :=
@@ -58,4 +58,4 @@ private def batchRun : IO Bool := do
   unless ← batchRun do
     throw (IO.userError "batched mutable prototype revision failed") : IO Unit)
 
-end LeanPoo.Examples.MutableObject
+end LeanPoo.Tests.MutableObject

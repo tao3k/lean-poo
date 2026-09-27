@@ -1,6 +1,6 @@
 import LeanPoo.Object.Schema
 
-namespace LeanPoo.Examples.TypedSlots
+namespace LeanPoo.Tests.TypedSlots
 
 /-- A class interface is a Lean family of value types indexed by slot keys. -/
 inductive Key where
@@ -27,4 +27,4 @@ def declaration : Object.Declaration Key Value :=
 def setRetries (value : Nat) : Object.Declaration Key Value :=
   declaration.withValue .retries value
 
-end LeanPoo.Examples.TypedSlots
+end LeanPoo.Tests.TypedSlots

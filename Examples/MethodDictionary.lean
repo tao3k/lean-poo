@@ -1,94 +1,43 @@
 import LeanPoo.Object.MethodDictionary
 
-open LeanPoo
+/-! A layered formatter: the caller can keep an earlier method while the
+runtime object acquires a later override. -/
 
 namespace LeanPoo.Examples.MethodDictionary
 
+open LeanPoo
+
 inductive Key where
-  | quote
-  | level
-  | audit
+  | format
   deriving DecidableEq, BEq, ReflBEq, LawfulBEq, Hashable
 
-abbrev Args : Key → Type
-  | .quote => String
-  | .level => Unit
-  | .audit => Bool
+abbrev Method := Object.DictionaryMethod Key Nat (fun _ => String) (fun _ => String)
 
-abbrev Result : Key → Type
-  | .quote => String
-  | .level => Nat
-  | .audit => Bool
+def base : Object.Declaration Key Method :=
+  Object.Declaration.empty.withValue .format
+    (fun receiver suffix => s!"record {receiver}{suffix}")
 
-abbrev Method := Object.DictionaryMethod Key Nat Args Result
-abbrev Dictionary := Object.MethodDictionary Key Nat Args Result
+def wrapped : Object.Declaration Key Method :=
+  Object.Declaration.empty.withSlot .format
+    (.computed fun _ inherited => do
+      let previous ← inherited ()
+      return fun receiver suffix => s!"[{previous receiver suffix}]")
 
-private def base : Object.Declaration Key Method :=
-  Object.Declaration.empty
-    |>.withValue .quote (fun receiver suffix => s!"base:{receiver}:{suffix}")
-    |>.withValue .level (fun receiver _ => receiver + 1)
-
-private def child : Object.Declaration Key Method :=
-  Object.Declaration.empty |>.withSlot .quote
-    (.computed fun _ inherited =>
-      let parent := (inherited ()).getD (fun _ _ => "missing")
-      some (fun receiver suffix => s!"child({parent receiver suffix})"))
-
-private def late : Object.Declaration Key Method :=
-  Object.Declaration.empty |>.withSlot .quote
-    (.computed fun _ inherited =>
-      let parent := (inherited ()).getD (fun _ _ => "missing")
-      some (fun receiver suffix => s!"late({parent receiver suffix})"))
-
-private def dictionaries : Except C4.Error (Dictionary × Dictionary × Dictionary) := do
+def usage : Except C4.Error (String × String × String) := do
   let empty : Object.Schema Key Method :=
     { graph := { nodes := [] }, declaration := fun _ => none }
   let basePlan ← LeanPoo.mix empty "Base" [] base
-  let childPlan ← LeanPoo.extend basePlan.schema "Child" "Base" child
-  let latePlan ← LeanPoo.extend childPlan.schema "Late" "Child" late
-  return (Object.MethodDictionary.fromMemoized basePlan.memoizeCompiled,
-    Object.MethodDictionary.fromMemoized childPlan.memoizeCompiled,
-    Object.MethodDictionary.fromMemoized latePlan.memoizeCompiled)
+  let childPlan ← LeanPoo.extend basePlan.schema "Wrapped" "Base" wrapped
+  let original := Object.MethodDictionary.fromMemoized basePlan.memoizeCompiled
+  let updated := Object.MethodDictionary.fromMemoized childPlan.memoizeCompiled
+  let object : Object.DictionaryObject Key Nat (fun _ => String) (fun _ => String) :=
+    { receiver := 42, methods := updated }
+  let fallback : Nat → String → String := fun _ _ => "missing"
+  let selected := original.select .format fallback
+  return (object.callDynamic .format "!" fallback,
+    object.callStatic original .format "!" fallback,
+    object.callSelected selected "!")
 
-private def quoteFallback : Nat → String → String :=
-  fun _ _ => "missing quote"
-
-private def levelFallback : Nat → Unit → Nat :=
-  fun _ _ => 0
-
-private def auditFallback : Nat → Bool → Bool :=
-  fun receiver allowed => receiver > 0 && allowed
-
-private def observed : Option Bool := do
-  let (baseDict, childDict, lateDict) ← dictionaries.toOption
-  let object : Object.DictionaryObject Key Nat Args Result :=
-    { receiver := 7, methods := childDict }
-  let revised := object.withMethods lateDict
-  let selectedQuote := baseDict.select .quote quoteFallback
-  let selectedAudit := baseDict.select .audit auditFallback
-  let generic : Object.Generic Nat (Method .quote) String String :=
-    Object.Generic.fromDictionary (.quote : Key)
-    (fun receiver => if receiver >= 10 then lateDict else baseDict)
-    quoteFallback
-  return (
-    object.callDynamic .quote "x" quoteFallback == "child(base:7:x)" &&
-    object.callStatic baseDict .quote "x" quoteFallback == "base:7:x" &&
-    object.callSelected selectedQuote "x" == "base:7:x" &&
-    object.callStatic childDict .quote "x" quoteFallback ==
-      object.callDynamic .quote "x" quoteFallback &&
-    object.callDynamic .level () levelFallback == 8 &&
-    object.callStatic baseDict .level () levelFallback == 8 &&
-    object.callDynamic .audit true auditFallback == true &&
-    object.callDynamic .audit false auditFallback == false &&
-    object.callSelected selectedAudit true == true &&
-    revised.callDynamic .quote "x" quoteFallback ==
-      "late(child(base:7:x))" &&
-    revised.callStatic baseDict .quote "x" quoteFallback == "base:7:x" &&
-    revised.callSelected selectedQuote "x" == "base:7:x" &&
-    object.callDynamic .quote "x" quoteFallback == "child(base:7:x)" &&
-    generic.call 7 "x" == "base:7:x" &&
-    generic.call 10 "x" == "late(child(base:10:x))")
-
-example : observed = some true := by native_decide
+#eval usage
 
 end LeanPoo.Examples.MethodDictionary

@@ -1,7 +1,7 @@
 import LeanPoo.Object.DispatchTable
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.DispatchTable
+namespace LeanPoo.Tests.DispatchTable
 
 abbrev Payload : String → Type := fun _ => Nat
 abbrev Item := Object.Plan String Payload
@@ -108,4 +108,4 @@ def rejected : Except String (Bool × List String) := do
   | .ok (true, ["base"]) => true
   | _ => false
 
-end LeanPoo.Examples.DispatchTable
+end LeanPoo.Tests.DispatchTable

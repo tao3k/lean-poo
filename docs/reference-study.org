@@ -239,7 +239,7 @@ repeated name scans during discovery; validation still reports reachable
 duplicate declarations before unknown parent references. Merge results and
 parent results use reverse accumulation and reverse once at the boundary.
 ~just benchmark-c4~ measures deep chains and wide fan-in graphs, while
-[[file:../Examples/C4Traversal.lean][C4Traversal.lean]] checks the reachable-error boundary.
+[[file:../Tests/C4Traversal.lean][C4Traversal.lean]] checks the reachable-error boundary.
 The integrated example executes both a suffix-tail graph and multiple local
 parent orders from C4-Mixins, as well as cycle and conflicting-order
 rejection.

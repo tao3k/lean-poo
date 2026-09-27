@@ -2,7 +2,7 @@ import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Class
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.MethodCombination
+namespace LeanPoo.Tests.MethodCombination
 
 open Object.MethodCombination
 
@@ -84,4 +84,4 @@ def result : Except C4.Error (List String × Except String (Nat × List String))
         "around-exit"]
   | _ => false
 
-end LeanPoo.Examples.MethodCombination
+end LeanPoo.Tests.MethodCombination

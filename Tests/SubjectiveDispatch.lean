@@ -1,7 +1,7 @@
 import LeanPoo.Object.Subjective
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.SubjectiveDispatch
+namespace LeanPoo.Tests.SubjectiveDispatch
 
 abbrev Payload : String → Type := fun _ => Nat
 abbrev Subject := Object.Plan String Payload
@@ -86,4 +86,4 @@ def lowPriority : Except String (List String × Nat) := do
   | .ok (["item", "base", "subject"], 1) => true
   | _ => false
 
-end LeanPoo.Examples.SubjectiveDispatch
+end LeanPoo.Tests.SubjectiveDispatch

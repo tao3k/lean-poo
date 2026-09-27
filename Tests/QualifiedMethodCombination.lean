@@ -2,7 +2,7 @@ import LeanPoo.Object.QualifiedMethods
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.QualifiedMethodCombination
+namespace LeanPoo.Tests.QualifiedMethodCombination
 
 structure Request where
   quantity : Nat
@@ -83,4 +83,4 @@ def result : Except C4.Error
     order == ["Final", "Normalize", "CheckAndBonus", "Base"]
   | _ => false
 
-end LeanPoo.Examples.QualifiedMethodCombination
+end LeanPoo.Tests.QualifiedMethodCombination

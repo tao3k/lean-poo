@@ -1,7 +1,7 @@
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Builder
 
-namespace LeanPoo.Examples.NestedPrototype
+namespace LeanPoo.Tests.NestedPrototype
 
 abbrev InnerValue (_ : String) := Nat
 abbrev Inner := Object.Memoized String InnerValue
@@ -100,4 +100,4 @@ def extendedInner : Except NestedError (Option Nat × Option Nat × Bool × Bool
           | none => false
       | _ => false
 
-end LeanPoo.Examples.NestedPrototype
+end LeanPoo.Tests.NestedPrototype

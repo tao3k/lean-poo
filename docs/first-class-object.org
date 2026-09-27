@@ -35,7 +35,7 @@ elaborates two independent examples:
   self, producing ~(some 3, some 6)~. Extending the instantiated object with
   ~x=4~ rebinds that final self and yields ~(some 4, some 8)~.
 
-The full [[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] path also projects a C4 diamond from a
+The full [[file:../Tests/IntegratedPrototype.lean][IntegratedPrototype.lean]] path also projects a C4 diamond from a
 memoized object and preserves the resulting object across a mutable update.
 
 This layer is the functional instance/prototype pairing. The paper's

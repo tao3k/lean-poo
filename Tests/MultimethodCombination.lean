@@ -1,7 +1,7 @@
 import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.MultimethodCombination
+namespace LeanPoo.Tests.MultimethodCombination
 
 abbrev Payload : String → Type := fun _ => Nat
 
@@ -180,4 +180,4 @@ def forwardingExercise : Except String
       "base:8:audit:1", "after:6"]
   | _ => false
 
-end LeanPoo.Examples.MultimethodCombination
+end LeanPoo.Tests.MultimethodCombination

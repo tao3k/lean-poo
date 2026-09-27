@@ -2,7 +2,7 @@ import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Class
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.SimpleMethodCombination
+namespace LeanPoo.Tests.SimpleMethodCombination
 
 open Object.MethodCombination
 
@@ -73,4 +73,4 @@ def result : Except C4.Error (List String × Except String (Bool × List String)
   | .ok (true, []) => true
   | _ => false)
 
-end LeanPoo.Examples.SimpleMethodCombination
+end LeanPoo.Tests.SimpleMethodCombination

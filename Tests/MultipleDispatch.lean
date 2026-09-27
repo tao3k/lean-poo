@@ -2,7 +2,7 @@ import LeanPoo.Object.Multimethod
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.MultipleDispatch
+namespace LeanPoo.Tests.MultipleDispatch
 
 abbrev Payload : String → Type := fun _ => Nat
 
@@ -110,4 +110,4 @@ def exercise : Except String
   | .error (.arity 2 1) => true
   | _ => false
 
-end LeanPoo.Examples.MultipleDispatch
+end LeanPoo.Tests.MultipleDispatch

@@ -1,6 +1,6 @@
 import LeanPoo.Object.InlineDispatch
 
-namespace LeanPoo.Examples.InlineDispatch
+namespace LeanPoo.Tests.InlineDispatch
 
 private abbrev Args := List String × Nat
 
@@ -61,4 +61,4 @@ private def arityFailure : Bool :=
 
 example : arityFailure = true := by native_decide
 
-end LeanPoo.Examples.InlineDispatch
+end LeanPoo.Tests.InlineDispatch

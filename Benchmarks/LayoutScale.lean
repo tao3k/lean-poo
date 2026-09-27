@@ -1,6 +1,6 @@
 import LeanPoo.Object.Layout
 
-namespace LeanPoo.Examples.LayoutScale
+namespace LeanPoo.Benchmarks.LayoutScale
 
 private def object : Option (Object.Memoized String (fun _ => Nat)) := do
   let entries : List (Sigma (fun _ : String => Nat)) :=
@@ -68,6 +68,6 @@ def main : IO Unit := do
     throw (IO.userError "layout read differs from keyed read")
   IO.println s!"calls={count} fields={layout.fields.size} checksum={keyed} keyed_ns={keyedNs} offset_ns={offsetNs} site_ns={siteNs}"
 
-end LeanPoo.Examples.LayoutScale
+end LeanPoo.Benchmarks.LayoutScale
 
-def main : IO Unit := LeanPoo.Examples.LayoutScale.main
+def main : IO Unit := LeanPoo.Benchmarks.LayoutScale.main

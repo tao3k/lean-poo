@@ -2,7 +2,7 @@ import LeanPoo.Object.Layout
 
 open LeanPoo
 
-namespace LeanPoo.Examples.SuffixLayout
+namespace LeanPoo.Tests.SuffixLayout
 
 abbrev Field (_ : String) := Nat
 
@@ -82,4 +82,4 @@ private def observed : Option Bool := do
 
 example : observed = some true := by native_decide
 
-end LeanPoo.Examples.SuffixLayout
+end LeanPoo.Tests.SuffixLayout

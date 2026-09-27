@@ -1,7 +1,7 @@
 import LeanPoo.Object.Class
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.ClassInstanceMethods
+namespace LeanPoo.Tests.ClassInstanceMethods
 
 structure Rectangle where
   width : Nat
@@ -54,4 +54,4 @@ def diamond : Except C4.Error (List String × Option Nat) := do
       result == 26
   | _ => false
 
-end LeanPoo.Examples.ClassInstanceMethods
+end LeanPoo.Tests.ClassInstanceMethods

@@ -1,7 +1,7 @@
 import LeanPoo.Object.StaticDispatch
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.StaticDispatch
+namespace LeanPoo.Tests.StaticDispatch
 
 abbrev Payload : String → Type := fun _ => Nat
 abbrev Item := Object.Plan String Payload
@@ -49,4 +49,4 @@ def exercise : Except String (Nat × Nat × Nat × Nat × Bool × Nat) := do
   | .ok (13, 118, 118, 23, true, 3) => true
   | _ => false
 
-end LeanPoo.Examples.StaticDispatch
+end LeanPoo.Tests.StaticDispatch

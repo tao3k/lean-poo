@@ -1,7 +1,7 @@
 import LeanPoo.Object.Builder
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.DeclarationBuilder
+namespace LeanPoo.Tests.DeclarationBuilder
 
 inductive Key where
   | active
@@ -50,4 +50,4 @@ def result : Except C4.Error (Option Nat) := do
   | .ok (some 3) => true
   | _ => false
 
-end LeanPoo.Examples.DeclarationBuilder
+end LeanPoo.Tests.DeclarationBuilder

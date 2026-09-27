@@ -67,7 +67,7 @@ folds each declaration's slots directly into
 the effective table, without materializing and iterating a temporary local
 hash map. ~Declaration.compileLocalMethods_get?~ proves that each local write
 uses the prior C4 layers and that the final direct declaration wins.
-[[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
+[[file:../Tests/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
 default, duplicate-declaration, self, missing-slot, and C4 diamond behavior.
 ~Plan.resolve_eq_compileSlot~ proves that the parent-first method fold used by
 the standard resolver equals the original C4 fold for every key and self; the
@@ -93,7 +93,7 @@ where its different cost profile helps.
 ~Memoized.mode~ keeps the selected construction path through extension,
 cloning, and revision; ~mixWith~ follows its left receiver. The compiled
 prototype constructor also preserves the selected mode after a later mutable
-edit. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] and [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] exercise these transitions.
+edit. [[file:../Tests/CompiledMemo.lean][CompiledMemo.lean]] and [[file:../Tests/MutablePrototype.lean][MutablePrototype.lean]] exercise these transitions.
 ~Plan.reviseDeclaration~ keeps its validated C4 precedence when only a
 declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
 order. ~Memoized~ allocates one new lazy instance after a successful batch,
@@ -118,14 +118,14 @@ inheritance, independent object mixing, cloning, persistent declaration
 revision, and a diamond with a shared ancestor. The diamond order is
 ~Diamond -> Left -> Right -> Base~ and its resulting slot value is ~13~.
 The same plan also runs as a first-class object and yields the same slot
-value. [[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] executes
+value. [[file:../Tests/DescriptorClass.lean][DescriptorClass.lean]] executes
 a descriptor class, extends it after instantiation, and derives a list
-descriptor. [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows a
+descriptor. [[file:../Tests/MutableObject.lean][MutableObject.lean]] shows a
 cell holding a pure object whose revised declaration yields a new instance.
 Its batch scenario revises an inherited base and child computation together,
 checks the preserved precedence, and rejects a batch with an unknown node
 without changing the installed instance.
-[[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] implements the
+[[file:../Tests/MutablePrototype.lean][MutablePrototype.lean]] implements the
 paper's parent-before-child effect order using one mutable object identity.
 It compares private staged construction with sequential effects and checks
 that a custom effect takes the latter path. The synthetic
@@ -141,7 +141,7 @@ of a computation, yielding ~(9, true)~.
 
 * Integrated execution
 
-[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one construction all the way through
+[[file:../Tests/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one construction all the way through
 C4 precedence, typed slot composition, lazy object execution, first-class
 projection, a later override, and a mutable identity. The diamond order is
 ~Diamond -> Left -> Right -> Base~. Its inherited slot is ~13~ and its
@@ -280,7 +280,7 @@ For finite, declared self dependencies, ~Dependencies.scheduleRanked~ checks
 the dependency order and constructs a total fixed-point instance instead of
 using the general thunk knot. ~Dependencies.revise~ then propagates edited
 keys through that dependency graph and reuses only cached values proved
-unchanged. [[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] exercises this path across a C4 inherited
+unchanged. [[file:../Tests/IncrementalObject.lean][IncrementalObject.lean]] exercises this path across a C4 inherited
 source and two computed branches. This certified incremental path requires a
 proof that resolver bodies outside the edited roots are unchanged at the old
 self. It does not claim to instrument arbitrary Lean function bodies or reuse
@@ -313,8 +313,8 @@ The POOF PO construction has an executable Lean main path:
 The independent [[file:../Examples/PrototypeCore.lean][prototype core]] and
 [[file:../Examples/FirstClassObject.lean][first-class object]],
 [[file:../Examples/LayeredObject.lean][typed slot object]],
-[[file:../Examples/DescriptorClass.lean][class]], and
-[[file:../Examples/MutableObject.lean][mutable object]] examples, together with
+[[file:../Tests/DescriptorClass.lean][class]], and
+[[file:../Tests/MutableObject.lean][mutable object]] examples, together with
 ~just check-po~, provide executable receipts. The C4 plan connects the
 general first-class object construction to typed slot resolution. Descriptor
 classes and a pure-to-mutable cell cover the paper's constructive extensions.

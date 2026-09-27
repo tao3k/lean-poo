@@ -1,7 +1,7 @@
 import LeanPoo.Object.Builder
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.SkewExtension
+namespace LeanPoo.Tests.SkewExtension
 
 structure Quota where
   retries : Nat
@@ -84,4 +84,4 @@ def c4Result : Except C4.Error (Option Nat) := do
   | .ok (some 3) => true
   | _ => false
 
-end LeanPoo.Examples.SkewExtension
+end LeanPoo.Tests.SkewExtension

@@ -1,7 +1,7 @@
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Builder
 
-namespace LeanPoo.Examples.SpecificationFocus
+namespace LeanPoo.Tests.SpecificationFocus
 
 abbrev Value (_ : String) := Nat
 
@@ -78,4 +78,4 @@ def removalResult : Except C4.Error
       | _ => false
   | _ => false
 
-end LeanPoo.Examples.SpecificationFocus
+end LeanPoo.Tests.SpecificationFocus

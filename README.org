@@ -38,13 +38,12 @@ just check
 The smaller Justfile targets include ~check-c4~, ~check-object~,
 ~check-proof~, ~check-debug~, and ~check-docs~. Use ~just check-incremental true~
 or ~just check-debug true~ to print semantic diagnostics only when needed.
-Run ~just --list~ for the full
-command list. The [[file:Examples/IntegratedPrototype.lean][integrated object example]] follows C4 resolution, lazy execution,
-extension, and revision. [[file:Examples/ProofReuseScale.lean][ProofReuseScale.lean]] exercises proof invalidation and reuse;
-[[file:Examples/DebugObject.lean][DebugObject.lean]] demonstrates the public tracing API.
-[[file:Examples/IncrementalObject.lean][IncrementalObject.lean]] carries unaffected cached values and proof obligations across an inherited source-slot edit, then installs the certified revision in a versioned mutable cell.
-[[file:Examples/MutableObject.lean][MutableObject.lean]] shows ordered declaration edits across an inherited base and child, with one atomic installation and rollback on error.
-[[file:Examples/MutablePrototype.lean][MutablePrototype.lean]] shows parent-before-child mutable prototype composition on one object identity and compares it with pure C4 extension.
+Run ~just --list~ for the full command list. [[file:Examples/LayeredObject.lean][LayeredObject.lean]] shows C4
+composition, lazy reads, cloning, and revision. [[file:Examples/MethodDictionary.lean][MethodDictionary.lean]] shows an inherited formatter with dynamic and
+caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.lean]] shows a live object's old and new snapshots.
+[[file:Examples/DebugTrace.lean][DebugTrace.lean]] shows the public tracing API on productive and recursive reads.
+Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
+[[file:Benchmarks/README.org][Benchmarks]].
 
 * Documentation
 
@@ -54,8 +53,9 @@ extension, and revision. [[file:Examples/ProofReuseScale.lean][ProofReuseScale.l
 - [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
 - [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
 
-Documentation is maintained in Org. Lean examples live in ~Examples/~;
-the library modules live in ~LeanPoo/~.
+Documentation is maintained in Org. [[file:Examples/README.org][Examples]] contains user-facing usage scenarios;
+~Tests/~ contains assertions; ~Benchmarks/~ contains measurements; the library
+modules live in ~LeanPoo/~.
 
 * Credits
 

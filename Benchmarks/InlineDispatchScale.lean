@@ -1,6 +1,6 @@
 import LeanPoo.Object.InlineDispatch
 
-namespace LeanPoo.Examples.InlineDispatchScale
+namespace LeanPoo.Benchmarks.InlineDispatchScale
 
 private abbrev Args := List String × Nat
 
@@ -75,6 +75,6 @@ def main : IO Unit := do
     throw (IO.userError "call-site dispatch differs from direct dispatch")
   IO.println s!"calls={count} methods={methodCount} checksum={direct} direct_ns={directNs} generic_ns={genericNs} inline_ns={inlineNs} generic_shapes={updatedGeneric.cache.size} inline_entry={updatedInline.entry.isSome}"
 
-end LeanPoo.Examples.InlineDispatchScale
+end LeanPoo.Benchmarks.InlineDispatchScale
 
-def main : IO Unit := LeanPoo.Examples.InlineDispatchScale.main
+def main : IO Unit := LeanPoo.Benchmarks.InlineDispatchScale.main

@@ -1,0 +1,9 @@
+#+TITLE: LeanPoo benchmarks
+
+These programs measure C4 traversal, declaration construction, dispatch,
+layout lookup, revision, memoization, and mutable composition. Run a named
+~just benchmark-*~ recipe; these measurements are separate from the project
+test gate. They do not establish a general performance guarantee.
+
+Usage scenarios live in [[file:../Examples/README.org][Examples]], and assertions live in
+[[file:../Tests/README.org][Tests]].

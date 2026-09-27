@@ -81,29 +81,29 @@ keys without a hash implementation. ~just benchmark-declaration~ measures all
 three construction paths; the fixture is a construction benchmark, not a
 theorem replay benchmark.
 
-[[file:../Examples/TypedSlots.lean][TypedSlots.lean]] is a standalone Lean example of a key-indexed value family:
+[[file:../Tests/TypedSlots.lean][TypedSlots.lean]] is a standalone Lean example of a key-indexed value family:
 one slot contains ~Bool~, another contains ~Nat~, and a computed slot can
 read final self and its inherited value with those types checked by Lean.
-[[file:../Examples/DeclarationBuilder.lean][DeclarationBuilder.lean]] uses the public
+[[file:../Tests/DeclarationBuilder.lean][DeclarationBuilder.lean]] uses the public
 builder to express ordered heterogeneous declarations with native ~do~ notation.
 Its direct-value declaration is definitionally equal to the corresponding
 ~withValue~ chain; the example also evaluates an inherited method through C4.
-[[file:../Examples/FocusedSpecification.lean][FocusedSpecification.lean]] composes two
+[[file:../Tests/FocusedSpecification.lean][FocusedSpecification.lean]] composes two
 field focuses, updates one nested retry count through inherited computation,
 and checks that neighboring fields keep their inherited values after C4
 resolution.
-[[file:../Examples/SkewExtension.lean][SkewExtension.lean]] demonstrates a genuinely
+[[file:../Tests/SkewExtension.lean][SkewExtension.lean]] demonstrates a genuinely
 skew extension: the method reads an enable flag from final self while
 updating only the inherited retry count. It checks both the enabled and
 disabled cases, states agreement with successive focusing, and installs a
 skew-focused method in a C4 object declaration.
-[[file:../Examples/SpecificationFocus.lean][SpecificationFocus.lean]] focuses a
+[[file:../Tests/SpecificationFocus.lean][SpecificationFocus.lean]] focuses a
 child prototype's declaration, adds a skew method, and checks the old and new
 instances separately. The revised plan keeps its C4 precedence; looking up
 an unknown prototype fails explicitly. The same example composes a specification
 lens with direct method/default lenses, then removes the child contributions
 to reveal the parent's method and default without changing C4 topology.
-[[file:../Examples/NestedPrototype.lean][NestedPrototype.lean]] holds an independently
+[[file:../Tests/NestedPrototype.lean][NestedPrototype.lean]] holds an independently
 extensible inner object in an outer typed slot. Composed lenses change an
 inner value; a fallible focused update extends the inner C4 graph. The outer
 precedence stays fixed, the old outer object retains the old inner object,
@@ -114,7 +114,7 @@ reuses the object's prototype information; the derived object receives its
 own memoized values. The same example mixes two independently built object
 families and reads both inherited slots. A diamond with a shared base shows
 C4's precedence and the order of inherited method composition.
-[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one C4 diamond through memoized
+[[file:../Tests/IntegratedPrototype.lean][IntegratedPrototype.lean]] follows one C4 diamond through memoized
 execution, first-class projection, a new override, and a mutable snapshot.
 
 * Read slots
@@ -159,7 +159,7 @@ Lean's call-by-need ~Thunk~ for each declared key.
 ~memoizeCompiled~ follows Gerbil-POO's base-to-child method-table pass,
 including per-node last-write-wins declarations, and shares the same
 ~SlotSpec.toMethod~ and ~Method.compose~ operations. It moves method assembly
-to object creation. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks the lazy and compiled paths on inherited defaults,
+to object creation. [[file:../Tests/CompiledMemo.lean][CompiledMemo.lean]] checks the lazy and compiled paths on inherited defaults,
 overrides, repeated local declarations, final-self reads, and missing keys.
 The example also checks a C4 diamond. ~Plan.resolve_eq_compileSlot~ proves
 that the standard resolver's parent-first fold equals its original C4 fold
@@ -177,7 +177,7 @@ For repeated instances of one immutable C4 plan, call ~plan.compileMemo~ once
 and then ~compiled.instantiate~ per instance. The compiled table retains open
 methods, while each instance allocates its own shared lazy value cells.
 ~Plan.memoizeCompiled~ is the convenience form that compiles and instantiates
-in one call. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] creates two instances from one compiled plan;
+in one call. [[file:../Tests/CompiledMemo.lean][CompiledMemo.lean]] creates two instances from one compiled plan;
 ~just benchmark-memoization~ includes the separate ~compiledReused~ path.
 ~Memoized.mode~ records the chosen strategy. Derived objects from ~extend~,
 ~mix~, ~plus~, ~clone~, and declaration revision retain that strategy; when
@@ -195,7 +195,7 @@ derived rank before constructing ~Ranked~. ~Dependencies.instantiate~ then
 returns the same proof-bearing instance in one call. The
 caller proves that each slot reads only its declared dependencies; arbitrary
 Lean functions cannot be inspected to infer that claim automatically.
-[[file:../Examples/RankedObject.lean][RankedObject.lean]] constructs a child-computed slot over an inherited base
+[[file:../Tests/RankedObject.lean][RankedObject.lean]] constructs a child-computed slot over an inherited base
 value, its fixed-point instance, and a sound cache. It also checks successful
 rank inference, a declared cycle, and a missing source key. This discipline covers
 well-founded dependencies; it does not decide whether arbitrary Lean slot
@@ -226,7 +226,7 @@ An unforced retained thunk may still hold the old instance through its
 closure until it is forced or released. Callers with a strict retention
 budget can use the explicit immutable ~Cache~ path, whose retained values
 do not close over the old instance.
-[[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] uses a C4 child
+[[file:../Tests/IncrementalObject.lean][IncrementalObject.lean]] uses a C4 child
 with two computed branches. Editing one inherited source invalidates its
 dependent branch while preserving the independent source and computed cache.
 ~Object.Debug.Revision.explainImpact~ shows which dependency caused each
@@ -260,7 +260,7 @@ read path on the new object. ~Proof.rebaseInstanceCache~ derives that equality
 for keys outside a patch's *value-change footprint* from the old and new
 ~Object.Instance~ equations, the patch frame, and state alignment. Computed
 slots whose values change must also be in that footprint, even when the edit
-directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates both
+directly names only another slot. [[file:../Tests/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates both
 single-slot reuse and a computed dependent that must be invalidated with its
 source slot. The dependent example now constructs both instances through
 ~Object.Ranked~, closes a relation certificate after the patch, and rebases
@@ -302,11 +302,13 @@ descriptors supply their native empty value.
 stores a descriptor, value, and proof of acceptance together. Number
 descriptors include integer ranges, fixed-width ~BitVec~, and normalized
 ~Rat~ values.
-[[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] demonstrates
+[[file:../Tests/DescriptorClass.lean][DescriptorClass.lean]] demonstrates
 inheritance and parameterization. ~Object.Mutable~ holds a persistent
 ~Memoized~ object in an ~IO.Ref~. ~reviseDeclaration~ and ~extend~ install a
 fresh C4-validated instance on success. The example in
-[[file:../Examples/MutableObject.lean][MutableObject.lean]] shows this path.
+[[file:../Tests/MutableObject.lean][MutableObject.lean]] shows this path.
+[[file:../Examples/LiveRevision.lean][LiveRevision.lean]] is a short application example that reads an inherited
+computed slot before and after changing the base declaration.
 ~Mutable.reviseDeclarations~ installs a complete ordered batch in one cell
 operation. If any edit fails, the old object and its cached reads remain
 current. The same example edits an inherited base and child computation
@@ -325,7 +327,7 @@ back to sequential private execution.
 for the final instance without first allocating an on-demand instance on the
 standard private path. Applying a layer directly to an already shared cell
 always has sequential effect semantics, so a later failure may leave earlier
-layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares the batched and sequential paths with pure
+layers installed. [[file:../Tests/MutablePrototype.lean][MutablePrototype.lean]] compares the batched and sequential paths with pure
 extension, checks a late override of a ~self~-dependent slot, custom-effect
 fallback, and failed private and shared builds. The identity prototype keeps
 the supplied memoized base, including its existing lazy cells.
@@ -333,7 +335,7 @@ The standard path retains ~Plan.resolve~; the compiled path uses the same
 ~SlotSpec~ method algebra with a preassembled effective table.
 ~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration
 and replace its lazy instance. Existing snapshots retain their old values;
-[[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
+[[file:../Tests/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
 ~putValue~.
 ~Object.Generic.fromSlot~ selects a typed method value from that same
 memoized instance; ~Generic.fromType~ selects from an explicit descriptor.
@@ -400,9 +402,11 @@ reads; event recording uses a reverse accumulator to keep each append constant
 time.
 ~run fuel key~ returns only the result. Both report a cycle with its
 complete key path or stop when the fuel budget is exhausted.
-[[file:../Examples/DebugObject.lean][DebugObject.lean]] shows a two-slot
+[[file:../Tests/DebugObject.lean][DebugObject.lean]] shows a two-slot
 cycle, a productive dependency, and a branching case that exhausts the shared
 budget.
+[[file:../Examples/DebugTrace.lean][DebugTrace.lean]] is the shorter caller-facing version: define a program, run a
+trace, and inspect the result and event path.
 The shared budget covers reads made through this interface. An opaque Lean
 callback can still block without making another read, and ordinary
 ~Memoized.read~ retains its original lazy semantics. Callers needing a

@@ -1,7 +1,7 @@
 import LeanPoo.Object.Initialization
 import LeanPoo.Object.Builder
 
-namespace LeanPoo.Examples.ClassInitialization
+namespace LeanPoo.Tests.ClassInitialization
 
 inductive Key where
   | width
@@ -107,4 +107,4 @@ def rejectedWidth : Except Object.ConstructError (Object.ClassInstance Key Value
   | .error (.rejected "ScaledColoredRectangle") => true
   | _ => false
 
-end LeanPoo.Examples.ClassInitialization
+end LeanPoo.Tests.ClassInitialization

@@ -14,8 +14,6 @@ check-merge: check-types
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
     lake build LeanPoo.C4.Linearize
-    lake env lean Examples/C4SuffixOrder.lean
-    lake env lean Examples/C4Traversal.lean
 
 # Check the paper's executable prototype nucleus.
 check-mvp:
@@ -74,10 +72,6 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.InlineDispatch
     lake build LeanPoo.Object.Prototype
     lake build LeanPoo.Object.Debug
-    lake env lean Examples/ComputedDefault.lean
-    lake env lean Examples/MapDeclaration.lean
-    lake env lean Examples/CompiledMemo.lean
-    lake env lean Examples/RankedObject.lean
 
 # Check certified dependency propagation; opt into the impact trace on demand.
 check-incremental verbose="false":
@@ -85,7 +79,7 @@ check-incremental verbose="false":
     lake build LeanPoo.Proof.Revision
     lake build LeanPoo.Proof.Runtime
     lake build LeanPoo.Object.Lazy
-    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; fi
+    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/IncrementalObject.lean; fi
 
 # Check the public LeanPoo composition operations.
 check-compose: check-object
@@ -107,16 +101,13 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Revision
     lake build LeanPoo.Proof.Runtime
     lake build LeanPoo.Proof.Product
-    just check-incremental
-    lake env lean Examples/CertifiedCacheReuse.lean
-    just check-proof-reuse
 
 # Exercise the public invalidation report over a large independent corpus.
 check-proof-reuse:
     lake build LeanPoo.Object.Debug
-    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/ProofReuseScale.lean
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/ProofReuseScale.lean
 
-# Elaborate the independent PO examples.
+# Elaborate user-facing usage examples.
 check-example: check-compose
     lake env lean Examples/PrototypeCore.lean
     lake env lean Examples/DelayedNumbers.lean
@@ -125,93 +116,108 @@ check-example: check-compose
     lake env lean Examples/LensPrototype.lean
     lake env lean Examples/FirstClassObject.lean
     lake env lean Examples/FirstClassRecord.lean
-    lake env lean Examples/DescriptorClass.lean
     lake env lean Examples/MethodDictionary.lean
-    lake env lean Examples/ClassInstanceMethods.lean
-    lake env lean Examples/ClassInitialization.lean
-    lake env lean Examples/MethodCombination.lean
-    lake env lean Examples/SimpleMethodCombination.lean
-    lake env lean Examples/QualifiedMethodCombination.lean
-    lake env lean Examples/MultipleDispatch.lean
-    lake env lean Examples/MultimethodCombination.lean
-    lake env lean Examples/SubjectiveDispatch.lean
-    lake env lean Examples/DispatchTable.lean
-    lake env lean Examples/StaticDispatch.lean
-    lake env lean Examples/InlineDispatch.lean
-    lake env lean Examples/Chapter9Combination.lean
-    lake env lean Examples/SuffixLayout.lean
-    lake env lean Examples/MutableObject.lean
-    lake env lean Examples/MutablePrototype.lean
-    lake env lean Examples/TypedSlots.lean
-    lake env lean Examples/DeclarationBuilder.lean
-    lake env lean Examples/FocusedSpecification.lean
-    lake env lean Examples/SkewExtension.lean
-    lake env lean Examples/SpecificationFocus.lean
-    lake env lean Examples/NestedPrototype.lean
+    lake env lean Examples/LiveRevision.lean
+    lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean
-    lake env lean Examples/IntegratedPrototype.lean
+
+# Check every behavioral and proof contract.
+check-tests: check-proof
+    lake env lean Tests/C4SuffixOrder.lean
+    lake env lean Tests/C4Traversal.lean
+    lake env lean Tests/ComputedDefault.lean
+    lake env lean Tests/MapDeclaration.lean
+    lake env lean Tests/CompiledMemo.lean
+    lake env lean Tests/RankedObject.lean
+    lake env lean Tests/CertifiedCacheReuse.lean
+    lake env lean Tests/DescriptorClass.lean
+    lake env lean Tests/IntegratedPrototype.lean
+    lake env lean Tests/MethodDictionary.lean
+    lake env lean Tests/ClassInstanceMethods.lean
+    lake env lean Tests/ClassInitialization.lean
+    lake env lean Tests/MethodCombination.lean
+    lake env lean Tests/SimpleMethodCombination.lean
+    lake env lean Tests/QualifiedMethodCombination.lean
+    lake env lean Tests/MultipleDispatch.lean
+    lake env lean Tests/MultimethodCombination.lean
+    lake env lean Tests/SubjectiveDispatch.lean
+    lake env lean Tests/DispatchTable.lean
+    lake env lean Tests/StaticDispatch.lean
+    lake env lean Tests/InlineDispatch.lean
+    lake env lean Tests/Chapter9Combination.lean
+    lake env lean Tests/SuffixLayout.lean
+    lake env lean Tests/MutableObject.lean
+    lake env lean Tests/MutablePrototype.lean
+    lake env lean Tests/TypedSlots.lean
+    lake env lean Tests/DeclarationBuilder.lean
+    lake env lean Tests/FocusedSpecification.lean
+    lake env lean Tests/SkewExtension.lean
+    lake env lean Tests/SpecificationFocus.lean
+    lake env lean Tests/NestedPrototype.lean
+    just check-incremental
+    just check-proof-reuse
     just check-debug
 
-# Run diagnostic object examples in a bounded Lean process.
+# Check diagnostic contracts in a bounded Lean process.
 check-debug verbose="false":
     lake build LeanPoo.Object.Debug
-    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/DebugObject.lean; fi
-    @debug_rc=0; timeout --signal=TERM --kill-after=1s 2s lake env lean -M 2048 -T 10000000 Examples/DebugUnboundedBody.lean >/dev/null 2>&1 || debug_rc=$?; test "$debug_rc" -eq 124
+    @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/DebugObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/DebugObject.lean; fi
+    @debug_rc=0; timeout --signal=TERM --kill-after=1s 2s lake env lean -M 2048 -T 10000000 Tests/DebugUnboundedBody.lean >/dev/null 2>&1 || debug_rc=$?; test "$debug_rc" -eq 124
 
-# Compile the complete executable PO core and its usage examples.
-check-po: check-example check-docs
+# Compile the PO core, usage examples, and focused tests.
+check-po: check-example check-tests check-docs
 
-# Parse every maintained Org page, including the root README.
+# Parse every maintained Org page, including the root and directory indexes.
 check-docs:
-    emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (cons "README.org" (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
+    emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (append (list "README.org" "Examples/README.org" "Tests/README.org" "Benchmarks/README.org") (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
 
 # Compare equality-only, hash-indexed ordered, and sorted-map construction.
 benchmark-declaration:
     lake build LeanPoo.Object.Schema
-    lake env lean --run Examples/DeclarationScale.lean
+    lake env lean --run Benchmarks/DeclarationScale.lean
 
 # Compare repeated C4 recompilation with declaration-only plan revision.
 benchmark-revision:
     lake build LeanPoo.Object.Resolve
-    lake env lean --run Examples/RevisionScale.lean
+    lake env lean --run Benchmarks/RevisionScale.lean
 
 # Measure C4 traversal on deep and wide finite inheritance graphs.
 benchmark-c4:
     lake build LeanPoo.C4.Linearize
-    lake env lean --run Examples/C4Scale.lean
+    lake env lean --run Benchmarks/C4Scale.lean
 
 # Compare demand-driven, one-pass, and proof-backed indexed method resolution.
 benchmark-memoization:
     lake build LeanPoo.Object.Memo
-    lake env lean --run Examples/MemoizationScale.lean
-    lake env lean --run Examples/MemoizationChainScale.lean
+    lake env lean --run Benchmarks/MemoizationScale.lean
+    lake env lean --run Benchmarks/MemoizationChainScale.lean
 
 # Compare repeated standard-method assembly with one prepared effective method.
 benchmark-effective-methods:
     lake build LeanPoo.Object.MultimethodCombination
-    lake env lean --run Examples/PreparedDispatchScale.lean
+    lake env lean --run Benchmarks/PreparedDispatchScale.lean
 
 # Compare direct selection, generic-function cache, and one call-site entry.
 benchmark-inline-dispatch:
     lake build LeanPoo.Object.InlineDispatch
-    lake env lean --run Examples/InlineDispatchScale.lean
+    lake env lean --run Benchmarks/InlineDispatchScale.lean
 
 # Compare runtime method-dictionary selection with a preselected Lean method.
 benchmark-method-dictionary:
     lake build LeanPoo.Object.MethodDictionary
-    lake env lean --run Examples/MethodDictionaryScale.lean
+    lake env lean --run Benchmarks/MethodDictionaryScale.lean
 
 # Compare keyed lookup, checked offset access, and a monomorphic access site.
 benchmark-layout:
     lake build LeanPoo.Object.Layout
-    lake env lean --run Examples/LayoutScale.lean
+    lake env lean --run Benchmarks/LayoutScale.lean
 
 # Compare sequential layer installation with one private final allocation.
 benchmark-mutable-prototype:
     lake build LeanPoo.Prototype.Mutable
-    lake env lean --run Examples/MutablePrototypeScale.lean
+    lake env lean --run Benchmarks/MutablePrototypeScale.lean
 
-check: check-proof check-example check-docs
+check: check-example check-tests check-docs
     lake build
 
 # Build the complete Lean library.

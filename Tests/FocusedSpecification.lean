@@ -1,7 +1,7 @@
 import LeanPoo.Object.Builder
 import LeanPoo.Object.Memo
 
-namespace LeanPoo.Examples.FocusedSpecification
+namespace LeanPoo.Tests.FocusedSpecification
 
 structure Quota where
   retries : Nat
@@ -53,4 +53,4 @@ def result : Except C4.Error (Option Config) := do
       config == { quota := { retries := 3, burst := 8 }, enabled := true }
   | _ => false
 
-end LeanPoo.Examples.FocusedSpecification
+end LeanPoo.Tests.FocusedSpecification

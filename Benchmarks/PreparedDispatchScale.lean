@@ -1,6 +1,6 @@
 import LeanPoo.Object.MultimethodCombination
 
-namespace LeanPoo.Examples.PreparedDispatchScale
+namespace LeanPoo.Benchmarks.PreparedDispatchScale
 
 abbrev Args := List String × Nat
 abbrev Contribution := Object.MethodCombination.Contribution Args Id Nat
@@ -69,6 +69,6 @@ def main : IO Unit := do
     throw (IO.userError "prepared method result differs from baseline")
   IO.println s!"calls={count} methods={methodCount} checksum={left} baseline_ns={baselineElapsed} prepared_ns={preparedElapsed} effective_shapes={updated.effectiveCache.size}"
 
-end LeanPoo.Examples.PreparedDispatchScale
+end LeanPoo.Benchmarks.PreparedDispatchScale
 
-def main : IO Unit := LeanPoo.Examples.PreparedDispatchScale.main
+def main : IO Unit := LeanPoo.Benchmarks.PreparedDispatchScale.main

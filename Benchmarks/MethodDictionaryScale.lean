@@ -1,6 +1,6 @@
 import LeanPoo.Object.MethodDictionary
 
-namespace LeanPoo.Examples.MethodDictionaryScale
+namespace LeanPoo.Benchmarks.MethodDictionaryScale
 
 private abbrev Args (_ : String) := Nat
 private abbrev Result (_ : String) := Nat
@@ -54,6 +54,6 @@ def main : IO Unit := do
     throw (IO.userError "preselected method differs from dynamic dictionary")
   IO.println s!"calls={count} methods=64 checksum={dynamicValue} dynamic_ns={dynamicNs} selected_ns={selectedNs}"
 
-end LeanPoo.Examples.MethodDictionaryScale
+end LeanPoo.Benchmarks.MethodDictionaryScale
 
-def main : IO Unit := LeanPoo.Examples.MethodDictionaryScale.main
+def main : IO Unit := LeanPoo.Benchmarks.MethodDictionaryScale.main
