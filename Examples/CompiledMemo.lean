@@ -42,4 +42,34 @@ example : observed = some
      [some 14, some 4, some 18, none]) := by
   native_decide
 
+/-- A chosen method-building strategy persists across derived objects. The
+left receiver supplies the strategy when two independent families are mixed. -/
+private def evolved : Option Bool := do
+  let basePlan ← (LeanPoo.mix empty "Base" [] base).toOption
+  let parentPlan ← (LeanPoo.extend basePlan.schema "Parent" "Base" parent).toOption
+  let plan ← (LeanPoo.extend parentPlan.schema "Child" "Parent" child).toOption
+  let source := plan.memoizeCompiled
+  let revised ← (source.reviseDefault "Child" "x" 7).toOption
+  let extended ← (revised.extend "Extra"
+    (Object.Declaration.empty.withSlot "x"
+      (.computed fun _ inherited => (inherited ()).map (· + 1)))).toOption
+  let cloned ← (extended.clone "Clone" []).toOption
+  let otherPlan ← (LeanPoo.mix empty "Other" []
+    (Object.Declaration.empty.withValue "other" 5)).toOption
+  let joined ← (cloned.mixWith otherPlan.memoize "Joined"
+    Object.Declaration.empty).toOption
+  let joinedOpposite ← (otherPlan.memoize.mixWith cloned "JoinedOpposite"
+    Object.Declaration.empty).toOption
+  return source.mode == .compiled && revised.mode == .compiled &&
+    extended.mode == .compiled && cloned.mode == .compiled &&
+    joined.mode == .compiled && joinedOpposite.mode == .onDemand &&
+    revised.read "x" == some 18 &&
+    extended.read "x" == some 19 && cloned.read "x" == some 19 &&
+    joined.read "other" == some 5 && joined.read "x" == some 19 &&
+    joinedOpposite.read "other" == some 5 &&
+    joinedOpposite.read "x" == some 19
+
+example : evolved = some true := by
+  native_decide
+
 end CompiledMemoExample

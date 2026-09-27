@@ -21,16 +21,22 @@ private partial def Plan.buildThunks {Key : Type u} {Value : Key → Type v}
   table
 
 /-- Executable object with a shared lazy value cell for each declared key. -/
+inductive ResolutionMode where
+  | onDemand
+  | compiled
+  deriving Repr, DecidableEq
+
 structure Memoized (Key : Type u) (Value : Key → Type v)
     [BEq Key] [LawfulBEq Key] [Hashable Key] where
   plan : Plan Key Value
   thunks : Std.DHashMap Key (fun key => Thunk (Option (Value key)))
+  mode : ResolutionMode := .onDemand
 
 /-- Instantiate the C4 plan into a shared call-by-need object. -/
 def Plan.memoize {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) : Memoized Key Value :=
-  ⟨plan, plan.buildThunks (LeanPoo.allSlots plan) plan.resolve⟩
+  ⟨plan, plan.buildThunks (LeanPoo.allSlots plan) plan.resolve, .onDemand⟩
 
 /-- Compile defaults and effective methods in one least-specific-to-most-
 specific traversal, following Gerbil-POO's method-table construction. The
@@ -72,7 +78,22 @@ def Plan.memoizeCompiled {Key : Type u} {Value : Key → Type v}
     fun key self => match effective.get? key with
       | some method => method self
       | none => none
-  ⟨plan, plan.buildThunks keys resolve⟩
+  ⟨plan, plan.buildThunks keys resolve, .compiled⟩
+
+/-- Select how effective methods are built while retaining lazy values. -/
+def Plan.memoizeUsing {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) (mode : ResolutionMode) : Memoized Key Value :=
+  match mode with
+  | .onDemand => plan.memoize
+  | .compiled => plan.memoizeCompiled
+
+/-- Rebuild a derived object with the receiver's resolution strategy. -/
+def Memoized.rebuild {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (memoized : Memoized Key Value) (plan : Plan Key Value) :
+    Memoized Key Value :=
+  plan.memoizeUsing memoized.mode
 
 /-- An executable object can itself be extended: the new object keeps the
 source schema and receives a fresh lazy instance. -/
@@ -82,7 +103,7 @@ def Memoized.extend {Key : Type u} {Value : Key → Type v}
     (declaration : Declaration Key Value) :
     Except C4.Error (Memoized Key Value) := do
   let plan ← LeanPoo.extend memoized.plan.schema name memoized.plan.root declaration
-  return plan.memoize
+  return memoized.rebuild plan
 
 /-- Compose an executable object with further named parents in its schema. -/
 def Memoized.mix {Key : Type u} {Value : Key → Type v}
@@ -92,7 +113,7 @@ def Memoized.mix {Key : Type u} {Value : Key → Type v}
     Except C4.Error (Memoized Key Value) := do
   let plan ← LeanPoo.mix memoized.plan.schema name
     (memoized.plan.root :: otherParents) declaration
-  return plan.memoize
+  return memoized.rebuild plan
 
 inductive CombineError where
   | schema (error : SchemaMergeError)
@@ -100,7 +121,8 @@ inductive CombineError where
   deriving Repr
 
 /-- Mix two independently constructed executable objects. Their prototype
-graphs must have disjoint node names; the new C4 plan sees both roots. -/
+graphs must have disjoint node names; the new C4 plan sees both roots. The
+left receiver supplies the method-building strategy. -/
 def Memoized.mixWith {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (left right : Memoized Key Value) (name : String)
@@ -109,7 +131,7 @@ def Memoized.mixWith {Key : Type u} {Value : Key → Type v}
   let schema ← (left.plan.schema.mergeDisjoint right.plan.schema).mapError .schema
   let plan ← (LeanPoo.mix schema name [left.plan.root, right.plan.root]
     declaration).mapError .c4
-  return plan.memoize
+  return left.rebuild plan
 
 /-- Apply an existing override object to this executable base. -/
 def Memoized.plus {Key : Type u} {Value : Key → Type v}
@@ -118,7 +140,7 @@ def Memoized.plus {Key : Type u} {Value : Key → Type v}
     Except LeanPoo.CompositionError (Memoized Key Value) := do
   let plan : Plan Key Value ←
     LeanPoo.plus memoized.plan.schema name memoized.plan.root overrideName
-  return plan.memoize
+  return memoized.rebuild plan
 
 /-- Clone this object's direct declaration and replace selected values. -/
 def Memoized.clone {Key : Type u} {Value : Key → Type v}
@@ -128,7 +150,7 @@ def Memoized.clone {Key : Type u} {Value : Key → Type v}
     Except (LeanPoo.CloneError Key) (Memoized Key Value) := do
   let plan : Plan Key Value ←
     LeanPoo.clone memoized.plan.schema name memoized.plan.root overrides
-  return plan.memoize
+  return memoized.rebuild plan
 
 /-- Revise a declaration without recomputing unchanged C4 topology, then
 create a fresh lazy instance. Old objects retain their plan and values. -/
@@ -138,7 +160,7 @@ def Memoized.reviseDeclaration {Key : Type u} {Value : Key → Type v}
     (update : Declaration Key Value → Declaration Key Value) :
     Except C4.Error (Memoized Key Value) := do
   let plan ← memoized.plan.reviseDeclaration name update
-  return plan.memoize
+  return memoized.rebuild plan
 
 /-- Ordered declaration edits share the old C4 order and create just one
 fresh lazy instance after all edits have succeeded. -/
@@ -148,7 +170,7 @@ def Memoized.reviseDeclarations {Key : Type u} {Value : Key → Type v}
     (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
     Except C4.Error (Memoized Key Value) := do
   let plan ← memoized.plan.reviseDeclarations updates
-  return plan.memoize
+  return memoized.rebuild plan
 
 /-- Lean's persistent counterpart of changing a direct slot method. -/
 def Memoized.reviseSlot {Key : Type u} {Value : Key → Type v}

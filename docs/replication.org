@@ -66,6 +66,10 @@ values lazily. ~memoize~ remains the default for sparse reads; the compiled
 path favors dense reads but has no general proof of equivalence to
 ~Plan.resolve~. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
 default, duplicate-declaration, self, and missing-slot behavior.
+~Memoized.mode~ keeps the selected construction path through extension,
+cloning, and revision; ~mixWith~ follows its left receiver. The compiled
+prototype constructor also preserves the selected mode after a later mutable
+edit. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] and [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] exercise these transitions.
 ~Plan.reviseDeclaration~ keeps its validated C4 precedence when only a
 declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
 order. ~Memoized~ allocates one new lazy instance after a successful batch,

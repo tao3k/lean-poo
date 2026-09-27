@@ -88,7 +88,10 @@ The Lean modules are separated by semantic responsibility:
   base-to-child pass before creating those cells, reflecting Gerbil-POO's
   ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
   ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
-  behavior, while a general equivalence theorem remains open.
+  behavior, while a general equivalence theorem remains open. The executable
+  object's ~ResolutionMode~ keeps that method-building choice through derived
+  objects and mutable revisions; mixing independent objects follows the left
+  receiver's mode.
   ~Memoized.extend~, ~mix~, ~plus~, and ~clone~ keep the prototype and
   executable instance together while deriving a fresh object. ~Memoized.foldSlots~
   traverses typed values in declaration order. ~Schema.mergeDisjoint~ and

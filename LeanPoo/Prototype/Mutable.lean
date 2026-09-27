@@ -99,7 +99,7 @@ def MutableProto.instantiate {Key : Type} {Value : Key → Type}
   | some (.edit compile) =>
       match compile base.plan with
       | .error error => return .error error
-      | .ok final => return .ok (← Object.Mutable.new final.memoize)
+      | .ok final => return .ok (← Object.Mutable.new (base.rebuild final))
   | none =>
     let object ← Object.Mutable.new base
     match ← prototype.apply object with

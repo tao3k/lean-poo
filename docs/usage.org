@@ -125,6 +125,12 @@ overrides, repeated local declarations, final-self reads, and missing keys.
 The optimized table is an executable projection; it does not itself carry a
 Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
 read many declared slots; sparse reads can favor ~memoize~.
+~Memoized.mode~ records the chosen strategy. Derived objects from ~extend~,
+~mix~, ~plus~, ~clone~, and declaration revision retain that strategy; when
+~mixWith~ joins independent families, the left receiver supplies it.
+~Plan.memoizeUsing~ selects a strategy explicitly. Mutable updates and
+standard ~MutableProto.instantiate~ also carry the base object's mode, while
+~instantiateCompiled~ explicitly selects compiled methods.
 An unproductive cycle can diverge in either executable path. A proof-bearing
 declaration needs an ~Object.Instance~ whose state satisfies the resolver
 equation. ~Object.Ranked~ supplies one without unsafe recursion when the caller

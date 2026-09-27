@@ -59,6 +59,14 @@ private def run : IO Bool := do
     | return false
   let compiledCount ← compiledObject.read "count"
   let compiledDerived ← compiledObject.read "derived"
+  let compiledUpdated ← compiledObject.reviseDeclaration "Base"
+    (fun declaration => declaration.withValue "count" 4)
+  let compiledSnapshot ← compiledObject.snapshot
+  let compiledRevisedCount ← compiledObject.read "count"
+  let some inheritedMode :=
+      (← layers.instantiate basePlan.memoizeCompiled).toOption
+    | return false
+  let inheritedSnapshot ← inheritedMode.snapshot
   let update := Prototype.MutableProto.compose
     (.revise "Base" fun declaration => declaration.withValue "count" 4)
     layers
@@ -106,6 +114,10 @@ private def run : IO Bool := do
     firstCount == expected.memoize.read "count" &&
     firstDerived == expected.memoize.read "derived" &&
     compiledCount == firstCount && compiledDerived == firstDerived &&
+    compiledUpdated.toOption.isSome &&
+    compiledSnapshot.mode == .compiled &&
+    compiledRevisedCount == some 10 &&
+    inheritedSnapshot.mode == .compiled &&
     firstCount == some 6 && firstDerived == some 16 &&
     sequentialSucceeded &&
     sequentialCount == firstCount && sequentialDerived == firstDerived &&
