@@ -70,6 +70,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Subjective
     lake build LeanPoo.Object.DispatchTable
     lake build LeanPoo.Object.StaticDispatch
+    lake build LeanPoo.Object.InlineDispatch
     lake build LeanPoo.Object.Prototype
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
@@ -134,6 +135,7 @@ check-example: check-compose
     lake env lean Examples/SubjectiveDispatch.lean
     lake env lean Examples/DispatchTable.lean
     lake env lean Examples/StaticDispatch.lean
+    lake env lean Examples/InlineDispatch.lean
     lake env lean Examples/Chapter9Combination.lean
     lake env lean Examples/SuffixLayout.lean
     lake env lean Examples/MutableObject.lean
@@ -186,6 +188,11 @@ benchmark-memoization:
 benchmark-effective-methods:
     lake build LeanPoo.Object.MultimethodCombination
     lake env lean --run Examples/PreparedDispatchScale.lean
+
+# Compare direct selection, generic-function cache, and one call-site entry.
+benchmark-inline-dispatch:
+    lake build LeanPoo.Object.InlineDispatch
+    lake env lean --run Examples/InlineDispatchScale.lean
 
 # Compare keyed lookup, checked offset access, and a monomorphic access site.
 benchmark-layout:

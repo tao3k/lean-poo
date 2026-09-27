@@ -148,6 +148,13 @@ def Multimethod.registerWhen (generic : Multimethod Args Method Result)
       index := generic.index.prepend specializers (.when predicate method)
       cache := {} }
 
+/-- The uncached candidate sequence for one complete C4 call shape. The
+generic's cache and call-site caches both use this one sparse-index traversal. -/
+def Multimethod.candidatesFor (generic : Multimethod Args Method Result)
+    (shape : List (List String)) : Array (MethodCandidate Args Method) :=
+  generic.index.collect (shape.map fun order =>
+    order.map Specializer.prototype ++ [.any])
+
 /-- A cache hit reuses the candidate sequence. A miss traverses only
 the sparse tuple index and returns a new generic containing that entry. -/
 def Multimethod.resolve (generic : Multimethod Args Method Result)
@@ -160,9 +167,7 @@ def Multimethod.resolve (generic : Multimethod Args Method Result)
   match generic.cache.get? precedence with
   | some methods => return (methods, generic)
   | none =>
-      let orders := precedence.map fun order =>
-        order.map Specializer.prototype ++ [.any]
-      let methods := generic.index.collect orders
+      let methods := generic.candidatesFor precedence
       return (methods, { generic with
         cache := generic.cache.insert precedence methods })
 
