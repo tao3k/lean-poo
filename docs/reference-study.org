@@ -242,5 +242,10 @@ next runtime before ~MutableRuntime~ installs it. This is a declared finite
 dependency policy, not automatic tracking of arbitrary Lean computations;
 the paper notes that universally correct automatic mutation tracking would
 need to cover the wider language, beyond the object system.
+The paper also calls out precedence lists as an expensive computation worth
+retaining. Declaration-only edits now reuse ~Plan.valid~ and its C4 order;
+ordered batches allocate a single new executable instance and install it only
+after every edit succeeds. Structural edits still recompile C4. This separates
+topology reuse from value-cache invalidation.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.

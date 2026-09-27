@@ -201,8 +201,11 @@ decidable equality, ~Proof.rebaseInstanceCacheByValue~ can instead compare each
 stored value with the new resolver. This detects changed computed slots without
 a supplied footprint and does not recompute the old instance. It may evaluate
 the new instance and does not reuse the executable ~Memoized~ thunks.
-Prototype revisions return a fresh plan and memoized instance; an already
-instantiated object retains its values.
+Declaration-only revisions retain the plan's proved C4 precedence and create
+a fresh memoized instance; an already instantiated object retains its values.
+~Plan.reviseDeclarations~ and ~Memoized.reviseDeclarations~ apply ordered edits
+to several existing nodes without recompiling the unchanged graph or
+allocating an instance after each edit. A missing node returns a C4 error.
 
 * Classes and mutable objects
 
@@ -235,6 +238,10 @@ inheritance and parameterization. ~Object.Mutable~ holds a persistent
 ~Memoized~ object in an ~IO.Ref~. ~reviseDeclaration~ and ~extend~ install a
 fresh C4-validated instance on success. The example in
 [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows this path.
+~Mutable.reviseDeclarations~ installs a complete ordered batch in one cell
+operation. If any edit fails, the old object and its cached reads remain
+current. The same example edits an inherited base and child computation
+together, then checks rollback for an unknown node.
 ~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration
 and replace its lazy instance. Existing snapshots retain their old values;
 [[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
@@ -335,6 +342,9 @@ corpus.
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,
 ~just check-po~, and ~just check-proof~ compile the respective layers.
+~just benchmark-revision~ compares full C4 recompilation with a
+declaration-only revision on a synthetic 64-node chain. It measures topology
+updates, not object reads or cross-platform performance.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.

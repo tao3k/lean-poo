@@ -132,6 +132,11 @@ benchmark-declaration:
     lake build LeanPoo.Object.Schema
     lake env lean --run Examples/DeclarationScale.lean
 
+# Compare repeated C4 recompilation with declaration-only plan revision.
+benchmark-revision:
+    lake build LeanPoo.Object.Resolve
+    lake env lean --run Examples/RevisionScale.lean
+
 check: check-proof check-example check-docs
     lake build
 

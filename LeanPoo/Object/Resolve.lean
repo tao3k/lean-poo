@@ -29,6 +29,49 @@ def compile (schema : Schema Key Value) (root : String) :
   | .error error => .error error
   | .ok precedence => .ok ⟨schema, root, precedence, result⟩
 
+/-- Change a declaration while retaining the validated C4 order. The graph
+and root are unchanged, so no second linearization is needed. -/
+def Plan.reviseDeclaration (plan : Plan Key Value) (name : String)
+    (update : Declaration Key Value → Declaration Key Value) :
+    Except C4.Error (Plan Key Value) :=
+  match result : plan.schema.reviseDeclaration name update with
+  | .error error => .error error
+  | .ok revised =>
+      have sameGraph : revised.graph = plan.schema.graph := by
+        unfold Schema.reviseDeclaration at result
+        split at result
+        · contradiction
+        · cases result
+          rfl
+      .ok {
+        schema := revised
+        root := plan.root
+        precedence := plan.precedence
+        valid := by
+          rw [sameGraph]
+          exact plan.valid
+      }
+
+/-- Apply ordered declaration edits to one plan. Every intermediate edit
+retains the same validated topology; callers instantiate only the final plan. -/
+def Plan.reviseDeclarations (plan : Plan Key Value)
+    (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
+    Except C4.Error (Plan Key Value) :=
+  updates.foldlM (fun current (name, update) =>
+    current.reviseDeclaration name update) plan
+
+theorem Plan.reviseDeclaration_preserves_precedence
+    (plan : Plan Key Value) (name : String)
+    (update : Declaration Key Value → Declaration Key Value)
+    (revised : Plan Key Value)
+    (result : plan.reviseDeclaration name update = .ok revised) :
+    revised.precedence = plan.precedence := by
+  unfold Plan.reviseDeclaration at result
+  split at result
+  · cases result
+  · cases result
+    rfl
+
 /-- The most specific declared default is the base for method composition. -/
 private def baseDefault (schema : Schema Key Value) (order : List String)
     (key : Key) : Option (Value key) :=

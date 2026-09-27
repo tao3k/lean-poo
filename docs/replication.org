@@ -58,6 +58,11 @@ instantiated objects through their retained prototypes yields ~(2, 6)~.
 each declared key, evaluates on demand, and retains the plan for further
 ~extend~, ~mix~, ~plus~, or ~clone~ operations. ~Prepared~ stores assembled
 slot functions; ~Cache~ is an explicit immutable value cache.
+~Plan.reviseDeclaration~ keeps its validated C4 precedence when only a
+declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
+order. ~Memoized~ allocates one new lazy instance after a successful batch,
+and ~Mutable.reviseDeclarations~ installs it in one cell operation or retains
+the old object on error. Topology-changing ~extend~ and ~mix~ still run C4.
 ~Declaration.fromValues~, ~fromMap~, and ~fromFunction~ provide finite typed
 value sources. ~allSlots~, ~foldSlots~, ~values~, and ~force~ provide object
 inspection and materialization.
@@ -81,6 +86,9 @@ value. [[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] executes
 a descriptor class, extends it after instantiation, and derives a list
 descriptor. [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows a
 cell holding a pure object whose revised declaration yields a new instance.
+Its batch scenario revises an inherited base and child computation together,
+checks the preserved precedence, and rejects a batch with an unknown node
+without changing the installed instance.
 [[file:../Examples/LensPrototype.lean][LensPrototype.lean]] uses the appendix's
 getter/wrapper/setter construction to compose two updates to one component
 of a computation, yielding ~(9, true)~.

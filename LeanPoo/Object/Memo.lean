@@ -87,15 +87,24 @@ def Memoized.clone {Key : Type u} {Value : Key → Type v}
     LeanPoo.clone memoized.plan.schema name memoized.plan.root overrides
   return plan.memoize
 
-/-- Recompile a changed prototype declaration into a fresh executable object.
-Existing memoized objects keep their original plan and computed values. -/
+/-- Revise a declaration without recomputing unchanged C4 topology, then
+create a fresh lazy instance. Old objects retain their plan and values. -/
 def Memoized.reviseDeclaration {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (memoized : Memoized Key Value) (name : String)
     (update : Declaration Key Value → Declaration Key Value) :
     Except C4.Error (Memoized Key Value) := do
-  let schema ← memoized.plan.schema.reviseDeclaration name update
-  let plan ← compile schema memoized.plan.root
+  let plan ← memoized.plan.reviseDeclaration name update
+  return plan.memoize
+
+/-- Ordered declaration edits share the old C4 order and create just one
+fresh lazy instance after all edits have succeeded. -/
+def Memoized.reviseDeclarations {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (memoized : Memoized Key Value)
+    (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
+    Except C4.Error (Memoized Key Value) := do
+  let plan ← memoized.plan.reviseDeclarations updates
   return plan.memoize
 
 /-- Lean's persistent counterpart of changing a direct slot method. -/
