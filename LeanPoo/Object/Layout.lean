@@ -12,17 +12,22 @@ namespace LeanPoo.Object
 
 universe u v
 
+/-- Suffix specifications form a stable least-specific-first prefix. -/
+def Plan.suffixNames {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) : List String :=
+  plan.precedence.reverse.takeWhile fun name =>
+    match plan.schema.graph.findNode? name with
+    | some node => node.suffix
+    | none => false
+
 /-- Direct keys contributed by the suffix tail, in least-specific-first C4
 order. C4 validation puts suffix specifications at the end of precedence, so
 they occupy the front of `LeanPoo.allSlots`. -/
 def Plan.suffixKeys {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) : List Key :=
-  let suffixNames := plan.precedence.reverse.takeWhile fun name =>
-    match plan.schema.graph.findNode? name with
-    | some node => node.suffix
-    | none => false
-  let (_, reversed) := suffixNames.foldl (fun (seen, reversed) name =>
+  let (_, reversed) := plan.suffixNames.foldl (fun (seen, reversed) name =>
     let keys := (plan.schema.declaration name).map Declaration.directKeys |>.getD []
     keys.foldl (fun (seen, reversed) key =>
       if seen.contains key then (seen, reversed)
@@ -55,6 +60,8 @@ structure SlotLayout (Key : Type u) (Value : Key → Type v)
   fields : Array (Entry Key (fun key => CellProgram object key))
   offsets : Std.HashMap Key Nat
   suffixSize : Nat
+  suffixAncestors : Array String
+  shapeId : UInt64
 
 private def Memoized.layoutEntry {Key : Type u} {Value : Key → Type v}
     [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -72,7 +79,9 @@ def Memoized.layout {Key : Type u} {Value : Key → Type v}
   let (offsets, _) := fields.foldl (fun (offsets, next) entry =>
     (offsets.insert entry.key next, next + 1))
     (({} : Std.HashMap Key Nat), 0)
-  { object, fields, offsets, suffixSize := object.plan.suffixKeys.length }
+  { object, fields, offsets, suffixSize := object.plan.suffixKeys.length
+    suffixAncestors := object.plan.suffixNames.toArray
+    shapeId := hash (keys, object.plan.suffixNames) }
 
 /-- Check an array position before treating it as a typed field offset. -/
 def SlotLayout.matchesAt {Key : Type u} {Value : Key → Type v}
@@ -139,12 +148,13 @@ theorem SlotLayout.read_sound {Key : Type u} {Value : Key → Type v}
   · exact layout.readAt_sound _ key
   · rfl
 
-/-- A statically named field from the C4 suffix prefix. The offset can be
-carried to descendant layouts; a one-position check handles any later shape
-change without consulting the hash index. -/
+/-- A statically named field from the C4 suffix prefix. Its introducer's
+position in the least-specific-first ancestry remains fixed in descendants. -/
 structure SuffixField (Key : Type u) where
   key : Key
   offset : Nat
+  introducedBy : String
+  ancestorIndex : Nat
 
 def SlotLayout.suffixField? {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -153,22 +163,39 @@ def SlotLayout.suffixField? {Key : Type u} {Value : Key → Type v}
   | none => none
   | some offset =>
       if offset < layout.suffixSize && layout.matchesAt offset key then
-        some ⟨key, offset⟩
+        let names := layout.suffixAncestors
+        let origin := (List.range names.size).findSome? fun (index : Nat) =>
+          match names[index]? with
+          | none => none
+          | some name =>
+              match layout.object.plan.schema.declaration name with
+              | none => none
+              | some declaration =>
+                  if declaration.directKeys.any (· == key) then
+                    some (name, index)
+                  else none
+        origin.map fun (name, index) => ⟨key, offset, name, index⟩
       else none
 
-/-- The Boolean reports whether the fixed suffix offset also fits this
-object's layout. Either result has the object's ordinary keyed meaning. -/
+/-- A fast hit requires both the introducing suffix ancestor and the field at
+the fixed offset. A foreign same-name field falls back to keyed lookup. -/
 def SuffixField.read {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (field : SuffixField Key) (layout : SlotLayout Key Value) :
     Option (Value field.key) × Bool :=
-  layout.readAtChecked field.offset field.key
+  if layout.suffixAncestors[field.ancestorIndex]? == some field.introducedBy then
+    layout.readAtChecked field.offset field.key
+  else (layout.object.read field.key, false)
 
 theorem SuffixField.read_sound {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
-    (field : SuffixField Key) (layout : SlotLayout Key Value) :
+  (field : SuffixField Key) (layout : SlotLayout Key Value) :
     (field.read layout).1 = layout.object.read field.key :=
-  layout.readAtChecked_sound field.offset field.key
+  by
+    unfold SuffixField.read
+    split
+    · exact layout.readAtChecked_sound field.offset field.key
+    · rfl
 
 /-- One access site holds only a speculative offset. It does not own a
 descriptor or method body, so it can be reused across object layouts. -/
@@ -230,21 +257,23 @@ def remember {Key : Type u} [BEq Key] [Hashable Key]
 
 end SharedSlotOffsets
 
-/-- A polymorphic field access site keeps four recently successful offsets.
-Its field key is fixed, while the object layout may vary on every call. -/
+/-- A polymorphic field access site keeps four learned descriptor-offset
+pairs. Its field key is fixed, while the object layout may vary on every call.
+The descriptor fingerprint is only a hint; each offset is checked. -/
 structure PolySlotAccessSite (Key : Type u) where
   key : Key
-  recent : List Nat := []
+  recent : List (UInt64 × Nat) := []
 
 namespace PolySlotAccessSite
 
 def capacity : Nat := 4
 
-def remember (site : PolySlotAccessSite Key) (offset : Nat) :
+def remember (site : PolySlotAccessSite Key) (shapeId : UInt64)
+    (offset : Nat) :
     PolySlotAccessSite Key :=
-  if site.recent.head? == some offset then site
+  if site.recent.any (· == (shapeId, offset)) then site
   else { site with recent :=
-      (offset :: site.recent.filter (· != offset)).take capacity }
+      ((shapeId, offset) :: site.recent.filter (·.1 != shapeId)).take capacity }
 
 /-- A checked probe does not evaluate the object on a mismatch. -/
 private def matching {Key : Type u} {Value : Key → Type v}
@@ -252,6 +281,33 @@ private def matching {Key : Type u} {Value : Key → Type v}
     (layout : SlotLayout Key Value) (key : Key) (offsets : List Nat) :
     Option Nat :=
   offsets.find? (layout.matchesAt · key)
+
+private def readShared {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (site : PolySlotAccessSite Key) (shared : SharedSlotOffsets Key)
+    (layout : SlotLayout Key Value) :
+    Option (Value site.key) × PolySlotAccessSite Key ×
+      SharedSlotOffsets Key × Bool × Bool :=
+  match matching layout site.key (shared.candidates site.key) with
+  | some offset =>
+      ((layout.readAtChecked offset site.key).1,
+        site.remember layout.shapeId offset,
+        shared.remember site.key offset, false, true)
+  | none =>
+      let updated := layout.offsets.get? site.key
+      (layout.read site.key,
+        updated.elim site (site.remember layout.shapeId),
+        updated.elim shared (shared.remember site.key), false, false)
+
+private theorem readShared_sound {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (site : PolySlotAccessSite Key) (shared : SharedSlotOffsets Key)
+    (layout : SlotLayout Key Value) :
+    (readShared site shared layout).1 = layout.object.read site.key := by
+  unfold readShared
+  split
+  · exact layout.readAtChecked_sound _ _
+  · exact layout.read_sound _
 
 /-- The Boolean pair records a local or shared hit. A local hit leaves the
 shared cache alone. On a cold miss, keyed lookup supplies the authoritative
@@ -262,20 +318,13 @@ def read {Key : Type u} {Value : Key → Type v}
     (layout : SlotLayout Key Value) :
     Option (Value site.key) × PolySlotAccessSite Key ×
       SharedSlotOffsets Key × Bool × Bool :=
-  match matching layout site.key site.recent with
-  | some offset =>
-      ((layout.readAtChecked offset site.key).1, site.remember offset,
-        shared, true, false)
-  | none =>
-      match matching layout site.key (shared.candidates site.key) with
-      | some offset =>
-          ((layout.readAtChecked offset site.key).1, site.remember offset,
-            shared.remember site.key offset, false, true)
-      | none =>
-          let updated := layout.offsets.get? site.key
-          (layout.read site.key,
-            updated.elim site site.remember,
-            updated.elim shared (shared.remember site.key), false, false)
+  match site.recent.find? (·.1 == layout.shapeId) with
+  | none => readShared site shared layout
+  | some (_, offset) =>
+      let (value, hit) := layout.readAtChecked offset site.key
+      if hit then
+        (value, site, shared, true, false)
+      else readShared site shared layout
 
 theorem read_sound {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -284,10 +333,15 @@ theorem read_sound {Key : Type u} {Value : Key → Type v}
     (site.read shared layout).1 = layout.object.read site.key := by
   unfold read
   split
-  · exact layout.readAtChecked_sound _ _
-  · split
-    · exact layout.readAtChecked_sound _ _
-    · exact layout.read_sound _
+  · exact readShared_sound site shared layout
+  · rename_i candidate found
+    cases checked : layout.readAtChecked candidate site.key with
+    | mk value hit =>
+        cases hit
+        · simpa [checked] using readShared_sound site shared layout
+        · have sound := layout.readAtChecked_sound candidate site.key
+          rw [checked] at sound
+          simpa [checked] using sound
 
 end PolySlotAccessSite
 

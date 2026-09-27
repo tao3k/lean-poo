@@ -363,11 +363,18 @@ the new immutable dispatch value.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.
 
+Section 10's suffix access now retains the introducing specification and its
+position in the least-specific-first suffix-ancestor vector. A fast read
+checks that ancestry position and the field offset; a foreign same-name field
+falls back to ordinary keyed reading.
 Section 10 also describes small per-site field-offset caches and a cache
 shared by sites reading the same field name. ~PolySlotAccessSite~ retains four
 offsets, while ~SharedSlotOffsets~ retains eight learned offsets per name.
-Local hits do not write the shared cache. Every speculative
+Local entries pair a layout fingerprint with an offset, and a hit allocates no
+updated cache. A fingerprint collision still checks the actual field. Local
+hits do not write the shared cache. Every speculative
 offset is checked against the current layout before a lazy cell is read; a
 miss falls back to ordinary keyed lookup and teaches both levels. The
 ~read_sound~ theorem states equality with ordinary object reads, including
-after a layout change or an absent field.
+after a layout change or an absent field. ~just benchmark-layout~ measures
+single-layout and alternating-layout access separately.

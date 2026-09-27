@@ -11,6 +11,7 @@ private def graph : C4.Graph :=
     [{ name := "Object", suffix := true },
      { name := "Named", parentOrders := [["Object"]], suffix := true },
      { name := "Special", parentOrders := [["Named"]], suffix := true },
+     { name := "Foreign", suffix := true },
      { name := "Other" },
      { name := "Child", parentOrders := [["Other", "Named"]] },
      { name := "ChildSpecial", parentOrders := [["Other", "Special"]] }] }
@@ -20,6 +21,7 @@ private def declaration (name : String) : Option (Object.Declaration String Fiel
   | "Object" => some (Object.Declaration.empty.withDefault "base" 1)
   | "Named" => some (Object.Declaration.empty.withDefault "named" 2)
   | "Special" => some (Object.Declaration.empty.withDefault "special" 4)
+  | "Foreign" => some (Object.Declaration.empty.withDefault "base" 99)
   | "Other" => some (Object.Declaration.empty.withDefault "other" 3)
   | "Child" => some (Object.Declaration.empty
       |>.withDefault "base" 10
@@ -33,8 +35,10 @@ private def schema : Object.Schema String Field := { graph, declaration }
 private def observed : Option Bool := do
   let childPlan ← (Object.compile schema "Child").toOption
   let specialPlan ← (Object.compile schema "ChildSpecial").toOption
+  let foreignPlan ← (Object.compile schema "Foreign").toOption
   let child := childPlan.memoizeCompiled.layout
   let special := specialPlan.memoizeCompiled.layout
+  let foreign := foreignPlan.memoizeCompiled.layout
   let baseField ← child.suffixField? "base"
   let namedField ← child.suffixField? "named"
   let names (layout : Object.SlotLayout String Field) :=
@@ -55,6 +59,8 @@ private def observed : Option Bool := do
     names child == ["base", "named", "other", "derived"] &&
     names special == ["base", "named", "special", "other"] &&
     child.suffixSize == 2 && special.suffixSize == 3 &&
+    child.suffixAncestors.toList == ["Object", "Named"] &&
+    special.suffixAncestors.toList == ["Object", "Named", "Special"] &&
     child.offsets.get? "base" == some 0 &&
     special.offsets.get? "base" == some 0 &&
     child.offsets.get? "named" == some 1 &&
@@ -63,8 +69,11 @@ private def observed : Option Bool := do
     special.offsets.get? "other" == some 3 &&
     (child.suffixField? "other").isNone &&
     baseField.offset == 0 && namedField.offset == 1 &&
+    baseField.introducedBy == "Object" &&
+    namedField.introducedBy == "Named" &&
     baseField.read child == (some 10, true) &&
     baseField.read special == (some 20, true) &&
+    baseField.read foreign == (some 99, false) &&
     namedField.read special == (some 2, true) &&
     child.read "base" == some 10 &&
     child.read "derived" == some 11 &&
@@ -90,6 +99,9 @@ private def sharedObserved : Option Bool := do
   let empty : Object.SharedSlotOffsets String := {}
   let first : Object.PolySlotAccessSite String := ⟨"other", []⟩
   let (one, first, shared, local1, shared1) := first.read empty child
+  let collision := { special with shapeId := child.shapeId }
+  let (collisionValue, _, _, collisionLocal, collisionShared) :=
+    first.read shared collision
   let (two, first, shared, local2, shared2) := first.read shared special
   let (three, _, shared, local3, shared3) := first.read shared child
   let second : Object.PolySlotAccessSite String := ⟨"other", []⟩
@@ -97,6 +109,7 @@ private def sharedObserved : Option Bool := do
   let missing : Object.PolySlotAccessSite String := ⟨"absent", []⟩
   let (absent, _, _, absentLocal, absentShared) := missing.read shared child
   return one == some 3 && two == some 3 && three == some 3 &&
+    collisionValue == some 3 && !collisionLocal && !collisionShared &&
     four == some 3 && absent == none &&
     !local1 && !shared1 && !local2 && !shared2 &&
     local3 && !shared3 && !local4 && shared4 &&
@@ -114,6 +127,7 @@ example :
 
 example :
     ((List.range 8).foldl (fun (site : Object.PolySlotAccessSite String) offset =>
-      site.remember offset) ⟨"key", []⟩).recent = [7, 6, 5, 4] := by native_decide
+      site.remember (UInt64.ofNat offset) offset) ⟨"key", []⟩).recent =
+      [(7, 7), (6, 6), (5, 5), (4, 4)] := by native_decide
 
 end LeanPoo.Tests.SuffixLayout
