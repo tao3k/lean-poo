@@ -62,6 +62,13 @@ linearizer returned that order. ~plus~ rejects an override with multiple
 C++ local parent orders rather than flattening them silently. ~clone~ rejects
 duplicate override keys and validates its new node through C4.
 
+For wide sets of direct values, ~Declaration.fromMap~ sorts the map entries
+once and builds the ordered slot list directly. It avoids repeated list
+replacement during bulk construction. ~fromValues~ retains its
+~DecidableEq~-only key requirement and first-position/last-value behavior for
+duplicate input keys. ~just benchmark-declaration~ measures these paths;
+the fixture is a construction benchmark, not a theorem replay benchmark.
+
 [[file:../Examples/TypedSlots.lean][TypedSlots.lean]] is a standalone Lean example of a key-indexed value family:
 one slot contains ~Bool~, another contains ~Nat~, and a computed slot can
 read final self and its inherited value with those types checked by Lean.
@@ -81,6 +88,8 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Plan.resolve~ | Query a typed slot; absence is ~none~. |
 | ~Plan.ref~ | Require a slot; absence is ~noApplicableMethod~. |
 | ~Plan.memoize~ | Build a shared lazy instance of an open-recursive plan. |
+| ~Plan.memoizeCompiled~ | Assemble the effective method table once, then keep values lazy; useful for dense reads of a wide object. |
+| ~Plan.memoizeIndexed~ | Index every declaration once, then compose a slot's method when its value is forced; ~IndexedPlan.resolve_sound~ proves its resolver agrees with ~Plan.resolve~ for every key and open self. |
 | ~Memoized.read~ / ~ref~ / ~refWith~ / ~values~ | Read one slot, handle a missing slot explicitly, or materialize all slots from the shared instance. |
 | ~LeanPoo.hasSlot~ | Check whether a key is declared in the C4 chain. |
 | ~LeanPoo.hasSlots~ | Check several required keys in one compiled plan. |
@@ -89,8 +98,13 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~LeanPoo.prepareDeclared~ | Store assembled slot functions in a dependent hash map. |
 | ~Cache.read~ / ~Cache.ref~ | Return a value and an updated immutable instance cache. |
 | ~Cache.peek~ | Inspect an existing cache entry without evaluating a slot. |
+| ~Cache.rebase~ | Carry only selected evaluated entries into a new resolver and self, with a proof that each retained result is unchanged. |
+| ~Proof.rebaseInstanceCacheByValue~ | Compare each cached value with the new resolved value and reuse only equal entries. |
 | ~Cache.force~ | Fill cache entries for a finite set of keys. |
 | ~Object.Closed.instantiate~ | Construct an instance when slots are independent of self. |
+| ~Object.Ranked.instantiate~ | Construct a total fixed-point instance when every self dependency has a smaller natural-number rank. |
+| ~Object.Dependencies.inferRanked~ | Infer and verify a rank from declared self dependencies; identify missing sources and blocked cycles separately. |
+| ~Object.Dependencies.instantiate~ | Construct a proof-bearing fixed-point instance from checked finite dependencies. |
 | ~Object.Instance.prepare~ / ~cache~ | Prepare and cache slots for one fixed-point instance. |
 | ~Object.Instance.prepareDeclared~ / ~cacheDeclared~ | Use all declaration-owned keys. |
 | ~Object.Cache.forceDeclared~ | Evaluate all declared keys into the explicit cache. |
@@ -101,14 +115,120 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Object.Instance.cachedRead~ | Relate a cached result to the instance value. |
 
 The declarations own their finite key order even when the Lean key type is
-infinite. Cached functions and values carry proofs that they agree
-with ~Plan.resolve~; the cache does not define another slot evaluator. Missing
-slots do not grow the value cache. ~memoize~ uses Lean's call-by-need ~Thunk~
-for each declared key; an unproductive cycle can diverge. A proof-bearing
-declaration needs an explicitly supplied ~Object.Instance~ whose state satisfies the
-resolver equation.
-Prototype revisions return a fresh plan and memoized instance; an already
-instantiated object retains its values.
+infinite. ~Prepared~ functions and ~Cache~ values carry proofs that they agree
+with ~Plan.resolve~. Missing slots do not grow the value cache. ~memoize~ uses
+Lean's call-by-need ~Thunk~ for each declared key.
+~memoizeCompiled~ follows Gerbil-POO's base-to-child method-table pass,
+including per-node last-write-wins declarations, and shares the same
+~SlotSpec.toMethod~ and ~Method.compose~ operations. It moves method assembly
+to object creation. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks the lazy and compiled paths on inherited defaults,
+overrides, repeated local declarations, final-self reads, and missing keys.
+The example also checks a C4 diamond. ~Plan.resolve_eq_compileSlot~ proves
+that the standard resolver's parent-first fold equals its original C4 fold
+for every key and open self. ~Entry.toMap_get?~ separately proves that the
+compiled path's local slot table keeps last-write-wins declarations.
+The optimized table is an executable projection; it does not itself carry a
+Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
+read many declared slots. ~memoizeIndexed~ preindexes each declaration and
+keeps the same lazy values; its resolver has a general Lean soundness theorem.
+The two accelerated paths have different construction/read costs, while
+sparse reads can favor ~memoize~.
+~Memoized.mode~ records the chosen strategy. Derived objects from ~extend~,
+~mix~, ~plus~, ~clone~, and declaration revision retain that strategy; when
+~mixWith~ joins independent families, the left receiver supplies it.
+~Plan.memoizeUsing~ selects a strategy explicitly. Mutable updates and
+standard ~MutableProto.instantiate~ also carry the base object's mode, while
+~instantiateCompiled~ explicitly selects compiled methods.
+An unproductive cycle can diverge in either executable path. A proof-bearing
+declaration needs an ~Object.Instance~ whose state satisfies the resolver
+equation. ~Object.Ranked~ supplies one without unsafe recursion when the caller
+proves that each resolved slot depends on self only at smaller ranks. For a
+finite dependency support, ~Object.Dependencies.inferRanked~ schedules the
+declared edges, reports an undeclared source with its reader, and checks the
+derived rank before constructing ~Ranked~. ~Dependencies.instantiate~ then
+returns the same proof-bearing instance in one call. The
+caller proves that each slot reads only its declared dependencies; arbitrary
+Lean functions cannot be inspected to infer that claim automatically.
+[[file:../Examples/RankedObject.lean][RankedObject.lean]] constructs a child-computed slot over an inherited base
+value, its fixed-point instance, and a sound cache. It also checks successful
+rank inference, a declared cycle, and a missing source key. This discipline covers
+well-founded dependencies; it does not decide whether arbitrary Lean slot
+functions terminate.
+~Dependencies.scheduleRanked~ retains the checked order and edge-rank proof.
+~Scheduled.impact roots~ propagates direct edits through the declared reads
+and checks that an unaffected slot cannot read an affected one.
+~Scheduled.stableState~ proves that unaffected values agree between old and
+new fixed-point instances when their resolver bodies agree at the old self.
+~Scheduled.rebaseCache~ carries only those proved-stable evaluated entries to
+the new instance. ~Dependencies.revise~ packages scheduling, impact checking,
+fixed-point construction, and cache transfer in one declared update. The
+caller supplies the unchanged-resolver proof; a change
+to an opaque slot body cannot be inferred automatically.
+~Proof.patchOfRevision~ turns that checked update into a patch over resolved
+values. ~patchOfRevision_aligned~ proves that it produces the next fixed-point
+state. ~CertifiedObject.applyRevision~ reuses obligations outside the
+footprint and requests proofs for ~pendingRevision~. The integrated example
+has two obligations: editing one inherited source selects its computed
+relation for repair while reusing the independent relation.
+~Instance.lazy keys~ builds shared Lean thunk cells from a proof-bearing
+instance. ~LazyInstance.read_sound~ ties every read to that instance, while
+~Revision.rebaseLazy~ retains a cell only outside the checked impact set and
+installs fresh cells for affected selected keys. ~Revision.reusedLazyKeys~
+reports retained cells without forcing them. This is the total ranked path;
+ordinary ~Memoized~ still rebuilds its general recursive thunk table.
+An unforced retained thunk may still hold the old instance through its
+closure until it is forced or released. Callers with a strict retention
+budget can use the explicit immutable ~Cache~ path, whose retained values
+do not close over the old instance.
+[[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] uses a C4 child
+with two computed branches. Editing one inherited source invalidates its
+dependent branch while preserving the independent source and computed cache.
+~Object.Debug.Revision.explainImpact~ shows which dependency caused each
+affected key. Run ~just check-incremental true~ for that report; normal checks
+remain quiet.
+~Proof.Runtime~ binds a certified instance, an explicit value cache, and
+selected call-by-need cells into one persistent value. ~Runtime.revise~
+performs the checked fixed-point update, transfers sound cache entries and
+unaffected thunk cells, selects pending obligations, and closes the next
+certificate. ~Runtime.read_sound~ and ~readLazy_sound~ relate both read paths
+to the same instance. ~Runtime.newLoaded~ can prepare selected cache entries
+before sharing a snapshot. ~Proof.MutableRuntime~ stores that value in an
+~IO.Ref~. ~read~ memoizes explicit cache entries, while ~readLazy~ accesses
+the shared thunk cells. ~snapshot~ retains an immutable view, and ~install~
+accepts a fully certified next value only when the
+snapshot version is still current. The integrated example checks old and new
+reads, retained independent values, a stale install, and the certificate's
+agreement with the installed instance. ~MutableRuntime.transact~ applies a
+pure certified update to the current cell value in one operation; an error
+preserves the version and cached contents. The version counts semantic
+installs, not cache reads. Callers that use ~Runtime.revise~ separately must
+derive the next value from the snapshot they intend to replace; the expected
+version rejects intervening semantic installs.
+Unforced reused thunk cells can retain their former instance closure. Use the
+explicit cache read path when that retention matters; the pure revision
+preserves its evaluated values without retaining those closures.
+~Cache.rebase~ is a sound reuse primitive for the explicit immutable cache:
+the caller selects reusable keys and proves equality of their old and new
+resolved values. A key without that proof is omitted and follows the ordinary
+read path on the new object. ~Proof.rebaseInstanceCache~ derives that equality
+for keys outside a patch's *value-change footprint* from the old and new
+~Object.Instance~ equations, the patch frame, and state alignment. Computed
+slots whose values change must also be in that footprint, even when the edit
+directly names only another slot. [[file:../Examples/CertifiedCacheReuse.lean][CertifiedCacheReuse.lean]] demonstrates both
+single-slot reuse and a computed dependent that must be invalidated with its
+source slot. The dependent example now constructs both instances through
+~Object.Ranked~, closes a relation certificate after the patch, and rebases
+the old cache. The footprint is supplied with a proof of state alignment; this
+API does not infer arbitrary slot dependencies. When dependent values have
+decidable equality, ~Proof.rebaseInstanceCacheByValue~ can instead compare each
+stored value with the new resolver. This detects changed computed slots without
+a supplied footprint and does not recompute the old instance. It may evaluate
+the new instance and does not reuse the executable ~Memoized~ thunks.
+Declaration-only revisions retain the plan's proved C4 precedence and create
+a fresh memoized instance; an already instantiated object retains its values.
+~Plan.reviseDeclarations~ and ~Memoized.reviseDeclarations~ apply ordered edits
+to several existing nodes without recompiling the unchanged graph or
+allocating an instance after each edit. A missing node returns a C4 error.
 
 * Classes and mutable objects
 
@@ -141,6 +261,27 @@ inheritance and parameterization. ~Object.Mutable~ holds a persistent
 ~Memoized~ object in an ~IO.Ref~. ~reviseDeclaration~ and ~extend~ install a
 fresh C4-validated instance on success. The example in
 [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows this path.
+~Mutable.reviseDeclarations~ installs a complete ordered batch in one cell
+operation. If any edit fails, the old object and its cached reads remain
+current. The same example edits an inherited base and child computation
+together, then checks rollback for an unknown node.
+~Prototype.MutableProto~ is the paper's one-identity mutable wrapper in
+Lean. ~compose child parent~ runs the parent first and then the child on the
+same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
+~extend~, ~slot~, and ~revise~ construct layers from the existing C4 object
+operations. ~instantiate~ starts from a memoized base and exposes the cell
+only when every layer succeeds. A composition made entirely of these standard
+layers transforms the private C4 plan first, then allocates one final lazy
+instance. A custom ~apply~ effect falls back to sequential private execution.
+~instantiateCompiled~ selects the optional precompiled effective method table
+for the final instance. Applying a layer directly to an already shared cell
+always has sequential effect semantics, so a later failure may leave earlier
+layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares the batched and sequential paths with pure
+extension, checks a late override of a ~self~-dependent slot, custom-effect
+fallback, and failed private and shared builds. The identity prototype keeps
+the supplied memoized base, including its existing lazy cells.
+The standard path retains ~Plan.resolve~; the compiled path uses the same
+~SlotSpec~ method algebra with a preassembled effective table.
 ~putValue~, ~putSlot~, and ~putDefault~ revise the current root declaration
 and replace its lazy instance. Existing snapshots retain their old values;
 [[file:../Examples/IntegratedPrototype.lean][IntegratedPrototype.lean]] shows a dependent slot recomputed after
@@ -183,6 +324,7 @@ C4 recompilation; ~Lens.compose~ combines two typed lenses.
 | ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
 | ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
 | ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
+| ~Proof.rebaseInstanceCache~ | Preserve cached values outside a proved patch footprint while rebinding to a new C4-valid instance. |
 | ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
 | ~Proof.Certificate.pair~ | Combine their certificates without replaying either proof. |
 | ~Proof.Patch.left~ / ~right~ | Lift a patch into one side while preserving the other side. |
@@ -223,6 +365,12 @@ blocking callback in a separate process and checks that the two-second
 external timeout terminates it. These limits protect the test process; they
 do not prove termination of an arbitrary callback or bound the total memory
 of another host application embedding this API.
+~just check-debug true~ prints those reports on demand. Lean's ~-v~ reports
+its version and Lake's ~--verbose~ reports build commands, so the Justfile
+parameter controls semantic trace output separately. For finite declared
+dependencies, rank construction rejects cycles before evaluation and no
+per-read guard is needed. The optional ~Debug.Program~ remains available for
+opaque agent-authored computations that cannot supply that declaration.
 
 ~just check-proof-reuse~ constructs 10,000 independent obligations through
 the public Debug impact API. A single-key patch selects one for repair and
@@ -234,6 +382,13 @@ corpus.
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,
 ~just check-po~, and ~just check-proof~ compile the respective layers.
+~just benchmark-revision~ compares full C4 recompilation with a
+declaration-only revision on a synthetic 64-node chain. It measures topology
+updates, not object reads or cross-platform performance.
+~just benchmark-memoization~ compares sparse and dense reads of 256 direct
+slots through the on-demand, one-pass compiled, and indexed paths. It is a synthetic local
+measurement and also runs a 64-node chain. The workload should determine
+which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.

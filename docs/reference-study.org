@@ -64,10 +64,20 @@ The Lean modules are separated by semantic responsibility:
   ordered replacement for both entry kinds. ~fromValues~ and ~fromFunction~ translate the Gerbil
   direct-value and lazy-function constructors. ~fromMap~ accepts a typed
   dependent map and orders keys with a caller-supplied comparator.
+  ~Entry.toMap_get?~ proves that materializing an ordered declaration list
+  into a dependent hash map preserves last-write-wins lookup for every key.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
-  ~resolve_compiled~ proves it agrees with the one-shot entry point. ~Plan.ref~
+  ~resolve_compiled~ proves it agrees with the one-shot entry point. The
+  executable ~Plan.resolve~ now accumulates methods from least to most
+  specific, and ~Plan.resolve_eq_compileSlot~ proves equality with the
+  original most-specific-first C4 fold for every key and open self. ~Plan.ref~
   reports a missing required slot explicitly.
+- ~LeanPoo/Object/Indexed.lean~ indexes each declaration's defaults and slot
+  methods in dependent hash maps. ~IndexedPlan~ carries an alignment proof;
+  ~IndexedPlan.resolve_sound~ proves its resolver equals ~Plan.resolve~ for
+  every key and open self. The construction uses ~Entry.toMap_get?~ and the
+  same C4 parent-first fold.
 - ~LeanPoo/Compose.lean~ exposes ~LeanPoo.mix~, ~LeanPoo.extend~, and
   ~LeanPoo.plus~, and ~LeanPoo.clone~ as immutable graph constructors that
   compile a C4 plan. They correspond to Gerbil's ~.mix~, ~.extend~, ~.+~,
@@ -84,21 +94,36 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Memo.lean~ ties a lazy thunk table across declared keys.
   ~Plan.memoize~ builds an executable open-recursive object with one shared
   call-by-need cell per key; ~Memoized.values~ materializes its values.
+  ~Plan.memoizeCompiled~ optionally assembles effective methods in one
+  base-to-child pass before creating those cells, reflecting Gerbil-POO's
+  ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
+  ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
+  behavior, including a C4 diamond. The forward-fold theorem proves the
+  composition order, and ~Entry.toMap_get?~ proves the local duplicate-slot
+  normalization used by the table builder. A general theorem about the
+  resulting cross-node hash table remains open. ~Plan.memoizeIndexed~ has a
+  general resolver soundness theorem and a different performance profile.
+  The executable object's ~ResolutionMode~ keeps the chosen method-building
+  strategy through derived
+  objects and mutable revisions; mixing independent objects follows the left
+  receiver's mode.
   ~Memoized.extend~, ~mix~, ~plus~, and ~clone~ keep the prototype and
   executable instance together while deriving a fresh object. ~Memoized.foldSlots~
   traverses typed values in declaration order. ~Schema.mergeDisjoint~ and
   ~Memoized.mixWith~ compose separate object families with explicit node-name
   collision reporting. ~reviseSlot~ and ~reviseDefault~ persistently update an
-  existing prototype declaration, recompile C4, and allocate a fresh lazy
-  instance; ~force~ and ~valuesSorted~ cover eager materialization and sorted
+  existing prototype declaration, preserve C4 when topology is unchanged,
+  and allocate a fresh lazy instance; ~force~ and ~valuesSorted~ cover eager materialization and sorted
   export.
 - ~LeanPoo/Object/Prepare.lean~ stores preassembled, dependently typed slot
   functions in ~Std.DHashMap~ for selected keys. Each entry carries a proof
   that it computes the same value as ~Plan.resolve~.
 - ~LeanPoo/Object/Cache.lean~ stores evaluated values in an explicit immutable
   cache. Its read operations return the updated cache, and the soundness
-  theorems connect cached results back to the resolver. ~peek~ inspects only
-  cached values; an absent resolution does not insert an entry.
+  theorems connect cached results back to the resolver. ~Cache.rebase~ carries
+  entries to another resolver only with a proof of equal resolved values.
+  ~peek~ inspects only cached values; an absent resolution does not insert an
+  entry.
 - ~LeanPoo/Prototype/Class.lean~ owns composable runtime descriptors and
   JSON/text/byte codecs. ~Types.lean~ adds heterogeneously typed tuples,
   descriptor/value pairs, fixed-width integers, integer ranges, and
@@ -111,13 +136,35 @@ The Lean modules are separated by semantic responsibility:
 - ~LeanPoo/Object/Instance.lean~ states the fixed-point equation for an open
   recursive object. Closed plans can be instantiated directly; instance
   preparation and caching share the validated plan and final self.
+- ~LeanPoo/Object/Ranked.lean~ constructs a total fixed-point instance for
+  plans whose resolved slots read self only at strictly smaller natural-number
+  ranks. ~Dependencies.inferRanked~ schedules finite declared dependencies,
+  identifies missing sources by reader and key, rejects blocked cycles, and
+  checks every edge before producing the rank. ~Dependencies.instantiate~
+  returns the proof-bearing instance directly.
+  Its locality proof connects that well-founded evaluation to the ordinary C4
+  resolver, including inherited declarations. The resulting instance uses the
+  existing certificate and cache APIs.
+- ~LeanPoo/Object/Incremental.lean~ computes a conservative reverse-dependency
+  footprint from that schedule, checks closure, proves old and new instance
+  values equal outside the footprint, and rebases only those cached entries.
+  ~Dependencies.revise~ combines those steps into one checked update.
+  ~Object.Debug.Revision.explainImpact~ reports the direct edit and affected
+  reads without adding instrumentation to each slot.
+- ~LeanPoo/Object/Lazy.lean~ allocates call-by-need cells from a proof-bearing
+  total instance. Each cell carries its value equation; ~Revision.rebaseLazy~
+  retains the same thunk for unaffected keys and creates fresh cells for
+  affected keys, independently of the partial ~Plan.memoize~ fixed point.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
-  ~Invalidation.lean~, and ~Object.lean~ own proof objects, append, right-side
+  ~Invalidation.lean~, ~Object.lean~, and ~Revision.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
   invalidation, and certificates over typed object instances.
   ~Batch.lean~ folds typed patches and proves agreement with sequential append,
   exact touched-key order, last-write precedence, and the condition for
   reusing an obligation through every patch in the batch.
+  ~Revision.lean~ projects a checked object update into the existing patch
+  algebra, proves that applying it yields the new fixed point, and closes the
+  certificate using only pending obligations.
 - ~Justfile~ offers module-scoped compilation commands. ~just check~ builds
   the complete Lean library, executes the integrated examples, and parses
   every maintained Org page.
@@ -156,7 +203,16 @@ produced by the earlier one. ~mem_pending_iff~ proves that the executable
 pending list selects exactly affected old obligations and new obligations.
 ~CertifiedObject.applyValues~ binds an ordered batch of typed overrides to
 the next resolved instance, using the same certificate transport as
-~applyPatch~. ~invalidatedNodes~ follows reverse
+~applyPatch~. ~rebaseInstanceCache~ transports evaluated values outside the
+patch footprint using the old and new instance equations and the patch frame
+proof. ~rebaseInstanceCacheByValue~ compares stored values with the new
+resolver, covering computed dependents without a supplied footprint and
+without rerunning the old resolver; it can force the new instance.
+~Proof.patchOfRevision~ derives a finite patch from a checked ~Object.Revision~.
+Its alignment theorem covers keys outside the finite declaration support as
+well as unaffected declared keys. ~CertifiedObject.applyRevision~ then uses
+the existing pending-obligation and certificate machinery.
+~invalidatedNodes~ follows reverse
 inheritance edges for structure-level invalidation. Its step is monotone;
 ~Descendant~ indexes an inheritance path by edge count. Lean proves that
 changed nodes remain in the result and that every descendant reachable within
@@ -176,5 +232,52 @@ the new certificate from reused and newly discharged obligations. The
 library constructs closed instances with ~Object.Closed.instantiate~ and
 executes general open recursion with ~Plan.memoize~. The executable thunk
 knot is partial, so it does not by itself provide the equation required by
-~Object.Instance~; proof-bearing clients supply that equation explicitly. No
+~Object.Instance~; proof-bearing clients supply that equation explicitly or
+construct it from ~Object.Ranked~ for well-founded dependencies. No
 concrete policy semantics domain is part of this repository yet.
+
+* Paper-derived boundaries
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the
+~ProofObject~ / ~Patch~ / ~Certificate~ interface. Its section 1 identifies
+prototype composition as an associative operation with an identity; Lean's
+~Prototype.compose~ and typed chain have those laws. Sections 4.2 and 4.3
+pair an instance with its reusable prototype and compute an inheritance
+order; ~Memoized~ retains the compiled plan with the lazy instance, while
+the separate C4 source supplies this project's ordering algorithm. Section
+5 derives classes from prototypes for type descriptors; Lean's descriptor
+and class layers use native types rather than Scheme's dynamic MOP.
+Section 6.1.3 expresses mutable prototypes as effects on one object identity,
+with parent effects preceding child effects. ~Prototype.MutableProto~ provides
+that effect order over ~Object.Mutable~; its named slot constructor uses the
+same C4 plan and slot evaluator as the pure path. It reproduces the observable
+composition behavior without claiming the paper's in-place hash-table
+optimization. For private construction, standard declaration layers compose
+their plan transformations and instantiate only the final object. Arbitrary
+effect layers retain sequential execution, as does direct application to a
+shared mutable identity.
+
+| Boundary in the paper | Current Lean behavior | Remaining connection |
+|-----------------------+-----------------------+----------------------|
+| Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint. ~Scheduled.impact~ propagates changed roots through finite declared dependencies, checks closure, and ~Scheduled.rebaseCache~ reuses only proved-stable values; ~rebaseInstanceCacheByValue~ remains available when values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. The checked incremental path applies to proof-bearing instances whose dependencies are declared and whose unchanged resolver bodies are proved equal at the old self. Arbitrary Lean callbacks cannot be inspected to derive that premise. |
+| Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. ~Object.Ranked.instantiate~ constructs that equation by well-founded recursion for ranked self dependencies. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ still requires a next instance and state-alignment proof; ranked plans can supply the instance when their locality condition holds. |
+| Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
+
+The first two rows are integration boundaries for this project's incremental
+proof-reuse goal. They do not undo the implemented paper-model construction.
+For the certified finite-dependency path, ~Object.LazyInstance~ also retains
+actual thunk cells across a revision. The table's ~Memoized~ limitation refers
+to the general recursive executable object.
+~Proof.Runtime~ binds those cells and the explicit value cache to one
+certified instance. Its revision carries both forms of sound reuse into the
+next runtime before ~MutableRuntime~ installs it. This is a declared finite
+dependency policy, not automatic tracking of arbitrary Lean computations;
+the paper notes that universally correct automatic mutation tracking would
+need to cover the wider language, beyond the object system.
+The paper also calls out precedence lists as an expensive computation worth
+retaining. Declaration-only edits now reuse ~Plan.valid~ and its C4 order;
+ordered batches allocate a single new executable instance and install it only
+after every edit succeeds. Structural edits still recompile C4. This separates
+topology reuse from value-cache invalidation.
+The paper's optional runtime descriptors and future method-combination
+mechanisms are not a conformance checklist for Lean's static type system.

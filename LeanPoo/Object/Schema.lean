@@ -30,6 +30,44 @@ def Entry.lookup {Key : Type u} {Payload : Key → Type w}
     if same : key = entry.key then some (same.symm ▸ entry.value)
     else found) none
 
+/-- Materialize ordered dependent entries with the same last-write-wins
+meaning as `Entry.lookup`. -/
+def Entry.toMap {Key : Type u} {Payload : Key → Type w}
+    [BEq Key] [Hashable Key] (entries : List (Entry Key Payload)) :
+    Std.DHashMap Key Payload :=
+  entries.foldl (fun table entry => table.insert entry.key entry.value) {}
+
+private theorem Entry.foldToMap_get? {Key : Type u} {Payload : Key → Type w}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (entries : List (Entry Key Payload)) (table : Std.DHashMap Key Payload)
+    (key : Key) :
+    (entries.foldl (fun current entry =>
+      current.insert entry.key entry.value) table).get? key =
+    entries.foldl (fun found (entry : Entry Key Payload) =>
+      letI : Decidable (key = entry.key) := entry.decideEq key
+      if same : key = entry.key then some (same.symm ▸ entry.value)
+      else found) (table.get? key) := by
+  induction entries generalizing table with
+  | nil => rfl
+  | cons entry rest ih =>
+      simp only [List.foldl_cons]
+      rw [ih]
+      congr 1
+      rw [Std.DHashMap.get?_insert]
+      by_cases same : key = entry.key
+      · subst key
+        simp
+      · have reverse : entry.key ≠ key := by intro h; exact same h.symm
+        simp [reverse, same]
+
+theorem Entry.toMap_get? {Key : Type u} {Payload : Key → Type w}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (entries : List (Entry Key Payload)) (key : Key) :
+    (Entry.toMap entries).get? key = Entry.lookup entries key := by
+  unfold Entry.toMap Entry.lookup
+  rw [Entry.foldToMap_get?]
+  simp
+
 /-- Replacing an existing key keeps its declaration position. -/
 def Entry.replace {Key : Type u} {Payload : Key → Type w}
     [DecidableEq Key] (entries : List (Entry Key Payload))
@@ -89,8 +127,11 @@ This is the typed analogue of object<-hash's sorted traversal. -/
 def Declaration.fromMap [DecidableEq Key] [BEq Key] [Hashable Key]
     (entries : Std.DHashMap Key Value) (lessEq : Key → Key → Bool) :
     Declaration Key Value :=
-  Declaration.fromValues (entries.toList.mergeSort
-    (fun left right => lessEq left.1 right.1))
+  let ordered := entries.toList.mergeSort
+    (fun left right => lessEq left.1 right.1)
+  { slots := ordered.map fun ⟨key, value⟩ =>
+      ⟨key, .constant (some value), fun _ => inferInstance⟩
+    defaults := [] }
 
 /-- Translate object.ss object<-fun; values are requested only at lookup. -/
 def Declaration.fromFunction [DecidableEq Key]

@@ -12,7 +12,11 @@ import LeanPoo.Prototype.Types
 import LeanPoo.Prototype.Lens
 import LeanPoo.Prototype.SlotSpec
 import LeanPoo.Object.Resolve
+import LeanPoo.Object.Indexed
 import LeanPoo.Object.Instance
+import LeanPoo.Object.Ranked
+import LeanPoo.Object.Incremental
+import LeanPoo.Object.Lazy
 import LeanPoo.Compose
 import LeanPoo.Slots
 import LeanPoo.Object.Memo
@@ -21,9 +25,12 @@ import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
 import LeanPoo.Object.Prototype
 import LeanPoo.Object.Mutable
+import LeanPoo.Prototype.Mutable
 import LeanPoo.Object.Prepare
 import LeanPoo.Object.Cache
 import LeanPoo.Proof.Object
+import LeanPoo.Proof.Revision
+import LeanPoo.Proof.Runtime
 import LeanPoo.Proof.Batch
 import LeanPoo.Proof.Product
 import LeanPoo.Object.Debug

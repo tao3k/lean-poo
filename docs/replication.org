@@ -28,6 +28,7 @@ macros are not design requirements for Lean.
 | Multiple inheritance | ~C4.linearize~ | Compute prototype order separately; slot composition consumes that order. |
 | Classes | ~Prototype.DescriptorClass~ | Compose runtime type descriptors through delayed prototypes. |
 | Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
+| Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; standard private layers instantiate their final C4 plan once, and arbitrary effects fall back to sequential execution. |
 | Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
 | Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
 | Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
@@ -58,6 +59,33 @@ instantiated objects through their retained prototypes yields ~(2, 6)~.
 each declared key, evaluates on demand, and retains the plan for further
 ~extend~, ~mix~, ~plus~, or ~clone~ operations. ~Prepared~ stores assembled
 slot functions; ~Cache~ is an explicit immutable value cache.
+~Plan.memoizeCompiled~ optionally compiles one effective method table from
+least-specific to most-specific declarations, following Gerbil-POO's runtime
+shape. It uses the existing slot-spec method algebra and still computes slot
+values lazily. ~memoize~ remains the default for sparse reads; the compiled
+path favors dense reads but has no general proof of equivalence to
+~Plan.resolve~. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
+default, duplicate-declaration, self, missing-slot, and C4 diamond behavior.
+~Plan.resolve_eq_compileSlot~ proves that the parent-first method fold used by
+the standard resolver equals the original C4 fold for every key and self; the
+~Entry.toMap_get?~ theorem proves the table builder's local last-write-wins
+normalization. Cross-node hash-table materialization still needs its own
+general proof.
+~Plan.memoizeIndexed~ instead indexes each declaration once and composes a
+requested slot from those tables. ~IndexedPlan.resolve_sound~ proves that this
+cross-node resolver equals ~Plan.resolve~ for every key and open self, including
+missing keys. It retains lazy slot values and provides a proof-backed
+accelerated path; the one-pass effective table remains available for workloads
+where its different cost profile helps.
+~Memoized.mode~ keeps the selected construction path through extension,
+cloning, and revision; ~mixWith~ follows its left receiver. The compiled
+prototype constructor also preserves the selected mode after a later mutable
+edit. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] and [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] exercise these transitions.
+~Plan.reviseDeclaration~ keeps its validated C4 precedence when only a
+declaration changes; ~Plan.reviseDeclarations~ applies several such edits in
+order. ~Memoized~ allocates one new lazy instance after a successful batch,
+and ~Mutable.reviseDeclarations~ installs it in one cell operation or retains
+the old object on error. Topology-changing ~extend~ and ~mix~ still run C4.
 ~Declaration.fromValues~, ~fromMap~, and ~fromFunction~ provide finite typed
 value sources. ~allSlots~, ~foldSlots~, ~values~, and ~force~ provide object
 inspection and materialization.
@@ -81,6 +109,19 @@ value. [[file:../Examples/DescriptorClass.lean][DescriptorClass.lean]] executes
 a descriptor class, extends it after instantiation, and derives a list
 descriptor. [[file:../Examples/MutableObject.lean][MutableObject.lean]] shows a
 cell holding a pure object whose revised declaration yields a new instance.
+Its batch scenario revises an inherited base and child computation together,
+checks the preserved precedence, and rejects a batch with an unknown node
+without changing the installed instance.
+[[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] implements the
+paper's parent-before-child effect order using one mutable object identity.
+It compares private plan-first construction with sequential effects and checks
+that a custom effect takes the latter path. The synthetic
+~just benchmark-mutable-prototype~ target compares both paths without changing
+the result; its timing is workload-specific.
+Its named slot layer composes an inherited override, while an earlier
+~self~-dependent slot sees the final override. The example compares its
+results with the ordinary pure C4 extension path and checks that a failed
+construction does not return the private cell.
 [[file:../Examples/LensPrototype.lean][LensPrototype.lean]] uses the appendix's
 getter/wrapper/setter construction to compose two updates to one component
 of a computation, yielding ~(9, true)~.
@@ -221,6 +262,36 @@ constructor, but recursive instances may form reference cycles that Lean's
 reference-counting runtime cannot reclaim automatically. These are executable
 recursion boundaries. Prototype
 composition, slot types, C4 data, and typed builders remain type checked.
+
+For finite, declared self dependencies, ~Dependencies.scheduleRanked~ checks
+the dependency order and constructs a total fixed-point instance instead of
+using the general thunk knot. ~Dependencies.revise~ then propagates edited
+keys through that dependency graph and reuses only cached values proved
+unchanged. [[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] exercises this path across a C4 inherited
+source and two computed branches. This certified incremental path requires a
+proof that resolver bodies outside the edited roots are unchanged at the old
+self. It does not claim to instrument arbitrary Lean function bodies or reuse
+the executable ~Memoized~ thunks.
+The proof layer projects this revision into its ordinary patch algebra. The
+projection carries a frame proof and an alignment theorem, so
+~CertifiedObject.applyRevision~ reuses certificates outside the affected
+footprint. The same example checks that only the relation over the edited
+branch is pending.
+The total fixed point also supports call-by-need cells. ~Instance.lazy~ binds
+selected cells to its proved state; ~Revision.rebaseLazy~ retains cells outside
+the dependency footprint and replaces affected ones. This certified runtime
+sharing path does not claim that the general recursive ~Memoized~ thunk knot
+terminates.
+~Proof.Runtime~ now packages the certified fixed point with an immutable
+value cache and proof-bearing lazy cells. Its pure revision operation carries
+only proved-stable cache entries and thunk cells, then closes selected
+obligations before a new runtime can be constructed. Both read paths are
+proved equal to the same instance state. ~Proof.MutableRuntime~ places such values in
+an identity cell and uses a version check to prevent a revision derived from
+an obsolete snapshot from overwriting a newer one. The C4 incremental example
+checks that the old snapshot remains readable after installation, a failed
+transaction leaves the cell unchanged, and the installed certificate describes
+the value returned by the new runtime through both read paths.
 
 * Conclusion
 

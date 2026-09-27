@@ -20,9 +20,12 @@ private def parents (node : Node) : List String :=
 private def withoutTail (items tail : List String) : List String :=
   items.filter (fun item => !tail.contains item)
 
-/-- Once an order enters the suffix tail, it cannot leave it. -/
+/-- Local suffix members must form an ordered subsequence of the inherited
+tail, with no non-suffix member between them. -/
 private def respectsSuffixTail (order tail : List String) : Bool :=
-  (order.dropWhile (fun item => !tail.contains item)).all tail.contains
+  let suffix := order.dropWhile (fun item => !tail.contains item)
+  suffix.all tail.contains &&
+    tail.filter (fun item => suffix.contains item) == suffix
 
 /-- Walk the already computed inherited-suffix chain. -/
 private def suffixReaches (table : Table) (source target : String) : Bool :=

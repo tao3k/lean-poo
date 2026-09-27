@@ -1,4 +1,5 @@
 import LeanPoo.Object.Resolve
+import LeanPoo.Object.Incremental
 import LeanPoo.Proof.Invalidation
 
 /-!
@@ -25,6 +26,37 @@ def Plan.explain (plan : Object.Plan Key Value) (key : Key) : Resolution Key whe
     | none => false
     | some declaration =>
         (declaration.slot key).isSome || (declaration.default key).isSome)
+
+/-- One affected slot and the affected reads that explain its invalidation. -/
+structure ImpactRow (Key : Type u) where
+  key : Key
+  directEdit : Bool
+  affectedReads : List Key
+  deriving Repr
+
+/-- Describe the checked impact footprint without changing the object or
+requiring instrumentation in each slot body. -/
+def Scheduled.explainImpact {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key]
+    {plan : Object.Plan Key Value}
+    {spec : Object.Dependencies Key Value plan}
+    (scheduled : Object.Scheduled spec) (roots : List Key)
+    (impact : Object.Impact spec roots) : List (ImpactRow Key) :=
+  scheduled.order.filterMap fun key =>
+    if impact.affected key then
+      some (ImpactRow.mk key (roots.contains key)
+        ((spec.reads key).filter impact.affected))
+    else none
+
+/-- An updated object's impact trace, available without repeating the
+dependency analysis or adding a guard to the object definition. -/
+def Revision.explainImpact {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {plan : Object.Plan Key Value}
+    {spec : Object.Dependencies Key Value plan}
+    {roots keys : List Key}
+    (revision : Object.Revision spec roots keys) : List (ImpactRow Key) :=
+  Scheduled.explainImpact revision.scheduled roots revision.impact
 
 inductive Error (Key : Type u) where
   | cycle (path : List Key)
@@ -56,6 +88,7 @@ structure Report (Key : Type u) (α : Type u) where
   result : Except (Error Key) α
   events : List (Event Key)
   stepsUsed : Nat
+  deriving Repr
 
 structure Program (Key : Type u) (Value : Key → Type u) where
   slots : List (Object.Entry Key (Method Key Value)) := []

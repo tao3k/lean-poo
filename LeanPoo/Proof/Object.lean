@@ -4,6 +4,46 @@ import LeanPoo.Object.Instance
 
 namespace LeanPoo.Proof
 
+/-- Reuse evaluated object slots outside a proved value-change footprint.
+The patch frame and both instance equations establish the resolver equality
+required by `Cache.rebase`; dependent computed slots must be included in
+`patch.touched` whenever their resolved value changes. -/
+def rebaseInstanceCache {Key : Type} {Value : Key → Type}
+    [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {oldPlan newPlan : Object.Plan Key Value}
+    (current : Object.Instance Key Value oldPlan)
+    (next : Object.Instance Key Value newPlan)
+    (patch : Patch Key (fun key => Option (Value key)))
+    (aligned : next.state = patch.apply current.state)
+    (keys : List Key)
+    (cache : Object.Cache (current.prepare keys) current.state) :
+    Object.Cache (next.prepare keys) next.state :=
+  cache.rebase (next.prepare keys) next.state
+    (fun key => key ∉ patch.touched) (by
+      intro key untouched
+      rw [(current.prepare keys).resolve_sound,
+        (next.prepare keys).resolve_sound]
+      change oldPlan.resolve key current.state =
+        newPlan.resolve key next.state
+      rw [current.agrees key, next.agrees key]
+      exact ((congrFun aligned key).trans
+        (patch.frame current.state key untouched)).symm)
+
+/-- Reuse exactly the evaluated entries whose cached and new resolved values
+compare equal. This checks computed dependents without a patch footprint and
+does not recompute the old instance. -/
+def rebaseInstanceCacheByValue {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    {oldPlan newPlan : Object.Plan Key Value}
+    (current : Object.Instance Key Value oldPlan)
+    (next : Object.Instance Key Value newPlan)
+    (keys : List Key)
+    (decideSame : (key : Key) → (value : Option (Value key)) →
+      Decidable (value = (next.prepare keys).resolve key next.state))
+    (cache : Object.Cache (current.prepare keys) current.state) :
+    Object.Cache (next.prepare keys) next.state :=
+  cache.rebaseByValue (next.prepare keys) next.state decideSame
+
 /-- Proof obligations over the resolved object's values. -/
 def proofObjectOfInstance {Key : Type} {Value : Key → Type}
     {plan : Object.Plan Key Value}

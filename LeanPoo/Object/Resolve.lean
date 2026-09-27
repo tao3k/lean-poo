@@ -29,6 +29,49 @@ def compile (schema : Schema Key Value) (root : String) :
   | .error error => .error error
   | .ok precedence => .ok ⟨schema, root, precedence, result⟩
 
+/-- Change a declaration while retaining the validated C4 order. The graph
+and root are unchanged, so no second linearization is needed. -/
+def Plan.reviseDeclaration (plan : Plan Key Value) (name : String)
+    (update : Declaration Key Value → Declaration Key Value) :
+    Except C4.Error (Plan Key Value) :=
+  match result : plan.schema.reviseDeclaration name update with
+  | .error error => .error error
+  | .ok revised =>
+      have sameGraph : revised.graph = plan.schema.graph := by
+        unfold Schema.reviseDeclaration at result
+        split at result
+        · contradiction
+        · cases result
+          rfl
+      .ok {
+        schema := revised
+        root := plan.root
+        precedence := plan.precedence
+        valid := by
+          rw [sameGraph]
+          exact plan.valid
+      }
+
+/-- Apply ordered declaration edits to one plan. Every intermediate edit
+retains the same validated topology; callers instantiate only the final plan. -/
+def Plan.reviseDeclarations (plan : Plan Key Value)
+    (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
+    Except C4.Error (Plan Key Value) :=
+  updates.foldlM (fun current (name, update) =>
+    current.reviseDeclaration name update) plan
+
+theorem Plan.reviseDeclaration_preserves_precedence
+    (plan : Plan Key Value) (name : String)
+    (update : Declaration Key Value → Declaration Key Value)
+    (revised : Plan Key Value)
+    (result : plan.reviseDeclaration name update = .ok revised) :
+    revised.precedence = plan.precedence := by
+  unfold Plan.reviseDeclaration at result
+  split at result
+  · cases result
+  · cases result
+    rfl
+
 /-- The most specific declared default is the base for method composition. -/
 private def baseDefault (schema : Schema Key Value) (order : List String)
     (key : Key) : Option (Value key) :=
@@ -39,6 +82,23 @@ private def baseDefault (schema : Schema Key Value) (order : List String)
       match declaration.default key with
       | none => inherited
       | some value => some value) none
+
+/-- Scan defaults from the least specific declaration toward the root. -/
+private def baseDefaultForward (schema : Schema Key Value)
+    (order : List String) (key : Key) : Option (Value key) :=
+  order.reverse.foldl (fun inherited name =>
+    match schema.declaration name with
+    | none => inherited
+    | some declaration =>
+      match declaration.default key with
+      | none => inherited
+      | some value => some value) none
+
+private theorem baseDefaultForward_eq (schema : Schema Key Value)
+    (order : List String) (key : Key) :
+    baseDefaultForward schema order key = baseDefault schema order key := by
+  unfold baseDefaultForward baseDefault
+  rw [List.foldl_reverse]
 
 /-- Assemble one inherited slot function, keeping self open until lookup. -/
 def Plan.compileSlot (plan : Plan Key Value) (key : Key) :
@@ -55,10 +115,40 @@ def Plan.compileSlot (plan : Plan Key Value) (key : Key) :
       Prototype.Method.identity
   fun self => methods self (fun _ => default)
 
+/-- The paper's parent-first construction of one effective slot method. -/
+def Plan.compileSlotForward (plan : Plan Key Value) (key : Key) :
+    Self Key Value → Option (Value key) :=
+  let default := baseDefaultForward plan.schema plan.precedence key
+  let methods : Prototype.Method (Self Key Value) (Option (Value key)) :=
+    plan.precedence.reverse.foldl (fun inherited name =>
+      match plan.schema.declaration name with
+      | none => inherited
+      | some declaration =>
+        match declaration.slot key with
+        | none => inherited
+        | some spec => Prototype.Method.compose spec.toMethod inherited)
+      Prototype.Method.identity
+  fun self => methods self (fun _ => default)
+
+/-- Parent-first accumulation has exactly the original C4 slot meaning. -/
+theorem Plan.compileSlotForward_eq (plan : Plan Key Value) (key : Key) :
+    plan.compileSlotForward key = plan.compileSlot key := by
+  unfold Plan.compileSlotForward Plan.compileSlot
+  rw [baseDefaultForward_eq]
+  rw [List.foldl_reverse]
+
 /-- Resolve one typed slot with an explicit open-recursive self. -/
 def Plan.resolve (plan : Plan Key Value) (key : Key)
     (self : Self Key Value) : Option (Value key) :=
-  plan.compileSlot key self
+  plan.compileSlotForward key self
+
+/-- The parent-first resolver agrees with the original C4 fold for every
+key and open-recursive self, including keys absent from all declarations. -/
+theorem Plan.resolve_eq_compileSlot (plan : Plan Key Value) (key : Key)
+    (self : Self Key Value) :
+    plan.resolve key self = plan.compileSlot key self := by
+  unfold Plan.resolve
+  rw [plan.compileSlotForward_eq]
 
 /-- Require a resolved slot; optional probing remains available via resolve. -/
 def Plan.ref (plan : Plan Key Value) (key : Key)

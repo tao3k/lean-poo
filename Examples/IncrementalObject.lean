@@ -1,0 +1,313 @@
+import LeanPoo.Object.Debug
+import LeanPoo.Proof.Runtime
+import LeanPoo.Object.Lazy
+
+open LeanPoo
+
+namespace IncrementalObjectExample
+
+inductive Key where
+  | source | derived | stableSource | stableDerived
+  deriving BEq, ReflBEq, LawfulBEq, Hashable, DecidableEq, Repr
+
+private instance [DecidableEq α] [DecidableEq β] :
+    DecidableEq (Except α β) := by
+  intro x y
+  cases x with
+  | error left =>
+      cases y with
+      | error right => simpa using (inferInstance : Decidable (left = right))
+      | ok _ => exact isFalse (by intro equality; cases equality)
+  | ok left =>
+      cases y with
+      | error _ => exact isFalse (by intro equality; cases equality)
+      | ok right => simpa using (inferInstance : Decidable (left = right))
+
+private abbrev Values (_ : Key) := Nat
+
+private def graph : C4.Graph :=
+  { nodes := [{ name := "Base" },
+      { name := "Child", parentOrders := [["Base"]] }] }
+
+private def base (changed : Nat) : Object.Declaration Key Values :=
+  Object.Declaration.empty
+    |>.withValue .source changed
+    |>.withValue .stableSource 7
+
+private def child : Object.Declaration Key Values :=
+  Object.Declaration.empty
+    |>.withSlot .derived
+      (.self fun self => (self .source).map (· + 1))
+    |>.withSlot .stableDerived
+      (.self fun self => (self .stableSource).map (· * 2))
+
+private def schema (changed : Nat) : Object.Schema Key Values :=
+  { graph
+    declaration := fun name =>
+      if name == "Base" then some (base changed)
+      else if name == "Child" then some child else none }
+
+private def plan (changed : Nat) : Object.Plan Key Values :=
+  { schema := schema changed
+    root := "Child"
+    precedence := ["Child", "Base"]
+    valid := by
+      change C4.linearize graph "Child" = .ok ["Child", "Base"]
+      native_decide }
+
+private def dependencies (changed : Nat) :
+    Object.Dependencies Key Values (plan changed) :=
+  { keys := [.source, .derived, .stableSource, .stableDerived]
+    reads := fun key => match key with
+      | .derived => [.source]
+      | .stableDerived => [.stableSource]
+      | _ => []
+    supported := by
+      intro key dependency membership
+      cases key <;> simp
+    dependsOnlyOn := by
+      intro key left right equal
+      cases key with
+      | source => rfl
+      | stableSource => rfl
+      | derived =>
+          change (left .source).map (· + 1) =
+            (right .source).map (· + 1)
+          rw [equal .source (by simp)]
+      | stableDerived =>
+          change (left .stableSource).map (· * 2) =
+            (right .stableSource).map (· * 2)
+          rw [equal .stableSource (by simp)] }
+
+private theorem sameResolver (current : Object.Instance Key Values (plan 20))
+    (key : Key) (unmodified : key ∉ [.source]) :
+    (plan 20).resolve key current.state =
+      (plan 30).resolve key current.state := by
+  cases key with
+  | source => simp at unmodified
+  | derived => rfl
+  | stableSource => rfl
+  | stableDerived => rfl
+
+private def changedRelation : Proof.Obligation Key
+    (fun key => Option (Values key)) :=
+  { dependencies := [.derived, .source]
+    holds := fun state => state .derived = (state .source).map (· + 1)
+    stable := by
+      intro before after equal holds
+      calc
+        after .derived = before .derived :=
+          (equal .derived (by simp)).symm
+        _ = (before .source).map (· + 1) := holds
+        _ = (after .source).map (· + 1) := by
+          rw [equal .source (by simp)] }
+
+private def stableRelation : Proof.Obligation Key
+    (fun key => Option (Values key)) :=
+  { dependencies := [.stableDerived, .stableSource]
+    holds := fun state => state .stableDerived =
+      (state .stableSource).map (· * 2)
+    stable := by
+      intro before after equal holds
+      calc
+        after .stableDerived = before .stableDerived :=
+          (equal .stableDerived (by simp)).symm
+        _ = (before .stableSource).map (· * 2) := holds
+        _ = (after .stableSource).map (· * 2) := by
+          rw [equal .stableSource (by simp)] }
+
+private theorem changedRelationHolds (changed : Nat)
+    (instanceValue : Object.Instance Key Values (plan changed)) :
+    changedRelation.holds instanceValue.state := by
+  change instanceValue.state .derived =
+    (instanceValue.state .source).map (· + 1)
+  rw [← instanceValue.agrees .derived]
+  rfl
+
+private theorem stableRelationHolds (changed : Nat)
+    (instanceValue : Object.Instance Key Values (plan changed)) :
+    stableRelation.holds instanceValue.state := by
+  change instanceValue.state .stableDerived =
+    (instanceValue.state .stableSource).map (· * 2)
+  rw [← instanceValue.agrees .stableDerived]
+  rfl
+
+private def certified (current : Object.Instance Key Values (plan 20)) :
+    Proof.CertifiedObject Key Values (plan 20) :=
+  { instanceValue := current
+    obligations := [changedRelation, stableRelation]
+    certificate := by
+      intro obligation membership
+      have owned : obligation = changedRelation ∨
+          obligation = stableRelation := by
+        simpa [Proof.proofObjectOfInstance] using membership
+      rcases owned with changed | stable
+      · subst obligation
+        exact changedRelationHolds 20 current
+      · subst obligation
+        exact stableRelationHolds 20 current }
+
+private theorem dischargeRevision
+    (current : Object.Instance Key Values (plan 20))
+    {keys : List Key}
+    (revision : Object.Revision (dependencies 30) [.source] keys)
+    (obligation : Proof.Obligation Key (fun key => Option (Values key)))
+    (membership : obligation ∈
+      Proof.pendingRevision (certified current) revision []) :
+    obligation.holds revision.instanceValue.state := by
+    have selected := (Proof.mem_pending_iff
+      (Proof.proofObjectOfInstance current
+        [changedRelation, stableRelation])
+      (Proof.patchOfRevision revision) obligation).mp membership
+    rcases selected with ⟨owned, _⟩ | fresh
+    · have choice : obligation = changedRelation ∨
+          obligation = stableRelation := by
+        simpa [Proof.proofObjectOfInstance] using owned
+      rcases choice with changed | stable
+      · subst obligation
+        exact changedRelationHolds 30 revision.instanceValue
+      · subst obligation
+        exact stableRelationHolds 30 revision.instanceValue
+    · simp [Proof.patchOfRevision] at fresh
+
+private def certifiedRevision
+    (current : Object.Instance Key Values (plan 20))
+    (revision : Object.Revision (dependencies 30) [.source]
+      [.source, .derived, .stableSource, .stableDerived]) :
+    Proof.CertifiedObject Key Values (plan 30) :=
+  (certified current).applyRevision revision (sameResolver current) []
+    (dischargeRevision current revision)
+
+example (current : Object.Instance Key Values (plan 20))
+    (revision : Object.Revision (dependencies 30) [.source]
+      [.source, .derived, .stableSource, .stableDerived]) :
+    stableRelation.holds
+      (certifiedRevision current revision).instanceValue.state :=
+  (certifiedRevision current revision).certificate stableRelation (by
+    change stableRelation ∈
+      [changedRelation, stableRelation] ++ []
+    simp)
+
+private structure Outcome where
+  invalidated : List Key
+  retained : List Key
+  stableValue : Option (Option Nat)
+  recomputedValue : Option Nat
+  repairs : List Bool
+  reusedLazy : List Key
+  lazyDerived : Option Nat
+  lazyStable : Option Nat
+  deriving DecidableEq, Repr
+
+private def observed : Option Outcome := do
+  let oldScheduled ← ((dependencies 20).scheduleRanked).toOption
+  let current := oldScheduled.ranked.instantiate
+  let keys := [.source, .derived, .stableSource, .stableDerived]
+  let oldCache := (current.cache keys).force keys
+  let oldLazy := current.lazy keys
+  let revision ← ((dependencies 30).revise [.source] current keys oldCache
+    (sameResolver current)).toOption
+  let newLazy := revision.rebaseLazy current oldLazy (sameResolver current)
+  let certifiedNext := certifiedRevision current revision
+  let impact := revision.impact
+  let reused := revision.cache
+  let proofImpact := Proof.Debug.explainPatch
+    (Proof.proofObjectOfInstance current
+      [changedRelation, stableRelation])
+    (Proof.patchOfRevision revision)
+  return {
+    invalidated := keys.filter impact.affected
+    retained := keys.filter fun key => (reused.peek key).isSome
+    stableValue := reused.peek .stableDerived
+    recomputedValue := certifiedNext.instanceValue.state .derived
+    repairs := proofImpact.map Proof.Debug.Impact.needsRepair
+    reusedLazy := revision.reusedLazyKeys oldLazy
+    lazyDerived := newLazy.read .derived
+    lazyStable := newLazy.read .stableDerived
+  }
+
+example : observed = some {
+    invalidated := [.source, .derived]
+    retained := [.stableSource, .stableDerived]
+    stableValue := some (some 14)
+    recomputedValue := some 31
+    repairs := [true, false]
+    reusedLazy := [.stableSource, .stableDerived]
+    lazyDerived := some 31
+    lazyStable := some 14
+  } := by
+  native_decide
+
+example (oldScheduled : Object.Scheduled (dependencies 20))
+    (newScheduled : Object.Scheduled (dependencies 30))
+    (impact : Object.Impact (dependencies 30) [.source])
+    (unaffected : impact.affected .stableDerived = false) :
+    let current := oldScheduled.ranked.instantiate
+    let next := newScheduled.ranked.instantiate
+    current.state .stableDerived = next.state .stableDerived := by
+  exact newScheduled.stableState [.source] impact
+    oldScheduled.ranked.instantiate newScheduled.ranked.instantiate
+    (sameResolver _) .stableDerived unaffected
+
+private def diagnostic : Option (List (Object.Debug.ImpactRow Key)) := do
+  let oldScheduled ← ((dependencies 20).scheduleRanked).toOption
+  let current := oldScheduled.ranked.instantiate
+  let keys := [.source, .derived, .stableSource, .stableDerived]
+  let oldCache := (current.cache keys).force keys
+  let revision ← ((dependencies 30).revise [.source] current keys oldCache
+    (sameResolver current)).toOption
+  some (Object.Debug.Revision.explainImpact revision)
+
+/-- The pure certified revision is installed once at a mutable identity.
+The old snapshot remains readable, and a stale writer cannot replace it. -/
+private def runtimeScenario : IO Bool := do
+  let some scheduled := ((dependencies 20).scheduleRanked).toOption
+    | return false
+  let current := scheduled.ranked.instantiate
+  let keys := [.source, .derived, .stableSource, .stableDerived]
+  let runtime := Proof.Runtime.newLoaded (certified current) keys
+    [.derived, .stableDerived]
+  let mutable ← Proof.MutableRuntime.new runtime
+  let beforeDerived ← mutable.read .derived
+  let beforeStable ← mutable.read .stableDerived
+  let beforeLazyDerived ← mutable.readLazy .derived
+  let beforeLazyStable ← mutable.readLazy .stableDerived
+  let (version, snapshot) ← mutable.snapshot
+  let rejected ← mutable.transact fun _ =>
+    (Except.error "rejected" : Except String (Proof.Runtime Key Values))
+  let (afterRejectVersion, afterRejectSnapshot) ← mutable.snapshot
+  let some revised := (runtime.revise (dependencies 30) [.source]
+      (sameResolver current) []
+      (fun revision obligation membership =>
+        dischargeRevision current revision obligation membership)).toOption
+    | return false
+  let retainedStable := revised.cache.peek .stableDerived
+  let invalidatedDerived := revised.cache.peek .derived
+  let installed ← mutable.install version revised
+  let afterDerived ← mutable.read .derived
+  let afterStable ← mutable.read .stableDerived
+  let afterLazyDerived ← mutable.readLazy .derived
+  let afterLazyStable ← mutable.readLazy .stableDerived
+  let staleInstalled ← mutable.install version snapshot
+  let (finalVersion, finalSnapshot) ← mutable.snapshot
+  let oldSnapshotValue := (snapshot.read .derived).1
+  let certifiedValue := finalSnapshot.certified.instanceValue.state .derived
+  return rejected.toOption.isNone && afterRejectVersion == version &&
+    afterRejectSnapshot.cache.peek .derived == some (some 21) &&
+    installed && !staleInstalled && finalVersion == version + 1 &&
+    beforeDerived == some 21 && beforeStable == some 14 &&
+    beforeLazyDerived == beforeDerived && beforeLazyStable == beforeStable &&
+    afterDerived == some 31 && afterStable == some 14 &&
+    afterLazyDerived == afterDerived && afterLazyStable == afterStable &&
+    retainedStable == some (some 14) && invalidatedDerived == none &&
+    oldSnapshotValue == some 21 && certifiedValue == afterDerived
+
+#eval (do
+  unless ← runtimeScenario do
+    throw (IO.userError "certified mutable revision scenario failed") : IO Unit)
+
+#eval (do
+  if (← IO.getEnv "LEANPOO_VERBOSE") == some "1" then
+    IO.println (repr (diagnostic, observed.map Outcome.reusedLazy)) : IO Unit)
+
+end IncrementalObjectExample

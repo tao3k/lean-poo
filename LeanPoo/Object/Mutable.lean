@@ -40,6 +40,18 @@ def Mutable.reviseDeclaration {Key : Type} {Value : Key → Type}
     | .error error => (.error error, current)
     | .ok revised => (.ok (), revised)
 
+/-- Apply ordered prototype edits as one installation. If any name is
+unknown, the original object and all previously cached reads remain. -/
+def Mutable.reviseDeclarations {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (object : Mutable Key Value)
+    (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
+    IO (Except C4.Error Unit) :=
+  object.cell.modifyGet fun current =>
+    match current.reviseDeclarations updates with
+    | .error error => (.error error, current)
+    | .ok revised => (.ok (), revised)
+
 /-- Extend the installed object and replace the value at this identity. -/
 def Mutable.extend {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
