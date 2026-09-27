@@ -80,7 +80,7 @@ private def optimizedPaths : Option Bool := do
   let (_, warmedSite) ← (site.call (shape, 1)).toOption
   let revisedSite ← (warmedSite.contribute
     [.prototype "A", .prototype "B"] check).toOption
-  let siteCleared := revisedSite.entry.isNone
+  let siteCleared := revisedSite.entries.isEmpty
   let (siteResult, _) ← (revisedSite.call (shape, 101)).toOption
   let prepared : Object.PreparedMultimethod Input (Sigma Body)
       (Object.QualifiedMethods Qualifier Body) (Except String (List String)) :=

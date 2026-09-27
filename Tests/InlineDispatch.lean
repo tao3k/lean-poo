@@ -33,11 +33,11 @@ private def observed : Option Bool := do
   let guarded ← (afterOdd.registerWhen [.prototype "P1"]
     (fun args => args.2 == 3) 2000).toOption
   let (guardedResult, _) ← (guarded.call odd).toOption
-  return initial.entry.isNone && afterEven.entry.isSome &&
-    afterOdd.entry.isSome && afterNarrow.entry.isSome &&
-    afterNarrow.entry.map Object.InlineEntry.shape == some [shape.drop 1] &&
-    revised.entry.isNone && revisedAfterCall.entry.isSome &&
-    guarded.entry.isNone &&
+  return initial.entries.isEmpty && !afterEven.entries.isEmpty &&
+    !afterOdd.entries.isEmpty && !afterNarrow.entries.isEmpty &&
+    afterNarrow.entries.head?.map Object.InlineEntry.shape == some [shape.drop 1] &&
+    revised.entries.isEmpty && !revisedAfterCall.entries.isEmpty &&
+    guarded.entries.isEmpty &&
     evenResult == 3082 && oddResult == 2083 &&
     narrowResult == 2081 && revisedResult == 7081 &&
     guardedResult == 4083 &&
@@ -60,5 +60,24 @@ private def arityFailure : Bool :=
   | _ => false
 
 example : arityFailure = true := by native_decide
+
+private def fourRecentShapes : Option Bool := do
+  let generic ← generic.toOption
+  let mut site := Object.InlineDispatch.create generic
+  for index in [:5] do
+    let args : Args := (shape.drop index, 2)
+    let (result, updated) ← (site.call args).toOption
+    let direct ← (Object.InlineDispatch.direct generic args).toOption
+    if result != direct then return false
+    site := updated
+  let firstOrder := site.entries.map Object.InlineEntry.shape
+  let (_, touched) ← (site.call (shape.drop 2, 2)).toOption
+  let (_, revised) ← (touched.call (shape.drop 5, 2)).toOption
+  return firstOrder == [4, 3, 2, 1].map (fun i => [shape.drop i]) &&
+    revised.entries.length == 4 &&
+    revised.entries.map Object.InlineEntry.shape ==
+      [5, 2, 4, 3].map (fun i => [shape.drop i])
+
+#guard fourRecentShapes == some true
 
 end LeanPoo.Tests.InlineDispatch

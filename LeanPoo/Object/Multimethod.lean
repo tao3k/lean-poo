@@ -1,4 +1,4 @@
-import Std
+import LeanPoo.Object.ShapeCache
 
 /-!
 The paper's multiple dispatch index is owned by a generic function, not by
@@ -119,8 +119,7 @@ structure Multimethod (Args Method Result : Type) where
   precedence : Args → List (List String)
   combine : Array Method → Args → Result
   index : MethodIndex (MethodCandidate Args Method) := .empty
-  cache : Std.HashMap (List (List String))
-    (Array (MethodCandidate Args Method)) := {}
+  cache : ShapeCache (Array (MethodCandidate Args Method)) := {}
 
 /-- Updating the generic's method table invalidates its old candidate-sequence
 cache. Existing immutable versions of the generic remain usable. -/
@@ -178,11 +177,12 @@ def Multimethod.resolve (generic : Multimethod Args Method Result)
   if precedence.length != generic.arity then
     throw (.arity generic.arity precedence.length)
   match generic.cache.get? precedence with
-  | some methods => return (methods, generic)
+  | some methods =>
+      return (methods, { generic with cache := generic.cache.touch precedence })
   | none =>
       let methods := generic.candidatesFor precedence
       return (methods, { generic with
-        cache := generic.cache.insert precedence methods })
+        cache := generic.cache.remember precedence methods })
 
 def Multimethod.call (generic : Multimethod Args Method Result) (args : Args) :
     Except MultimethodError (Result × Multimethod Args Method Result) := do
@@ -195,9 +195,10 @@ theorem Multimethod.resolve_cached
     (methods : Array (MethodCandidate Args Method))
     (arity : (generic.precedence args).length = generic.arity)
     (cached : generic.cache.get? (generic.precedence args) = some methods) :
-    generic.resolve args = .ok (methods, generic) := by
-  have cached' : generic.cache[generic.precedence args]? = some methods := cached
-  simp [Multimethod.resolve, arity, cached']
+    generic.resolve args = .ok
+      (methods, { generic with
+        cache := generic.cache.touch (generic.precedence args) }) := by
+  simp [Multimethod.resolve, arity, cached]
   rfl
 
 theorem Multimethod.register_cache_empty
@@ -230,12 +231,13 @@ theorem Multimethod.call_cached
     (candidates : Array (MethodCandidate Args Method))
     (arity : (generic.precedence args).length = generic.arity)
     (cached : generic.cache.get? (generic.precedence args) = some candidates) :
-    generic.call args = .ok
+    (generic.call args).map Prod.fst = .ok
       (generic.combine
         (candidates.foldl (fun found candidate =>
           if candidate.applies args then found.push candidate.method else found) #[])
-        args, generic) := by
-  simp [Multimethod.call, generic.resolve_cached args candidates arity cached]
+        args) := by
+  simp [Multimethod.call, generic.resolve_cached args candidates arity cached,
+    MethodCandidate.select]
   rfl
 
 end LeanPoo.Object

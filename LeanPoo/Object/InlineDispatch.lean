@@ -1,10 +1,10 @@
 import LeanPoo.Object.Multimethod
 
 /-!
-Section 10's per-call-site inline cache for generic functions. A cached
-candidate sequence is indexed by the complete C4 tuple and carries a proof
+Section 10's four-entry per-call-site LRU cache for generic functions. Each
+candidate sequence is indexed by its complete C4 tuple and carries a proof
 that it came from this exact immutable generic. Method registration creates a
-new site with no entry. Value predicates are evaluated on every call.
+new empty site. Value predicates are evaluated on every call.
 -/
 
 namespace LeanPoo.Object
@@ -16,17 +16,29 @@ structure InlineEntry (generic : Multimethod Args Method Result) where
   candidates : Array (MethodCandidate Args Method)
   valid : candidates = generic.candidatesFor shape
 
-/-- A monomorphic call site. The generic owns semantics; this state only
-remembers its most recent C4 shape. -/
+/-- A call site retaining up to four recent C4 shapes. The generic owns the
+semantics; entries are only proven candidate snapshots. -/
 structure InlineDispatch (Args Method Result : Type) where
   generic : Multimethod Args Method Result
-  entry : Option (InlineEntry generic) := none
+  entries : List (InlineEntry generic) := []
 
 namespace InlineDispatch
 
 def create (generic : Multimethod Args Method Result) :
     InlineDispatch Args Method Result :=
-  ⟨generic, none⟩
+  ⟨generic, []⟩
+
+def capacity : Nat := 4
+
+private def findEntry {generic : Multimethod Args Method Result}
+    (entries : List (InlineEntry generic))
+    (shape : List (List String)) :
+    Option { entry : InlineEntry generic // entry.shape = shape } :=
+  match entries with
+  | [] => none
+  | entry :: rest =>
+      if same : entry.shape = shape then some ⟨entry, same⟩
+      else findEntry rest shape
 
 /-- Resolve by one shape comparison on a hit, or traverse the shared sparse
 index on a miss. A wrong arity has the same error as `Multimethod.resolve`. -/
@@ -37,12 +49,13 @@ def resolve (site : InlineDispatch Args Method Result) (args : Args) :
   let shape := site.generic.precedence args
   if shape.length != site.generic.arity then
     throw (.arity site.generic.arity shape.length)
-  if let some entry := site.entry then
-    if shape = entry.shape then
-      return (entry.candidates, site)
+  if let some found := findEntry site.entries shape then
+    let entry := found.val
+    let recent := entry :: site.entries.filter (fun old => old.shape != shape)
+    return (entry.candidates, { site with entries := recent.take capacity })
   let candidates := site.generic.candidatesFor shape
   let entry : InlineEntry site.generic := ⟨shape, candidates, rfl⟩
-  return (candidates, { site with entry := some entry })
+  return (candidates, { site with entries := (entry :: site.entries).take capacity })
 
 /-- The current arguments, including value-sensitive predicates, are used
 after candidate lookup. The cache never stores predicate results. -/
@@ -68,20 +81,16 @@ theorem resolve_sound (site : InlineDispatch Args Method Result) (args : Args)
     (arity : (site.generic.precedence args).length = site.generic.arity) :
     (site.resolve args).map Prod.fst =
       .ok (site.generic.candidatesFor (site.generic.precedence args)) := by
-  cases entry : site.entry with
+  cases found : findEntry site.entries (site.generic.precedence args) with
   | none =>
-      simp [InlineDispatch.resolve, arity, entry]
+      simp [InlineDispatch.resolve, arity, found]
       rfl
-  | some cached =>
-      by_cases same : site.generic.precedence args = cached.shape
-      · have cachedArity : cached.shape.length = site.generic.arity := by
-          rw [← same]
-          exact arity
-        simp [InlineDispatch.resolve, entry, same,
-          cachedArity, cached.valid]
-        rfl
-      · simp [InlineDispatch.resolve, arity, entry, same]
-        rfl
+  | some matched =>
+      have valid : matched.val.candidates =
+          site.generic.candidatesFor (site.generic.precedence args) := by
+        simpa [matched.property] using matched.val.valid
+      simp [InlineDispatch.resolve, arity, found, valid]
+      rfl
 
 theorem call_sound (site : InlineDispatch Args Method Result) (args : Args) :
     (site.call args).map Prod.fst =
@@ -117,32 +126,32 @@ theorem call_sound (site : InlineDispatch Args Method Result) (args : Args) :
     simp [InlineDispatch.call, failed]
     rfl
 
-/-- Registration returns a different generic, so the dependent entry is
+/-- Registration returns a different generic, so the dependent entries are
 discarded rather than relying on a possibly colliding revision counter. -/
 def register (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (method : Method) :
     Except MultimethodError (InlineDispatch Args Method Result) := do
   let generic ← site.generic.register specializers method
-  return ⟨generic, none⟩
+  return ⟨generic, []⟩
 
-/-- Add a method at one tuple and discard the previous call-site entry. -/
+/-- Add a method at one tuple and discard previous call-site entries. -/
 def contribute (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (method : Method) :
     Except MultimethodError (InlineDispatch Args Method Result) := do
   let generic ← site.generic.contribute specializers method
-  return ⟨generic, none⟩
+  return ⟨generic, []⟩
 
 def registerWhen (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (predicate : Args → Bool)
     (method : Method) :
     Except MultimethodError (InlineDispatch Args Method Result) := do
   let generic ← site.generic.registerWhen specializers predicate method
-  return ⟨generic, none⟩
+  return ⟨generic, []⟩
 
 theorem register_empty (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (method : Method)
     (registered : specializers.length = site.generic.arity) :
-    (site.register specializers method).map (fun revised => revised.entry.isNone) =
+    (site.register specializers method).map (fun revised => revised.entries.isEmpty) =
       .ok true := by
   simp [InlineDispatch.register, Multimethod.register, registered]
   rfl
@@ -151,7 +160,7 @@ theorem contribute_empty (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (method : Method)
     (registered : specializers.length = site.generic.arity) :
     (site.contribute specializers method).map
-      (fun revised => revised.entry.isNone) = .ok true := by
+      (fun revised => revised.entries.isEmpty) = .ok true := by
   simp [InlineDispatch.contribute, Multimethod.contribute, registered]
   rfl
 
@@ -160,7 +169,7 @@ theorem registerWhen_empty (site : InlineDispatch Args Method Result)
     (method : Method)
     (registered : specializers.length = site.generic.arity) :
     (site.registerWhen specializers predicate method).map
-      (fun revised => revised.entry.isNone) = .ok true := by
+      (fun revised => revised.entries.isEmpty) = .ok true := by
   simp [InlineDispatch.registerWhen, Multimethod.registerWhen, registered]
   rfl
 

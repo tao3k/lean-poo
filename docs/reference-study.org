@@ -354,5 +354,11 @@ retaining. Declaration-only edits now reuse ~Plan.valid~ and its C4 order;
 ordered batches allocate a single new executable instance and install it only
 after every edit succeeds. Structural edits still recompile C4. This separates
 topology reuse from value-cache invalidation.
+Section 10's method-caching exercise suggests eight recently used generic
+shapes and four at a dynamic call site. ~ShapeCache~ now bounds the generic
+candidate and prepared effective-method caches to eight shapes; ~InlineDispatch~
+holds four proof-bearing call-site entries. Candidate predicates remain
+value-sensitive after either cache hit, and registration clears caches in
+the new immutable dispatch value.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.

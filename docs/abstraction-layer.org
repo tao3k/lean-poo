@@ -331,7 +331,7 @@ of a newly registered generic.
 | Dispatch ecosystems | Pure dependent table with transactional extension and per-generic cache state. |
 | Dynamic versus preselected dispatch | Runtime generic call and proof-guarded shape-specific candidate snapshot. |
 | Dynamic versus static method dictionaries | Runtime object dictionary, caller-selected dictionary, and a preselected typed method. |
-| Per-call-site inline cache | One proven candidate entry for the current immutable generic and C4 tuple, with direct-index fallback. |
+| Per-call-site inline cache | Four recent proof-bearing candidate entries for the current immutable generic, with direct-index fallback. |
 
 These are executable variants of the paper's mechanisms. The preselected
 entry point requires an explicit shape witness and is not a claim of automatic
@@ -350,6 +350,15 @@ applicable methods for each call. Registration invalidates both caches in the
 new immutable version. ~Multimethod.preparedStandard~ supplies the standard
 method-combination policy without a second resolver. The shared C4 example
 checks reuse, guarded fallback, and replacement after invalidation.
+Both the generic candidate cache and prepared effective-method cache now use
+~ShapeCache~, an eight-entry persistent LRU of complete dispatch shapes.
+Hits refresh recency; a ninth distinct shape evicts the least recent entry.
+The sparse method index remains the semantic source when an evicted shape is
+called again. [[file:../Examples/BoundedDispatch.lean][BoundedDispatch.lean]] shows the caller-visible behavior, while
+[[file:../Tests/ShapeCache.lean][ShapeCache.lean]] checks recency, the capacity bound, cache eviction, and
+agreement with uncached selection across many shapes. This bounds retained
+shape entries in each current generic or prepared value; callers may still
+retain older immutable versions intentionally.
 ~just benchmark-effective-methods~ compares repeated standard-method
 assembly with this prepared path and checks equal results. Its workload is
 configurable through ~LEANPOO_BENCH_CALLS~ and ~LEANPOO_BENCH_METHODS~. On
@@ -358,22 +367,21 @@ Darwin arm64, two runs with 20,000 calls and 128 methods measured about
 At 32 methods the measured order varied, so this is an opt-in optimization,
 not an assumed speedup for every method set.
 
-~InlineDispatch~ adds the paper's one-entry method-call-site cache beside the
+~InlineDispatch~ adds the paper's four-entry LRU method-call-site cache beside the
 generic function's existing shared shape cache. ~Multimethod.candidatesFor~
 owns the sparse-index traversal used by both. An ~InlineEntry~ carries a Lean
 proof that its candidate sequence belongs to its exact immutable generic;
-the site checks the complete C4 shape before reusing it. ~call_sound~ proves
+the site checks the complete C4 shape before reusing it and refreshes that
+entry's recency. ~call_sound~ proves
 that cache hits and misses produce the same result as direct traversal, and
 ~register_empty~ and ~registerWhen_empty~ prove that either kind of method
-registration starts a new site without an entry. Value predicates are still
+registration starts a new site without entries. Value predicates are still
 checked on every call. [[file:../Tests/InlineDispatch.lean][InlineDispatch.lean]] checks two payloads under one C4 shape,
-a changed shape, ordinary and guarded registration, and an arity failure.
+a changed shape, four-entry eviction and recency, ordinary and guarded
+registration, and an arity failure.
 ~just benchmark-inline-dispatch~ compares direct traversal, the generic's
-shared cache, and the call-site entry with equal-result checks. In two local
-64-method runs, the one-entry site took about 0.34 seconds for 10,000 calls
-and 0.67 seconds for 20,000 calls; the shared generic cache took about 0.41
-and 0.82 seconds respectively. These are local workloads with a hot shape,
-not a general dispatch-speed guarantee.
+shared cache, and the call-site cache with equal-result checks. Timings depend
+on the shape distribution and are not a general dispatch-speed guarantee.
 
 Section 10 also separates object layout from method composition. ~Memoized.layout~
 places the C4 suffix tail's declared keys at the front of an array of the

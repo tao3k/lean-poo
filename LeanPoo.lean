@@ -30,6 +30,7 @@ import LeanPoo.Object.Class
 import LeanPoo.Object.Initialization
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.QualifiedMethods
+import LeanPoo.Object.ShapeCache
 import LeanPoo.Object.Multimethod
 import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Object.Subjective

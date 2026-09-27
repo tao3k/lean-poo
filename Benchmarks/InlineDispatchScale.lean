@@ -73,7 +73,7 @@ def main : IO Unit := do
   let inlineNs := (← IO.monoNanosNow) - startedInline
   if direct != ordinary || direct != inlineValue then
     throw (IO.userError "call-site dispatch differs from direct dispatch")
-  IO.println s!"calls={count} methods={methodCount} checksum={direct} direct_ns={directNs} generic_ns={genericNs} inline_ns={inlineNs} generic_shapes={updatedGeneric.cache.size} inline_entry={updatedInline.entry.isSome}"
+  IO.println s!"calls={count} methods={methodCount} checksum={direct} direct_ns={directNs} generic_ns={genericNs} inline_ns={inlineNs} generic_shapes={updatedGeneric.cache.size} inline_entries={updatedInline.entries.length}"
 
 end LeanPoo.Benchmarks.InlineDispatchScale
 

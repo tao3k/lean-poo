@@ -17,7 +17,7 @@ structure PreparedMultimethod (Args Method Effective Result : Type) where
   generic : Multimethod Args Method Unit
   prepare : Array Method → Effective
   invoke : Effective → Args → Result
-  effectiveCache : Std.HashMap (List (List String)) Effective := {}
+  effectiveCache : ShapeCache Effective := {}
 
 namespace PreparedMultimethod
 
@@ -59,7 +59,9 @@ def call (prepared : PreparedMultimethod Args Method Effective Result)
       (Result × PreparedMultimethod Args Method Effective Result) := do
   let shape := prepared.generic.precedence args
   match prepared.effectiveCache.get? shape with
-  | some effective => return (prepared.invoke effective args, prepared)
+  | some effective =>
+      return (prepared.invoke effective args,
+        { prepared with effectiveCache := prepared.effectiveCache.touch shape })
   | none => pure ()
   let (candidates, updatedGeneric) ← prepared.generic.resolve args
   let updated := { prepared with generic := updatedGeneric }
@@ -68,7 +70,7 @@ def call (prepared : PreparedMultimethod Args Method Effective Result)
       (MethodCandidate.select candidates args)
     return (prepared.invoke effective args,
       { updated with effectiveCache :=
-          prepared.effectiveCache.insert shape effective })
+          prepared.effectiveCache.remember shape effective })
   else
     let effective := prepared.prepare
       (MethodCandidate.select candidates args)
