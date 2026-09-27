@@ -33,6 +33,7 @@ import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Object.Subjective
 import LeanPoo.Object.DispatchTable
 import LeanPoo.Object.StaticDispatch
+import LeanPoo.Object.PreparedMultimethod
 import LeanPoo.Object.Prototype
 import LeanPoo.Object.Mutable
 import LeanPoo.Prototype.Mutable

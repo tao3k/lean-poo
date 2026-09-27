@@ -1,5 +1,6 @@
 import LeanPoo.Object.Multimethod
 import LeanPoo.Object.MethodCombination
+import LeanPoo.Object.PreparedMultimethod
 
 /-!
 The paper separates multiple dispatch into an accepter, a combiner, and an
@@ -59,5 +60,41 @@ def forwardingStandard {Dispatch Payload : Type} {M : Type → Type}
         (fun contribution methods => methods.prepend contribution)
         ({} : MethodCombination.ForwardMethods Dispatch Payload M Result)
       (MethodCombination.forwardEffective methods onMissing) call }
+
+/-- BETA-style superclass-controlled `inner` over the C4-selected methods. -/
+def inner {Args : Type} {M : Type → Type} {Result : Type}
+    (arity : Nat) (precedence : Args → List (List String))
+    (onInnermost : Args → M Result) :
+    Multimethod Args (MethodCombination.SubMethod Args M Result) (M Result) :=
+  { arity
+    precedence
+    combine := fun methods args =>
+      (MethodCombination.innerChain methods.toList onInnermost) args }
+
+/-- Simula-style automatic `inner` for prefix/suffix class bodies. -/
+def simula {Args : Type} {M : Type → Type} [Monad M]
+    (arity : Nat) (precedence : Args → List (List String)) :
+    Multimethod Args (MethodCombination.SimulaBody Args M) (M Unit) :=
+  { arity
+    precedence
+    combine := fun methods args =>
+      (MethodCombination.simulaEffective methods.toList) args }
+
+/-- Precompute the standard effective method once per unconditional C4
+shape. Shapes containing guarded contributions still use per-call selection. -/
+def preparedStandard {Args : Type} {M : Type → Type} {Result : Type}
+    [Monad M] (arity : Nat)
+    (precedence : Args → List (List String))
+    (onMissing : Args → M Result) :
+    PreparedMultimethod Args
+      (MethodCombination.Contribution Args M Result)
+      (Args → M Result) (M Result) :=
+  PreparedMultimethod.create arity precedence
+    (fun contributions =>
+      let methods := contributions.toList.foldr
+        (fun contribution methods => methods.prepend contribution)
+        ({} : MethodCombination.Methods Args M Result)
+      MethodCombination.effective methods onMissing)
+    (fun effective args => effective args)
 
 end LeanPoo.Object.Multimethod

@@ -157,6 +157,16 @@ authorization can reject it, and execution keeps a ~next~ chain. This is the
 paper's user-defined method-combination mechanism expressed through Lean's
 type families rather than a runtime qualifier map.
 
+The paper's Simula/BETA ~inner~ is a different combination policy over the
+same C4-selected methods. ~innerChain~ reverses the ordinary call chain so
+the least-specific method controls whether descendants run; omitting ~inner~
+stops them, as in BETA. ~simulaEffective~ models Simula's automatic final
+~inner~ by running prefixes least-specific-first and suffixes
+most-specific-first. These are typed policies in the core, and the
+~Multimethod.inner~ and ~Multimethod.simula~ constructors apply them to
+generic-owned method sets. [[file:../Examples/Chapter9Combination.lean][Chapter9Combination.lean]] checks both policies on one C4
+diamond, including an ancestor that stops the descendant chain.
+
 * Multiple dispatch
 
 The paper places multimethods on the generic function, indexed by tuples of
@@ -261,7 +271,43 @@ child, checks a predicate that becomes applicable for another value of the
 same shape, rejects a different C4 shape, and observes the separate result
 of a newly registered generic.
 
+* Paper section 9 execution map
+
+| Paper mechanism | Lean-native execution |
+|-----------------+-----------------------|
+| Standard, simple, and user-defined combinations | Typed contributions, policies, and dependent qualifier groups over one C4 order. |
+| Simula and BETA ~inner~ | Reversed C4 control chain and automatic prefix/suffix entry. |
+| Orthogonal protocols | Independent generic keys and retroactive method registration in ~DispatchTable~. |
+| Multiple dispatch and specializers | Generic-owned tuple index with C4 precedence, universal methods, and value predicates. |
+| Calling conventions | Typed complete call records and payload-forwarding ~next~. |
+| Subjective dispatch | Reader-scoped subject at the first or last dispatch position. |
+| Dispatch ecosystems | Pure dependent table with transactional extension and per-generic cache state. |
+| Dynamic versus preselected dispatch | Runtime generic call and proof-guarded shape-specific candidate snapshot. |
+
+These are executable variants of the paper's mechanisms. The preselected
+entry point requires an explicit shape witness and is not a claim of automatic
+compiler devirtualization. The paper's dynamic MOP and host-language syntax
+are not part of this Lean-native API.
+
 * Optimization boundary
+
+~PreparedMultimethod~ adds the paper's effective-method cache on top of the
+existing candidate-sequence cache. The candidate type distinguishes an
+unconditional declaration from a value-sensitive predicate. When every
+candidate for a C4 shape is unconditional, ~prepare~ builds the effective
+method once and ~invoke~ reuses it with each current argument. A shape with
+any guarded candidate still rechecks predicates and prepares only currently
+applicable methods for each call. Registration invalidates both caches in the
+new immutable version. ~Multimethod.preparedStandard~ supplies the standard
+method-combination policy without a second resolver. The shared C4 example
+checks reuse, guarded fallback, and replacement after invalidation.
+~just benchmark-effective-methods~ compares repeated standard-method
+assembly with this prepared path and checks equal results. Its workload is
+configurable through ~LEANPOO_BENCH_CALLS~ and ~LEANPOO_BENCH_METHODS~. On
+Darwin arm64, two runs with 20,000 calls and 128 methods measured about
+4.0--4.1 seconds for repeated assembly and 3.3 seconds for preparation.
+At 32 methods the measured order varied, so this is an opt-in optimization,
+not an assumed speedup for every method set.
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
 snapshot is requested; it computes the precedence list and assembled slot

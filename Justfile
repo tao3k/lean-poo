@@ -65,6 +65,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.MethodCombination
     lake build LeanPoo.Object.QualifiedMethods
     lake build LeanPoo.Object.Multimethod
+    lake build LeanPoo.Object.PreparedMultimethod
     lake build LeanPoo.Object.MultimethodCombination
     lake build LeanPoo.Object.Subjective
     lake build LeanPoo.Object.DispatchTable
@@ -132,6 +133,7 @@ check-example: check-compose
     lake env lean Examples/SubjectiveDispatch.lean
     lake env lean Examples/DispatchTable.lean
     lake env lean Examples/StaticDispatch.lean
+    lake env lean Examples/Chapter9Combination.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
@@ -177,6 +179,11 @@ benchmark-memoization:
     lake build LeanPoo.Object.Memo
     lake env lean --run Examples/MemoizationScale.lean
     lake env lean --run Examples/MemoizationChainScale.lean
+
+# Compare repeated standard-method assembly with one prepared effective method.
+benchmark-effective-methods:
+    lake build LeanPoo.Object.MultimethodCombination
+    lake env lean --run Examples/PreparedDispatchScale.lean
 
 # Compare sequential layer installation with one private final allocation.
 benchmark-mutable-prototype:

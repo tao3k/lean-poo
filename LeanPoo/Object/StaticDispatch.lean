@@ -27,8 +27,7 @@ comparison and method-index traversal. Candidate predicates remain dynamic. -/
 def StaticDispatch.call (compiled : StaticDispatch Args Method Result)
     (args : Args) (_sameShape : compiled.precedence args = compiled.shape) :
     Result :=
-  let methods := compiled.candidates.foldl (fun found candidate =>
-    if candidate.applies args then found.push candidate.method else found) #[]
+  let methods := MethodCandidate.select compiled.candidates args
   compiled.combine methods args
 
 inductive StaticDispatchError where

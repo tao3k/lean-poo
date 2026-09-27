@@ -161,6 +161,34 @@ def forwardEffective {Dispatch Payload : Type} {M : Type → Type}
       after call
     return result
 
+/-- BETA-style `inner` reverses the usual next-method control: the least
+specific method runs first and decides whether to enter its descendants.
+An omitted `inner` stops the chain. -/
+def innerChain {Receiver : Type} {M : Type → Type} {Result : Type}
+    (methods : List (SubMethod Receiver M Result))
+    (onInnermost : Receiver → M Result) : Receiver → M Result :=
+  callChain methods.reverse onInnermost
+
+/-- Simula inserts `inner` at the end of a body when the author omitted it.
+Each body supplies a prefix and suffix; all prefixes run least-specific-first,
+then all suffixes run most-specific-first. -/
+structure SimulaBody (Receiver : Type) (M : Type → Type) where
+  prefixPart : SideMethod Receiver M
+  suffixPart : SideMethod Receiver M
+
+def simulaEffective {Receiver : Type} {M : Type → Type} [Monad M]
+    (methods : List (SimulaBody Receiver M)) : Receiver → M Unit :=
+  fun receiver => do
+    for method in methods.reverse do
+      method.prefixPart receiver
+    for method in methods do
+      method.suffixPart receiver
+
+theorem innerChain_nil {Receiver : Type} {M : Type → Type}
+    {Result : Type} (onInnermost : Receiver → M Result) :
+    innerChain ([] : List (SubMethod Receiver M Result)) onInnermost =
+      onInnermost := rfl
+
 /-- A simple method cannot call `next`; only an around method can wrap the
 combined result. The accumulator may have a different type from either the
 individual method result or the final result. -/

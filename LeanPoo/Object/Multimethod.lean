@@ -86,9 +86,31 @@ inductive MultimethodError where
 
 /-- Value-sensitive matching is checked on every call. The cache retains
 candidates, rather than freezing the result of a predicate for one argument. -/
-structure MethodCandidate (Args Method : Type) where
-  applies : Args → Bool
-  method : Method
+inductive MethodCandidate (Args Method : Type) where
+  | always (method : Method)
+  | when (predicate : Args → Bool) (method : Method)
+
+def MethodCandidate.applies (candidate : MethodCandidate Args Method)
+    (args : Args) : Bool :=
+  match candidate with
+  | .always _ => true
+  | .when predicate _ => predicate args
+
+def MethodCandidate.method (candidate : MethodCandidate Args Method) :
+    Method :=
+  match candidate with
+  | .always method | .when _ method => method
+
+def MethodCandidate.unconditional (candidate : MethodCandidate Args Method) :
+    Bool :=
+  match candidate with
+  | .always _ => true
+  | .when _ _ => false
+
+def MethodCandidate.select (candidates : Array (MethodCandidate Args Method))
+    (args : Args) : Array Method :=
+  candidates.foldl (fun found candidate =>
+    if candidate.applies args then found.push candidate.method else found) #[]
 
 /-- A first-class generic function owns its methods, dispatch shape,
 combination policy, and immutable candidate-sequence cache. -/
@@ -109,7 +131,7 @@ def Multimethod.register (generic : Multimethod Args Method Result)
     .error (.arity generic.arity specializers.length)
   else
     .ok { generic with
-      index := generic.index.insert specializers ⟨fun _ => true, method⟩
+      index := generic.index.insert specializers (.always method)
       cache := {} }
 
 /-- Refine one specialization tuple with an equality or arbitrary predicate.
@@ -123,7 +145,7 @@ def Multimethod.registerWhen (generic : Multimethod Args Method Result)
     .error (.arity generic.arity specializers.length)
   else
     .ok { generic with
-      index := generic.index.prepend specializers ⟨predicate, method⟩
+      index := generic.index.prepend specializers (.when predicate method)
       cache := {} }
 
 /-- A cache hit reuses the candidate sequence. A miss traverses only
@@ -147,8 +169,7 @@ def Multimethod.resolve (generic : Multimethod Args Method Result)
 def Multimethod.call (generic : Multimethod Args Method Result) (args : Args) :
     Except MultimethodError (Result × Multimethod Args Method Result) := do
   let (candidates, updated) ← generic.resolve args
-  let methods := candidates.foldl (fun found candidate =>
-    if candidate.applies args then found.push candidate.method else found) #[]
+  let methods := MethodCandidate.select candidates args
   return (generic.combine methods args, updated)
 
 theorem Multimethod.resolve_cached
