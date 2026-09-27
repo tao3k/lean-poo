@@ -107,4 +107,20 @@ def rejectedWidth : Except Object.ConstructError (Object.ClassInstance Key Value
   | .error (.rejected "ScaledColoredRectangle") => true
   | _ => false
 
+/-- A standalone computed rule can call its own declared default through
+`inherited`. The default and computation must both reach the declaration. -/
+def computedWithOwnDefault : Except C4.Error (Option Nat) := do
+  let classSpec : Object.ClassSpec Key Value :=
+    { name := "DefaultedArea"
+      rules := [
+        { key := .area
+          default := some 7
+          compute := some (.computed fun _ inherited => inherited ()) }] }
+  let object ← classSpec.instantiate
+  return object.read .area
+
+#guard match computedWithOwnDefault with
+  | .ok (some 7) => true
+  | _ => false
+
 end LeanPoo.Tests.ClassInitialization
