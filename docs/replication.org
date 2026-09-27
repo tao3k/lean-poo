@@ -64,12 +64,16 @@ least-specific to most-specific declarations, following Gerbil-POO's runtime
 shape. It uses the existing slot-spec method algebra and still computes slot
 values lazily. ~memoize~ remains the default for sparse reads; the compiled
 path favors dense reads but has no general proof of equivalence to
-~Plan.resolve~. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
+~Plan.resolve~. The builder now folds each declaration's slots directly into
+the effective table, without materializing and iterating a temporary local
+hash map. ~Declaration.compileLocalMethods_get?~ proves that each local write
+uses the prior C4 layers and that the final direct declaration wins.
+[[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
 default, duplicate-declaration, self, missing-slot, and C4 diamond behavior.
 ~Plan.resolve_eq_compileSlot~ proves that the parent-first method fold used by
 the standard resolver equals the original C4 fold for every key and self; the
-~Entry.toMap_get?~ theorem proves the table builder's local last-write-wins
-normalization. Cross-node hash-table materialization still needs its own
+~Entry.foldMap_get?_lookup~ proves the dependent ordered-write invariant used
+by the local builder. Cross-node hash-table materialization still needs its own
 general proof.
 ~Plan.memoizeIndexed~ instead indexes each declaration once and composes a
 requested slot from those tables. ~IndexedPlan.resolve_sound~ proves that this

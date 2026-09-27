@@ -40,6 +40,44 @@ def Plan.memoize {Key : Type u} {Value : Key → Type v}
     (plan : Plan Key Value) : Memoized Key Value :=
   ⟨plan, plan.buildThunks (LeanPoo.allSlots plan) plan.resolve, .onDemand⟩
 
+/-- All direct methods in one declaration inherit from the preceding C4
+layers. Later duplicate keys replace earlier entries in this declaration. -/
+private def Declaration.localMethod {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (inherited : Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key))))
+    (key : Key) (spec : SlotPayload Key Value key) :
+    Prototype.Method (Self Key Value) (Option (Value key)) :=
+  Prototype.Method.compose spec.toMethod
+    ((inherited.get? key).getD Prototype.Method.identity)
+
+private def Declaration.compileLocalMethods {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (declaration : Declaration Key Value)
+    (inherited : Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key)))) :
+    Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key))) :=
+  declaration.slots.foldl (fun methods entry =>
+    methods.insert entry.key (Declaration.localMethod inherited entry.key entry.value))
+    inherited
+
+private theorem Declaration.compileLocalMethods_get?
+    {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (declaration : Declaration Key Value)
+    (inherited : Std.DHashMap Key
+      (fun key => Prototype.Method (Self Key Value) (Option (Value key))))
+    (key : Key) :
+    (declaration.compileLocalMethods inherited).get? key =
+    match declaration.slot key with
+    | some spec => some (Declaration.localMethod inherited key spec)
+    | none => inherited.get? key := by
+  unfold Declaration.compileLocalMethods Declaration.slot
+  rw [Entry.foldMap_get?_lookup declaration.slots inherited
+    (Declaration.localMethod inherited) key]
+  cases Entry.lookup declaration.slots key <;> rfl
+
 /-- Compile defaults and effective methods in one least-specific-to-most-
 specific traversal, following Gerbil-POO's method-table construction. The
 method algebra is still `SlotSpec.toMethod` and `Method.compose`. -/
@@ -54,11 +92,7 @@ private def Plan.compileEffective {Key : Type u} {Value : Key → Type v}
     if let some declaration := plan.schema.declaration name then
       for entry in declaration.defaults do
         defaults := defaults.insert entry.key entry.value
-      let localSlots := Entry.toMap declaration.slots
-      for entry in localSlots.toList do
-        let inherited := (methods.get? entry.1).getD Prototype.Method.identity
-        methods := methods.insert entry.1
-          (Prototype.Method.compose entry.2.toMethod inherited)
+      methods := declaration.compileLocalMethods methods
   let mut effective : Std.DHashMap Key
       (fun key => Self Key Value → Option (Value key)) := {}
   for key in keys do

@@ -102,8 +102,9 @@ The Lean modules are separated by semantic responsibility:
   ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
   ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
   behavior, including a C4 diamond. The forward-fold theorem proves the
-  composition order, and ~Entry.toMap_get?~ proves the local duplicate-slot
-  normalization used by the table builder. A general theorem about the
+  composition order; ~Entry.foldMap_get?_lookup~ and
+  ~Declaration.compileLocalMethods_get?~ prove the local duplicate-slot
+  normalization as direct ordered writes. A general theorem about the
   resulting cross-node hash table remains open. ~Plan.memoizeIndexed~ has a
   general resolver soundness theorem and a different performance profile.
   The executable object's ~ResolutionMode~ keeps the chosen method-building

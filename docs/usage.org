@@ -128,7 +128,9 @@ overrides, repeated local declarations, final-self reads, and missing keys.
 The example also checks a C4 diamond. ~Plan.resolve_eq_compileSlot~ proves
 that the standard resolver's parent-first fold equals its original C4 fold
 for every key and open self. ~Entry.toMap_get?~ separately proves that the
-compiled path's local slot table keeps last-write-wins declarations.
+compiled path's direct local writes keep last-write-wins declarations;
+~Declaration.compileLocalMethods_get?~ specializes that fact to effective
+methods. The builder makes no temporary per-declaration hash table.
 The optimized table is an executable projection; it does not itself carry a
 Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
 read many declared slots. ~memoizeIndexed~ preindexes each declaration and

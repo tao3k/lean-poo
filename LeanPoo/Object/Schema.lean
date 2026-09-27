@@ -60,6 +60,81 @@ private theorem Entry.foldToMap_get? {Key : Type u} {Payload : Key → Type w}
       · have reverse : entry.key ≠ key := by intro h; exact same h.symm
         simp [reverse, same]
 
+/-- A dependent payload transformation still obeys ordered last-write-wins
+lookup when its entries are inserted into a table. -/
+theorem Entry.foldMap_get? {Key : Type u} {Payload : Key → Type w}
+    {Result : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (entries : List (Entry Key Payload)) (table : Std.DHashMap Key Result)
+    (convert : (key : Key) → Payload key → Result key) (key : Key) :
+    (entries.foldl (fun current entry =>
+      current.insert entry.key (convert entry.key entry.value)) table).get? key =
+    entries.foldl (fun found (entry : Entry Key Payload) =>
+      letI : Decidable (key = entry.key) := entry.decideEq key
+      if same : key = entry.key then
+        some (same.symm ▸ convert entry.key entry.value)
+      else found) (table.get? key) := by
+  induction entries generalizing table with
+  | nil => rfl
+  | cons entry rest ih =>
+      simp only [List.foldl_cons]
+      rw [ih]
+      congr 1
+      rw [Std.DHashMap.get?_insert]
+      by_cases same : key = entry.key
+      · subst key
+        simp
+      · have reverse : entry.key ≠ key := by intro h; exact same h.symm
+        simp [reverse, same]
+
+/-- Mapping ordered writes into a dependent table preserves the declaration
+lookup: a present declaration replaces the seed, while an absent one leaves it. -/
+theorem Entry.foldMap_get?_lookup {Key : Type u} {Payload : Key → Type w}
+    {Result : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (entries : List (Entry Key Payload)) (table : Std.DHashMap Key Result)
+    (convert : (key : Key) → Payload key → Result key) (key : Key) :
+    (entries.foldl (fun current entry =>
+      current.insert entry.key (convert entry.key entry.value)) table).get? key =
+    match Entry.lookup entries key with
+    | some value => some (convert key value)
+    | none => table.get? key := by
+  rw [Entry.foldMap_get?]
+  let lift : Option (Payload key) → Option (Result key) :=
+    fun value => match value with
+      | some value => some (convert key value)
+      | none => table.get? key
+  have step (found : Option (Payload key)) (entry : Entry Key Payload) :
+      (letI : Decidable (key = entry.key) := entry.decideEq key
+       if same : key = entry.key then
+         some (same.symm ▸ convert entry.key entry.value)
+       else lift found) =
+      lift (letI : Decidable (key = entry.key) := entry.decideEq key
+        if same : key = entry.key then
+          some (same.symm ▸ entry.value)
+        else found) := by
+    by_cases same : key = entry.key
+    · subst key
+      simp [lift]
+    · simp [lift, same]
+  have fold (rest : List (Entry Key Payload)) (found : Option (Payload key)) :
+      rest.foldl (fun current (entry : Entry Key Payload) =>
+        letI : Decidable (key = entry.key) := entry.decideEq key
+        if same : key = entry.key then
+          some (same.symm ▸ convert entry.key entry.value)
+        else current) (lift found) =
+      lift (rest.foldl (fun current (entry : Entry Key Payload) =>
+        letI : Decidable (key = entry.key) := entry.decideEq key
+        if same : key = entry.key then
+          some (same.symm ▸ entry.value)
+        else current) found) := by
+    induction rest generalizing found with
+    | nil => rfl
+    | cons entry tail ih =>
+        simp only [List.foldl_cons]
+        rw [step, ih]
+  simpa [Entry.lookup, lift] using fold entries none
+
 theorem Entry.toMap_get? {Key : Type u} {Payload : Key → Type w}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (entries : List (Entry Key Payload)) (key : Key) :
@@ -127,6 +202,7 @@ rule as `fromValues`. The ordered array owns declaration order; the map only
 finds an existing position, so no hash-map iteration order escapes. -/
 def Declaration.fromValuesIndexed
     [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
+    [LawfulHashable Key]
     (entries : List (Sigma Value)) : Declaration Key Value :=
   let (_, ordered) := entries.foldl (fun (positions, ordered) entry =>
     match positions.get? entry.1 with
