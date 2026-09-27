@@ -64,6 +64,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Initialization
     lake build LeanPoo.Object.MethodCombination
     lake build LeanPoo.Object.QualifiedMethods
+    lake build LeanPoo.Object.Multimethod
     lake build LeanPoo.Object.Prototype
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
@@ -122,6 +123,7 @@ check-example: check-compose
     lake env lean Examples/MethodCombination.lean
     lake env lean Examples/SimpleMethodCombination.lean
     lake env lean Examples/QualifiedMethodCombination.lean
+    lake env lean Examples/MultipleDispatch.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean

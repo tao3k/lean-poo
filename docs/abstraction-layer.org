@@ -157,6 +157,25 @@ authorization can reject it, and execution keeps a ~next~ chain. This is the
 paper's user-defined method-combination mechanism expressed through Lean's
 type families rather than a runtime qualifier map.
 
+* Multiple dispatch
+
+The paper places multimethods on the generic function, indexed by tuples of
+argument prototypes. ~Object.Multimethod~ is a first-class Lean value with a
+fixed arity, an accepter that extracts each argument's C4 precedence, a
+combiner, a sparse tuple index, and an immutable effective-method cache. A
+registration names one exact specialization tuple; a call visits indexed
+branches in lexicographic C4 order. The cache key is the complete tuple of
+precedence lists, so a changed class lineage cannot reuse an old sequence.
+Registering or replacing a method returns a new generic with an empty cache;
+the previous value and its cache remain valid. Lean proves that a cache hit
+returns the stored sequence and that registration clears the cache.
+
+[[file:../Examples/MultipleDispatch.lean][MultipleDispatch.lean]] combines a C4 diamond on the first argument with a
+second argument's lineage. It checks tuple ordering, a repeated call's cache,
+method replacement, and fixed-arity rejection. The combiner reuses
+~MethodCombination.callChain~; multimethod selection does not add another
+method invocation protocol.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
