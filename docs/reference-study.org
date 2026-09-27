@@ -252,8 +252,10 @@ with parent effects preceding child effects. ~Prototype.MutableProto~ provides
 that effect order over ~Object.Mutable~; its named slot constructor uses the
 same C4 plan and slot evaluator as the pure path. It reproduces the observable
 composition behavior without claiming the paper's in-place hash-table
-optimization. For private construction, standard declaration layers compose
-their plan transformations and instantiate only the final object. Arbitrary
+optimization. For private construction, standard declaration layers stage
+their schema transformations, validate C4 at most once for the final root, and
+instantiate only the final object. Each layer still rejects a duplicate name
+or a revision of an unknown node at the point where it is applied. Arbitrary
 effect layers retain sequential execution, as does direct application to a
 shared mutable identity.
 

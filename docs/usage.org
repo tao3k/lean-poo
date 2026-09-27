@@ -271,10 +271,13 @@ same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
 ~extend~, ~slot~, and ~revise~ construct layers from the existing C4 object
 operations. ~instantiate~ starts from a memoized base and exposes the cell
 only when every layer succeeds. A composition made entirely of these standard
-layers transforms the private C4 plan first, then allocates one final lazy
-instance. A custom ~apply~ effect falls back to sequential private execution.
+layers stages its schema changes, compiles C4 at most once for the final root, and
+allocates one final lazy instance. Duplicate names and unknown revision targets
+are rejected at the layer that introduces them. A custom ~apply~ effect falls
+back to sequential private execution.
 ~instantiateCompiled~ selects the optional precompiled effective method table
-for the final instance. Applying a layer directly to an already shared cell
+for the final instance without first allocating an on-demand instance on the
+standard private path. Applying a layer directly to an already shared cell
 always has sequential effect semantics, so a later failure may leave earlier
 layers installed. [[file:../Examples/MutablePrototype.lean][MutablePrototype.lean]] compares the batched and sequential paths with pure
 extension, checks a late override of a ~self~-dependent slot, custom-effect

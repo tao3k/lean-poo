@@ -101,12 +101,23 @@ private def run : IO Bool := do
   let bad := Prototype.MutableProto.compose
     (.extend "Parent" parent) (.extend "Parent" parent)
   let rejected ← bad.instantiate basePlan.memoize
+  let rejectedCompiled ← bad.instantiateCompiled basePlan.memoize
+  let wrongOrder := Prototype.MutableProto.compose
+    (.extend "Later" parent) (.revise "Later" id)
+  let orderRejected ← wrongOrder.instantiate basePlan.memoize
+  let orderRejectedCompiled ← wrongOrder.instantiateCompiled basePlan.memoize
   let shared ← Object.Mutable.new basePlan.memoize
   let sharedResult ← bad.apply shared
   let sharedCount ← shared.read "count"
   let duplicateRejected := match rejected with
     | .error (.duplicateNode "Parent") => true
     | _ => false
+  let compiledDuplicateRejected := match rejectedCompiled with
+    | .error (.duplicateNode "Parent") => true
+    | _ => false
+  let prematureRevisionRejected := match orderRejected, orderRejectedCompiled with
+    | .error (.unknownNode "Later"), .error (.unknownNode "Later") => true
+    | _, _ => false
   let sharedPartial := match sharedResult with
     | .error (.duplicateNode "Parent") => sharedCount == some 3
     | _ => false
@@ -140,7 +151,8 @@ private def run : IO Bool := do
     scaledDerived == expectedScaled.memoize.read "derived" &&
     basePlan.memoize.read "count" == some 2 &&
     (first.read "count", first.read "derived") == (some 6, some 16) &&
-    duplicateRejected && sharedPartial && fallbackCount == some 6
+    duplicateRejected && compiledDuplicateRejected &&
+    prematureRevisionRejected && sharedPartial && fallbackCount == some 6
 
 #eval (do
   unless ← run do
