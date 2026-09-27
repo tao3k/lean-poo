@@ -199,6 +199,19 @@ combination policies with two C4 arguments. Its standard call exercises
 around, before, primary, and after methods, while a predicate-specific
 before method is reevaluated across two calls sharing one cached C4 shape.
 
+~Object.Multimethod.forwardingStandard~ models the paper's optional updated
+arguments to ~next~ with a typed product of dispatch arguments and a payload.
+The caller captures the complete record before selecting methods. A method
+can pass ~none~ to retain its current payload or ~some updated~ to forward a
+new one. It cannot replace the dispatch half of the product, so the selected
+C4 method sequence stays valid for the rest of the call. The forwarding
+standard combiner retains around/before/primary/after order; an around method
+may update what the inner combination sees, while a primary method may update
+what later primary methods see. Candidate selection occurs once at call entry.
+The forwarding example checks both forms of ~next~, propagation of optional
+and list-valued fields, qualifier order, and reuse of one C4 shape cache for
+different payload values.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a

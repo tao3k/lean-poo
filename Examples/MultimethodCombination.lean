@@ -111,4 +111,73 @@ def simpleExercise : Except String (Nat × Nat) := do
   | .ok (105, 1) => true
   | _ => false
 
+/-- A Lean record carries mandatory, optional, and list-valued non-dispatch
+arguments. `next` may replace it, but cannot replace the dispatch pair. -/
+structure Request where
+  quantity : Nat
+  note : Option String
+  tags : List String
+
+abbrev Dispatch := Object.Plan String Payload × Object.Plan String Payload
+abbrev ForwardCall := Dispatch × Request
+
+def forwardPrecedence (dispatch : Dispatch) : List (List String) :=
+  [dispatch.1.precedence, dispatch.2.precedence]
+
+def forwarding : Object.Multimethod ForwardCall
+    (Object.MethodCombination.ForwardContribution Dispatch Request Trace Nat)
+    (Trace Nat) :=
+  Object.Multimethod.forwardingStandard 2 forwardPrecedence
+    (fun _ => throw "no primary method")
+
+def forwardingExercise : Except String
+    (Nat × List String × Nat × List String × Nat) := do
+  let call ← shape.mapError (fun _ => "invalid C4 graph")
+  let dispatch : Dispatch := (call.left, call.right)
+  let request : Request := ⟨3, some "audit", ["tag"]⟩
+  let g ← (forwarding.register [.any, .any]
+    (.around (fun next (_, payload) => do
+      mark "around"
+      return (← next (some { payload with
+        quantity := payload.quantity + 1 })) + 1))).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L0", .prototype "R0"]
+    (.primary (fun _ (_, payload) => do
+      mark s!"base:{payload.quantity}:{payload.note.getD ""}:{payload.tags.length}"
+      return payload.quantity))).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "LF", .prototype "R1"]
+    (.primary (fun next (_, payload) => do
+      mark s!"head:{payload.quantity}"
+      next none))).mapError (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L1", .prototype "R1"]
+    (.primary (fun next (_, payload) => do
+      mark s!"specific:{payload.quantity}"
+      return (← next (some { payload with
+        quantity := payload.quantity + 2 })) + 10))).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L1", .prototype "R0"]
+    (.before (fun (_, payload) => mark s!"before:{payload.quantity}")))
+    |>.mapError (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L0", .prototype "R1"]
+    (.after (fun (_, payload) => mark s!"after:{payload.quantity}")))
+    |>.mapError (fun _ => "invalid method arity")
+  let (first, cached) ← (g.call (dispatch, request)).mapError
+    (fun _ => "invalid call arity")
+  let (firstValue, firstTrace) ← first.run []
+  let (second, reused) ← (cached.call
+    (dispatch, { request with quantity := 5 })).mapError
+    (fun _ => "invalid call arity")
+  let (secondValue, secondTrace) ← second.run []
+  return (firstValue, firstTrace.reverse, secondValue,
+    secondTrace.reverse, reused.cache.size)
+
+#guard match forwardingExercise with
+  | .ok (17, first, 19, second, 1) =>
+    first == ["around", "before:4", "head:4", "specific:4",
+      "base:6:audit:1", "after:4"] &&
+    second == ["around", "before:6", "head:6", "specific:6",
+      "base:8:audit:1", "after:6"]
+  | _ => false
+
 end LeanPoo.Examples.MultimethodCombination

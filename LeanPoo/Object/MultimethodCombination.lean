@@ -42,4 +42,22 @@ def simple {Args : Type} {M : Type → Type}
         ({} : MethodCombination.SimpleMethods Args M Item Result)
       (MethodCombination.simpleEffective policy methods) args }
 
+/-- A typed calling convention for a fixed dispatch tuple and a forwardable
+payload. Methods can update the payload passed to `next`, while Lean's product
+type prevents them from replacing the already-dispatched C4 arguments. -/
+def forwardingStandard {Dispatch Payload : Type} {M : Type → Type}
+    {Result : Type} [Monad M]
+    (arity : Nat) (precedence : Dispatch → List (List String))
+    (onMissing : (Dispatch × Payload) → M Result) :
+    Multimethod (Dispatch × Payload)
+      (MethodCombination.ForwardContribution Dispatch Payload M Result)
+      (M Result) :=
+  { arity
+    precedence := fun call => precedence call.1
+    combine := fun contributions call =>
+      let methods := contributions.toList.foldr
+        (fun contribution methods => methods.prepend contribution)
+        ({} : MethodCombination.ForwardMethods Dispatch Payload M Result)
+      (MethodCombination.forwardEffective methods onMissing) call }
+
 end LeanPoo.Object.Multimethod

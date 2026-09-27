@@ -94,6 +94,73 @@ def effective {Receiver : Type} {M : Type → Type} {Result : Type}
       after receiver
     return result
 
+/-- A forwarding method may pass a new payload to the remaining method
+chain. `none` retains the current payload. The dispatch part of the call is
+not accepted by `next`, so the resolved C4 order remains fixed. -/
+abbrev ForwardMethod (Dispatch Payload : Type) (M : Type → Type)
+    (Result : Type) :=
+  (Option Payload → M Result) → (Dispatch × Payload) → M Result
+
+inductive ForwardContribution (Dispatch Payload : Type)
+    (M : Type → Type) (Result : Type) where
+  | primary (method : ForwardMethod Dispatch Payload M Result)
+  | before (method : SideMethod (Dispatch × Payload) M)
+  | after (method : SideMethod (Dispatch × Payload) M)
+  | around (method : ForwardMethod Dispatch Payload M Result)
+
+structure ForwardMethods (Dispatch Payload : Type)
+    (M : Type → Type) (Result : Type) where
+  primary : List (ForwardMethod Dispatch Payload M Result) := []
+  before : List (SideMethod (Dispatch × Payload) M) := []
+  after : List (SideMethod (Dispatch × Payload) M) := []
+  around : List (ForwardMethod Dispatch Payload M Result) := []
+
+def ForwardMethods.prepend (methods : ForwardMethods Dispatch Payload M Result)
+    (contribution : ForwardContribution Dispatch Payload M Result) :
+    ForwardMethods Dispatch Payload M Result :=
+  match contribution with
+  | .primary method => { methods with primary := method :: methods.primary }
+  | .before method => { methods with before := method :: methods.before }
+  | .after method => { methods with after := method :: methods.after }
+  | .around method => { methods with around := method :: methods.around }
+
+/-- Each `next` closure captures the current dispatch argument, while its
+optional payload replaces only the value passed to the next method. -/
+def callForwardChain {Dispatch Payload : Type} {M : Type → Type}
+    {Result : Type}
+    (methods : List (ForwardMethod Dispatch Payload M Result))
+    (onExhausted : (Dispatch × Payload) → M Result) :
+    (Dispatch × Payload) → M Result :=
+  methods.foldr (fun method next call =>
+    method (fun replacement =>
+      next (call.1, replacement.getD call.2)) call) onExhausted
+
+theorem callForwardChain_cons {Dispatch Payload : Type} {M : Type → Type}
+    {Result : Type} (method : ForwardMethod Dispatch Payload M Result)
+    (rest : List (ForwardMethod Dispatch Payload M Result))
+    (onExhausted : (Dispatch × Payload) → M Result)
+    (call : Dispatch × Payload) :
+    callForwardChain (method :: rest) onExhausted call =
+      method (fun replacement =>
+        callForwardChain rest onExhausted
+          (call.1, replacement.getD call.2)) call := rfl
+
+/-- The standard qualifier order with payload-forwarding `next`. An around
+method may change the payload observed by the whole inner combination; a
+primary method may change it for the remaining primary methods. -/
+def forwardEffective {Dispatch Payload : Type} {M : Type → Type}
+    {Result : Type} [Monad M]
+    (methods : ForwardMethods Dispatch Payload M Result)
+    (onMissing : (Dispatch × Payload) → M Result) :
+    (Dispatch × Payload) → M Result :=
+  callForwardChain methods.around fun call => do
+    for before in methods.before do
+      before call
+    let result ← callForwardChain methods.primary onMissing call
+    for after in methods.after.reverse do
+      after call
+    return result
+
 /-- A simple method cannot call `next`; only an around method can wrap the
 combined result. The accumulator may have a different type from either the
 individual method result or the final result. -/
