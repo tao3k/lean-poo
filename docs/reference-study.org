@@ -108,6 +108,10 @@ The Lean modules are separated by semantic responsibility:
   ~compileTablesFor_method_getD~, and ~Plan.compiledTables_resolve~ prove
   cross-node resolution for every key and open self.
   ~Plan.compileEffective_get?_mem~ proves lookup for every materialized key.
+  ~Plan.compileMemo~ packages the table and proof as a reusable ~CompiledPlan~;
+  each ~CompiledPlan.instantiate~ allocates fresh lazy cells without rebuilding
+  effective methods. This applies the source's staging distinction to repeated
+  instances of one immutable topology and declaration set.
   ~Plan.memoizeIndexed~ has a
   general resolver soundness theorem and a different performance profile.
   The executable object's ~ResolutionMode~ keeps the chosen method-building

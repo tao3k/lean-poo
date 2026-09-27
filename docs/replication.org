@@ -80,6 +80,10 @@ lookup for every key included in the finite materialization list. The
 recursive thunk fixed point is executable and can still diverge for an
 unguarded self reference; these table theorems do not assert totality of
 arbitrary recursive objects.
+~Plan.compileMemo~ retains the proven table as a reusable ~CompiledPlan~.
+Repeated ~CompiledPlan.instantiate~ calls allocate fresh lazy cells without
+repeating C4 method composition. This separates the paper's construction
+stage from each object's recursive value stage.
 ~Plan.memoizeIndexed~ instead indexes each declaration once and composes a
 requested slot from those tables. ~IndexedPlan.resolve_sound~ proves that this
 cross-node resolver equals ~Plan.resolve~ for every key and open self, including

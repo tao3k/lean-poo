@@ -276,18 +276,55 @@ private theorem Plan.compileEffective_get?_mem
   funext self
   exact plan.compiledTables_resolve key self
 
+/-- A reusable, proof-backed method table for one validated C4 plan. The
+compiled functions remain open in `self`; only instances allocate lazy cells. -/
+structure CompiledPlan (Key : Type u) (Value : Key → Type v)
+    [BEq Key] [LawfulBEq Key] [Hashable Key] where
+  plan : Plan Key Value
+  keys : List Key
+  effective : Std.DHashMap Key (fun key => Self Key Value → Option (Value key))
+  sound : ∀ key, key ∈ keys → effective.get? key = some (plan.resolve key)
+
+/-- Stage C4 method composition once for any number of later instances. -/
+def Plan.compileMemo {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (plan : Plan Key Value) : CompiledPlan Key Value :=
+  let keys := LeanPoo.allSlots plan
+  { plan
+    keys
+    effective := plan.compileEffective keys
+    sound := plan.compileEffective_get?_mem keys }
+
+/-- Read a compiled open method. Unmaterialized keys have no method. -/
+def CompiledPlan.resolve {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (compiled : CompiledPlan Key Value) (key : Key) (self : Self Key Value) :
+    Option (Value key) :=
+  match compiled.effective.get? key with
+  | some method => method self
+  | none => none
+
+/-- Every materialized compiled method has the plan's open-recursive meaning. -/
+theorem CompiledPlan.resolve_sound {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (compiled : CompiledPlan Key Value) (key : Key)
+    (member : key ∈ compiled.keys) (self : Self Key Value) :
+    compiled.resolve key self = compiled.plan.resolve key self := by
+  simp [CompiledPlan.resolve, compiled.sound key member]
+
+/-- Tie a fresh lazy self table while reusing the compiled open methods. -/
+def CompiledPlan.instantiate {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (compiled : CompiledPlan Key Value) : Memoized Key Value :=
+  ⟨compiled.plan,
+    compiled.plan.buildThunks compiled.keys compiled.resolve, .compiled⟩
+
 /-- Precompute every effective method in one pass, then keep slot values
 lazy. This favors objects whose callers read many declared slots. -/
 def Plan.memoizeCompiled {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) : Memoized Key Value :=
-  let keys := LeanPoo.allSlots plan
-  let effective := plan.compileEffective keys
-  let resolve : (key : Key) → Self Key Value → Option (Value key) :=
-    fun key self => match effective.get? key with
-      | some method => method self
-      | none => none
-  ⟨plan, plan.buildThunks keys resolve, .compiled⟩
+  plan.compileMemo.instantiate
 
 /-- Index direct declarations once and retain lazy slot values. The index's
 resolver is proved equal to `Plan.resolve` for every key and open self. -/

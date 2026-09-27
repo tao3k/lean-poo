@@ -91,6 +91,8 @@ execution, first-class projection, a new override, and a mutable snapshot.
 | ~Plan.ref~ | Require a slot; absence is ~noApplicableMethod~. |
 | ~Plan.memoize~ | Build a shared lazy instance of an open-recursive plan. |
 | ~Plan.memoizeCompiled~ | Assemble the effective method table once, then keep values lazy; useful for dense reads of a wide object. |
+| ~Plan.compileMemo~ / ~CompiledPlan.instantiate~ | Compile the open method table once, then create any number of objects with independent lazy cells. |
+| ~CompiledPlan.resolve_sound~ | For a materialized key, equate the compiled open method with ~Plan.resolve~ for every self. |
 | ~Plan.memoizeIndexed~ | Index every declaration once, then compose a slot's method when its value is forced; ~IndexedPlan.resolve_sound~ proves its resolver agrees with ~Plan.resolve~ for every key and open self. |
 | ~Memoized.read~ / ~ref~ / ~refWith~ / ~values~ | Read one slot, handle a missing slot explicitly, or materialize all slots from the shared instance. |
 | ~LeanPoo.hasSlot~ | Check whether a key is declared in the C4 chain. |
@@ -137,6 +139,12 @@ that read many declared slots. ~memoizeIndexed~ preindexes each declaration and
 keeps the same lazy values; its resolver has a general Lean soundness theorem.
 The two accelerated paths have different construction/read costs, while
 sparse reads can favor ~memoize~.
+For repeated instances of one immutable C4 plan, call ~plan.compileMemo~ once
+and then ~compiled.instantiate~ per instance. The compiled table retains open
+methods, while each instance allocates its own shared lazy value cells.
+~Plan.memoizeCompiled~ is the convenience form that compiles and instantiates
+in one call. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] creates two instances from one compiled plan;
+~just benchmark-memoization~ includes the separate ~compiledReused~ path.
 ~Memoized.mode~ records the chosen strategy. Derived objects from ~extend~,
 ~mix~, ~plus~, ~clone~, and declaration revision retain that strategy; when
 ~mixWith~ joins independent families, the left receiver supplies it.

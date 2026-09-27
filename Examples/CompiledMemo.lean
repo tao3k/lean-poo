@@ -29,19 +29,23 @@ private def child : Object.Declaration String (fun _ => Nat) :=
     defaults := (Object.Declaration.empty.withDefault "x" 5).defaults }
 
 private def observed : Option
-    (List (Option Nat) × List (Option Nat) × List (Option Nat)) := do
+    (List (Option Nat) × List (Option Nat) × List (Option Nat) ×
+      List (Option Nat)) := do
   let basePlan ← (LeanPoo.mix empty "Base" [] base).toOption
   let parentPlan ← (LeanPoo.extend basePlan.schema "Parent" "Base" parent).toOption
   let plan ← (LeanPoo.extend parentPlan.schema "Child" "Parent" child).toOption
   let sparse := plan.memoize
-  let compiled := plan.memoizeCompiled
+  let compiledPlan := plan.compileMemo
+  let compiled := compiledPlan.instantiate
+  let secondInstance := compiledPlan.instantiate
   let indexed := plan.memoizeIndexed
   let keys := ["x", "y", "z", "missing"]
   return (keys.map sparse.read, keys.map compiled.read,
-    keys.map indexed.read)
+    keys.map indexed.read, keys.map secondInstance.read)
 
 example : observed = some
     ([some 14, some 4, some 18, none],
+     [some 14, some 4, some 18, none],
      [some 14, some 4, some 18, none],
      [some 14, some 4, some 18, none]) := by
   native_decide
