@@ -91,6 +91,13 @@ The Lean modules are separated by semantic responsibility:
   lens modification with that revision and preservation of C4 precedence;
   there is no target-only update that could leave an extensible prototype out
   of sync with its specification.
+- ~Declaration.withoutSlot~ and ~withoutDefault~ implement the paper's
+  non-monotonic specification edits. ~Entry.erase~ preserves the order of all
+  other direct entries and removes every write at the chosen key; Lean proves
+  that the removed direct lookup is absent. ~Lens.directSlot~ and
+  ~Lens.directDefault~ compose with ~Lens.specification~ to focus on one
+  optional contribution. Removing a direct contribution leaves the full C4
+  ancestor graph intact, so inherited methods and defaults can become visible.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -311,6 +318,10 @@ For a retained prototype, ~Object.Lens.specification~ exposes its direct
 declaration while reconstructing a fresh target after a change, matching the
 paper's warning that target-only updates may desynchronize an extensible
 prototype from its specification.
+The nested-inheritance discussion also warns against dropping an ancestor
+solely because it has no direct contribution at a focus: that node may still
+constrain C4 order. Direct-slot removal here keeps every graph node and
+reuses the already validated precedence.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

@@ -85,6 +85,10 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    fresh instance; it never changes only the already-instantiated target.
    Lean proves that modifying this lens is the existing declaration revision
    and that a successful change retains the validated C4 precedence.
+   ~Lens.directSlot~ and ~Lens.directDefault~ compose with the specification
+   lens. Setting their optional focus to ~none~ removes only the named direct
+   contribution; it does not prune the ancestor graph. Lean proves the direct
+   lookup is absent afterward, and C4 can reveal inherited contributions.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.

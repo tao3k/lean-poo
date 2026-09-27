@@ -8,6 +8,7 @@ abbrev Value (_ : String) := Nat
 def base : Object.Declaration String Value := Object.Declaration.build do
   Object.Declaration.Builder.value "enabled" 1
   Object.Declaration.Builder.value "retries" 2
+  Object.Declaration.Builder.default "limit" 4
 
 def conditional : Prototype.Proto Bool Nat Nat :=
   fun enabled previous => if enabled then previous + 1 else previous
@@ -27,8 +28,11 @@ def initial : Except C4.Error (Object.Memoized String Value) := do
   let empty : Object.Schema String Value :=
     { graph := { nodes := [] }, declaration := fun _ => none }
   let basePlan ← LeanPoo.mix empty "Base" [] base
+  let childDeclaration : Object.Declaration String Value :=
+    Object.Declaration.build do
+      Object.Declaration.Builder.default "limit" 7
   let child ← LeanPoo.extend basePlan.schema "Child" "Base"
-    Object.Declaration.empty
+    childDeclaration
   return child.memoize
 
 def result : Except C4.Error (Option Nat × Option Nat × Bool × Bool) := do
@@ -42,6 +46,28 @@ def result : Except C4.Error (Option Nat × Option Nat × Bool × Bool) := do
 
 #guard match result with
   | .ok (some 2, some 3, true, true) => true
+  | _ => false
+
+/-- Removing a direct method or default exposes the parent's contribution. -/
+def removalResult : Except C4.Error
+    (Option Nat × Option Nat × Option Nat × Option Nat × Bool × Bool) := do
+  let original ← initial
+  let specification := Object.Lens.specification
+    (Key := String) (Value := Value) "Child"
+  let revised ← specification.modify addMethod original
+  let method := specification.compose
+    (Object.Lens.directSlot (Key := String) (Value := Value) "retries")
+  let withoutMethod ← method.set none revised
+  let fallback := specification.compose
+    (Object.Lens.directDefault (Key := String) (Value := Value) "limit")
+  let withoutDefault ← fallback.set none withoutMethod
+  return (revised.read "retries", withoutMethod.read "retries",
+    withoutMethod.read "limit", withoutDefault.read "limit",
+    revised.plan.precedence == withoutDefault.plan.precedence,
+    (← method.get withoutMethod).isNone && (← fallback.get withoutDefault).isNone)
+
+#guard match removalResult with
+  | .ok (some 3, some 2, some 7, some 4, true, true) => true
   | _ => false
 
 #guard match initial with

@@ -38,6 +38,16 @@ def default {Key : Type u} {Value : Key → Type v} [DecidableEq Key]
     (key : Key) (item : Value key) : Declaration.Builder Key Value PUnit :=
   modify fun declaration => declaration.withDefault key item
 
+/-- Drop a direct method so resolution can expose an inherited method. -/
+def eraseSlot {Key : Type u} {Value : Key → Type v} [DecidableEq Key]
+    (key : Key) : Declaration.Builder Key Value PUnit :=
+  modify fun declaration => declaration.withoutSlot key
+
+/-- Drop a direct default without changing ancestor declarations. -/
+def eraseDefault {Key : Type u} {Value : Key → Type v} [DecidableEq Key]
+    (key : Key) : Declaration.Builder Key Value PUnit :=
+  modify fun declaration => declaration.withoutDefault key
+
 /-- Install a method whose final self and inherited computation stay open. -/
 def slot {Key : Type u} {Value : Key → Type v} [DecidableEq Key]
     (key : Key) (spec : SlotPayload Key Value key) :

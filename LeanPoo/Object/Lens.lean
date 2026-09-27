@@ -81,6 +81,27 @@ theorem Lens.specification_modify_preserves_precedence
     exact Plan.reviseDeclaration_preserves_precedence
       object.plan name change plan equation
 
+/-- Focus one optional direct method inside a declaration. Removing it does
+not remove inherited methods of the same key. -/
+def Lens.directSlot {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (key : Key) :
+    Lens (Declaration Key Value) (Option (SlotPayload Key Value key)) C4.Error :=
+  { get := fun declaration => .ok (declaration.slot key)
+    set := fun spec declaration => .ok <|
+      match spec with
+      | some method => declaration.withSlot key method
+      | none => declaration.withoutSlot key }
+
+/-- Focus one optional direct default within a declaration. -/
+def Lens.directDefault {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (key : Key) :
+    Lens (Declaration Key Value) (Option (Value key)) C4.Error :=
+  { get := fun declaration => .ok (declaration.default key)
+    set := fun value declaration => .ok <|
+      match value with
+      | some item => declaration.withDefault key item
+      | none => declaration.withoutDefault key }
+
 inductive SlotLensError (Key : Type u) where
   | lookup (error : LookupError Key)
   | c4 (error : C4.Error)

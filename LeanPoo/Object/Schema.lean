@@ -152,6 +152,41 @@ def Entry.replace {Key : Type u} {Payload : Key → Type w}
     entries.map (fun entry => if entry.key = key then replacement else entry)
   else entries ++ [replacement]
 
+/-- Remove every direct write for a key while retaining the order of all
+other dependent entries. Inherited declarations are not changed. -/
+def Entry.erase {Key : Type u} {Payload : Key → Type w}
+    [DecidableEq Key] (entries : List (Entry Key Payload))
+    (key : Key) : List (Entry Key Payload) :=
+  entries.filter fun entry => decide (entry.key ≠ key)
+
+/-- Erasing a key removes all its direct writes, including duplicate entries. -/
+theorem Entry.lookup_erase_same {Key : Type u} {Payload : Key → Type w}
+    [DecidableEq Key] (entries : List (Entry Key Payload)) (key : Key) :
+    Entry.lookup (Entry.erase entries key) key = none := by
+  have noKey (rest : List (Entry Key Payload))
+      (found : Option (Payload key))
+      (absent : ∀ entry ∈ rest, entry.key ≠ key) :
+      rest.foldl (fun current (entry : Entry Key Payload) =>
+        letI : Decidable (key = entry.key) := entry.decideEq key
+        if same : key = entry.key then some (same.symm ▸ entry.value)
+        else current) found = found := by
+    induction rest generalizing found with
+    | nil => rfl
+    | cons entry tail ih =>
+        have neq : key ≠ entry.key := by
+          intro same
+          exact absent entry (by simp) same.symm
+        simp only [List.foldl_cons]
+        simp only [dite_eq_right neq]
+        apply ih
+        intro next member
+        exact absent next (by simp [member])
+  unfold Entry.lookup
+  apply noKey
+  intro entry member
+  have filtered := List.mem_filter.mp member
+  simpa using filtered.2
+
 abbrev SlotPayload (Key : Type u) (Value : Key → Type v) (key : Key) :=
   Prototype.SlotSpec (Self Key Value) (Option (Value key))
 
@@ -184,6 +219,27 @@ def Declaration.withDefault [DecidableEq Key]
     (declaration : Declaration Key Value) (key : Key) (value : Value key) :
     Declaration Key Value :=
   { declaration with defaults := Entry.replace declaration.defaults key value }
+
+/-- Remove only this prototype's direct method. An ancestor method may then
+become visible under the unchanged C4 order. -/
+def Declaration.withoutSlot [DecidableEq Key]
+    (declaration : Declaration Key Value) (key : Key) : Declaration Key Value :=
+  { declaration with slots := Entry.erase declaration.slots key }
+
+/-- Remove only this prototype's direct default value. -/
+def Declaration.withoutDefault [DecidableEq Key]
+    (declaration : Declaration Key Value) (key : Key) : Declaration Key Value :=
+  { declaration with defaults := Entry.erase declaration.defaults key }
+
+theorem Declaration.slot_withoutSlot [DecidableEq Key]
+    (declaration : Declaration Key Value) (key : Key) :
+    (declaration.withoutSlot key).slot key = none := by
+  exact Entry.lookup_erase_same declaration.slots key
+
+theorem Declaration.default_withoutDefault [DecidableEq Key]
+    (declaration : Declaration Key Value) (key : Key) :
+    (declaration.withoutDefault key).default key = none := by
+  exact Entry.lookup_erase_same declaration.defaults key
 
 /-- Replace one direct slot with a constant value, as object.ss .cc does. -/
 def Declaration.withValue [DecidableEq Key]

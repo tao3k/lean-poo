@@ -50,7 +50,9 @@ does not require an ~Inhabited~ result type.
 | ~Prototype.MonoLens~ | Compose ordinary getter/setter field focuses as a special case of skew lenses. |
 | ~Declaration.Builder.focusInherited~ | Apply a focused change to an inherited slot value while retaining the rest of the value. |
 | ~Declaration.Builder.skew~ | Install a general skew-focused open extension as a delayed C4 slot method. |
+| ~Declaration.Builder.eraseSlot~ / ~eraseDefault~ | Remove a direct contribution while retaining all other ordered declarations and ancestors. |
 | ~Object.Lens.specification~ | Focus a named prototype's direct declaration, then rebuild a new instance after an update. Unknown names return a C4 error. |
+| ~Object.Lens.directSlot~ / ~directDefault~ | Compose with a specification lens to add, replace, or remove one optional direct method or default. |
 | ~Declaration.withSlot~ / ~withDefault~ | Add a slot computation or base default at a typed key. |
 | ~Declaration.fromValues~ / ~fromValuesIndexed~ / ~fromFunction~ / ~fromMap~ | Build ordered direct slots from typed values, a hash-indexed value stream, a lazy function, or a sorted dependent map. |
 | ~LeanPoo.mix~ | Add a node with ordered direct supers and compile its C4 plan. |
@@ -97,7 +99,9 @@ skew-focused method in a C4 object declaration.
 [[file:../Examples/SpecificationFocus.lean][SpecificationFocus.lean]] focuses a
 child prototype's declaration, adds a skew method, and checks the old and new
 instances separately. The revised plan keeps its C4 precedence; looking up
-an unknown prototype fails explicitly.
+an unknown prototype fails explicitly. The same example composes a specification
+lens with direct method/default lenses, then removes the child contributions
+to reveal the parent's method and default without changing C4 topology.
 [[file:../Examples/LayeredObject.lean][LayeredObject.lean]] runs a complete ~mix~ / ~extend~ / ~memoize~ / ~read~ path.
 It also clones the executable child with a new direct value. Composition
 reuses the object's prototype information; the derived object receives its
