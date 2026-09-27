@@ -25,6 +25,7 @@ import LeanPoo.Object.Memo
 import LeanPoo.Object.Generic
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
+import LeanPoo.Object.Initialization
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Prototype
 import LeanPoo.Object.Mutable

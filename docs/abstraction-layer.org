@@ -107,6 +107,25 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
 
+* Class initialization
+
+POOF section 9 derives a base instance from a class's ordered field
+descriptors. In Lean, ~ClassLineage~ retains a typed ~ClassSpec~ and its
+validated C4 class prototype. ~root~ installs the first class;
+~extend~ installs only a child's direct rules and retains the inherited shape
+in the descriptor. ~construct~ supplies caller values as a final child of
+the class prototype, then validates all required fields and predicates.
+~ClassInstance~ retains the descriptor explicitly as the instance-to-class
+link; Lean does not need a magic runtime field for type lookup.
+
+~ClassSpec.fieldNames~ enumerates the descriptor's fields in first-declaration
+order. A child may replace an inherited rule without moving its name to the
+end; the same last-write-wins operation used for direct declarations chooses
+the child's rule. [[file:../Examples/ClassInitialization.lean][ClassInitialization.lean]] checks required width and height,
+inherited color and scale defaults, an area initializer reading final self,
+an inherited area extension, direct constructor overrides, C4 ancestry, and
+rejection of missing or invalid fields.
+
 * Method combinations
 
 The paper's standard method combination is represented by a typed
