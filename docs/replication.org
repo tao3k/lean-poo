@@ -65,7 +65,12 @@ shape. It uses the existing slot-spec method algebra and still computes slot
 values lazily. ~memoize~ remains the default for sparse reads; the compiled
 path favors dense reads but has no general proof of equivalence to
 ~Plan.resolve~. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks representative inheritance,
-default, duplicate-declaration, self, and missing-slot behavior.
+default, duplicate-declaration, self, missing-slot, and C4 diamond behavior.
+~Plan.resolve_eq_compileSlot~ proves that the parent-first method fold used by
+the standard resolver equals the original C4 fold for every key and self; the
+~Entry.toMap_get?~ theorem proves the table builder's local last-write-wins
+normalization. Cross-node hash-table materialization still needs its own
+general proof.
 ~Memoized.mode~ keeps the selected construction path through extension,
 cloning, and revision; ~mixWith~ follows its left receiver. The compiled
 prototype constructor also preserves the selected mode after a later mutable

@@ -24,7 +24,9 @@ def Plan.prepare [BEq Key] [Hashable Key] (plan : Plan Key Value)
     (keys : List Key) : Prepared Key Value :=
   { plan
     slots := keys.foldl (fun table key =>
-      table.insert key ⟨plan.compileSlot key, by intro self; rfl⟩) {} }
+      table.insert key ⟨plan.compileSlot key, by
+        intro self
+        rw [plan.resolve_eq_compileSlot]⟩) {} }
 
 def Prepared.resolve [BEq Key] [LawfulBEq Key] [Hashable Key]
     (prepared : Prepared Key Value) (key : Key)

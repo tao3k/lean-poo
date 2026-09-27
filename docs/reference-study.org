@@ -64,9 +64,14 @@ The Lean modules are separated by semantic responsibility:
   ordered replacement for both entry kinds. ~fromValues~ and ~fromFunction~ translate the Gerbil
   direct-value and lazy-function constructors. ~fromMap~ accepts a typed
   dependent map and orders keys with a caller-supplied comparator.
+  ~Entry.toMap_get?~ proves that materializing an ordered declaration list
+  into a dependent hash map preserves last-write-wins lookup for every key.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
-  ~resolve_compiled~ proves it agrees with the one-shot entry point. ~Plan.ref~
+  ~resolve_compiled~ proves it agrees with the one-shot entry point. The
+  executable ~Plan.resolve~ now accumulates methods from least to most
+  specific, and ~Plan.resolve_eq_compileSlot~ proves equality with the
+  original most-specific-first C4 fold for every key and open self. ~Plan.ref~
   reports a missing required slot explicitly.
 - ~LeanPoo/Compose.lean~ exposes ~LeanPoo.mix~, ~LeanPoo.extend~, and
   ~LeanPoo.plus~, and ~LeanPoo.clone~ as immutable graph constructors that
@@ -88,7 +93,10 @@ The Lean modules are separated by semantic responsibility:
   base-to-child pass before creating those cells, reflecting Gerbil-POO's
   ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
   ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
-  behavior, while a general equivalence theorem remains open. The executable
+  behavior, including a C4 diamond. The forward-fold theorem proves the
+  composition order, and ~Entry.toMap_get?~ proves the local duplicate-slot
+  normalization used by the table builder. A general theorem about the
+  resulting cross-node hash table remains open. The executable
   object's ~ResolutionMode~ keeps that method-building choice through derived
   objects and mutable revisions; mixing independent objects follows the left
   receiver's mode.

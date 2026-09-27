@@ -72,4 +72,23 @@ private def evolved : Option Bool := do
 example : evolved = some true := by
   native_decide
 
+/-- The one-pass table also follows the validated C4 diamond order. -/
+private def diamond : Option (List String × Option Nat × Option Nat) := do
+  let root ← (LeanPoo.mix empty "Root" []
+    (Object.Declaration.empty.withValue "x" 1)).toOption
+  let left ← (LeanPoo.extend root.schema "Left" "Root"
+    (Object.Declaration.empty.withSlot "x"
+      (.computed fun _ inherited => (inherited ()).map (· + 10)))).toOption
+  let right ← (LeanPoo.extend left.schema "Right" "Root"
+    (Object.Declaration.empty.withSlot "x"
+      (.computed fun _ inherited => (inherited ()).map (· * 2)))).toOption
+  let top ← (LeanPoo.mix right.schema "Diamond" ["Left", "Right"]
+    (Object.Declaration.empty.withSlot "x"
+      (.computed fun _ inherited => (inherited ()).map (· + 3)))).toOption
+  return (top.precedence, top.memoize.read "x", top.memoizeCompiled.read "x")
+
+example : diamond = some
+    (["Diamond", "Left", "Right", "Root"], some 15, some 15) := by
+  native_decide
+
 end CompiledMemoExample

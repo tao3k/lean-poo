@@ -52,9 +52,7 @@ private def Plan.compileEffective {Key : Type u} {Value : Key → Type v}
     if let some declaration := plan.schema.declaration name then
       for entry in declaration.defaults do
         defaults := defaults.insert entry.key entry.value
-      let localSlots := declaration.slots.foldl (fun table entry =>
-        table.insert entry.key entry.value)
-        ({} : Std.DHashMap Key (SlotPayload Key Value))
+      let localSlots := Entry.toMap declaration.slots
       for entry in localSlots.toList do
         let inherited := (methods.get? entry.1).getD Prototype.Method.identity
         methods := methods.insert entry.1

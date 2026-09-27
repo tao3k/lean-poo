@@ -122,6 +122,10 @@ including per-node last-write-wins declarations, and shares the same
 ~SlotSpec.toMethod~ and ~Method.compose~ operations. It moves method assembly
 to object creation. [[file:../Examples/CompiledMemo.lean][CompiledMemo.lean]] checks the lazy and compiled paths on inherited defaults,
 overrides, repeated local declarations, final-self reads, and missing keys.
+The example also checks a C4 diamond. ~Plan.resolve_eq_compileSlot~ proves
+that the standard resolver's parent-first fold equals its original C4 fold
+for every key and open self. ~Entry.toMap_get?~ separately proves that the
+compiled path's local slot table keeps last-write-wins declarations.
 The optimized table is an executable projection; it does not itself carry a
 Lean equivalence theorem to ~Plan.resolve~. Choose it for workloads that
 read many declared slots; sparse reads can favor ~memoize~.
