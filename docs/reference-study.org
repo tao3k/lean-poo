@@ -85,6 +85,12 @@ The Lean modules are separated by semantic responsibility:
   composed lenses equals successive focusing. ~refocusUpdate~ narrows only
   the update target; a getter/setter pair supplies the monomorphic special
   case used by nested specification updates.
+- ~Object.Lens.specification~ is the paper's prototype-specification focus for
+  a validated C4 object. Its setter uses ~Memoized.reviseDeclaration~, which
+  rebuilds the target from the new specification. Lean proves equivalence of
+  lens modification with that revision and preservation of C4 precedence;
+  there is no target-only update that could leave an extensible prototype out
+  of sync with its specification.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -301,6 +307,10 @@ while ~Builder.focusInherited~ applies a composed field focus within a C4
 declaration and ~Builder.skew~ admits the general focus. This is a focused
 specification operation, not a new inheritance
 algorithm.
+For a retained prototype, ~Object.Lens.specification~ exposes its direct
+declaration while reconstructing a fresh target after a change, matching the
+paper's warning that target-only updates may desynchronize an extensible
+prototype from its specification.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

@@ -350,6 +350,14 @@ def Memoized.rebuild {Key : Type u} {Value : Key → Type v}
     Memoized Key Value :=
   plan.memoizeUsing memoized.mode
 
+theorem Memoized.rebuild_plan {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (memoized : Memoized Key Value) (plan : Plan Key Value) :
+    (memoized.rebuild plan).plan = plan := by
+  cases memoized with
+  | mk current thunks mode =>
+      cases mode <;> rfl
+
 /-- An executable object can itself be extended: the new object keeps the
 source schema and receives a fresh lazy instance. -/
 def Memoized.extend {Key : Type u} {Value : Key → Type v}

@@ -80,6 +80,11 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    ~Builder.skew~ admits the full skew-lens form directly as a C4 slot method:
    its view reads the final self, while its update receives the delayed
    inherited value. Both paths use the existing ~SlotSpec.computed~ evaluator.
+   ~Object.Lens.specification~ focuses an existing prototype's direct
+   declaration. Its setter revises the retained specification and rebuilds a
+   fresh instance; it never changes only the already-instantiated target.
+   Lean proves that modifying this lens is the existing declaration revision
+   and that a successful change retains the validated C4 precedence.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
