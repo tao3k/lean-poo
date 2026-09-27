@@ -24,6 +24,7 @@ import LeanPoo.Slots
 import LeanPoo.Object.Memo
 import LeanPoo.Object.Layout
 import LeanPoo.Object.Generic
+import LeanPoo.Object.MethodDictionary
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
 import LeanPoo.Object.Initialization

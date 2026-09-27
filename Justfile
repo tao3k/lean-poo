@@ -46,6 +46,7 @@ check-prototype: check-first-class
 # Check typed generic selection over the object's existing slot evaluator.
 check-generic: check-prototype
     lake build LeanPoo.Object.Generic
+    lake build LeanPoo.Object.MethodDictionary
     lake build LeanPoo.Object.Lens
 
 # Check typed object declarations and C4-ordered slot resolution.
@@ -125,6 +126,7 @@ check-example: check-compose
     lake env lean Examples/FirstClassObject.lean
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/DescriptorClass.lean
+    lake env lean Examples/MethodDictionary.lean
     lake env lean Examples/ClassInstanceMethods.lean
     lake env lean Examples/ClassInitialization.lean
     lake env lean Examples/MethodCombination.lean
@@ -193,6 +195,11 @@ benchmark-effective-methods:
 benchmark-inline-dispatch:
     lake build LeanPoo.Object.InlineDispatch
     lake env lean --run Examples/InlineDispatchScale.lean
+
+# Compare runtime method-dictionary selection with a preselected Lean method.
+benchmark-method-dictionary:
+    lake build LeanPoo.Object.MethodDictionary
+    lake env lean --run Examples/MethodDictionaryScale.lean
 
 # Compare keyed lookup, checked offset access, and a monomorphic access site.
 benchmark-layout:

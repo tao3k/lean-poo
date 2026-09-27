@@ -253,6 +253,32 @@ types, adds methods for a separately defined C4 child in one extension,
 checks both resulting calls and per-generic cache invalidation, and exercises
 a rejected second declaration while the original table remains usable.
 
+* Method dictionaries and dispatch stages
+
+The paper factors class method calls through one dictionary invocation and
+distinguishes where the dictionary is selected. ~Object.MethodDictionary~ is
+a Lean dependent function: each method key fixes its argument and result
+types. ~MethodDictionary.fromMemoized~ projects C4-resolved function-valued
+slots from the existing lazy object evaluator. ~DictionaryObject.callDynamic~
+uses the dictionary carried by the runtime value; ~callStatic~ uses a
+dictionary supplied by the caller's declared context. Both call the same
+~MethodDictionary.call~ operation. ~select~ makes the static stage explicit
+by returning the chosen Lean function; ~callSelected~ invokes that function
+without consulting a dictionary again. Lean proves its agreement with a
+static dictionary call and relates dynamic calls after replacement to the
+new dictionary; the example observes a changed dynamic result while the
+previously selected function keeps its result.
+~Generic.fromDictionary~ connects this typed dictionary selection to the
+existing generic invoker, with a reduction theorem for the common call rule.
+[[file:../Examples/MethodDictionary.lean][MethodDictionary.lean]] uses three C4 layers, an inherited method, a later
+override, two different method signatures, and a missing-method fallback.
+It shows a runtime child call, a base dictionary selected by the caller, and
+a preselected base method on the same receiver. This is an explicit Lean
+staging API; it does not claim automatic compiler devirtualization.
+~just benchmark-method-dictionary~ checks equal results for dynamic and
+preselected reads. Local timing varied across samples, including a reversal
+in a 100,000-call run, so this benchmark establishes no general speedup.
+
 * Preselected dispatch
 
 The paper distinguishes dynamic dictionary lookup from method selection for
@@ -283,6 +309,7 @@ of a newly registered generic.
 | Subjective dispatch | Reader-scoped subject at the first or last dispatch position. |
 | Dispatch ecosystems | Pure dependent table with transactional extension and per-generic cache state. |
 | Dynamic versus preselected dispatch | Runtime generic call and proof-guarded shape-specific candidate snapshot. |
+| Dynamic versus static method dictionaries | Runtime object dictionary, caller-selected dictionary, and a preselected typed method. |
 | Per-call-site inline cache | One proven candidate entry for the current immutable generic and C4 tuple, with direct-index fallback. |
 
 These are executable variants of the paper's mechanisms. The preselected
