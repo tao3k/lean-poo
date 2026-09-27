@@ -309,6 +309,28 @@ Darwin arm64, two runs with 20,000 calls and 128 methods measured about
 At 32 methods the measured order varied, so this is an opt-in optimization,
 not an assumed speedup for every method set.
 
+Section 10 also separates object layout from method composition. ~Memoized.layout~
+places the C4 suffix tail's declared keys at the front of an array of the
+object's existing lazy cells. It records the suffix prefix length and a hash
+index for dynamic key lookup. ~SuffixField~ captures a checked position in
+that prefix and can be reused on a descendant layout; a changed shape is
+checked at that one position before the cell is read. ~SlotAccessSite~ is a
+one-entry inline cache for an ordinary field access. A miss learns the new
+offset, and an invalid or stale offset reads through the original object.
+The ~readAt_sound~, ~read_sound~, ~SuffixField.read_sound~, and
+~SlotAccessSite.read_sound~ theorems connect all four paths to
+~Memoized.read~. The layout stores Lean array positions and shares the
+existing thunks; it does not specify a raw-memory object ABI.
+[[file:../Examples/SuffixLayout.lean][SuffixLayout.lean]] checks a suffix chain with an unrelated parent, a new
+descendant suffix field, an inherited override, final-self recursion, fixed
+prefix positions, cache hits, shifted positions, and stale-offset fallback.
+~just benchmark-layout~ compares keyed, checked-offset, and one-entry-site
+reads over 64 fields, with effectful accumulation so each call is actually
+measured. Two local Darwin arm64 runs of 100,000 calls had equal checksums:
+keyed reads took about 120--122 ms, checked offsets about 92--93 ms, and
+access sites about 107 ms. These are workload-specific samples, not a
+general speedup claim.
+
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
 snapshot is requested; it computes the precedence list and assembled slot
 functions once, then caches evaluated slot values in the instance. These are

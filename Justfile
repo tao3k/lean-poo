@@ -90,6 +90,7 @@ check-compose: check-object
     lake build LeanPoo.Compose
     lake build LeanPoo.Slots
     lake build LeanPoo.Object.Memo
+    lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Prototype.Mutable
 
@@ -134,6 +135,7 @@ check-example: check-compose
     lake env lean Examples/DispatchTable.lean
     lake env lean Examples/StaticDispatch.lean
     lake env lean Examples/Chapter9Combination.lean
+    lake env lean Examples/SuffixLayout.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
@@ -184,6 +186,11 @@ benchmark-memoization:
 benchmark-effective-methods:
     lake build LeanPoo.Object.MultimethodCombination
     lake env lean --run Examples/PreparedDispatchScale.lean
+
+# Compare keyed lookup, checked offset access, and a monomorphic access site.
+benchmark-layout:
+    lake build LeanPoo.Object.Layout
+    lake env lean --run Examples/LayoutScale.lean
 
 # Compare sequential layer installation with one private final allocation.
 benchmark-mutable-prototype:

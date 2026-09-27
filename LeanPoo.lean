@@ -22,6 +22,7 @@ import LeanPoo.Object.Lazy
 import LeanPoo.Compose
 import LeanPoo.Slots
 import LeanPoo.Object.Memo
+import LeanPoo.Object.Layout
 import LeanPoo.Object.Generic
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
