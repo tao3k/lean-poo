@@ -303,16 +303,24 @@ in a 100,000-call run, so this benchmark establishes no general speedup.
 * Preselected dispatch
 
 The paper distinguishes dynamic dictionary lookup from method selection for
-a shape known in advance. ~Object.Multimethod.compile~ resolves one complete
-C4 shape and returns an immutable ~StaticDispatch~ snapshot. Its ~call~ entry
+a shape known in advance. ~Object.Multimethod.compile~ selects one complete
+C4 shape from the source generic's sparse index and returns an immutable,
+proof-bearing ~StaticDispatch~ snapshot. The snapshot carries its source
+generic, the selected candidates, and a proof that they agree. Its ~call~ entry
 requires a Lean proof that the new arguments have that same shape; it then
 performs no shape comparison or sparse-index traversal. ~callChecked~ makes
 the comparison at a dynamic boundary and reports the expected and actual
 shape on mismatch. Both entry points reevaluate value-sensitive predicates
 against the current arguments. A later method registration creates a new
 generic; it does not silently alter an already compiled snapshot.
+~StaticDispatch.call_sound~ proves that a same-shape compiled call agrees with
+uncached dispatch from that exact immutable generic. Compilation selects from
+the sparse index directly, so its certificate does not depend on a mutable or
+externally populated candidate cache.
 This is explicit preselection, not a claim that Lean's compiler automatically
 devirtualizes arbitrary calls.
+The [[file:../Examples/StaticMethodSelection.lean][usage scenario]] shows a stable preselected call alongside an independently
+extended generic.
 [[file:../Tests/StaticDispatch.lean][StaticDispatch.lean]] compares the preselected and dynamic results on a C4
 child, checks a predicate that becomes applicable for another value of the
 same shape, rejects a different C4 shape, and observes the separate result

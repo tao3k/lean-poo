@@ -19,6 +19,11 @@ def generic : Object.Multimethod (Item × Nat) Nat Nat :=
     precedence := fun call => [call.1.precedence]
     combine := fun methods call => methods.foldl Nat.add call.2 }
 
+example (compiled : Object.StaticDispatch (Item × Nat) Nat Nat) :
+    Object.InlineDispatch.direct compiled.generic compiled.witness =
+      .ok (compiled.call compiled.witness rfl) :=
+  compiled.call_sound compiled.witness rfl
+
 def exercise : Except String (Nat × Nat × Nat × Nat × Bool × Nat) := do
   let (base, child) ← plans.mapError (fun _ => "invalid C4 graph")
   let g ← (generic.register [.prototype "Base"] 1).mapError
