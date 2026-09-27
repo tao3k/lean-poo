@@ -212,6 +212,20 @@ The forwarding example checks both forms of ~next~, propagation of optional
 and list-valued fields, qualifier order, and reuse of one C4 shape cache for
 different payload values.
 
+* Subjective dispatch
+
+The paper's implicit subject is one more argument to lexicographic multiple
+dispatch. ~Object.Subjective.generic~ makes its position explicit: ~first~
+gives subject methods priority over methods specialized on explicit arguments;
+~last~ gives the explicit arguments priority. ~Object.Subjective.Scope~ uses
+Lean's ~ReaderT~ for the implicit subject and ~StateT~ for the generic's
+immutable candidate cache. ~withSubject~ rebinds the subject only inside a
+nested action, while cache changes remain available to later calls. There is
+no global dispatch table or mutable dynamic variable.
+[[file:../Examples/SubjectiveDispatch.lean][SubjectiveDispatch.lean]] constructs independent C4 subject and item
+lineages, shows both lexicographic orders, and checks that the outer subject
+returns after a nested scope while the two cached call shapes persist.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
