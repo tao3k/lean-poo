@@ -53,6 +53,7 @@ does not require an ~Inhabited~ result type.
 | ~Declaration.Builder.eraseSlot~ / ~eraseDefault~ | Remove a direct contribution while retaining all other ordered declarations and ancestors. |
 | ~Object.Lens.specification~ | Focus a named prototype's direct declaration, then rebuild a new instance after an update. Unknown names return a C4 error. |
 | ~Object.Lens.directSlot~ / ~directDefault~ | Compose with a specification lens to add, replace, or remove one optional direct method or default. |
+| ~Object.Lens.mapError~ / ~modifyM~ | Compose nested focuses with different error types and propagate a failed inner update before rebuilding the outer object. |
 | ~Declaration.withSlot~ / ~withDefault~ | Add a slot computation or base default at a typed key. |
 | ~Declaration.fromValues~ / ~fromValuesIndexed~ / ~fromFunction~ / ~fromMap~ | Build ordered direct slots from typed values, a hash-indexed value stream, a lazy function, or a sorted dependent map. |
 | ~LeanPoo.mix~ | Add a node with ordered direct supers and compile its C4 plan. |
@@ -102,6 +103,11 @@ instances separately. The revised plan keeps its C4 precedence; looking up
 an unknown prototype fails explicitly. The same example composes a specification
 lens with direct method/default lenses, then removes the child contributions
 to reveal the parent's method and default without changing C4 topology.
+[[file:../Examples/NestedPrototype.lean][NestedPrototype.lean]] holds an independently
+extensible inner object in an outer typed slot. Composed lenses change an
+inner value; a fallible focused update extends the inner C4 graph. The outer
+precedence stays fixed, the old outer object retains the old inner object,
+and a failed inner extension returns an error without an updated outer object.
 [[file:../Examples/LayeredObject.lean][LayeredObject.lean]] runs a complete ~mix~ / ~extend~ / ~memoize~ / ~read~ path.
 It also clones the executable child with a new direct value. Composition
 reuses the object's prototype information; the derived object receives its

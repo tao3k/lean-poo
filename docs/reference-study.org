@@ -98,6 +98,11 @@ The Lean modules are separated by semantic responsibility:
   ~Lens.directDefault~ compose with ~Lens.specification~ to focus on one
   optional contribution. Removing a direct contribution leaves the full C4
   ancestor graph intact, so inherited methods and defaults can become visible.
+- ~Object.Lens.mapError~ and ~modifyM~ make nested prototypes ordinary typed
+  slot values with independent C4 plans. Error mapping permits lenses from
+  independently defined layers to compose; a fallible inner extension must
+  succeed before the outer declaration is rebuilt. Identity/composition of
+  error mapping and its pure-update special case are proved in Lean.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -322,6 +327,10 @@ The nested-inheritance discussion also warns against dropping an ancestor
 solely because it has no direct contribution at a focus: that node may still
 constrain C4 order. Direct-slot removal here keeps every graph node and
 reuses the already validated precedence.
+Nested prototypes use the same first-class ~Memoized~ object at each level;
+the inner graph can gain an ancestor while the outer graph retains its own
+validated precedence. This follows the paper's separation of inner and outer
+inheritance structures without adding a second object evaluator.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|

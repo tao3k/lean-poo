@@ -17,6 +17,53 @@ def Lens.modify (lens : Lens Source Target Error)
     (change : Target → Target) (source : Source) : Except Error Source := do
   lens.set (change (← lens.get source)) source
 
+/-- A focused update may itself fail, as when a nested prototype extension
+fails C4 validation. No source object is installed on failure. -/
+def Lens.modifyM (lens : Lens Source Target Error)
+    (change : Target → Except Error Target)
+    (source : Source) : Except Error Source := do
+  lens.set (← change (← lens.get source)) source
+
+theorem Lens.modifyM_pure (lens : Lens Source Target Error)
+    (change : Target → Target) (source : Source) :
+    lens.modifyM (fun target => .ok (change target)) source =
+      lens.modify change source := by
+  rfl
+
+/-- Adapt a lens's errors before composing independently defined layers. -/
+def Lens.mapError (lens : Lens Source Target Error)
+    (wrap : Error → OtherError) : Lens Source Target OtherError :=
+  { get := fun source => (lens.get source).mapError wrap
+    set := fun target source => (lens.set target source).mapError wrap }
+
+theorem Lens.mapError_id (lens : Lens Source Target Error) :
+    lens.mapError (fun error => error) = lens := by
+  cases lens with
+  | mk get set =>
+      unfold Lens.mapError
+      congr 1
+      · funext source
+        dsimp
+        cases get source <;> rfl
+      · funext target source
+        dsimp
+        cases set target source <;> rfl
+
+theorem Lens.mapError_compose (lens : Lens Source Target Error)
+    (first : Error → MiddleError) (second : MiddleError → OtherError) :
+    (lens.mapError first).mapError second =
+      lens.mapError (second ∘ first) := by
+  cases lens with
+  | mk get set =>
+      unfold Lens.mapError
+      congr 1
+      · funext source
+        dsimp
+        cases get source <;> rfl
+      · funext target source
+        dsimp
+        cases set target source <;> rfl
+
 /-- Access the outer focus, then the inner focus. -/
 def Lens.compose (outer : Lens Source Target Error)
     (inner : Lens Target Middle Error) : Lens Source Middle Error :=

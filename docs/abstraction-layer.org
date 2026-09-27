@@ -89,6 +89,11 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    lens. Setting their optional focus to ~none~ removes only the named direct
    contribution; it does not prune the ancestor graph. Lean proves the direct
    lookup is absent afterward, and C4 can reveal inherited contributions.
+   Nested prototypes can retain their own C4 plan as a typed outer slot value.
+   ~Lens.mapError~ lets independently typed inner and outer lenses compose;
+   ~Lens.modifyM~ propagates a failed inner extension before the outer
+   specification is revised. Lean proves error-map identity/composition and
+   agreement of fallible updates with the pure update path.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
