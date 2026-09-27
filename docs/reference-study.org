@@ -236,5 +236,11 @@ proof-reuse goal. They do not undo the implemented paper-model construction.
 For the certified finite-dependency path, ~Object.LazyInstance~ also retains
 actual thunk cells across a revision. The table's ~Memoized~ limitation refers
 to the general recursive executable object.
+~Proof.Runtime~ binds those cells and the explicit value cache to one
+certified instance. Its revision carries both forms of sound reuse into the
+next runtime before ~MutableRuntime~ installs it. This is a declared finite
+dependency policy, not automatic tracking of arbitrary Lean computations;
+the paper notes that universally correct automatic mutation tracking would
+need to cover the wider language, beyond the object system.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.

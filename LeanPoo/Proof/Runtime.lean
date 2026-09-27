@@ -1,4 +1,5 @@
 import LeanPoo.Proof.Revision
+import LeanPoo.Object.Lazy
 
 /-!
 A proof-bearing persistent runtime value. Mutation can store this value in a
@@ -7,8 +8,8 @@ cell, while all revision and certificate work remains a pure operation.
 
 namespace LeanPoo.Proof
 
-/-- One C4 plan, its certified instance, and the explicit value cache for
-selected keys. The cache is indexed by that exact instance. -/
+/-- One C4 plan, its certified instance, explicit value cache, and selected
+call-by-need cells. Both read paths are indexed by that exact instance. -/
 structure Runtime (Key : Type) (Value : Key → Type)
     [BEq Key] [LawfulBEq Key] [Hashable Key] where
   plan : Object.Plan Key Value
@@ -17,6 +18,7 @@ structure Runtime (Key : Type) (Value : Key → Type)
   cache : Object.Cache
     (certified.instanceValue.prepare keys)
     certified.instanceValue.state
+  lazy : Object.LazyInstance certified.instanceValue
 
 def Runtime.new {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -26,7 +28,8 @@ def Runtime.new {Key : Type} {Value : Key → Type}
   { plan
     certified
     keys
-    cache := certified.instanceValue.cache keys }
+    cache := certified.instanceValue.cache keys
+    lazy := certified.instanceValue.lazy keys }
 
 /-- Prepare selected evaluated values before sharing a runtime snapshot. -/
 def Runtime.newLoaded {Key : Type} {Value : Key → Type}
@@ -37,7 +40,8 @@ def Runtime.newLoaded {Key : Type} {Value : Key → Type}
   { plan
     certified
     keys
-    cache := (certified.instanceValue.cache keys).force loaded }
+    cache := (certified.instanceValue.cache keys).force loaded
+    lazy := certified.instanceValue.lazy keys }
 
 /-- A read returns a new persistent runtime with its evaluated cache entry. -/
 def Runtime.read {Key : Type} {Value : Key → Type}
@@ -53,6 +57,19 @@ theorem Runtime.read_sound {Key : Type} {Value : Key → Type}
     (runtime.read key).1 = runtime.certified.instanceValue.state key := by
   change (runtime.cache.read key).1 = _
   exact runtime.certified.instanceValue.cachedRead runtime.keys runtime.cache key
+
+/-- Read through the selected call-by-need cells without changing the
+persistent runtime value. -/
+def Runtime.readLazy {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (runtime : Runtime Key Value) (key : Key) : Option (Value key) :=
+  runtime.lazy.read key
+
+theorem Runtime.readLazy_sound {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (runtime : Runtime Key Value) (key : Key) :
+    runtime.readLazy key = runtime.certified.instanceValue.state key :=
+  runtime.lazy.read_sound key
 
 /-- A complete pure revision: infer the next fixed point, rebase evaluated
 values, select pending obligations, and close the new certificate. -/
@@ -82,6 +99,8 @@ def Runtime.revise {Key : Type} {Value : Key → Type}
         certified
         keys := runtime.keys
         cache := revision.cache
+        lazy := revision.rebaseLazy runtime.certified.instanceValue
+          runtime.lazy sameResolver
       }
 
 /-- A versioned identity for certified persistent runtime values. Cache reads
@@ -107,6 +126,14 @@ def MutableRuntime.read {Key : Type} {Value : Key → Type}
   mutable.cell.modifyGet fun (version, runtime) =>
     let (value, next) := runtime.read key
     (value, (version, next))
+
+/-- A selected lazy read uses the current certified runtime's shared cell. -/
+def MutableRuntime.readLazy {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (mutable : MutableRuntime Key Value) (key : Key) :
+    IO (Option (Value key)) := do
+  let (_, runtime) ← mutable.snapshot
+  return runtime.readLazy key
 
 /-- Install a pure, fully certified revision only if the snapshot from which
 it was derived is still current. A stale install leaves the cell unchanged. -/

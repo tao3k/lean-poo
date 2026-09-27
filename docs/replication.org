@@ -242,13 +242,15 @@ the dependency footprint and replaces affected ones. This certified runtime
 sharing path does not claim that the general recursive ~Memoized~ thunk knot
 terminates.
 ~Proof.Runtime~ now packages the certified fixed point with an immutable
-value cache. Its pure revision operation closes selected obligations before a
-new runtime can be constructed. ~Proof.MutableRuntime~ places such values in
+value cache and proof-bearing lazy cells. Its pure revision operation carries
+only proved-stable cache entries and thunk cells, then closes selected
+obligations before a new runtime can be constructed. Both read paths are
+proved equal to the same instance state. ~Proof.MutableRuntime~ places such values in
 an identity cell and uses a version check to prevent a revision derived from
 an obsolete snapshot from overwriting a newer one. The C4 incremental example
 checks that the old snapshot remains readable after installation, a failed
 transaction leaves the cell unchanged, and the installed certificate describes
-the value returned by the new runtime.
+the value returned by the new runtime through both read paths.
 
 * Conclusion
 

@@ -163,13 +163,16 @@ dependent branch while preserving the independent source and computed cache.
 ~Object.Debug.Revision.explainImpact~ shows which dependency caused each
 affected key. Run ~just check-incremental true~ for that report; normal checks
 remain quiet.
-~Proof.Runtime~ binds a certified instance and its explicit cache into one
-persistent value. ~Runtime.revise~ performs the checked fixed-point update,
-cache transfer, obligation selection, and certificate closure before returning
-the next value. ~Runtime.newLoaded~ can prepare selected cache entries before
-sharing a snapshot. ~Proof.MutableRuntime~ stores that value in an ~IO.Ref~.
-Its reads atomically memoize cache entries; ~snapshot~ retains an immutable
-view, and ~install~ accepts a fully certified next value only when the
+~Proof.Runtime~ binds a certified instance, an explicit value cache, and
+selected call-by-need cells into one persistent value. ~Runtime.revise~
+performs the checked fixed-point update, transfers sound cache entries and
+unaffected thunk cells, selects pending obligations, and closes the next
+certificate. ~Runtime.read_sound~ and ~readLazy_sound~ relate both read paths
+to the same instance. ~Runtime.newLoaded~ can prepare selected cache entries
+before sharing a snapshot. ~Proof.MutableRuntime~ stores that value in an
+~IO.Ref~. ~read~ memoizes explicit cache entries, while ~readLazy~ accesses
+the shared thunk cells. ~snapshot~ retains an immutable view, and ~install~
+accepts a fully certified next value only when the
 snapshot version is still current. The integrated example checks old and new
 reads, retained independent values, a stale install, and the certificate's
 agreement with the installed instance. ~MutableRuntime.transact~ applies a
@@ -178,6 +181,9 @@ preserves the version and cached contents. The version counts semantic
 installs, not cache reads. Callers that use ~Runtime.revise~ separately must
 derive the next value from the snapshot they intend to replace; the expected
 version rejects intervening semantic installs.
+Unforced reused thunk cells can retain their former instance closure. Use the
+explicit cache read path when that retention matters; the pure revision
+preserves its evaluated values without retaining those closures.
 ~Cache.rebase~ is a sound reuse primitive for the explicit immutable cache:
 the caller selects reusable keys and proves equality of their old and new
 resolved values. A key without that proof is omitted and follows the ordinary

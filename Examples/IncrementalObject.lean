@@ -270,6 +270,8 @@ private def runtimeScenario : IO Bool := do
   let mutable ← Proof.MutableRuntime.new runtime
   let beforeDerived ← mutable.read .derived
   let beforeStable ← mutable.read .stableDerived
+  let beforeLazyDerived ← mutable.readLazy .derived
+  let beforeLazyStable ← mutable.readLazy .stableDerived
   let (version, snapshot) ← mutable.snapshot
   let rejected ← mutable.transact fun _ =>
     (Except.error "rejected" : Except String (Proof.Runtime Key Values))
@@ -284,6 +286,8 @@ private def runtimeScenario : IO Bool := do
   let installed ← mutable.install version revised
   let afterDerived ← mutable.read .derived
   let afterStable ← mutable.read .stableDerived
+  let afterLazyDerived ← mutable.readLazy .derived
+  let afterLazyStable ← mutable.readLazy .stableDerived
   let staleInstalled ← mutable.install version snapshot
   let (finalVersion, finalSnapshot) ← mutable.snapshot
   let oldSnapshotValue := (snapshot.read .derived).1
@@ -292,7 +296,9 @@ private def runtimeScenario : IO Bool := do
     afterRejectSnapshot.cache.peek .derived == some (some 21) &&
     installed && !staleInstalled && finalVersion == version + 1 &&
     beforeDerived == some 21 && beforeStable == some 14 &&
+    beforeLazyDerived == beforeDerived && beforeLazyStable == beforeStable &&
     afterDerived == some 31 && afterStable == some 14 &&
+    afterLazyDerived == afterDerived && afterLazyStable == afterStable &&
     retainedStable == some (some 14) && invalidatedDerived == none &&
     oldSnapshotValue == some 21 && certifiedValue == afterDerived
 
