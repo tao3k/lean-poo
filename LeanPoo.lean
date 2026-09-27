@@ -28,6 +28,7 @@ import LeanPoo.Object.Prepare
 import LeanPoo.Object.Cache
 import LeanPoo.Proof.Object
 import LeanPoo.Proof.Revision
+import LeanPoo.Proof.Runtime
 import LeanPoo.Proof.Batch
 import LeanPoo.Proof.Product
 import LeanPoo.Object.Debug

@@ -1,5 +1,5 @@
 import LeanPoo.Object.Debug
-import LeanPoo.Proof.Revision
+import LeanPoo.Proof.Runtime
 import LeanPoo.Object.Lazy
 
 open LeanPoo
@@ -147,13 +147,14 @@ private def certified (current : Object.Instance Key Values (plan 20)) :
       · subst obligation
         exact stableRelationHolds 20 current }
 
-private def certifiedRevision
+private theorem dischargeRevision
     (current : Object.Instance Key Values (plan 20))
-    (revision : Object.Revision (dependencies 30) [.source]
-      [.source, .derived, .stableSource, .stableDerived]) :
-    Proof.CertifiedObject Key Values (plan 30) :=
-  (certified current).applyRevision revision (sameResolver current) [] (by
-    intro obligation membership
+    {keys : List Key}
+    (revision : Object.Revision (dependencies 30) [.source] keys)
+    (obligation : Proof.Obligation Key (fun key => Option (Values key)))
+    (membership : obligation ∈
+      Proof.pendingRevision (certified current) revision []) :
+    obligation.holds revision.instanceValue.state := by
     have selected := (Proof.mem_pending_iff
       (Proof.proofObjectOfInstance current
         [changedRelation, stableRelation])
@@ -167,7 +168,15 @@ private def certifiedRevision
         exact changedRelationHolds 30 revision.instanceValue
       · subst obligation
         exact stableRelationHolds 30 revision.instanceValue
-    · simp [Proof.patchOfRevision] at fresh)
+    · simp [Proof.patchOfRevision] at fresh
+
+private def certifiedRevision
+    (current : Object.Instance Key Values (plan 20))
+    (revision : Object.Revision (dependencies 30) [.source]
+      [.source, .derived, .stableSource, .stableDerived]) :
+    Proof.CertifiedObject Key Values (plan 30) :=
+  (certified current).applyRevision revision (sameResolver current) []
+    (dischargeRevision current revision)
 
 example (current : Object.Instance Key Values (plan 20))
     (revision : Object.Revision (dependencies 30) [.source]
@@ -248,6 +257,48 @@ private def diagnostic : Option (List (Object.Debug.ImpactRow Key)) := do
   let revision ← ((dependencies 30).revise [.source] current keys oldCache
     (sameResolver current)).toOption
   some (Object.Debug.Revision.explainImpact revision)
+
+/-- The pure certified revision is installed once at a mutable identity.
+The old snapshot remains readable, and a stale writer cannot replace it. -/
+private def runtimeScenario : IO Bool := do
+  let some scheduled := ((dependencies 20).scheduleRanked).toOption
+    | return false
+  let current := scheduled.ranked.instantiate
+  let keys := [.source, .derived, .stableSource, .stableDerived]
+  let runtime := Proof.Runtime.newLoaded (certified current) keys
+    [.derived, .stableDerived]
+  let mutable ← Proof.MutableRuntime.new runtime
+  let beforeDerived ← mutable.read .derived
+  let beforeStable ← mutable.read .stableDerived
+  let (version, snapshot) ← mutable.snapshot
+  let rejected ← mutable.transact fun _ =>
+    (Except.error "rejected" : Except String (Proof.Runtime Key Values))
+  let (afterRejectVersion, afterRejectSnapshot) ← mutable.snapshot
+  let some revised := (runtime.revise (dependencies 30) [.source]
+      (sameResolver current) []
+      (fun revision obligation membership =>
+        dischargeRevision current revision obligation membership)).toOption
+    | return false
+  let retainedStable := revised.cache.peek .stableDerived
+  let invalidatedDerived := revised.cache.peek .derived
+  let installed ← mutable.install version revised
+  let afterDerived ← mutable.read .derived
+  let afterStable ← mutable.read .stableDerived
+  let staleInstalled ← mutable.install version snapshot
+  let (finalVersion, finalSnapshot) ← mutable.snapshot
+  let oldSnapshotValue := (snapshot.read .derived).1
+  let certifiedValue := finalSnapshot.certified.instanceValue.state .derived
+  return rejected.toOption.isNone && afterRejectVersion == version &&
+    afterRejectSnapshot.cache.peek .derived == some (some 21) &&
+    installed && !staleInstalled && finalVersion == version + 1 &&
+    beforeDerived == some 21 && beforeStable == some 14 &&
+    afterDerived == some 31 && afterStable == some 14 &&
+    retainedStable == some (some 14) && invalidatedDerived == none &&
+    oldSnapshotValue == some 21 && certifiedValue == afterDerived
+
+#eval (do
+  unless ← runtimeScenario do
+    throw (IO.userError "certified mutable revision scenario failed") : IO Unit)
 
 #eval (do
   if (← IO.getEnv "LEANPOO_VERBOSE") == some "1" then

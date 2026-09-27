@@ -67,6 +67,7 @@ check-object: check-c4 check-generic
 check-incremental verbose="false":
     lake build LeanPoo.Object.Debug
     lake build LeanPoo.Proof.Revision
+    lake build LeanPoo.Proof.Runtime
     lake build LeanPoo.Object.Lazy
     @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; fi
 
@@ -86,6 +87,7 @@ check-proof: check-compose
     lake build LeanPoo.Proof.Invalidation
     lake build LeanPoo.Proof.Object
     lake build LeanPoo.Proof.Revision
+    lake build LeanPoo.Proof.Runtime
     lake build LeanPoo.Proof.Product
     just check-incremental
     lake env lean Examples/CertifiedCacheReuse.lean
