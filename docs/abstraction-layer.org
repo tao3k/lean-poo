@@ -226,6 +226,23 @@ no global dispatch table or mutable dynamic variable.
 lineages, shows both lexicographic orders, and checks that the outer subject
 returns after a nested scope while the two cached call shapes persist.
 
+* Dispatch ecosystems
+
+The paper also describes a dispatch table as a first-class extension scope.
+~Object.DispatchTable~ indexes heterogeneous generic functions by a dependent
+key: each key fixes its own argument, method, and result types. It reuses the
+generic's sparse C4 resolver and candidate cache. ~install~ assembles
+independently defined generics; ~register~ and ~registerWhen~ let another
+module contribute methods for already defined prototypes. A call returns a
+new table with only the selected generic's cache updated. ~Edit~ is a Lean
+~StateT~ computation over the whole table with ~Except~ errors, so several
+method declarations can form one coherent ecosystem extension without
+exposing a partially changed table on failure.
+[[file:../Examples/DispatchTable.lean][DispatchTable.lean]] defines two generics with different method and result
+types, adds methods for a separately defined C4 child in one extension,
+checks both resulting calls and per-generic cache invalidation, and exercises
+a rejected second declaration while the original table remains usable.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
