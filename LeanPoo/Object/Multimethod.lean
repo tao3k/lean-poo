@@ -3,59 +3,74 @@ import Std
 /-!
 The paper's multiple dispatch index is owned by a generic function, not by
 any of its argument prototypes. Each argument contributes a C4 precedence
-list. A sparse trie finds methods in lexicographic tuple order and caches the
-effective sequence by the complete tuple of precedence lists.
+list. A sparse trie finds candidates in lexicographic tuple order and caches
+that sequence by the complete tuple of precedence lists. Value-sensitive
+predicates are checked at every call.
 -/
 
 namespace LeanPoo.Object
 
-/-- A sparse index over tuples of prototype names. The value at a node is
+/-- A method can specialize on one named prototype or match every argument.
+`any` is distinct from every user-defined prototype name. -/
+inductive Specializer where
+  | prototype (name : String)
+  | any
+  deriving Repr, BEq
+
+/-- A sparse index over tuples of specializers. The value at a node is
 applicable only when the entire specialization tuple has been consumed. -/
 inductive MethodIndex (Method : Type) where
-  | node (value : Option Method) (children : List (String × MethodIndex Method))
+  | node (values : List Method)
+      (children : List (Specializer × MethodIndex Method))
 
 namespace MethodIndex
 
-def empty : MethodIndex Method := .node none []
+def empty : MethodIndex Method := .node [] []
 
-def child? : List (String × MethodIndex Method) → String → Option (MethodIndex Method)
+def child? : List (Specializer × MethodIndex Method) →
+    Specializer → Option (MethodIndex Method)
   | [], _ => none
   | (name, child) :: rest, query =>
       if name == query then some child else child? rest query
 
-/-- Register one exact specialization tuple. Replacing a tuple retains its
-first index position and leaves all other specializations intact. -/
-def insert (index : MethodIndex Method) (path : List String)
-    (method : Method) : MethodIndex Method :=
+/-- Update one exact specialization tuple while retaining every other path. -/
+def alter (index : MethodIndex Method) (path : List Specializer)
+    (change : List Method → List Method) : MethodIndex Method :=
   match index, path with
-  | .node _ children, [] => .node (some method) children
-  | .node value children, name :: rest =>
+  | .node values children, [] => .node (change values) children
+  | .node values children, name :: rest =>
       let child := (child? children name).getD empty
-      let updated := child.insert rest method
+      let updated := child.alter rest change
       let children :=
         if children.any (fun entry => entry.1 == name) then
           children.map fun entry =>
             if entry.1 == name then (name, updated) else entry
         else children ++ [(name, updated)]
-      .node value children
+      .node values children
 termination_by path.length
 
-def lookup (index : MethodIndex Method) (path : List String) : Option Method :=
+def insert (index : MethodIndex Method) (path : List Specializer)
+    (method : Method) : MethodIndex Method :=
+  index.alter path (fun _ => [method])
+
+def prepend (index : MethodIndex Method) (path : List Specializer)
+    (method : Method) : MethodIndex Method :=
+  index.alter path (method :: ·)
+
+def lookup (index : MethodIndex Method) (path : List Specializer) : List Method :=
   match index, path with
-  | .node value _, [] => value
+  | .node values _, [] => values
   | .node _ children, name :: rest =>
-      (child? children name).bind (fun child => child.lookup rest)
+      ((child? children name).map (fun child => child.lookup rest)).getD []
 termination_by path.length
 
 /-- Visit only indexed branches, in the lexicographic product of the C4
 orders. Array append avoids repeated concatenation of method lists. -/
-def collect (index : MethodIndex Method) (orders : List (List String))
+def collect (index : MethodIndex Method) (orders : List (List Specializer))
     (found : Array Method := #[]) : Array Method :=
   match index, orders with
-  | .node value _, [] =>
-      match value with
-      | some method => found.push method
-      | none => found
+  | .node values _, [] =>
+      values.foldl (fun current method => current.push method) found
   | .node _ children, order :: rest =>
       order.foldl (fun current name =>
         match child? children name with
@@ -69,49 +84,76 @@ inductive MultimethodError where
   | arity (expected actual : Nat)
   deriving Repr, BEq
 
+/-- Value-sensitive matching is checked on every call. The cache retains
+candidates, rather than freezing the result of a predicate for one argument. -/
+structure MethodCandidate (Args Method : Type) where
+  applies : Args → Bool
+  method : Method
+
 /-- A first-class generic function owns its methods, dispatch shape,
-combination policy, and immutable effective-method cache. -/
+combination policy, and immutable candidate-sequence cache. -/
 structure Multimethod (Args Method Result : Type) where
   arity : Nat
   precedence : Args → List (List String)
   combine : Array Method → Args → Result
-  index : MethodIndex Method := .empty
-  cache : Std.HashMap (List (List String)) (Array Method) := {}
+  index : MethodIndex (MethodCandidate Args Method) := .empty
+  cache : Std.HashMap (List (List String))
+    (Array (MethodCandidate Args Method)) := {}
 
-/-- Updating the generic's method table invalidates its old effective-method
+/-- Updating the generic's method table invalidates its old candidate-sequence
 cache. Existing immutable versions of the generic remain usable. -/
 def Multimethod.register (generic : Multimethod Args Method Result)
-    (specializers : List String) (method : Method) :
+    (specializers : List Specializer) (method : Method) :
     Except MultimethodError (Multimethod Args Method Result) :=
   if specializers.length != generic.arity then
     .error (.arity generic.arity specializers.length)
   else
     .ok { generic with
-      index := generic.index.insert specializers method
+      index := generic.index.insert specializers ⟨fun _ => true, method⟩
       cache := {} }
 
-/-- A cache hit reuses the effective method sequence. A miss traverses only
+/-- Refine one specialization tuple with an equality or arbitrary predicate.
+Guarded methods precede its unconditional method. Candidate matching remains
+dynamic even when the C4-shaped index lookup is cached. -/
+def Multimethod.registerWhen (generic : Multimethod Args Method Result)
+    (specializers : List Specializer) (predicate : Args → Bool)
+    (method : Method) :
+    Except MultimethodError (Multimethod Args Method Result) :=
+  if specializers.length != generic.arity then
+    .error (.arity generic.arity specializers.length)
+  else
+    .ok { generic with
+      index := generic.index.prepend specializers ⟨predicate, method⟩
+      cache := {} }
+
+/-- A cache hit reuses the candidate sequence. A miss traverses only
 the sparse tuple index and returns a new generic containing that entry. -/
 def Multimethod.resolve (generic : Multimethod Args Method Result)
     (args : Args) :
-    Except MultimethodError (Array Method × Multimethod Args Method Result) := do
-  let orders := generic.precedence args
-  if orders.length != generic.arity then
-    throw (.arity generic.arity orders.length)
-  match generic.cache.get? orders with
+    Except MultimethodError
+      (Array (MethodCandidate Args Method) × Multimethod Args Method Result) := do
+  let precedence := generic.precedence args
+  if precedence.length != generic.arity then
+    throw (.arity generic.arity precedence.length)
+  match generic.cache.get? precedence with
   | some methods => return (methods, generic)
   | none =>
+      let orders := precedence.map fun order =>
+        order.map Specializer.prototype ++ [.any]
       let methods := generic.index.collect orders
-      return (methods, { generic with cache := generic.cache.insert orders methods })
+      return (methods, { generic with
+        cache := generic.cache.insert precedence methods })
 
 def Multimethod.call (generic : Multimethod Args Method Result) (args : Args) :
     Except MultimethodError (Result × Multimethod Args Method Result) := do
-  let (methods, updated) ← generic.resolve args
+  let (candidates, updated) ← generic.resolve args
+  let methods := candidates.foldl (fun found candidate =>
+    if candidate.applies args then found.push candidate.method else found) #[]
   return (generic.combine methods args, updated)
 
 theorem Multimethod.resolve_cached
     (generic : Multimethod Args Method Result) (args : Args)
-    (methods : Array Method)
+    (methods : Array (MethodCandidate Args Method))
     (arity : (generic.precedence args).length = generic.arity)
     (cached : generic.cache.get? (generic.precedence args) = some methods) :
     generic.resolve args = .ok (methods, generic) := by
@@ -121,10 +163,32 @@ theorem Multimethod.resolve_cached
 
 theorem Multimethod.register_cache_empty
     (generic : Multimethod Args Method Result)
-    (specializers : List String) (method : Method)
+    (specializers : List Specializer) (method : Method)
     (registered : specializers.length = generic.arity) :
     (generic.register specializers method).map (fun revised => revised.cache) =
       .ok {} := by
   simp [Multimethod.register, registered, Except.map]
+
+theorem Multimethod.registerWhen_cache_empty
+    (generic : Multimethod Args Method Result)
+    (specializers : List Specializer)
+    (predicate : Args → Bool) (method : Method)
+    (registered : specializers.length = generic.arity) :
+    (generic.registerWhen specializers predicate method).map
+        (fun revised => revised.cache) = .ok {} := by
+  simp [Multimethod.registerWhen, registered, Except.map]
+
+theorem Multimethod.call_cached
+    (generic : Multimethod Args Method Result) (args : Args)
+    (candidates : Array (MethodCandidate Args Method))
+    (arity : (generic.precedence args).length = generic.arity)
+    (cached : generic.cache.get? (generic.precedence args) = some candidates) :
+    generic.call args = .ok
+      (generic.combine
+        (candidates.foldl (fun found candidate =>
+          if candidate.applies args then found.push candidate.method else found) #[])
+        args, generic) := by
+  simp [Multimethod.call, generic.resolve_cached args candidates arity cached]
+  rfl
 
 end LeanPoo.Object

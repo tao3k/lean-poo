@@ -9,12 +9,17 @@ abbrev Payload : String → Type := fun _ => Nat
 structure Call where
   left : Object.Plan String Payload
   right : Object.Plan String Payload
+  quantity : Nat
 
 abbrev Method := Object.MethodCombination.SubMethod
   Call (Except String) (List String)
 
 def baseMethod : Method :=
-  fun _ _ => .ok ["L0/R0"]
+  fun next _ => do
+    return "L0/R0" :: (← next ())
+
+def universalMethod : Method :=
+  fun _ _ => .ok ["any/any"]
 
 def layer (name : String) : Method :=
   fun next _ => do
@@ -39,39 +44,59 @@ def callShape : Except C4.Error Call := do
     Object.Declaration.empty
   let r0 ← LeanPoo.mix empty "R0" [] Object.Declaration.empty
   let r1 ← LeanPoo.extend r0.schema "R1" "R0" Object.Declaration.empty
-  return ⟨left, r1⟩
+  return ⟨left, r1, 1⟩
 
 /-- Lexicographic tuple order follows a C4 diamond on the left argument.
 Reusing the same shape hits the effective-method cache; registering a new
 method creates a fresh generic with an empty cache. -/
 def exercise : Except String
-    (List String × Nat × Nat × List String × Nat) := do
+    (List String × Nat × Nat × List String × Nat × List String) := do
   let call ← callShape.mapError (fun _ => "invalid C4 graph")
-  let g ← (generic.register ["L0", "R0"] baseMethod).mapError
+  let g ← (generic.register [.any, .any] universalMethod).mapError
     (fun _ => "invalid method arity")
-  let g ← (g.register ["L1", "R0"] (layer "L1/R0")).mapError
+  let g ← (g.register [.any, .prototype "R1"]
+    (layer "any/R1")).mapError
     (fun _ => "invalid method arity")
-  let g ← (g.register ["L0", "R1"] (layer "L0/R1")).mapError
+  let g ← (g.register [.prototype "L0", .prototype "R0"] baseMethod).mapError
     (fun _ => "invalid method arity")
-  let g ← (g.register ["L1", "R1"] (layer "L1/R1")).mapError
+  let g ← (g.register [.prototype "L1", .prototype "R0"]
+    (layer "L1/R0")).mapError
     (fun _ => "invalid method arity")
-  let g ← (g.register ["L2", "R0"] (layer "L2/R0")).mapError
+  let g ← (g.register [.prototype "L0", .prototype "R1"]
+    (layer "L0/R1")).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L1", .prototype "R1"]
+    (layer "L1/R1")).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.register [.prototype "L2", .prototype "R0"]
+    (layer "L2/R0")).mapError
+    (fun _ => "invalid method arity")
+  let g ← (g.registerWhen [.prototype "L1", .prototype "R1"]
+    (fun call => call.quantity == 42) (layer "quantity=42")).mapError
     (fun _ => "invalid method arity")
   let (first, cached) ← (g.call call).mapError (fun _ => "invalid call arity")
   let labels ← first
   let (again, reused) ← (cached.call call).mapError
     (fun _ => "invalid call arity")
   let _ ← again
-  let revised ← (reused.register ["L1", "R1"] (layer "replacement"))
+  let (exact, exactCached) ← (reused.call { call with quantity := 42 })
+    |>.mapError (fun _ => "invalid call arity")
+  let exactLabels ← exact
+  let revised ← (exactCached.register [.prototype "L1", .prototype "R1"]
+    (layer "replacement"))
     |>.mapError (fun _ => "invalid method arity")
   let (changed, _) ← (revised.call call).mapError (fun _ => "invalid call arity")
   return (labels, cached.cache.size, revised.cache.size, ← changed,
-    reused.cache.size)
+    exactCached.cache.size, exactLabels)
 
 #guard match exercise with
-  | .ok (first, 1, 0, changed, 1) =>
-    first == ["L1/R1", "L1/R0", "L2/R0", "L0/R1", "L0/R0"] &&
-      changed == ["replacement", "L1/R0", "L2/R0", "L0/R1", "L0/R0"]
+  | .ok (first, 1, 0, changed, 1, exact) =>
+    first == ["L1/R1", "L1/R0", "L2/R0", "L0/R1", "L0/R0",
+      "any/R1", "any/any"] &&
+      exact == ["quantity=42", "L1/R1", "L1/R0", "L2/R0",
+        "L0/R1", "L0/R0", "any/R1", "any/any"] &&
+      changed == ["replacement", "L1/R0", "L2/R0", "L0/R1", "L0/R0",
+        "any/R1", "any/any"]
   | _ => false
 
 #guard match callShape with
@@ -81,7 +106,7 @@ def exercise : Except String
   | _ => false
 
 -- Registration enforces the generic function's fixed arity.
-#guard match generic.register ["L0"] baseMethod with
+#guard match generic.register [.prototype "L0"] baseMethod with
   | .error (.arity 2 1) => true
   | _ => false
 
