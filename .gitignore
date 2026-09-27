@@ -1,3 +1,4 @@
 /.data/
 /.lake/
 /.devenv/
+.pre-commit-config.yaml
