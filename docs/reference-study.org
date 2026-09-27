@@ -73,7 +73,9 @@ The Lean modules are separated by semantic responsibility:
   those declarations. Its pure ~StateM~ programs compose with ~do~ notation;
   ~buildOn~ supports reuse, and reduction theorems connect the builder to the
   existing direct-value and inherited-method operations. A focused inherited
-  update lifts a monomorphic lens through the same delayed method form. This follows the
+  update lifts a monomorphic lens through the same delayed method form;
+  ~Builder.skew~ also lifts a general skew-focused open prototype into a C4
+  slot, with final-self view and delayed inherited input. This follows the
   upstream separation between convenient expression and object semantics
   without translating Scheme macro syntax into Lean.
 - ~LeanPoo/Prototype/SkewLens.lean~ implements the paper's distinction between
@@ -296,7 +298,8 @@ Section 9 separates a skew lens's viewed context from its extension update;
 ~Prototype.SkewLens~ implements this higher-order shape and its composition,
 and ~SkewLens.focus~ lifts an open prototype by the paper's ~skew-ext~ rule,
 while ~Builder.focusInherited~ applies a composed field focus within a C4
-declaration. This is a focused specification operation, not a new inheritance
+declaration and ~Builder.skew~ admits the general focus. This is a focused
+specification operation, not a new inheritance
 algorithm.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |

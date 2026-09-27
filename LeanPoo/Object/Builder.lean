@@ -64,6 +64,17 @@ def focusInherited {Key : Type u} {Value : Key → Type v}
     (change : Part → Part) : Declaration.Builder Key Value PUnit :=
   modifyInherited key (Option.map (focus.modify change))
 
+/-- Install any paper-style skew extension as one C4 slot method. The lens
+controls both the final-self view and when to force inherited computation. -/
+def skew {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (key : Key)
+    (focus : Prototype.SkewLens Inherited Required Provided
+      (Prototype.Next (Option (Value key)))
+      (Self Key Value) (Option (Value key)))
+    (extension : Prototype.Proto Required Inherited Provided) :
+    Declaration.Builder Key Value PUnit :=
+  slot key (.computed (focus.focus extension))
+
 end Declaration.Builder
 
 theorem Declaration.buildOn_value {Key : Type u} {Value : Key → Type v}
@@ -91,5 +102,15 @@ theorem Declaration.buildOn_focusInherited {Key : Type u}
       declaration.withSlot key
         (.computed fun _ inherited =>
           Option.map (focus.modify change) (inherited ())) := rfl
+
+theorem Declaration.buildOn_skew {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (declaration : Declaration Key Value) (key : Key)
+    (focus : Prototype.SkewLens Inherited Required Provided
+      (Prototype.Next (Option (Value key)))
+      (Self Key Value) (Option (Value key)))
+    (extension : Prototype.Proto Required Inherited Provided) :
+    Declaration.buildOn declaration
+      (Declaration.Builder.skew key focus extension) =
+      declaration.withSlot key (.computed (focus.focus extension)) := rfl
 
 end LeanPoo.Object

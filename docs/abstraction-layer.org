@@ -77,6 +77,9 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    A monomorphic lens built from a getter and setter can focus an inherited
    update on a nested field through ~Builder.focusInherited~. C4 assembles the
    method; the inherited result remains delayed until the slot is read.
+   ~Builder.skew~ admits the full skew-lens form directly as a C4 slot method:
+   its view reads the final self, while its update receives the delayed
+   inherited value. Both paths use the existing ~SlotSpec.computed~ evaluator.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.

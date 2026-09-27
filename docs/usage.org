@@ -49,6 +49,7 @@ does not require an ~Inhabited~ result type.
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |
 | ~Prototype.MonoLens~ | Compose ordinary getter/setter field focuses as a special case of skew lenses. |
 | ~Declaration.Builder.focusInherited~ | Apply a focused change to an inherited slot value while retaining the rest of the value. |
+| ~Declaration.Builder.skew~ | Install a general skew-focused open extension as a delayed C4 slot method. |
 | ~Declaration.withSlot~ / ~withDefault~ | Add a slot computation or base default at a typed key. |
 | ~Declaration.fromValues~ / ~fromValuesIndexed~ / ~fromFunction~ / ~fromMap~ | Build ordered direct slots from typed values, a hash-indexed value stream, a lazy function, or a sorted dependent map. |
 | ~LeanPoo.mix~ | Add a node with ordered direct supers and compile its C4 plan. |
@@ -90,7 +91,8 @@ resolution.
 [[file:../Examples/SkewExtension.lean][SkewExtension.lean]] demonstrates a genuinely
 skew extension: the method reads an enable flag from final self while
 updating only the inherited retry count. It checks both the enabled and
-disabled cases and states agreement with successive focusing.
+disabled cases, states agreement with successive focusing, and installs a
+skew-focused method in a C4 object declaration.
 [[file:../Examples/LayeredObject.lean][LayeredObject.lean]] runs a complete ~mix~ / ~extend~ / ~memoize~ / ~read~ path.
 It also clones the executable child with a new direct value. Composition
 reuses the object's prototype information; the derived object receives its

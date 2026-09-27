@@ -1,4 +1,5 @@
-import LeanPoo.Prototype.SkewLens
+import LeanPoo.Object.Builder
+import LeanPoo.Object.Memo
 
 namespace LeanPoo.Examples.SkewExtension
 
@@ -49,5 +50,38 @@ private def inherited : Config :=
 #guard extension { inherited with enabled := false }
   { inherited with enabled := true } ==
     { quota := { retries := 2, burst := 8 }, enabled := true }
+
+/-- The same skew extension shape can be installed as a C4 slot method. -/
+inductive Key where
+  | enabled
+  | retries
+  deriving DecidableEq, BEq, ReflBEq, LawfulBEq, Hashable
+
+def Value : Key → Type
+  | .enabled => Bool
+  | .retries => Nat
+
+def slotFocus : Prototype.SkewLens Nat Bool Nat
+    (Prototype.Next (Option Nat)) (Object.Self Key Value) (Option Nat) :=
+  { view := fun self => ((self .enabled).getD false : Bool)
+    update := fun change inherited => Option.map change (inherited ()) }
+
+def base : Object.Declaration Key Value := Object.Declaration.build do
+  Object.Declaration.Builder.value .enabled true
+  Object.Declaration.Builder.value .retries (2 : Nat)
+
+def layer : Object.Declaration Key Value := Object.Declaration.build do
+  Object.Declaration.Builder.skew .retries slotFocus incrementWhenEnabled
+
+def c4Result : Except C4.Error (Option Nat) := do
+  let empty : Object.Schema Key Value :=
+    { graph := { nodes := [] }, declaration := fun _ => none }
+  let basePlan ← LeanPoo.mix empty "Base" [] base
+  let extended ← LeanPoo.extend basePlan.schema "Conditional" "Base" layer
+  return extended.memoize.read .retries
+
+#guard match c4Result with
+  | .ok (some 3) => true
+  | _ => false
 
 end LeanPoo.Examples.SkewExtension
