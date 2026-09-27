@@ -386,6 +386,10 @@ instances. Structural node invalidation and value-key dependency
 selection are separate operations. ~append_composeAll~ proves batch append
 agrees with stepwise append; ~unaffected_composeAll_iff~ characterizes proof
 reuse across the entire batch.
+[[file:../Examples/ProofReuse.lean][ProofReuse.lean]] gives the caller-facing pattern: declare an obligation's
+dependencies once, override an unrelated key, and invoke ~Proof.reuse~ to
+carry the existing certificate. The scenario also closes the revised object
+without a second proof of the identity invariant.
 
 * Debugging recursive objects
 

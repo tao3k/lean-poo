@@ -8,6 +8,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | Scenario | What it shows |
 |----------+---------------|
 | [[file:MethodDictionary.lean][MethodDictionary]] | C4 inheritance, dynamic dispatch, a caller-selected dictionary, and a preselected method. |
+| [[file:ExtensibleDispatch.lean][ExtensibleDispatch]] | A plugin adds pair-specific and value-guarded methods to an existing two-axis generic. |
+| [[file:ProofReuse.lean][ProofReuse]] | A quota patch preserves an independent certified identity obligation through the public reuse theorem. |
 | [[file:LiveRevision.lean][LiveRevision]] | A derived slot before and after a live declaration revision; the old snapshot remains readable. |
 | [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |
 | [[file:LayeredObject.lean][LayeredObject]] | Mix, extend, memoize, clone, and a diamond-shaped inheritance graph. |

@@ -117,6 +117,8 @@ check-example: check-compose
     lake env lean Examples/FirstClassObject.lean
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/MethodDictionary.lean
+    lake env lean Examples/ExtensibleDispatch.lean
+    lake env lean Examples/ProofReuse.lean
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean

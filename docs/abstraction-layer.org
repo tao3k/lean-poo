@@ -189,6 +189,9 @@ evaluating their predicates; each call checks predicates against its current
 arguments. Thus calls with identical C4 lineages and different values cannot
 reuse a stale applicability decision. Lean proves this cached-call equation
 and that guarded registration also clears the cache.
+[[file:../Examples/ExtensibleDispatch.lean][ExtensibleDispatch.lean]] uses two separately constructed C4 lineages as one
+dispatch shape. A later plugin contributes both a pair-specific method and a
+value-guarded refinement, while the original table remains callable.
 
 [[file:../Tests/MultipleDispatch.lean][MultipleDispatch.lean]] combines a C4 diamond on the first argument with a
 second argument's lineage. It checks tuple ordering, a repeated call's cache,
@@ -252,6 +255,8 @@ exposing a partially changed table on failure.
 types, adds methods for a separately defined C4 child in one extension,
 checks both resulting calls and per-generic cache invalidation, and exercises
 a rejected second declaration while the original table remains usable.
+The [[file:../Examples/ExtensibleDispatch.lean][plugin scenario]] is a smaller application-facing view of this extension
+workflow; its tuple specializers depend on both argument lineages.
 
 * Method dictionaries and dispatch stages
 
