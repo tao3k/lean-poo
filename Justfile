@@ -61,6 +61,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
+    lake build LeanPoo.Object.MethodCombination
     lake build LeanPoo.Object.Prototype
     lake build LeanPoo.Object.Debug
     lake env lean Examples/ComputedDefault.lean
@@ -115,6 +116,8 @@ check-example: check-compose
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/DescriptorClass.lean
     lake env lean Examples/ClassInstanceMethods.lean
+    lake env lean Examples/MethodCombination.lean
+    lake env lean Examples/SimpleMethodCombination.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean

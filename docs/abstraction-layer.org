@@ -107,6 +107,25 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
 
+* Method combinations
+
+The paper's standard method combination is represented by a typed
+~MethodCombination.Contribution~: ~primary~ and ~around~ receive a delayed
+~next~, while ~before~ and ~after~ cannot call it. Several contributions from
+one class can be installed through ~specifications~; C4 assembles them into
+most-specific-first groups. ~effective~ calls around methods outside the
+before/primary/after body, reverses the after group, and uses the caller's
+effect type for errors and state. [[file:../Examples/MethodCombination.lean][MethodCombination.lean]] checks a C4 diamond,
+including every observed call in the standard order.
+
+The paper's simple combination is a separate ~SimplePolicy~ with neutral
+value, first/step/finish operations, and a stop predicate. Its item methods
+have no ~next~ argument; around methods can still wrap the folded result.
+[[file:../Examples/SimpleMethodCombination.lean][SimpleMethodCombination.lean]] checks an ~and~ policy that stops after the
+first false result and retains the neutral value for an empty group. These
+functions interpret typed method groups produced by the same C4 slot chain;
+they do not add dynamic CLOS dispatch or a second inheritance algorithm.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
