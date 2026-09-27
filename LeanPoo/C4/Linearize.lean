@@ -44,10 +44,11 @@ private def suffixReaches (table : Table) (source target : String) : Bool :=
 private def computeNode (table : Table) (node : Node) :
     Except Error Linearization := do
   let orders := node.parentOrders.filter (fun order => !order.isEmpty)
-  let mut parentResults : List Linearization := []
+  let mut parentResultsRev : List Linearization := []
   for parent in parents node do
     let some result := lookup table parent | throw (.unknownNode parent)
-    parentResults := parentResults ++ [result]
+    parentResultsRev := result :: parentResultsRev
+  let parentResults := parentResultsRev.reverse
 
   let mut inheritedSuffix : Option String := none
   for result in parentResults do
@@ -91,19 +92,40 @@ private def pass (nodes : List Node) (table : Table) : Except Error Table :=
     let result ← computeNode ready node
     return ready.insert node.name result) (.ok table)
 
-/-- Names reachable from the requested root; other nodes cannot affect it. -/
-private def reachable (graph : Graph) (root : String) : List String :=
-  (List.range graph.nodes.length).foldl (fun names _ =>
-    unique (names ++ (names.flatMap fun name =>
-      match graph.findNode? name with
-      | none => []
-      | some node => parents node))) [root]
+/-- First declarations own name lookup until duplicate validation reports an
+error; indexing avoids repeated linear searches while discovering reachability. -/
+private def nodeIndex (graph : Graph) : Std.HashMap String Node :=
+  graph.nodes.foldl (fun table node =>
+    if table.contains node.name then table else table.insert node.name node) {}
+
+/-- Discover each reachable name once in breadth-first order. Every queued
+name comes from the root or one parent edge, so the finite edge count bounds
+the loop even when an edge points to an unknown node. -/
+private def reachable (graph : Graph) (index : Std.HashMap String Node)
+    (root : String) : List String := Id.run do
+  let fuel := graph.nodes.foldl (fun total node =>
+    total + node.parentOrders.flatten.length) 1
+  let mut pending := [root]
+  let mut seen : Std.HashSet String := {}
+  let mut reversed := []
+  for _ in [:fuel] do
+    match pending with
+    | [] => break
+    | name :: rest =>
+        pending := rest
+        if !seen.contains name then
+          seen := seen.insert name
+          reversed := name :: reversed
+          if let some node := index.get? name then
+            pending := pending ++ parents node
+  return reversed.reverse
 
 /-- Total finite-graph C4 translation. All iterations have bounds from graph size. -/
 def linearize (graph : Graph) (root : String) : Except Error (List String) := do
-  if (graph.findNode? root).isNone then
+  let index := nodeIndex graph
+  if (index.get? root).isNone then
     throw (.unknownNode root)
-  let names := reachable graph root
+  let names := reachable graph index root
   let nodes := graph.nodes.filter (fun node => names.contains node.name)
   ({ nodes } : Graph).validate
   let table ← (List.range nodes.length).foldl

@@ -401,9 +401,10 @@ corpus.
 declaration-only revision on a synthetic 64-node chain. It measures topology
 updates, not object reads or cross-platform performance.
 ~just benchmark-memoization~ compares sparse and dense reads of 256 direct
-slots through the on-demand, one-pass compiled, and indexed paths. It is a synthetic local
-measurement and also runs a 64-node chain. The workload should determine
-which constructor to use.
+slots through the on-demand, compiled, indexed, and compiled-reused paths;
+it also runs a 64-node chain. ~just benchmark-c4~ measures C4 construction
+on deep chains and wide fan-in graphs. These are synthetic local timings;
+the workload should determine which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.

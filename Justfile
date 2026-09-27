@@ -15,6 +15,7 @@ check-merge: check-types
 check-c4: check-merge
     lake build LeanPoo.C4.Linearize
     lake env lean Examples/C4SuffixOrder.lean
+    lake env lean Examples/C4Traversal.lean
 
 # Check the paper's executable prototype nucleus.
 check-mvp:
@@ -140,6 +141,11 @@ benchmark-declaration:
 benchmark-revision:
     lake build LeanPoo.Object.Resolve
     lake env lean --run Examples/RevisionScale.lean
+
+# Measure C4 traversal on deep and wide finite inheritance graphs.
+benchmark-c4:
+    lake build LeanPoo.C4.Linearize
+    lake env lean --run Examples/C4Scale.lean
 
 # Compare demand-driven, one-pass, and proof-backed indexed method resolution.
 benchmark-memoization:
