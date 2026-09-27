@@ -125,6 +125,13 @@ def register (site : InlineDispatch Args Method Result)
   let generic ← site.generic.register specializers method
   return ⟨generic, none⟩
 
+/-- Add a method at one tuple and discard the previous call-site entry. -/
+def contribute (site : InlineDispatch Args Method Result)
+    (specializers : List Specializer) (method : Method) :
+    Except MultimethodError (InlineDispatch Args Method Result) := do
+  let generic ← site.generic.contribute specializers method
+  return ⟨generic, none⟩
+
 def registerWhen (site : InlineDispatch Args Method Result)
     (specializers : List Specializer) (predicate : Args → Bool)
     (method : Method) :
@@ -138,6 +145,14 @@ theorem register_empty (site : InlineDispatch Args Method Result)
     (site.register specializers method).map (fun revised => revised.entry.isNone) =
       .ok true := by
   simp [InlineDispatch.register, Multimethod.register, registered]
+  rfl
+
+theorem contribute_empty (site : InlineDispatch Args Method Result)
+    (specializers : List Specializer) (method : Method)
+    (registered : specializers.length = site.generic.arity) :
+    (site.contribute specializers method).map
+      (fun revised => revised.entry.isNone) = .ok true := by
+  simp [InlineDispatch.contribute, Multimethod.contribute, registered]
   rfl
 
 theorem registerWhen_empty (site : InlineDispatch Args Method Result)

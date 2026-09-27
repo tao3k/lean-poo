@@ -118,6 +118,7 @@ check-example: check-compose
     lake env lean Examples/FirstClassRecord.lean
     lake env lean Examples/MethodDictionary.lean
     lake env lean Examples/ExtensibleDispatch.lean
+    lake env lean Examples/QualifiedCombination.lean
     lake env lean Examples/ProofReuse.lean
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/DebugTrace.lean
@@ -140,6 +141,7 @@ check-tests: check-proof
     lake env lean Tests/MethodCombination.lean
     lake env lean Tests/SimpleMethodCombination.lean
     lake env lean Tests/QualifiedMethodCombination.lean
+    lake env lean Tests/QualifiedCombination.lean
     lake env lean Tests/MultipleDispatch.lean
     lake env lean Tests/MultimethodCombination.lean
     lake env lean Tests/SubjectiveDispatch.lean

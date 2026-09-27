@@ -360,6 +360,21 @@ and validates a full object. A sealed class rejects unknown JSON fields.
 ~Object.Lens.slot~ gets, sets, or modifies a typed slot through persistent
 C4 recompilation; ~Lens.compose~ combines two typed lenses.
 
+* Define a method combination
+
+Use ~Object.Multimethod.qualified~ when standard or simple combination is not
+the desired policy. Define a qualifier type, a dependent family of method
+body types, and one interpreter over ~QualifiedMethods~. The generic still
+selects contributions by its C4 tuple shape. ~register~ replaces the methods
+at one tuple, while ~contribute~ retains existing methods there and prepends
+another. ~DispatchTable.contributeIn~ performs the same addition inside an
+atomic ecosystem edit. Prepared and inline dispatch expose ~contribute~ as
+well and discard their previous effective-method or call-site cache.
+[[file:../Examples/QualifiedCombination.lean][QualifiedCombination.lean]] shows a validation qualifier and a
+rendering qualifier on one two-argument specialization; the second call has
+the same dispatch shape but a different payload and is rejected by the
+validation policy.
+
 * Compose proofs
 
 | Operation | Role |

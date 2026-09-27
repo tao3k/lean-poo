@@ -1,6 +1,7 @@
 import LeanPoo.Object.Multimethod
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.PreparedMultimethod
+import LeanPoo.Object.QualifiedMethods
 
 /-!
 The paper separates multiple dispatch into an accepter, a combiner, and an
@@ -10,6 +11,19 @@ the complete `Args` value is passed to each method as the invoker's record.
 -/
 
 namespace LeanPoo.Object.Multimethod
+
+/-- User-defined method combination. C4 and the sparse tuple index select
+contributions; the interpreter receives them grouped by their dependent
+qualifiers in precedence order. No new dispatch or slot evaluator is needed. -/
+def qualified {Args Result : Type} {Qualifier : Type}
+    {Body : Qualifier → Type} [DecidableEq Qualifier]
+    (arity : Nat) (precedence : Args → List (List String))
+    (interpret : QualifiedMethods Qualifier Body → Args → Result) :
+    Multimethod Args (Sigma Body) Result :=
+  { arity
+    precedence
+    combine := fun contributions args =>
+      interpret (QualifiedMethods.prependAll contributions.toList {}) args }
 
 /-- Combine qualified multimethod contributions in lexicographic C4 order.
 The result of dispatch is a standard effective method, with around, before,

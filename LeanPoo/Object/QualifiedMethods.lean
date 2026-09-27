@@ -32,6 +32,28 @@ def QualifiedMethods.prepend {Qualifier : Type u}
   { groups := Entry.replace methods.groups qualifier
       (body :: methods.lookup qualifier) }
 
+/-- Interpret an ordered sequence of qualified contributions. Earlier
+contributions remain ahead of later ones within each qualifier. -/
+def QualifiedMethods.prependAll {Qualifier : Type u}
+    {Body : Qualifier → Type v} [DecidableEq Qualifier]
+    (contributions : List (Sigma Body))
+    (methods : QualifiedMethods Qualifier Body) :
+    QualifiedMethods Qualifier Body :=
+  contributions.foldr
+    (fun contribution accumulated =>
+      accumulated.prepend contribution.1 contribution.2) methods
+
+/-- A contribution batch composes in the same order as two successive
+inheritance layers. -/
+theorem QualifiedMethods.prependAll_append {Qualifier : Type u}
+    {Body : Qualifier → Type v} [DecidableEq Qualifier]
+    (front back : List (Sigma Body))
+    (methods : QualifiedMethods Qualifier Body) :
+    QualifiedMethods.prependAll (front ++ back) methods =
+      QualifiedMethods.prependAll front
+        (QualifiedMethods.prependAll back methods) := by
+  simp [QualifiedMethods.prependAll]
+
 /-- Install heterogeneous qualified methods from one prototype as an
 ordinary delayed slot specification. Their source order is preserved. -/
 def QualifiedMethods.specifications {Self : Type w}
@@ -39,9 +61,7 @@ def QualifiedMethods.specifications {Self : Type w}
     [DecidableEq Qualifier] (contributions : List (Sigma Body)) :
     Prototype.SlotSpec Self (Option (QualifiedMethods Qualifier Body)) :=
   .computed fun _ inherited =>
-    some <| contributions.foldr
-      (fun contribution methods =>
-        methods.prepend contribution.1 contribution.2)
+    some <| QualifiedMethods.prependAll contributions
       ((inherited ()).getD {})
 
 /-- A single contribution is still a first-class specification. -/

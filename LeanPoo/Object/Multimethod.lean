@@ -134,6 +134,19 @@ def Multimethod.register (generic : Multimethod Args Method Result)
       index := generic.index.insert specializers (.always method)
       cache := {} }
 
+/-- Add an unconditional contribution at an existing specialization tuple.
+Unlike `register`, this keeps earlier contributions at that tuple, which is
+needed when distinct qualifiers jointly define one effective method. -/
+def Multimethod.contribute (generic : Multimethod Args Method Result)
+    (specializers : List Specializer) (method : Method) :
+    Except MultimethodError (Multimethod Args Method Result) :=
+  if specializers.length != generic.arity then
+    .error (.arity generic.arity specializers.length)
+  else
+    .ok { generic with
+      index := generic.index.prepend specializers (.always method)
+      cache := {} }
+
 /-- Refine one specialization tuple with an equality or arbitrary predicate.
 Guarded methods precede its unconditional method. Candidate matching remains
 dynamic even when the C4-shaped index lookup is cached. -/
@@ -194,6 +207,14 @@ theorem Multimethod.register_cache_empty
     (generic.register specializers method).map (fun revised => revised.cache) =
       .ok {} := by
   simp [Multimethod.register, registered, Except.map]
+
+theorem Multimethod.contribute_cache_empty
+    (generic : Multimethod Args Method Result)
+    (specializers : List Specializer) (method : Method)
+    (registered : specializers.length = generic.arity) :
+    (generic.contribute specializers method).map
+      (fun revised => revised.cache) = .ok {} := by
+  simp [Multimethod.contribute, registered, Except.map]
 
 theorem Multimethod.registerWhen_cache_empty
     (generic : Multimethod Args Method Result)

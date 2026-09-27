@@ -55,6 +55,15 @@ def register (table : DispatchTable Key Args Method Result)
   let updated ← (generic.register specializers method).mapError .dispatch
   return table.install key updated
 
+/-- Contribute another method at a tuple without replacing its existing
+methods. Only the selected generic's cached candidate sequence is cleared. -/
+def contribute (table : DispatchTable Key Args Method Result)
+    (key : Key) (specializers : List Specializer) (method : Method key) :
+    Except (DispatchTableError Key) (DispatchTable Key Args Method Result) := do
+  let generic ← table.lookup key
+  let updated ← (generic.contribute specializers method).mapError .dispatch
+  return table.install key updated
+
 def registerWhen (table : DispatchTable Key Args Method Result)
     (key : Key) (specializers : List Specializer)
     (predicate : Args key → Bool) (method : Method key) :
@@ -85,6 +94,14 @@ def registerIn (key : Key) (specializers : List Specializer)
       (Method := Method) (Result := Result) Unit := do
   let table ← get
   match table.register key specializers method with
+  | .ok updated => set updated
+  | .error error => throw error
+
+def contributeIn (key : Key) (specializers : List Specializer)
+    (method : Method key) : Edit (Key := Key) (Args := Args)
+      (Method := Method) (Result := Result) Unit := do
+  let table ← get
+  match table.contribute key specializers method with
   | .ok updated => set updated
   | .error error => throw error
 

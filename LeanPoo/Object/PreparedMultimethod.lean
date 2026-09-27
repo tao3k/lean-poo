@@ -36,6 +36,14 @@ def register (prepared : PreparedMultimethod Args Method Effective Result)
   let updated ← prepared.generic.register specializers method
   return { prepared with generic := updated, effectiveCache := {} }
 
+/-- Keep earlier methods at one tuple and invalidate both dispatch caches. -/
+def contribute (prepared : PreparedMultimethod Args Method Effective Result)
+    (specializers : List Specializer) (method : Method) :
+    Except MultimethodError
+      (PreparedMultimethod Args Method Effective Result) := do
+  let updated ← prepared.generic.contribute specializers method
+  return { prepared with generic := updated, effectiveCache := {} }
+
 def registerWhen (prepared : PreparedMultimethod Args Method Effective Result)
     (specializers : List Specializer) (predicate : Args → Bool)
     (method : Method) :
