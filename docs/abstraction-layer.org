@@ -188,6 +188,17 @@ rejection. The combiner reuses
 ~MethodCombination.callChain~; multimethod selection does not add another
 method invocation protocol.
 
+~Object.Multimethod.standard~ and ~Object.Multimethod.simple~ connect the
+paper's accepter, combiner, and invoker without a user-written adapter for
+each generic function. The accepter extracts the C4 orders from a typed call
+record; the sparse index selects contributions; the combiner folds them in
+lexicographic order into the existing standard or simple method groups. The
+invoker passes the entire call record, including non-dispatch arguments, to
+each selected method. ~Examples/MultimethodCombination.lean~ checks both
+combination policies with two C4 arguments. Its standard call exercises
+around, before, primary, and after methods, while a predicate-specific
+before method is reevaluated across two calls sharing one cached C4 shape.
+
 * Optimization boundary
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a

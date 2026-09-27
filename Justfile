@@ -124,6 +124,7 @@ check-example: check-compose
     lake env lean Examples/SimpleMethodCombination.lean
     lake env lean Examples/QualifiedMethodCombination.lean
     lake env lean Examples/MultipleDispatch.lean
+    lake env lean Examples/MultimethodCombination.lean
     lake env lean Examples/MutableObject.lean
     lake env lean Examples/MutablePrototype.lean
     lake env lean Examples/TypedSlots.lean
