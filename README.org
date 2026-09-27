@@ -14,7 +14,7 @@ language or a domain-specific proof system.
 | Layer | Public capability |
 |-------+-------------------|
 | ~LeanPoo.Prototype~ | Open-recursive prototypes, ordered composition, delayed instances, first-class objects, and classes. |
-| ~LeanPoo.C4~ and ~LeanPoo.Object~ | C4 precedence, typed slots, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental cache reuse for finite dependencies. |
+| ~LeanPoo.C4~ and ~LeanPoo.Object~ | C4 precedence, typed slots, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 

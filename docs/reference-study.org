@@ -128,6 +128,10 @@ The Lean modules are separated by semantic responsibility:
   ~Dependencies.revise~ combines those steps into one checked update.
   ~Object.Debug.Revision.explainImpact~ reports the direct edit and affected
   reads without adding instrumentation to each slot.
+- ~LeanPoo/Object/Lazy.lean~ allocates call-by-need cells from a proof-bearing
+  total instance. Each cell carries its value equation; ~Revision.rebaseLazy~
+  retains the same thunk for unaffected keys and creates fresh cells for
+  affected keys, independently of the partial ~Plan.memoize~ fixed point.
 - ~LeanPoo/Proof/Types.lean~, ~Patch.lean~, ~Batch.lean~, ~Reuse.lean~,
   ~Invalidation.lean~, ~Object.lean~, and ~Revision.lean~ own proof objects, append, right-side
   override, obligation transport, pending obligations, descendant
@@ -229,5 +233,8 @@ and class layers use native types rather than Scheme's dynamic MOP.
 
 The first two rows are integration boundaries for this project's incremental
 proof-reuse goal. They do not undo the implemented paper-model construction.
+For the certified finite-dependency path, ~Object.LazyInstance~ also retains
+actual thunk cells across a revision. The table's ~Memoized~ limitation refers
+to the general recursive executable object.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.

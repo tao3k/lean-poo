@@ -15,6 +15,7 @@ import LeanPoo.Object.Resolve
 import LeanPoo.Object.Instance
 import LeanPoo.Object.Ranked
 import LeanPoo.Object.Incremental
+import LeanPoo.Object.Lazy
 import LeanPoo.Compose
 import LeanPoo.Slots
 import LeanPoo.Object.Memo

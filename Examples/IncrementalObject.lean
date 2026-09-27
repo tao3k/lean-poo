@@ -1,5 +1,6 @@
 import LeanPoo.Object.Debug
 import LeanPoo.Proof.Revision
+import LeanPoo.Object.Lazy
 
 open LeanPoo
 
@@ -184,6 +185,9 @@ private structure Outcome where
   stableValue : Option (Option Nat)
   recomputedValue : Option Nat
   repairs : List Bool
+  reusedLazy : List Key
+  lazyDerived : Option Nat
+  lazyStable : Option Nat
   deriving DecidableEq, Repr
 
 private def observed : Option Outcome := do
@@ -191,8 +195,10 @@ private def observed : Option Outcome := do
   let current := oldScheduled.ranked.instantiate
   let keys := [.source, .derived, .stableSource, .stableDerived]
   let oldCache := (current.cache keys).force keys
+  let oldLazy := current.lazy keys
   let revision ← ((dependencies 30).revise [.source] current keys oldCache
     (sameResolver current)).toOption
+  let newLazy := revision.rebaseLazy current oldLazy (sameResolver current)
   let certifiedNext := certifiedRevision current revision
   let impact := revision.impact
   let reused := revision.cache
@@ -206,6 +212,9 @@ private def observed : Option Outcome := do
     stableValue := reused.peek .stableDerived
     recomputedValue := certifiedNext.instanceValue.state .derived
     repairs := proofImpact.map Proof.Debug.Impact.needsRepair
+    reusedLazy := revision.reusedLazyKeys oldLazy
+    lazyDerived := newLazy.read .derived
+    lazyStable := newLazy.read .stableDerived
   }
 
 example : observed = some {
@@ -214,6 +223,9 @@ example : observed = some {
     stableValue := some (some 14)
     recomputedValue := some 31
     repairs := [true, false]
+    reusedLazy := [.stableSource, .stableDerived]
+    lazyDerived := some 31
+    lazyStable := some 14
   } := by
   native_decide
 
@@ -239,6 +251,6 @@ private def diagnostic : Option (List (Object.Debug.ImpactRow Key)) := do
 
 #eval (do
   if (← IO.getEnv "LEANPOO_VERBOSE") == some "1" then
-    IO.println (repr diagnostic) : IO Unit)
+    IO.println (repr (diagnostic, observed.map Outcome.reusedLazy)) : IO Unit)
 
 end IncrementalObjectExample

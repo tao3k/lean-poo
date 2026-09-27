@@ -236,6 +236,11 @@ projection carries a frame proof and an alignment theorem, so
 ~CertifiedObject.applyRevision~ reuses certificates outside the affected
 footprint. The same example checks that only the relation over the edited
 branch is pending.
+The total fixed point also supports call-by-need cells. ~Instance.lazy~ binds
+selected cells to its proved state; ~Revision.rebaseLazy~ retains cells outside
+the dependency footprint and replaces affected ones. This certified runtime
+sharing path does not claim that the general recursive ~Memoized~ thunk knot
+terminates.
 
 * Conclusion
 

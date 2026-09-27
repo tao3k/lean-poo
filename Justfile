@@ -53,6 +53,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Instance
     lake build LeanPoo.Object.Ranked
     lake build LeanPoo.Object.Incremental
+    lake build LeanPoo.Object.Lazy
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
@@ -66,6 +67,7 @@ check-object: check-c4 check-generic
 check-incremental verbose="false":
     lake build LeanPoo.Object.Debug
     lake build LeanPoo.Proof.Revision
+    lake build LeanPoo.Object.Lazy
     @if [ "{{verbose}}" = "true" ]; then LEANPOO_VERBOSE=1 timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; else timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/IncrementalObject.lean; fi
 
 # Check the public LeanPoo composition operations.

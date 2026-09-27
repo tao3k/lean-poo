@@ -147,6 +147,16 @@ state. ~CertifiedObject.applyRevision~ reuses obligations outside the
 footprint and requests proofs for ~pendingRevision~. The integrated example
 has two obligations: editing one inherited source selects its computed
 relation for repair while reusing the independent relation.
+~Instance.lazy keys~ builds shared Lean thunk cells from a proof-bearing
+instance. ~LazyInstance.read_sound~ ties every read to that instance, while
+~Revision.rebaseLazy~ retains a cell only outside the checked impact set and
+installs fresh cells for affected selected keys. ~Revision.reusedLazyKeys~
+reports retained cells without forcing them. This is the total ranked path;
+ordinary ~Memoized~ still rebuilds its general recursive thunk table.
+An unforced retained thunk may still hold the old instance through its
+closure until it is forced or released. Callers with a strict retention
+budget can use the explicit immutable ~Cache~ path, whose retained values
+do not close over the old instance.
 [[file:../Examples/IncrementalObject.lean][IncrementalObject.lean]] uses a C4 child
 with two computed branches. Editing one inherited source invalidates its
 dependent branch while preserving the independent source and computed cache.
