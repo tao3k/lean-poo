@@ -22,10 +22,20 @@ private def benchmarkMap (count : Nat) : IO Unit := do
   let elapsed := (← IO.monoMsNow) - started
   IO.println s!"map_elapsed_ms={elapsed}"
 
+private def benchmarkIndexed (count : Nat) : IO Unit := do
+  let started ← IO.monoMsNow
+  let declaration := Object.Declaration.fromValuesIndexed (values count)
+  IO.println s!"indexed_slots={declaration.slots.length}"
+  let elapsed := (← IO.monoMsNow) - started
+  IO.println s!"indexed_elapsed_ms={elapsed}"
+
 def main : IO Unit := do
   benchmarkList 1000
   benchmarkList 2000
   benchmarkList 4000
+  benchmarkIndexed 1000
+  benchmarkIndexed 2000
+  benchmarkIndexed 4000
   benchmarkMap 1000
   benchmarkMap 2000
   benchmarkMap 4000

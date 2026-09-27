@@ -62,10 +62,47 @@ The Lean modules are separated by semantic responsibility:
   ordered direct slot/default entries as the only declaration source, separate
   from the C4 graph. One generic dependent ~Entry~ supplies typed lookup and
   ordered replacement for both entry kinds. ~fromValues~ and ~fromFunction~ translate the Gerbil
-  direct-value and lazy-function constructors. ~fromMap~ accepts a typed
+  direct-value and lazy-function constructors. ~fromValuesIndexed~ uses a
+  hash-indexed array position to retain first-key order and last-value
+  semantics for wide typed value streams, following Section 10's finite-map
+  representation argument. ~fromMap~ accepts a typed
   dependent map and orders keys with a caller-supplied comparator.
   ~Entry.toMap_get?~ proves that materializing an ordered declaration list
   into a dependent hash map preserves last-write-wins lookup for every key.
+- ~LeanPoo/Object/Builder.lean~ provides a Lean-native expression layer over
+  those declarations. Its pure ~StateM~ programs compose with ~do~ notation;
+  ~buildOn~ supports reuse, and reduction theorems connect the builder to the
+  existing direct-value and inherited-method operations. A focused inherited
+  update lifts a monomorphic lens through the same delayed method form;
+  ~Builder.skew~ also lifts a general skew-focused open prototype into a C4
+  slot, with final-self view and delayed inherited input. This follows the
+  upstream separation between convenient expression and object semantics
+  without translating Scheme macro syntax into Lean.
+- ~LeanPoo/Prototype/SkewLens.lean~ implements the paper's distinction between
+  the context viewed by a lens and the extension it updates. Identity and
+  composition are proved associative. ~SkewLens.focus~ translates the paper's
+  ~skew-ext~ onto the existing open ~Proto~, with a proof that focusing through
+  composed lenses equals successive focusing. ~refocusUpdate~ narrows only
+  the update target; a getter/setter pair supplies the monomorphic special
+  case used by nested specification updates.
+- ~Object.Lens.specification~ is the paper's prototype-specification focus for
+  a validated C4 object. Its setter uses ~Memoized.reviseDeclaration~, which
+  rebuilds the target from the new specification. Lean proves equivalence of
+  lens modification with that revision and preservation of C4 precedence;
+  there is no target-only update that could leave an extensible prototype out
+  of sync with its specification.
+- ~Declaration.withoutSlot~ and ~withoutDefault~ implement the paper's
+  non-monotonic specification edits. ~Entry.erase~ preserves the order of all
+  other direct entries and removes every write at the chosen key; Lean proves
+  that the removed direct lookup is absent. ~Lens.directSlot~ and
+  ~Lens.directDefault~ compose with ~Lens.specification~ to focus on one
+  optional contribution. Removing a direct contribution leaves the full C4
+  ancestor graph intact, so inherited methods and defaults can become visible.
+- ~Object.Lens.mapError~ and ~modifyM~ make nested prototypes ordinary typed
+  slot values with independent C4 plans. Error mapping permits lenses from
+  independently defined layers to compose; a fallible inner extension must
+  succeed before the outer declaration is rebuilt. Identity/composition of
+  error mapping and its pure-update special case are proved in Lean.
 - ~LeanPoo/Object/Resolve.lean~ assembles defaults and lazy inherited methods
   in C4 order, following ~object.ss~. ~compile~ creates a reusable C4 plan;
   ~resolve_compiled~ proves it agrees with the one-shot entry point. The
@@ -99,9 +136,17 @@ The Lean modules are separated by semantic responsibility:
   ~compute-slot-funs!~. It uses the same ~SlotSpec.toMethod~ and
   ~Method.compose~ operations; ~CompiledMemo.lean~ checks representative
   behavior, including a C4 diamond. The forward-fold theorem proves the
-  composition order, and ~Entry.toMap_get?~ proves the local duplicate-slot
-  normalization used by the table builder. A general theorem about the
-  resulting cross-node hash table remains open. ~Plan.memoizeIndexed~ has a
+  composition order; ~Entry.foldMap_get?_lookup~ and
+  ~Declaration.compileLocalMethods_get?~ prove the local duplicate-slot
+  normalization as direct ordered writes. ~compileTablesFor_default_get?~,
+  ~compileTablesFor_method_getD~, and ~Plan.compiledTables_resolve~ prove
+  cross-node resolution for every key and open self.
+  ~Plan.compileEffective_get?_mem~ proves lookup for every materialized key.
+  ~Plan.compileMemo~ packages the table and proof as a reusable ~CompiledPlan~;
+  each ~CompiledPlan.instantiate~ allocates fresh lazy cells without rebuilding
+  effective methods. This applies the source's staging distinction to repeated
+  instances of one immutable topology and declaration set.
+  ~Plan.memoizeIndexed~ has a
   general resolver soundness theorem and a different performance profile.
   The executable object's ~ResolutionMode~ keeps the chosen method-building
   strategy through derived
@@ -181,11 +226,20 @@ The C4 rewrite follows these source operations:
 | ~c3_merge_t~ | ~merge~ |
 | ~cons_t<Node, prefix ++ tail>~ | final ~precedence~ |
 
-Lean evaluates the finite graph in dependency order instead of using C++
-template recursion. ~merge~ follows the C++ ancestor-counting update: count
+Lean evaluates the finite graph with bounded parent-first recursion and a
+table of completed results instead of C++ template recursion. Each reachable
+node's precedence is computed once; cycles exhaust the finite node-depth
+bound. ~merge~ follows the C++ ancestor-counting update: count
 candidate tails once and decrement counts when a selected head exposes a new
 head. ~Std.HashMap~ stores both those counts and completed precedence lists;
 ~Std.HashSet~ handles duplicate detection and order-preserving deduplication.
+The reachable subgraph is now discovered with a finite breadth-first queue
+bounded by the source edge count. A first-declaration node index avoids
+repeated name scans during discovery; validation still reports reachable
+duplicate declarations before unknown parent references. Merge results and
+parent results use reverse accumulation and reverse once at the boundary.
+~just benchmark-c4~ measures deep chains and wide fan-in graphs, while
+[[file:../Tests/C4Traversal.lean][C4Traversal.lean]] checks the reachable-error boundary.
 The integrated example executes both a suffix-tail graph and multiple local
 parent orders from C4-Mixins, as well as cycle and conflicting-order
 rejection.
@@ -252,16 +306,37 @@ with parent effects preceding child effects. ~Prototype.MutableProto~ provides
 that effect order over ~Object.Mutable~; its named slot constructor uses the
 same C4 plan and slot evaluator as the pure path. It reproduces the observable
 composition behavior without claiming the paper's in-place hash-table
-optimization. For private construction, standard declaration layers compose
-their plan transformations and instantiate only the final object. Arbitrary
+optimization. For private construction, standard declaration layers stage
+their schema transformations, validate C4 at most once for the final root, and
+instantiate only the final object. Each layer still rejects a duplicate name
+or a revision of an unknown node at the point where it is applied. Arbitrary
 effect layers retain sequential execution, as does direct application to a
 shared mutable identity.
+Section 9 separates a skew lens's viewed context from its extension update;
+~Prototype.SkewLens~ implements this higher-order shape and its composition,
+and ~SkewLens.focus~ lifts an open prototype by the paper's ~skew-ext~ rule,
+while ~Builder.focusInherited~ applies a composed field focus within a C4
+declaration and ~Builder.skew~ admits the general focus. This is a focused
+specification operation, not a new inheritance
+algorithm.
+For a retained prototype, ~Object.Lens.specification~ exposes its direct
+declaration while reconstructing a fresh target after a change, matching the
+paper's warning that target-only updates may desynchronize an extensible
+prototype from its specification.
+The nested-inheritance discussion also warns against dropping an ancestor
+solely because it has no direct contribution at a focus: that node may still
+constrain C4 order. Direct-slot removal here keeps every graph node and
+reuses the already validated precedence.
+Nested prototypes use the same first-class ~Memoized~ object at each level;
+the inner graph can gain an ancestor while the outer graph retains its own
+validated precedence. This follows the paper's separation of inner and outer
+inheritance structures without adding a second object evaluator.
 
 | Boundary in the paper | Current Lean behavior | Remaining connection |
 |-----------------------+-----------------------+----------------------|
 | Section 6.2 discusses caching after mutation. | ~Mutable~ installs a fresh validated plan and lazy instance after an edit. ~Cache.rebase~ and ~Proof.rebaseInstanceCache~ preserve proof-bearing cached values outside a proved value-change footprint. ~Scheduled.impact~ propagates changed roots through finite declared dependencies, checks closure, and ~Scheduled.rebaseCache~ reuses only proved-stable values; ~rebaseInstanceCacheByValue~ remains available when values have decidable equality. ~Proof.invalidatedNodes~ and ~Proof.pending~ report structural and obligation impact separately. | Executable ~Memoized~ thunks are still rebuilt after an edit. The checked incremental path applies to proof-bearing instances whose dependencies are declared and whose unchanged resolver bodies are proved equal at the old self. Arbitrary Lean callbacks cannot be inspected to derive that premise. |
 | Sections 1 and 4 use open recursive fixed points. | ~Plan.memoize~ executes them with a shared thunk table; ~Object.Instance~ states the fixed-point equation for proof-bearing clients. ~Object.Ranked.instantiate~ constructs that equation by well-founded recursion for ranked self dependencies. | A general executable ~Memoized~ cannot automatically supply that equation because its unsafe fixed point may diverge. ~CertifiedObject.applyPatch~ still requires a next instance and state-alignment proof; ranked plans can supply the instance when their locality condition holds. |
-| Section 8 and Appendix A discuss generalized prototypes, method combinations, and multiple dispatch as future work. | ~Prototype.lensGen~ implements the paper's sketched constructor; ~Object.Generic~ selects typed methods. | A universal method-combination or multiple-dispatch protocol is not part of the paper's completed core and is not implemented here. |
+| Section 9 develops generalized prototypes, user-defined method combinations, and multiple dispatch. | ~Prototype.lensGen~ implements the sketched constructor; ~QualifiedMethods~ and ~Multimethod.qualified~ group typed contributions selected by C4 tuple dispatch, while ~DispatchTable~ scopes ecosystem extensions. | The Lean API uses first-class functions and type families; it does not reproduce a dynamic host-language MOP. |
 
 The first two rows are integration boundaries for this project's incremental
 proof-reuse goal. They do not undo the implemented paper-model construction.
@@ -279,5 +354,27 @@ retaining. Declaration-only edits now reuse ~Plan.valid~ and its C4 order;
 ordered batches allocate a single new executable instance and install it only
 after every edit succeeds. Structural edits still recompile C4. This separates
 topology reuse from value-cache invalidation.
+Section 10's method-caching exercise suggests eight recently used generic
+shapes and four at a dynamic call site. ~ShapeCache~ now bounds the generic
+candidate and prepared effective-method caches to eight shapes; ~InlineDispatch~
+holds four proof-bearing call-site entries. Candidate predicates remain
+value-sensitive after either cache hit, and registration clears caches in
+the new immutable dispatch value.
 The paper's optional runtime descriptors and future method-combination
 mechanisms are not a conformance checklist for Lean's static type system.
+
+Section 10's suffix access now retains the introducing specification and its
+position in the least-specific-first suffix-ancestor vector. A fast read
+checks that ancestry position and the field offset; a foreign same-name field
+falls back to ordinary keyed reading.
+Section 10 also describes small per-site field-offset caches and a cache
+shared by sites reading the same field name. ~PolySlotAccessSite~ retains four
+offsets, while ~SharedSlotOffsets~ retains eight learned offsets per name.
+Local entries pair a layout fingerprint with an offset, and a hit allocates no
+updated cache. A fingerprint collision still checks the actual field. Local
+hits do not write the shared cache. Every speculative
+offset is checked against the current layout before a lazy cell is read; a
+miss falls back to ordinary keyed lookup and teaches both levels. The
+~read_sound~ theorem states equality with ordinary object reads, including
+after a layout change or an absent field. ~just benchmark-layout~ measures
+single-layout and alternating-layout access separately.

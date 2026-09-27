@@ -49,7 +49,7 @@ def Graph.validate (graph : Graph) : Except Error Unit := do
   for node in graph.nodes do
     for order in node.parentOrders do
       for parent in order do
-        if (graph.findNode? parent).isNone then
+        if !seen.contains parent then
           throw (.unknownNode parent)
 
 end LeanPoo.C4

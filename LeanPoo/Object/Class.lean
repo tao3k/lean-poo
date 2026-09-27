@@ -77,9 +77,14 @@ def ClassSpec.derive {Key : Type u} {Value : Key → Type v}
     (rules : List (SlotRule Key Value)) (sealed : Bool := parent.sealed) :
     ClassSpec Key Value :=
   { name
-    rules := parent.effectiveRules.filter (fun old =>
-      !rules.any (fun new => decide (old.key = new.key))) ++ rules
+    rules := parent.effectiveRules ++ rules
     sealed }
+
+/-- Field names retain their first declaration position even when a child
+replaces an inherited rule. -/
+def ClassSpec.fieldNames {Key : Type u} {Value : Key → Type v}
+    [DecidableEq Key] (classSpec : ClassSpec Key Value) : List Key :=
+  classSpec.effectiveRules.map (fun rule => rule.key)
 
 /-- A class layer is itself a delayed prototype for a class descriptor.
 `Prototype.Object` can retain and extend it after instantiation. -/

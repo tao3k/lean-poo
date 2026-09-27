@@ -6,7 +6,7 @@ import LeanPoo.Object.Class
 import LeanPoo.Prototype.Class
 import LeanPoo.Prototype.Types
 
-namespace LeanPoo.Examples.IntegratedPrototype
+namespace LeanPoo.Tests.IntegratedPrototype
 
 def emptySchema : Object.Schema String (fun _ => Nat) :=
   { graph := { nodes := [] }, declaration := fun _ => none }
@@ -393,4 +393,4 @@ def mutableRun : IO (Except C4.Error (Option Nat × Option Nat × Option Nat)) :
 #eval objectClassJsonRun
 #eval mutableRun
 
-end LeanPoo.Examples.IntegratedPrototype
+end LeanPoo.Tests.IntegratedPrototype

@@ -40,7 +40,7 @@ private def mergeStep (result : List String) (lists : List (List String))
     | [] => (reversed, newHeads)) ([], [])
   let updatedCounts := newHeads.foldl (fun counts name =>
     counts.insert name (counts.getD name 0 - 1)) counts
-  return (result ++ [next], reversed.reverse.filter (fun list => !list.isEmpty), updatedCounts)
+  return (next :: result, reversed.reverse.filter (fun list => !list.isEmpty), updatedCounts)
 
 /-- C3's ordered merge with C4-Mixins' incremental tail counts.
 Each successful step removes at least one candidate, so the sum of candidate
@@ -54,7 +54,7 @@ def merge (lists : List (List String)) : Except Error (List String) := do
     mergeStep result pending counts) initial
   let (result, pending, _) ← final
   if pending.all List.isEmpty then
-    return result
+    return result.reverse
   throw .inconsistentOrder
 
 end LeanPoo.C4

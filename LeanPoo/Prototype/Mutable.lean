@@ -8,12 +8,30 @@ mutable cell, while composition runs the parent before its child.
 
 namespace LeanPoo.Prototype
 
-/-- Private construction can retain its base or compose C4 plan edits before
-allocating the final executable object. -/
+/-- A declaration-only path retains its C4 witness. A structural extension
+stages the schema until the final root is ready for one C4 compilation. -/
+inductive PendingPlan (Key : Type) (Value : Key → Type) where
+  | valid (plan : Object.Plan Key Value)
+  | staged (schema : Object.Schema Key Value) (root : String)
+
+private def PendingPlan.schema : PendingPlan Key Value → Object.Schema Key Value
+  | .valid plan => plan.schema
+  | .staged schema _ => schema
+
+private def PendingPlan.root : PendingPlan Key Value → String
+  | .valid plan => plan.root
+  | .staged _ root => root
+
+private def PendingPlan.finish : PendingPlan Key Value →
+    Except C4.Error (Object.Plan Key Value)
+  | .valid plan => .ok plan
+  | .staged schema root => Object.compile schema root
+
+/-- Private construction composes pending edits before allocating an object. -/
 inductive PlanPath (Key : Type) (Value : Key → Type) where
   | identity
-  | edit (run : Object.Plan Key Value →
-      Except C4.Error (Object.Plan Key Value))
+  | edit (run : PendingPlan Key Value →
+      Except C4.Error (PendingPlan Key Value))
 
 private def PlanPath.compose (child parent : PlanPath Key Value) :
     PlanPath Key Value :=
@@ -21,8 +39,8 @@ private def PlanPath.compose (child parent : PlanPath Key Value) :
   | .identity, path => path
   | path, .identity => path
   | .edit childRun, .edit parentRun =>
-      .edit fun plan => do
-        let inherited ← parentRun plan
+      .edit fun pending => do
+        let inherited ← parentRun pending
         childRun inherited
 
 /-- An effectful prototype layer receives one mutable object identity.
@@ -31,8 +49,8 @@ same identity with their final self. -/
 structure MutableProto (Key : Type) (Value : Key → Type)
     [BEq Key] [LawfulBEq Key] [Hashable Key] where
   apply : Object.Mutable Key Value → IO (Except C4.Error Unit)
-  /-- Standard declaration layers can transform a private C4 plan before a
-  single executable instance is allocated. Arbitrary effects use `apply`. -/
+  /-- Standard layers stage a private schema and retain validated precedence
+  through declaration-only edits. Arbitrary effects use `apply`. -/
   plan? : Option (PlanPath Key Value) := none
 
 def MutableProto.identity {Key : Type} {Value : Key → Type}
@@ -64,8 +82,9 @@ def MutableProto.extend {Key : Type} {Value : Key → Type}
     (name : String) (declaration : Object.Declaration Key Value) :
     MutableProto Key Value :=
   { apply := fun object => object.extend name declaration
-    plan? := some <| .edit fun plan =>
-      LeanPoo.extend plan.schema name plan.root declaration }
+    plan? := some <| .edit fun pending => do
+      let next ← LeanPoo.extendSchema pending.schema name pending.root declaration
+      return .staged next name }
 
 /-- One named slot increment. `SlotSpec.computed` may request the inherited
 method, while `SlotSpec.self` reads the final composed object. -/
@@ -84,10 +103,14 @@ def MutableProto.revise {Key : Type} {Value : Key → Type}
     (update : Object.Declaration Key Value → Object.Declaration Key Value) :
     MutableProto Key Value :=
   { apply := fun object => object.reviseDeclaration name update
-    plan? := some <| .edit fun plan => plan.reviseDeclaration name update }
+    plan? := some <| .edit fun pending =>
+      match pending with
+      | .valid plan => (plan.reviseDeclaration name update).map .valid
+      | .staged schema root =>
+          (schema.reviseDeclaration name update).map (fun next => .staged next root) }
 
 /-- Build a private identity and return it only on success. Standard layers
-compile their plan before allocating one executable instance; arbitrary
+compile C4 only after the staged structure is complete; arbitrary
 effect layers run sequentially on a private cell. -/
 def MutableProto.instantiate {Key : Type} {Value : Key → Type}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -96,10 +119,13 @@ def MutableProto.instantiate {Key : Type} {Value : Key → Type}
     IO (Except C4.Error (Object.Mutable Key Value)) := do
   match prototype.plan? with
   | some .identity => return .ok (← Object.Mutable.new base)
-  | some (.edit compile) =>
-      match compile base.plan with
+  | some (.edit stage) =>
+      match stage (.valid base.plan) with
       | .error error => return .error error
-      | .ok final => return .ok (← Object.Mutable.new (base.rebuild final))
+      | .ok pending =>
+          match pending.finish with
+          | .error error => return .error error
+          | .ok final => return .ok (← Object.Mutable.new (base.rebuild final))
   | none =>
     let object ← Object.Mutable.new base
     match ← prototype.apply object with
@@ -113,11 +139,21 @@ def MutableProto.instantiateCompiled {Key : Type} {Value : Key → Type}
     (prototype : MutableProto Key Value)
     (base : Object.Memoized Key Value) :
     IO (Except C4.Error (Object.Mutable Key Value)) := do
-  match ← prototype.instantiate base with
-  | .error error => return .error error
-  | .ok object =>
-      let final ← object.snapshot
-      object.cell.set final.plan.memoizeCompiled
-      return .ok object
+  match prototype.plan? with
+  | some .identity => return .ok (← Object.Mutable.new base.plan.memoizeCompiled)
+  | some (.edit stage) =>
+      match stage (.valid base.plan) with
+      | .error error => return .error error
+      | .ok pending =>
+          match pending.finish with
+          | .error error => return .error error
+          | .ok final => return .ok (← Object.Mutable.new final.memoizeCompiled)
+  | none =>
+      match ← prototype.instantiate base with
+      | .error error => return .error error
+      | .ok object =>
+          let final ← object.snapshot
+          object.cell.set final.plan.memoizeCompiled
+          return .ok object
 
 end LeanPoo.Prototype

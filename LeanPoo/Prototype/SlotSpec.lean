@@ -60,4 +60,46 @@ def SlotSpec.toMethod (spec : SlotSpec Self α) : Method Self α :=
 def SlotSpec.modify (f : α → α) : SlotSpec Self α :=
   .computed (fun _ next => f (next ()))
 
+/-- The inherited instance method is selected by the class's C4 slot chain.
+The receiver is supplied only when the resulting method is called, so it may
+belong to a subclass of the class that contributed this specification. -/
+abbrev NextInstanceMethod (Receiver : Type u) (Result : Type v) :=
+  Receiver → Option Result
+
+/-- Focus an open class specification onto an instance method. The class
+`self` is deliberately unused; method dispatch uses the eventual receiver. -/
+def SlotSpec.instanceMethod {ClassSelf : Type} {Receiver : Type u}
+    {Result : Type v}
+    (body : NextInstanceMethod Receiver Result → Receiver → Result) :
+    SlotSpec ClassSelf (Option (Receiver → Result)) :=
+  .computed fun _ inherited =>
+    let parent := Thunk.mk inherited
+    some fun receiver =>
+      body (fun target => parent.get.map (fun method => method target)) receiver
+
+/-- A base method does not request an inherited method. -/
+def SlotSpec.baseInstanceMethod {ClassSelf : Type} {Receiver : Type u}
+    {Result : Type v} (body : Receiver → Result) :
+    SlotSpec ClassSelf (Option (Receiver → Result)) :=
+  .constant (some body)
+
+theorem SlotSpec.instanceMethod_eval {ClassSelf : Type}
+    {Receiver : Type u} {Result : Type v}
+    (body : NextInstanceMethod Receiver Result → Receiver → Result)
+    (self : ClassSelf)
+    (inherited : Next (Option (Receiver → Result)))
+    (receiver : Receiver) :
+    ((SlotSpec.instanceMethod body).eval self inherited).map
+        (fun method => method receiver) =
+      some (body (fun target => (Thunk.mk inherited).get.map
+        (fun method => method target)) receiver) := rfl
+
+theorem SlotSpec.baseInstanceMethod_eval {ClassSelf : Type}
+    {Receiver : Type u} {Result : Type v}
+    (body : Receiver → Result) (self : ClassSelf)
+    (inherited : Next (Option (Receiver → Result)))
+    (receiver : Receiver) :
+    ((SlotSpec.baseInstanceMethod body).eval self inherited).map
+      (fun method => method receiver) = some (body receiver) := rfl
+
 end LeanPoo.Prototype

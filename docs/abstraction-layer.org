@@ -14,7 +14,7 @@ an executable object-level reference; its layers are distinct:
 | ~object.ss~ | Slot specs, inheritance, instance evaluation, cache | ~LeanPoo.Prototype.SlotSpec~ and ~LeanPoo.Object~ |
 | ~mop.ss~ | Generic method selection and runtime type descriptors | Descriptor behavior is represented with Lean values; no dynamic MOP is copied. |
 | ~type.ss~ | Runtime type descriptors and conversions | Lean's dependent value families and native inductive types where object semantics need them |
-| ~brace.ss~ and ~object.ss~ macros | Convenient source syntax and lexical slot binding | Lean functions and indexed types express the semantics without copying Lisp syntax. |
+| ~brace.ss~ and ~object.ss~ macros | Convenient source syntax and lexical slot binding | A pure ~StateM~ builder, Lean ~do~, and indexed types express ordered declarations without copying Lisp syntax. |
 
 The C4 ordering algorithm is owned separately by [[https://github.com/fare/c4-mixins][C4-Mixins]] and the Gerbil
 runtime. Object syntax must consume that ordering rather than reimplement it.
@@ -36,6 +36,15 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    ~Method.compose~ owns that delayed inheritance chain; the object resolver
    folds C4 declarations with it instead of carrying a second composition
    implementation.
+   ~SlotSpec.instanceMethod~ focuses a class contribution onto an eventual
+   receiver. Its ~next~ argument calls the method accumulated from later C4
+   ancestors; the receiver need not have the class's own static type.
+   ~baseInstanceMethod~ supplies a method that never requests its parent.
+   A Lean ~Thunk~ shares the inherited effective method across calls while
+   keeping it unforced when the body never calls ~next~.
+   These are typed wrappers over the same slot evaluator, not a second method
+   dispatcher. [[file:../Tests/ClassInstanceMethods.lean][ClassInstanceMethods.lean]] composes a base area method with two
+   mixins in a diamond and calls the resulting method on the final receiver.
    ~Declaration.withSlot~ and ~Declaration.withDefault~ use one dependent
    ~Entry.lookup~ / ~Entry.replace~ pair for ordered typed values, without a
    dynamic property map or a parallel runtime type hierarchy.
@@ -59,19 +68,350 @@ case. Function-valued ~instantiate~ ties the open-recursive self explicitly.
    ~Prototype.Chain~ makes intermediate prototype types match at each link.
    These are the type-level parts relevant to POO composition. Serialization
    formats from ~type.ss~ are separate interoperability concerns, not the
-   foundation of LeanPoo's class model. [[file:../Examples/TypedSlots.lean][TypedSlots.lean]] shows the class-side
+   foundation of LeanPoo's class model. [[file:../Tests/TypedSlots.lean][TypedSlots.lean]] shows the class-side
    encoding using an inductive key and a dependent ~Value~ family.
 4. Gerbil ~defrules~, brace notation, and lexical slot identifiers normalize
-   source forms before evaluation. Lean notation is enough for simple
-   operations such as prototype composition; ~syntax~ and ~macro_rules~ are
-   appropriate for recurring compound forms. A custom elaborator is justified
-   only when the syntax needs type or local-context information. All syntax
-   must expand to the same definitions, without a second evaluator.
+   source forms before evaluation. Lean's native expression layer is the
+   public ~Declaration.Builder~: ~StateM~, ~do~ notation, dependent key/value
+   typing, and ordinary higher-order functions. ~build~ starts an empty
+   declaration; ~buildOn~ applies a reusable program to an existing one.
+   ~value~, ~default~, ~slot~, ~modifyInherited~, and ~edit~ invoke the existing
+   declaration operations. Lean proves that builder values and inherited
+   modifiers reduce to those same operations. The builder does not define
+   another object evaluator or duplicate the Gerbil macro grammar.
+   ~Prototype.SkewLens~ implements the paper's separate view and extension
+   focus as two typed functions. ~SkewLens.focus~ is the paper's ~skew-ext~:
+   it lifts an open ~Proto~ into a wider context. Identity, composition, and
+   agreement between composed and successive focusing are proved.
+   A monomorphic lens built from a getter and setter can focus an inherited
+   update on a nested field through ~Builder.focusInherited~. C4 assembles the
+   method; the inherited result remains delayed until the slot is read.
+   ~Builder.skew~ admits the full skew-lens form directly as a C4 slot method:
+   its view reads the final self, while its update receives the delayed
+   inherited value. Both paths use the existing ~SlotSpec.computed~ evaluator.
+   ~Object.Lens.specification~ focuses an existing prototype's direct
+   declaration. Its setter revises the retained specification and rebuilds a
+   fresh instance; it never changes only the already-instantiated target.
+   Lean proves that modifying this lens is the existing declaration revision
+   and that a successful change retains the validated C4 precedence.
+   ~Lens.directSlot~ and ~Lens.directDefault~ compose with the specification
+   lens. Setting their optional focus to ~none~ removes only the named direct
+   contribution; it does not prune the ancestor graph. Lean proves the direct
+   lookup is absent afterward, and C4 can reveal inherited contributions.
+   Nested prototypes can retain their own C4 plan as a typed outer slot value.
+   ~Lens.mapError~ lets independently typed inner and outer lenses compose;
+   ~Lens.modifyM~ propagates a failed inner extension before the outer
+   specification is revised. Lean proves error-map identity/composition and
+   agreement of fallible updates with the pure update path.
 5. C4 must remain explicit. Lean's built-in ~structure extends~ uses C3 field
    resolution when possible, so its inheritance mechanism is not the C4
    object semantics being translated here.
 
+* Class initialization
+
+POOF section 9 derives a base instance from a class's ordered field
+descriptors. In Lean, ~ClassLineage~ retains a typed ~ClassSpec~ and its
+validated C4 class prototype. ~root~ installs the first class;
+~extend~ installs only a child's direct rules and retains the inherited shape
+in the descriptor. ~construct~ supplies caller values as a final child of
+the class prototype, then validates all required fields and predicates.
+~ClassInstance~ retains the descriptor explicitly as the instance-to-class
+link; Lean does not need a magic runtime field for type lookup.
+
+~ClassSpec.fieldNames~ enumerates the descriptor's fields in first-declaration
+order. A child may replace an inherited rule without moving its name to the
+end; the same last-write-wins operation used for direct declarations chooses
+the child's rule. [[file:../Tests/ClassInitialization.lean][ClassInitialization.lean]] checks required width and height,
+inherited color and scale defaults, an area initializer reading final self,
+an inherited area extension, direct constructor overrides, C4 ancestry, and
+rejection of missing or invalid fields.
+
+* Method combinations
+
+The paper's standard method combination is represented by a typed
+~MethodCombination.Contribution~: ~primary~ and ~around~ receive a delayed
+~next~, while ~before~ and ~after~ cannot call it. Several contributions from
+one class can be installed through ~specifications~; C4 assembles them into
+most-specific-first groups. ~effective~ calls around methods outside the
+before/primary/after body, reverses the after group, and uses the caller's
+effect type for errors and state. [[file:../Tests/MethodCombination.lean][MethodCombination.lean]] checks a C4 diamond,
+including every observed call in the standard order.
+
+The paper's simple combination is a separate ~SimplePolicy~ with neutral
+value, first/step/finish operations, and a stop predicate. Its item methods
+have no ~next~ argument; around methods can still wrap the folded result.
+[[file:../Tests/SimpleMethodCombination.lean][SimpleMethodCombination.lean]] checks an ~and~ policy that stops after the
+first false result and retains the neutral value for an empty group. These
+functions interpret typed method groups produced by the same C4 slot chain;
+they do not add dynamic CLOS dispatch or a second inheritance algorithm.
+
+User-defined combinations can choose their own qualifiers and execution
+order. ~QualifiedMethods~ indexes each qualifier by a Lean family of method
+body types, so each phase receives exactly the capabilities it needs.
+~specifications~ inserts heterogeneous contributions into the existing C4
+slot chain and reuses the ordered dependent ~Entry~ store. A caller combines
+the resolved groups with an ordinary Lean function.
+[[file:../Tests/QualifiedMethodCombination.lean][QualifiedMethodCombination.lean]] uses separate normalization, authorization,
+and execution phases in a C4 diamond: normalization changes the request,
+authorization can reject it, and execution keeps a ~next~ chain. This is the
+paper's user-defined method-combination mechanism expressed through Lean's
+type families rather than a runtime qualifier map.
+~QualifiedMethods.prependAll~ is the shared ordered grouping operation for
+both C4 slot inheritance and multiple dispatch; its append law states how
+two contribution batches compose. ~Object.Multimethod.qualified~ passes the
+selected groups to a caller-defined interpreter. [[file:../Examples/QualifiedCombination.lean][QualifiedCombination.lean]] runs
+validation and rendering qualifiers over one two-axis call. [[file:../Tests/QualifiedCombination.lean][The focused contract]]
+checks multiple qualifiers at one tuple, registration invalidation, and
+value-dependent calls sharing a cached shape.
+
+The paper's Simula/BETA ~inner~ is a different combination policy over the
+same C4-selected methods. ~innerChain~ reverses the ordinary call chain so
+the least-specific method controls whether descendants run; omitting ~inner~
+stops them, as in BETA. ~simulaEffective~ models Simula's automatic final
+~inner~ by running prefixes least-specific-first and suffixes
+most-specific-first. These are typed policies in the core, and the
+~Multimethod.inner~ and ~Multimethod.simula~ constructors apply them to
+generic-owned method sets. [[file:../Tests/Chapter9Combination.lean][Chapter9Combination.lean]] checks both policies on one C4
+diamond, including an ancestor that stops the descendant chain.
+
+* Multiple dispatch
+
+The paper places multimethods on the generic function, indexed by tuples of
+argument prototypes. ~Object.Multimethod~ is a first-class Lean value with a
+fixed arity, an accepter that extracts each argument's C4 precedence, a
+combiner, a sparse tuple index, and an immutable candidate-sequence cache. A
+registration names one exact specialization tuple; a call visits indexed
+branches in lexicographic C4 order. The cache key is the complete tuple of
+precedence lists, so a changed class lineage cannot reuse an old sequence.
+Each argument order ends with the distinct ~Specializer.any~ value. This
+permits both universal defaults and partially specialized methods, such as
+"any left argument, right argument of class R1", without reserving a class
+name or asking every class hierarchy to inherit a common root.
+Registering or replacing a method returns a new generic with an empty cache;
+the previous value and its cache remain valid. Lean proves that a cache hit
+returns the stored sequence and that registration clears the cache.
+~registerWhen~ adds an equality or arbitrary predicate refinement to one
+specialization tuple. The cache stores candidate methods, not the result of
+evaluating their predicates; each call checks predicates against its current
+arguments. Thus calls with identical C4 lineages and different values cannot
+reuse a stale applicability decision. Lean proves this cached-call equation
+and that guarded registration also clears the cache.
+~register~ replaces contributions at one specialization tuple;
+~contribute~ prepends an unconditional contribution there, allowing several
+qualified methods to form one effective method. Both clear the new generic's
+candidate cache while leaving earlier immutable versions usable. The
+dispatch-table equivalents are ~contribute~ and ~contributeIn~.
+~InlineDispatch.contribute~ and ~PreparedMultimethod.contribute~ also clear
+their derived call-site or effective-method cache when a contribution is
+added. The previous immutable dispatch value remains valid.
+[[file:../Examples/ExtensibleDispatch.lean][ExtensibleDispatch.lean]] uses two separately constructed C4 lineages as one
+dispatch shape. A later plugin contributes both a pair-specific method and a
+value-guarded refinement, while the original table remains callable.
+
+[[file:../Tests/MultipleDispatch.lean][MultipleDispatch.lean]] combines a C4 diamond on the first argument with a
+second argument's lineage. It checks tuple ordering, a repeated call's cache,
+partially universal and fully universal methods, equality-style predicate
+refinement across a shared cache shape, method replacement, and fixed-arity
+rejection. The combiner reuses
+~MethodCombination.callChain~; multimethod selection does not add another
+method invocation protocol.
+
+~Object.Multimethod.standard~ and ~Object.Multimethod.simple~ connect the
+paper's accepter, combiner, and invoker without a user-written adapter for
+each generic function. The accepter extracts the C4 orders from a typed call
+record; the sparse index selects contributions; the combiner folds them in
+lexicographic order into the existing standard or simple method groups. The
+invoker passes the entire call record, including non-dispatch arguments, to
+each selected method. ~Tests/MultimethodCombination.lean~ checks both
+combination policies with two C4 arguments. Its standard call exercises
+around, before, primary, and after methods, while a predicate-specific
+before method is reevaluated across two calls sharing one cached C4 shape.
+
+~Object.Multimethod.forwardingStandard~ models the paper's optional updated
+arguments to ~next~ with a typed product of dispatch arguments and a payload.
+The caller captures the complete record before selecting methods. A method
+can pass ~none~ to retain its current payload or ~some updated~ to forward a
+new one. It cannot replace the dispatch half of the product, so the selected
+C4 method sequence stays valid for the rest of the call. The forwarding
+standard combiner retains around/before/primary/after order; an around method
+may update what the inner combination sees, while a primary method may update
+what later primary methods see. Candidate selection occurs once at call entry.
+The forwarding example checks both forms of ~next~, propagation of optional
+and list-valued fields, qualifier order, and reuse of one C4 shape cache for
+different payload values.
+
+* Subjective dispatch
+
+The paper's implicit subject is one more argument to lexicographic multiple
+dispatch. ~Object.Subjective.generic~ makes its position explicit: ~first~
+gives subject methods priority over methods specialized on explicit arguments;
+~last~ gives the explicit arguments priority. ~Object.Subjective.Scope~ uses
+Lean's ~ReaderT~ for the implicit subject and ~StateT~ for the generic's
+immutable candidate cache. ~withSubject~ rebinds the subject only inside a
+nested action, while cache changes remain available to later calls. There is
+no global dispatch table or mutable dynamic variable.
+[[file:../Tests/SubjectiveDispatch.lean][SubjectiveDispatch.lean]] constructs independent C4 subject and item
+lineages, shows both lexicographic orders, and checks that the outer subject
+returns after a nested scope while the two cached call shapes persist.
+
+* Dispatch ecosystems
+
+The paper also describes a dispatch table as a first-class extension scope.
+~Object.DispatchTable~ indexes heterogeneous generic functions by a dependent
+key: each key fixes its own argument, method, and result types. It reuses the
+generic's sparse C4 resolver and candidate cache. ~install~ assembles
+independently defined generics; ~register~ and ~registerWhen~ let another
+module contribute methods for already defined prototypes. A call returns a
+new table with only the selected generic's cache updated. ~Edit~ is a Lean
+~StateT~ computation over the whole table with ~Except~ errors, so several
+method declarations can form one coherent ecosystem extension without
+exposing a partially changed table on failure.
+[[file:../Tests/DispatchTable.lean][DispatchTable.lean]] defines two generics with different method and result
+types, adds methods for a separately defined C4 child in one extension,
+checks both resulting calls and per-generic cache invalidation, and exercises
+a rejected second declaration while the original table remains usable.
+The [[file:../Examples/ExtensibleDispatch.lean][plugin scenario]] is a smaller application-facing view of this extension
+workflow; its tuple specializers depend on both argument lineages.
+
+* Method dictionaries and dispatch stages
+
+The paper factors class method calls through one dictionary invocation and
+distinguishes where the dictionary is selected. ~Object.MethodDictionary~ is
+a Lean dependent function: each method key fixes its argument and result
+types. ~MethodDictionary.fromMemoized~ projects C4-resolved function-valued
+slots from the existing lazy object evaluator. ~DictionaryObject.callDynamic~
+uses the dictionary carried by the runtime value; ~callStatic~ uses a
+dictionary supplied by the caller's declared context. Both call the same
+~MethodDictionary.call~ operation. ~select~ makes the static stage explicit
+by returning the chosen Lean function; ~callSelected~ invokes that function
+without consulting a dictionary again. Lean proves its agreement with a
+static dictionary call and relates dynamic calls after replacement to the
+new dictionary; the example observes a changed dynamic result while the
+previously selected function keeps its result.
+~Generic.fromDictionary~ connects this typed dictionary selection to the
+existing generic invoker, with a reduction theorem for the common call rule.
+[[file:../Tests/MethodDictionary.lean][MethodDictionary.lean]] uses three C4 layers, an inherited method, a later
+override, two different method signatures, and a missing-method fallback.
+It shows a runtime child call, a base dictionary selected by the caller, and
+a preselected base method on the same receiver. This is an explicit Lean
+staging API; it does not claim automatic compiler devirtualization.
+The concise [[file:../Examples/MethodDictionary.lean][usage scenario]] shows the three call forms without test assertions.
+~just benchmark-method-dictionary~ checks equal results for dynamic and
+preselected reads. Local timing varied across samples, including a reversal
+in a 100,000-call run, so this benchmark establishes no general speedup.
+
+* Preselected dispatch
+
+The paper distinguishes dynamic dictionary lookup from method selection for
+a shape known in advance. ~Object.Multimethod.compile~ selects one complete
+C4 shape from the source generic's sparse index and returns an immutable,
+proof-bearing ~StaticDispatch~ snapshot. The snapshot carries its source
+generic, the selected candidates, and a proof that they agree. Its ~call~ entry
+requires a Lean proof that the new arguments have that same shape; it then
+performs no shape comparison or sparse-index traversal. ~callChecked~ makes
+the comparison at a dynamic boundary and reports the expected and actual
+shape on mismatch. Both entry points reevaluate value-sensitive predicates
+against the current arguments. A later method registration creates a new
+generic; it does not silently alter an already compiled snapshot.
+~StaticDispatch.call_sound~ proves that a same-shape compiled call agrees with
+uncached dispatch from that exact immutable generic. Compilation selects from
+the sparse index directly, so its certificate does not depend on a mutable or
+externally populated candidate cache.
+This is explicit preselection, not a claim that Lean's compiler automatically
+devirtualizes arbitrary calls.
+The [[file:../Examples/StaticMethodSelection.lean][usage scenario]] shows a stable preselected call alongside an independently
+extended generic.
+[[file:../Tests/StaticDispatch.lean][StaticDispatch.lean]] compares the preselected and dynamic results on a C4
+child, checks a predicate that becomes applicable for another value of the
+same shape, rejects a different C4 shape, and observes the separate result
+of a newly registered generic.
+
+* Paper section 9 execution map
+
+| Paper mechanism | Lean-native execution |
+|-----------------+-----------------------|
+| Standard, simple, and user-defined combinations | Typed contributions, policies, and dependent qualifier groups over one C4 order. |
+| Simula and BETA ~inner~ | Reversed C4 control chain and automatic prefix/suffix entry. |
+| Orthogonal protocols | Independent generic keys and retroactive method registration in ~DispatchTable~. |
+| Multiple dispatch and specializers | Generic-owned tuple index with C4 precedence, universal methods, and value predicates. |
+| Calling conventions | Typed complete call records and payload-forwarding ~next~. |
+| Subjective dispatch | Reader-scoped subject at the first or last dispatch position. |
+| Dispatch ecosystems | Pure dependent table with transactional extension and per-generic cache state. |
+| Dynamic versus preselected dispatch | Runtime generic call and proof-guarded shape-specific candidate snapshot. |
+| Dynamic versus static method dictionaries | Runtime object dictionary, caller-selected dictionary, and a preselected typed method. |
+| Per-call-site inline cache | Four recent proof-bearing candidate entries for the current immutable generic, with direct-index fallback. |
+
+These are executable variants of the paper's mechanisms. The preselected
+entry point requires an explicit shape witness and is not a claim of automatic
+compiler devirtualization. The paper's dynamic MOP and host-language syntax
+are not part of this Lean-native API.
+
 * Optimization boundary
+
+~PreparedMultimethod~ adds the paper's effective-method cache on top of the
+existing candidate-sequence cache. The candidate type distinguishes an
+unconditional declaration from a value-sensitive predicate. When every
+candidate for a C4 shape is unconditional, ~prepare~ builds the effective
+method once and ~invoke~ reuses it with each current argument. A shape with
+any guarded candidate still rechecks predicates and prepares only currently
+applicable methods for each call. Registration invalidates both caches in the
+new immutable version. ~Multimethod.preparedStandard~ supplies the standard
+method-combination policy without a second resolver. The shared C4 example
+checks reuse, guarded fallback, and replacement after invalidation.
+Both the generic candidate cache and prepared effective-method cache now use
+~ShapeCache~, an eight-entry persistent LRU of complete dispatch shapes.
+Hits refresh recency; a ninth distinct shape evicts the least recent entry.
+The sparse method index remains the semantic source when an evicted shape is
+called again. [[file:../Examples/BoundedDispatch.lean][BoundedDispatch.lean]] shows the caller-visible behavior, while
+[[file:../Tests/ShapeCache.lean][ShapeCache.lean]] checks recency, the capacity bound, cache eviction, and
+agreement with uncached selection across many shapes. This bounds retained
+shape entries in each current generic or prepared value; callers may still
+retain older immutable versions intentionally.
+~just benchmark-effective-methods~ compares repeated standard-method
+assembly with this prepared path and checks equal results. Its workload is
+configurable through ~LEANPOO_BENCH_CALLS~ and ~LEANPOO_BENCH_METHODS~. On
+Darwin arm64, two runs with 20,000 calls and 128 methods measured about
+4.0--4.1 seconds for repeated assembly and 3.3 seconds for preparation.
+At 32 methods the measured order varied, so this is an opt-in optimization,
+not an assumed speedup for every method set.
+
+~InlineDispatch~ adds the paper's four-entry LRU method-call-site cache beside the
+generic function's existing shared shape cache. ~Multimethod.candidatesFor~
+owns the sparse-index traversal used by both. An ~InlineEntry~ carries a Lean
+proof that its candidate sequence belongs to its exact immutable generic;
+the site checks the complete C4 shape before reusing it and refreshes that
+entry's recency. ~call_sound~ proves
+that cache hits and misses produce the same result as direct traversal, and
+~register_empty~ and ~registerWhen_empty~ prove that either kind of method
+registration starts a new site without entries. Value predicates are still
+checked on every call. [[file:../Tests/InlineDispatch.lean][InlineDispatch.lean]] checks two payloads under one C4 shape,
+a changed shape, four-entry eviction and recency, ordinary and guarded
+registration, and an arity failure.
+~just benchmark-inline-dispatch~ compares direct traversal, the generic's
+shared cache, and the call-site cache with equal-result checks. Timings depend
+on the shape distribution and are not a general dispatch-speed guarantee.
+
+Section 10 also separates object layout from method composition. ~Memoized.layout~
+places the C4 suffix tail's declared keys at the front of an array of the
+object's existing lazy cells. It records the suffix prefix length and a hash
+index for dynamic key lookup. ~SuffixField~ captures a checked position in
+that prefix and can be reused on a descendant layout; a changed shape is
+checked at that one position before the cell is read. ~SlotAccessSite~ is a
+one-entry inline cache for an ordinary field access. A miss learns the new
+offset, and an invalid or stale offset reads through the original object.
+The ~readAt_sound~, ~read_sound~, ~SuffixField.read_sound~, and
+~SlotAccessSite.read_sound~ theorems connect all four paths to
+~Memoized.read~. The layout stores Lean array positions and shares the
+existing thunks; it does not specify a raw-memory object ABI.
+[[file:../Tests/SuffixLayout.lean][SuffixLayout.lean]] checks a suffix chain with an unrelated parent, a new
+descendant suffix field, an inherited override, final-self recursion, fixed
+prefix positions, cache hits, shifted positions, and stale-offset fallback.
+~just benchmark-layout~ compares keyed, checked-offset, and one-entry-site
+reads over 64 fields, with effectful accumulation so each call is actually
+measured. Two local Darwin arm64 runs of 100,000 calls had equal checksums:
+keyed reads took about 120--122 ms, checked offsets about 92--93 ms, and
+access sites about 107 ms. These are workload-specific samples, not a
+general speedup claim.
 
 Gerbil-POO's ~object.ss~ keeps direct slot writes in a pending store until a
 snapshot is requested; it computes the precedence list and assembled slot
@@ -104,9 +444,9 @@ directly; adding Mathlib alone would not speed up those executable algorithms.
 2. Proof objects, patches, append, right-side override, reuse, pending
    obligation discharge, and rebinding a certified object to an overridden
    instance are implemented with Lean-checked definitions and theorems.
-3. Typed declaration builders and a scoped prototype-composition operator
-   reuse the current resolver; further syntax should expand to the same
-   constructors rather than define a second evaluator.
+3. The typed declaration builder and scoped prototype-composition operator
+   reuse the current resolver. The builder is a public Lean API in
+   ~LeanPoo/Object/Builder.lean~; the executable usage example is separate.
 4. Precedence computation, method assembly, and evaluated-value caching have
    separate representations, following ~object.ss~.
 5. Executable open recursion uses a shared thunk table and reuses

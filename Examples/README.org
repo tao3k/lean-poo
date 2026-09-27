@@ -1,0 +1,24 @@
+#+TITLE: LeanPoo usage examples
+
+These Lean files show how a caller constructs and uses LeanPoo values. Run a
+single scenario with ~lake env lean Examples/NAME.lean~, or run them all with
+~just check-example~. Their ~#eval~ output illustrates the API; precise
+behavioral assertions belong in [[file:../Tests/README.org][Tests]].
+
+| Scenario | What it shows |
+|----------+---------------|
+| [[file:MethodDictionary.lean][MethodDictionary]] | C4 inheritance, dynamic dispatch, a caller-selected dictionary, and a preselected method. |
+| [[file:ExtensibleDispatch.lean][ExtensibleDispatch]] | A plugin adds pair-specific and value-guarded methods to an existing two-axis generic. |
+| [[file:QualifiedCombination.lean][QualifiedCombination]] | A caller-defined interpreter groups typed qualifiers after two-axis dispatch. |
+| [[file:BoundedDispatch.lean][BoundedDispatch]] | Many runtime dispatch shapes retain eight recent candidate sequences and resolve evicted shapes again. |
+| [[file:SharedFieldAccess.lean][SharedFieldAccess]] | Two field readers share learned offsets across object layouts with different field positions. |
+| [[file:StaticMethodSelection.lean][StaticMethodSelection]] | Preselect a C4 method shape, reevaluate a value guard, and retain the old version after extension. |
+| [[file:ProofReuse.lean][ProofReuse]] | A quota patch preserves an independent certified identity obligation through the public reuse theorem. |
+| [[file:LiveRevision.lean][LiveRevision]] | A derived slot before and after a live declaration revision; the old snapshot remains readable. |
+| [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |
+| [[file:LayeredObject.lean][LayeredObject]] | Mix, extend, memoize, clone, and a diamond-shaped inheritance graph. |
+| [[file:FirstClassObject.lean][FirstClassObject]] | First-class prototype values and delayed construction. |
+| [[file:PrototypeCore.lean][PrototypeCore]] | Open-recursive prototype composition and delayed values. |
+
+The smaller files in this directory introduce one paper operation at a time.
+See [[file:../docs/usage.org][API usage]] for the corresponding library entry points.

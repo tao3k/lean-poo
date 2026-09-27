@@ -16,6 +16,18 @@ private def addNode (schema : Object.Schema Key Value) (node : C4.Node)
     declaration := fun query =>
       if query == node.name then some declaration else schema.declaration query }
 
+/-- Stage a single-parent layer without resolving C4 yet. This is safe for
+private construction: a fresh child of an existing parent cannot change the
+parent's precedence. The final root is still validated by `Object.compile`. -/
+def extendSchema (schema : Object.Schema Key Value) (name parent : String)
+    (declaration : Object.Declaration Key Value) :
+    Except C4.Error (Object.Schema Key Value) := do
+  if (schema.graph.findNode? name).isSome then
+    throw (.duplicateNode name)
+  if (schema.graph.findNode? parent).isNone then
+    throw (.unknownNode parent)
+  return addNode schema { name, parentOrders := [[parent]] } declaration
+
 /-- Build an object from the complete C4 node metadata. -/
 def mixC4 (schema : Object.Schema Key Value) (node : C4.Node)
     (declaration : Object.Declaration Key Value) :

@@ -31,9 +31,25 @@ private def sample (mode : Object.ResolutionMode) (dense : Bool) (rounds count :
     | .indexed => "indexed"
   IO.println s!"mode={modeName} dense={dense} keys={count} rounds={rounds} elapsed_us={elapsedUs} checksum={checksum}"
 
+private def sampleReused (dense : Bool) (rounds count : Nat)
+    (source : Object.Plan Nat (fun _ => Nat)) : IO Unit := do
+  let compiled := source.compileMemo
+  let started ← IO.monoNanosNow
+  let mut checksum := 0
+  for _ in [:rounds] do
+    let object := compiled.instantiate
+    if dense then
+      for key in [:count] do
+        checksum := checksum + (object.read key).getD 0
+    else
+      checksum := checksum + (object.read (count - 1)).getD 0
+  let elapsedUs := ((← IO.monoNanosNow) - started) / 1000
+  IO.println s!"mode=compiledReused dense={dense} keys={count} rounds={rounds} elapsed_us={elapsedUs} checksum={checksum}"
+
 def main : IO Unit := do
   let .ok source := plan 256 | throw (IO.userError "C4 plan failed")
   for dense in [false, true] do
     for mode in [Object.ResolutionMode.onDemand,
         .compiled, .indexed] do
       sample mode dense 10 256 source
+    sampleReused dense 10 256 source

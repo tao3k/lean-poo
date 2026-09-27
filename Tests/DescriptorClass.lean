@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.Class
 
-namespace LeanPoo.Examples.DescriptorClass
+namespace LeanPoo.Tests.DescriptorClass
 
 open LeanPoo.Prototype
 
@@ -28,4 +28,4 @@ unsafe def positiveEvenNumbers : Prototype.Object (Descriptor Nat) (Descriptor N
   positiveEvenNumbers.value.accepts 0,
   (positiveEvenNumbers.value.listOf).accepts [2, 4])
 
-end LeanPoo.Examples.DescriptorClass
+end LeanPoo.Tests.DescriptorClass
