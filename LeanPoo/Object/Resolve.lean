@@ -17,6 +17,14 @@ structure Plan (Key : Type u) (Value : Key → Type v) where
   precedence : List String
   valid : C4.linearize schema.graph root = .ok precedence
 
+/-- The editable part of one prototype identity: its direct methods and
+the C4 metadata that positions them in the object. The name is fixed by the
+focus, so a specification edit cannot silently rename another prototype. -/
+structure Specification (Key : Type u) (Value : Key → Type v) where
+  declaration : Declaration Key Value
+  parentOrders : List (List String)
+  suffix : Bool
+
 /-- The required-lookup boundary corresponding to object.ss .ref. -/
 inductive LookupError (Key : Type u) where
   | noApplicableMethod (key : Key)
@@ -51,6 +59,28 @@ def Plan.reviseDeclaration (plan : Plan Key Value) (name : String)
           rw [sameGraph]
           exact plan.valid
       }
+
+/-- Revise a complete prototype specification. A direct-method-only edit
+reuses the certified precedence; a parent or suffix edit is recompiled by C4.
+The original plan remains available when recompilation fails. -/
+def Plan.reviseSpecification (plan : Plan Key Value) (name : String)
+    (specification : Specification Key Value) :
+    Except C4.Error (Plan Key Value) := do
+  let some node := plan.schema.graph.findNode? name |
+    throw (.unknownNode name)
+  if node.parentOrders == specification.parentOrders &&
+      node.suffix == specification.suffix then
+    plan.reviseDeclaration name (fun _ => specification.declaration)
+  else
+    let revised ← plan.schema.reviseDeclaration name
+      (fun _ => specification.declaration)
+    let nodes := revised.graph.nodes.map fun current =>
+      if current.name == name then
+        { current with
+          parentOrders := specification.parentOrders
+          suffix := specification.suffix }
+      else current
+    compile { revised with graph := { nodes } } plan.root
 
 /-- Apply ordered declaration edits to one plan. Every intermediate edit
 retains the same validated topology; callers instantiate only the final plan. -/

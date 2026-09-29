@@ -86,6 +86,31 @@ def Lens.specification {Key : Type u} {Value : Key → Type v}
     set := fun declaration object =>
       object.reviseDeclaration name (fun _ => declaration) }
 
+/-- Focus the paper's complete prototype specification: direct methods,
+parent orders, and suffix policy. A topology edit is checked by C4 before a
+new instance is returned; an unchanged topology keeps the compiled order. -/
+def Lens.prototypeSpecification {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] (name : String) :
+    Lens (Memoized Key Value) (Specification Key Value) C4.Error :=
+  { get := fun object =>
+      match object.plan.schema.graph.findNode? name with
+      | none => .error (.unknownNode name)
+      | some node => .ok {
+          declaration := (object.plan.schema.declaration name).getD
+            Declaration.empty
+          parentOrders := node.parentOrders
+          suffix := node.suffix }
+    set := fun specification object =>
+      object.reviseSpecification name specification }
+
+theorem Lens.prototypeSpecification_set {Key : Type u}
+    {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (name : String) (specification : Specification Key Value)
+    (object : Memoized Key Value) :
+    (Lens.prototypeSpecification name).set specification object =
+      object.reviseSpecification name specification := rfl
+
 theorem Lens.specification_set {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (name : String) (declaration : Declaration Key Value)

@@ -454,6 +454,16 @@ def Memoized.reviseDeclaration {Key : Type u} {Value : Key → Type v}
   let plan ← memoized.plan.reviseDeclaration name update
   return memoized.rebuild plan
 
+/-- Rebuild one complete prototype specification using the C4 plan's
+topology-aware revision path and the receiver's resolution mode. -/
+def Memoized.reviseSpecification {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (memoized : Memoized Key Value) (name : String)
+    (specification : Specification Key Value) :
+    Except C4.Error (Memoized Key Value) := do
+  let plan ← memoized.plan.reviseSpecification name specification
+  return memoized.rebuild plan
+
 /-- Ordered declaration edits share the old C4 order and create just one
 fresh lazy instance after all edits have succeeded. -/
 def Memoized.reviseDeclarations {Key : Type u} {Value : Key → Type v}

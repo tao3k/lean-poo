@@ -301,8 +301,9 @@ inductive SchemaMergeError where
 not overlap. Existing names remain owned by the schema that declared them. -/
 def Schema.mergeDisjoint (left right : Schema Key Value) :
     Except SchemaMergeError (Schema Key Value) :=
-  match right.graph.nodes.find? (fun node =>
-    (left.graph.findNode? node.name).isSome) with
+  let leftNames : Std.HashSet String :=
+    left.graph.nodes.foldl (fun names node => names.insert node.name) {}
+  match right.graph.nodes.find? (fun node => leftNames.contains node.name) with
   | some duplicate => .error (.duplicateNode duplicate.name)
   | none => .ok {
       graph := { nodes := left.graph.nodes ++ right.graph.nodes }
