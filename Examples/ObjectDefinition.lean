@@ -31,10 +31,10 @@ def run : Except String (Option Nat × Option Nat × Option Nat × Nat) := do
   let child ← (root.extendWith "Child" do
     Object.Declaration.Builder.value .base 5).mapError
       (fun _ => "invalid extension")
-  let sibling ← (Object.defineIn child.plan.schema "Sibling" ["Base"] do
+  let sibling ← (child.defineWith "Sibling" ["Base"] do
     Object.Declaration.Builder.modifyInherited .total
       (Option.map (· + 10))).mapError (fun _ => "invalid sibling")
-  let diamond ← (Object.defineIn sibling.plan.schema "Diamond"
+  let diamond ← (sibling.defineWith "Diamond"
       ["Child", "Sibling"] do pure ()).mapError
         (fun _ => "invalid diamond")
   let method ← (diamond.ref .apply).mapError (fun _ => "missing method")
