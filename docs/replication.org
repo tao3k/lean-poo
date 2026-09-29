@@ -272,6 +272,11 @@ context refinement agrees with precomposing the extension's context input.
 surrounding value. It projects an updated broad value back to the original
 focus; changes outside that focus do not accumulate across applications, as
 the paper cautions. This is a functional optic, not a mutable pointer.
+The section's broader "is-a" focused specification is presented as a possible
+generalization, with input/output prototypes and possible type constraints,
+without a specified constructor or evaluation rule. The typed skew lens and
+complete prototype-specification lens cover the executable constructions
+described here; they do not claim a canonical implementation of that sketch.
 
 * Complete prototype specification focus
 
@@ -327,16 +332,16 @@ overlapping prototype identities, and a missing outer contribution is reported
 instead of silently discarding the extra bases.
 ~Schema.mergeDisjointMany~ shares a single name index across those families
 and the ordinary first-class ~mixMany~ path. It retains node declaration order,
-reports the first repeated identity, and defers each original declaration
-function until its node is requested.
+reports the first cross-family repeated identity, and defers each original
+declaration function until its node is requested. Duplicate names within one
+family remain C4 graph-validation errors, as in repeated pairwise merging.
 
 The general construction in the paper is broader: contributions may be
-computed by arbitrary outer slot bodies, and independent inner DAGs may be
-assembled from arbitrary outer slot bodies. LeanPoo does not inspect Lean
-functions to discover contributions or infer a merge of overlapping inner
-families. Callers explicitly supply layers and use disjoint identities for
-independent bases. This remains a paper-level boundary beyond the current
-derived topology.
+computed by arbitrary outer slot bodies, and independent inner DAGs may share
+prototype identities. LeanPoo does not inspect Lean functions to discover
+contributions or infer a merge of overlapping inner families. Callers
+explicitly supply layers and use disjoint identities for independent bases.
+This remains a paper-level boundary beyond the current derived topology.
 
 * Fixed-point boundary in Lean
 

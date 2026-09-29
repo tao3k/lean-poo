@@ -109,6 +109,30 @@ private def mergedSchemaLookup : Except Object.SchemaMergeError Bool := do
   | .ok true => true
   | _ => false
 
+/-- Pairwise merging checks collisions between families; an invalid duplicate
+inside one family is still diagnosed by C4 graph validation. -/
+private def mergedInvalidFamilyBoundary : Bool := Id.run do
+  let empty : Object.Schema Key Value :=
+    { graph := { nodes := [] }, declaration := fun _ => none }
+  let duplicate : Object.Schema Key Value :=
+    { graph := { nodes := [{ name := "Same" }, { name := "Same" }] }
+      declaration := fun _ => none }
+  let firstOnly := match duplicate.mergeDisjointMany [] with
+    | .ok schema => schema.graph.nodes.length == 2
+    | _ => false
+  let laterOnly := match empty.mergeDisjointMany [duplicate] with
+    | .ok schema => schema.graph.nodes.length == 2
+    | _ => false
+  let firstCross := match duplicate.mergeDisjointMany [duplicate] with
+    | .error (.duplicateNode "Same") => true
+    | _ => false
+  return firstOnly && laterOnly && firstCross &&
+    (match Object.compile duplicate "Same" with
+     | .error (.duplicateNode "Same") => true
+     | _ => false)
+
+#guard mergedInvalidFamilyBoundary
+
 private def nodeMetadata : Except C4.Error (List String × Option Nat × Bool) := do
   let root ← Object.define (Key := Key) (Value := Value) "Object" do
     Object.Declaration.Builder.default .source 1
