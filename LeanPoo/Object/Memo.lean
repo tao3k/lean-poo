@@ -383,18 +383,30 @@ inductive CombineError where
   | c4 (error : C4.Error)
   deriving Repr
 
-/-- Mix two independently constructed executable objects. Their prototype
-graphs must have disjoint node names; the new C4 plan sees both roots. The
-left receiver supplies the method-building strategy. -/
+/-- Mix first-class executable objects from disjoint C4 families. Their
+prototype graphs must have disjoint node names. The receiver comes first in
+the parent order and supplies the method-building strategy. -/
+def Memoized.mixMany {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (first : Memoized Key Value) (others : List (Memoized Key Value))
+    (name : String)
+    (declaration : Declaration Key Value) :
+    Except CombineError (Memoized Key Value) := do
+  let schema ← others.foldlM (fun schema other =>
+    (schema.mergeDisjoint other.plan.schema).mapError .schema) first.plan.schema
+  let parents := first.plan.root :: others.map (·.plan.root)
+  let plan ← (LeanPoo.mix schema name parents
+    declaration).mapError .c4
+  return first.rebuild plan
+
+/-- Mix two independently constructed executable objects. The left receiver
+supplies the method-building strategy. -/
 def Memoized.mixWith {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (left right : Memoized Key Value) (name : String)
     (declaration : Declaration Key Value) :
-    Except CombineError (Memoized Key Value) := do
-  let schema ← (left.plan.schema.mergeDisjoint right.plan.schema).mapError .schema
-  let plan ← (LeanPoo.mix schema name [left.plan.root, right.plan.root]
-    declaration).mapError .c4
-  return left.rebuild plan
+    Except CombineError (Memoized Key Value) :=
+  left.mixMany [right] name declaration
 
 /-- Apply an existing override object to this executable base. -/
 def Memoized.plus {Key : Type u} {Value : Key → Type v}
@@ -404,6 +416,23 @@ def Memoized.plus {Key : Type u} {Value : Key → Type v}
   let plan : Plan Key Value ←
     LeanPoo.plus memoized.plan.schema name memoized.plan.root overrideName
   return memoized.rebuild plan
+
+inductive PlusWithError where
+  | schema (error : SchemaMergeError)
+  | composition (error : LeanPoo.CompositionError)
+  deriving Repr
+
+/-- Apply an independent first-class override object using Gerbil's `.+`
+topology: copy its direct declaration and place its parents before the base.
+The two object families must have disjoint node names. -/
+def Memoized.plusWith {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (base override : Memoized Key Value) (name : String) :
+    Except PlusWithError (Memoized Key Value) := do
+  let schema ← (base.plan.schema.mergeDisjoint override.plan.schema).mapError .schema
+  let plan ← (LeanPoo.plus schema name base.plan.root override.plan.root).mapError
+    .composition
+  return base.rebuild plan
 
 /-- Clone this object's direct declaration and replace selected values. -/
 def Memoized.clone {Key : Type u} {Value : Key → Type v}

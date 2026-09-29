@@ -28,16 +28,27 @@ retaining its resolution mode. ~Object.defineIn schema name parents~ supports
 callers that own a schema directly. All four use the existing compiler and
 slot evaluator. See [[file:../Examples/ObjectDefinition.lean][ObjectDefinition.lean]] for a typed C4 diamond.
 
+For independent object families, ~first.defineFrom name [second, third] do ...~
+accepts first-class parent objects and merges their disjoint C4 graphs. The
+receiver supplies the resolution mode. A repeated node name is reported as a
+schema collision; shared ancestry belongs in ~defineWith~ on one family
+snapshot. This distinction avoids silently choosing between different
+declarations for a colliding ancestor.
+
+~first.mixMany [second, third] name declaration~ exposes the same first-class
+parent composition when the declaration is already built. ~mixWith~ remains
+its two-object form.
+
 | Gerbil-POO form | Lean expression |
 |-----------------+-----------------|
-| ~.o~ and ~.def~ | ~Object.define~, ~Memoized.defineWith~, ~Object.defineIn~, or ~Memoized.extendWith~ inside an ordinary Lean ~def~; ~Declaration.build~ creates reusable direct specifications. |
+| ~.o~ and ~.def~ | ~Object.define~, ~Memoized.defineWith~, ~Memoized.defineFrom~, ~Object.defineIn~, or ~Memoized.extendWith~ inside an ordinary Lean ~def~; ~Declaration.build~ creates reusable direct specifications. |
 | Constant slot, lexical value, and default | ~Declaration.Builder.value~ with a Lean value or lexical variable; ~default~ supplies the inherited base. |
 | ~=>~ inherited modifier | ~Declaration.Builder.modifyInherited~; the inherited computation is forced only when this slot is read. |
 | Conditional inherited call | ~slot key (.computed fun self inherited => ...)~; invoke ~inherited ()~ only in the branch that needs it. |
 | Final-self slot | ~slot key (.self ...)~; the typed ~self~ lookup remains lazy. |
 | ~.ref~ and ~.get~ | ~Memoized.read~ returns ~Option~; ~Memoized.ref~ reports an absent slot. Nested reads use ~Option.bind~. |
 | ~.call~ | Read a function-valued slot and apply the resulting Lean function. |
-| ~.mix~, ~.extend~, ~.+~ | ~Memoized.mix~ / ~mixWith~, ~extend~ / ~extendWith~, and ~plus~. |
+| ~.mix~, ~.extend~, ~.+~ | ~Memoized.mix~ / ~mixMany~ / ~mixWith~, ~extend~ / ~extendWith~, and ~plus~ / ~plusWith~. |
 
 Gerbil's ~.put!~ mutates only an instance, while ~.putslot!~ changes its
 prototype. LeanPoo's persistent ~reviseSlot~ / ~reviseDefault~ and mutable
@@ -46,11 +57,14 @@ promise Gerbil's instance-only mutation behavior. Lean's closed ~structure~
 and field notation remain preferable when no runtime C4 extension is needed.
 
 Gerbil's ~=>.+~ combines objects stored *inside a slot*. It is distinct from
-adding a direct C4 parent to the outer object. The typed builder can express
-such a computation through ~slot key (.computed ...)~ when the slot's value
-type provides a nested composition operation, but there is no generic
-~=>.+~ helper or uniform way to discard a nested composition error. The
-caller must choose how that error is represented in its value type.
+adding a direct C4 parent to the outer object. Use ~slot key (.computed ...)~
+to defer the nested operation, then call ~inner.plusWith override name~ on
+the inherited object. ~plusWith~ uses the existing ~.+~ topology after
+joining two disjoint object families. The slot's Lean value type can contain
+~Except PlusWithError~ so a nested composition failure stays observable.
+[[file:../Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] shows this pattern. A shared-ancestry
+nested override still requires one common family snapshot and ~plus~; there
+is no generic syntax macro for ~=>.+~.
 
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
@@ -91,7 +105,7 @@ does not require an ~Inhabited~ result type.
 | Operation | Role |
 |-----------+------|
 | ~Object.Declaration.empty~ | Start a typed declaration. |
-| ~Object.define~ / ~Object.defineIn~ / ~Memoized.defineWith~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, multiple-parent, or child definitions. |
+| ~Object.define~ / ~Object.defineIn~ / ~Memoized.defineWith~ / ~Memoized.defineFrom~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, same-family, independent-family, or child definitions. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |

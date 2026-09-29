@@ -60,4 +60,28 @@ private def resolutionModeScenario : Except C4.Error Bool := do
   | .ok true => true
   | _ => false
 
+private def independentParents : Except Object.CombineError
+    (List String × Option Nat × Option Nat × Bool × Bool) := do
+  let source ← (Object.define (Key := Key) (Value := Value) "Source" do
+    Object.Declaration.Builder.value .source 2).mapError .c4
+  let increment ← (Object.define (Key := Key) (Value := Value) "Increment" do
+    Object.Declaration.Builder.modifyInherited .derived
+      (Option.map (· + 10))).mapError .c4
+  let seed ← (Object.define (Key := Key) (Value := Value) "Seed" do
+    Object.Declaration.Builder.default .derived 4).mapError .c4
+  let indexed := source.plan.memoizeIndexed
+  let combined ← indexed.defineFrom "Combined" [increment, seed] do
+    pure ()
+  let rejectsSharedFamily := match indexed.defineFrom "Repeated" [indexed] do
+      pure () with
+    | .error (.schema (.duplicateNode "Source")) => true
+    | _ => false
+  return (combined.plan.precedence, combined.read .source,
+    combined.read .derived, combined.mode == .indexed, rejectsSharedFamily)
+
+#guard match independentParents with
+  | .ok (["Combined", "Source", "Increment", "Seed"],
+      some 2, some 14, true, true) => true
+  | _ => false
+
 end LeanPoo.Tests.ObjectDefinition

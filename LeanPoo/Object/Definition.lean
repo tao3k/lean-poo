@@ -42,6 +42,16 @@ def Memoized.defineWith {Key : Type u} {Value : Key → Type v}
     (Declaration.build program)
   return receiver.rebuild plan
 
+/-- Define an object whose direct parents are first-class objects from
+disjoint C4 families. The receiver's resolution mode is retained. -/
+def Memoized.defineFrom {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (first : Memoized Key Value) (name : String)
+    (others : List (Memoized Key Value))
+    (program : Declaration.Builder Key Value PUnit) :
+    Except CombineError (Memoized Key Value) :=
+  first.mixMany others name (Declaration.build program)
+
 /-- Define a child object with an open direct specification. The source
 object and its existing lazy cells stay unchanged; the child gets a fresh
 instance with final-self reads and inherited computations. -/

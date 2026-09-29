@@ -42,4 +42,21 @@ def run : Except String (Option Nat × Option Nat × Option Nat × Nat) := do
 
 #eval run
 
+/-- Independent prototype values can be direct parents of one new object. -/
+def combineIndependent : Except String (List String × Option Nat) := do
+  let source ← (Object.define (Key := Key) (Value := Value) "Source" do
+    Object.Declaration.Builder.value .base 2).mapError
+      (fun _ => "invalid source")
+  let increment ← (Object.define (Key := Key) (Value := Value) "Increment" do
+    Object.Declaration.Builder.modifyInherited .total
+      (Option.map (· + 10))).mapError (fun _ => "invalid increment")
+  let seed ← (Object.define (Key := Key) (Value := Value) "Seed" do
+    Object.Declaration.Builder.default .total 4).mapError
+      (fun _ => "invalid seed")
+  let composed ← (source.defineFrom "Combined" [increment, seed] do
+    pure ()).mapError (fun _ => "invalid composition")
+  return (composed.plan.precedence, composed.read .total)
+
+#eval combineIndependent
+
 end LeanPoo.Examples.ObjectDefinition
