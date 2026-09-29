@@ -30,6 +30,7 @@ macros are not design requirements for Lean.
 | Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
 | Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; standard private layers stage schema edits, resolve C4 at most once, and instantiate the final object once, while arbitrary effects fall back to sequential execution. |
 | Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
+| Skew focus | ~Prototype.SkewLens~ | Refine the extension focus or its readable context independently; broaden a focus using a fixed context. |
 | Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
 | Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
 | Typed lens | ~Object.Lens~ | Get, set, modify, and compose typed views; specification edits rebuild a fresh object and recompile C4 only when topology changes. |
@@ -260,6 +261,17 @@ generalized prototype constructor is a sketch; a complete account is left
 for future work. ~Prototype.lensGen~ implements that constructor as a normal
 delayed prototype. It introduces neither Lisp-style declaration syntax nor
 a separate object evaluator or runtime MOP.
+
+* Context and extension focus
+
+POOF section 9 separates the context an extension may read from the value it
+updates. ~SkewLens.refocusUpdate~ changes the latter; ~viewOnly~ and
+~refocusView~ now change only the former. ~refocusView_focus~ states that
+context refinement agrees with precomposing the extension's context input.
+~MonoLens.reverseAt~ implements the paper's reverse focus with a fixed
+surrounding value. It projects an updated broad value back to the original
+focus; changes outside that focus do not accumulate across applications, as
+the paper cautions. This is a functional optic, not a mutable pointer.
 
 * Complete prototype specification focus
 

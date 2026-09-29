@@ -84,6 +84,31 @@ private def independentParents : Except Object.CombineError
       some 2, some 14, true, true) => true
   | _ => false
 
+/-- The indexed multi-family merge keeps the public declaration lookup
+behavior of repeated pairwise merging, including names outside the graph. -/
+private def mergedSchemaLookup : Except Object.SchemaMergeError Bool := do
+  let family (node : String) (value : Nat) : Object.Schema Key Value :=
+    { graph := { nodes := [{ name := node }] }
+      declaration := fun query =>
+        if query == node || query == "Unowned" then
+          some (Object.Declaration.empty.withDefault .source value)
+        else none }
+  let first := family "First" 1
+  let others := [family "Second" 2, family "Third" 3]
+  let repeated ← others.foldlM Object.Schema.mergeDisjoint first
+  let indexed ← first.mergeDisjointMany others
+  let read (schema : Object.Schema Key Value) (name : String) :=
+    (schema.declaration name).bind (·.default .source)
+  return indexed.graph.nodes.map (·.name) ==
+      repeated.graph.nodes.map (·.name) &&
+    ["First", "Second", "Third", "Unowned"].all
+      (fun name => read indexed name == read repeated name) &&
+    read indexed "Unowned" == some 3
+
+#guard match mergedSchemaLookup with
+  | .ok true => true
+  | _ => false
+
 private def nodeMetadata : Except C4.Error (List String × Option Nat × Bool) := do
   let root ← Object.define (Key := Key) (Value := Value) "Object" do
     Object.Declaration.Builder.default .source 1

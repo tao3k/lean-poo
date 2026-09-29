@@ -51,6 +51,38 @@ private def inherited : Config :=
   { inherited with enabled := true } ==
     { quota := { retries := 2, burst := 8 }, enabled := true }
 
+/-- Reading a narrower context leaves the quota update unchanged. -/
+def weightedFocus : Prototype.SkewLens Quota Nat Quota Config Config Config :=
+  context.refocusView (fun enabled => if enabled then 2 else 0)
+
+def weightedExtension : Prototype.Proto Nat Quota Quota :=
+  fun weight previous => { previous with retries := previous.retries + weight }
+
+#guard (weightedFocus.focus weightedExtension)
+    { inherited with enabled := true } inherited ==
+      { inherited with quota := { retries := 4, burst := 8 } }
+
+#guard (weightedFocus.focus weightedExtension)
+    { inherited with enabled := false } inherited == inherited
+
+/-- Reverse focus restores a fixed surrounding value. An update outside the
+quota is projected away, while an update to the quota remains observable. -/
+def quotaLens : Prototype.MonoLens Config Quota :=
+  .ofGetSet Config.quota (fun quota config => { config with quota })
+
+def reverseQuota : Prototype.MonoLens Quota Config :=
+  quotaLens.reverseAt { inherited with enabled := true }
+
+#guard reverseQuota.view { retries := 3, burst := 8 } ==
+  { quota := { retries := 3, burst := 8 }, enabled := true }
+
+#guard reverseQuota.modify (fun config => { config with enabled := false })
+    inherited.quota == inherited.quota
+
+#guard reverseQuota.modify (fun config =>
+    { config with quota := { config.quota with retries := 9 } })
+    inherited.quota == { retries := 9, burst := 8 }
+
 /-- The same skew extension shape can be installed as a C4 slot method. -/
 inductive Key where
   | enabled
