@@ -5,5 +5,8 @@ layout lookup, revision, memoization, and mutable composition. Run a named
 ~just benchmark-*~ recipe; these measurements are separate from the project
 test gate. They do not establish a general performance guarantee.
 
+~just benchmark-strict-definition~ compares ordered replacement construction
+with duplicate-checked construction on distinct keys at three scales.
+
 Usage scenarios live in [[file:../Examples/README.org][Examples]], and assertions live in
 [[file:../Tests/README.org][Tests]].

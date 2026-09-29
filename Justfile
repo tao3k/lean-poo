@@ -192,6 +192,11 @@ benchmark-declaration:
     lake build LeanPoo.Object.Schema
     lake env lean --run Benchmarks/DeclarationScale.lean
 
+# Compare ordered replacement with checked unique-key definition construction.
+benchmark-strict-definition:
+    lake build LeanPoo.Object.StrictBuilder
+    lake env lean --run Benchmarks/StrictDefinitionScale.lean
+
 # Compare repeated C4 recompilation with declaration-only plan revision.
 benchmark-revision:
     lake build LeanPoo.Object.Resolve

@@ -91,4 +91,20 @@ private def checkedIndependent : Except (Object.StrictCombineError Key)
   | .ok (["Joined", "Base", "Increment"], some 5, true) => true
   | _ => false
 
+private def bulkDeclaration : Except
+    (Object.Declaration.DuplicateError Nat) Bool := do
+  let program : Object.Declaration.StrictBuilder Nat (fun _ => Nat) PUnit := do
+    for key in [:1024] do
+      Object.Declaration.StrictBuilder.value key key
+      Object.Declaration.StrictBuilder.default key (key + 1)
+  let declaration ← program.build
+  return declaration.directKeys ==
+      (List.range 1024 ++ List.range 1024) &&
+    (declaration.slot 1023).isSome &&
+    declaration.default 1023 == some 1024
+
+#guard match bulkDeclaration with
+  | .ok true => true
+  | _ => false
+
 end LeanPoo.Tests.StrictObjectDefinition

@@ -89,6 +89,10 @@ blocks cannot bypass these checks with ~set~ or ~modify~. Code that constructs
 the underlying program value manually remains outside this authoring
 contract. Strict construction does not guarantee termination of an arbitrary
 Lean function inside a slot.
+Strict construction records seen keys in hash sets and prepends direct
+entries while declaring; it reverses the accumulated lists once at build
+time. With lawful hashing, distinct writes avoid the ordinary Builder's
+repeated list scans.
 
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
