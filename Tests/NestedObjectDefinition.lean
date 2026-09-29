@@ -274,6 +274,41 @@ private def independentInnerParent : Except String Bool := do
   | .ok true => true
   | _ => false
 
+private def multipleInnerFamilies : Except String Bool := do
+  let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
+  let valueBase ← (Object.define (Key := Key) (Value := Value) "ValueBase" do
+    Object.Declaration.Builder.value .x 1) |>.mapError
+      (fun _ => "invalid value base")
+  let metadataBase ← (Object.define (Key := Key) (Value := Value)
+    "MetadataBase" do
+      Object.Declaration.Builder.value .z 5) |>.mapError
+        (fun _ => "invalid metadata base")
+  let layers : String → Option (Object.Nested.Layer Key Value)
+    | "Left" => some { declaration := Object.Declaration.build do
+        Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10)) }
+    | "Right" => some { declaration := Object.Declaration.build do
+        Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2)) }
+    | _ => none
+  let inner ← Object.Nested.liftLayersOnMany outer
+    valueBase.plan.memoizeCompiled [metadataBase] "many" layers
+      |>.mapError (fun _ => "invalid multiple-family lift")
+  let collision := match Object.Nested.liftLayersOnMany outer
+      valueBase [valueBase] "collision" layers with
+    | .error (.schema (.duplicateNode "ValueBase")) => true
+    | _ => false
+  let missing := match Object.Nested.liftLayersOnMany outer
+      valueBase [metadataBase] "empty" (fun _ => none) with
+    | .error .missingFocus => true
+    | _ => false
+  return inner.read .x == some 12 && inner.read .z == some 5 &&
+    inner.mode == .compiled &&
+    inner.plan.precedence.contains "ValueBase" &&
+    inner.plan.precedence.contains "MetadataBase" && collision && missing
+
+#guard match multipleInnerFamilies with
+  | .ok true => true
+  | _ => false
+
 private def unknownInnerParent : Except C4.Error Bool := do
   let outer ← outerTopology
   let base ← Object.define (Key := Key) (Value := Value)

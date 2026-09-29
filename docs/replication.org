@@ -285,12 +285,19 @@ family, so the inner specification has dependencies independent of the outer
 graph. The compiler validates both sets of constraints together; the widget
 scenario composes an inner trait with the outer scale and shift branches.
 
+~liftLayersOnMany~ accepts several independent inner base families. Their
+roots become independent parents of the retained outer leaves; the first base
+selects the resulting resolution mode. The usual disjoint-schema check rejects
+overlapping prototype identities, and a missing outer contribution is reported
+instead of silently discarding the extra bases.
+
 The general construction in the paper is broader: contributions may be
 computed by arbitrary outer slot bodies, and independent inner DAGs may be
-assembled from multiple unrelated families. LeanPoo does not inspect Lean
+assembled from arbitrary outer slot bodies. LeanPoo does not inspect Lean
 functions to discover contributions or infer a merge of overlapping inner
-families. Callers explicitly supply layers and choose a shared inner family.
-This remains a paper-level boundary beyond the current derived topology.
+families. Callers explicitly supply layers and use disjoint identities for
+independent bases. This remains a paper-level boundary beyond the current
+derived topology.
 
 * Fixed-point boundary in Lean
 
