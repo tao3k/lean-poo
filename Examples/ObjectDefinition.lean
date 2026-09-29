@@ -81,4 +81,20 @@ def groupedParents : Except String (List String × Option Nat) := do
 
 #eval groupedParents
 
+/-- Opt into duplicate-write diagnostics for an author-facing definition. -/
+def checkedDefinition : Except String (Option Nat × Option Nat) := do
+  let root ← (Object.defineStrict (Key := Key) (Value := Value) "Checked" do
+    Object.Declaration.StrictBuilder.value .base 2
+    Object.Declaration.StrictBuilder.default .total 1
+    Object.Declaration.StrictBuilder.slot .total
+      (.computed fun self inherited =>
+        some ((inherited ()).getD 0 + (self .base).getD 0))).mapError
+          (fun _ => "invalid checked root")
+  let child ← (root.extendStrict "CheckedChild" do
+    Object.Declaration.StrictBuilder.value .base 5).mapError
+      (fun _ => "invalid checked child")
+  return (root.read .total, child.read .total)
+
+#eval checkedDefinition
+
 end LeanPoo.Examples.ObjectDefinition

@@ -87,6 +87,7 @@ check-compose: check-object
     lake build LeanPoo.Compose
     lake build LeanPoo.Slots
     lake build LeanPoo.Object.Memo
+    lake build LeanPoo.Object.StrictBuilder
     lake build LeanPoo.Object.Definition
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
@@ -144,6 +145,7 @@ check-tests: check-proof
     lake env lean Tests/IntegratedPrototype.lean
     lake env lean Tests/MethodDictionary.lean
     lake env lean Tests/ObjectDefinition.lean
+    lake env lean Tests/StrictObjectDefinition.lean
     lake env lean Tests/NestedObjectDefinition.lean
     lake env lean Tests/ClassInstanceMethods.lean
     lake env lean Tests/ClassInitialization.lean

@@ -77,10 +77,18 @@ is no generic syntax macro for ~=>.+~.
 
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
-write to the same direct key replaces the earlier one. This supports
-deliberate programmatic edits, but it does not diagnose an accidental repeated
-builder call. A method and default for the same key remain separate in both
-models.
+write to the same direct key replaces the earlier one. For authored object
+definitions that should reject accidental repeats, use
+~Declaration.StrictBuilder.value~ / ~default~ / ~slot~ in a typed ~do~ block
+with ~Object.defineStrict~, ~Memoized.extendStrict~,
+~defineStrictWith~, ~defineStrictNodeWith~, or ~defineStrictFrom~. Their
+errors distinguish a repeated direct method from a repeated default, before
+the C4 plan is compiled. A method and default for the same key remain legal.
+The strict builder has no general ~MonadState~ operations, so ordinary ~do~
+blocks cannot bypass these checks with ~set~ or ~modify~. Code that constructs
+the underlying program value manually remains outside this authoring
+contract. Strict construction does not guarantee termination of an arbitrary
+Lean function inside a slot.
 
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
@@ -123,6 +131,7 @@ does not require an ~Inhabited~ result type.
 | ~Object.Declaration.empty~ | Start a typed declaration. |
 | ~Object.define~ / ~Object.defineIn~ / ~Object.defineNodeIn~ / ~Memoized.defineWith~ / ~Memoized.defineNodeWith~ / ~Memoized.defineFrom~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, full node metadata, same-family, independent-family, or child definitions. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
+| ~Declaration.StrictBuilder~ / ~Object.defineStrict~ | Opt into duplicate direct-write diagnostics while retaining typed Lean ~do~ declarations and the same C4 evaluator. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |
 | ~Prototype.MonoLens~ | Compose ordinary getter/setter field focuses as a special case of skew lenses. |
