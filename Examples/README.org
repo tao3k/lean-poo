@@ -17,6 +17,7 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:LiveRevision.lean][LiveRevision]] | A derived slot before and after a live declaration revision; the old snapshot remains readable. |
 | [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |
 | [[file:LayeredObject.lean][LayeredObject]] | Mix, extend, memoize, clone, and a diamond-shaped inheritance graph. |
+| [[file:ObjectDefinition.lean][ObjectDefinition]] | Typed object definitions with lazy inheritance, a C4 diamond, final-self override, and a function-valued slot call. |
 | [[file:FirstClassObject.lean][FirstClassObject]] | First-class prototype values and delayed construction. |
 | [[file:PrototypeCore.lean][PrototypeCore]] | Open-recursive prototype composition and delayed values. |
 

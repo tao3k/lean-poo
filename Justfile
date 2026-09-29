@@ -87,6 +87,7 @@ check-compose: check-object
     lake build LeanPoo.Compose
     lake build LeanPoo.Slots
     lake build LeanPoo.Object.Memo
+    lake build LeanPoo.Object.Definition
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Prototype.Mutable
@@ -127,6 +128,7 @@ check-example: check-compose
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean
+    lake env lean Examples/ObjectDefinition.lean
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
@@ -140,6 +142,7 @@ check-tests: check-proof
     lake env lean Tests/DescriptorClass.lean
     lake env lean Tests/IntegratedPrototype.lean
     lake env lean Tests/MethodDictionary.lean
+    lake env lean Tests/ObjectDefinition.lean
     lake env lean Tests/ClassInstanceMethods.lean
     lake env lean Tests/ClassInitialization.lean
     lake env lean Tests/MethodCombination.lean

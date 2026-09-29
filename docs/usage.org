@@ -5,6 +5,43 @@ This page is a compact map of the current Lean API.
 
 * Build an object
 
+Gerbil-POO's ~.o~ is an object-definition form: it declares slots and returns
+an object that can be read now and inherited later. It is not another name
+for ~.mix~. Lean expresses the declaration with typed ~do~ notation:
+
+#+begin_src lean
+let root ← Object.define (Key := Key) (Value := Value) "Root" do
+  Object.Declaration.Builder.value .source 3
+  Object.Declaration.Builder.default .derived 2
+  Object.Declaration.Builder.slot .derived
+    (.computed fun self inherited =>
+      some ((inherited ()).getD 0 + (self .source).getD 0))
+let child ← root.extendWith "Child" do
+  Object.Declaration.Builder.value .source 9
+#+end_src
+
+~Object.define~ returns a ~Memoized~ object with a reusable C4 plan and lazy
+current instance. ~extendWith~ constructs a child from the same typed builder;
+the root remains readable. ~Object.defineIn schema name parents~ defines an
+object with multiple direct parents in an existing graph. All three use the
+existing compiler and slot evaluator. See [[file:../Examples/ObjectDefinition.lean][ObjectDefinition.lean]] for a typed C4 diamond.
+
+| Gerbil-POO form | Lean expression |
+|-----------------+-----------------|
+| ~.o~ and ~.def~ | ~Object.define~, ~Object.defineIn~, or ~Memoized.extendWith~ inside an ordinary Lean ~def~; ~Declaration.build~ creates reusable direct specifications. |
+| Constant slot and default | ~Declaration.Builder.value~ and ~default~. |
+| Inherited modifier or conditional inherited call | ~Declaration.Builder.modifyInherited~ or ~slot key (.computed ...)~. |
+| Final-self slot | ~slot key (.self ...)~; the typed ~self~ lookup remains lazy. |
+| ~.ref~ and ~.get~ | ~Memoized.read~ returns ~Option~; ~Memoized.ref~ reports an absent slot. Nested reads use ~Option.bind~. |
+| ~.call~ | Read a function-valued slot and apply the resulting Lean function. |
+| ~.mix~, ~.extend~, ~.+~ | ~Memoized.mix~ / ~mixWith~, ~extend~ / ~extendWith~, and ~plus~. |
+
+Gerbil's ~.put!~ mutates only an instance, while ~.putslot!~ changes its
+prototype. LeanPoo's persistent ~reviseSlot~ / ~reviseDefault~ and mutable
+~Mutable.putValue~ / ~putSlot~ create a newly validated instance; they do not
+promise Gerbil's instance-only mutation behavior. Lean's closed ~structure~
+and field notation remain preferable when no runtime C4 extension is needed.
+
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
 ~Prototype.DelayedProto~ uses Lean ~Thunk~ for non-function lazy instances.
@@ -44,6 +81,7 @@ does not require an ~Inhabited~ result type.
 | Operation | Role |
 |-----------+------|
 | ~Object.Declaration.empty~ | Start a typed declaration. |
+| ~Object.define~ / ~Object.defineIn~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, multiple-parent, or child definitions. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |
