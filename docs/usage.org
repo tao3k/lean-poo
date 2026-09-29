@@ -39,9 +39,18 @@ declarations for a colliding ancestor.
 parent composition when the declaration is already built. ~mixWith~ remains
 its two-object form.
 
+For a C4 node with multiple local parent orders or suffix metadata, use
+~Object.defineNodeIn schema node do ...~ or
+~receiver.defineNodeWith node do ...~. The node is an ordinary Lean
+~C4.Node~ value, such as
+~{ name := "Example", parentOrders := [["A", "B"], ["C"]] }~.
+These entry points call the same C4 compiler as the flat-parent forms, so
+unknown parents and invalid suffix order are reported during definition.
+
 | Gerbil-POO form | Lean expression |
 |-----------------+-----------------|
 | ~.o~ and ~.def~ | ~Object.define~, ~Memoized.defineWith~, ~Memoized.defineFrom~, ~Object.defineIn~, or ~Memoized.extendWith~ inside an ordinary Lean ~def~; ~Declaration.build~ creates reusable direct specifications. |
+| C4 node metadata beyond flat Gerbil supers | ~Object.defineNodeIn~ or ~Memoized.defineNodeWith~ with a ~C4.Node~. |
 | Constant slot, lexical value, and default | ~Declaration.Builder.value~ with a Lean value or lexical variable; ~default~ supplies the inherited base. |
 | ~=>~ inherited modifier | ~Declaration.Builder.modifyInherited~; the inherited computation is forced only when this slot is read. |
 | Conditional inherited call | ~slot key (.computed fun self inherited => ...)~; invoke ~inherited ()~ only in the branch that needs it. |
@@ -65,6 +74,13 @@ joining two disjoint object families. The slot's Lean value type can contain
 [[file:../Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] shows this pattern. A shared-ancestry
 nested override still requires one common family snapshot and ~plus~; there
 is no generic syntax macro for ~=>.+~.
+
+Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
+one form. ~Declaration.Builder~ is an ordered Lean state program: a later
+write to the same direct key replaces the earlier one. This supports
+deliberate programmatic edits, but it does not diagnose an accidental repeated
+builder call. A method and default for the same key remain separate in both
+models.
 
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
@@ -105,7 +121,7 @@ does not require an ~Inhabited~ result type.
 | Operation | Role |
 |-----------+------|
 | ~Object.Declaration.empty~ | Start a typed declaration. |
-| ~Object.define~ / ~Object.defineIn~ / ~Memoized.defineWith~ / ~Memoized.defineFrom~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, same-family, independent-family, or child definitions. |
+| ~Object.define~ / ~Object.defineIn~ / ~Object.defineNodeIn~ / ~Memoized.defineWith~ / ~Memoized.defineNodeWith~ / ~Memoized.defineFrom~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, full node metadata, same-family, independent-family, or child definitions. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |

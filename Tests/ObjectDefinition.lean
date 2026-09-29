@@ -84,4 +84,46 @@ private def independentParents : Except Object.CombineError
       some 2, some 14, true, true) => true
   | _ => false
 
+private def nodeMetadata : Except C4.Error (List String × Option Nat × Bool) := do
+  let root ← Object.define (Key := Key) (Value := Value) "Object" do
+    Object.Declaration.Builder.default .source 1
+  let a ← root.defineWith "A" ["Object"] do
+    Object.Declaration.Builder.modifyInherited .source (Option.map (· + 1))
+  let b ← a.defineWith "B" ["Object"] do
+    Object.Declaration.Builder.modifyInherited .source (Option.map (· + 2))
+  let c ← b.defineWith "C" ["Object"] do
+    Object.Declaration.Builder.modifyInherited .source (Option.map (· + 3))
+  let combined ← c.defineNodeWith
+      { name := "Example", parentOrders := [["A", "B"], ["C"]] } do
+    pure ()
+  let invalid := match c.defineNodeWith
+      { name := "Invalid", parentOrders := [["Missing"]] } do pure () with
+    | .error (.unknownNode "Missing") => true
+    | _ => false
+  return (combined.plan.precedence, combined.read .source, invalid)
+
+#guard match nodeMetadata with
+  | .ok (["Example", "A", "B", "C", "Object"], some 7, true) => true
+  | _ => false
+
+private def suffixMetadata : Except C4.Error (List String × Bool) := do
+  let empty : Object.Schema Key Value :=
+    { graph := { nodes := [] }, declaration := fun _ => none }
+  let tail ← Object.defineNodeIn empty { name := "Tail", suffix := true } do
+    Object.Declaration.Builder.default .source 1
+  let other ← tail.defineNodeWith { name := "Other" } do
+    Object.Declaration.Builder.value .source 2
+  let valid ← other.defineNodeWith
+      { name := "Valid", parentOrders := [["Other", "Tail"]] } do
+    pure ()
+  let rejectsBadOrder := match other.defineNodeWith
+      { name := "Bad", parentOrders := [["Tail", "Other"]] } do pure () with
+    | .error .suffixOrderViolation => true
+    | _ => false
+  return (valid.plan.precedence, rejectsBadOrder)
+
+#guard match suffixMetadata with
+  | .ok (["Valid", "Other", "Tail"], true) => true
+  | _ => false
+
 end LeanPoo.Tests.ObjectDefinition

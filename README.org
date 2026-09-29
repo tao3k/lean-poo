@@ -41,7 +41,7 @@ or ~just check-debug true~ to print semantic diagnostics only when needed.
 Run ~just --list~ for the full command list. [[file:Examples/LayeredObject.lean][LayeredObject.lean]] shows C4
 composition, lazy reads, cloning, and revision. [[file:Examples/MethodDictionary.lean][MethodDictionary.lean]] shows an inherited formatter with dynamic and
 caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.lean]] shows a live object's old and new snapshots.
-[[file:Examples/ObjectDefinition.lean][ObjectDefinition.lean]] shows typed object definitions, a C4 diamond, and an inherited method call.
+[[file:Examples/ObjectDefinition.lean][ObjectDefinition.lean]] shows typed object definitions, C4 parent orders, and an inherited method call.
 [[file:Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] composes an object-valued slot with an explicit error result.
 [[file:Examples/DebugTrace.lean][DebugTrace.lean]] shows the public tracing API on productive and recursive reads.
 [[file:Examples/ProofReuse.lean][ProofReuse.lean]] carries a certificate across an unrelated override, and

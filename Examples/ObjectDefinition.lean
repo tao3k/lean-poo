@@ -59,4 +59,26 @@ def combineIndependent : Except String (List String × Option Nat) := do
 
 #eval combineIndependent
 
+/-- A full C4 node retains separate local parent orders when one flat list
+would lose that authoring structure. -/
+def groupedParents : Except String (List String × Option Nat) := do
+  let root ← (Object.define (Key := Key) (Value := Value) "Object" do
+    Object.Declaration.Builder.default .total 1).mapError
+      (fun _ => "invalid root")
+  let left ← (root.extendWith "Left" do
+    Object.Declaration.Builder.modifyInherited .total
+      (Option.map (· + 1))).mapError (fun _ => "invalid left")
+  let right ← (left.defineWith "Right" ["Object"] do
+    Object.Declaration.Builder.modifyInherited .total
+      (Option.map (· + 2))).mapError (fun _ => "invalid right")
+  let appendix ← (right.defineWith "Appendix" ["Object"] do
+    Object.Declaration.Builder.modifyInherited .total
+      (Option.map (· + 3))).mapError (fun _ => "invalid appendix")
+  let grouped ← (appendix.defineNodeWith
+      { name := "Grouped", parentOrders := [["Left", "Right"], ["Appendix"]] }
+      do pure ()).mapError (fun _ => "invalid parent orders")
+  return (grouped.plan.precedence, grouped.read .total)
+
+#eval groupedParents
+
 end LeanPoo.Examples.ObjectDefinition
