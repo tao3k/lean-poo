@@ -300,11 +300,23 @@ family, so the inner specification has dependencies independent of the outer
 graph. The compiler validates both sets of constraints together; the widget
 scenario composes an inner trait with the outer scale and shift branches.
 
+~Nested.Contributions.ofEntries~ is the finite authoring entry for one inner
+focus. It checks each named contributor against the selected outer C4 plan and
+rejects duplicate layer declarations. Entries may be written in any order;
+~layers.lookup~ supplies the resulting map to the existing lifting compiler,
+whose precedence comes from C4. The widget example uses this entry rather than
+an opaque name-matching function. Callers that compute contributions dynamically
+can still use the underlying function-based API.
+
 ~liftLayersOnMany~ accepts several independent inner base families. Their
 roots become independent parents of the retained outer leaves; the first base
 selects the resulting resolution mode. The usual disjoint-schema check rejects
 overlapping prototype identities, and a missing outer contribution is reported
 instead of silently discarding the extra bases.
+~Schema.mergeDisjointMany~ shares a single name index across those families
+and the ordinary first-class ~mixMany~ path. It retains node declaration order,
+reports the first repeated identity, and defers each original declaration
+function until its node is requested.
 
 The general construction in the paper is broader: contributions may be
 computed by arbitrary outer slot bodies, and independent inner DAGs may be

@@ -21,6 +21,36 @@ structure Layer (Key : Type w) (Value : Key → Type x) where
   parentOrders : List (List String) := []
   suffix : Option Bool := none
 
+inductive ContributionError where
+  | unknownOuterNode (name : String)
+  | duplicateLayer (name : String)
+  deriving Repr, BEq
+
+/-- A finite, checked declaration of the outer nodes that contribute to one
+inner focus. Only nodes reachable from the selected outer root may contribute.
+The list order is authoring order; C4, not that order, resolves inheritance. -/
+structure Contributions (Key : Type w) (Value : Key → Type x) where
+  layers : Std.HashMap String (Layer Key Value)
+
+def Contributions.ofEntries {OuterKey : Type u}
+    {OuterValue : OuterKey → Type v} {Key : Type w}
+    {Value : Key → Type x} (outer : Plan OuterKey OuterValue)
+    (entries : List (String × Layer Key Value)) :
+    Except ContributionError (Contributions Key Value) := do
+  let reachable := outer.precedence.foldl
+    (fun names name => names.insert name) ({} : Std.HashSet String)
+  let layers ← entries.foldlM (fun layers (name, layer) => do
+    unless reachable.contains name do
+      throw (.unknownOuterNode name)
+    if layers.contains name then
+      throw (.duplicateLayer name)
+    return layers.insert name layer) ({} : Std.HashMap String (Layer Key Value))
+  return ⟨layers⟩
+
+def Contributions.lookup (contributions : Contributions Key Value)
+    (name : String) : Option (Layer Key Value) :=
+  contributions.layers.get? name
+
 private structure Focus (Key : Type w) (Value : Key → Type x) where
   nodes : Std.HashMap String C4.Node
   relevant : Std.HashSet String
@@ -111,8 +141,8 @@ private def compileFocus {OuterKey : Type u} {OuterValue : OuterKey → Type v}
       Except LiftError (Plan Key Value) := do
     let lifted := liftedSchema outer namePrefix focus kept
       (bases.map (·.root))
-    let schema ← bases.foldlM (fun schema base =>
-      (schema.mergeDisjoint base.schema).mapError .schema) lifted
+    let schema ← (lifted.mergeDisjointMany
+      (bases.map (·.schema))).mapError .schema
     (compile schema (liftedName namePrefix outer.root)).mapError .c4
   match compileWith focus.relevant with
   | .error (.schema error) => throw (.schema error)

@@ -85,15 +85,6 @@ def diamond : Except String (List String × Option Nat × Option Nat) := do
 
 /-- A nested component's inner C4 graph follows the complete outer graph.
 Layout declares no inner method but still carries its inherited order. -/
-private def widgetContribution : String →
-    Option (Object.Declaration InnerKey InnerValue)
-  | "Widget" => some <| Object.Declaration.build do
-      Object.Declaration.Builder.value .x 1
-  | "Scale" => some <| Object.Declaration.build do
-      Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2))
-  | "Shift" => some <| Object.Declaration.build do
-      Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10))
-  | _ => none
 
 def liftedWidget : Except String (List String × Option Nat × Option Nat) := do
   let innerBase ← (Object.define (Key := InnerKey) (Value := InnerValue)
@@ -116,12 +107,16 @@ def liftedWidget : Except String (List String × Option Nat × Option Nat) := do
       declaration := fun _ => none }
   let plan ← Object.compile outer "Final" |>.mapError
     (fun _ => "invalid outer topology")
-  let layer : String → Option (Object.Nested.Layer InnerKey InnerValue)
-    | "Widget" => some { parentOrders := [["WidgetTrait"]] }
-    | name => (widgetContribution name).map fun declaration =>
-        { declaration }
+  let layers ← Object.Nested.Contributions.ofEntries plan
+    (Key := InnerKey) (Value := InnerValue) [
+      ("Widget", { parentOrders := [["WidgetTrait"]] }),
+      ("Scale", { declaration := Object.Declaration.build do
+          Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2)) }),
+      ("Shift", { declaration := Object.Declaration.build do
+          Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10)) })]
+    |>.mapError (fun _ => "invalid inner contributions")
   let inner ← Object.Nested.liftLayersOn plan basePlan.memoize
-    "widget" layer |>.mapError (fun _ => "invalid nested component")
+    "widget" layers.lookup |>.mapError (fun _ => "invalid nested component")
   return (inner.plan.precedence, inner.read .x, inner.read .z)
 
 #eval liftedWidget

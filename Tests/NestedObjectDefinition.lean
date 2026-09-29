@@ -163,6 +163,32 @@ private def liftedOuterDag : Except Object.Nested.LiftError Bool := do
   | .ok true => true
   | _ => false
 
+private def checkedContributions : Except String Bool := do
+  let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
+  let entries : List (String × Object.Nested.Layer Key Value) :=
+    ["Right", "Origin", "Left"].map fun name =>
+      (name, { declaration := (liftedContributions name).getD Object.Declaration.empty })
+  let layers ← Object.Nested.Contributions.ofEntries outer entries
+    |>.mapError (fun _ => "invalid contributors")
+  let some inner ← Object.Nested.liftLayers outer "checked" layers.lookup
+    |>.mapError (fun _ => "invalid checked lift") | return false
+  let duplicate := match Object.Nested.Contributions.ofEntries outer
+      (entries ++ [("Right", { declaration := Object.Declaration.empty })]) with
+    | .error (.duplicateLayer "Right") => true
+    | _ => false
+  let unknown := match Object.Nested.Contributions.ofEntries outer
+      (entries ++ [("Typo", { declaration := Object.Declaration.empty })]) with
+    | .error (.unknownOuterNode "Typo") => true
+    | _ => false
+  return inner.read .x == some 12 &&
+    inner.plan.precedence.take 4 ==
+      ["checked/Diamond", "checked/Bridge", "checked/Left", "checked/Right"] &&
+    duplicate && unknown
+
+#guard match checkedContributions with
+  | .ok true => true
+  | _ => false
+
 private def liftedOnBase : Except String Bool := do
   let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
   let base ← (Object.define (Key := Key) (Value := Value) "Stored" do

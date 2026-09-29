@@ -392,8 +392,8 @@ def Memoized.mixMany {Key : Type u} {Value : Key → Type v}
     (name : String)
     (declaration : Declaration Key Value) :
     Except CombineError (Memoized Key Value) := do
-  let schema ← others.foldlM (fun schema other =>
-    (schema.mergeDisjoint other.plan.schema).mapError .schema) first.plan.schema
+  let schema ← (first.plan.schema.mergeDisjointMany
+    (others.map (·.plan.schema))).mapError .schema
   let parents := first.plan.root :: others.map (·.plan.root)
   let plan ← (LeanPoo.mix schema name parents
     declaration).mapError .c4

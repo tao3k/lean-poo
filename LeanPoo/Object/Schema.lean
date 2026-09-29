@@ -311,6 +311,26 @@ def Schema.mergeDisjoint (left right : Schema Key Value) :
         if (left.graph.findNode? name).isSome then left.declaration name
         else right.declaration name }
 
+/-- Merge several independent families in one pass. The first repeated name
+in schema/node order is reported; each declaration remains owned by its
+original schema and is evaluated only when that name is requested. -/
+def Schema.mergeDisjointMany (first : Schema Key Value)
+    (others : List (Schema Key Value)) :
+    Except SchemaMergeError (Schema Key Value) := do
+  let (_, reversed, owners) ← (first :: others).foldlM
+    (fun (seen, reversed, owners) schema =>
+      schema.graph.nodes.foldlM (fun (seen, reversed, owners) node => do
+        if seen.contains node.name then
+          throw (.duplicateNode node.name)
+        return (seen.insert node.name, node :: reversed,
+          owners.insert node.name schema.declaration))
+        (seen, reversed, owners))
+    (({} : Std.HashSet String), ([] : List C4.Node),
+      ({} : Std.HashMap String (String → Option (Declaration Key Value))))
+  return {
+    graph := { nodes := reversed.reverse }
+    declaration := fun name => (owners.get? name).bind (· name) }
+
 /-- Persistently revise one existing prototype declaration. -/
 def Schema.reviseDeclaration (schema : Schema Key Value) (name : String)
     (update : Declaration Key Value → Declaration Key Value) :
