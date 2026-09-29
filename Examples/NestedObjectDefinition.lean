@@ -83,4 +83,47 @@ def diamond : Except String (List String × Option Nat × Option Nat) := do
 
 #eval diamond
 
+/-- A nested component's inner C4 graph follows the complete outer graph.
+Layout declares no inner method but still carries its inherited order. -/
+private def widgetContribution : String →
+    Option (Object.Declaration InnerKey InnerValue)
+  | "Widget" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.value .x 1
+  | "Scale" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2))
+  | "Shift" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10))
+  | _ => none
+
+def liftedWidget : Except String (List String × Option Nat × Option Nat) := do
+  let innerBase ← (Object.define (Key := InnerKey) (Value := InnerValue)
+      "WidgetDefaults" do
+    Object.Declaration.Builder.value .x 1
+    Object.Declaration.Builder.value .z 5) |>.mapError
+      (fun _ => "invalid inner base")
+  let trait ← (innerBase.extendWith "WidgetTrait" do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· + 2)))
+    |>.mapError (fun _ => "invalid inner trait")
+  let basePlan ← Object.compile trait.plan.schema "WidgetDefaults"
+    |>.mapError (fun _ => "invalid inner family")
+  let outer : Object.Schema OuterKey (fun _ => Nat) :=
+    { graph := { nodes :=
+        [{ name := "Widget" },
+         { name := "Scale", parentOrders := [["Widget"]] },
+         { name := "Shift", parentOrders := [["Widget"]] },
+         { name := "Layout", parentOrders := [["Scale"]] },
+         { name := "Final", parentOrders := [["Shift", "Layout"]] }] }
+      declaration := fun _ => none }
+  let plan ← Object.compile outer "Final" |>.mapError
+    (fun _ => "invalid outer topology")
+  let layer : String → Option (Object.Nested.Layer InnerKey InnerValue)
+    | "Widget" => some { parentOrders := [["WidgetTrait"]] }
+    | name => (widgetContribution name).map fun declaration =>
+        { declaration }
+  let inner ← Object.Nested.liftLayersOn plan basePlan.memoize
+    "widget" layer |>.mapError (fun _ => "invalid nested component")
+  return (inner.plan.precedence, inner.read .x, inner.read .z)
+
+#eval liftedWidget
+
 end LeanPoo.Examples.NestedObjectDefinition

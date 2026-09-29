@@ -270,13 +270,27 @@ executes two such methods in its resolved order, while the inner C4 compiler
 checks each composition. This covers explicit nested extensions, including
 fallible independent-family overrides.
 
-The general construction in the paper is broader: it lifts nested parent
-DAGs through the outer hierarchy and preserves ordering constraints from
-ancestors with no direct inner method. LeanPoo does not yet infer or build
-that inner DAG automatically from arbitrary nested outer specifications.
-Callers currently name each inner contribution and choose whether it belongs
-to one shared inner family or to disjoint families. This is a remaining
-paper-level feature beyond the explicit typed slot construction above.
+~Object.Nested.lift~ and ~liftOn~ now derive an inner C4 graph from an outer
+plan and explicit per-node inner declarations. They retain identity nodes
+with contributing ancestors, omit unrelated branches, and check that the
+inner C4 order projects from the outer order. If pruning changes that order,
+the construction retries with the complete outer ancestry. ~liftOn~ attaches
+one separate inner base family below the lifted leaves. The implementation
+uses the existing C4 compiler and slot evaluator; no nested evaluator is
+introduced.
+
+~liftLayers~ and ~liftLayersOn~ also accept per-node inner parent orders and
+suffix metadata. Those parents can refer to existing nodes in the inner base
+family, so the inner specification has dependencies independent of the outer
+graph. The compiler validates both sets of constraints together; the widget
+scenario composes an inner trait with the outer scale and shift branches.
+
+The general construction in the paper is broader: contributions may be
+computed by arbitrary outer slot bodies, and independent inner DAGs may be
+assembled from multiple unrelated families. LeanPoo does not inspect Lean
+functions to discover contributions or infer a merge of overlapping inner
+families. Callers explicitly supply layers and choose a shared inner family.
+This remains a paper-level boundary beyond the current derived topology.
 
 * Fixed-point boundary in Lean
 

@@ -122,4 +122,171 @@ private def nestedSharedFamily : Except String (Option Nat) := do
   | .ok (some 2) => true
   | _ => false
 
+private def liftedContributions : String → Option (Object.Declaration Key Value)
+  | "Origin" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.value .x 1
+      Object.Declaration.Builder.value .z 5
+  | "Left" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10))
+  | "Right" => some <| Object.Declaration.build do
+      Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2))
+  | _ => none
+
+private def outerTopology : Except C4.Error
+    (Object.Plan OuterKey (fun _ => Nat)) :=
+  let schema : Object.Schema OuterKey (fun _ => Nat) :=
+    { graph := { nodes :=
+        [{ name := "Origin" },
+         { name := "Left", parentOrders := [["Origin"]] },
+         { name := "Right", parentOrders := [["Origin"]] },
+         { name := "Bridge", parentOrders := [["Left"]] },
+         { name := "Unused" },
+         { name := "Diamond", parentOrders :=
+             [["Bridge"], ["Right", "Unused"]] }] }
+      declaration := fun _ => none }
+  Object.compile schema "Diamond"
+
+private def liftedOuterDag : Except Object.Nested.LiftError Bool := do
+  let outer ← outerTopology |>.mapError .c4
+  let some inner ← Object.Nested.lift outer "focus"
+      liftedContributions | return false
+  let expected := (outer.precedence.filter (· != "Unused")).map
+    (Object.Nested.liftedName "focus")
+  let some bridge := inner.plan.schema.graph.findNode? "focus/Bridge" |
+    return false
+  return inner.plan.precedence == expected &&
+    bridge.parentOrders == [["focus/Left"]] &&
+    (inner.plan.schema.graph.findNode? "focus/Unused").isNone &&
+    inner.read .x == some 12 && inner.read .z == some 5
+
+#guard match liftedOuterDag with
+  | .ok true => true
+  | _ => false
+
+private def liftedOnBase : Except String Bool := do
+  let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
+  let base ← (Object.define (Key := Key) (Value := Value) "Stored" do
+    Object.Declaration.Builder.value .z 7) |>.mapError
+      (fun _ => "invalid inner base")
+  let lifted ← Object.Nested.liftOn outer base.plan.memoizeCompiled
+    "focus" (fun name =>
+      if name == "Origin" then
+        some <| Object.Declaration.build do
+          Object.Declaration.Builder.value .x 1
+      else liftedContributions name)
+    |>.mapError (fun _ => "invalid nested lift")
+  let expected := (outer.precedence.filter (· != "Unused")).map
+    (Object.Nested.liftedName "focus") ++ ["Stored"]
+  return lifted.plan.precedence == expected &&
+    lifted.read .x == some 12 && lifted.read .z == some 7 &&
+    lifted.mode == .compiled
+
+#guard match liftedOnBase with
+  | .ok true => true
+  | _ => false
+
+private def liftedCollision : Except C4.Error Bool := do
+  let outer ← outerTopology
+  let base ← Object.define (Key := Key) (Value := Value)
+    "focus/Origin" do pure ()
+  return match Object.Nested.liftOn outer base "focus"
+      liftedContributions with
+    | .error (.schema (.duplicateNode "focus/Origin")) => true
+    | _ => false
+
+#guard match liftedCollision with
+  | .ok true => true
+  | _ => false
+
+private def absentFocus : Except String Bool := do
+  let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
+  let noContribution : String → Option (Object.Declaration Key Value) :=
+    fun _ => none
+  let lifted ← Object.Nested.lift outer "empty" noContribution
+    |>.mapError (fun _ => "invalid empty focus")
+  let base ← (Object.define (Key := Key) (Value := Value) "Unchanged" do
+    Object.Declaration.Builder.value .x 9) |>.mapError
+      (fun _ => "invalid base")
+  let derived ← Object.Nested.liftOn outer base "empty" noContribution
+    |>.mapError (fun _ => "invalid base focus")
+  return lifted.isNone && derived.plan.precedence == ["Unchanged"] &&
+    derived.read .x == some 9
+
+#guard match absentFocus with
+  | .ok true => true
+  | _ => false
+
+private def liftedSuffix : Except Object.Nested.LiftError Bool := do
+  let schema : Object.Schema OuterKey (fun _ => Nat) :=
+    { graph := { nodes :=
+        [{ name := "Base", suffix := true },
+         { name := "Child", parentOrders := [["Base"]], suffix := true }] }
+      declaration := fun _ => none }
+  let outer ← Object.compile schema "Child" |>.mapError .c4
+  let contribution : String → Option (Object.Declaration Key Value)
+    | "Base" => some <| Object.Declaration.empty.withValue .x 4
+    | _ => none
+  let some inner ← Object.Nested.lift outer "suffix" contribution |
+    return false
+  let some child := inner.plan.schema.graph.findNode? "suffix/Child" |
+    return false
+  let layer : String → Option (Object.Nested.Layer Key Value)
+    | "Base" => some {
+        declaration := Object.Declaration.empty.withValue .x 4 }
+    | "Child" => some { suffix := some false }
+    | _ => none
+  let some changed ← Object.Nested.liftLayers outer "custom" layer |
+    return false
+  let some revised := changed.plan.schema.graph.findNode? "custom/Child" |
+    return false
+  return child.suffix && inner.plan.precedence ==
+    ["suffix/Child", "suffix/Base"] && inner.read .x == some 4 &&
+    !revised.suffix && changed.read .x == some 4
+
+#guard match liftedSuffix with
+  | .ok true => true
+  | _ => false
+
+private def independentInnerParent : Except String Bool := do
+  let outer ← outerTopology |>.mapError (fun _ => "invalid outer DAG")
+  let base ← (Object.define (Key := Key) (Value := Value) "InnerBase" do
+    Object.Declaration.Builder.value .x 1
+    Object.Declaration.Builder.value .z 5) |>.mapError
+      (fun _ => "invalid inner base")
+  let trait ← (base.extendWith "InnerTrait" do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· + 2)))
+    |>.mapError (fun _ => "invalid independent inner parent")
+  let basePlan ← Object.compile trait.plan.schema "InnerBase"
+    |>.mapError (fun _ => "invalid inner family")
+  let layers : String → Option (Object.Nested.Layer Key Value)
+    | "Origin" => some { parentOrders := [["InnerTrait"]] }
+    | name => (liftedContributions name).map fun declaration =>
+        { declaration }
+  let inner ← Object.Nested.liftLayersOn outer basePlan.memoize
+    "layer" layers |>.mapError (fun _ => "invalid layered lift")
+  let some origin := inner.plan.schema.graph.findNode? "layer/Origin" |
+    return false
+  return origin.parentOrders == [["InnerTrait"], ["InnerBase"]] &&
+    inner.read .x == some 16 && inner.read .z == some 5 &&
+    inner.plan.precedence.contains "InnerTrait"
+
+#guard match independentInnerParent with
+  | .ok true => true
+  | _ => false
+
+private def unknownInnerParent : Except C4.Error Bool := do
+  let outer ← outerTopology
+  let base ← Object.define (Key := Key) (Value := Value)
+    "KnownBase" do pure ()
+  let layers : String → Option (Object.Nested.Layer Key Value)
+    | "Origin" => some { parentOrders := [["MissingInnerParent"]] }
+    | _ => none
+  return match Object.Nested.liftLayersOn outer base "invalid" layers with
+    | .error (.c4 (.unknownNode "MissingInnerParent")) => true
+    | _ => false
+
+#guard match unknownInnerParent with
+  | .ok true => true
+  | _ => false
+
 end LeanPoo.Tests.NestedObjectDefinition
