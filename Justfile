@@ -87,6 +87,9 @@ check-compose: check-object
     lake build LeanPoo.Compose
     lake build LeanPoo.Slots
     lake build LeanPoo.Object.Memo
+    lake build LeanPoo.Object.StrictBuilder
+    lake build LeanPoo.Object.Definition
+    lake build LeanPoo.Object.Nested
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Prototype.Mutable
@@ -127,6 +130,8 @@ check-example: check-compose
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean
+    lake env lean Examples/ObjectDefinition.lean
+    lake env lean Examples/NestedObjectDefinition.lean
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
@@ -140,6 +145,9 @@ check-tests: check-proof
     lake env lean Tests/DescriptorClass.lean
     lake env lean Tests/IntegratedPrototype.lean
     lake env lean Tests/MethodDictionary.lean
+    lake env lean Tests/ObjectDefinition.lean
+    lake env lean Tests/StrictObjectDefinition.lean
+    lake env lean Tests/NestedObjectDefinition.lean
     lake env lean Tests/ClassInstanceMethods.lean
     lake env lean Tests/ClassInitialization.lean
     lake env lean Tests/MethodCombination.lean
@@ -185,10 +193,20 @@ benchmark-declaration:
     lake build LeanPoo.Object.Schema
     lake env lean --run Benchmarks/DeclarationScale.lean
 
+# Compare ordered replacement with checked unique-key definition construction.
+benchmark-strict-definition:
+    lake build LeanPoo.Object.StrictBuilder
+    lake env lean --run Benchmarks/StrictDefinitionScale.lean
+
 # Compare repeated C4 recompilation with declaration-only plan revision.
 benchmark-revision:
     lake build LeanPoo.Object.Resolve
     lake env lean --run Benchmarks/RevisionScale.lean
+
+# Compare repeated pairwise schema merging with one indexed pass.
+benchmark-schema-merge:
+    lake build LeanPoo.Object.Schema
+    lake env lean --run Benchmarks/SchemaMergeScale.lean
 
 # Measure C4 traversal on deep and wide finite inheritance graphs.
 benchmark-c4:

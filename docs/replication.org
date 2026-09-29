@@ -30,9 +30,10 @@ macros are not design requirements for Lean.
 | Pure-to-mutable extension | ~Object.Mutable~ | Store a persistent object value in a mutable Lean cell. |
 | Mutable prototype protocol | ~Prototype.MutableProto~ | Compose parent and child effects on one mutable identity; standard private layers stage schema edits, resolve C4 at most once, and instantiate the final object once, while arbitrary effects fall back to sequential execution. |
 | Generalized method fragment | ~Prototype.lensGen~ | Select, wrap, and install a method inside an ordinary delayed prototype. |
+| Skew focus | ~Prototype.SkewLens~ | Refine the extension focus or its readable context independently; broaden a focus using a fixed context. |
 | Generic method selection | ~Object.Generic~ | Select a typed method from an instance slot or an explicit type descriptor, invoke it, and use a typed fallback when absent. |
 | Runtime object class | ~Object.ClassSpec~, ~SlotRule~ | Validate required, optional, fixed, and sealed slots; derive defaults and computed slot declarations. |
-| Typed lens | ~Object.Lens~ | Get, set, modify, and compose typed views; slot changes recompile a fresh C4 object. |
+| Typed lens | ~Object.Lens~ | Get, set, modify, and compose typed views; specification edits rebuild a fresh object and recompile C4 only when topology changes. |
 | Heterogeneous tuple | ~Prototype.HList~, ~Descriptors~ | Keep component types in a type-level list and derive runtime checking and JSON. |
 
 The minimal paper model does not require Scheme dictionaries. Lean instead
@@ -260,6 +261,87 @@ generalized prototype constructor is a sketch; a complete account is left
 for future work. ~Prototype.lensGen~ implements that constructor as a normal
 delayed prototype. It introduces neither Lisp-style declaration syntax nor
 a separate object evaluator or runtime MOP.
+
+* Context and extension focus
+
+POOF section 9 separates the context an extension may read from the value it
+updates. ~SkewLens.refocusUpdate~ changes the latter; ~viewOnly~ and
+~refocusView~ now change only the former. ~refocusView_focus~ states that
+context refinement agrees with precomposing the extension's context input.
+~MonoLens.reverseAt~ implements the paper's reverse focus with a fixed
+surrounding value. It projects an updated broad value back to the original
+focus; changes outside that focus do not accumulate across applications, as
+the paper cautions. This is a functional optic, not a mutable pointer.
+The section's broader "is-a" focused specification is presented as a possible
+generalization, with input/output prototypes and possible type constraints,
+without a specified constructor or evaluation rule. The typed skew lens and
+complete prototype-specification lens cover the executable constructions
+described here; they do not claim a canonical implementation of that sketch.
+
+* Complete prototype specification focus
+
+POOF section 9's prototype-specification lens views one identity's direct
+extension, suffix policy, and parent orders together. In LeanPoo,
+~Object.Specification~ is that typed value and
+~Object.Lens.prototypeSpecification name~ focuses it within a ~Memoized~
+object. A modification cannot rename the focused identity. Changing only the
+direct declaration retains the plan's validated C4 precedence; changing
+parent orders or suffix policy invokes the existing C4 compiler before the new
+object is returned. Invalid parents, cycles, or suffix constraints remain
+ordinary C4 errors, and the original object remains usable. The narrower
+~Lens.specification~ continues to serve declaration-only edits.
+The public slot setter writes a new root specification; it does not mutate a
+materialized target while leaving its inherited specification out of sync.
+
+* Nested specification boundary
+
+POOF section 9 describes nested specifications whose outer inheritance can
+induce an inner hierarchy. ~Object.Nested.plusWith~ and ~plus~ now express
+an inner extension as a reusable typed slot method. An outer C4 diamond
+executes two such methods in its resolved order, while the inner C4 compiler
+checks each composition. This covers explicit nested extensions, including
+fallible independent-family overrides.
+
+~Object.Nested.lift~ and ~liftOn~ now derive an inner C4 graph from an outer
+plan and explicit per-node inner declarations. They retain identity nodes
+with contributing ancestors, omit unrelated branches, and check that the
+inner C4 order projects from the outer order. If pruning changes that order,
+the construction retries with the complete outer ancestry. ~liftOn~ attaches
+one separate inner base family below the lifted leaves. The implementation
+uses the existing C4 compiler and slot evaluator; no nested evaluator is
+introduced.
+
+~liftLayers~ and ~liftLayersOn~ also accept per-node inner parent orders and
+suffix metadata. Those parents can refer to existing nodes in the inner base
+family, so the inner specification has dependencies independent of the outer
+graph. The compiler validates both sets of constraints together; the widget
+scenario composes an inner trait with the outer scale and shift branches.
+
+~Nested.Contributions.ofEntries~ is the finite authoring entry for one inner
+focus. It checks each named contributor against the selected outer C4 plan and
+rejects duplicate layer declarations. Entries may be written in any order;
+~layers.lookup~ supplies the resulting map to the existing lifting compiler,
+whose precedence comes from C4. The widget example uses this entry rather than
+an opaque name-matching function. Callers that compute contributions dynamically
+can still use the underlying function-based API.
+
+~liftLayersOnMany~ accepts several independent inner base families. Their
+roots become independent parents of the retained outer leaves; the first base
+selects the resulting resolution mode. The usual disjoint-schema check rejects
+overlapping prototype identities, and a missing outer contribution is reported
+instead of silently discarding the extra bases.
+~Schema.mergeDisjointMany~ shares a single name index across those families
+and the ordinary first-class ~mixMany~ path. It retains node declaration order,
+reports the first cross-family repeated identity, and defers each original
+declaration function until its node is requested. Duplicate names within one
+family remain C4 graph-validation errors, as in repeated pairwise merging.
+
+The general construction in the paper is broader: contributions may be
+computed by arbitrary outer slot bodies, and independent inner DAGs may share
+prototype identities. LeanPoo does not inspect Lean functions to discover
+contributions or infer a merge of overlapping inner families. Callers
+explicitly supply layers and use disjoint identities for independent bases.
+This remains a paper-level boundary beyond the current derived topology.
 
 * Fixed-point boundary in Lean
 

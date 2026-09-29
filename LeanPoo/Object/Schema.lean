@@ -301,14 +301,45 @@ inductive SchemaMergeError where
 not overlap. Existing names remain owned by the schema that declared them. -/
 def Schema.mergeDisjoint (left right : Schema Key Value) :
     Except SchemaMergeError (Schema Key Value) :=
-  match right.graph.nodes.find? (fun node =>
-    (left.graph.findNode? node.name).isSome) with
+  let leftNames : Std.HashSet String :=
+    left.graph.nodes.foldl (fun names node => names.insert node.name) {}
+  match right.graph.nodes.find? (fun node => leftNames.contains node.name) with
   | some duplicate => .error (.duplicateNode duplicate.name)
   | none => .ok {
       graph := { nodes := left.graph.nodes ++ right.graph.nodes }
       declaration := fun name =>
         if (left.graph.findNode? name).isSome then left.declaration name
         else right.declaration name }
+
+/-- Merge several independent families in one pass. The first cross-family
+name collision in schema/node order is reported; validation of duplicates
+within one graph stays with C4. Each node keeps its original declaration
+owner. Names outside every graph retain the final schema's lookup behavior
+from repeated pairwise merges. -/
+def Schema.mergeDisjointMany (first : Schema Key Value)
+    (others : List (Schema Key Value)) :
+    Except SchemaMergeError (Schema Key Value) := do
+  let fallback := others.foldl (fun _ schema => schema) first
+  let (_, reversed, owners) ← (first :: others).foldlM
+    (fun (seen, reversed, owners) schema => do
+      let (reversed, owners) ← schema.graph.nodes.foldlM
+        (fun (reversed, owners) node => do
+        if seen.contains node.name then
+          throw (.duplicateNode node.name)
+        return (node :: reversed,
+          owners.insert node.name schema.declaration))
+        (reversed, owners)
+      let seen := schema.graph.nodes.foldl
+        (fun names node => names.insert node.name) seen
+      return (seen, reversed, owners))
+    (({} : Std.HashSet String), ([] : List C4.Node),
+      ({} : Std.HashMap String (String → Option (Declaration Key Value))))
+  return {
+    graph := { nodes := reversed.reverse }
+    declaration := fun name =>
+      match owners.get? name with
+      | some owner => owner name
+      | none => fallback.declaration name }
 
 /-- Persistently revise one existing prototype declaration. -/
 def Schema.reviseDeclaration (schema : Schema Key Value) (name : String)

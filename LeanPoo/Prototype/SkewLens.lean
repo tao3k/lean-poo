@@ -81,6 +81,27 @@ def SkewLens.refocusUpdate (lens : SkewLens I R P J S Q)
     (update : (II → PP) → I → P) : SkewLens II R PP J S Q :=
   lens.compose (SkewLens.updateOnly R update)
 
+/-- Read a different view of the context without changing the extension. -/
+def SkewLens.viewOnly (view : R → RR) : SkewLens I RR P I R P :=
+  ⟨view, fun extension => extension⟩
+
+/-- Refine the context available to an extension while retaining its focus. -/
+def SkewLens.refocusView (lens : SkewLens I R P J S Q)
+    (view : R → RR) : SkewLens I RR P J S Q :=
+  lens.compose (SkewLens.viewOnly view)
+
+theorem SkewLens.refocusView_update
+    (lens : SkewLens I R P J S Q) (view : R → RR) :
+    (lens.refocusView view).update = lens.update := rfl
+
+theorem SkewLens.refocusView_focus
+    (lens : SkewLens I R P J S Q) (view : R → RR)
+    (extension : Proto RR I P) :
+    (lens.refocusView view).focus extension =
+      lens.focus (fun context inherited => extension (view context) inherited) := by
+  funext self inherited
+  rfl
+
 theorem SkewLens.refocusUpdate_view
     (lens : SkewLens I R P J S Q)
     (update : (II → PP) → I → P) :
@@ -97,5 +118,13 @@ def MonoLens.ofGetSet (get : S → A) (set : A → S → S) : MonoLens S A :=
 /-- Apply a local change to the focused part of a whole value. -/
 def MonoLens.modify (lens : MonoLens S A) (change : A → A) (source : S) : S :=
   lens.update change source
+
+/-- Broaden a focus using a fixed surrounding context. Each application
+reconstructs that same context, so this is not a lawful stateful lens when
+updates need to accumulate outside the original focus. -/
+def MonoLens.reverseAt (context : S) (lens : MonoLens S A) : MonoLens A S :=
+  { view := fun focused => lens.modify (fun _ => focused) context
+    update := fun change focused =>
+      lens.view (change (lens.modify (fun _ => focused) context)) }
 
 end LeanPoo.Prototype

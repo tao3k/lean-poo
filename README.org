@@ -14,7 +14,7 @@ language or a domain-specific proof system.
 | Layer | Public capability |
 |-------+-------------------|
 | ~LeanPoo.Prototype~ | Open-recursive prototypes, ordered composition, delayed instances, first-class objects, and classes. |
-| ~LeanPoo.C4~ and ~LeanPoo.Object~ | C4 precedence, typed slots, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
+| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 
@@ -41,6 +41,8 @@ or ~just check-debug true~ to print semantic diagnostics only when needed.
 Run ~just --list~ for the full command list. [[file:Examples/LayeredObject.lean][LayeredObject.lean]] shows C4
 composition, lazy reads, cloning, and revision. [[file:Examples/MethodDictionary.lean][MethodDictionary.lean]] shows an inherited formatter with dynamic and
 caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.lean]] shows a live object's old and new snapshots.
+[[file:Examples/ObjectDefinition.lean][ObjectDefinition.lean]] shows typed object definitions, C4 parent orders, and an inherited method call.
+[[file:Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] composes an object-valued slot with an explicit error result.
 [[file:Examples/DebugTrace.lean][DebugTrace.lean]] shows the public tracing API on productive and recursive reads.
 [[file:Examples/ProofReuse.lean][ProofReuse.lean]] carries a certificate across an unrelated override, and
 [[file:Examples/ExtensibleDispatch.lean][ExtensibleDispatch.lean]] adds plugin methods selected by two C4 lineages.

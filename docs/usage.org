@@ -5,6 +5,126 @@ This page is a compact map of the current Lean API.
 
 * Build an object
 
+Gerbil-POO's ~.o~ is an object-definition form: it declares slots and returns
+an object that can be read now and inherited later. It is not another name
+for ~.mix~. Lean expresses the declaration with typed ~do~ notation:
+
+#+begin_src lean
+let root ← Object.define (Key := Key) (Value := Value) "Root" do
+  Object.Declaration.Builder.value .source 3
+  Object.Declaration.Builder.default .derived 2
+  Object.Declaration.Builder.slot .derived
+    (.computed fun self inherited =>
+      some ((inherited ()).getD 0 + (self .source).getD 0))
+let child ← root.extendWith "Child" do
+  Object.Declaration.Builder.value .source 9
+#+end_src
+
+~Object.define~ returns a ~Memoized~ object with a reusable C4 plan and lazy
+current instance. ~extendWith~ constructs a child from the same typed builder;
+the root remains readable. ~receiver.defineWith name parents~ defines a new
+object in the receiver's graph, including multiple direct parents, while
+retaining its resolution mode. ~Object.defineIn schema name parents~ supports
+callers that own a schema directly. All four use the existing compiler and
+slot evaluator. See [[file:../Examples/ObjectDefinition.lean][ObjectDefinition.lean]] for a typed C4 diamond.
+
+For independent object families, ~first.defineFrom name [second, third] do ...~
+accepts first-class parent objects and merges their disjoint C4 graphs. The
+receiver supplies the resolution mode. A repeated node name is reported as a
+schema collision; shared ancestry belongs in ~defineWith~ on one family
+snapshot. This distinction avoids silently choosing between different
+declarations for a colliding ancestor.
+
+~first.mixMany [second, third] name declaration~ exposes the same first-class
+parent composition when the declaration is already built. ~mixWith~ remains
+its two-object form.
+
+For a C4 node with multiple local parent orders or suffix metadata, use
+~Object.defineNodeIn schema node do ...~ or
+~receiver.defineNodeWith node do ...~. The node is an ordinary Lean
+~C4.Node~ value, such as
+~{ name := "Example", parentOrders := [["A", "B"], ["C"]] }~.
+These entry points call the same C4 compiler as the flat-parent forms, so
+unknown parents and invalid suffix order are reported during definition.
+
+| Gerbil-POO form | Lean expression |
+|-----------------+-----------------|
+| ~.o~ and ~.def~ | ~Object.define~, ~Memoized.defineWith~, ~Memoized.defineFrom~, ~Object.defineIn~, or ~Memoized.extendWith~ inside an ordinary Lean ~def~; ~Declaration.build~ creates reusable direct specifications. |
+| C4 node metadata beyond flat Gerbil supers | ~Object.defineNodeIn~ or ~Memoized.defineNodeWith~ with a ~C4.Node~. |
+| Constant slot, lexical value, and default | ~Declaration.Builder.value~ with a Lean value or lexical variable; ~default~ supplies the inherited base. |
+| ~=>~ inherited modifier | ~Declaration.Builder.modifyInherited~; the inherited computation is forced only when this slot is read. |
+| Conditional inherited call | ~slot key (.computed fun self inherited => ...)~; invoke ~inherited ()~ only in the branch that needs it. |
+| Final-self slot | ~slot key (.self ...)~; the typed ~self~ lookup remains lazy. |
+| ~.ref~ and ~.get~ | ~Memoized.read~ returns ~Option~; ~Memoized.ref~ reports an absent slot. Nested reads use ~Option.bind~. |
+| ~.call~ | Read a function-valued slot and apply the resulting Lean function. |
+| ~.mix~, ~.extend~, ~.+~ | ~Memoized.mix~ / ~mixMany~ / ~mixWith~, ~extend~ / ~extendWith~, and ~plus~ / ~plusWith~. |
+
+Gerbil's ~.put!~ mutates only an instance, while ~.putslot!~ changes its
+prototype. LeanPoo's persistent ~reviseSlot~ / ~reviseDefault~ and mutable
+~Mutable.putValue~ / ~putSlot~ create a newly validated instance; they do not
+promise Gerbil's instance-only mutation behavior. Lean's closed ~structure~
+and field notation remain preferable when no runtime C4 extension is needed.
+
+Gerbil's ~=>.+~ combines objects stored *inside a slot*. It is distinct from
+adding a direct C4 parent to the outer object. Use ~slot key (.computed ...)~
+to defer the nested operation, then call ~inner.plusWith override name~ on
+the inherited object. ~plusWith~ uses the existing ~.+~ topology after
+joining two disjoint object families. The slot's Lean value type can contain
+~Except PlusWithError~ so a nested composition failure stays observable.
+[[file:../Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] shows this pattern. A shared-ancestry
+nested override still requires one common family snapshot and ~plus~; there
+is no generic syntax macro for ~=>.+~.
+
+~Object.Nested.plusWith override name~ is a reusable slot method for the
+independent-family case. ~Object.Nested.plus name overrideName~ uses an override
+already in the inherited inner object's C4 family. Both keep an absent
+inherited slot absent and propagate an inner composition error through the
+slot's ~Except~ value. When two outer branches contribute these methods, the
+ordinary outer C4 resolver orders their application. The diamond in
+[[file:../Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] yields ~12~ from a base ~1~, a
+doubling branch, and an add-ten branch; an unrelated inner slot stays ~5~.
+Each independent inner override and generated node needs a distinct C4 name.
+
+For several outer branches contributing to one inner specification,
+~Object.Nested.lift outerPlan namePrefix contribution~ derives an inner
+C4 family from the outer plan and a function from outer node names to
+optional direct inner declarations. It returns ~none~ when the focus has no
+contribution. ~Object.Nested.liftOn outerPlan innerBase namePrefix contribution~
+uses an existing inner object as the shared least-specific ancestor and
+retains its resolution mode. ~liftLayers~ and ~liftLayersOn~ accept a typed
+~Object.Nested.Layer~ at each node when the inner specification also names
+parents from the supplied inner family or needs its own suffix flag. The
+constructor keeps nodes with a direct
+contribution or a contributing ancestor, including identity nodes that carry
+ordering constraints; unrelated branches are omitted. It verifies that the
+resulting order is the outer C4 order projected onto the kept nodes. If
+pruning changes that order, it retries with the complete outer ancestry.
+The lifted nodes retain C4 suffix metadata.
+Names are generated by ~Object.Nested.liftedName~; an overlap with the inner
+base family is reported as a schema error. The
+[[file:../Examples/NestedObjectDefinition.lean][lifted widget]] composes a
+shift and a scale through an outer branch with no direct inner method, while
+the widget's own trait contributes independently to its inner parent graph.
+
+Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
+one form. ~Declaration.Builder~ is an ordered Lean state program: a later
+write to the same direct key replaces the earlier one. For authored object
+definitions that should reject accidental repeats, use
+~Declaration.StrictBuilder.value~ / ~default~ / ~slot~ in a typed ~do~ block
+with ~Object.defineStrict~, ~Memoized.extendStrict~,
+~defineStrictWith~, ~defineStrictNodeWith~, or ~defineStrictFrom~. Their
+errors distinguish a repeated direct method from a repeated default, before
+the C4 plan is compiled. A method and default for the same key remain legal.
+The strict builder has no general ~MonadState~ operations, so ordinary ~do~
+blocks cannot bypass these checks with ~set~ or ~modify~. Code that constructs
+the underlying program value manually remains outside this authoring
+contract. Strict construction does not guarantee termination of an arbitrary
+Lean function inside a slot.
+Strict construction records seen keys in hash sets and prepends direct
+entries while declaring; it reverses the accumulated lists once at build
+time. With lawful hashing, distinct writes avoid the ordinary Builder's
+repeated list scans.
+
 ~Prototype.Proto~, ~compose~, and ~instantiate~ are the POOF starting point.
 ~Prototype.Generator~ keeps an inherited computation open, while
 ~Prototype.DelayedProto~ uses Lean ~Thunk~ for non-function lazy instances.
@@ -44,7 +164,9 @@ does not require an ~Inhabited~ result type.
 | Operation | Role |
 |-----------+------|
 | ~Object.Declaration.empty~ | Start a typed declaration. |
+| ~Object.define~ / ~Object.defineIn~ / ~Object.defineNodeIn~ / ~Memoized.defineWith~ / ~Memoized.defineNodeWith~ / ~Memoized.defineFrom~ / ~Memoized.extendWith~ | Construct a lazy C4 object from typed root, full node metadata, same-family, independent-family, or child definitions. |
 | ~Declaration.build~ / ~buildOn~ | Run a pure, reusable Lean ~do~ program to construct or extend a typed declaration. |
+| ~Declaration.StrictBuilder~ / ~Object.defineStrict~ | Opt into duplicate direct-write diagnostics while retaining typed Lean ~do~ declarations and the same C4 evaluator. |
 | ~Declaration.Builder.value~ / ~default~ / ~slot~ / ~modifyInherited~ / ~edit~ | Compose direct values, defaults, open methods, delayed inherited updates, and ordinary declaration transforms. |
 | ~Prototype.SkewLens.focus~ / ~refocusUpdate~ | Lift an open prototype to a wider context and narrow its update target independently of the final-self view. |
 | ~Prototype.MonoLens~ | Compose ordinary getter/setter field focuses as a special case of skew lenses. |

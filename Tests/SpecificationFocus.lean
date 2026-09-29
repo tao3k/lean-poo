@@ -1,5 +1,6 @@
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Builder
+import LeanPoo.Object.Definition
 
 namespace LeanPoo.Tests.SpecificationFocus
 
@@ -76,6 +77,59 @@ def removalResult : Except C4.Error
         "Missing").get original with
       | .error (.unknownNode "Missing") => true
       | _ => false
+  | _ => false
+
+/-- The full specification focus updates topology and direct methods through
+one value. A method-only edit retains the validated C4 order; malformed
+parents fail before a new object is returned. -/
+def fullSpecificationResult : Except C4.Error Bool := do
+  let original ← initial
+  let focus := Object.Lens.prototypeSpecification
+    (Key := String) (Value := Value) "Child"
+  let detached ← focus.modify (fun spec =>
+    { spec with parentOrders := [] }) original
+  let revised ← focus.modify (fun spec =>
+    { spec with declaration := spec.declaration.withValue "retries" 9 })
+    detached
+  let suffixed ← focus.modify (fun spec =>
+    { spec with suffix := true }) revised
+  let badParent := match focus.modify (fun spec =>
+      { spec with parentOrders := [["Missing"]] }) suffixed with
+    | .error (.unknownNode "Missing") => true
+    | _ => false
+  let cycle := match focus.modify (fun spec =>
+      { spec with parentOrders := [["Child"]] }) detached with
+    | .error (.cycle "Child") => true
+    | _ => false
+  return original.read "retries" == some 2 &&
+    detached.read "retries" == none &&
+    detached.plan.precedence == ["Child"] &&
+    revised.read "retries" == some 9 &&
+    revised.plan.precedence == detached.plan.precedence &&
+    (← focus.get suffixed).suffix && badParent && cycle
+
+#guard match fullSpecificationResult with
+  | .ok true => true
+  | _ => false
+
+/-- Reordering two C4 parents changes the selected inherited default. -/
+def reorderedParents : Except C4.Error Bool := do
+  let child ← initial
+  let sibling ← child.defineWith "Sibling" ["Base"] do
+    Object.Declaration.Builder.default "limit" 9
+  let joined ← sibling.defineWith "Joined" ["Child", "Sibling"] do
+    pure ()
+  let focus := Object.Lens.prototypeSpecification
+    (Key := String) (Value := Value) "Joined"
+  let reordered ← focus.modify (fun spec =>
+    { spec with parentOrders := [["Sibling", "Child"]] }) joined
+  return joined.read "limit" == some 7 &&
+    reordered.read "limit" == some 9 &&
+    joined.plan.precedence == ["Joined", "Child", "Sibling", "Base"] &&
+    reordered.plan.precedence == ["Joined", "Sibling", "Child", "Base"]
+
+#guard match reorderedParents with
+  | .ok true => true
   | _ => false
 
 end LeanPoo.Tests.SpecificationFocus
