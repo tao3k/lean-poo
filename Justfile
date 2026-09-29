@@ -203,6 +203,11 @@ benchmark-revision:
     lake build LeanPoo.Object.Resolve
     lake env lean --run Benchmarks/RevisionScale.lean
 
+# Compare repeated pairwise schema merging with one indexed pass.
+benchmark-schema-merge:
+    lake build LeanPoo.Object.Schema
+    lake env lean --run Benchmarks/SchemaMergeScale.lean
+
 # Measure C4 traversal on deep and wide finite inheritance graphs.
 benchmark-c4:
     lake build LeanPoo.C4.Linearize

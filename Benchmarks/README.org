@@ -8,5 +8,9 @@ test gate. They do not establish a general performance guarantee.
 ~just benchmark-strict-definition~ compares ordered replacement construction
 with duplicate-checked construction on distinct keys at three scales.
 
+~just benchmark-schema-merge~ compares repeated pairwise merging with the
+shared-index pass over disjoint families. It checks node counts and inherited
+declaration checksums before reporting timings.
+
 Usage scenarios live in [[file:../Examples/README.org][Examples]], and assertions live in
 [[file:../Tests/README.org][Tests]].
