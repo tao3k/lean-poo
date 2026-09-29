@@ -75,6 +75,16 @@ joining two disjoint object families. The slot's Lean value type can contain
 nested override still requires one common family snapshot and ~plus~; there
 is no generic syntax macro for ~=>.+~.
 
+~Object.Nested.plusWith override name~ is a reusable slot method for the
+independent-family case. ~Object.Nested.plus name overrideName~ uses an override
+already in the inherited inner object's C4 family. Both keep an absent
+inherited slot absent and propagate an inner composition error through the
+slot's ~Except~ value. When two outer branches contribute these methods, the
+ordinary outer C4 resolver orders their application. The diamond in
+[[file:../Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] yields ~12~ from a base ~1~, a
+doubling branch, and an add-ten branch; an unrelated inner slot stays ~5~.
+Each independent inner override and generated node needs a distinct C4 name.
+
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
 write to the same direct key replaces the earlier one. For authored object

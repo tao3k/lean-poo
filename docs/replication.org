@@ -261,6 +261,23 @@ for future work. ~Prototype.lensGen~ implements that constructor as a normal
 delayed prototype. It introduces neither Lisp-style declaration syntax nor
 a separate object evaluator or runtime MOP.
 
+* Nested specification boundary
+
+POOF section 9 describes nested specifications whose outer inheritance can
+induce an inner hierarchy. ~Object.Nested.plusWith~ and ~plus~ now express
+an inner extension as a reusable typed slot method. An outer C4 diamond
+executes two such methods in its resolved order, while the inner C4 compiler
+checks each composition. This covers explicit nested extensions, including
+fallible independent-family overrides.
+
+The general construction in the paper is broader: it lifts nested parent
+DAGs through the outer hierarchy and preserves ordering constraints from
+ancestors with no direct inner method. LeanPoo does not yet infer or build
+that inner DAG automatically from arbitrary nested outer specifications.
+Callers currently name each inner contribution and choose whether it belongs
+to one shared inner family or to disjoint families. This is a remaining
+paper-level feature beyond the explicit typed slot construction above.
+
 * Fixed-point boundary in Lean
 
 A general fixed point may diverge, so Lean's kernel cannot certify it as a

@@ -89,6 +89,7 @@ check-compose: check-object
     lake build LeanPoo.Object.Memo
     lake build LeanPoo.Object.StrictBuilder
     lake build LeanPoo.Object.Definition
+    lake build LeanPoo.Object.Nested
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Prototype.Mutable
