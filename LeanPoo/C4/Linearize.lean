@@ -1,5 +1,5 @@
 import Std
-import LeanPoo.C4.Merge
+import LeanPoo.C4.Precedence
 
 /-!
 C4 metadata algorithm translated from François-René Rideau's C4-Mixins,
@@ -41,7 +41,7 @@ private def suffixReaches (table : Table) (source target : String) : Bool :=
   found
 
 /-- Compute one node after all its parents have been computed. -/
-private def computeNode (table : Table) (node : Node) :
+private def computeNode (table : Table) (node : Node) (checked : Bool) :
     Except Error Linearization := do
   let orders := node.parentOrders.filter (fun order => !order.isEmpty)
   let mut parentResultsRev : List Linearization := []
@@ -74,7 +74,9 @@ private def computeNode (table : Table) (node : Node) :
   let candidates :=
     (parentResults.map (fun result => withoutTail result.precedence inheritedTail)) ++
     (orders.map (fun order => withoutTail order inheritedTail))
-  let mergedPrefix ← merge candidates
+  let mergedPrefix ← if checked then
+    (Precedence.mergeCertified candidates).map (·.output)
+  else merge candidates
   return {
     precedence := [node.name] ++ mergedPrefix ++ inheritedTail
     inheritedSuffix := inheritedSuffix
@@ -84,7 +86,7 @@ private def computeNode (table : Table) (node : Node) :
 /-- Resolve a node only after its parents, retaining each completed C4 result.
 The remaining node count bounds recursion, including cyclic graphs. -/
 private def resolveNode (index : Std.HashMap String Node) (root name : String)
-    (table : Table) : Nat → Except Error Table
+    (table : Table) (checked : Bool) : Nat → Except Error Table
   | 0 =>
       if (lookup table name).isSome then .ok table else .error (.cycle root)
   | fuel + 1 => do
@@ -93,8 +95,8 @@ private def resolveNode (index : Std.HashMap String Node) (root name : String)
       let some node := index.get? name | throw (.unknownNode name)
       let mut ready := table
       for parent in parents node do
-        ready ← resolveNode index root parent ready fuel
-      let result ← computeNode ready node
+        ready ← resolveNode index root parent ready checked fuel
+      let result ← computeNode ready node checked
       return ready.insert name result
 
 /-- First declarations own name lookup until duplicate validation reports an
@@ -126,7 +128,7 @@ private def reachable (graph : Graph) (index : Std.HashMap String Node)
   return reversed.reverse
 
 /-- Total finite-graph C4 translation. All iterations have bounds from graph size. -/
-def linearize (graph : Graph) (root : String) : Except Error (List String) := do
+private def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Error (List String) := do
   let index := nodeIndex graph
   if (index.get? root).isNone then
     throw (.unknownNode root)
@@ -135,8 +137,18 @@ def linearize (graph : Graph) (root : String) : Except Error (List String) := do
     ({} : Std.HashSet String)
   let nodes := graph.nodes.filter (fun node => namesSet.contains node.name)
   ({ nodes } : Graph).validate
-  let table ← resolveNode index root root {} nodes.length
+  let table ← resolveNode index root root {} checked nodes.length
   let some result := lookup table root | throw (.cycle root)
   return result.precedence
+
+/-- The ordinary tail-count implementation. -/
+def linearize (graph : Graph) (root : String) : Except Error (List String) :=
+  linearizeWith graph root false
+
+/-- Opt-in independent replay of every reachable node's prefix merge. Each
+accepted merge constructs a leftmost-eligible trace before its suffix is added.
+The graph's ordinary local-order, monotonicity, and suffix checks still apply. -/
+def linearizeChecked (graph : Graph) (root : String) : Except Error (List String) :=
+  linearizeWith graph root true
 
 end LeanPoo.C4

@@ -646,3 +646,14 @@ extension computing ~112~. The certificate is attached to the returned
 object's actual precedence and the selected source classifications. This
 receipt is a finite semantic construction, not a proof of asymptotic efficiency
 or automatic classification of new specifications.
+
+* Extended-precedence receipt
+
+~lake build LeanPoo.C4.Precedence LeanPoo.C4.Linearize~ checks the structural
+selection laws, trace uniqueness, and empty-suffix reduction. The focused
+~Tests/ExtendedPrecedence.lean~ entry requires ~EXTENDED-PRECEDENCE-OK~ and
+checks replay rejection, suffix exemption, and checked graph behavior.
+~Examples/ExtendedPrecedence.lean~ compares ordinary and suffix-exempt orders.
+The returned merge certificate concerns operational selection on its exact
+input lists; it is not a theorem of complete graph-algorithm correctness or
+an equivalence proof with Ducournau's extended-precedence graph.

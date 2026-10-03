@@ -351,6 +351,21 @@ slots, future reclassification, and hierarchy/local/suffix conflicts. This
 construction uses explicit metadata and enumerates candidate pairs; it does
 not infer categories from opaque methods or establish an ~O(nd)~ bound.
 
+Section 7's extended-precedence discussion now has an operational formalization
+in ~C4.Precedence~. Eligibility is defined independently by absence from all
+candidate tails; selection chooses the first eligible head. ~choose_eligible~
+and ~choose_leftmost~ prove feasibility and rejection of all earlier heads.
+An inductive ~Trace~ records each choice and complete termination, and
+~Trace.unique~ proves that two accepted traces for the same input agree.
+~mergeCertified~ replays the optimized tail-count merger's output using this
+independent structural definition. ~linearizeChecked~ opts into this replay at
+every reachable node's prefix merge. Suffix members are excluded before the
+choice and retained for final append; ~candidates_without_suffix~ proves
+reduction to ordinary C3 candidate construction when the suffix is empty.
+This formalizes the paper's operational tie rule. It does not prove the whole
+optimized algorithm correct for every graph, nor equivalence to Ducournau's
+original extended-precedence graph relation.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the

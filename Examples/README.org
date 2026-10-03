@@ -21,6 +21,7 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions, including named inner parents with shared ancestors. |
 | [[file:SpecificationComposition.lean][SpecificationComposition]] | Fuse policy specifications and include a later infrastructure ancestor before their direct finalizers. |
 | [[file:SharedFamily.lean][SharedFamily]] | Compose independently derived inner snapshots with explicitly shared prototype identities in an inherited component slot. |
+| [[file:ExtendedPrecedence.lean][ExtendedPrecedence]] | Compare certified prefix selection with and without a suffix exemption. |
 | [[file:SortedInheritance.lean][SortedInheritance]] | Linearize specification-sort priorities and enforce their complete cross-sort order through C4, changing noncommuting methods from 22 to 12. |
 | [[file:QuiescentUpgrade.lean][QuiescentUpgrade]] | Pause admission during an old Person operation and migrate class data only after that operation returns. |
 | [[file:ClassMigration.lean][ClassMigration]] | Upgrade Person through three typed class versions with defaults, value-preserving renaming, and an explicit age conversion. |

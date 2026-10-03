@@ -854,6 +854,36 @@ reports 9,999 reusable obligations. This checks dependency selection at scale;
 it does not measure theorem replay time or represent a large Cedar policy
 corpus.
 
+* Checked extended-precedence selection
+
+~C4.Precedence.mergeCertified lists~ runs the ordinary tail-count merger,
+then independently replays the output against candidate tails. Its returned
+~Certified lists~ binds the output to an inductive ~Trace~. Every step chooses
+the first eligible head, removes that head from all matching candidate lists,
+and continues until every list is empty. An incorrect choice, truncated output,
+or extra output is rejected. ~choose_eligible~, ~choose_leftmost~, and
+~Trace.unique~ provide the kernel-checked selection and uniqueness laws.
+
+~mergePrefix parents locals suffix~ removes the suffix names before certifying
+the prefix. The caller retains the suffix for final append; this helper does
+not validate graph-level suffix compatibility. ~candidates_without_suffix~
+proves that empty-suffix inputs are exactly the parent precedence lists followed
+by the local orders used for ordinary C3 merging.
+
+~C4.linearizeChecked graph root~ uses the existing graph traversal, local-order,
+monotonicity, and suffix checks, with independent replay at every reachable
+prefix merge. ~C4.linearize~ uses the ordinary merger. The checked path adds
+structural scanning cost and is intended for verification. Prefix certificates
+are exposed through ~mergeCertified~; graph-level checking returns the ordinary
+precedence list after all checks. [[file:../Tests/ExtendedPrecedence.lean][ExtendedPrecedence.lean]] covers diamonds,
+blocked first heads, conflicts, cycles, suffix incompatibility, and rejection
+of invalid claimed traces. [[file:../Examples/ExtendedPrecedence.lean][ExtendedPrecedence.lean]] shows ordinary
+~X S T Y~ selection versus suffix-exempt ~Y X S T~.
+
+This is an operational definition of extended precedence for C4's candidate
+selection. A proof of the entire optimized merger/traversal for all inputs and
+an equivalence proof with Ducournau's original relation remain open.
+
 * Commands
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,

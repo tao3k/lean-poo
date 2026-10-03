@@ -20,3 +20,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:QuiescentUpgrade.lean][QuiescentUpgrade]] checks admission closure, two concurrent readers draining, exception cleanup, canceled/stale requests, upgrade rollback, and the quiescence and authorization proofs.
 
 - [[file:SortedInheritance.lean][SortedInheritance]] checks two-level sort priorities, complete ordering certificates, same-sort C4 behavior, heterogeneous function slots, future reclassification, and metadata, hierarchy, local-order, and suffix conflicts.
+
+- [[file:ExtendedPrecedence.lean][ExtendedPrecedence]] checks leftmost eligible replay, rejected incorrect/incomplete traces, suffix exemption, checked graph linearization, and the selection and uniqueness proofs.
