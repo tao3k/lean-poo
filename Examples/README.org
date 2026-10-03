@@ -18,7 +18,7 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |
 | [[file:LayeredObject.lean][LayeredObject]] | Mix, extend, memoize, clone, and a diamond-shaped inheritance graph. |
 | [[file:ObjectDefinition.lean][ObjectDefinition]] | Typed object definitions with lazy inheritance, first-class parents, grouped C4 parent orders, checked authoring, and a function-valued slot call. |
-| [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions. |
+| [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions, including named inner parents with shared ancestors. |
 | [[file:FirstClassObject.lean][FirstClassObject]] | First-class prototype values and delayed construction. |
 | [[file:PrototypeCore.lean][PrototypeCore]] | Open-recursive prototype composition and delayed values. |
 

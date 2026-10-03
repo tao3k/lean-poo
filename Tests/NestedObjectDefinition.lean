@@ -335,6 +335,94 @@ private def multipleInnerFamilies : Except String Bool := do
   | .ok true => true
   | _ => false
 
+/-- Two inner roots share one seed. Noncommuting methods expose parent order,
+and the seed must occur once even when several outer leaves inherit it. -/
+private def commonInnerFamily : Except String Bool := do
+  let seed ← (Object.define (Key := Key) (Value := Value) "Seed" do
+    Object.Declaration.Builder.value .x 1
+    Object.Declaration.Builder.value .z 5) |>.mapError (fun _ => "seed")
+  let left ← (seed.extendWith "Add" do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10)))
+    |>.mapError (fun _ => "add")
+  let family ← (left.defineWith "Double" ["Seed"] do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2)))
+    |>.mapError (fun _ => "double")
+  let outer ← Object.compile
+    ({ graph := { nodes := [{ name := "Component" }] }
+       declaration := fun _ => none } : Object.Schema OuterKey OuterValue)
+    "Component" |>.mapError (fun _ => "outer")
+  let layer : String → Option (Object.Nested.Layer Key Value) :=
+    fun _ => some {}
+  let forward ← Object.Nested.liftLayersWithParents outer
+    family.plan.memoizeCompiled [["Add", "Double"]] "forward" layer
+    |>.mapError (fun _ => "forward")
+  let reverse ← Object.Nested.liftLayersWithParents outer
+    family.plan.memoizeIndexed [["Double", "Add"]] "reverse" layer
+    |>.mapError (fun _ => "reverse")
+  let independent ← Object.Nested.liftLayersWithParents outer family
+    [["Add"], ["Double"]] "independent" layer
+    |>.mapError (fun _ => "independent")
+  let some independentRoot := independent.plan.schema.graph.findNode?
+      "independent/Component" | return false
+  let orderedFamily ← (family.defineWith "Ordered" ["Add", "Double"] do
+    pure ()) |>.mapError (fun _ => "ordered family")
+  let reordered ← Object.Nested.liftLayersWithParents outer orderedFamily
+    [["Double"], ["Ordered"]] "reordered" layer
+    |>.mapError (fun _ => "independent reordering")
+  let forcedConflict := match Object.Nested.liftLayersWithParents outer
+      orderedFamily [["Double", "Ordered"]] "forced" layer with
+    | .error (.c4 .inconsistentOrder) => true
+    | _ => false
+  let diamond ← outerTopology |>.mapError (fun _ => "diamond")
+  let branches : String → Option (Object.Nested.Layer Key Value)
+    | "Left" => some {}
+    | "Right" => some {}
+    | _ => none
+  let shared ← Object.Nested.liftLayersWithParents diamond family
+    [["Add", "Double"]] "shared" branches
+    |>.mapError (fun _ => "shared leaves")
+  let unknown := match Object.Nested.liftLayersWithParents outer family
+      [["absent"]] "unknown" layer with
+    | .error (.c4 (.unknownNode "absent")) => true
+    | _ => false
+  let liftedReference := match Object.Nested.liftLayersWithParents outer family
+      [["self/Component"]] "self" layer with
+    | .error (.c4 (.unknownNode "self/Component")) => true
+    | _ => false
+  let conflict := match Object.Nested.liftLayersWithParents outer family
+      [["Add", "Double"], ["Double", "Add"]] "conflict" layer with
+    | .error (.c4 .inconsistentOrder) => true
+    | _ => false
+  let empty := match Object.Nested.liftLayersWithParents outer family
+      [["Add", "Double"]] "empty" (fun _ => none) with
+    | .error .missingFocus => true
+    | _ => false
+  let collisionFamily ← (family.defineWith "collision/Component" [] do
+    pure ()) |>.mapError (fun _ => "collision family")
+  let collision := match Object.Nested.liftLayersWithParents outer
+      collisionFamily [["Add", "Double"]] "collision" layer with
+    | .error (.schema (.duplicateNode "collision/Component")) => true
+    | _ => false
+  return forward.plan.precedence ==
+      ["forward/Component", "Add", "Double", "Seed"] &&
+    reverse.plan.precedence ==
+      ["reverse/Component", "Double", "Add", "Seed"] &&
+    forward.read .x == some 12 && reverse.read .x == some 22 &&
+    forward.read .z == some 5 && forward.mode == .compiled &&
+    reverse.mode == .indexed &&
+    independentRoot.parentOrders == [["Add"], ["Double"]] &&
+    (shared.plan.precedence.filter (· == "Seed")).length == 1 &&
+    shared.read .x == some 12 && family.read .x == some 2 &&
+    family.plan.precedence == ["Double", "Seed"] &&
+    reordered.plan.precedence ==
+      ["reordered/Component", "Ordered", "Add", "Double", "Seed"] &&
+    reordered.read .x == some 12 && forcedConflict &&
+    unknown && liftedReference && conflict && empty && collision
+
+#guard match commonInnerFamily with
+  | .ok true => true
+  | _ => false
+
 private def unknownInnerParent : Except C4.Error Bool := do
   let outer ← outerTopology
   let base ← Object.define (Key := Key) (Value := Value)

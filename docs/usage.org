@@ -106,6 +106,20 @@ base family is reported as a schema error. The
 shift and a scale through an outer branch with no direct inner method, while
 the widget's own trait contributes independently to its inner parent graph.
 
+When several inner parents share ancestors, author them within one family
+snapshot and call
+~Object.Nested.liftLayersWithParents outerPlan family parentOrders namePrefix layers.lookup~.
+The selected names can be any nodes in that family's schema, including nodes
+outside its current root's ancestry. Use ~[["ShiftTrait", "ScaleTrait"]]~ to
+require that order, or ~[["ShiftTrait"], ["ScaleTrait"]]~ to leave their relative
+order to C4. Each retained outer leaf inherits those orders. The shared
+ancestor retains one identity and runs once; ~sharedWidgetTraits~ in the
+nested example returns ~12~ and preserves the defaults' unrelated ~z~ slot.
+The derived object retains the family's resolution mode. Unknown selected
+parents, conflicting orders, and lifted-name collisions return errors; a
+missing focus returns ~LiftError.missingFocus~. ~liftLayersOnMany~ remains the
+entry for distinct, independently authored families.
+
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
 write to the same direct key replaces the earlier one. For authored object

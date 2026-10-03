@@ -336,12 +336,26 @@ reports the first cross-family repeated identity, and defers each original
 declaration function until its node is requested. Duplicate names within one
 family remain C4 graph-validation errors, as in repeated pairwise merging.
 
-The general construction in the paper is broader: contributions may be
-computed by arbitrary outer slot bodies, and independent inner DAGs may share
-prototype identities. LeanPoo does not inspect Lean functions to discover
-contributions or infer a merge of overlapping inner families. Callers
-explicitly supply layers and use disjoint identities for independent bases.
-This remains a paper-level boundary beyond the current derived topology.
+~liftLayersWithParents~ accepts several named inner parents from one common
+family schema. It attaches caller-supplied parent orders to each retained
+outer leaf. Shared ancestors retain their original identity and appear once
+in C4 precedence, even when several outer branches reach them. Ordered parent
+lists constrain relative precedence; singleton lists leave that choice to
+C4, matching the paper's independent-parent representation. Parents need not
+be ancestors of the snapshot's current root. Unknown selected names are
+rejected against the authoritative family before lifting. Conflicting orders
+and lifted-name collisions remain errors; the source snapshot and its
+resolution mode are preserved.
+
+The remaining boundary is discovery and reconciliation of arbitrary sources:
+contributions may be computed by arbitrary outer slot bodies, and separately
+authored inner DAG snapshots may overlap without a common authoritative
+schema. LeanPoo does not inspect Lean functions to discover contributions or
+infer equality of opaque declarations from matching names. Callers explicitly
+supply layers and either author shared parents in one family or supply
+disjoint independent families. The derived shared-ancestor topology itself is
+now executable; arbitrary function discovery and cross-snapshot identity
+reconciliation remain outside this construction.
 
 * Fixed-point boundary in Lean
 
