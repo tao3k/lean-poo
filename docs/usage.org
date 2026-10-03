@@ -943,6 +943,37 @@ orders and cached tails; it does not prove cache provenance, correct traversal
 of every graph, or optimized-merger success whenever a consistent order exists.
 [[file:../Tests/NodeCertificate.lean][NodeCertificate.lean]] checks the certificate laws and typed rejection paths.
 
+* Graph-derived certificates
+
+~C4.linearizeCertified graph root~ first obtains the ordinary compiler result,
+then independently rebuilds a finite derivation from ~graph.findNode?~ and
+every declared parent edge. It returns ~GraphCertified graph root~ only when
+the reconstructed list equals that ordinary result. ~c.compiled~ proves
+~linearize graph root = .ok c.output~; the certificate is tied to the original
+graph and the actual returned list.
+
+~c.nodup~ proves unique names, ~c.head~ proves that the root is first, and
+~c.covers~ characterizes output membership exactly by ~Ancestor graph item root~.
+This ancestry relation includes the root itself and follows each first-matching
+node declaration's flattened local parent orders. ~c.local_order found member~
+retains each root local order as an ordered sublist. ~c.ancestor path~ supplies
+a finite derivation for any reachable ancestor and proves its derived order is
+an ordered sublist of the root output. If that ancestor's graph declaration has
+~suffix = true~, ~c.ancestor_suffix path found flag~ proves its full order is an
+actual suffix of the root output. ~c.unique other~ proves identical output for
+two certificates over the same graph/root.
+
+The reconstruction carries parent derivations, including their most-specific
+tail lists, so graph provenance is established by the trace rather than assumed
+from a compiler cache. Existing ordinary graph errors are propagated, and a
+reconstruction mismatch reports ~inconsistentOrder~. Verification may repeat
+shared ancestors and is intended for proof-bearing results, not performance
+claims. Completeness of the ordinary traversal and of bounded certificate
+reconstruction on every consistent graph is not proved here.
+[[file:../Tests/GraphCertificate.lean][GraphCertificate.lean]] checks diamonds, shared suffix chains, repeated
+parent edges, missing nodes, cycles, ordering conflicts, and unreachable
+malformed declarations without changing the ordinary compiler's root scope.
+
 * Commands
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,

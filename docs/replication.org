@@ -691,3 +691,19 @@ suffixes, duplicate tails, and a node name already in its ancestry.
 The checked graph path constructs the certificate from actual cached parent
 tails at every computed node. Traversal completeness and graph-to-cache
 metadata provenance remain separate proof obligations.
+
+* Graph-derived certificate receipt
+
+~lake build LeanPoo.C4.GraphCertificate~ checks graph lookup provenance,
+complete declared-parent derivations, transitive ancestor and suffix laws,
+and exact binding to the ordinary compiler result.
+~Tests/GraphCertificate.lean~ requires ~GRAPH-CERTIFICATE-OK~ and prints axiom
+dependencies for unique names, head identity, exact ancestry coverage,
+ancestor-order preservation, declared ancestor suffix retention, local orders,
+and output uniqueness. The executable cases include shared ancestors, suffix
+chains, repeated parent edges, and ordinary typed errors.
+These are general soundness laws of accepted graph-derived certificates.
+Success on all consistent graphs and any verification efficiency bound remain
+unproved; shared parent work may be repeated. The proof does not establish
+the original optimized traversal's internal cache invariant or equivalence
+with Ducournau's definition.

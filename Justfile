@@ -13,6 +13,7 @@ check-merge: check-types
     lake build LeanPoo.C4.Precedence
     lake build LeanPoo.C4.Suffix
     lake build LeanPoo.C4.NodeCertificate
+    lake build LeanPoo.C4.GraphCertificate
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -190,6 +191,7 @@ check-tests: check-proof
     lake env lean Tests/ExtendedPrecedence.lean
     lake env lean Tests/SuffixConsistency.lean
     lake env lean Tests/NodeCertificate.lean
+    lake env lean Tests/GraphCertificate.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean

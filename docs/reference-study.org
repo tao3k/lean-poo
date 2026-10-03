@@ -395,9 +395,25 @@ tail is duplicate-free and the node name is absent from the reconstructed
 ancestry. Its full output preserves each parent/local order, retains each
 parent tail as a suffix, contains no repeated names, and starts with the node
 name. ~linearizeChecked~ constructs this certificate at every computed node.
-These are general laws over the supplied orders and cached tails. A proof that
-graph traversal computes all required nodes and that cached metadata correctly
-represents the graph's suffix declarations remains open.
+These are general laws over the supplied orders and cached tails.
+
+~C4.GraphCertificate~ now provides a separate graph-derived certificate for
+the ordinary compiler's exact returned list. ~GraphTrace~ binds every node
+to its first declaration lookup in the original graph, records every declared
+parent edge, and recursively supplies the parent derivations used to construct
+that node's orders and tails. ~GraphCertified~ carries both this trace and an
+equality to ~linearize graph root~. Its laws establish duplicate-free output,
+root-first order, exact reflexive ancestry coverage, transitive ancestor-order
+preservation, local-order preservation, and actual suffix retention for any
+graph ancestor declared as a suffix. Two accepted certificates for the same
+graph/root agree about output.
+~linearizeCertified~ reconstructs independently from graph declarations and
+rejects a mismatch with the ordinary compiler. It does not trust the compiler's
+cached metadata. This is soundness for accepted certificates. A proof that
+the ordinary traversal or this bounded reconstruction always succeeds for
+every consistent graph, and equivalence with Ducournau's original relation,
+remain open. Verification can repeat shared parent work; no efficiency bound
+is claimed for this path.
 
 * Paper-derived boundaries
 
