@@ -1,5 +1,6 @@
 import LeanPoo.C4.Precedence
 import LeanPoo.C4.ReferenceMerge
+import LeanPoo.C4.MergeInvariant
 import LeanPoo.C4.Suffix
 import LeanPoo.C4.NodeCertificate
 import LeanPoo.C4.GraphCertificate

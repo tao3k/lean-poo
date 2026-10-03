@@ -720,8 +720,8 @@ cases check blocked heads, shared candidates, inconsistency, explicit fuel,
 and reference suffix/node construction. ~linearizeCertified~ now rebuilds
 using the structural reference merger. This closes completeness relative to
 complete candidate traces. Graph reconstruction completeness is now proved
-relative to finite ~GraphTrace~ derivations; the optimized merger's state
-invariant remains a separate obligation.
+relative to finite ~GraphTrace~ derivations. The optimized candidate merger's
+state invariant is now proved by the receipt below.
 
 * Graph reconstruction completeness receipt
 
@@ -738,5 +738,33 @@ and suffix-order violations. The gate remains ~GRAPH-CERTIFICATE-OK~.
 
 ~reconstruct_success_iff~ closes success exactly against existence of the
 explicit finite ~GraphTrace~ relation. ~linearizeCertified_complete~ still
-requires ordinary compiler success. Neither ordinary optimized completeness
-nor equivalence to the paper's original relation follows from this receipt.
+requires ordinary compiler success. Neither ordinary graph traversal
+completeness nor equivalence to the paper's original relation follows from
+this receipt.
+
+* Optimized merge invariant and equivalence receipt
+
+~lake build LeanPoo.C4.MergeInvariant~ checks hash-map initialization,
+multiplicity accounting for exposed heads, incremental subtraction, exact
+eligible-head selection, empty-candidate pruning, actual step simulation,
+finite-fold soundness/completeness, and optimized/reference ~toOption~ equality.
+The runtime retains its incremental HashMap and original finite-fold budget;
+named inline state operations provide proof seams for the same algorithm.
+~Precedence.check_complete~ and ~mergeCertified_complete~ connect actual raw
+results to the existing independent replay path.
+
+~Tests/MergeInvariant.lean~ prints 16 axiom reports containing only standard
+Lean axioms. General examples quantify over arbitrary candidates and traces.
+Direct guards check repeated-tail multiplicities and a decrement of two
+occurrences exposed by one chosen name. An executable comparison enumerates
+all 3,616 families of zero to three candidate orders with zero to three
+positions over two names. It compares both raw and certified optimized
+results with the structural reference output, including empty candidates,
+repeated names, repeated orders, blocked heads, and conflicts. The gate is
+~MERGE-INVARIANT-OK families=3616~. This finite enumeration supplements the
+general kernel proofs; it is not their evidence boundary.
+
+The equivalence theorem compares successful lists and rejection domains via
+~toOption~, not error payloads. Ordinary graph traversal/cache completeness,
+equivalence to Ducournau's original graph relation, and complexity bounds
+remain open.

@@ -890,8 +890,9 @@ of invalid claimed traces. [[file:../Examples/ExtendedPrecedence.lean][ExtendedP
 ~X S T Y~ selection versus suffix-exempt ~Y X S T~.
 
 This is an operational definition of extended precedence for C4's candidate
-selection. A proof of the entire optimized merger/traversal for all inputs and
-an equivalence proof with Ducournau's original relation remain open.
+selection. The optimized merger is now proved sound and complete for this
+operational trace relation, as described below. Completeness of the ordinary
+graph traversal and equivalence with Ducournau's original relation remain open.
 
 * Certified suffix reconstruction
 
@@ -940,7 +941,8 @@ precedence and checks the selected tail against those actual lists before
 constructing the complete node certificate. It still returns an ordinary
 list. This establishes accepted node results relative to the supplied parent
 orders and cached tails; it does not prove cache provenance, correct traversal
-of every graph, or optimized-merger success whenever a consistent order exists.
+of every graph, or ordinary traversal completeness. Optimized candidate-merge
+completeness is established separately by the invariant proof below.
 [[file:../Tests/NodeCertificate.lean][NodeCertificate.lean]] checks the certificate laws and typed rejection paths.
 
 * Graph-derived certificates
@@ -983,8 +985,8 @@ selecting the first eligible head and advancing the candidates. It uses
 proves that any existing ~Trace lists output~ is reproduced, and
 ~mergeReference_success_iff~ proves that success is equivalent to the existence
 of such a complete operational trace. The theorem concerns the defined
-leftmost-eligible merge policy; it does not establish completeness of the
-optimized tail-count implementation.
+leftmost-eligible merge policy. The optimized implementation now has a
+separate simulation and completeness proof against this same policy.
 
 ~mergeReferenceWithFuel lists fuel~ exposes an explicit budget for experiments;
 its completeness theorem requires ~output.length ≤ fuel~. Insufficient fuel
@@ -1040,6 +1042,39 @@ is duplicate-free. ~mergeWithSuffixReference_complete~ and
 ~linearizeCertified_complete compiled trace~ proves that a successful
 ordinary output admitting a graph derivation is always certified. It does
 not prove that ~linearize~ succeeds whenever such a derivation exists.
-Optimized tail-count/cache invariants, ordinary traversal completeness,
-equivalence to Ducournau's original relation, and verification efficiency
-remain separate obligations.
+The candidate tail-count invariant is now proved. Graph traversal cache
+invariants, ordinary traversal completeness, equivalence to Ducournau's
+original relation, and verification efficiency remain separate obligations.
+
+* Optimized merge state and completeness
+
+~C4.MergeState.CountInvariant lists counts~ states that every hash-map lookup
+matches the multiplicity of that name in all remaining candidate tails.
+~ancestorCounts_invariant~ proves initialization. ~tail_count_advance~ accounts
+for every newly exposed head, and ~decrement_preserves~ proves the incremental
+subtract operations preserve the exact counts. Repeated candidate lists and
+repeated tail names are counted separately; no distinctness premise is used.
+
+~eligibleHead_eq_choose~ proves that the actual hash-map selection is the
+reference leftmost-eligible selection. ~trace_pending~ proves empty-candidate
+pruning preserves the full trace relation. ~mergeStep_selected~ binds the
+actual scan, reverse, prune, and count update to the next candidates.
+~rounds_complete~ and ~rounds_sound~ connect the actual finite fold to traces,
+including its reversed output accumulator.
+
+~MergeState.merge_complete trace~ proves ~C4.merge lists = .ok output~ for any
+complete ~Trace lists output~. ~merge_sound success~ proves a successful raw
+output has that trace, so its order preservation, exact coverage, uniqueness,
+and tie policy follow from the existing trace laws. ~merge_success_iff~
+characterizes success exactly by existence of a complete trace.
+~merge_reference_output~ proves equality of optimized and reference ~toOption~
+outputs for arbitrary finite candidates, including identical rejection domains.
+It compares success/rejection and successful lists; it does not compare error
+payloads through ~Except~ equality.
+
+~Precedence.check_complete~ proves replay always accepts a complete trace.
+~mergeCertified_complete~ and ~mergeCertified_success_iff~ therefore establish
+completeness of the existing optimized certified path. These are merge-level
+laws; the ordinary graph compiler's traversal and cache invariants are still
+separate proof obligations. No merge complexity or runtime speed bound is
+claimed here.

@@ -433,8 +433,22 @@ certified longest tail, and reference node reconstruction completeness.
 ~linearizeCertified_complete~ proves certification succeeds whenever the
 ordinary compiler has returned an output admitting a ~GraphTrace~.
 Existence of a ~GraphTrace~ is the explicit consistency criterion here; its
-equivalence to the paper's original relation remains unproved. Completeness
-of the optimized merger and ordinary graph traversal remain open.
+equivalence to the paper's original relation remains unproved. Optimized
+candidate merging now has its own soundness and completeness proof below;
+ordinary graph traversal completeness remains open.
+
+The optimized ~C4.merge~ now has a simulation proof in ~C4.MergeInvariant~.
+~CountInvariant~ counts every occurrence in the actual candidate tails.
+Initialization, newly exposed-head accounting, incremental decrement, empty
+candidate pruning, head selection, and the finite fold all preserve the
+structural merge semantics. ~merge_sound~ derives a complete ~Trace~ from
+any actual successful raw result; ~merge_complete~ reproduces every complete
+trace with the runtime's original candidate-position budget.
+~merge_reference_output~ equates optimized/reference successful outputs and
+rejection domains for arbitrary finite candidates. The independent checker
+and optimized certified merger are also complete. This closes the optimized
+candidate-merge state invariant; it does not close the ordinary graph
+traversal's ancestry/suffix cache invariant or establish a complexity bound.
 
 * Paper-derived boundaries
 

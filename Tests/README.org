@@ -26,3 +26,4 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:NodeCertificate.lean][NodeCertificate]] checks longest inherited-tail selection, fresh node names, complete node certificates, and rejection of incompatible, invented, or duplicate tails.
 - [[file:GraphCertificate.lean][GraphCertificate]] checks graph-derived ancestry, transitive order and suffix preservation, exact compiler-result binding, shared ancestors, repeated parent edges, and typed graph errors.
 - [[file:ReferenceMerge.lean][ReferenceMerge]] checks a complete structural merger, sufficient and insufficient budgets, graph declaration/length bounds, and reference suffix/node construction.
+- [[file:MergeInvariant.lean][MergeInvariant]] checks exact incremental tail counts, raw optimized merge soundness/completeness, reference output equivalence, certified replay completeness, and 3,616 finite candidate families.
