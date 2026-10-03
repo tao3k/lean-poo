@@ -6,3 +6,5 @@ complete project gate. Diagnostic and incremental checks use bounded Lean
 processes through ~just check-debug~ and ~just check-incremental~.
 
 User-facing scenarios live in [[file:../Examples/README.org][Examples]].
+
+- [[file:SpecificationComposition.lean][SpecificationComposition]] checks fused finalizers, defaults, delayed inheritance, parent-order conflicts, source identity exclusion, and later ancestor insertion.

@@ -25,6 +25,7 @@ import LeanPoo.Object.Memo
 import LeanPoo.Object.StrictBuilder
 import LeanPoo.Object.Definition
 import LeanPoo.Object.Nested
+import LeanPoo.Object.SpecificationComposition
 import LeanPoo.Object.Layout
 import LeanPoo.Object.Generic
 import LeanPoo.Object.MethodDictionary

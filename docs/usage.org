@@ -120,6 +120,22 @@ parents, conflicting orders, and lifted-name collisions return errors; a
 missing focus returns ~LiftError.missingFocus~. ~liftLayersOnMany~ remains the
 entry for distinct, independently authored families.
 
+To use the paper's alternative protocol that merges specifications into one
+identity, import ~LeanPoo.Object.SpecificationComposition~ and call
+~family.fuseSpecifications "CombinedPolicy" ["PolicyA", "PolicyB"]~. Sources
+are most-specific first. Their direct methods compose in that order and their
+parent orders are concatenated; their identities are not added as parents.
+Use direct methods for finalization and put ordinary contributions on parents:
+future parents added through ~Lens.prototypeSpecification~ will run before
+the fused direct methods. The optional suffix argument defaults to ~false~.
+~Specification.fuse~ is also available for already extracted specification
+values. The checked object entry rejects repeated sources and selected sources
+that remain ancestors, preventing a finalizer from being applied twice.
+[[file:../Examples/SpecificationComposition.lean][SpecificationComposition.lean]] runs a policy with budget ~34~,
+then includes a new infrastructure ancestor and obtains ~64~ after the same
+finalizers run. Defaults, delayed inherited methods, and the family's
+resolution mode keep their ordinary meaning.
+
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
 write to the same direct key replaces the earlier one. For authored object

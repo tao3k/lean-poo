@@ -357,6 +357,32 @@ disjoint independent families. The derived shared-ancestor topology itself is
 now executable; arbitrary function discovery and cross-snapshot identity
 reconciliation remain outside this construction.
 
+* Fused specification protocol
+
+Section 9 also describes an alternative to preserving two prototypes as
+separate parents: combine their direct modular extensions and their local
+parent orders into one specification. ~Declaration.compose~ composes the
+direct slot methods with open self and delayed next; the most-specific direct
+default wins. ~Specification.fuse~ combines those declarations and concatenates
+the local parent orders. The caller chooses the merged suffix flag explicitly.
+No source identity is introduced as a parent merely by fusing its specification.
+
+~Memoized.fuseSpecifications~ supplies a checked common-family entry. It reads
+selected specifications in most-specific-first order and compiles one fresh
+identity with the existing C4 compiler. It rejects repeated sources and any
+selected source still present in the merged ancestry, which would otherwise
+apply its direct extension twice. Unknown sources, name collisions, and
+inconsistent orders also remain errors. The source object is persistent and
+the derived object keeps its resolution mode.
+
+The protocol treats direct extensions as finalizers: ordinary extension
+contributions should live on ancestor nodes. The executable policy example
+combines two direct finalizers, then uses the full specification lens to add
+an infrastructure ancestor. That new ancestor executes before both finalizers.
+This closes the paper's described alternative composition protocol for
+explicit typed specifications within one family; it does not reconcile opaque
+declarations across independently authored snapshots.
+
 * Fixed-point boundary in Lean
 
 A general fixed point may diverge, so Lean's kernel cannot certify it as a
