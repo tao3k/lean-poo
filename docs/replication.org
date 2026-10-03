@@ -664,4 +664,17 @@ parent/local-order candidate as an ordered sublist; the other two establish
 exact name coverage and uniqueness. Repeated candidates share a single output
 name, while a duplicate within one candidate has no accepted trace. These
 are input-general merge consistency proofs, not just enumerated regressions;
-whole-graph traversal and suffix append remain separate proof obligations.
+whole-graph traversal remains a separate proof obligation.
+
+* Suffix reconstruction receipt
+
+~lake build LeanPoo.C4.Suffix LeanPoo.C4.Linearize~ checks the compatibility
+split, the Boolean check's soundness, and complete-order preservation after
+suffix append. ~Tests/SuffixConsistency.lean~ requires
+~SUFFIX-CONSISTENCY-OK~ and prints the certificate laws' axiom dependencies.
+It checks partial shared tails, suffix-only and empty-tail inputs, reversed
+suffix order, interleaved infix rejection, and a checked graph with two
+different inherited suffixes in one compatible chain. ~SuffixCertified~ binds
+these general laws to the actual returned ancestry. The no-duplicate law
+requires a duplicate-free supplied tail; graph tail selection and uniqueness
+of the subsequently prepended root name are not proved by this receipt.

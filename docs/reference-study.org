@@ -373,8 +373,19 @@ local-order candidates. ~Trace.covers~ proves exact name coverage, and
 ~Trace.nodup~ proves that the output contains no repeated names, even when
 different candidates share ancestors. These laws apply to every complete
 trace and therefore every ~Certified~ result. They do not assume a bounded
-graph size or a particular fixture. The graph traversal and the suffix append
-still need separate end-to-end correctness proofs.
+graph size or a particular fixture.
+
+~C4.Suffix~ connects the prefix proof to complete ancestry. The runtime
+~respectsSuffixTail~ check implies a split into a suffix-free prefix and an
+ordered sublist of the inherited tail. ~append_preserves~ proves that the
+complete original order survives prefix merging and tail append.
+~mergeWithSuffixCertified~ checks this split for every complete parent and
+local order and returns a ~SuffixCertified~ result: input-order preservation,
+exact input-or-tail coverage, and actual tail suffix retention. Its no-duplicate
+law assumes the caller's tail has no duplicates. ~linearizeChecked~ now uses
+these full-ancestry certificates at every reachable node. Correctness of graph
+traversal, inherited-tail selection, and root-name uniqueness remain separate
+proof obligations.
 
 * Paper-derived boundaries
 

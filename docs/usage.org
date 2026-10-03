@@ -879,9 +879,9 @@ not validate graph-level suffix compatibility. ~candidates_without_suffix~
 proves that empty-suffix inputs are exactly the parent precedence lists followed
 by the local orders used for ordinary C3 merging.
 
-~C4.linearizeChecked graph root~ uses the existing graph traversal, local-order,
-monotonicity, and suffix checks, with independent replay at every reachable
-prefix merge. ~C4.linearize~ uses the ordinary merger. The checked path adds
+~C4.linearizeChecked graph root~ uses the existing graph traversal and suffix
+selection, with independent replay and complete input-order checks at every
+reachable node. ~C4.linearize~ uses the ordinary merger. The checked path adds
 structural scanning cost and is intended for verification. Prefix certificates
 are exposed through ~mergeCertified~; graph-level checking returns the ordinary
 precedence list after all checks. [[file:../Tests/ExtendedPrecedence.lean][ExtendedPrecedence.lean]] covers diamonds,
@@ -892,6 +892,29 @@ of invalid claimed traces. [[file:../Examples/ExtendedPrecedence.lean][ExtendedP
 This is an operational definition of extended precedence for C4's candidate
 selection. A proof of the entire optimized merger/traversal for all inputs and
 an equivalence proof with Ducournau's original relation remain open.
+
+* Certified suffix reconstruction
+
+~C4.mergeWithSuffixCertified orders tail~ accepts complete parent/local orders,
+checks their compatibility with the supplied inherited tail, then merges their
+suffix-free candidates using independent trace replay. A successful
+~SuffixCertified orders tail~ exposes ~output = front ++ tail~.
+~c.preserves member~ proves that each complete input order is an ordered
+sublist of the output, ~c.suffix~ proves that the tail is an actual suffix, and
+~c.covers~ proves exact membership in the input orders or the tail.
+~c.nodup tailUnique~ proves unique output names when ~tailUnique : tail.Nodup~
+is supplied. The helper preserves the caller's tail and does not establish
+that graph traversal selected the correct tail.
+
+~respectsSuffixTail_sound~ ties the existing Boolean check to the required
+prefix/suffix split; ~append_preserves~ proves that merging the cleaned prefix
+and appending the inherited tail retain the whole original order.
+~linearizeChecked~ now constructs these complete-ancestry certificates for
+every reachable node's parent and local orders before adding the node name.
+The graph API still returns a list; correctness of traversal, tail selection,
+and the new node's absence from its ancestry remain separate proof goals.
+[[file:../Tests/SuffixConsistency.lean][SuffixConsistency.lean]] exercises shared suffixes, partial tail
+subsequences, empty tails, reversed suffix order, and interleaved infix names.
 
 * Commands
 

@@ -1,5 +1,5 @@
 import Std
-import LeanPoo.C4.Precedence
+import LeanPoo.C4.Suffix
 
 /-!
 C4 metadata algorithm translated from François-René Rideau's C4-Mixins,
@@ -16,16 +16,6 @@ private def lookup (table : Table) (name : String) : Option Linearization :=
 
 private def parents (node : Node) : List String :=
   unique node.parentOrders.flatten
-
-private def withoutTail (items tail : List String) : List String :=
-  items.filter (fun item => !tail.contains item)
-
-/-- Local suffix members must form an ordered subsequence of the inherited
-tail, with no non-suffix member between them. -/
-private def respectsSuffixTail (order tail : List String) : Bool :=
-  let suffix := order.dropWhile (fun item => !tail.contains item)
-  suffix.all tail.contains &&
-    tail.filter (fun item => suffix.contains item) == suffix
 
 /-- Walk the already computed inherited-suffix chain. -/
 private def suffixReaches (table : Table) (source target : String) : Bool :=
@@ -74,11 +64,13 @@ private def computeNode (table : Table) (node : Node) (checked : Bool) :
   let candidates :=
     (parentResults.map (fun result => withoutTail result.precedence inheritedTail)) ++
     (orders.map (fun order => withoutTail order inheritedTail))
-  let mergedPrefix ← if checked then
-    (Precedence.mergeCertified candidates).map (·.output)
-  else merge candidates
+  let mergedAncestry ← if checked then
+    (mergeWithSuffixCertified (parentResults.map (·.precedence) ++ orders) inheritedTail).map (·.output)
+  else do
+    let mergedPrefix ← merge candidates
+    pure (mergedPrefix ++ inheritedTail)
   return {
-    precedence := [node.name] ++ mergedPrefix ++ inheritedTail
+    precedence := node.name :: mergedAncestry
     inheritedSuffix := inheritedSuffix
     mostSpecificSuffix := if node.suffix then some node.name else inheritedSuffix
   }
@@ -145,9 +137,10 @@ private def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Exc
 def linearize (graph : Graph) (root : String) : Except Error (List String) :=
   linearizeWith graph root false
 
-/-- Opt-in independent replay of every reachable node's prefix merge. Each
-accepted merge constructs a leftmost-eligible trace before its suffix is added.
-The graph's ordinary local-order, monotonicity, and suffix checks still apply. -/
+/-- Opt-in independent replay and suffix reconstruction for every reachable
+node. Each accepted merge certifies order preservation for all complete parent
+and local inputs, and retention of the inherited tail as an actual suffix.
+This does not prove the traversal's tail selection correct for every graph. -/
 def linearizeChecked (graph : Graph) (root : String) : Except Error (List String) :=
   linearizeWith graph root true
 
