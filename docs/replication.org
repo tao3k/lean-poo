@@ -476,6 +476,41 @@ unsafe fixed point; these policies do not supply a total fixed-point proof.
 | Class instance methods and initialization | Instance-method slot fragments and initialization modules; class method/initialization tests | Typed Lean records and functions provide the authoring surface. |
 | Method combinations and dispatch | Qualified combinations, Simula/BETA inner, subjective and tuple dispatch; chapter 9 and dispatch tests | This is a typed first-class API, without a dynamic host-language MOP. |
 
+* Typed class redefinition
+
+Section 6 asks for a class-update protocol supporting new defaulted fields,
+removed fields, value-preserving renaming, and user-provided type conversion,
+with ~Person~ evolving through three versions. ~ClassSpec.migrateFrom~ now
+implements an explicit snapshot protocol across distinct typed key spaces and
+value families. ~FieldTransfer.preserve~ carries a payload-type equality;
+~FieldTransfer.evaluate_preserve~ proves value preservation for a present
+source. General transfers return ~Except String~ from their typed converter.
+Missing sources either fail or explicitly defer to target defaults/optional
+rules. Required target values and refinements are checked at the end.
+
+The full registry is checked before reading source data. Duplicate and unknown
+targets fail, and fixed/computed targets belong to the new class rather than
+copied instance data. The new object is built from the target class plus its
+explicit transferred data layer, so target computations use the new final
+self. Source graph identities and method bodies are not migrated. Omitted
+source fields are dropped from the new snapshot; the old snapshot retains them.
+The result carries the target class's Boolean acceptance proof and preserves
+the source resolver mode. Target validation may force new computed fields.
+
+The Person example adds age with default ~0~, preserves ~name~ as ~full-name~,
+converts an edited natural age ~37~ to string ~"37"~, and adds defaulted email.
+Checks also remove a retired field, recompute a new dependent summary, preserve
+old snapshots, and rebind that summary through a later target extension.
+All three resolution modes run. Rejections cover missing required data,
+conversion errors, failed target refinements, repeated/unknown/non-data
+targets, and a class/instance name collision. A source field that would panic
+is not forced when the full transfer shape is rejected.
+
+This closes the exercise's four field operations for explicit per-instance
+snapshots. Automatic discovery of all live instances, preservation of a
+mutable identity across different static types, persistence/index migrations,
+and the exercise's multi-phase store-upgrade bonus are not implemented.
+
 * Certified structural invalidation
 
 Section 6's mutable-inheritance discussion asks how specification changes

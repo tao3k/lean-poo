@@ -300,6 +300,14 @@ knot is partial, so it does not by itself provide the equation required by
 construct it from ~Object.Ranked~ for well-founded dependencies. No
 concrete policy semantics domain is part of this repository yet.
 
+Section 6's class-redefinition exercise now has an explicit per-instance
+snapshot migration protocol in ~Object.Migration~. Transfers preserve equal
+payload types across renaming or invoke a typed, fallible conversion. The new
+class supplies defaults and computed fields; omitted old fields survive only
+in the old snapshot. ~ClassSpec.migrateFrom~ returns a new object together
+with its class-acceptance proof. This covers the exercise's four field
+operations, without a live-instance registry or persistent-store index upgrade.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the

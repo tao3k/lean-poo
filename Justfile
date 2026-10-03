@@ -62,6 +62,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
+    lake build LeanPoo.Object.Migration
     lake build LeanPoo.Object.Initialization
     lake build LeanPoo.Object.MethodCombination
     lake build LeanPoo.Object.QualifiedMethods
@@ -141,6 +142,7 @@ check-example: check-compose
     lake env lean Examples/SpecificationComposition.lean
     lake env lean Examples/SharedFamily.lean
     lake env lean Examples/Renaming.lean
+    lake env lean Examples/ClassMigration.lean
     lake env lean Examples/CertifiedInvalidation.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/TargetAndWrapping.lean
 
@@ -186,6 +188,7 @@ check-tests: check-proof
     lake env lean Tests/SharedFamily.lean
     lake env lean Tests/AncestryTransform.lean
     lake env lean Tests/Renaming.lean
+    lake env lean Tests/ClassMigration.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/TargetPolicies.lean
     lake env lean Tests/NestedPrototype.lean
     just check-incremental

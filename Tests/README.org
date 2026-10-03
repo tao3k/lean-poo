@@ -11,6 +11,7 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:SharedFamily.lean][SharedFamily]] checks shared snapshot composition, declaration authority, metadata and C4 conflicts, and nested absence/error propagation.
 
+- [[file:ClassMigration.lean][ClassMigration]] checks three Person versions, defaults, deleted data, typed renaming/conversion, fresh computations, acceptance certificates, and rejection before source reads.
 - [[file:C4Ranked.lean][C4Ranked]] checks whole-graph ancestry ranks, complete structural impact, cycle/reference rejection, and independence from C4 method-order and suffix checks.
 - [[file:Renaming.lean][Renaming]] checks reversible heterogeneous slot renaming, internal self reads, delayed inheritance, defaults, duplicate writes, and later extension.
 - [[file:AncestryTransform.lean][AncestryTransform]] checks ancestry wrappers, heterogeneous and function-valued slots, unrelated branches, and later extension.

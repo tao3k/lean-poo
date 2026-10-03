@@ -567,6 +567,38 @@ and validates a full object. A sealed class rejects unknown JSON fields.
 ~Object.Lens.slot~ gets, sets, or modifies a typed slot through persistent
 C4 recompilation; ~Lens.compose~ combines two typed lenses.
 
+* Typed class migration
+
+Import ~LeanPoo.Object.Migration~ for the paper's class-redefinition exercise.
+~targetClass.migrateFrom instanceName source transfers~ constructs a fresh
+object from the target class and an explicit list of ~FieldTransfer~ values.
+Source and target can have different key types and different key-indexed
+value families. ~FieldTransfer.preserve oldKey newKey rfl~ preserves equal
+payload types across a rename. A transfer's ~convert~ function returns
+~Except String (TargetValue targetKey)~ for a type change that may fail.
+Missing source data fails by default; ~.useTargetDefault~ leaves the target
+class's default or optional rule in control. A missing required target field
+still fails the final class check.
+
+The complete transfer registry is checked before source values are read.
+Repeated, undeclared, fixed, and computed targets are rejected. Only explicit
+source fields are read; omitted source fields are dropped from the new object
+while remaining in the old snapshot. The target schema contains the new class
+and its data layer; source prototype topology and method bodies are not copied.
+New computations therefore read the new final self. New fields use target
+class defaults unless explicitly transferred. The source resolution mode is
+retained. Runtime validation can force the target fields it checks.
+
+Success returns ~Migrated targetClass~ with ~object~ and an ~accepted~ proof.
+A conversion or target-refinement failure returns a typed ~MigrationError~;
+the source snapshot stays available. This is an explicit per-instance snapshot
+migration, without an automatic live-instance registry, old-store indexes,
+or a migration plan inferred from opaque callbacks.
+[[file:../Examples/ClassMigration.lean][ClassMigration.lean]] evolves ~Person~ from ~name~, to ~name~ plus a
+defaulted natural age, to ~full-name~, a converted string age, and email.
+[[file:../Tests/ClassMigration.lean][ClassMigration.lean]] also drops old data and recomputes dependent
+summaries, including under a later extension.
+
 * Define a method combination
 
 Use ~Object.Multimethod.qualified~ when standard or simple combination is not

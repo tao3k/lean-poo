@@ -36,6 +36,7 @@ import LeanPoo.Object.Generic
 import LeanPoo.Object.MethodDictionary
 import LeanPoo.Object.Lens
 import LeanPoo.Object.Class
+import LeanPoo.Object.Migration
 import LeanPoo.Object.Initialization
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.QualifiedMethods

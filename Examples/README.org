@@ -21,6 +21,7 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions, including named inner parents with shared ancestors. |
 | [[file:SpecificationComposition.lean][SpecificationComposition]] | Fuse policy specifications and include a later infrastructure ancestor before their direct finalizers. |
 | [[file:SharedFamily.lean][SharedFamily]] | Compose independently derived inner snapshots with explicitly shared prototype identities in an inherited component slot. |
+| [[file:ClassMigration.lean][ClassMigration]] | Upgrade Person through three typed class versions with defaults, value-preserving renaming, and an explicit age conversion. |
 | [[file:CertifiedInvalidation.lean][CertifiedInvalidation]] | Compute every structurally affected descendant with a checked reachability certificate. |
 | [[file:Renaming.lean][Renaming]] | Rename slots and their internal self reads, then rebind the inherited formula through a later extension. |
 | [[file:TargetAndWrapping.lean][TargetAndWrapping]] | Wrap existing ancestor contributions and compare target-update policies under later extension. |
