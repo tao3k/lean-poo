@@ -633,3 +633,16 @@ busy/stale requests, exception cleanup, and conversion-error rollback.
 ~Examples/QuiescentUpgrade.lean~ composes the boundary with a Person class
 migration. This receipt concerns scoped callbacks at one object identity;
 it does not cover native process suspension, code unloading, or heap discovery.
+
+* Two-level inheritance receipt
+
+~lake build LeanPoo.Object.SortedInheritance~ checks the C4-based sort policy
+and its complete-pair and final-order laws. ~Tests/SortedInheritance.lean~
+asserts the priority-driven ~22 -> 12~ behavior in all three resolver modes,
+same-sort order, final-self/defaults, heterogeneous function slots, later
+reclassification, and rejection of metadata, ancestor, explicit-local-order,
+and suffix conflicts. ~Examples/SortedInheritance.lean~ shows a later
+extension computing ~112~. The certificate is attached to the returned
+object's actual precedence and the selected source classifications. This
+receipt is a finite semantic construction, not a proof of asymptotic efficiency
+or automatic classification of new specifications.

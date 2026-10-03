@@ -18,3 +18,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:TargetPolicies.lean][TargetPolicies]] checks rejection, retained-specification target edits, constant-specification replacement, and target detachment.
 
 - [[file:QuiescentUpgrade.lean][QuiescentUpgrade]] checks admission closure, two concurrent readers draining, exception cleanup, canceled/stale requests, upgrade rollback, and the quiescence and authorization proofs.
+
+- [[file:SortedInheritance.lean][SortedInheritance]] checks two-level sort priorities, complete ordering certificates, same-sort C4 behavior, heterogeneous function slots, future reclassification, and metadata, hierarchy, local-order, and suffix conflicts.

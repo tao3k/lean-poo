@@ -51,6 +51,7 @@ import LeanPoo.Object.PreparedMultimethod
 import LeanPoo.Object.Prototype
 import LeanPoo.Object.Mutable
 import LeanPoo.Object.Upgrade
+import LeanPoo.Object.SortedInheritance
 import LeanPoo.Prototype.Mutable
 import LeanPoo.Object.Prepare
 import LeanPoo.Object.Cache

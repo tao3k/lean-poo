@@ -100,6 +100,7 @@ check-compose: check-object
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Object.Upgrade
+    lake build LeanPoo.Object.SortedInheritance
     lake build LeanPoo.Prototype.Mutable
 
 # Check the proof-composition extension.
@@ -137,6 +138,7 @@ check-example: check-compose
     lake env lean Examples/ProofReuse.lean
     lake env lean Examples/LiveRevision.lean
     lake env lean Examples/QuiescentUpgrade.lean
+    lake env lean Examples/SortedInheritance.lean
     lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/ObjectDefinition.lean
@@ -180,6 +182,7 @@ check-tests: check-proof
     lake env lean Tests/Chapter9Combination.lean
     lake env lean Tests/SuffixLayout.lean
     lake env lean Tests/MutableObject.lean
+    lake env lean Tests/SortedInheritance.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean

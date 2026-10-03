@@ -338,6 +338,19 @@ The guarantee covers scoped operations on one runtime, with joined background
 work and a fixed Lean key/value family. It does not implement Erlang process
 suspension, release supervision, native module loading, or heap-wide upgrade.
 
+Section 7's research exercise on two-level inheritance now has an explicit
+C4-based construction in ~Object.SortedInheritance~. A selected sort hierarchy
+provides priority; a complete finite classification assigns each selected
+specification to one sort. Cross-sort pairs are installed into the applicable
+ancestry orders before the final wrapper is compiled. Existing local orders
+and suffix constraints can reject the policy. The returned certificate checks
+the actual C4 precedence; ~requirements_complete~ and ~higher_precedes~ prove
+complete coverage and ordering of every higher/lower selected pair. Tests
+cover noncommuting methods, same-sort ties, all resolver modes, typed function
+slots, future reclassification, and hierarchy/local/suffix conflicts. This
+construction uses explicit metadata and enumerates candidate pairs; it does
+not infer categories from opaque methods or establish an ~O(nd)~ bound.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the

@@ -692,6 +692,65 @@ defaulted natural age, to ~full-name~, a converted string age, and email.
 [[file:../Tests/ClassMigration.lean][ClassMigration.lean]] also drops old data and recomputes dependent
 summaries, including under a later extension.
 
+* Specification-sort priorities
+
+Section 7's two-level inheritance exercise is implemented by
+~Object.SortedInheritance.Policy~ and ~SortedInheritance.apply~. The policy
+contains a separate C4 graph of specification sorts, its selected root, and
+an explicit list mapping each selected source specification name to one sort.
+The sort hierarchy is linearized most-specific first. All specifications in
+an earlier sort must precede all specifications in a later sort. Specifications
+in the same sort retain ordinary C4 constraints and tie handling.
+
+~apply policy source freshName~ validates the sort graph and classification
+registry, then enumerates every required cross-sort specification pair. It
+adds each applicable pair to the local parent orders of every selected node
+whose proper ancestry contains both names. A fresh wrapper inherits the
+source root plus the complete pair constraints and contributes no direct
+slots. This makes C4 derive each ancestor's precedence with the policy before
+using that precedence in descendants. Existing local orders, inheritance
+edges, and suffix requirements remain constraints: the policy cannot override
+a contradiction with them. Original declarations and unrelated graph nodes
+are retained; the original object is a readable persistent snapshot.
+
+The returned ~Certified~ value contains the new executable ~object~, selected
+~source~ names, sort ~priority~, ~classification~, and a proof that the final
+C4 order satisfies every generated pair. ~requirements_complete~ proves that
+every pair of selected names classified into different priority levels is
+included. ~Certified.higher_precedes~ combines this completeness law with the
+checked result: a higher-sort selected specification precedes a lower-sort
+selected specification in the actual object's order. These are order
+certificates, not proofs of equivalence between the old and new slot results;
+changing priority can intentionally change method behavior.
+
+| Error | Meaning |
+|-------+---------|
+| ~sorts~ | The selected sort hierarchy fails C4 validation |
+| ~repeatedClassification~ | A specification is classified more than once |
+| ~unknownSpecification~ | A classification names a specification outside the selected source ancestry |
+| ~unavailableSort~ | The assigned sort is outside the selected sort hierarchy |
+| ~unclassified~ | A selected source specification has no sort |
+| ~inheritance~ | C4 rejects the combined original and priority constraints; the error includes all imposed pairs |
+| ~priorityNotRespected~ | Final verification rejects an order and reports the offending pairs |
+
+[[file:../Examples/SortedInheritance.lean][SortedInheritance.lean]] changes the order of multiplicative and additive
+contributions from ~22~ to ~12~; a later extension computes ~112~. The returned
+object preserves the source resolver mode and creates fresh lazy target cells.
+[[file:../Tests/SortedInheritance.lean][SortedInheritance.lean]] checks all three resolver modes, same-sort ordering,
+final-self reads, defaults, function-valued heterogeneous slots, and rejection
+of contradictory local precedence, reversed ancestor priority, and suffix
+requirements. Inheritance errors report the imposed pairs rather than a
+minimal conflict core.
+
+This is an explicit finite C4-based construction over the selected sort and
+specification ancestries. The wrapper's new identity is outside the source
+classification being certified. Later extensions require reapplying the
+policy with all newly selected names classified, including earlier wrappers,
+for a complete certificate at that new root. There is no inference of sort
+membership from arbitrary method bodies or Lean types. The construction
+enumerates a quadratic number of candidate pairs and linearizes each selected
+ancestry; it makes no ~O(nd)~ performance claim.
+
 * Define a method combination
 
 Use ~Object.Multimethod.qualified~ when standard or simple combination is not
