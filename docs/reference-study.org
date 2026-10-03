@@ -313,7 +313,30 @@ The next section 6 exercise has three explicit update policies in
 cells, and versioned fresh cells plus an old-specification handle. The tests
 compare their missing-target behavior and snapshot consistency under all
 three resolver modes. This is a finite per-instance protocol; it does not
-implement process quiescence or the following Erlang-style hot-upgrade exercise.
+implement process suspension or a native code loader.
+
+The following section 6 exercise now has a cooperative quiescent-upgrade
+protocol in ~Object.Upgrade~. Erlang's
+[[https://www.erlang.org/doc/system/code_loading.html][code replacement documentation]] describes current and old module code;
+fully qualified calls select current code while old calls may continue.
+[[https://www.erlang.org/doc/apps/stdlib/sys.html#change_code/5][sys:change_code]] requires a suspended process and invokes its state-change
+callback. [[https://www.erlang.org/doc/apps/kernel/code.html#soft_purge/1][code:soft_purge]] refuses to remove old code while processes still linger
+in it. These mechanisms separate switching versions, state conversion, and
+retiring executable code.
+
+LeanPoo's simplifying design separates operation admission from execution:
+pause rejects new operations; already admitted callbacks retain their captured
+specification; commit requires all such callbacks to exit. A mutex guards the
+control state and publication. Version plus request number rejects canceled
+or completed sessions, and a pure updater supplies data conversion.
+The ~Control.commit_quiescent~, ~commit_authorized~, and ~enter_paused~ laws
+are kernel-checked; tests use two real readers whose completion is controlled
+by promises. The Person example composes the boundary with typed class
+migration. Stack-held objects remain immutable old snapshots after upgrade;
+there is no inspection, rewriting, or purging of native call stacks or code.
+The guarantee covers scoped operations on one runtime, with joined background
+work and a fixed Lean key/value family. It does not implement Erlang process
+suspension, release supervision, native module loading, or heap-wide upgrade.
 
 * Paper-derived boundaries
 

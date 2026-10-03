@@ -604,6 +604,62 @@ and validates a full object. A sealed class rejects unknown JSON fields.
 ~Object.Lens.slot~ gets, sets, or modifies a typed slot through persistent
 C4 recompilation; ~Lens.compose~ combines two typed lenses.
 
+* Cooperative quiescent upgrades
+
+~Object.Upgrade.Runtime~ wraps a memoized object with a mutex-protected
+operation boundary. ~withSnapshot~ admits one callback, captures its version
+and immutable object, and releases admission in ~finally~ on return or an
+~IO.Error~. Callbacks execute outside the mutex, so independent readers may
+run concurrently. All reads within one callback should use its captured
+object, rather than reopening admission for each slot.
+
+~Runtime.pause~ closes admission and returns an owner-bound ~Session~.
+Existing callbacks continue on their old snapshots. A new callback receives
+~Error.paused~; a second pause receives ~Error.alreadyPending~. The session
+exposes two operations:
+
+| Operation | Condition | Result |
+|-----------+-----------+--------|
+| ~session.commit update~ | Tracked callbacks still active | ~Failure.control (Error.busy n)~; updater is not called |
+| ~session.commit update~ | Matching request, no active callbacks | Apply the pure updater; install its result and advance version |
+| ~session.commit update~ | Updater returns an error | Preserve old object/version and keep admission paused |
+| ~session.cancel~ | Matching outstanding request | Reopen admission on the old object/version |
+| Commit or cancel | Canceled, superseded, or completed request | ~Error.stale~ |
+
+Commit is an explicit attempt rather than a blocking wait. Callers retry
+when their operations have drained, or cancel to resume service. A request
+number advances even on cancellation, so an old session cannot commit a
+replacement request at the same object version. Sessions retain their owner;
+they cannot be applied to a different runtime through the public API.
+Admission, departure, cancellation, and publication use the same mutex.
+The updater runs under that mutex and must terminate without reentering the
+runtime through effects. ~Control.commit_quiescent~ proves that a successful
+control transition has zero active operations, increments its version, and
+clears the pending request. ~commit_authorized~ checks the matching request
+and version; ~enter_paused~ proves rejection of new admission while paused.
+These are kernel-checked control laws, rather than proofs of the native mutex
+implementation or arbitrary callback behavior.
+
+[[file:../Examples/QuiescentUpgrade.lean][QuiescentUpgrade.lean]] holds the v1 Person on a callback's stack,
+requests an upgrade, observes ~busy 1~, and then migrates to the new class
+after the callback returns. New operations read the renamed field and fresh
+computed summary; the retained old object still reads its old name.
+[[file:../Tests/QuiescentUpgrade.lean][QuiescentUpgrade.lean]] also runs two dedicated tasks with promise-controlled
+completion: commit fails at two active operations, fails at one, and succeeds
+at zero. The regression has a 30-second process bound and no sleep-based
+ordering assumptions.
+
+This is cooperative quiescence for callbacks admitted through one runtime.
+Work spawned by a callback must be joined before it returns if that work is
+to count as active. Escaped snapshots and closures remain immutable old-version
+values; the protocol neither inspects native stacks nor unloads their code.
+A nonterminating callback prevents a successful upgrade. There is no process
+suspension, forced cancellation, native module loader, heap-wide registry,
+or coordinated multi-object transaction. Each runtime retains one fixed Lean
+key/value family; cross-family migration creates another runtime. A successful
+updater still has to return a C4-validated ~Memoized~ object; class acceptance
+is supplied by ~ClassSpec.migrateFrom~ when class migration is needed.
+
 * Typed class migration
 
 Import ~LeanPoo.Object.Migration~ for the paper's class-redefinition exercise.

@@ -622,3 +622,14 @@ reproduction.
 | Pure and mutable object behavior | Closed | Direct slot/default changes rebuild the lazy instance; integrated receipts show recomputation and old snapshot retention. |
 | Integrated executable receipt | Closed | ~just check-po~ builds the object layers, executes the integrated example, and parses Org documentation. |
 | Upstream semantic inventory | Closed | The source operation table maps each PO operation family to a Lean-native construction. |
+
+* Cooperative upgrade receipt
+
+~lake build LeanPoo.Object.Upgrade~ checks the mutex-guarded operation runtime
+and its pure control laws. The bounded entry in ~just check-tests~ runs
+~Tests/QuiescentUpgrade.lean~ and requires ~QUIESCENT-UPGRADE-OK~: three
+resolver modes, two promise-controlled concurrent readers, paused admission,
+busy/stale requests, exception cleanup, and conversion-error rollback.
+~Examples/QuiescentUpgrade.lean~ composes the boundary with a Person class
+migration. This receipt concerns scoped callbacks at one object identity;
+it does not cover native process suspension, code unloading, or heap discovery.
