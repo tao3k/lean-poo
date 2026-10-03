@@ -968,8 +968,9 @@ tail lists, so graph provenance is established by the trace rather than assumed
 from a compiler cache. Existing ordinary graph errors are propagated, and a
 reconstruction mismatch reports ~inconsistentOrder~. Verification may repeat
 shared ancestors and is intended for proof-bearing results, not performance
-claims. Completeness of the ordinary traversal and of bounded certificate
-reconstruction on every consistent graph is not proved here.
+claims. Independent reconstruction is complete relative to finite
+~GraphTrace~ derivations, as described below. Completeness of the ordinary
+optimized traversal is not proved here.
 [[file:../Tests/GraphCertificate.lean][GraphCertificate.lean]] checks diamonds, shared suffix chains, repeated
 parent edges, missing nodes, cycles, ordering conflicts, and unreachable
 malformed declarations without changing the ordinary compiler's root scope.
@@ -996,8 +997,9 @@ merger with the existing suffix/node checks. Independent reconstruction inside
 first and its result is compared to the independently derived output.
 ~c.length_bound~ proves that a graph certificate's output contains at most
 ~graph.nodes.length~ names. ~GraphTrace.parent_budget~ proves that a parent's
-derived output is strictly shorter than the child's; the proof that recursive
-reconstruction always succeeds within its graph-size budget remains open.
+derived output is strictly shorter than the child's. This decrease now proves
+that recursive reconstruction succeeds within the graph-size budget whenever
+a finite derivation exists.
 [[file:../Tests/ReferenceMerge.lean][ReferenceMerge.lean]] covers shared candidates, blocked heads, conflicting
 orders, duplicate names, explicit budget exhaustion, and reference suffix/node
 construction.
@@ -1017,3 +1019,27 @@ the workload should determine which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.
+
+* Complete independent graph reconstruction
+
+~C4.reconstruct graph root~ reconstructs from the original graph without
+calling ~linearize~. ~reconstruct_complete trace~ proves it returns exactly
+the complete precedence and most-specific tail of any finite ~GraphTrace~,
+using ~graph.nodes.length~ as the recursion budget. ~reconstruct_success_iff~
+characterizes success by existence of such a derivation. Repeated edges,
+shared ancestors, and duplicate declarations do not require extra assumptions;
+lookup continues to use the first matching declaration.
+
+~GraphTrace.unique first second~ proves agreement of both output and tail
+for two derivations over the same graph/root. The proof uses deterministic
+complete reconstruction and does not assume ordinary compiler success.
+~respectsSuffixTail_iff~ characterizes the suffix check when the shared tail
+is duplicate-free. ~mergeWithSuffixReference_complete~ and
+~certifyNodeReference_complete~ reproduce arbitrary supplied certificates.
+
+~linearizeCertified_complete compiled trace~ proves that a successful
+ordinary output admitting a graph derivation is always certified. It does
+not prove that ~linearize~ succeeds whenever such a derivation exists.
+Optimized tail-count/cache invariants, ordinary traversal completeness,
+equivalence to Ducournau's original relation, and verification efficiency
+remain separate obligations.

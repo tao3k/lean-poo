@@ -193,6 +193,48 @@ theorem GraphTrace.length_bound (trace : GraphTrace graph root output tail) :
 private def longestTail (tails : List (List String)) : List String :=
   tails.foldl (fun current next => if current.length < next.length then next else current) []
 
+private theorem longestTail_fold (target : List String) (tails : List (List String))
+    (current : List String) (initial : current.IsSuffix target)
+    (contained : ∀ tail ∈ tails, tail.IsSuffix target)
+    (chosen : current = target ∨ target ∈ tails) :
+    tails.foldl (fun current next => if current.length < next.length then next else current) current = target := by
+  induction tails generalizing current with
+  | nil => simpa using chosen
+  | cons next rest ih =>
+    have nextSuffix := contained next (by simp)
+    have restSuffix : ∀ tail ∈ rest, tail.IsSuffix target :=
+      fun tail member => contained tail (by simp [member])
+    simp only [List.foldl_cons]
+    split
+    · rename_i longer
+      apply ih next nextSuffix restSuffix
+      rcases chosen with same | member
+      · subst current
+        have bound := nextSuffix.length_le
+        omega
+      · rcases List.mem_cons.mp member with same | member
+        · exact .inl same.symm
+        · exact .inr member
+    · rename_i shorter
+      apply ih current initial restSuffix
+      rcases chosen with same | member
+      · exact .inl same
+      · rcases List.mem_cons.mp member with same | member
+        · subst next
+          exact .inl (initial.eq_of_length_le (by omega))
+        · exact .inr member
+
+private theorem longestTail_complete (certificate : TailCertified tails) :
+    longestTail tails = certificate.output := by
+  rcases certificate.chosen with ⟨empty, same⟩ | member
+  · simp [longestTail, empty, same]
+  · exact longestTail_fold certificate.output tails [] List.nil_suffix
+      certificate.containsTail (.inr member)
+
+private def resultRow (child : Sigma (GraphResult graph)) :
+    String × (List String × List String) :=
+  (child.1, (child.2.output, child.2.mostSpecificTail))
+
 /-- Independent bounded reconstruction from graph declarations. Parent rows
 carry their derivations rather than relying on cached linearization metadata. -/
 private def derive (graph : Graph) (root name : String) : Nat → Except Error (GraphResult graph name)
@@ -204,8 +246,7 @@ private def derive (graph : Graph) (root name : String) : Nat → Except Error (
       let children ← node.parentOrders.flatten.mapM fun parent => do
         let child ← derive graph root parent fuel
         return (⟨parent, child⟩ : Sigma (GraphResult graph))
-      let rows := children.map fun child =>
-        (child.1, (child.2.output, child.2.mostSpecificTail))
+      let rows := children.map resultRow
       if names : rows.map Prod.fst = node.parentOrders.flatten then
         let orders := rows.map (fun row => row.2.1) ++ node.parentOrders
         let tails := rows.map (fun row => row.2.2)
@@ -219,6 +260,96 @@ private def derive (graph : Graph) (root name : String) : Nat → Except Error (
           if node.suffix then certificate.output else certificate.selection.output,
           .node found rows names parents certificate⟩
       else throw .inconsistentOrder
+
+private theorem derive_rows (rows : List (String × (List String × List String)))
+    (ready : ∀ row ∈ rows, ∃ child : GraphResult graph row.1,
+      derive graph root row.1 fuel = .ok child ∧
+      child.output = row.2.1 ∧ child.mostSpecificTail = row.2.2) :
+    ∃ children : List (Sigma (GraphResult graph)),
+      (rows.map Prod.fst).mapM (fun parent => do
+        let child ← derive graph root parent fuel
+        return (⟨parent, child⟩ : Sigma (GraphResult graph))) = .ok children ∧
+      children.map resultRow = rows := by
+  induction rows with
+  | nil => exact ⟨[], rfl, rfl⟩
+  | cons row rows ih =>
+    obtain ⟨child, success, output, tail⟩ := ready row (by simp)
+    obtain ⟨children, successes, same⟩ := ih (fun other member => ready other (by simp [member]))
+    refine ⟨⟨row.1, child⟩ :: children, ?_, ?_⟩
+    · rw [List.map_cons, List.mapM_cons, successes, success]
+      rfl
+    · simp [resultRow, same, output, tail]
+
+private theorem derive_complete (trace : GraphTrace graph name output tail)
+    (enough : output.length ≤ fuel) :
+    ∃ result, derive graph root name fuel = .ok result ∧
+      result.output = output ∧ result.mostSpecificTail = tail := by
+  induction trace generalizing fuel with
+  | node found rows names parents certificate ih =>
+    cases fuel with
+    | zero => simp [NodeCertified.output] at enough
+    | succ fuel =>
+      have ready : ∀ row ∈ rows, ∃ child : GraphResult graph row.1,
+          derive graph root row.1 fuel = .ok child ∧
+          child.output = row.2.1 ∧ child.mostSpecificTail = row.2.2 := by
+        intro row member
+        have kept := certificate.ancestry.preserves
+          (List.mem_append_left _ (List.mem_map.mpr ⟨row, member, rfl⟩))
+        apply ih row member
+        have bound : certificate.ancestry.output.length ≤ fuel := Nat.le_of_succ_le_succ enough
+        exact Nat.le_trans kept.length_le bound
+      obtain ⟨children, successes, same⟩ := derive_rows rows ready
+      rw [names] at successes
+      subst rows
+      obtain ⟨result, success, outputEq, tailEq⟩ := certifyNodeReference_complete certificate
+      refine ⟨⟨result.output, if _ then result.output else result.selection.output,
+        .node found (children.map resultRow) names parents result⟩, ?_, outputEq, ?_⟩
+      · simp only [derive]
+        split
+        · rename_i missing
+          rw [missing] at found
+          cases found
+        · rename_i actual selected
+          have identical := Option.some.inj (selected.symm.trans found)
+          subst actual
+          rw [successes]
+          simp only [bind, Except.bind, pure, Except.pure,
+            dite_eq_left names, longestTail_complete certificate.selection]
+          simp only [success]
+      · simp [outputEq, tailEq]
+
+/-- Complete independent reconstruction with the original declaration count
+as its budget. It does not call the ordinary compiler. -/
+def reconstruct (graph : Graph) (root : String) : Except Error (GraphResult graph root) :=
+  derive graph root root graph.nodes.length
+
+theorem reconstruct_complete (trace : GraphTrace graph root output tail) :
+    ∃ result, reconstruct graph root = .ok result ∧
+      result.output = output ∧ result.mostSpecificTail = tail :=
+  derive_complete trace trace.length_bound
+
+/-- Reconstruction succeeds exactly for roots admitting a finite derivation. -/
+theorem reconstruct_success_iff :
+    (reconstruct graph root).toOption.isSome = true ↔
+      ∃ output tail, GraphTrace graph root output tail := by
+  constructor
+  · intro success
+    cases result : reconstruct graph root with
+    | error error => simp [result, Except.toOption] at success
+    | ok certificate => exact ⟨certificate.output, certificate.mostSpecificTail, certificate.trace⟩
+  · rintro ⟨output, tail, trace⟩
+    obtain ⟨result, success, _, _⟩ := reconstruct_complete trace
+    simp [success, Except.toOption]
+
+/-- Both complete precedence and most-specific tail are determined by the
+original graph, independently of the ordinary compiler's result. -/
+theorem GraphTrace.unique (first : GraphTrace graph root output₁ tail₁)
+    (second : GraphTrace graph root output₂ tail₂) : output₁ = output₂ ∧ tail₁ = tail₂ := by
+  obtain ⟨one, success₁, output₁Eq, tail₁Eq⟩ := reconstruct_complete first
+  obtain ⟨two, success₂, output₂Eq, tail₂Eq⟩ := reconstruct_complete second
+  have same := Except.ok.inj (success₁.symm.trans success₂)
+  subst two
+  exact ⟨output₁Eq.symm.trans output₂Eq, tail₁Eq.symm.trans tail₂Eq⟩
 
 /-- The returned graph derivation is bound to the ordinary compiler's exact
 successful result, not a caller-supplied candidate list or cache snapshot. -/
@@ -270,9 +401,28 @@ def linearizeCertified (graph : Graph) (root : String) : Except Error (GraphCert
   match compiled : linearize graph root with
   | .error error => .error error
   | .ok output => do
-    let result ← derive graph root root graph.nodes.length
+    let result ← reconstruct graph root
     if same : result.output = output then
       return ⟨result, by rw [same]; exact compiled⟩
     else throw .inconsistentOrder
+
+/-- Once the ordinary compiler returns a derivable result, the public
+certificate path cannot fail during reconstruction or output comparison. -/
+theorem linearizeCertified_complete (compiled : linearize graph root = .ok output)
+    (trace : GraphTrace graph root output tail) :
+    ∃ certificate, linearizeCertified graph root = .ok certificate ∧
+      certificate.output = output := by
+  obtain ⟨result, success, same, _⟩ := reconstruct_complete trace
+  refine ⟨⟨result, by rw [same]; exact compiled⟩, ?_, same⟩
+  simp only [linearizeCertified]
+  split
+  · rename_i failed
+    rw [failed] at compiled
+    cases compiled
+  · rename_i actual returned
+    have identical := Except.ok.inj (returned.symm.trans compiled)
+    subst actual
+    rw [success]
+    simp [bind, Except.bind, same, pure, Except.pure]
 
 end LeanPoo.C4

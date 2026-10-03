@@ -52,6 +52,30 @@ theorem compatible_withoutTail (compatible : SuffixCompatible order tail) :
     rw [frontKept, suffixRemoved, List.append_nil]
   exact ⟨suffix, by rw [cleaned]; exact same, contained⟩
 
+/-- Every compatible order passes the executable check when the shared tail
+has no repeated names. -/
+theorem respectsSuffixTail_complete (compatible : SuffixCompatible order tail)
+    (unique : tail.Nodup) : respectsSuffixTail order tail = true := by
+  obtain ⟨front, suffix, same, absent, contained⟩ := compatible
+  have dropped : order.dropWhile (fun item => !tail.contains item) = suffix := by
+    rw [same, List.dropWhile_append_of_pos (by simpa using absent)]
+    cases suffix with
+    | nil => rfl
+    | cons name rest =>
+      have member := contained.subset (List.mem_cons_self)
+      simp [member]
+  have filtered : tail.filter (fun item => suffix.contains item) = suffix := by
+    have kept : suffix.Sublist (tail.filter (fun item => suffix.contains item)) :=
+      List.sublist_filter_iff.mpr ⟨suffix, contained, (List.filter_eq_self.mpr (by simp)).symm⟩
+    exact (kept.eq_of_length_le ((unique.sublist List.filter_sublist).length_le_of_subset
+      (by intro name member; simpa using (List.mem_filter.mp member).2))).symm
+  simp only [respectsSuffixTail, dropped, filtered, beq_self_eq_true, Bool.and_true]
+  exact List.all_eq_true.mpr (by intro name member; simpa using contained.subset member)
+
+theorem respectsSuffixTail_iff (unique : tail.Nodup) :
+    respectsSuffixTail order tail = true ↔ SuffixCompatible order tail :=
+  ⟨respectsSuffixTail_sound, fun compatible => respectsSuffixTail_complete compatible unique⟩
+
 /-- Reattaching a compatible shared tail preserves the complete input order. -/
 theorem append_preserves (trace : Precedence.Trace lists front)
     (member : withoutTail order tail ∈ lists)
@@ -126,5 +150,19 @@ def mergeWithSuffixCertified (orders : List (List String)) (tail : List String) 
 def mergeWithSuffixReference (orders : List (List String)) (tail : List String) :
     Except Error (SuffixCertified orders tail) :=
   mergeWithSuffixUsing Precedence.mergeReference orders tail
+
+theorem mergeWithSuffixReference_complete (certificate : SuffixCertified orders tail)
+    (unique : tail.Nodup) :
+    ∃ result, mergeWithSuffixReference orders tail = .ok result ∧
+      result.output = certificate.output := by
+  have accepted : orders.all (fun order => respectsSuffixTail order tail) = true :=
+    List.all_eq_true.mpr (fun order member =>
+      respectsSuffixTail_complete (certificate.compatible order member) unique)
+  obtain ⟨merged, success, same⟩ := Precedence.mergeReference_complete certificate.trace
+  refine ⟨⟨merged.output, merged.trace, fun order member =>
+    respectsSuffixTail_sound (List.all_eq_true.mp accepted order member)⟩, ?_, ?_⟩
+  · simp [mergeWithSuffixReference, mergeWithSuffixUsing, accepted, success]
+    rfl
+  · simp [SuffixCertified.output, same]
 
 end LeanPoo.C4

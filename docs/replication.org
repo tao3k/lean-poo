@@ -703,8 +703,9 @@ ancestor-order preservation, declared ancestor suffix retention, local orders,
 and output uniqueness. The executable cases include shared ancestors, suffix
 chains, repeated parent edges, and ordinary typed errors.
 These are general soundness laws of accepted graph-derived certificates.
-Success on all consistent graphs and any verification efficiency bound remain
-unproved; shared parent work may be repeated. The proof does not establish
+Independent reconstruction is complete relative to finite ~GraphTrace~
+derivations. Ordinary compiler completeness and any verification efficiency
+bound remain unproved; shared parent work may be repeated. The proof does not establish
 the original optimized traversal's internal cache invariant or equivalence
 with Ducournau's definition.
 
@@ -718,5 +719,24 @@ examples quantify over arbitrary finite candidate lists, while executable
 cases check blocked heads, shared candidates, inconsistency, explicit fuel,
 and reference suffix/node construction. ~linearizeCertified~ now rebuilds
 using the structural reference merger. This closes completeness relative to
-complete candidate traces; whole-graph reconstruction completeness and the
-optimized merger's state invariant remain separate proof obligations.
+complete candidate traces. Graph reconstruction completeness is now proved
+relative to finite ~GraphTrace~ derivations; the optimized merger's state
+invariant remains a separate obligation.
+
+* Graph reconstruction completeness receipt
+
+~lake build LeanPoo.C4.GraphCertificate~ checks suffix and node reproduction,
+longest-tail reproduction, recursion budget sufficiency, graph reconstruction
+completeness, and graph-trace uniqueness for both output and tail.
+~Tests/GraphCertificate.lean~ prints nine additional theorem axiom reports;
+they require only standard Lean axioms, with no ~sorryAx~ or native-decision
+axiom. General examples quantify over arbitrary graphs and derivations.
+Executable checks exercise ~reconstruct~ directly on diamonds, shared suffix
+chains, repeated edges, first-match duplicate declarations, disconnected
+errors, missing nodes, cycles, local-order conflicts, incompatible tails,
+and suffix-order violations. The gate remains ~GRAPH-CERTIFICATE-OK~.
+
+~reconstruct_success_iff~ closes success exactly against existence of the
+explicit finite ~GraphTrace~ relation. ~linearizeCertified_complete~ still
+requires ordinary compiler success. Neither ordinary optimized completeness
+nor equivalence to the paper's original relation follows from this receipt.

@@ -40,6 +40,10 @@ def certifyTail (tails : List (List String)) (claimed : List String) :
     else .error .incompatibleSuffixes
   else .error .incompatibleSuffixes
 
+theorem certifyTail_complete (certificate : TailCertified tails) :
+    certifyTail tails certificate.output = .ok certificate := by
+  simp only [certifyTail, dite_eq_left certificate.chosen, dite_eq_left certificate.containsTail]
+
 /-- Evidence for one complete node, binding the selected tail, reconstructed
 ancestry, and fresh node name to the returned precedence. -/
 structure NodeCertified (name : String) (orders tails : List (List String)) where
@@ -95,5 +99,17 @@ def certifyNode (name : String) (orders tails : List (List String)) (claimedTail
 def certifyNodeReference (name : String) (orders tails : List (List String)) (claimedTail : List String) :
     Except Error (NodeCertified name orders tails) :=
   certifyNodeUsing mergeWithSuffixReference name orders tails claimedTail
+
+/-- Reference reconstruction reproduces every well-formed node certificate. -/
+theorem certifyNodeReference_complete (certificate : NodeCertified name orders tails) :
+    ∃ result, certifyNodeReference name orders tails certificate.selection.output = .ok result ∧
+      result.output = certificate.output ∧ result.selection.output = certificate.selection.output := by
+  obtain ⟨ancestry, success, same⟩ :=
+    mergeWithSuffixReference_complete certificate.ancestry certificate.tailUnique
+  have fresh : name ∉ ancestry.output := by rw [same]; exact certificate.fresh
+  refine ⟨⟨certificate.selection, ancestry, certificate.tailUnique, fresh⟩, ?_, ?_, rfl⟩
+  · simp [certifyNodeReference, certifyNodeUsing, certifyTail_complete certificate.selection,
+      success, certificate.tailUnique, fresh, bind, Except.bind, pure, Except.pure]
+  · simp [NodeCertified.output, same]
 
 end LeanPoo.C4

@@ -409,10 +409,12 @@ graph ancestor declared as a suffix. Two accepted certificates for the same
 graph/root agree about output.
 ~linearizeCertified~ reconstructs independently from graph declarations and
 rejects a mismatch with the ordinary compiler. It does not trust the compiler's
-cached metadata. This is soundness for accepted certificates. A proof that
-the ordinary traversal or this bounded reconstruction always succeeds for
-every consistent graph, and equivalence with Ducournau's original relation,
-remain open. Verification can repeat shared parent work; no efficiency bound
+cached metadata. The public independent ~reconstruct~ path now succeeds
+exactly when the root admits a finite ~GraphTrace~, reproducing its complete
+precedence and most-specific tail within ~graph.nodes.length~ steps of depth.
+~GraphTrace.unique~ proves both lists are fixed by the original graph.
+Completeness of the ordinary optimized traversal and equivalence with
+Ducournau's original relation remain open. Verification can repeat shared parent work; no efficiency bound
 is claimed for this path.
 
 The structural reference merger ~Precedence.mergeReference~ now has a
@@ -425,8 +427,14 @@ Independent graph reconstruction now uses ~certifyNodeReference~ and this
 structural merger. ~GraphTrace.declared~ and ~GraphTrace.length_bound~ bind
 all output names to original declarations and bound output size by graph size;
 ~GraphTrace.parent_budget~ proves strict output-length decrease along a parent
-edge. These support the remaining graph reconstruction completeness proof.
-Completeness of the optimized merger and ordinary graph traversal remain open.
+edge. The reconstruction completeness proof now combines these bounds with
+suffix-check completeness for duplicate-free tails, exact reproduction of a
+certified longest tail, and reference node reconstruction completeness.
+~linearizeCertified_complete~ proves certification succeeds whenever the
+ordinary compiler has returned an output admitting a ~GraphTrace~.
+Existence of a ~GraphTrace~ is the explicit consistency criterion here; its
+equivalence to the paper's original relation remains unproved. Completeness
+of the optimized merger and ordinary graph traversal remain open.
 
 * Paper-derived boundaries
 

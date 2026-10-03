@@ -45,6 +45,41 @@ private def disconnected : Graph :=
   { nodes := [{ name := "Root" }, { name := "Broken", parentOrders := [["Missing"]] }] }
 #guard (linearizeCertified disconnected "Root").toOption.map (·.output) == some ["Root"]
 
+#guard (reconstruct diamond "Root").toOption.map (·.output) ==
+  some ["Root", "Left", "Right", "Base"]
+#guard (reconstruct suffixes "Root").toOption.map (·.mostSpecificTail) == some ["S", "T"]
+#guard (reconstruct suffixes "S").toOption.map (·.mostSpecificTail) == some ["S", "T"]
+#guard (reconstruct repeated "Root").toOption.map (·.output) ==
+  some ["Root", "Left", "Right", "Base"]
+#guard error? (reconstruct conflict "Root") == some .inconsistentOrder
+#guard error? (reconstruct cycle "A") == some (.cycle "A")
+#guard error? (reconstruct diamond "Missing") == some (.unknownNode "Missing")
+#guard (reconstruct disconnected "Root").toOption.map (·.output) == some ["Root"]
+private def duplicateDeclarations : Graph :=
+  { nodes := [{ name := "Root" }, { name := "Root", parentOrders := [["Missing"]] }] }
+#guard (reconstruct duplicateDeclarations "Root").toOption.map (·.output) == some ["Root"]
+private def suffixViolation : Graph :=
+  { nodes := [{ name := "S", suffix := true }, { name := "X" },
+      { name := "Root", parentOrders := [["S", "X"]] }] }
+#guard error? (reconstruct suffixViolation "Root") == some .suffixOrderViolation
+private def incompatibleTails : Graph :=
+  { nodes := [{ name := "A", suffix := true }, { name := "B", suffix := true },
+      { name := "Root", parentOrders := [["A", "B"]] }] }
+#guard error? (reconstruct incompatibleTails "Root") == some .incompatibleSuffixes
+
+example (trace : GraphTrace graph root output tail) :
+    ∃ result, reconstruct graph root = .ok result ∧
+      result.output = output ∧ result.mostSpecificTail = tail := reconstruct_complete trace
+example (graph : Graph) (root : String) :
+    (reconstruct graph root).toOption.isSome = true ↔
+      ∃ output tail, GraphTrace graph root output tail := reconstruct_success_iff
+example (first : GraphTrace graph root output₁ tail₁)
+    (second : GraphTrace graph root output₂ tail₂) : output₁ = output₂ ∧ tail₁ = tail₂ :=
+  first.unique second
+example (compiled : linearize graph root = .ok output) (trace : GraphTrace graph root output tail) :
+    ∃ certificate, linearizeCertified graph root = .ok certificate ∧ certificate.output = output :=
+  linearizeCertified_complete compiled trace
+
 example (graph : Graph) (certificate : GraphCertified graph root) :
     linearize graph root = .ok certificate.output := certificate.compiled
 example (graph : Graph) (certificate : GraphCertified graph root) :
@@ -67,5 +102,14 @@ example (graph : Graph) (certificate : GraphCertified graph root)
 #print axioms GraphCertified.ancestor_suffix
 #print axioms GraphCertified.local_order
 #print axioms GraphCertified.unique
+#print axioms respectsSuffixTail_complete
+#print axioms respectsSuffixTail_iff
+#print axioms mergeWithSuffixReference_complete
+#print axioms certifyTail_complete
+#print axioms certifyNodeReference_complete
+#print axioms reconstruct_complete
+#print axioms reconstruct_success_iff
+#print axioms GraphTrace.unique
+#print axioms linearizeCertified_complete
 #eval IO.println "GRAPH-CERTIFICATE-OK"
 end LeanPoo.Tests.GraphCertificate
