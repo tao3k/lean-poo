@@ -91,6 +91,7 @@ check-compose: check-object
     lake build LeanPoo.Object.Definition
     lake build LeanPoo.Object.Nested
     lake build LeanPoo.Object.SpecificationComposition
+    lake build LeanPoo.Object.SharedFamily
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
     lake build LeanPoo.Prototype.Mutable
@@ -134,6 +135,7 @@ check-example: check-compose
     lake env lean Examples/ObjectDefinition.lean
     lake env lean Examples/NestedObjectDefinition.lean
     lake env lean Examples/SpecificationComposition.lean
+    lake env lean Examples/SharedFamily.lean
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
@@ -173,6 +175,7 @@ check-tests: check-proof
     lake env lean Tests/SkewExtension.lean
     lake env lean Tests/SpecificationFocus.lean
     lake env lean Tests/SpecificationComposition.lean
+    lake env lean Tests/SharedFamily.lean
     lake env lean Tests/NestedPrototype.lean
     just check-incremental
     just check-proof-reuse

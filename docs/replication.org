@@ -347,15 +347,29 @@ rejected against the authoritative family before lifting. Conflicting orders
 and lifted-name collisions remain errors; the source snapshot and its
 resolution mode are preserved.
 
-The remaining boundary is discovery and reconciliation of arbitrary sources:
-contributions may be computed by arbitrary outer slot bodies, and separately
-authored inner DAG snapshots may overlap without a common authoritative
-schema. LeanPoo does not inspect Lean functions to discover contributions or
-infer equality of opaque declarations from matching names. Callers explicitly
-supply layers and either author shared parents in one family or supply
-disjoint independent families. The derived shared-ancestor topology itself is
-now executable; arbitrary function discovery and cross-snapshot identity
-reconciliation remain outside this construction.
+~Schema.mergeSharedFromLeft~ also composes separately derived family snapshots
+under explicit shared-identity authority. A finite list declares the shared
+names and selects the left schema as their declaration owner. Each listed
+identity must exist in both schemas with identical parent orders and suffix
+metadata; unlisted collisions and inconsistent metadata are rejected.
+~Memoized.mixSharedWith~ then makes the two roots independent parents and
+uses C4 to validate the combined precedence. ~Nested.mixSharedWith~ carries
+this construction into an inherited inner-object slot. The shared-component
+scenario derives both branches separately, preserving one defaults ancestor.
+
+Declaration authority is explicit rather than inferred. Lean proves that
+successful merges retain the left declaration for each left-owned node and
+the right lookup for every name outside the left graph. An absent left
+shared declaration stays absent, even when the right snapshot supplies a
+body. Different opaque functions may therefore be reconciled only by the
+caller's explicit choice of authority; the merge does not certify them equal.
+
+The remaining discovery boundary concerns arbitrary outer slot bodies and
+automatic identity inference. Callers explicitly supply contributions and
+either use one common family, disjoint independent families, or a finite
+shared-name list with left declaration authority. The shared-ancestor topology
+and explicit cross-snapshot reconciliation are executable. Automatic function
+discovery and extensional equality of opaque declarations are not claimed.
 
 * Fused specification protocol
 

@@ -120,6 +120,22 @@ parents, conflicting orders, and lifted-name collisions return errors; a
 missing focus returns ~LiftError.missingFocus~. ~liftLayersOnMany~ remains the
 entry for distinct, independently authored families.
 
+For separately derived snapshots that share prototype identities, import
+~LeanPoo.Object.SharedFamily~ and call
+~left.mixSharedWith right ["Defaults"] "CombinedComponent"~. The listed
+shared names explicitly select the left snapshot as declaration authority.
+Each name must exist in both schemas, and its parent orders and suffix flag
+must match exactly. Every unlisted overlap is rejected. Different opaque
+slot bodies are not compared: the left declaration wins, including when it
+is absent. Use this entry only when that authority choice is intended.
+The two roots become independent parents; C4 includes their shared ancestors
+once and checks their combined constraints. The receiver's resolution mode
+is retained. ~Schema.mergeSharedFromLeft~ supplies the underlying graph merge.
+~Nested.mixSharedWith right sharedNames name~ applies the same operation to
+an inherited inner-object slot, propagating absence and earlier errors.
+[[file:../Examples/SharedFamily.lean][SharedFamily.lean]] combines two independent branches over one
+~Defaults~ identity and returns budget ~12~ with unchanged retries ~5~.
+
 To use the paper's alternative protocol that merges specifications into one
 identity, import ~LeanPoo.Object.SpecificationComposition~ and call
 ~family.fuseSpecifications "CombinedPolicy" ["PolicyA", "PolicyB"]~. Sources

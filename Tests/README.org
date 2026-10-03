@@ -8,3 +8,5 @@ processes through ~just check-debug~ and ~just check-incremental~.
 User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:SpecificationComposition.lean][SpecificationComposition]] checks fused finalizers, defaults, delayed inheritance, parent-order conflicts, source identity exclusion, and later ancestor insertion.
+
+- [[file:SharedFamily.lean][SharedFamily]] checks shared snapshot composition, declaration authority, metadata and C4 conflicts, and nested absence/error propagation.
