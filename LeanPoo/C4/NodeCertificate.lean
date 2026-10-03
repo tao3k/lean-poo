@@ -76,14 +76,24 @@ theorem NodeCertified.covers (certificate : NodeCertified name orders tails) :
       (∃ order ∈ orders, item ∈ order) ∨ item ∈ certificate.selection.output := by
   simp only [output, List.mem_cons, certificate.ancestry.covers]
 
-def certifyNode (name : String) (orders tails : List (List String)) (claimedTail : List String) :
+private def certifyNodeUsing
+    (merger : (orders : List (List String)) → (tail : List String) → Except Error (SuffixCertified orders tail))
+    (name : String) (orders tails : List (List String)) (claimedTail : List String) :
     Except Error (NodeCertified name orders tails) := do
   let selection ← certifyTail tails claimedTail
-  let ancestry ← mergeWithSuffixCertified orders selection.output
+  let ancestry ← merger orders selection.output
   if unique : selection.output.Nodup then
     if fresh : name ∉ ancestry.output then
       return ⟨selection, ancestry, unique, fresh⟩
     else throw (.cycle name)
   else throw .inconsistentOrder
+
+def certifyNode (name : String) (orders tails : List (List String)) (claimedTail : List String) :
+    Except Error (NodeCertified name orders tails) :=
+  certifyNodeUsing mergeWithSuffixCertified name orders tails claimedTail
+
+def certifyNodeReference (name : String) (orders tails : List (List String)) (claimedTail : List String) :
+    Except Error (NodeCertified name orders tails) :=
+  certifyNodeUsing mergeWithSuffixReference name orders tails claimedTail
 
 end LeanPoo.C4

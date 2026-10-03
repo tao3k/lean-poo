@@ -415,6 +415,19 @@ every consistent graph, and equivalence with Ducournau's original relation,
 remain open. Verification can repeat shared parent work; no efficiency bound
 is claimed for this path.
 
+The structural reference merger ~Precedence.mergeReference~ now has a
+completeness theorem: whenever a finite ~Trace lists output~ exists, the
+merger succeeds with exactly that output. ~Trace.length_bound~ proves that
+the candidate-position count is sufficient fuel; ~mergeReference_success_iff~
+characterizes success exactly by existence of a complete operational trace.
+This theorem does not assume correctness of the optimized tail-count state.
+Independent graph reconstruction now uses ~certifyNodeReference~ and this
+structural merger. ~GraphTrace.declared~ and ~GraphTrace.length_bound~ bind
+all output names to original declarations and bound output size by graph size;
+~GraphTrace.parent_budget~ proves strict output-length decrease along a parent
+edge. These support the remaining graph reconstruction completeness proof.
+Completeness of the optimized merger and ordinary graph traversal remain open.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the

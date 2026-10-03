@@ -707,3 +707,16 @@ Success on all consistent graphs and any verification efficiency bound remain
 unproved; shared parent work may be repeated. The proof does not establish
 the original optimized traversal's internal cache invariant or equivalence
 with Ducournau's definition.
+
+* Reference merge completeness receipt
+
+~lake build LeanPoo.C4.ReferenceMerge LeanPoo.C4.GraphCertificate~ checks
+structural merge completeness, its input-derived budget, and graph size and
+parent-decrease bounds. ~Tests/ReferenceMerge.lean~ requires
+~REFERENCE-MERGE-OK~ and prints the completeness/bound axioms. Its theorem
+examples quantify over arbitrary finite candidate lists, while executable
+cases check blocked heads, shared candidates, inconsistency, explicit fuel,
+and reference suffix/node construction. ~linearizeCertified~ now rebuilds
+using the structural reference merger. This closes completeness relative to
+complete candidate traces; whole-graph reconstruction completeness and the
+optimized merger's state invariant remain separate proof obligations.

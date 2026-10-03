@@ -974,6 +974,34 @@ reconstruction on every consistent graph is not proved here.
 parent edges, missing nodes, cycles, ordering conflicts, and unreachable
 malformed declarations without changing the ordinary compiler's root scope.
 
+* Complete structural reference merge
+
+~C4.Precedence.mergeReference lists~ constructs a certified trace directly by
+selecting the first eligible head and advancing the candidates. It uses
+~lists.flatten.length~ as a sufficient step budget. ~mergeReference_complete~
+proves that any existing ~Trace lists output~ is reproduced, and
+~mergeReference_success_iff~ proves that success is equivalent to the existence
+of such a complete operational trace. The theorem concerns the defined
+leftmost-eligible merge policy; it does not establish completeness of the
+optimized tail-count implementation.
+
+~mergeReferenceWithFuel lists fuel~ exposes an explicit budget for experiments;
+its completeness theorem requires ~output.length ≤ fuel~. Insufficient fuel
+can report ~inconsistentOrder~. Use ~mergeReference~ when that distinction
+should be handled automatically.
+
+~C4.mergeWithSuffixReference~ and ~C4.certifyNodeReference~ use the structural
+merger with the existing suffix/node checks. Independent reconstruction inside
+~linearizeCertified~ now uses this path. The ordinary compiler still runs
+first and its result is compared to the independently derived output.
+~c.length_bound~ proves that a graph certificate's output contains at most
+~graph.nodes.length~ names. ~GraphTrace.parent_budget~ proves that a parent's
+derived output is strictly shorter than the child's; the proof that recursive
+reconstruction always succeeds within its graph-size budget remains open.
+[[file:../Tests/ReferenceMerge.lean][ReferenceMerge.lean]] covers shared candidates, blocked heads, conflicting
+orders, duplicate names, explicit budget exhaustion, and reference suffix/node
+construction.
+
 * Commands
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,

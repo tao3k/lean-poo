@@ -61,6 +61,23 @@ theorem GraphTrace.local_order {node : Node} (trace : GraphTrace graph root outp
     subst node
     exact certificate.preserves (List.mem_append_right _ member)
 
+theorem GraphTrace.parent_budget {node : Node} {parent : String}
+    (trace : GraphTrace graph root output tail)
+    (found : graph.findNode? root = some node) (member : parent ∈ node.parentOrders.flatten) :
+    ∃ parentOutput parentTail, GraphTrace graph parent parentOutput parentTail ∧
+      parentOutput.length < output.length := by
+  cases trace with
+  | node actual rows names parents certificate =>
+    have same := Option.some.inj (actual.symm.trans found)
+    subst node
+    rw [← names] at member
+    obtain ⟨row, present, name⟩ := List.mem_map.mp member
+    refine ⟨row.2.1, row.2.2, ?_, ?_⟩
+    · simpa [name] using parents row present
+    · have kept := certificate.ancestry.preserves
+        (List.mem_append_left _ (List.mem_map.mpr ⟨row, present, rfl⟩))
+      exact Nat.lt_of_le_of_lt kept.length_le (Nat.lt_succ_self _)
+
 theorem GraphTrace.parent_tail {node : Node} {parent : String}
     (trace : GraphTrace graph root output tail)
     (found : graph.findNode? root = some node) (member : parent ∈ node.parentOrders.flatten) :
@@ -129,6 +146,13 @@ theorem GraphTrace.root_mem (trace : GraphTrace graph root output tail) : root �
   cases trace with
   | node _ _ _ _ certificate => simp [NodeCertified.output]
 
+theorem GraphTrace.declared (trace : GraphTrace graph root output tail) :
+    ∃ declaration ∈ graph.nodes, declaration.name = root := by
+  cases trace with
+  | node found rows names parents certificate =>
+    have selected := List.find?_some (p := fun declaration : Node => declaration.name == root) found
+    exact ⟨_, List.mem_of_find?_eq_some found, beq_iff_eq.mp selected⟩
+
 theorem GraphTrace.covers (trace : GraphTrace graph root output tail) :
     item ∈ output ↔ Ancestor graph item root := by
   constructor
@@ -155,6 +179,17 @@ theorem GraphTrace.covers (trace : GraphTrace graph root output tail) :
     obtain ⟨ancestorOutput, ancestorTail, ancestorTrace, inherited⟩ := trace.ancestor path
     exact inherited.subset ancestorTrace.root_mem
 
+/-- Graph-derived output size is bounded by the number of original declarations. -/
+theorem GraphTrace.length_bound (trace : GraphTrace graph root output tail) :
+    output.length ≤ graph.nodes.length := by
+  have bound : output.length ≤ (graph.nodes.map Node.name).length :=
+    trace.nodup.length_le_of_subset (by
+      intro item member
+      obtain ⟨ancestorOutput, ancestorTail, ancestorTrace, _⟩ := trace.ancestor (trace.covers.mp member)
+      obtain ⟨declaration, present, same⟩ := ancestorTrace.declared
+      exact List.mem_map.mpr ⟨declaration, present, same⟩)
+  simpa using bound
+
 private def longestTail (tails : List (List String)) : List String :=
   tails.foldl (fun current next => if current.length < next.length then next else current) []
 
@@ -174,7 +209,7 @@ private def derive (graph : Graph) (root name : String) : Nat → Except Error (
       if names : rows.map Prod.fst = node.parentOrders.flatten then
         let orders := rows.map (fun row => row.2.1) ++ node.parentOrders
         let tails := rows.map (fun row => row.2.2)
-        let certificate ← certifyNode name orders tails (longestTail tails)
+        let certificate ← certifyNodeReference name orders tails (longestTail tails)
         have parents : ∀ row ∈ rows, GraphTrace graph row.1 row.2.1 row.2.2 := by
           intro row present
           obtain ⟨child, _, same⟩ := List.mem_map.mp present
@@ -199,6 +234,9 @@ theorem GraphCertified.nodup (certificate : GraphCertified graph root) :
 
 theorem GraphCertified.head (certificate : GraphCertified graph root) :
     certificate.output.head? = some root := certificate.result.trace.head
+
+theorem GraphCertified.length_bound (certificate : GraphCertified graph root) :
+    certificate.output.length ≤ graph.nodes.length := certificate.result.trace.length_bound
 
 theorem GraphCertified.ancestor {ancestor : String} (certificate : GraphCertified graph root)
     (path : Ancestor graph ancestor root) :

@@ -1,4 +1,4 @@
-import LeanPoo.C4.Precedence
+import LeanPoo.C4.ReferenceMerge
 
 namespace LeanPoo.C4
 
@@ -108,12 +108,23 @@ theorem SuffixCertified.nodup (certificate : SuffixCertified orders tail)
 
 /-- Check complete parent and local orders before cleanup; then certify the
 prefix merge and reattach the shared suffix with an order-preservation proof. -/
-def mergeWithSuffixCertified (orders : List (List String)) (tail : List String) :
+private def mergeWithSuffixUsing
+    (merger : (lists : List (List String)) → Except Error (Precedence.Certified lists))
+    (orders : List (List String)) (tail : List String) :
     Except Error (SuffixCertified orders tail) := do
   if accepted : orders.all (fun order => respectsSuffixTail order tail) = true then
-    let merged ← Precedence.mergeCertified (orders.map (fun order => withoutTail order tail))
+    let merged ← merger (orders.map (fun order => withoutTail order tail))
     return ⟨merged.output, merged.trace, fun order member =>
       respectsSuffixTail_sound (List.all_eq_true.mp accepted order member)⟩
   else throw .suffixOrderViolation
+
+def mergeWithSuffixCertified (orders : List (List String)) (tail : List String) :
+    Except Error (SuffixCertified orders tail) :=
+  mergeWithSuffixUsing Precedence.mergeCertified orders tail
+
+/-- Suffix reconstruction with the complete structural reference merger. -/
+def mergeWithSuffixReference (orders : List (List String)) (tail : List String) :
+    Except Error (SuffixCertified orders tail) :=
+  mergeWithSuffixUsing Precedence.mergeReference orders tail
 
 end LeanPoo.C4
