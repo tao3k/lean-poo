@@ -397,6 +397,61 @@ This closes the paper's described alternative composition protocol for
 explicit typed specifications within one family; it does not reconcile opaque
 declarations across independently authored snapshots.
 
+* Wrapping the current ancestry
+
+Section 9 describes wrapping the modular extensions in the current ancestry
+as a non-modular final transformation. ~Plan.transformAncestryDeclarations~
+prepares one transformed lookup table for the reachable direct declarations;
+absent declarations and unrelated branches retain their original lookup.
+~Memoized.wrapAncestrySlots~ applies a named, dependent-key wrapper to each
+existing direct slot. ~Declaration.mapSlots~ preserves defaults and entry
+order. Lean proves that mapping slot payloads commutes with last-write-wins
+lookup, including repeated keys and heterogeneous value types, and that the
+transformation retains the graph and validated C4 precedence. It also proves
+that declarations outside the current ancestry are unchanged.
+
+The wrapping scenario distinguishes this from a final root wrapper: the
+original result is ~12~, per-contribution wrapping yields ~16~, and wrapping
+only the final result yields ~13~. A later layer produces ~48~ without receiving
+the earlier wrapper. Function-valued slot checks wrap arguments and results
+while retaining final-self rebinding after a later scale override. This is a
+snapshot pass with the paper's stated coordination requirement for future
+extensions, not an automatically inherited wrapping policy.
+
+* Raw target-update policies
+
+Section 9 explicitly lists four target-update policies. ~Prototype.Object~
+now exposes each through ~LeanPoo.Prototype.Target~. ~updateTarget~ rejects
+updates by default, without executing the change or requesting the target.
+~updateTargetOutOfSync~ retains the prototype but changes the target;
+~overwriteTargetSpecification~ replaces it with a constant updated target;
+~detachTarget~ returns only the updated target thunk without a prototype.
+These operate on the paper's first-class pair; a C4 object can use its existing
+~toFirstClassObject~ projection. C4-aware specification edits remain available
+through the original ~Memoized~ object and its lenses.
+
+Lean proves rejection, prototype/base retention for the explicit out-of-sync
+policy, constancy of the replacement prototype, and agreement of the detached
+and edited targets. The executable check starts with ~x = 1~ and ~double = 2~,
+edits only the target to ~x = 100~, then extends with ~x = 7~. Retaining the
+original specification reconstructs ~double = 14~ and discards the target-only
+edit; the constant replacement retains ~double = 2~. The detached value has
+no object-extension API. General first-class extension still uses the existing
+unsafe fixed point; these policies do not supply a total fixed-point proof.
+
+* Chapter 9 executable protocol receipts
+
+| Described protocol | Lean entry and receipt | Explicit limit |
+|--------------------+------------------------+----------------|
+| Context and extension focus | ~SkewLens~ view/update/refocus operations, ~MonoLens.reverseAt~; focused and skew specification tests | The broader is-a specialization sketch has no specified evaluation rule. |
+| Complete prototype specification | ~Lens.prototypeSpecification~; ~Tests/SpecificationFocus.lean~ | Prototype identity is fixed; topology edits are C4-checked. |
+| Nested identity-preserving composition | ~Nested.liftLayersWithParents~, ~Nested.mixSharedWith~; nested and shared-family tests | Contributions and cross-snapshot declaration authority are explicit. |
+| Merged specification protocol | ~Specification.fuse~, ~Memoized.fuseSpecifications~; specification-composition tests | Direct extensions act as finalizers; selected sources cannot remain ancestors. |
+| Wrap current ancestor extensions | ~wrapAncestrySlots~, ~transformAncestryDeclarations~; ancestry-transformation tests | Future extensions do not automatically receive this snapshot wrapper. |
+| Four raw target-update policies | ~Prototype.Object~ target operations; ~Tests/TargetPolicies.lean~ | Policies have different future-extension behavior; the general fixed point remains unsafe. |
+| Class instance methods and initialization | Instance-method slot fragments and initialization modules; class method/initialization tests | Typed Lean records and functions provide the authoring surface. |
+| Method combinations and dispatch | Qualified combinations, Simula/BETA inner, subjective and tuple dispatch; chapter 9 and dispatch tests | This is a typed first-class API, without a dynamic host-language MOP. |
+
 * Fixed-point boundary in Lean
 
 A general fixed point may diverge, so Lean's kernel cannot certify it as a

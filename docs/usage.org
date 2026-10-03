@@ -152,6 +152,27 @@ then includes a new infrastructure ancestor and obtains ~64~ after the same
 finalizers run. Defaults, delayed inherited methods, and the family's
 resolution mode keep their ordinary meaning.
 
+Import ~LeanPoo.Object.AncestryTransform~ to transform existing contributions
+throughout one object's current C4 ancestry. Use
+~object.wrapAncestrySlots (fun node key spec => ...)~ for typed method wrappers,
+or ~object.transformAncestryDeclarations change~ to edit whole direct
+declarations. A wrapper can return ~.computed (fun self inherited => ...)~
+and call ~spec.eval self inherited~ before adapting its result. Function-valued
+results can adapt method arguments as well. The pass preserves the C4 graph,
+resolution mode, and unrelated branches. Slot wrapping leaves defaults
+unchanged. Newly added layers are outside this earlier pass.
+
+Import ~LeanPoo.Prototype.Target~ for the paper's four raw target-update choices
+on ~Prototype.Object~. ~pair.updateTarget change~ rejects the update.
+~pair.updateTargetOutOfSync change~ keeps the old prototype, so a later
+extension reconstructs from it and loses the raw target edit.
+~pair.overwriteTargetSpecification change~ retains a constant updated target;
+future extensions inherit those values rather than rebound old formulas.
+~pair.detachTarget change~ returns a target thunk with no prototype.
+Use ~memoized.toFirstClassObject~ for a first-class view of a C4 object.
+[[file:../Examples/TargetAndWrapping.lean][TargetAndWrapping.lean]] runs both the wrapping pass and the
+future-extension differences between these target policies.
+
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
 write to the same direct key replaces the earlier one. For authored object

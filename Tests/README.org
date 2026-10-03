@@ -10,3 +10,6 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:SpecificationComposition.lean][SpecificationComposition]] checks fused finalizers, defaults, delayed inheritance, parent-order conflicts, source identity exclusion, and later ancestor insertion.
 
 - [[file:SharedFamily.lean][SharedFamily]] checks shared snapshot composition, declaration authority, metadata and C4 conflicts, and nested absence/error propagation.
+
+- [[file:AncestryTransform.lean][AncestryTransform]] checks ancestry wrappers, heterogeneous and function-valued slots, unrelated branches, and later extension.
+- [[file:TargetPolicies.lean][TargetPolicies]] checks rejection, retained-specification target edits, constant-specification replacement, and target detachment.
