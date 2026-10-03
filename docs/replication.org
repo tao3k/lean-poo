@@ -418,6 +418,29 @@ while retaining final-self rebinding after a later scale override. This is a
 snapshot pass with the paper's stated coordination requirement for future
 extensions, not an automatically inherited wrapping policy.
 
+* Reversible method renaming
+
+Section 9 also names method renaming as a non-modular wrapper. Import
+~LeanPoo.Object.Renaming~ and provide an explicit bijection between old and
+new keys. ~Renaming.declaration~ translates typed method entries and defaults,
+retains last-direct-write lookup, and gives existing method bodies a pulled
+back final self. ~Renaming.schema~ translates every declaration in the schema,
+including branches outside the current root. Prototype identities and C4
+metadata remain unchanged. ~Renaming.memoized~ rebuilds lazy cells with the
+original resolution mode. New extensions must coordinate by using new keys
+or translated declarations.
+
+~Renaming.resolve~ is a Lean theorem for every key and every supplied self;
+~Renaming.instantiate~ transports an ~Object.Instance~ fixed-point equation
+without a new recursive construction. Entry lookup, declaration lookup, and
+the two self round trips have kernel-checked laws. The executable checks cover
+heterogeneous and function-valued slots, a diamond yielding ~12~ or ~22~ under
+opposite parent orders, defaults and missing slots, unrelated branches,
+delayed overriding of a parent that would panic, duplicate writes, all three
+resolution modes, and future final-self rebinding. The example yields
+~6 → 6 → 14~. There is no automatic inspection of opaque method bodies,
+inferred key mapping, or many-to-one aliasing policy.
+
 * Raw target-update policies
 
 Section 9 explicitly lists four target-update policies. ~Prototype.Object~
@@ -448,6 +471,7 @@ unsafe fixed point; these policies do not supply a total fixed-point proof.
 | Nested identity-preserving composition | ~Nested.liftLayersWithParents~, ~Nested.mixSharedWith~; nested and shared-family tests | Contributions and cross-snapshot declaration authority are explicit. |
 | Merged specification protocol | ~Specification.fuse~, ~Memoized.fuseSpecifications~; specification-composition tests | Direct extensions act as finalizers; selected sources cannot remain ancestors. |
 | Wrap current ancestor extensions | ~wrapAncestrySlots~, ~transformAncestryDeclarations~; ancestry-transformation tests | Future extensions do not automatically receive this snapshot wrapper. |
+| Reversible method renaming | ~Object.Renaming~; ~Tests/Renaming.lean~ | Explicit bijection; future contributions must coordinate in the new key space. |
 | Four raw target-update policies | ~Prototype.Object~ target operations; ~Tests/TargetPolicies.lean~ | Policies have different future-extension behavior; the general fixed point remains unsafe. |
 | Class instance methods and initialization | Instance-method slot fragments and initialization modules; class method/initialization tests | Typed Lean records and functions provide the authoring surface. |
 | Method combinations and dispatch | Qualified combinations, Simula/BETA inner, subjective and tuple dispatch; chapter 9 and dispatch tests | This is a typed first-class API, without a dynamic host-language MOP. |

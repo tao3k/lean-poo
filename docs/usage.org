@@ -162,6 +162,24 @@ results can adapt method arguments as well. The pass preserves the C4 graph,
 resolution mode, and unrelated branches. Slot wrapping leaves defaults
 unchanged. Newly added layers are outside this earlier pass.
 
+Import ~LeanPoo.Object.Renaming~ for a reversible, typed renaming of an entire
+prototype family. Supply ~Renaming.forward~, ~inverse~, and the two inverse
+laws. The target value family is ~rename.Values Value~: each new key selects
+its old value type through the inverse map. Define a concrete mapping with
+~abbrev~ when type-class inference should reduce its keys to concrete types.
+Use ~rename.memoized object~ or ~rename.plan plan~. The pass translates all
+schema declarations, including unrelated branches, preserving prototype
+names, C4 order, defaults, duplicate-write order, and resolution mode. Slot
+bodies receive a translated self; inherited computations stay delayed.
+Future extensions must use the new keys or translate their declarations with
+~rename.declaration~. The operation rebuilds lazy value cells rather than
+sharing an already evaluated target. ~rename.instantiate instance~ transports
+a proof-bearing fixed point directly; ~Renaming.resolve~ proves agreement for
+every key and every final self. This API requires a bijection; it does not
+infer renamings or merge several methods into one alias.
+[[file:../Examples/Renaming.lean][Renaming.lean]] keeps a computed result ~6~ through renaming and
+rebinds it to ~14~ when a later extension supplies the new source value ~7~.
+
 Import ~LeanPoo.Prototype.Target~ for the paper's four raw target-update choices
 on ~Prototype.Object~. ~pair.updateTarget change~ rejects the update.
 ~pair.updateTargetOutOfSync change~ keeps the old prototype, so a later

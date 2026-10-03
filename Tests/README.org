@@ -11,5 +11,6 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:SharedFamily.lean][SharedFamily]] checks shared snapshot composition, declaration authority, metadata and C4 conflicts, and nested absence/error propagation.
 
+- [[file:Renaming.lean][Renaming]] checks reversible heterogeneous slot renaming, internal self reads, delayed inheritance, defaults, duplicate writes, and later extension.
 - [[file:AncestryTransform.lean][AncestryTransform]] checks ancestry wrappers, heterogeneous and function-valued slots, unrelated branches, and later extension.
 - [[file:TargetPolicies.lean][TargetPolicies]] checks rejection, retained-specification target edits, constant-specification replacement, and target detachment.

@@ -145,6 +145,34 @@ def Plan.compileSlot (plan : Plan Key Value) (key : Key) :
       Prototype.Method.identity
   fun self => methods self (fun _ => default)
 
+/-- One default layer in the canonical least-to-most-specific evaluation. -/
+def Schema.defaultStep (schema : Schema Key Value) (key : Key)
+    (name : String) (inherited : Option (Value key)) : Option (Value key) :=
+  match schema.declaration name with
+  | none => inherited
+  | some declaration => match declaration.default key with
+    | none => inherited
+    | some value => some value
+
+/-- One delayed method layer in the canonical C4 evaluation. -/
+def Schema.methodStep (schema : Schema Key Value) (key : Key)
+    (name : String) (inherited : Prototype.Method (Self Key Value) (Option (Value key))) :
+    Prototype.Method (Self Key Value) (Option (Value key)) :=
+  match schema.declaration name with
+  | none => inherited
+  | some declaration => match declaration.slot key with
+    | none => inherited
+    | some spec => Prototype.Method.compose spec.toMethod inherited
+
+/-- Expose the canonical method/default fold for semantic transformations. -/
+theorem Plan.compileSlot_apply (plan : Plan Key Value) (key : Key)
+    (self : Self Key Value) :
+    plan.compileSlot key self =
+      (plan.precedence.foldr (plan.schema.methodStep key) Prototype.Method.identity)
+        self (fun _ => plan.precedence.foldr (plan.schema.defaultStep key) none) := by
+  unfold Plan.compileSlot Schema.methodStep Schema.defaultStep baseDefault
+  rfl
+
 /-- The paper's parent-first construction of one effective slot method. -/
 def Plan.compileSlotForward (plan : Plan Key Value) (key : Key) :
     Self Key Value → Option (Value key) :=
