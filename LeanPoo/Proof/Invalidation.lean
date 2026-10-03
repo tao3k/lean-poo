@@ -1,4 +1,5 @@
 import LeanPoo.Proof.Reuse
+import LeanPoo.C4.Ranked
 
 namespace LeanPoo.Proof
 
@@ -269,6 +270,81 @@ theorem mem_invalidated_iff_bounded_descendant (graph : C4.Graph)
   · intro ⟨origin, originChanged, steps, withinBound, path⟩
     exact mem_invalidated_of_descendant graph changed origin name steps
       originChanged path withinBound
+
+/-- Every inheritance edge consumes at least one rank level. -/
+theorem Descendant.rank_distance {graph : C4.Graph} (ranked : C4.Ranked graph)
+    {origin name : String} {steps : Nat} (path : Descendant graph origin steps name) :
+    ranked.rank origin + steps ≤ ranked.rank name := by
+  induction path with
+  | self => simp
+  | child path node member edge ih =>
+    have lower := ranked.parentLower node member _ edge
+    omega
+
+/-- A ranked finite graph bounds every path, without a caller-supplied
+distance bound or membership assumption on the change origin. -/
+theorem Descendant.within_graph_bound {graph : C4.Graph} (ranked : C4.Ranked graph)
+    {origin name : String} {steps : Nat} (path : Descendant graph origin steps name) :
+    steps ≤ graph.nodes.length := by
+  cases path with
+  | self => omega
+  | child path node member edge =>
+    have distance := (Descendant.child path node member edge).rank_distance ranked
+    have bounded := ranked.bounded node member
+    omega
+
+/-- A positive cycle contradicts the checked parent-rank discipline. -/
+theorem Descendant.no_positive_cycle {graph : C4.Graph} (ranked : C4.Ranked graph)
+    (name : String) (steps : Nat) : ¬ Descendant graph name (steps + 1) name := by
+  intro path
+  have distance := path.rank_distance ranked
+  omega
+
+/-- Exact unbounded reachability specification for certified finite graphs. -/
+theorem mem_invalidated_iff_descendant {graph : C4.Graph} (ranked : C4.Ranked graph)
+    (changed : List String) (name : String) :
+    name ∈ invalidatedNodes graph changed ↔
+      ∃ origin ∈ changed, ∃ steps, Descendant graph origin steps name := by
+  constructor
+  · intro present
+    obtain ⟨origin, member, steps, _, path⟩ :=
+      descendant_of_mem_invalidated graph changed name present
+    exact ⟨origin, member, steps, path⟩
+  · intro ⟨origin, member, steps, path⟩
+    exact mem_invalidated_of_descendant graph changed origin name steps member path
+      (path.within_graph_bound ranked)
+
+/-- After the finite propagation pass, another pass adds no affected names. -/
+theorem mem_impactStep_invalidated_iff {graph : C4.Graph} (ranked : C4.Ranked graph)
+    (changed : List String) (name : String) :
+    name ∈ impactStep graph (invalidatedNodes graph changed) ↔
+      name ∈ invalidatedNodes graph changed := by
+  constructor
+  · intro present
+    rcases mem_impactStep_cases graph _ name present with old | new
+    · exact old
+    · obtain ⟨node, member, same, parent, affected, edge⟩ := new
+      obtain ⟨origin, changedMember, steps, path⟩ :=
+        (mem_invalidated_iff_descendant ranked changed parent).mp affected
+      subst name
+      exact (mem_invalidated_iff_descendant ranked changed node.name).mpr
+        ⟨origin, changedMember, steps + 1, .child path node member edge⟩
+  · exact mem_impactStep_of_mem graph _ name
+
+/-- An executable structural impact list with an exact reachability proof. -/
+structure CertifiedInvalidation (graph : C4.Graph) (changed : List String) where
+  names : List String
+  characterizes : ∀ name, name ∈ names ↔
+    ∃ origin ∈ changed, ∃ steps, Descendant graph origin steps name
+
+/-- Check the whole inheritance graph before returning a complete impact
+list. This concerns structural names, not inferred dependencies of slot bodies. -/
+def certifyInvalidation (graph : C4.Graph) (changed : List String) :
+    Except C4.RankError (CertifiedInvalidation graph changed) := do
+  let ranked ← graph.inferRanked
+  return {
+    names := invalidatedNodes graph changed
+    characterizes := mem_invalidated_iff_descendant ranked changed }
 
 
 end LeanPoo.Proof

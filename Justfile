@@ -14,6 +14,7 @@ check-merge: check-types
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
     lake build LeanPoo.C4.Linearize
+    lake build LeanPoo.C4.Ranked
 
 # Check the paper's executable prototype nucleus.
 check-mvp:
@@ -140,11 +141,13 @@ check-example: check-compose
     lake env lean Examples/SpecificationComposition.lean
     lake env lean Examples/SharedFamily.lean
     lake env lean Examples/Renaming.lean
+    lake env lean Examples/CertifiedInvalidation.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/TargetAndWrapping.lean
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
     lake env lean Tests/C4SuffixOrder.lean
+    lake env lean Tests/C4Ranked.lean
     lake env lean Tests/C4Traversal.lean
     lake env lean Tests/ComputedDefault.lean
     lake env lean Tests/MapDeclaration.lean

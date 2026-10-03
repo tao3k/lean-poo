@@ -595,7 +595,11 @@ validation policy.
 | ~Proof.closePending~ | Build a certificate from reused and newly discharged proofs. |
 | ~Proof.invalidatedNodes~ | Compute graph nodes affected by a structural change. |
 | ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
-| ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
+| ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the output for arbitrary graphs using bounded paths. |
+| ~C4.Graph.inferRanked~ / ~checkRank~ | Infer or check a whole-graph ancestry rank with kernel-checked edge and node bounds. |
+| ~Proof.certifyInvalidation~ | Return all structurally affected descendants with an exact, unbounded reachability certificate. |
+| ~Proof.mem_invalidated_iff_descendant~ | Characterize the impact output by all descendant paths in a ranked finite graph. |
+| ~Proof.mem_impactStep_invalidated_iff~ | Prove that another propagation pass adds no affected names. |
 | ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
 | ~Proof.rebaseInstanceCache~ | Preserve cached values outside a proved patch footprint while rebinding to a new C4-valid instance. |
 | ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
@@ -604,8 +608,17 @@ validation policy.
 | ~Proof.ProofObject.withObligation~ | Attach a relation that spans composed components. |
 
 The domain supplies its concrete keys, values, propositions, and
-instances. Structural node invalidation and value-key dependency
-selection are separate operations. ~append_composeAll~ proves batch append
+instances. Import ~LeanPoo.C4.Ranked~ to infer a whole-schema ancestry rank,
+or use ~graph.checkRank proposedRank~ for a supplied rank. Use
+~Proof.certifyInvalidation graph changedNames~ to obtain ~result.names~ and
+~result.characterizes~. The certificate covers all descendant paths; callers
+do not provide a distance bound. Rank validation checks duplicate names,
+missing parents, cycles, and every rank/edge bound across the whole graph,
+including unreachable branches. Acyclic graphs can still fail C4 method-order
+or suffix checks, so rank checking does not replace C4 compilation.
+[[file:../Examples/CertifiedInvalidation.lean][CertifiedInvalidation.lean]] marks both sides of a diamond and its final
+child while leaving the unrelated branch out. Structural node invalidation
+and value-key dependency selection are separate operations. ~append_composeAll~ proves batch append
 agrees with stepwise append; ~unaffected_composeAll_iff~ characterizes proof
 reuse across the entire batch.
 [[file:../Examples/ProofReuse.lean][ProofReuse.lean]] gives the caller-facing pattern: declare an obligation's

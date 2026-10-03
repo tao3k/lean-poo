@@ -476,6 +476,36 @@ unsafe fixed point; these policies do not supply a total fixed-point proof.
 | Class instance methods and initialization | Instance-method slot fragments and initialization modules; class method/initialization tests | Typed Lean records and functions provide the authoring surface. |
 | Method combinations and dispatch | Qualified combinations, Simula/BETA inner, subjective and tuple dispatch; chapter 9 and dispatch tests | This is a typed first-class API, without a dynamic host-language MOP. |
 
+* Certified structural invalidation
+
+Section 6's mutable-inheritance discussion asks how specification changes
+invalidate children. The existing ~Proof.invalidatedNodes~ performs a finite
+reverse-edge propagation. Its arbitrary-graph theorem retains a path-length
+bound. ~C4.Graph.inferRanked~ now computes a parent-first schedule of the whole
+schema and checks a proposed rank at every node and edge. ~Graph.checkRank~
+also accepts a caller-supplied rank. The returned ~C4.Ranked~ carries Lean
+proofs that every parent has lower rank and every graph node lies below the
+node-count bound. Cycles, duplicate names, and missing parent references are
+rejected; an invalid proposed rank is a separate error.
+
+~Descendant.rank_distance~ bounds each inheritance path by its rank increase,
+and ~within_graph_bound~ removes the extra path-length premise.
+~mem_invalidated_iff_descendant~ proves exact reachability for certified graphs;
+~mem_impactStep_invalidated_iff~ proves that another pass adds no new names.
+~Proof.certifyInvalidation~ returns the existing executable names plus that
+exact reachability proof. Checks cover a diamond, duplicate changes, unknown
+changes, a reversed 32-node chain, an empty graph, invalid ranks, and malformed
+or cyclic schemas. The example marks ~Base~, ~Left~, ~Right~, and ~Combined~,
+leaving ~Unrelated~ out.
+
+The rank certificate concerns parent-edge acyclicity. It can accept a graph
+that still fails C4 method-order or suffix constraints, which remain separate
+checks. Rank validation covers the entire schema, so an unreachable cycle can
+fail it even when C4 succeeds for another root. This is a checked ancestry
+certificate, not a proof extracted from C4 success. It does not discover
+slot-function dependencies, transfer executable memo thunks, or implement
+whole-heap migration of instances.
+
 * Fixed-point boundary in Lean
 
 A general fixed point may diverge, so Lean's kernel cannot certify it as a

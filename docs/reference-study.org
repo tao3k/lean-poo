@@ -272,11 +272,21 @@ inheritance edges for structure-level invalidation. Its step is monotone;
 changed nodes remain in the result and that every descendant reachable within
 the graph's finite propagation bound is selected. Conversely, every selected
 node has such a path. ~mem_invalidated_iff_bounded_descendant~ is the exact
-specification of the executable result. It states the bound explicitly rather
-than assuming that arbitrary cyclic paths are short. ~C4.Graph.validate~
-checks name uniqueness and parent references; the linearizer detects cycles
-operationally, but there is not yet a theorem extracting a global rank from a
-successful linearization.
+specification of the executable result for arbitrary graphs.
+~C4.Graph.inferRanked~ now checks a finite whole-graph ancestry rank, with a
+proof that every parent has smaller rank and every node rank is below the
+node count. ~Descendant.rank_distance~ and ~within_graph_bound~ then bound
+all inheritance paths. ~mem_invalidated_iff_descendant~ characterizes the
+result by reachability without a caller-supplied path bound, and
+~mem_impactStep_invalidated_iff~ proves closure after the finite pass.
+~Proof.certifyInvalidation~ returns this executable list together with its
+exact reachability proof, rejecting malformed or cyclic whole schemas.
+Parent-edge acyclicity is independent of C4 method-order and suffix
+constraints; the existing linearizer still checks those constraints.
+Whole-schema rank checking includes branches outside one root's ancestry.
+It does not extract a global rank merely from success of the root-local C4
+linearizer. Structural impact does not inspect dependencies hidden in slot
+functions or implement a whole-heap instance migration policy.
 
 ~Object.Instance~ states the self equation for a validated compiled plan, and
 ~CertifiedObject~ binds its obligation certificate to that instance. The

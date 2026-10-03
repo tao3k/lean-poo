@@ -1,4 +1,5 @@
 import LeanPoo.C4.Linearize
+import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose
 import LeanPoo.Prototype.FixedPoint
 import LeanPoo.Prototype.Record
