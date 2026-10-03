@@ -911,10 +911,37 @@ prefix/suffix split; ~append_preserves~ proves that merging the cleaned prefix
 and appending the inherited tail retain the whole original order.
 ~linearizeChecked~ now constructs these complete-ancestry certificates for
 every reachable node's parent and local orders before adding the node name.
-The graph API still returns a list; correctness of traversal, tail selection,
-and the new node's absence from its ancestry remain separate proof goals.
+The graph API still returns a list; full graph traversal and cache provenance
+remain separate proof goals. The node certificate below checks tail choice
+and the new node's absence from its ancestry.
 [[file:../Tests/SuffixConsistency.lean][SuffixConsistency.lean]] exercises shared suffixes, partial tail
 subsequences, empty tails, reversed suffix order, and interleaved infix names.
+
+* Certified tail selection and complete nodes
+
+~C4.certifyTail tails claimed~ independently checks the traversal's claimed
+inherited tail. An accepted ~TailCertified tails~ selects one supplied tail
+(or ~[]~ when there are no inputs) and proves every supplied tail is a suffix
+of it. ~c.longest member~ proves maximal length; ~c.unique other~ proves that
+two accepted selections for the same input tails agree. ~c.comparable first second~
+proves that any two supplied tails are comparable by suffix inclusion. A shorter choice, an
+invented longer tail, or incompatible input suffixes is rejected.
+
+~C4.certifyNode name orders tails claimedTail~ adds suffix reconstruction,
+duplicate-free tail validation, and node-name freshness. Its returned
+~NodeCertified name orders tails~ exposes ~output~ and proves ~preserves~,
+~inherited_suffix~, ~parent_suffix~, ~nodup~, ~head~, and ~covers~. The
+no-duplicate law now includes the prepended node and requires no extra premise
+from the caller. A repeated node name reports ~cycle name~; a duplicate tail
+reports ~inconsistentOrder~.
+
+~linearizeChecked~ retrieves each parent's cached most-specific-suffix
+precedence and checks the selected tail against those actual lists before
+constructing the complete node certificate. It still returns an ordinary
+list. This establishes accepted node results relative to the supplied parent
+orders and cached tails; it does not prove cache provenance, correct traversal
+of every graph, or optimized-merger success whenever a consistent order exists.
+[[file:../Tests/NodeCertificate.lean][NodeCertificate.lean]] checks the certificate laws and typed rejection paths.
 
 * Commands
 

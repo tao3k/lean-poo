@@ -383,9 +383,21 @@ complete original order survives prefix merging and tail append.
 local order and returns a ~SuffixCertified~ result: input-order preservation,
 exact input-or-tail coverage, and actual tail suffix retention. Its no-duplicate
 law assumes the caller's tail has no duplicates. ~linearizeChecked~ now uses
-these full-ancestry certificates at every reachable node. Correctness of graph
-traversal, inherited-tail selection, and root-name uniqueness remain separate
-proof obligations.
+these full-ancestry certificates at every reachable node.
+
+~C4.NodeCertificate~ adds independent validation of the graph computation's
+selected tail against the actual cached parent tails. ~TailCertified~ requires
+selection from those inputs (or empty selection for no inputs) and every input
+to be a literal suffix of the selected tail. Its ~longest~ and ~unique~ laws
+prove maximal length and unique selection; ~comparable~ proves that the input
+tails form a total suffix order. ~NodeCertified~ checks that the
+tail is duplicate-free and the node name is absent from the reconstructed
+ancestry. Its full output preserves each parent/local order, retains each
+parent tail as a suffix, contains no repeated names, and starts with the node
+name. ~linearizeChecked~ constructs this certificate at every computed node.
+These are general laws over the supplied orders and cached tails. A proof that
+graph traversal computes all required nodes and that cached metadata correctly
+represents the graph's suffix declarations remains open.
 
 * Paper-derived boundaries
 

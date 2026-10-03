@@ -23,3 +23,4 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:ExtendedPrecedence.lean][ExtendedPrecedence]] checks leftmost eligible replay, rejected incorrect/incomplete traces, suffix exemption, checked graph linearization, and the selection and uniqueness proofs.
 - [[file:SuffixConsistency.lean][SuffixConsistency]] checks complete-order preservation after suffix reconstruction, exact coverage, suffix retention, and duplicate-free output given a duplicate-free inherited tail.
+- [[file:NodeCertificate.lean][NodeCertificate]] checks longest inherited-tail selection, fresh node names, complete node certificates, and rejection of incompatible, invented, or duplicate tails.

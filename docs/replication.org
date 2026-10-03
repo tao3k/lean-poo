@@ -676,5 +676,18 @@ It checks partial shared tails, suffix-only and empty-tail inputs, reversed
 suffix order, interleaved infix rejection, and a checked graph with two
 different inherited suffixes in one compatible chain. ~SuffixCertified~ binds
 these general laws to the actual returned ancestry. The no-duplicate law
-requires a duplicate-free supplied tail; graph tail selection and uniqueness
-of the subsequently prepended root name are not proved by this receipt.
+requires a duplicate-free supplied tail; the complete node receipt below
+validates that premise and the subsequently prepended root name.
+
+* Complete node receipt
+
+~lake build LeanPoo.C4.NodeCertificate LeanPoo.C4.Linearize~ checks inherited
+tail maximality, total suffix comparability, uniqueness, and the complete node laws.
+~Tests/NodeCertificate.lean~ requires ~NODE-CERTIFICATE-OK~ and prints axiom
+dependencies for maximality, uniqueness, full-order preservation, parent
+suffix retention, duplicate-free output, head identity, and exact coverage.
+Typed regressions reject shorter or invented selected tails, incompatible
+suffixes, duplicate tails, and a node name already in its ancestry.
+The checked graph path constructs the certificate from actual cached parent
+tails at every computed node. Traversal completeness and graph-to-cache
+metadata provenance remain separate proof obligations.

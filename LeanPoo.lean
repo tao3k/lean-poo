@@ -1,5 +1,6 @@
 import LeanPoo.C4.Precedence
 import LeanPoo.C4.Suffix
+import LeanPoo.C4.NodeCertificate
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

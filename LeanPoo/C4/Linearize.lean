@@ -1,5 +1,5 @@
 import Std
-import LeanPoo.C4.Suffix
+import LeanPoo.C4.NodeCertificate
 
 /-!
 C4 metadata algorithm translated from François-René Rideau's C4-Mixins,
@@ -65,7 +65,15 @@ private def computeNode (table : Table) (node : Node) (checked : Bool) :
     (parentResults.map (fun result => withoutTail result.precedence inheritedTail)) ++
     (orders.map (fun order => withoutTail order inheritedTail))
   let mergedAncestry ← if checked then
-    (mergeWithSuffixCertified (parentResults.map (·.precedence) ++ orders) inheritedTail).map (·.output)
+    do
+      let mut tailsRev : List (List String) := []
+      for result in parentResults do
+        if let some suffix := result.mostSpecificSuffix then
+          let some cached := lookup table suffix | throw (.unknownNode suffix)
+          tailsRev := cached.precedence :: tailsRev
+      let certificate ← certifyNode node.name
+        (parentResults.map (·.precedence) ++ orders) tailsRev.reverse inheritedTail
+      pure certificate.ancestry.output
   else do
     let mergedPrefix ← merge candidates
     pure (mergedPrefix ++ inheritedTail)
@@ -140,7 +148,9 @@ def linearize (graph : Graph) (root : String) : Except Error (List String) :=
 /-- Opt-in independent replay and suffix reconstruction for every reachable
 node. Each accepted merge certifies order preservation for all complete parent
 and local inputs, and retention of the inherited tail as an actual suffix.
-This does not prove the traversal's tail selection correct for every graph. -/
+The selected tail is independently checked against all cached parent tails,
+and the prepended node name is checked for freshness. This does not prove
+the graph traversal or cached metadata correct for every graph. -/
 def linearizeChecked (graph : Graph) (root : String) : Except Error (List String) :=
   linearizeWith graph root true
 
