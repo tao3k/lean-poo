@@ -308,6 +308,13 @@ in the old snapshot. ~ClassSpec.migrateFrom~ returns a new object together
 with its class-acceptance proof. This covers the exercise's four field
 operations, without a live-instance registry or persistent-store index upgrade.
 
+The next section 6 exercise has three explicit update policies in
+~Mutable.reviseWithPolicy~: eager forcing before installation, lazy fresh
+cells, and versioned fresh cells plus an old-specification handle. The tests
+compare their missing-target behavior and snapshot consistency under all
+three resolver modes. This is a finite per-instance protocol; it does not
+implement process quiescence or the following Erlang-style hot-upgrade exercise.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the

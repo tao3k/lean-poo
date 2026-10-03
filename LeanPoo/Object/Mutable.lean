@@ -97,4 +97,45 @@ def Mutable.putDefault {Key : Type} {Value : Key → Type}
     IO (Except C4.Error Unit) :=
   object.reviseCurrent (fun declaration => declaration.withDefault key value)
 
+/-- Section 6's three policies for targets after specification revision. -/
+inductive UpdatePolicy where
+  | eager
+  | lazy
+  | versioned
+  deriving Repr, DecidableEq
+
+inductive UpdateError (Key : Type) where
+  | revision (error : C4.Error)
+  | target (error : LookupError Key)
+  deriving Repr
+
+/-- The installed specification snapshot, with an explicit old-version handle
+only for the versioned policy. Handles remain persistent across later updates. -/
+structure UpdateReceipt (Key : Type) (Value : Key → Type)
+    [BEq Key] [LawfulBEq Key] [Hashable Key] where
+  current : Memoized Key Value
+  previous : Option (Memoized Key Value)
+
+/-- Revise a finite batch in one cell operation at a mutable identity. All policies
+build fresh target cells. Eager forces every declared target before installation
+and rolls back on a missing target. Lazy installs unforced cells. Versioned
+also returns the previous specification and its target cells for explicit reads.
+Concurrent reads holding a snapshot finish against that snapshot. -/
+def Mutable.reviseWithPolicy {Key : Type} {Value : Key → Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (object : Mutable Key Value) (policy : UpdatePolicy)
+    (updates : List (String × (Declaration Key Value → Declaration Key Value))) :
+    IO (Except (UpdateError Key) (UpdateReceipt Key Value)) :=
+  object.cell.modifyGet fun current =>
+    match current.reviseDeclarations updates with
+    | .error error => (.error (.revision error), current)
+    | .ok revised =>
+      match policy with
+      | .eager =>
+        match revised.force with
+        | .error error => (.error (.target error), current)
+        | .ok ready => (.ok ⟨ready, none⟩, ready)
+      | .lazy => (.ok ⟨revised, none⟩, revised)
+      | .versioned => (.ok ⟨revised, some current⟩, revised)
+
 end LeanPoo.Object

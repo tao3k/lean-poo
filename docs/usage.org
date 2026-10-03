@@ -520,6 +520,43 @@ computed slot before and after changing the base declaration.
 operation. If any edit fails, the old object and its cached reads remain
 current. The same example edits an inherited base and child computation
 together, then checks rollback for an unknown node.
+
+~Mutable.reviseWithPolicy~ compares the three target-update strategies from
+section 6, using the same ordered declaration batch:
+
+| Policy | Before installing the new specification | Access to old targets |
+|--------+----------------------------------------+-----------------------|
+| ~eager~ | Force every declared target; reject any missing target | Existing snapshots |
+| ~lazy~ | Install fresh unforced target cells | Existing snapshots |
+| ~versioned~ | Install fresh unforced target cells | Explicit ~receipt.previous~ and existing snapshots |
+
+On success ~receipt.current~ is the installed snapshot. It remains tied to
+that specification even after another update. ~versioned~ also returns the
+previous snapshot; reading an old target that was never forced still uses
+its old specification. New reads through the mutable identity use the new
+snapshot. Lazy dirty state is represented by replacement with fresh thunks;
+there is no separate dirty-bit table. All targets are replaced, including
+ones unaffected by the batch. A revision error, or a missing eager target,
+leaves the installed object unchanged. An empty successful batch follows the
+same refresh policy. These are explicit per-instance updates, with no heap
+registry or numeric version lookup service.
+
+Eager moves computation cost to updates and makes missing-target failure
+visible before publication. Lazy shortens updates but moves computation and
+missing reads to access time. Versioned permits readers to finish on their
+captured specification, at the cost of retaining plans and target cells as
+long as handles survive. For interactive editing, lazy can avoid computing
+unused targets. For a server requiring request consistency, capture one
+versioned snapshot per request. For latency-sensitive reads, eager can move
+work to a controlled update phase; this implementation provides no real-time
+latency bound. All policies retain the existing evaluator's requirement that
+forced recursive computations terminate; eager forcing does not recover from
+panics or divergent slot functions.
+
+~Tests/MutableObject.lean~ compares all three policies under all three resolver
+modes, including an unforced old dependent target, two updates, a rejected
+batch, and eager rollback versus lazy/versioned installation of a missing
+target.
 ~Prototype.MutableProto~ is the paper's one-identity mutable wrapper in
 Lean. ~compose child parent~ runs the parent first and then the child on the
 same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
