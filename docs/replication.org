@@ -657,3 +657,11 @@ checks replay rejection, suffix exemption, and checked graph behavior.
 The returned merge certificate concerns operational selection on its exact
 input lists; it is not a theorem of complete graph-algorithm correctness or
 an equivalence proof with Ducournau's extended-precedence graph.
+
+The same focused entry checks ~Trace.preserves~, ~Trace.covers~, and
+~Trace.nodup~ and prints their axiom dependencies. The first law retains every
+parent/local-order candidate as an ordered sublist; the other two establish
+exact name coverage and uniqueness. Repeated candidates share a single output
+name, while a duplicate within one candidate has no accepted trace. These
+are input-general merge consistency proofs, not just enumerated regressions;
+whole-graph traversal and suffix append remain separate proof obligations.

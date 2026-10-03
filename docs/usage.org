@@ -864,6 +864,15 @@ and continues until every list is empty. An incorrect choice, truncated output,
 or extra output is rejected. ~choose_eligible~, ~choose_leftmost~, and
 ~Trace.unique~ provide the kernel-checked selection and uniqueness laws.
 
+For a returned certificate ~c~, ~c.trace.preserves member~ proves that the
+candidate selected by ~member : order ∈ lists~ is an ordered sublist of
+~c.output~. ~c.trace.covers~ proves that output membership is equivalent to
+membership in some input candidate, and ~c.trace.nodup~ proves no repeated
+output names. These are general laws of accepted complete traces, including
+shared ancestors across multiple candidates. They formalize merge-level
+local-order preservation and monotonicity; they do not establish correctness
+of the entire graph traversal or suffix reconstruction.
+
 ~mergePrefix parents locals suffix~ removes the suffix names before certifying
 the prefix. The caller retains the suffix for final append; this helper does
 not validate graph-level suffix compatibility. ~candidates_without_suffix~

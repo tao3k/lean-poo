@@ -19,6 +19,9 @@ private def same (first second : Except Error (List String)) : Bool :=
 #guard (check [["A"], ["B", "A"]] ["B", "A", "A"]).isNone
 #guard (check [["A"]] []).isNone
 #guard (check [] ["A"]).isNone
+#guard (mergeCertified [["A", "B"], ["A", "B"], []]).toOption.map (·.output) == some ["A", "B"]
+#guard (mergeCertified [["A", "A"]]).toOption.isNone
+#guard (check [["A", "B"], ["A", "B"]] ["A", "B", "B"]).isNone
 
 /-- A suffix is excluded from the tie-break race: its members are kept for
 final append rather than preferred as part of X's ordinary ancestry block. -/
@@ -59,9 +62,22 @@ private def suffixes : Graph :=
 /-- Certificates for identical inputs cannot disagree about their outputs. -/
 example (first second : Certified lists) : first.output = second.output :=
   first.trace.unique second.trace
+
+/-- The certificate supplies the paper's ordered-subset consistency property
+for any parent or local-order candidate, without a graph-size restriction. -/
+example (certificate : Certified lists) (present : order ∈ lists) :
+    order.Sublist certificate.output := certificate.trace.preserves present
+
+example (certificate : Certified lists) :
+    name ∈ certificate.output ↔ ∃ order ∈ lists, name ∈ order := certificate.trace.covers
+
+example (certificate : Certified lists) : certificate.output.Nodup := certificate.trace.nodup
 #print axioms choose_eligible
 #print axioms choose_leftmost
 #print axioms Trace.unique
 #print axioms candidates_without_suffix
+#print axioms Trace.preserves
+#print axioms Trace.covers
+#print axioms Trace.nodup
 #eval IO.println "EXTENDED-PRECEDENCE-OK"
 end LeanPoo.Tests.ExtendedPrecedence

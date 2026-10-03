@@ -366,6 +366,16 @@ This formalizes the paper's operational tie rule. It does not prove the whole
 optimized algorithm correct for every graph, nor equivalence to Ducournau's
 original extended-precedence graph relation.
 
+The paper's ordered-subset formulation of monotonicity now has a merge-level
+law: ~Trace.preserves~ proves that every input candidate is a ~List.Sublist~
+of the completed output. This covers both inherited parent precedence and
+local-order candidates. ~Trace.covers~ proves exact name coverage, and
+~Trace.nodup~ proves that the output contains no repeated names, even when
+different candidates share ancestors. These laws apply to every complete
+trace and therefore every ~Certified~ result. They do not assume a bounded
+graph size or a particular fixture. The graph traversal and the suffix append
+still need separate end-to-end correctness proofs.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the
