@@ -72,3 +72,11 @@ The [[file:receipts/euler-context-reindex-2026-10-04.json][context snapshot]] ad
 zero-history obligations are recorded as projection/analytic proof gates;
 shared parameter names do not establish provider interchangeability. The local
 64-case contract is not a runtime measurement or avoided-Euler-edit count.
+
+
+The [[file:receipts/euler-declaration-presentation-2026-10-04.json][declaration-presentation snapshot]] adds exact local module/test hashes and
+bounded registration-order contracts to the unchanged source inventory, still
+using schema 1. Its 1536 permutation runs and 25200 pair queries are semantic
+checks, not timing samples. No upstream C4 registry, avoided consumer edits or
+net maintenance saving has been measured. Validation diagnostic order is a
+retained negative result.

@@ -355,3 +355,29 @@ the earlier fixed-context observation/evidence pipeline; arbitrary new context
 semantics and forward-versus-history equality remain application obligations.
 Measure a concrete change and its consumer fanout before claiming a library-wide
 maintenance reduction. No upstream files, imports or dependencies are added.
+
+* Registration order as a change boundary
+
+The [[file:../../Benchmarks/receipts/euler-declaration-presentation-2026-10-04.json][declaration-presentation receipt]] preserves schema 1 and the pinned source
+manifest. The reference's four theorem entry points and parameter blocks remain
+source-only evidence. No Euler C4 registry is implemented, so this new contract
+is conditional on a user's existing C4 capability design. Source interfaces do
+not by themselves justify adding override precedence.
+
+| Capability / API checklist | Implemented benefit | Cost / boundary |
+|---------------------------+---------------------+-----------------|
+| ~Graph.sameLookup_of_perm~ | Proves lookup identity after outer declaration permutation | Names globally unique; declarations themselves exact |
+| ~VerifiedOrder.permute~, ~permute_unique~ | Reuse retained output and identify fresh compilation | Explicit permutation/uniqueness evidence; no resolver invocation by migration |
+| ~linearizeChecked_permute_ok~ | Preserve success/rejection and exact successful output | Error diagnostic priority can differ; concrete counterexample retained |
+| ~assemble_permute~ | Same whole capability dictionary after registry reordering | Provider dictionary and original names unchanged |
+| ~Requirements.prepare_permute~ | One checklist, same retained functions and first missing capability | No per-capability ~require~ rewrites; changed declarations/providers need separate contracts |
+| Existing consumers and proof bodies | Exact interface equality preserves arbitrary consumer results/claims | Conditional kernel guarantee; avoided Euler consumer count remains unknown |
+| Shared implementation cost | C4 module 93 physical lines; Functional bridge 27 | 118-line test; registry and evidence-construction costs excluded |
+| Local evidence | 64 families × 24 permutations; 1008 accepted; 25200 pair checks | Not a runtime comparison or an upstream migration |
+| Net Euler source reduction, edit fanout and hours | Unmeasured | Registry construction, uniqueness/permutation proofs, context and application adapters must be included |
+
+This removes declaration storage order from the successful consumer contract.
+It does not remove semantically significant parent order or the application's
+mathematical compatibility obligations. The original reference remains clean
+and read-only. Full graph-isomorphism/EPG correspondence, actual change-fanout
+receipts and build/elaboration speed remain separate gates.

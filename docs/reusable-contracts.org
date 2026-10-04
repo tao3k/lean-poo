@@ -645,3 +645,50 @@ or changed theorem statements. The [[file:../Tests/FunctionalReindex.lean][compi
 a different legacy context and a claim about an unrelated new field. Reindexing
 neither proves equality between different analytic constructions nor establishes
 a speedup. See the [[file:use-cases/euler-maintenance-checklist.org][reference checklist]] for the resulting research boundary.
+
+* Reuse verified orders after registry declaration reordering
+
+Import ~LeanPoo.C4.Presentation~ and ~LeanPoo.Functional.Presentation~.
+Keep each node's exact name, local parent rows and suffix flag. Supply
+~same : graph.nodes.Perm other.nodes~ and
+~unique : (graph.nodes.map C4.Node.name).Nodup~. The permutation concerns the
+outer declaration list; reordering a node's parent rows can change precedence.
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (same : graph.nodes.Perm other.nodes)
+    (unique : (graph.nodes.map C4.Node.name).Nodup)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble (order.permute same unique) providers) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_permute order same unique providers keys
+#+end_src
+
+~VerifiedOrder.permute~ retains the existing output list without mapping it or
+running either resolver. ~permute_unique~ identifies the output of any fresh
+verified compilation. ~linearizeChecked_permute_ok~ proves exact successful
+checked outputs in both directions, including that a rejected graph cannot
+become accepted under these premises. It does not equate error payloads:
+validation reports its first invalid reference in declaration-list order.
+
+~assemble_permute~ preserves the whole provider dictionary, and
+~Requirements.prepare_permute~ preserves exact functions and first missing
+capability errors for any checklist. Apply ~congrArg~ to reuse any downstream
+consumer result or result proposition; there are no per-key ~require~ rewrites.
+Provider names, context, keys and dependent result types remain unchanged.
+No factory is invoked by retained-order migration.
+
+The caller must establish the permutation and uniqueness evidence; the library
+does not infer equivalence of edited declarations. Duplicate names can change
+first lookup when reordered and are outside this guarantee. The more general
+~Graph.SameLookup~, ~GraphTrace.represent~ and ~VerifiedOrder.represent~ APIs
+accept explicit complete lookup agreement; the target must have unique names
+for checked acceptance. This exact-lookup condition includes absent names and
+is stronger than a consumer-specific reachable equivalence.
+
+See [[file:../Tests/C4Presentation.lean][the compiled generic consumer and corpus]] and the [[file:use-cases/euler-maintenance-checklist.org][reference checklist]].
+These contracts preserve semantic consumers under registry restructuring;
+Lean module recompilation, error diagnostic order, changed local precedence,
+net source savings and elapsed-time improvement are separate measurements.

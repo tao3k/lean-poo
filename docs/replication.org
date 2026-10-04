@@ -1534,8 +1534,9 @@ malformed graphs, and a collapsing-map boundary. These finite checks support
 the generic kernel proofs; they are not the proof of arbitrary relabeling.
 
 The paper correspondence table now records this completed relabeling slice.
-Arbitrary graph-isomorphism/declaration-permutation invariance, original EPG
-correspondence, and full error relabeling remain separate obligations. No
+Arbitrary graph-isomorphism witnesses, original EPG correspondence, and full
+error relabeling remain separate obligations. The later presentation slice
+closes unique-name declaration permutation for successful checked outputs. No
 measured speedup or external integration is claimed.
 
 
@@ -1716,3 +1717,37 @@ parameter names do not imply a valid projection or analytic equality. Original
 EPG correspondence, arbitrary graph equivalence and measured reference change
 fanout remain open. The [[file:use-cases/euler-maintenance-checklist.org][source receipt]] records these obligations without an
 external adapter or integration.
+
+* Declaration storage permutation and retained consumer invariance
+
+~C4.Presentation~ closes declaration-list permutation invariance for successful
+checked outputs with globally unique node names. ~Graph.sameLookup_of_perm~
+proves exact name lookup agreement. ~GraphTrace.represent~ transfers the complete
+finite derivation, retaining every original parent row and literal suffix.
+~VerifiedOrder.permute~ retains the output list and supplies erased acceptance
+and derivation evidence without executing a resolver; ~permute_unique~ identifies
+independent verified results. ~linearizeChecked_permute_ok~ is a bidirectional
+kernel theorem for every successful output, not a finite-corpus inference.
+
+~Functional.assemble_permute~ and ~Requirements.prepare_permute~ extend that
+property to exact selected functions, dependent proof families and first missing
+capability errors. A generic arbitrary consumer/result-claim can use equality
+without altering its checklist or proof body. This is a concrete registration
+order independence property in the implementation's shape-determinism chain.
+It does not cover edits to parent-order lists, flags, identifiers or providers.
+
+The [[file:../Tests/C4Presentation.lean][compiled corpus]] enumerates all 24 declaration permutations of 64 four-node
+families: 1536 checked/audited output comparisons, 1008 successes and 25200
+retained pair comparisons, including absent/self queries. It also compares
+selected dependent values at two contexts. Seven axiom reports show trace
+transfer is axiom-free; lookup permutation uses ~propext~/~Quot.sound~ and
+acceptance/consumer contracts also use existing ~Classical.choice~ dependencies.
+No ~sorryAx~ or native decision axiom is introduced.
+
+A unique-name malformed graph produces ~unknownNode MissingA~ in one declaration
+order and ~unknownNode MissingB~ in reverse order. Both reject. Another fixture
+shows first lookup changes under duplicate-name permutation. These retained
+counterexamples bound the result: exact graph error-payload invariance is false
+for current validation priority, while checklist errors are exactly preserved
+once a verified order exists. Arbitrary graph-isomorphism witnesses and original
+EPG/C4 suffix-exemption correspondence remain separate research obligations.

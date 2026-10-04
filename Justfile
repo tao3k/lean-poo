@@ -40,13 +40,15 @@ check-merge: check-types
         LeanPoo.C4.VerifiedOrder \
         LeanPoo.C4.OrderRelation \
         LeanPoo.C4.Renaming \
+        LeanPoo.C4.Presentation \
         LeanPoo.Functional.Assembly \
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
         LeanPoo.Functional.Transport \
-        LeanPoo.Functional.Reindex
+        LeanPoo.Functional.Reindex \
+        LeanPoo.Functional.Presentation
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -261,6 +263,7 @@ _check-contracts:
     {{lean}} Tests/VerifiedOrder.lean
     {{lean}} Tests/OrderRelation.lean
     {{lean}} Tests/C4Renaming.lean
+    {{lean}} Tests/C4Presentation.lean
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean

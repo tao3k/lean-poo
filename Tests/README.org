@@ -61,3 +61,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalTransport.lean][FunctionalTransport]] connects observation consumers to dependent evidence migration; checks payload/guard preservation, identity/composition/roundtrip, Prop and PLift reuse, missing-equality/wrong-context rejection, and four kernel axiom reports.
 
 - [[file:FunctionalReindex.lean][FunctionalReindex]] checks complete-provider and checklist context projection, exact first errors in 64 preparations, two outer contexts, dependent results and old proof reuse; rejects unrelated context claims and reports five kernel axiom dependencies.
+
+- [[file:C4Presentation.lean][C4Presentation]] checks all 24 declaration permutations of 64 four-node families, checked/audited successful outputs, retained dependent provider values and 25200 pair queries; compiles arbitrary consumer preservation and retains diagnostic-order/duplicate-lookup counterexamples with seven kernel axiom reports.
