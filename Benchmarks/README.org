@@ -24,6 +24,12 @@ measurements, not C4 algorithm throughput or a whole-suite speedup claim.
 
 See [[file:../docs/check-performance.org][check pipeline performance]] for the measured boundary and full gate policy.
 
+~just benchmark-check-atoms~ compares identical eight-file warm checks using
+one and four workers in one Lake environment. Two paired repetitions alternate
+variant order and require per-file Lean transcript/source hashes to agree.
+The [[file:receipts/check-atoms-2026-10-05.json][schema-1 receipt]] records each sample and source identity, separate wall/CPU
+medians and the exclusion of library builds, full-suite coverage and CI queues.
+
 
 ~python3 Benchmarks/EulerMaintenanceStudy.py --output /tmp/euler-maintenance.json~
 is an optional source/maintenance study, not a runtime benchmark. It requires

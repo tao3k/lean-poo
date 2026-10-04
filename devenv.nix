@@ -20,6 +20,7 @@
   packages = [
     pkgs.just
     pkgs.elan
+    pkgs.python3
   ];
 
   dotenv.enable = true;

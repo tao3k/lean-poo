@@ -28,7 +28,8 @@ runtime boundary.
 
 Install the Lean toolchain named in [[file:lean-toolchain][lean-toolchain]]. Build the library with
 ~lake build~. The full project check uses ~just~, ~zsh~, Emacs for Org parsing,
-and a ~timeout~ command:
+Python 3, and a ~timeout~ command. The complete local gate checks independent
+Lean files with four workers after the public library build:
 
 #+begin_src sh
 lake build

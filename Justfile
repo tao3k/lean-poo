@@ -366,6 +366,10 @@ benchmark-mutable-prototype:
 benchmark-check-startup:
     python3 Benchmarks/CheckStartup.py
 
+# Compare identical warm Lean file checks with one and four workers.
+benchmark-check-atoms:
+    lake env python3 Benchmarks/CheckAtomsStudy.py --output /tmp/lean-poo-check-atoms.json
+
 # Share one configured Lean environment across the complete gate.
 check:
     lake env just --set lean lean _check
@@ -374,7 +378,9 @@ check:
 _check:
     lake build
     {{lean}} LeanPoo/C4/Types.lean
-    just --set lean "{{lean}}" _check-examples _check-contracts _check-diagnostics check-docs
+    python3 -m unittest discover -s tools/tests -p 'test_*.py'
+    python3 tools/check_atoms.py --jobs 4
+    just --set lean "{{lean}}" _check-diagnostics check-docs
 
 # Build the complete Lean library.
 build: check
