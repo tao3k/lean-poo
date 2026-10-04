@@ -1078,3 +1078,52 @@ sufficient fuel relative to finite graph derivations. The actual top-level
 original graph count. Reachability completeness, that smaller count's fuel
 bound, validation policy, whole ordinary graph completeness, and equivalence
 to the original Ducournau graph relation remain separate obligations.
+
+* Actual reachability and top-level fuel receipt
+
+~lake build LeanPoo.C4.ReachabilityInvariant~ proves the existing imperative
+~reachable~ loop exactly equal to a proof model, including early exit on an
+empty queue, first-declaration indexing, repeated names, and absent nodes.
+The runtime implementation is unchanged. The queue length plus the raw
+parent-edge count of unseen declarations strictly decreases on each
+nonempty iteration. Expanding a declaration consumes at least its appended
+deduplicated parents' contribution; repeated and absent names consume one
+queued item. The original one-plus-edge-count budget therefore drains the
+queue even with cycles, unknown names, and duplicate declarations.
+
+~reachable_iff~ characterizes actual discovered names exactly as graph
+ancestors, and ~reachable_nodup~ proves discovery uniqueness. Unknown edge
+targets can be graph ancestors; declaration validation remains separate.
+For a finite root ~GraphTrace~, discovered membership equals membership in
+its complete precedence. ~reachableNodes~ names the exact declaration filter
+used by ~linearizeWith~ and preserves all declarations of each discovered
+name, including duplicates. ~reachableNodes_budget~ proves the finite
+precedence length is bounded by this smaller reachable-declaration count.
+
+~linearizeWith_complete~, ~linearize_complete~, and
+~linearizeChecked_complete~ now derive exact actual top-level output from a
+finite original graph derivation and successful validation of that exact
+reachable declaration filter. Root lookup, BFS completeness, the actual
+smaller resolver fuel, parent population, and root cache success are all
+derived. Validation success is still an explicit premise: ~GraphTrace~ uses
+first-declaration lookup, whereas the runtime rejects repeated reachable
+names. A finite first-declaration derivation alone does not imply validation.
+
+~Tests/ReachabilityInvariant.lean~ requires
+~REACHABILITY-INVARIANT-OK queries=1080 accepted=132~. All 1,080 queries over
+540 graphs agree with an independent list-based set-saturation oracle;
+132 queries admitting both independent reconstruction and actual reachable
+validation agree in both top-level modes. Cases include cyclic edges,
+missing names, repeated parent orders, empty orders, duplicate declarations,
+and disconnected bad declarations. Guards record BFS order, the smaller
+fuel count, reachable duplicate rejection, unreachable duplicate exclusion,
+missing-node errors, and cycle errors. Eleven axiom reports use only Lean's
+standard axioms; ancestor transitivity uses none.
+
+This closes discovery completeness and the top-level reachable fuel bound.
+Validation success remains an explicit policy gate. Deriving that gate from
+appropriate declaration uniqueness and finite graph evidence, proving
+whole-compiler soundness/error behavior, and relating the graph relation to
+original Ducournau semantics remain separate obligations. The conditional
+completeness theorem does not claim unconditional acceptance of every
+first-declaration graph derivation.

@@ -656,3 +656,22 @@ uses validated reachable-declaration count; proving discovery completeness,
 that count's fuel sufficiency, and validation policy remains necessary for
 whole ordinary graph completeness. Original Ducournau relation equivalence
 remains a separate semantic question.
+
+* Further C4 closure: actual BFS and top-level reachable fuel
+
+The existing BFS is now tied exactly to a proof model. Its original edge
+budget drains the queue using queue length plus unseen declaration edge
+weight, including cycles, repeats, missing targets, and duplicate names.
+Actual discovery is unique and covers exactly graph ancestors. For a finite
+root derivation, complete precedence length is bounded by the exact reachable
+filter used by the runtime, supplying the previously open smaller fuel bound.
+
+Both actual top-level modes now reproduce finite graph output conditional
+on validation of that exact reachable filter. Root lookup, discovery, fuel,
+recursive cache population, and final root lookup are derived. Validation
+success remains explicit because first-declaration graph evidence permits
+reachable duplicates that the runtime rejects. The 1,080-query oracle checks
+independent closure and 132 accepted top-level reconstructions; separate
+guards record reachable versus disconnected duplicate policy. Deriving
+validation from appropriate uniqueness, whole-compiler soundness/error
+behavior, and original Ducournau relation equivalence remain open.
