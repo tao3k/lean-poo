@@ -23,6 +23,7 @@ check-merge: check-types
     lake build LeanPoo.C4.MetadataInvariant
     lake build LeanPoo.C4.ComputeInvariant
     lake build LeanPoo.C4.GraphComputeInvariant
+    lake build LeanPoo.C4.ResolverInvariant
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -210,6 +211,7 @@ check-tests: check-proof
     lake env lean Tests/MetadataInvariant.lean
     lake env lean Tests/ComputeInvariant.lean
     lake env lean Tests/GraphComputeInvariant.lean
+    lake env lean Tests/ResolverInvariant.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean

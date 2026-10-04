@@ -636,3 +636,23 @@ These results supersede the two open node-level obligations in the preceding
 receipt. Recursive resolver preservation, parent-loop/fuel reasoning,
 reachable validation, and whole ordinary graph completeness still require
 integration proofs; the original Ducournau graph relation remains separate.
+
+* Further C4 closure: actual recursive resolver
+
+The actual imperative parent loop and recursive ~resolveNode~ now preserve
+strong semantic metadata and all existing cache entries. Newly added keys
+are bounded by the finite graph derivation's ancestry. Direct parent output
+excludes the child's fresh head, so parent resolution establishes the
+freshness required by the node insertion theorem. Strictly shorter parent
+precedences supply recursive fuel, and original declaration count is
+sufficient when starting from an empty cache. Both resolver modes reproduce
+the independent finite graph output without assuming execution success.
+
+The 320-family finite oracle compares both modes on all 256 independently
+accepted graphs; rejected-family error equivalence is not claimed. Recursive
+resolver preservation and sufficient-fuel obligations from the preceding
+receipt are closed relative to finite graph evidence. The top-level runtime
+uses validated reachable-declaration count; proving discovery completeness,
+that count's fuel sufficiency, and validation policy remains necessary for
+whole ordinary graph completeness. Original Ducournau relation equivalence
+remains a separate semantic question.

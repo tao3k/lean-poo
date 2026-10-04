@@ -1034,3 +1034,47 @@ metadata for computed entries. Preservation through recursive ~resolveNode~,
 its parent loop and fuel budget, reachable validation policy, and whole
 ordinary graph completeness remain open. Equivalence to the original
 Ducournau graph relation remains a separate obligation.
+
+* Actual recursive resolver preservation and fuel receipt
+
+~lake build LeanPoo.C4.ResolverInvariant~ proves the actual ~resolveNode~
+recursion complete relative to an original finite ~GraphTrace~ and existing
+~MetadataInvariant~ when the derivation's precedence length is at most the
+supplied fuel. Both runtime modes produce a cached root whose complete
+precedence equals the original derivation, retain the strong metadata
+invariant, and preserve every previously cached entry unchanged.
+
+~CacheGrowth~ records old-entry retention and bounds newly introduced keys.
+~resolveParents~ is a proof-facing definition of the existing ~forIn~ loop;
+it does not replace the runtime implementation. The parent-loop theorem
+retains successful lookups of every parent through later recursive calls.
+Direct parent outputs lie inside the child's ancestry without its fresh head.
+Thus all parent-resolution additions exclude that head, establishing the
+fresh-key premise required by ~computeNode_metadata_insert~. Parent outputs
+also have strictly smaller length, so recursive calls receive sufficient
+fuel without an independent termination or availability premise.
+
+~resolveNode_graph_complete~ starts from the empty strong cache invariant
+and uses the original declaration count as sufficient fuel, derived from
+~GraphTrace.length_bound~. ~resolveNode_output~ gives exact observable root
+precedence. A cache hit needs no remaining fuel and bypasses graph lookup;
+its output agrees with the derivation through cache provenance uniqueness.
+The fuel bound is sufficient, not claimed minimal.
+
+~Tests/ResolverInvariant.lean~ prints ten axiom reports, using only standard
+Lean axioms (the fresh-head exclusion theorem uses none). Generic examples
+check exact root output, strong metadata, fresh-head retention during parent
+resolution, and preservation of unrelated old entries. The finite oracle
+requires ~RESOLVER-INVARIANT-OK families=320 accepted=256~: both resolver modes
+reproduce successful independent reconstruction on all 256 accepted families.
+The families vary topology, local ordering, suffix flags, repeated parent
+edges, and empty local orders. Guards separately cover exact insufficient-fuel
+cycle errors, zero-fuel cache hits, unknown names, and a self-cycle. Rejected
+families are not used to claim full error-payload equivalence.
+
+This closes recursive resolver preservation, parent-loop population, and
+sufficient fuel relative to finite graph derivations. The actual top-level
+~linearizeWith~ uses the count of validated reachable declarations, not the
+original graph count. Reachability completeness, that smaller count's fuel
+bound, validation policy, whole ordinary graph completeness, and equivalence
+to the original Ducournau graph relation remain separate obligations.
