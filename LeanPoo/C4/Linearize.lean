@@ -57,15 +57,23 @@ def selectSuffix (table : Table) : List (Option String) → Option String →
     let selected ← selectSuffixStep table current next
     selectSuffix table rest selected
 
+/-- Collect cached parents in declaration order, accumulating in reverse. -/
+def collectParentsRev (table : Table) : List String → List Linearization →
+    Except Error (List Linearization)
+  | [], reversed => .ok reversed
+  | name :: rest, reversed => do
+    let some entry := lookup table name | throw (.unknownNode name)
+    collectParentsRev table rest (entry :: reversed)
+
+def collectParents (table : Table) (names : List String) : Except Error (List Linearization) := do
+  let reversed ← collectParentsRev table names []
+  return reversed.reverse
+
 /-- Compute one node after all its parents have been computed. -/
 def computeNode (table : Table) (node : Node) (checked : Bool) :
     Except Error Linearization := do
   let orders := node.parentOrders.filter (fun order => !order.isEmpty)
-  let mut parentResultsRev : List Linearization := []
-  for parent in parents node do
-    let some result := lookup table parent | throw (.unknownNode parent)
-    parentResultsRev := result :: parentResultsRev
-  let parentResults := parentResultsRev.reverse
+  let parentResults ← collectParents table (parents node)
 
   let inheritedSuffix ← selectSuffix table (parentResults.map (·.mostSpecificSuffix)) none
 

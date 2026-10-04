@@ -826,3 +826,44 @@ from arbitrary graph ancestry or literal suffix comparability. Canonical
 ~GraphTrace~, complete ~computeNode~ derivations, reachable validation, and
 ~resolveNode~ preservation/completeness remain open. These receipts do not
 establish equivalence to Ducournau's original graph relation.
+
+* Parent collection and graph-row binding receipt
+
+~lake build LeanPoo.C4.ParentInvariant~ checks the actual HashSet fold used
+by ~unique~ against an explicit first-occurrence specification. General
+kernel proofs establish exact membership, absence of duplicate names, and
+ordered sublist retention. ~parents~ therefore preserves the first declared
+occurrence and all lookup obligations, including across repeated local
+orders and empty local orders.
+
+The cache collection operation extracted from ~computeNode~ retains the
+original reverse accumulator. ~collectParents_sound~ and
+~collectParents_complete~ relate every supplied name to its exact result in
+that position; repeated supplied names are supported by the general lemmas.
+~collectParents_success_iff~ says deduplicated collection succeeds exactly
+when every name in the original flattened parent orders has a cached result.
+
+Given ~CacheInvariant~, an existing root ~GraphTrace~, and successful
+collection, ~collected_parent_preserves~ binds fetched parent precedences to
+original graph derivations and ordered sublists of the complete root output.
+~cached_graph_rows~ retains the original complete node certificate and binds
+every original row, including repeated declared edges, to an entry in the
+actually collected parent results. Equality follows from ~GraphTrace.unique~;
+most-specific metadata is not inferred from a cache precedence alone.
+
+~Tests/ParentInvariant.lean~ prints fourteen standard-axiom reports and
+requires ~PARENT-INVARIANT-OK families=1365~. General examples quantify over
+arbitrary names, cached results, graphs, and certificates. Direct guards
+cover stable declaration order, repeated names, empty collection, and the
+first unknown-name error. An executable oracle compares all 1,365 name
+lists of zero to five positions over two cached and two missing names with
+both standard first-occurrence deduplication and the original collection
+loop. Exact successful entries and error payloads are compared, before and
+after deduplication.
+
+Binding original repeated rows is distinct from removing repeated merge
+candidates. The latter simulation, empty-order normalization, canonical
+suffix metadata, complete ~computeNode~ derivations, ~resolveNode~ cache
+preservation, and reachable validation remain open. These proofs require
+an existing graph derivation and cache provenance; they do not establish
+ordinary graph success or equivalence to Ducournau's original graph relation.

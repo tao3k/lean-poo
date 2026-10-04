@@ -567,3 +567,15 @@ checker. This advances the implementation proof connection; it does not
 establish the selector's canonical metadata premises from the original graph.
 The next obligations are parent collection/deduplication, canonical suffix
 metadata, and cache population by ~computeNode~ and ~resolveNode~.
+
+* Further C4 closure: parent cache provenance
+
+Stable first-occurrence deduplication now has a kernel proof over the actual
+HashSet fold. The runtime parent collector also has positional soundness and
+completeness proofs: deduplication retains all original parent lookup
+obligations. Under existing graph/cache provenance, fetched parent outputs
+agree with the original graph rows, including repeated edges, and preserve
+parent precedence in the complete root output.
+This closes collection and row binding. It leaves the simulation for removing
+repeated merge candidates and empty local orders, canonical suffix metadata,
+and full node/resolver cache population as separate obligations.
