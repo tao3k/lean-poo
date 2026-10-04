@@ -88,3 +88,12 @@ cases compare fresh target compilation with retained direct/sequential migration
 3072 independent target compilations and 25200 pair queries are semantic counts,
 not runtime benchmark samples. The direct path maps the output once rather than
 twice; no elapsed-time or actual Euler maintenance saving has been measured.
+
+
+The [[file:receipts/euler-provider-registry-2026-10-05.json][provider-registry snapshot]] records automatic alignment and root-cut exclusion,
+64 registry builds and 512 preparations with exact local source hashes, still
+under schema 1. Three handwritten mapped-name branches in the prior local
+fixture are replaced by one generic cached constructor call. This is local
+adapter evidence, not upstream removed code, an elapsed-time benchmark or a
+claim that Euler needs a C4 registry. Provider/index construction, string/hash
+costs and actual upstream maintenance savings remain separate measurements.

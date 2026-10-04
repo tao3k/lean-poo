@@ -1787,3 +1787,33 @@ The finite acceptance comparison is regression evidence, not a new general
 rejection/error-payload theorem for injective relabeling. Arbitrary finite
 isomorphism witnesses, EPG/C4 suffix-exemption correspondence and changed
 context/claims remain separate research gates.
+
+* Automatic provider alignment over a verified ancestor cut
+
+~Functional.Registry~ builds a hash registry of whole provider functions from
+one retained verified order and an explicit ~Graph.Relabeling~ witness.
+~relabel_lookup~ and ~relabel_aligned~ prove exact automatic name alignment on
+every original ancestor. ~relabel_missing~ proves that names outside the mapped
+cut remain absent. ~assemble_relabel_registry~ and ~prepare_relabel_registry~
+remove the caller-supplied mapped dictionary and alignment premise from the
+consumer interface, preserving exact functions, dependent proof families and
+first missing capabilities. The [[file:../Tests/FunctionalRegistry.lean][generic client]] reuses an arbitrary consumer-result
+proposition and its old proof without an application alignment lemma.
+
+The executable corpus covers four valid precedence presentations, two injective
+name maps, eight availability masks and eight caller lists: 64 registry builds,
+512 preparations and 224 successful cases checked at two contexts. Empty,
+repeated and reversed lists, skipped providers, first-error priority and an
+available unrelated source provider outside the root's cut are included.
+Five kernel axiom reports contain only standard ~propext~, ~Quot.sound~ and
+existing ~Classical.choice~ dependencies; no ~sorryAx~ or native decision axiom.
+
+This implements the graph-to-provider alignment obligation as a generic library
+construction, rather than assuming an application has already supplied it.
+Factories and their mathematical results are retained, not invoked during index
+construction. The constructor traverses the ancestor list, obtains provider
+functions and stores hash entries; subsequent dictionary access uses hash/name
+operations. No runtime benchmark, shared-root whole-graph registry, changed
+context/data adapter, analytic equivalence or actual Euler edit saving is implied.
+The fixed source cut, global-injective name witness and migrated graph-validation
+premises remain explicit. EPG and arbitrary finite isomorphism gates remain open.

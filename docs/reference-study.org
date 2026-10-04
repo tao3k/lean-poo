@@ -1018,3 +1018,10 @@ The pinned Euler source supplies four theorem-valued interface examples.
 while the [[file:use-cases/euler-maintenance-checklist.org][cost checklist]] counts retained adapter arguments and explicit
 context slots separately from verified local source-edit savings. Upstream
 analytic proofs and implicit-instance closure are not integrated or compiled.
+
+The explicit relabeling consumer slice now has a constructive provider boundary:
+~Functional.ProviderRegistry.relabel~ supplies the previously assumed mapped
+dictionary and proves its alignment generically on the verified ancestor cut.
+~prepare_relabel_registry~ preserves the entire checklist without an application
+alignment lemma. This closes that implementation obligation; it does not extend
+the original EPG relation or arbitrary finite graph-isomorphism correspondence.

@@ -736,3 +736,48 @@ permutation and source uniqueness. Global injectivity is an explicit sufficient
 premise, stronger than injectivity merely on declared nodes. This API does not
 prove arbitrary finite graph-isomorphism extension, changed local parent orders,
 new analytic claims, or equal error diagnostic payloads. See the [[file:use-cases/euler-maintenance-checklist.org][cost checklist]].
+
+* Build the migrated provider registry automatically
+
+Import ~LeanPoo.Functional.Registry~. Use one retained hash registry rather than
+writing an inverse name map, one branch per provider and an alignment lemma:
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (change : graph.Relabeling other)
+    (unique : (graph.nodes.map C4.Node.name).Nodup)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble (order.relabel change unique)
+          (Functional.ProviderRegistry.relabel order change providers).dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_relabel_registry order change unique providers keys
+#+end_src
+
+In executable client code, retain ~registry := ProviderRegistry.relabel order
+change providers~ once, then give ~registry.dictionary~ to ~assemble~ with the
+migrated verified order. Prepare the consumer checklist once and retain its
+factories for repeated context application. ~dictionary name~ returns the whole
+stored provider through a hash query. No capability enumeration, ~DecidableEq
+Key~, inverse name function, context or factory invocation is needed to build
+the registry. ~relabel_lookup~ and ~relabel_aligned~ prove the automatic alignment;
+~assemble_relabel_registry~ and ~prepare_relabel_registry~ preserve exact selected
+functions and first missing keys. Consumers can rewrite arbitrary result claims
+with the old proof, as compiled in [[file:../Tests/FunctionalRegistry.lean][FunctionalRegistry]].
+
+The index is scoped to the source order's ancestors, including the root.
+~relabel_missing~ proves names outside the mapped scope provide no capabilities,
+even if the original application dictionary has other providers. This registry
+cannot serve an unrelated root without rebuilding an appropriate ancestor cut.
+Source graph uniqueness and the explicit relabeling witness remain prerequisites
+for migrated verified orders; the registry does not infer graph equivalence.
+
+Construction traverses the retained ancestor list once and stores one whole
+provider function per mapped name. It computes the name map and obtains each
+provider function, so application dictionary construction can have a cost.
+Later dictionary access hashes/compares names; worst-case collision behavior and
+string costs remain. Retaining prepared factories avoids repeated registry
+queries. This is a reusable hash index, not an elapsed-time speedup claim or
+factory-result cache. Original contexts, proof guards, keys, data payloads and
+factory bodies remain exact; embedded payload names are not rewritten.

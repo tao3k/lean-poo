@@ -406,3 +406,28 @@ checklist. It preserves claims only in the fixed context/key/result families;
 Euler's analytic equivalence and dependent context guards are separate inputs.
 The reference already contains reusable interfaces, and this result does not
 imply that adding C4 would reduce its source or maintenance time.
+
+* Remove handwritten provider-name adapters
+
+The [[file:../../Benchmarks/receipts/euler-provider-registry-2026-10-05.json][provider-registry receipt]] binds the new local constructor/test to the unchanged
+Euler source manifest and keeps schema 1. The preceding local relabeling fixture
+contains three handwritten mapped-name branches for ~A~, ~B~ and ~P~. The new
+client calls ~ProviderRegistry.relabel~ once; its automatic alignment proof works
+for any number of original ancestors and any capability key type. This is a
+local adapter boundary, not a count of removed Euler declarations or arguments.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~ProviderRegistry.relabel~, ~dictionary~ | Replace per-provider mapped-name branches with one cached constructor | Traverse the source ancestor order; store one whole provider function per name |
+| ~relabel_lookup~, ~relabel_aligned~ | Library proves whole-provider alignment automatically | Explicit injective graph relabeling witness remains; no arbitrary equivalence inference |
+| ~assemble_relabel_registry~, ~prepare_relabel_registry~ | Reuse selection, one capability checklist and its consumer proofs | No user mapped dictionary or alignment lemma; graph uniqueness, original providers and key/result families remain |
+| ~relabel_missing~ | Keep unrelated source providers outside this root's mapped cut | Registry is root-specific; it is not a global/shared-root registry |
+| Original function invocation | Factory bodies and proof guards remain unchanged | Index construction obtains provider functions; results are not memoized and payload names are not rewritten |
+| Local evidence | 64 registries, 512 preparations, 224 successes at two contexts | Semantic checks; hash collision/string costs and elapsed time are unmeasured |
+| Shared implementation cost | Registry module 112 physical lines including proofs and comments | Additional 118-line test; source provider and graph-witness construction costs excluded |
+| Euler avoided edits, net lines and hours | Unmeasured | No upstream C4 registry or PDE adapter; real migration and change fanout still required |
+
+The source's existing theorem interfaces and dependent contexts still have to be
+packaged by the application. This constructor addresses the registry-alignment
+maintenance seam only when C4 override precedence is justified. It adds no import,
+dependency or change to the reference repository, and preserves its source pin.

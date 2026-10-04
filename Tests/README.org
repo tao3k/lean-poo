@@ -65,3 +65,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:C4Presentation.lean][C4Presentation]] checks all 24 declaration permutations of 64 four-node families, checked/audited successful outputs, retained dependent provider values and 25200 pair queries; compiles arbitrary consumer preservation and retains diagnostic-order/duplicate-lookup counterexamples with seven kernel axiom reports.
 
 - [[file:C4Relabeling.lean][C4Relabeling]] checks composed label/permutation witnesses, 1536 two-stage cases with 3072 independent target compilations, direct/sequential retained outputs, 25200 mapped pairs, aligned dependent values, generic consumer-claim reuse and a missing-capability counterexample when provider names are not aligned; eight kernel axiom reports.
+
+- [[file:FunctionalRegistry.lean][FunctionalRegistry]] checks automatic whole-provider alignment with 64 hash registries and 512 preparations, first errors, repeated/empty lists, dependent values at two contexts and unrelated-source-provider exclusion; compiles arbitrary result-claim reuse without a caller alignment lemma and reports five kernel axiom dependencies.
