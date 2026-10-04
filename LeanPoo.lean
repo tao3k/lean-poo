@@ -13,6 +13,7 @@ import LeanPoo.C4.ComputeInvariant
 import LeanPoo.C4.GraphComputeInvariant
 import LeanPoo.C4.ResolverInvariant
 import LeanPoo.C4.ReachabilityInvariant
+import LeanPoo.C4.ValidationInvariant
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

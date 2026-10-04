@@ -675,3 +675,21 @@ independent closure and 132 accepted top-level reconstructions; separate
 guards record reachable versus disconnected duplicate policy. Deriving
 validation from appropriate uniqueness, whole-compiler soundness/error
 behavior, and original Ducournau relation equivalence remain open.
+
+* Further C4 closure: derived reachable validation
+
+Actual validation now succeeds from unique names and parent-name closure.
+For finite root graph evidence, reachable-only name uniqueness identifies
+all included declarations with graph lookup's first declaration. Every parent
+edge then has an included declared parent, deriving the closure required by
+the actual validation loops. Both top-level modes are complete under finite
+~GraphTrace~ and reachable uniqueness without successful-validation premises.
+Disconnected duplicate or bad-reference declarations remain outside the
+policy; global uniqueness is a stronger sufficient condition.
+
+The 96-family regression records 12 globally unique/closed validations and
+24 finite-reconstruction queries with unique reachable names reproducing
+both compiler outputs. Whole-compiler soundness, necessity and exact error
+behavior, and original Ducournau relation equivalence remain open. These
+results close the validation obligation of the preceding receipt, not the
+reverse direction from arbitrary successful runtime output to graph evidence.

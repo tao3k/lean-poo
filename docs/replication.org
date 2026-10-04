@@ -1127,3 +1127,44 @@ whole-compiler soundness/error behavior, and relating the graph relation to
 original Ducournau semantics remain separate obligations. The conditional
 completeness theorem does not claim unconditional acceptance of every
 first-declaration graph derivation.
+
+* Derived reachable validation and uniqueness receipt
+
+~lake build LeanPoo.C4.ValidationInvariant~ proves actual ~Graph.validate~
+success from unique declaration names and complete parent-name membership.
+The proof follows the runtime name scan and all three nested parent-check
+loops without replacing them or assuming their execution succeeds.
+
+~ReachableUnique~ constrains names in the exact ~reachableNodes~ filter.
+It permits duplicate names and missing references outside the root's ancestry.
+Under this condition each included declaration equals the first declaration
+used by graph lookup. A finite root ~GraphTrace~ then supplies finite parent
+traces for every included edge and a declaration for each parent inside the
+same reachable filter. ~reachable_declarations_closed~ derives parent-name
+membership, and ~reachable_validate_complete~ derives actual validation.
+
+~linearizeWith_unique_complete~, ~linearize_unique_complete~, and
+~linearizeChecked_unique_complete~ therefore require finite original graph
+evidence and reachable declaration-name uniqueness, with no successful
+validation or execution premise. Root lookup, BFS, reachable fuel, recursive
+metadata population, actual validation, and final output are derived.
+~reachableUnique_of_global~ also supplies this condition from global name
+uniqueness, a stronger sufficient requirement than the runtime needs.
+
+~Tests/ValidationInvariant.lean~ requires
+~VALIDATION-INVARIANT-OK graphs=96 validated=12 accepted=24~. Twelve families
+with globally unique and closed declarations pass actual validation;
+24 families with independent finite reconstruction and unique reachable
+names pass derived reachable validation and reproduce both top-level outputs.
+Generic kernel examples quantify over arbitrary graph evidence and inputs.
+Guards distinguish disconnected duplicate rejection by global validation
+from acceptance by root-specific compilation, repeated edges, reachable
+duplicates, and missing parent names. Eight axiom reports use only standard
+Lean axioms. Runtime algorithms and validation error order are unchanged.
+
+This closes the previous explicit successful-validation premise under the
+necessary declaration uniqueness policy. It is a completeness result relative
+to ~GraphTrace~ and reachable uniqueness, not whole-compiler soundness or
+an equivalence of all error payloads. Necessity of the policy, the reverse
+successful-execution-to-graph-evidence direction, and original Ducournau
+relation equivalence remain separate obligations.
