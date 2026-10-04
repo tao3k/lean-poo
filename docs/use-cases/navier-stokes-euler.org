@@ -68,22 +68,51 @@ consumer workflow, implemented entirely within LeanPoo:
 1. Retain an ordinary dependent context containing the data and guards.
 2. Keep existing constructors as ~Factory Context Result~ functions.
 3. Compile the provider graph once with ~linearizeVerified~ and ~assemble~.
-4. Select each required capability with ~Functional.require~ before the
-   repeated order/time/context loop. Failure returns the missing typed key.
+4. Declare the consumer checklist and call ~Requirements.prepare~ before the
+   repeated order/time/context loop. Failure returns the first missing typed key.
 5. Retain the resulting functions. ~Factory.zipWith~ passes both results at
    the same context to a consumer's existing constructor.
 6. Use ~Factory.reindex~ when a consumer has a larger context. Its explicit
    projection determines the result type; it cannot silently move a proof
    to changed data.
 
-[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] demonstrates steps 4 and 5 using the
-background and residual capabilities. ~prepare~ returns either the missing
-capability or both selected functions; ~Prepared.build~ then invokes those
-functions without graph compilation or provider lookup. Its pair result is
-an interface demonstration, not an upstream spatial-budget theorem.
-A client can replace the pair constructor with its own typed constructor.
-~require_ok_iff~ connects preparation to exact provider selection, so
-~assemble_origin~ remains available to prove original-graph provenance.
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] uses the library's dependent requirement tuple
+for ~[background, residual]~. The same API accepts the full spatial checklist
+~[background, derivative, residual, linear, quadratic]~ without a new preparation
+record or another sequence of ~require~ calls. ~Requirements.build~ invokes the
+retained functions at the supplied context and returns the corresponding typed
+results. The consumer supplies its existing budget constructor.
+
+~prepare_ok_iff~ identifies every retained factory; ~prepare_origin~ supplies
+original-graph provenance for each requested key. A context can include finite
+Sobolev order and guards; factories still return the witness at that exact
+indexed type. This experiment does not instantiate upstream spatial budgets.
+
+* Functional cases and maintenance boundaries
+
+At the same source pin,
+[[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/FunctionalVelocity.lean#L15][EulerFunctionalVelocity.velocityMap]] takes an indexed family of four bounded
+linear functionals; ~velocityMap_apply~ immediately identifies each output
+component with its supplied functional. Its fixed coordinate assembly already
+uses ordinary Lean composition well. C4 selection is useful only if a consumer
+has interchangeable implementations with an actual precedence policy.
+
+The budget factory case has a different proposed seam: initialized estimates,
+correction coefficients, and a residual-only override can contribute separate
+capabilities. One checklist prepares the full combination. The consumer retains
+that prepared tuple across order/time calls instead of repeating selection.
+
+| Maintenance change | What the client changes | Reused evidence |
+|--------------------+-------------------------+-----------------|
+| Add a required field | Extend the typed checklist and consumer constructor | Generic preparation and provenance contracts |
+| Replace only residual | Supply its new factory in the more-specific provider | Other selected factories and context/result types |
+| Change data/order/guards | Supply a new exact context; factories construct fresh indexed results | Selection of retained functions |
+| Prefix provider names | Rename graph and align dictionary entries under those names | ~assemble_rename~ proves identical selected functions |
+| Rename graph only | Preparation can fail; fix dictionary alignment | No selection-preservation claim without alignment |
+
+This is a design study with executable generic clients. No upstream module is
+copied, changed, imported, or built. It establishes reusable interface contracts,
+not a measured reduction of Euler source lines or analytic proof cost.
 
 Binding repeated arguments is a benefit of ordinary Lean functions and
 context records. C4 adds selection and precedence across a proposed provider

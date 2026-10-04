@@ -1,4 +1,4 @@
-import LeanPoo.Functional.Assembly
+import LeanPoo.Functional.Requirements
 
 /-! A source-informed interface experiment for Euler budget assembly. The
 capabilities correspond to PacketInitializedSpatialBudget fields. Callers
@@ -52,22 +52,30 @@ def compileFamily (inputs : Inputs Context Value)
 
 /-- A consumer declares the capabilities it needs and selects them before
 entering its order/time/context loop. Missing capabilities retain their key. -/
-structure Prepared (Context : Type u) (Value : Context → Capability → Type v) where
-  background : Factory Context (fun context => Value context .background)
-  residual : Factory Context (fun context => Value context .residual)
+abbrev requested : List Capability := [.background, .residual]
+
+abbrev Prepared (Context : Type u) (Value : Context → Capability → Type v) :=
+  Requirements.Factories Context Value requested
 
 def prepare (provider : Provider Context Capability Value) :
-    Except Capability (Prepared Context Value) := do
-  let background ← require provider .background
-  let residual ← require provider .residual
-  pure ⟨background, residual⟩
+    Except Capability (Prepared Context Value) := Requirements.prepare provider requested
 
 /-- Invoke the retained functions at one shared context. A real client can
-replace the pair constructor with its existing budget constructor. -/
+replace this pair projection with its existing budget constructor. -/
 def Prepared.build (prepared : Prepared Context Value) :
     Factory Context (fun context => Value context .background × Value context .residual) :=
-  Factory.zipWith (fun _ background residual => (background, residual))
-    prepared.background prepared.residual
+  fun context =>
+    let results := Requirements.build (keys := requested) prepared context
+    (results.1, results.2.1)
+
+/-- The full budget checklist uses the same API with heterogeneous field types;
+no consumer-specific preparation structure is needed. -/
+abbrev budgetRequested : List Capability :=
+  [.background, .derivative, .residual, .linear, .quadratic]
+
+example (provider : Provider Context Capability Value) :
+    Except Capability (Requirements.Factories Context Value budgetRequested) :=
+  Requirements.prepare provider budgetRequested
 
 example (inputs : Inputs Context Value)
     (tight : Factory Context (fun context => Value context .residual)) :

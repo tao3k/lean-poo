@@ -47,3 +47,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:VerifiedOrder.lean][VerifiedOrder]] checks recursive checked soundness, original graph evidence without caller premises, 512 graph combinations, exact wrapper outcomes, and indexed ancestry decisions.
 - [[file:FunctionalAssembly.lean][FunctionalAssembly]] checks selected-provider provenance, typed context-dependent witnesses, first-provider selection, missing capabilities, and exact factory application.
 - [[file:ReusableContracts.lean][ReusableContracts]] compiles the generic client contracts documented in the API guide for ancestry, ordering constraints, certificate reuse, and batch updates.
+
+- [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries.

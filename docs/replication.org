@@ -1556,3 +1556,38 @@ For two selected Lean checks, wall time is 16.320 to 14.770 seconds and CPU is
 1.910 to 1.724, excluding separately recorded one-time environment preparation.
 [[file:check-performance.org][The performance guide]] bounds these claims to warm startup orchestration;
 no whole-suite percentage, cold-build gain, or C4 runtime speedup is inferred.
+
+
+* Contextual requirement preparation and consumer relabeling
+
+~LeanPoo/Functional/Requirements.lean~ implements a caller-ordered typed
+capability checklist. Preparation returns either its first missing key or a
+complete heterogeneous tuple of retained factories. ~build~ invokes those
+functions with one exact context and has no graph/provider argument.
+~prepare_ok_iff~ establishes exact selection for every tuple component;
+~Selected.available~ and ~prepare_origin~ expose requested-key availability and
+original-graph ancestry. Empty and repeated requirements are supported.
+
+The paper's name-independence slice now reaches the functional consumer API:
+~select_rename~ proves equality of selection under aligned provider names;
+~assemble_rename~ combines this with proof-preserving verified graph renaming.
+Alignment is explicit on original ancestors. A renamed graph does not change
+a separate provider dictionary. The result types and context stay identical.
+These theorems do not close arbitrary graph-isomorphism/declaration-permutation
+invariance, EPG correspondence, or unrestricted ordinary C4 soundness.
+
+~Tests/FunctionalRequirements.lean~ checks all eight three-capability provider
+availability patterns against all eight checklists in normal, reversed, and
+duplicated order: 192 preparations. Successful tuples use three heterogeneous
+result types and are applied at two contexts. An independent first-missing
+oracle checks failure order. Aligned and deliberately unaligned dictionary
+cases exercise independently compiled namespace renaming. Negative elaboration
+checks reject a witness at a changed capability or context. Six axiom reports
+use only Lean's standard axioms, with no admitted or native-evaluation proof.
+
+The existing contextual-factory example consumes the general preparation API.
+The pinned [[file:use-cases/navier-stokes-euler.org][Euler study]] now also distinguishes fixed functional-coordinate
+assembly from the proposed interchangeable budget-provider seam. The source
+clone remains reference-only; no upstream build or dependency is introduced.
+Maintenance benefits are removal of repeated preparation code and reuse of
+generic contracts, not an established PDE line-count or runtime speedup.

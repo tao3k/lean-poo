@@ -969,3 +969,22 @@ declaration permutation, or edits to parent-row order. Cross-compiler complete
 error-payload relabeling and unrestricted ordinary soundness are not derived.
 Extended precedence graph correspondence and its C4 suffix exemption remain
 open. The external Euler repository remains reference material only.
+
+
+* Functional consumer contracts informed by the Euler reference
+
+~Functional.Requirements~ prepares an arbitrary caller-ordered, heterogeneous
+capability list and retains its functions for repeated contexts. Exact selection,
+requested-key availability, and original C4 ancestor provenance have kernel
+contracts. The existing contextual factory client uses this API instead of its
+own preparation record. Empty and duplicated lists retain defined behavior.
+
+~Functional.select_rename~ and ~assemble_rename~ extend the completed injective
+relabeling slice to consumer selection: align provider dictionary names, then
+selected factories are equal. This is a consumer consequence of the existing
+paper property, not a new full graph-isomorphism or EPG proof.
+
+The pinned [[file:use-cases/navier-stokes-euler.org][source study]] compares ~FunctionalVelocity.velocityMap~'s fixed
+coordinate assembly with interchangeable initialized-budget capabilities.
+Ordinary dependent contexts remain the baseline; C4 adds precedence among
+actual replacement providers. Only LeanPoo's generic contracts are compiled.

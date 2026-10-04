@@ -350,6 +350,55 @@ context-indexed mathematical types, a residual-only override, and a
 The external Euler repository supplies design references; no import or
 build dependency is introduced.
 
+* Prepare a typed capability checklist once
+
+Import ~LeanPoo.Functional.Requirements~. Declare the capabilities needed by
+one consumer as a ~List Key~. ~Requirements.prepare provider keys~ returns
+~Except Key (Requirements.Factories Context Value keys)~. The tuple follows
+the caller's key order; each component has its own context-indexed result
+type. Empty lists succeed, and repeated keys retain repeated selected functions.
+The first missing key is reported before any factory is invoked.
+
+After matching success once, retain the tuple and call
+~Requirements.build (keys := requested) retained context~ for every compatible
+context, where ~requested~ is the checklist used for preparation. It returns
+~Requirements.Results Value context keys~, a heterogeneous tuple indexed by
+exactly that context and checklist. The builder adds no provider lookup or graph compilation; supplied factory
+bodies keep their own behavior. Pass the results to your existing constructor; mathematical guards
+and witnesses remain part of its own types.
+
+~prepare_ok_iff~ proves the tuple's ~Selected~ contract: every component is
+exactly the provider's selected function. ~Selected.available~ exposes this
+for any requested key. ~prepare_origin~ combines it with a verified C4 order
+and proves original-graph ancestry for every requested capability. These
+contracts are generic over arbitrary key and context/result types.
+
+[[file:../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] now uses this library tuple instead of a
+consumer-owned preparation record and repeated ~require~ statements. Changing
+the checklist changes its type as well; adapt the consumer's constructor to
+the new fields. This API removes repeated preparation plumbing, not the
+consumer's domain-specific construction or analytic proof obligations.
+
+* Preserve selected factories across provider-family renaming
+
+~Functional.select_rename~ equates selection on mapped names when each mapped
+provider agrees with the original provider on the requested key. Agreement is
+needed only on the retained precedence. ~assemble_rename~ lifts that contract
+to ~VerifiedOrder.rename~: supply the injective map, original global declaration
+uniqueness, and provider agreement on original graph ancestors.
+
+Graph renaming alone cannot rename a String-indexed provider dictionary.
+Store the same factory values under the new names. If that alignment is
+missing, selection can return a missing capability or a different factory;
+the theorem requires the alignment explicitly. Capability keys and mathematical
+contexts do not change. With it, selected functions agree exactly, so the
+existing requirement tuple and consumer proofs remain reusable.
+
+[[file:../Tests/FunctionalRequirements.lean][FunctionalRequirements]] compiles both generic provenance and renaming
+clients, checks 192 preparation cases with heterogeneous result types, and
+checks an aligned namespace prefix against independently compiled renamed
+C4 output. A deliberately unaligned dictionary fails preparation.
+
 * Reuse proofs after an unrelated change
 
 ~Proof.Obligation~ declares a predicate and the dependencies sufficient to

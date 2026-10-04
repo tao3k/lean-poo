@@ -25,6 +25,7 @@ import LeanPoo.C4.Renaming
 import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
+import LeanPoo.Functional.Requirements
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose
