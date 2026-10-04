@@ -621,3 +621,18 @@ The integration still requires systematic normalized-node evidence from
 original graph rows and a proof that new entries establish stronger semantic
 suffix coverage. Resolver preservation and reachable validation remain
 separate obligations before whole ordinary graph completeness.
+
+* Further C4 closure: graph-derived node insertion
+
+Original graph rows and canonical parent metadata now construct the exact
+runtime node certificate through repeated-edge normalization, empty-local
+filtering, and empty-parent-tail omission. Both actual node computation modes
+reproduce the graph output without supplied normalized node evidence. Proper
+marked-ancestor coverage is derived from original rows, and actual fresh
+insertion now establishes the stronger semantic metadata invariant while
+retaining all old entries' metadata. The inserted node consequently supports
+complete marked-ancestor recognition by the existing bounded suffix walk.
+These results supersede the two open node-level obligations in the preceding
+receipt. Recursive resolver preservation, parent-loop/fuel reasoning,
+reachable validation, and whole ordinary graph completeness still require
+integration proofs; the original Ducournau graph relation remains separate.

@@ -999,3 +999,38 @@ ordinary graph completeness remain open. Fresh insertion preserves the old
 provenance/link invariant here, not the stronger semantic coverage invariant.
 These conditional runtime receipts do not establish equivalence to the
 original Ducournau graph relation.
+
+* Graph-derived node evidence and strong metadata insertion receipt
+
+~lake build LeanPoo.C4.GraphComputeInvariant~ connects original ~GraphTrace~
+rows to the exact runtime ~NodeCertified~ input. ~graph_node_certificate~
+uses canonical parent metadata and actual successful parent collection to
+transport repeated graph edges through stable parent deduplication, remove
+empty local orders, and omit empty parent tails. Complete output and selected
+tail are retained. Every proper declared marked ancestor belongs to the
+constructed inherited tail; this coverage comes from the original graph
+rows rather than an additional metadata premise for the new node.
+
+~computeNode_graph_complete~ reproduces the original graph output in both
+actual runtime modes without a caller-supplied normalized certificate or a
+successful-computation premise. ~computeNode_metadata_insert~ proves that
+actual fresh insertion retains the stronger ~MetadataInvariant~, including
+graph-derived most-specific tails, selected-entry availability, and proper
+marked-ancestor coverage. A generic ~MetadataInvariant.insert~ lemma also
+preserves the metadata of all old entries because a fresh key cannot replace
+any existing selected suffix entry.
+
+~Tests/GraphComputeInvariant.lean~ checks these interfaces over arbitrary
+runtime inputs and verifies that the newly inserted entry supports exact
+marked-ancestor recognition by the actual bounded suffix walk. Eight axiom
+reports use only Lean's standard ~propext~, ~Classical.choice~, and
+~Quot.sound~. The proofs require an original finite root ~GraphTrace~, the
+existing strong cache invariant, first-declaration lookup, successful parent
+collection, and (for insertion) a fresh cache key.
+
+This closes the two node-level obligations left by the preceding receipt:
+deriving normalized node evidence from graph rows and establishing strong
+metadata for computed entries. Preservation through recursive ~resolveNode~,
+its parent loop and fuel budget, reachable validation policy, and whole
+ordinary graph completeness remain open. Equivalence to the original
+Ducournau graph relation remains a separate obligation.
