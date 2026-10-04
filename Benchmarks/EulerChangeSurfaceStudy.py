@@ -73,9 +73,10 @@ def study(reference):
             if matches:
                 mentions[name].append({"file": relative, "lines": matches})
     local = ["LeanPoo/Functional/View.lean", "Tests/FunctionalView.lean",
-             "LeanPoo/Functional/Observation.lean", "Tests/FunctionalObservation.lean"]
+             "LeanPoo/Functional/Observation.lean", "Tests/FunctionalObservation.lean",
+             "LeanPoo/Functional/Transport.lean", "Tests/FunctionalTransport.lean"]
     return {
-        "schema": "lean-poo.euler-change-surface.v2",
+        "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
                       "tracked_lean_files": len(files), "physical_lines": lines,
                       "files_by_top_level": dict(sorted(groups.items())),
@@ -86,6 +87,16 @@ def study(reference):
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
         "observation_bridge": observation_bridge(reference),
+        "evidence_transport": {
+            "reference_file": "Euler/PacketInitializedResidualEquation.lean",
+            "data_equality_line": 101, "dependent_certificate_line": 114,
+            "equality_rewrite_line": 127,
+            "local_api": ["Factory.transport", "Factory.transportProof",
+                          "Factory.transport_refl", "Factory.transport_trans", "Factory.transport_roundtrip"],
+            "scope": "Retarget an explicitly data-indexed witness or proposition at the same context, given equality of the entire indexed datum",
+            "analytic_equivalence_inferred": False,
+            "euler_adapter_implemented": False,
+        },
         "local_contract": {"files": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in local},
                            "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types",
                            "runtime_benchmark": False},

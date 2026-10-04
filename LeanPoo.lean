@@ -29,6 +29,7 @@ import LeanPoo.Functional.Requirements
 import LeanPoo.Functional.Access
 import LeanPoo.Functional.View
 import LeanPoo.Functional.Observation
+import LeanPoo.Functional.Transport
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

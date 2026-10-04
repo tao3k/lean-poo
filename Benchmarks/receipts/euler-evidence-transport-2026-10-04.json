@@ -121,12 +121,30 @@
     "proposed_contract": "Different representation families, fixed context/key/public observation family, pointwise observation equality on declared consumer keys",
     "euler_adapter_implemented": false
   },
+  "evidence_transport": {
+    "reference_file": "Euler/PacketInitializedResidualEquation.lean",
+    "data_equality_line": 101,
+    "dependent_certificate_line": 114,
+    "equality_rewrite_line": 127,
+    "local_api": [
+      "Factory.transport",
+      "Factory.transportProof",
+      "Factory.transport_refl",
+      "Factory.transport_trans",
+      "Factory.transport_roundtrip"
+    ],
+    "scope": "Retarget an explicitly data-indexed witness or proposition at the same context, given equality of the entire indexed datum",
+    "analytic_equivalence_inferred": false,
+    "euler_adapter_implemented": false
+  },
   "local_contract": {
     "files": {
       "LeanPoo/Functional/View.lean": "192f5ab369c3c8b4908569747ee8c7783548832a4a1fb5b529cf40ad8f5fbf7e",
       "Tests/FunctionalView.lean": "2173b60339e85bf447ae69d07f98bedc38863425b68da82541767d56cb65bd3d",
       "LeanPoo/Functional/Observation.lean": "cfb644760448a4ff9bb4a49f6485461c40c4770886f4bb7b878c5c3f7b97da80",
-      "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+      "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b",
+      "LeanPoo/Functional/Transport.lean": "487963aa6e2ce9cb0bf34b2c42867acbe848a97998f297e9d37577751ce0c982",
+      "Tests/FunctionalTransport.lean": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3"
     },
     "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types",
     "runtime_benchmark": false

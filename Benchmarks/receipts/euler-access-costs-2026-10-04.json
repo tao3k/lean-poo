@@ -1,5 +1,5 @@
 {
-  "schema": "lean-poo.euler-maintenance.v2",
+  "schema": "lean-poo.euler-maintenance.v1",
   "evidence_boundary": "pinned lexical inventory plus kernel-checked generic client comparison; no upstream integration",
   "reference": {
     "repository": "openai/NavierStokesAndEuler",

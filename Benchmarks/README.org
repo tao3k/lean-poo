@@ -34,10 +34,10 @@ code and shared library costs. It runs no upstream builds. See the
 [[file:../docs/use-cases/euler-maintenance-checklist.org][benefit checklist]] and tracked receipt for scope and unknown adapter costs.
 
 
-The study's v2 receipt also includes marked positional/named access definitions
-from ~Tests/FunctionalAccess.lean~, additional shared Access/proof-adapter code,
-and the source declaration/context-slot/adapter-arity inventory. The original
-v1 receipt remains a historical preparation-only baseline. Full implicit
+The access-cost receipt also includes marked positional/named definitions
+from ~Tests/FunctionalAccess.lean~, shared Access/proof-adapter costs, and source
+context-slot/adapter-arity inventory. The preparation receipt records the earlier
+measurement scope. Both use ~lean-poo.euler-maintenance.v1~. Full implicit
 instance/context/adapter elaboration and global source savings remain unknown.
 
 * Change propagation reference inventory
@@ -51,8 +51,16 @@ references or measure affected consumers, source savings, or runtime. It is
 optional reference research and is not a CI dependency. The [[file:../docs/use-cases/euler-maintenance-checklist.org][evaluation protocol]]
 now prioritizes real change fanout and complete migration costs.
 
-The current inventory script emits schema ~lean-poo.euler-change-surface.v2~,
-adding hashed source locations for existing path/tower/correction-data bridges
-and the typed observation library/test. The historical v1 receipt is retained;
-[[file:receipts/euler-observation-contracts-2026-10-04.json][the v2 receipt]] is an interface-contract study, not a compiled Euler adapter or
-measurement of avoided consumer edits. The reference tool remains outside CI.
+All change-surface receipts and the current inventory script use
+~lean-poo.euler-change-surface.v1~. The [[file:receipts/euler-change-surface-2026-10-04.json][projection snapshot]],
+[[file:receipts/euler-observation-contracts-2026-10-04.json][observation snapshot]], and [[file:receipts/euler-evidence-transport-2026-10-04.json][evidence snapshot]] differ in measurement scope,
+not schema version. They bind the same reference manifest and the local
+contracts/tests covered by each study. Existing path/tower/data bridges remain
+reference-only; external analytic adapters and avoided edit/time savings are
+unmeasured. These are unreleased schema-1 studies; adding evidence fields does
+not trigger a version increment.
+
+Run logs belong in the system temporary directory, such as ~/tmp/~ or the
+host's ~$TMPDIR~. The repository ignores ~*.log~ at every depth. Preserve stable
+benchmark and test evidence as JSON receipts, with source hashes, measurement
+scope, and units; do not retain log files as benchmark artifacts.

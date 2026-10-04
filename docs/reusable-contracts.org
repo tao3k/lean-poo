@@ -559,3 +559,47 @@ the selected implementations must satisfy the stated pointwise relation.
 The Euler reference already contains a path-to-field-tower bridge. Reusing it
 as compatibility evidence would be application-owned; no external adapter or
 large-library migration has been compiled here. See the [[file:use-cases/euler-maintenance-checklist.org][research checklist]].
+
+* Retarget existing evidence to equal replacement data
+
+Import ~LeanPoo.Functional.Transport~. After establishing equality of the data
+produced by two implementations, ~Factory.transport~ reuses an existing witness
+family and gives it the exact replacement index:
+
+#+begin_src lean
+example {Context : Type} {Data : Context → Type}
+    (Certificate : (c : Context) → Data c → Type)
+    (old new : Functional.Factory Context Data)
+    (same : ∀ c, old c = new c)
+    (existing : Functional.Factory Context (fun c => Certificate c (old c))) :
+    Functional.Factory Context (fun c => Certificate c (new c)) :=
+  Functional.Factory.transport Certificate same existing
+#+end_src
+
+The witness may be a record containing data, proof fields, and further
+quantified obligations. Its implementation is retained. ~transport_refl~
+preserves identity, ~transport_trans~ equates chained and direct migration,
+and ~transport_roundtrip~ restores the exact original witness family after
+migration back. These laws apply to arbitrary dependent witnesses.
+
+For an existing theorem ~prove : ∀ c, Claim c (old c)~, call
+~Factory.transportProof Claim same prove~ to obtain ~∀ c, Claim c (new c)~.
+It returns Prop directly and requires no axioms. If a Type-valued proof factory
+is required by a provider, wrap the result with ~Factory.fromProof~. No analytic
+proof is synthesized: the old theorem and the data equality remain prerequisites.
+
+The observation pipeline supplies that equality. If a consumer returns a data
+factory, ~observed_consumer_stable~ gives equality of the old and replacement
+data factories. Use ~fun c => congrFun dataEqual c~ as the transport premise.
+The [[file:../Tests/FunctionalTransport.lean][generic compiled client]] connects these APIs without assuming identical
+original representation types. This factors the common migration step out of
+individual analytic consumers.
+
+Transport fixes the context and the entire datum indexed by the witness.
+Equality of one projected field cannot retarget evidence indexed by a larger
+unequal record. Changed context types, changed claims, or merely ordered/
+approximately equal data require an explicit application-specific adapter or
+proof. The retained witness body keeps its original computation; this API does
+not remove legacy computations or establish a runtime improvement. The
+[[file:use-cases/euler-maintenance-checklist.org][reference research checklist]] records an existing Euler data-equality rewrite
+with the same dependent-index shape, without claiming an external migration.

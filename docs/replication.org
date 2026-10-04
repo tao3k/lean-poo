@@ -1675,3 +1675,21 @@ or changed context types. The [[file:use-cases/euler-maintenance-checklist.org][
 path/tower/data equality bridges; no upstream analytic adapter or runtime
 speedup is established, and no C4 precedence requirement follows merely from
 this interface contract.
+
+* Indexed evidence reuse after semantic replacement
+
+~Functional.Transport~ implements migration of an existing context/data-indexed
+certificate to equal replacement data. ~transportProof~ handles Prop families
+directly; ~transport_refl~, ~transport_trans~, and ~transport_roundtrip~ establish
+identity, coherent composition, and exact return. The [[file:../Tests/FunctionalTransport.lean][generic compiled client]]
+connects observation-compatible providers to equal consumer data factories and
+reuses dependent evidence without requiring equal original representation types.
+
+Identity and direct proof transport require no axioms; composition and return
+use ~Quot.sound~ through function extensionality. This is a bounded typed evidence
+migration consequence of the implemented functional substitution interfaces.
+Whole indexed-data equality and the existing witness remain explicit inputs;
+analytic equivalence, changed claims/contexts, and hidden-field dependencies are
+not inferred. The [[file:use-cases/euler-maintenance-checklist.org][reference source]] already uses the corresponding data rewrite
+in its residual equation proof. No compiled PDE adapter, original EPG closure,
+net maintenance saving, or runtime improvement follows from this local contract.

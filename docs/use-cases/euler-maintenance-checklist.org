@@ -285,3 +285,42 @@ This closes a typed representation-replacement contract, rather than asserting
 arbitrary graph extension invariance or full paper correspondence. A substantial
 reference evaluation still needs a real change, verified consumers of the
 chosen observation, full adapter costs, and before/after edit and build receipts.
+
+* Reuse indexed analytic evidence after a certified replacement
+
+The [[file:../../Benchmarks/receipts/euler-evidence-transport-2026-10-04.json][evidence receipt]] retains the immutable source census and adds the dependent
+evidence boundary. At ~Euler/PacketInitializedResidualEquation.lean:101~,
+~initializedCorrectionData_eq_coordinate~ identifies two complete correction
+data constructions. ~initializedApproximationResidual~ at line 114 is indexed
+by that correction datum. Its equation proof at line 127 rewrites by the data
+equality before applying the existing analytic derivative theorem. All its
+pressure, gradient, order, time, and guard obligations remain present.
+
+The new ~Factory.transport~ models this index migration for arbitrary
+Type-valued certificate families, and ~Factory.transportProof~ handles existing
+Prop-valued theorem families. ~transport_refl~, ~transport_trans~, and
+~transport_roundtrip~ prove identity, composition coherence, and exact reversal.
+The generic local client connects observation-compatible representations to a
+data-producing consumer and then transports its already constructed evidence.
+
+| Capability / reference point | Before | Implemented after | Added costs / evidence |
+|------------------------------+--------+-------------------+------------------------|
+| Retarget a dependent certificate, following the source's data rewrite | Manually express each dependent cast/rewrite | ~Factory.transport~ returns the exact replacement-indexed family | Entire datum equality and explicit witness family; generic compiled client |
+| Retarget an existing analytic proposition | Caller writes the equality substitution around the old proof | ~Factory.transportProof~ reuses the theorem directly | Old proof and data equality remain; kernel report has no axioms |
+| Multiple certified replacements | Caller manages dependent casts and their alignment | Chained migration equals direct migration; return migration restores evidence | Two general equality laws use function extensionality (~Quot.sound~) |
+| Existing Euler equation at line 127 | Source already has a data-equality rewrite | Same dependency pattern is expressible by the local API | No upstream adapter compiled; no existing rewrite counted as newly avoided work |
+| Net Euler lines, avoided edits, maintenance time, execution cost | Unmeasured | Unmeasured | Shared module, evidence-family declarations, equality proofs, and adapters must be included |
+
+The fixture checks non-definitional equal data constructions, retained
+certificate payload/bound fields, direct versus chained migration, roundtrip,
+raw theorem reuse and PLift adaptation, and rejection of missing equality or
+wrong-context evidence. This is proof reuse under explicit equality, not a
+solver for analytic equivalence. Observation equality must first imply equality
+of the whole datum on which the certificate depends. A bound about hidden fields
+cannot be transported using equality of a smaller public projection alone.
+The original evidence body remains, including any computations it performs.
+
+This closes the local chain from provider selection through public observations
+and consumer data equality to dependent evidence reuse. The graph acceptance,
+EPG correspondence, changed-context/statement adapters, and actual reference
+migration gates remain separate.

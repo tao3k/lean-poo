@@ -138,7 +138,7 @@ def study(reference):
     overhead = code_lines(library.read_text())
     savings = before - after
     return {
-        "schema": "lean-poo.euler-maintenance.v2",
+        "schema": "lean-poo.euler-maintenance.v1",
         "evidence_boundary": "pinned lexical inventory plus kernel-checked generic client comparison; no upstream integration",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": actual,
                       "file": SOURCE, "sha256": sha256(path), "calls": calls,
