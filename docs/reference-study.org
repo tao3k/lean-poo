@@ -711,3 +711,19 @@ checked freshness validation, delimiting arbitrary-cache soundness. Original
 graph evidence still requires reverse normalization and cache provenance
 propagation. Whole-graph soundness, the reverse accepted-mode implication,
 full error behavior, and original Ducournau relation equivalence remain open.
+
+* Further C4 closure: original graph evidence from checked nodes
+
+Complete certificates now expand back through empty-tail omission, stable
+parent deduplication, and empty-local filtering. Actual checked node success,
+canonical parent metadata, and exact original declaration lookup construct
+original ~GraphTrace~ without a root-trace premise. Fresh actual insertion
+establishes strong graph-backed metadata from that successful execution.
+The 744-combination regression reproduces all 152 accepted normalized outputs
+and selected tails after expansion, including all-empty restored tail inputs.
+
+This closes reverse normalization and single-node checked graph soundness.
+Recursive execution-to-cache provenance and child-key freshness through parent
+resolution remain integration obligations before whole checked-graph soundness.
+Whole ordinary-graph soundness, the reverse accepted-mode implication, complete
+error behavior, and original Ducournau relation equivalence remain separate.

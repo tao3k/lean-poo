@@ -27,6 +27,8 @@ check-merge: check-types
     lake build LeanPoo.C4.ReachabilityInvariant
     lake build LeanPoo.C4.ValidationInvariant
     lake build LeanPoo.C4.ExecutionInvariant
+    lake build LeanPoo.C4.CertificateExpansion
+    lake build LeanPoo.C4.NodeSoundness
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -218,6 +220,7 @@ check-tests: check-proof
     lake env lean Tests/ReachabilityInvariant.lean
     lake env lean Tests/ValidationInvariant.lean
     lake env lean Tests/ExecutionInvariant.lean
+    lake env lean Tests/NodeSoundness.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean

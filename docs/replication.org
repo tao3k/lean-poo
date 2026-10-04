@@ -1210,3 +1210,47 @@ reverse row normalization and cache provenance propagation. Neither whole
 checked-graph soundness nor ordinary-graph soundness is claimed here. Ordinary
 acceptance implying checked acceptance, full error-payload equivalence, and
 original Ducournau relation equivalence remain separate obligations.
+
+* Reverse certificate normalization and checked-node graph soundness receipt
+
+~lake build LeanPoo.C4.CertificateExpansion~ proves reverse transport of
+complete node evidence. ~TailCertified.restore_empty~ and
+~NodeCertified.restore_empty~ restore omitted empty parent tails, including
+nonempty original inputs containing only empty tails. Selected output remains
+unchanged; empties cannot justify an invented nonempty claim.
+~nodeCertificate_expand~ reintroduces repeated original parent names and empty
+local orders. Bidirectional merge trace normalization supplies the original
+ancestry trace; every original parent and nonempty local input already has
+compatibility evidence, while an empty local order is trivially compatible.
+Complete output, selected tail, uniqueness, and root freshness are retained.
+
+~lake build LeanPoo.C4.NodeSoundness~ connects that reverse transport to actual
+checked execution. ~checked_certificate_graph~ uses successful parent
+collection and existing canonical ~MetadataInvariant~ to bind every original
+row to its actual cached precedence and graph-derived tail. It restores
+omitted tails, expands deduplicated rows and local orders, and constructs the
+original ~GraphTrace~. A root graph derivation is not a premise.
+~computeNode_checked_graph_sound~ extracts the actual runtime certificate and
+supplies exact graph precedence and graph tail, including the node's suffix
+flag. ~computeNode_checked_insert_sound~ derives the strong metadata invariant
+for actual fresh insertion from checked execution success; its root derivation
+is extracted rather than assumed. These results still require canonical
+parent metadata and the exact original declaration lookup. Insertion also
+requires a fresh cache key.
+
+~Tests/NodeSoundness.lean~ requires
+~NODE-SOUNDNESS-OK families=744 accepted=152~. All 152 successful normalized
+checker inputs among 744 combinations reproduce both output and selected tail
+when expanded to original repeated edges, empty local orders, and complete
+parent-tail inputs. Generic kernel examples check graph soundness and strong
+metadata insertion for arbitrary inputs. Guards cover all-empty tail
+restoration, invented-tail rejection, and repeated-edge graph reconstruction.
+Six axiom reports use only Lean's standard axioms. Runtime algorithms are
+unchanged.
+
+This closes the reverse-normalization and single checked-node graph evidence
+obligations left by the execution receipt. Successful recursive checked
+resolver preservation still needs cache provenance propagation and a proof
+that parent recursion leaves each computed node key fresh. Whole checked and
+ordinary graph soundness, ordinary-to-checked acceptance, complete error
+behavior, and original Ducournau graph relation equivalence remain open.
