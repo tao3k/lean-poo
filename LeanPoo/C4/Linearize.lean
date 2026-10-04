@@ -38,6 +38,25 @@ def suffixReachesWithFuel (table : Table) (source target : String) (fuel : Nat) 
 def suffixReaches (table : Table) (source target : String) : Bool :=
   suffixReachesWithFuel table source target (table.size + 1)
 
+/-- Compare two inherited suffix names using the actual bounded cache walk. -/
+def selectSuffixStep (table : Table) (current next : Option String) :
+    Except Error (Option String) :=
+  match current, next with
+  | none, next => .ok next
+  | current, none => .ok current
+  | some current, some next =>
+    if suffixReaches table current next then .ok (some current)
+    else if suffixReaches table next current then .ok (some next)
+    else .error .incompatibleSuffixes
+
+/-- Fold parent suffix metadata in its original declaration order. -/
+def selectSuffix (table : Table) : List (Option String) → Option String →
+    Except Error (Option String)
+  | [], current => .ok current
+  | next :: rest, current => do
+    let selected ← selectSuffixStep table current next
+    selectSuffix table rest selected
+
 /-- Compute one node after all its parents have been computed. -/
 def computeNode (table : Table) (node : Node) (checked : Bool) :
     Except Error Linearization := do
@@ -48,18 +67,7 @@ def computeNode (table : Table) (node : Node) (checked : Bool) :
     parentResultsRev := result :: parentResultsRev
   let parentResults := parentResultsRev.reverse
 
-  let mut inheritedSuffix : Option String := none
-  for result in parentResults do
-    match inheritedSuffix, result.mostSpecificSuffix with
-    | none, next => inheritedSuffix := next
-    | _, none => pure ()
-    | some current, some next =>
-      if suffixReaches table current next then
-        pure ()
-      else if suffixReaches table next current then
-        inheritedSuffix := some next
-      else
-        throw .incompatibleSuffixes
+  let inheritedSuffix ← selectSuffix table (parentResults.map (·.mostSpecificSuffix)) none
 
   let inheritedTail ← match inheritedSuffix with
     | none => pure []

@@ -1,4 +1,4 @@
-import LeanPoo.C4.ReferenceMerge
+import LeanPoo.C4.MergeInvariant
 
 namespace LeanPoo.C4
 
@@ -162,6 +162,21 @@ theorem mergeWithSuffixReference_complete (certificate : SuffixCertified orders 
   refine ⟨⟨merged.output, merged.trace, fun order member =>
     respectsSuffixTail_sound (List.all_eq_true.mp accepted order member)⟩, ?_, ?_⟩
   · simp [mergeWithSuffixReference, mergeWithSuffixUsing, accepted, success]
+    rfl
+  · simp [SuffixCertified.output, same]
+
+/-- The optimized merger also reconstructs every compatible suffix certificate. -/
+theorem mergeWithSuffixCertified_complete (certificate : SuffixCertified orders tail)
+    (unique : tail.Nodup) :
+    ∃ result, mergeWithSuffixCertified orders tail = .ok result ∧
+      result.output = certificate.output := by
+  have accepted : orders.all (fun order => respectsSuffixTail order tail) = true :=
+    List.all_eq_true.mpr (fun order member =>
+      respectsSuffixTail_complete (certificate.compatible order member) unique)
+  obtain ⟨merged, success, same⟩ := Precedence.mergeCertified_complete certificate.trace
+  refine ⟨⟨merged.output, merged.trace, fun order member =>
+    respectsSuffixTail_sound (List.all_eq_true.mp accepted order member)⟩, ?_, ?_⟩
+  · simp [mergeWithSuffixCertified, mergeWithSuffixUsing, accepted, success]
     rfl
   · simp [SuffixCertified.output, same]
 

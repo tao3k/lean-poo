@@ -792,3 +792,37 @@ named inline operations provide proof seams. No cache population or whole
 graph success theorem is implied: ~computeNode~ result derivations, the
 ~mostSpecificSuffix~ selector, parent deduplication, reachable validation, and
 ~resolveNode~ preservation/completeness remain separate obligations.
+
+* Runtime suffix selection and optimized node checker receipt
+
+~lake build LeanPoo.C4.SelectionInvariant~ checks the actual selection step
+and parent fold extracted from ~computeNode~. A successful fold retains an
+input and reaches every supplied suffix through inherited-suffix pointers.
+Under ~SuffixCacheInvariant~, pairwise pointer comparability suffices for
+success with the original ~table.size + 1~ walk budget. Successful selection
+plus an existing chosen entry gives a ~TailCertified~ for cached parent
+suffix precedences. This certificate uses full literal suffixes, including
+repeated parent tails. Empty metadata contributes no tail.
+
+~mergeWithSuffixCertified_complete~ and ~certifyNode_complete~ now prove
+that the optimized runtime checkers reconstruct any supplied compatible
+suffix certificate or well-formed complete node certificate. The node proof
+binds both the complete output and selected tail. It carries the supplied
+tail uniqueness and fresh-node assumptions; it does not infer them from
+ordinary traversal.
+
+~Tests/SelectionInvariant.lean~ prints ten axiom reports using only standard
+Lean axioms and requires ~SELECTION-INVARIANT-OK comparisons=3905~. General
+examples quantify over arbitrary certificates, tables, and parent metadata.
+Direct guards exercise reversed chains, incomparable suffixes, empty
+metadata, duplicate tails, and ordinary/checked traversal with repeated
+parents and empty local orders. An executable oracle retains the original
+imperative suffix loop and compares 3,905 combinations of input lists and
+initial accumulators, including missing names and exact error payloads.
+
+Pointer comparability is an explicit premise. No theorem yet derives it
+from arbitrary graph ancestry or literal suffix comparability. Canonical
+~mostSpecificSuffix~ metadata, parent deduplication alignment with
+~GraphTrace~, complete ~computeNode~ derivations, reachable validation, and
+~resolveNode~ preservation/completeness remain open. These receipts do not
+establish equivalence to Ducournau's original graph relation.

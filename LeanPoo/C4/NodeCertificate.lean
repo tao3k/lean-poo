@@ -112,4 +112,16 @@ theorem certifyNodeReference_complete (certificate : NodeCertified name orders t
       success, certificate.tailUnique, fresh, bind, Except.bind, pure, Except.pure]
   · simp [NodeCertified.output, same]
 
+/-- The runtime node checker reproduces every well-formed node certificate. -/
+theorem certifyNode_complete (certificate : NodeCertified name orders tails) :
+    ∃ result, certifyNode name orders tails certificate.selection.output = .ok result ∧
+      result.output = certificate.output ∧ result.selection.output = certificate.selection.output := by
+  obtain ⟨ancestry, success, same⟩ :=
+    mergeWithSuffixCertified_complete certificate.ancestry certificate.tailUnique
+  have fresh : name ∉ ancestry.output := by rw [same]; exact certificate.fresh
+  refine ⟨⟨certificate.selection, ancestry, certificate.tailUnique, fresh⟩, ?_, ?_, rfl⟩
+  · simp [certifyNode, certifyNodeUsing, certifyTail_complete certificate.selection,
+      success, certificate.tailUnique, fresh, bind, Except.bind, pure, Except.pure]
+  · simp [NodeCertified.output, same]
+
 end LeanPoo.C4

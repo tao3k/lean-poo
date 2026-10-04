@@ -553,3 +553,17 @@ miss falls back to ordinary keyed lookup and teaches both levels. The
 ~read_sound~ theorem states equality with ordinary object reads, including
 after a layout change or an absent field. ~just benchmark-layout~ measures
 single-layout and alternating-layout access separately.
+
+* Further C4 closure: executable suffix selection
+
+The runtime parent-suffix selector now has kernel proofs for input retention
+and domination through actual inherited-suffix pointers. A valid cache and
+pairwise comparable supplied pointer chains suffice for successful bounded
+selection. Given the selected cached entry, the result constructs the
+independent ~TailCertified~ used by complete node checking.
+The optimized suffix and node checkers also reproduce arbitrary supplied
+certificates, connecting optimized merge completeness to the full node
+checker. This advances the implementation proof connection; it does not
+establish the selector's canonical metadata premises from the original graph.
+The next obligations are parent collection/deduplication, canonical suffix
+metadata, and cache population by ~computeNode~ and ~resolveNode~.

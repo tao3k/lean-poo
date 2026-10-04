@@ -17,6 +17,7 @@ check-merge: check-types
     lake build LeanPoo.C4.NodeCertificate
     lake build LeanPoo.C4.GraphCertificate
     lake build LeanPoo.C4.TraversalInvariant
+    lake build LeanPoo.C4.SelectionInvariant
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -198,6 +199,7 @@ check-tests: check-proof
     lake env lean Tests/ReferenceMerge.lean
     lake env lean Tests/MergeInvariant.lean
     lake env lean Tests/TraversalInvariant.lean
+    lake env lean Tests/SelectionInvariant.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean
