@@ -820,3 +820,27 @@ For applications composing theorem factories, a verified order supplies the
 stronger contract and the selected provider's original graph provenance.
 The external Euler source remains a design reference for those applications;
 its proofs and dependency tree are not integrated.
+
+* Conditional repair at the node boundary
+
+The suffix-crossing experiment identifies complete-parent compatibility as an
+extra obligation beyond the source's local-order guard. The new
+~OrdinaryNode~ module keeps the source-shaped ordinary algorithm unchanged.
+It proves that ordinary success, duplicate-free output, and compatibility of
+every actual parent precedence with the selected shared tail suffice for
+exact checked acceptance on canonical cached parents. These conditions are
+also necessary, giving an exact local acceptance characterization.
+
+The executable ~auditNode~ reads the same parent/suffix stages and checks the
+extra conditions. It performs no merge. A retained ~AuditedNode~ stores the
+exact ordinary execution and audit receipts, allowing graph proof recovery
+and fresh canonical insertion. The cache invariant is still a premise;
+this local result does not certify an arbitrary raw cache or unaudited
+ordinary recursion. It strengthens the source result on the characterized
+subset and leaves original-paper equivalence as a separate research task.
+
+The 256-family regression distinguishes 116 promoted from 20 rejected ordinary
+successes, and explicitly guards the execution-receipt boundary. The public
+consumer workflow is in [[file:reusable-contracts.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
+continues to serve as a reference for typed factory interfaces, with no
+integration or dependency introduced.

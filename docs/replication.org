@@ -1352,3 +1352,38 @@ Ducournau relation. See [[file:reference-study.org::*Suffix crossing and the str
 characterize the extra admissibility conditions or formalize the weaker
 source behavior separately, plus complete cross-mode failure semantics and
 the original paper relation mapping.
+
+* Conditional ordinary node acceptance and retained audit receipts
+
+~computeNode_ordinary_evidence~ extracts the actual parent collection, suffix
+selection, local compatibility, prefix merge trace, and exact result from
+successful ordinary execution. On canonical ~MetadataInvariant~ parents,
+~computeNode_checked_iff~ proves exact checked success equivalent to ordinary
+success, output uniqueness, and complete parent ~ParentCompatible~. The
+reverse proof constructs a node certificate from execution evidence; it
+assumes no root graph trace or caller-supplied certificate.
+
+~auditNode~ checks these extra conditions without a merge. Its soundness and
+completeness establish ~auditNode_acceptance_iff~ for the actual ordinary
+result under canonical metadata. ~computeAuditedNode~ executes ordinary once
+and retains the result and audit receipts. ~AuditedNode.checked~ proves exact
+checked acceptance; ~graphSound~ recovers original graph evidence;
+~insertSound~ preserves canonical metadata for fresh insertion. Proof fields
+erase. Audit diagnostics do not claim full checked-mode error equivalence,
+and no elaboration or runtime speedup has been measured.
+
+~Tests/OrdinaryNode.lean~ covers 256 five-node graph combinations with canonical
+parents obtained from checked parent recursion. Of 136 ordinary successes,
+116 pass the audit and 20 fail; audit acceptance agrees with checked execution
+and retained-wrapper acceptance. It includes repeated/empty declarations,
+suffix flags, and conflicting local constraints. An invented result can pass
+local audit but cannot acquire a graph trace without its actual ordinary
+execution receipt. A duplicate invented result is rejected. All new axiom
+reports contain only Lean standard axioms.
+
+This closes the conditional single-node reverse acceptance and original graph
+soundness boundary. Whole ordinary resolver/top-level conditional acceptance
+still needs the admissibility and canonical cache conditions propagated through
+all recursive calls. The unconditional suffix-crossing counterexample remains
+valid. Original paper relation mapping and full cross-mode failure
+characterization remain separate obligations.

@@ -17,6 +17,7 @@ import LeanPoo.C4.ValidationInvariant
 import LeanPoo.C4.ExecutionInvariant
 import LeanPoo.C4.CertificateExpansion
 import LeanPoo.C4.NodeSoundness
+import LeanPoo.C4.OrdinaryNode
 import LeanPoo.C4.ResolverSoundness
 import LeanPoo.C4.VerifiedOrder
 import LeanPoo.Functional.Assembly

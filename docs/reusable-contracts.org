@@ -25,6 +25,44 @@ Ducournau relation. Ordinary-to-checked acceptance fails in general: the
 ~linearizeVerified~ when the application relies on complete ancestor-order
 preservation.
 
+* Audit an ordinary node already computed from canonical parents
+
+Advanced clients retaining a resolver cache can use
+~LinearizeState.computeAuditedNode table node~. It executes one ordinary node
+merge and audits the result's uniqueness and complete parent-order
+compatibility. It returns ~AuditedNode table node~, retaining the exact
+ordinary execution and audit receipts. Its proof fields erase at runtime.
+The audit reads parent/suffix metadata and scans the orders; it invokes no
+merger. No measured speedup is claimed.
+
+Supply ~valid : MetadataInvariant graph table~ to ~receipt.checked~ to prove
+exact checked acceptance without executing checked again. With the original
+node lookup ~found~, ~receipt.graphSound valid found~ recovers ~GraphTrace~:
+
+#+begin_src lean
+example (receipt : LinearizeState.AuditedNode table node)
+    (valid : LinearizeState.MetadataInvariant graph table)
+    (found : graph.findNode? node.name = some node) :
+    GraphTrace graph node.name receipt.result.precedence
+      (if node.suffix then receipt.result.precedence else
+        LinearizeState.selectedTail table receipt.result.inheritedSuffix) :=
+  receipt.graphSound valid found
+#+end_src
+
+~receipt.insertSound valid found fresh~ preserves canonical metadata when
+inserting at a fresh node name. Starting with an arbitrary raw cache requires
+its own metadata proof. An audit of an invented result is insufficient;
+the retained ordinary execution receipt binds the proof to the actual result.
+
+~computeNode_checked_iff~ characterizes single-node acceptance on canonical
+parents: ordinary success, duplicate-free output, and ~ParentCompatible~
+are necessary and sufficient. ~auditNode_acceptance_iff~ characterizes the
+executable audit when the exact ordinary success is supplied. Audit errors
+are its own diagnostics; this does not assert complete error-payload equality
+with checked mode. Whole ordinary recursion still needs propagation of these
+conditions and cache provenance at every node. For ordinary graph users,
+~linearizeVerified~ remains the complete checked graph interface.
+
 * Compile once, answer graph questions later
 
 Retain ~order : VerifiedOrder graph root~ after successful compilation.

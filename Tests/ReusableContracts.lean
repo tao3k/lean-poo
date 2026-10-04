@@ -1,4 +1,5 @@
 import LeanPoo.C4.VerifiedOrder
+import LeanPoo.C4.OrdinaryNode
 import LeanPoo.Proof.Reuse
 import LeanPoo.Proof.Batch
 
@@ -20,6 +21,14 @@ example (order : VerifiedOrder graph root) (query : String)
     (found : graph.findNode? query = some node) (declared : constraint ∈ node.parentOrders) :
     constraint.Sublist order.output :=
   order.ancestor_local_order (order.indexAncestors.isAncestor_iff.mp present) found declared
+
+example (receipt : LinearizeState.AuditedNode table node)
+    (valid : LinearizeState.MetadataInvariant graph table)
+    (found : graph.findNode? node.name = some node) :
+    GraphTrace graph node.name receipt.result.precedence
+      (if node.suffix then receipt.result.precedence else
+        LinearizeState.selectedTail table receipt.result.inheritedSuffix) :=
+  receipt.graphSound valid found
 
 example (current : ProofObject Key Value) (update : Patch Key Value)
     (certificate : Certificate current) (obligation : Obligation Key Value)
