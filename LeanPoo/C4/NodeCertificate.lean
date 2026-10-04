@@ -124,4 +124,30 @@ theorem certifyNode_complete (certificate : NodeCertified name orders tails) :
       success, certificate.tailUnique, fresh, bind, Except.bind, pure, Except.pure]
   · simp [NodeCertified.output, same]
 
+/-- The checker result retains the exact claimed inherited tail. -/
+theorem certifyNode_claimed (success : certifyNode name orders tails claimed = .ok certificate) :
+    certificate.selection.output = claimed := by
+  unfold certifyNode certifyNodeUsing at success
+  cases selected : certifyTail tails claimed with
+  | error error => simp [selected, bind, Except.bind] at success
+  | ok selection =>
+    have same : selection.output = claimed := by
+      unfold certifyTail at selected
+      split at selected
+      · split at selected
+        · have equal := Except.ok.inj selected
+          rw [← equal]
+        · simp_all
+      · simp_all
+    cases merged : mergeWithSuffixCertified orders selection.output with
+    | error error => simp [selected, merged, bind, Except.bind] at success
+    | ok ancestry =>
+      simp only [selected, merged, bind, Except.bind] at success
+      split at success
+      · split at success
+        · simp only [pure, Except.pure, Except.ok.injEq] at success
+          rw [← success]; exact same
+        · simp_all
+      · simp_all
+
 end LeanPoo.C4

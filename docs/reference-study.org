@@ -693,3 +693,21 @@ both compiler outputs. Whole-compiler soundness, necessity and exact error
 behavior, and original Ducournau relation equivalence remain open. These
 results close the validation obligation of the preceding receipt, not the
 reverse direction from arbitrary successful runtime output to graph evidence.
+
+* Further C4 closure: execution evidence and accepted-mode simulation
+
+Successful checked node execution now exposes the actual normalized node
+certificate, including output, selected tail, and suffix metadata. Its laws
+supply uniqueness, head, order preservation, and literal tail retention
+without assumed graph evidence. That certificate also proves identical
+ordinary node acceptance; sequential parent resolution transfers this to
+exact resolver cache equality and then checked-to-ordinary top-level output.
+The runtime implementation is unchanged.
+
+The 224-node regression records 120 accepted node computations and 578
+successful resolver simulations across arbitrary finite starting caches.
+A malformed cache permits ordinary repeated-root output but is rejected by
+checked freshness validation, delimiting arbitrary-cache soundness. Original
+graph evidence still requires reverse normalization and cache provenance
+propagation. Whole-graph soundness, the reverse accepted-mode implication,
+full error behavior, and original Ducournau relation equivalence remain open.

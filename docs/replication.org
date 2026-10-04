@@ -1168,3 +1168,45 @@ to ~GraphTrace~ and reachable uniqueness, not whole-compiler soundness or
 an equivalence of all error payloads. Necessity of the policy, the reverse
 successful-execution-to-graph-evidence direction, and original Ducournau
 relation equivalence remain separate obligations.
+
+* Successful checked execution evidence and ordinary simulation receipt
+
+~lake build LeanPoo.C4.ExecutionInvariant~ extracts the actual normalized
+~NodeCertified~ value from successful checked ~computeNode~ execution.
+~certifyNode_claimed~ binds its selected tail to the supplied claim;
+~readSuffix_sound~ binds the actual read to the selected cache projection.
+~computeNode_checked_evidence~ records successful parent and tail collection,
+selection, exact complete output, and both suffix metadata fields. No graph
+derivation or cache invariant is an assumption of these extraction laws.
+
+~computeNode_checked_laws~ derives duplicate-free precedence, exact root head,
+literal selected-tail retention, and preservation of every actually collected
+parent precedence and nonempty local order. ~computeNode_checked_ordinary~
+uses that actual certificate's merger trace to prove the ordinary node
+computation accepts with the exact same result. The existing parent loop
+transfers successful execution sequentially, and
+~resolveNode_checked_ordinary~ derives exact complete-cache simulation for
+arbitrary indices, initial tables, and fuel. ~linearizeChecked_ordinary~
+derives actual top-level ordinary acceptance with identical output from
+checked acceptance alone, without finite graph or uniqueness premises.
+
+~Tests/ExecutionInvariant.lean~ requires
+~EXECUTION-INVARIANT-OK nodes=224 accepted=120 resolved=578~. All 120 checked
+successes among 224 node/cache combinations reproduce the ordinary result;
+578 successful checked resolver queries reproduce cache lookups in ordinary
+mode across 14 graphs, 16 starting caches, and five budgets. The finite cache
+comparison covers the complete four-name test universe, while the generic
+kernel theorem states exact table equality. Top-level checked successes in
+these graphs reproduce ordinary outputs. Seven axiom reports use only
+standard Lean axioms. A malformed-cache guard records ordinary acceptance
+of a repeated root where checked mode rejects root freshness, showing why
+ordinary success on an arbitrary cache cannot imply graph soundness alone.
+Runtime algorithms are unchanged.
+
+This supplies the first execution-to-evidence layer and checked-to-ordinary
+simulation through the actual compiler. The extracted certificate uses
+normalized runtime rows; promoting it to original ~GraphTrace~ requires
+reverse row normalization and cache provenance propagation. Neither whole
+checked-graph soundness nor ordinary-graph soundness is claimed here. Ordinary
+acceptance implying checked acceptance, full error-payload equivalence, and
+original Ducournau relation equivalence remain separate obligations.
