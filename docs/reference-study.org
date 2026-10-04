@@ -864,3 +864,22 @@ error semantics remain open. The external NavierStokesAndEuler checkout
 continues to serve only as reference material, with no integration or build
 dependency. Mapping this path to Ducournau's original relations and measuring
 its cost are distinct tasks.
+
+
+* Exact audited acceptance completeness
+
+The acceptance-completeness gate in the preceding receipt is now closed.
+~computeAuditedNode_checked_complete~ derives an ordinary execution and audit
+receipt from any checked node success on canonical metadata.
+~resolveAuditedNode_checked_complete~ propagates this through the actual
+sequential parent calls at the same fuel, including zero-fuel cache hits.
+Its parent-loop argument recovers canonical metadata from checked success;
+it does not assume a caller root graph trace.
+
+~linearizeAudited_success_iff~ establishes exact successful-output equivalence
+for every graph and root, from the compilers' own empty caches and validation.
+~linearizeAudited_toOption~ and the retained verified-order projection expose
+that guarantee to clients. This supersedes the preceding open acceptance gate;
+complete failure-payload equivalence, measured performance, and mapping to
+the original Ducournau relations remain separate research tasks. Unrestricted
+ordinary soundness remains refuted by the retained suffix-crossing example.

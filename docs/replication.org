@@ -1417,3 +1417,27 @@ This closes successful graph soundness for the audited API. Unrestricted
 ordinary graph soundness remains refuted. Completeness of audited acceptance,
 complete failure semantics, measured performance, and the exact original
 Ducournau relation mapping remain separate research gates.
+
+
+* Audited acceptance completeness and canonical-cache fuel cases
+
+The previously open audited acceptance-completeness gate is closed by the
+reverse node, recursive, and top-level success theorems. Recursive equivalence
+requires canonical initial metadata; top-level equivalence has no caller
+validity or trace premise. Both directions preserve the exact successful
+cache or output. Optional successful-result projections are equal, while
+complete error-payload equivalence is not asserted.
+
+The executable corpus retains all 256 graph families and now also compares
+7168 recursive cases: empty or checked-derived partial parent caches, parent
+or root requests, and fuel 0 through 6. On joint success it compares every
+declared cache entry; on failure it compares rejection without equating error
+payloads. The receipt is
+~AUDITED-RESOLVER-OK families=256 accepted=116 rejected=140 cacheCases=7168~.
+
+All thirteen reported theorems, including seven new completeness/equivalence
+contracts, use only ~propext~, ~Classical.choice~, and ~Quot.sound~. The focused
+module, executable corpus, and generic guide contracts compile successfully.
+The runtime compilers themselves are unchanged in this slice. Original paper
+relation correspondence, complete failure semantics, and performance
+measurement remain open; success equivalence alone is not a speedup receipt.

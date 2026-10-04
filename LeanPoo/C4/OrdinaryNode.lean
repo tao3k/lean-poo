@@ -247,6 +247,23 @@ def computeAuditedNode (table : Table) (node : Node) : Except Error (AuditedNode
     | .error error => .error error
     | .ok _ => .ok ⟨result, ordinary, audited⟩
 
+/-- Every checked node success has a retained ordinary execution and audit
+receipt on canonical metadata. No extra node certificate is supplied. -/
+theorem computeAuditedNode_checked_complete (valid : MetadataInvariant graph table)
+    (checked : computeNode table node true = .ok result) :
+    ∃ receipt, computeAuditedNode table node = .ok receipt ∧ receipt.result = result := by
+  have ordinary := computeNode_checked_ordinary checked
+  have audited := (auditNode_acceptance_iff valid ordinary).mpr checked
+  unfold computeAuditedNode
+  split
+  next error failed => rw [ordinary] at failed; cases failed
+  next actual computed =>
+    have same : actual = result := Except.ok.inj (computed.symm.trans ordinary)
+    subst actual
+    split
+    next error rejected => rw [audited] at rejected; cases rejected
+    next acceptedUnit passed => exact ⟨_, rfl, rfl⟩
+
 /-- Retained receipts establish exact checked acceptance under canonical
 metadata, without rerunning the node merger. -/
 theorem AuditedNode.checked (receipt : AuditedNode table node)

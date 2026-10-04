@@ -14,6 +14,7 @@ example (valid : MetadataInvariant graph table)
   let mut families := 0
   let mut accepted := 0
   let mut rejected := 0
+  let mut cacheCases := 0
   IO.println "AUDITED-RESOLVER-START"
   for p in [[["A"]], [["A", "B"]], [["B", "A"]], [[], ["A"], ["A"], []]] do
     for s in [[["A"]], [["B"]], [["A", "B"]], [["B", "A"]]] do
@@ -24,6 +25,22 @@ example (valid : MetadataInvariant graph table)
             {name := "P", parentOrders := p, suffix := flags % 2 == 1},
             {name := "S", parentOrders := s, suffix := flags / 2 == 1},
             {name := "Root", parentOrders := localOrders}] }
+          let index := nodeIndex graph
+          let .ok partialCache := resolveNode index "Root" "P" {} true graph.nodes.length
+            | throw (IO.userError "canonical partial P cache failed")
+          for before in [({} : Table), partialCache] do
+            for name in ["P", "Root"] do
+              for fuel in List.range (graph.nodes.length + 2) do
+                let checkedCache := resolveNode index "Root" name before true fuel
+                let auditedCache := resolveAuditedNode index "Root" name before fuel
+                match checkedCache, auditedCache with
+                | .error _, .error _ => pure ()
+                | .ok checkedAfter, .ok auditedAfter =>
+                  for declaration in graph.nodes do
+                    unless lookup checkedAfter declaration.name == lookup auditedAfter declaration.name do
+                      throw (IO.userError "canonical cache entries differ across audited and checked resolution")
+                | _, _ => throw (IO.userError "canonical cache success domains differ")
+                cacheCases := cacheCases + 1
           let audited := linearizeAudited graph "Root"
           unless audited.toOption == (linearizeChecked graph "Root").toOption do
             throw (IO.userError "audited and checked successful outputs differ")
@@ -46,7 +63,7 @@ example (valid : MetadataInvariant graph table)
             accepted := accepted + 1
           families := families + 1
           if families % 64 == 0 then IO.println s!"AUDITED-RESOLVER-PROGRESS families={families}"
-  IO.println s!"AUDITED-RESOLVER-OK families={families} accepted={accepted} rejected={rejected}"
+  IO.println s!"AUDITED-RESOLVER-OK families={families} accepted={accepted} rejected={rejected} cacheCases={cacheCases}"
 
 private def crossing : Graph := { nodes := [
   {name := "A"}, {name := "B"}, {name := "P", parentOrders := [["A", "B"]]},
@@ -66,6 +83,13 @@ private def leaf : Graph := {nodes := [{name := "A"}]}
 #guard (linearizeAudited {nodes := [{name := "A"}, {name := "A"}]} "A").toOption.isNone
 #guard (linearizeAudited {nodes := [{name := "A"}, {name := "Unused", parentOrders := [["Unknown"]]}]} "A").toOption == some ["A"]
 
+#print axioms computeAuditedNode_checked_complete
+#print axioms resolveAuditedNode_checked_complete
+#print axioms resolveAuditedNode_success_iff
+#print axioms linearizeAudited_checked_complete
+#print axioms linearizeAudited_success_iff
+#print axioms linearizeAudited_toOption
+#print axioms linearizeAuditedVerified_toOption
 #print axioms resolveAuditedNode_acceptance
 #print axioms resolveAuditedNode_graph_sound
 #print axioms linearizeAudited_accepts_mode

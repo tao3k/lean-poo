@@ -111,6 +111,58 @@ theorem resolveAuditedNode_acceptance (valid : MetadataInvariant graph table)
                 using congrArg Except.ok same
             exact ⟨checked, ordinary, (resolveNode_checked_sound valid checked).1⟩
 
+/-- Auditing loses no successful checked recursion on canonical caches,
+including cache hits at zero fuel and shared parent executions. -/
+theorem resolveAuditedNode_checked_complete (valid : MetadataInvariant graph table)
+    (success : resolveNode (nodeIndex graph) root name table true fuel = .ok ready) :
+    resolveAuditedNode (nodeIndex graph) root name table fuel = .ok ready := by
+  induction fuel generalizing name table ready with
+  | zero =>
+    cases cached : lookup table name with
+    | none => simp [resolveNode, cached] at success
+    | some entry => simpa [resolveNode, resolveAuditedNode, cached] using success
+  | succ fuel ih =>
+    cases cached : lookup table name with
+    | some entry => simpa [resolveNode, resolveAuditedNode, cached, pure, Except.pure] using success
+    | none =>
+      cases indexed : (nodeIndex graph)[name]? with
+      | none => simp [resolveNode, cached, Std.HashMap.get?_eq_getElem?, indexed] at success
+      | some node =>
+        have execution : (do
+          let next ← resolveParents (fun parent before =>
+            resolveNode (nodeIndex graph) root parent before true fuel) (parents node) table
+          let result ← computeNode next node true
+          pure (next.insert name result)) = .ok ready := by
+          simp only [resolveNode, cached, Option.isSome_none, Bool.false_eq_true,
+            ↓reduceIte, Std.HashMap.get?_eq_getElem?, indexed] at success
+          exact success
+        cases parentsDone : resolveParents (fun parent before =>
+            resolveNode (nodeIndex graph) root parent before true fuel) (parents node) table with
+        | error error => simp [parentsDone, bind, Except.bind] at execution
+        | ok next =>
+          have auditedParents := resolveParents_transfer valid
+            (target := fun parent before => resolveAuditedNode (nodeIndex graph) root parent before fuel)
+            (fun _ _ _ _ validBefore done =>
+              ⟨ih validBefore done, (resolveNode_checked_sound validBefore done).1⟩) parentsDone
+          cases computed : computeNode next node true with
+          | error error => simp [parentsDone, computed, bind, Except.bind] at execution
+          | ok result =>
+            obtain ⟨receipt, auditedNode, resultSame⟩ :=
+              computeAuditedNode_checked_complete auditedParents.2 computed
+            have same : next.insert name result = ready := by
+              simpa [parentsDone, computed, bind, Except.bind, pure, Except.pure] using execution
+            simp only [resolveAuditedNode, cached, Option.isSome_none, Bool.false_eq_true,
+              ↓reduceIte, Std.HashMap.get?_eq_getElem?, indexed, auditedParents.1,
+              auditedNode, bind, Except.bind, pure, Except.pure, resultSame, same]
+
+/-- Exact success equivalence of audited and checked recursion. The initial
+cache must be canonical; failure payloads need not coincide. -/
+theorem resolveAuditedNode_success_iff (valid : MetadataInvariant graph table) :
+    resolveAuditedNode (nodeIndex graph) root name table fuel = .ok ready ↔
+      resolveNode (nodeIndex graph) root name table true fuel = .ok ready :=
+  ⟨fun success => (resolveAuditedNode_acceptance valid success).1,
+    resolveAuditedNode_checked_complete valid⟩
+
 /-- Recover the original graph contract for the actual result of an audited
 recursive execution, including executions that start from a canonical cache. -/
 theorem resolveAuditedNode_graph_sound (valid : MetadataInvariant graph table)
@@ -167,6 +219,53 @@ theorem linearizeAudited_accepts_mode (success : linearizeAudited graph root = .
           (LinearizeState.MetadataInvariant.empty graph) checkedDone
         simpa [validated, computed, done, bind, Except.bind, cached, pure, Except.pure] using success
 
+/-- Every successful checked graph compilation is accepted by the audited
+compiler with the same output, starting from its own empty cache. -/
+theorem linearizeAudited_checked_complete (success : linearizeChecked graph root = .ok output) :
+    linearizeAudited graph root = .ok output := by
+  unfold linearizeChecked LinearizeState.linearizeWith at success
+  unfold linearizeAudited
+  cases indexed : (LinearizeState.nodeIndex graph)[root]? with
+  | none => simp [Std.HashMap.get?_eq_getElem?, indexed, bind, Except.bind] at success
+  | some node =>
+    simp only [Std.HashMap.get?_eq_getElem?, indexed, Option.isNone_some,
+      Bool.false_eq_true, ↓reduceIte] at success ⊢
+    generalize declarations : graph.nodes.filter (fun node =>
+      ((LinearizeState.reachable graph (LinearizeState.nodeIndex graph) root).foldl
+        (fun seen name => seen.insert name) ({} : Std.HashSet String)).contains node.name) = nodes at success ⊢
+    cases validated : (Graph.mk nodes).validate with
+    | error error => simp [validated, bind, Except.bind] at success
+    | ok acceptedUnit =>
+      cases computed : LinearizeState.resolveNode (LinearizeState.nodeIndex graph)
+          root root {} true nodes.length with
+      | error error => simp [validated, computed, bind, Except.bind] at success
+      | ok table =>
+        have audited := LinearizeState.resolveAuditedNode_checked_complete
+          (LinearizeState.MetadataInvariant.empty graph) computed
+        obtain ⟨entry, cached, _⟩ := LinearizeState.resolveNode_checked_graph_sound
+          (LinearizeState.MetadataInvariant.empty graph) computed
+        simpa [validated, computed, audited, bind, Except.bind, cached, pure, Except.pure] using success
+
+/-- Audited and checked graph compilers have exactly the same successful
+outputs for every graph and root; there are no caller validity premises. -/
+theorem linearizeAudited_success_iff :
+    linearizeAudited graph root = .ok output ↔ linearizeChecked graph root = .ok output :=
+  ⟨fun success => linearizeAudited_accepts_mode success true, linearizeAudited_checked_complete⟩
+
+/-- Both compilers return the same optional successful result. This allows
+clients to interchange them when diagnostics are intentionally discarded. -/
+theorem linearizeAudited_toOption :
+    (linearizeAudited graph root).toOption = (linearizeChecked graph root).toOption := by
+  cases audited : linearizeAudited graph root with
+  | error error =>
+    cases checked : linearizeChecked graph root with
+    | error other => rfl
+    | ok output =>
+      have impossible := linearizeAudited_checked_complete checked
+      rw [audited] at impossible
+      cases impossible
+  | ok output => rw [(linearizeAudited_success_iff).mp audited]
+
 /-- End-to-end graph soundness of a successful audited compiler execution.
 There are no caller trace, node compatibility, or cache invariant premises. -/
 theorem linearizeAudited_graph_sound (success : linearizeAudited graph root = .ok output) :
@@ -191,5 +290,12 @@ theorem linearizeAuditedVerified_projection :
     (linearizeAuditedVerified graph root).map (·.output) = linearizeAudited graph root := by
   unfold linearizeAuditedVerified
   split <;> simp_all [Except.map]
+
+/-- Retaining the audited verified-order interface loses no checked successful
+output. Errors retain audited diagnostics and are discarded by this projection. -/
+theorem linearizeAuditedVerified_toOption :
+    ((linearizeAuditedVerified graph root).map (·.output)).toOption =
+      (linearizeChecked graph root).toOption := by
+  rw [linearizeAuditedVerified_projection, linearizeAudited_toOption]
 
 end LeanPoo.C4

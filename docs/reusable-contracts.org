@@ -84,6 +84,10 @@ For an advanced client starting from a canonical cache,
 successes and the final ~MetadataInvariant~. These are successful-execution
 contracts; complete error-payload equivalence is not claimed.
 
+~resolveAuditedNode_success_iff valid~ supplies the converse as well: checked
+recursion on the same canonical cache and fuel succeeds exactly when audited
+recursion returns that same cache. Cached zero-fuel hits are included.
+
 Use ~linearizeAuditedVerified graph root~ to retain a ~VerifiedOrder~ with all
 existing ancestry, hash-index, ancestor-order, and suffix contracts. It runs
 the audited compiler and uses erased proofs to supply checked acceptance;
@@ -94,7 +98,32 @@ provide the checked compiler and its exact diagnostics.
 The ordinary compiler alone still accepts the demonstrated suffix-crossing
 counterexample. The audit rejects it. A successful audited execution closes
 the graph soundness path for this API, without asserting unrestricted ordinary
-soundness, measured performance gains, or completeness of audit acceptance.
+soundness or measured performance gains.
+
+* Interchange audited and checked successful results
+
+~linearizeAudited_success_iff~ proves exact success equivalence for every graph,
+root, and output, without caller validity premises. A client that already has
+a checked execution receipt can transfer it directly:
+
+#+begin_src lean
+example (checked : linearizeChecked graph root = .ok output) :
+    linearizeAudited graph root = .ok output := linearizeAudited_checked_complete checked
+#+end_src
+
+For clients intentionally discarding failure diagnostics,
+~linearizeAudited_toOption~ proves the two optional outputs equal.
+The same guarantee is available after retaining a ~VerifiedOrder~:
+
+#+begin_src lean
+example : ((linearizeAuditedVerified graph root).map (·.output)).toOption =
+    (linearizeChecked graph root).toOption := linearizeAuditedVerified_toOption
+#+end_src
+
+Thus choosing ordinary computation plus audits loses no checked successful
+input or output. On failure, retain the original ~Except~ value if the specific
+diagnostic matters: these theorems do not equate error payloads. No performance
+improvement follows from success equivalence alone.
 
 * Compile once, answer graph questions later
 

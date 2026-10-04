@@ -13,6 +13,14 @@ example (success : linearizeAudited graph root = .ok output) :
     ∃ tail, GraphTrace graph root output tail := linearizeAudited_graph_sound success
 
 
+/- A client may choose ordinary computation plus audits without losing any
+checked successful output. Exact failure diagnostics are kept separately. -/
+example (checked : linearizeChecked graph root = .ok output) :
+    linearizeAudited graph root = .ok output := linearizeAudited_checked_complete checked
+
+example : ((linearizeAuditedVerified graph root).map (·.output)).toOption =
+    (linearizeChecked graph root).toOption := linearizeAuditedVerified_toOption
+
 example (order : VerifiedOrder graph root) (query : String)
     (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=
   order.indexAncestors.isAncestor_iff.mp present
