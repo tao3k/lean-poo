@@ -9,29 +9,37 @@ Upstream offers Apache-2.0 or No Problem Bugroff; this translation uses Apache-2
 
 namespace LeanPoo.C4
 
-private abbrev Table := Std.HashMap String Linearization
+/- Named runtime operations supply proof seams for graph indexing and traversal. -/
+namespace LinearizeState
 
-private def lookup (table : Table) (name : String) : Option Linearization :=
+abbrev Table := Std.HashMap String Linearization
+
+def lookup (table : Table) (name : String) : Option Linearization :=
   table.get? name
 
-private def parents (node : Node) : List String :=
+def parents (node : Node) : List String :=
   unique node.parentOrders.flatten
 
-/-- Walk the already computed inherited-suffix chain. -/
-private def suffixReaches (table : Table) (source target : String) : Bool :=
-  let (_, found) := (List.range (table.size + 1)).foldl
-    (fun (current, found) _ =>
-      if found then (current, true)
-      else match current with
-        | none => (none, false)
-        | some name =>
-          if name == target then (current, true)
-          else ((lookup table name).bind Linearization.inheritedSuffix, false))
-    (some source, false)
-  found
+/-- One step through the already computed inherited-suffix chain. -/
+@[inline] def suffixStep (table : Table) (target : String)
+    (state : Option String × Bool) (_ : Nat) : Option String × Bool :=
+  let (current, found) := state
+  if found then (current, true)
+  else match current with
+    | none => (none, false)
+    | some name =>
+      if name == target then (current, true)
+      else ((lookup table name).bind Linearization.inheritedSuffix, false)
+
+def suffixReachesWithFuel (table : Table) (source target : String) (fuel : Nat) : Bool :=
+  ((List.range fuel).foldl (suffixStep table target) (some source, false)).2
+
+/-- Walk the inherited-suffix chain with the actual table-size budget. -/
+def suffixReaches (table : Table) (source target : String) : Bool :=
+  suffixReachesWithFuel table source target (table.size + 1)
 
 /-- Compute one node after all its parents have been computed. -/
-private def computeNode (table : Table) (node : Node) (checked : Bool) :
+def computeNode (table : Table) (node : Node) (checked : Bool) :
     Except Error Linearization := do
   let orders := node.parentOrders.filter (fun order => !order.isEmpty)
   let mut parentResultsRev : List Linearization := []
@@ -85,7 +93,7 @@ private def computeNode (table : Table) (node : Node) (checked : Bool) :
 
 /-- Resolve a node only after its parents, retaining each completed C4 result.
 The remaining node count bounds recursion, including cyclic graphs. -/
-private def resolveNode (index : Std.HashMap String Node) (root name : String)
+def resolveNode (index : Std.HashMap String Node) (root name : String)
     (table : Table) (checked : Bool) : Nat → Except Error Table
   | 0 =>
       if (lookup table name).isSome then .ok table else .error (.cycle root)
@@ -101,14 +109,16 @@ private def resolveNode (index : Std.HashMap String Node) (root name : String)
 
 /-- First declarations own name lookup until duplicate validation reports an
 error; indexing avoids repeated linear searches while discovering reachability. -/
-private def nodeIndex (graph : Graph) : Std.HashMap String Node :=
-  graph.nodes.foldl (fun table node =>
-    if table.contains node.name then table else table.insert node.name node) {}
+@[inline] def indexStep (table : Std.HashMap String Node) (node : Node) : Std.HashMap String Node :=
+  if table.contains node.name then table else table.insert node.name node
+
+def nodeIndex (graph : Graph) : Std.HashMap String Node :=
+  graph.nodes.foldl indexStep {}
 
 /-- Discover each reachable name once in breadth-first order. Every queued
 name comes from the root or one parent edge, so the finite edge count bounds
 the loop even when an edge points to an unknown node. -/
-private def reachable (graph : Graph) (index : Std.HashMap String Node)
+def reachable (graph : Graph) (index : Std.HashMap String Node)
     (root : String) : List String := Id.run do
   let fuel := graph.nodes.foldl (fun total node =>
     total + node.parentOrders.flatten.length) 1
@@ -128,7 +138,7 @@ private def reachable (graph : Graph) (index : Std.HashMap String Node)
   return reversed.reverse
 
 /-- Total finite-graph C4 translation. All iterations have bounds from graph size. -/
-private def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Error (List String) := do
+def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Error (List String) := do
   let index := nodeIndex graph
   if (index.get? root).isNone then
     throw (.unknownNode root)
@@ -141,9 +151,11 @@ private def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Exc
   let some result := lookup table root | throw (.cycle root)
   return result.precedence
 
+end LinearizeState
+
 /-- The ordinary tail-count implementation. -/
 def linearize (graph : Graph) (root : String) : Except Error (List String) :=
-  linearizeWith graph root false
+  LinearizeState.linearizeWith graph root false
 
 /-- Opt-in independent replay and suffix reconstruction for every reachable
 node. Each accepted merge certifies order preservation for all complete parent
@@ -152,6 +164,6 @@ The selected tail is independently checked against all cached parent tails,
 and the prepended node name is checked for freshness. This does not prove
 the graph traversal or cached metadata correct for every graph. -/
 def linearizeChecked (graph : Graph) (root : String) : Except Error (List String) :=
-  linearizeWith graph root true
+  LinearizeState.linearizeWith graph root true
 
 end LeanPoo.C4

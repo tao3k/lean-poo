@@ -768,3 +768,27 @@ The equivalence theorem compares successful lists and rejection domains via
 ~toOption~, not error payloads. Ordinary graph traversal/cache completeness,
 equivalence to Ducournau's original graph relation, and complexity bounds
 remain open.
+
+* Graph traversal index and suffix-walk receipt
+
+~lake build LeanPoo.C4.TraversalInvariant~ checks actual HashMap index lookup
+against first graph declarations, suffix-walk soundness for arbitrary fuel,
+sufficient explicit fuel, strict cache-link decrease, absence of repeated
+path sources, and the actual table-size budget. It also checks graph cache
+provenance preservation through fresh insertion and the ancestry/suffix witness
+returned by a successful walk under that provenance.
+
+~Tests/TraversalInvariant.lean~ prints 14 axiom reports using only standard
+Lean axioms and requires ~TRAVERSAL-INVARIANT-OK~. General examples quantify
+over arbitrary graphs, caches, and pointer paths. A concrete three-key cache
+has a kernel-checked literal-suffix invariant and exercises transitive links,
+self-recognition, missing targets, reversed links, and exact two-versus-three
+round exhaustion. Additional guards exercise an invalid self-cycle and empty
+cache primitives, and distinguish first-write indexing from duplicate graph
+validation.
+
+The walk retains its original HashMap table and ~table.size + 1~ budget;
+named inline operations provide proof seams. No cache population or whole
+graph success theorem is implied: ~computeNode~ result derivations, the
+~mostSpecificSuffix~ selector, parent deduplication, reachable validation, and
+~resolveNode~ preservation/completeness remain separate obligations.

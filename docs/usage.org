@@ -1078,3 +1078,41 @@ completeness of the existing optimized certified path. These are merge-level
 laws; the ordinary graph compiler's traversal and cache invariants are still
 separate proof obligations. No merge complexity or runtime speed bound is
 claimed here.
+
+* Graph index and inherited-suffix walk invariants
+
+~C4.LinearizeState.nodeIndex_lookup~ proves the actual first-write HashMap
+lookup equals ~Graph.findNode?~ for every graph/name, including duplicate
+and missing names. ~nodeIndex_declared~ binds a selected entry to its original
+declaration and name. Ordinary reachable-graph validation still rejects
+reachable duplicate declarations; this lookup theorem does not bypass it.
+
+~SuffixPath table source target steps~ records exact cached inherited-suffix
+pointer lookups. ~suffixReachesWithFuel_sound~ proves every successful actual
+walk has such a path without assuming valid metadata.
+~suffixReachesWithFuel_complete~ reproduces any path when ~steps + 1 ≤ fuel~;
+the extra round recognizes the target. The existing runtime budget is
+~table.size + 1~.
+
+~SuffixCacheInvariant table~ requires cached precedence to start with its
+lookup name, and every inherited-suffix link to point to a cached precedence
+that is a literal suffix of the source precedence's tail. These links strictly
+decrease precedence length. ~SuffixPath.length_bound~ proves path sources
+cannot repeat and are actual table keys, bounding link count by ~table.size~.
+~suffixReaches_iff~ therefore proves runtime success exactly against finite
+pointer reachability under this invariant. ~suffixReaches_preserves~ retains
+the target precedence as a literal suffix of the source precedence.
+Self-recognition occurs before lookup, including in an empty table; this is
+the existing walk primitive's behavior, not graph-root acceptance.
+
+~CacheInvariant graph table~ adds a ~GraphTrace~ for every cached complete
+precedence. The empty table satisfies it. ~CacheInvariant.insert~ proves an
+actual fresh insertion preserves it when the new entry supplies a derivation
+and inherited-link evidence. ~suffixReaches_ancestor~ then connects a successful
+actual walk to original-graph ancestry and a complete target graph derivation.
+
+These are exact index and walk theorems plus a cache insertion preservation
+law. The ordinary compiler's ~computeNode~ and ~resolveNode~ have not yet been
+proved to establish this invariant. Binding ~mostSpecificSuffix~ selection,
+parent deduplication, reachable validation, and recursive table population to
+~GraphTrace~ remains open, as does ordinary graph compiler completeness.

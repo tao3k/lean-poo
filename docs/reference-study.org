@@ -450,6 +450,21 @@ and optimized certified merger are also complete. This closes the optimized
 candidate-merge state invariant; it does not close the ordinary graph
 traversal's ancestry/suffix cache invariant or establish a complexity bound.
 
+The ordinary compiler now exposes named runtime operations in
+~C4.LinearizeState~ for the next traversal proof. ~nodeIndex_lookup~ equates
+its first-write HashMap with the original graph's first declaration lookup.
+The actual inherited-suffix walk is sound for finite pointer paths with any
+budget. Under a literal-suffix cache-link invariant, link lengths strictly
+decrease, visited sources are distinct actual keys, and ~table.size + 1~ is
+proved sufficient. Its acceptance then exactly matches finite pointer
+reachability and retains complete target precedence as a literal suffix.
+~CacheInvariant~ binds cached complete precedence to ~GraphTrace~;
+fresh insertion preserves this property when the new result provides its
+derivation and link evidence. A successful walk through such a cache witnesses
+original-graph ancestry. These laws do not yet prove that ~computeNode~ or
+~resolveNode~ populate a valid cache, nor that ~mostSpecificSuffix~ selection
+matches a graph trace. The ordinary graph compiler's completeness remains open.
+
 * Paper-derived boundaries
 
 The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] gives the constructive object model, not the
