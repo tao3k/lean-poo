@@ -237,3 +237,51 @@ no consumer result or claim needs to change. This is a conditional semantic
 bound, not a measured count of avoided Euler edits. Actual reference migration,
 maintenance hours saved, net source savings, and C4-specific large-library
 benefit remain unestablished. No external integration is required for this study.
+
+* Representation changes through a public observation interface
+
+The [[file:../../Benchmarks/receipts/euler-observation-contracts-2026-10-04.json][observation receipt]] extends the earlier source census without overwriting its
+historical receipt. In the fixed source ~Euler/PacketInitializedResidualEquation.lean~:
+
+| Source declaration / use | Line | Existing source obligation |
+|--------------------------+------+----------------------------|
+| ~toFieldTower_eq_of_path_eq~ | 18 | ~Field P T raw~ and ~Field P T raw'~ have equal paths; their field towers are equal |
+| ~initializedNormalizedField_path_eq~ | 69 | The normalized and coordinate field paths agree |
+| ~initializedNormalizedField_tower_eq~ | 74 | Reuse the path bridge to establish tower equality |
+| ~initializedCorrectionData_eq_coordinate~ | 101 | Reuse tower equality to identify correction data |
+| Residual equation rewrite | 127 | Use correction-data equality before the analytic derivative theorem |
+
+These are existing analytic bridges. This source supplies a concrete semantic
+replacement boundary, not evidence that a new C4 graph is necessary. The source
+has not been elaborated against its external Lean/Mathlib toolchain in this
+workspace. No adapter to its PDE types has been implemented or counted as a
+completed migration.
+
+The previous ~consumer_stable~ requires identical original result families and
+selected functions. That cannot even express differently typed representations.
+The new ~Related~, ~RelatedOn~, ~observe~, ~project_related~, ~observe_congr~, and
+~observed_consumer_stable~ API expresses a weaker sufficient condition: equal
+public observations for each consumer key at every context. Different original
+result types and hidden metadata are allowed. Consumers must use the fixed
+public interface. Equality of paths alone does not preserve a consumer of an
+unrelated hidden field; a tower consumer needs tower equality or the source's
+path-to-tower bridge.
+
+| Capability / benefit | Previous boundary | Implemented boundary | Added cost / evidence |
+|----------------------+-------------------+----------------------+-----------------------|
+| Replace a selected capability's representation type | Exact-factory preservation contract cannot apply | Different result families with equal public observations | Two observation maps and a pointwise compatibility proof; generic kernel contracts |
+| Preserve a consumer and its result claim | Manual use of the particular compatibility lemma | One shared observation consumer is used on both representations; generic claim transport | Consumer must use public observations; local compiled fixture, not measured Euler edits |
+| Preserve dependent context binding | Same context-indexed original family | Different original families, same exact context and public family | Context/key/public type changes are still open; negative elaboration guards |
+| Wrong public observation | No compatibility evidence | Concrete changed path is proved incompatible | Counterexample in the local test |
+| Actual Euler reduction and maintenance time | Unknown | Unknown | Existing upstream bridges remain; no external integration, net line estimate, or hours estimate |
+
+Observation constructs function wrappers and evaluates the maps on each later
+call. It adds a shared module with four general proofs, observation adapters,
+and compatibility obligations. It does not cache values or establish runtime
+improvement. Preparation success is required separately; ~RelatedOn~ alone
+says nothing about absent capabilities or equal error results.
+
+This closes a typed representation-replacement contract, rather than asserting
+arbitrary graph extension invariance or full paper correspondence. A substantial
+reference evaluation still needs a real change, verified consumers of the
+chosen observation, full adapter costs, and before/after edit and build receipts.

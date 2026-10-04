@@ -1654,3 +1654,24 @@ statements, or changed context types. C4 order changes may change requested
 provider selections and therefore fail the preservation premise. The revised
 [[file:use-cases/euler-maintenance-checklist.org][reference evaluation protocol]] measures change propagation and full boundary
 costs; the earlier line fixtures cannot establish a large-library benefit.
+
+* Representation substitution through observations
+
+~Functional.Observation~ allows different provider result families related at
+each exact context/key. ~RelatedOn~ scopes the relation to a consumer checklist;
+~project_related~ transfers it to two successfully prepared views.
+~observe_congr~ and ~observed_consumer_stable~ prove equality of the public
+interface and all its consumers from pointwise observation equality. The
+[[file:../Tests/FunctionalObservation.lean][compiled fixture]] transports arbitrary result propositions and rejects changed
+public values and wrong-context witnesses. Kernel reports use ~propext~ for
+selection and ~Quot.sound~ for function extensionality, with no ~sorryAx~ or
+native decision axiom.
+
+This realizes a bounded substitutability contract in the implementation:
+representation families may differ, while the consumer's public observation
+family, keys, and contexts remain fixed. It does not prove claims about hidden
+fields, arbitrary implementation relations, availability, graph isomorphism,
+or changed context types. The [[file:use-cases/euler-maintenance-checklist.org][reference analysis]] identifies existing Euler
+path/tower/data equality bridges; no upstream analytic adapter or runtime
+speedup is established, and no C4 precedence requirement follows merely from
+this interface contract.

@@ -518,3 +518,44 @@ This prevents unrelated source edits from requiring consumer-expression or
 consumer-theorem changes under the stated conditions. It does not stop Lean
 from recompiling modules whose imports changed, nor establish an elapsed-time
 improvement.
+
+* Preserve an observation interface across representation changes
+
+Import ~LeanPoo.Functional.Observation~ when implementations expose different
+representation types but share a public semantic interface. Declare
+~Observed : Context → Key → Type~, with two maps
+~expose : ∀ c k, Value c k → Observed c k~ and
+~reveal : ∀ c k, Other c k → Observed c k~. Give consumers only the observed
+factories. Values, representations, and contexts remain explicitly indexed;
+the library does not select a suitable observation for the application.
+
+~Requirements.Related relation keys left right~ records pointwise compatibility
+of retained functions, allowing different original result families.
+~RelatedOn provider other needs relation~ declares this condition only for
+selected pairs of factories on ~needs~. It does not imply availability or
+missing-key error equivalence. ~project_related~ derives related narrow views
+from two successful preparations, with only the declared keys in its premise.
+It also handles distinct source lists and repeated consumer keys.
+
+~Requirements.observe expose retained~ constructs the public factories without
+invoking the original factories or the observation map. Invocation later runs
+the original function and its map. Observation can have a cost; retain these
+public factories before repeated use. No observation is memoized or assumed
+constant-time. If the two maps yield equal observations at every supplied
+context, ~observe_congr~ proves the public factory tuples equal and
+~observed_consumer_stable~ preserves any consumer result. This includes results
+that are themselves context functions and transfers propositions about them.
+The [[file:../Tests/FunctionalObservation.lean][compiled test]] exercises distinct representations, dependent guards, a deleted
+unrequested capability, reordered source lists, and repeated consumer keys.
+
+Only exposed observations are preserved. A claim about hidden metadata cannot
+be transferred from equality of paths alone. If a consumer needs a bound or
+proof witness, expose the relevant property or prove its relationship to the
+observation explicitly. The test rejects a changed public value and use of a
+witness from a different context. Context/key/public observation type changes
+still need explicit typed adapters. Original C4 selections need not be equal;
+the selected implementations must satisfy the stated pointwise relation.
+
+The Euler reference already contains a path-to-field-tower bridge. Reusing it
+as compatibility evidence would be application-owned; no external adapter or
+large-library migration has been compiled here. See the [[file:use-cases/euler-maintenance-checklist.org][research checklist]].

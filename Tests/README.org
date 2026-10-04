@@ -55,3 +55,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalAccess.lean][FunctionalAccess]] checks named access under successful checklist insertion/reordering/repetition, exact selected-provider provenance, positional type rejection, and proposition-valued proof adapters.
 
 - [[file:FunctionalView.lean][FunctionalView]] checks projection, arbitrary consumer/result-claim transport, unrelated provider edits and deletion, independently prepared small lists, and preserved dependent witnesses; four kernel axiom reports use only propext.
+
+- [[file:FunctionalObservation.lean][FunctionalObservation]] checks public consumers and claim transport across distinct result families, repeated/reordered capability lists, changed-public-value rejection, hidden-key/wrong-context boundaries, and four standard kernel axiom reports.

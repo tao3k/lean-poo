@@ -20,6 +20,27 @@ def git(reference, *args):
     return subprocess.check_output(["git", "-C", str(reference), *args])
 
 
+def observation_bridge(reference):
+    relative = "Euler/PacketInitializedResidualEquation.lean"
+    raw = (reference / relative).read_bytes()
+    text = raw.decode()
+    names = ["toFieldTower_eq_of_path_eq", "initializedNormalizedField_path_eq",
+             "initializedNormalizedField_tower_eq", "initializedCorrectionData_eq_coordinate"]
+    declarations = {}
+    for name in names:
+        rows = [i for i, row in enumerate(text.splitlines(), 1)
+                if re.match(r"theorem " + re.escape(name) + r"\b", row)]
+        if len(rows) != 1:
+            raise ValueError(f"Expected one declaration of {name}")
+        declarations[name] = rows[0]
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(),
+            "declarations": declarations,
+            "scope": "Existing source bridge: path equality implies field-tower equality; correction-data equality is used by the residual identity",
+            "external_lean_compilation": False,
+            "proposed_contract": "Different representation families, fixed context/key/public observation family, pointwise observation equality on declared consumer keys",
+            "euler_adapter_implemented": False}
+
+
 def study(reference):
     if git(reference, "rev-parse", "HEAD").decode().strip() != PIN:
         raise ValueError("Reference pin mismatch")
@@ -51,9 +72,10 @@ def study(reference):
             matches = [i for i, row in enumerate(rows, 1) if pattern.search(row)]
             if matches:
                 mentions[name].append({"file": relative, "lines": matches})
-    local = ["LeanPoo/Functional/View.lean", "Tests/FunctionalView.lean"]
+    local = ["LeanPoo/Functional/View.lean", "Tests/FunctionalView.lean",
+             "LeanPoo/Functional/Observation.lean", "Tests/FunctionalObservation.lean"]
     return {
-        "schema": "lean-poo.euler-change-surface.v1",
+        "schema": "lean-poo.euler-change-surface.v2",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
                       "tracked_lean_files": len(files), "physical_lines": lines,
                       "files_by_top_level": dict(sorted(groups.items())),
@@ -63,8 +85,9 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "observation_bridge": observation_bridge(reference),
         "local_contract": {"files": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in local},
-                           "scope": "arbitrary consumers; equal factories on declared keys; both source preparations successful; fixed Context/Key/Value types",
+                           "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types",
                            "runtime_benchmark": False},
         "unmeasured": {"actual_euler_consumers_migrated": 0, "net_lines_saved": None,
                        "maintenance_hours_saved": None, "affected_euler_consumers_avoided": None},

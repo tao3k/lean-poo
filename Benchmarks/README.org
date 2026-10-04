@@ -50,3 +50,9 @@ hashes of the local projection contract and test. It does not resolve Lean
 references or measure affected consumers, source savings, or runtime. It is
 optional reference research and is not a CI dependency. The [[file:../docs/use-cases/euler-maintenance-checklist.org][evaluation protocol]]
 now prioritizes real change fanout and complete migration costs.
+
+The current inventory script emits schema ~lean-poo.euler-change-surface.v2~,
+adding hashed source locations for existing path/tower/correction-data bridges
+and the typed observation library/test. The historical v1 receipt is retained;
+[[file:receipts/euler-observation-contracts-2026-10-04.json][the v2 receipt]] is an interface-contract study, not a compiled Euler adapter or
+measurement of avoided consumer edits. The reference tool remains outside CI.
