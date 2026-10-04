@@ -905,3 +905,44 @@ These conclusions are relative to the existing original ~GraphTrace~ relation.
 Mapping to Ducournau's paper, finer failure-phase semantics, and measured cost
 remain independent. The external Euler checkout remains reference material,
 with no integration or build dependency.
+
+
+* Paper properties and retained order relations
+
+Primary comparison: Barrett et al.,
+[[https://opendylan.org/_static/c3-linearization.pdf][A Monotonic Superclass Linearization for Dylan]] (1996), printed page 3
+(PDF page 3), defines local precedence across descendants and monotonicity
+as preservation of superclass orders. Its extended precedence graph is a
+separate construction (printed pages 8–9).
+
+The author's C4 account is the source-pinned POOF draft
+~.data/poof/ltuo_07_inheritance_mixin_single_multiple_or_optimal.scrbl~ at
+~9affa8fbbb4f12cbd98cb97f8b8b84474fc39429~. The ~C4~ section explicitly
+exempts suffix specifications and their ancestors from extended precedence;
+it does not exempt them from monotonicity. Thus leftmost legal candidate
+selection is not, by itself, a proof of the original extended precedence
+relation or its suffix exemption. The original 1994 Ducournau paper has not
+been fully inspected in this study.
+
+| Property | Lean contract for retained verified results | Remaining boundary |
+|----------+--------------------------------------------+--------------------|
+| Node before its ancestors | ~GraphTrace.inheritance_precedes~, ~VerifiedOrder.inheritance_precedes~ | Distinct names; exact original graph paths |
+| Reachable declared local order | ~VerifiedOrder.ancestor_local_order~, ~local_precedes~ | Original rows may encode several partial constraints |
+| Ancestor order preserved | ~VerifiedOrder.ancestor_order~, ~monotone_precedes~ | Same graph; independently retained ancestor result identified by trace uniqueness |
+| Marked ancestry is a literal suffix | ~VerifiedOrder.ancestor_suffix~ | Existing stronger graph contract |
+| Extended precedence graph | No graph-level EPG theorem yet | Formalize maximal common subclasses, directed constraints, cycles, and C4 suffix exemption |
+| Shape determinism | No graph-isomorphism theorem yet | Renaming plus ordered graph structure; name-insensitive examples are insufficient |
+
+~LeanPoo/C4/OrderRelation.lean~ exposes executable pair queries backed by the
+first three contracts. ~Precedes~ means an ordered two-element sublist;
+strictness follows from the retained order's uniqueness, rather than an
+assumption about arbitrary lists. A true query proves both names are graph
+ancestors. The monotonic client theorem consumes existing verified orders and
+never reruns either compiler.
+
+This establishes concrete property correspondence, not full C3/C4 algorithm
+or Ducournau relation equivalence. In particular the ordinary suffix-crossing
+counterexample above still reverses an ancestor constraint. The paper's
+suffix exemption cannot be used to remove that monotonicity obligation.
+Verified checked/audited results retain it by construction. Performance
+measurements and external Euler code reduction remain separate work.

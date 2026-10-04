@@ -34,6 +34,7 @@ check-merge: check-types
     lake build LeanPoo.C4.AuditedResolver
     lake build LeanPoo.C4.Diagnostics
     lake build LeanPoo.C4.VerifiedOrder
+    lake build LeanPoo.C4.OrderRelation
     lake build LeanPoo.Functional.Assembly
 
 # Check the C4 rewrite and its imports.
@@ -232,6 +233,7 @@ check-tests: check-proof
     lake env lean Tests/AuditedResolver.lean
     lake env lean Tests/Diagnostics.lean
     lake env lean Tests/VerifiedOrder.lean
+    lake env lean Tests/OrderRelation.lean
     lake env lean Tests/ReusableContracts.lean
     lake env lean Tests/FunctionalAssembly.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean

@@ -1474,3 +1474,34 @@ native-evaluation proof axiom or admitted proof is used.
 Unqualified complete error-payload equivalence is refuted by the runtime
 witness. More detailed failure-phase characterization, original paper relation
 correspondence, and performance measurement remain separate research gates.
+
+
+* Retained precedence queries and paper property correspondence
+
+~LeanPoo/C4/OrderRelation.lean~ adds a list-scanning Boolean precedence query
+on ~VerifiedOrder~. Its kernel contracts establish ordered-pair equivalence,
+self rejection, original ancestry of both names, inherited local pairs,
+monotonic transfer from a retained ancestor order, and inheritance precedence
+for any reachable node. The latter is derived directly from graph coverage,
+then transported into the root order. No fresh graph compilation is required
+by these queries or client proofs.
+
+~lake build LeanPoo.C4.OrderRelation~ and
+~lake env lean Tests/OrderRelation.lean~ pass. The regression checks all 256
+five-node families from the audited resolver corpus: 116 verified successes,
+4176 pair queries against an independent membership/position oracle, and
+1516 true ancestor pairs retained in the root. It also checks all reachable
+local pairs and distinct inheritance pairs; self and missing queries occur
+in the positional corpus. Counts are executable receipts, not an exhaustive
+proof over arbitrary graphs. The generic theorems supply that proof boundary.
+
+The eight axiom reports show ~Precedes.included~ is axiom-free and the other
+seven use only ~propext~, ~Classical.choice~, and ~Quot.sound~. No ~sorryAx~ or
+native evaluation axiom is introduced. ~Tests/ReusableContracts.lean~ compiles
+the consumer guide's monotonic, local, inheritance, and membership examples.
+
+[[file:reference-study.org::*Paper properties and retained order relations][The paper correspondence table]] records the primary C3 source and pinned C4
+draft. Local and monotonic order properties now have query-facing contracts;
+graph EPG correspondence, C4's suffix exemption within that relation, and
+shape-isomorphism invariance remain open. No measured speedup or upstream
+Euler integration is claimed.

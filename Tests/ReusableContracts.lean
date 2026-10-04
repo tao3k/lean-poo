@@ -1,4 +1,5 @@
 import LeanPoo.C4.VerifiedOrder
+import LeanPoo.C4.OrderRelation
 import LeanPoo.C4.OrdinaryNode
 import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
@@ -45,6 +46,23 @@ example (order : VerifiedOrder graph root) (query : String)
     (found : graph.findNode? query = some node) (declared : constraint ∈ node.parentOrders) :
     constraint.Sublist order.output :=
   order.ancestor_local_order (order.indexAncestors.isAncestor_iff.mp present) found declared
+
+example (order : VerifiedOrder graph root)
+    (ancestorOrder : VerifiedOrder graph ancestor) (path : Ancestor graph ancestor root)
+    (before : ancestorOrder.precedes left right = true) : order.precedes left right = true :=
+  order.monotone_precedes ancestorOrder path before
+
+example (order : VerifiedOrder graph root) (reachable : Ancestor graph node root)
+    (path : Ancestor graph base node) (different : base ≠ node) :
+    order.precedes node base = true := order.inheritance_precedes reachable path different
+
+example (order : VerifiedOrder graph root) (path : Ancestor graph node.name root)
+    (found : graph.findNode? node.name = some node) (declared : constraint ∈ node.parentOrders)
+    (before : Precedes constraint left right) : order.precedes left right = true :=
+  order.local_precedes path found declared before
+
+example (order : VerifiedOrder graph root) (accepted : order.precedes left right = true) :
+    Ancestor graph left root ∧ Ancestor graph right root := order.precedes_members accepted
 
 example (receipt : LinearizeState.AuditedNode table node)
     (valid : LinearizeState.MetadataInvariant graph table)

@@ -204,6 +204,48 @@ Install it with a local ~letI~ when a conditional needs a proof in its true or
 false branch. This decision follows the executable hash query; it does not
 introduce a classical, noncomputable decision procedure.
 
+* Query precedence and reuse its proof
+
+Import ~LeanPoo.C4.OrderRelation~ and retain ~order : VerifiedOrder graph root~.
+~order.precedes left right~ answers whether the first name occurs before the
+second in this exact retained result. It scans the list once, without another
+compilation or graph traversal. It is not a hash lookup; no timing improvement
+is claimed. Missing names and self comparison return ~false~.
+
+~precedes_iff~ turns a true query into ~Precedes order.output left right~,
+an ordered two-element sublist. ~precedes_members~ proves that both names are
+original graph ancestors. For a resolver or handler pipeline, this lets a
+consumer require an earlier provider and retain the proof alongside selection.
+
+To reuse an ancestor's comparison in a descendant on the same graph:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root)
+    (ancestorOrder : VerifiedOrder graph ancestor) (path : Ancestor graph ancestor root)
+    (before : ancestorOrder.precedes left right = true) : order.precedes left right = true :=
+  order.monotone_precedes ancestorOrder path before
+#+end_src
+
+The caller supplies two retained results, not fresh compilation executions.
+The theorem uses uniqueness of their original graph derivations to identify
+the ancestor result, then transports its comparison through the root's
+ancestor sublist. This does not transport an order across an edited graph.
+
+~order.local_precedes path found declared before~ transports a pair from any
+reachable declaration's original constraint. ~order.inheritance_precedes~
+places a reachable node before each distinct ancestor of that node:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (reachable : Ancestor graph node root)
+    (path : Ancestor graph base node) (different : base ≠ node) :
+    order.precedes node base = true := order.inheritance_precedes reachable path different
+#+end_src
+
+These apply to verified checked or audited results, including retained suffix
+orders. They do not certify arbitrary ordinary compiler outputs. The
+[[file:reference-study.org::*Paper properties and retained order relations][paper correspondence table]] separates these order contracts from the
+still-open extended precedence graph and shape-isomorphism claims.
+
 * Preserve caller ordering and inherited tails
 
 ~order.local_order~ transports a declared root constraint into the actual
