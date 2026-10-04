@@ -727,3 +727,25 @@ Recursive execution-to-cache provenance and child-key freshness through parent
 resolution remain integration obligations before whole checked-graph soundness.
 Whole ordinary-graph soundness, the reverse accepted-mode implication, complete
 error behavior, and original Ducournau relation equivalence remain separate.
+
+* Further C4 closure: successful checked graph compilation
+
+~ResolverSoundness~ propagates canonical metadata and cache growth along
+actual successful checked parent recursion. New keys are restricted to
+ancestors of the requested node. A successful node's original graph trace
+excludes the current root from its ancestry, which proves parent recursion
+left that root key fresh. Actual insertion then preserves strong metadata.
+~linearizeChecked_graph_sound~ establishes an original graph trace for every
+successful top-level checked result without caller evidence premises.
+
+~VerifiedOrder~ exposes that contract through one checked compilation and
+proof-erased result fields. Its ancestry hash index reuses exact graph
+coverage for executable and proof-producing queries. ~Functional.Assembly~
+selects typed context-dependent factories with graph-backed provider
+provenance. The source-pinned [[file:use-cases/navier-stokes-euler.org][Euler budget study]] identifies a real
+factory boundary, while separating the compiled generic interface experiment
+from the remaining upstream migration and code-reduction measurements.
+
+Original-graph checked soundness is now proved. Ordinary-to-checked acceptance,
+whole ordinary-graph soundness, complete cross-mode error behavior, and the
+original Ducournau relation equivalence remain open.

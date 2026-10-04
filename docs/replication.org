@@ -1254,3 +1254,54 @@ resolver preservation still needs cache provenance propagation and a proof
 that parent recursion leaves each computed node key fresh. Whole checked and
 ordinary graph soundness, ordinary-to-checked acceptance, complete error
 behavior, and original Ducournau graph relation equivalence remain open.
+
+* Checked resolver soundness and reusable factory interfaces receipt
+
+~resolveParents_sound~ recovers canonical metadata, retained entries, and
+parent availability from actual successful execution. It assumes preservation
+only for successful parent calls. ~resolveNode_checked_sound~ applies fuel
+induction to the real resolver, including zero-fuel cache hits. Cache growth
+permits only graph ancestors of the requested name. During a miss, parent
+growth permits ancestors of actual direct parents; checked node execution
+supplies the original root trace. Any introduction of the root during parent
+resolution would put that root in its own ancestry, contradicting freshness.
+The resulting fresh insertion preserves the strong invariant.
+
+~resolveNode_checked_graph_sound~ extracts original graph evidence for the
+actual final cached entry. ~linearizeChecked_graph_sound~ starts from the
+empty invariant and proves an original ~GraphTrace~ for successful top-level
+checked output. No root derivation, graph-name uniqueness, validation receipt,
+or caller cache invariant is a premise of that top-level theorem.
+
+~linearizeVerified~ retains that success and existential graph derivation in
+~VerifiedOrder~. All contract fields are proofs and erase at runtime. The
+wrapper performs one checked compilation; it does not call ~reconstruct~.
+~linearizeVerified_projection~ preserves exact checked output and error.
+Public contracts expose ordinary output equality, uniqueness, root head,
+size bound, ancestor coverage, original local ordering, and flagged ancestor
+tails. ~indexAncestors~ builds a retained ~Std.HashSet~ whose Boolean and
+~Decidable~ queries are proved equivalent to original graph ancestry.
+
+~Tests/VerifiedOrder.lean~ requires
+~VERIFIED-ORDER-OK families=512 accepted=192~. Every accepted graph agrees with
+independent original reconstruction. The family covers cyclic/self edges,
+missing references, repeated/empty parent rows, local ordering, and suffix
+flags. Indexed, list, and proof-producing ancestry decisions agree. Guards
+check reachable-only validation and exact unknown-root failure.
+
+~Functional.Assembly~ selects context-indexed factories without applying them.
+Provider-origin and exact application theorems expose reusable contracts.
+~Tests/FunctionalAssembly.lean~ checks typed witnesses across changed contexts,
+including rejection of automatic witness transfer, overrides, missing
+capabilities, and transparent application. ~Tests/ReusableContracts.lean~
+compiles the guide's consumer contracts. ~Examples/ContextualFactories.lean~
+binds the proposed Euler provider topology to arbitrary actual mathematical
+result types; it does not import the upstream analytic proof dependency tree.
+
+The source clone is pinned at ~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~.
+Upstream compilation under its RC2 toolchain, proof-consumer equivalence,
+net source reduction, and performance gains require the separate experiment
+described in [[file:use-cases/navier-stokes-euler.org][the Euler study]]. Whole checked soundness relative to original
+~GraphTrace~ is established here; whole ordinary soundness, reverse mode
+acceptance, complete cross-mode error semantics, and the original Ducournau
+relation equivalence remain unproved.

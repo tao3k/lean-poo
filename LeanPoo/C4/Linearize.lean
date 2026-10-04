@@ -191,8 +191,9 @@ def linearize (graph : Graph) (root : String) : Except Error (List String) :=
 node. Each accepted merge certifies order preservation for all complete parent
 and local inputs, and retention of the inherited tail as an actual suffix.
 The selected tail is independently checked against all cached parent tails,
-and the prepended node name is checked for freshness. This does not prove
-the graph traversal or cached metadata correct for every graph. -/
+and the prepended node name is checked for freshness. `ResolverSoundness`
+proves that successful execution yields a trace on the original graph;
+`linearizeVerified` exposes reusable guarantees to clients. -/
 def linearizeChecked (graph : Graph) (root : String) : Except Error (List String) :=
   LinearizeState.linearizeWith graph root true
 

@@ -1,0 +1,117 @@
+#+TITLE: Reusable API contracts
+
+This guide starts from application tasks and the guarantees clients can use.
+The generic Lean snippets are compiled in [[file:../Tests/ReusableContracts.lean][ReusableContracts]].
+[[file:../Examples/README.org][Examples]] shows complete scenarios; this page explains how to choose and
+combine reusable library interfaces.
+
+* Choose the compilation result
+
+| Need | Interface | Contract and cost |
+|------+-----------+-------------------|
+| An executable precedence | ~C4.linearize~ | Ordinary finite compiler; returns ~Except Error (List String)~. |
+| Independent checks at each reachable node | ~C4.linearizeChecked~ | Successful output has an original ~GraphTrace~, by ~linearizeChecked_graph_sound~. |
+| Retain that result with proofs for client code | ~C4.linearizeVerified~ | One checked compilation; returns ~VerifiedOrder graph root~. Proof fields erase at runtime. |
+| Repeated ancestry queries | ~order.indexAncestors~ | One hash-set construction from the retained order, followed by hash-set queries. |
+| Independent full graph reconstruction | ~C4.linearizeCertified~ | Ordinary compilation plus separate reconstruction; shared parent work may repeat. |
+
+~linearizeVerified_projection~ proves exact output and error preservation
+relative to ~linearizeChecked~. The new wrapper does not independently replay
+the graph a second time. It validates the root's reachable declarations;
+unreachable duplicate names or missing references do not become global schema
+errors. None of these interfaces proves equivalence with the original
+Ducournau relation or establishes ordinary-to-checked acceptance.
+
+* Compile once, answer graph questions later
+
+Retain ~order : VerifiedOrder graph root~ after successful compilation.
+~order.head~, ~nodup~, ~length_bound~, and ~compiled~ expose the head,
+uniqueness, graph-size bound, and equality with the ordinary compiler.
+~covers~ proves exact ancestry membership, including the root itself.
+
+For occasional queries, ~order.isAncestor query~ scans the retained list.
+For many queries, retain ~index := order.indexAncestors~ and use
+~index.isAncestor query~. Both return a Boolean with an ~isAncestor_iff~
+theorem. Neither needs another compilation or graph traversal.
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (query : String)
+    (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=
+  order.indexAncestors.isAncestor_iff.mp present
+#+end_src
+
+~index.decideAncestor query~ supplies ~Decidable (Ancestor graph query root)~.
+Install it with a local ~letI~ when a conditional needs a proof in its true or
+false branch. This decision follows the executable hash query; it does not
+introduce a classical, noncomputable decision procedure.
+
+* Preserve caller ordering and inherited tails
+
+~order.local_order~ transports a declared root constraint into the actual
+returned precedence. ~order.ancestor_order~ supplies an ancestor's complete
+derived order as a sublist. ~order.ancestor_suffix~ strengthens this to a
+literal suffix for an ancestor declared with ~suffix := true~.
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (found : graph.findNode? root = some node)
+    (declared : constraint ∈ node.parentOrders) : constraint.Sublist order.output :=
+  order.local_order found declared
+#+end_src
+
+These proofs refer to exact original declarations and every original parent
+edge, even when runtime normalization removes repeated edges and empty rows.
+Applications can use them for ordered handler families, resolver pipelines,
+or inherited specifications without reproving the C4 merge algorithm.
+
+* Assemble context-dependent mathematical factories
+
+Import ~LeanPoo.Functional.Assembly~. A ~Factory Context Result~ is
+~(context : Context) → Result context~. A ~Provider Context Key Value~
+maps a typed capability key to an optional factory. The result type can
+include data and witnesses depending on the supplied context.
+
+~Functional.assemble order providers~ chooses the first provided factory for
+each key in the verified precedence. Selection returns function values; it
+does not invoke factories. Resolve a capability once, retain that function,
+and apply it to each context where its type permits. Missing capabilities
+remain ~none~. ~assemble_origin~ proves the selected provider is an original
+graph ancestor. ~apply_selected~ proves application uses the exact selected
+function and supplied context.
+
+Use one ~Context~ for mutually dependent source data, radius choices, and
+their proof witnesses. Give the value family the type ~Context → Key → Type~.
+If changing a parameter changes the required theorem, the factory must supply
+the witness at the new indexed type. C4 selection supplies precedence and
+provider provenance; the mathematical contract comes from this result type.
+It does not automatically transport proofs across changed data.
+
+The [[file:use-cases/navier-stokes-euler.org][Euler budget study]] identifies actual upstream factory call sites.
+[[file:../Examples/ContextualFactories.lean][ContextualFactories]] shows the provider boundary with arbitrary
+context-indexed mathematical types and a residual-only override.
+
+* Reuse proofs after an unrelated change
+
+~Proof.Obligation~ declares a predicate and the dependencies sufficient to
+transport its proof. ~Patch.frame~ proves that untouched keys retain their
+values. ~Proof.reuse~ combines those existing contracts:
+
+#+begin_src lean
+example (current : ProofObject Key Value) (update : Patch Key Value)
+    (certificate : Certificate current) (obligation : Obligation Key Value)
+    (owned : obligation ∈ current.obligations) (safe : unaffected obligation update) :
+    obligation.holds (append current update).state :=
+  reuse current update certificate obligation owned safe
+#+end_src
+
+~Proof.close~ builds the next certificate from the old certificate plus
+proofs for affected old obligations and newly added obligations. The stability
+and dependency contracts are premises, not facts inferred from a function's
+source code. A change to viscosity, geometry, or forcing may affect many
+obligations and cannot be certified as unrelated merely by choosing a new
+provider name.
+
+For several writes, ~Patch.setMany~ preserves dependent key types and uses
+last-write semantics. ~Patch.setMany_last~ exposes that guarantee.
+~CertifiedObject.applyRevision~ connects this proof workflow to the object's
+checked finite change footprint when the caller supplies its resolver
+alignment and discharges the pending obligations.

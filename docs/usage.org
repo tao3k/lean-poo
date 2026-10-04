@@ -2,6 +2,8 @@
 
 The object workflow is in [[file:use-case.md][the PO use case]].
 This page is a compact map of the current Lean API.
+For task-oriented choices and generic proof contracts, see
+[[file:reusable-contracts.org][Reusable API contracts]].
 
 * Build an object
 

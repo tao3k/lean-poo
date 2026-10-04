@@ -29,6 +29,9 @@ check-merge: check-types
     lake build LeanPoo.C4.ExecutionInvariant
     lake build LeanPoo.C4.CertificateExpansion
     lake build LeanPoo.C4.NodeSoundness
+    lake build LeanPoo.C4.ResolverSoundness
+    lake build LeanPoo.C4.VerifiedOrder
+    lake build LeanPoo.Functional.Assembly
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -164,6 +167,7 @@ check-example: check-compose
     lake env lean Examples/ObjectDefinition.lean
     lake env lean Examples/NestedObjectDefinition.lean
     lake env lean Examples/SpecificationComposition.lean
+    lake env lean Examples/ContextualFactories.lean
     lake env lean Examples/SharedFamily.lean
     lake env lean Examples/Renaming.lean
     lake env lean Examples/ClassMigration.lean
@@ -221,6 +225,9 @@ check-tests: check-proof
     lake env lean Tests/ValidationInvariant.lean
     lake env lean Tests/ExecutionInvariant.lean
     lake env lean Tests/NodeSoundness.lean
+    lake env lean Tests/VerifiedOrder.lean
+    lake env lean Tests/ReusableContracts.lean
+    lake env lean Tests/FunctionalAssembly.lean
     timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean
