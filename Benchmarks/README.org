@@ -64,3 +64,11 @@ Run logs belong in the system temporary directory, such as ~/tmp/~ or the
 host's ~$TMPDIR~. The repository ignores ~*.log~ at every depth. Preserve stable
 benchmark and test evidence as JSON receipts, with source hashes, measurement
 scope, and units; do not retain log files as benchmark artifacts.
+
+
+The [[file:receipts/euler-context-reindex-2026-10-04.json][context snapshot]] adds the two correction-data input blocks and hashes of
+~Functional.Reindex~ and its compiled test. Its schema remains
+~lean-poo.euler-change-surface.v1~. Distinct initialized-history and forward
+zero-history obligations are recorded as projection/analytic proof gates;
+shared parameter names do not establish provider interchangeability. The local
+64-case contract is not a runtime measurement or avoided-Euler-edit count.

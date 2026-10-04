@@ -59,3 +59,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalObservation.lean][FunctionalObservation]] checks public consumers and claim transport across distinct result families, repeated/reordered capability lists, changed-public-value rejection, hidden-key/wrong-context boundaries, and four standard kernel axiom reports.
 
 - [[file:FunctionalTransport.lean][FunctionalTransport]] connects observation consumers to dependent evidence migration; checks payload/guard preservation, identity/composition/roundtrip, Prop and PLift reuse, missing-equality/wrong-context rejection, and four kernel axiom reports.
+
+- [[file:FunctionalReindex.lean][FunctionalReindex]] checks complete-provider and checklist context projection, exact first errors in 64 preparations, two outer contexts, dependent results and old proof reuse; rejects unrelated context claims and reports five kernel axiom dependencies.

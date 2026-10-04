@@ -324,3 +324,34 @@ This closes the local chain from provider selection through public observations
 and consumer data equality to dependent evidence reuse. The graph acceptance,
 EPG correspondence, changed-context/statement adapters, and actual reference
 migration gates remain separate.
+
+* Context changes without rewriting each capability and old proof
+
+The [[file:../../Benchmarks/receipts/euler-context-reindex-2026-10-04.json][context receipt]] retains schema 1 and hashes both reference input blocks and
+the compiled local API/test. The initialized correction input block at
+~Euler/PacketInitializedCorrectionData.lean:18–21~ includes time ~τ~, its guards
+and dependent history ~B~. The forward input block at
+~Euler/PacketForwardInitializedCorrectionData.lean:18–20~ supplies a zero-history
+construction through different definitions. Their shared names are a useful
+boundary-design reference, not evidence of interchangeable analytic providers.
+A projection to the initialized context must actually supply the history and
+its time-indexed guards; the forward context alone does not establish this.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~reindexProvider~ and ~select_reindex~ | Adapt the whole provider; preserve precedence selection | One complete typed context projection; factory wrappers |
+| ~assemble_reindex~ | Reuse the existing verified C4 order | Graph/provider names fixed; no graph extension result |
+| ~Requirements.reindex~ and ~prepare_reindex~ | Reuse one checklist and preserve exact first missing item | Linear wrapper construction over retained factories; no individual handwritten ~require~ additions |
+| ~projectedResults~ and ~build_reindex~ | Preserve the exact projected dependent result tuple | Explicit type cast API; old factory computations retained |
+| Existing theorem consumer via ~Factory.reindex~ | Reuse old proof bodies at the projected context | Claims about new fields or changed old data require separate proofs |
+| Shared implementation cost | 96 physical lines including definitions, proofs and comments | Additional 93-line test; projection and application adapters excluded |
+| Local verification | 64 availability/list cases; two outer contexts on successful cases; five kernel axiom reports | Local test is not an Euler migration or runtime benchmark |
+| Euler avoided consumer edits, net lines and hours | Unmeasured | Projection elaboration, dependent history/guards, instances, registry and analytic compatibility costs still required |
+
+For consumers using only the old interface, the shared projection can contain
+context packaging changes while their proof bodies remain reusable. This is a
+generic conditional contract, not a count of avoided upstream edits. It extends
+the earlier fixed-context observation/evidence pipeline; arbitrary new context
+semantics and forward-versus-history equality remain application obligations.
+Measure a concrete change and its consumer fanout before claiming a library-wide
+maintenance reduction. No upstream files, imports or dependencies are added.

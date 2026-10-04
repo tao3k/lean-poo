@@ -1693,3 +1693,26 @@ analytic equivalence, changed claims/contexts, and hidden-field dependencies are
 not inferred. The [[file:use-cases/euler-maintenance-checklist.org][reference source]] already uses the corresponding data rewrite
 in its residual equation proof. No compiled PDE adapter, original EPG closure,
 net maintenance saving, or runtime improvement follows from this local contract.
+
+* Context projection for complete capability families
+
+~Functional.Reindex~ lifts the whole provider or a retained checklist along an
+explicit ~Outer → Context~ projection. ~select_reindex~, ~assemble_reindex~ and
+~prepare_reindex~ establish selection, verified-order assembly, and exact
+success/first-error preservation. ~results_reindex_type~ identifies the two
+recursive result types; ~projectedResults~ exposes the cast and ~build_reindex~
+proves exact projected results. Result type equality and result preservation
+require no axioms; assembly uses function extensionality and the existing
+selection proof. The [[file:../Tests/FunctionalReindex.lean][compiled contract]] checks 64 availability/list combinations,
+two outer contexts for successful preparations, repeated/empty requests, old
+proof reuse and rejection of unrelated context claims.
+
+This closes an explicit context-adaptation consequence for existing factories,
+providers, checklists and proofs. It does not establish unrestricted context
+extension: all old obligations must be supplied by the projection, and claims
+remain indexed by that projection. The reference's initialized-history and
+forward zero-history constructions have distinct input obligations; matching
+parameter names do not imply a valid projection or analytic equality. Original
+EPG correspondence, arbitrary graph equivalence and measured reference change
+fanout remain open. The [[file:use-cases/euler-maintenance-checklist.org][source receipt]] records these obligations without an
+external adapter or integration.

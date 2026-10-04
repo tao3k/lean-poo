@@ -45,7 +45,8 @@ check-merge: check-types
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
-        LeanPoo.Functional.Transport
+        LeanPoo.Functional.Transport \
+        LeanPoo.Functional.Reindex
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -268,6 +269,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalView.lean
     {{lean}} Tests/FunctionalObservation.lean
     {{lean}} Tests/FunctionalTransport.lean
+    {{lean}} Tests/FunctionalReindex.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     {{lean}} Tests/MutablePrototype.lean
     {{lean}} Tests/TypedSlots.lean
