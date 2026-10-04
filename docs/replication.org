@@ -336,12 +336,210 @@ reports the first cross-family repeated identity, and defers each original
 declaration function until its node is requested. Duplicate names within one
 family remain C4 graph-validation errors, as in repeated pairwise merging.
 
-The general construction in the paper is broader: contributions may be
-computed by arbitrary outer slot bodies, and independent inner DAGs may share
-prototype identities. LeanPoo does not inspect Lean functions to discover
-contributions or infer a merge of overlapping inner families. Callers
-explicitly supply layers and use disjoint identities for independent bases.
-This remains a paper-level boundary beyond the current derived topology.
+~liftLayersWithParents~ accepts several named inner parents from one common
+family schema. It attaches caller-supplied parent orders to each retained
+outer leaf. Shared ancestors retain their original identity and appear once
+in C4 precedence, even when several outer branches reach them. Ordered parent
+lists constrain relative precedence; singleton lists leave that choice to
+C4, matching the paper's independent-parent representation. Parents need not
+be ancestors of the snapshot's current root. Unknown selected names are
+rejected against the authoritative family before lifting. Conflicting orders
+and lifted-name collisions remain errors; the source snapshot and its
+resolution mode are preserved.
+
+~Schema.mergeSharedFromLeft~ also composes separately derived family snapshots
+under explicit shared-identity authority. A finite list declares the shared
+names and selects the left schema as their declaration owner. Each listed
+identity must exist in both schemas with identical parent orders and suffix
+metadata; unlisted collisions and inconsistent metadata are rejected.
+~Memoized.mixSharedWith~ then makes the two roots independent parents and
+uses C4 to validate the combined precedence. ~Nested.mixSharedWith~ carries
+this construction into an inherited inner-object slot. The shared-component
+scenario derives both branches separately, preserving one defaults ancestor.
+
+Declaration authority is explicit rather than inferred. Lean proves that
+successful merges retain the left declaration for each left-owned node and
+the right lookup for every name outside the left graph. An absent left
+shared declaration stays absent, even when the right snapshot supplies a
+body. Different opaque functions may therefore be reconciled only by the
+caller's explicit choice of authority; the merge does not certify them equal.
+
+The remaining discovery boundary concerns arbitrary outer slot bodies and
+automatic identity inference. Callers explicitly supply contributions and
+either use one common family, disjoint independent families, or a finite
+shared-name list with left declaration authority. The shared-ancestor topology
+and explicit cross-snapshot reconciliation are executable. Automatic function
+discovery and extensional equality of opaque declarations are not claimed.
+
+* Fused specification protocol
+
+Section 9 also describes an alternative to preserving two prototypes as
+separate parents: combine their direct modular extensions and their local
+parent orders into one specification. ~Declaration.compose~ composes the
+direct slot methods with open self and delayed next; the most-specific direct
+default wins. ~Specification.fuse~ combines those declarations and concatenates
+the local parent orders. The caller chooses the merged suffix flag explicitly.
+No source identity is introduced as a parent merely by fusing its specification.
+
+~Memoized.fuseSpecifications~ supplies a checked common-family entry. It reads
+selected specifications in most-specific-first order and compiles one fresh
+identity with the existing C4 compiler. It rejects repeated sources and any
+selected source still present in the merged ancestry, which would otherwise
+apply its direct extension twice. Unknown sources, name collisions, and
+inconsistent orders also remain errors. The source object is persistent and
+the derived object keeps its resolution mode.
+
+The protocol treats direct extensions as finalizers: ordinary extension
+contributions should live on ancestor nodes. The executable policy example
+combines two direct finalizers, then uses the full specification lens to add
+an infrastructure ancestor. That new ancestor executes before both finalizers.
+This closes the paper's described alternative composition protocol for
+explicit typed specifications within one family; it does not reconcile opaque
+declarations across independently authored snapshots.
+
+* Wrapping the current ancestry
+
+Section 9 describes wrapping the modular extensions in the current ancestry
+as a non-modular final transformation. ~Plan.transformAncestryDeclarations~
+prepares one transformed lookup table for the reachable direct declarations;
+absent declarations and unrelated branches retain their original lookup.
+~Memoized.wrapAncestrySlots~ applies a named, dependent-key wrapper to each
+existing direct slot. ~Declaration.mapSlots~ preserves defaults and entry
+order. Lean proves that mapping slot payloads commutes with last-write-wins
+lookup, including repeated keys and heterogeneous value types, and that the
+transformation retains the graph and validated C4 precedence. It also proves
+that declarations outside the current ancestry are unchanged.
+
+The wrapping scenario distinguishes this from a final root wrapper: the
+original result is ~12~, per-contribution wrapping yields ~16~, and wrapping
+only the final result yields ~13~. A later layer produces ~48~ without receiving
+the earlier wrapper. Function-valued slot checks wrap arguments and results
+while retaining final-self rebinding after a later scale override. This is a
+snapshot pass with the paper's stated coordination requirement for future
+extensions, not an automatically inherited wrapping policy.
+
+* Reversible method renaming
+
+Section 9 also names method renaming as a non-modular wrapper. Import
+~LeanPoo.Object.Renaming~ and provide an explicit bijection between old and
+new keys. ~Renaming.declaration~ translates typed method entries and defaults,
+retains last-direct-write lookup, and gives existing method bodies a pulled
+back final self. ~Renaming.schema~ translates every declaration in the schema,
+including branches outside the current root. Prototype identities and C4
+metadata remain unchanged. ~Renaming.memoized~ rebuilds lazy cells with the
+original resolution mode. New extensions must coordinate by using new keys
+or translated declarations.
+
+~Renaming.resolve~ is a Lean theorem for every key and every supplied self;
+~Renaming.instantiate~ transports an ~Object.Instance~ fixed-point equation
+without a new recursive construction. Entry lookup, declaration lookup, and
+the two self round trips have kernel-checked laws. The executable checks cover
+heterogeneous and function-valued slots, a diamond yielding ~12~ or ~22~ under
+opposite parent orders, defaults and missing slots, unrelated branches,
+delayed overriding of a parent that would panic, duplicate writes, all three
+resolution modes, and future final-self rebinding. The example yields
+~6 → 6 → 14~. There is no automatic inspection of opaque method bodies,
+inferred key mapping, or many-to-one aliasing policy.
+
+* Raw target-update policies
+
+Section 9 explicitly lists four target-update policies. ~Prototype.Object~
+now exposes each through ~LeanPoo.Prototype.Target~. ~updateTarget~ rejects
+updates by default, without executing the change or requesting the target.
+~updateTargetOutOfSync~ retains the prototype but changes the target;
+~overwriteTargetSpecification~ replaces it with a constant updated target;
+~detachTarget~ returns only the updated target thunk without a prototype.
+These operate on the paper's first-class pair; a C4 object can use its existing
+~toFirstClassObject~ projection. C4-aware specification edits remain available
+through the original ~Memoized~ object and its lenses.
+
+Lean proves rejection, prototype/base retention for the explicit out-of-sync
+policy, constancy of the replacement prototype, and agreement of the detached
+and edited targets. The executable check starts with ~x = 1~ and ~double = 2~,
+edits only the target to ~x = 100~, then extends with ~x = 7~. Retaining the
+original specification reconstructs ~double = 14~ and discards the target-only
+edit; the constant replacement retains ~double = 2~. The detached value has
+no object-extension API. General first-class extension still uses the existing
+unsafe fixed point; these policies do not supply a total fixed-point proof.
+
+* Chapter 9 executable protocol receipts
+
+| Described protocol | Lean entry and receipt | Explicit limit |
+|--------------------+------------------------+----------------|
+| Context and extension focus | ~SkewLens~ view/update/refocus operations, ~MonoLens.reverseAt~; focused and skew specification tests | The broader is-a specialization sketch has no specified evaluation rule. |
+| Complete prototype specification | ~Lens.prototypeSpecification~; ~Tests/SpecificationFocus.lean~ | Prototype identity is fixed; topology edits are C4-checked. |
+| Nested identity-preserving composition | ~Nested.liftLayersWithParents~, ~Nested.mixSharedWith~; nested and shared-family tests | Contributions and cross-snapshot declaration authority are explicit. |
+| Merged specification protocol | ~Specification.fuse~, ~Memoized.fuseSpecifications~; specification-composition tests | Direct extensions act as finalizers; selected sources cannot remain ancestors. |
+| Wrap current ancestor extensions | ~wrapAncestrySlots~, ~transformAncestryDeclarations~; ancestry-transformation tests | Future extensions do not automatically receive this snapshot wrapper. |
+| Reversible method renaming | ~Object.Renaming~; ~Tests/Renaming.lean~ | Explicit bijection; future contributions must coordinate in the new key space. |
+| Four raw target-update policies | ~Prototype.Object~ target operations; ~Tests/TargetPolicies.lean~ | Policies have different future-extension behavior; the general fixed point remains unsafe. |
+| Class instance methods and initialization | Instance-method slot fragments and initialization modules; class method/initialization tests | Typed Lean records and functions provide the authoring surface. |
+| Method combinations and dispatch | Qualified combinations, Simula/BETA inner, subjective and tuple dispatch; chapter 9 and dispatch tests | This is a typed first-class API, without a dynamic host-language MOP. |
+
+* Typed class redefinition
+
+Section 6 asks for a class-update protocol supporting new defaulted fields,
+removed fields, value-preserving renaming, and user-provided type conversion,
+with ~Person~ evolving through three versions. ~ClassSpec.migrateFrom~ now
+implements an explicit snapshot protocol across distinct typed key spaces and
+value families. ~FieldTransfer.preserve~ carries a payload-type equality;
+~FieldTransfer.evaluate_preserve~ proves value preservation for a present
+source. General transfers return ~Except String~ from their typed converter.
+Missing sources either fail or explicitly defer to target defaults/optional
+rules. Required target values and refinements are checked at the end.
+
+The full registry is checked before reading source data. Duplicate and unknown
+targets fail, and fixed/computed targets belong to the new class rather than
+copied instance data. The new object is built from the target class plus its
+explicit transferred data layer, so target computations use the new final
+self. Source graph identities and method bodies are not migrated. Omitted
+source fields are dropped from the new snapshot; the old snapshot retains them.
+The result carries the target class's Boolean acceptance proof and preserves
+the source resolver mode. Target validation may force new computed fields.
+
+The Person example adds age with default ~0~, preserves ~name~ as ~full-name~,
+converts an edited natural age ~37~ to string ~"37"~, and adds defaulted email.
+Checks also remove a retired field, recompute a new dependent summary, preserve
+old snapshots, and rebind that summary through a later target extension.
+All three resolution modes run. Rejections cover missing required data,
+conversion errors, failed target refinements, repeated/unknown/non-data
+targets, and a class/instance name collision. A source field that would panic
+is not forced when the full transfer shape is rejected.
+
+This closes the exercise's four field operations for explicit per-instance
+snapshots. Automatic discovery of all live instances, preservation of a
+mutable identity across different static types, persistence/index migrations,
+and the exercise's multi-phase store-upgrade bonus are not implemented.
+
+* Certified structural invalidation
+
+Section 6's mutable-inheritance discussion asks how specification changes
+invalidate children. The existing ~Proof.invalidatedNodes~ performs a finite
+reverse-edge propagation. Its arbitrary-graph theorem retains a path-length
+bound. ~C4.Graph.inferRanked~ now computes a parent-first schedule of the whole
+schema and checks a proposed rank at every node and edge. ~Graph.checkRank~
+also accepts a caller-supplied rank. The returned ~C4.Ranked~ carries Lean
+proofs that every parent has lower rank and every graph node lies below the
+node-count bound. Cycles, duplicate names, and missing parent references are
+rejected; an invalid proposed rank is a separate error.
+
+~Descendant.rank_distance~ bounds each inheritance path by its rank increase,
+and ~within_graph_bound~ removes the extra path-length premise.
+~mem_invalidated_iff_descendant~ proves exact reachability for certified graphs;
+~mem_impactStep_invalidated_iff~ proves that another pass adds no new names.
+~Proof.certifyInvalidation~ returns the existing executable names plus that
+exact reachability proof. Checks cover a diamond, duplicate changes, unknown
+changes, a reversed 32-node chain, an empty graph, invalid ranks, and malformed
+or cyclic schemas. The example marks ~Base~, ~Left~, ~Right~, and ~Combined~,
+leaving ~Unrelated~ out.
+
+The rank certificate concerns parent-edge acyclicity. It can accept a graph
+that still fails C4 method-order or suffix constraints, which remain separate
+checks. Rank validation covers the entire schema, so an unreachable cycle can
+fail it even when C4 succeeds for another root. This is a checked ancestry
+certificate, not a proof extracted from C4 success. It does not discover
+slot-function dependencies, transfer executable memo thunks, or implement
+whole-heap migration of instances.
 
 * Fixed-point boundary in Lean
 
@@ -424,3 +622,937 @@ reproduction.
 | Pure and mutable object behavior | Closed | Direct slot/default changes rebuild the lazy instance; integrated receipts show recomputation and old snapshot retention. |
 | Integrated executable receipt | Closed | ~just check-po~ builds the object layers, executes the integrated example, and parses Org documentation. |
 | Upstream semantic inventory | Closed | The source operation table maps each PO operation family to a Lean-native construction. |
+
+* Cooperative upgrade receipt
+
+~lake build LeanPoo.Object.Upgrade~ checks the mutex-guarded operation runtime
+and its pure control laws. The bounded entry in ~just check-tests~ runs
+~Tests/QuiescentUpgrade.lean~ and requires ~QUIESCENT-UPGRADE-OK~: three
+resolver modes, two promise-controlled concurrent readers, paused admission,
+busy/stale requests, exception cleanup, and conversion-error rollback.
+~Examples/QuiescentUpgrade.lean~ composes the boundary with a Person class
+migration. This receipt concerns scoped callbacks at one object identity;
+it does not cover native process suspension, code unloading, or heap discovery.
+
+* Two-level inheritance receipt
+
+~lake build LeanPoo.Object.SortedInheritance~ checks the C4-based sort policy
+and its complete-pair and final-order laws. ~Tests/SortedInheritance.lean~
+asserts the priority-driven ~22 -> 12~ behavior in all three resolver modes,
+same-sort order, final-self/defaults, heterogeneous function slots, later
+reclassification, and rejection of metadata, ancestor, explicit-local-order,
+and suffix conflicts. ~Examples/SortedInheritance.lean~ shows a later
+extension computing ~112~. The certificate is attached to the returned
+object's actual precedence and the selected source classifications. This
+receipt is a finite semantic construction, not a proof of asymptotic efficiency
+or automatic classification of new specifications.
+
+* Extended-precedence receipt
+
+~lake build LeanPoo.C4.Precedence LeanPoo.C4.Linearize~ checks the structural
+selection laws, trace uniqueness, and empty-suffix reduction. The focused
+~Tests/ExtendedPrecedence.lean~ entry requires ~EXTENDED-PRECEDENCE-OK~ and
+checks replay rejection, suffix exemption, and checked graph behavior.
+~Examples/ExtendedPrecedence.lean~ compares ordinary and suffix-exempt orders.
+The returned merge certificate concerns operational selection on its exact
+input lists; it is not a theorem of complete graph-algorithm correctness or
+an equivalence proof with Ducournau's extended-precedence graph.
+
+The same focused entry checks ~Trace.preserves~, ~Trace.covers~, and
+~Trace.nodup~ and prints their axiom dependencies. The first law retains every
+parent/local-order candidate as an ordered sublist; the other two establish
+exact name coverage and uniqueness. Repeated candidates share a single output
+name, while a duplicate within one candidate has no accepted trace. These
+are input-general merge consistency proofs, not just enumerated regressions;
+whole-graph traversal remains a separate proof obligation.
+
+* Suffix reconstruction receipt
+
+~lake build LeanPoo.C4.Suffix LeanPoo.C4.Linearize~ checks the compatibility
+split, the Boolean check's soundness, and complete-order preservation after
+suffix append. ~Tests/SuffixConsistency.lean~ requires
+~SUFFIX-CONSISTENCY-OK~ and prints the certificate laws' axiom dependencies.
+It checks partial shared tails, suffix-only and empty-tail inputs, reversed
+suffix order, interleaved infix rejection, and a checked graph with two
+different inherited suffixes in one compatible chain. ~SuffixCertified~ binds
+these general laws to the actual returned ancestry. The no-duplicate law
+requires a duplicate-free supplied tail; the complete node receipt below
+validates that premise and the subsequently prepended root name.
+
+* Complete node receipt
+
+~lake build LeanPoo.C4.NodeCertificate LeanPoo.C4.Linearize~ checks inherited
+tail maximality, total suffix comparability, uniqueness, and the complete node laws.
+~Tests/NodeCertificate.lean~ requires ~NODE-CERTIFICATE-OK~ and prints axiom
+dependencies for maximality, uniqueness, full-order preservation, parent
+suffix retention, duplicate-free output, head identity, and exact coverage.
+Typed regressions reject shorter or invented selected tails, incompatible
+suffixes, duplicate tails, and a node name already in its ancestry.
+The checked graph path constructs the certificate from actual cached parent
+tails at every computed node. Traversal completeness and graph-to-cache
+metadata provenance remain separate proof obligations.
+
+* Graph-derived certificate receipt
+
+~lake build LeanPoo.C4.GraphCertificate~ checks graph lookup provenance,
+complete declared-parent derivations, transitive ancestor and suffix laws,
+and exact binding to the ordinary compiler result.
+~Tests/GraphCertificate.lean~ requires ~GRAPH-CERTIFICATE-OK~ and prints axiom
+dependencies for unique names, head identity, exact ancestry coverage,
+ancestor-order preservation, declared ancestor suffix retention, local orders,
+and output uniqueness. The executable cases include shared ancestors, suffix
+chains, repeated parent edges, and ordinary typed errors.
+These are general soundness laws of accepted graph-derived certificates.
+Independent reconstruction is complete relative to finite ~GraphTrace~
+derivations. Ordinary compiler completeness and any verification efficiency
+bound remain unproved; shared parent work may be repeated. The proof does not establish
+the original optimized traversal's internal cache invariant or equivalence
+with Ducournau's definition.
+
+* Reference merge completeness receipt
+
+~lake build LeanPoo.C4.ReferenceMerge LeanPoo.C4.GraphCertificate~ checks
+structural merge completeness, its input-derived budget, and graph size and
+parent-decrease bounds. ~Tests/ReferenceMerge.lean~ requires
+~REFERENCE-MERGE-OK~ and prints the completeness/bound axioms. Its theorem
+examples quantify over arbitrary finite candidate lists, while executable
+cases check blocked heads, shared candidates, inconsistency, explicit fuel,
+and reference suffix/node construction. ~linearizeCertified~ now rebuilds
+using the structural reference merger. This closes completeness relative to
+complete candidate traces. Graph reconstruction completeness is now proved
+relative to finite ~GraphTrace~ derivations. The optimized candidate merger's
+state invariant is now proved by the receipt below.
+
+* Graph reconstruction completeness receipt
+
+~lake build LeanPoo.C4.GraphCertificate~ checks suffix and node reproduction,
+longest-tail reproduction, recursion budget sufficiency, graph reconstruction
+completeness, and graph-trace uniqueness for both output and tail.
+~Tests/GraphCertificate.lean~ prints nine additional theorem axiom reports;
+they require only standard Lean axioms, with no ~sorryAx~ or native-decision
+axiom. General examples quantify over arbitrary graphs and derivations.
+Executable checks exercise ~reconstruct~ directly on diamonds, shared suffix
+chains, repeated edges, first-match duplicate declarations, disconnected
+errors, missing nodes, cycles, local-order conflicts, incompatible tails,
+and suffix-order violations. The gate remains ~GRAPH-CERTIFICATE-OK~.
+
+~reconstruct_success_iff~ closes success exactly against existence of the
+explicit finite ~GraphTrace~ relation. ~linearizeCertified_complete~ still
+requires ordinary compiler success. Neither ordinary graph traversal
+completeness nor equivalence to the paper's original relation follows from
+this receipt.
+
+* Optimized merge invariant and equivalence receipt
+
+~lake build LeanPoo.C4.MergeInvariant~ checks hash-map initialization,
+multiplicity accounting for exposed heads, incremental subtraction, exact
+eligible-head selection, empty-candidate pruning, actual step simulation,
+finite-fold soundness/completeness, and optimized/reference ~toOption~ equality.
+The runtime retains its incremental HashMap and original finite-fold budget;
+named inline state operations provide proof seams for the same algorithm.
+~Precedence.check_complete~ and ~mergeCertified_complete~ connect actual raw
+results to the existing independent replay path.
+
+~Tests/MergeInvariant.lean~ prints 16 axiom reports containing only standard
+Lean axioms. General examples quantify over arbitrary candidates and traces.
+Direct guards check repeated-tail multiplicities and a decrement of two
+occurrences exposed by one chosen name. An executable comparison enumerates
+all 3,616 families of zero to three candidate orders with zero to three
+positions over two names. It compares both raw and certified optimized
+results with the structural reference output, including empty candidates,
+repeated names, repeated orders, blocked heads, and conflicts. The gate is
+~MERGE-INVARIANT-OK families=3616~. This finite enumeration supplements the
+general kernel proofs; it is not their evidence boundary.
+
+The equivalence theorem compares successful lists and rejection domains via
+~toOption~, not error payloads. Ordinary graph traversal/cache completeness,
+equivalence to Ducournau's original graph relation, and complexity bounds
+remain open.
+
+* Graph traversal index and suffix-walk receipt
+
+~lake build LeanPoo.C4.TraversalInvariant~ checks actual HashMap index lookup
+against first graph declarations, suffix-walk soundness for arbitrary fuel,
+sufficient explicit fuel, strict cache-link decrease, absence of repeated
+path sources, and the actual table-size budget. It also checks graph cache
+provenance preservation through fresh insertion and the ancestry/suffix witness
+returned by a successful walk under that provenance.
+
+~Tests/TraversalInvariant.lean~ prints 14 axiom reports using only standard
+Lean axioms and requires ~TRAVERSAL-INVARIANT-OK~. General examples quantify
+over arbitrary graphs, caches, and pointer paths. A concrete three-key cache
+has a kernel-checked literal-suffix invariant and exercises transitive links,
+self-recognition, missing targets, reversed links, and exact two-versus-three
+round exhaustion. Additional guards exercise an invalid self-cycle and empty
+cache primitives, and distinguish first-write indexing from duplicate graph
+validation.
+
+The walk retains its original HashMap table and ~table.size + 1~ budget;
+named inline operations provide proof seams. No cache population or whole
+graph success theorem is implied: ~computeNode~ result derivations, the
+~mostSpecificSuffix~ selector, parent deduplication, reachable validation, and
+~resolveNode~ preservation/completeness remain separate obligations.
+
+* Runtime suffix selection and optimized node checker receipt
+
+~lake build LeanPoo.C4.SelectionInvariant~ checks the actual selection step
+and parent fold extracted from ~computeNode~. A successful fold retains an
+input and reaches every supplied suffix through inherited-suffix pointers.
+Under ~SuffixCacheInvariant~, pairwise pointer comparability suffices for
+success with the original ~table.size + 1~ walk budget. Successful selection
+plus an existing chosen entry gives a ~TailCertified~ for cached parent
+suffix precedences. This certificate uses full literal suffixes, including
+repeated parent tails. Empty metadata contributes no tail.
+
+~mergeWithSuffixCertified_complete~ and ~certifyNode_complete~ now prove
+that the optimized runtime checkers reconstruct any supplied compatible
+suffix certificate or well-formed complete node certificate. The node proof
+binds both the complete output and selected tail. It carries the supplied
+tail uniqueness and fresh-node assumptions; it does not infer them from
+ordinary traversal.
+
+~Tests/SelectionInvariant.lean~ prints ten axiom reports using only standard
+Lean axioms and requires ~SELECTION-INVARIANT-OK comparisons=3905~. General
+examples quantify over arbitrary certificates, tables, and parent metadata.
+Direct guards exercise reversed chains, incomparable suffixes, empty
+metadata, duplicate tails, and ordinary/checked traversal with repeated
+parents and empty local orders. An executable oracle retains the original
+imperative suffix loop and compares 3,905 combinations of input lists and
+initial accumulators, including missing names and exact error payloads.
+
+Pointer comparability is an explicit premise. No theorem yet derives it
+from arbitrary graph ancestry or literal suffix comparability. Canonical
+~mostSpecificSuffix~ metadata, parent deduplication alignment with
+~GraphTrace~, complete ~computeNode~ derivations, reachable validation, and
+~resolveNode~ preservation/completeness remain open. These receipts do not
+establish equivalence to Ducournau's original graph relation.
+
+* Parent collection and graph-row binding receipt
+
+~lake build LeanPoo.C4.ParentInvariant~ checks the actual HashSet fold used
+by ~unique~ against an explicit first-occurrence specification. General
+kernel proofs establish exact membership, absence of duplicate names, and
+ordered sublist retention. ~parents~ therefore preserves the first declared
+occurrence and all lookup obligations, including across repeated local
+orders and empty local orders.
+
+The cache collection operation extracted from ~computeNode~ retains the
+original reverse accumulator. ~collectParents_sound~ and
+~collectParents_complete~ relate every supplied name to its exact result in
+that position; repeated supplied names are supported by the general lemmas.
+~collectParents_success_iff~ says deduplicated collection succeeds exactly
+when every name in the original flattened parent orders has a cached result.
+
+Given ~CacheInvariant~, an existing root ~GraphTrace~, and successful
+collection, ~collected_parent_preserves~ binds fetched parent precedences to
+original graph derivations and ordered sublists of the complete root output.
+~cached_graph_rows~ retains the original complete node certificate and binds
+every original row, including repeated declared edges, to an entry in the
+actually collected parent results. Equality follows from ~GraphTrace.unique~;
+most-specific metadata is not inferred from a cache precedence alone.
+
+~Tests/ParentInvariant.lean~ prints fourteen standard-axiom reports and
+requires ~PARENT-INVARIANT-OK families=1365~. General examples quantify over
+arbitrary names, cached results, graphs, and certificates. Direct guards
+cover stable declaration order, repeated names, empty collection, and the
+first unknown-name error. An executable oracle compares all 1,365 name
+lists of zero to five positions over two cached and two missing names with
+both standard first-occurrence deduplication and the original collection
+loop. Exact successful entries and error payloads are compared, before and
+after deduplication.
+
+Binding original repeated rows is distinct from removing repeated merge
+candidates. The latter simulation, empty-order normalization, canonical
+suffix metadata, complete ~computeNode~ derivations, ~resolveNode~ cache
+preservation, and reachable validation remain open. These proofs require
+an existing graph derivation and cache provenance; they do not establish
+ordinary graph success or equivalence to Ducournau's original graph relation.
+
+* Duplicate candidate and empty local-order normalization receipt
+
+~lake build LeanPoo.C4.NormalizationInvariant~ checks stable deduplication
+through ~ScanEquivalent~: universal checks and first matching inputs remain
+equal. The relation survives arbitrary maps and every candidate advance,
+even when distinct parent names have identical precedences or cleanup makes
+previously distinct orders identical. Eligibility and leftmost selection
+therefore agree, and complete ~Precedence.Trace~ evidence transports in
+both directions.
+
+~merge_unique_parents~ lifts the relation to the actual optimized merger.
+~merge_empty_locals~ permits removing empty local orders before suffix
+cleanup; cleanup may independently empty other orders. The combined
+~merge_normalized_candidates~ and ~trace_normalized_candidates~ cover
+stable parent-name deduplication and empty local-order removal together.
+They preserve complete successful output and rejection domain via ~toOption~;
+the general theorem does not compare error payloads.
+
+~nodeCertificate_normalize~ transports a supplied full original node
+certificate to normalized parent orders and tails, retaining its complete
+output and selected tail. ~collected_precedence_map~ binds the actual
+successful collector to exact cache projections. The resulting
+~collected_candidates_normalize~ connects ~computeNode~'s actual collected
+parent results and filtered local orders to the original flattened parent
+edge candidates for any shared tail. Its cache projection is total only to
+state the lemma: successful collection supplies actual entries wherever it
+is used. This is a conditional normalization theorem, not a graph-success
+or cache-population theorem.
+
+~Tests/NormalizationInvariant.lean~ prints eighteen reports using at most
+standard Lean axioms, includes general kernel examples, and requires
+~NORMALIZATION-INVARIANT-OK comparisons=14535~. The finite comparison covers
+85 parent-name sequences, 57 local-order families, and three shared tails.
+It includes repeated parent names, identical orders from distinct names,
+empty local orders, blocked heads, conflicts, and cleanup-induced equality.
+Progress is emitted every 1,710 comparisons. Repeated names inside an order
+are retained; a repeated-name order can still be inconsistent.
+
+Remaining obligations are canonical ~mostSpecificSuffix~ metadata,
+selection-chain comparability derived from graph evidence, omission of empty
+parent tails in the runtime checker, complete ~computeNode~ and ~resolveNode~
+cache population proofs, reachable validation, and equivalence to the original
+Ducournau graph relation. Candidate normalization is now proved separately
+from these metadata and traversal obligations.
+
+* Graph-backed suffix metadata and selection receipt
+
+~lake build LeanPoo.C4.MetadataInvariant~ checks that every nonempty
+~GraphTrace~ most-specific tail is the complete precedence of an actually
+declared marked suffix ancestor. An empty tail is equivalent to absence of
+all marked graph ancestors, including the root itself.
+
+~MetadataInvariant~ extends the earlier cache provenance with three explicit
+semantic premises: cached most-specific metadata reconstructs the exact
+~GraphTrace~ tail; selected names have actual cached entries; and an
+inherited link contains each proper marked ancestor in the next cached
+precedence. This coverage premise is stated using graph ancestry and list
+membership, not assumed pointer reachability or pairwise chain comparability.
+The marked status and graph ancestry of selected names are derived from these
+premises and graph tail origin, rather than added as fields.
+
+Strict cached precedence decrease proves ~flagged_ancestor_path~ under this
+coverage. The unchanged ~table.size + 1~ walk therefore recognizes exactly
+graph ancestry for declared marked suffix targets. Literal suffix containment
+between cached suffix precedences implies an actual inherited-pointer path.
+Original graph parent-tail preservation then derives pairwise comparability
+of collected parent metadata. ~collected_suffix_selection_complete~ proves
+successful runtime selection without a separate comparability premise, and
+~collected_suffix_selection_certified~ supplies a real selected cache entry
+and independent ~TailCertified~ evidence.
+
+~Tests/MetadataInvariant.lean~ prints fifteen reports containing only standard
+Lean axioms and requires ~METADATA-INVARIANT-OK~. Generic examples quantify
+over arbitrary graphs, caches, derivations, and collected parents. A
+kernel-checked counterexample has a valid old literal-link invariant but an
+absent inherited pointer at a node whose precedence includes a marked
+ancestor. The actual walk rejects that ancestor, and the stronger metadata
+invariant is proved impossible for this cache. No ~native_decide~ is used
+in these proofs. Runtime guards verify ordinary/checked graph output and
+cached tail projection for this graph.
+
+The counterexample prevents inferring completeness from the old cache-link
+invariant alone. Building ~MetadataInvariant~ from actual ~computeNode~
+results, preserving it through ~resolveNode~, runtime omission of empty
+parent tails, reachable validation, and whole ordinary graph completeness
+remain open. Graph-backed conditional walk/selection completeness does not
+establish these population obligations or equivalence to Ducournau's original
+graph relation.
+
+* Actual node computation and empty-tail omission receipt
+
+~lake build LeanPoo.C4.ComputeInvariant~ checks that empty parent tails may
+be omitted from ~TailCertified~ and complete ~NodeCertified~ evidence while
+retaining the chosen tail and complete output. Under actual suffix-entry
+availability and the old head invariant, runtime absence of suffix metadata
+is exactly empty-tail deletion on the complete cached tail projection.
+The all-empty case remains valid and selects an empty inherited tail.
+
+Named ~readSuffix~ and ~collectSuffixTails~ operations now expose the actual
+runtime selected-tail read and reverse-accumulator checker collection.
+Missing selected entries still return the original unknown-node error;
+absent metadata contributes no tail. Complete collection equals the existing
+independent ~suffixTails~ projection once all supplied names are cached.
+
+~computeNode_complete~ proves both ordinary and checked runtime branches
+reproduce complete normalized node evidence, including actual inherited and
+most-specific metadata. ~computeNode_certified~ derives successful selection
+and matching selected tail from graph-backed metadata, an existing root
+~GraphTrace~, actual collected parents, and supplied complete normalized node
+evidence. It does not take successful ~computeNode~ execution as a premise.
+~computeNode_insert_preserves~ further retains the original ~CacheInvariant~
+after actual fresh insertion when that supplied node output has its graph
+derivation. The inherited link's full literal suffix witness is derived
+from the complete node certificate.
+
+~Tests/ComputeInvariant.lean~ prints nine standard-axiom reports and requires
+~COMPUTE-INVARIANT-OK families=781~. Generic examples quantify over arbitrary
+certificates and runtime inputs. Guards cover ordinary/checked equality,
+flagged and unflagged node metadata, repeated parents and empty local orders,
+leaf nodes, empty parent tails, and missing names. The finite oracle compares
+781 option-name sequences against the original checker collection loop,
+including exact successful values and first missing-name error payloads.
+
+The supplied normalized node evidence is still an explicit premise of the
+computation theorem. Deriving it systematically from original graph rows and
+canonical parent metadata, establishing the stronger ~MetadataInvariant~ for
+new computed entries, resolver preservation, reachable validation, and whole
+ordinary graph completeness remain open. Fresh insertion preserves the old
+provenance/link invariant here, not the stronger semantic coverage invariant.
+These conditional runtime receipts do not establish equivalence to the
+original Ducournau graph relation.
+
+* Graph-derived node evidence and strong metadata insertion receipt
+
+~lake build LeanPoo.C4.GraphComputeInvariant~ connects original ~GraphTrace~
+rows to the exact runtime ~NodeCertified~ input. ~graph_node_certificate~
+uses canonical parent metadata and actual successful parent collection to
+transport repeated graph edges through stable parent deduplication, remove
+empty local orders, and omit empty parent tails. Complete output and selected
+tail are retained. Every proper declared marked ancestor belongs to the
+constructed inherited tail; this coverage comes from the original graph
+rows rather than an additional metadata premise for the new node.
+
+~computeNode_graph_complete~ reproduces the original graph output in both
+actual runtime modes without a caller-supplied normalized certificate or a
+successful-computation premise. ~computeNode_metadata_insert~ proves that
+actual fresh insertion retains the stronger ~MetadataInvariant~, including
+graph-derived most-specific tails, selected-entry availability, and proper
+marked-ancestor coverage. A generic ~MetadataInvariant.insert~ lemma also
+preserves the metadata of all old entries because a fresh key cannot replace
+any existing selected suffix entry.
+
+~Tests/GraphComputeInvariant.lean~ checks these interfaces over arbitrary
+runtime inputs and verifies that the newly inserted entry supports exact
+marked-ancestor recognition by the actual bounded suffix walk. Eight axiom
+reports use only Lean's standard ~propext~, ~Classical.choice~, and
+~Quot.sound~. The proofs require an original finite root ~GraphTrace~, the
+existing strong cache invariant, first-declaration lookup, successful parent
+collection, and (for insertion) a fresh cache key.
+
+This closes the two node-level obligations left by the preceding receipt:
+deriving normalized node evidence from graph rows and establishing strong
+metadata for computed entries. Preservation through recursive ~resolveNode~,
+its parent loop and fuel budget, reachable validation policy, and whole
+ordinary graph completeness remain open. Equivalence to the original
+Ducournau graph relation remains a separate obligation.
+
+* Actual recursive resolver preservation and fuel receipt
+
+~lake build LeanPoo.C4.ResolverInvariant~ proves the actual ~resolveNode~
+recursion complete relative to an original finite ~GraphTrace~ and existing
+~MetadataInvariant~ when the derivation's precedence length is at most the
+supplied fuel. Both runtime modes produce a cached root whose complete
+precedence equals the original derivation, retain the strong metadata
+invariant, and preserve every previously cached entry unchanged.
+
+~CacheGrowth~ records old-entry retention and bounds newly introduced keys.
+~resolveParents~ is a proof-facing definition of the existing ~forIn~ loop;
+it does not replace the runtime implementation. The parent-loop theorem
+retains successful lookups of every parent through later recursive calls.
+Direct parent outputs lie inside the child's ancestry without its fresh head.
+Thus all parent-resolution additions exclude that head, establishing the
+fresh-key premise required by ~computeNode_metadata_insert~. Parent outputs
+also have strictly smaller length, so recursive calls receive sufficient
+fuel without an independent termination or availability premise.
+
+~resolveNode_graph_complete~ starts from the empty strong cache invariant
+and uses the original declaration count as sufficient fuel, derived from
+~GraphTrace.length_bound~. ~resolveNode_output~ gives exact observable root
+precedence. A cache hit needs no remaining fuel and bypasses graph lookup;
+its output agrees with the derivation through cache provenance uniqueness.
+The fuel bound is sufficient, not claimed minimal.
+
+~Tests/ResolverInvariant.lean~ prints ten axiom reports, using only standard
+Lean axioms (the fresh-head exclusion theorem uses none). Generic examples
+check exact root output, strong metadata, fresh-head retention during parent
+resolution, and preservation of unrelated old entries. The finite oracle
+requires ~RESOLVER-INVARIANT-OK families=320 accepted=256~: both resolver modes
+reproduce successful independent reconstruction on all 256 accepted families.
+The families vary topology, local ordering, suffix flags, repeated parent
+edges, and empty local orders. Guards separately cover exact insufficient-fuel
+cycle errors, zero-fuel cache hits, unknown names, and a self-cycle. Rejected
+families are not used to claim full error-payload equivalence.
+
+This closes recursive resolver preservation, parent-loop population, and
+sufficient fuel relative to finite graph derivations. The actual top-level
+~linearizeWith~ uses the count of validated reachable declarations, not the
+original graph count. Reachability completeness, that smaller count's fuel
+bound, validation policy, whole ordinary graph completeness, and equivalence
+to the original Ducournau graph relation remain separate obligations.
+
+* Actual reachability and top-level fuel receipt
+
+~lake build LeanPoo.C4.ReachabilityInvariant~ proves the existing imperative
+~reachable~ loop exactly equal to a proof model, including early exit on an
+empty queue, first-declaration indexing, repeated names, and absent nodes.
+The runtime implementation is unchanged. The queue length plus the raw
+parent-edge count of unseen declarations strictly decreases on each
+nonempty iteration. Expanding a declaration consumes at least its appended
+deduplicated parents' contribution; repeated and absent names consume one
+queued item. The original one-plus-edge-count budget therefore drains the
+queue even with cycles, unknown names, and duplicate declarations.
+
+~reachable_iff~ characterizes actual discovered names exactly as graph
+ancestors, and ~reachable_nodup~ proves discovery uniqueness. Unknown edge
+targets can be graph ancestors; declaration validation remains separate.
+For a finite root ~GraphTrace~, discovered membership equals membership in
+its complete precedence. ~reachableNodes~ names the exact declaration filter
+used by ~linearizeWith~ and preserves all declarations of each discovered
+name, including duplicates. ~reachableNodes_budget~ proves the finite
+precedence length is bounded by this smaller reachable-declaration count.
+
+~linearizeWith_complete~, ~linearize_complete~, and
+~linearizeChecked_complete~ now derive exact actual top-level output from a
+finite original graph derivation and successful validation of that exact
+reachable declaration filter. Root lookup, BFS completeness, the actual
+smaller resolver fuel, parent population, and root cache success are all
+derived. Validation success is still an explicit premise: ~GraphTrace~ uses
+first-declaration lookup, whereas the runtime rejects repeated reachable
+names. A finite first-declaration derivation alone does not imply validation.
+
+~Tests/ReachabilityInvariant.lean~ requires
+~REACHABILITY-INVARIANT-OK queries=1080 accepted=132~. All 1,080 queries over
+540 graphs agree with an independent list-based set-saturation oracle;
+132 queries admitting both independent reconstruction and actual reachable
+validation agree in both top-level modes. Cases include cyclic edges,
+missing names, repeated parent orders, empty orders, duplicate declarations,
+and disconnected bad declarations. Guards record BFS order, the smaller
+fuel count, reachable duplicate rejection, unreachable duplicate exclusion,
+missing-node errors, and cycle errors. Eleven axiom reports use only Lean's
+standard axioms; ancestor transitivity uses none.
+
+This closes discovery completeness and the top-level reachable fuel bound.
+Validation success remains an explicit policy gate. Deriving that gate from
+appropriate declaration uniqueness and finite graph evidence, proving
+whole-compiler soundness/error behavior, and relating the graph relation to
+original Ducournau semantics remain separate obligations. The conditional
+completeness theorem does not claim unconditional acceptance of every
+first-declaration graph derivation.
+
+* Derived reachable validation and uniqueness receipt
+
+~lake build LeanPoo.C4.ValidationInvariant~ proves actual ~Graph.validate~
+success from unique declaration names and complete parent-name membership.
+The proof follows the runtime name scan and all three nested parent-check
+loops without replacing them or assuming their execution succeeds.
+
+~ReachableUnique~ constrains names in the exact ~reachableNodes~ filter.
+It permits duplicate names and missing references outside the root's ancestry.
+Under this condition each included declaration equals the first declaration
+used by graph lookup. A finite root ~GraphTrace~ then supplies finite parent
+traces for every included edge and a declaration for each parent inside the
+same reachable filter. ~reachable_declarations_closed~ derives parent-name
+membership, and ~reachable_validate_complete~ derives actual validation.
+
+~linearizeWith_unique_complete~, ~linearize_unique_complete~, and
+~linearizeChecked_unique_complete~ therefore require finite original graph
+evidence and reachable declaration-name uniqueness, with no successful
+validation or execution premise. Root lookup, BFS, reachable fuel, recursive
+metadata population, actual validation, and final output are derived.
+~reachableUnique_of_global~ also supplies this condition from global name
+uniqueness, a stronger sufficient requirement than the runtime needs.
+
+~Tests/ValidationInvariant.lean~ requires
+~VALIDATION-INVARIANT-OK graphs=96 validated=12 accepted=24~. Twelve families
+with globally unique and closed declarations pass actual validation;
+24 families with independent finite reconstruction and unique reachable
+names pass derived reachable validation and reproduce both top-level outputs.
+Generic kernel examples quantify over arbitrary graph evidence and inputs.
+Guards distinguish disconnected duplicate rejection by global validation
+from acceptance by root-specific compilation, repeated edges, reachable
+duplicates, and missing parent names. Eight axiom reports use only standard
+Lean axioms. Runtime algorithms and validation error order are unchanged.
+
+This closes the previous explicit successful-validation premise under the
+necessary declaration uniqueness policy. It is a completeness result relative
+to ~GraphTrace~ and reachable uniqueness, not whole-compiler soundness or
+an equivalence of all error payloads. Necessity of the policy, the reverse
+successful-execution-to-graph-evidence direction, and original Ducournau
+relation equivalence remain separate obligations.
+
+* Successful checked execution evidence and ordinary simulation receipt
+
+~lake build LeanPoo.C4.ExecutionInvariant~ extracts the actual normalized
+~NodeCertified~ value from successful checked ~computeNode~ execution.
+~certifyNode_claimed~ binds its selected tail to the supplied claim;
+~readSuffix_sound~ binds the actual read to the selected cache projection.
+~computeNode_checked_evidence~ records successful parent and tail collection,
+selection, exact complete output, and both suffix metadata fields. No graph
+derivation or cache invariant is an assumption of these extraction laws.
+
+~computeNode_checked_laws~ derives duplicate-free precedence, exact root head,
+literal selected-tail retention, and preservation of every actually collected
+parent precedence and nonempty local order. ~computeNode_checked_ordinary~
+uses that actual certificate's merger trace to prove the ordinary node
+computation accepts with the exact same result. The existing parent loop
+transfers successful execution sequentially, and
+~resolveNode_checked_ordinary~ derives exact complete-cache simulation for
+arbitrary indices, initial tables, and fuel. ~linearizeChecked_ordinary~
+derives actual top-level ordinary acceptance with identical output from
+checked acceptance alone, without finite graph or uniqueness premises.
+
+~Tests/ExecutionInvariant.lean~ requires
+~EXECUTION-INVARIANT-OK nodes=224 accepted=120 resolved=578~. All 120 checked
+successes among 224 node/cache combinations reproduce the ordinary result;
+578 successful checked resolver queries reproduce cache lookups in ordinary
+mode across 14 graphs, 16 starting caches, and five budgets. The finite cache
+comparison covers the complete four-name test universe, while the generic
+kernel theorem states exact table equality. Top-level checked successes in
+these graphs reproduce ordinary outputs. Seven axiom reports use only
+standard Lean axioms. A malformed-cache guard records ordinary acceptance
+of a repeated root where checked mode rejects root freshness, showing why
+ordinary success on an arbitrary cache cannot imply graph soundness alone.
+Runtime algorithms are unchanged.
+
+This supplies the first execution-to-evidence layer and checked-to-ordinary
+simulation through the actual compiler. The extracted certificate uses
+normalized runtime rows; promoting it to original ~GraphTrace~ requires
+reverse row normalization and cache provenance propagation. Neither whole
+checked-graph soundness nor ordinary-graph soundness is claimed here. Ordinary
+acceptance implying checked acceptance, full error-payload equivalence, and
+original Ducournau relation equivalence remain separate obligations.
+
+* Reverse certificate normalization and checked-node graph soundness receipt
+
+~lake build LeanPoo.C4.CertificateExpansion~ proves reverse transport of
+complete node evidence. ~TailCertified.restore_empty~ and
+~NodeCertified.restore_empty~ restore omitted empty parent tails, including
+nonempty original inputs containing only empty tails. Selected output remains
+unchanged; empties cannot justify an invented nonempty claim.
+~nodeCertificate_expand~ reintroduces repeated original parent names and empty
+local orders. Bidirectional merge trace normalization supplies the original
+ancestry trace; every original parent and nonempty local input already has
+compatibility evidence, while an empty local order is trivially compatible.
+Complete output, selected tail, uniqueness, and root freshness are retained.
+
+~lake build LeanPoo.C4.NodeSoundness~ connects that reverse transport to actual
+checked execution. ~checked_certificate_graph~ uses successful parent
+collection and existing canonical ~MetadataInvariant~ to bind every original
+row to its actual cached precedence and graph-derived tail. It restores
+omitted tails, expands deduplicated rows and local orders, and constructs the
+original ~GraphTrace~. A root graph derivation is not a premise.
+~computeNode_checked_graph_sound~ extracts the actual runtime certificate and
+supplies exact graph precedence and graph tail, including the node's suffix
+flag. ~computeNode_checked_insert_sound~ derives the strong metadata invariant
+for actual fresh insertion from checked execution success; its root derivation
+is extracted rather than assumed. These results still require canonical
+parent metadata and the exact original declaration lookup. Insertion also
+requires a fresh cache key.
+
+~Tests/NodeSoundness.lean~ requires
+~NODE-SOUNDNESS-OK families=744 accepted=152~. All 152 successful normalized
+checker inputs among 744 combinations reproduce both output and selected tail
+when expanded to original repeated edges, empty local orders, and complete
+parent-tail inputs. Generic kernel examples check graph soundness and strong
+metadata insertion for arbitrary inputs. Guards cover all-empty tail
+restoration, invented-tail rejection, and repeated-edge graph reconstruction.
+Six axiom reports use only Lean's standard axioms. Runtime algorithms are
+unchanged.
+
+This closes the reverse-normalization and single checked-node graph evidence
+obligations left by the execution receipt. Successful recursive checked
+resolver preservation still needs cache provenance propagation and a proof
+that parent recursion leaves each computed node key fresh. Whole checked and
+ordinary graph soundness, ordinary-to-checked acceptance, complete error
+behavior, and original Ducournau graph relation equivalence remain open.
+
+* Checked resolver soundness and reusable factory interfaces receipt
+
+~resolveParents_sound~ recovers canonical metadata, retained entries, and
+parent availability from actual successful execution. It assumes preservation
+only for successful parent calls. ~resolveNode_checked_sound~ applies fuel
+induction to the real resolver, including zero-fuel cache hits. Cache growth
+permits only graph ancestors of the requested name. During a miss, parent
+growth permits ancestors of actual direct parents; checked node execution
+supplies the original root trace. Any introduction of the root during parent
+resolution would put that root in its own ancestry, contradicting freshness.
+The resulting fresh insertion preserves the strong invariant.
+
+~resolveNode_checked_graph_sound~ extracts original graph evidence for the
+actual final cached entry. ~linearizeChecked_graph_sound~ starts from the
+empty invariant and proves an original ~GraphTrace~ for successful top-level
+checked output. No root derivation, graph-name uniqueness, validation receipt,
+or caller cache invariant is a premise of that top-level theorem.
+
+~linearizeVerified~ retains that success and existential graph derivation in
+~VerifiedOrder~. All contract fields are proofs and erase at runtime. The
+wrapper performs one checked compilation; it does not call ~reconstruct~.
+~linearizeVerified_projection~ preserves exact checked output and error.
+Public contracts expose ordinary output equality, uniqueness, root head,
+size bound, ancestor coverage, original local ordering, and flagged ancestor
+tails. ~indexAncestors~ builds a retained ~Std.HashSet~ whose Boolean and
+~Decidable~ queries are proved equivalent to original graph ancestry.
+
+~Tests/VerifiedOrder.lean~ requires
+~VERIFIED-ORDER-OK families=512 accepted=192~. Every accepted graph agrees with
+independent original reconstruction. The family covers cyclic/self edges,
+missing references, repeated/empty parent rows, local ordering, and suffix
+flags. Indexed, list, and proof-producing ancestry decisions agree. Guards
+check reachable-only validation and exact unknown-root failure.
+
+~Functional.Assembly~ selects context-indexed factories without applying them.
+Provider-origin and exact application theorems expose reusable contracts.
+~Tests/FunctionalAssembly.lean~ checks typed witnesses across changed contexts,
+including rejection of automatic witness transfer, overrides, missing
+capabilities, and transparent application. ~Tests/ReusableContracts.lean~
+compiles the guide's consumer contracts. ~Examples/ContextualFactories.lean~
+binds the proposed Euler provider topology to arbitrary actual mathematical
+result types; it does not import the upstream analytic proof dependency tree.
+
+The source clone is pinned at ~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~.
+The external source is used only as a reference, with no integration or
+build dependency. PDE proof-consumer equivalence, net source reduction, and
+performance gains are not claimed; [[file:use-cases/navier-stokes-euler.org][the Euler study]] records these boundaries. Whole checked soundness relative to original
+~GraphTrace~ is established here. The suffix-crossing receipt below refutes
+unconditional ordinary soundness and reverse mode acceptance for the current
+algorithm. Complete cross-mode failure semantics and the original Ducournau
+relation mapping remain open.
+
+* Required factory preparation and context composition receipt
+
+~Functional.require~ returns either the exact missing typed capability or a
+retained factory. ~require_ok_iff~ preserves exact selection, allowing clients
+to use ~assemble_origin~ after preparation. ~require_missing_iff~ characterizes
+absence. ~Factory.zipWith~ combines retained factories at one context;
+~Factory.reindex~ adapts through an explicit context projection and retains
+its exact dependent result type. These functions add no graph compilation
+at factory invocation time.
+
+~Tests/FunctionalAssembly.lean~ checks reuse at different contexts, missing
+required capabilities, original-graph provenance after preparation, and
+rejection of a fixed old witness through reindexing. The source-informed
+~ContextualFactories.Prepared~ example retains background and residual
+factories before invoking them. This is a generic LeanPoo consumer workflow;
+it has no external Euler imports and closes no additional PDE theorem.
+
+* Suffix crossing: ordinary behavior versus complete graph ordering
+
+~GraphTrace.ancestor_local_order~ proves preservation of every original local
+order declared by any reachable ancestor. ~VerifiedOrder.ancestor_local_order~
+exposes it to clients using retained checked evidence. A compiled guide
+contract combines this theorem with an indexed ancestry receipt.
+
+The five-node ~suffixCrossing~ graph in ~Tests/ExecutionInvariant.lean~ has
+~P~ with local order ~A,B~, flagged ~S~ with parent ~A~, and ~Root~ with local
+order ~P,S~. Ordinary compilation returns ~Root,P,B,S,A~, reversing ~P~'s
+order. Checked compilation and independent reconstruction reject it with
+~suffixOrderViolation~. ~suffixCrossing_no_trace~ proves in Lean's kernel
+that the observed output has no ~GraphTrace~ for any tail. The executable
+compiler outcomes are regression guards; the no-trace claim is a separate
+kernel theorem, using only standard Lean axioms. Moving ~A~ to the end of
+~P~'s order makes the same root output acceptable; removing the suffix flag
+accepts ~Root,P,S,A,B~.
+
+Consequently unconditional ordinary success does not imply the stronger
+~GraphTrace~ contract, and unconditional ordinary-to-checked acceptance is
+not a remaining theorem to prove for the current algorithm. The direction
+checked-to-ordinary remains proved. Runtime algorithms are unchanged.
+The original C4-Mixins snapshot also accepts this fixture; this distinction
+must be accounted for before claiming equivalence with the original
+Ducournau relation. See [[file:reference-study.org::*Suffix crossing and the stronger graph contract][the source-bound study]]. Remaining work is to
+characterize the extra admissibility conditions or formalize the weaker
+source behavior separately, plus complete cross-mode failure semantics and
+the original paper relation mapping.
+
+* Conditional ordinary node acceptance and retained audit receipts
+
+~computeNode_ordinary_evidence~ extracts the actual parent collection, suffix
+selection, local compatibility, prefix merge trace, and exact result from
+successful ordinary execution. On canonical ~MetadataInvariant~ parents,
+~computeNode_checked_iff~ proves exact checked success equivalent to ordinary
+success, output uniqueness, and complete parent ~ParentCompatible~. The
+reverse proof constructs a node certificate from execution evidence; it
+assumes no root graph trace or caller-supplied certificate.
+
+~auditNode~ checks these extra conditions without a merge. Its soundness and
+completeness establish ~auditNode_acceptance_iff~ for the actual ordinary
+result under canonical metadata. ~computeAuditedNode~ executes ordinary once
+and retains the result and audit receipts. ~AuditedNode.checked~ proves exact
+checked acceptance; ~graphSound~ recovers original graph evidence;
+~insertSound~ preserves canonical metadata for fresh insertion. Proof fields
+erase. Audit diagnostics do not claim full checked-mode error equivalence,
+and no elaboration or runtime speedup has been measured.
+
+~Tests/OrdinaryNode.lean~ covers 256 five-node graph combinations with canonical
+parents obtained from checked parent recursion. Of 136 ordinary successes,
+116 pass the audit and 20 fail; audit acceptance agrees with checked execution
+and retained-wrapper acceptance. It includes repeated/empty declarations,
+suffix flags, and conflicting local constraints. An invented result can pass
+local audit but cannot acquire a graph trace without its actual ordinary
+execution receipt. A duplicate invented result is rejected. All new axiom
+reports contain only Lean standard axioms.
+
+This closes the conditional single-node reverse acceptance and original graph
+soundness boundary. Whole ordinary resolver/top-level conditional acceptance
+still needs the admissibility and canonical cache conditions propagated through
+all recursive calls. The unconditional suffix-crossing counterexample remains
+valid. Original paper relation mapping and full cross-mode failure
+characterization remain separate obligations.
+
+
+* Recursive ordinary computation with audited acceptance
+
+~LeanPoo/C4/AuditedResolver.lean~ lifts the node audit through parent recursion.
+~resolveAuditedNode_acceptance~ transfers actual audited success to both
+existing resolver modes on the same cache, and obtains final canonical
+metadata. The transfer uses successful checked executions to propagate the
+invariant; it does not require a caller-supplied root graph trace.
+
+~linearizeAudited_graph_sound~ starts from the empty cache and proves the
+original graph contract from actual top-level success alone.
+~linearizeAuditedVerified~ retains the existing ~VerifiedOrder~ interface,
+without executing checked compilation or a second merger.
+
+The executable corpus starts each of 256 five-node families from an empty
+cache and compares successful outputs with checked and ordinary compilation.
+The result is ~AUDITED-RESOLVER-OK families=256 accepted=116 rejected=140~.
+All six reported theorems use only ~propext~, ~Classical.choice~, and
+~Quot.sound~. Focused module, runtime, and reusable-client checks pass locally.
+It also checks cached zero-fuel access, insufficient cold fuel, unknown roots
+and parents, cycles, duplicate declarations, unreachable invalid declarations,
+and the previously retained suffix-crossing counterexample. Axiom reports
+cover recursive acceptance, graph soundness, mode transfer, ordinary success,
+and verified-wrapper projection.
+
+This closes successful graph soundness for the audited API. Unrestricted
+ordinary graph soundness remains refuted. Completeness of audited acceptance,
+complete failure semantics, measured performance, and the exact original
+Ducournau relation mapping remain separate research gates.
+
+
+* Audited acceptance completeness and canonical-cache fuel cases
+
+The previously open audited acceptance-completeness gate is closed by the
+reverse node, recursive, and top-level success theorems. Recursive equivalence
+requires canonical initial metadata; top-level equivalence has no caller
+validity or trace premise. Both directions preserve the exact successful
+cache or output. Optional successful-result projections are equal, while
+complete error-payload equivalence is not asserted.
+
+The executable corpus retains all 256 graph families and now also compares
+7168 recursive cases: empty or checked-derived partial parent caches, parent
+or root requests, and fuel 0 through 6. On joint success it compares every
+declared cache entry; on failure it compares rejection without equating error
+payloads. The receipt is
+~AUDITED-RESOLVER-OK families=256 accepted=116 rejected=140 cacheCases=7168~.
+
+All thirteen reported theorems, including seven new completeness/equivalence
+contracts, use only ~propext~, ~Classical.choice~, and ~Quot.sound~. The focused
+module, executable corpus, and generic guide contracts compile successfully.
+The runtime compilers themselves are unchanged in this slice. Original paper
+relation correspondence, complete failure semantics, and performance
+measurement remain open; success equivalence alone is not a speedup receipt.
+
+
+* Retained rejection receipts and diagnostic priority
+
+~LeanPoo/C4/Diagnostics.lean~ provides ~diagnoseAudited~, preserving the exact
+actual audited diagnostic and retained ~VerifiedOrder~ success. Its projection
+is proved for both branches. ~RejectedOrder.noVerified~ and
+~checkedRejected~ require no declaration uniqueness. ~noGraphTrace~ and the
+success/rejection graph equivalences use ~ReachableUnique~ to account for the
+runtime's duplicate-declaration validation policy.
+
+The seven-node witness has bases A, B, C, P inheriting [A,B,C], Q inheriting
+[C,B], suffix S inheriting [A], and Root inheriting [P,Q,S]. Prefix inconsistency
+and complete-parent suffix crossing coexist. Ordinary/audited return
+~inconsistentOrder~, while checked returns ~suffixOrderViolation~. Executable
+error comparisons establish distinct diagnostics; this receipt does not claim
+kernel evaluation of those full compiler executions.
+
+A separate kernel derivation for two identical Root leaf declarations exhibits
+~GraphTrace duplicateGraph "Root" ["Root"] []~ even though both compilers reject
+~duplicateNode "Root"~. This demonstrates the validation/evidence boundary.
+
+The focused diagnostic corpus covers eight fixtures: one success and seven
+rejections, including unknown roots/parents, cycles, incompatible suffixes,
+suffix-order violation, prefix inconsistency, and duplicates. The receipt is
+~DIAGNOSTICS-OK fixtures=8 accepted=1 rejected=7 priority=distinct duplicate=trace-and-rejection~.
+The six generic contracts use only ~propext~, ~Classical.choice~, and ~Quot.sound~;
+the duplicate finite derivation uses only ~propext~ and ~Quot.sound~. No
+native-evaluation proof axiom or admitted proof is used.
+
+Unqualified complete error-payload equivalence is refuted by the runtime
+witness. More detailed failure-phase characterization, original paper relation
+correspondence, and performance measurement remain separate research gates.
+
+
+* Retained precedence queries and paper property correspondence
+
+~LeanPoo/C4/OrderRelation.lean~ adds a list-scanning Boolean precedence query
+on ~VerifiedOrder~. Its kernel contracts establish ordered-pair equivalence,
+self rejection, original ancestry of both names, inherited local pairs,
+monotonic transfer from a retained ancestor order, and inheritance precedence
+for any reachable node. The latter is derived directly from graph coverage,
+then transported into the root order. No fresh graph compilation is required
+by these queries or client proofs.
+
+~lake build LeanPoo.C4.OrderRelation~ and
+~lake env lean Tests/OrderRelation.lean~ pass. The regression checks all 256
+five-node families from the audited resolver corpus: 116 verified successes,
+4176 pair queries against an independent membership/position oracle, and
+1516 true ancestor pairs retained in the root. It also checks all reachable
+local pairs and distinct inheritance pairs; self and missing queries occur
+in the positional corpus. Counts are executable receipts, not an exhaustive
+proof over arbitrary graphs. The generic theorems supply that proof boundary.
+
+The eight axiom reports show ~Precedes.included~ is axiom-free and the other
+seven use only ~propext~, ~Classical.choice~, and ~Quot.sound~. No ~sorryAx~ or
+native evaluation axiom is introduced. ~Tests/ReusableContracts.lean~ compiles
+the consumer guide's monotonic, local, inheritance, and membership examples.
+
+[[file:reference-study.org::*Paper properties and retained order relations][The paper correspondence table]] records the primary C3 source and pinned C4
+draft. Local and monotonic order properties now have query-facing contracts;
+graph EPG correspondence, C4's suffix exemption within that relation, and
+shape-isomorphism invariance remain open. No measured speedup or upstream
+Euler integration is claimed.
+
+
+* Injective graph renaming and proof-preserving result migration
+
+~LeanPoo/C4/Renaming.lean~ proves label independence through the actual
+leftmost eligible selection relation. Equality, tail membership, heads,
+advancement, and literal-tail compatibility commute with an injective name
+map. Merge and node certificates transport into a full original graph trace,
+including first-declaration lookup and every original parent edge.
+
+~VerifiedOrder.rename~ maps retained output once and supplies erased evidence
+for the renamed graph/root. Global original declaration uniqueness establishes
+the stronger sufficient validation premise; no compiler executes in this
+consumer operation. ~rename_unique~ identifies independent verified results
+and ~rename_precedes~ preserves all mapped Boolean pair queries.
+
+Focused commands are ~lake build LeanPoo.C4.Renaming~,
+~lake env lean Tests/C4Renaming.lean~, and
+~lake env lean Tests/ReusableContracts.lean~. The executable corpus applies
+a Unicode prefix and an A/B identity exchange to 256 five-node families,
+comparing actual renamed compilation with mapped original results and
+transported verified results: 512 runs, 232 successes, and 8352 pair queries.
+The seven axiom reports contain only Lean standard axioms: four use
+~propext~ and ~Quot.sound~, and three additionally use ~Classical.choice~.
+No ~sorryAx~ or native evaluation axiom occurs. It also checks missing/self pair queries,
+malformed graphs, and a collapsing-map boundary. These finite checks support
+the generic kernel proofs; they are not the proof of arbitrary relabeling.
+
+The paper correspondence table now records this completed relabeling slice.
+Arbitrary graph-isomorphism/declaration-permutation invariance, original EPG
+correspondence, and full error relabeling remain separate obligations. No
+measured speedup or external integration is claimed.
+
+
+* Check startup optimization with unchanged proof coverage
+
+The user-requested performance investigation measured startup separately from
+Lean payloads. ~just check~ establishes one Lake environment and reuses it for
+all existing Lean checks; contiguous module builds are batched. Standalone
+recipes retain Lake setup. All 124 Lean-file and 108 module-target references
+across Justfile recipes are unchanged, as are the existing timeouts and memory
+limits. The proof and runtime tests continue to execute.
+
+~Benchmarks/CheckStartup.py~ performs sequential, alternating A/B trials and
+requires exact equality of the selected Lean transcripts. The tracked
+[[file:../Benchmarks/receipts/check-startup-2026-10-04.json][three-repetition receipt]] records source hashes and CPU/wall time separately.
+Median cached-build wall time is 2.181 to 0.210 seconds; CPU is 0.338 to 0.065.
+For two selected Lean checks, wall time is 16.320 to 14.770 seconds and CPU is
+1.910 to 1.724, excluding separately recorded one-time environment preparation.
+[[file:check-performance.org][The performance guide]] bounds these claims to warm startup orchestration;
+no whole-suite percentage, cold-build gain, or C4 runtime speedup is inferred.

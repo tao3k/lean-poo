@@ -6,3 +6,44 @@ complete project gate. Diagnostic and incremental checks use bounded Lean
 processes through ~just check-debug~ and ~just check-incremental~.
 
 User-facing scenarios live in [[file:../Examples/README.org][Examples]].
+
+- [[file:SpecificationComposition.lean][SpecificationComposition]] checks fused finalizers, defaults, delayed inheritance, parent-order conflicts, source identity exclusion, and later ancestor insertion.
+
+- [[file:SharedFamily.lean][SharedFamily]] checks shared snapshot composition, declaration authority, metadata and C4 conflicts, and nested absence/error propagation.
+
+- [[file:ClassMigration.lean][ClassMigration]] checks three Person versions, defaults, deleted data, typed renaming/conversion, fresh computations, acceptance certificates, and rejection before source reads.
+- [[file:C4Ranked.lean][C4Ranked]] checks whole-graph ancestry ranks, complete structural impact, cycle/reference rejection, and independence from C4 method-order and suffix checks.
+- [[file:Renaming.lean][Renaming]] checks reversible heterogeneous slot renaming, internal self reads, delayed inheritance, defaults, duplicate writes, and later extension.
+- [[file:AncestryTransform.lean][AncestryTransform]] checks ancestry wrappers, heterogeneous and function-valued slots, unrelated branches, and later extension.
+- [[file:TargetPolicies.lean][TargetPolicies]] checks rejection, retained-specification target edits, constant-specification replacement, and target detachment.
+
+- [[file:QuiescentUpgrade.lean][QuiescentUpgrade]] checks admission closure, two concurrent readers draining, exception cleanup, canceled/stale requests, upgrade rollback, and the quiescence and authorization proofs.
+
+- [[file:SortedInheritance.lean][SortedInheritance]] checks two-level sort priorities, complete ordering certificates, same-sort C4 behavior, heterogeneous function slots, future reclassification, and metadata, hierarchy, local-order, and suffix conflicts.
+
+- [[file:ExtendedPrecedence.lean][ExtendedPrecedence]] checks leftmost eligible replay, rejected incorrect/incomplete traces, suffix exemption, checked graph linearization, and the selection and uniqueness proofs.
+- [[file:SuffixConsistency.lean][SuffixConsistency]] checks complete-order preservation after suffix reconstruction, exact coverage, suffix retention, and duplicate-free output given a duplicate-free inherited tail.
+- [[file:NodeCertificate.lean][NodeCertificate]] checks longest inherited-tail selection, fresh node names, complete node certificates, and rejection of incompatible, invented, or duplicate tails.
+- [[file:GraphCertificate.lean][GraphCertificate]] checks graph-derived ancestry, transitive order and suffix preservation, exact compiler-result binding, shared ancestors, repeated parent edges, and typed graph errors.
+- [[file:ReferenceMerge.lean][ReferenceMerge]] checks a complete structural merger, sufficient and insufficient budgets, graph declaration/length bounds, and reference suffix/node construction.
+- [[file:MergeInvariant.lean][MergeInvariant]] checks exact incremental tail counts, raw optimized merge soundness/completeness, reference output equivalence, certified replay completeness, and 3,616 finite candidate families.
+- [[file:TraversalInvariant.lean][TraversalInvariant]] checks first-write graph indexing, actual bounded suffix-walk soundness/completeness, table-size bounds, literal suffix retention, and conditional graph cache insertion/provenance.
+- [[file:SelectionInvariant.lean][SelectionInvariant]] checks optimized suffix/node reconstruction completeness, actual parent suffix selection soundness, conditional pointer-chain completeness, independent tail certification, and 3,905 comparisons with the original selection loop.
+- [[file:ParentInvariant.lean][ParentInvariant]] checks stable first-occurrence HashSet deduplication, exact positional cache collection, all-parent availability, original graph row binding including repeats, and 1,365 finite name families.
+- [[file:NormalizationInvariant.lean][NormalizationInvariant]] checks stable duplicate-candidate and empty-local-order normalization, full trace and node-certificate transport, actual collected candidate binding, and 14,535 finite comparisons.
+- [[file:MetadataInvariant.lean][MetadataInvariant]] checks graph tail origin and absence, selected suffix ancestry, complete flagged-ancestor walks under explicit semantic metadata coverage, derived parent-chain comparability, and a kernel-checked skipped-link counterexample.
+- [[file:ComputeInvariant.lean][ComputeInvariant]] checks empty-parent-tail omission, actual selected-tail reads and collection, both computeNode modes, conditional computed-node cache insertion, and 781 exact suffix-collector comparisons.
+- [[file:GraphComputeInvariant.lean][GraphComputeInvariant]] checks graph-derived runtime node certificates, proper marked-ancestor coverage, strong metadata preservation after actual fresh insertion, and graph ancestry recognition from the inserted node.
+- [[file:ResolverInvariant.lean][ResolverInvariant]] checks actual recursive resolver completeness, metadata and old-entry preservation, bounded new-key scope, original-declaration fuel sufficiency, cache hits at zero fuel, and 320 finite graph families against successful independent reconstruction.
+- [[file:ReachabilityInvariant.lean][ReachabilityInvariant]] checks exact runtime BFS modeling, edge-budget queue exhaustion, ancestor discovery and uniqueness, reachable-declaration fuel, conditional top-level completeness, and 1,080 finite root queries against independent set saturation.
+- [[file:ValidationInvariant.lean][ValidationInvariant]] checks actual declaration validation from uniqueness and parent closure, reachable-only uniqueness, derived validation and top-level completeness, and 96 finite graph families including disconnected duplicate policy.
+- [[file:ExecutionInvariant.lean][ExecutionInvariant]] checks evidence extracted from successful checked node execution, exact claimed-tail binding, checked-to-ordinary node/resolver/top-level simulation, 224 cache/node combinations, a malformed-cache freshness boundary, and a five-node suffix crossing with a kernel proof that its ordinary output has no original graph trace.
+- [[file:NodeSoundness.lean][NodeSoundness]] checks reverse certificate normalization, restoration of empty tails, original graph evidence from successful checked node execution, actual fresh metadata insertion, and 744 finite certificate combinations.
+- [[file:Diagnostics.lean][Diagnostics]] checks retained accepted/rejected diagnostics, a seven-node error-priority counterexample, semantic rejection contracts under reachable uniqueness, and a kernel graph derivation despite duplicate-declaration validation rejection.
+- [[file:AuditedResolver.lean][AuditedResolver]] checks bidirectional recursive audit acceptance, original graph soundness, 256 cold-cache graph combinations, 7168 canonical cache and fuel cases, optional-output equivalence, retained verified queries, warm zero-fuel hits, suffix-crossing rejection, and malformed graph boundaries.
+- [[file:OrdinaryNode.lean][OrdinaryNode]] checks exact conditional ordinary/checked node acceptance, retained audit receipts, canonical fresh insertion, 256 graph combinations, and rejection of treating an audited invented output as an execution receipt.
+- [[file:C4Renaming.lean][C4Renaming]] checks Unicode prefixing and identity exchange against actual renamed compilation, proof-preserving retained result migration, pair query preservation, malformed/collapsing boundaries, and seven kernel axiom reports.
+- [[file:OrderRelation.lean][OrderRelation]] checks retained precedence queries against an independent position oracle, ancestor pair monotonicity, reachable local and inheritance precedence across 256 graph families, and eight kernel axiom reports.
+- [[file:VerifiedOrder.lean][VerifiedOrder]] checks recursive checked soundness, original graph evidence without caller premises, 512 graph combinations, exact wrapper outcomes, and indexed ancestry decisions.
+- [[file:FunctionalAssembly.lean][FunctionalAssembly]] checks selected-provider provenance, typed context-dependent witnesses, first-provider selection, missing capabilities, and exact factory application.
+- [[file:ReusableContracts.lean][ReusableContracts]] compiles the generic client contracts documented in the API guide for ancestry, ordering constraints, certificate reuse, and batch updates.

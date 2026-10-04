@@ -14,3 +14,12 @@ declaration checksums before reporting timings.
 
 Usage scenarios live in [[file:../Examples/README.org][Examples]], and assertions live in
 [[file:../Tests/README.org][Tests]].
+
+~just benchmark-check-startup~ compares repeated Lake launches with batched
+cached builds and an already configured Lean environment. It alternates A/B
+order over three repetitions, requires identical Lean check transcripts, and
+reports CPU and wall time separately. ~CheckStartup.py --output receipt.json~
+saves samples and exact Lean-source hashes. These are warm pipeline startup
+measurements, not C4 algorithm throughput or a whole-suite speedup claim.
+
+See [[file:../docs/check-performance.org][check pipeline performance]] for the measured boundary and full gate policy.

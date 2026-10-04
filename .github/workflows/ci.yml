@@ -11,9 +11,39 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  library:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          lint: false
+      - name: Build public library and proofs
+        run: |
+          lake build
+          lake env lean LeanPoo/C4/Types.lean
+      - name: Package this run's build
+        run: tar -czf lean-build.tar.gz .lake/build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lean-build-${{ github.sha }}
+          path: lean-build.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  lean-checks:
+    name: ${{ matrix.atom }}
+    needs: library
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        atom: [examples, contracts, diagnostics]
     steps:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
@@ -23,7 +53,39 @@ jobs:
           test: false
           lint: false
       - uses: taiki-e/install-action@just
-      - name: Install project shell and Org parser
-        run: sudo apt-get update && sudo apt-get install -y zsh emacs-nox
-      - name: Check Lean modules, examples, debug, and Org docs
-        run: just check
+      - uses: actions/download-artifact@v4
+        with:
+          name: lean-build-${{ github.sha }}
+      - name: Restore this run's build
+        run: tar -xzf lean-build.tar.gz
+      - name: Check atom
+        run: lake env just --set lean lean _check-${{ matrix.atom }}
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@just
+      - name: Install Org parser
+        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+      - name: Parse maintained Org documents
+        run: just check-docs
+
+  # Preserve the existing required-check context. Failure, cancellation, or a
+  # skipped prerequisite must never turn this aggregate green.
+  check:
+    if: ${{ always() }}
+    needs: [library, lean-checks, docs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every atom to succeed
+        env:
+          LIBRARY: ${{ needs.library.result }}
+          LEAN_CHECKS: ${{ needs.lean-checks.result }}
+          DOCS: ${{ needs.docs.result }}
+        run: |
+          test "$LIBRARY" = success
+          test "$LEAN_CHECKS" = success
+          test "$DOCS" = success

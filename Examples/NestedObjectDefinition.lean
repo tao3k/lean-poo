@@ -121,4 +121,32 @@ def liftedWidget : Except String (List String × Option Nat × Option Nat) := do
 
 #eval liftedWidget
 
+/-- Independent component traits use one shared defaults identity. The caller
+can constrain their order without duplicating the defaults family. -/
+def sharedWidgetTraits : Except String (List String × Option Nat × Option Nat) := do
+  let defaults ← (Object.define (Key := InnerKey) (Value := InnerValue)
+      "SharedDefaults" do
+    Object.Declaration.Builder.value .x 1
+    Object.Declaration.Builder.value .z 5) |>.mapError (fun _ => "defaults")
+  let shifted ← (defaults.extendWith "ShiftTrait" do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· + 10)))
+    |>.mapError (fun _ => "shift trait")
+  let family ← (shifted.defineWith "ScaleTrait" ["SharedDefaults"] do
+    Object.Declaration.Builder.modifyInherited .x (Option.map (· * 2)))
+    |>.mapError (fun _ => "scale trait")
+  let outer : Object.Schema OuterKey (fun _ => Nat) :=
+    { graph := { nodes := [{ name := "Widget" },
+        { name := "Layout", parentOrders := [["Widget"]] }] }
+      declaration := fun _ => none }
+  let plan ← Object.compile outer "Layout" |>.mapError (fun _ => "layout")
+  let layers ← Object.Nested.Contributions.ofEntries plan
+    (Key := InnerKey) (Value := InnerValue) [("Widget", {})]
+    |>.mapError (fun _ => "component focus")
+  let widget ← Object.Nested.liftLayersWithParents plan family
+    [["ShiftTrait", "ScaleTrait"]] "shared-widget" layers.lookup
+    |>.mapError (fun _ => "component traits")
+  return (widget.plan.precedence, widget.read .x, widget.read .z)
+
+#eval sharedWidgetTraits
+
 end LeanPoo.Examples.NestedObjectDefinition

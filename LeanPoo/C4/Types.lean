@@ -32,12 +32,15 @@ structure Linearization where
 def Graph.findNode? (graph : Graph) (name : String) : Option Node :=
   graph.nodes.find? (fun node => node.name == name)
 
+/-- One stable first-occurrence deduplication step, shared with its proofs. -/
+@[inline] def uniqueStep (state : Std.HashSet String × List String) (item : String) :
+    Std.HashSet String × List String :=
+  let (seen, reversed) := state
+  if seen.contains item then (seen, reversed)
+  else (seen.insert item, item :: reversed)
+
 def unique (items : List String) : List String :=
-  let (_, reversed) := items.foldl (fun (seen, reversed) item =>
-    if seen.contains item then (seen, reversed)
-    else (seen.insert item, item :: reversed))
-    (({} : Std.HashSet String), [])
-  reversed.reverse
+  (items.foldl uniqueStep (({} : Std.HashSet String), [])).2.reverse
 
 /-- Validate names before following edges, so missing references have one error path. -/
 def Graph.validate (graph : Graph) : Except Error Unit := do

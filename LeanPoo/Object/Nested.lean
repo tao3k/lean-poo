@@ -87,7 +87,7 @@ private def liftedSchema {OuterKey : Type u} {OuterValue : OuterKey → Type v}
     {Key : Type w} {Value : Key → Type x}
     (outer : Plan OuterKey OuterValue) (namePrefix : String)
     (focus : Focus Key Value) (relevant : Std.HashSet String)
-    (baseRoots : List String) : Schema Key Value :=
+    (baseParentOrders : List (List String)) : Schema Key Value :=
   let rename := liftedName namePrefix
   let names := outer.precedence.filter relevant.contains
   let nodes := names.filterMap fun name =>
@@ -97,7 +97,7 @@ private def liftedSchema {OuterKey : Type u} {OuterValue : OuterKey → Type v}
       let layer := focus.layers.get? (rename name)
       let extraOrders := (layer.map (·.parentOrders)).getD []
       let baseOrders := if keptOrders.flatten.isEmpty then
-        baseRoots.map (fun root => [root]) else []
+        baseParentOrders else []
       { node with
         name := rename name
         parentOrders := keptOrders ++ extraOrders ++ baseOrders
@@ -133,14 +133,15 @@ private def compileFocus {OuterKey : Type u} {OuterValue : OuterKey → Type v}
     {Key : Type w} {Value : Key → Type x}
     (outer : Plan OuterKey OuterValue) (bases : List (Plan Key Value))
     (namePrefix : String)
-    (contribution : String → Option (Layer Key Value)) :
+    (contribution : String → Option (Layer Key Value))
+    (baseParentOrders : Option (List (List String)) := none) :
     Except LiftError (Option (Plan Key Value)) := do
   let focus := prepareFocus outer namePrefix contribution
   if !focus.relevant.contains outer.root then return none
   let compileWith (kept : Std.HashSet String) :
       Except LiftError (Plan Key Value) := do
     let lifted := liftedSchema outer namePrefix focus kept
-      (bases.map (·.root))
+      (baseParentOrders.getD ((bases.map (·.root)).map (fun root => [root])))
     let schema ← (lifted.mergeDisjointMany
       (bases.map (·.schema))).mapError .schema
     (compile schema (liftedName namePrefix outer.root)).mapError .c4
@@ -196,6 +197,29 @@ def liftLayersOnMany {OuterKey : Type u} {OuterValue : OuterKey → Type v}
   let plan? ← compileFocus outer (bases.map (·.plan)) namePrefix contribution
   match plan? with
   | some plan => return first.rebuild plan
+  | none => throw .missingFocus
+
+/-- Lift a focus over named parents from one authoritative inner family.
+Shared ancestors retain their identity and occur once in C4 precedence.
+Singleton orders leave parents independent; a multi-name order constrains
+relative precedence. Every selected parent must belong to the supplied
+schema. The family's resolution mode is retained. -/
+def liftLayersWithParents {OuterKey : Type u} {OuterValue : OuterKey → Type v}
+    {Key : Type w} {Value : Key → Type x}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (outer : Plan OuterKey OuterValue) (family : Memoized Key Value)
+    (parentOrders : List (List String)) (namePrefix : String)
+    (contribution : String → Option (Layer Key Value)) :
+    Except LiftError (Memoized Key Value) := do
+  let names := family.plan.schema.graph.nodes.foldl
+    (fun names node => names.insert node.name) ({} : Std.HashSet String)
+  for name in parentOrders.flatten do
+    unless names.contains name do
+      throw (.c4 (.unknownNode name))
+  let plan? ← compileFocus outer [family.plan] namePrefix contribution
+    (some parentOrders)
+  match plan? with
+  | some plan => return family.rebuild plan
   | none => throw .missingFocus
 
 /-- Direct declarations are layers without additional inner parents. -/

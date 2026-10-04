@@ -18,7 +18,17 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:DebugTrace.lean][DebugTrace]] | Public trace reports for a productive dependency and a recursive read. |
 | [[file:LayeredObject.lean][LayeredObject]] | Mix, extend, memoize, clone, and a diamond-shaped inheritance graph. |
 | [[file:ObjectDefinition.lean][ObjectDefinition]] | Typed object definitions with lazy inheritance, first-class parents, grouped C4 parent orders, checked authoring, and a function-valued slot call. |
-| [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions. |
+| [[file:NestedObjectDefinition.lean][NestedObjectDefinition]] | Extend an object-valued slot through two outer C4 branches, then derive a nested C4 graph from outer ancestry and explicit inner contributions, including named inner parents with shared ancestors. |
+| [[file:SpecificationComposition.lean][SpecificationComposition]] | Fuse policy specifications and include a later infrastructure ancestor before their direct finalizers. |
+| [[file:ContextualFactories.lean][ContextualFactories]] | Select context-indexed Euler budget factory interfaces, retaining existing proof producers and overriding only the residual capability. |
+| [[file:SharedFamily.lean][SharedFamily]] | Compose independently derived inner snapshots with explicitly shared prototype identities in an inherited component slot. |
+| [[file:ExtendedPrecedence.lean][ExtendedPrecedence]] | Compare certified prefix selection with and without a suffix exemption. |
+| [[file:SortedInheritance.lean][SortedInheritance]] | Linearize specification-sort priorities and enforce their complete cross-sort order through C4, changing noncommuting methods from 22 to 12. |
+| [[file:QuiescentUpgrade.lean][QuiescentUpgrade]] | Pause admission during an old Person operation and migrate class data only after that operation returns. |
+| [[file:ClassMigration.lean][ClassMigration]] | Upgrade Person through three typed class versions with defaults, value-preserving renaming, and an explicit age conversion. |
+| [[file:CertifiedInvalidation.lean][CertifiedInvalidation]] | Compute every structurally affected descendant with a checked reachability certificate. |
+| [[file:Renaming.lean][Renaming]] | Rename slots and their internal self reads, then rebind the inherited formula through a later extension. |
+| [[file:TargetAndWrapping.lean][TargetAndWrapping]] | Wrap existing ancestor contributions and compare target-update policies under later extension. |
 | [[file:FirstClassObject.lean][FirstClassObject]] | First-class prototype values and delayed construction. |
 | [[file:PrototypeCore.lean][PrototypeCore]] | Open-recursive prototype composition and delayed values. |
 

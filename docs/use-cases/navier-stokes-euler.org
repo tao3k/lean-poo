@@ -1,0 +1,107 @@
+#+TITLE: NavierStokesAndEuler: context-bound budget factories
+
+* Source snapshot and evidence
+
+The user-requested repository is cloned under
+~.data/NavierStokesAndEuler~. The inspected snapshot is
+~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~ from
+[[https://github.com/openai/NavierStokesAndEuler][openai/NavierStokesAndEuler]]. The clone is ignored by this repository.
+Its toolchain and Mathlib dependency are ~v4.34.0-rc2~; LeanPoo currently uses
+~v4.34.0~. The external repository is reference material only. LeanPoo has
+no dependency on it and does not build or integrate its PDE proofs. The
+compiled examples below exercise LeanPoo's own generic interfaces.
+
+* A concrete composition boundary
+
+The following locations are bound to that immutable snapshot:
+
+| Original interface | Current responsibility | Possible factory boundary |
+|--------------------+------------------------+---------------------------|
+| [[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/PacketParentNormalBudget.lean#L56][sourceNormalBudget]] | Builds ~NormalBudget D q (radius R C C₁)~ from actual coefficient estimates. | A factory taking one source context and returning the same indexed budget. |
+| [[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/PacketInitializedSpatialBudget.lean#L57][initializedSpatialBudget]] | Assembles coefficient, background, derivative, and residual estimates into one spatial budget. | A typed family of existing constructor functions. |
+| [[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/PacketInitializedSpatialBudget.lean#L86][background and derivative fields]] | Repeatedly supplies the same source/geometry/history/budget arguments to two field estimates. | Bind common context once; retain each original theorem as a factory. |
+| [[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/PacketInitializedSpatialBudget.lean#L96][residual_bound]] | Supplies the common context plus frequency/order/radius guards. | An independently replaceable residual provider whose result keeps the exact guard-indexed type. |
+| [[https://github.com/openai/NavierStokesAndEuler/blob/f9e8bc5b38b6e212696e8a30e3e91517af887bbd/Euler/PacketInitializedAllOrderBudget.lean#L107][all-order spatial factory]] | Requests the same spatial/drift construction at varying finite orders. | Select the factory once and apply it at each requested order. |
+
+The source already uses Lean structures and inherited projections, for
+example ~EulerMeanPacketProvider.Budget extends SobolevData~. Packaging common
+arguments in an ordinary dependent context record is therefore the necessary
+baseline. C4's additional role is selecting among interchangeable, typed
+providers and preserving their precedence across multiple inherited families.
+An import dependency graph alone does not justify applying C4 ordering.
+
+* Functional API experiment
+
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.lean]] uses five capability keys: background,
+derivative, residual, linear, and quadratic. Its topology joins initialized
+fields with correction coefficients, then derives a residual-only override:
+
+#+begin_example
+TightResidual → SpatialBudget → InitializedFields → CorrectionCoefficients → Source
+#+end_example
+
+This is a proposed provider topology, not a transcription of upstream module
+imports. ~Inputs Context Value~ retains the five existing factories.
+~Value : Context → Capability → Type~ lets the application supply actual
+upstream mathematical types. ~compileFamily~ obtains a verified C4 order and
+assembles the provider family. Generic kernel examples prove the override
+selects the new residual factory while retaining the old background factory.
+No scalar surrogate is used to claim a Navier–Stokes or Euler theorem.
+
+The library interface in ~LeanPoo.Functional.Assembly~ supplies:
+
+- ~Factory~ and ~Provider~ for context-dependent functions.
+- ~assemble~ for selection through a retained verified order.
+- ~assemble_origin~ for original-graph provider provenance.
+- ~apply_selected~ for application of the selected function to the exact context.
+
+This preserves the existing analytic proofs as callbacks. A revised field or
+parameter must still produce a proof of the exact new result type. Mathematical
+proofs are not replaced by C4, and open-recursive unsafe instantiation is not
+needed for this factory interface.
+
+* API lessons from the reference
+
+The repeated context arguments in ~initializedSpatialBudget~ motivate a
+consumer workflow, implemented entirely within LeanPoo:
+
+1. Retain an ordinary dependent context containing the data and guards.
+2. Keep existing constructors as ~Factory Context Result~ functions.
+3. Compile the provider graph once with ~linearizeVerified~ and ~assemble~.
+4. Select each required capability with ~Functional.require~ before the
+   repeated order/time/context loop. Failure returns the missing typed key.
+5. Retain the resulting functions. ~Factory.zipWith~ passes both results at
+   the same context to a consumer's existing constructor.
+6. Use ~Factory.reindex~ when a consumer has a larger context. Its explicit
+   projection determines the result type; it cannot silently move a proof
+   to changed data.
+
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] demonstrates steps 4 and 5 using the
+background and residual capabilities. ~prepare~ returns either the missing
+capability or both selected functions; ~Prepared.build~ then invokes those
+functions without graph compilation or provider lookup. Its pair result is
+an interface demonstration, not an upstream spatial-budget theorem.
+A client can replace the pair constructor with its own typed constructor.
+~require_ok_iff~ connects preparation to exact provider selection, so
+~assemble_origin~ remains available to prove original-graph provenance.
+
+Binding repeated arguments is a benefit of ordinary Lean functions and
+context records. C4 adds selection and precedence across a proposed provider
+family. The source's import graph is not itself such a family. Mathematical
+proofs still need their original guards, including order and radius bounds.
+
+* Evidence and limits
+
+At this snapshot, the local import closure of ~Euler.PacketParentNormalBudget~
+contains 317 upstream source modules and 56,066 source lines, before Mathlib.
+This is a dependency-size receipt, not proof complexity or performance data.
+~sourceNormalBudget~ has one external source call site, in
+~Euler/PacketParentLabelBudgets.lean~. That single call does not justify a
+claim of large source reduction from C4.
+
+No upstream source is migrated or removed. The maintained output is a generic
+LeanPoo API, its kernel-checked client contracts, and usage guidance informed
+by the reference. Net PDE source reduction and performance improvement are
+not established. Any later comparison must count context records, adapters,
+provider declarations, and consumer code together, and distinguish argument
+packaging from C4's contribution.
