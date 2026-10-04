@@ -1,5 +1,6 @@
 import LeanPoo.C4.VerifiedOrder
 import LeanPoo.C4.OrderRelation
+import LeanPoo.C4.Renaming
 import LeanPoo.C4.OrdinaryNode
 import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
@@ -63,6 +64,15 @@ example (order : VerifiedOrder graph root) (path : Ancestor graph node.name root
 
 example (order : VerifiedOrder graph root) (accepted : order.precedes left right = true) :
     Ancestor graph left root ∧ Ancestor graph right root := order.precedes_members accepted
+
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    VerifiedOrder (graph.rename rename) (rename root) := order.rename rename injective unique
+
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    (order.rename rename injective unique).precedes (rename left) (rename right) =
+      order.precedes left right := order.rename_precedes rename injective unique
 
 example (receipt : LinearizeState.AuditedNode table node)
     (valid : LinearizeState.MetadataInvariant graph table)

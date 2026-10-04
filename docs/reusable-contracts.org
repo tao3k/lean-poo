@@ -246,6 +246,49 @@ orders. They do not certify arbitrary ordinary compiler outputs. The
 [[file:reference-study.org::*Paper properties and retained order relations][paper correspondence table]] separates these order contracts from the
 still-open extended precedence graph and shape-isomorphism claims.
 
+* Move a verified order into a new name space
+
+Import ~LeanPoo.C4.Renaming~. Use ~graph.rename rename~ when composing independently
+named resolver or factory families. It maps declaration names and every parent
+reference, retaining declaration order, local-row order, and suffix flags.
+It does not rename application provider dictionaries or change their values;
+clients must align those keys with the renamed graph.
+
+Retain the compiled order and supply an injective name map plus global
+uniqueness of the original declaration names:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    VerifiedOrder (graph.rename rename) (rename root) := order.rename rename injective unique
+#+end_src
+
+~order.rename~ maps its output list once. Its acceptance and graph proofs erase;
+it does not execute either compiler, reconstruct parents, or run an audit.
+The caller must use the same function for the graph, root, and queries.
+For a fixed prefix, ~fun name => prefix ++ name~ is injective by
+~String.append_right_inj prefix~. Distinct prefixes alone do not prove disjointness
+of arbitrary preexisting family keys; establish that separately before union.
+No runtime speedup is claimed.
+
+~rename_output~ proves the exact mapped output. ~rename_unique~ identifies any
+independently compiled verified result of that renamed graph with the migrated
+one. Queries also commute with the mapping, even for self or absent names:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    (order.rename rename injective unique).precedes (rename left) (rename right) =
+      order.precedes left right := order.rename_precedes rename injective unique
+#+end_src
+
+Global declaration uniqueness is a sufficient explicit premise for this
+consumer operation. Existing verified compilation validates only reachable
+names, so a retained result alone does not discharge that stronger premise.
+A collapsing map cannot supply injectivity and may cause duplicate-declaration
+validation failure. This API transports C4 orders; it is distinct from the
+object-slot ~Object.Renaming~ interface.
+
 * Preserve caller ordering and inherited tails
 
 ~order.local_order~ transports a declared root constraint into the actual

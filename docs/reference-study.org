@@ -931,7 +931,7 @@ been fully inspected in this study.
 | Ancestor order preserved | ~VerifiedOrder.ancestor_order~, ~monotone_precedes~ | Same graph; independently retained ancestor result identified by trace uniqueness |
 | Marked ancestry is a literal suffix | ~VerifiedOrder.ancestor_suffix~ | Existing stronger graph contract |
 | Extended precedence graph | No graph-level EPG theorem yet | Formalize maximal common subclasses, directed constraints, cycles, and C4 suffix exemption |
-| Shape determinism | No graph-isomorphism theorem yet | Renaming plus ordered graph structure; name-insensitive examples are insufficient |
+| Shape determinism | ~GraphTrace.rename~, ~VerifiedOrder.rename_unique~ for injective relabeling | Arbitrary graph isomorphism and declaration permutation remain separate |
 
 ~LeanPoo/C4/OrderRelation.lean~ exposes executable pair queries backed by the
 first three contracts. ~Precedes~ means an ordered two-element sublist;
@@ -946,3 +946,26 @@ counterexample above still reverses an ancestor constraint. The paper's
 suffix exemption cannot be used to remove that monotonicity obligation.
 Verified checked/audited results retain it by construction. Performance
 measurements and external Euler code reduction remain separate work.
+
+
+* Injective relabeling and retained graph evidence
+
+The [[https://opendylan.org/_static/c3-linearization.pdf][C3 paper]] excludes dependence on class names from acceptability.
+The new ~LeanPoo/C4/Renaming.lean~ closes the relabeling part of that obligation
+for the original finite graph relation. It proves that leftmost eligible
+selection commutes with any injective String map, then transports merge,
+complete suffix, node, and recursive graph evidence. Every original local
+row and suffix flag is retained; the selected literal tail is mapped too.
+
+~VerifiedOrder.rename~ exposes this proof as a practical migration operation.
+With original global declaration uniqueness, checked completeness establishes
+successful compilation of the renamed graph's mapped output. Any independently
+retained verified order must agree. The data path only maps names in the
+retained output; compilers and source reference checkouts are unchanged.
+
+This proves identity relabeling for a fixed ordered declaration structure.
+It does not establish invariance under arbitrary graph-isomorphism witnesses,
+declaration permutation, or edits to parent-row order. Cross-compiler complete
+error-payload relabeling and unrestricted ordinary soundness are not derived.
+Extended precedence graph correspondence and its C4 suffix exemption remain
+open. The external Euler repository remains reference material only.

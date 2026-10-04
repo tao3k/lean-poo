@@ -1505,3 +1505,35 @@ draft. Local and monotonic order properties now have query-facing contracts;
 graph EPG correspondence, C4's suffix exemption within that relation, and
 shape-isomorphism invariance remain open. No measured speedup or upstream
 Euler integration is claimed.
+
+
+* Injective graph renaming and proof-preserving result migration
+
+~LeanPoo/C4/Renaming.lean~ proves label independence through the actual
+leftmost eligible selection relation. Equality, tail membership, heads,
+advancement, and literal-tail compatibility commute with an injective name
+map. Merge and node certificates transport into a full original graph trace,
+including first-declaration lookup and every original parent edge.
+
+~VerifiedOrder.rename~ maps retained output once and supplies erased evidence
+for the renamed graph/root. Global original declaration uniqueness establishes
+the stronger sufficient validation premise; no compiler executes in this
+consumer operation. ~rename_unique~ identifies independent verified results
+and ~rename_precedes~ preserves all mapped Boolean pair queries.
+
+Focused commands are ~lake build LeanPoo.C4.Renaming~,
+~lake env lean Tests/C4Renaming.lean~, and
+~lake env lean Tests/ReusableContracts.lean~. The executable corpus applies
+a Unicode prefix and an A/B identity exchange to 256 five-node families,
+comparing actual renamed compilation with mapped original results and
+transported verified results: 512 runs, 232 successes, and 8352 pair queries.
+The seven axiom reports contain only Lean standard axioms: four use
+~propext~ and ~Quot.sound~, and three additionally use ~Classical.choice~.
+No ~sorryAx~ or native evaluation axiom occurs. It also checks missing/self pair queries,
+malformed graphs, and a collapsing-map boundary. These finite checks support
+the generic kernel proofs; they are not the proof of arbitrary relabeling.
+
+The paper correspondence table now records this completed relabeling slice.
+Arbitrary graph-isomorphism/declaration-permutation invariance, original EPG
+correspondence, and full error relabeling remain separate obligations. No
+measured speedup or external integration is claimed.
