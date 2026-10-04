@@ -592,3 +592,18 @@ parent collection also binds its actual candidates to this normalization.
 Canonical suffix metadata, runtime omission of empty parent tails, and full
 node/resolver population remain separate obligations before ordinary graph
 completeness can be claimed.
+
+* Further C4 closure: suffix metadata meaning and graph reachability
+
+Graph-derived most-specific tails now have a proved marked-ancestor origin,
+and empty tails characterize absence of marked graph ancestors. A stronger
+cache metadata invariant binds actual most-specific metadata to those tails
+and states semantic inherited-link coverage for proper marked ancestors.
+Under it, the runtime walk exactly recognizes marked graph ancestors and
+collected parent suffix chains are provably comparable. Successful selection
+and independent tail certification follow without assuming comparability
+separately. A kernel counterexample records why the earlier literal-link
+invariant alone cannot prove complete graph ancestry recognition.
+The stronger invariant still needs a population proof for actual node results
+and preservation through the resolver. These remain explicit integration
+obligations before ordinary graph completeness can be claimed.

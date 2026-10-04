@@ -912,3 +912,47 @@ parent tails in the runtime checker, complete ~computeNode~ and ~resolveNode~
 cache population proofs, reachable validation, and equivalence to the original
 Ducournau graph relation. Candidate normalization is now proved separately
 from these metadata and traversal obligations.
+
+* Graph-backed suffix metadata and selection receipt
+
+~lake build LeanPoo.C4.MetadataInvariant~ checks that every nonempty
+~GraphTrace~ most-specific tail is the complete precedence of an actually
+declared marked suffix ancestor. An empty tail is equivalent to absence of
+all marked graph ancestors, including the root itself.
+
+~MetadataInvariant~ extends the earlier cache provenance with three explicit
+semantic premises: cached most-specific metadata reconstructs the exact
+~GraphTrace~ tail; selected names have actual cached entries; and an
+inherited link contains each proper marked ancestor in the next cached
+precedence. This coverage premise is stated using graph ancestry and list
+membership, not assumed pointer reachability or pairwise chain comparability.
+The marked status and graph ancestry of selected names are derived from these
+premises and graph tail origin, rather than added as fields.
+
+Strict cached precedence decrease proves ~flagged_ancestor_path~ under this
+coverage. The unchanged ~table.size + 1~ walk therefore recognizes exactly
+graph ancestry for declared marked suffix targets. Literal suffix containment
+between cached suffix precedences implies an actual inherited-pointer path.
+Original graph parent-tail preservation then derives pairwise comparability
+of collected parent metadata. ~collected_suffix_selection_complete~ proves
+successful runtime selection without a separate comparability premise, and
+~collected_suffix_selection_certified~ supplies a real selected cache entry
+and independent ~TailCertified~ evidence.
+
+~Tests/MetadataInvariant.lean~ prints fifteen reports containing only standard
+Lean axioms and requires ~METADATA-INVARIANT-OK~. Generic examples quantify
+over arbitrary graphs, caches, derivations, and collected parents. A
+kernel-checked counterexample has a valid old literal-link invariant but an
+absent inherited pointer at a node whose precedence includes a marked
+ancestor. The actual walk rejects that ancestor, and the stronger metadata
+invariant is proved impossible for this cache. No ~native_decide~ is used
+in these proofs. Runtime guards verify ordinary/checked graph output and
+cached tail projection for this graph.
+
+The counterexample prevents inferring completeness from the old cache-link
+invariant alone. Building ~MetadataInvariant~ from actual ~computeNode~
+results, preserving it through ~resolveNode~, runtime omission of empty
+parent tails, reachable validation, and whole ordinary graph completeness
+remain open. Graph-backed conditional walk/selection completeness does not
+establish these population obligations or equivalence to Ducournau's original
+graph relation.
