@@ -1441,3 +1441,36 @@ module, executable corpus, and generic guide contracts compile successfully.
 The runtime compilers themselves are unchanged in this slice. Original paper
 relation correspondence, complete failure semantics, and performance
 measurement remain open; success equivalence alone is not a speedup receipt.
+
+
+* Retained rejection receipts and diagnostic priority
+
+~LeanPoo/C4/Diagnostics.lean~ provides ~diagnoseAudited~, preserving the exact
+actual audited diagnostic and retained ~VerifiedOrder~ success. Its projection
+is proved for both branches. ~RejectedOrder.noVerified~ and
+~checkedRejected~ require no declaration uniqueness. ~noGraphTrace~ and the
+success/rejection graph equivalences use ~ReachableUnique~ to account for the
+runtime's duplicate-declaration validation policy.
+
+The seven-node witness has bases A, B, C, P inheriting [A,B,C], Q inheriting
+[C,B], suffix S inheriting [A], and Root inheriting [P,Q,S]. Prefix inconsistency
+and complete-parent suffix crossing coexist. Ordinary/audited return
+~inconsistentOrder~, while checked returns ~suffixOrderViolation~. Executable
+error comparisons establish distinct diagnostics; this receipt does not claim
+kernel evaluation of those full compiler executions.
+
+A separate kernel derivation for two identical Root leaf declarations exhibits
+~GraphTrace duplicateGraph "Root" ["Root"] []~ even though both compilers reject
+~duplicateNode "Root"~. This demonstrates the validation/evidence boundary.
+
+The focused diagnostic corpus covers eight fixtures: one success and seven
+rejections, including unknown roots/parents, cycles, incompatible suffixes,
+suffix-order violation, prefix inconsistency, and duplicates. The receipt is
+~DIAGNOSTICS-OK fixtures=8 accepted=1 rejected=7 priority=distinct duplicate=trace-and-rejection~.
+The six generic contracts use only ~propext~, ~Classical.choice~, and ~Quot.sound~;
+the duplicate finite derivation uses only ~propext~ and ~Quot.sound~. No
+native-evaluation proof axiom or admitted proof is used.
+
+Unqualified complete error-payload equivalence is refuted by the runtime
+witness. More detailed failure-phase characterization, original paper relation
+correspondence, and performance measurement remain separate research gates.

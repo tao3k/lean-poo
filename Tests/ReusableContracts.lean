@@ -1,6 +1,7 @@
 import LeanPoo.C4.VerifiedOrder
 import LeanPoo.C4.OrdinaryNode
 import LeanPoo.C4.AuditedResolver
+import LeanPoo.C4.Diagnostics
 import LeanPoo.Proof.Reuse
 import LeanPoo.Proof.Batch
 
@@ -20,6 +21,16 @@ example (checked : linearizeChecked graph root = .ok output) :
 
 example : ((linearizeAuditedVerified graph root).map (·.output)).toOption =
     (linearizeChecked graph root).toOption := linearizeAuditedVerified_toOption
+
+example (receipt : RejectedOrder graph root) : ¬ Nonempty (VerifiedOrder graph root) :=
+  receipt.noVerified
+
+example (receipt : RejectedOrder graph root) (unique : (graph.nodes.map Node.name).Nodup) :
+    ¬ ∃ output tail, GraphTrace graph root output tail :=
+  receipt.noGraphTrace (LinearizeState.reachableUnique_of_global unique)
+
+example : ((diagnoseAudited graph root).mapError (·.error)).map (·.output) =
+    linearizeAudited graph root := diagnoseAudited_projection
 
 example (order : VerifiedOrder graph root) (query : String)
     (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=

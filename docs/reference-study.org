@@ -883,3 +883,25 @@ that guarantee to clients. This supersedes the preceding open acceptance gate;
 complete failure-payload equivalence, measured performance, and mapping to
 the original Ducournau relations remain separate research tasks. Unrestricted
 ordinary soundness remains refuted by the retained suffix-crossing example.
+
+
+* Rejection evidence and non-equivalent diagnostic priority
+
+A seven-node Lean witness now refutes full audited/checked error-payload
+equivalence: P's [A,B,C] order crosses suffix S,A, while Q's [C,B] conflicts
+with the cleaned prefix. Ordinary-first audited compilation reports
+~inconsistentOrder~; checked's complete-parent suffix check reports
+~suffixOrderViolation~. Successful-output equivalence remains intact.
+
+The proof-facing negative contract is now precise: on reachable unique
+names, audited success is equivalent to original finite graph evidence, and
+actual rejection is equivalent to absence of all such evidence. Without
+uniqueness, a rejected execution still excludes a successful verified order,
+but a duplicate leaf declaration can admit a kernel graph derivation while
+validation rejects it. ~diagnoseAudited~ retains actual diagnostics and these
+conditional rejection contracts for client code.
+
+These conclusions are relative to the existing original ~GraphTrace~ relation.
+Mapping to Ducournau's paper, finer failure-phase semantics, and measured cost
+remain independent. The external Euler checkout remains reference material,
+with no integration or build dependency.

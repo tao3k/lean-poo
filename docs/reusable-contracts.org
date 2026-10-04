@@ -125,6 +125,46 @@ input or output. On failure, retain the original ~Except~ value if the specific
 diagnostic matters: these theorems do not equate error payloads. No performance
 improvement follows from success equivalence alone.
 
+* Retain failure receipts and prove the rejection boundary
+
+~diagnoseAudited graph root~ executes audited compilation once and returns
+~Except (RejectedOrder graph root) (VerifiedOrder graph root)~. On success,
+retain the existing verified queries. On failure, ~receipt.error~ is the actual
+audited diagnostic and ~receipt.rejected~ retains its execution equality.
+Proof fields erase. ~diagnoseAudited_projection~ recovers the original audited
+output or error exactly, so this wrapper does not rewrite diagnostics.
+
+A rejection always excludes successful verified compilation:
+
+#+begin_src lean
+example (receipt : RejectedOrder graph root) : ¬ Nonempty (VerifiedOrder graph root) :=
+  receipt.noVerified
+#+end_src
+
+~receipt.checkedRejected~ supplies checked rejection, with an existential
+error rather than an equal error payload. A seven-node executable witness
+combines contradictory prefix orders and a complete-parent suffix crossing:
+audited reports ~inconsistentOrder~ while checked reports
+~suffixOrderViolation~. Their successful-output equivalence does not imply
+identical diagnostic priority.
+
+To conclude there is no original finite graph derivation, supply reachable
+declaration uniqueness. A common stronger input is global name uniqueness:
+
+#+begin_src lean
+example (receipt : RejectedOrder graph root) (unique : (graph.nodes.map Node.name).Nodup) :
+    ¬ ∃ output tail, GraphTrace graph root output tail :=
+  receipt.noGraphTrace (LinearizeState.reachableUnique_of_global unique)
+#+end_src
+
+~linearizeAudited_graph_iff unique~ characterizes successful execution by
+original graph evidence; ~linearizeAudited_rejection_iff unique~ characterizes
+failure by absence of any such evidence. The uniqueness premise matters:
+two identical leaf declarations admit a kernel ~GraphTrace~ via first lookup,
+but validation rejects the duplicate. Preserve ~receipt.error~ when explaining
+validation failures to users; do not label every rejection as absence of graph
+evidence without the required premise.
+
 * Compile once, answer graph questions later
 
 Retain ~order : VerifiedOrder graph root~ after successful compilation.

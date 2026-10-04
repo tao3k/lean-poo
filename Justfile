@@ -32,6 +32,7 @@ check-merge: check-types
     lake build LeanPoo.C4.OrdinaryNode
     lake build LeanPoo.C4.ResolverSoundness
     lake build LeanPoo.C4.AuditedResolver
+    lake build LeanPoo.C4.Diagnostics
     lake build LeanPoo.C4.VerifiedOrder
     lake build LeanPoo.Functional.Assembly
 
@@ -229,6 +230,7 @@ check-tests: check-proof
     lake env lean Tests/NodeSoundness.lean
     lake env lean Tests/OrdinaryNode.lean
     lake env lean Tests/AuditedResolver.lean
+    lake env lean Tests/Diagnostics.lean
     lake env lean Tests/VerifiedOrder.lean
     lake env lean Tests/ReusableContracts.lean
     lake env lean Tests/FunctionalAssembly.lean
