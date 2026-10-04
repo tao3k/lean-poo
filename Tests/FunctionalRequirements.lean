@@ -26,6 +26,15 @@ example (order : VerifiedOrder graph root) (providers : String → Provider Cont
     assemble (order.rename rename injective unique) mapped key = assemble order providers key :=
   assemble_rename order rename injective unique mapped aligned
 
+example (order : VerifiedOrder graph root) (providers mapped : String → Provider Context Key Value)
+    (rename : String → String) (injective : Function.Injective rename)
+    (unique : (graph.nodes.map Node.name).Nodup) (keys : List Key)
+    (aligned : ∀ name, Ancestor graph name root → ∀ key ∈ keys,
+      mapped (rename name) key = providers name key) :
+    Requirements.prepare (assemble (order.rename rename injective unique) mapped) keys =
+      Requirements.prepare (assemble order providers) keys :=
+  Requirements.prepare_rename order providers mapped rename injective unique keys aligned
+
 private inductive Capability where
   | background | derivative | residual
   deriving BEq, DecidableEq, Repr
@@ -122,4 +131,6 @@ private def renamedCase : Bool :=
 #print axioms Requirements.Selected.available
 #print axioms Requirements.prepare_origin
 #print axioms Requirements.prepare_missing_head
+#print axioms Requirements.prepare_congr
+#print axioms Requirements.prepare_rename
 end LeanPoo.Tests.FunctionalRequirements

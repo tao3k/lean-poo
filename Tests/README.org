@@ -49,3 +49,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:ReusableContracts.lean][ReusableContracts]] compiles the generic client contracts documented in the API guide for ancestry, ordering constraints, certificate reuse, and batch updates.
 
 - [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries.
+
+- [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.

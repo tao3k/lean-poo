@@ -1,0 +1,112 @@
+#+TITLE: Euler interface benefits: measured costs and reference-only forecasts
+
+* Scope and reproducible receipt
+
+This report compares the immutable OpenAI reference at
+~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~ with a self-contained typed
+client fixture. The reference checkout is unchanged. Its current code uses
+ordinary direct constructors, not ~Functional.require~. The provider-client
+comparison is a proposed interface seam, not an existing upstream refactor.
+
+The [[file:../../Benchmarks/receipts/euler-maintenance-2026-10-04.json][machine-readable receipt]] records input hashes, exact source call ranges,
+counting rules, shared costs, and unmeasured forecast fields. Reproduce it with:
+
+#+begin_src sh
+python3 Benchmarks/EulerMaintenanceStudy.py --output /tmp/euler-maintenance.json
+lake env lean Tests/FunctionalMaintenance.lean
+#+end_src
+
+The optional Python study only reads the pinned source and local fixture;
+it does not build, import, or modify upstream code. It is outside CI's test
+dependencies. The Lean fixture is part of the shared local/CI contract gate.
+The Python output alone does not certify a Lean proof.
+
+* Benefit checklist for this capability
+
+| Item | Before | After / forecast | Evidence and excluded costs |
+|------+--------+------------------+-----------------------------|
+| Five-capability client preparation and application | 17 nonblank, noncomment code lines | 8 lines: 9 fewer, 52.94% | Measured fixture; counts checklist declaration, tuple alias, preparation, and result builder. Shared interface is 3 additional lines on both sides. |
+| Handwritten selection statements | 5 ~require~ calls | 1 ~Requirements.prepare~ call: 80% fewer statements | Measured provider-client fixture; existing Euler code has zero such ~require~ calls, so this is not an upstream deletion percentage. |
+| Consumer-owned prepared record fields | 5 | 0 | Tuple replaces this record. Capability declarations, provider definitions, mathematical data/guards, and consumer output types still exist. |
+| Analytic function/data/guard semantics | Arbitrary context-indexed factory values | Exactly the same returned function or first missing key | Kernel ~same_client~ theorem, not scalar substitution for Euler analysis. |
+| Shared requirement implementation | None in a standalone manual client | 104 code lines including general kernel proofs | Count the entire current ~Functional.Requirements~ module once. A toy source balance crosses zero at 12 identical consumers saving 9 lines each; context/provider/adapter and other library costs are excluded. |
+| Euler repeated common arguments | Four field calls, 33 identical explicit prefix arguments each: 132 occurrences | Proposed consumer surface: four context references | Lexical source inventory only. Adapters keeping the original signatures still need all 132 original arguments; context construction adds code. Net Euler lines saved are unmeasured. |
+| Change outside a consumer's requested capabilities | Manually reason about selection impact | Checklist preparation, including errors, remains exactly equal if requested provider values agree | Generic ~prepare_congr~ theorem; no measured engineer-hours estimate. |
+| Graph/provider namespace migration | Rename graph and update dictionary consistently | Entire checklist preparation stays equal under the stated alignment | Generic ~prepare_rename~ theorem. Unaligned dictionaries can fail; dictionary alignment work is still required. |
+| Whole Euler proof or maintenance reduction | Existing analytic proof bodies and guards | No established percentage or labor-hour saving | No upstream migration, adapter implementation, PDE build, or timed maintenance experiment. |
+
+The 17-to-8 comparison is narrowly about preparation/application plumbing.
+The same-capability/result types are shared. It excludes the common provider
+registry and C4 graph, which both variants already receive. Adding C4 to an
+existing fixed constructor introduces those costs, so the fixture percentage
+must not be applied to the whole Euler repository.
+
+The 104-line shared module includes more than runtime preparation: its selection,
+provenance, congruence, and rename proofs. The 12-consumer arithmetic is only
+~ceil(104 / 9)~, not a measured migration break-even point. Real context records,
+adapters preserving source signatures, capability declarations, provider
+configuration, constructors, and application-specific proofs must also be counted.
+
+* Source checklist: actual Euler call points
+
+All four locations are in ~Euler/PacketInitializedSpatialBudget.lean~ at the pin:
+
+| Field | Source lines | Explicit argument groups | Common prefix groups |
+|-------+--------------+--------------------------+----------------------|
+| ~background~ | 86-88 | 40 | 33 |
+| ~background_derivative~ | 89-91 | 40 | 33 |
+| ~residual_bound~ | 96-98 | 44 | 33 |
+| ~drift_bound~ | 111-113 | 40 | 33 |
+
+Parenthesized expressions and proof terms count as one explicit lexical argument
+group; implicit Lean arguments are not inferred. The identical prefix is:
+
+#+begin_example
+M D hTime τ hτ hτT B δ hδ ξ hs α L H NB W LM WM BC hRc hcost hδ1 hα hR WP S hgrowth Cagree N hN k hk hbase
+#+end_example
+
+A context can bind this common data and its guards. That would concentrate
+consumer argument changes, but compatibility adapters still call the original
+four theorems with the original parameters. No theorem proof or guard disappears.
+Repeated uses beyond the first call number 99; this is a repetition inventory,
+not a proven deletion of 99 arguments from the whole implementation.
+
+* Attribute each benefit to its mechanism
+
+- Ordinary dependent context/function binding: packages repeated source data,
+  orders, radii, and guards. Existing fixed constructors can already use it.
+- ~Requirements.prepare~: removes repetitive all-or-error preparation and
+  exposes generic exact-selection/provenance contracts.
+- C4: chooses among actual replacement providers with declared precedence;
+  residual-only replacement does not require rebuilding selection code for
+  other capabilities. Fixed coordinate assembly alone does not need C4.
+- Retained factory tuple: adds no provider lookup or graph compilation at the
+  builder layer. Factory bodies keep their own behavior; runtime speedup is
+  not measured here.
+
+* Completed and open gates
+
+- [X] Immutable source pin and clean reference checkout.
+- [X] Four actual source call ranges, 33-argument common prefix, and source hash.
+- [X] Client before/after counts including new checklist and result application.
+- [X] Generic same-client proof covers successful functions and exact failure.
+- [X] Generic stable-checklist and full-checklist namespace migration proofs.
+- [X] Shared implementation cost reported separately.
+- [ ] Reference-only accounting of full dependent contexts and compatibility adapters.
+- [ ] Net source estimate including provider registry, graph, consumer construction, and adapter costs.
+- [ ] Measured maintenance-change effort; no hours or global percentage asserted.
+
+* Checklist to include in every subsequent progress report
+
+For each new reusable capability, report:
+
+1. Capability and concrete reference call point, with immutable source location.
+2. Before/after unit: lines, selection statements, repeated arguments, or edit sites.
+3. What is measured locally, what is a conditional source forecast, and what is unknown.
+4. Added context/adapter/provider/graph/proof costs and their accounting scope.
+5. Kernel/API contract showing the comparison preserves the exact domain types.
+6. Remaining evidence gate and the next reference-only study to close it.
+
+A concise report table should always include ~Reference point | Before | After
+or forecast | Added costs | Evidence status~. Unknown savings remain unknown;
+no repository-wide percentage is extrapolated from a small client fixture.

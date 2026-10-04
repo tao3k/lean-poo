@@ -100,6 +100,34 @@ theorem prepare_origin (order : C4.VerifiedOrder graph root)
   obtain ⟨name, ancestor, source⟩ := assemble_origin selected
   exact ⟨name, ancestor, factory, source⟩
 
+/-- Preparation depends only on the capabilities requested by this consumer.
+Unrequested provider edits leave its retained tuple and error result unchanged. -/
+theorem prepare_congr (provider other : Provider Context Key Value) (keys : List Key)
+    (same : ∀ key ∈ keys, other key = provider key) :
+    prepare other keys = prepare provider keys := by
+  induction keys with
+  | nil => rfl
+  | cons key rest ih =>
+    have head := same key (by simp)
+    have tail := ih (fun other member => same other (by simp [member]))
+    simp only [prepare, head]
+    cases provider key <;> simp_all
+
+/-- Aligned graph/provider renaming preserves the entire caller checklist,
+including its first missing key, rather than only a single capability lookup. -/
+theorem prepare_rename (order : C4.VerifiedOrder graph root)
+    (providers mapped : String → Provider Context Key Value)
+    (rename : String → String) (injective : Function.Injective rename)
+    (unique : (graph.nodes.map C4.Node.name).Nodup) (keys : List Key)
+    (aligned : ∀ name, C4.Ancestor graph name root → ∀ key ∈ keys,
+      mapped (rename name) key = providers name key) :
+    prepare (assemble (order.rename rename injective unique) mapped) keys =
+      prepare (assemble order providers) keys := by
+  apply prepare_congr
+  intro key requested
+  exact assemble_rename order rename injective unique mapped
+    (fun name ancestor => aligned name ancestor key requested)
+
 /-- A missing first capability is reported without examining the tail. -/
 theorem prepare_missing_head (provider : Provider Context Key Value) (key : Key)
     (rest : List Key) (absent : provider key = none) :

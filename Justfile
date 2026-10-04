@@ -259,6 +259,7 @@ _check-contracts:
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean
+    {{lean}} Tests/FunctionalMaintenance.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     {{lean}} Tests/MutablePrototype.lean
     {{lean}} Tests/TypedSlots.lean

@@ -988,3 +988,16 @@ The pinned [[file:use-cases/navier-stokes-euler.org][source study]] compares ~Fu
 coordinate assembly with interchangeable initialized-budget capabilities.
 Ordinary dependent contexts remain the baseline; C4 adds precedence among
 actual replacement providers. Only LeanPoo's generic contracts are compiled.
+
+
+* Measured interface surface versus reference migration estimates
+
+The [[file:use-cases/euler-maintenance-checklist.org][Euler benefit checklist]] binds source argument repetitions to immutable
+call ranges and compares two typed local provider clients with a generic
+same-function/first-error theorem. The client comparison includes its capability
+list and result builder. Shared library and unknown source-adapter costs are
+reported separately; it is not a global Euler source-reduction claim.
+
+~prepare_congr~ and ~prepare_rename~ advance the paper/interface chain to exact
+whole-checklist stability, including failure results. The source-study script
+is optional and reads reference material only; CI has no dependency on it.

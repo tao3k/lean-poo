@@ -425,3 +425,22 @@ last-write semantics. ~Patch.setMany_last~ exposes that guarantee.
 ~CertifiedObject.applyRevision~ connects this proof workflow to the object's
 checked finite change footprint when the caller supplies its resolver
 alignment and discharges the pending obligations.
+
+
+* Keep a prepared checklist stable across unrelated edits
+
+~Requirements.prepare_congr provider other keys same~ proves exact equality
+of preparation results when the providers agree on the requested keys.
+Unrequested keys require no agreement. Both retained function tuples and
+first-missing errors are preserved. This is a contract about provider values;
+it does not inspect arbitrary factory bodies to infer their stability.
+
+~Requirements.prepare_rename~ preserves the whole checklist through verified
+graph renaming, with alignment needed only on requested keys at original
+ancestors. It combines ~assemble_rename~ with ~prepare_congr~ and preserves
+errors as well as successes. Namespace alignment remains a caller obligation.
+
+[[file:../Tests/FunctionalMaintenance.lean][FunctionalMaintenance.same_client]] proves a five-field manual provider
+client and the general checklist API return exactly the same function or
+first missing error. The [[file:use-cases/euler-maintenance-checklist.org][Euler maintenance report]] gives reproducible local
+code counts, actual reference repetitions, and shared/adapter cost boundaries.

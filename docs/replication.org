@@ -1582,7 +1582,7 @@ duplicated order: 192 preparations. Successful tuples use three heterogeneous
 result types and are applied at two contexts. An independent first-missing
 oracle checks failure order. Aligned and deliberately unaligned dictionary
 cases exercise independently compiled namespace renaming. Negative elaboration
-checks reject a witness at a changed capability or context. Six axiom reports
+checks reject a witness at a changed capability or context. Eight axiom reports
 use only Lean's standard axioms, with no admitted or native-evaluation proof.
 
 The existing contextual-factory example consumes the general preparation API.
@@ -1591,3 +1591,24 @@ assembly from the proposed interchangeable budget-provider seam. The source
 clone remains reference-only; no upstream build or dependency is introduced.
 Maintenance benefits are removal of repeated preparation code and reuse of
 generic contracts, not an established PDE line-count or runtime speedup.
+
+
+* Whole-checklist preservation and reference maintenance accounting
+
+~Requirements.prepare_congr~ closes exact preparation stability under changes
+outside requested capabilities. ~prepare_rename~ lifts the existing provider
+name-alignment contract to an entire checklist, including its missing-key
+failure. Both are generic kernel proofs over arbitrary dependent result types.
+
+~Tests/FunctionalMaintenance.lean~ compares a manual five-capability prepared
+record with the shared checklist. ~same_client~ establishes identical successful
+functions and first-missing errors for every provider, preserving abstract
+context-indexed result types. Its axiom report contains only standard Lean axioms.
+
+The optional ~Benchmarks/EulerMaintenanceStudy.py~ records source hashes and
+lexical argument groups at the immutable Euler reference pin, then counts the
+compiled client's complete preparation/application sections. Its tracked
+receipt and [[file:use-cases/euler-maintenance-checklist.org][benefit checklist]] distinguish 17-to-8 local client code lines from
+four upstream 33-argument common prefixes. Shared implementation, adapter,
+context, and provider costs remain explicit. No upstream integration, net PDE
+line reduction, maintenance-hour saving, or runtime speedup is established.

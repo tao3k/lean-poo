@@ -23,3 +23,12 @@ saves samples and exact Lean-source hashes. These are warm pipeline startup
 measurements, not C4 algorithm throughput or a whole-suite speedup claim.
 
 See [[file:../docs/check-performance.org][check pipeline performance]] for the measured boundary and full gate policy.
+
+
+~python3 Benchmarks/EulerMaintenanceStudy.py --output /tmp/euler-maintenance.json~
+is an optional source/maintenance study, not a runtime benchmark. It requires
+and only reads the pinned clean ~.data/NavierStokesAndEuler~ reference. It counts
+common explicit arguments and marked code sections in the kernel-checked
+~Tests/FunctionalMaintenance.lean~ comparison, including checklist/application
+code and shared library costs. It runs no upstream builds. See the
+[[file:../docs/use-cases/euler-maintenance-checklist.org][benefit checklist]] and tracked receipt for scope and unknown adapter costs.
