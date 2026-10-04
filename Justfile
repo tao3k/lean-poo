@@ -386,4 +386,4 @@ clean:
 # Existing bounded diagnostic recipes retain their memory/time limits.
 [private]
 _check-diagnostics:
-    just --set lean "{{lean}}" check-incremental check-proof-reuse check-debug
+    just --set lean "{{lean}}" check-incremental false check-proof-reuse check-debug false

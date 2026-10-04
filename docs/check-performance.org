@@ -16,6 +16,13 @@ limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
 that C4's compilation algorithm became faster.
 
+The diagnostic dispatcher explicitly supplies ~false~ to both optional
+~verbose~ parameters. Without those arguments, ~just~ consumes the following
+~check-proof-reuse~ recipe name as ~check-incremental~'s parameter and omits that
+check. The earlier source inventory alone did not establish execution of all
+114 files. The corrected dispatcher runs the bounded proof-reuse corpus too;
+the prior successful gate is not complete evidence for that diagnostic.
+
 * Atomic CI and its merge gate
 
 The ~library~ job builds the public library and proofs. Its compressed build
