@@ -50,6 +50,25 @@ def compileFamily (inputs : Inputs Context Value)
   | .error error => .error error
   | .ok order => .ok (assemble order (providers inputs tightResidual))
 
+/-- A consumer declares the capabilities it needs and selects them before
+entering its order/time/context loop. Missing capabilities retain their key. -/
+structure Prepared (Context : Type u) (Value : Context → Capability → Type v) where
+  background : Factory Context (fun context => Value context .background)
+  residual : Factory Context (fun context => Value context .residual)
+
+def prepare (provider : Provider Context Capability Value) :
+    Except Capability (Prepared Context Value) := do
+  let background ← require provider .background
+  let residual ← require provider .residual
+  pure ⟨background, residual⟩
+
+/-- Invoke the retained functions at one shared context. A real client can
+replace the pair constructor with its existing budget constructor. -/
+def Prepared.build (prepared : Prepared Context Value) :
+    Factory Context (fun context => Value context .background × Value context .residual) :=
+  Factory.zipWith (fun _ background residual => (background, residual))
+    prepared.background prepared.residual
+
 example (inputs : Inputs Context Value)
     (tight : Factory Context (fun context => Value context .residual)) :
     select ["TightResidual", "SpatialBudget", "InitializedFields", "CorrectionCoefficients", "Source"]

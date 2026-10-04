@@ -85,9 +85,26 @@ the witness at the new indexed type. C4 selection supplies precedence and
 provider provenance; the mathematical contract comes from this result type.
 It does not automatically transport proofs across changed data.
 
+For a required capability, use ~Functional.require provider key~ during
+preparation. Match its ~Except~ once: ~.error key~ identifies the missing
+capability and ~.ok build~ supplies a retained factory. Later calls to
+~build context~ perform no provider lookup. ~require_ok_iff~ turns a successful
+preparation receipt into ~provider key = some build~; combine it with
+~assemble_origin~ to recover the original graph provider.
+
+~Factory.zipWith combine left right~ invokes retained factories at the same
+context and passes their data and witnesses to ~combine~. The result may be
+a client's dependent record. ~Factory.reindex project build~ adapts a factory
+to a larger context; the result is ~Result (project outer)~, preserving its
+exact dependency. Supplying a fixed old witness where a new context requires
+a different witness is still rejected by Lean.
+
 The [[file:use-cases/navier-stokes-euler.org][Euler budget study]] identifies actual upstream factory call sites.
 [[file:../Examples/ContextualFactories.lean][ContextualFactories]] shows the provider boundary with arbitrary
-context-indexed mathematical types and a residual-only override.
+context-indexed mathematical types, a residual-only override, and a
+~Prepared~ consumer retaining its required background/residual functions.
+The external Euler repository supplies design references; no import or
+build dependency is introduced.
 
 * Reuse proofs after an unrelated change
 

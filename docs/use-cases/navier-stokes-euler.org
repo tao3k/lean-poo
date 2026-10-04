@@ -7,8 +7,9 @@ The user-requested repository is cloned under
 ~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~ from
 [[https://github.com/openai/NavierStokesAndEuler][openai/NavierStokesAndEuler]]. The clone is ignored by this repository.
 Its toolchain and Mathlib dependency are ~v4.34.0-rc2~; LeanPoo currently uses
-~v4.34.0~. This receipt is a source study and a compiled LeanPoo interface
-experiment, not an upstream build or a migrated PDE proof.
+~v4.34.0~. The external repository is reference material only. LeanPoo has
+no dependency on it and does not build or integrate its PDE proofs. The
+compiled examples below exercise LeanPoo's own generic interfaces.
 
 * A concrete composition boundary
 
@@ -59,26 +60,48 @@ parameter must still produce a proof of the exact new result type. Mathematical
 proofs are not replaced by C4, and open-recursive unsafe instantiation is not
 needed for this factory interface.
 
-* Experiment needed to establish code reduction
+* API lessons from the reference
 
-The falsifiable next integration is ~sourceNormalBudget~, followed by one
-~initializedSpatialBudget~ call site:
+The repeated context arguments in ~initializedSpatialBudget~ motivate a
+consumer workflow, implemented entirely within LeanPoo:
 
-1. Build the original selected upstream target with its exact RC2 toolchain
-   and Mathlib pin, recording the baseline declarations and axiom reports.
-2. Bind the actual source parameters and guards into a dependent ~Context~.
-   Compare this native context-record baseline with a C4 provider variant.
-3. Instantiate the parametric value family with actual ~NormalBudget~ and
-   spatial estimate types; require Lean to reject a witness for changed data.
-4. Preserve the original target theorem types and prove wrapper equality or
-   the required extensional equivalence. Check the original proof consumer.
-5. Count total source changes including context definitions, adapters,
-   provider declarations, and call sites. Report net lines and repeated
-   arguments removed, and compare elaboration time separately.
+1. Retain an ordinary dependent context containing the data and guards.
+2. Keep existing constructors as ~Factory Context Result~ functions.
+3. Compile the provider graph once with ~linearizeVerified~ and ~assemble~.
+4. Select each required capability with ~Functional.require~ before the
+   repeated order/time/context loop. Failure returns the missing typed key.
+5. Retain the resulting functions. ~Factory.zipWith~ passes both results at
+   the same context to a consumer's existing constructor.
+6. Use ~Factory.reindex~ when a consumer has a larger context. Its explicit
+   projection determines the result type; it cannot silently move a proof
+   to changed data.
+
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] demonstrates steps 4 and 5 using the
+background and residual capabilities. ~prepare~ returns either the missing
+capability or both selected functions; ~Prepared.build~ then invokes those
+functions without graph compilation or provider lookup. Its pair result is
+an interface demonstration, not an upstream spatial-budget theorem.
+A client can replace the pair constructor with its own typed constructor.
+~require_ok_iff~ connects preparation to exact provider selection, so
+~assemble_origin~ remains available to prove original-graph provenance.
+
+Binding repeated arguments is a benefit of ordinary Lean functions and
+context records. C4 adds selection and precedence across a proposed provider
+family. The source's import graph is not itself such a family. Mathematical
+proofs still need their original guards, including order and radius bounds.
+
+* Evidence and limits
 
 At this snapshot, the local import closure of ~Euler.PacketParentNormalBudget~
 contains 317 upstream source modules and 56,066 source lines, before Mathlib.
 This is a dependency-size receipt, not proof complexity or performance data.
-The current experiment compiles the generic factory contract in LeanPoo;
-upstream toolchain compatibility, actual proof-consumer compilation, net code
-reduction, and performance improvements are not yet established.
+~sourceNormalBudget~ has one external source call site, in
+~Euler/PacketParentLabelBudgets.lean~. That single call does not justify a
+claim of large source reduction from C4.
+
+No upstream source is migrated or removed. The maintained output is a generic
+LeanPoo API, its kernel-checked client contracts, and usage guidance informed
+by the reference. Net PDE source reduction and performance improvement are
+not established. Any later comparison must count context records, adapters,
+provider declarations, and consumer code together, and distinguish argument
+packaging from C4's contribution.

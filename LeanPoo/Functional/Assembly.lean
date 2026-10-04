@@ -5,12 +5,31 @@ function values before applying a context; mathematical factories can remain
 noncomputable, while provider selection is executable. -/
 namespace LeanPoo.Functional
 
-universe u v w
+universe u v w x
 
 /-- Every factory returns a value indexed by the same supplied context.
 The result may bundle data and proofs depending on that data. -/
 abbrev Factory (Context : Type u) (Result : Context → Type v) :=
   (context : Context) → Result context
+
+namespace Factory
+
+/-- Adapt a factory to a larger context by an explicit projection. Its result
+is indexed by that projection; this does not transport a witness to new data. -/
+def reindex {Context : Type u} {Result : Context → Type v} {Outer : Type w}
+    (project : Outer → Context) (factory : Factory Context Result) :
+    Factory Outer (fun outer => Result (project outer)) :=
+  fun outer => factory (project outer)
+
+/-- Combine retained factories at the same context. The consumer may use both
+data and proof witnesses to construct its own context-indexed result. -/
+def zipWith {Context : Type u} {Left : Context → Type v}
+    {Right : Context → Type w} {Result : Context → Type x}
+    (combine : (context : Context) → Left context → Right context → Result context)
+    (left : Factory Context Left) (right : Factory Context Right) : Factory Context Result :=
+  fun context => combine context (left context) (right context)
+
+end Factory
 
 /-- A provider owns an optional factory at each typed capability key. -/
 abbrev Provider (Context : Type u) (Key : Type v) (Value : Context → Key → Type w) :=
@@ -71,6 +90,24 @@ theorem assemble_origin {order : C4.VerifiedOrder graph root}
 /-- Invoke a retained provider with the exact context determining its result. -/
 def apply (provider : Provider Context Key Value) (context : Context) (key : Key) :
     Option (Value context key) := (provider key).map (fun factory => factory context)
+
+/-- Resolve a required capability before invoking any factory. Failure returns
+the missing typed key; success is a function reusable across contexts. -/
+def require (provider : Provider Context Key Value) (key : Key) :
+    Except Key (Factory Context (fun context => Value context key)) :=
+  match provider key with
+  | none => .error key
+  | some factory => .ok factory
+
+theorem require_ok_iff {provider : Provider Context Key Value} :
+    require provider key = .ok factory ↔ provider key = some factory := by
+  unfold require
+  cases provider key <;> simp
+
+theorem require_missing_iff {provider : Provider Context Key Value} :
+    require provider key = .error key ↔ provider key = none := by
+  unfold require
+  cases provider key <;> simp
 
 theorem apply_selected {provider : Provider Context Key Value} {context : Context}
     (selected : provider key = some factory) :

@@ -1299,9 +1299,26 @@ binds the proposed Euler provider topology to arbitrary actual mathematical
 result types; it does not import the upstream analytic proof dependency tree.
 
 The source clone is pinned at ~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~.
-Upstream compilation under its RC2 toolchain, proof-consumer equivalence,
-net source reduction, and performance gains require the separate experiment
-described in [[file:use-cases/navier-stokes-euler.org][the Euler study]]. Whole checked soundness relative to original
+The external source is used only as a reference, with no integration or
+build dependency. PDE proof-consumer equivalence, net source reduction, and
+performance gains are not claimed; [[file:use-cases/navier-stokes-euler.org][the Euler study]] records these boundaries. Whole checked soundness relative to original
 ~GraphTrace~ is established here; whole ordinary soundness, reverse mode
 acceptance, complete cross-mode error semantics, and the original Ducournau
 relation equivalence remain unproved.
+
+* Required factory preparation and context composition receipt
+
+~Functional.require~ returns either the exact missing typed capability or a
+retained factory. ~require_ok_iff~ preserves exact selection, allowing clients
+to use ~assemble_origin~ after preparation. ~require_missing_iff~ characterizes
+absence. ~Factory.zipWith~ combines retained factories at one context;
+~Factory.reindex~ adapts through an explicit context projection and retains
+its exact dependent result type. These functions add no graph compilation
+at factory invocation time.
+
+~Tests/FunctionalAssembly.lean~ checks reuse at different contexts, missing
+required capabilities, original-graph provenance after preparation, and
+rejection of a fixed old witness through reindexing. The source-informed
+~ContextualFactories.Prepared~ example retains background and residual
+factories before invoking them. This is a generic LeanPoo consumer workflow;
+it has no external Euler imports and closes no additional PDE theorem.
