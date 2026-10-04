@@ -15,6 +15,12 @@ example (order : VerifiedOrder graph root) (found : graph.findNode? root = some 
     (declared : constraint ∈ node.parentOrders) : constraint.Sublist order.output :=
   order.local_order found declared
 
+example (order : VerifiedOrder graph root) (query : String)
+    (present : order.indexAncestors.isAncestor query = true)
+    (found : graph.findNode? query = some node) (declared : constraint ∈ node.parentOrders) :
+    constraint.Sublist order.output :=
+  order.ancestor_local_order (order.indexAncestors.isAncestor_iff.mp present) found declared
+
 example (current : ProofObject Key Value) (update : Patch Key Value)
     (certificate : Certificate current) (obligation : Obligation Key Value)
     (owned : obligation ∈ current.obligations) (safe : unaffected obligation update) :

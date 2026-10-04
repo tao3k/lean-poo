@@ -9,7 +9,7 @@ combine reusable library interfaces.
 
 | Need | Interface | Contract and cost |
 |------+-----------+-------------------|
-| An executable precedence | ~C4.linearize~ | Ordinary finite compiler; returns ~Except Error (List String)~. |
+| An executable precedence | ~C4.linearize~ | Source-shaped finite compiler; returns ~Except Error (List String)~; suffix crossing can reorder an ancestor's local constraint. |
 | Independent checks at each reachable node | ~C4.linearizeChecked~ | Successful output has an original ~GraphTrace~, by ~linearizeChecked_graph_sound~. |
 | Retain that result with proofs for client code | ~C4.linearizeVerified~ | One checked compilation; returns ~VerifiedOrder graph root~. Proof fields erase at runtime. |
 | Repeated ancestry queries | ~order.indexAncestors~ | One hash-set construction from the retained order, followed by hash-set queries. |
@@ -20,7 +20,10 @@ relative to ~linearizeChecked~. The new wrapper does not independently replay
 the graph a second time. It validates the root's reachable declarations;
 unreachable duplicate names or missing references do not become global schema
 errors. None of these interfaces proves equivalence with the original
-Ducournau relation or establishes ordinary-to-checked acceptance.
+Ducournau relation. Ordinary-to-checked acceptance fails in general: the
+[[file:reference-study.org::*Suffix crossing and the stronger graph contract][suffix-crossing study]] records a five-node counterexample. Use
+~linearizeVerified~ when the application relies on complete ancestor-order
+preservation.
 
 * Compile once, answer graph questions later
 
@@ -39,6 +42,22 @@ example (order : VerifiedOrder graph root) (query : String)
     (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=
   order.indexAncestors.isAncestor_iff.mp present
 #+end_src
+
+For a constraint declared by a reachable ancestor, use
+~order.ancestor_local_order path found declared~. It proves that the ancestor's
+original local order remains an ordered sublist of the retained root output.
+An indexed membership receipt supplies ~path~ directly:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (query : String)
+    (present : order.indexAncestors.isAncestor query = true)
+    (found : graph.findNode? query = some node) (declared : constraint ∈ node.parentOrders) :
+    constraint.Sublist order.output :=
+  order.ancestor_local_order (order.indexAncestors.isAncestor_iff.mp present) found declared
+#+end_src
+
+Retain ~index := order.indexAncestors~ for repeated membership queries. This
+proof consumes existing evidence; it does not compile each ancestor again.
 
 ~index.decideAncestor query~ supplies ~Decidable (Ancestor graph query root)~.
 Install it with a local ~letI~ when a conditional needs a proof in its true or

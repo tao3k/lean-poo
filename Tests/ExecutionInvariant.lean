@@ -1,4 +1,5 @@
 import LeanPoo.C4.ExecutionInvariant
+import LeanPoo.C4.GraphCertificate
 
 namespace LeanPoo.Tests.ExecutionInvariant
 open C4 LinearizeState
@@ -74,7 +75,55 @@ private def root : Node := { name := "Root", parentOrders := [["A"]] }
   | .error (.cycle "Root") => true
   | _ => false
 
+/- A valid, acyclic graph also separates ordinary and checked acceptance.
+The selected S,A tail intersects P's unmarked ancestry before B. Removing
+that tail preserves Root's local P,S constraint but reverses P's A,B one. -/
+private def suffixCrossing : Graph := { nodes := [
+  { name := "A" }, { name := "B" },
+  { name := "P", parentOrders := [["A", "B"]] },
+  { name := "S", parentOrders := [["A"]], suffix := true },
+  { name := "Root", parentOrders := [["P", "S"]] }] }
+
+#guard (suffixCrossing.validate).toOption.isSome
+#guard (linearize suffixCrossing "P").toOption == some ["P", "A", "B"]
+#guard (linearize suffixCrossing "Root").toOption == some ["Root", "P", "B", "S", "A"]
+#guard match linearizeChecked suffixCrossing "Root" with
+  | .error .suffixOrderViolation => true
+  | _ => false
+#guard match reconstruct suffixCrossing "Root" with
+  | .error .suffixOrderViolation => true
+  | _ => false
+
+/- Moving A to the end of P's order makes the same inherited tail compatible.
+The root output is unchanged, but it now has the strengthened contract. -/
+private def compatibleCrossing : Graph := { nodes := suffixCrossing.nodes.map fun node =>
+  if node.name == "P" then {node with parentOrders := [["B", "A"]]} else node }
+#guard (linearizeChecked compatibleCrossing "Root").toOption ==
+  some ["Root", "P", "B", "S", "A"]
+#guard (reconstruct compatibleCrossing "Root").toOption.map (·.output) ==
+  some ["Root", "P", "B", "S", "A"]
+
+private def noSharedSuffix : Graph := { nodes := suffixCrossing.nodes.map fun node =>
+  {node with suffix := false} }
+#guard (linearizeChecked noSharedSuffix "Root").toOption ==
+  some ["Root", "P", "S", "A", "B"]
+
+/-- The observed ordinary output cannot have an original GraphTrace, for
+any selected tail. This proof uses the original declared ancestor order. -/
+theorem suffixCrossing_no_trace :
+    ¬ ∃ tail, GraphTrace suffixCrossing "Root" ["Root", "P", "B", "S", "A"] tail := by
+  rintro ⟨tail, trace⟩
+  have path : Ancestor suffixCrossing "P" "Root" := .parent (by rfl) (by simp) .self
+  have retained := trace.ancestor_local_order path
+    (show suffixCrossing.findNode? "P" = some {name := "P", parentOrders := [["A", "B"]]} by rfl)
+    (show ["A", "B"] ∈ ([["A", "B"]] : List (List String)) by simp)
+  have impossible : ¬ (["A", "B"] : List String).Sublist ["Root", "P", "B", "S", "A"] := by decide
+  exact impossible retained
+
 #print axioms certifyNode_claimed
+#print axioms suffixCrossing_no_trace
+#print axioms GraphTrace.ancestor_local_order
+#eval IO.println "SUFFIX-CROSSING-OK ordinary=accepted checked=rejected trace=impossible"
 #print axioms readSuffix_sound
 #print axioms computeNode_checked_evidence
 #print axioms computeNode_checked_laws

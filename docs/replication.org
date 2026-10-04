@@ -1302,9 +1302,10 @@ The source clone is pinned at ~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~.
 The external source is used only as a reference, with no integration or
 build dependency. PDE proof-consumer equivalence, net source reduction, and
 performance gains are not claimed; [[file:use-cases/navier-stokes-euler.org][the Euler study]] records these boundaries. Whole checked soundness relative to original
-~GraphTrace~ is established here; whole ordinary soundness, reverse mode
-acceptance, complete cross-mode error semantics, and the original Ducournau
-relation equivalence remain unproved.
+~GraphTrace~ is established here. The suffix-crossing receipt below refutes
+unconditional ordinary soundness and reverse mode acceptance for the current
+algorithm. Complete cross-mode failure semantics and the original Ducournau
+relation mapping remain open.
 
 * Required factory preparation and context composition receipt
 
@@ -1322,3 +1323,32 @@ rejection of a fixed old witness through reindexing. The source-informed
 ~ContextualFactories.Prepared~ example retains background and residual
 factories before invoking them. This is a generic LeanPoo consumer workflow;
 it has no external Euler imports and closes no additional PDE theorem.
+
+* Suffix crossing: ordinary behavior versus complete graph ordering
+
+~GraphTrace.ancestor_local_order~ proves preservation of every original local
+order declared by any reachable ancestor. ~VerifiedOrder.ancestor_local_order~
+exposes it to clients using retained checked evidence. A compiled guide
+contract combines this theorem with an indexed ancestry receipt.
+
+The five-node ~suffixCrossing~ graph in ~Tests/ExecutionInvariant.lean~ has
+~P~ with local order ~A,B~, flagged ~S~ with parent ~A~, and ~Root~ with local
+order ~P,S~. Ordinary compilation returns ~Root,P,B,S,A~, reversing ~P~'s
+order. Checked compilation and independent reconstruction reject it with
+~suffixOrderViolation~. ~suffixCrossing_no_trace~ proves in Lean's kernel
+that the observed output has no ~GraphTrace~ for any tail. The executable
+compiler outcomes are regression guards; the no-trace claim is a separate
+kernel theorem, using only standard Lean axioms. Moving ~A~ to the end of
+~P~'s order makes the same root output acceptable; removing the suffix flag
+accepts ~Root,P,S,A,B~.
+
+Consequently unconditional ordinary success does not imply the stronger
+~GraphTrace~ contract, and unconditional ordinary-to-checked acceptance is
+not a remaining theorem to prove for the current algorithm. The direction
+checked-to-ordinary remains proved. Runtime algorithms are unchanged.
+The original C4-Mixins snapshot also accepts this fixture; this distinction
+must be accounted for before claiming equivalence with the original
+Ducournau relation. See [[file:reference-study.org::*Suffix crossing and the stronger graph contract][the source-bound study]]. Remaining work is to
+characterize the extra admissibility conditions or formalize the weaker
+source behavior separately, plus complete cross-mode failure semantics and
+the original paper relation mapping.

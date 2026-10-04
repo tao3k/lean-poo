@@ -57,6 +57,14 @@ theorem ancestor_order (order : VerifiedOrder graph root) (path : Ancestor graph
   obtain ⟨_, trace⟩ := order.derivation
   exact trace.ancestor path
 
+/-- Use a retained order to discharge ordering constraints declared by any
+reachable ancestor, without recompiling that ancestor. -/
+theorem ancestor_local_order (order : VerifiedOrder graph root)
+    (path : Ancestor graph name root) (found : graph.findNode? name = some node)
+    (member : constraint ∈ node.parentOrders) : constraint.Sublist order.output := by
+  obtain ⟨_, trace⟩ := order.derivation
+  exact trace.ancestor_local_order path found member
+
 theorem ancestor_suffix (order : VerifiedOrder graph root) (path : Ancestor graph name root)
     (found : graph.findNode? name = some node) (flag : node.suffix = true) :
     ∃ output tail, GraphTrace graph name output tail ∧ output.IsSuffix order.output := by

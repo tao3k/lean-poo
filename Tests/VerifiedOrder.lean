@@ -81,6 +81,7 @@ private def disconnected : Graph := { nodes := [
 #print axioms linearizeVerified_projection
 #print axioms C4.VerifiedOrder.covers
 #print axioms C4.VerifiedOrder.ancestor_suffix
+#print axioms C4.VerifiedOrder.ancestor_local_order
 #print axioms C4.VerifiedOrder.indexAncestors
 #print axioms AncestryIndex.isAncestor_iff
 

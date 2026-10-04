@@ -142,6 +142,15 @@ theorem GraphTrace.ancestor_tail {ancestor : String} (path : Ancestor graph ance
     obtain ⟨ancestorOutput, ancestorTail, ancestorTrace, inherited⟩ := ih parentTrace
     exact ⟨ancestorOutput, ancestorTail, ancestorTrace, inherited.trans kept⟩
 
+/-- Every reachable ancestor's original local order is retained in the root
+output, including unflagged ancestors and repeated declarations. -/
+theorem GraphTrace.ancestor_local_order {ancestor : String} {node : Node} {order : List String}
+    (trace : GraphTrace graph root output tail)
+    (path : Ancestor graph ancestor root) (found : graph.findNode? ancestor = some node)
+    (member : order ∈ node.parentOrders) : order.Sublist output := by
+  obtain ⟨_, _, ancestorTrace, kept⟩ := trace.ancestor path
+  exact (ancestorTrace.local_order found member).trans kept
+
 theorem GraphTrace.root_mem (trace : GraphTrace graph root output tail) : root ∈ output := by
   cases trace with
   | node _ _ _ _ certificate => simp [NodeCertified.output]

@@ -749,3 +749,74 @@ from the remaining upstream migration and code-reduction measurements.
 Original-graph checked soundness is now proved. Ordinary-to-checked acceptance,
 whole ordinary-graph soundness, complete cross-mode error behavior, and the
 original Ducournau relation equivalence remain open.
+
+* Suffix crossing and the stronger graph contract
+
+Reference pin: ~fare/c4-mixins~ at
+~b8448b6ba74bb23f18d56806957f8c0ef80d38f6~. In
+[[https://github.com/fare/c4-mixins/blob/b8448b6ba74bb23f18d56806957f8c0ef80d38f6/include/c4/linearize.hpp#L583][linearize.hpp:583-620]], the source checks its local ~parent_orders~ against
+~inherited_tail~, strips that tail from complete parent precedences and local
+orders, and merges the remaining candidates. Complete parent precedences do
+not receive the same compatibility check before stripping.
+
+The following acyclic fixture isolates the difference:
+
+| Node | Original local parent order | Suffix flag | Ordinary precedence |
+|------+-----------------------------+-------------+---------------------|
+| A | empty | false | A |
+| B | empty | false | B |
+| P | A,B | false | P,A,B |
+| S | A | true | S,A |
+| Root | P,S | false | Root,P,B,S,A |
+
+At ~Root~, the selected inherited tail is ~S,A~. Root's ~P,S~ local order
+passes the suffix check, while ~P,A,B~ has a shared-tail member before ~B~.
+Removing ~A~ from that parent candidate produces ~P,B~; appending the tail
+places ~A~ after ~B~. This preserves Root's local order and reverses the local
+~A,B~ order declared by P.
+
+The C++ reference comparison used this standalone fixture with the original
+header, compiled with ~clang++ -std=c++20 -fsyntax-only -I .data/c4-mixins/include~:
+
+#+begin_src cpp
+#include <c4/linearize.hpp>
+#include <type_traits>
+struct A { using parents = c4::type_list<>; static constexpr bool suffix = false; };
+struct B { using parents = c4::type_list<>; static constexpr bool suffix = false; };
+struct P { using parents = c4::type_list<c4::type_list<A,B>>; static constexpr bool suffix = false; };
+struct S { using parents = c4::type_list<c4::type_list<A>>; static constexpr bool suffix = true; };
+struct Root { using parents = c4::type_list<c4::type_list<P,S>>; static constexpr bool suffix = false; };
+struct Traits {
+  template<class N> using parent_orders = typename N::parents;
+  template<class N> static constexpr bool suffix = N::suffix;
+};
+static_assert(std::is_same_v<c4::precedence_list_t<P,Traits>, c4::type_list<P,A,B>>);
+static_assert(std::is_same_v<c4::precedence_list_t<Root,Traits>, c4::type_list<Root,P,B,S,A>>);
+#+end_src
+
+Both static assertions passed at the fixed reference pin. This is one source
+comparison, with no external dependency added to LeanPoo's build or CI.
+The pinned clone remains unchanged.
+
+[[file:../Tests/ExecutionInvariant.lean][ExecutionInvariant]] guards the exact Lean ordinary result and the checked
+and independent reconstruction ~suffixOrderViolation~ outcomes.
+~suffixCrossing_no_trace~ separately proves that the observed ordinary output
+admits no original ~GraphTrace~ at any tail. Its contradiction uses
+~GraphTrace.ancestor_local_order~ to demand ~A,B~ as an ordered sublist.
+The proof's axiom report contains only Lean standard axioms; compiler outcomes
+are executable guards, without a native-evaluation axiom in the theorem.
+Variants check that moving ~A~ to the end of P's order or removing S's suffix
+flag restores acceptance.
+
+The stronger ~GraphTrace~ contract enforces complete ancestor-order
+preservation. The current source-shaped ordinary behavior permits this
+suffix crossing. Unconditional equivalence between them is therefore false.
+Checked-to-ordinary success transfer remains established. A positive reverse
+result needs additional admissibility conditions; source/paper equivalence
+needs a relation matching the actual suffix semantics. This fixture does not
+by itself decide the original Ducournau paper relation.
+
+For applications composing theorem factories, a verified order supplies the
+stronger contract and the selected provider's original graph provenance.
+The external Euler source remains a design reference for those applications;
+its proofs and dependency tree are not integrated.
