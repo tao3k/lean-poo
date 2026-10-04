@@ -2,18 +2,45 @@
 
 * Preserve the complete gate
 
-~just check~ now enters one Lake environment, then runs the same recipe graph
-through the private ~_check~ entry. Lean invocations reuse that environment;
-standalone ~just check-*~ recipes still establish their own. Nested incremental,
-proof-reuse, and debug checks receive the selected Lean command. Contiguous
-module builds are batched into one Lake invocation per phase.
+~just check~ enters one Lake environment, builds the complete public library
+once, checks C4's source-owned types, and runs four shared atoms: examples,
+contracts, bounded diagnostics, and Org documentation. The source commands
+live in the Justfile; CI does not maintain a second list. Standalone public
+~check-*~ recipes retain their build prerequisites. The full gate avoids their
+repeated build traversals and six repeated prototype examples.
 
-No Lean file, module target, proof, axiom report, or diagnostic check is removed.
-The before/after Justfile inventory has the same 124 Lean-file references and
-108 module-target references across its recipes. Existing memory/allocation
+No unique Lean source, proof, axiom report, or diagnostic check is removed.
+The 104 unique example/test files remain covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
-rejection remain unchanged. This is startup orchestration; there is no claim
+rejection remain unchanged. This changes orchestration; it does not establish
 that C4's compilation algorithm became faster.
+
+* Atomic CI and its merge gate
+
+The ~library~ job builds the public library and proofs. Its compressed build
+artifact is named with the current workflow SHA and passed only within that
+run. The ~examples~, ~contracts~, and ~diagnostics~ jobs consume it and run
+independently with ~fail-fast: false~. The ~docs~ job installs only the Org
+parser and runs independently of Lean. Each job has a bounded timeout.
+
+The ~check~ job retains the previous status name and runs even after failure.
+It requires ~success~ from the library, complete Lean matrix, and docs; failed,
+cancelled, and skipped prerequisites cannot pass. No path filters skip checks.
+The local pre-commit hook still requires the complete ~just check~ gate.
+
+The recipes can be reproduced after ~lake build~:
+
+#+begin_src sh
+lake env just --set lean lean _check-examples
+lake env just --set lean lean _check-contracts
+lake env just --set lean lean _check-diagnostics
+just check-docs
+#+end_src
+
+Artifact transfer and runner setup have costs. The earlier single-job Linux
+check took 113 seconds at commit ~2abf644~; compare exact new-run job/critical
+path timings before claiming an overall CI speedup. Parallel jobs improve
+failure localization even when setup dominates wall time.
 
 * Controlled warm startup measurements
 

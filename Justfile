@@ -1,4 +1,4 @@
-set shell := ["zsh", "-eu", "-c"]
+set shell := ["bash", "-eu", "-c"]
 
 # Full checks establish the Lake environment once; standalone recipes retain it.
 lean := "lake env lean"
@@ -160,6 +160,10 @@ check-proof-reuse:
 
 # Elaborate user-facing usage examples.
 check-example: check-compose
+    just --set lean "{{lean}}" _check-examples
+
+[private]
+_check-examples:
     {{lean}} Examples/PrototypeCore.lean
     {{lean}} Examples/DelayedNumbers.lean
     {{lean}} Examples/PrototypeFunctions.lean
@@ -192,6 +196,10 @@ check-example: check-compose
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
+    just --set lean "{{lean}}" _check-contracts _check-diagnostics
+
+[private]
+_check-contracts:
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean
@@ -263,9 +271,6 @@ check-tests: check-proof
     {{lean}} Tests/ClassMigration.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/TargetPolicies.lean
     {{lean}} Tests/NestedPrototype.lean
-    just --set lean "{{lean}}" check-incremental
-    just --set lean "{{lean}}" check-proof-reuse
-    just --set lean "{{lean}}" check-debug
 
 # Check diagnostic contracts in a bounded Lean process.
 check-debug verbose="false":
@@ -340,13 +345,15 @@ benchmark-mutable-prototype:
 benchmark-check-startup:
     python3 Benchmarks/CheckStartup.py
 
-# Share one configured Lean environment across the complete unchanged gate.
+# Share one configured Lean environment across the complete gate.
 check:
     lake env just --set lean lean _check
 
 [private]
-_check: check-example check-tests check-docs
+_check:
     lake build
+    {{lean}} LeanPoo/C4/Types.lean
+    just --set lean "{{lean}}" _check-examples _check-contracts _check-diagnostics check-docs
 
 # Build the complete Lean library.
 build: check
@@ -354,3 +361,8 @@ build: check
 # Remove generated Lean build artifacts.
 clean:
     lake clean
+
+# Existing bounded diagnostic recipes retain their memory/time limits.
+[private]
+_check-diagnostics:
+    just --set lean "{{lean}}" check-incremental check-proof-reuse check-debug
