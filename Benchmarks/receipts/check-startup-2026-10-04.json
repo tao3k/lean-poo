@@ -1,0 +1,131 @@
+{
+  "targets": [
+    "LeanPoo.C4.Merge",
+    "LeanPoo.C4.Precedence",
+    "LeanPoo.C4.Suffix",
+    "LeanPoo.C4.GraphCertificate",
+    "LeanPoo.C4.VerifiedOrder",
+    "LeanPoo.C4.Renaming"
+  ],
+  "files": [
+    "Tests/ReusableContracts.lean",
+    "Tests/C4Renaming.lean"
+  ],
+  "repeats": 3,
+  "shared_environment_preparation": {
+    "wall_seconds": 0.5856568340022932,
+    "cpu_seconds": 0.12573800000000002
+  },
+  "samples": [
+    {
+      "repeat": 0,
+      "case": "cached-builds",
+      "variant": "baseline",
+      "wall_seconds": 2.1811686259970884,
+      "cpu_seconds": 0.33602199999999993
+    },
+    {
+      "repeat": 0,
+      "case": "cached-builds",
+      "variant": "shared",
+      "wall_seconds": 0.21029624999937369,
+      "cpu_seconds": 0.06508699999999998
+    },
+    {
+      "repeat": 0,
+      "case": "lean-checks",
+      "variant": "baseline",
+      "wall_seconds": 14.231937790995289,
+      "cpu_seconds": 1.837488
+    },
+    {
+      "repeat": 0,
+      "case": "lean-checks",
+      "variant": "shared",
+      "wall_seconds": 14.770334707995062,
+      "cpu_seconds": 1.724125
+    },
+    {
+      "repeat": 1,
+      "case": "cached-builds",
+      "variant": "shared",
+      "wall_seconds": 0.19265912500122795,
+      "cpu_seconds": 0.06313400000000069
+    },
+    {
+      "repeat": 1,
+      "case": "cached-builds",
+      "variant": "baseline",
+      "wall_seconds": 1.5138085010112263,
+      "cpu_seconds": 0.3384089999999995
+    },
+    {
+      "repeat": 1,
+      "case": "lean-checks",
+      "variant": "shared",
+      "wall_seconds": 11.919121750004706,
+      "cpu_seconds": 1.5955799999999993
+    },
+    {
+      "repeat": 1,
+      "case": "lean-checks",
+      "variant": "baseline",
+      "wall_seconds": 16.320325832995877,
+      "cpu_seconds": 1.931966
+    },
+    {
+      "repeat": 2,
+      "case": "cached-builds",
+      "variant": "baseline",
+      "wall_seconds": 3.7692163760002586,
+      "cpu_seconds": 0.3760249999999985
+    },
+    {
+      "repeat": 2,
+      "case": "cached-builds",
+      "variant": "shared",
+      "wall_seconds": 0.3621673340021516,
+      "cpu_seconds": 0.06619100000000078
+    },
+    {
+      "repeat": 2,
+      "case": "lean-checks",
+      "variant": "baseline",
+      "wall_seconds": 20.84465545800049,
+      "cpu_seconds": 1.9098509999999993
+    },
+    {
+      "repeat": 2,
+      "case": "lean-checks",
+      "variant": "shared",
+      "wall_seconds": 17.75220729200373,
+      "cpu_seconds": 1.7944399999999998
+    }
+  ],
+  "medians": {
+    "cached-builds": {
+      "baseline": {
+        "wall_seconds": 2.1811686259970884,
+        "cpu_seconds": 0.3384089999999995
+      },
+      "shared": {
+        "wall_seconds": 0.21029624999937369,
+        "cpu_seconds": 0.06508699999999998
+      }
+    },
+    "lean-checks": {
+      "baseline": {
+        "wall_seconds": 16.320325832995877,
+        "cpu_seconds": 1.9098509999999993
+      },
+      "shared": {
+        "wall_seconds": 14.770334707995062,
+        "cpu_seconds": 1.724125
+      }
+    }
+  },
+  "source_sha256": {
+    "Tests/ReusableContracts.lean": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b",
+    "Tests/C4Renaming.lean": "1eff493b4d6e7ffc3748db892653e23ea7afff990a02953381c0dd9cac023232"
+  }
+}

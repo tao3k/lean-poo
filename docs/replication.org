@@ -1537,3 +1537,22 @@ The paper correspondence table now records this completed relabeling slice.
 Arbitrary graph-isomorphism/declaration-permutation invariance, original EPG
 correspondence, and full error relabeling remain separate obligations. No
 measured speedup or external integration is claimed.
+
+
+* Check startup optimization with unchanged proof coverage
+
+The user-requested performance investigation measured startup separately from
+Lean payloads. ~just check~ establishes one Lake environment and reuses it for
+all existing Lean checks; contiguous module builds are batched. Standalone
+recipes retain Lake setup. All 124 Lean-file and 108 module-target references
+across Justfile recipes are unchanged, as are the existing timeouts and memory
+limits. The proof and runtime tests continue to execute.
+
+~Benchmarks/CheckStartup.py~ performs sequential, alternating A/B trials and
+requires exact equality of the selected Lean transcripts. The tracked
+[[file:../Benchmarks/receipts/check-startup-2026-10-04.json][three-repetition receipt]] records source hashes and CPU/wall time separately.
+Median cached-build wall time is 2.181 to 0.210 seconds; CPU is 0.338 to 0.065.
+For two selected Lean checks, wall time is 16.320 to 14.770 seconds and CPU is
+1.910 to 1.724, excluding separately recorded one-time environment preparation.
+[[file:check-performance.org][The performance guide]] bounds these claims to warm startup orchestration;
+no whole-suite percentage, cold-build gain, or C4 runtime speedup is inferred.

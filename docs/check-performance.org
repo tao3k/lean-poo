@@ -1,0 +1,61 @@
+#+TITLE: Check pipeline performance
+
+* Preserve the complete gate
+
+~just check~ now enters one Lake environment, then runs the same recipe graph
+through the private ~_check~ entry. Lean invocations reuse that environment;
+standalone ~just check-*~ recipes still establish their own. Nested incremental,
+proof-reuse, and debug checks receive the selected Lean command. Contiguous
+module builds are batched into one Lake invocation per phase.
+
+No Lean file, module target, proof, axiom report, or diagnostic check is removed.
+The before/after Justfile inventory has the same 124 Lean-file references and
+108 module-target references across its recipes. Existing memory/allocation
+limits, 30-second bounded checks, and the expected two-second unbounded-body
+rejection remain unchanged. This is startup orchestration; there is no claim
+that C4's compilation algorithm became faster.
+
+* Controlled warm startup measurements
+
+Run ~just benchmark-check-startup~ or save the full receipt:
+
+#+begin_src sh
+python3 Benchmarks/CheckStartup.py --repeats 3 --output /tmp/check-startup.json
+#+end_src
+
+The stdlib-only Python harness runs variants sequentially and alternates their
+order. Six identical cached module targets compare separate Lake invocations
+with one batched invocation. Two identical Lean files compare per-file Lake
+launches with the same native Lean executable in an already configured
+~LEAN_PATH~. The latter transcripts must match exactly. Every command must
+succeed within 30 seconds; a timeout or changed transcript fails the study.
+The initial warm build and shared-environment setup are separate preparation
+costs, recorded outside the timed samples.
+
+The [[file:../Benchmarks/receipts/check-startup-2026-10-04.json][2026-10-04 receipt]] retains every sample, preparation time, selected inputs,
+and source hashes. Medians from three repetitions on this host:
+
+| Selected workload | Baseline wall s | Shared wall s | Baseline CPU s | Shared CPU s |
+|-------------------+-----------------+---------------+----------------+--------------|
+| Six cached builds | 2.181 | 0.210 | 0.338 | 0.065 |
+| Two Lean checks | 16.320 | 14.770 | 1.910 | 1.724 |
+
+The first row reduces measured wall time by about 90% and CPU time by 81%.
+The second reduces measured wall time by about 9.5% and CPU time by 9.7%,
+excluding the separately reported one-time environment preparation. The full
+gate amortizes preparation over all checks. These samples do not establish a
+whole-suite percentage or cold-build improvement.
+
+The baseline full pre-commit gate took about thirteen minutes on this busy
+host. In these samples wall time is much larger than CPU time, so waiting and
+resource contention contribute materially. CPU and wall time must remain
+separate; a different host load can change full-gate wall time. Lean's thread
+policy is unchanged. Local full-gate and exact-head CI receipts remain required.
+
+* Keep runtime performance distinct
+
+~just benchmark-c4~ measures chain and fan-in compilation at 32–256 nodes.
+Declaration, schema merge, memoization, revision, dispatch, layout, and mutable
+prototype benchmarks have their own recipes. Use unchanged inputs, semantic
+checks, and repeated A/B measurements before changing those algorithms.
+Startup improvements cannot be reported as runtime factory or resolver gains.
