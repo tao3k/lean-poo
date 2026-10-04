@@ -7,6 +7,7 @@ import LeanPoo.C4.GraphCertificate
 import LeanPoo.C4.TraversalInvariant
 import LeanPoo.C4.SelectionInvariant
 import LeanPoo.C4.ParentInvariant
+import LeanPoo.C4.NormalizationInvariant
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

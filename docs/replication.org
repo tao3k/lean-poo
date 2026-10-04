@@ -867,3 +867,48 @@ suffix metadata, complete ~computeNode~ derivations, ~resolveNode~ cache
 preservation, and reachable validation remain open. These proofs require
 an existing graph derivation and cache provenance; they do not establish
 ordinary graph success or equivalence to Ducournau's original graph relation.
+
+* Duplicate candidate and empty local-order normalization receipt
+
+~lake build LeanPoo.C4.NormalizationInvariant~ checks stable deduplication
+through ~ScanEquivalent~: universal checks and first matching inputs remain
+equal. The relation survives arbitrary maps and every candidate advance,
+even when distinct parent names have identical precedences or cleanup makes
+previously distinct orders identical. Eligibility and leftmost selection
+therefore agree, and complete ~Precedence.Trace~ evidence transports in
+both directions.
+
+~merge_unique_parents~ lifts the relation to the actual optimized merger.
+~merge_empty_locals~ permits removing empty local orders before suffix
+cleanup; cleanup may independently empty other orders. The combined
+~merge_normalized_candidates~ and ~trace_normalized_candidates~ cover
+stable parent-name deduplication and empty local-order removal together.
+They preserve complete successful output and rejection domain via ~toOption~;
+the general theorem does not compare error payloads.
+
+~nodeCertificate_normalize~ transports a supplied full original node
+certificate to normalized parent orders and tails, retaining its complete
+output and selected tail. ~collected_precedence_map~ binds the actual
+successful collector to exact cache projections. The resulting
+~collected_candidates_normalize~ connects ~computeNode~'s actual collected
+parent results and filtered local orders to the original flattened parent
+edge candidates for any shared tail. Its cache projection is total only to
+state the lemma: successful collection supplies actual entries wherever it
+is used. This is a conditional normalization theorem, not a graph-success
+or cache-population theorem.
+
+~Tests/NormalizationInvariant.lean~ prints eighteen reports using at most
+standard Lean axioms, includes general kernel examples, and requires
+~NORMALIZATION-INVARIANT-OK comparisons=14535~. The finite comparison covers
+85 parent-name sequences, 57 local-order families, and three shared tails.
+It includes repeated parent names, identical orders from distinct names,
+empty local orders, blocked heads, conflicts, and cleanup-induced equality.
+Progress is emitted every 1,710 comparisons. Repeated names inside an order
+are retained; a repeated-name order can still be inconsistent.
+
+Remaining obligations are canonical ~mostSpecificSuffix~ metadata,
+selection-chain comparability derived from graph evidence, omission of empty
+parent tails in the runtime checker, complete ~computeNode~ and ~resolveNode~
+cache population proofs, reachable validation, and equivalence to the original
+Ducournau graph relation. Candidate normalization is now proved separately
+from these metadata and traversal obligations.

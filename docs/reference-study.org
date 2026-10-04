@@ -579,3 +579,16 @@ parent precedence in the complete root output.
 This closes collection and row binding. It leaves the simulation for removing
 repeated merge candidates and empty local orders, canonical suffix metadata,
 and full node/resolver cache population as separate obligations.
+
+* Further C4 closure: merge normalization
+
+Stable duplicate-parent candidate deletion and empty local-order removal now
+preserve complete operational traces in both directions and optimized merge
+outputs/rejection domains. The proof preserves first matching choices under
+arbitrary maps, including noninjective cache projections and suffix cleanup.
+Supplied complete node certificates transport to normalized parent rows and
+local orders without changing output or chosen tail. Successful runtime
+parent collection also binds its actual candidates to this normalization.
+Canonical suffix metadata, runtime omission of empty parent tails, and full
+node/resolver population remain separate obligations before ordinary graph
+completeness can be claimed.
