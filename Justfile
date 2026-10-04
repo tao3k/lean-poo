@@ -10,10 +10,21 @@ check-types:
 # Check C3 candidate merging independently.
 check-merge: check-types
     lake build LeanPoo.C4.Merge
+    lake build LeanPoo.C4.Precedence
+    lake build LeanPoo.C4.ReferenceMerge
+    lake build LeanPoo.C4.MergeInvariant
+    lake build LeanPoo.C4.Suffix
+    lake build LeanPoo.C4.NodeCertificate
+    lake build LeanPoo.C4.GraphCertificate
+    lake build LeanPoo.C4.TraversalInvariant
+    lake build LeanPoo.C4.SelectionInvariant
+    lake build LeanPoo.C4.ParentInvariant
+    lake build LeanPoo.C4.NormalizationInvariant
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
     lake build LeanPoo.C4.Linearize
+    lake build LeanPoo.C4.Ranked
 
 # Check the paper's executable prototype nucleus.
 check-mvp:
@@ -40,6 +51,7 @@ check-prototype: check-first-class
     lake build LeanPoo.Prototype.Lens
     lake build LeanPoo.Prototype.SkewLens
     lake build LeanPoo.Prototype.SlotSpec
+    lake build LeanPoo.Prototype.Target
 
 # Check typed generic selection over the object's existing slot evaluator.
 check-generic: check-prototype
@@ -60,6 +72,7 @@ check-object: check-c4 check-generic
     lake build LeanPoo.Object.Prepare
     lake build LeanPoo.Object.Cache
     lake build LeanPoo.Object.Class
+    lake build LeanPoo.Object.Migration
     lake build LeanPoo.Object.Initialization
     lake build LeanPoo.Object.MethodCombination
     lake build LeanPoo.Object.QualifiedMethods
@@ -90,8 +103,14 @@ check-compose: check-object
     lake build LeanPoo.Object.StrictBuilder
     lake build LeanPoo.Object.Definition
     lake build LeanPoo.Object.Nested
+    lake build LeanPoo.Object.SpecificationComposition
+    lake build LeanPoo.Object.SharedFamily
+    lake build LeanPoo.Object.AncestryTransform
+    lake build LeanPoo.Object.Renaming
     lake build LeanPoo.Object.Layout
     lake build LeanPoo.Object.Mutable
+    lake build LeanPoo.Object.Upgrade
+    lake build LeanPoo.Object.SortedInheritance
     lake build LeanPoo.Prototype.Mutable
 
 # Check the proof-composition extension.
@@ -128,14 +147,24 @@ check-example: check-compose
     lake env lean Examples/StaticMethodSelection.lean
     lake env lean Examples/ProofReuse.lean
     lake env lean Examples/LiveRevision.lean
+    lake env lean Examples/QuiescentUpgrade.lean
+    lake env lean Examples/SortedInheritance.lean
+    lake env lean Examples/ExtendedPrecedence.lean
     lake env lean Examples/DebugTrace.lean
     lake env lean Examples/LayeredObject.lean
     lake env lean Examples/ObjectDefinition.lean
     lake env lean Examples/NestedObjectDefinition.lean
+    lake env lean Examples/SpecificationComposition.lean
+    lake env lean Examples/SharedFamily.lean
+    lake env lean Examples/Renaming.lean
+    lake env lean Examples/ClassMigration.lean
+    lake env lean Examples/CertifiedInvalidation.lean
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Examples/TargetAndWrapping.lean
 
 # Check every behavioral and proof contract.
 check-tests: check-proof
     lake env lean Tests/C4SuffixOrder.lean
+    lake env lean Tests/C4Ranked.lean
     lake env lean Tests/C4Traversal.lean
     lake env lean Tests/ComputedDefault.lean
     lake env lean Tests/MapDeclaration.lean
@@ -164,12 +193,30 @@ check-tests: check-proof
     lake env lean Tests/Chapter9Combination.lean
     lake env lean Tests/SuffixLayout.lean
     lake env lean Tests/MutableObject.lean
+    lake env lean Tests/SortedInheritance.lean
+    lake env lean Tests/ExtendedPrecedence.lean
+    lake env lean Tests/SuffixConsistency.lean
+    lake env lean Tests/NodeCertificate.lean
+    lake env lean Tests/GraphCertificate.lean
+    lake env lean Tests/ReferenceMerge.lean
+    lake env lean Tests/MergeInvariant.lean
+    lake env lean Tests/TraversalInvariant.lean
+    lake env lean Tests/SelectionInvariant.lean
+    lake env lean Tests/ParentInvariant.lean
+    lake env lean Tests/NormalizationInvariant.lean
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     lake env lean Tests/MutablePrototype.lean
     lake env lean Tests/TypedSlots.lean
     lake env lean Tests/DeclarationBuilder.lean
     lake env lean Tests/FocusedSpecification.lean
     lake env lean Tests/SkewExtension.lean
     lake env lean Tests/SpecificationFocus.lean
+    lake env lean Tests/SpecificationComposition.lean
+    lake env lean Tests/SharedFamily.lean
+    lake env lean Tests/AncestryTransform.lean
+    lake env lean Tests/Renaming.lean
+    lake env lean Tests/ClassMigration.lean
+    timeout --signal=TERM --kill-after=3s 30s lake env lean -M 2048 -T 10000000 Tests/TargetPolicies.lean
     lake env lean Tests/NestedPrototype.lean
     just check-incremental
     just check-proof-reuse

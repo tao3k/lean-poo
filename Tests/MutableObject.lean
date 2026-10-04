@@ -58,4 +58,56 @@ private def batchRun : IO Bool := do
   unless ← batchRun do
     throw (IO.userError "batched mutable prototype revision failed") : IO Unit)
 
+/-- Compare all policies under every resolver: fresh dependent targets,
+versioned handles across two updates, and transactional errors. -/
+private def policyRun (mode : Object.ResolutionMode)
+    (policy : Object.UpdatePolicy) : IO Bool := do
+  let empty : Object.Schema String (fun _ => Nat) :=
+    { graph := { nodes := [] }, declaration := fun _ => none }
+  let declaration : Object.Declaration String (fun _ => Nat) :=
+    Object.Declaration.empty |>.withValue "count" 2
+      |>.withSlot "derived" (.self fun self => (self "count").map (· + 1))
+  let some plan := (LeanPoo.mix empty "Base" [] declaration).toOption
+    | return false
+  let object ← Object.Mutable.new (plan.memoizeUsing mode)
+  let old ← object.snapshot
+  -- Keep derived unforced in the old version until after revision.
+  let count := old.read "count"
+  let .ok first ← object.reviseWithPolicy policy
+      [("Base", fun d => d.withValue "count" 5)] | return false
+  let .ok second ← object.reviseWithPolicy policy
+      [("Base", fun d => d.withValue "count" 8)] | return false
+  let failed ← object.reviseWithPolicy policy
+      [("Base", fun d => d.withValue "count" 100), ("Unknown", id)]
+  let installed ← object.snapshot
+  let versions := match policy, first.previous, second.previous with
+    | .versioned, some v1, some v2 =>
+      v1.read "derived" == some 3 && v2.read "derived" == some 6
+    | .eager, none, none | .lazy, none, none => true
+    | _, _, _ => false
+  -- A declared target returning none distinguishes eager pre-install forcing
+  -- from successful lazy/versioned installation with a missing read later.
+  let missing ← object.reviseWithPolicy policy
+      [("Base", fun d => d.withSlot "derived" (.constant none))]
+  let afterMissing ← object.snapshot
+  let missingCorrect := match policy, missing with
+    | .eager, .error (.target (.noApplicableMethod "derived")) =>
+      afterMissing.read "derived" == some 9
+    | .lazy, .ok receipt | .versioned, .ok receipt =>
+      receipt.current.read "derived" == none && afterMissing.read "derived" == none
+    | _, _ => false
+  return count == some 2 && old.read "derived" == some 3 &&
+    first.current.read "derived" == some 6 &&
+    second.current.read "derived" == some 9 &&
+    (← object.read "count") == some 8 &&
+    installed.read "derived" == some 9 && failed.toOption.isNone &&
+    first.current.mode == mode && second.current.mode == mode &&
+    versions && missingCorrect
+
+#eval (do
+  for mode in [Object.ResolutionMode.onDemand, .compiled, .indexed] do
+    for policy in [Object.UpdatePolicy.eager, .lazy, .versioned] do
+      unless ← policyRun mode policy do
+        throw (IO.userError s!"update policy failed: {repr mode}/{repr policy}") : IO Unit)
+
 end LeanPoo.Tests.MutableObject

@@ -106,6 +106,91 @@ base family is reported as a schema error. The
 shift and a scale through an outer branch with no direct inner method, while
 the widget's own trait contributes independently to its inner parent graph.
 
+When several inner parents share ancestors, author them within one family
+snapshot and call
+~Object.Nested.liftLayersWithParents outerPlan family parentOrders namePrefix layers.lookup~.
+The selected names can be any nodes in that family's schema, including nodes
+outside its current root's ancestry. Use ~[["ShiftTrait", "ScaleTrait"]]~ to
+require that order, or ~[["ShiftTrait"], ["ScaleTrait"]]~ to leave their relative
+order to C4. Each retained outer leaf inherits those orders. The shared
+ancestor retains one identity and runs once; ~sharedWidgetTraits~ in the
+nested example returns ~12~ and preserves the defaults' unrelated ~z~ slot.
+The derived object retains the family's resolution mode. Unknown selected
+parents, conflicting orders, and lifted-name collisions return errors; a
+missing focus returns ~LiftError.missingFocus~. ~liftLayersOnMany~ remains the
+entry for distinct, independently authored families.
+
+For separately derived snapshots that share prototype identities, import
+~LeanPoo.Object.SharedFamily~ and call
+~left.mixSharedWith right ["Defaults"] "CombinedComponent"~. The listed
+shared names explicitly select the left snapshot as declaration authority.
+Each name must exist in both schemas, and its parent orders and suffix flag
+must match exactly. Every unlisted overlap is rejected. Different opaque
+slot bodies are not compared: the left declaration wins, including when it
+is absent. Use this entry only when that authority choice is intended.
+The two roots become independent parents; C4 includes their shared ancestors
+once and checks their combined constraints. The receiver's resolution mode
+is retained. ~Schema.mergeSharedFromLeft~ supplies the underlying graph merge.
+~Nested.mixSharedWith right sharedNames name~ applies the same operation to
+an inherited inner-object slot, propagating absence and earlier errors.
+[[file:../Examples/SharedFamily.lean][SharedFamily.lean]] combines two independent branches over one
+~Defaults~ identity and returns budget ~12~ with unchanged retries ~5~.
+
+To use the paper's alternative protocol that merges specifications into one
+identity, import ~LeanPoo.Object.SpecificationComposition~ and call
+~family.fuseSpecifications "CombinedPolicy" ["PolicyA", "PolicyB"]~. Sources
+are most-specific first. Their direct methods compose in that order and their
+parent orders are concatenated; their identities are not added as parents.
+Use direct methods for finalization and put ordinary contributions on parents:
+future parents added through ~Lens.prototypeSpecification~ will run before
+the fused direct methods. The optional suffix argument defaults to ~false~.
+~Specification.fuse~ is also available for already extracted specification
+values. The checked object entry rejects repeated sources and selected sources
+that remain ancestors, preventing a finalizer from being applied twice.
+[[file:../Examples/SpecificationComposition.lean][SpecificationComposition.lean]] runs a policy with budget ~34~,
+then includes a new infrastructure ancestor and obtains ~64~ after the same
+finalizers run. Defaults, delayed inherited methods, and the family's
+resolution mode keep their ordinary meaning.
+
+Import ~LeanPoo.Object.AncestryTransform~ to transform existing contributions
+throughout one object's current C4 ancestry. Use
+~object.wrapAncestrySlots (fun node key spec => ...)~ for typed method wrappers,
+or ~object.transformAncestryDeclarations change~ to edit whole direct
+declarations. A wrapper can return ~.computed (fun self inherited => ...)~
+and call ~spec.eval self inherited~ before adapting its result. Function-valued
+results can adapt method arguments as well. The pass preserves the C4 graph,
+resolution mode, and unrelated branches. Slot wrapping leaves defaults
+unchanged. Newly added layers are outside this earlier pass.
+
+Import ~LeanPoo.Object.Renaming~ for a reversible, typed renaming of an entire
+prototype family. Supply ~Renaming.forward~, ~inverse~, and the two inverse
+laws. The target value family is ~rename.Values Value~: each new key selects
+its old value type through the inverse map. Define a concrete mapping with
+~abbrev~ when type-class inference should reduce its keys to concrete types.
+Use ~rename.memoized object~ or ~rename.plan plan~. The pass translates all
+schema declarations, including unrelated branches, preserving prototype
+names, C4 order, defaults, duplicate-write order, and resolution mode. Slot
+bodies receive a translated self; inherited computations stay delayed.
+Future extensions must use the new keys or translate their declarations with
+~rename.declaration~. The operation rebuilds lazy value cells rather than
+sharing an already evaluated target. ~rename.instantiate instance~ transports
+a proof-bearing fixed point directly; ~Renaming.resolve~ proves agreement for
+every key and every final self. This API requires a bijection; it does not
+infer renamings or merge several methods into one alias.
+[[file:../Examples/Renaming.lean][Renaming.lean]] keeps a computed result ~6~ through renaming and
+rebinds it to ~14~ when a later extension supplies the new source value ~7~.
+
+Import ~LeanPoo.Prototype.Target~ for the paper's four raw target-update choices
+on ~Prototype.Object~. ~pair.updateTarget change~ rejects the update.
+~pair.updateTargetOutOfSync change~ keeps the old prototype, so a later
+extension reconstructs from it and loses the raw target edit.
+~pair.overwriteTargetSpecification change~ retains a constant updated target;
+future extensions inherit those values rather than rebound old formulas.
+~pair.detachTarget change~ returns a target thunk with no prototype.
+Use ~memoized.toFirstClassObject~ for a first-class view of a C4 object.
+[[file:../Examples/TargetAndWrapping.lean][TargetAndWrapping.lean]] runs both the wrapping pass and the
+future-extension differences between these target policies.
+
 Gerbil's ~.o~ syntax rejects a repeated direct method or repeated default in
 one form. ~Declaration.Builder~ is an ordered Lean state program: a later
 write to the same direct key replaces the earlier one. For authored object
@@ -435,6 +520,43 @@ computed slot before and after changing the base declaration.
 operation. If any edit fails, the old object and its cached reads remain
 current. The same example edits an inherited base and child computation
 together, then checks rollback for an unknown node.
+
+~Mutable.reviseWithPolicy~ compares the three target-update strategies from
+section 6, using the same ordered declaration batch:
+
+| Policy | Before installing the new specification | Access to old targets |
+|--------+----------------------------------------+-----------------------|
+| ~eager~ | Force every declared target; reject any missing target | Existing snapshots |
+| ~lazy~ | Install fresh unforced target cells | Existing snapshots |
+| ~versioned~ | Install fresh unforced target cells | Explicit ~receipt.previous~ and existing snapshots |
+
+On success ~receipt.current~ is the installed snapshot. It remains tied to
+that specification even after another update. ~versioned~ also returns the
+previous snapshot; reading an old target that was never forced still uses
+its old specification. New reads through the mutable identity use the new
+snapshot. Lazy dirty state is represented by replacement with fresh thunks;
+there is no separate dirty-bit table. All targets are replaced, including
+ones unaffected by the batch. A revision error, or a missing eager target,
+leaves the installed object unchanged. An empty successful batch follows the
+same refresh policy. These are explicit per-instance updates, with no heap
+registry or numeric version lookup service.
+
+Eager moves computation cost to updates and makes missing-target failure
+visible before publication. Lazy shortens updates but moves computation and
+missing reads to access time. Versioned permits readers to finish on their
+captured specification, at the cost of retaining plans and target cells as
+long as handles survive. For interactive editing, lazy can avoid computing
+unused targets. For a server requiring request consistency, capture one
+versioned snapshot per request. For latency-sensitive reads, eager can move
+work to a controlled update phase; this implementation provides no real-time
+latency bound. All policies retain the existing evaluator's requirement that
+forced recursive computations terminate; eager forcing does not recover from
+panics or divergent slot functions.
+
+~Tests/MutableObject.lean~ compares all three policies under all three resolver
+modes, including an unforced old dependent target, two updates, a rejected
+batch, and eager rollback versus lazy/versioned installation of a missing
+target.
 ~Prototype.MutableProto~ is the paper's one-identity mutable wrapper in
 Lean. ~compose child parent~ runs the parent first and then the child on the
 same ~Object.Mutable~ cell. ~composeAll~ accepts a most-specific-first list;
@@ -482,6 +604,153 @@ and validates a full object. A sealed class rejects unknown JSON fields.
 ~Object.Lens.slot~ gets, sets, or modifies a typed slot through persistent
 C4 recompilation; ~Lens.compose~ combines two typed lenses.
 
+* Cooperative quiescent upgrades
+
+~Object.Upgrade.Runtime~ wraps a memoized object with a mutex-protected
+operation boundary. ~withSnapshot~ admits one callback, captures its version
+and immutable object, and releases admission in ~finally~ on return or an
+~IO.Error~. Callbacks execute outside the mutex, so independent readers may
+run concurrently. All reads within one callback should use its captured
+object, rather than reopening admission for each slot.
+
+~Runtime.pause~ closes admission and returns an owner-bound ~Session~.
+Existing callbacks continue on their old snapshots. A new callback receives
+~Error.paused~; a second pause receives ~Error.alreadyPending~. The session
+exposes two operations:
+
+| Operation | Condition | Result |
+|-----------+-----------+--------|
+| ~session.commit update~ | Tracked callbacks still active | ~Failure.control (Error.busy n)~; updater is not called |
+| ~session.commit update~ | Matching request, no active callbacks | Apply the pure updater; install its result and advance version |
+| ~session.commit update~ | Updater returns an error | Preserve old object/version and keep admission paused |
+| ~session.cancel~ | Matching outstanding request | Reopen admission on the old object/version |
+| Commit or cancel | Canceled, superseded, or completed request | ~Error.stale~ |
+
+Commit is an explicit attempt rather than a blocking wait. Callers retry
+when their operations have drained, or cancel to resume service. A request
+number advances even on cancellation, so an old session cannot commit a
+replacement request at the same object version. Sessions retain their owner;
+they cannot be applied to a different runtime through the public API.
+Admission, departure, cancellation, and publication use the same mutex.
+The updater runs under that mutex and must terminate without reentering the
+runtime through effects. ~Control.commit_quiescent~ proves that a successful
+control transition has zero active operations, increments its version, and
+clears the pending request. ~commit_authorized~ checks the matching request
+and version; ~enter_paused~ proves rejection of new admission while paused.
+These are kernel-checked control laws, rather than proofs of the native mutex
+implementation or arbitrary callback behavior.
+
+[[file:../Examples/QuiescentUpgrade.lean][QuiescentUpgrade.lean]] holds the v1 Person on a callback's stack,
+requests an upgrade, observes ~busy 1~, and then migrates to the new class
+after the callback returns. New operations read the renamed field and fresh
+computed summary; the retained old object still reads its old name.
+[[file:../Tests/QuiescentUpgrade.lean][QuiescentUpgrade.lean]] also runs two dedicated tasks with promise-controlled
+completion: commit fails at two active operations, fails at one, and succeeds
+at zero. The regression has a 30-second process bound and no sleep-based
+ordering assumptions.
+
+This is cooperative quiescence for callbacks admitted through one runtime.
+Work spawned by a callback must be joined before it returns if that work is
+to count as active. Escaped snapshots and closures remain immutable old-version
+values; the protocol neither inspects native stacks nor unloads their code.
+A nonterminating callback prevents a successful upgrade. There is no process
+suspension, forced cancellation, native module loader, heap-wide registry,
+or coordinated multi-object transaction. Each runtime retains one fixed Lean
+key/value family; cross-family migration creates another runtime. A successful
+updater still has to return a C4-validated ~Memoized~ object; class acceptance
+is supplied by ~ClassSpec.migrateFrom~ when class migration is needed.
+
+* Typed class migration
+
+Import ~LeanPoo.Object.Migration~ for the paper's class-redefinition exercise.
+~targetClass.migrateFrom instanceName source transfers~ constructs a fresh
+object from the target class and an explicit list of ~FieldTransfer~ values.
+Source and target can have different key types and different key-indexed
+value families. ~FieldTransfer.preserve oldKey newKey rfl~ preserves equal
+payload types across a rename. A transfer's ~convert~ function returns
+~Except String (TargetValue targetKey)~ for a type change that may fail.
+Missing source data fails by default; ~.useTargetDefault~ leaves the target
+class's default or optional rule in control. A missing required target field
+still fails the final class check.
+
+The complete transfer registry is checked before source values are read.
+Repeated, undeclared, fixed, and computed targets are rejected. Only explicit
+source fields are read; omitted source fields are dropped from the new object
+while remaining in the old snapshot. The target schema contains the new class
+and its data layer; source prototype topology and method bodies are not copied.
+New computations therefore read the new final self. New fields use target
+class defaults unless explicitly transferred. The source resolution mode is
+retained. Runtime validation can force the target fields it checks.
+
+Success returns ~Migrated targetClass~ with ~object~ and an ~accepted~ proof.
+A conversion or target-refinement failure returns a typed ~MigrationError~;
+the source snapshot stays available. This is an explicit per-instance snapshot
+migration, without an automatic live-instance registry, old-store indexes,
+or a migration plan inferred from opaque callbacks.
+[[file:../Examples/ClassMigration.lean][ClassMigration.lean]] evolves ~Person~ from ~name~, to ~name~ plus a
+defaulted natural age, to ~full-name~, a converted string age, and email.
+[[file:../Tests/ClassMigration.lean][ClassMigration.lean]] also drops old data and recomputes dependent
+summaries, including under a later extension.
+
+* Specification-sort priorities
+
+Section 7's two-level inheritance exercise is implemented by
+~Object.SortedInheritance.Policy~ and ~SortedInheritance.apply~. The policy
+contains a separate C4 graph of specification sorts, its selected root, and
+an explicit list mapping each selected source specification name to one sort.
+The sort hierarchy is linearized most-specific first. All specifications in
+an earlier sort must precede all specifications in a later sort. Specifications
+in the same sort retain ordinary C4 constraints and tie handling.
+
+~apply policy source freshName~ validates the sort graph and classification
+registry, then enumerates every required cross-sort specification pair. It
+adds each applicable pair to the local parent orders of every selected node
+whose proper ancestry contains both names. A fresh wrapper inherits the
+source root plus the complete pair constraints and contributes no direct
+slots. This makes C4 derive each ancestor's precedence with the policy before
+using that precedence in descendants. Existing local orders, inheritance
+edges, and suffix requirements remain constraints: the policy cannot override
+a contradiction with them. Original declarations and unrelated graph nodes
+are retained; the original object is a readable persistent snapshot.
+
+The returned ~Certified~ value contains the new executable ~object~, selected
+~source~ names, sort ~priority~, ~classification~, and a proof that the final
+C4 order satisfies every generated pair. ~requirements_complete~ proves that
+every pair of selected names classified into different priority levels is
+included. ~Certified.higher_precedes~ combines this completeness law with the
+checked result: a higher-sort selected specification precedes a lower-sort
+selected specification in the actual object's order. These are order
+certificates, not proofs of equivalence between the old and new slot results;
+changing priority can intentionally change method behavior.
+
+| Error | Meaning |
+|-------+---------|
+| ~sorts~ | The selected sort hierarchy fails C4 validation |
+| ~repeatedClassification~ | A specification is classified more than once |
+| ~unknownSpecification~ | A classification names a specification outside the selected source ancestry |
+| ~unavailableSort~ | The assigned sort is outside the selected sort hierarchy |
+| ~unclassified~ | A selected source specification has no sort |
+| ~inheritance~ | C4 rejects the combined original and priority constraints; the error includes all imposed pairs |
+| ~priorityNotRespected~ | Final verification rejects an order and reports the offending pairs |
+
+[[file:../Examples/SortedInheritance.lean][SortedInheritance.lean]] changes the order of multiplicative and additive
+contributions from ~22~ to ~12~; a later extension computes ~112~. The returned
+object preserves the source resolver mode and creates fresh lazy target cells.
+[[file:../Tests/SortedInheritance.lean][SortedInheritance.lean]] checks all three resolver modes, same-sort ordering,
+final-self reads, defaults, function-valued heterogeneous slots, and rejection
+of contradictory local precedence, reversed ancestor priority, and suffix
+requirements. Inheritance errors report the imposed pairs rather than a
+minimal conflict core.
+
+This is an explicit finite C4-based construction over the selected sort and
+specification ancestries. The wrapper's new identity is outside the source
+classification being certified. Later extensions require reapplying the
+policy with all newly selected names classified, including earlier wrappers,
+for a complete certificate at that new root. There is no inference of sort
+membership from arbitrary method bodies or Lean types. The construction
+enumerates a quadratic number of candidate pairs and linearizes each selected
+ancestry; it makes no ~O(nd)~ performance claim.
+
 * Define a method combination
 
 Use ~Object.Multimethod.qualified~ when standard or simple combination is not
@@ -510,7 +779,11 @@ validation policy.
 | ~Proof.closePending~ | Build a certificate from reused and newly discharged proofs. |
 | ~Proof.invalidatedNodes~ | Compute graph nodes affected by a structural change. |
 | ~Proof.mem_invalidated_of_descendant~ | Prove inclusion for a parent-to-child path within the graph's propagation bound. |
-| ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the complete output as exactly those nodes with bounded paths from changed nodes. |
+| ~Proof.mem_invalidated_iff_bounded_descendant~ | Characterize the output for arbitrary graphs using bounded paths. |
+| ~C4.Graph.inferRanked~ / ~checkRank~ | Infer or check a whole-graph ancestry rank with kernel-checked edge and node bounds. |
+| ~Proof.certifyInvalidation~ | Return all structurally affected descendants with an exact, unbounded reachability certificate. |
+| ~Proof.mem_invalidated_iff_descendant~ | Characterize the impact output by all descendant paths in a ranked finite graph. |
+| ~Proof.mem_impactStep_invalidated_iff~ | Prove that another propagation pass adds no affected names. |
 | ~Proof.CertifiedObject.applyPatch~ | Bind the new certificate to a C4-valid instance. |
 | ~Proof.rebaseInstanceCache~ | Preserve cached values outside a proved patch footprint while rebinding to a new C4-valid instance. |
 | ~Proof.ProofObject.pair~ | Combine independent proof objects under disjoint ~Sum~ keys. |
@@ -519,8 +792,17 @@ validation policy.
 | ~Proof.ProofObject.withObligation~ | Attach a relation that spans composed components. |
 
 The domain supplies its concrete keys, values, propositions, and
-instances. Structural node invalidation and value-key dependency
-selection are separate operations. ~append_composeAll~ proves batch append
+instances. Import ~LeanPoo.C4.Ranked~ to infer a whole-schema ancestry rank,
+or use ~graph.checkRank proposedRank~ for a supplied rank. Use
+~Proof.certifyInvalidation graph changedNames~ to obtain ~result.names~ and
+~result.characterizes~. The certificate covers all descendant paths; callers
+do not provide a distance bound. Rank validation checks duplicate names,
+missing parents, cycles, and every rank/edge bound across the whole graph,
+including unreachable branches. Acyclic graphs can still fail C4 method-order
+or suffix checks, so rank checking does not replace C4 compilation.
+[[file:../Examples/CertifiedInvalidation.lean][CertifiedInvalidation.lean]] marks both sides of a diamond and its final
+child while leaving the unrelated branch out. Structural node invalidation
+and value-key dependency selection are separate operations. ~append_composeAll~ proves batch append
 agrees with stepwise append; ~unaffected_composeAll_iff~ characterizes proof
 reuse across the entire batch.
 [[file:../Examples/ProofReuse.lean][ProofReuse.lean]] gives the caller-facing pattern: declare an obligation's
@@ -572,6 +854,158 @@ reports 9,999 reusable obligations. This checks dependency selection at scale;
 it does not measure theorem replay time or represent a large Cedar policy
 corpus.
 
+* Checked extended-precedence selection
+
+~C4.Precedence.mergeCertified lists~ runs the ordinary tail-count merger,
+then independently replays the output against candidate tails. Its returned
+~Certified lists~ binds the output to an inductive ~Trace~. Every step chooses
+the first eligible head, removes that head from all matching candidate lists,
+and continues until every list is empty. An incorrect choice, truncated output,
+or extra output is rejected. ~choose_eligible~, ~choose_leftmost~, and
+~Trace.unique~ provide the kernel-checked selection and uniqueness laws.
+
+For a returned certificate ~c~, ~c.trace.preserves member~ proves that the
+candidate selected by ~member : order ∈ lists~ is an ordered sublist of
+~c.output~. ~c.trace.covers~ proves that output membership is equivalent to
+membership in some input candidate, and ~c.trace.nodup~ proves no repeated
+output names. These are general laws of accepted complete traces, including
+shared ancestors across multiple candidates. They formalize merge-level
+local-order preservation and monotonicity; they do not establish correctness
+of the entire graph traversal or suffix reconstruction.
+
+~mergePrefix parents locals suffix~ removes the suffix names before certifying
+the prefix. The caller retains the suffix for final append; this helper does
+not validate graph-level suffix compatibility. ~candidates_without_suffix~
+proves that empty-suffix inputs are exactly the parent precedence lists followed
+by the local orders used for ordinary C3 merging.
+
+~C4.linearizeChecked graph root~ uses the existing graph traversal and suffix
+selection, with independent replay and complete input-order checks at every
+reachable node. ~C4.linearize~ uses the ordinary merger. The checked path adds
+structural scanning cost and is intended for verification. Prefix certificates
+are exposed through ~mergeCertified~; graph-level checking returns the ordinary
+precedence list after all checks. [[file:../Tests/ExtendedPrecedence.lean][ExtendedPrecedence.lean]] covers diamonds,
+blocked first heads, conflicts, cycles, suffix incompatibility, and rejection
+of invalid claimed traces. [[file:../Examples/ExtendedPrecedence.lean][ExtendedPrecedence.lean]] shows ordinary
+~X S T Y~ selection versus suffix-exempt ~Y X S T~.
+
+This is an operational definition of extended precedence for C4's candidate
+selection. The optimized merger is now proved sound and complete for this
+operational trace relation, as described below. Completeness of the ordinary
+graph traversal and equivalence with Ducournau's original relation remain open.
+
+* Certified suffix reconstruction
+
+~C4.mergeWithSuffixCertified orders tail~ accepts complete parent/local orders,
+checks their compatibility with the supplied inherited tail, then merges their
+suffix-free candidates using independent trace replay. A successful
+~SuffixCertified orders tail~ exposes ~output = front ++ tail~.
+~c.preserves member~ proves that each complete input order is an ordered
+sublist of the output, ~c.suffix~ proves that the tail is an actual suffix, and
+~c.covers~ proves exact membership in the input orders or the tail.
+~c.nodup tailUnique~ proves unique output names when ~tailUnique : tail.Nodup~
+is supplied. The helper preserves the caller's tail and does not establish
+that graph traversal selected the correct tail.
+
+~respectsSuffixTail_sound~ ties the existing Boolean check to the required
+prefix/suffix split; ~append_preserves~ proves that merging the cleaned prefix
+and appending the inherited tail retain the whole original order.
+~linearizeChecked~ now constructs these complete-ancestry certificates for
+every reachable node's parent and local orders before adding the node name.
+The graph API still returns a list; full graph traversal and cache provenance
+remain separate proof goals. The node certificate below checks tail choice
+and the new node's absence from its ancestry.
+[[file:../Tests/SuffixConsistency.lean][SuffixConsistency.lean]] exercises shared suffixes, partial tail
+subsequences, empty tails, reversed suffix order, and interleaved infix names.
+
+* Certified tail selection and complete nodes
+
+~C4.certifyTail tails claimed~ independently checks the traversal's claimed
+inherited tail. An accepted ~TailCertified tails~ selects one supplied tail
+(or ~[]~ when there are no inputs) and proves every supplied tail is a suffix
+of it. ~c.longest member~ proves maximal length; ~c.unique other~ proves that
+two accepted selections for the same input tails agree. ~c.comparable first second~
+proves that any two supplied tails are comparable by suffix inclusion. A shorter choice, an
+invented longer tail, or incompatible input suffixes is rejected.
+
+~C4.certifyNode name orders tails claimedTail~ adds suffix reconstruction,
+duplicate-free tail validation, and node-name freshness. Its returned
+~NodeCertified name orders tails~ exposes ~output~ and proves ~preserves~,
+~inherited_suffix~, ~parent_suffix~, ~nodup~, ~head~, and ~covers~. The
+no-duplicate law now includes the prepended node and requires no extra premise
+from the caller. A repeated node name reports ~cycle name~; a duplicate tail
+reports ~inconsistentOrder~.
+
+~linearizeChecked~ retrieves each parent's cached most-specific-suffix
+precedence and checks the selected tail against those actual lists before
+constructing the complete node certificate. It still returns an ordinary
+list. This establishes accepted node results relative to the supplied parent
+orders and cached tails; it does not prove cache provenance, correct traversal
+of every graph, or ordinary traversal completeness. Optimized candidate-merge
+completeness is established separately by the invariant proof below.
+[[file:../Tests/NodeCertificate.lean][NodeCertificate.lean]] checks the certificate laws and typed rejection paths.
+
+* Graph-derived certificates
+
+~C4.linearizeCertified graph root~ first obtains the ordinary compiler result,
+then independently rebuilds a finite derivation from ~graph.findNode?~ and
+every declared parent edge. It returns ~GraphCertified graph root~ only when
+the reconstructed list equals that ordinary result. ~c.compiled~ proves
+~linearize graph root = .ok c.output~; the certificate is tied to the original
+graph and the actual returned list.
+
+~c.nodup~ proves unique names, ~c.head~ proves that the root is first, and
+~c.covers~ characterizes output membership exactly by ~Ancestor graph item root~.
+This ancestry relation includes the root itself and follows each first-matching
+node declaration's flattened local parent orders. ~c.local_order found member~
+retains each root local order as an ordered sublist. ~c.ancestor path~ supplies
+a finite derivation for any reachable ancestor and proves its derived order is
+an ordered sublist of the root output. If that ancestor's graph declaration has
+~suffix = true~, ~c.ancestor_suffix path found flag~ proves its full order is an
+actual suffix of the root output. ~c.unique other~ proves identical output for
+two certificates over the same graph/root.
+
+The reconstruction carries parent derivations, including their most-specific
+tail lists, so graph provenance is established by the trace rather than assumed
+from a compiler cache. Existing ordinary graph errors are propagated, and a
+reconstruction mismatch reports ~inconsistentOrder~. Verification may repeat
+shared ancestors and is intended for proof-bearing results, not performance
+claims. Independent reconstruction is complete relative to finite
+~GraphTrace~ derivations, as described below. Completeness of the ordinary
+optimized traversal is not proved here.
+[[file:../Tests/GraphCertificate.lean][GraphCertificate.lean]] checks diamonds, shared suffix chains, repeated
+parent edges, missing nodes, cycles, ordering conflicts, and unreachable
+malformed declarations without changing the ordinary compiler's root scope.
+
+* Complete structural reference merge
+
+~C4.Precedence.mergeReference lists~ constructs a certified trace directly by
+selecting the first eligible head and advancing the candidates. It uses
+~lists.flatten.length~ as a sufficient step budget. ~mergeReference_complete~
+proves that any existing ~Trace lists output~ is reproduced, and
+~mergeReference_success_iff~ proves that success is equivalent to the existence
+of such a complete operational trace. The theorem concerns the defined
+leftmost-eligible merge policy. The optimized implementation now has a
+separate simulation and completeness proof against this same policy.
+
+~mergeReferenceWithFuel lists fuel~ exposes an explicit budget for experiments;
+its completeness theorem requires ~output.length ≤ fuel~. Insufficient fuel
+can report ~inconsistentOrder~. Use ~mergeReference~ when that distinction
+should be handled automatically.
+
+~C4.mergeWithSuffixReference~ and ~C4.certifyNodeReference~ use the structural
+merger with the existing suffix/node checks. Independent reconstruction inside
+~linearizeCertified~ now uses this path. The ordinary compiler still runs
+first and its result is compared to the independently derived output.
+~c.length_bound~ proves that a graph certificate's output contains at most
+~graph.nodes.length~ names. ~GraphTrace.parent_budget~ proves that a parent's
+derived output is strictly shorter than the child's. This decrease now proves
+that recursive reconstruction succeeds within the graph-size budget whenever
+a finite derivation exists.
+[[file:../Tests/ReferenceMerge.lean][ReferenceMerge.lean]] covers shared candidates, blocked heads, conflicting
+orders, duplicate names, explicit budget exhaustion, and reference suffix/node
+construction.
+
 * Commands
 
 ~just check-c4~, ~just check-object~, ~just check-compose~,
@@ -587,3 +1021,98 @@ the workload should determine which constructor to use.
 ~just check~ compiles the
 complete library. These are Lean elaboration and theorem checks, not a
 duplicate upstream reference-test suite.
+
+* Complete independent graph reconstruction
+
+~C4.reconstruct graph root~ reconstructs from the original graph without
+calling ~linearize~. ~reconstruct_complete trace~ proves it returns exactly
+the complete precedence and most-specific tail of any finite ~GraphTrace~,
+using ~graph.nodes.length~ as the recursion budget. ~reconstruct_success_iff~
+characterizes success by existence of such a derivation. Repeated edges,
+shared ancestors, and duplicate declarations do not require extra assumptions;
+lookup continues to use the first matching declaration.
+
+~GraphTrace.unique first second~ proves agreement of both output and tail
+for two derivations over the same graph/root. The proof uses deterministic
+complete reconstruction and does not assume ordinary compiler success.
+~respectsSuffixTail_iff~ characterizes the suffix check when the shared tail
+is duplicate-free. ~mergeWithSuffixReference_complete~ and
+~certifyNodeReference_complete~ reproduce arbitrary supplied certificates.
+
+~linearizeCertified_complete compiled trace~ proves that a successful
+ordinary output admitting a graph derivation is always certified. It does
+not prove that ~linearize~ succeeds whenever such a derivation exists.
+The candidate tail-count invariant is now proved. Graph traversal cache
+invariants, ordinary traversal completeness, equivalence to Ducournau's
+original relation, and verification efficiency remain separate obligations.
+
+* Optimized merge state and completeness
+
+~C4.MergeState.CountInvariant lists counts~ states that every hash-map lookup
+matches the multiplicity of that name in all remaining candidate tails.
+~ancestorCounts_invariant~ proves initialization. ~tail_count_advance~ accounts
+for every newly exposed head, and ~decrement_preserves~ proves the incremental
+subtract operations preserve the exact counts. Repeated candidate lists and
+repeated tail names are counted separately; no distinctness premise is used.
+
+~eligibleHead_eq_choose~ proves that the actual hash-map selection is the
+reference leftmost-eligible selection. ~trace_pending~ proves empty-candidate
+pruning preserves the full trace relation. ~mergeStep_selected~ binds the
+actual scan, reverse, prune, and count update to the next candidates.
+~rounds_complete~ and ~rounds_sound~ connect the actual finite fold to traces,
+including its reversed output accumulator.
+
+~MergeState.merge_complete trace~ proves ~C4.merge lists = .ok output~ for any
+complete ~Trace lists output~. ~merge_sound success~ proves a successful raw
+output has that trace, so its order preservation, exact coverage, uniqueness,
+and tie policy follow from the existing trace laws. ~merge_success_iff~
+characterizes success exactly by existence of a complete trace.
+~merge_reference_output~ proves equality of optimized and reference ~toOption~
+outputs for arbitrary finite candidates, including identical rejection domains.
+It compares success/rejection and successful lists; it does not compare error
+payloads through ~Except~ equality.
+
+~Precedence.check_complete~ proves replay always accepts a complete trace.
+~mergeCertified_complete~ and ~mergeCertified_success_iff~ therefore establish
+completeness of the existing optimized certified path. These are merge-level
+laws; the ordinary graph compiler's traversal and cache invariants are still
+separate proof obligations. No merge complexity or runtime speed bound is
+claimed here.
+
+* Graph index and inherited-suffix walk invariants
+
+~C4.LinearizeState.nodeIndex_lookup~ proves the actual first-write HashMap
+lookup equals ~Graph.findNode?~ for every graph/name, including duplicate
+and missing names. ~nodeIndex_declared~ binds a selected entry to its original
+declaration and name. Ordinary reachable-graph validation still rejects
+reachable duplicate declarations; this lookup theorem does not bypass it.
+
+~SuffixPath table source target steps~ records exact cached inherited-suffix
+pointer lookups. ~suffixReachesWithFuel_sound~ proves every successful actual
+walk has such a path without assuming valid metadata.
+~suffixReachesWithFuel_complete~ reproduces any path when ~steps + 1 ≤ fuel~;
+the extra round recognizes the target. The existing runtime budget is
+~table.size + 1~.
+
+~SuffixCacheInvariant table~ requires cached precedence to start with its
+lookup name, and every inherited-suffix link to point to a cached precedence
+that is a literal suffix of the source precedence's tail. These links strictly
+decrease precedence length. ~SuffixPath.length_bound~ proves path sources
+cannot repeat and are actual table keys, bounding link count by ~table.size~.
+~suffixReaches_iff~ therefore proves runtime success exactly against finite
+pointer reachability under this invariant. ~suffixReaches_preserves~ retains
+the target precedence as a literal suffix of the source precedence.
+Self-recognition occurs before lookup, including in an empty table; this is
+the existing walk primitive's behavior, not graph-root acceptance.
+
+~CacheInvariant graph table~ adds a ~GraphTrace~ for every cached complete
+precedence. The empty table satisfies it. ~CacheInvariant.insert~ proves an
+actual fresh insertion preserves it when the new entry supplies a derivation
+and inherited-link evidence. ~suffixReaches_ancestor~ then connects a successful
+actual walk to original-graph ancestry and a complete target graph derivation.
+
+These are exact index and walk theorems plus a cache insertion preservation
+law. The ordinary compiler's ~computeNode~ and ~resolveNode~ have not yet been
+proved to establish this invariant. Binding ~mostSpecificSuffix~ selection,
+parent deduplication, reachable validation, and recursive table population to
+~GraphTrace~ remains open, as does ordinary graph compiler completeness.

@@ -272,11 +272,21 @@ inheritance edges for structure-level invalidation. Its step is monotone;
 changed nodes remain in the result and that every descendant reachable within
 the graph's finite propagation bound is selected. Conversely, every selected
 node has such a path. ~mem_invalidated_iff_bounded_descendant~ is the exact
-specification of the executable result. It states the bound explicitly rather
-than assuming that arbitrary cyclic paths are short. ~C4.Graph.validate~
-checks name uniqueness and parent references; the linearizer detects cycles
-operationally, but there is not yet a theorem extracting a global rank from a
-successful linearization.
+specification of the executable result for arbitrary graphs.
+~C4.Graph.inferRanked~ now checks a finite whole-graph ancestry rank, with a
+proof that every parent has smaller rank and every node rank is below the
+node count. ~Descendant.rank_distance~ and ~within_graph_bound~ then bound
+all inheritance paths. ~mem_invalidated_iff_descendant~ characterizes the
+result by reachability without a caller-supplied path bound, and
+~mem_impactStep_invalidated_iff~ proves closure after the finite pass.
+~Proof.certifyInvalidation~ returns this executable list together with its
+exact reachability proof, rejecting malformed or cyclic whole schemas.
+Parent-edge acyclicity is independent of C4 method-order and suffix
+constraints; the existing linearizer still checks those constraints.
+Whole-schema rank checking includes branches outside one root's ancestry.
+It does not extract a global rank merely from success of the root-local C4
+linearizer. Structural impact does not inspect dependencies hidden in slot
+functions or implement a whole-heap instance migration policy.
 
 ~Object.Instance~ states the self equation for a validated compiled plan, and
 ~CertifiedObject~ binds its obligation certificate to that instance. The
@@ -289,6 +299,171 @@ knot is partial, so it does not by itself provide the equation required by
 ~Object.Instance~; proof-bearing clients supply that equation explicitly or
 construct it from ~Object.Ranked~ for well-founded dependencies. No
 concrete policy semantics domain is part of this repository yet.
+
+Section 6's class-redefinition exercise now has an explicit per-instance
+snapshot migration protocol in ~Object.Migration~. Transfers preserve equal
+payload types across renaming or invoke a typed, fallible conversion. The new
+class supplies defaults and computed fields; omitted old fields survive only
+in the old snapshot. ~ClassSpec.migrateFrom~ returns a new object together
+with its class-acceptance proof. This covers the exercise's four field
+operations, without a live-instance registry or persistent-store index upgrade.
+
+The next section 6 exercise has three explicit update policies in
+~Mutable.reviseWithPolicy~: eager forcing before installation, lazy fresh
+cells, and versioned fresh cells plus an old-specification handle. The tests
+compare their missing-target behavior and snapshot consistency under all
+three resolver modes. This is a finite per-instance protocol; it does not
+implement process suspension or a native code loader.
+
+The following section 6 exercise now has a cooperative quiescent-upgrade
+protocol in ~Object.Upgrade~. Erlang's
+[[https://www.erlang.org/doc/system/code_loading.html][code replacement documentation]] describes current and old module code;
+fully qualified calls select current code while old calls may continue.
+[[https://www.erlang.org/doc/apps/stdlib/sys.html#change_code/5][sys:change_code]] requires a suspended process and invokes its state-change
+callback. [[https://www.erlang.org/doc/apps/kernel/code.html#soft_purge/1][code:soft_purge]] refuses to remove old code while processes still linger
+in it. These mechanisms separate switching versions, state conversion, and
+retiring executable code.
+
+LeanPoo's simplifying design separates operation admission from execution:
+pause rejects new operations; already admitted callbacks retain their captured
+specification; commit requires all such callbacks to exit. A mutex guards the
+control state and publication. Version plus request number rejects canceled
+or completed sessions, and a pure updater supplies data conversion.
+The ~Control.commit_quiescent~, ~commit_authorized~, and ~enter_paused~ laws
+are kernel-checked; tests use two real readers whose completion is controlled
+by promises. The Person example composes the boundary with typed class
+migration. Stack-held objects remain immutable old snapshots after upgrade;
+there is no inspection, rewriting, or purging of native call stacks or code.
+The guarantee covers scoped operations on one runtime, with joined background
+work and a fixed Lean key/value family. It does not implement Erlang process
+suspension, release supervision, native module loading, or heap-wide upgrade.
+
+Section 7's research exercise on two-level inheritance now has an explicit
+C4-based construction in ~Object.SortedInheritance~. A selected sort hierarchy
+provides priority; a complete finite classification assigns each selected
+specification to one sort. Cross-sort pairs are installed into the applicable
+ancestry orders before the final wrapper is compiled. Existing local orders
+and suffix constraints can reject the policy. The returned certificate checks
+the actual C4 precedence; ~requirements_complete~ and ~higher_precedes~ prove
+complete coverage and ordering of every higher/lower selected pair. Tests
+cover noncommuting methods, same-sort ties, all resolver modes, typed function
+slots, future reclassification, and hierarchy/local/suffix conflicts. This
+construction uses explicit metadata and enumerates candidate pairs; it does
+not infer categories from opaque methods or establish an ~O(nd)~ bound.
+
+Section 7's extended-precedence discussion now has an operational formalization
+in ~C4.Precedence~. Eligibility is defined independently by absence from all
+candidate tails; selection chooses the first eligible head. ~choose_eligible~
+and ~choose_leftmost~ prove feasibility and rejection of all earlier heads.
+An inductive ~Trace~ records each choice and complete termination, and
+~Trace.unique~ proves that two accepted traces for the same input agree.
+~mergeCertified~ replays the optimized tail-count merger's output using this
+independent structural definition. ~linearizeChecked~ opts into this replay at
+every reachable node's prefix merge. Suffix members are excluded before the
+choice and retained for final append; ~candidates_without_suffix~ proves
+reduction to ordinary C3 candidate construction when the suffix is empty.
+This formalizes the paper's operational tie rule. It does not prove the whole
+optimized algorithm correct for every graph, nor equivalence to Ducournau's
+original extended-precedence graph relation.
+
+The paper's ordered-subset formulation of monotonicity now has a merge-level
+law: ~Trace.preserves~ proves that every input candidate is a ~List.Sublist~
+of the completed output. This covers both inherited parent precedence and
+local-order candidates. ~Trace.covers~ proves exact name coverage, and
+~Trace.nodup~ proves that the output contains no repeated names, even when
+different candidates share ancestors. These laws apply to every complete
+trace and therefore every ~Certified~ result. They do not assume a bounded
+graph size or a particular fixture.
+
+~C4.Suffix~ connects the prefix proof to complete ancestry. The runtime
+~respectsSuffixTail~ check implies a split into a suffix-free prefix and an
+ordered sublist of the inherited tail. ~append_preserves~ proves that the
+complete original order survives prefix merging and tail append.
+~mergeWithSuffixCertified~ checks this split for every complete parent and
+local order and returns a ~SuffixCertified~ result: input-order preservation,
+exact input-or-tail coverage, and actual tail suffix retention. Its no-duplicate
+law assumes the caller's tail has no duplicates. ~linearizeChecked~ now uses
+these full-ancestry certificates at every reachable node.
+
+~C4.NodeCertificate~ adds independent validation of the graph computation's
+selected tail against the actual cached parent tails. ~TailCertified~ requires
+selection from those inputs (or empty selection for no inputs) and every input
+to be a literal suffix of the selected tail. Its ~longest~ and ~unique~ laws
+prove maximal length and unique selection; ~comparable~ proves that the input
+tails form a total suffix order. ~NodeCertified~ checks that the
+tail is duplicate-free and the node name is absent from the reconstructed
+ancestry. Its full output preserves each parent/local order, retains each
+parent tail as a suffix, contains no repeated names, and starts with the node
+name. ~linearizeChecked~ constructs this certificate at every computed node.
+These are general laws over the supplied orders and cached tails.
+
+~C4.GraphCertificate~ now provides a separate graph-derived certificate for
+the ordinary compiler's exact returned list. ~GraphTrace~ binds every node
+to its first declaration lookup in the original graph, records every declared
+parent edge, and recursively supplies the parent derivations used to construct
+that node's orders and tails. ~GraphCertified~ carries both this trace and an
+equality to ~linearize graph root~. Its laws establish duplicate-free output,
+root-first order, exact reflexive ancestry coverage, transitive ancestor-order
+preservation, local-order preservation, and actual suffix retention for any
+graph ancestor declared as a suffix. Two accepted certificates for the same
+graph/root agree about output.
+~linearizeCertified~ reconstructs independently from graph declarations and
+rejects a mismatch with the ordinary compiler. It does not trust the compiler's
+cached metadata. The public independent ~reconstruct~ path now succeeds
+exactly when the root admits a finite ~GraphTrace~, reproducing its complete
+precedence and most-specific tail within ~graph.nodes.length~ steps of depth.
+~GraphTrace.unique~ proves both lists are fixed by the original graph.
+Completeness of the ordinary optimized traversal and equivalence with
+Ducournau's original relation remain open. Verification can repeat shared parent work; no efficiency bound
+is claimed for this path.
+
+The structural reference merger ~Precedence.mergeReference~ now has a
+completeness theorem: whenever a finite ~Trace lists output~ exists, the
+merger succeeds with exactly that output. ~Trace.length_bound~ proves that
+the candidate-position count is sufficient fuel; ~mergeReference_success_iff~
+characterizes success exactly by existence of a complete operational trace.
+This theorem does not assume correctness of the optimized tail-count state.
+Independent graph reconstruction now uses ~certifyNodeReference~ and this
+structural merger. ~GraphTrace.declared~ and ~GraphTrace.length_bound~ bind
+all output names to original declarations and bound output size by graph size;
+~GraphTrace.parent_budget~ proves strict output-length decrease along a parent
+edge. The reconstruction completeness proof now combines these bounds with
+suffix-check completeness for duplicate-free tails, exact reproduction of a
+certified longest tail, and reference node reconstruction completeness.
+~linearizeCertified_complete~ proves certification succeeds whenever the
+ordinary compiler has returned an output admitting a ~GraphTrace~.
+Existence of a ~GraphTrace~ is the explicit consistency criterion here; its
+equivalence to the paper's original relation remains unproved. Optimized
+candidate merging now has its own soundness and completeness proof below;
+ordinary graph traversal completeness remains open.
+
+The optimized ~C4.merge~ now has a simulation proof in ~C4.MergeInvariant~.
+~CountInvariant~ counts every occurrence in the actual candidate tails.
+Initialization, newly exposed-head accounting, incremental decrement, empty
+candidate pruning, head selection, and the finite fold all preserve the
+structural merge semantics. ~merge_sound~ derives a complete ~Trace~ from
+any actual successful raw result; ~merge_complete~ reproduces every complete
+trace with the runtime's original candidate-position budget.
+~merge_reference_output~ equates optimized/reference successful outputs and
+rejection domains for arbitrary finite candidates. The independent checker
+and optimized certified merger are also complete. This closes the optimized
+candidate-merge state invariant; it does not close the ordinary graph
+traversal's ancestry/suffix cache invariant or establish a complexity bound.
+
+The ordinary compiler now exposes named runtime operations in
+~C4.LinearizeState~ for the next traversal proof. ~nodeIndex_lookup~ equates
+its first-write HashMap with the original graph's first declaration lookup.
+The actual inherited-suffix walk is sound for finite pointer paths with any
+budget. Under a literal-suffix cache-link invariant, link lengths strictly
+decrease, visited sources are distinct actual keys, and ~table.size + 1~ is
+proved sufficient. Its acceptance then exactly matches finite pointer
+reachability and retains complete target precedence as a literal suffix.
+~CacheInvariant~ binds cached complete precedence to ~GraphTrace~;
+fresh insertion preserves this property when the new result provides its
+derivation and link evidence. A successful walk through such a cache witnesses
+original-graph ancestry. These laws do not yet prove that ~computeNode~ or
+~resolveNode~ populate a valid cache, nor that ~mostSpecificSuffix~ selection
+matches a graph trace. The ordinary graph compiler's completeness remains open.
 
 * Paper-derived boundaries
 
@@ -378,3 +553,42 @@ miss falls back to ordinary keyed lookup and teaches both levels. The
 ~read_sound~ theorem states equality with ordinary object reads, including
 after a layout change or an absent field. ~just benchmark-layout~ measures
 single-layout and alternating-layout access separately.
+
+* Further C4 closure: executable suffix selection
+
+The runtime parent-suffix selector now has kernel proofs for input retention
+and domination through actual inherited-suffix pointers. A valid cache and
+pairwise comparable supplied pointer chains suffice for successful bounded
+selection. Given the selected cached entry, the result constructs the
+independent ~TailCertified~ used by complete node checking.
+The optimized suffix and node checkers also reproduce arbitrary supplied
+certificates, connecting optimized merge completeness to the full node
+checker. This advances the implementation proof connection; it does not
+establish the selector's canonical metadata premises from the original graph.
+The next obligations are parent collection/deduplication, canonical suffix
+metadata, and cache population by ~computeNode~ and ~resolveNode~.
+
+* Further C4 closure: parent cache provenance
+
+Stable first-occurrence deduplication now has a kernel proof over the actual
+HashSet fold. The runtime parent collector also has positional soundness and
+completeness proofs: deduplication retains all original parent lookup
+obligations. Under existing graph/cache provenance, fetched parent outputs
+agree with the original graph rows, including repeated edges, and preserve
+parent precedence in the complete root output.
+This closes collection and row binding. It leaves the simulation for removing
+repeated merge candidates and empty local orders, canonical suffix metadata,
+and full node/resolver cache population as separate obligations.
+
+* Further C4 closure: merge normalization
+
+Stable duplicate-parent candidate deletion and empty local-order removal now
+preserve complete operational traces in both directions and optimized merge
+outputs/rejection domains. The proof preserves first matching choices under
+arbitrary maps, including noninjective cache projections and suffix cleanup.
+Supplied complete node certificates transport to normalized parent rows and
+local orders without changing output or chosen tail. Successful runtime
+parent collection also binds its actual candidates to this normalization.
+Canonical suffix metadata, runtime omission of empty parent tails, and full
+node/resolver population remain separate obligations before ordinary graph
+completeness can be claimed.
