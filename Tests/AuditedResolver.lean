@@ -1,0 +1,75 @@
+import LeanPoo.C4.AuditedResolver
+
+namespace LeanPoo.Tests.AuditedResolver
+open C4 LinearizeState
+
+example (success : linearizeAudited graph root = .ok output) :
+    ∃ tail, GraphTrace graph root output tail := linearizeAudited_graph_sound success
+
+example (valid : MetadataInvariant graph table)
+    (success : resolveAuditedNode (nodeIndex graph) root name table fuel = .ok ready) :
+    MetadataInvariant graph ready := (resolveAuditedNode_acceptance valid success).2.2
+
+#eval do
+  let mut families := 0
+  let mut accepted := 0
+  let mut rejected := 0
+  IO.println "AUDITED-RESOLVER-START"
+  for p in [[["A"]], [["A", "B"]], [["B", "A"]], [[], ["A"], ["A"], []]] do
+    for s in [[["A"]], [["B"]], [["A", "B"]], [["B", "A"]]] do
+      for flags in List.range 4 do
+        for localOrders in [[["P", "S"]], [["S", "P"]], [["P"], ["S"]], [[], ["P", "S"], ["P"], []]] do
+          let graph : Graph := { nodes := [
+            {name := "A"}, {name := "B"},
+            {name := "P", parentOrders := p, suffix := flags % 2 == 1},
+            {name := "S", parentOrders := s, suffix := flags / 2 == 1},
+            {name := "Root", parentOrders := localOrders}] }
+          let audited := linearizeAudited graph "Root"
+          unless audited.toOption == (linearizeChecked graph "Root").toOption do
+            throw (IO.userError "audited and checked successful outputs differ")
+          match audited with
+          | .error _ => rejected := rejected + 1
+          | .ok output =>
+            unless (linearize graph "Root").toOption == some output do
+              throw (IO.userError "audited output differs from ordinary")
+            let .ok order := linearizeAuditedVerified graph "Root"
+              | throw (IO.userError "verified wrapper rejected an audited success")
+            unless order.output == output && order.indexAncestors.isAncestor "A" do
+              throw (IO.userError "retained verified order or ancestry query disagrees")
+            let index := nodeIndex graph
+            let .ok cache := resolveAuditedNode index "Root" "Root" {} graph.nodes.length
+              | throw (IO.userError "audited recursion rejected a top-level success")
+            unless (lookup cache "Root").map Linearization.precedence == some output do
+              throw (IO.userError "audited cache disagrees with top-level result")
+            unless (resolveAuditedNode index "Root" "Root" cache 0).toOption.isSome do
+              throw (IO.userError "zero-fuel cached result was rejected")
+            accepted := accepted + 1
+          families := families + 1
+          if families % 64 == 0 then IO.println s!"AUDITED-RESOLVER-PROGRESS families={families}"
+  IO.println s!"AUDITED-RESOLVER-OK families={families} accepted={accepted} rejected={rejected}"
+
+private def crossing : Graph := { nodes := [
+  {name := "A"}, {name := "B"}, {name := "P", parentOrders := [["A", "B"]]},
+  {name := "S", parentOrders := [["A"]], suffix := true},
+  {name := "Root", parentOrders := [["P", "S"]]}] }
+#guard (linearize crossing "Root").toOption == some ["Root", "P", "B", "S", "A"]
+#guard (linearizeAudited crossing "Root").toOption.isNone
+
+private def leaf : Graph := {nodes := [{name := "A"}]}
+#guard (linearizeAudited leaf "A").toOption == some ["A"]
+#guard (resolveAuditedNode (nodeIndex leaf) "A" "A" {} 0).toOption.isNone
+#guard (linearizeAudited leaf "Missing").toOption.isNone
+#guard (linearizeAudited {nodes := [{name := "A", parentOrders := [["Missing"]]}]} "A").toOption.isNone
+#guard (linearizeAudited {nodes := [{name := "A", parentOrders := [["A"]]}]} "A").toOption.isNone
+#guard (linearizeAudited {nodes := [{name := "A", parentOrders := [["B"]]},
+  {name := "B", parentOrders := [["A"]]}]} "A").toOption.isNone
+#guard (linearizeAudited {nodes := [{name := "A"}, {name := "A"}]} "A").toOption.isNone
+#guard (linearizeAudited {nodes := [{name := "A"}, {name := "Unused", parentOrders := [["Unknown"]]}]} "A").toOption == some ["A"]
+
+#print axioms resolveAuditedNode_acceptance
+#print axioms resolveAuditedNode_graph_sound
+#print axioms linearizeAudited_accepts_mode
+#print axioms linearizeAudited_graph_sound
+#print axioms linearizeAuditedVerified_projection
+#print axioms linearizeAudited_ordinary
+end LeanPoo.Tests.AuditedResolver

@@ -844,3 +844,23 @@ successes, and explicitly guards the execution-receipt boundary. The public
 consumer workflow is in [[file:reusable-contracts.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
 continues to serve as a reference for typed factory interfaces, with no
 integration or dependency introduced.
+
+
+* Recursive audit propagation
+
+The conditional node boundary now composes into a Lean-native recursive API.
+~resolveAuditedNode~ performs ordinary computation plus the node audit at each
+fresh cache entry. Its successful-execution theorem propagates canonical
+metadata through actual parent calls and proves the exact cache returned by
+both existing resolver modes. Starting from an empty cache,
+~linearizeAudited_graph_sound~ establishes an original ~GraphTrace~ without
+caller trace or compatibility premises. The retained verified wrapper exposes
+existing client contracts after this execution.
+
+This construction demonstrates a sufficient executable admissibility path
+for ordinary computation. It does not change the source C4 algorithm or
+prove unrestricted ordinary soundness. Completeness of acceptance and exact
+error semantics remain open. The external NavierStokesAndEuler checkout
+continues to serve only as reference material, with no integration or build
+dependency. Mapping this path to Ducournau's original relations and measuring
+its cost are distinct tasks.

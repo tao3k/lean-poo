@@ -59,9 +59,42 @@ parents: ordinary success, duplicate-free output, and ~ParentCompatible~
 are necessary and sufficient. ~auditNode_acceptance_iff~ characterizes the
 executable audit when the exact ordinary success is supplied. Audit errors
 are its own diagnostics; this does not assert complete error-payload equality
-with checked mode. Whole ordinary recursion still needs propagation of these
-conditions and cache provenance at every node. For ordinary graph users,
-~linearizeVerified~ remains the complete checked graph interface.
+with checked mode.
+
+* Compile a whole graph through ordinary computation and audits
+
+~linearizeAudited graph root~ resolves parents recursively from an empty cache.
+Each fresh node executes ordinary computation once, followed by its audit;
+shared ancestors use the retained cache. Validation, reachability, cache hits,
+and fuel follow the existing resolver. No checked compiler is executed by this
+API. The audit still reads and scans metadata; no measured speedup is claimed.
+
+Successful execution establishes an original ~GraphTrace~ without caller
+compatibility, metadata, or trace premises:
+
+#+begin_src lean
+example (success : linearizeAudited graph root = .ok output) :
+    ∃ tail, GraphTrace graph root output tail := linearizeAudited_graph_sound success
+#+end_src
+
+~linearizeAudited_accepts_mode success true~ proves checked acceptance of the
+same output; ~linearizeAudited_ordinary success~ proves ordinary acceptance.
+For an advanced client starting from a canonical cache,
+~resolveAuditedNode_acceptance valid success~ supplies both exact resolver
+successes and the final ~MetadataInvariant~. These are successful-execution
+contracts; complete error-payload equivalence is not claimed.
+
+Use ~linearizeAuditedVerified graph root~ to retain a ~VerifiedOrder~ with all
+existing ancestry, hash-index, ancestor-order, and suffix contracts. It runs
+the audited compiler and uses erased proofs to supply checked acceptance;
+it does not rerun checked compilation. Its projection theorem preserves the
+audited compiler's output or error exactly. ~linearizeVerified~ continues to
+provide the checked compiler and its exact diagnostics.
+
+The ordinary compiler alone still accepts the demonstrated suffix-crossing
+counterexample. The audit rejects it. A successful audited execution closes
+the graph soundness path for this API, without asserting unrestricted ordinary
+soundness, measured performance gains, or completeness of audit acceptance.
 
 * Compile once, answer graph questions later
 

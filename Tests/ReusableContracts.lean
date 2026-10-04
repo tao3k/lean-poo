@@ -1,5 +1,6 @@
 import LeanPoo.C4.VerifiedOrder
 import LeanPoo.C4.OrdinaryNode
+import LeanPoo.C4.AuditedResolver
 import LeanPoo.Proof.Reuse
 import LeanPoo.Proof.Batch
 
@@ -7,6 +8,10 @@ import LeanPoo.Proof.Batch
 check how consumers combine the public API, independently of a demo domain. -/
 namespace LeanPoo.Tests.ReusableContracts
 open C4 Proof
+
+example (success : linearizeAudited graph root = .ok output) :
+    ∃ tail, GraphTrace graph root output tail := linearizeAudited_graph_sound success
+
 
 example (order : VerifiedOrder graph root) (query : String)
     (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=

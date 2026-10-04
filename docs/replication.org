@@ -1387,3 +1387,33 @@ still needs the admissibility and canonical cache conditions propagated through
 all recursive calls. The unconditional suffix-crossing counterexample remains
 valid. Original paper relation mapping and full cross-mode failure
 characterization remain separate obligations.
+
+
+* Recursive ordinary computation with audited acceptance
+
+~LeanPoo/C4/AuditedResolver.lean~ lifts the node audit through parent recursion.
+~resolveAuditedNode_acceptance~ transfers actual audited success to both
+existing resolver modes on the same cache, and obtains final canonical
+metadata. The transfer uses successful checked executions to propagate the
+invariant; it does not require a caller-supplied root graph trace.
+
+~linearizeAudited_graph_sound~ starts from the empty cache and proves the
+original graph contract from actual top-level success alone.
+~linearizeAuditedVerified~ retains the existing ~VerifiedOrder~ interface,
+without executing checked compilation or a second merger.
+
+The executable corpus starts each of 256 five-node families from an empty
+cache and compares successful outputs with checked and ordinary compilation.
+The result is ~AUDITED-RESOLVER-OK families=256 accepted=116 rejected=140~.
+All six reported theorems use only ~propext~, ~Classical.choice~, and
+~Quot.sound~. Focused module, runtime, and reusable-client checks pass locally.
+It also checks cached zero-fuel access, insufficient cold fuel, unknown roots
+and parents, cycles, duplicate declarations, unreachable invalid declarations,
+and the previously retained suffix-crossing counterexample. Axiom reports
+cover recursive acceptance, graph soundness, mode transfer, ordinary success,
+and verified-wrapper projection.
+
+This closes successful graph soundness for the audited API. Unrestricted
+ordinary graph soundness remains refuted. Completeness of audited acceptance,
+complete failure semantics, measured performance, and the exact original
+Ducournau relation mapping remain separate research gates.

@@ -20,6 +20,7 @@ import LeanPoo.C4.NodeSoundness
 import LeanPoo.C4.OrdinaryNode
 import LeanPoo.C4.ResolverSoundness
 import LeanPoo.C4.VerifiedOrder
+import LeanPoo.C4.AuditedResolver
 import LeanPoo.Functional.Assembly
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
