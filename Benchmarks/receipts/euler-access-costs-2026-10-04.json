@@ -1,0 +1,144 @@
+{
+  "schema": "lean-poo.euler-maintenance.v2",
+  "evidence_boundary": "pinned lexical inventory plus kernel-checked generic client comparison; no upstream integration",
+  "reference": {
+    "repository": "openai/NavierStokesAndEuler",
+    "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
+    "file": "Euler/PacketInitializedSpatialBudget.lean",
+    "sha256": "e42619491bc8fc2bb0c931ceb8d9b22a6d6f2b3cf721b42cb3cde48e69084594",
+    "calls": [
+      {
+        "field": "background",
+        "callee": "initializedCorrection_background",
+        "first_line": 86,
+        "last_line": 88,
+        "explicit_argument_groups": 40
+      },
+      {
+        "field": "background_derivative",
+        "callee": "initializedCorrection_background_derivative",
+        "first_line": 89,
+        "last_line": 91,
+        "explicit_argument_groups": 40
+      },
+      {
+        "field": "residual_bound",
+        "callee": "initializedCorrection_residual",
+        "first_line": 96,
+        "last_line": 98,
+        "explicit_argument_groups": 44
+      },
+      {
+        "field": "drift_bound",
+        "callee": "initializedCorrection_drift",
+        "first_line": 111,
+        "last_line": 113,
+        "explicit_argument_groups": 40
+      }
+    ],
+    "common_explicit_prefix": [
+      "M",
+      "D",
+      "hTime",
+      "τ",
+      "hτ",
+      "hτT",
+      "B",
+      "δ",
+      "hδ",
+      "ξ",
+      "hs",
+      "α",
+      "L",
+      "H",
+      "NB",
+      "W",
+      "LM",
+      "WM",
+      "BC",
+      "hRc",
+      "hcost",
+      "hδ1",
+      "hα",
+      "hR",
+      "WP",
+      "S",
+      "hgrowth",
+      "Cagree",
+      "N",
+      "hN",
+      "k",
+      "hk",
+      "hbase"
+    ],
+    "common_arguments_per_call": 33,
+    "common_argument_occurrences": 132,
+    "duplicate_occurrences_beyond_first_call": 99
+  },
+  "local_client": {
+    "file": "Tests/FunctionalMaintenance.lean",
+    "sha256": "bda783efa69948fce06da44202fa732925bc693dfb9c0bb75251cf4153742b6d",
+    "semantic_contract": "same_client",
+    "manual_code_lines": 17,
+    "checklist_code_lines": 8,
+    "common_interface_code_lines": 3,
+    "saved_client_code_lines": 9,
+    "client_code_reduction_percent": 52.94,
+    "manual_require_statements": 5,
+    "checklist_prepare_calls": 1,
+    "manual_owned_prepared_fields": 5,
+    "checklist_owned_prepared_fields": 0,
+    "new_checklist_declaration_included": true
+  },
+  "shared_cost": {
+    "file": "LeanPoo/Functional/Requirements.lean",
+    "sha256": "bddb441539be34d5e8865afe2c180483c5db62e6541ca18a23364dcd621a39ff",
+    "code_lines_including_kernel_proofs": 104,
+    "toy_source_break_even_consumers": 12,
+    "scope": "count entire Requirements module once; Assembly/provider/context/domain code and reference adapters excluded"
+  },
+  "forecast": {
+    "upstream_net_lines_removed": null,
+    "maintenance_hours_saved": null,
+    "consumer_common_context_slots_if_adapted": 4,
+    "adapter_common_arguments_still_required": 132,
+    "scope": "hypothetical consumer surface only; adapters preserve existing upstream signatures; no net-source or labor claim"
+  },
+  "followup": {
+    "access_fixture": {
+      "file": "Tests/FunctionalAccess.lean",
+      "sha256": "49bf667172bbbacdc489d7cc289fd2e62e67b63016f51d715719e176ff2b97a2",
+      "positional_read_before": "retained.2.1",
+      "positional_read_after": "retained.2.2.1",
+      "positional_consumer_expression_edits": 1,
+      "named_consumer_expression_edits": 0,
+      "positional_read_definition_code_lines": 2,
+      "generic_named_read_definition_code_lines": 4,
+      "scope": "one residual access while inserting derivative; checklist/provider changes excluded"
+    },
+    "additional_shared_cost": {
+      "access_file": "LeanPoo/Functional/Access.lean",
+      "sha256": "8075540dfc19274c25dacacf9ad37fa107cbb7a82f143942f864057bb15af4e9",
+      "access_code_lines_including_proofs": 47,
+      "proof_adapter_and_equation_code_lines": 6,
+      "proof_adapter_source_sha256": "f60343d92f98cbb04d93d55845e89712d3a8a034e21eb7d33033b8a8a04a8823"
+    },
+    "context_adapter_ledger": {
+      "theorem_file": "Euler/PacketInitializedCorrectionNorms.lean",
+      "sha256": "973b5403b584a9123753f113dbd1be478c00874ad54fb864585fb38efb781887",
+      "one_to_one_common_context_field_slots": 33,
+      "ambient_typeclass_declarations": [
+        "NormedAddCommGroup U",
+        "InnerProductSpace ℝ U",
+        "CompleteSpace U"
+      ],
+      "implicit_period_and_instance_closure": "not elaborated; full dependent context remains unverified",
+      "proof_valued_source_entries": 4,
+      "adapter_entries_if_each_original_theorem_is_retained": 4,
+      "explicit_argument_groups_retained_by_adapters": 164,
+      "nonprefix_argument_groups": 32,
+      "scope": "conditional one-to-one context model, not a compiled Euler context/adapter implementation"
+    }
+  },
+  "validation": "Run lake env lean Tests/FunctionalMaintenance.lean and Tests/FunctionalAccess.lean separately; this script does not certify Lean proofs."
+}

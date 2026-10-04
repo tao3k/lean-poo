@@ -1612,3 +1612,27 @@ receipt and [[file:use-cases/euler-maintenance-checklist.org][benefit checklist]
 four upstream 33-argument common prefixes. Shared implementation, adapter,
 context, and provider costs remain explicit. No upstream integration, net PDE
 line reduction, maintenance-hour saving, or runtime speedup is established.
+
+
+* Key-based retained access and exact proof adapters
+
+~Functional.Access~ adds ~Requirements.factoryAt~, selected-provider equality,
+exact original C4 provenance, and stability across successful checklists.
+Extensions, reorderings, and duplicates change no named factory from the same
+provider. The caller supplies typed membership and decidable key equality;
+access scans the checklist and should occur before repeated context calls.
+~Factory.fromProof~ preserves a proposition-valued theorem as a ~PLift~ factory;
+its ~down~ equation is axiom-free and binds the exact context/claim.
+
+~Tests/FunctionalAccess.lean~ compiles the generic stability/provenance clients,
+checks four checklist shapes at two contexts, checks changed positional access,
+and rejects a theorem witness at a different context. Four axiom reports use
+only standard Lean axioms or none. The contextual example now uses typed keys.
+
+The reference-only Euler ledger expands to 33 common field slots in a
+conditional one-to-one context model, three explicit ambient typeclasses,
+four proof-valued adapter entries, and 164 retained explicit argument groups.
+The marked client shows one positional-expression edit versus zero named-read
+edits, but adds reader/proof/membership costs. Full dependent context/implicit
+instance elaboration, adapter bodies, net source reduction, and maintenance
+hours remain separate gates. No upstream source or build dependency is added.

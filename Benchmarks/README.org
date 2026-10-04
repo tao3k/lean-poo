@@ -32,3 +32,10 @@ common explicit arguments and marked code sections in the kernel-checked
 ~Tests/FunctionalMaintenance.lean~ comparison, including checklist/application
 code and shared library costs. It runs no upstream builds. See the
 [[file:../docs/use-cases/euler-maintenance-checklist.org][benefit checklist]] and tracked receipt for scope and unknown adapter costs.
+
+
+The study's v2 receipt also includes marked positional/named access definitions
+from ~Tests/FunctionalAccess.lean~, additional shared Access/proof-adapter code,
+and the source declaration/context-slot/adapter-arity inventory. The original
+v1 receipt remains a historical preparation-only baseline. Full implicit
+instance/context/adapter elaboration and global source savings remain unknown.

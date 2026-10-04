@@ -1001,3 +1001,18 @@ reported separately; it is not a global Euler source-reduction claim.
 ~prepare_congr~ and ~prepare_rename~ advance the paper/interface chain to exact
 whole-checklist stability, including failure results. The source-study script
 is optional and reads reference material only; CI has no dependency on it.
+
+
+* Stable capability access under successful checklist extensions
+
+~factoryAt_stable~ closes typed consumer access stability across arbitrary
+successful requirement lists sharing a provider. Named access preserves the
+exact selected function and original C4 ancestor; inserted, reordered, and
+repeated keys need no position-sensitive consumer rewrite. This conditional
+consumer property does not prove ordinary C4 graph soundness or EPG equivalence.
+
+The pinned Euler source supplies four theorem-valued interface examples.
+~Factory.fromProof~ preserves their proposition/context shape through ~PLift~,
+while the [[file:use-cases/euler-maintenance-checklist.org][cost checklist]] counts retained adapter arguments and explicit
+context slots separately from verified local source-edit savings. Upstream
+analytic proofs and implicit-instance closure are not integrated or compiled.

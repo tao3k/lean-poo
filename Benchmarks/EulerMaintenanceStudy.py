@@ -54,6 +54,54 @@ def arguments(text):
     return groups
 
 
+def followup(reference, common, calls):
+    access = ROOT / "LeanPoo/Functional/Access.lean"
+    fixture = ROOT / "Tests/FunctionalAccess.lean"
+    assembly = ROOT / "LeanPoo/Functional/Assembly.lean"
+    text = fixture.read_text()
+    positional = text.split("-- ACCESS-POSITIONAL-BEGIN\n", 1)[1].split("-- ACCESS-POSITIONAL-END", 1)[0]
+    named = text.split("-- ACCESS-NAMED-BEGIN\n", 1)[1].split("-- ACCESS-NAMED-END", 1)[0]
+    expressions = re.findall(r":= (retained[.0-9]+)", positional)
+    if expressions != ["retained.2.1", "retained.2.2.1"]:
+        raise ValueError("Unexpected positional comparison fixture")
+    theorem_path = reference / "Euler/PacketInitializedCorrectionNorms.lean"
+    theorem_source = theorem_path.read_text()
+    declarations = theorem_source.split("variable ", 1)[1].split("\ninclude ", 1)[0]
+    groups = arguments(declarations)
+    declared = []
+    for group in groups:
+        if group.startswith(("(", "{")) and ":" in group:
+            declared.extend(group[1:].split(":", 1)[0].split())
+    if not set(common) <= set(declared):
+        raise ValueError("Common parameters missing from source variable declarations")
+    ambient = re.findall(r"\[([^\]]+)\]", declarations)
+    for call in calls:
+        if not re.search(r"^theorem " + re.escape(call["callee"]) + r"\b", theorem_source, re.M):
+            raise ValueError("Expected proof-valued source entry")
+    helper = "def fromProof" + assembly.read_text().split("def fromProof", 1)[1].split("/-- Adapt a factory", 1)[0]
+    return {
+        "access_fixture": {"file": "Tests/FunctionalAccess.lean", "sha256": sha256(fixture),
+                           "positional_read_before": expressions[0], "positional_read_after": expressions[1],
+                           "positional_consumer_expression_edits": 1, "named_consumer_expression_edits": 0,
+                           "positional_read_definition_code_lines": code_lines(positional.split("private def positionalAfter", 1)[0]),
+                           "generic_named_read_definition_code_lines": code_lines(named),
+                           "scope": "one residual access while inserting derivative; checklist/provider changes excluded"},
+        "additional_shared_cost": {"access_file": "LeanPoo/Functional/Access.lean", "sha256": sha256(access),
+                                   "access_code_lines_including_proofs": code_lines(access.read_text()),
+                                   "proof_adapter_and_equation_code_lines": code_lines(helper),
+                                   "proof_adapter_source_sha256": sha256(assembly)},
+        "context_adapter_ledger": {"theorem_file": "Euler/PacketInitializedCorrectionNorms.lean", "sha256": sha256(theorem_path),
+                                   "one_to_one_common_context_field_slots": len(common),
+                                   "ambient_typeclass_declarations": ambient,
+                                   "implicit_period_and_instance_closure": "not elaborated; full dependent context remains unverified",
+                                   "proof_valued_source_entries": len(calls),
+                                   "adapter_entries_if_each_original_theorem_is_retained": len(calls),
+                                   "explicit_argument_groups_retained_by_adapters": sum(c["explicit_argument_groups"] for c in calls),
+                                   "nonprefix_argument_groups": sum(c["explicit_argument_groups"] for c in calls) - len(common) * len(calls),
+                                   "scope": "conditional one-to-one context model, not a compiled Euler context/adapter implementation"}
+    }
+
+
 def study(reference):
     actual = subprocess.check_output(
         ["git", "-C", str(reference), "rev-parse", "HEAD"], text=True).strip()
@@ -90,7 +138,7 @@ def study(reference):
     overhead = code_lines(library.read_text())
     savings = before - after
     return {
-        "schema": "lean-poo.euler-maintenance.v1",
+        "schema": "lean-poo.euler-maintenance.v2",
         "evidence_boundary": "pinned lexical inventory plus kernel-checked generic client comparison; no upstream integration",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": actual,
                       "file": SOURCE, "sha256": sha256(path), "calls": calls,
@@ -116,7 +164,8 @@ def study(reference):
                      "consumer_common_context_slots_if_adapted": len(calls),
                      "adapter_common_arguments_still_required": len(common) * len(calls),
                      "scope": "hypothetical consumer surface only; adapters preserve existing upstream signatures; no net-source or labor claim"},
-        "validation": "Run lake env lean Tests/FunctionalMaintenance.lean separately; this script does not certify Lean proofs."
+        "followup": followup(reference, common, calls),
+        "validation": "Run lake env lean Tests/FunctionalMaintenance.lean and Tests/FunctionalAccess.lean separately; this script does not certify Lean proofs."
     }
 
 

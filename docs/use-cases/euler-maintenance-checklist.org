@@ -96,6 +96,53 @@ not a proven deletion of 99 arguments from the whole implementation.
 - [ ] Net source estimate including provider registry, graph, consumer construction, and adapter costs.
 - [ ] Measured maintenance-change effort; no hours or global percentage asserted.
 
+* Follow-up: stable named access and context/adapter cost ledger
+
+The [[file:../../Benchmarks/receipts/euler-access-costs-2026-10-04.json][follow-up receipt]] retains the same 17-to-8 preparation comparison and
+adds the costs below. Its hashes bind the new Access implementation, typed
+client fixture, proof adapter, and actual upstream theorem declarations.
+Reproduce it with the same optional study command and
+~lake env lean Tests/FunctionalAccess.lean~.
+
+| New capability / reference seam | Before | After / conditional estimate | Added costs / evidence |
+|---------------------------------+--------+------------------------------+------------------------|
+| Residual access when inserting derivative into ~[background,residual]~ | ~retained.2.1~ must become ~retained.2.2.1~: one consumer expression edit | Named ~factoryAt~ expression needs zero edits | Checked generic client; checklist/provider declarations still change. |
+| Access helper source | Fixed positional reader: 2 code lines | Generic named reader: 4 code lines | Two added client lines in this fixture, membership proof, and ~DecidableEq Key~; not a universal source-size estimate. |
+| Shared named-access library | Existing preparation module | 47 additional code lines including selection, stability, and provenance proofs | Optional ~Functional.Access~ module. These lines were excluded from the earlier 12-consumer toy balance. |
+| Raw Euler theorem result | Four proof-valued source entry points | ~Factory.fromProof~ produces ~PLift (Claim context)~ | Six added shared code lines including the exact ~down~ equation; original theorem arguments and guards remain. No wrapper-line reduction is claimed. |
+| Common source context | 33 unique explicitly supplied prefix names | One-to-one context model: 33 field slots | Conditional schema inventory, not compiled Euler context code or a minimal field count. |
+| Ambient constraints | Source ~U~ plus three written typeclass assumptions | Retain them when forming dependent context/adapters | Actual declaration inventory; implicit ~period~/instance closure has not been elaborated. |
+| Four source adapters | Explicit arities 40, 40, 44, 40 | Four retained theorem entry points still pass 164 argument groups | Includes the original 132 common groups and 32 remaining groups. This is retained adapter cost, not a source deletion. |
+
+~factoryAt_selected~ proves the named reader is exactly the provider-selected
+factory. ~factoryAt_stable~ proves equality across arbitrary successful
+checklists for the same provider, including extensions, reorderings, and
+repeats. Both preparations must succeed: adding a missing required capability
+can still reject the larger checklist. ~factoryAt_origin~ retains the exact
+original C4 ancestor and selected function. This strengthens the functional
+consumer contract without assuming arbitrary graph-isomorphism invariance.
+
+A positional read can become ill-typed after an inserted heterogeneous field;
+the fixture checks that rejection. A named read instead carries a membership
+proof. It scans the checklist once per access, so retain the returned factory
+before an order/time loop. Its body and any user callback retain their own
+behavior; no runtime speedup is established.
+
+The source's four original declarations are theorems. A raw proof has sort
+~Prop~, while a provider capability uses a result in ~Type~. ~Factory.fromProof~
+packages an existing theorem in ~PLift~ and its ~down~ equation is axiom-free.
+It preserves the exact context-indexed claim; changing source data or guards
+still requires the new claim's proof. This helper does not make noncomputable
+upstream analysis executable or construct its dependent context automatically.
+
+The cost ledger now closes explicit interface-slot/adapter-arity inventory,
+but the full dependent context, its construction, implicit instances, actual
+adapter bodies, provider registry, and graph setup remain unimplemented in the
+reference study. The 164 source arguments have not disappeared. Net Euler
+source savings and maintenance hours remain unknown. The earlier 12-consumer
+arithmetic excludes this follow-up's optional 53 shared code lines and reader
+cost; it cannot be treated as the current full migration break-even point.
+
 * Checklist to include in every subsequent progress report
 
 For each new reusable capability, report:

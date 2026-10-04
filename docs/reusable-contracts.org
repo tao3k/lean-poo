@@ -444,3 +444,42 @@ errors as well as successes. Namespace alignment remains a caller obligation.
 client and the general checklist API return exactly the same function or
 first missing error. The [[file:use-cases/euler-maintenance-checklist.org][Euler maintenance report]] gives reproducible local
 code counts, actual reference repetitions, and shared/adapter cost boundaries.
+
+
+* Access prepared factories by typed key
+
+Import ~LeanPoo.Functional.Access~ and derive or supply ~DecidableEq Key~.
+After a successful preparation, use
+~Requirements.factoryAt (keys := requested) retained key member~. The proof
+~member : key ∈ requested~ excludes a missing key and the return type is the
+factory for that exact key. Literal lists usually discharge membership with
+~by simp [requested]~. Repeated keys use their first tuple occurrence.
+
+Retain this returned function before repeated context calls. Named access
+scans the checklist; it is not a constant-time field offset. It invokes no
+factory during the scan, and subsequent calls invoke the retained factory's
+own body. A consumer no longer embeds positions such as ~.2.2.1~.
+
+~factoryAt_selected~ gives ~provider key = some (factoryAt ...)~ from the
+selected-tuple contract. ~factoryAt_stable~ proves named factory equality for
+any two successful checklists from that provider containing the key. A newly
+missing required key can still fail preparation. ~factoryAt_origin~ exposes
+the exact original C4 ancestor supplying this function after verified assembly.
+
+[[file:../Examples/ContextualFactories.lean][ContextualFactories.Prepared.build]] now extracts background and residual
+by key, then retains them in ~Factory.zipWith~. Membership proofs and user
+constructors still need to follow their capability types. This is a maintenance
+contract, not a measured resolver throughput improvement.
+
+* Adapt existing proposition-valued theorems
+
+~Factory.fromProof prove~ accepts ~prove : ∀ context, Claim context~ for
+~Claim : Context → Prop~ and returns ~Factory Context (fun c => PLift (Claim c))~.
+Its result's ~down~ is a proof of the exact supplied context's claim;
+~fromProof_down~ is definitionally equal to the existing theorem call and
+requires no axioms. This bridges the result sort without rewriting analytic
+proofs. Context/guard binding and noncomputable source behavior remain caller
+responsibilities.
+
+The [[file:use-cases/euler-maintenance-checklist.org][follow-up Euler checklist]] records an unchanged named read after a field
+insertion, added reader/library costs, and the actual source adapter arities.

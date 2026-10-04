@@ -151,3 +151,27 @@ signature-preserving adapters still pass the original arguments. The receipt
 separately counts the shared requirement implementation and leaves net PDE
 source reduction and maintenance hours unmeasured. Future progress reports
 use the same baseline/cost/evidence checklist.
+
+
+* Named capabilities and proposition-valued source estimates
+
+The four initialized background/derivative/residual/drift entries are actual
+~theorem~ declarations in ~Euler/PacketInitializedCorrectionNorms.lean~. A
+factory capability in ~Type~ can retain such a theorem via
+~Factory.fromProof~, which packages its exact claim in ~PLift~. Existing
+arguments and guards remain required by the adapter; ~down~ yields precisely
+the old theorem at the supplied context. No upstream analytic proof is built
+or changed by this experiment.
+
+The contextual client now takes background and residual factories with
+~Requirements.factoryAt~ instead of tuple offsets. Extending a successful
+capability checklist does not require changing these key-based reads;
+~factoryAt_stable~ proves that fact. A missing newly required field still fails
+preparation. Select the named factory once, then retain it across contexts.
+
+The [[file:euler-maintenance-checklist.org][expanded cost ledger]] records the one-to-one 33-field context model,
+three explicitly written ambient typeclass constraints, four proof adapter
+entry points, and all 164 retained explicit source arguments. It separates
+these source inventories from unverified dependent contexts/implicit instance
+closure and from the local no-position-edit result. Whole-source reduction is
+still unmeasured; the additional API/proof costs are included in the checklist.

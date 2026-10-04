@@ -14,6 +14,16 @@ abbrev Factory (Context : Type u) (Result : Context → Type v) :=
 
 namespace Factory
 
+/-- Preserve an existing context-indexed theorem as a proof-bearing factory.
+PLift changes its sort, not its proposition, data, or guards. -/
+def fromProof {Context : Type u} {Claim : Context → Prop}
+    (prove : ∀ context, Claim context) : Factory Context (fun context => PLift (Claim context)) :=
+  fun context => ⟨prove context⟩
+
+@[simp] theorem fromProof_down {Context : Type u} {Claim : Context → Prop}
+    (prove : ∀ context, Claim context) (context : Context) :
+    (fromProof prove context).down = prove context := rfl
+
 /-- Adapt a factory to a larger context by an explicit projection. Its result
 is indexed by that projection; this does not transport a witness to new data. -/
 def reindex {Context : Type u} {Result : Context → Type v} {Outer : Type w}

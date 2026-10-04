@@ -51,3 +51,5 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries.
 
 - [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
+
+- [[file:FunctionalAccess.lean][FunctionalAccess]] checks named access under successful checklist insertion/reordering/repetition, exact selected-provider provenance, positional type rejection, and proposition-valued proof adapters.

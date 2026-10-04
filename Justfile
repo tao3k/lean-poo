@@ -41,7 +41,8 @@ check-merge: check-types
         LeanPoo.C4.OrderRelation \
         LeanPoo.C4.Renaming \
         LeanPoo.Functional.Assembly \
-        LeanPoo.Functional.Requirements
+        LeanPoo.Functional.Requirements \
+        LeanPoo.Functional.Access
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -260,6 +261,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean
     {{lean}} Tests/FunctionalMaintenance.lean
+    {{lean}} Tests/FunctionalAccess.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     {{lean}} Tests/MutablePrototype.lean
     {{lean}} Tests/TypedSlots.lean

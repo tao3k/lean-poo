@@ -1,4 +1,4 @@
-import LeanPoo.Functional.Requirements
+import LeanPoo.Functional.Access
 
 /-! A source-informed interface experiment for Euler budget assembly. The
 capabilities correspond to PacketInitializedSpatialBudget fields. Callers
@@ -64,9 +64,9 @@ def prepare (provider : Provider Context Capability Value) :
 replace this pair projection with its existing budget constructor. -/
 def Prepared.build (prepared : Prepared Context Value) :
     Factory Context (fun context => Value context .background × Value context .residual) :=
-  fun context =>
-    let results := Requirements.build (keys := requested) prepared context
-    (results.1, results.2.1)
+  let background := Requirements.factoryAt (keys := requested) prepared .background (by simp [requested])
+  let residual := Requirements.factoryAt (keys := requested) prepared .residual (by simp [requested])
+  Factory.zipWith (fun _ background residual => (background, residual)) background residual
 
 /-- The full budget checklist uses the same API with heterogeneous field types;
 no consumer-specific preparation structure is needed. -/
