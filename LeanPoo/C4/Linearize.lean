@@ -69,6 +69,28 @@ def collectParents (table : Table) (names : List String) : Except Error (List Li
   let reversed ← collectParentsRev table names []
   return reversed.reverse
 
+/-- Read a selected full suffix precedence, rejecting missing cache entries. -/
+def readSuffix (table : Table) (selected : Option String) : Except Error (List String) := do
+  match selected with
+  | none => pure []
+  | some name =>
+    let some entry := lookup table name | throw (.unknownNode name)
+    pure entry.precedence
+
+/-- Collect nonempty suffix metadata in order using the original reverse accumulator. -/
+def collectSuffixTailsRev (table : Table) : List (Option String) → List (List String) →
+    Except Error (List (List String))
+  | [], reversed => .ok reversed
+  | none :: rest, reversed => collectSuffixTailsRev table rest reversed
+  | some name :: rest, reversed => do
+    let tail ← readSuffix table (some name)
+    collectSuffixTailsRev table rest (tail :: reversed)
+
+def collectSuffixTails (table : Table) (sources : List (Option String)) :
+    Except Error (List (List String)) := do
+  let reversed ← collectSuffixTailsRev table sources []
+  return reversed.reverse
+
 /-- Compute one node after all its parents have been computed. -/
 def computeNode (table : Table) (node : Node) (checked : Bool) :
     Except Error Linearization := do
@@ -77,11 +99,7 @@ def computeNode (table : Table) (node : Node) (checked : Bool) :
 
   let inheritedSuffix ← selectSuffix table (parentResults.map (·.mostSpecificSuffix)) none
 
-  let inheritedTail ← match inheritedSuffix with
-    | none => pure []
-    | some suffix =>
-      let some result := lookup table suffix | throw (.unknownNode suffix)
-      pure result.precedence
+  let inheritedTail ← readSuffix table inheritedSuffix
   if !orders.all (fun order => respectsSuffixTail order inheritedTail) then
     throw .suffixOrderViolation
 
@@ -90,13 +108,9 @@ def computeNode (table : Table) (node : Node) (checked : Bool) :
     (orders.map (fun order => withoutTail order inheritedTail))
   let mergedAncestry ← if checked then
     do
-      let mut tailsRev : List (List String) := []
-      for result in parentResults do
-        if let some suffix := result.mostSpecificSuffix then
-          let some cached := lookup table suffix | throw (.unknownNode suffix)
-          tailsRev := cached.precedence :: tailsRev
+      let tails ← collectSuffixTails table (parentResults.map (·.mostSpecificSuffix))
       let certificate ← certifyNode node.name
-        (parentResults.map (·.precedence) ++ orders) tailsRev.reverse inheritedTail
+        (parentResults.map (·.precedence) ++ orders) tails inheritedTail
       pure certificate.ancestry.output
   else do
     let mergedPrefix ← merge candidates

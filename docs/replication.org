@@ -956,3 +956,46 @@ parent tails, reachable validation, and whole ordinary graph completeness
 remain open. Graph-backed conditional walk/selection completeness does not
 establish these population obligations or equivalence to Ducournau's original
 graph relation.
+
+* Actual node computation and empty-tail omission receipt
+
+~lake build LeanPoo.C4.ComputeInvariant~ checks that empty parent tails may
+be omitted from ~TailCertified~ and complete ~NodeCertified~ evidence while
+retaining the chosen tail and complete output. Under actual suffix-entry
+availability and the old head invariant, runtime absence of suffix metadata
+is exactly empty-tail deletion on the complete cached tail projection.
+The all-empty case remains valid and selects an empty inherited tail.
+
+Named ~readSuffix~ and ~collectSuffixTails~ operations now expose the actual
+runtime selected-tail read and reverse-accumulator checker collection.
+Missing selected entries still return the original unknown-node error;
+absent metadata contributes no tail. Complete collection equals the existing
+independent ~suffixTails~ projection once all supplied names are cached.
+
+~computeNode_complete~ proves both ordinary and checked runtime branches
+reproduce complete normalized node evidence, including actual inherited and
+most-specific metadata. ~computeNode_certified~ derives successful selection
+and matching selected tail from graph-backed metadata, an existing root
+~GraphTrace~, actual collected parents, and supplied complete normalized node
+evidence. It does not take successful ~computeNode~ execution as a premise.
+~computeNode_insert_preserves~ further retains the original ~CacheInvariant~
+after actual fresh insertion when that supplied node output has its graph
+derivation. The inherited link's full literal suffix witness is derived
+from the complete node certificate.
+
+~Tests/ComputeInvariant.lean~ prints nine standard-axiom reports and requires
+~COMPUTE-INVARIANT-OK families=781~. Generic examples quantify over arbitrary
+certificates and runtime inputs. Guards cover ordinary/checked equality,
+flagged and unflagged node metadata, repeated parents and empty local orders,
+leaf nodes, empty parent tails, and missing names. The finite oracle compares
+781 option-name sequences against the original checker collection loop,
+including exact successful values and first missing-name error payloads.
+
+The supplied normalized node evidence is still an explicit premise of the
+computation theorem. Deriving it systematically from original graph rows and
+canonical parent metadata, establishing the stronger ~MetadataInvariant~ for
+new computed entries, resolver preservation, reachable validation, and whole
+ordinary graph completeness remain open. Fresh insertion preserves the old
+provenance/link invariant here, not the stronger semantic coverage invariant.
+These conditional runtime receipts do not establish equivalence to the
+original Ducournau graph relation.

@@ -607,3 +607,17 @@ invariant alone cannot prove complete graph ancestry recognition.
 The stronger invariant still needs a population proof for actual node results
 and preservation through the resolver. These remain explicit integration
 obligations before ordinary graph completeness can be claimed.
+
+* Further C4 closure: actual node computation
+
+Complete node evidence now survives empty-parent-tail omission. The actual
+runtime selected-tail read and checker collection have completeness proofs,
+and both ordinary and checked ~computeNode~ branches reproduce supplied
+normalized node certificates with exact output and suffix metadata. Given
+existing graph-backed metadata and a root derivation, selection success and
+tail agreement are derived. Actual fresh insertion retains the original
+cache provenance and literal inherited-link evidence.
+The integration still requires systematic normalized-node evidence from
+original graph rows and a proof that new entries establish stronger semantic
+suffix coverage. Resolver preservation and reachable validation remain
+separate obligations before whole ordinary graph completeness.

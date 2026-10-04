@@ -9,6 +9,7 @@ import LeanPoo.C4.SelectionInvariant
 import LeanPoo.C4.ParentInvariant
 import LeanPoo.C4.NormalizationInvariant
 import LeanPoo.C4.MetadataInvariant
+import LeanPoo.C4.ComputeInvariant
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose
