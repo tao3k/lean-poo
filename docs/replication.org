@@ -1636,3 +1636,21 @@ The marked client shows one positional-expression edit versus zero named-read
 edits, but adds reader/proof/membership costs. Full dependent context/implicit
 instance elaboration, adapter bodies, net source reduction, and maintenance
 hours remain separate gates. No upstream source or build dependency is added.
+
+* Consumer dependency boundaries and change propagation
+
+~Functional.View~ realizes explicit capability projection over prepared
+context-indexed functions. ~project_selected~ and ~project_ready~ retain exact
+selection, while ~project_stable~ permits provider and source-list changes
+outside a consumer's keys. ~consumer_stable~ preserves arbitrary consumers;
+[[file:../Tests/FunctionalView.lean][FunctionalView]] also compiles transport of an arbitrary result proposition.
+The fixed Context/Key/Value families and requested-function equality are explicit
+premises. Small-list independent preparation avoids unrelated missing-key gates.
+
+This implements a bounded interface extension consequence alongside the existing
+POOF-inspired composition and verified C4 order contracts. It is not a proof
+of arbitrary graph extension invariance, EPG correspondence, changed theorem
+statements, or changed context types. C4 order changes may change requested
+provider selections and therefore fail the preservation premise. The revised
+[[file:use-cases/euler-maintenance-checklist.org][reference evaluation protocol]] measures change propagation and full boundary
+costs; the earlier line fixtures cannot establish a large-library benefit.

@@ -39,3 +39,14 @@ from ~Tests/FunctionalAccess.lean~, additional shared Access/proof-adapter code,
 and the source declaration/context-slot/adapter-arity inventory. The original
 v1 receipt remains a historical preparation-only baseline. Full implicit
 instance/context/adapter elaboration and global source savings remain unknown.
+
+* Change propagation reference inventory
+
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-change-surface.json~
+reads only Git-tracked Lean files at the pinned clean Euler reference. The
+[[file:receipts/euler-change-surface-2026-10-04.json][receipt]] records a content manifest, physical line/file counts, lexical mentions
+of the four earlier theorem entry points outside their defining file, and
+hashes of the local projection contract and test. It does not resolve Lean
+references or measure affected consumers, source savings, or runtime. It is
+optional reference research and is not a CI dependency. The [[file:../docs/use-cases/euler-maintenance-checklist.org][evaluation protocol]]
+now prioritizes real change fanout and complete migration costs.

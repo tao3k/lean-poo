@@ -483,3 +483,38 @@ responsibilities.
 
 The [[file:use-cases/euler-maintenance-checklist.org][follow-up Euler checklist]] records an unchanged named read after a field
 insertion, added reader/library costs, and the actual source adapter arities.
+
+* Declare only the capabilities a consumer uses
+
+Import ~LeanPoo.Functional.View~. Give the consumer a type
+~Requirements.Factories Context Value needs → Result~ where ~needs~ lists its
+actual dependencies. Keep source-list positions, provider registry, and graph
+outside that function. For independent consumers, call ~prepare provider needs~
+directly: a missing unrelated capability must not become a global startup gate.
+
+When a larger family has already been prepared, call
+~Requirements.project retained needs included~, with
+~included : ∀ key ∈ needs, key ∈ source~. The result has the consumer's exact
+list and dependent result types. Projection can reorder or repeat keys and
+runs no factory or provider lookup. It scans the source once per requested key;
+retain the projected tuple before repeated context calls. It neither generates
+adapters nor removes source capabilities.
+
+~project_selected~ preserves the selected-function contract, so original C4
+provenance remains available through ~factoryAt_origin~ and ~project_ready~.
+~project_ready~ proves agreement with independent local preparation.
+~project_stable~ compares different successful source lists and different
+providers, requiring function equality only for ~needs~. The two lists may
+contain different unrelated capabilities. ~consumer_stable~ transfers exact
+results of any function using this narrow interface. Results can themselves be
+functions over all contexts; equality also transports an existing proposition
+about the result, as compiled in [[file:../Tests/FunctionalView.lean][FunctionalView]].
+
+The contract fixes ~Context~, ~Key~, and ~Value~. Changed requested functions,
+changed proposition statements, and changed context/result types require new
+compatibility evidence. Equality of functions is sufficient and can be proved
+extensionally; observational similarity alone does not discharge that premise.
+This prevents unrelated source edits from requiring consumer-expression or
+consumer-theorem changes under the stated conditions. It does not stop Lean
+from recompiling modules whose imports changed, nor establish an elapsed-time
+improvement.

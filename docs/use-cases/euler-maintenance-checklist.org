@@ -157,3 +157,83 @@ For each new reusable capability, report:
 A concise report table should always include ~Reference point | Before | After
 or forecast | Added costs | Evidence status~. Unknown savings remain unknown;
 no repository-wide percentage is extrapolated from a small client fixture.
+
+* Revised research objective: bound change propagation
+
+The earlier source-line fixtures establish small interface contracts. They do
+not establish a worthwhile migration for a large proof library. Source size is
+no longer the primary success metric. The research question is which changes
+can be confined behind an interface while preserving existing consumers and
+proofs, with adapter and verification costs included.
+
+The [[file:../../Benchmarks/receipts/euler-change-surface-2026-10-04.json][tracked-source census]] at the same immutable pin finds 2,659 Lean files and
+641,332 physical lines. This counts Git-tracked Lean files, including blank and
+comment lines, and excludes dependencies, generated files, and untracked
+material. A different overall workspace-size figure needs its own counting
+scope; it cannot serve as this inventory's denominator.
+
+All four previously studied theorem identifiers have just one lexical mention
+each outside their defining file, at the four known SpatialBudget call points.
+This seam supplies four calls in one file, not evidence of a repository-wide
+high-fanout opportunity. Identifier-text counting is not Lean elaboration or a
+transitive dependency graph, and aliases/unqualified references may be missed.
+
+** Wider candidates, not established savings
+
+The same census identifies ~SourceCoefficientAgreement~ in 67 files (90 lexical
+occurrences), ~initializedCorrectionData~ in 31 files (50 occurrences), and
+~velocityMap~ in 28 files (158 occurrences). These counts include defining
+files and possible comments. They prioritize manual/elaborated dependency
+analysis; they are not counts of affected callers or removable arguments.
+The source already has reusable agreement/data/function interfaces, so further
+packaging alone may add maintenance cost. Before proposing a C4 provider graph,
+a real need for interchangeable implementations or override precedence must
+be established. No such large-family replacement has been demonstrated yet.
+
+** Implemented change contract
+
+~Requirements.project~ gives a consumer only the capabilities it declares.
+~project_ready~ equates this projection with independent preparation.
+~project_stable~ permits different providers and source lists, with agreement
+only on the consumer's declared keys. ~consumer_stable~ then preserves every
+consumer function and transports claims about its result. These are generic
+kernel proofs, not a finite count of simulated consumer edits.
+
+| Change | Established boundary | Remaining obligation |
+|-------+----------------------+----------------------|
+| Add/reorder/remove unrequested capabilities in an available source | Equal projected interface and arbitrary consumer result | Both source preparations succeed; requested keys remain present |
+| Change unrelated provider functions | Same consumer result for all supplied contexts | Exact function agreement on the consumer's keys |
+| Delete an unrelated capability so a global checklist fails | Independent small-list preparation can still succeed | Do not force consumers through a global all-capabilities gate |
+| Change a requested theorem's implementation | Same contract applies if its factory equality is proved | Caller must prove equality; no automatic analytic equivalence solver |
+| Change context fields, requested result type, or theorem statement | No preservation claim from this contract | Typed adapters and statement-level compatibility proofs |
+| Change a module imported by the consumer | Consumer semantics may be preserved | Lean rebuilds are still possible; no build-time saving proved |
+
+Projection adds a shared library with four general proofs, a membership
+obligation at each source/view boundary, and repeated source-list scanning at
+projection time. Small-list preparation is already supported and needs no
+projection. A provider registry, graph, dependent context, and source adapters
+still have to be justified and counted. Ordinary fixed function composition
+remains appropriate where no interchangeable provider precedence exists.
+
+** Evaluation protocol for a substantial reference case
+
+1. Identify a real interface with multiple independently maintained consumers,
+   and a real provider/implementation change. Count elaborated dependencies or
+   manually verify candidate lexical references before claiming fanout.
+2. Declare each consumer's minimal capability list; inventory context and
+   statement dependencies separately from provider lookup dependencies.
+3. Keep an explicit baseline change and compare changed consumer expressions,
+   theorem statements, proof scripts, adapters, and files. Count required
+   verification work separately from text edits.
+4. Apply the same change to the narrow-interface design; use kernel contracts
+   to preserve consumers outside the changed capability set. Consumers of a
+   changed capability still require equivalence evidence or migration.
+5. Report the break-even boundary including shared implementation, provider
+   registry, graph, context, adapters, and proof obligations. Benchmark actual
+   elaboration/build time under a controlled baseline only if claiming speed.
+
+For an arbitrary number of consumers satisfying the preservation premises,
+no consumer result or claim needs to change. This is a conditional semantic
+bound, not a measured count of avoided Euler edits. Actual reference migration,
+maintenance hours saved, net source savings, and C4-specific large-library
+benefit remain unestablished. No external integration is required for this study.
