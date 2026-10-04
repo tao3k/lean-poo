@@ -23,6 +23,7 @@ import LeanPoo.C4.VerifiedOrder
 import LeanPoo.C4.OrderRelation
 import LeanPoo.C4.Renaming
 import LeanPoo.C4.Presentation
+import LeanPoo.C4.Relabeling
 import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
@@ -33,6 +34,7 @@ import LeanPoo.Functional.Observation
 import LeanPoo.Functional.Transport
 import LeanPoo.Functional.Reindex
 import LeanPoo.Functional.Presentation
+import LeanPoo.Functional.Relabeling
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

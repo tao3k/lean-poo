@@ -381,3 +381,28 @@ It does not remove semantically significant parent order or the application's
 mathematical compatibility obligations. The original reference remains clean
 and read-only. Full graph-isomorphism/EPG correspondence, actual change-fanout
 receipts and build/elaboration speed remain separate gates.
+
+* Multi-step graph/name migration with one consumer boundary
+
+The [[file:../../Benchmarks/receipts/euler-relabeling-composition-2026-10-04.json][relabeling-composition receipt]] adds local witness/consumer contracts while
+retaining schema 1 and the same pinned Euler manifest. No source C4 registry,
+provider adapter or external dependency is introduced. This remains a conditional
+application interface for users who need actual override precedence.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~Graph.Relabeling~ | One shared descriptor for labels and declaration storage | Global injectivity and exact permutation evidence; parent rows/flags fixed |
+| ~Relabeling.trans~, ~unique~ | Compose descriptors and carry uniqueness across stages | Caller must first supply valid stage descriptors |
+| ~VerifiedOrder.relabel~, ~relabel_unique~, ~relabel_precedes~ | Reuse verified output and mapped pair queries without a resolver call | One name-map pass; output allocation and name transformations retained |
+| ~relabel_trans_output~ | Composed/direct output equals sequential output | Direct maps once rather than twice; elapsed-time savings unmeasured |
+| ~assemble_relabel~, ~Requirements.prepare_relabel~ | Reuse checklist and consumer proof under requested-key alignment | Application provider mapping; no new handwritten per-key ~require~ adapters |
+| Provider alignment counterexample | Renaming the graph alone loses an existing capability | This premise cannot be discarded or synthesized from graph shape |
+| Shared implementation cost | C4 module 85 physical lines; Functional bridge 35 | 132-line test; application witness/provider construction costs excluded |
+| Local corpus | 1536 cases, 3072 independent target compilations, 25200 pair checks | Local semantic evidence; no external analytic migration |
+| Euler avoided edits, net lines and maintenance hours | Unmeasured | Registry/witness/context/provider adapter costs and real change fanout still required |
+
+This completes the explicit label/permutation composition path to a consumer
+checklist. It preserves claims only in the fixed context/key/result families;
+Euler's analytic equivalence and dependent context guards are separate inputs.
+The reference already contains reusable interfaces, and this result does not
+imply that adding C4 would reduce its source or maintenance time.

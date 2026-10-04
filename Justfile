@@ -41,6 +41,7 @@ check-merge: check-types
         LeanPoo.C4.OrderRelation \
         LeanPoo.C4.Renaming \
         LeanPoo.C4.Presentation \
+        LeanPoo.C4.Relabeling \
         LeanPoo.Functional.Assembly \
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.Access \
@@ -48,7 +49,8 @@ check-merge: check-types
         LeanPoo.Functional.Observation \
         LeanPoo.Functional.Transport \
         LeanPoo.Functional.Reindex \
-        LeanPoo.Functional.Presentation
+        LeanPoo.Functional.Presentation \
+        LeanPoo.Functional.Relabeling
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -264,6 +266,7 @@ _check-contracts:
     {{lean}} Tests/OrderRelation.lean
     {{lean}} Tests/C4Renaming.lean
     {{lean}} Tests/C4Presentation.lean
+    {{lean}} Tests/C4Relabeling.lean
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean

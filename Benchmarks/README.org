@@ -80,3 +80,11 @@ using schema 1. Its 1536 permutation runs and 25200 pair queries are semantic
 checks, not timing samples. No upstream C4 registry, avoided consumer edits or
 net maintenance saving has been measured. Validation diagnostic order is a
 retained negative result.
+
+
+The [[file:receipts/euler-relabeling-composition-2026-10-04.json][relabeling-composition snapshot]] binds the local composed-witness modules and
+test to the same upstream manifest, still under schema 1. Its 1536 two-stage
+cases compare fresh target compilation with retained direct/sequential migration;
+3072 independent target compilations and 25200 pair queries are semantic counts,
+not runtime benchmark samples. The direct path maps the output once rather than
+twice; no elapsed-time or actual Euler maintenance saving has been measured.

@@ -692,3 +692,47 @@ See [[file:../Tests/C4Presentation.lean][the compiled generic consumer and corpu
 These contracts preserve semantic consumers under registry restructuring;
 Lean module recompilation, error diagnostic order, changed local precedence,
 net source savings and elapsed-time improvement are separate measurements.
+
+* Combine label changes and declaration reordering
+
+Import ~LeanPoo.C4.Relabeling~ and ~LeanPoo.Functional.Relabeling~.
+~Graph.Relabeling graph other~ packages ~rename~, its global injectivity proof,
+and ~declarations : (graph.rename rename).nodes.Perm other.nodes~. This witness
+preserves exact parent rows and suffix flags after name mapping. It does not
+infer a mapping from similar-looking graphs or align provider dictionaries.
+
+#+begin_src lean
+example {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (rename : String → String) (injective : Function.Injective rename)
+    (declarations : (graph.rename rename).nodes.Perm other.nodes)
+    (unique : (graph.nodes.map C4.Node.name).Nodup) :
+    C4.VerifiedOrder other (rename root) :=
+  order.relabel ⟨rename, injective, declarations⟩ unique
+#+end_src
+
+~change.unique~ transports source name uniqueness to the target.
+~VerifiedOrder.relabel~ maps the retained output once and invokes no resolver.
+~relabel_unique~ identifies any freshly verified target output, and
+~relabel_precedes~ preserves mapped pair queries, including absent/self queries.
+For multiple migrations, compose witnesses with ~first.trans second~ and migrate
+once. ~relabel_trans_output~ proves equality with sequential migration. The
+direct path avoids building and traversing an intermediate output list; the
+composed name function still evaluates both name transformations. This is a
+structural allocation/pass boundary, not an elapsed-time benchmark.
+
+~assemble_relabel~ preserves a requested factory when providers align under
+~change.rename~ on original ancestors. ~Requirements.prepare_relabel~ lifts
+that condition to the complete caller checklist, including exact functions
+and the first missing key. Its alignment premise is required only for keys
+in the checklist; unrelated capabilities and unrelated graph names need no
+alignment proof. A generic consumer and its existing result proposition use
+this equality through ~congrArg~ or rewriting, with no per-key ~require~ edits.
+The context, keys and dependent result families remain fixed.
+
+Provider alignment is essential: the [[file:../Tests/C4Relabeling.lean][compiled client]] shows an entry becomes
+missing if the graph is renamed but the old dictionary is kept. Applications
+own mapping construction, provider adapters, injectivity, exact declaration
+permutation and source uniqueness. Global injectivity is an explicit sufficient
+premise, stronger than injectivity merely on declared nodes. This API does not
+prove arbitrary finite graph-isomorphism extension, changed local parent orders,
+new analytic claims, or equal error diagnostic payloads. See the [[file:use-cases/euler-maintenance-checklist.org][cost checklist]].

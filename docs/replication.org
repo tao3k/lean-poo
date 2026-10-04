@@ -1751,3 +1751,39 @@ counterexamples bound the result: exact graph error-payload invariance is false
 for current validation priority, while checklist errors are exactly preserved
 once a verified order exists. Arbitrary graph-isomorphism witnesses and original
 EPG/C4 suffix-exemption correspondence remain separate research obligations.
+
+* Composition of explicit relabeling and declaration presentation
+
+~Graph.Relabeling~ packages a global injective name map with the exact target
+permutation of renamed declarations. ~trans~ composes these witnesses and
+~unique~ transports the source validation premise. ~VerifiedOrder.relabel~
+retains the mapped output and erased checked/derivation evidence.
+~relabel_unique~ equates independently verified target output,
+~relabel_precedes~ preserves mapped pairs and ~relabel_trans_output~ equates
+direct composed migration with sequential migration. Composition changes no
+parent-row order or suffix flag; it closes this combined witness slice of the
+shape-determinism implementation without asserting arbitrary graph isomorphism.
+
+~Functional.assemble_relabel~ and ~Requirements.prepare_relabel~ transfer this
+graph property to selected dependent functions and the whole consumer checklist.
+Provider alignment is explicit on original ancestors and requested keys only.
+The [[file:../Tests/C4Relabeling.lean][generic client]] rewrites an arbitrary consumer result proposition while retaining
+its old proof. No new mathematical equivalence is inferred from graph shape.
+
+The executable corpus covers 64 four-node families and all 24 declaration
+permutations, followed by an A/B label exchange and then a Unicode prefix plus
+reverse storage. Its 1536 cases independently compile both targets (3072 target
+compilations), retain 1008 successful cases and check 25200 mapped pairs. Direct
+and sequential outputs agree; aligned dependent values are checked at two
+contexts. Eight axiom reports contain only ~propext~, ~Quot.sound~ and existing
+~Classical.choice~ dependencies. A concrete unaligned provider loses the source
+capability, recording a negative boundary of consumer preservation.
+
+Composing descriptions permits one output-list map instead of the two maps in
+sequential migration. Name computation and application alignment proofs remain;
+no runtime timing, build speedup or upstream edit saving is established.
+Success migration and uniqueness for a supplied verified target are proved.
+The finite acceptance comparison is regression evidence, not a new general
+rejection/error-payload theorem for injective relabeling. Arbitrary finite
+isomorphism witnesses, EPG/C4 suffix-exemption correspondence and changed
+context/claims remain separate research gates.

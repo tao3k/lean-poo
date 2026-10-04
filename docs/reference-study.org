@@ -931,7 +931,7 @@ been fully inspected in this study.
 | Ancestor order preserved | ~VerifiedOrder.ancestor_order~, ~monotone_precedes~ | Same graph; independently retained ancestor result identified by trace uniqueness |
 | Marked ancestry is a literal suffix | ~VerifiedOrder.ancestor_suffix~ | Existing stronger graph contract |
 | Extended precedence graph | No graph-level EPG theorem yet | Formalize maximal common subclasses, directed constraints, cycles, and C4 suffix exemption |
-| Shape determinism | ~GraphTrace.rename~, ~VerifiedOrder.rename_unique~ for injective relabeling; ~VerifiedOrder.permute_unique~ and ~linearizeChecked_permute_ok~ for declaration permutation under unique names | Arbitrary graph-isomorphism witnesses, edited parent rows and exact error payloads remain separate |
+| Shape determinism | ~GraphTrace.rename~, ~VerifiedOrder.rename_unique~ for injective relabeling; ~VerifiedOrder.permute_unique~ and ~linearizeChecked_permute_ok~ for declaration permutation under unique names; ~Graph.Relabeling.trans~, ~VerifiedOrder.relabel_unique~ for combined witnesses | Arbitrary graph-isomorphism witnesses, edited parent rows and exact error payloads remain separate |
 
 ~LeanPoo/C4/OrderRelation.lean~ exposes executable pair queries backed by the
 first three contracts. ~Precedes~ means an ordered two-element sublist;
