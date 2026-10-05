@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 132 independent Lean example/contract files
+The local complete gate runs the 133 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -278,3 +278,11 @@ Eight additional small matched controls in ~_check-native-context~ check
 independent checksums and reuse policy. Total native admissions are now 40.
 Lean atom/diagnostic counts and nine supervisor tests remain unchanged.
 [[file:../docs/performance/context-cache.org][Native cache evidence]] separates local timing from CI semantic admission.
+
+* Narrow public views
+
+~FunctionalObservedView.lean~ checks 4608 cases / 1944 successes, 23328 reads /
+5832 hits, nonidentity observations, broad-first/uncached/independent parity,
+first duplicates and joint-proof result construction. Seven axiom reports use
+propext. Current inventory: 133 independent atoms + four diagnostics (137
+standalone), 40 native admissions and nine supervisor tests.

@@ -915,3 +915,12 @@ not an Euler-wide edit-count estimate.
 - [X] Measurement code cost 63 Lean + 77 Python lines; separate v1 receipts.
 - [X] Reference pressure sharing acknowledged; no redundant builds established.
 - [ ] Euler migration 0; net lines/maintenance/allocation savings unmeasured.
+
+* Narrow public view checklist
+
+- [X] Ten APIs; one direct public consequence replaces intermediate Claims.
+- [X] Only requested positions observed; result equals broad-first observation.
+- [X] 4608 cases / 23328 reads / 5832 hits; seven axiom reports and joint outputs.
+- [X] Local paper and existing reference field consumers hashed; v1 receipt.
+- [X] Shared costs 105 + 164 lines; no integration or new native timing claim.
+- [ ] Actual Euler migration 0; net code/maintenance/allocation savings unmeasured.

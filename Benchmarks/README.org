@@ -401,3 +401,10 @@ and eight CI admissions, with setup/query separation and negative controls.
 ~receipts/context-slot-native-2026-10-05.json~ binds sources/binary; the separate
 ~euler-context-cache-native-2026-10-05.json~ audit remains reference-only. Both
 are schema v1. Native admissions now total 40; raw logs stay in TMP.
+
+* Narrow observed view audit
+
+~receipts/euler-observed-view-2026-10-05.json~ stays v1 and binds 64 local hashes,
+the local original paper and reference field consumers. Ten APIs avoid observing
+unrequested positions during conversion. This path has no native timing study;
+previous cache timings remain historical and cannot be transferred.

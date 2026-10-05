@@ -1432,3 +1432,8 @@ time/allocation savings unmeasured.
 
 [[file:performance/context-cache.org][Native built-data cache evidence]] separates local matched timing from
 Euler reference sharing, with negative miss controls and no migration claim.
+
+* Narrow public interface qualification
+
+[[file:contracts/observed-view.org][Narrow public views]] bind the local POOF source and existing reference
+field consumers, without asserting redundant external observation or migration.

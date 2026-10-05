@@ -1,0 +1,66 @@
+#+TITLE: Narrow public views of built dependencies
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalObservedView.lean][Focused compiled clients]]
+
+* Project before observing
+
+Import ~LeanPoo.Functional.ObservedView~. A consumer requesting few keys can
+use ~slot.observeProject keys included expose Public derive~ to project retained
+raw data first, then observe only the requested positions. This creates one
+narrow public certificate: the supplied ~derive~ sees the broad raw data and
+its original Claim. No broad public Claim or intermediate narrow raw Claim
+needs to be declared. Factory and output construction do not run in conversion.
+
+Ten APIs: ~resultAt_observe~, ~projectResults_observe~, ~Certified.observeProject~,
+~Snapshot.observeProject~, ~Snapshot.observeProject_val~,
+~ContextSlot.observeProject~, ~observeProject_empty~,
+~observeProject_retained~, ~observeProject_hit~, ~observeProject_consume~.
+
+~projectResults_observe~ proves value equality with observing all source
+positions before projection. This holds even when duplicate source values
+differ: named access selects the first occurrence. Target order and repeated
+requests remain. Repeated requested keys still repeat observations. The API
+does not deduplicate requests or memoize observer outputs independently.
+
+#+begin_src lean
+import LeanPoo.Functional.ObservedView
+open LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value Observed : Context → Key → Type}
+    [DecidableEq Key] {c : Context} {source : List Key}
+    (data : Results Value c source) (keys : List Key)
+    (included : ∀ key ∈ keys, key ∈ source)
+    (expose : ∀ c key, Value c key → Observed c key) :
+    projectResults (observeResults expose data) keys included =
+      observeResults expose (projectResults data keys included) :=
+  projectResults_observe expose data keys included
+#+end_src
+
+* Continue through the cache and constructor
+
+A populated view retains its context and gives a hit on reading that context;
+an empty view remains empty. New contexts build narrow public factories and
+replace the slot. ~observeProject_consume~ identifies every output with an
+uncached narrow public build. Constructors run every time. Retain the converted
+slot to avoid converting again at subsequent requests.
+
+4608 cases cover 1944 successful preparations, three contexts, 23328 reads and
+5832 hits. Nonidentity observers change heterogeneous internal data into Nat
+public values; independent values, broad-first observation and uncached builds
+agree. Separate checks retain the first inconsistent duplicate and construct
+a result with a joint arithmetic proof. Seven axiom reports use propext, no
+sorryAx. Missing keys and wrong context indices are rejected.
+
+* Cost and reference boundary
+
+Projection scans source positions and constructs projected/observed tuples.
+Only requested positions are observed during conversion; native allocation and
+timing savings for this path are unmeasured. Earlier cache timing results do
+not transfer to this operation. Shared costs: 105 module / 164 test lines.
+
+The local [[file:../../.data/poof/poof.scrbl][POOF source]] Cache invalidation discussion motivates explicit
+cache choices. This is a bounded operation over closed immutable families, not
+open recursion, automatic analytic inference or language-wide invalidation.
+The [[file:../../Benchmarks/receipts/euler-observed-view-2026-10-05.json][v1 audit]] hashes the pinned original paper and existing reference
+pressure/gradient field consumers. They already use named field projection;
+redundant broad observations are not demonstrated. Euler migrations 0, net
+code and maintenance savings unmeasured; no integration is added.

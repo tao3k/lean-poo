@@ -2394,3 +2394,11 @@ into a comparable base and native performance qualification remain open.
 
 [[file:performance/context-cache.org::*Replicate and admit semantics][The dedicated replication instructions]] specify source/binary-bound local
 samples and eight small native admissions; setup and query clocks are separate.
+
+* Narrow public view replication
+
+Build ~LeanPoo.Functional.ObservedView~ and run ~Tests/FunctionalObservedView.lean~.
+Expect FUNCTIONAL-OBSERVED-VIEW-OK (4608/1944 cases/successes, 23328 reads/5832
+hits), DUPLICATE-OK (first=21/later=109) and JOINT-OK (contexts=3), with seven
+propext axiom reports. [[file:contracts/observed-view.org][The dedicated API module]] gives the public client.
+Separate v1 receipt ~euler-observed-view-2026-10-05.json~ binds 64 local hashes.

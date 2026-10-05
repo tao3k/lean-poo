@@ -380,7 +380,8 @@ def study(reference):
              "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean",
              "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean",
              "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean",
-             "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py"]
+             "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py",
+             "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -392,6 +393,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "observed_view": {
+            "paper_source": paper_cache_audit(),
+            "reference_audit": context_view_audit(reference),
+            "local_api": ["resultAt_observe", "projectResults_observe", "Certified.observeProject", "Snapshot.observeProject", "Snapshot.observeProject_val", "ContextSlot.observeProject", "ContextSlot.observeProject_empty", "ContextSlot.observeProject_retained", "ContextSlot.observeProject_hit", "ContextSlot.observeProject_consume"],
+            "tests": {"cases": 4608, "successes": 1944, "reads": 23328, "hits": 5832, "contexts": 3, "joint_proof_outputs": 3, "first_duplicate_observation": True, "axiom_reports": 7},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean"]},
+            "mechanism": "Project requested raw positions before observing them; one narrow public certificate and direct data consequence, without a broad public Claim or intermediate narrow raw Claim",
+            "cost": "Source scans and projected/observed tuples remain; repeated requested keys repeat observations; no observation on unrequested source positions during conversion",
+            "limits": ["Total pure observation functions and explicit public consequence required", "Reference already projects named pressure fields; redundant observation, external migration or savings not established", "This path has no native timing/allocation study; previous cache timings cannot be transferred; Euler migrations 0"]},
         "context_slot_native": {
             "paper_source": paper_cache_audit(),
             "reference_audit": context_slot_audit(reference),

@@ -159,3 +159,9 @@ are ~ContextSlot.empty~, ~read~, ~consume~ and ~Certified.consume~; no new
 runtime API is added. A recurring expensive dependency workload can benefit
 from hits, while miss-only work still pays cache overhead. Measure the actual
 consumer's dependency and constructor costs before choosing a policy.
+
+* Expose only requested cache positions
+
+[[file:observed-view.org][Narrow public views]] combine projection and observation with one direct
+public consequence. This avoids broad observers on unrequested positions and
+client intermediate Claims; requested duplicates still repeat observers.
