@@ -13,6 +13,22 @@ example {Context : Type u} {Key : Type v} [BEq Key] [Hashable Key] [LawfulBEq Ke
     Claim ((Requirements.prepare (assemble index.order updated.dictionary) keys).map consume) := by
   rw [Requirements.prepare_indexedTransaction_of_unaffected index registry changes keys applied unaffected]
   exact known
+-- Representation migration transfers the complete consumer result, even when
+-- edits affect its requested keys, without a negative-scope premise.
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : AncestryIndex graph root) (registry : ProviderRegistry Context Key Value)
+    (changes : List (RegistryEdit Context Key Value)) (keys : List Key)
+    (consume : Requirements.Factories Context Value keys → Result)
+    (Claim : Except String (Except Key Result) → Prop)
+    (known : Claim ((registry.patchTransaction changes).map (fun updated =>
+      (Requirements.prepare (assemble index.order updated.dictionary) keys).map consume))) :
+    Claim (((IndexedRegistry.ofRegistry registry).patchTransaction changes).map (fun updated =>
+      (Requirements.prepare (assemble index.order updated.dictionary) keys).map consume)) := by
+  rw [IndexedRegistry.ofRegistry_transaction_consumer registry changes
+    (fun dictionary => (Requirements.prepare (assemble index.order dictionary) keys).map consume)]
+  exact known
 private inductive Capability where
   | quantity | flag | bound
   deriving BEq, ReflBEq, LawfulBEq, DecidableEq
@@ -150,10 +166,41 @@ private def lists : List (List Capability) :=
   unless successes == 192 && rejected == 64 && queries == 3072 && negative == 1920 do
     throw (IO.userError "unexpected transaction corpus")
   IO.println s!"FUNCTIONAL-INDEXED-TRANSACTION-OK successes={successes} rejected={rejected} queries={queries} negative={negative} contexts=2"
+private def scopeAbsent : ProviderRegistry Nat Capability Value := ⟨{}⟩
+private def scopeRegistered : ProviderRegistry Nat Capability Value :=
+  ⟨scopeAbsent.entries.insert "Empty" (fun _ => none)⟩
+example : (IndexedRegistry.ofRegistry scopeRegistered).dictionary = scopeAbsent.dictionary := by
+  rw [IndexedRegistry.ofRegistry_dictionary]
+  funext name key
+  by_cases same : "Empty" = name <;>
+    simp [scopeRegistered, scopeAbsent, ProviderRegistry.dictionary, same]
+
+-- Dictionary equality does not imply equal transaction errors: a registered
+-- empty provider is different from an unknown name. Guard against dropping scope.
+#eval do
+  let absent := scopeAbsent
+  let registered := scopeRegistered
+  let indexed := IndexedRegistry.ofRegistry registered
+  for name in ["Empty", "Missing"] do
+    for key in ([.quantity, .flag, .bound] : List Capability) do
+      for c in [0, 7] do
+        unless same (observe (indexed.dictionary name) [key] c)
+            (observe (absent.dictionary name) [key] c) do
+          throw (IO.userError "empty-provider dictionary control differs")
+  unless indexed.entries.contains "Empty" && !absent.entries.contains "Empty" do
+    throw (IO.userError "name scope counterexample missing")
+  let edits : List (RegistryEdit Nat Capability Value) := [("Empty", [])]
+  let .ok _ := indexed.patchTransaction edits | throw (IO.userError "registered empty name rejected")
+  let .error name := absent.patchTransaction edits | throw (IO.userError "unknown empty name accepted")
+  unless name == "Empty" do throw (IO.userError "wrong empty-name error")
+  IO.println "FUNCTIONAL-INDEXED-TRANSACTION-EMPTY-SCOPE-OK dictionary_cells=12"
 #print axioms IndexedRegistry.patchTransaction_nil
 #print axioms IndexedRegistry.patchTransaction_cons
 #print axioms IndexedRegistry.patchTransaction_missing
 #print axioms IndexedRegistry.patchTransaction_scope
 #print axioms IndexedRegistry.patchTransaction_base
 #print axioms Requirements.prepare_indexedTransaction_of_unaffected
+#print axioms IndexedRegistry.patchTransaction_congr
+#print axioms IndexedRegistry.ofRegistry_patchTransaction
+#print axioms IndexedRegistry.ofRegistry_transaction_consumer
 end LeanPoo.Tests.FunctionalIndexedTransaction

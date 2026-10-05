@@ -651,3 +651,22 @@ user must still specify actual dependencies and align affected consumers.
 Separate batch calls retain their earlier behavior. No new transaction timing,
 allocation or peak-memory study is claimed. The [[file:../../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][source snapshot]] retains schema 1
 and the unchanged reference manifest. Original EPG/analytic closure remains open.
+
+* Complete transaction outcome capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~patchTransaction_congr~ | Preserve all query functions and first transaction errors for aligned states | Exact dictionaries AND equal name membership required |
+| ~ofRegistry_patchTransaction~ | Change ordinary storage to indexed storage with the same edits | Conversion supplies alignment; no user per-name/key proof |
+| ~ofRegistry_transaction_consumer~ | Reuse existing transaction consumer claims, including affected keys and nested errors | One rewrite; compares representations under the same changes |
+| Scope negative control | Prevent treating unknown names as registered empty providers | Full dictionary equality proved; twelve cells and opposite empty-batch outcomes checked |
+| Shared library/test cost | Current 174/206 physical lines; added 73/47 | Proofs/comments included; runtime transaction body unchanged |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or extrapolation |
+
+A user-defined coefficient/velocity provider workflow can retain its ordinary
+transaction consumer contract while choosing indexed storage for measured query
+workloads. The common theorem replaces per-consumer representation alignment;
+the user still supplies actual typed providers and dependency scopes. This is
+an application pattern, with no external adapter or consumer migration measured.
+Changing the transaction's edits still needs negative read scope or affected
+consumer alignment. The [[file:../../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][source snapshot]] keeps schema 1 and the reference pin.

@@ -2101,3 +2101,31 @@ The [[file:../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][sch
 pin/manifest. External consumers migrated remain zero; net lines, hours and
 avoided proof edits remain unknown. This closes a reusable library contract;
 original EPG correspondence and analytic dependency inference remain open.
+
+* Complete indexed/ordinary transaction outcome correspondence
+
+~IndexedRegistry.patchTransaction_congr~ strengthens the earlier successful,
+negative-scope result to equality of the entire dictionary-valued transaction
+outcome across representations. Induction follows caller-order batches, using
+per-name exact dictionary updates and unchanged membership at each successful
+step. Equal membership ensures both sides fail at the same first unknown name.
+Dictionary equality alone is insufficient: a registered empty provider and an
+unknown name have equal complete query functions but different empty-batch results.
+A kernel example proves full dictionary equality; twelve runtime observations
+and the opposite outcomes preserve this negative control.
+
+~ofRegistry_patchTransaction~ discharges dictionary/scope premises for the
+provided conversion. ~ofRegistry_transaction_consumer~ then maps any consumer
+across equal outcomes, covering nested capability errors and arbitrary claims.
+A generic prepared-consumer client compiles with one rewrite, without a success
+or unaffected-scope premise. Three new axiom reports use only the existing standard
+axioms, bringing this module's reports to nine. The scalar/ordinary corpus still
+checks 192 successes and 64 first-name failures across two contexts.
+
+Current module/test costs are 174/206 physical lines, increments of 73/47 over
+101/159. The runtime transaction definition is unchanged; these are erased proofs
+and semantic/client validation, with no new timing/allocation claim. The
+[[file:../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][schema-1 source snapshot]] binds 32 local files at the unchanged Euler reference.
+Euler migration remains zero and upstream savings unknown. This establishes
+same-edit representation correspondence; it does not prove old/new affected
+consumers equal, original EPG correspondence or analytic dependency inference.

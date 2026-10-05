@@ -3,7 +3,7 @@ import LeanPoo.Functional.RegistryTransaction
 
 /-! Atomic named transactions on retained indexed state. -/
 namespace LeanPoo.Functional
-universe u v w
+universe u v w x
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
 variable [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
 
@@ -97,5 +97,78 @@ theorem Requirements.prepare_indexedTransaction_of_unaffected (index : C4.Ancest
         exact applied
       exact (ih next tail scopes.2).trans
         (prepare_indexedRegistry_of_unaffected index registry edit.1 edit.2 keys step scopes.1)
+
+/-- Exact transaction outcomes across representations. Dictionary agreement alone
+cannot distinguish an absent name from a registered empty provider, so name scope
+is an explicit premise. Covers affected consumers and first unknown-name errors. -/
+theorem IndexedRegistry.patchTransaction_congr (registry : IndexedRegistry Context Key Value)
+    (ordinary : ProviderRegistry Context Key Value) (edits : List (RegistryEdit Context Key Value))
+    (agreement : registry.dictionary = ordinary.dictionary)
+    (scope : ∀ target, registry.entries.contains target = ordinary.entries.contains target) :
+    (registry.patchTransaction edits).map IndexedRegistry.dictionary =
+      (ordinary.patchTransaction edits).map ProviderRegistry.dictionary := by
+  induction edits generalizing registry ordinary with
+  | nil => simp [patchTransaction, ProviderRegistry.patchTransaction, Except.map, agreement]
+  | cons edit rest ih =>
+    cases found : registry.entries[edit.1]? with
+    | none =>
+      have absent : ordinary.entries[edit.1]? = none := by
+        have names := scope edit.1
+        simp only [Std.HashMap.contains_eq_isSome_getElem?, found, Option.isSome_none] at names
+        cases other : ordinary.entries[edit.1]? <;> simp_all
+      simp [patchTransaction, patchBatch, ProviderRegistry.patchTransaction,
+        ProviderRegistry.patchBatch, found, absent, Except.map]
+      rfl
+    | some state =>
+      cases other : ordinary.entries[edit.1]? with
+      | none =>
+        have names := scope edit.1
+        simp [Std.HashMap.contains_eq_isSome_getElem?, found, other] at names
+      | some provider =>
+        let next : IndexedRegistry Context Key Value :=
+          ⟨registry.entries.insert edit.1 (state.extend edit.2)⟩
+        let reference : ProviderRegistry Context Key Value :=
+          ⟨ordinary.entries.insert edit.1 (ProviderOverlay.compile provider edit.2).provider⟩
+        have step : registry.patchBatch edit.1 edit.2 = .ok next := by
+          simp [patchBatch, found, next]
+        have control : ordinary.patchBatch edit.1 edit.2 = .ok reference := by
+          simp [ProviderRegistry.patchBatch, other, reference]
+        have dictionaries : next.dictionary = reference.dictionary := by
+          funext target
+          by_cases same : target = edit.1
+          · subst target
+            rw [patchBatch_at registry edit.1 edit.2 step,
+              ProviderRegistry.patchBatch_at ordinary edit.1 edit.2 control, agreement]
+          · rw [patchBatch_other registry edit.1 edit.2 step same,
+              ProviderRegistry.patchBatch_other ordinary edit.1 edit.2 control same, agreement]
+        have names : ∀ target, next.entries.contains target = reference.entries.contains target := by
+          intro target
+          exact (patchBatch_scope registry edit.1 edit.2 step).trans
+            ((scope target).trans (ProviderRegistry.patchBatch_scope ordinary edit.1 edit.2 control).symm)
+        simpa only [patchTransaction_cons, ProviderRegistry.patchTransaction_cons, step, control,
+          Except.bind] using ih next reference dictionaries names
+
+/-- Convert once; all subsequent transaction outcomes have ordinary semantics.
+No comparison snapshot, per-name alignment or negative-impact premise is needed. -/
+theorem IndexedRegistry.ofRegistry_patchTransaction (ordinary : ProviderRegistry Context Key Value)
+    (edits : List (RegistryEdit Context Key Value)) :
+    ((ofRegistry ordinary).patchTransaction edits).map IndexedRegistry.dictionary =
+      (ordinary.patchTransaction edits).map ProviderRegistry.dictionary := by
+  apply patchTransaction_congr _ _ _ (ofRegistry_dictionary ordinary)
+  intro target
+  simp only [ofRegistry, Std.HashMap.contains_eq_isSome_getElem?, Std.HashMap.getElem?_map]
+  cases ordinary.entries[target]? <;> rfl
+
+/-- Transfer any dictionary consumer, retaining both transaction errors and the
+consumer's own result/error semantics. Factory execution is entirely caller-owned. -/
+theorem IndexedRegistry.ofRegistry_transaction_consumer {Result : Type x}
+    (ordinary : ProviderRegistry Context Key Value) (edits : List (RegistryEdit Context Key Value))
+    (consume : (String → Provider Context Key Value) → Result) :
+    ((ofRegistry ordinary).patchTransaction edits).map (fun updated => consume updated.dictionary) =
+      (ordinary.patchTransaction edits).map (fun updated => consume updated.dictionary) := by
+  have outcomes := congrArg (fun result => result.map consume) (ofRegistry_patchTransaction ordinary edits)
+  cases indexed : (ofRegistry ordinary).patchTransaction edits <;>
+    cases control : ordinary.patchTransaction edits <;>
+    simpa only [indexed, control, Except.map] using outcomes
 
 end LeanPoo.Functional

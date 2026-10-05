@@ -300,3 +300,12 @@ no serial global pass or new CI job is added. Four native named-batch admission
 cases and nine Python supervision tests remain part of the full gate.
 Transaction semantics are checked by the Lean corpus; previous native timings
 are evidence for batches/queries and do not measure transaction performance.
+
+* Complete transaction outcome admission
+
+The existing indexed transaction atom now checks representation outcome transfer
+and the registered-empty/unknown-name control. It adds no atom, serial phase or
+CI job: the inventory remains 118 independent plus four diagnostic files, using
+twelve shards and sixteen CI jobs. The three new library APIs are erased proofs;
+the runtime transaction body is unchanged. Prior batch/query timings remain
+scoped to their benchmark source and are not transaction timing evidence.

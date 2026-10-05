@@ -1119,3 +1119,11 @@ Reference source and manifest remain unchanged. This is a potential workflow for
 user-supplied analytic provider changes, with zero actual Euler migrations and
 unmeasured source/maintenance savings. Local semantic evidence and shared costs
 are recorded separately from previous batch performance measurements.
+
+The [[file:../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][transaction-outcome source snapshot]] records complete representation equality,
+including errors and arbitrary consumer claims, with 32 local hashes. A registered
+empty provider versus absent-name control establishes why equal name membership
+is required in addition to equal dictionary functions. Conversion provides both
+premises automatically. This supports a potential user migration between local
+storage representations; the Euler reference remains untouched, with zero
+actual migrations and unmeasured code/maintenance savings.

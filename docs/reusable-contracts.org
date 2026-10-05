@@ -1207,3 +1207,49 @@ negative scope does not suppress unknown-name errors. The reference Euler tower
 could group named analytic-provider changes before reusing an unaffected
 consumer, once a user supplies typed providers and actual dependency scopes.
 No such external adapter or consumer migration is implemented here.
+
+* Transfer complete transaction consumers between representations
+
+Import ~LeanPoo.Functional.IndexedTransaction~. Once a client has a scoped
+~ProviderRegistry~, convert it with ~IndexedRegistry.ofRegistry~ and pass the same
+~RegistryEdit~ transaction. ~ofRegistry_patchTransaction~ proves equality of the
+complete ~Except String~ dictionary result: all successful provider functions
+and the first unknown-name error agree. A success premise and negative impact
+check are unnecessary for this representation comparison.
+
+~ofRegistry_transaction_consumer~ transfers any dictionary consumer, including
+C4 assembly, heterogeneous preparation, caller-context evaluation and arbitrary
+claims about the resulting nested errors. For example:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : C4.AncestryIndex graph root)
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) (keys : List Key)
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except String (Except Key Result) → Prop)
+    (known : Claim ((registry.patchTransaction changes).map (fun updated =>
+      (Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys).map consume))) :
+    Claim (((Functional.IndexedRegistry.ofRegistry registry).patchTransaction changes).map
+      (fun updated => (Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys).map consume)) := by
+  rw [Functional.IndexedRegistry.ofRegistry_transaction_consumer registry changes
+    (fun dictionary => (Functional.Requirements.prepare
+      (Functional.assemble index.order dictionary) keys).map consume)]
+  exact known
+#+end_src
+
+For already aligned custom states, ~patchTransaction_congr~ takes exact dictionary
+agreement plus equal name membership. Both conditions matter: a registered empty
+provider has the same dictionary functions as an unknown name, but an empty batch
+at that name succeeds in only the registered case. The tests prove this full
+function equality and execute the distinct outcomes.
+
+This supports changing storage representation while keeping existing transaction
+consumer proofs, including affected keys. It compares the same transaction on
+two representations. To reuse a claim across different old/new changes, use the
+negative-scope theorem or provide explicit alignment for affected consumers.
+No new runtime algorithm or performance threshold is introduced by these proofs.

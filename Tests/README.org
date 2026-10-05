@@ -137,5 +137,8 @@ cases after compiling the executable. The current atomic inventory includes 118 
 64 first unknown-name failures, 3072 queries (1920 negative), two contexts and
 all-key hash collisions. Independent scalar and ordinary-transaction controls
 check repeated names/keys, removals, first capability errors, preserved bases and
-old snapshots. A generic arbitrary consumer claim uses one rewrite. Six kernel
-axiom reports accompany the reusable transaction laws.
+old snapshots. Generic arbitrary consumer claims use one rewrite for negative
+scope and complete representation outcomes. A kernel proof shows equal empty
+dictionaries can still differ in name scope; twelve runtime cells and opposite
+empty-name outcomes guard this boundary. Nine kernel axiom reports accompany
+the reusable transaction laws.

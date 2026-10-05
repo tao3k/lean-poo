@@ -207,3 +207,12 @@ and the unchanged Euler pin/manifest, with 32 local source/test hashes. This is
 not a new timing receipt: earlier indexed-registry measurements cover named
 batches and queries. Transaction allocations, peak memory and external savings
 remain unmeasured; source/test cost is 101/159 physical lines.
+
+* Complete transaction outcome source boundary
+
+[[file:receipts/euler-transaction-outcomes-2026-10-05.json][Transaction-outcome source snapshot]] records three new erased proof APIs,
+a generic complete-result consumer and the empty-provider/name-scope control.
+Current transaction module/test costs are 174/206 lines, increments of 73/47.
+The runtime transaction implementation and earlier benchmark sources are unchanged.
+This source receipt measures no new timing, allocation or external savings;
+it keeps schema 1, 32 local hashes and the unchanged Euler pin/manifest.
