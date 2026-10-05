@@ -154,3 +154,9 @@ batches, 192 unknown-name errors and 15360 queries, with 10368 negative scopes.
 A 256→1 name lookup/insertion comparison is structural source evidence, not a
 runtime or external source-saving estimate. List scans, hash copies and retained
 base layers remain costs; schema 1 and the reference manifest remain unchanged.
+
+The [[file:receipts/euler-registry-transaction-2026-10-05.json][multi-provider transaction snapshot]] binds 26 local source/test hashes,
+pure first-unknown-name semantics and whole-consumer negative-scope reuse.
+It records shared source/test costs, retained prefix/normalization/storage costs,
+and zero actual Euler migrations. External code and maintenance savings remain
+unmeasured; the reference pin/manifest and schema 1 are retained.

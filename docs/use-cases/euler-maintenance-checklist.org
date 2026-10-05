@@ -545,3 +545,23 @@ The practical call removes client-side per-edit error plumbing and generated
 untouched-provider alignment. It does not establish that Euler's analytic
 consumers have declared this capability shape, or turn lexical source mentions
 into measured avoided proof maintenance. Those upstream obligations remain open.
+
+* Multi-provider transaction capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-transaction-2026-10-05.json][transaction snapshot]] retains schema 1 and the same read-only Euler reference.
+
+| Capability/API | User maintenance action covered | Evidence/cost boundary |
+|----------------+---------------------------------+------------------------|
+| ~RegistryEdit~, ~patchTransaction~ | Submit one list across several named providers | Pure first-error result; no partial registry returned |
+| ~patchTransaction_cons~, ~patchTransaction_missing~ | Reuse exact sequential/unknown-name behavior | Unknown empty batches also fail; prefix work still costs CPU |
+| ~patchTransaction_scope~ | Retain the same declared provider names | Success premise; no physical storage identity |
+| ~transactionMayAffect~, ~prepare_patchTransaction_of_unaffected~ | Reuse unaffected whole consumer claims | No per-name alignment or per-key ~require~; explicit scopes and success |
+| Local semantic evidence | 192 successes, 64 unknown errors, 3072 queries, two contexts | Independent scalar oracle; failure after valid prefix; six axiom reports |
+| Shared implementation cost | Source/test physical lines recorded in snapshot | Caller adapters excluded; repeated names can retain base layers |
+| Actual Euler consumers migrated | 0 | Reference only; no integration |
+| Euler net lines / maintenance hours / avoided edits | Unknown / unknown / unknown | No matched consumer migration or timing measurement |
+
+This addresses coordinated application changes rather than a local example-only
+wrapper. Consumer mathematical proofs still need their own semantic premises
+when a requested capability actually changes. No upstream-scale extrapolation
+is justified by this local contract.

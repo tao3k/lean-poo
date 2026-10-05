@@ -40,6 +40,7 @@ import LeanPoo.Functional.SharedRegistry
 import LeanPoo.Functional.RegistryPatch
 import LeanPoo.Functional.Overlay
 import LeanPoo.Functional.RegistryBatch
+import LeanPoo.Functional.RegistryTransaction
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

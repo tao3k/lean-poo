@@ -1076,3 +1076,9 @@ alignment for consumers. The single-name batch uses one lookup/insertion and
 preserves graph/order/result families. It does not flatten earlier base overlays
 or infer multi-name transaction/analytic dependency equivalence. The reference
 Euler checkout remains unchanged and outside build/CI dependencies.
+
+The [[file:../Benchmarks/receipts/euler-registry-transaction-2026-10-05.json][multi-provider transaction snapshot]] binds 26 local source/test hashes,
+pure first-unknown-name semantics and whole-consumer negative-scope reuse.
+It records shared source/test costs, retained prefix/normalization/storage costs,
+and zero actual Euler migrations. External code and maintenance savings remain
+unmeasured; the reference pin/manifest and schema 1 are retained.

@@ -1023,3 +1023,39 @@ other changes. The API does not collapse arbitrary old closures, provide a
 multi-name transaction or infer analytic dependency closure. Graph/order and
 context/key/result families remain fixed. Euler adapters and actual maintenance
 savings remain unmeasured.
+
+* Multi-provider pure transactions and whole-consumer reuse
+
+~RegistryEdit~ packages a provider name with its heterogeneous typed batch.
+~ProviderRegistry.patchTransaction registry changes~ processes the list in caller
+order. Empty transactions return the original registry; repeated names apply
+sequentially and later same-key writes win. The first unknown name, including
+an empty batch at that name, returns an error with no partial registry in the
+result. The retained original snapshot remains usable after success or failure.
+This is return-value atomicity, without external effects or concurrent isolation.
+
+Retain each consumer's ancestry index and requested keys. A false
+~Requirements.transactionMayAffect index keys changes~ plus successful execution
+lets ~prepare_patchTransaction_of_unaffected~ rewrite the entire preparation.
+The same old arbitrary consumer claim is then reusable without handwritten
+per-provider alignment or repeated per-key ~require~. False does not make an
+invalid transaction succeed. True is only a candidate: shadowing, earlier missing
+keys and edits later restored can make a candidate observationally unchanged.
+
+#+begin_src lean
+def changeMany {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) :=
+  registry.patchTransaction changes
+#+end_src
+
+The kernel sequencing law ~patchTransaction_cons~ preserves exact first-error
+behavior; ~patchTransaction_missing~ proves head-name rejection and
+~patchTransaction_scope~ preserves membership for successful transactions.
+No new graph compilation, provider acquisition or factory invocation occurs.
+Each reached named batch costs one lookup and each successful batch one
+insertion, plus normalization and possible persistent-storage copies. Work on a
+valid prefix is still performed before a later failure. Repeated names are not
+grouped and may accumulate base overlays. Candidate queries scan explicit
+histories; no measured runtime gain or precise analytic dependency closure is
+claimed. Context/key/result families and graph/order remain fixed.

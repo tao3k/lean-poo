@@ -109,7 +109,8 @@ def study(reference):
              "LeanPoo/Functional/SharedRegistry.lean", "Tests/FunctionalSharedRegistry.lean",
              "LeanPoo/Functional/RegistryPatch.lean", "Tests/FunctionalRegistryPatch.lean",
              "LeanPoo/Functional/Overlay.lean", "Tests/FunctionalOverlay.lean",
-             "LeanPoo/Functional/RegistryBatch.lean", "Tests/FunctionalRegistryBatch.lean"]
+             "LeanPoo/Functional/RegistryBatch.lean", "Tests/FunctionalRegistryBatch.lean",
+             "LeanPoo/Functional/RegistryTransaction.lean", "Tests/FunctionalRegistryTransaction.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -343,6 +344,27 @@ def study(reference):
                               "Empty known-name batch preserves functions, unknown name still fails; no general multi-name transaction"],
             "runtime_benchmark": False, "precise_dependency_closure": False,
             "euler_consumer_migration": False, "external_lean_compilation": False,
+        },
+        "registry_transaction": {
+            "local_api": ["RegistryEdit", "ProviderRegistry.patchTransaction", "ProviderRegistry.patchTransaction_nil",
+                          "ProviderRegistry.patchTransaction_cons", "ProviderRegistry.patchTransaction_missing",
+                          "ProviderRegistry.patchTransaction_scope", "Requirements.transactionMayAffect",
+                          "Requirements.transactionMayAffect_iff", "Requirements.prepare_patchTransaction_of_unaffected"],
+            "scope": "Caller-ordered multi-name pure transaction; first unknown-name error exposes no partial registry; whole-consumer negative scope reuse",
+            "premises": ["DecidableEq Key", "Successful transaction", "Fixed graph/order/context/key/result families", "Explicit consumer keys"],
+            "local_test": {"presentations": 4, "masks": 8, "plans": 8, "roots": 2, "key_lists": 8,
+                           "successes": 192, "first_unknown_errors": 64, "queries": 3072, "negative_queries": 1920, "contexts": 2,
+                           "standard_axiom_reports": 6, "independent_scalar_oracle": True,
+                           "generic_arbitrary_claim_client": True, "failure_after_valid_prefix": True,
+                           "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in
+                               ["LeanPoo/Functional/RegistryTransaction.lean", "Tests/FunctionalRegistryTransaction.lean"]},
+            "cost_boundary": ["One lookup per reached named batch and one insertion per successful batch",
+                              "Stops at first unknown name; valid prefix work still costs CPU/allocation",
+                              "Repeated names are not grouped; prior base-overlay layers can accumulate",
+                              "Impact scans named batches and explicit key histories; no precise dependency inference",
+                              "Return-value atomicity only; no external effects, concurrency transaction or storage identity claim"],
+            "runtime_benchmark": False, "euler_consumer_migration": False, "external_lean_compilation": False,
         },
         "local_contract": {"files": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in local},
                            "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types; explicit context projection through Reindex; unique-name declaration permutation through Presentation; composed explicit Relabeling witnesses with scoped provider alignment; constructive whole-provider alignment through a retained ancestor-cut Registry and a declaration-wide SharedRegistry for multiple verified roots; typed single-capability patch noninterference from negative ancestry/checklist impact",

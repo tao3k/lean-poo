@@ -1985,3 +1985,23 @@ base costs remain. Normalizing a batch does not flatten prior base overlays or
 supply a general multi-name transaction. The schema-1 source snapshot retains
 the unchanged Euler pin/manifest; actual avoided edits, net lines and hours
 remain unmeasured.
+
+* Named multi-provider transaction contract
+
+The implementation now composes known-name batch transitions into one pure
+~patchTransaction~ result. Six kernel theorem reports cover empty identity,
+sequential bind, head unknown-name rejection, unchanged name membership, the
+union-of-read-scopes candidate criterion and whole-preparation preservation.
+This closes the multi-name return-value transaction slice, with success and
+negative scope premises explicit. It does not close graph/context/type migration,
+external concurrency isolation, precise analytic dependencies or EPG relation
+correspondence.
+
+The compiled generic client reuses an arbitrary consumer claim by one rewrite.
+The independent scalar corpus checks four graph presentations, eight masks,
+eight plans, two roots, eight lists and two contexts: 192 successful transactions,
+64 first-unknown-name errors and 3072 consumer queries. Plans include deletion,
+multiple names, repeated names and failures after a valid prefix. Retained
+snapshots are checked after failures too. The new schema-1 reference snapshot
+binds source and test costs while keeping external consumers migrated at zero;
+Euler code reduction and maintenance time remain unmeasured.
