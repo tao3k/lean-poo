@@ -565,3 +565,27 @@ This addresses coordinated application changes rather than a local example-only
 wrapper. Consumer mathematical proofs still need their own semantic premises
 when a requested capability actually changes. No upstream-scale extrapolation
 is justified by this local contract.
+
+* Indexed retained-state capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-indexed-overlay-2026-10-05.json][indexed-overlay source snapshot]] retains schema 1 and the unchanged reference.
+
+| Capability/API | User action covered | Cost/evidence boundary |
+|----------------+---------------------+------------------------|
+| ~IndexedOverlay.ofProvider~, ~set~, ~extend~ | Retain typed state and continue edits without wrapping its prior provider | Original base unchanged; supplied pre-existing base wrappers remain |
+| ~provider~, ~compile_provider~ | Use indexed lookup with the existing provider interface | Exact whole-function equality to list overlay; lawful equality/hash instances |
+| ~extend_append~, ~extend_base~ | Reuse batching/composition and base-retention proofs | Repeated same-key entries overwrite; explicit removals retained |
+| ~prepare_indexed_extend~, ~prepare_indexed_compile~ | Reuse whole consumer claims without handwritten ~require~ per key | Same context/key/result families; semantic changes still need mathematical premises |
+| Local semantic corpus | 5504 prefix + 512 final + 5504 snapshot observations, two contexts | All keys collide; nine axiom reports; generic arbitrary-claim client |
+| Runtime study | Matched construction and direct-query workloads | Interpreter only; collisions/storage copies/small-table overhead remain |
+| Euler integration / migrated consumers | None / 0 | Reference only |
+| Euler net lines / hours / avoided proof edits | Unknown / unknown / unknown | No whole-consumer migration measurement |
+
+The matched 1024-key interpreter workload records list/indexed construction
+medians of 57.046/6.043 ms and direct query medians of 158.632/5.707 ms.
+The eight-key negative result is retained: 0.300/0.802 ms construction and
+0.281/0.605 ms queries. These local operation measurements do not measure
+Euler proof time or code savings. Shared source/test cost is 103/128 physical
+lines including proofs/comments; application adapters and benchmark code are
+separate costs. Original EPG correspondence and analytic dependency inference
+remain open.

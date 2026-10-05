@@ -2005,3 +2005,27 @@ multiple names, repeated names and failures after a valid prefix. Retained
 snapshots are checked after failures too. The new schema-1 reference snapshot
 binds source and test costs while keeping external consumers migrated at zero;
 Euler code reduction and maintenance time remain unmeasured.
+
+* Retained dependent hash overlay correspondence
+
+~Functional.IndexedOverlay~ replaces normalized override-list filtering/query
+scans with a dependent hash table. Nine axiom reports establish base retention,
+exact single-write and sequential extension semantics, concatenated-state
+composition, list-overlay agreement and whole-consumer preparation equality.
+This closes the representation substitution and repeated-extension slice with
+explicit lawful equality/hash instances and fixed context/key/result families.
+It does not close the original EPG relation mapping or analytic dependency gates.
+
+The independent scalar oracle checks 32 histories, 344 updates, 5504 prefix
+observations, 512 final observations and 5504 retained-snapshot observations at
+two contexts. All typed keys intentionally share one hash. A 256-write same-key
+history retains one override; collisions do not compromise correctness.
+Source/test physical costs and 28 local source hashes are recorded in the new
+schema-1 reference snapshot. Local runtime measurements are separated from
+upstream maintenance claims; no Euler consumer is migrated.
+
+Paired runtime evidence separately records 1024-key list/indexed construction
+at 57.046/6.043 ms and queries at 158.632/5.707 ms under the interpreter.
+Eight-key indexed medians are slower, retained as a negative result. These are
+operation-level local measurements; no native/Euler proof speedup is established.
+Shared module/test cost is 103/128 physical lines including proofs/comments.

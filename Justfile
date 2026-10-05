@@ -55,6 +55,7 @@ check-merge: check-types
         LeanPoo.Functional.SharedRegistry \
         LeanPoo.Functional.RegistryPatch \
         LeanPoo.Functional.Overlay \
+        LeanPoo.Functional.IndexedOverlay \
         LeanPoo.Functional.RegistryBatch \
         LeanPoo.Functional.RegistryTransaction
 
@@ -277,6 +278,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalSharedRegistry.lean
     {{lean}} Tests/FunctionalRegistryPatch.lean
     {{lean}} Tests/FunctionalOverlay.lean
+    {{lean}} Tests/FunctionalIndexedOverlay.lean
     {{lean}} Tests/FunctionalRegistryBatch.lean
     {{lean}} Tests/FunctionalRegistryTransaction.lean
     {{lean}} Tests/ReusableContracts.lean

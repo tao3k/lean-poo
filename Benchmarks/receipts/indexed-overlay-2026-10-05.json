@@ -1,0 +1,360 @@
+{
+  "schema": "lean-poo.indexed-overlay-study.v1",
+  "engine": "Lean --run interpreter; internal monotonic construction/query timers",
+  "repeats": 4,
+  "alternating_order": true,
+  "samples": [
+    {
+      "variant": "list",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 530375,
+      "query_ns": 296625,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 383292,
+      "query_ns": 443959,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 771208,
+      "query_ns": 575542,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 279625,
+      "query_ns": 277916,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 321084,
+      "query_ns": 270250,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 832125,
+      "query_ns": 693583,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 1004125,
+      "query_ns": 634709,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 3
+    },
+    {
+      "variant": "list",
+      "count": 8,
+      "width": 8,
+      "queries": 64,
+      "stored": 8,
+      "checksum": 480,
+      "construct_ns": 278291,
+      "query_ns": 284542,
+      "oracle_parity": "true",
+      "case": "small",
+      "repeat": 3
+    },
+    {
+      "variant": "list",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 88135750,
+      "query_ns": 192499083,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 5049458,
+      "query_ns": 5198084,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 3380208,
+      "query_ns": 4893250,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 50436167,
+      "query_ns": 153000291,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 59977833,
+      "query_ns": 157932000,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 7529917,
+      "query_ns": 6216375,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 7035958,
+      "query_ns": 6555583,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 3
+    },
+    {
+      "variant": "list",
+      "count": 1024,
+      "width": 1024,
+      "queries": 4128,
+      "stored": 1024,
+      "checksum": 1821742,
+      "construct_ns": 54113375,
+      "query_ns": 159332958,
+      "oracle_parity": "true",
+      "case": "distinct",
+      "repeat": 3
+    },
+    {
+      "variant": "list",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 51116083,
+      "query_ns": 10883916,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 3632125,
+      "query_ns": 1452125,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 0
+    },
+    {
+      "variant": "indexed",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 3816875,
+      "query_ns": 1776084,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 52716041,
+      "query_ns": 10868750,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 1
+    },
+    {
+      "variant": "list",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 49283209,
+      "query_ns": 10810167,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 3661625,
+      "query_ns": 1444042,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 2
+    },
+    {
+      "variant": "indexed",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 8172834,
+      "query_ns": 2862084,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 3
+    },
+    {
+      "variant": "list",
+      "count": 2048,
+      "width": 256,
+      "queries": 1056,
+      "stored": 256,
+      "checksum": 1688630,
+      "construct_ns": 54652333,
+      "query_ns": 10785542,
+      "oracle_parity": "true",
+      "case": "repeated",
+      "repeat": 3
+    }
+  ],
+  "medians": {
+    "small": {
+      "list": {
+        "construct_ns": 300354.5,
+        "query_ns": 281229.0
+      },
+      "indexed": {
+        "construct_ns": 801666.5,
+        "query_ns": 605125.5
+      }
+    },
+    "distinct": {
+      "list": {
+        "construct_ns": 57045604.0,
+        "query_ns": 158632479.0
+      },
+      "indexed": {
+        "construct_ns": 6042708.0,
+        "query_ns": 5707229.5
+      }
+    },
+    "repeated": {
+      "list": {
+        "construct_ns": 51916062.0,
+        "query_ns": 10839458.5
+      },
+      "indexed": {
+        "construct_ns": 3739250.0,
+        "query_ns": 1614104.5
+      }
+    }
+  },
+  "matched_semantic_controls": true,
+  "scope": "Local selected Nat-key workloads; excludes imports, input construction, independent scalar oracle, graph/registry/preparation and end-to-end Euler proofs; no native-code or allocation claim",
+  "source_sha256": {
+    "LeanPoo/Functional/IndexedOverlay.lean": "3b8fd6df5295c3cf82565e588c1dfd0fdc55ede14c61b7e092536e88f556f3a0",
+    "LeanPoo/Functional/Overlay.lean": "677384e575f628b62198294db2aaf6d24f55aef8797edffd8c55c7ce6a0e4f73",
+    "Benchmarks/IndexedOverlayScale.lean": "03872ee4f7aba9343e057574904f484f0d02ea421cfcb93faf95a65ec3a21e7c",
+    "Benchmarks/IndexedOverlayStudy.py": "d2b701e190d53f11ecea2e8056b459ed0370571fadfb16e22f7a0219aedc389d"
+  }
+}

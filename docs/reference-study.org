@@ -1082,3 +1082,15 @@ pure first-unknown-name semantics and whole-consumer negative-scope reuse.
 It records shared source/test costs, retained prefix/normalization/storage costs,
 and zero actual Euler migrations. External code and maintenance savings remain
 unmeasured; the reference pin/manifest and schema 1 are retained.
+
+The [[file:../Benchmarks/receipts/euler-indexed-overlay-2026-10-05.json][indexed-overlay source snapshot]] binds 28 local source/test hashes and retains
+schema 1, the unchanged Euler source manifest and zero actual migrations.
+The [[file:../Benchmarks/receipts/indexed-overlay-2026-10-05.json][paired runtime receipt]] compares identical small, distinct-key and repeated-key
+workloads using internal construction/query timers under Lean's interpreter.
+Imports, input generation, the scalar oracle and application/graph/preparation
+costs are excluded. It does not establish a native-code or Euler proof speedup.
+Reproduce after building the library with:
+
+#+begin_src sh
+python3 Benchmarks/IndexedOverlayStudy.py --output /tmp/indexed-overlay.json
+#+end_src

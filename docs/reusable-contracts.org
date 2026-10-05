@@ -1059,3 +1059,40 @@ valid prefix is still performed before a later failure. Repeated names are not
 grouped and may accumulate base overlays. Candidate queries scan explicit
 histories; no measured runtime gain or precise analytic dependency closure is
 claimed. Context/key/result families and graph/order remain fixed.
+
+* Retained indexed capability state
+
+~IndexedOverlay~ keeps the original provider and a dependent hash table of typed
+optional factories. A missing entry delegates to base; a stored ~none~ explicitly
+removes that capability. ~set~ inserts one typed cell. ~extend~ updates a retained
+state with caller-ordered edits and preserves its original base. Keep that state
+between batches instead of rebuilding an overlay over its materialized provider.
+Later same-key writes overwrite the cell. Already wrapped input bases are not
+compacted.
+
+~set_provider~ and ~extend_provider~ prove exact sequential ~patchKey~ semantics.
+~compile_provider~ equates the entire provider function with the existing list
+overlay; ~prepare_indexed_extend~ and ~prepare_indexed_compile~ lift this to whole
+consumer tuples and first errors. The generic arbitrary-claim client uses a
+single rewrite, without per-key ~require~ or alignment. ~extend_append~ proves
+that successive extensions equal one concatenated extension, including state,
+and ~extend_base~ proves that the retained base is unchanged.
+
+#+begin_src lean
+def continueEdits {Context Key : Type} [BEq Key] [Hashable Key] [LawfulBEq Key]
+    [DecidableEq Key] {Value : Context → Key → Type}
+    (state : Functional.IndexedOverlay Context Key Value)
+    (changes : List (Functional.CapabilityEdit Context Key Value)) :=
+  state.extend changes
+#+end_src
+
+Use ~state.provider~ with the existing assembly/preparation APIs; retain prepared
+factories when queries can be moved out of a repeated consumer loop. Hash/equality
+instances are explicit. The list implementation remains useful without a hash
+instance and for small tables. Hash lookup/insertion replaces full list scans;
+collisions, resizing, retained hash copies and base costs remain. There is no
+unconditional constant-time guarantee or automatic graph/type/dependency rewrite.
+The paired performance receipt isolates construction and direct queries under
+the Lean interpreter; it excludes imports, graph/registry/preparation costs and
+Euler proofs. Semantic tests force all keys to collide. Euler migration and net
+maintenance savings remain unmeasured.

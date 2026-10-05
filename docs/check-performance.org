@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 115 independent example/contract
+once, checks C4's source-owned types, and runs 116 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 119 unique example/test files, including the typed
+The current gate covers 120 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -182,3 +182,29 @@ Receipts keep per-phase wall times, total child CPU, worker count, exact exits
 and orchestration hashes under schema 1. Performance fixtures stay in JSON;
 transient raw output belongs in TMP. The mandatory complete pre-commit gate and
 sixteen exact-head CI jobs remain required.
+
+* Indexed overlay paired runtime evidence
+
+The [[file:../Benchmarks/receipts/indexed-overlay-2026-10-05.json][paired overlay receipt]] retains four alternating list/indexed pairs for each
+selected Nat-key workload. Internal monotonic timers separate construction and
+direct typed factory queries; each observed key/result and stored-key count is
+checked against an independent scalar oracle outside the timed regions.
+
+| Local interpreter workload | List construction ms | Indexed construction ms | List query ms | Indexed query ms |
+|----------------------------+----------------------+-------------------------+---------------+------------------|
+| 8 writes / 8 keys / 64 queries | 0.300 | 0.802 | 0.281 | 0.605 |
+| 1024 writes / 1024 keys / 4128 queries | 57.046 | 6.043 | 158.632 | 5.707 |
+| 2048 writes / 256 keys / 1056 queries | 51.916 | 3.739 | 10.839 | 1.614 |
+
+For the 1024-key workload, ratios of medians are 9.44x for construction and
+27.80x for direct queries. Repeated writes over 256 keys give 13.88x and 6.72x.
+The eight-key case is negative: indexed construction/query medians are 2.67x /
+2.15x slower. Tiny sub-millisecond timings vary; this is not a universal
+crossover estimate. Both representations remain available.
+
+These are Lean ~--run~ interpreter results for selected local workloads, with
+ordinary Nat hashes. Imports, input construction, the independent oracle,
+graph/registry/preparation, retained-snapshot copy workloads and Euler proofs
+are excluded. There is no native-code, allocation or whole-application speedup
+claim. Collisions/resizing/shared storage retain costs; the semantic test forces
+all keys to collide but is not a collision performance study.

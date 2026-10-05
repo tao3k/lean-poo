@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 115 independent Lean example/contract files
+The local complete gate runs the 116 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -114,3 +114,9 @@ transactions, 64 first-unknown errors (including after valid prefixes), 3072
 consumer queries and retained original snapshots at two contexts. Repeated
 names, deletions and empty batches are compared with an independent scalar
 oracle. A generic arbitrary-claim client and six axiom reports exercise reuse.
+
+[[file:FunctionalIndexedOverlay.lean][FunctionalIndexedOverlay]] checks dependent hash overlays with all keys
+colliding: 5504 prefix, 512 final and 5504 retained-snapshot observations,
+32 histories and 344 writes at two contexts. Exact list/sequential agreement,
+base retention and extension composition have nine standard-axiom reports;
+a generic consumer claim reuses the preparation proof in one rewrite.
