@@ -56,8 +56,8 @@ Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and perfor
 * Documentation
 
 - [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
-- [[file:docs/reusable-contracts.org][Reusable API contracts]] explains verified compilation, indexed ancestry,
-  context-dependent factories, and proof reuse for client code.
+- [[file:docs/reusable-contracts.org][Reusable API contracts]] indexes capability modules for verified compilation,
+  typed factories, proof reuse and retained consumer caches.
 - [[file:docs/use-cases/navier-stokes-euler.org][Euler budget factory study]] identifies actual upstream interfaces and
   the evidence required to establish code reduction.
 - [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the

@@ -1,0 +1,165 @@
+#+TITLE: Consumer interfaces and context adaptation
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Declare only the capabilities a consumer uses
+
+Import ~LeanPoo.Functional.View~. Give the consumer a type
+~Requirements.Factories Context Value needs → Result~ where ~needs~ lists its
+actual dependencies. Keep source-list positions, provider registry, and graph
+outside that function. For independent consumers, call ~prepare provider needs~
+directly: a missing unrelated capability must not become a global startup gate.
+
+When a larger family has already been prepared, call
+~Requirements.project retained needs included~, with
+~included : ∀ key ∈ needs, key ∈ source~. The result has the consumer's exact
+list and dependent result types. Projection can reorder or repeat keys and
+runs no factory or provider lookup. It scans the source once per requested key;
+retain the projected tuple before repeated context calls. It neither generates
+adapters nor removes source capabilities.
+
+~project_selected~ preserves the selected-function contract, so original C4
+provenance remains available through ~factoryAt_origin~ and ~project_ready~.
+~project_ready~ proves agreement with independent local preparation.
+~project_stable~ compares different successful source lists and different
+providers, requiring function equality only for ~needs~. The two lists may
+contain different unrelated capabilities. ~consumer_stable~ transfers exact
+results of any function using this narrow interface. Results can themselves be
+functions over all contexts; equality also transports an existing proposition
+about the result, as compiled in [[file:../../Tests/FunctionalView.lean][FunctionalView]].
+
+The contract fixes ~Context~, ~Key~, and ~Value~. Changed requested functions,
+changed proposition statements, and changed context/result types require new
+compatibility evidence. Equality of functions is sufficient and can be proved
+extensionally; observational similarity alone does not discharge that premise.
+This prevents unrelated source edits from requiring consumer-expression or
+consumer-theorem changes under the stated conditions. It does not stop Lean
+from recompiling modules whose imports changed, nor establish an elapsed-time
+improvement.
+
+* Preserve an observation interface across representation changes
+
+Import ~LeanPoo.Functional.Observation~ when implementations expose different
+representation types but share a public semantic interface. Declare
+~Observed : Context → Key → Type~, with two maps
+~expose : ∀ c k, Value c k → Observed c k~ and
+~reveal : ∀ c k, Other c k → Observed c k~. Give consumers only the observed
+factories. Values, representations, and contexts remain explicitly indexed;
+the library does not select a suitable observation for the application.
+
+~Requirements.Related relation keys left right~ records pointwise compatibility
+of retained functions, allowing different original result families.
+~RelatedOn provider other needs relation~ declares this condition only for
+selected pairs of factories on ~needs~. It does not imply availability or
+missing-key error equivalence. ~project_related~ derives related narrow views
+from two successful preparations, with only the declared keys in its premise.
+It also handles distinct source lists and repeated consumer keys.
+
+~Requirements.observe expose retained~ constructs the public factories without
+invoking the original factories or the observation map. Invocation later runs
+the original function and its map. Observation can have a cost; retain these
+public factories before repeated use. No observation is memoized or assumed
+constant-time. If the two maps yield equal observations at every supplied
+context, ~observe_congr~ proves the public factory tuples equal and
+~observed_consumer_stable~ preserves any consumer result. This includes results
+that are themselves context functions and transfers propositions about them.
+The [[file:../../Tests/FunctionalObservation.lean][compiled test]] exercises distinct representations, dependent guards, a deleted
+unrequested capability, reordered source lists, and repeated consumer keys.
+
+Only exposed observations are preserved. A claim about hidden metadata cannot
+be transferred from equality of paths alone. If a consumer needs a bound or
+proof witness, expose the relevant property or prove its relationship to the
+observation explicitly. The test rejects a changed public value and use of a
+witness from a different context. Context/key/public observation type changes
+still need explicit typed adapters. Original C4 selections need not be equal;
+the selected implementations must satisfy the stated pointwise relation.
+
+The Euler reference already contains a path-to-field-tower bridge. Reusing it
+as compatibility evidence would be application-owned; no external adapter or
+large-library migration has been compiled here. See the [[file:../use-cases/euler-maintenance-checklist.org][research checklist]].
+
+* Retarget existing evidence to equal replacement data
+
+Import ~LeanPoo.Functional.Transport~. After establishing equality of the data
+produced by two implementations, ~Factory.transport~ reuses an existing witness
+family and gives it the exact replacement index:
+
+#+begin_src lean
+example {Context : Type} {Data : Context → Type}
+    (Certificate : (c : Context) → Data c → Type)
+    (old new : Functional.Factory Context Data)
+    (same : ∀ c, old c = new c)
+    (existing : Functional.Factory Context (fun c => Certificate c (old c))) :
+    Functional.Factory Context (fun c => Certificate c (new c)) :=
+  Functional.Factory.transport Certificate same existing
+#+end_src
+
+The witness may be a record containing data, proof fields, and further
+quantified obligations. Its implementation is retained. ~transport_refl~
+preserves identity, ~transport_trans~ equates chained and direct migration,
+and ~transport_roundtrip~ restores the exact original witness family after
+migration back. These laws apply to arbitrary dependent witnesses.
+
+For an existing theorem ~prove : ∀ c, Claim c (old c)~, call
+~Factory.transportProof Claim same prove~ to obtain ~∀ c, Claim c (new c)~.
+It returns Prop directly and requires no axioms. If a Type-valued proof factory
+is required by a provider, wrap the result with ~Factory.fromProof~. No analytic
+proof is synthesized: the old theorem and the data equality remain prerequisites.
+
+The observation pipeline supplies that equality. If a consumer returns a data
+factory, ~observed_consumer_stable~ gives equality of the old and replacement
+data factories. Use ~fun c => congrFun dataEqual c~ as the transport premise.
+The [[file:../../Tests/FunctionalTransport.lean][generic compiled client]] connects these APIs without assuming identical
+original representation types. This factors the common migration step out of
+individual analytic consumers.
+
+Transport fixes the context and the entire datum indexed by the witness.
+Equality of one projected field cannot retarget evidence indexed by a larger
+unequal record. Changed context types, changed claims, or merely ordered/
+approximately equal data require an explicit application-specific adapter or
+proof. The retained witness body keeps its original computation; this API does
+not remove legacy computations or establish a runtime improvement. The
+[[file:../use-cases/euler-maintenance-checklist.org][reference research checklist]] records an existing Euler data-equality rewrite
+with the same dependent-index shape, without claiming an external migration.
+
+* Reuse a capability family in an extended context
+
+Import ~LeanPoo.Functional.Reindex~. Supply one explicit
+~project : Outer → Context~ containing the complete old dependent context.
+~reindexProvider project provider~ adapts every available factory; selection
+and missing capabilities remain independent of context values. ~select_reindex~
+and ~assemble_reindex~ preserve first-provider selection and reuse the same
+verified C4 order. No new graph compilation is required.
+
+#+begin_src lean
+example {Context Outer Key : Type} {Value : Context → Key → Type}
+    (project : Outer → Context) (provider : Functional.Provider Context Key Value)
+    (keys : List Key) :
+    Functional.Requirements.prepare (Functional.reindexProvider project provider) keys =
+      (Functional.Requirements.prepare provider keys).map
+        (Functional.Requirements.reindex project) :=
+  Functional.Requirements.prepare_reindex project provider keys
+#+end_src
+
+Alternatively retain a successful checklist once and call
+~Requirements.reindex project retained~. ~prepare_reindex~ proves these paths
+agree, including empty/repeated lists and the exact first missing key. Users
+keep one declaration of their capability checklist instead of writing one
+~require~ and one context wrapper per capability.
+
+~Requirements.projectedResults project keys outer~ converts the adapted tuple
+into its original type at ~project outer~. Abstract recursive tuple types need
+this proved type equality; no element traversal or factory invocation is added
+by the cast. ~build_reindex~ proves the result is exactly the original
+~Requirements.build retained (project outer)~, including dependent proof fields.
+An existing proof consumer can be lifted with ~Factory.reindex project~ and
+keeps precisely its old claim at the projection.
+
+Adaptation constructs function wrappers; invocation computes the projection
+for each invoked factory and retains the old computation. It is not caching.
+The caller owns the projection, including old guards, dependent fields and
+implicit instances. Added fields do not imply new claims, changed legacy data
+or changed theorem statements. The [[file:../../Tests/FunctionalReindex.lean][compiled client]] rejects both a witness at
+a different legacy context and a claim about an unrelated new field. Reindexing
+neither proves equality between different analytic constructions nor establishes
+a speedup. See the [[file:../use-cases/euler-maintenance-checklist.org][reference checklist]] for the resulting research boundary.

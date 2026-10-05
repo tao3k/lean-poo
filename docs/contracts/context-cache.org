@@ -1,0 +1,151 @@
+#+TITLE: Built data and context caches
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Reuse built dependency data at the latest exact context
+
+Import ~LeanPoo.Functional.ContextSlot~. ~Snapshot ready c~ carries built values,
+their exact equality to the certified factory application, and the joint proof.
+~ContextSlot ready~ retains zero or one context/snapshot pair; ~empty~ starts
+without data. This memoizes built dependencies, unlike CachedPreparation which
+retains selected functions. It does not memoize the output constructor.
+
+~slot.read c~ returns ~(snapshot, nextSlot, reused)~. A same-context hit returns
+the old snapshot and unchanged slot without building factories. A miss builds
+once and replaces the old pair. ~read_hit~/~read_miss~ prove these branches;
+~read_value~ equates every value with an uncached build. ~slot.consume construct c~
+returns ~(output, nextSlot, reused)~; ~consume_value~ proves equality with the
+uncached proof-aware consumer. Carry nextSlot into the next call. Returning to
+an evicted context is a miss. Context equality requires ~DecidableEq Context~;
+executable callers must provide a computable instance.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextSlot
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Context]
+    {keys : List Key} {Claim : ∀ c, Results Value c keys → Prop}
+    (ready : Certified keys Claim) (slot : ContextSlot ready)
+    {Output : Context → Type} (construct : ∀ c data, Claim c data → Output c)
+    (c : Context) : (slot.consume construct c).1 = ready.consume construct c :=
+  slot.consume_value construct c
+#+end_src
+
+The slot's exact family index prevents accidental reuse for another family with
+the same Claim. ~slot.rebind other sameFactories~ changes only proof alignment;
+~rebind_consume~ preserves outputs. Without exact factory equality, start a new
+empty slot. All varying inputs must be represented in context; captured inputs
+remain fixed by the family. No automatic analytic dependency invalidation occurs.
+
+One retained pair per cache value is a structural bound; externally keeping old
+immutable slots retains their data too. Equality comparisons and whole-tuple
+retention can be expensive. Misses allocate/build; constructors still run on
+hits. Source costs and hit decisions are checked, native timing/allocations are
+unmeasured. This is not a universal speedup or an output/action cache.
+
+* Hand built caches to a narrower consumer
+
+Import ~LeanPoo.Functional.ContextView~. ~Snapshot.project~ maps already built
+values and derives a new joint proof. ~ContextSlot.project keys included Narrow
+derive~ keeps the populated context, or preserves an empty slot. No factory or
+provider runs during projection. Requested order and duplicates are retained;
+named access chooses the first occurrence in the source, even when duplicate
+source values differ. The logical implication ~derive~ is supplied by the caller.
+
+Seven APIs: ~Snapshot.project~, ~Snapshot.project_val~, ~ContextSlot.project~,
+~project_empty~, ~project_retained~, ~project_hit~, ~project_consume~.
+The last theorem identifies cached narrow consumption with constructing from
+projected broad uncached values. Context changes still replace the slot;
+constructors execute every time. Keep the returned narrow slot for later calls.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextView
+open LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type}
+    [DecidableEq Key] [DecidableEq Context]
+    {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
+    {ready : Certified source Claim} (slot : ContextSlot ready)
+    (c : Context) (data : Snapshot ready c)
+    (saved : slot.retained = some ⟨c, data⟩)
+    (keys : List Key) (included : ∀ key ∈ keys, key ∈ source)
+    (Narrow : ∀ c, Results Value c keys → Prop) (derive) :
+    ((slot.project keys included Narrow derive).read c).2.2 = true :=
+  slot.project_hit c data saved keys included Narrow derive
+#+end_src
+
+Projection scans source keys and allocates a new tuple; repeated requests may
+repeat scans. A narrow cache may retain less data, but clients can retain the
+original cache too. No measured allocation or wall-time improvement is claimed.
+
+* Retain a public cache across internal representation changes
+
+Import ~LeanPoo.Functional.ContextObservation~. ~Snapshot.observe~ and
+~ContextSlot.observe~ execute the supplied observation functions on already built
+values and derive the public joint proof. No provider or dependency factory is
+called during this conversion. A populated context remains a hit; an empty slot
+remains empty. Clients can still retain their original hidden cache.
+
+Nine APIs: ~Snapshot.observe~, ~Snapshot.observe_val~, ~ContextSlot.observe~,
+~observe_empty~, ~observe_retained~, ~observe_hit~, ~observe_consume~,
+~replaceObservedPublic~, ~replaceObservedPublic_consume~.
+
+For a certificate whose Claim is over public observations,
+~slot.replaceObservedPublic expose reveal Public candidate compatible~ hands
+the public cache to the compatible candidate's public certified family.
+~compatible~ must prove pointwise public factory equality at every context and
+requested position. Candidate availability is explicit in its supplied factories.
+The hidden candidate tuple is not built or recovered from the old cache. Future
+misses build its public factories; constructors run on every call. This API
+removes manual observation/alignment/slot reconstruction from the public route.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextObservation
+open LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value Observed : Context → Key → Type}
+    [DecidableEq Context] {keys : List Key}
+    {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (c : Context) (data : Snapshot ready c)
+    (saved : slot.retained = some ⟨c, data⟩)
+    (expose : ∀ c key, Value c key → Observed c key)
+    (Public : ∀ c, Results Observed c keys → Prop) (derive) :
+    ((slot.observe expose Public derive).read c).2.2 = true :=
+  slot.observe_hit c data saved expose Public derive
+#+end_src
+
+Observing traverses the tuple and allocates public data, with costs of supplied
+observers. It is a deliberate conversion, not lazy observation or native
+performance evidence. Changed visible values require new evidence/cache;
+public equivalence does not preserve discarded hidden assertions.
+
+* Cache base dependencies while consuming a rich outer context
+
+Import ~LeanPoo.Functional.ContextPullback~. Supply ~project : Outer → Context~
+and a ~ContextSlot~ for a fixed certified family on Context. ~readAlong project
+outer~ computes this projection once and reads the base slot. Only Context
+needs executable ~DecidableEq~; Outer can include functions without equality.
+The returned Snapshot retains the exact dependent index ~project outer~.
+
+Six APIs: ~readAlong~, ~readAlong_value~, ~readAlong_hit~, ~consumeAlong~,
+~consumeAlong_value~, ~consumeAlong_reindex~ in namespace ContextSlot.
+~consumeAlong~ gives the full outer request, base data and joint proof to the
+constructor. Output can be indexed by Outer and the constructor runs on hits
+too. Base-only constructors agree with the existing Factory.reindex route.
+Carry the returned base slot into subsequent outer calls.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextPullback
+open LeanPoo.Functional.Requirements
+example {Context Outer Key : Type} {Value : Context → Key → Type}
+    [DecidableEq Context] {keys : List Key}
+    {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (project : Outer → Context) (outer : Outer) :
+    (slot.readAlong project outer).1.val = build ready.factories (project outer) :=
+  slot.readAlong_value project outer
+#+end_src
+
+The dependency family is intrinsically defined on the complete base context.
+This does not accept arbitrary outer-dependent factories or infer which fields
+can be omitted. If an outer field varies and affects a dependency, include it
+in the base context or prove an appropriate application-specific factoring.
+Captured inputs remain fixed by the certified family. Equal output hashes or
+matching selected numeric parameters alone are insufficient. Projection and
+base equality have costs; no native time/allocation win is measured here.

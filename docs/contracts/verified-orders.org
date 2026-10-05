@@ -1,0 +1,145 @@
+#+TITLE: Verified order queries
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Compile once, answer graph questions later
+
+Retain ~order : VerifiedOrder graph root~ after successful compilation.
+~order.head~, ~nodup~, ~length_bound~, and ~compiled~ expose the head,
+uniqueness, graph-size bound, and equality with the ordinary compiler.
+~covers~ proves exact ancestry membership, including the root itself.
+
+For occasional queries, ~order.isAncestor query~ scans the retained list.
+For many queries, retain ~index := order.indexAncestors~ and use
+~index.isAncestor query~. Both return a Boolean with an ~isAncestor_iff~
+theorem. Neither needs another compilation or graph traversal.
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (query : String)
+    (present : order.indexAncestors.isAncestor query = true) : Ancestor graph query root :=
+  order.indexAncestors.isAncestor_iff.mp present
+#+end_src
+
+For a constraint declared by a reachable ancestor, use
+~order.ancestor_local_order path found declared~. It proves that the ancestor's
+original local order remains an ordered sublist of the retained root output.
+An indexed membership receipt supplies ~path~ directly:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (query : String)
+    (present : order.indexAncestors.isAncestor query = true)
+    (found : graph.findNode? query = some node) (declared : constraint ∈ node.parentOrders) :
+    constraint.Sublist order.output :=
+  order.ancestor_local_order (order.indexAncestors.isAncestor_iff.mp present) found declared
+#+end_src
+
+Retain ~index := order.indexAncestors~ for repeated membership queries. This
+proof consumes existing evidence; it does not compile each ancestor again.
+
+~index.decideAncestor query~ supplies ~Decidable (Ancestor graph query root)~.
+Install it with a local ~letI~ when a conditional needs a proof in its true or
+false branch. This decision follows the executable hash query; it does not
+introduce a classical, noncomputable decision procedure.
+
+* Query precedence and reuse its proof
+
+Import ~LeanPoo.C4.OrderRelation~ and retain ~order : VerifiedOrder graph root~.
+~order.precedes left right~ answers whether the first name occurs before the
+second in this exact retained result. It scans the list once, without another
+compilation or graph traversal. It is not a hash lookup; no timing improvement
+is claimed. Missing names and self comparison return ~false~.
+
+~precedes_iff~ turns a true query into ~Precedes order.output left right~,
+an ordered two-element sublist. ~precedes_members~ proves that both names are
+original graph ancestors. For a resolver or handler pipeline, this lets a
+consumer require an earlier provider and retain the proof alongside selection.
+
+To reuse an ancestor's comparison in a descendant on the same graph:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root)
+    (ancestorOrder : VerifiedOrder graph ancestor) (path : Ancestor graph ancestor root)
+    (before : ancestorOrder.precedes left right = true) : order.precedes left right = true :=
+  order.monotone_precedes ancestorOrder path before
+#+end_src
+
+The caller supplies two retained results, not fresh compilation executions.
+The theorem uses uniqueness of their original graph derivations to identify
+the ancestor result, then transports its comparison through the root's
+ancestor sublist. This does not transport an order across an edited graph.
+
+~order.local_precedes path found declared before~ transports a pair from any
+reachable declaration's original constraint. ~order.inheritance_precedes~
+places a reachable node before each distinct ancestor of that node:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (reachable : Ancestor graph node root)
+    (path : Ancestor graph base node) (different : base ≠ node) :
+    order.precedes node base = true := order.inheritance_precedes reachable path different
+#+end_src
+
+These apply to verified checked or audited results, including retained suffix
+orders. They do not certify arbitrary ordinary compiler outputs. The
+[[file:../reference-study.org::*Paper properties and retained order relations][paper correspondence table]] separates these order contracts from the
+still-open extended precedence graph and shape-isomorphism claims.
+
+* Move a verified order into a new name space
+
+Import ~LeanPoo.C4.Renaming~. Use ~graph.rename rename~ when composing independently
+named resolver or factory families. It maps declaration names and every parent
+reference, retaining declaration order, local-row order, and suffix flags.
+It does not rename application provider dictionaries or change their values;
+clients must align those keys with the renamed graph.
+
+Retain the compiled order and supply an injective name map plus global
+uniqueness of the original declaration names:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    VerifiedOrder (graph.rename rename) (rename root) := order.rename rename injective unique
+#+end_src
+
+~order.rename~ maps its output list once. Its acceptance and graph proofs erase;
+it does not execute either compiler, reconstruct parents, or run an audit.
+The caller must use the same function for the graph, root, and queries.
+For a fixed prefix, ~fun name => prefix ++ name~ is injective by
+~String.append_right_inj prefix~. Distinct prefixes alone do not prove disjointness
+of arbitrary preexisting family keys; establish that separately before union.
+No runtime speedup is claimed.
+
+~rename_output~ proves the exact mapped output. ~rename_unique~ identifies any
+independently compiled verified result of that renamed graph with the migrated
+one. Queries also commute with the mapping, even for self or absent names:
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (rename : String → String)
+    (injective : Function.Injective rename) (unique : (graph.nodes.map Node.name).Nodup) :
+    (order.rename rename injective unique).precedes (rename left) (rename right) =
+      order.precedes left right := order.rename_precedes rename injective unique
+#+end_src
+
+Global declaration uniqueness is a sufficient explicit premise for this
+consumer operation. Existing verified compilation validates only reachable
+names, so a retained result alone does not discharge that stronger premise.
+A collapsing map cannot supply injectivity and may cause duplicate-declaration
+validation failure. This API transports C4 orders; it is distinct from the
+object-slot ~Object.Renaming~ interface.
+
+* Preserve caller ordering and inherited tails
+
+~order.local_order~ transports a declared root constraint into the actual
+returned precedence. ~order.ancestor_order~ supplies an ancestor's complete
+derived order as a sublist. ~order.ancestor_suffix~ strengthens this to a
+literal suffix for an ancestor declared with ~suffix := true~.
+
+#+begin_src lean
+example (order : VerifiedOrder graph root) (found : graph.findNode? root = some node)
+    (declared : constraint ∈ node.parentOrders) : constraint.Sublist order.output :=
+  order.local_order found declared
+#+end_src
+
+These proofs refer to exact original declarations and every original parent
+edge, even when runtime normalization removes repeated edges and empty rows.
+Applications can use them for ordered handler families, resolver pipelines,
+or inherited specifications without reproving the C4 merge algorithm.

@@ -841,7 +841,7 @@ subset and leaves original-paper equivalence as a separate research task.
 
 The 256-family regression distinguishes 116 promoted from 20 rejected ordinary
 successes, and explicitly guards the execution-receipt boundary. The public
-consumer workflow is in [[file:reusable-contracts.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
+consumer workflow is in [[file:contracts/compilation.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
 continues to serve as a reference for typed factory interfaces, with no
 integration or dependency introduced.
 

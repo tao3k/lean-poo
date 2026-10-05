@@ -1,0 +1,192 @@
+#+TITLE: Shared registries and edits
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Share a declaration registry across verified roots
+
+Import ~LeanPoo.Functional.SharedRegistry~. A multi-root application can retain
+~registry := ProviderRegistry.ofGraph graph providers~ once, then use
+~assemble left registry.dictionary~ and ~assemble right registry.dictionary~
+with independently verified orders of that same graph. Prepare each consumer's
+key list once and retain its factories. No per-root provider table, key
+enumeration, inverse name map or alignment proof is required. The constructor
+obtains provider functions but does not invoke factories or compile roots.
+
+The generic preservation contract is:
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble order
+          (Functional.ProviderRegistry.ofGraph graph providers).dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_ofGraph_registry order providers keys
+#+end_src
+
+~ofGraph_lookup~ preserves every declared provider; ~ofGraph_missing~ excludes
+undeclared application names. ~assemble_ofGraph_registry~ and
+~prepare_ofGraph_registry~ work for any verified root of the graph, without a
+new global name-uniqueness or migration premise. The index does not validate a
+graph: the assembly contracts still require a ~VerifiedOrder~.
+
+For an explicit migration, retain ~ProviderRegistry.relabelGraph change
+providers~ once and share its dictionary across all migrated orders.
+~relabelGraph_lookup~ proves whole-provider alignment on declarations and
+~relabelGraph_missing~ excludes mapped undeclared names;
+~assemble_relabelGraph_registry~ and ~prepare_relabelGraph_registry~ preserve
+functions, first errors and arbitrary consumer claims. The existing global
+injectivity, exact declaration permutation and source uniqueness requirements
+for migrated orders remain. ~relabelGraph_relabel~ proves agreement with the
+root-cut registry on every mapped ancestor.
+
+The scope choice is observable. A declared unrelated provider is present in a
+shared dictionary, while it is absent from a root-cut dictionary. ~assemble~
+still searches only that root's verified ancestor order, so an unrelated entry
+cannot fill a missing capability for the root. Direct dictionary clients see
+the wider declaration scope; they must choose the intended API accordingly.
+Undeclared providers are absent from either shared constructor. Compiled
+[[file:../../Tests/FunctionalSharedRegistry.lean][shared-root clients]] test this difference and reuse generic old consumer proofs.
+
+Constructing one shared registry visits ~graph.nodes.length~ declarations and
+allocates a name list plus hash table. Separate root-cut indexes visit the sum
+of the retained ancestor-list lengths. Sharing reduces those construction
+visits only when the graph-wide declaration count is smaller than that sum;
+many unused declarations can make it more expensive. The local two-root
+fixture has five declarations versus six summed ancestor entries, a structural
+count only. Hash/string costs, factory invocation and result data remain. No
+runtime speedup or actual Euler maintenance saving is inferred from these counts.
+
+* Patch one capability and reuse unaffected consumers
+
+Import ~LeanPoo.Functional.RegistryPatch~. This API requires ~DecidableEq Key~
+for typed single-key updates and checklist membership. Retain each root's
+~order.indexAncestors~ once. Apply ~registry.patch name key replacement~, where
+~replacement~ is ~some factory~ to add/replace a capability or ~none~ to remove
+it. Unknown provider names return ~.error name~; a successful patch retains
+exactly the old provider-name scope and leaves the original registry usable.
+The graph and verified orders are unchanged. The supplied factory must still
+inhabit the original context-indexed result contract.
+
+For each consumer, query ~Requirements.mayAffect index keys name key~. This
+combines indexed ancestry with membership in that consumer's explicit key list.
+When false, keep its old prepared factories and use
+~Requirements.prepare_patch_of_unaffected~ to retain their selection proof and
+arbitrary consumer-result claims. There is no provider-alignment premise,
+capability-by-capability ~require~ rewrite or analytic equivalence obligation
+for the unaffected consumer. The compiled [[file:../../Tests/FunctionalRegistryPatch.lean][generic client]] is:
+
+#+begin_src lean
+example {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    {graph : C4.Graph} (index : C4.AncestryIndex graph root)
+    (registry updated : Functional.ProviderRegistry Context Key Value)
+    (name : String) (key : Key)
+    (replacement : Option (Functional.Factory Context (fun c => Value c key)))
+    (keys : List Key) (applied : registry.patch name key replacement = .ok updated)
+    (unaffected : Functional.Requirements.mayAffect index keys name key = false) :
+    Functional.Requirements.prepare (Functional.assemble index.order updated.dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble index.order registry.dictionary) keys :=
+  Functional.Requirements.prepare_patch_of_unaffected index registry name key replacement keys applied unaffected
+#+end_src
+
+~patch_at~ establishes the edited cell, ~patch_other~ preserves exact functions
+at other names/keys, and ~patch_scope~ preserves provider-name membership.
+~prepare_patch_stable~ also accepts the explicit negative ancestry or key-list
+premise without executing an impact query. First missing capabilities and
+successful tuples are both preserved by the negative contract, for all contexts.
+
+A true impact query is a candidate for rechecking, not proof of a changed result.
+A more specific provider may shadow the edited provider; preparation may also
+stop at an earlier missing key. The corpus includes an explicit A-before-B
+shadow case with true candidate impact and unchanged selected quantity. Actual
+change, observation equivalence and broader proof dependency closure require
+additional evidence. Changes to graph orders or context/key/result families
+are outside this contract.
+
+One patch performs a name lookup and a persistent hash insertion; it does not
+fold graph declarations, reconstruct orders or acquire all other provider
+functions. Retaining old snapshots can cause underlying hash storage copies.
+Capability lookup adds key-equality checks; repeated edits can accumulate
+provider-wrapper chains, which this API does not compact. An impact query adds
+an ancestry hash lookup and a linear checklist membership check. No constant-
+time, end-to-end speedup or factory-result cache is claimed. Preparing factories
+once avoids repeated dictionary/key selection during context application.
+
+* Normalize edits and restore saved capabilities
+
+The same RegistryPatch import supplies ~Provider.patchKey_overwrite~: two
+edits of the same key equal just the final edit of the original provider.
+~patchKey_commute~ allows distinct keys to be reordered, retaining their
+individual dependent result families. ~patchKey_restore~ proves that writing
+the original cell back is an identity. These are function equalities across
+all contexts, including absent capabilities. Use them to prove an explicitly
+normalized edit plan. They do not compact a closure already constructed at
+runtime, nor define a general batch optimizer.
+
+For rollback, retain the original cell ~registry.dictionary name key~ (or the
+original registry), then call ~edited.patch name key savedCell~. A successful
+initial edit guarantees the rollback name still exists, by
+~ProviderRegistry.patch_restore_exists~. ~patch_restore~ proves exact dictionary
+equality with the original, without asserting physical hash-table identity.
+~Requirements.prepare_patch_restore~ restores any root's whole checklist,
+including first errors. A generic compiled client in FunctionalRegistryPatch
+transports an arbitrary old consumer claim by one rewrite; no impact query,
+per-key requirement rewrite, or new factory invocation is needed for its proof.
+
+The rollback must immediately undo that one edit, or the client must separately
+prove that intervening edits are preserved. Restoring one cell is not a rollback
+of arbitrary concurrent changes. Construction performs another persistent hash
+lookup/insertion and adds another key-check wrapper; retain original prepared
+factories or normalize from the saved original provider to avoid that chain.
+No constant-time or measured performance improvement is asserted.
+
+* Compile capability edits into a normalized overlay
+
+Import ~LeanPoo.Functional.Overlay~. ~CapabilityEdit Context Key Value~ is a
+heterogeneous pair: a capability key and an optional factory in that exact
+key's dependent result family. ~none~ explicitly removes the capability; an
+absent override delegates to the original provider. ~DecidableEq Key~ suffices;
+no key hashing, global finite-key enumeration or factory evaluation is required.
+
+Start ~ProviderOverlay.ofProvider original~ once. Retain that overlay and update
+it through ~overlay.set key replacement~. Each set removes the previous entry
+of that key and prepends its new entry. The structure retains a proof that
+stored keys are unique. Alternatively use one ~ProviderOverlay.compile original
+edits~ call on a caller-ordered edit list. Later edits of the same key win.
+~overlay.provider~ supplies the ordinary Provider interface for ~Requirements~,
+~assemble~, or a provider dictionary passed to ~ProviderRegistry.ofGraph~.
+
+~set_provider~ proves exact equality with one old ~patchKey~ operation;
+~compile_provider~ proves exact equality with sequential patching of the entire
+batch, across all contexts and arbitrary dependent value families.
+~Requirements.prepare_overlay_compile~ transports whole-checklist results,
+including their first missing keys. The compiled generic test client reuses an
+arbitrary old consumer claim by one rewrite, with no per-key ~require~ or
+per-step provider-alignment proof. A minimal typed usage is:
+
+#+begin_src lean
+def edited {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    (original : Functional.Provider Context Key Value)
+    (edits : List (Functional.CapabilityEdit Context Key Value))
+    (keys : List Key) :=
+  Functional.Requirements.prepare (Functional.ProviderOverlay.compile original edits).provider keys
+#+end_src
+
+Retain the compiled overlay or prepared factories; repeatedly rebuilding the
+batch would repeat normalization. Queries linearly scan distinct stored override
+keys, then call the base only if none matches. They do not traverse the history
+of overlay sets. In contrast, sequential ~patchKey~ stores a closure per edit.
+Compilation of h edits over d distinct keys scans up to the current d overrides
+per set and allocates filtered lists; this can cost quadratic work when every
+key is new. It is not a hash-indexed lookup or a constant-time API. The base may
+already contain wrapper chains; wrapping such a base does not compact them.
+Keep the original base when compiling a long edit history. Explicit ~none~ is
+retained as an override and must not be discarded as a missing edit.
+
+The local fixture checks 32 histories and 344 prefix updates against an
+independent last-cell oracle, including 5504 prefix and 512 final batch
+checklist observations at two contexts. A 256-edit same-key history stores one
+override; this is a structural reduction in stored edits and potential key
+checks, not a runtime speedup or Euler source saving. No arbitrary transaction,
+provider-name migration or analytic dependency equivalence is inferred.
