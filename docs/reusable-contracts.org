@@ -1457,3 +1457,60 @@ Shared API/proofs: 104 physical lines; semantic/client fixture: 115 lines. These
 are added local costs, not Euler source savings. Local validation covers 192
 availability/order/duplicate/empty preparations plus 8 joint-contract plans at
 three future contexts; six kernel axiom reports. No runtime speedup is measured.
+
+* Reuse the prepared tuple and joint proof across irrelevant transactions
+
+Import ~LeanPoo.Functional.CachedPreparation~. Prepare
+~cacheCertified provider keys Claim admit~ once and retain a ~KeyIndex keys~.
+~CachedPreparation provider keys Claim~ binds both cached success and first-key
+failure to the exact original provider. ~prepareTransactionCached~ returns:
+
+- A transaction name error, including unknown empty batches.
+- ~TransactionPreparation.reused cached~ after a negative ancestry/key scope
+  check and successful name preflight. This is the original complete outcome;
+  successful cached functions retain their supplied joint proof at all contexts.
+- ~TransactionPreparation.fresh prepared~ after conservative positive impact.
+  This contains complete freshly prepared data/errors, without the old joint
+  proof. Attach a new proof with ~certify~ after a successful fresh result. A
+  positive scope only says revalidation is needed, not that the old claim is false.
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} (keys : List Key)
+    (Claim : ∀ c, Functional.Requirements.Results Value c keys → Prop)
+    (index : C4.AncestryIndex graph root)
+    (registry : Functional.IndexedRegistry Context Key Value)
+    (edits : List (Functional.RegistryEdit Context Key Value))
+    (cache : Functional.Requirements.CachedPreparation
+      (Functional.assemble index.order registry.dictionary) keys Claim) :
+    (Functional.Requirements.prepareTransactionCached index
+      (Functional.Requirements.KeyIndex.ofKeys keys) registry edits cache).map
+        Functional.Requirements.TransactionPreparation.forget =
+    (registry.patchTransaction edits).map (fun updated =>
+      Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys) :=
+  Functional.Requirements.prepareTransactionCached_forget index
+    (Functional.Requirements.KeyIndex.ofKeys keys) registry edits cache
+#+end_src
+
+~prepareTransactionCached_forget~ proves exact full transaction semantics after
+forgetting the reuse tag/certificate. ~prepareTransactionCached_ofRegistry~
+transfers that contract from ordinary storage. ~prepareTransactionCached_unaffected~
+returns the exact retained outcome, while ~prepareTransactionCached_affected~
+exposes the full update path and fresh proof obligation. The negative path adds
+no capability lookup, preparation, update table or factory execution; raw impact
+cells and name preflight still scan. The retained tuples/indexes cost memory.
+
+The API gives a view relative to its explicit registry/graph/root/key list; it
+does not publish updated state or automatically rebind a cache for later registry
+revisions. Use full ~patchTransaction~ for state publication and provide exact
+alignment when rebinding a cache. Fixed closed factories are not a dependency
+tracker for open-recursive objects or arbitrary analytic callbacks. Changed
+contexts/result families and provider views require new alignment; the fixture
+rejects silently supplying a cache for another provider.
+
+Added shared code/proofs: 101 physical lines; semantic fixture: 175; native Lean/
+Python study: 56/65. Tests cover 4096 plans, 2304 negative and 1792 positive scopes,
+1024 first-name errors, collisions, cached missing-key failures and two contexts;
+four standard-only axiom reports. These are local costs, not measured Euler savings.

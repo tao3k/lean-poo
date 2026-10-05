@@ -16,3 +16,7 @@ root = "Benchmarks.ScopedTransactionScale"
 [[lean_exe]]
 name = "keyIndexScale"
 root = "Benchmarks.KeyIndexScale"
+
+[[lean_exe]]
+name = "cachedPreparationScale"
+root = "Benchmarks.CachedPreparationScale"

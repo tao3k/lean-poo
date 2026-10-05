@@ -2251,3 +2251,30 @@ Compare ~joint_certificate_audit~ and source hashes against
 lists are manually reviewed direct fields, not compiler-inferred closures.
 Schema remains v1; no external Lean/PDE build or integration. Proof admission is
 erased; no timing/allocation experiment or Euler savings is asserted.
+
+* Reproduce cached certified transaction views
+
+Build ~lake build LeanPoo.Functional.CachedPreparation cachedPreparationScale~;
+run ~lake env lean Tests/FunctionalCachedPreparation.lean~. Expect
+~FUNCTIONAL-CACHED-PREPARATION-OK cases=4096 negative=2304 positive=1792 name_errors=1024 contexts=2~
+and four reports with only standard axioms. The test also checks conservative
+reuse/fresh branches, wrong-provider alignment and uncertified fresh data.
+
+#+begin_src sh
+python3 Benchmarks/CachedPreparationStudy.py \
+  --output /tmp/cached-preparation-native.json
+python3 Benchmarks/EulerChangeSurfaceStudy.py \
+  --reference .data/NavierStokesAndEuler \
+  --output /tmp/euler-cached-preparation.json
+#+end_src
+
+Compare against the separately named v1 receipts. Both native variants materialize
+the same initial key index and certified tuple in an IO cell before timing queries;
+setup includes that cell's creation/read. This blocks pure initialization from
+sinking across the clock boundary. Query includes impact/preflight/full fallback
+and certificate/tag erasure; factory bodies/oracle run after timing. Eight/512
+requests, five modes, four alternating pairs produce 80 scalar-matched samples.
+The native claim is ~True~, isolating preparation/cache overhead; kernel theorems
+cover arbitrary joint claims and semantic fixtures use provenance witnesses.
+This is retained-input query evidence, not a one-use comparison, allocation study,
+or whole Euler speedup. Ten new native admission cases join the existing 22.

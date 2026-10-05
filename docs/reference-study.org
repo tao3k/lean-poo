@@ -1176,3 +1176,25 @@ outcomes. ~Certified.build~ provides both data and the joint proof at each suppl
 context. The original analytic obligations, instances, time/order guards and
 Type-valued pressure remain. No upstream adapter/PDE build/integration was added;
 actual migrations remain 0 and maintenance/source savings unmeasured.
+
+* POOF cache policy: retained certified preparation
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]], section 6.2 (printed page 20), discusses explicit caches,
+purity and mutation invalidation, and explains why general automatic invalidation
+would require tracking across the language. ~Functional.CachedPreparation~ now
+implements an explicit bounded policy for closed provider functions: retain the
+prepared tuple/error and its joint certificate, prove alignment with the initial
+provider, and reuse it only when C4 ancestry/requested-key impact is negative.
+This does not infer dependencies of arbitrary functions or replace the separately
+certified open-recursion/object runtime.
+
+The same OpenAI equality/certificate audit illustrates the boundary: pressure,
+metric, approximation and residual data occur in the equation, with original
+order/time guards. ~initializedCorrectionData_eq_coordinate~ is explicitly
+rewritten in ~initializedApproximationResidual~; source equality is evidence,
+not a consequence of a lexical name or missing C4 edit. A hypothetical client
+must represent these dependent inputs accurately in its context/result family and
+supply its joint claim. Negative scope preserves an exact selected function tuple;
+positive scope returns fresh data without silently transferring its old proof.
+The [[file:../Benchmarks/receipts/euler-cached-preparation-2026-10-05.json][reference-only receipt]] records this seam and its limits; no external adapter or
+PDE build was added. Actual Euler migrations remain 0 and savings unmeasured.

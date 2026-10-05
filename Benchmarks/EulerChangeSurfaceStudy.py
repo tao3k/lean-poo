@@ -168,7 +168,8 @@ def study(reference):
              "LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean",
              "LeanPoo/Functional/ScopedTransaction.lean", "Tests/FunctionalScopedTransaction.lean",
              "LeanPoo/Functional/KeyIndex.lean", "Tests/FunctionalKeyIndex.lean",
-             "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean"]
+             "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean",
+             "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -180,6 +181,20 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "prepared_certificate_reuse": {
+            "reference_seam": "Hash-bound joint_certificate_audit sources and observation_bridge: pressure-dependent equation uses explicit correction-data equality; no automatic analytic change footprint",
+            "local_api": ["CachedPreparation", "cacheCertified", "TransactionPreparation.reused", "TransactionPreparation.fresh", "TransactionPreparation.forget", "prepareTransactionCached", "prepareTransactionCached_forget", "prepareTransactionCached_ofRegistry", "prepareTransactionCached_unaffected", "prepareTransactionCached_affected"],
+            "alignment": "Cached certified success/first-key error is proof-bound to the exact original prepared provider. Graph/root/keys/context/result family remain fixed",
+            "negative_scope": "Check every transaction name, then return the same prepared tuple/error and joint proof without provider lookup, preparation or update construction",
+            "positive_scope": "Full transaction update and fresh data preparation; old joint certificate not reused, caller must supply a new analytic admission proof. Overlap does not imply the old claim is false",
+            "tests": {"cases": 4096, "negative": 2304, "positive": 1792, "name_errors": 1024,
+                      "contexts": 2, "axiom_reports": 4, "hash_collisions": True,
+                      "wrong_provider_and_uncertified_data_rejected": True},
+            "native": {"receipt": "cached-preparation-native-2026-10-05.json", "samples": 80,
+                       "alternating_pairs_per_workload": 4, "requests": [8, 512],
+                       "admission_cases": 10, "all_gate_native_cases": 32, "ci_jobs": 16,
+                       "scope": "Both paths materialize the same initial certified tuple/key index in IO before query timing; setup reported separately; not a one-use migration comparison"},
+            "limits": ["Closed functional providers, not automatic open-recursion/object invalidation", "Consumer view only, not updated registry publication", "Raw histories and name preflight still scan", "Factory bodies still run at each build", "Retained tuple and indexes cost memory; allocations/peak memory unmeasured", "No external adapter/build, actual Euler migrations 0, maintenance/code savings unmeasured"]},
         "joint_certificate_audit": joint_certificate_audit(reference),
         "observation_bridge": observation_bridge(reference),
         "evidence_transport": {
@@ -565,7 +580,7 @@ def study(reference):
                                 "Benchmarks/ScopedTransactionScale.lean", "Benchmarks/ScopedTransactionStudy.py"]},
             "native_receipt": "Benchmarks/receipts/scoped-transaction-native-2026-10-05.json",
             "native_samples": 32, "alternating_pairs_per_workload": 4,
-            "mandatory_native_cases": 8, "all_gate_native_cases": 22, "ci_jobs": 16,
+            "mandatory_native_cases": 8, "all_gate_native_cases": 32, "ci_jobs": 16,
             "cost_boundary": ["Negative scope does no update table/cell writes, but performs scope scan, name preflight and original preparation",
                               "Positive scope adds impact scan then executes full transaction",
                               "Disjoint keys still require edit-cell scans; conservative positives may be shadowed",
@@ -595,7 +610,7 @@ def study(reference):
                                 "Benchmarks/KeyIndexScale.lean", "Benchmarks/KeyIndexStudy.py"]},
             "native_receipt": "Benchmarks/receipts/key-index-native-2026-10-05.json",
             "native_samples": 80, "alternating_pairs_per_workload": 4, "request_widths": [8, 512],
-            "mandatory_native_cases": 10, "all_gate_native_cases": 22, "ci_jobs": 16,
+            "mandatory_native_cases": 10, "all_gate_native_cases": 32, "ci_jobs": 16,
             "cost_boundary": ["Build requested-key set once; duplicates removed only for impact membership",
                               "One hash probe per reached edit cell instead of repeated requested-list scans; raw history still scanned",
                               "Collision/copy/build costs remain; no unconditional O(1) or universal switch",

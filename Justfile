@@ -45,6 +45,7 @@ check-merge: check-types
         LeanPoo.Functional.Assembly \
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.CertifiedRequirements \
+        LeanPoo.Functional.CachedPreparation \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -296,6 +297,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
+    {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean
@@ -445,3 +447,16 @@ _check-native-key-index:
     .lake/build/bin/keyIndexScale indexed late 64 16 4
     .lake/build/bin/keyIndexScale list unknown 64 16 4
     .lake/build/bin/keyIndexScale indexed unknown 64 16 4
+
+# Cached tuple/proof reuse admission, without timing thresholds.
+_check-native-cached:
+    .lake/build/bin/cachedPreparationScale indexed outside 64 16 4
+    .lake/build/bin/cachedPreparationScale cached outside 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed keys 64 16 4
+    .lake/build/bin/cachedPreparationScale cached keys 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed early 64 16 4
+    .lake/build/bin/cachedPreparationScale cached early 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed late 64 16 4
+    .lake/build/bin/cachedPreparationScale cached late 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed unknown 64 16 4
+    .lake/build/bin/cachedPreparationScale cached unknown 64 16 4

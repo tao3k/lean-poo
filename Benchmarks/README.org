@@ -282,3 +282,32 @@ The local CertifiedRequirements API costs 104 lines, its fixture 115 lines;
 192 preparation plus 8 joint plans pass at three contexts with six axiom reports.
 No runtime benchmark, upstream adapter, actual migration or measured source/
 maintenance saving is added. Reproduce with EulerChangeSurfaceStudy; schema v1.
+
+* Retained certified tuple versus repeated preparation
+
+~receipts/cached-preparation-native-2026-10-05.json~ records 80 matched native
+samples (four alternating pairs for eight/512 requests across five modes).
+Both paths materialize the same initial certified tuple/key index in an IO cell
+before query timing; setup including the IO cell is separate. Query compares the
+existing retained-key scoped API to whole-tuple reuse; it includes tag/certificate
+forgetting, impact, preflight and any full fallback. Native ~Claim=True~ isolates
+runtime plumbing; generic theorems admit arbitrary joint propositions.
+
+| Requests / edits | Indexed re-preparation query ms | Cached query ms | Interpretation |
+|------------------+---------------------------------+-----------------+----------------|
+| 512 / outside ancestry | 0.049646 | 0.0084795 | Same retained tuple avoids repeated selection |
+| 512 / disjoint ancestor keys | 0.0582705 | 0.0167285 | Impact scan remains; repeated preparation removed |
+| 512 / early overlap | 0.1563125 | 0.152792 | Both full fallback; no claimed fallback speedup |
+| 512 / late overlap | 0.1641455 | 0.1575625 | Both full fallback; no claimed fallback speedup |
+| 512 / unknown name | 0.0116045 | 0.011771 | Cached path slightly slower; name error still exact |
+| 8 / unknown name | 0.0055205 | 0.005688 | Cached path slightly slower |
+
+For 512 outside-ancestry requests, common initial setup medians are 0.0641045/
+0.0667295 ms; per-sample setup+query medians 0.1141875/0.075188 ms. These totals
+include a common prepared cache even in the baseline and are not a one-use
+comparison or process-latency measurement. Four pairs do not establish universal
+crossovers or significance; all workloads and negative results are retained.
+Raw histories, name preflight, factory bodies and retained memory remain; no
+allocated-byte/peak-memory or Euler application/maintenance benefit was measured.
+Shared/test/native Lean/Python costs are 101/175/56/65 physical lines; the gate
+admits ten new small native cases (32 total). Historic receipts remain unchanged.

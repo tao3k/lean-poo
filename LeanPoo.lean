@@ -29,6 +29,7 @@ import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
 import LeanPoo.Functional.Requirements
 import LeanPoo.Functional.CertifiedRequirements
+import LeanPoo.Functional.CachedPreparation
 import LeanPoo.Functional.Access
 import LeanPoo.Functional.View
 import LeanPoo.Functional.Observation

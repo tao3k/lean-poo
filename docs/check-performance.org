@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 122 independent example/contract
+once, checks C4's source-owned types, and runs 123 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 126 unique example/test files, including the typed
+The current gate covers 127 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -339,6 +339,24 @@ Shared preparation builds ~LeanPoo~ and the three native study executables once.
 The existing native phase/CI diagnostic job now admits ten additional list/indexed
 key-scope cases, including outside/disjoint/early/late/unknown paths and capability
 errors, bringing the native total to 22. No timing threshold or new CI job is added.
-Current inventory: 122 independent files plus four bounded diagnostics (126 standalone
+At this stage: 122 independent files plus four bounded diagnostics (126 standalone
 files), twelve shards, nine supervision tests and sixteen CI jobs. The new native
 receipt records index construction separately and retains one-use regressions.
+
+* Cached prepared certificate qualification
+
+Current inventory: 123 independent Lean files plus four bounded diagnostics
+(127 standalone), 32 native admissions, nine Python supervisor tests, 16 CI jobs.
+Twelve shards remain the maximum parallel Lean matrix; cached preparation adds
+one atom and ten admissions in the existing diagnostic job, without serializing
+the file checks or imposing noisy timing thresholds.
+
+The native retained-input study compares indexed-key re-preparation with cached
+tuple reuse using a shared initial snapshot and IO materialization before query
+clocks. 512 requests / 4096 outside-ancestry edits: median query 0.049646 to
+0.0084795 ms; disjoint ancestor keys: 0.0582705 to 0.0167285 ms. Positive scopes
+both take full fallback; no fallback gain is claimed. Unknown-name cached queries
+are slightly slower at both widths. Setup, IO-cell costs and per-sample totals
+are reported separately; this is not a one-use or end-to-end comparison. No
+allocation/peak-memory, arbitrary function dependency tracking, or whole Euler
+maintenance gain is measured. Raw output remains in TMP; receipts keep schema v1.

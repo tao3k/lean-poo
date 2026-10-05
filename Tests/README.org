@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 122 independent Lean example/contract files
+The local complete gate runs the 123 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -172,5 +172,16 @@ the gate's native total to 22; the independent Lean inventory at this stage was 
 contracts at three contexts, including heterogeneous results, duplicates,
 reversal, empty/missing lists, a generic provider-change client and a rejected
 context mismatch. Six axiom reports use at most ~propext~. The canonical inventory
-now contains 122 independent Lean files plus four diagnostics (126 standalone),
+at this stage contained 122 independent Lean files plus four diagnostics (126 standalone),
 with 22 native admissions and 16 CI jobs; this test runs as one independent atom.
+
+* Cached certified preparation
+
+~FunctionalCachedPreparation.lean~ exercises 4096 plans with 2304 negative scopes,
+1792 positive scopes, 1024 first-name errors and two contexts, against scalar,
+ordinary, indexed-full and previous scoped controls. Forced hash collisions,
+empty/repeated/reversed requests, cached capability failures and conservative
+reuse/fresh decisions are included. Wrong-provider caches and uncertified fresh
+data fail type checks. Four standard-only axiom reports. Current inventory:
+123 independent files plus four diagnostics (127 standalone), 32 native admissions,
+and 16 CI jobs with 12 Lean shards.

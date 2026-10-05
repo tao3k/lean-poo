@@ -757,3 +757,30 @@ Capability / evidence checklist:
 This exposes a broader reusable contract than individual theorem wrappers. It
 reduces repeated selection/certificate plumbing for clients adopting the API;
 there is no measured Euler-wide reduction or runtime performance claim.
+
+* Cache whole preparation outcomes, including joint evidence
+
+| Capability / scenario | Existing scoped path | Retained cached path | Cost / limit |
+|-----------------------+----------------------+----------------------+--------------|
+| Negative scope with all requested keys available | Prepare the keys again | Return the same factory tuple and joint proof | Initial cache alignment/admission plus retained tuple memory |
+| Negative scope with a requested key missing | Find the first missing key again | Return the same first-key error | Unknown names still override that cached capability error |
+| Positive requested-key impact | Full update and preparation | Full update and fresh data, requiring new joint admission | Overlap alone does not prove the old claim false |
+| Unknown named batch, including empty | First name error | Same first name error | Name preflight remains on negative scopes |
+| Whole Euler analytic change footprint | No inferred contract | No inferred contract | Source equality/guards and accurate dependent inputs still required |
+
+Checklist:
+
+- [X] ~cacheCertified~ stores an exact prepared success/error with provider alignment.
+- [X] ~prepareTransactionCached~ exposes certified reuse versus fresh data explicitly.
+- [X] Full ordinary/indexed data/error equality and arbitrary joint Claims proved.
+- [X] 4096 plans, cached failures, collisions and two future contexts; four axiom reports.
+- [X] Wrong provider cache and fresh-as-certified data rejected by type checks.
+- [X] Native matched study separates retained-input setup from query using an IO materialization boundary.
+- [X] Added shared/test/native Lean/Python costs 101/175/56/65 lines recorded separately.
+- [ ] Compile an accurate Euler context/capability mapping and account for adapters.
+- [ ] Measure actual migrated proof/plumbing edits and maintenance time; migrations remain 0.
+
+The narrow benefit is zero capability selection/preparation and zero fresh joint
+proof obligations on a certified negative transaction view. Raw history/name
+checks and user factory computation remain. This is a conditional local guarantee,
+not an Euler-wide edit-count estimate.
