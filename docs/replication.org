@@ -2354,3 +2354,15 @@ Reproduce the audit with
 ~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-context-slot.json~;
 compare 54 local hashes with the v1 receipt. Reference Pa sharing already exists;
 no external context equality, native timing or redundant execution is established.
+
+* Context-view replication
+
+Build ~LeanPoo.Functional.ContextView~ and run ~Tests/FunctionalContextView.lean~.
+Expect ~FUNCTIONAL-CONTEXT-VIEW-OK cases=4608 successes=1944 contexts=3
+reads=29160 hits=11664~, ~FUNCTIONAL-CONTEXT-VIEW-JOINT-OK reordered=3~, and
+~FUNCTIONAL-CONTEXT-VIEW-DUPLICATE-OK first=11 later=99~. Five axiom reports use
+~propext~, without ~sorryAx~. The public client in reusable-contracts compiles.
+The new ~euler-context-view-2026-10-05.json~ receipt remains schema v1 and binds
+56 local source hashes and the pinned clean reference. Historical receipts stay
+unchanged. Reference source reads do not compile the PDE corpus or establish
+external performance/maintenance savings.

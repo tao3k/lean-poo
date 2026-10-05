@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 129 independent example/contract
+once, checks C4's source-owned types, and runs 130 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 133 unique example/test files, including the typed
+The current gate covers 134 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -410,3 +410,11 @@ The new atom brings coverage to 129 independent files plus four diagnostics
 supervisor tests remain. The explicit one-pair memo avoids dependency builds on
 hits but still compares contexts and runs constructors. Native timings and
 allocations remain unmeasured; it is not an output cache or universal speedup.
+
+* Context-view gate coverage
+
+~FunctionalContextView.lean~ is an independent atom. Current inventory is 130
+independent files plus four diagnostics (134 standalone), twelve Lean shards and
+16 CI jobs. Native admissions remain 32 and supervision tests remain nine.
+Its 29160 cached reads verify semantics; no new native projection benchmark or
+end-to-end performance claim is introduced. Raw transcripts remain in TMP.

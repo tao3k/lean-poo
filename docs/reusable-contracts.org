@@ -1768,3 +1768,37 @@ immutable slots retains their data too. Equality comparisons and whole-tuple
 retention can be expensive. Misses allocate/build; constructors still run on
 hits. Source costs and hit decisions are checked, native timing/allocations are
 unmeasured. This is not a universal speedup or an output/action cache.
+
+* Hand built caches to a narrower consumer
+
+Import ~LeanPoo.Functional.ContextView~. ~Snapshot.project~ maps already built
+values and derives a new joint proof. ~ContextSlot.project keys included Narrow
+derive~ keeps the populated context, or preserves an empty slot. No factory or
+provider runs during projection. Requested order and duplicates are retained;
+named access chooses the first occurrence in the source, even when duplicate
+source values differ. The logical implication ~derive~ is supplied by the caller.
+
+Seven APIs: ~Snapshot.project~, ~Snapshot.project_val~, ~ContextSlot.project~,
+~project_empty~, ~project_retained~, ~project_hit~, ~project_consume~.
+The last theorem identifies cached narrow consumption with constructing from
+projected broad uncached values. Context changes still replace the slot;
+constructors execute every time. Keep the returned narrow slot for later calls.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextView
+open LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type}
+    [DecidableEq Key] [DecidableEq Context]
+    {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
+    {ready : Certified source Claim} (slot : ContextSlot ready)
+    (c : Context) (data : Snapshot ready c)
+    (saved : slot.retained = some ⟨c, data⟩)
+    (keys : List Key) (included : ∀ key ∈ keys, key ∈ source)
+    (Narrow : ∀ c, Results Value c keys → Prop) (derive) :
+    ((slot.project keys included Narrow derive).read c).2.2 = true :=
+  slot.project_hit c data saved keys included Narrow derive
+#+end_src
+
+Projection scans source keys and allocates a new tuple; repeated requests may
+repeat scans. A narrow cache may retain less data, but clients can retain the
+original cache too. No measured allocation or wall-time improvement is claimed.

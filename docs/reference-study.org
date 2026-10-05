@@ -1355,3 +1355,26 @@ The local corpus checks 1215 reads (405 hits/810 misses), four repeated/alternat
 empty traces, rebind reuse and eviction, plus full uncached/scalar output parity.
 Shared module/test costs are 96/138 lines. Actual Euler migrations remain 0;
 net code/maintenance savings, allocations and native timings remain unmeasured.
+
+* Narrow consumers inherit built data cache hits
+
+The [[file:../Benchmarks/receipts/euler-context-view-2026-10-05.json][v1 context-view receipt]] binds
+~Budget.correctedPressureTower~ and ~Budget.correctedPressureTower_gradient~ in
+~AllOrderDriftEquation.lean~ to their source hash and named field uses. The first
+reads ~R.pressure~ fields; the second reads ~R.gradient t~. Existing named
+structures already support field projection. This is interface design evidence,
+not proof of redundant work, dependency closure or a useful executable adapter.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] sections 1.2.1 and 6.2 motivate named records
+and explicit caches. This implementation composes those bounded mechanisms:
+project immutable built data and its joint evidence into a smaller certified
+interface while retaining the exact-context hit. It does not implement open
+recursion, mutation tracking or automatic analytic proof derivation.
+
+Seven APIs remove manual snapshot and slot reconstruction from this route.
+4608 cases include 1944 successful preparations, 29160 narrow reads and 11664
+hits; empty, repeated, reordered and chained views match independent values.
+Joint numeric proof consumers and inconsistent duplicate source values are
+checked separately. Shared costs: 70 module lines and 152 test lines. Scans and
+new tuples remain; native timing/allocation savings are unmeasured. Actual Euler
+migrations are 0; net code and maintenance savings remain unmeasured.

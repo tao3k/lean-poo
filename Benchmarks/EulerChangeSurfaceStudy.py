@@ -118,6 +118,30 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def context_view_audit(reference):
+    relative = "Euler/AllOrderDriftEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    blocks = {"pressure": ("def Budget.correctedPressureTower", "theorem Budget.correctedFieldTower_initial"),
+              "gradient": ("theorem Budget.correctedPressureTower_gradient", "theorem ")}
+    selected = {}
+    for name, (start_token, end_token) in blocks.items():
+        starts = [i for i, row in enumerate(rows) if row.startswith(start_token)]
+        if len(starts) != 1:
+            raise ValueError(f"Expected one {start_token}")
+        start = starts[0]
+        end = next(i for i in range(start+1, len(rows)) if rows[i].startswith(end_token))
+        tokens = ["R.pressure.field", "R.pressure.realization", "R.pressure.value_eq"] if name == "pressure" else ["R.gradient t"]
+        body = "\n".join(rows[start:end])
+        for token in tokens:
+            if token not in body:
+                raise ValueError(f"Narrow field consumer changed: {token}")
+        selected[name] = {"declaration_line": start+1,
+                          "token_lines": {t: [i+1 for i in range(start,end) if t in rows[i]] for t in tokens}}
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "consumers": selected,
+            "scope": "Direct named-field uses only; existing structure already projects fields. No dependency closure, redundant construction, executable adapter, or external cost reduction established"}
+
+
 def context_slot_audit(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -316,7 +340,8 @@ def study(reference):
              "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean",
              "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean",
              "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean",
-             "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean"]
+             "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean",
+             "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -328,6 +353,14 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "context_view": {
+            "reference_audit": context_view_audit(reference),
+            "local_api": ["Snapshot.project", "Snapshot.project_val", "ContextSlot.project", "ContextSlot.project_empty", "ContextSlot.project_retained", "ContextSlot.project_hit", "ContextSlot.project_consume"],
+            "tests": {"cases": 4608, "successful_preparations": 1944, "contexts": 3, "reads": 29160, "hits": 11664, "joint_consumers": 3, "duplicate_first_occurrence": True, "axiom_reports": 5},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean"]},
+            "mechanism": "Project retained built values and derive a narrow joint proof, retain exact context hit; empty remains empty; missing keys cannot be supplied; constructor still runs",
+            "cost": "Named source scans and new projected tuple allocation, including repeated requested keys. No factory application during projection. Original broad cache may remain externally retained",
+            "limits": ["Logical consequence supplied by caller, no analytical proof synthesis", "Not open recursive object projection or mutable dependency tracking", "No native time/allocation benchmark or Euler migration; net lines and maintenance savings unmeasured"]},
         "context_slot": {
             "reference_audit": context_slot_audit(reference),
             "local_api": ["Snapshot", "ContextSlot", "ContextSlot.empty", "ContextSlot.read", "ContextSlot.read_hit", "ContextSlot.read_miss", "ContextSlot.read_value", "ContextSlot.consume", "ContextSlot.consume_value", "ContextSlot.rebind", "ContextSlot.rebind_consume"],

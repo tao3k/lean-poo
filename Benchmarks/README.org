@@ -366,3 +366,12 @@ are 96/138 lines. No native benchmark was added: hit/miss decisions and semantic
 parity are evidence, not execution-time or allocation savings. One retained pair
 bounds each slot value, while externally retained histories have separate costs.
 Historical receipts remain unchanged and actual Euler migrations remain 0.
+
+* Built cache projection audit
+
+~receipts/euler-context-view-2026-10-05.json~ is a separate schema v1 receipt,
+with 56 local source hashes. Seven APIs retain a built-data hit for a narrow
+consumer. Local costs are 70 module / 152 test lines; source scans and new tuple
+allocation remain. 4608 cases / 29160 reads are semantic evidence, not native
+performance data. Pressure/gradient consumers already use named reference
+fields; migrations 0, code and maintenance savings unmeasured.

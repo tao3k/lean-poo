@@ -868,3 +868,16 @@ not an Euler-wide edit-count estimate.
 - [ ] Demonstrate a computable complete context and actual dependent reference adapters.
 - [ ] Measure native hit/miss timing and allocations; no universal cache benefit inferred.
 - [ ] Measure migrated code/maintenance costs: migrations 0, savings unknown.
+
+* Context-view capability checklist
+
+- [X] Seven APIs for snapshot/slot projection and value, empty, retained, hit
+  and consumer correctness theorems. Narrow consumers reuse populated data
+  without manual slot reconstruction or factory execution.
+- [X] 4608 cases, 1944 successes, 29160 reads / 11664 hits; independent and
+  uncached controls, context replacement, empty and chained projections.
+- [X] Three joint-bound consumers; duplicate sources select the first value.
+- [X] Reference field consumers hashed; existing projection acknowledged.
+- [X] Local shared cost 70 + 152 lines; v1 receipt with 56 local hashes.
+- [ ] Euler adapters/migrations: 0; code and maintenance savings unmeasured.
+- [ ] Native projection timing and allocation cost remain unmeasured.
