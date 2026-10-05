@@ -408,3 +408,9 @@ are schema v1. Native admissions now total 40; raw logs stay in TMP.
 the local original paper and reference field consumers. Ten APIs avoid observing
 unrequested positions during conversion. This path has no native timing study;
 previous cache timings remain historical and cannot be transferred.
+
+* Borrowed public views
+
+~euler-borrowed-view-2026-10-05.json~ records five local APIs, 66 local source
+hashes and pinned paper/reference evidence. It is a source/semantic audit;
+view timing, allocation and external maintenance gains are unmeasured.

@@ -2402,3 +2402,9 @@ Expect FUNCTIONAL-OBSERVED-VIEW-OK (4608/1944 cases/successes, 23328 reads/5832
 hits), DUPLICATE-OK (first=21/later=109) and JOINT-OK (contexts=3), with seven
 propext axiom reports. [[file:contracts/observed-view.org][The dedicated API module]] gives the public client.
 Separate v1 receipt ~euler-observed-view-2026-10-05.json~ binds 64 local hashes.
+
+* Borrowed public view replication
+
+Build ~LeanPoo.Functional.BorrowedView~, then run ~Tests/FunctionalBorrowedView.lean~.
+Expect 120 reads / 113 hits / seven misses and three propext-only axiom reports.
+[[file:contracts/borrowed-view.org][Contract and cost guide]] explains broad cache retention and per-call view costs.

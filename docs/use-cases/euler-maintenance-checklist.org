@@ -924,3 +924,13 @@ not an Euler-wide edit-count estimate.
 - [X] Local paper and existing reference field consumers hashed; v1 receipt.
 - [X] Shared costs 105 + 164 lines; no integration or new native timing claim.
 - [ ] Actual Euler migration 0; net code/maintenance/allocation savings unmeasured.
+
+* Borrowed public view checklist
+
+- [X] Five APIs return a narrow public result and the original broad cache state.
+- [X] Different keys/observers share one broad slot; no manual reconstruction.
+- [X] 120 reads / 113 hits / seven misses; independent values and dependent outputs.
+- [X] Empty/reordered/repeated views, inconsistent duplicate preservation; three axiom reports.
+- [X] Original paper and shared reference R/Pa hashed in a separate v1 receipt.
+- [X] Local costs 59 + 75 lines; per-request views and broad misses remain.
+- [ ] Euler integrations/migrations 0; net lines, hours and native savings unknown.

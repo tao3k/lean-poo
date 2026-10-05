@@ -381,7 +381,8 @@ def study(reference):
              "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean",
              "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean",
              "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py",
-             "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean"]
+             "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean",
+             "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -393,6 +394,16 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "borrowed_view": {
+            "paper_source": paper_cache_audit(),
+            "reference_audit": context_view_audit(reference),
+            "shared_pressure_audit": context_slot_audit(reference),
+            "local_api": ["ContextSlot.readView", "ContextSlot.readView_state", "ContextSlot.readView_value", "ContextSlot.consumeView", "ContextSlot.consumeView_value"],
+            "tests": {"reads": 120, "hits": 113, "misses": 7, "views": 5, "observers": 2, "traces": 3, "dependent_proof_output": True, "inconsistent_duplicate_preserved_in_broad_cache": True, "axiom_reports": 3},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean"]},
+            "mechanism": "Expose each consumer view while returning the original broad cache transition and hit flag; different views share one retained broad tuple",
+            "cost": "Every request projects and observes its view and runs its constructor; misses build broad dependencies; broad tuple stays retained; source scans and view allocation remain",
+            "limits": ["Existing reference consumers already share R and pressure Pa; no redundant external cache established", "No native timing or allocation qualification for borrowed views; old cache timings do not transfer", "Euler integrations and migrations 0; net lines and maintenance savings unmeasured"]},
         "observed_view": {
             "paper_source": paper_cache_audit(),
             "reference_audit": context_view_audit(reference),

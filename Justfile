@@ -56,6 +56,7 @@ check-merge: check-types
         LeanPoo.Functional.ContextObservation \
         LeanPoo.Functional.ContextPullback \
         LeanPoo.Functional.ObservedView \
+        LeanPoo.Functional.BorrowedView \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -318,6 +319,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalContextObservation.lean
     {{lean}} Tests/FunctionalContextPullback.lean
     {{lean}} Tests/FunctionalObservedView.lean
+    {{lean}} Tests/FunctionalBorrowedView.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

@@ -18,6 +18,7 @@ these guides explain reusable library contracts.
 | Apply indexed transactions and run name-only preflight | [[file:contracts/indexed-transactions.org][Indexed transactions and preflight]] |
 | Prepare transaction views, retain key indices and joint certificates | [[file:contracts/preparation-cache.org][Certified preparation caches]] |
 | Publish cache revisions, project data and construct proof-aware outputs | [[file:contracts/certified-consumers.org][Certified consumer construction]] |
+| Share broad cached dependencies across different public consumers | [[file:contracts/borrowed-view.org][Borrowed public views]] |
 | Expose only requested positions with one public proof | [[file:contracts/observed-view.org][Narrow public views]] |
 | Reuse built data across contexts, narrow/public views and rich requests | [[file:contracts/context-cache.org][Built data and context caches]] |
 

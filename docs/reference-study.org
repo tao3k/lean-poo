@@ -1437,3 +1437,9 @@ Euler reference sharing, with negative miss controls and no migration claim.
 
 [[file:contracts/observed-view.org][Narrow public views]] bind the local POOF source and existing reference
 field consumers, without asserting redundant external observation or migration.
+
+* Broad dependency retention across public consumers
+
+[[file:contracts/borrowed-view.org][Borrowed view contracts]] preserve one broad cache across different public
+consumers. The original POOF cache discussion and existing Euler R/Pa sharing
+are source-bound in the [[file:../Benchmarks/receipts/euler-borrowed-view-2026-10-05.json][v1 audit]]. No external savings are measured.
