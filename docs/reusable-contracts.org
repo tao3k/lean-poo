@@ -1141,4 +1141,21 @@ pure transaction remains available with its previously documented costs. Hash
 collisions/resizing/shared copies, base costs and conservative footprint scans
 remain. Retaining an already wrapped input base does not compact it. Performance
 of named updates is measured separately from standalone overlay measurements;
-there is no graph/Euler proof or native-code speedup claim.
+the earlier interpreter-only receipt supports no graph/Euler proof or native-code
+speedup claim. The later native/lifetime study below has its own local scope.
+
+* Choosing representation with native and retained-state evidence
+
+The existing list/indexed APIs keep the same typed semantics. The performance
+study now exposes ~--engine native~ and ~--policy retained~ so a caller can check
+its actual execution engine and lifetime policy. Retained native repeated-batch
+query medians are 4.868/0.160 ms for list/indexed; update medians are
+0.306/0.266 ms. Same-source interpreter updates still regress, and native latest
+updates are slightly slower for indexed state. Tiny small-table timings vary.
+Choose based on caller workloads; there is no automatic/global switch threshold.
+
+The native executable is built by the complete gate. Four admission cases check
+current cells and retained old observations under both representations/policies.
+Performance thresholds are excluded from CI. This strengthens execution evidence
+for the existing ~patchBatch/dictionary~ APIs and their kernel contracts; it does
+not change graph/type/dependency premises or infer Euler proof equivalence.

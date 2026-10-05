@@ -4,3 +4,7 @@ defaultTargets = ["LeanPoo"]
 
 [[lean_lib]]
 name = "LeanPoo"
+
+[[lean_exe]]
+name = "indexedRegistryScale"
+root = "Benchmarks.IndexedRegistryScale"

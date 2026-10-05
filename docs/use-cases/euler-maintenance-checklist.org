@@ -614,3 +614,20 @@ Matched named-registry interpreter measurements retain both gains and losses:
 are slower in this case; query gains do not establish an update-only or Euler
 proof speedup. The small-table case is negative too. Benchmark Lean/Python
 source costs are 59/55 physical lines, separate from library/test costs.
+
+* Native and retained-state validation checklist
+
+| Added capability / entry point | User action covered | Cost/evidence boundary |
+|--------------------------------+---------------------+------------------------|
+| ~lake build indexedRegistryScale~ | Compile the actual registry benchmark | Native binary hash and source/toolchain/config identity |
+| Study ~--engine native/interpreter~ | Measure the caller's execution engine | Same source and current-result controls across engines |
+| Study ~--policy latest/retained~ | Measure keeping every prior query snapshot alive | Retained counts and scalar prefix observations checked after updates |
+| Mandatory native admission | Catch compilation/runtime/snapshot regressions | Four cases; no unstable performance threshold; all existing gates retained |
+| Shared benchmark source costs | Lean/Python 89/62 physical lines | Earlier 59/55; existing library API/proofs unchanged |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only |
+
+Native retained repeated-batch queries give 4.868/0.160 ms list/indexed medians;
+updates give 0.306/0.266 ms. Same-source interpreter updates still regress;
+native latest updates show a small regression. Advice remains engine/workload/
+lifetime-specific. No allocations/peak memory or whole Euler speedup is measured.
+The [[file:../../Benchmarks/receipts/euler-native-registry-2026-10-05.json][schema-1 source snapshot]] preserves the unchanged reference pin/manifest.

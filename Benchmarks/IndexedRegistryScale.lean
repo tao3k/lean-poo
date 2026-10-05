@@ -22,25 +22,44 @@ private def query (dictionary : String → Provider Nat Nat Value) (keys : List 
         | some factory => checksum := checksum + (factory c).val + 2
   return checksum
 
+private def listUpdates (initial : ProviderRegistry Nat Nat Value)
+    (edits : List (String × List (CapabilityEdit Nat Nat Value))) (retain : Bool) :
+    Except String (ProviderRegistry Nat Nat Value × Array (ProviderRegistry Nat Nat Value)) := do
+  let mut state := initial
+  let mut saved := #[]
+  for edit in edits do
+    if retain then saved := saved.push state
+    state ← state.patchBatch edit.1 edit.2
+  return (state, saved)
+private def indexedUpdates (initial : ProviderRegistry Nat Nat Value)
+    (edits : List (String × List (CapabilityEdit Nat Nat Value))) (retain : Bool) :
+    Except String (IndexedRegistry Nat Nat Value × Array (IndexedRegistry Nat Nat Value)) := do
+  let mut state := IndexedRegistry.ofRegistry initial
+  let mut saved := #[]
+  for edit in edits do
+    if retain then saved := saved.push state
+    state ← state.patchBatch edit.1 edit.2
+  return (state, saved)
+
 def main (args : List String) : IO Unit := do
-  let [variant, countText, widthText, chunkText] := args | throw (IO.userError "variant count width chunk required")
+  let [variant, countText, widthText, chunkText, policy] := args | throw (IO.userError "variant count width chunk policy required")
   let some count := countText.toNat? | throw (IO.userError "invalid count")
   let some width := widthText.toNat? | throw (IO.userError "invalid width")
   let some chunk := chunkText.toNat? | throw (IO.userError "invalid chunk")
   unless count > 0 && width > 0 && chunk > 0 && count % chunk == 0 &&
-      (variant == "list" || variant == "indexed") do throw (IO.userError "invalid parameters")
+      (variant == "list" || variant == "indexed") && (policy == "latest" || policy == "retained") do throw (IO.userError "invalid parameters")
   let edits := changes count width chunk
   let initial := ProviderRegistry.ofNames ["0", "1", "2", "3"] id (fun _ => base)
   let keys := (List.range (width + 8)) ++ (List.range (width + 8)).reverse
   let begin ← IO.monoNanosNow
-  let dictionary ← if variant == "indexed" then do
-    let .ok state := edits.foldlM (fun state edit => state.patchBatch edit.1 edit.2)
-      (IndexedRegistry.ofRegistry initial) | throw (IO.userError "indexed batch failed")
-    pure state.dictionary
+  let (dictionary, saved) ← if variant == "indexed" then do
+    let .ok (state, snapshots) := indexedUpdates initial edits (policy == "retained")
+      | throw (IO.userError "indexed batch failed")
+    pure (state.dictionary, snapshots.map IndexedRegistry.dictionary)
   else do
-    let .ok state := edits.foldlM (fun state edit => state.patchBatch edit.1 edit.2) initial
+    let .ok (state, snapshots) := listUpdates initial edits (policy == "retained")
       | throw (IO.userError "list batch failed")
-    pure state.dictionary
+    pure (state.dictionary, snapshots.map ProviderRegistry.dictionary)
   let constructNs := (← IO.monoNanosNow) - begin
   let startQuery ← IO.monoNanosNow
   let checksum ← query dictionary keys
@@ -56,4 +75,15 @@ def main (args : List String) : IO Unit := do
         | none => oracle := oracle + 1
         | some value => oracle := oracle + value + 2
   unless checksum == oracle do throw (IO.userError "checksum mismatch")
-  IO.println s!"variant={variant} count={count} width={width} chunk={chunk} batches={edits.length} queries={keys.length * 10} checksum={checksum} construct_ns={constructNs} query_ns={queryNs} oracle_parity=true"
+  unless saved.size == (if policy == "retained" then edits.length else 0) do
+    throw (IO.userError "retained snapshot count mismatch")
+  let mut savedChecksum := 0
+  for i in [:saved.size] do
+    let name := i % 4
+    let key := (i * chunk) % width
+    let wanted := expected (i * chunk) width chunk name key 7
+    let observed := (saved[i]! (toString name) key).map (fun factory => (factory 7).val)
+    unless observed == wanted do throw (IO.userError "old snapshot changed")
+    savedChecksum := savedChecksum + observed.getD 0
+
+  IO.println s!"variant={variant} policy={policy} retained={saved.size} saved_checksum={savedChecksum} count={count} width={width} chunk={chunk} batches={edits.length} queries={keys.length * 10} checksum={checksum} construct_ns={constructNs} query_ns={queryNs} oracle_parity=true"

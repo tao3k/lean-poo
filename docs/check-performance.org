@@ -205,8 +205,9 @@ crossover estimate. Both representations remain available.
 These are Lean ~--run~ interpreter results for selected local workloads, with
 ordinary Nat hashes. Imports, input construction, the independent oracle,
 graph/registry/preparation, retained-snapshot copy workloads and Euler proofs
-are excluded. There is no native-code, allocation or whole-application speedup
-claim. Collisions/resizing/shared storage retain costs; the semantic test forces
+are excluded from this earlier interpreter-only receipt. It supplies no
+native-code, allocation or whole-application speedup claim; the native/lifetime
+study below is separate. Collisions/resizing/shared storage retain costs; the semantic test forces
 all keys to collide but is not a collision performance study.
 
 * Named registry batch measurement
@@ -231,9 +232,61 @@ queries 1.24x slower). Tiny timings vary. Favor retained indexed state for the
 measured query-heavy continued-update pattern; retain ordinary/list APIs for
 small or update-heavy workloads unless caller measurements show a benefit.
 
-These are local interpreter measurements, not standalone-overlay multipliers,
-native-code guarantees or whole Euler proof gains. Imports, input generation,
+These earlier local interpreter measurements support their own named workflow,
+without standalone-overlay multipliers, native-code guarantees or whole Euler
+proof gains. The native/lifetime study below is separate. Imports, input generation,
 common initial registration, scalar oracle, graph/order/preparation and copy-heavy
 retained-snapshot workloads are excluded. Hash collision/resizing and shared
 storage costs remain. ~snapshot~ full-table materialization is not in the timed
 query path. All raw output belongs in TMP and fixtures stay schema-1 JSON.
+
+* Native execution and retained snapshot controls
+
+The [[file:../Benchmarks/receipts/indexed-registry-native-latest-2026-10-05.json][native latest]] and [[file:../Benchmarks/receipts/indexed-registry-native-retained-2026-10-05.json][native retained]] receipts use the compiled Lake executable;
+[[file:../Benchmarks/receipts/indexed-registry-interpreter-latest-2026-10-05.json][interpreter latest]] and [[file:../Benchmarks/receipts/indexed-registry-interpreter-retained-2026-10-05.json][interpreter retained]] use precisely the same Lean benchmark source and controls.
+Each combination retains 24 samples: four alternating list/indexed pairs for
+three workloads. Current results and old-snapshot checksums agree across engines.
+Source/toolchain/build-config hashes and native executable hashes are retained.
+The retained policy saves every pre-update registry, keeps its query view alive
+across timed updates and final queries, then checks one typed observation from
+each old snapshot against an independent scalar prefix oracle outside timing.
+All current query cells are checked at both contexts outside timing.
+
+| Native policy / workload | List updates ms | Indexed updates ms | List queries ms | Indexed queries ms |
+|--------------------------+-----------------+--------------------+-----------------+--------------------|
+| latest / small | 0.007563 | 0.007250 | 0.021604 | 0.021687 |
+| latest / distinct | 0.594876 | 0.274583 | 37.446646 | 0.586854 |
+| latest / repeated | 0.268146 | 0.275000 | 4.997125 | 0.154771 |
+| retained / small | 0.007833 | 0.006646 | 0.015104 | 0.013375 |
+| retained / distinct | 0.592021 | 0.269666 | 31.186459 | 0.601646 |
+| retained / repeated | 0.305897 | 0.266479 | 4.868021 | 0.159792 |
+
+The native retained repeated workload has update medians 0.306/0.266 ms and
+query medians 4.868/0.160 ms (30.46x query ratio of medians). The same-source
+interpreter retained workload has update medians 6.737/8.399 ms and queries
+277.887/10.170 ms: the update regression remains there. Do not reuse interpreter
+update ratios as native claims. The native latest repeated update medians are
+0.268/0.275 ms, a small negative result. Microsecond small-table differences
+vary by policy/order; no universal crossover or default representation switch
+is justified. Both APIs remain available.
+
+Build and reproduce after shared library preparation:
+
+#+begin_src sh
+lake build indexedRegistryScale
+python3 Benchmarks/IndexedRegistryStudy.py --engine native --policy retained --output /tmp/registry-native.json
+#+end_src
+
+~--engine~ accepts ~interpreter~ (default) or ~native~. ~--policy~ accepts ~latest~
+(default) or ~retained~. Native execution requires the built executable and fails
+when it is absent. Each run fails on exit/timeout, scalar result, retained count
+or snapshot/parity mismatch. Source/build setup, input generation, scalar oracles,
+initial common registration, graph/order/preparation and Euler proofs remain
+outside timing. Allocated bytes and peak live storage are not measured.
+
+The complete gate now builds ~LeanPoo~ and ~indexedRegistryScale~ once. A fourth
+independent post-preparation phase runs four native semantic cases covering both
+representations and retention policies, with no timing threshold. All 117 atomic
+Lean files, four bounded diagnostic files and nine Python supervision tests remain.
+CI builds the same executable and admits those four cases in the required
+diagnostics job; the existing sixteen-job aggregate is preserved.

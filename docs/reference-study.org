@@ -1106,3 +1106,9 @@ snapshots in semantic tests; copy-heavy retained-snapshot performance is unmeasu
 #+begin_src sh
 python3 Benchmarks/IndexedRegistryStudy.py --output /tmp/indexed-registry.json
 #+end_src
+
+The [[file:../Benchmarks/receipts/euler-native-registry-2026-10-05.json][native-registry source snapshot]] preserves the Euler reference and 30 local
+source/test hashes. Four engine/lifetime receipts strengthen local execution
+validation; they do not migrate any Euler consumer or measure upstream lines,
+hours or avoided proof edits. Benchmark code costs and unchanged library API
+boundaries are recorded separately.

@@ -2057,3 +2057,25 @@ Matched named-registry interpreter measurements retain both gains and losses:
 are slower in this case; query gains do not establish an update-only or Euler
 proof speedup. The small-table case is negative too. Benchmark Lean/Python
 source costs are 59/55 physical lines, separate from library/test costs.
+
+* Native execution and lifetime-policy replication
+
+Four schema-1 receipts bind the same benchmark source under native/interpreter
+execution and latest/retained policies. Ninety-six samples retain four alternating
+pairs per workload and per combination; current and retained-prefix control
+checksums agree across engines. Native binary and source/toolchain/config hashes
+are included. Retained query views stay live across timed updates and queries.
+
+The native retained repeated workload gives list/indexed update medians
+0.306/0.266 ms and queries 4.868/0.160 ms. Interpreter retained updates remain
+slower for indexed state (6.737/8.399 ms). Native latest repeated updates are
+slightly slower too (0.268/0.275 ms). These observations bound the representation
+advice by engine/workload/lifetime rather than declaring a universal winner.
+Allocated bytes, peak memory, whole Euler proof times and maintenance savings
+remain unmeasured; no external consumer is migrated.
+
+Mandatory native compilation and four semantic admission cases extend local/CI
+validation while preserving all canonical proofs, diagnostic bounds and the
+sixteen-job aggregate. The benchmark Lean/Python costs are now 89/62 physical
+lines (previously 59/55); no new library API/proof is asserted in this slice.
+Original EPG/analytic correspondence obligations remain open.

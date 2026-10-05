@@ -126,3 +126,9 @@ errors, 5632 impact queries and 3136 negative scopes across two roots/contexts.
 Colliding hashes, original-base retention, old snapshots and explicit materialized
 snapshots are checked against ordinary batches and a scalar oracle at each
 prefix. A generic client and nine standard-axiom reports close consumer reuse.
+
+The complete gate additionally builds the native registry benchmark and runs
+four semantic cases: list/indexed crossed with latest/retained snapshots.
+Current per-name/key outputs, retained counts and old snapshot observations are
+checked by Lean; timing values have no admission threshold. CI requires the same
+cases after compiling the executable. The 117-file atomic inventory is unchanged.

@@ -113,18 +113,19 @@ def main():
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
     results = execute(
-        [('library', ['lake', 'build']), ('types', ['lean', 'LeanPoo/C4/Types.lean']),
+        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale']), ('types', ['lean', 'LeanPoo/C4/Types.lean']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
-         ('docs', ['just', 'check-docs'])])
+         ('docs', ['just', 'check-docs']),
+         ('native', ['just', '_check-native-registry'])])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = dict(schema='lean-poo.check-gate.v1', jobs=jobs, phases=results,
                    wall_seconds=time.monotonic() - started,
                    cpu_seconds=after.ru_utime + after.ru_stime - before.ru_utime - before.ru_stime,
                    failures=[r['name'] for r in results if r['returncode']],
                    source_sha256={p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest()
-                                  for p in ['Justfile', 'tools/check_atoms.py', 'tools/check_gate.py']})
+                                  for p in ['Justfile', 'lakefile.toml', 'tools/check_atoms.py', 'tools/check_gate.py']})
     if args.receipt:
         args.receipt.write_text(json.dumps(receipt, indent=2) + '\n')
     emit('CHECK-GATE-END ' + json.dumps(receipt))

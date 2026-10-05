@@ -403,3 +403,10 @@ clean:
 [private]
 _check-diagnostics:
     just --set lean "{{lean}}" check-incremental false check-proof-reuse check-debug false
+
+# Native admission verifies semantics under both snapshot retention policies.
+_check-native-registry:
+    .lake/build/bin/indexedRegistryScale list 64 16 4 latest
+    .lake/build/bin/indexedRegistryScale indexed 64 16 4 latest
+    .lake/build/bin/indexedRegistryScale list 64 16 4 retained
+    .lake/build/bin/indexedRegistryScale indexed 64 16 4 retained

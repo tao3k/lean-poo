@@ -166,7 +166,9 @@ schema 1, the unchanged Euler source manifest and zero actual migrations.
 The [[file:receipts/indexed-overlay-2026-10-05.json][paired runtime receipt]] compares identical small, distinct-key and repeated-key
 workloads using internal construction/query timers under Lean's interpreter.
 Imports, input generation, the scalar oracle and application/graph/preparation
-costs are excluded. It does not establish a native-code or Euler proof speedup.
+costs are excluded. This earlier interpreter-only receipt does not establish
+a native-code or Euler proof speedup; later native/lifetime receipts have their
+own local scope.
 Reproduce after building the library with:
 
 #+begin_src sh
@@ -183,4 +185,16 @@ snapshots in semantic tests; copy-heavy retained-snapshot performance is unmeasu
 
 #+begin_src sh
 python3 Benchmarks/IndexedRegistryStudy.py --output /tmp/indexed-registry.json
+#+end_src
+
+The [[file:receipts/indexed-registry-native-latest-2026-10-05.json][native latest]], [[file:receipts/indexed-registry-native-retained-2026-10-05.json][native retained]],
+[[file:receipts/indexed-registry-interpreter-latest-2026-10-05.json][interpreter latest]] and [[file:receipts/indexed-registry-interpreter-retained-2026-10-05.json][interpreter retained]] receipts share source/toolchain/config hashes and cross-engine
+scalar control parity. Native binary hashes are recorded. Four alternating
+pairs per workload per combination retain negative update cases and tiny-table
+variation. No allocation or whole-Euler speedup is inferred. Schema stays v1;
+earlier interpreter receipts remain historical.
+
+#+begin_src sh
+lake build indexedRegistryScale
+python3 Benchmarks/IndexedRegistryStudy.py --engine native --policy retained --output /tmp/registry-native.json
 #+end_src
