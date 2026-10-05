@@ -1802,3 +1802,43 @@ example {Context Key : Type} {Value : Context → Key → Type}
 Projection scans source keys and allocates a new tuple; repeated requests may
 repeat scans. A narrow cache may retain less data, but clients can retain the
 original cache too. No measured allocation or wall-time improvement is claimed.
+
+* Retain a public cache across internal representation changes
+
+Import ~LeanPoo.Functional.ContextObservation~. ~Snapshot.observe~ and
+~ContextSlot.observe~ execute the supplied observation functions on already built
+values and derive the public joint proof. No provider or dependency factory is
+called during this conversion. A populated context remains a hit; an empty slot
+remains empty. Clients can still retain their original hidden cache.
+
+Nine APIs: ~Snapshot.observe~, ~Snapshot.observe_val~, ~ContextSlot.observe~,
+~observe_empty~, ~observe_retained~, ~observe_hit~, ~observe_consume~,
+~replaceObservedPublic~, ~replaceObservedPublic_consume~.
+
+For a certificate whose Claim is over public observations,
+~slot.replaceObservedPublic expose reveal Public candidate compatible~ hands
+the public cache to the compatible candidate's public certified family.
+~compatible~ must prove pointwise public factory equality at every context and
+requested position. Candidate availability is explicit in its supplied factories.
+The hidden candidate tuple is not built or recovered from the old cache. Future
+misses build its public factories; constructors run on every call. This API
+removes manual observation/alignment/slot reconstruction from the public route.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextObservation
+open LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value Observed : Context → Key → Type}
+    [DecidableEq Context] {keys : List Key}
+    {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (c : Context) (data : Snapshot ready c)
+    (saved : slot.retained = some ⟨c, data⟩)
+    (expose : ∀ c key, Value c key → Observed c key)
+    (Public : ∀ c, Results Observed c keys → Prop) (derive) :
+    ((slot.observe expose Public derive).read c).2.2 = true :=
+  slot.observe_hit c data saved expose Public derive
+#+end_src
+
+Observing traverses the tuple and allocates public data, with costs of supplied
+observers. It is a deliberate conversion, not lazy observation or native
+performance evidence. Changed visible values require new evidence/cache;
+public equivalence does not preserve discarded hidden assertions.

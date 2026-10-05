@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 130 independent Lean example/contract files
+The local complete gate runs the 131 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -253,3 +253,12 @@ chained projections plus independent and uncached controls. Separate checks
 consume joint bounds and select the first inconsistent duplicate source value.
 Five theorem axiom reports use propext. Current inventory: 130 independent
 files plus four diagnostics (134 standalone). Native admissions remain 32.
+
+* Public built context-cache observation
+
+~FunctionalContextObservation.lean~ checks 1536 cases / 375 replacements / 6750
+reads / 3375 hits, independent and uncached results, three contexts, empty and
+populated observation, hidden metadata and eviction. Joint-bound consumers
+are checked separately. Visible change, hidden type recovery and wrong context
+are rejected. Six axiom reports have no sorryAx. Current inventory: 131
+independent files plus four diagnostics (135 standalone); native admissions 32.

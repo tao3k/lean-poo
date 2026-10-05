@@ -1378,3 +1378,29 @@ Joint numeric proof consumers and inconsistent duplicate source values are
 checked separately. Shared costs: 70 module lines and 152 test lines. Scans and
 new tuples remain; native timing/allocation savings are unmeasured. Actual Euler
 migrations are 0; net code and maintenance savings remain unmeasured.
+
+* Public cache continuity across representation replacement
+
+The [[file:../Benchmarks/receipts/euler-context-observation-2026-10-05.json][v1 context-observation receipt]]
+binds the existing ~toFieldTower_eq_of_path_eq~ and normalized path/tower
+equality chain in ~PacketInitializedResidualEquation.lean~. Exact token lines
+and source hashes confirm the public equality bridge; the reference already
+provides it. No reference cache or computable rich-context equality, redundant
+construction, or external performance benefit is demonstrated.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 discusses explicit cache policies.
+This extension keeps a public cache through an explicitly compatible change
+of closed immutable factory representation. Observers execute during conversion,
+public factories execute on misses, and output constructors run on every call.
+It provides no language-wide tracking, mutable identity, open recursion or
+automatic analytical equivalence. Hidden replacement data cannot be recovered
+from the public cache.
+
+Nine APIs combine existing observation/certificate/rebind mechanisms without
+client slot reconstruction. 1536 cases have 375 compatible available pairs,
+6750 public reads and 3375 hits; independent and uncached values agree. Eight
+joint candidates yield one available replacement, checked at three contexts.
+Visible changes and wrong context/hidden types are rejected. Shared costs are
+96 module lines / 208 test lines, plus tuple traversal/allocation and supplied
+observers. Euler migrations remain 0; net code, maintenance, native time and
+allocation savings are unmeasured.

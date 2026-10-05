@@ -2366,3 +2366,15 @@ The new ~euler-context-view-2026-10-05.json~ receipt remains schema v1 and binds
 56 local source hashes and the pinned clean reference. Historical receipts stay
 unchanged. Reference source reads do not compile the PDE corpus or establish
 external performance/maintenance savings.
+
+* Public context-cache replication
+
+Build ~LeanPoo.Functional.ContextObservation~ and run
+~Tests/FunctionalContextObservation.lean~. Expect
+~FUNCTIONAL-CONTEXT-OBSERVATION-OK cases=1536 replaced=375 contexts=3 reads=6750
+hits=3375~ and ~FUNCTIONAL-CONTEXT-OBSERVATION-JOINT-OK candidates=8 replaced=1
+contexts=3~. Six axiom reports: two none, three propext, one Quot.sound; no
+sorryAx. The public client in reusable-contracts compiles.
+~euler-context-observation-2026-10-05.json~ remains v1, with 58 local source
+hashes and a pinned clean reference. Existing receipts are unchanged; the PDE
+corpus is not integrated or compiled by this audit.

@@ -37,6 +37,7 @@ import LeanPoo.Functional.CertifiedObservation
 import LeanPoo.Functional.CertifiedConsumer
 import LeanPoo.Functional.ContextSlot
 import LeanPoo.Functional.ContextView
+import LeanPoo.Functional.ContextObservation
 import LeanPoo.Functional.Access
 import LeanPoo.Functional.View
 import LeanPoo.Functional.Observation

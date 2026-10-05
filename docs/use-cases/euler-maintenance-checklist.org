@@ -881,3 +881,15 @@ not an Euler-wide edit-count estimate.
 - [X] Local shared cost 70 + 152 lines; v1 receipt with 56 local hashes.
 - [ ] Euler adapters/migrations: 0; code and maintenance savings unmeasured.
 - [ ] Native projection timing and allocation cost remain unmeasured.
+
+* Public context-cache continuity checklist
+
+- [X] Nine APIs for cached observation, alignment and compatible public handoff.
+- [X] 1536 cases / 375 replacements / 6750 reads / 3375 hits, three contexts,
+  empty slots, hidden observation, context replacement and uncached controls.
+- [X] Joint numeric/flag/duplicate proofs consumed; visible changes rejected.
+- [X] Six axiom reports, with no sorryAx; public client compiles.
+- [X] Existing reference path/tower equality bridge acknowledged and hashed.
+- [X] Local cost 96 + 208 lines; separate schema v1 receipt, 58 local hashes.
+- [ ] Actual Euler migration: 0; net lines/maintenance savings unmeasured.
+- [ ] Native observer time/tuple allocation costs remain unmeasured.

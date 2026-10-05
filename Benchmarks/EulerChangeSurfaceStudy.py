@@ -118,6 +118,20 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def context_observation_audit(reference):
+    audit = observation_bridge(reference)
+    rows = (reference / audit["file"]).read_text().splitlines()
+    tokens = ["(h : G.path = H.path) : G.toFieldTower = H.toFieldTower", "Field.toFieldTower_eq_of_path_eq _ _", "(initializedNormalizedField_path_eq M D"]
+    audit["bridge_token_lines"] = {}
+    for token in tokens:
+        lines = [i+1 for i, row in enumerate(rows) if token in row]
+        if len(lines) != 1:
+            raise ValueError(f"Expected one observation bridge token: {token}")
+        audit["bridge_token_lines"][token] = lines
+    audit["cache_limit"] = "Existing equality bridge only; no reference cache, computable context equality, redundant build, or external performance/maintenance gain demonstrated"
+    return audit
+
+
 def context_view_audit(reference):
     relative = "Euler/AllOrderDriftEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -341,7 +355,8 @@ def study(reference):
              "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean",
              "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean",
              "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean",
-             "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean"]
+             "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean",
+             "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -353,6 +368,14 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "context_observation": {
+            "reference_audit": context_observation_audit(reference),
+            "local_api": ["Snapshot.observe", "Snapshot.observe_val", "ContextSlot.observe", "ContextSlot.observe_empty", "ContextSlot.observe_retained", "ContextSlot.observe_hit", "ContextSlot.observe_consume", "ContextSlot.replaceObservedPublic", "ContextSlot.replaceObservedPublic_consume"],
+            "tests": {"cases": 1536, "replacements": 375, "contexts": 3, "reads": 6750, "hits": 3375, "joint_candidates": 8, "joint_replacements": 1, "axiom_reports": 6, "visible_change_rejected": True, "hidden_type_and_wrong_context_rejected": True},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean"]},
+            "mechanism": "Observation functions map retained data now; compatible replacement retains the public cache via erased factory equality; hidden replacement values are not reconstructed; future misses use replacement public factories",
+            "cost": "Traverse and allocate observed tuple, plus observation function costs; original cache may remain retained. Output constructor executes every call",
+            "limits": ["Explicit total observation, public consequence and pointwise factory equivalence required", "No automatic invalidation, hidden data transport, or identity/mutation guarantee", "No new native time/allocation benchmark; Euler migrations 0; net lines and maintenance savings unmeasured"]},
         "context_view": {
             "reference_audit": context_view_audit(reference),
             "local_api": ["Snapshot.project", "Snapshot.project_val", "ContextSlot.project", "ContextSlot.project_empty", "ContextSlot.project_retained", "ContextSlot.project_hit", "ContextSlot.project_consume"],
