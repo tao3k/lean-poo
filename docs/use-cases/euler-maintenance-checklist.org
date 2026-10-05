@@ -944,3 +944,15 @@ not an Euler-wide edit-count estimate.
 - [X] Pinned original getter/composition discussion and reference field consumers hashed; v1 receipt.
 - [X] Local shared costs 61 + 80 lines; no automatic rewrite or analytic inference.
 - [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.
+
+* Contract consequence checklist
+
+- [X] Ten APIs retain functions/built data while deriving another joint proof.
+- [X] No key projection, observer or dependency factory runs during conversion.
+- [X] 192 reads / 104 hits / 88 misses; eight families, cold/warm starts, chained hits.
+- [X] Dependent outputs, independent values, invalid-consequence/context rejection.
+- [X] Seven axiom reports: five axiom-free, two propext-only; compiled public client.
+- [X] Original cache policy and reference joint structures hashed; separate v1 receipt.
+- [X] Shared costs 63 + 73 lines; mapped wrapper and normal read costs retained.
+- [ ] Reference already carries joint proofs; redundant admission/rebuild unestablished.
+- [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.

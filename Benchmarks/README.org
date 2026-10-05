@@ -421,3 +421,9 @@ view timing, allocation and external maintenance gains are unmeasured.
 hashes, pinned original getter/composition discussion and existing nested
 reference field access. Structural comparison counts retain a regression;
 no native timing/allocation or external maintenance gain is inferred.
+
+* Contract consequence source audit
+
+~euler-contract-consequence-2026-10-06.json~ records ten local APIs, 70 local
+source hashes and pinned paper/reference joint contracts. It is a semantic
+and source audit; native time, allocations and external savings are unmeasured.

@@ -2414,3 +2414,9 @@ Expect 120 reads / 113 hits / seven misses and three propext-only axiom reports.
 Build ~LeanPoo.Functional.ViewComposition~ and run ~Tests/FunctionalViewComposition.lean~.
 Expect 5184 cases, positive=9/1 and negative=13/30 structural cost controls,
 and four propext-only axiom reports. [[file:contracts/view-composition.org][Contract and choice guide]].
+
+* Contract consequence replication
+
+Build ~LeanPoo.Functional.ContractConsequence~ and run ~Tests/FunctionalContractConsequence.lean~.
+Expect 192 reads / 104 hits / 88 misses and seven axiom reports (five none, two
+propext-only). [[file:contracts/contract-consequence.org][Contract, compiled client and cost guide]].

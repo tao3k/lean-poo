@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 135 independent Lean example/contract files
+The local complete gate runs the 136 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -300,3 +300,10 @@ axiom reports. Current inventory: 134 atoms + four diagnostics (138 standalone).
 an independent first-occurrence oracle. Four propext-only axiom reports;
 same-list identity counterexample and positive/negative scanner-cost controls.
 Current inventory: 135 independent atoms + four diagnostics (139 standalone).
+
+* Contract consequences
+
+~FunctionalContractConsequence.lean~ covers eight families / 192 reads / 104 hits
+/ 88 misses, cold/warm traces, independent dependent outputs and chained hits.
+Seven axiom reports: five axiom-free, two propext-only. Current inventory:
+136 independent atoms + four diagnostics (140 standalone).

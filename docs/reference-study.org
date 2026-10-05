@@ -1450,3 +1450,10 @@ are source-bound in the [[file:../Benchmarks/receipts/euler-borrowed-view-2026-1
 functions, including inconsistent duplicates. The local generalized-prototype
 getter/composition discussion is hashed in a [[file:../Benchmarks/receipts/euler-view-composition-2026-10-05.json][v1 audit]]. This is a closed-view
 correspondence; it does not establish lens setters or external savings.
+
+* Joint contract consequences without rebuilding values
+
+[[file:contracts/contract-consequence.org][Ten contract-consequence APIs]] retain the exact family/data while deriving
+a new joint proof. This Lean-specific extension of immutable explicit caching
+is source-bound to the paper and existing reference contracts in a [[file:../Benchmarks/receipts/euler-contract-consequence-2026-10-06.json][v1 audit]].
+It does not infer stronger analytic facts or establish external savings.

@@ -398,7 +398,8 @@ def study(reference):
              "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py",
              "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean",
              "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean",
-             "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean"]
+             "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean",
+             "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -410,6 +411,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "contract_consequence": {
+            "paper_source": paper_cache_audit(),
+            "reference_audit": joint_certificate_audit(reference),
+            "local_api": ["Certified.entails", "Certified.entails_factories", "Certified.entails_trans", "Snapshot.entails", "Snapshot.entails_val", "ContextSlot.entails", "ContextSlot.entails_empty", "ContextSlot.entails_retained", "ContextSlot.entails_hit", "ContextSlot.entails_consume"],
+            "tests": {"families": 8, "reads": 192, "hits": 104, "misses": 88, "traces": 3, "warm_modes": 2, "dependent_output": True, "chained_consequence_hits": True, "invalid_consequence_and_wrong_context_rejected": True, "axiom_reports": 7, "axiom_free_reports": 5},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean"]},
+            "mechanism": "Derive a new joint contract once while retaining exact factories and built data; compose logical consequences without projecting keys or observing values",
+            "cost": "Proofs are erased; populated slot conversion maps its Option/context wrapper, without traversing Results or executing factories/observers/constructors; normal context equality, misses, retention and consumers remain",
+            "limits": ["Caller supplies a valid implication over arbitrary data at each context; no stronger analytic fact is inferred", "Reference already carries inverse/strain and pressure/gradient/equation proofs; no repeated admission or avoidable rebuild established", "Lean-specific contract adaptation extends explicit immutable cache policy, not full paper conformance; native allocation/time and Euler code/maintenance savings unmeasured; integrations/migrations 0"]},
         "view_composition": {
             "paper_source": paper_view_composition_audit(),
             "reference_audit": context_view_audit(reference),
