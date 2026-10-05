@@ -1127,3 +1127,9 @@ is required in addition to equal dictionary functions. Conversion provides both
 premises automatically. This supports a potential user migration between local
 storage representations; the Euler reference remains untouched, with zero
 actual migrations and unmeasured code/maintenance savings.
+
+The [[file:../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][transaction-preflight source snapshot]] records optional name diagnostics,
+exact first-error agreement and scope-based reuse. It binds 34 local files at the
+unchanged Euler pin/manifest. Registered names do not imply available analytic
+capabilities; the test retains that negative boundary. No external adapter or
+consumer is migrated, and time, allocation and maintenance savings remain unknown.

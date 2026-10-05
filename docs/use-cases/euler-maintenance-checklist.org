@@ -670,3 +670,22 @@ the user still supplies actual typed providers and dependency scopes. This is
 an application pattern, with no external adapter or consumer migration measured.
 Changing the transaction's edits still needs negative read scope or affected
 consumer alignment. The [[file:../../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][source snapshot]] keeps schema 1 and the reference pin.
+
+* Transaction preflight capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| Ordinary/indexed ~checkTransaction~ | Report a transaction's first unknown name before update construction | Initial membership only; empty batches included |
+| ~checkTransaction_outcome~ | Reuse the real transaction success/error contract for dry-run diagnostics | Exact first-name error; capability preparation may still fail |
+| ~checkTransaction_after~ | Keep a future-plan check across successful value updates | Scope-preserving transaction required; one rewrite |
+| ~ofRegistry_checkTransaction~, ~checkTransactionNames_congr~ | Keep checks during conversion or equal-scope changes | No dictionary-value comparison or per-key ~require~ |
+| Semantic corpus | 12,432 cases; 1,056 successes; 11,376 first errors; 1,056 cache controls | Ordinary/indexed/scalar controls; empty-provider boundary; two contexts |
+| Shared source/test cost | 113/95 physical lines | Proofs/comments included; user adapters separate |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or extrapolation |
+
+For a user-defined analytic provider workflow, preflight grouped name edits before
+constructing update prefixes and reuse the name diagnostic as values change.
+Actual provider/dependency declarations remain user responsibilities. The API
+has one membership query per reached batch and no capability-cell traversal;
+preflight plus successful execution adds a name scan. No runtime/allocation gain
+is claimed. The [[file:../../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][source snapshot]] preserves schema 1 and the reference manifest.

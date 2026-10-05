@@ -1253,3 +1253,48 @@ consumer proofs, including affected keys. It compares the same transaction on
 two representations. To reuse a claim across different old/new changes, use the
 negative-scope theorem or provide explicit alignment for affected consumers.
 No new runtime algorithm or performance threshold is introduced by these proofs.
+
+* Optional name-only transaction preflight
+
+Import ~LeanPoo.Functional.TransactionCheck~. Both ordinary and indexed registries
+expose ~registry.checkTransaction changes : Except String Unit~. It stops at the
+first unknown name in caller order, including names paired with empty batches.
+It queries only initial name membership: no capability-edit cells, factories,
+update tables, graph resolution or explicit snapshots are needed during the check.
+Inputs still have their own construction cost.
+
+Use this for a dry-run diagnostic or before allocating a large successful prefix
+that might later be rejected. On ~.ok ()~, the caller can execute the transaction
+and then prepare its consumer. ~checkTransaction_outcome~ proves that the check
+has exactly the actual transaction's success/first-name-error result. It does not
+promise requested capabilities: a registered empty provider passes preflight but
+its preparation can still return a missing key. Factory guards remain typed and
+caller-owned.
+
+Successful transactions preserve membership, so cache a name-check result across
+updates with one rewrite instead of checking/alignment proofs for each name:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v} [BEq Key] [Hashable Key]
+    {Value : Context → Key → Type w}
+    (registry updated : Functional.IndexedRegistry Context Key Value)
+    (changes pending : List (Functional.RegistryEdit Context Key Value))
+    (applied : registry.patchTransaction changes = .ok updated)
+    (Claim : Except String Unit → Prop)
+    (known : Claim (registry.checkTransaction pending)) :
+    Claim (updated.checkTransaction pending) := by
+  rw [Functional.IndexedRegistry.checkTransaction_after registry updated changes pending applied]
+  exact known
+#+end_src
+
+~ofRegistry_checkTransaction~ preserves the check during storage conversion;
+~checkTransactionNames_congr~ covers explicitly equal name scopes. A different
+name scope needs new validation. ~checkTransactionNames_ok_iff~ characterizes
+success as every batch name being registered, regardless of repeated names/keys.
+
+Each reached batch needs one name membership query, stopping at the first absent
+name. Hash/collision costs remain. Preflight followed by a successful transaction
+adds another name scan; this is optional and does not replace normal execution.
+No elapsed-time or allocation improvement has been measured. This API packages
+name diagnostics and their exact reuse contracts; it does not infer analytic
+provider dependencies or migrate an external Euler consumer.

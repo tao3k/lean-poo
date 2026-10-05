@@ -2129,3 +2129,29 @@ and semantic/client validation, with no new timing/allocation claim. The
 Euler migration remains zero and upstream savings unknown. This establishes
 same-edit representation correspondence; it does not prove old/new affected
 consumers equal, original EPG correspondence or analytic dependency inference.
+
+* Initial name-scope transaction validation
+
+~Functional.TransactionCheck~ supplies an executable name-only preflight for both
+registry representations. Induction over caller-order batches proves exact
+~Except String Unit~ equality with the real transaction outcome after mapping
+away the final registry. Successful batch scope preservation permits each check
+to read initial membership; the first unknown name is preserved even after a
+valid prefix. Empty batches still require a known name. Further scope laws
+preserve cached future-plan checks after successful transactions and conversion.
+Seven kernel reports use only subsets of the standard Lean axioms.
+
+The independent initial-name corpus uses sixteen registration masks, all 259
+name sequences of length zero through three from six names, and batch widths
+0/3/64. It checks 12,432 cases, 1,056 successes, 11,376 first-name errors and
+1,056 cached checks against actual ordinary/indexed transactions. Snapshot
+observations use two contexts. A registered empty provider passes preflight but
+fails capability preparation, preserving the name/capability boundary. The
+arbitrary-claim cache client compiles using one rewrite.
+
+Shared source/test cost is 113/95 physical lines including proofs/comments. The
+[[file:../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][schema-1 source snapshot]] binds 34 local files at the unchanged Euler reference.
+Preflight scans names without constructing update prefixes or traversing edit
+cells; successful check-plus-execution adds a name scan. No time/allocation gain
+or external maintenance saving is measured. Euler migration stays zero, and
+original EPG correspondence/analytic dependency inference remain open.

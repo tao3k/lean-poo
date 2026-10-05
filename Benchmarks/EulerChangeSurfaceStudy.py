@@ -113,7 +113,8 @@ def study(reference):
              "LeanPoo/Functional/RegistryTransaction.lean", "Tests/FunctionalRegistryTransaction.lean",
              "LeanPoo/Functional/IndexedOverlay.lean", "Tests/FunctionalIndexedOverlay.lean",
              "LeanPoo/Functional/IndexedRegistry.lean", "Tests/FunctionalIndexedRegistry.lean",
-             "LeanPoo/Functional/IndexedTransaction.lean", "Tests/FunctionalIndexedTransaction.lean"]
+             "LeanPoo/Functional/IndexedTransaction.lean", "Tests/FunctionalIndexedTransaction.lean",
+             "LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -466,6 +467,31 @@ def study(reference):
                               "Nested consumer missing-key errors, caller context evaluation and arbitrary claims transfer exactly",
                               "This compares representations under the same edits, not old/new affected consumers",
                               "No new timing, allocation, peak-memory or external savings measurement"],
+            "euler_consumer_migration": False, "external_lean_compilation": False,
+        },
+        "transaction_preflight": {
+            "local_api": ["checkTransactionNames", "ProviderRegistry.checkTransaction", "IndexedRegistry.checkTransaction",
+                          "checkTransactionNames_ok_iff", "checkTransactionNames_congr",
+                          "ProviderRegistry.checkTransaction_outcome", "IndexedRegistry.checkTransaction_outcome",
+                          "ProviderRegistry.checkTransaction_after", "IndexedRegistry.checkTransaction_after",
+                          "IndexedRegistry.ofRegistry_checkTransaction"],
+            "scope": "Optional initial-name-scope preflight with exact transaction success/first-error agreement",
+            "premises": ["Immutable registry scope; all batches preserve membership",
+                         "Scope agreement required to carry a cached preflight to a different registry",
+                         "Success establishes registered names only, not capability availability"],
+            "local_test": {"scope_masks": 16, "name_plans": 259, "batch_widths": [0, 3, 64],
+                           "cases": 12432, "successes": 1056, "first_unknown_errors": 11376,
+                           "cached_scope_controls": 1056, "contexts": 2, "standard_axiom_reports": 7,
+                           "independent_initial_name_oracle": True, "ordinary_and_indexed_transaction_controls": True,
+                           "preflight_success_with_capability_error": True, "generic_arbitrary_claim_client": True,
+                           "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in
+                               ["LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean"]},
+            "cost_boundary": ["One name membership query per reached batch, stopping at first unknown name",
+                              "Does not traverse capability edit cells, invoke factories or construct update tables",
+                              "Inputs/edit-list construction, hash collisions and name-scan costs remain",
+                              "Running preflight then a successful transaction adds an extra name scan; optional, not default",
+                              "No elapsed-time/allocation/peak-memory or external maintenance win measured"],
             "euler_consumer_migration": False, "external_lean_compilation": False,
         },
         "native_registry_validation": {

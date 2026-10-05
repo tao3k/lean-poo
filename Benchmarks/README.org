@@ -216,3 +216,12 @@ Current transaction module/test costs are 174/206 lines, increments of 73/47.
 The runtime transaction implementation and earlier benchmark sources are unchanged.
 This source receipt measures no new timing, allocation or external savings;
 it keeps schema 1, 32 local hashes and the unchanged Euler pin/manifest.
+
+* Transaction preflight source boundary
+
+[[file:receipts/euler-transaction-preflight-2026-10-05.json][Preflight source snapshot]] retains schema 1 and the Euler pin/manifest, binding
+34 local files. It records seven proof reports, 12,432 scalar/ordinary/indexed
+semantic cases and source/test costs of 113/95 physical lines. This is not a new
+performance receipt: preflight avoids update-prefix construction but a successful
+preflight-plus-execution adds a name scan. Timing/allocation gains and external
+savings are unmeasured. Existing batch performance receipts keep their scope.
