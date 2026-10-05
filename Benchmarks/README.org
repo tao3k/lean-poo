@@ -322,3 +322,12 @@ state, collisions, errors and two contexts, with six standard-only axiom reports
 Explicit OpenAI time-transport declarations/token lines are hash-bound. No new
 publication runtime/memory benchmark, external adapter/build, actual migration or
 measured code/labor saving. Prior view-only timings apply only to their own API.
+
+* Certified narrow-view source audit
+
+~receipts/euler-certified-view-2026-10-05.json~ uses the existing v1 schema.
+It adds source-hashed individual inverse/strain consumers and 46 local hashes,
+five projection APIs, broad-failure fallback semantics and 78/120 line costs.
+There is no new native benchmark: projection scans and fallback preparation
+costs are explicit, allocations/timing and actual Euler maintenance savings
+are unmeasured. Earlier receipts remain historical evidence.

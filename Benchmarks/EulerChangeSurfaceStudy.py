@@ -118,6 +118,28 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def narrow_consumer_audit(reference):
+    relative = "Euler/PacketSourceEquations.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    consumers = {}
+    for name, field in [("sourceInverse_eq_mean", "inverse"), ("sourceStrain_eq_mean", "strain")]:
+        starts = [i for i, row in enumerate(rows) if re.match(r"theorem " + name + r"\b", row)]
+        if len(starts) != 1:
+            raise ValueError(f"Expected one {name}")
+        start = starts[0]
+        end = next((i for i in range(start+1, len(rows)) if rows[i].startswith("theorem ")), len(rows))
+        body = "\n".join(rows[start:end])
+        token = f"A.{field} t x"
+        if token not in body or "EulerMeanPacketProvider.Data.clamp_coe" not in body:
+            raise ValueError(f"Consumer obligations changed: {name}")
+        consumers[name] = {"declaration_line": start+1, "certificate_field": field,
+                           "field_use_lines": [i+1 for i in range(start, end) if token in rows[i]],
+                           "retained_obligations": ["dependent M/D types and instances", "time clamp equality"]}
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "consumers": consumers,
+            "scope": "Manual direct source reading with declaration/token guards; not elaboration or transitive dependency closure"}
+
+
 def consumer_time_audit(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -191,7 +213,8 @@ def study(reference):
              "LeanPoo/Functional/KeyIndex.lean", "Tests/FunctionalKeyIndex.lean",
              "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean",
              "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean",
-             "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean"]
+             "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean",
+             "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -203,6 +226,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "certified_view": {
+            "reference_audit": narrow_consumer_audit(reference),
+            "local_api": ["Certified.project", "Certified.project_factories", "CachedPreparation.narrow", "CachedPreparation.narrow_of_ok", "CachedPreparation.narrow_eq"],
+            "success": "Project retained functions and derive the consumer Claim explicitly; no provider lookup, factory execution, or preparation",
+            "failure": "Prepare the narrower keys independently with fresh admission; broad first error may be absent or reordered in the consumer interface",
+            "tests": {"availability_masks": 8, "requests": 24, "duplicate_successes": 4, "rescued_broad_failures": 3, "contexts": 3, "axiom_reports": 3},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean"]},
+            "cost": "Shared library/test additions are costs; successful projection scans the retained list for each requested key; allocate/project once before repeated builds; failed broad cache performs narrow preparation",
+            "limits": ["Explicit analytic consequence and fallback admission required", "Fixed context/result types; no automatic transport or dependency inference", "Closed provider tuple, not open recursive object invalidation", "No native timing or allocation claim", "Actual Euler migrations 0; net code and maintenance savings unmeasured"]},
         "consumer_revision": {
             "time_transport_audit": consumer_time_audit(reference),
             "reference_seam": "PacketInitializedResidualEquation:45-64 uses explicit changeTime hTime for both velocity/derivative and derivative proof. Provider cache alignment is distinct from transporting these dependent types",

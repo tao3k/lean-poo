@@ -2295,3 +2295,14 @@ v1 receipt. Direct declaration/token checks do not elaborate external Lean or
 infer analytic dependencies. The new publication API always constructs full
 updates; prior view-only microbench results do not quantify this path. No new
 runtime/memory or Euler maintenance saving is asserted.
+
+* Certified narrow views
+
+Build ~lake build LeanPoo.Functional.CertifiedView~ and run
+~lake env lean Tests/FunctionalCertifiedView.lean~. Expect
+~FUNCTIONAL-CERTIFIED-VIEW-OK masks=8 requests=24 successes=4 rescued=3 contexts=3~
+and three standard-only axiom reports. Reproduce the source audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-view.json~.
+Compare the 46 local source hashes with the committed v1 receipt. Reference
+pin, direct-source reading limits and zero actual Euler migrations remain explicit.
+The public client in reusable-contracts compiles without handwritten requires.

@@ -1224,3 +1224,26 @@ The continuous-revision API removes repeated provider/cache alignment plumbing
 for negative declared transactions; it preserves all nonconsumer registry edits
 and never silently supplies a positive branch's new analytic proof. No external
 adapter/integration/PDE build, measured Euler migration or code/labor saving is added.
+
+* Narrow certified consumers without propagating broad failures
+
+At the pinned reference, ~sourceInverse_eq_mean~ and ~sourceStrain_eq_mean~ in
+~Euler/PacketSourceEquations.lean~ each use one field of
+~SourceCoefficientAgreement~. Both still rewrite the explicit time clamp.
+The new [[file:../Benchmarks/receipts/euler-certified-view-2026-10-05.json][v1 receipt]]
+hashes the source and guards the declarations, field uses and clamp obligations.
+This is direct source reading, not elaboration or transitive dependency inference.
+
+~Certified.project~ derives a smaller joint proof explicitly; the cache API
+reuses successful broad tuples and independently prepares narrow keys after a
+broad failure. Three of eight availability masks demonstrate broad failure
+with successful duplicate-key consumers. Reordered errors and empty consumers
+are checked too. The shared module/test cost is 78/120 physical lines.
+
+POOF section 1.2.1 models records as functions from names to values. This API is
+a typed projection of an already prepared closed functional interface, with
+explicit joint evidence. It supplies a bounded client interface corresponding
+to named record access; it does not establish the paper's open-recursive fix/mix
+semantics or automatic analytic dependency tracking. See the
+[[https://fare.tunes.org/files/cs/poof.pdf][author's paper]]. Actual Euler migrations
+remain 0; net lines, adapter costs and maintenance savings remain unmeasured.

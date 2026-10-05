@@ -804,3 +804,15 @@ not an Euler-wide edit-count estimate.
 - [ ] Compile reference-compatible dependent inputs and account for complete adapters.
 - [ ] Measure actual migrated proof/maintenance edits; migrations remain 0, savings unknown.
 - [ ] Measure publication-path runtime/memory costs; view-only timings cannot be reused for this claim.
+
+* Narrow a joint certificate for individual consumers
+
+- [X] Five APIs: ~Certified.project~, ~project_factories~, ~CachedPreparation.narrow~, ~narrow_of_ok~, ~narrow_eq~.
+- [X] Success reuses functions/proof; broad failure independently checks narrow keys.
+- [X] 24 requests over eight availability masks; three rescued broad failures, reordered first errors, empty and duplicate requests, three contexts.
+- [X] Three axiom reports use only propext; arbitrary false consequence rejected.
+- [X] Two reference consumers, field-use and clamp tokens are source-hash bound.
+- [X] Shared/test cost 78/120 lines; success projection scans source per requested key.
+- [ ] Supply actual Euler-dependent adapters, inclusion and analytic consequence proofs.
+- [ ] Measure complete migrated costs and avoided edits: current migrations 0, savings unknown.
+- [ ] Measure native timing/allocations; no new performance claim in this increment.

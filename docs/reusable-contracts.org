@@ -1574,3 +1574,42 @@ first transactions, 3072 second transactions, nonconsumer updates, cached errors
 collisions, two contexts and six standard-only axiom reports. Runtime fixtures
 use ~Claim=True~ to isolate revision plumbing; generic kernel contracts cover
 arbitrary joint claims. Actual Euler migration and savings remain unmeasured.
+
+* Give a small consumer a derived joint certificate
+
+Import ~LeanPoo.Functional.CertifiedView~. ~Certified.project~ takes an explicit
+key inclusion and analytic consequence, returning only the requested functions
+and their joint proof. It preserves consumer order and duplicate requests.
+~Certified.project_factories~ exposes the exact underlying projection.
+
+~CachedPreparation.narrow~ also handles cached failures. On success it projects
+retained functions and derives the narrow certificate without provider lookup,
+preparation, or factory execution. On broad failure it prepares the narrow
+interface with the supplied admission proof. A missing broad-only key must not
+poison a consumer; a differently ordered consumer must get its own first error.
+~CachedPreparation.narrow_eq~ proves complete equality with independent certified
+preparation. ~CachedPreparation.narrow_of_ok~ identifies the reuse branch.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedView
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Key]
+    (provider : Provider Context Key Value) (source keys : List Key)
+    (Claim : ∀ c, Results Value c source → Prop)
+    (Narrow : ∀ c, Results Value c keys → Prop)
+    (cache : CachedPreparation provider source Claim)
+    (included : ∀ key ∈ keys, key ∈ source)
+    (derive : ∀ ready : Certified source Claim, ∀ c,
+      Claim c (build ready.factories c) →
+      Narrow c (build (project ready.factories keys included) c))
+    (admit : ∀ f, Selected provider keys f → ∀ c, Narrow c (build f c)) :
+    (cache.narrow provider source keys Claim Narrow included derive admit).outcome =
+      prepareCertified provider keys Narrow admit :=
+  cache.narrow_eq provider source keys Claim Narrow included derive admit
+#+end_src
+
+Projection scans the retained list for each requested key. Project once before
+repeated builds; factory bodies still run on each build. Inclusion, analytic
+consequence and fallback admission are explicit proofs, erased at runtime.
+Changed context/result types still need separate transport. No analytic proof,
+open-recursive dependency closure, native speedup or allocation saving is inferred.
