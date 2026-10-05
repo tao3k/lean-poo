@@ -1298,3 +1298,55 @@ adds another name scan; this is optional and does not replace normal execution.
 No elapsed-time or allocation improvement has been measured. This API packages
 name diagnostics and their exact reuse contracts; it does not infer analytic
 provider dependencies or migrate an external Euler consumer.
+
+* Prepare a consumer transaction view with a conservative fast path
+
+Import ~LeanPoo.Functional.ScopedTransaction~. Call
+~Requirements.prepareTransaction index registry changes keys~ to obtain
+~Except String (Except Key (Factories Context Value keys))~. It returns a
+consumer view; it does not return an updated registry for publication.
+
+A negative ~transactionMayAffect~ checks all transaction names, then prepares
+from the original dictionary without constructing update prefixes or writing
+capability cells. Thus out-of-scope unknown names are still errors, including
+empty batches. A positive candidate runs the full transaction and prepares its
+result. Missing capabilities, repeated keys, caller order and all future context
+applications preserve exactly the full path's semantics. No factory executes
+during preparation. This is conservative: shadowed edits can take the positive
+path, and disjoint keys still need edit-cell scans.
+
+~prepareTransaction_eq~ rewrites to the full indexed transaction for arbitrary
+clients. ~prepareTransaction_ofRegistry~ transfers an ordinary client directly:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : C4.AncestryIndex graph root)
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) (keys : List Key)
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except String (Except Key Result) → Prop)
+    (known : Claim ((registry.patchTransaction changes).map (fun updated =>
+      (Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys).map consume))) :
+    Claim ((Functional.Requirements.prepareTransaction index
+      (Functional.IndexedRegistry.ofRegistry registry) changes keys).map
+        (fun ready => ready.map consume)) := by
+  rw [Functional.Requirements.prepareTransaction_ofRegistry]
+  cases applied : registry.patchTransaction changes <;>
+    simpa only [applied, Except.map] using known
+#+end_src
+
+The API packages update/preflight/prepare branching and its proof, reducing caller
+per-key ~require~ and branch-alignment scaffolding. It does not infer the user's
+analytic dependencies. Use full ~patchTransaction~ when publishing updated state;
+sharing one already-updated registry can amortize work across many consumers.
+
+The paired native receipt measures the whole call, including impact checks.
+Outside-name medians are 0.124/0.011 ms full/scoped; disjoint-key medians are
+0.187/0.145 ms; late unknown-name medians are 0.119/0.009 ms. Positive fallback
+is slightly slower, 0.118313/0.119542 ms. Graph/index/registration/conversion,
+inputs, factory execution and scalar validation are outside timers. Four local
+alternating pairs per workload establish no universal crossover, allocation
+saving or whole Euler speedup.

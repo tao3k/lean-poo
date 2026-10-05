@@ -114,7 +114,8 @@ def study(reference):
              "LeanPoo/Functional/IndexedOverlay.lean", "Tests/FunctionalIndexedOverlay.lean",
              "LeanPoo/Functional/IndexedRegistry.lean", "Tests/FunctionalIndexedRegistry.lean",
              "LeanPoo/Functional/IndexedTransaction.lean", "Tests/FunctionalIndexedTransaction.lean",
-             "LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean"]
+             "LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean",
+             "LeanPoo/Functional/ScopedTransaction.lean", "Tests/FunctionalScopedTransaction.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -492,6 +493,31 @@ def study(reference):
                               "Inputs/edit-list construction, hash collisions and name-scan costs remain",
                               "Running preflight then a successful transaction adds an extra name scan; optional, not default",
                               "No elapsed-time/allocation/peak-memory or external maintenance win measured"],
+            "euler_consumer_migration": False, "external_lean_compilation": False,
+        },
+        "scoped_transaction_preparation": {
+            "local_api": ["Requirements.prepareTransaction", "Requirements.prepareTransaction_eq",
+                          "Requirements.prepareTransaction_ofRegistry", "Requirements.prepareTransaction_unaffected"],
+            "scope": "Consumer-only preparation with complete full-transaction outcome semantics; no updated registry returned",
+            "premises": ["Fixed verified graph/order, context/key/result family", "Lawful BEq, Hashable and DecidableEq Key",
+                         "Conservative declared ancestor/key scope; all unknown names still checked"],
+            "local_test": {"cases": 4096, "negative_scopes": 2304, "positive_scopes": 1792,
+                           "first_name_errors": 1024, "contexts": 2, "standard_axiom_reports": 3,
+                           "independent_scalar_oracle": True, "ordinary_and_full_indexed_controls": True,
+                           "all_capability_hashes_collide": True, "generic_arbitrary_claim_client": True,
+                           "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in
+                               ["LeanPoo/Functional/ScopedTransaction.lean", "Tests/FunctionalScopedTransaction.lean",
+                                "Benchmarks/ScopedTransactionScale.lean", "Benchmarks/ScopedTransactionStudy.py"]},
+            "native_receipt": "Benchmarks/receipts/scoped-transaction-native-2026-10-05.json",
+            "native_samples": 32, "alternating_pairs_per_workload": 4,
+            "mandatory_native_cases": 8, "all_gate_native_cases": 12, "ci_jobs": 16,
+            "cost_boundary": ["Negative scope does no update table/cell writes, but performs scope scan, name preflight and original preparation",
+                              "Positive scope adds impact scan then executes full transaction",
+                              "Disjoint keys still require edit-cell scans; conservative positives may be shadowed",
+                              "Shared already-updated registries can amortize updates across consumers; this is not a replacement for publishing state",
+                              "Measured local native consumer-only calls exclude graph/index/registration/conversion/inputs/factory bodies/oracle",
+                              "No allocation/peak-memory/whole Euler/maintenance saving measurement"],
             "euler_consumer_migration": False, "external_lean_compilation": False,
         },
         "native_registry_validation": {

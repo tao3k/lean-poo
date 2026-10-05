@@ -56,6 +56,7 @@ check-merge: check-types
         LeanPoo.Functional.RegistryPatch \
         LeanPoo.Functional.Overlay \
         LeanPoo.Functional.IndexedOverlay \
+        LeanPoo.Functional.ScopedTransaction \
         LeanPoo.Functional.TransactionCheck \
         LeanPoo.Functional.IndexedTransaction \
         LeanPoo.Functional.IndexedRegistry \
@@ -282,6 +283,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalRegistryPatch.lean
     {{lean}} Tests/FunctionalOverlay.lean
     {{lean}} Tests/FunctionalIndexedOverlay.lean
+    {{lean}} Tests/FunctionalScopedTransaction.lean
     {{lean}} Tests/FunctionalTransactionCheck.lean
     {{lean}} Tests/FunctionalIndexedTransaction.lean
     {{lean}} Tests/FunctionalIndexedRegistry.lean
@@ -414,3 +416,15 @@ _check-native-registry:
     .lake/build/bin/indexedRegistryScale indexed 64 16 4 latest
     .lake/build/bin/indexedRegistryScale list 64 16 4 retained
     .lake/build/bin/indexedRegistryScale indexed 64 16 4 retained
+
+# Scoped consumer admission: both paths, negative/positive scopes and first errors.
+
+_check-native-scoped:
+    .lake/build/bin/scopedTransactionScale full outside 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped outside 64 16 4
+    .lake/build/bin/scopedTransactionScale full keys 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped keys 64 16 4
+    .lake/build/bin/scopedTransactionScale full positive 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped positive 64 16 4
+    .lake/build/bin/scopedTransactionScale full unknown 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped unknown 64 16 4

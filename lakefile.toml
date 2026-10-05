@@ -8,3 +8,7 @@ name = "LeanPoo"
 [[lean_exe]]
 name = "indexedRegistryScale"
 root = "Benchmarks.IndexedRegistryScale"
+
+[[lean_exe]]
+name = "scopedTransactionScale"
+root = "Benchmarks.ScopedTransactionScale"

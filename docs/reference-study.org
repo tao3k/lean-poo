@@ -1133,3 +1133,10 @@ exact first-error agreement and scope-based reuse. It binds 34 local files at th
 unchanged Euler pin/manifest. Registered names do not imply available analytic
 capabilities; the test retains that negative boundary. No external adapter or
 consumer is migrated, and time, allocation and maintenance savings remain unknown.
+
+The [[file:../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][scoped-transaction source snapshot]] records the consumer-only fast path,
+complete nested-error correspondence, 36 local hashes and unchanged Euler source.
+The [[file:../Benchmarks/receipts/scoped-transaction-native-2026-10-05.json][native operation receipt]] separates outside ancestry, disjoint keys, positive
+fallback and late unknown-name paths. Positive fallback overhead is retained.
+This may support user-supplied narrow analytic consumers, with no external
+adapter/integration/migration and no measured upstream source or maintenance saving.

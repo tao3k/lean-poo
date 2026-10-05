@@ -2155,3 +2155,38 @@ Preflight scans names without constructing update prefixes or traversing edit
 cells; successful check-plus-execution adds a name scan. No time/allocation gain
 or external maintenance saving is measured. Euler migration stays zero, and
 original EPG correspondence/analytic dependency inference remain open.
+
+* Scoped transaction consumer preparation
+
+~Requirements.prepareTransaction~ chooses between the full indexed transaction
+and a name-preflight/original-preparation branch using the retained ancestor/key
+scope. The negative branch builds no update prefix. ~prepareTransaction_eq~
+proves complete nested-outcome equality: scope noninterference covers successful
+results, while exact name preflight covers errors. The conversion corollary
+transfers ordinary consumers without user alignment or success assumptions.
+Three standard-axiom reports and a compiled arbitrary-claim client accompany it.
+
+The corpus checks 4,096 consumer cases: 2,304 negative and 1,792 positive scopes,
+1,024 unknown-name outcomes, four presentations, eight availability masks, eight
+plans, two roots, eight key lists and two contexts. All capability hashes collide.
+Independent scalar, full indexed and ordinary paths agree, preserving capability
+errors and duplicate-key order. Shared library/test cost is 59/144 physical lines.
+
+The [[file:../Benchmarks/receipts/scoped-transaction-native-2026-10-05.json][paired native receipt]] has 32 samples, four alternating pairs per workload,
+exact paired outcome controls, thirteen source/config hashes and a binary digest.
+For 4,096 edits over width 32 in 256 batches, outside-name full/scoped medians are
+0.123917/0.010792 ms; disjoint-key 0.186938/0.144771 ms; late unknown-name
+0.118646/0.009084 ms. Positive fallback retains a negative result:
+0.118313/0.119542 ms. The negative path eliminates update writes, but scope/name/
+preparation scans remain; disjoint keys scan the entire edit history. These are
+single-consumer operation timings, excluding factory execution and graph/index/
+registration/conversion/input/oracle/build costs. No full-application gain follows.
+Benchmark Lean/Python costs are 49/60 lines; allocations/peak memory are unmeasured.
+
+Eight native full/scoped admission cases cover both negative modes, positive
+fallback and late unknown names. Together with four registry cases, the gate
+admits twelve native cases without timing thresholds. Current inventory has 120
+independent Lean files plus four diagnostics; sixteen CI jobs remain unchanged.
+The [[file:../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]] binds 36 local files at the unchanged Euler pin/manifest.
+External migrations remain zero; net lines/hours/avoided edits remain unknown.
+Original EPG correspondence and analytic dependency inference remain open.

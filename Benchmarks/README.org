@@ -225,3 +225,26 @@ semantic cases and source/test costs of 113/95 physical lines. This is not a new
 performance receipt: preflight avoids update-prefix construction but a successful
 preflight-plus-execution adds a name scan. Timing/allocation gains and external
 savings are unmeasured. Existing batch performance receipts keep their scope.
+
+* Native scoped transaction consumer study
+
+Build with ~lake build scopedTransactionScale~ and reproduce with:
+
+#+begin_src sh
+python3 Benchmarks/ScopedTransactionStudy.py --output /tmp/scoped-transaction.json
+#+end_src
+
+The [[file:receipts/scoped-transaction-native-2026-10-05.json][native receipt]] compares full indexed transaction preparation and the scoped
+consumer API over 4,096 edits, width 32, 256 batches. Thirty-two samples retain
+four alternating pairs for each of outside-name, disjoint-key, positive and late
+unknown-name modes. Internal timers include impact scan, preflight/full updates
+and preparation; graph/index/registration/conversion/inputs/factory execution/
+scalar oracle/build are excluded. Scalar status/checksum controls match per pair.
+Thirteen source/config hashes, host architecture and native binary digest are bound.
+
+Full/scoped medians in ms: outside 0.123917/0.010792; keys 0.186938/0.144771;
+positive 0.118313/0.119542; unknown 0.118646/0.009084. Retain the positive
+regression and scope-scan cost; no universal policy or whole Euler gain is claimed.
+Shared benchmark Lean/Python costs are 49/60 lines, separate from library/test
+59/144 lines. No allocations/peak memory are measured. The [[file:receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]]
+keeps the reference pin/manifest, 36 local files and zero external migrations.

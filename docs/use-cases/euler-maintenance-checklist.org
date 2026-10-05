@@ -689,3 +689,23 @@ Actual provider/dependency declarations remain user responsibilities. The API
 has one membership query per reached batch and no capability-cell traversal;
 preflight plus successful execution adds a name scan. No runtime/allocation gain
 is claimed. The [[file:../../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][source snapshot]] preserves schema 1 and the reference manifest.
+
+* Scoped transaction consumer capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~Requirements.prepareTransaction~ | Prepare only the consumer result of planned changes | Negative scope avoids update prefixes; positive falls back; no registry publication |
+| ~prepareTransaction_eq~ | Reuse the full indexed transaction consumer proof | Exact name/capability errors and all context functions preserved |
+| ~prepareTransaction_ofRegistry~ | Move an ordinary consumer to the fast path with one rewrite | Conversion supplies alignment; no success/negative-scope caller premise |
+| ~prepareTransaction_unaffected~ | Expose the exact preflight/original-preparation branch | Unknown out-of-scope names still fail |
+| Semantic corpus | 4,096 cases, 2,304 negative, 1,792 positive, 1,024 name errors | Scalar/ordinary/full-indexed controls; colliding hashes; two contexts |
+| Shared source/test cost | 59/144 physical lines | Proofs/comments included; benchmark 49/60 lines separate |
+| Native operation evidence | 32 samples; outside-name 0.124/0.011 ms full/scoped | Positive fallback slightly slower; disjoint-key scans remain |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+A user-defined analytic tower can preview a narrow coefficient/velocity consumer
+under grouped edits without constructing unrelated updates. This packages branch
+logic and proof reuse; it does not infer dependencies or replace publishing the
+full changed registry. Sharing a full result across consumers can be cheaper.
+The [[file:../../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][source snapshot]] retains schema 1 and the reference manifest. Factory execution,
+allocation/peak-memory and whole Euler maintenance benefits are unmeasured.
