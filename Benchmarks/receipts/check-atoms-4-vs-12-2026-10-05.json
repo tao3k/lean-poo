@@ -1,0 +1,705 @@
+{
+  "schema": "lean-poo.check-atoms-study.v1",
+  "files": [
+    "Examples/ContextualFactories.lean",
+    "Examples/SharedFamily.lean",
+    "Tests/FunctionalRegistry.lean",
+    "Tests/FunctionalReindex.lean",
+    "Tests/C4Relabeling.lean",
+    "Tests/ReusableContracts.lean",
+    "Tests/FunctionalRequirements.lean",
+    "Tests/FunctionalObservation.lean",
+    "Tests/FunctionalOverlay.lean",
+    "Tests/FunctionalTransport.lean",
+    "Tests/FunctionalSharedRegistry.lean",
+    "Tests/C4Presentation.lean"
+  ],
+  "repeats": 2,
+  "samples": [
+    {
+      "repeat": 0,
+      "jobs": 4,
+      "wall_seconds": 35.96407954199822,
+      "cpu_seconds": 12.715274,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 4,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 113,
+        "selected_files": 12,
+        "wall_seconds": 35.16653379199852,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 14.804505916006747,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.650056458005565,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Presentation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Presentation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 20.847269500009133,
+            "transcript_sha256": "e10d863c6986915c36a655e0cd99ce8d05dc41092ed615ee19fa031e4361f17e",
+            "source_sha256": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 19.561789041996235,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.22032287500042,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalOverlay.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalOverlay.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.614177583003766,
+            "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431",
+            "source_sha256": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.664216709003085,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 6.230614083993714,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.135780917000375,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/FunctionalSharedRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalSharedRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.14674450000166,
+            "transcript_sha256": "570658748e2306de12de51fecbde5c80ae244dfda2087f50026811a25c38fa81",
+            "source_sha256": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00"
+          },
+          {
+            "file": "Tests/FunctionalTransport.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalTransport.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 6.24869216598745,
+            "transcript_sha256": "1b43ef2fb1a31802c5a60ae79027882dcb57e662ba4683789318c6a095d2dded",
+            "source_sha256": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.115792042008252,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "59d43fcc50a4ee73e81d8d402839f887e9b8eac1616024f412c09a1973c0dadd"
+      }
+    },
+    {
+      "repeat": 0,
+      "jobs": 12,
+      "wall_seconds": 23.30106374999741,
+      "cpu_seconds": 12.835723999999999,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 12,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 113,
+        "selected_files": 12,
+        "wall_seconds": 22.576360167004168,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 15.095382333005546,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.541333083005156,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Presentation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Presentation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 22.56034058298974,
+            "transcript_sha256": "e10d863c6986915c36a655e0cd99ce8d05dc41092ed615ee19fa031e4361f17e",
+            "source_sha256": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 21.00430362499901,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.434017166990088,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalOverlay.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalOverlay.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.395542625003145,
+            "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431",
+            "source_sha256": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.486118582994095,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.50708812501398,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.610667417000514,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/FunctionalSharedRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalSharedRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.954018624994205,
+            "transcript_sha256": "570658748e2306de12de51fecbde5c80ae244dfda2087f50026811a25c38fa81",
+            "source_sha256": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00"
+          },
+          {
+            "file": "Tests/FunctionalTransport.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalTransport.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.263937957992312,
+            "transcript_sha256": "1b43ef2fb1a31802c5a60ae79027882dcb57e662ba4683789318c6a095d2dded",
+            "source_sha256": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.229960374999791,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "59d43fcc50a4ee73e81d8d402839f887e9b8eac1616024f412c09a1973c0dadd"
+      }
+    },
+    {
+      "repeat": 1,
+      "jobs": 12,
+      "wall_seconds": 23.595908290997613,
+      "cpu_seconds": 13.021366999999996,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 12,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 113,
+        "selected_files": 12,
+        "wall_seconds": 22.816506415998447,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 16.09362433300703,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.900068458009628,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Presentation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Presentation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 22.80843570800789,
+            "transcript_sha256": "e10d863c6986915c36a655e0cd99ce8d05dc41092ed615ee19fa031e4361f17e",
+            "source_sha256": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 22.048322874994483,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.569942500005709,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalOverlay.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalOverlay.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.377013375007664,
+            "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431",
+            "source_sha256": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.1546933750069,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.067050750003546,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.343691125002806,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/FunctionalSharedRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalSharedRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.972574375002296,
+            "transcript_sha256": "570658748e2306de12de51fecbde5c80ae244dfda2087f50026811a25c38fa81",
+            "source_sha256": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00"
+          },
+          {
+            "file": "Tests/FunctionalTransport.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalTransport.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.504706292005721,
+            "transcript_sha256": "1b43ef2fb1a31802c5a60ae79027882dcb57e662ba4683789318c6a095d2dded",
+            "source_sha256": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.331625666993205,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "59d43fcc50a4ee73e81d8d402839f887e9b8eac1616024f412c09a1973c0dadd"
+      }
+    },
+    {
+      "repeat": 1,
+      "jobs": 4,
+      "wall_seconds": 37.87057383399224,
+      "cpu_seconds": 12.868327999999996,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 4,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 113,
+        "selected_files": 12,
+        "wall_seconds": 37.187963792006485,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 13.823165166002582,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.690707750007277,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Presentation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Presentation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 22.31977754199761,
+            "transcript_sha256": "e10d863c6986915c36a655e0cd99ce8d05dc41092ed615ee19fa031e4361f17e",
+            "source_sha256": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 21.43905362499936,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.703347875009058,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalOverlay.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalOverlay.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.237752959001227,
+            "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431",
+            "source_sha256": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.69896554099978,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.547601792000933,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.038440874996013,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/FunctionalSharedRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalSharedRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 12.173356125000282,
+            "transcript_sha256": "570658748e2306de12de51fecbde5c80ae244dfda2087f50026811a25c38fa81",
+            "source_sha256": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00"
+          },
+          {
+            "file": "Tests/FunctionalTransport.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalTransport.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.3256511249928735,
+            "transcript_sha256": "1b43ef2fb1a31802c5a60ae79027882dcb57e662ba4683789318c6a095d2dded",
+            "source_sha256": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.046378749990254,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "59d43fcc50a4ee73e81d8d402839f887e9b8eac1616024f412c09a1973c0dadd"
+      }
+    }
+  ],
+  "medians": {
+    "4": {
+      "wall_seconds": 36.91732668799523,
+      "cpu_seconds": 12.791801
+    },
+    "12": {
+      "wall_seconds": 23.448486020497512,
+      "cpu_seconds": 12.928545499999998
+    }
+  },
+  "transcript_parity": true,
+  "scope": "Warm selected 12-file corpus in one prepared Lake environment; excludes initial library build, diagnostics, docs, CI setup and runner queues; not a full-gate or CI speedup estimate",
+  "source_sha256": {
+    "tools/check_atoms.py": "ae4ca18c49d6663901d0a03d587a1bf29c39802095f19d1447ec8f385f3954f4",
+    "Justfile": "59d43fcc50a4ee73e81d8d402839f887e9b8eac1616024f412c09a1973c0dadd",
+    "Benchmarks/CheckAtomsStudy.py": "d33ba0837fa1a177be7b74b66f9d2b3ee7b00e0238f92537dc1bff72d0ded130",
+    "Examples/ContextualFactories.lean": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5",
+    "Examples/SharedFamily.lean": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7",
+    "Tests/FunctionalRegistry.lean": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e",
+    "Tests/FunctionalReindex.lean": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0",
+    "Tests/C4Relabeling.lean": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb",
+    "Tests/ReusableContracts.lean": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b",
+    "Tests/FunctionalRequirements.lean": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52",
+    "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b",
+    "Tests/FunctionalOverlay.lean": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050",
+    "Tests/FunctionalTransport.lean": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3",
+    "Tests/FunctionalSharedRegistry.lean": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00",
+    "Tests/C4Presentation.lean": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44"
+  },
+  "host": {
+    "logical_cpus": 12,
+    "physical_memory_bytes": 34359738368
+  }
+}

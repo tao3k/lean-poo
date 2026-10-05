@@ -135,3 +135,14 @@ contexts. A 256-to-1 same-key override count is structural evidence only. Linear
 filter/query costs, potentially quadratic all-distinct compilation, and unchanged
 base costs are explicit. Schema 1, reference pin and manifest remain unchanged;
 actual Euler savings and runtime gains remain unmeasured.
+
+
+The [[file:receipts/check-atoms-4-vs-12-2026-10-05.json][4/12-worker study]] compares the same twelve warm Lean files over two alternating
+pairs. Wall medians are 36.917/23.448 s, CPU 12.792/12.929 s, with exact transcript
+and source parity. This selected workload improves 1.57 times; full-gate/CI and
+kernel speedup remain separate claims. ~CheckAtomsStudy.py~ accepts explicit
+worker counts and files while keeping its old defaults and schema 1.
+The [[file:receipts/check-thread-policy-2026-10-05.json][thread-policy negative receipt]] shows no consistent one-thread improvement;
+Lean's internal thread policy remains unchanged. ~tools/check_gate.py~ emits
+complete phase receipts on request, launches independent checks after successful
+shared preparation, and caps automatic file workers by CPU/memory capacity.

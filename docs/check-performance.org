@@ -4,8 +4,8 @@
 
 ~just check~ enters one Lake environment, builds the complete public library
 once, checks C4's source-owned types, and runs 113 independent example/contract
-files with four workers, followed by four bounded diagnostic files and Org
-documentation. The source commands live in the Justfile; the Python runner
+files with automatically capped workers, alongside four bounded diagnostic
+files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
 CI does not maintain a second file list. Standalone public
 ~check-*~ recipes retain their build prerequisites. The full gate avoids their
@@ -66,9 +66,9 @@ active process groups and prevents pending files from launching.
 Lean's internal parallel work does not make separate shell invocations run
 concurrently. The corrected serial complete gate on this host took 1085.70 s
 wall and 115.04 s CPU. This exposes a large wall/CPU gap but does not identify
-its operating-system or host cause. Four independent workers remove the
-file-by-file scheduling dependency; CI schedules twelve shards after the
-library is ready. GitHub runner availability and artifact/setup costs still
+its operating-system or host cause. Independent workers remove the file-by-file scheduling dependency. The local
+gate now selects up to twelve workers from CPU/physical-memory capacity; CI
+schedules twelve shards after the library is ready. GitHub runner availability and artifact/setup costs still
 bound the actual concurrency and end-to-end improvement.
 
 The [[file:../Benchmarks/receipts/check-atoms-2026-10-05.json][paired atom study]] runs the same eight warm Lean files with one and four
@@ -131,3 +131,54 @@ Declaration, schema merge, memoization, revision, dispatch, layout, and mutable
 prototype benchmarks have their own recipes. Use unchanged inputs, semantic
 checks, and repeated A/B measurements before changing those algorithms.
 Startup improvements cannot be reported as runtime factory or resolver gains.
+
+* Resource-capped local concurrency and phase receipts
+
+The [[file:../tools/check_gate.py][complete-gate dispatcher]] builds the library, checks source-owned types and
+runs Python supervision admission tests. Only after all preparation succeeds,
+it starts independent atom, bounded-diagnostic and Org phases concurrently.
+Every phase emits actual start/completion records with exit status and elapsed
+time. All phases must succeed; a failed preparation prevents check launches,
+and failed checks or launch errors cannot be hidden by successful siblings.
+Interrupting the gate terminates active phase process groups; the atomic runner
+also terminates its own children. No synthetic heartbeat or relaxed timeout is
+introduced. Five gate admission tests join the existing four runner tests.
+
+The default file-worker count is the minimum of logical CPUs, twelve and a
+physical-memory budget of 2 GiB per worker after reserving 4 GiB for the host
+and diagnostics; the minimum is one. Unknown physical memory permits one
+worker. This is a conservative capacity rule, not a free-memory reservation or
+an adaptive load controller. ~LEAN_POO_CHECK_JOBS~ can explicitly select a
+positive count for a constrained host. This 12-core, 32-GiB host selects twelve.
+Lean's own thread policy and all canonical file commands remain unchanged.
+
+The [[file:../Benchmarks/receipts/check-atoms-4-vs-12-2026-10-05.json][four/twelve-worker receipt]] uses identical twelve warm Lean files, alternating
+4/12 then 12/4 over two repetitions, with exact source/output/status parity.
+
+| Selected twelve-file workload | Wall median s | CPU median s |
+|-------------------------------+---------------+--------------|
+| Four workers | 36.917 | 12.792 |
+| Twelve workers | 23.448 | 12.929 |
+
+This selected workload is 1.57 times faster (36.5% less wall time), with similar
+CPU cost. Build, remaining files, diagnostic/docs phases and CI runner/setup
+costs are excluded; this is not a measured full-gate or Lean kernel speedup.
+The benchmark now accepts explicit job counts and selected files while retaining
+its prior defaults, schema 1, failure checks and transcript-parity requirement.
+
+The [[file:../Benchmarks/receipts/check-thread-policy-2026-10-05.json][thread-policy negative result]] retains two alternating single-file comparisons.
+Default-thread walls were 14.641 and 14.018 seconds; single-thread walls were
+14.399 and 15.060 seconds, with identical output. There is no consistent gain,
+so Lean's thread policy is retained. A wall/CPU gap identifies waiting but does
+not by itself identify its operating-system/import/scheduling cause.
+
+For a complete current phase receipt (JSON, no repository log):
+
+#+begin_src sh
+LEAN_POO_CHECK_RECEIPT=/tmp/lean-poo-check-gate.json just check
+#+end_src
+
+Receipts keep per-phase wall times, total child CPU, worker count, exact exits
+and orchestration hashes under schema 1. Performance fixtures stay in JSON;
+transient raw output belongs in TMP. The mandatory complete pre-commit gate and
+sixteen exact-head CI jobs remain required.

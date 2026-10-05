@@ -1,9 +1,10 @@
 #+TITLE: LeanPoo tests
 
 The local complete gate runs the 113 independent Lean example/contract files
-with four workers from the canonical Justfile recipes. CI partitions those
+with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
-files run separately. Python tests in ~tools/tests~ verify exact shard coverage,
+files run concurrently with the local atom and document phases after shared
+preparation, and in a separate CI job. Python tests in ~tools/tests~ verify exact shard coverage,
 preserved bounded arguments, failure/timeout/launch-error propagation and
 interruption cleanup. Semantic assertions and proofs remain in Lean.
 

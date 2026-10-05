@@ -1941,3 +1941,13 @@ The new schema-1 source receipt records 110 module lines and 117 test lines,
 including proofs/comments and excluding caller adapters. Euler
 adapters, avoided source edits, net lines and maintenance hours remain unmeasured;
 the pinned external checkout is unchanged and reference-only.
+
+
+The complete local validation gate now exposes phase timings and runs independent
+atom, diagnostic and document phases concurrently after successful preparation.
+Resource-capped file concurrency selects twelve workers on this 12-core/32-GiB
+host. Same-source/output paired twelve-file measurements compare four/twelve
+workers at 36.917/23.448-second medians; this is scheduling evidence for that
+selected corpus, not a Lean kernel/C4 algorithm speedup. Negative one-thread
+measurements are retained. Canonical proofs, bounded checks, complete pre-commit
+validation and all sixteen CI jobs remain admission requirements.

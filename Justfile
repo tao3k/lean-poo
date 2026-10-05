@@ -382,11 +382,7 @@ check:
 
 [private]
 _check:
-    lake build
-    {{lean}} LeanPoo/C4/Types.lean
-    python3 -m unittest discover -s tools/tests -p 'test_*.py'
-    python3 tools/check_atoms.py --jobs 4
-    just --set lean "{{lean}}" _check-diagnostics check-docs
+    python3 tools/check_gate.py
 
 # Build the complete Lean library.
 build: check

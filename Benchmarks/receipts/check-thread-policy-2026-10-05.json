@@ -1,0 +1,39 @@
+{
+  "schema": "lean-poo.check-thread-study.v1",
+  "file": "Tests/FunctionalOverlay.lean",
+  "source_sha256": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050",
+  "repeats": 2,
+  "samples": [
+    {
+      "repeat": 0,
+      "threads": null,
+      "wall_seconds": 14.640939208999043,
+      "cpu_seconds": 1.036579,
+      "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431"
+    },
+    {
+      "repeat": 0,
+      "threads": 1,
+      "wall_seconds": 14.399323916004505,
+      "cpu_seconds": 0.991017,
+      "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431"
+    },
+    {
+      "repeat": 1,
+      "threads": 1,
+      "wall_seconds": 15.059860542009119,
+      "cpu_seconds": 0.9696629999999997,
+      "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431"
+    },
+    {
+      "repeat": 1,
+      "threads": null,
+      "wall_seconds": 14.018046958008199,
+      "cpu_seconds": 1.0127560000000002,
+      "transcript_sha256": "de2c7f5e112e50e21d22e49717e06dc161fcbdb70ca6e00b356cd29ffa7b7431"
+    }
+  ],
+  "transcript_parity": true,
+  "decision": "Keep default Lean thread policy; single-thread samples show no consistent wall improvement",
+  "scope": "One warm Lean file, paired alternating default/one-thread runs; excludes gate/build and is not a general kernel performance benchmark"
+}
