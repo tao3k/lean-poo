@@ -1134,10 +1134,10 @@ the edited one. The ordinary batch's sequential semantics, repeated-key last
 write and removals therefore transfer exactly. The tests check old snapshots,
 base retention, first errors and independent consumer results with colliding keys.
 
-The ~IndexedRegistry~ type currently exposes individual batches, not one atomic
-multi-name transaction call: successive calls have separate results and prior
-successful states remain available when a later call fails. ~ProviderRegistry~'s
-pure transaction remains available with its previously documented costs. Hash
+For atomic multi-name changes, import ~Functional.IndexedTransaction~ and use
+~registry.patchTransaction changes~ as described below. Individual batch calls
+still have separate results and expose prior successful states on later errors.
+Hash
 collisions/resizing/shared copies, base costs and conservative footprint scans
 remain. Retaining an already wrapped input base does not compact it. Performance
 of named updates is measured separately from standalone overlay measurements;
@@ -1159,3 +1159,51 @@ current cells and retained old observations under both representations/policies.
 Performance thresholds are excluded from CI. This strengthens execution evidence
 for the existing ~patchBatch/dictionary~ APIs and their kernel contracts; it does
 not change graph/type/dependency premises or infer Euler proof equivalence.
+
+* Atomic transactions on retained indexed registries
+
+Import ~LeanPoo.Functional.IndexedTransaction~. Use the same ~RegistryEdit~ list
+and ~Requirements.transactionMayAffect~ predicate as ordinary registry clients.
+Call ~state.patchTransaction changes~ once and publish only its ~.ok updated~
+result. An empty transaction returns the original state. Repeated names execute
+in caller order; an unknown name, even with an empty batch, stops with that name.
+A successful prefix is never returned on failure. The original immutable state
+and prepared views remain available; this is pure return-value atomicity.
+
+Unlike chaining individual batches in caller code, this API packages sequencing
+and first-error handling. ~patchTransaction_base~ proves that every original base
+is retained. ~patchTransaction_scope~ preserves the complete name membership.
+Each reached successful batch does one name lookup/insertion and indexed writes.
+There is no full-table snapshot, graph rebuild or factory invocation in the path.
+Hash collisions, persistent copies and retaining old versions remain costs.
+
+For a successful transaction with negative ancestor/key read scope, reuse an
+arbitrary consumer claim with one rewrite:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : C4.AncestryIndex graph root)
+    (state updated : Functional.IndexedRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) (keys : List Key)
+    (applied : state.patchTransaction changes = .ok updated)
+    (unaffected : Functional.Requirements.transactionMayAffect index keys changes = false)
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except Key Result → Prop)
+    (known : Claim ((Functional.Requirements.prepare
+      (Functional.assemble index.order state.dictionary) keys).map consume)) :
+    Claim ((Functional.Requirements.prepare
+      (Functional.assemble index.order updated.dictionary) keys).map consume) := by
+  rw [Functional.Requirements.prepare_indexedTransaction_of_unaffected
+    index state changes keys applied unaffected]
+  exact known
+#+end_src
+
+This covers all contexts, repeated consumer keys and first missing-key errors.
+It removes caller per-batch proof chaining and per-key ~require~ scaffolding for
+unaffected consumers. A positive candidate still needs explicit alignment;
+negative scope does not suppress unknown-name errors. The reference Euler tower
+could group named analytic-provider changes before reusing an unaffected
+consumer, once a user supplies typed providers and actual dependency scopes.
+No such external adapter or consumer migration is implemented here.

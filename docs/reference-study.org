@@ -1112,3 +1112,10 @@ source/test hashes. Four engine/lifetime receipts strengthen local execution
 validation; they do not migrate any Euler consumer or measure upstream lines,
 hours or avoided proof edits. Benchmark code costs and unchanged library API
 boundaries are recorded separately.
+
+The [[file:../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][indexed-transaction source snapshot]] records the added atomic indexed API,
+base/scope laws and whole-consumer reuse proof, binding 32 local source/test files.
+Reference source and manifest remain unchanged. This is a potential workflow for
+user-supplied analytic provider changes, with zero actual Euler migrations and
+unmeasured source/maintenance savings. Local semantic evidence and shared costs
+are recorded separately from previous batch performance measurements.

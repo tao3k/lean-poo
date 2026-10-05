@@ -631,3 +631,23 @@ updates give 0.306/0.266 ms. Same-source interpreter updates still regress;
 native latest updates show a small regression. Advice remains engine/workload/
 lifetime-specific. No allocations/peak memory or whole Euler speedup is measured.
 The [[file:../../Benchmarks/receipts/euler-native-registry-2026-10-05.json][schema-1 source snapshot]] preserves the unchanged reference pin/manifest.
+
+* Indexed transaction capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~IndexedRegistry.patchTransaction~ | Publish several named changes only after all succeed | First unknown name returns error; no prefix state returned |
+| ~patchTransaction_base~, ~patchTransaction_scope~ | Retain original bases and declaration membership across repeated names | Kernel proofs; no full-table materialization |
+| ~prepare_indexedTransaction_of_unaffected~ | Reuse an entire unaffected consumer claim with one rewrite | Successful transaction and explicit negative ancestor/key scope required |
+| Reused ~RegistryEdit~, ~transactionMayAffect~ | Share existing change representation and impact checks | No second edit format or handwritten per-key ~require~ |
+| Semantic corpus | 192 successes, 64 first errors, 3072 queries, 1920 negative | Two contexts; colliding hashes; scalar/ordinary controls; old snapshots |
+| Shared library/test cost | 101/159 physical lines | Proofs/comments included; user providers/dependency scopes are extra |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+For a user-defined analytic tower, group coefficient/velocity/provider changes
+into a transaction, then reuse unaffected prepared consumers using its scope
+check and one theorem. This packages error sequencing and proof chaining; the
+user must still specify actual dependencies and align affected consumers.
+Separate batch calls retain their earlier behavior. No new transaction timing,
+allocation or peak-memory study is claimed. The [[file:../../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][source snapshot]] retains schema 1
+and the unchanged reference manifest. Original EPG/analytic closure remains open.

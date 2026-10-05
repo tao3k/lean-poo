@@ -198,3 +198,12 @@ earlier interpreter receipts remain historical.
 lake build indexedRegistryScale
 python3 Benchmarks/IndexedRegistryStudy.py --engine native --policy retained --output /tmp/registry-native.json
 #+end_src
+
+* Indexed transaction source boundary
+
+[[file:receipts/euler-indexed-transaction-2026-10-05.json][Indexed transaction source snapshot]] records the new library API, six kernel
+reports and independent scalar/ordinary semantic controls. It retains schema 1
+and the unchanged Euler pin/manifest, with 32 local source/test hashes. This is
+not a new timing receipt: earlier indexed-registry measurements cover named
+batches and queries. Transaction allocations, peak memory and external savings
+remain unmeasured; source/test cost is 101/159 physical lines.

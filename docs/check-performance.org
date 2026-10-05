@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 117 independent example/contract
+once, checks C4's source-owned types, and runs 118 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 121 unique example/test files, including the typed
+The current gate covers 122 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -286,7 +286,17 @@ outside timing. Allocated bytes and peak live storage are not measured.
 
 The complete gate now builds ~LeanPoo~ and ~indexedRegistryScale~ once. A fourth
 independent post-preparation phase runs four native semantic cases covering both
-representations and retention policies, with no timing threshold. All 117 atomic
+representations and retention policies, with no timing threshold. All 118 atomic
 Lean files, four bounded diagnostic files and nine Python supervision tests remain.
 CI builds the same executable and admits those four cases in the required
 diagnostics job; the existing sixteen-job aggregate is preserved.
+
+* Indexed transaction admission
+
+The atomic inventory now includes ~Tests/FunctionalIndexedTransaction.lean~:
+118 independent files plus four bounded diagnostic files (122 standalone files).
+The dispatcher distributes the new contract through its existing twelve shards;
+no serial global pass or new CI job is added. Four native named-batch admission
+cases and nine Python supervision tests remain part of the full gate.
+Transaction semantics are checked by the Lean corpus; previous native timings
+are evidence for batches/queries and do not measure transaction performance.
