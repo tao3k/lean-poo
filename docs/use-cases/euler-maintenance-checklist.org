@@ -524,3 +524,24 @@ API and retain a whole-consumer proof. This is a reusable local mechanism; it
 does not establish that the inspected Euler proofs have this provider/edit
 shape or that they can discard analytic premises. Provider adapters and actual
 external savings remain separate measurements.
+
+* Shared-registry batch capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-batch-2026-10-05.json][registry-batch snapshot]] retains schema 1 and the same reference pin/manifest.
+
+| New API/capability | Reusable maintenance obligation | Cost or remaining gate |
+|-------------------+---------------------------------+------------------------|
+| ~ProviderRegistry.patchBatch~ | One call installs a typed normalized edit batch at a known provider | One lookup/insertion; no graph fold or other-provider acquisition |
+| ~patchBatch_at~, ~patchBatch_dictionary~ | Exact sequential-reference provider and whole-dictionary agreement | Same Context/Key/result families; supplied factories keep their contracts |
+| ~patchBatch_other~, ~patchBatch_scope~, ~patchBatch_untouched~, ~patchBatch_nil~ | Other providers/unedited keys/name membership preserved; empty known-name identity | Unknown names rejected even for empty batch; no physical table identity |
+| ~batchMayAffect~, ~prepare_patchBatch_of_unaffected~ | Reuse whole unaffected consumer proof without per-key ~require~ or alignment | Explicit read scopes; candidate truth can be shadowed/blocked |
+| Local semantic evidence | 960 batches, 192 unknown errors, 15360 queries; 10368 negative scopes | Two contexts, four presentations; generic kernel proofs cover all contexts |
+| Local structural case | 256 same-key edits: registry lookup/insertion count 256→1 | Definition-level counts; no runtime/allocated-byte measurement |
+| Shared source cost | 150 module lines and 139 test lines | Proofs/comments included; caller adapters excluded |
+| Retained costs | List filtering/allocation, footprint scans and possible hash copies | New batches can retain old base-overlay layers |
+| Euler avoided edits/net lines/hours | Still unmeasured | Reference only; no adapters, integration or external compilation |
+
+The practical call removes client-side per-edit error plumbing and generated
+untouched-provider alignment. It does not establish that Euler's analytic
+consumers have declared this capability shape, or turn lexical source mentions
+into measured avoided proof maintenance. Those upstream obligations remain open.

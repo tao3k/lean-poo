@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 113 independent Lean example/contract files
+The local complete gate runs the 114 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -100,3 +100,11 @@ and an independent last-cell oracle: 32 histories, 344 updates, 5504 prefix
 and 512 final batch observations at two contexts. It compiles a generic
 whole-consumer claim client, retains unique-key invariants, checks a 256-to-1
 same-key structural case and prints four standard-axiom reports.
+
+[[file:FunctionalRegistryBatch.lean][FunctionalRegistryBatch]] checks 960 shared-registry batches, 192 unknown-name
+errors and 15360 impact queries across four graph presentations, eight masks,
+five names, six recipes, two roots and eight lists. An independent last-cell
+oracle checks results/first errors at two contexts; 10368 negative scopes
+preserve consumers. The test compiles an arbitrary-claim client and prints ten
+standard-axiom reports, including empty-batch identity and exact dictionary
+agreement. A 256-edit recipe exercises normalization through installation.

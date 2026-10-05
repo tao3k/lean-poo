@@ -970,3 +970,56 @@ checklist observations at two contexts. A 256-edit same-key history stores one
 override; this is a structural reduction in stored edits and potential key
 checks, not a runtime speedup or Euler source saving. No arbitrary transaction,
 provider-name migration or analytic dependency equivalence is inferred.
+
+* Apply a normalized capability batch directly to a shared registry
+
+Import ~LeanPoo.Functional.RegistryBatch~. Call ~registry.patchBatch name edits~
+with the same typed ~CapabilityEdit~ list used by ProviderOverlay. The API
+checks the provider name once, compiles a normalized overlay over its retained
+original provider, and installs it with one insertion. No handwritten dictionary
+branch, provider-alignment proof, graph declaration fold or factory invocation
+is needed. Unknown names return that exact name as error, including an empty
+batch. Known-name empty batches retain all original dictionary functions.
+
+A successful batch preserves provider-name membership, every other provider's
+entire function, and every unedited key even at the target provider. Later
+same-key edits win; explicit removal stays distinct from base fallback.
+~patchBatch_dictionary~ supplies whole-dictionary equality to the sequential
+single-provider reference. This is equality of selected functions at all
+contexts, not physical hash-table identity or a new mathematical equivalence
+between unrelated factories.
+
+Retain each root's ancestry index once. Query
+~Requirements.batchMayAffect index keys name edits~ for each consumer. False
+means either the provider is outside that root or its requested key list is
+disjoint from the batch footprint. Use ~prepare_patchBatch_of_unaffected~ to
+reuse exact prepared tuples, first errors and arbitrary consumer claims by one
+rewrite. The generic compiled client in FunctionalRegistryBatch requires no
+per-key ~require~ or untouched-provider alignment proofs. The explicit
+~prepare_patchBatch_stable~ theorem also accepts the negative scope premise.
+A true query is conservative: earlier providers or missing keys may hide edits.
+
+#+begin_src lean
+def update {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (name : String) (edits : List (Functional.CapabilityEdit Context Key Value)) :=
+  registry.patchBatch name edits
+#+end_src
+
+The registry operation makes one name lookup/insertion for an entire batch,
+versus one per edit for repeated known-name ~registry.patch~ calls. The local
+256-edit same-key case therefore has one rather than 256 lookup/insertion
+operations by definition, and its normalized overlay has one override. This
+is structural operation-count evidence; no elapsed-time or allocated-byte gain
+has been measured. Compilation still filters/allocates lists and can be
+quadratic with all-distinct keys. A batch impact query scans the original edit
+list and requested keys. Persistent hash storage may copy under sharing.
+
+Normalization covers the supplied batch. Applying another batch over an already
+patched provider retains that prior provider as its base, so repeated batches
+can accumulate base-overlay layers. Keep a saved original registry/provider
+and compile the complete intended history when that preservation policy fits
+other changes. The API does not collapse arbitrary old closures, provide a
+multi-name transaction or infer analytic dependency closure. Graph/order and
+context/key/result families remain fixed. Euler adapters and actual maintenance
+savings remain unmeasured.

@@ -1067,3 +1067,12 @@ explicit edit-list normalization gate after the algebraic update identities.
 It does not compact arbitrary base closures. List scans and allocation remain
 construction costs; no runtime or Euler maintenance saving is inferred from
 stored override counts.
+
+
+RegistryBatch closes installation of one explicit normalized capability batch
+at an existing shared-registry name. Exact dictionary/whole-checklist contracts
+and negative ancestry/footprint queries remove manual untouched-provider
+alignment for consumers. The single-name batch uses one lookup/insertion and
+preserves graph/order/result families. It does not flatten earlier base overlays
+or infer multi-name transaction/analytic dependency equivalence. The reference
+Euler checkout remains unchanged and outside build/CI dependencies.

@@ -1951,3 +1951,37 @@ workers at 36.917/23.448-second medians; this is scheduling evidence for that
 selected corpus, not a Lean kernel/C4 algorithm speedup. Negative one-thread
 measurements are retained. Canonical proofs, bounded checks, complete pre-commit
 validation and all sixteen CI jobs remain admission requirements.
+
+* Shared registry installation of normalized capability batches
+
+~Functional.RegistryBatch~ implements ~ProviderRegistry.patchBatch~: a checked
+existing provider name, one normalized typed edit batch and one registry
+insertion. Kernel proofs establish exact sequential provider-edit semantics,
+whole-dictionary agreement, empty-batch identity at known names, unchanged
+provider-name scope, unchanged other providers and untouched typed keys.
+Unknown names fail even with no edits. No graph/order reconstruction or factory
+invocation occurs during installation.
+
+~Requirements.batchMayAffect~ combines retained ancestry with overlap of an
+explicit edit footprint and caller checklist. Its negative result supplies
+whole-preparation equality, including first errors and arbitrary old consumer
+claims, without per-key or provider-alignment premises. True remains a candidate,
+not precise semantic/analytic dependency closure. A compiled generic client
+uses one rewrite. Ten theorem axiom reports contain only Lean standard axioms.
+
+The independent last-cell/availability oracle covers four graph presentations,
+eight masks, five providers, six batch recipes (including empty, deletion,
+mixed keys, repeated updates and 256 same-key edits), two verified roots and
+eight key lists. All 960 batches, 192 unknown-name rejections and 15360 impact
+queries pass at contexts 0 and 7. The 10368 negative scopes preserve original
+consumer results; 4992 queries are candidates. Old snapshots remain usable.
+
+Shared source cost is 150 module lines and 139 test lines, including
+proofs/comments and excluding caller adapters. A 256-edit same-key batch makes
+one name lookup/insertion rather than 256 repeated registry patch operations;
+this is source-level structure, not a measured runtime or allocated-byte gain.
+Normalized list filtering, footprint scans, persistent hash copies and retained
+base costs remain. Normalizing a batch does not flatten prior base overlays or
+supply a general multi-name transaction. The schema-1 source snapshot retains
+the unchanged Euler pin/manifest; actual avoided edits, net lines and hours
+remain unmeasured.

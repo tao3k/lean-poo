@@ -146,3 +146,11 @@ The [[file:receipts/check-thread-policy-2026-10-05.json][thread-policy negative 
 Lean's internal thread policy remains unchanged. ~tools/check_gate.py~ emits
 complete phase receipts on request, launches independent checks after successful
 shared preparation, and caps automatic file workers by CPU/memory capacity.
+
+
+The [[file:receipts/euler-registry-batch-2026-10-05.json][registry-batch snapshot]] binds normalized shared-registry batch installation and
+negative-impact consumer contracts to exact local hashes. The corpus has 960
+batches, 192 unknown-name errors and 15360 queries, with 10368 negative scopes.
+A 256→1 name lookup/insertion comparison is structural source evidence, not a
+runtime or external source-saving estimate. List scans, hash copies and retained
+base layers remain costs; schema 1 and the reference manifest remain unchanged.
