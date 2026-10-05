@@ -892,3 +892,31 @@ provider-wrapper chains, which this API does not compact. An impact query adds
 an ancestry hash lookup and a linear checklist membership check. No constant-
 time, end-to-end speedup or factory-result cache is claimed. Preparing factories
 once avoids repeated dictionary/key selection during context application.
+
+* Normalize edits and restore saved capabilities
+
+The same RegistryPatch import supplies ~Provider.patchKey_overwrite~: two
+edits of the same key equal just the final edit of the original provider.
+~patchKey_commute~ allows distinct keys to be reordered, retaining their
+individual dependent result families. ~patchKey_restore~ proves that writing
+the original cell back is an identity. These are function equalities across
+all contexts, including absent capabilities. Use them to prove an explicitly
+normalized edit plan. They do not compact a closure already constructed at
+runtime, nor define a general batch optimizer.
+
+For rollback, retain the original cell ~registry.dictionary name key~ (or the
+original registry), then call ~edited.patch name key savedCell~. A successful
+initial edit guarantees the rollback name still exists, by
+~ProviderRegistry.patch_restore_exists~. ~patch_restore~ proves exact dictionary
+equality with the original, without asserting physical hash-table identity.
+~Requirements.prepare_patch_restore~ restores any root's whole checklist,
+including first errors. A generic compiled client in FunctionalRegistryPatch
+transports an arbitrary old consumer claim by one rewrite; no impact query,
+per-key requirement rewrite, or new factory invocation is needed for its proof.
+
+The rollback must immediately undo that one edit, or the client must separately
+prove that intervening edits are preserved. Restoring one cell is not a rollback
+of arbitrary concurrent changes. Construction performs another persistent hash
+lookup/insertion and adds another key-check wrapper; retain original prepared
+factories or normalize from the saved original provider to avoid that chain.
+No constant-time or measured performance improvement is asserted.

@@ -89,3 +89,7 @@ results and first errors against an independent oracle at two contexts. The
 positive-query shadowing boundary remains explicit; generic negative-impact
 clients reuse arbitrary old consumer claims. Eight axiom reports use only
 standard dependencies.
+
+FunctionalRegistryPatch additionally executes 960 immediate original-cell
+rollbacks over the same 15360 checklist queries at two contexts, and compiles a
+generic arbitrary-claim rollback client plus six update-algebra axiom reports.

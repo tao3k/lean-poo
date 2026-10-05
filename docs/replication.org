@@ -1884,10 +1884,29 @@ Euler fanout measurement. The explicit shadowing case has positive candidate
 impact and unchanged selected output. Eight axiom reports contain only standard
 ~propext~, ~Classical.choice~ and ~Quot.sound~ dependencies.
 
-The source cost is a 135-line shared module plus a 146-line test. A patch has one
+The original patch snapshot cost is a 135-line shared module plus a 146-line test. A patch has one
 registry lookup/insertion rather than a declaration fold/provider reacquisition;
 hash storage may still copy under sharing. Key-equality checks and repeated
 wrapper chains add lookup costs; impact queries scan the requested key list.
 There is no new runtime benchmark, cache compaction or upstream migration.
 Original EPG equivalence, arbitrary graph extension, changed context families
 and actual external maintenance savings remain separate obligations.
+
+* Capability update algebra and exact rollback
+
+RegistryPatch now proves same-key overwrite, distinct-key commutation and
+original-cell identity for arbitrary dependent capability families. Successful
+registry edits retain their name, so an immediate original-cell rollback exists.
+Its dictionary is extensionally the original dictionary. Whole checklist
+preparation equality transports an arbitrary consumer claim through rollback,
+with no manual capability-by-capability alignment premises. This closes the
+single-cell rollback and provider-edit algebra obligations, not a general
+transaction or analytic dependency theorem.
+
+The existing corpus now executes all 960 immediate rollbacks and compares their
+15360 root/checklist results at both contexts with original selections and first
+errors. Six additional axiom reports check the update/rollback theorems. Source
+cost adds 67 module lines and 38 test lines (202 and 182 total), recorded in
+the new schema-1 rollback snapshot. Extensional update
+identities support a caller-constructed normalized plan; no automatic batch
+optimizer, closure compaction, runtime speedup or Euler migration is claimed.

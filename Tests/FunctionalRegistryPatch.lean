@@ -96,6 +96,8 @@ private def oracle (mask : Nat) (names : List String) (name : String) (edited : 
           for name in names do
             let .ok updated := registry.patch name key (replacement provided key) |
               throw (IO.userError "declared provider rejected")
+            let .ok restored := updated.patch name key (registry.dictionary name key) |
+              throw (IO.userError "rollback rejected a retained name")
             for target in names ++ ["Missing"] do
               unless updated.entries.contains target == registry.entries.contains target do
                 throw (IO.userError "provider-name scope changed")
@@ -108,6 +110,8 @@ private def oracle (mask : Nat) (names : List String) (name : String) (edited : 
                 let mut changed := false
                 for c in [0, 7] do
                   let before := observe (assemble index.order registry.dictionary) keys c
+                  unless sameResults before (observe (assemble index.order restored.dictionary) keys c) do
+                    throw (IO.userError "rollback differs from original selection/first error")
                   let after := observe (assemble index.order updated.dictionary) keys c
                   unless sameResults after (oracle mask index.order.output name key provided keys c) do
                     throw (IO.userError "edited result/first-error differs from oracle")
@@ -133,7 +137,7 @@ private def oracle (mask : Nat) (names : List String) (name : String) (edited : 
       sameResults (observe (assemble order registry.dictionary) [.quantity] 7)
         (observe (assemble order updated.dictionary) [.quantity] 7) do
     throw (IO.userError "candidate impact incorrectly means actual change")
-  IO.println s!"FUNCTIONAL-REGISTRY-PATCH-OK patches={patches} queries={queries} unaffected={unaffected} candidates={affected} observedChanges={observedChanges} rejected={rejected} contexts=2"
+  IO.println s!"FUNCTIONAL-REGISTRY-PATCH-OK patches={patches} queries={queries} unaffected={unaffected} candidates={affected} observedChanges={observedChanges} rejected={rejected} rollbacks={patches} contexts=2"
 
 #print axioms ProviderRegistry.patch_missing
 #print axioms ProviderRegistry.patch_at
@@ -144,3 +148,35 @@ private def oracle (mask : Nat) (names : List String) (name : String) (edited : 
 #print axioms Requirements.mayAffect_iff
 #print axioms Requirements.prepare_patch_of_unaffected
 end LeanPoo.Tests.FunctionalRegistryPatch
+
+namespace LeanPoo.Tests.FunctionalRegistryRollback
+open Functional
+universe u v w x
+
+-- An arbitrary client reuses its old proof after rollback; no per-key obligations.
+example {Context : Type u} {Key : Type v} [DecidableEq Key] {Value : Context → Key → Type w}
+    {Result : Type x} (order : C4.VerifiedOrder graph root)
+    (registry edited restored : ProviderRegistry Context Key Value) (name : String) (key : Key)
+    (replacement : Option (Factory Context (fun c => Value c key))) (keys : List Key)
+    (edit : registry.patch name key replacement = .ok edited)
+    (restore : edited.patch name key (registry.dictionary name key) = .ok restored)
+    (consume : Requirements.Factories Context Value keys → Result) (Claim : Except Key Result → Prop)
+    (known : Claim ((Requirements.prepare (assemble order registry.dictionary) keys).map consume)) :
+    Claim ((Requirements.prepare (assemble order restored.dictionary) keys).map consume) := by
+  rw [Requirements.prepare_patch_restore order registry edited restored name key replacement keys edit restore]
+  exact known
+
+-- Theorems cover arbitrary dependent result families, removal and addition.
+example {Context : Type u} {Key : Type v} [DecidableEq Key] {Value : Context → Key → Type w}
+    (provider : Provider Context Key Value) (key : Key)
+    (replacement : Option (Factory Context (fun c => Value c key))) :
+    (provider.patchKey key replacement).patchKey key (provider key) = provider := by
+  rw [Provider.patchKey_overwrite, Provider.patchKey_restore]
+
+#print axioms Provider.patchKey_restore
+#print axioms Provider.patchKey_overwrite
+#print axioms Provider.patchKey_commute
+#print axioms ProviderRegistry.patch_restore_exists
+#print axioms ProviderRegistry.patch_restore
+#print axioms Requirements.prepare_patch_restore
+end LeanPoo.Tests.FunctionalRegistryRollback

@@ -1050,3 +1050,11 @@ The positive query remains conservative: override shadowing supplies a concrete
 candidate with unchanged selection. This separates declared read-scope impact
 from precise semantic/analytic dependency closure, which is not inferred from
 the reference's lexical mention census or proved by the new API.
+
+
+RegistryPatch additionally supplies same-key overwrite, distinct-key commutation
+and exact immediate original-cell rollback. These dependent-function algebra
+proofs let clients normalize their own edit plans and reuse arbitrary consumer
+claims after rollback. They do not supply runtime closure compaction, general
+transaction isolation, or analytic dependency equivalence. The pinned external
+Euler checkout remains reference material only.

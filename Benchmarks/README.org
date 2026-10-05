@@ -118,3 +118,11 @@ at two contexts, not a precise function-change or upstream fanout census.
 Persistent hash copies, key-equality checks and repeated wrapper chains remain
 explicit costs. No external integration or runtime benchmark is added; schema 1
 and the pinned reference manifest remain unchanged.
+
+
+The [[file:receipts/euler-registry-rollback-2026-10-05.json][registry-rollback snapshot]] binds same-key overwrite, distinct-key commutation
+and immediate original-cell rollback to updated local hashes. All 960 rollback
+operations restore the original 15360 checklist observations at two contexts.
+Generic proofs cover dependent functions at every context. Source cost and
+additional wrapper/hash costs are explicit; no automatic compaction, runtime
+benchmark or measured external maintenance saving is asserted. Schema remains 1.

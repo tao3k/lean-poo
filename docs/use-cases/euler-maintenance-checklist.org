@@ -475,7 +475,7 @@ has not been given those declarations, adapters or dependency scopes.
 | ~prepare_patch_stable~, ~prepare_patch_of_unaffected~ | Reuse old tuples, first-error result and consumer proofs for negative scopes | Supplied factory still satisfies its original dependent contract; no per-key ~require~ rewrites |
 | Local semantic evidence | 960 patches, 192 unknown-name errors, 15360 queries; 10752 negative scopes | 4608 candidates, 1384 sampled value/error changes at two contexts; not Euler affected-file counts |
 | Retained negative boundary | Positive candidate query can have unchanged selection due to shadowing | Precise dependency closure and analytic equivalence are not automated |
-| Shared implementation cost | New module 135 physical lines including proofs/comments | Additional 146-line test; provider/context/adaptor costs excluded |
+| Shared implementation cost | Initial patch snapshot: module 135 physical lines including proofs/comments | Initial 146-line test; extended source cost below |
 | Runtime costs | No other-provider reacquisition or explicit graph fold | Repeated patches can form key-check wrapper chains; no compaction or speedup measurement |
 | Euler avoided edits, net lines and hours | Unmeasured | No integration, external build or real consumer migration |
 
@@ -483,3 +483,22 @@ The sufficient preservation certificate is generic and covers all contexts;
 the two-context corpus checks execution and records conservative candidates.
 Neither the local negative-query proportion nor sampled changes estimate a
 percentage reduction in the external proof repository's source or labor cost.
+
+* Single-capability rollback and update-plan checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-rollback-2026-10-05.json][rollback snapshot]] retains the same reference pin and schema 1.
+
+| New API/capability | Reusable obligation | Remaining cost or gate |
+|-------------------+---------------------+------------------------|
+| ~patchKey_overwrite~ | Prove a same-key edit sequence equals its final edit | Caller constructs normalized plan; no automatic closure compaction |
+| ~patchKey_commute~ | Reorder distinct typed capabilities | Distinct-key premise; fixed dependent result families |
+| ~patchKey_restore~ | Writing the original cell is identity | Save the original cell/provider |
+| ~patch_restore_exists~, ~patch_restore~ | Immediate rollback succeeds and restores exact dictionary functions | One additional lookup/insertion, possible hash copy and another wrapper |
+| ~prepare_patch_restore~ | Reuse arbitrary old consumer proof by one whole-checklist rewrite | All roots/checklists; no intervening edits without separate proof |
+| Local validation | 960 rollbacks, 15360 checklist comparisons at two contexts | Generic kernel equality covers all contexts; corpus is not upstream savings |
+| Shared source cost | 67 added module lines, 38 added test lines | Current totals: 202 module lines, 182 test lines; consumer/adaptor costs excluded |
+| Euler avoided edits/net lines/hours | Unmeasured | Reference only; no actual consumer adapters or migration |
+
+This reduces repeated local rollback alignment obligations. It supplies no claim
+that Euler requires these operations or that an upstream analytic theorem becomes
+interchangeable. Precise dependency closure and external savings stay open.

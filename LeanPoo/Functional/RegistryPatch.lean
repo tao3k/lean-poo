@@ -132,4 +132,71 @@ theorem Requirements.prepare_patch_of_unaffected (index : C4.AncestryIndex graph
     simp [unaffected] at affected
   · exact Or.inl ancestor
 
+/-- Reapplying the original cell preserves the complete dependent provider. -/
+theorem Provider.patchKey_restore (provider : Provider Context Key Value) (key : Key) :
+    provider.patchKey key (provider key) = provider := by
+  funext query
+  by_cases same : query = key
+  · subst query; simp [patchKey]
+  · simp [patchKey, same]
+
+/-- A later edit of the same key supersedes the earlier edit. This equality
+supports constructing a normalized plan; it does not compact existing closures. -/
+theorem Provider.patchKey_overwrite (provider : Provider Context Key Value) (key : Key)
+    (first last : Option (Factory Context (fun c => Value c key))) :
+    (provider.patchKey key first).patchKey key last = provider.patchKey key last := by
+  funext query
+  by_cases same : query = key
+  · subst query; simp [patchKey]
+  · simp [patchKey, same]
+
+/-- Distinct capability edits commute, even with different dependent families. -/
+theorem Provider.patchKey_commute (provider : Provider Context Key Value) (left right : Key)
+    (a : Option (Factory Context (fun c => Value c left)))
+    (b : Option (Factory Context (fun c => Value c right))) (distinct : left ≠ right) :
+    (provider.patchKey left a).patchKey right b = (provider.patchKey right b).patchKey left a := by
+  funext query
+  by_cases l : query = left
+  · subst query; simp [patchKey, distinct]
+  · by_cases r : query = right
+    · subst query; simp [patchKey, l]
+    · simp [patchKey, l, r]
+
+/-- A successful edit retains the provider entry, so restoring its saved cell
+cannot fail with an unknown provider name. -/
+theorem ProviderRegistry.patch_restore_exists (registry edited : ProviderRegistry Context Key Value)
+    (name : String) (key : Key) (replacement : Option (Factory Context (fun c => Value c key)))
+    (edit : registry.patch name key replacement = .ok edited) :
+    ∃ restored, edited.patch name key (registry.dictionary name key) = .ok restored := by
+  obtain ⟨provider, _, table⟩ := patch_success registry name key replacement edit
+  simp only [ProviderRegistry.patch, table, Std.HashMap.getElem?_insert_self]
+  exact ⟨_, rfl⟩
+
+/-- Restore a saved original cell after a successful registry edit. Equality is
+of dictionaries, not physical hash storage. Provider membership is unchanged. -/
+theorem ProviderRegistry.patch_restore (registry edited restored : ProviderRegistry Context Key Value)
+    (name : String) (key : Key) (replacement : Option (Factory Context (fun c => Value c key)))
+    (edit : registry.patch name key replacement = .ok edited)
+    (restore : edited.patch name key (registry.dictionary name key) = .ok restored) :
+    restored.dictionary = registry.dictionary := by
+  funext target query
+  by_cases sameName : target = name
+  · subst target
+    by_cases sameKey : query = key
+    · subst query; exact patch_at edited name key _ restore
+    · rw [patch_other edited name key _ restore (Or.inr sameKey),
+          patch_other registry name key replacement edit (Or.inr sameKey)]
+  · rw [patch_other edited name key _ restore (Or.inl sameName),
+        patch_other registry name key replacement edit (Or.inl sameName)]
+
+/-- Rollback restores whole preparations, including all dependent functions and
+first errors, for any root and checklist; no impact query is required. -/
+theorem Requirements.prepare_patch_restore (order : C4.VerifiedOrder graph root)
+    (registry edited restored : ProviderRegistry Context Key Value) (name : String) (key : Key)
+    (replacement : Option (Factory Context (fun c => Value c key))) (keys : List Key)
+    (edit : registry.patch name key replacement = .ok edited)
+    (restore : edited.patch name key (registry.dictionary name key) = .ok restored) :
+    prepare (assemble order restored.dictionary) keys = prepare (assemble order registry.dictionary) keys := by
+  rw [ProviderRegistry.patch_restore registry edited restored name key replacement edit restore]
+
 end LeanPoo.Functional
