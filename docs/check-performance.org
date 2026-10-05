@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 123 independent example/contract
+once, checks C4's source-owned types, and runs 124 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 127 unique example/test files, including the typed
+The current gate covers 128 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -345,7 +345,7 @@ receipt records index construction separately and retains one-use regressions.
 
 * Cached prepared certificate qualification
 
-Current inventory: 123 independent Lean files plus four bounded diagnostics
+At this stage: 123 independent Lean files plus four bounded diagnostics
 (127 standalone), 32 native admissions, nine Python supervisor tests, 16 CI jobs.
 Twelve shards remain the maximum parallel Lean matrix; cached preparation adds
 one atom and ten admissions in the existing diagnostic job, without serializing
@@ -360,3 +360,13 @@ are slightly slower at both widths. Setup, IO-cell costs and per-sample totals
 are reported separately; this is not a one-use or end-to-end comparison. No
 allocation/peak-memory, arbitrary function dependency tracking, or whole Euler
 maintenance gain is measured. Raw output remains in TMP; receipts keep schema v1.
+
+
+* Continuous revision gate
+
+Current inventory: 124 independent Lean files plus four diagnostics (128 standalone),
+32 native admissions, nine Python supervisor checks and 16 CI jobs. One additional
+atomic test checks 4096 first + 3072 second transactions. File checks still run in
+12 parallel shards/workers; no optional timing threshold or new native microbench
+was added. Full publication intentionally constructs all registry updates, so
+cached-view timing receipts are not evidence of publication-path speedups.

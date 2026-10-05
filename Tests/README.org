@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 123 independent Lean example/contract files
+The local complete gate runs the 124 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -182,6 +182,16 @@ with 22 native admissions and 16 CI jobs; this test runs as one independent atom
 ordinary, indexed-full and previous scoped controls. Forced hash collisions,
 empty/repeated/reversed requests, cached capability failures and conservative
 reuse/fresh decisions are included. Wrong-provider caches and uncertified fresh
-data fail type checks. Four standard-only axiom reports. Current inventory:
+data fail type checks. Four standard-only axiom reports. At this stage:
 123 independent files plus four diagnostics (127 standalone), 32 native admissions,
 and 16 CI jobs with 12 Lean shards.
+
+* Continuous consumer revision contract
+
+~FunctionalConsumerRevision.lean~ checks 4096 initial + 3072 chained transactions,
+full nonconsumer state publication, reuse/fresh branches, cached capability errors,
+1024 first-name errors, collisions and two contexts. Six kernel reports use only
+standard axioms. Runtime Claim=True isolates registry/cache plumbing; generic
+clients prove arbitrary joint-claim outcomes. Current inventory: 124 independent
+files + four diagnostics (128 standalone), 32 native admissions, nine Python
+supervisor checks and 16 CI jobs with 12 Lean shards.

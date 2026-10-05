@@ -311,3 +311,14 @@ Raw histories, name preflight, factory bodies and retained memory remain; no
 allocated-byte/peak-memory or Euler application/maintenance benefit was measured.
 Shared/test/native Lean/Python costs are 101/175/56/65 physical lines; the gate
 admits ten new small native cases (32 total). Historic receipts remain unchanged.
+
+* Continuous consumer revision source snapshot
+
+~receipts/euler-consumer-revision-2026-10-05.json~ records full immutable registry
+publication plus automatically rebound negative-scope cached certificates and
+fresh-data certification without a repeated prepare. Shared API/proofs cost 164
+lines, the fixture 203. 4096 first + 3072 second transactions cover other-consumer
+state, collisions, errors and two contexts, with six standard-only axiom reports.
+Explicit OpenAI time-transport declarations/token lines are hash-bound. No new
+publication runtime/memory benchmark, external adapter/build, actual migration or
+measured code/labor saving. Prior view-only timings apply only to their own API.

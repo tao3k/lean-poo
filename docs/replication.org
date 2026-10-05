@@ -2278,3 +2278,20 @@ The native claim is ~True~, isolating preparation/cache overhead; kernel theorem
 cover arbitrary joint claims and semantic fixtures use provenance witnesses.
 This is retained-input query evidence, not a one-use comparison, allocation study,
 or whole Euler speedup. Ten new native admission cases join the existing 22.
+
+* Reproduce continuous consumer revisions
+
+Build ~lake build LeanPoo.Functional.ConsumerRevision~ and run
+~lake env lean Tests/FunctionalConsumerRevision.lean~. Expect
+~FUNCTIONAL-CONSUMER-REVISION-OK cases=4096 negative=2304 positive=1792 name_errors=1024 chained=3072 contexts=2~
+and six standard-only axiom reports. Every successful first transaction is
+followed by a second known transaction using the returned registry/aligned cache;
+nonconsumer updates are checked independently. Runtime Claim=True isolates the
+revision plumbing; generic kernel theorems retain arbitrary joint contracts.
+
+Re-run EulerChangeSurfaceStudy with ~--output /tmp/euler-consumer-revision.json~
+and compare ~consumer_revision.time_transport_audit~ against the separately named
+v1 receipt. Direct declaration/token checks do not elaborate external Lean or
+infer analytic dependencies. The new publication API always constructs full
+updates; prior view-only microbench results do not quantify this path. No new
+runtime/memory or Euler maintenance saving is asserted.

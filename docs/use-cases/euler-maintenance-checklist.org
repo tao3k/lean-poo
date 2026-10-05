@@ -784,3 +784,23 @@ The narrow benefit is zero capability selection/preparation and zero fresh joint
 proof obligations on a certified negative transaction view. Raw history/name
 checks and user factory computation remain. This is a conditional local guarantee,
 not an Euler-wide edit-count estimate.
+
+* Continue after publishing a registry revision
+
+| Capability / audit seam | New guarantee | Remaining obligation / cost |
+|-------------------------+---------------+-----------------------------|
+| ~applyTransactionCached~ | Full updated registry equals ~patchTransaction~, including first name errors | All registry edit construction still runs; no prefix on error |
+| Negative scope | Old entire certificate/error is automatically aligned to the returned registry for the next transaction | Fixed graph/root/keys/context/result family/claim; initial admission remains |
+| Positive scope | ~Prepared.certify~ admits already prepared new data without repeating selection | Supply the new provider's joint analytic proof |
+| Velocity and derivative ~changeTime hTime~ | Actual source tokens at 48/57 and derivative transport at 63 recorded | Time equality/positivity and dependent-type transportation remain explicit |
+| Cache rebinding vs time transport | Distinct proof interfaces documented | Provider preparation equality does not prove equality of changed time-indexed types |
+
+- [X] Complete registry and indexed/ordinary consumer equality proved.
+- [X] Negative transaction supplies cache alignment without client per-name/key proofs.
+- [X] Fresh prepared data can be certified without preparing again.
+- [X] 4096 first + 3072 second transactions, two contexts, collisions and nonconsumer updates checked.
+- [X] Six standard-only axiom reports; shared/test costs 164/203 physical lines.
+- [X] Three source declarations and explicit time-transport token lines hash-bound.
+- [ ] Compile reference-compatible dependent inputs and account for complete adapters.
+- [ ] Measure actual migrated proof/maintenance edits; migrations remain 0, savings unknown.
+- [ ] Measure publication-path runtime/memory costs; view-only timings cannot be reused for this claim.

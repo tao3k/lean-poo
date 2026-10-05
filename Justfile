@@ -46,6 +46,7 @@ check-merge: check-types
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.CachedPreparation \
+        LeanPoo.Functional.ConsumerRevision \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -298,6 +299,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalRequirements.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
+    {{lean}} Tests/FunctionalConsumerRevision.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

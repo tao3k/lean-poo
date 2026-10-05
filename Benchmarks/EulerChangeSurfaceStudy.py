@@ -118,6 +118,27 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def consumer_time_audit(reference):
+    relative = "Euler/PacketInitializedResidualEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    declarations = {}
+    for name in ["initializedVelocityField", "initializedVelocityDerivativeField", "initializedVelocityField_time"]:
+        matches = [i for i, row in enumerate(rows, 1)
+                   if re.match(r"(?:def|theorem) " + name + r"\b", row)]
+        if len(matches) != 1:
+            raise ValueError(f"Expected one {name}")
+        declarations[name] = matches[0]
+    transport = [i for i, row in enumerate(rows, 1) if ".changeTime hTime" in row]
+    derivative = [i for i, row in enumerate(rows, 1) if "Field.changeTime_derivative _ _ hTime" in row]
+    if len(transport) != 2 or len(derivative) != 1:
+        raise ValueError("Explicit time transports changed")
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(),
+            "declarations": declarations, "change_time_lines": transport,
+            "derivative_transport_lines": derivative,
+            "scope": "Manual reading plus exact declaration/token checks; not elaborated implicit-instance or transitive dependency closure"}
+
+
 def study(reference):
     if git(reference, "rev-parse", "HEAD").decode().strip() != PIN:
         raise ValueError("Reference pin mismatch")
@@ -169,7 +190,8 @@ def study(reference):
              "LeanPoo/Functional/ScopedTransaction.lean", "Tests/FunctionalScopedTransaction.lean",
              "LeanPoo/Functional/KeyIndex.lean", "Tests/FunctionalKeyIndex.lean",
              "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean",
-             "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean"]
+             "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean",
+             "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -181,6 +203,22 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "consumer_revision": {
+            "time_transport_audit": consumer_time_audit(reference),
+            "reference_seam": "PacketInitializedResidualEquation:45-64 uses explicit changeTime hTime for both velocity/derivative and derivative proof. Provider cache alignment is distinct from transporting these dependent types",
+            "local_api": ["Prepared", "Prepared.certify", "Prepared.certify_forget", "CachedPreparation.rebind", "CachedPreparation.rebind_outcome", "ConsumerRevision.reused", "ConsumerRevision.fresh", "ConsumerRevision.registry", "ConsumerRevision.forget", "ConsumerRevision.certify", "ConsumerRevision.certify_forget", "applyTransactionCached", "applyTransactionCached_registry", "applyTransactionCached_forget", "applyTransactionCached_ofRegistry"],
+            "publication": "Always full immutable patchTransaction; unrequested and nonancestor edits remain in the returned registry, no updated prefix on unknown name errors",
+            "negative_scope": "Automatically rebind exact old cached outcome/certificate to the new registry through preparation equality; no client per-name/key alignment or fresh joint proof",
+            "positive_scope": "Prepare fresh data once. Prepared.certify attaches supplied new analytic admission to that saved outcome without preparing again",
+            "fixed_parameters": ["graph/root/order", "key list", "Context", "Value family", "joint Claim"],
+            "tests": {"first_transactions": 4096, "second_transactions": 3072,
+                      "negative": 2304, "positive": 1792, "first_name_errors": 1024,
+                      "contexts": 2, "axiom_reports": 6, "forced_collisions": True,
+                      "nonconsumer_publication_checked": True,
+                      "runtime_claim": "True isolates revision plumbing; generic kernel theorems cover arbitrary joint Claims"},
+            "shared_lines": 164, "fixture_lines": 203,
+            "gate": {"independent_atoms": 124, "diagnostics": 4, "native_admissions": 32, "ci_jobs": 16},
+            "limits": ["Full update construction still costs on negative scope; earlier view-only microbench is not a publication benchmark", "Fresh analytic admission still required; no automatic dependency inference", "Dependent time/context/result family changes need explicit transport/reindex, not mere provider rebind", "No external adapter/build/integration; actual Euler migrations 0", "Runtime/allocated-byte/peak-memory publication gains and code/maintenance savings unmeasured"]},
         "prepared_certificate_reuse": {
             "reference_seam": "Hash-bound joint_certificate_audit sources and observation_bridge: pressure-dependent equation uses explicit correction-data equality; no automatic analytic change footprint",
             "local_api": ["CachedPreparation", "cacheCertified", "TransactionPreparation.reused", "TransactionPreparation.fresh", "TransactionPreparation.forget", "prepareTransactionCached", "prepareTransactionCached_forget", "prepareTransactionCached_ofRegistry", "prepareTransactionCached_unaffected", "prepareTransactionCached_affected"],
