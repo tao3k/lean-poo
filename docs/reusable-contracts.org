@@ -920,3 +920,53 @@ of arbitrary concurrent changes. Construction performs another persistent hash
 lookup/insertion and adds another key-check wrapper; retain original prepared
 factories or normalize from the saved original provider to avoid that chain.
 No constant-time or measured performance improvement is asserted.
+
+* Compile capability edits into a normalized overlay
+
+Import ~LeanPoo.Functional.Overlay~. ~CapabilityEdit Context Key Value~ is a
+heterogeneous pair: a capability key and an optional factory in that exact
+key's dependent result family. ~none~ explicitly removes the capability; an
+absent override delegates to the original provider. ~DecidableEq Key~ suffices;
+no key hashing, global finite-key enumeration or factory evaluation is required.
+
+Start ~ProviderOverlay.ofProvider original~ once. Retain that overlay and update
+it through ~overlay.set key replacement~. Each set removes the previous entry
+of that key and prepends its new entry. The structure retains a proof that
+stored keys are unique. Alternatively use one ~ProviderOverlay.compile original
+edits~ call on a caller-ordered edit list. Later edits of the same key win.
+~overlay.provider~ supplies the ordinary Provider interface for ~Requirements~,
+~assemble~, or a provider dictionary passed to ~ProviderRegistry.ofGraph~.
+
+~set_provider~ proves exact equality with one old ~patchKey~ operation;
+~compile_provider~ proves exact equality with sequential patching of the entire
+batch, across all contexts and arbitrary dependent value families.
+~Requirements.prepare_overlay_compile~ transports whole-checklist results,
+including their first missing keys. The compiled generic test client reuses an
+arbitrary old consumer claim by one rewrite, with no per-key ~require~ or
+per-step provider-alignment proof. A minimal typed usage is:
+
+#+begin_src lean
+def edited {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    (original : Functional.Provider Context Key Value)
+    (edits : List (Functional.CapabilityEdit Context Key Value))
+    (keys : List Key) :=
+  Functional.Requirements.prepare (Functional.ProviderOverlay.compile original edits).provider keys
+#+end_src
+
+Retain the compiled overlay or prepared factories; repeatedly rebuilding the
+batch would repeat normalization. Queries linearly scan distinct stored override
+keys, then call the base only if none matches. They do not traverse the history
+of overlay sets. In contrast, sequential ~patchKey~ stores a closure per edit.
+Compilation of h edits over d distinct keys scans up to the current d overrides
+per set and allocates filtered lists; this can cost quadratic work when every
+key is new. It is not a hash-indexed lookup or a constant-time API. The base may
+already contain wrapper chains; wrapping such a base does not compact them.
+Keep the original base when compiling a long edit history. Explicit ~none~ is
+retained as an override and must not be discarded as a missing edit.
+
+The local fixture checks 32 histories and 344 prefix updates against an
+independent last-cell oracle, including 5504 prefix and 512 final batch
+checklist observations at two contexts. A 256-edit same-key history stores one
+override; this is a structural reduction in stored edits and potential key
+checks, not a runtime speedup or Euler source saving. No arbitrary transaction,
+provider-name migration or analytic dependency equivalence is inferred.

@@ -1910,3 +1910,34 @@ cost adds 67 module lines and 38 test lines (202 and 182 total), recorded in
 the new schema-1 rollback snapshot. Extensional update
 identities support a caller-constructed normalized plan; no automatic batch
 optimizer, closure compaction, runtime speedup or Euler migration is claimed.
+
+* Normalized typed capability overlays
+
+~Functional.Overlay~ closes the previously unimplemented normalization gate for
+an explicit caller-supplied list of typed capability edits over a retained base
+provider. ~ProviderOverlay~ stores a unique-key override list. ~set~ removes any
+old occurrence of the edited key; ~compile~ folds sets in caller order. Explicit
+capability removal is retained and distinguished from falling back to the base.
+The flat provider interface scans current overrides, not edit-history closures.
+
+Kernel proofs establish exact single-step and whole-batch equality with existing
+~patchKey~ semantics for arbitrary context/key/dependent result families. Whole
+~Requirements.prepare~ equality retains exact factories and first errors; a
+generic client transports an arbitrary old claim with one rewrite. Four axiom
+reports contain only standard Lean axioms. This is finite provider-edit
+normalization, not compaction of an arbitrary pre-existing provider closure or
+a precise analytic dependency closure.
+
+The corpus checks 32 histories, 344 prefix updates, 5504 prefix checklist
+observations and 512 final batch observations at two contexts against an
+independent last-cell oracle and sequential patching. A separate 256 same-key
+edit list leaves one stored override, while unedited and missing keys preserve
+base semantics. The unique-key invariant is retained by construction.
+
+Normalization trades per-set list scans/allocations for bounded current-override
+queries; with all-distinct keys compilation can be quadratic. Base provider costs
+remain. Stored edit counts are structural evidence, not a measured runtime gain.
+The new schema-1 source receipt records 110 module lines and 117 test lines,
+including proofs/comments and excluding caller adapters. Euler
+adapters, avoided source edits, net lines and maintenance hours remain unmeasured;
+the pinned external checkout is unchanged and reference-only.

@@ -53,7 +53,8 @@ check-merge: check-types
         LeanPoo.Functional.Relabeling \
         LeanPoo.Functional.Registry \
         LeanPoo.Functional.SharedRegistry \
-        LeanPoo.Functional.RegistryPatch
+        LeanPoo.Functional.RegistryPatch \
+        LeanPoo.Functional.Overlay
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -273,6 +274,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalRegistry.lean
     {{lean}} Tests/FunctionalSharedRegistry.lean
     {{lean}} Tests/FunctionalRegistryPatch.lean
+    {{lean}} Tests/FunctionalOverlay.lean
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean

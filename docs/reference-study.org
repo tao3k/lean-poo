@@ -1058,3 +1058,12 @@ proofs let clients normalize their own edit plans and reuse arbitrary consumer
 claims after rollback. They do not supply runtime closure compaction, general
 transaction isolation, or analytic dependency equivalence. The pinned external
 Euler checkout remains reference material only.
+
+
+Functional.Overlay implements normalized finite dependent capability edits:
+last-write semantics with unique stored keys, explicit removal, retained base
+fallback and whole-checklist equality to sequential patching. This closes the
+explicit edit-list normalization gate after the algebraic update identities.
+It does not compact arbitrary base closures. List scans and allocation remain
+construction costs; no runtime or Euler maintenance saving is inferred from
+stored override counts.

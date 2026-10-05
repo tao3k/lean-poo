@@ -107,7 +107,8 @@ def study(reference):
              "LeanPoo/Functional/Relabeling.lean", "Tests/C4Relabeling.lean",
              "LeanPoo/Functional/Registry.lean", "Tests/FunctionalRegistry.lean",
              "LeanPoo/Functional/SharedRegistry.lean", "Tests/FunctionalSharedRegistry.lean",
-             "LeanPoo/Functional/RegistryPatch.lean", "Tests/FunctionalRegistryPatch.lean"]
+             "LeanPoo/Functional/RegistryPatch.lean", "Tests/FunctionalRegistryPatch.lean",
+             "LeanPoo/Functional/Overlay.lean", "Tests/FunctionalOverlay.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -293,6 +294,28 @@ def study(reference):
             "automatic_batch_optimizer": False, "wrapper_compaction": False,
             "runtime_benchmark": False, "external_lean_compilation": False,
             "euler_consumer_migration": False,
+        },
+        "provider_overlay": {
+            "local_api": ["CapabilityEdit", "ProviderOverlay.ofProvider", "ProviderOverlay.set", "ProviderOverlay.compile",
+                          "ProviderOverlay.provider", "ProviderOverlay.set_provider", "ProviderOverlay.compile_provider",
+                          "Requirements.prepare_overlay_set", "Requirements.prepare_overlay_compile"],
+            "scope": "Unique-key typed overlay normalizes an explicit edit history over an original retained base; exact equality with sequential patching and whole preparations",
+            "premises": ["DecidableEq Key", "Same context/key/dependent result families", "Explicit original base and caller-ordered typed edits"],
+            "local_test": {"histories": 32, "prefix_updates": 344, "prefix_checklist_observations": 5504,
+                           "final_batch_observations": 512, "contexts": 2, "standard_axiom_reports": 4,
+                           "independent_last_cell_oracle": True, "generic_arbitrary_claim_client": True,
+                           "counts_origin": "Passing local Lean test; inventory script does not execute Lean"},
+            "structural_case": {"same_key_edits": 256, "stored_override_keys": 1,
+                                "scope": "Stored entries only; not runtime timing, allocated bytes or external source savings"},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in
+                               ["LeanPoo/Functional/Overlay.lean", "Tests/FunctionalOverlay.lean"]},
+            "cost_boundary": ["Each set filters current unique override list and allocates a new list",
+                              "All-distinct compilation can require quadratic scans",
+                              "Query scans current distinct override keys and then may delegate to retained base",
+                              "Existing base wrappers are not compacted; retain original base and compiled result",
+                              "Explicit removal differs from absent override; no factory invocation during compilation"],
+            "explicit_edit_history_normalization": True, "arbitrary_base_closure_compaction": False,
+            "runtime_benchmark": False, "external_lean_compilation": False, "euler_consumer_migration": False,
         },
         "local_contract": {"files": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in local},
                            "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types; explicit context projection through Reindex; unique-name declaration permutation through Presentation; composed explicit Relabeling witnesses with scoped provider alignment; constructive whole-provider alignment through a retained ancestor-cut Registry and a declaration-wide SharedRegistry for multiple verified roots; typed single-capability patch noninterference from negative ancestry/checklist impact",

@@ -38,6 +38,7 @@ import LeanPoo.Functional.Relabeling
 import LeanPoo.Functional.Registry
 import LeanPoo.Functional.SharedRegistry
 import LeanPoo.Functional.RegistryPatch
+import LeanPoo.Functional.Overlay
 import LeanPoo.C4.Linearize
 import LeanPoo.C4.Ranked
 import LeanPoo.Prototype.Compose

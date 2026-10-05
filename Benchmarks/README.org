@@ -126,3 +126,12 @@ operations restore the original 15360 checklist observations at two contexts.
 Generic proofs cover dependent functions at every context. Source cost and
 additional wrapper/hash costs are explicit; no automatic compaction, runtime
 benchmark or measured external maintenance saving is asserted. Schema remains 1.
+
+
+The [[file:receipts/euler-provider-overlay-2026-10-05.json][provider-overlay snapshot]] binds normalized typed edit batches and whole-checklist
+equivalence to sequential patching to exact local hashes. Local semantic checks
+cover 32 histories, 344 updates, 5504 prefix and 512 batch observations at two
+contexts. A 256-to-1 same-key override count is structural evidence only. Linear
+filter/query costs, potentially quadratic all-distinct compilation, and unchanged
+base costs are explicit. Schema 1, reference pin and manifest remain unchanged;
+actual Euler savings and runtime gains remain unmeasured.

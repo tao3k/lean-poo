@@ -502,3 +502,25 @@ The [[file:../../Benchmarks/receipts/euler-registry-rollback-2026-10-05.json][ro
 This reduces repeated local rollback alignment obligations. It supplies no claim
 that Euler requires these operations or that an upstream analytic theorem becomes
 interchangeable. Precise dependency closure and external savings stay open.
+
+* Normalized overlay capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-provider-overlay-2026-10-05.json][overlay snapshot]] retains schema 1 and the same reference manifest.
+
+| New API/capability | Reusable obligation or structural benefit | Remaining cost/gate |
+|-------------------+-------------------------------------------+---------------------|
+| ~CapabilityEdit~, ~ProviderOverlay.ofProvider~ | Heterogeneous typed edit list and one retained original base | Same Context/Key/result families; decidable keys |
+| ~ProviderOverlay.set~, ~compile~ | Last edit wins; kernel-certified unique stored override keys | Linear list filtering per set; all-distinct compilation can be quadratic |
+| ~ProviderOverlay.provider~ | Ordinary provider interface; scan overrides rather than history | Linear distinct-key scan; unchanged base may have its own wrappers |
+| ~set_provider~, ~compile_provider~ | Exact equality with existing patch semantics | Explicit deletion retained; no factory evaluation during compilation |
+| ~prepare_overlay_compile~ | Whole-checklist proof reuse without per-key ~require~ or step alignment | Retain overlay/prepared factories to avoid rebuilding |
+| Local semantic corpus | 32 histories, 344 updates; 5504 prefix and 512 batch observations, two contexts | Independent cell oracle plus generic proofs; no external adapters |
+| Local structural case | 256 same-key edits compile to one stored override | Storage/key-check structure only; runtime speedup unmeasured |
+| Shared implementation cost | 110 module lines plus 117 test lines | Includes proofs/comments; caller providers/adapters excluded |
+| Euler avoided edits/net lines/hours | Still unmeasured | No integration, external compilation or actual consumer migration |
+
+A user with an explicit typed edit history can now compile it with one generic
+API and retain a whole-consumer proof. This is a reusable local mechanism; it
+does not establish that the inspected Euler proofs have this provider/edit
+shape or that they can discard analytic premises. Provider adapters and actual
+external savings remain separate measurements.
