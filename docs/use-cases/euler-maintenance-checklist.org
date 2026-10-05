@@ -459,3 +459,27 @@ visits only if the sum of root ancestor counts exceeds the declaration count.
 That criterion is not a percentage reduction in Euler source or maintenance
 cost. Application-owned context/guard adapters and actual change fanout still
 need measurement before any upstream saving is claimed.
+
+* Reuse unaffected consumers after one capability edit
+
+The [[file:../../Benchmarks/receipts/euler-registry-patch-2026-10-05.json][patch snapshot]] adds a local change-fanout mechanism to the unchanged reference
+inventory, still under schema 1. It addresses update/proof maintenance once an
+application has explicit C4 roots and capability checklists. The Euler reference
+has not been given those declarations, adapters or dependency scopes.
+
+| Capability / API checklist | Implemented benefit | Cost / boundary |
+|---------------------------+---------------------+-----------------|
+| ~Provider.patchKey~, ~ProviderRegistry.patch~ | Edit one typed capability without a declaration fold or other-provider acquisition | ~DecidableEq Key~ required; one name lookup/insertion, possible shared-storage copy |
+| ~patch_at~, ~patch_other~, ~patch_scope~ | Exact edited cell, untouched functions and provider-name scope | Unknown names are rejected; graph/order and result families unchanged |
+| ~mayAffect~, ~mayAffect_iff~ | Reusable ancestry plus requested-key candidate impact | Retain index once; key membership is linear; true is not proof of actual change |
+| ~prepare_patch_stable~, ~prepare_patch_of_unaffected~ | Reuse old tuples, first-error result and consumer proofs for negative scopes | Supplied factory still satisfies its original dependent contract; no per-key ~require~ rewrites |
+| Local semantic evidence | 960 patches, 192 unknown-name errors, 15360 queries; 10752 negative scopes | 4608 candidates, 1384 sampled value/error changes at two contexts; not Euler affected-file counts |
+| Retained negative boundary | Positive candidate query can have unchanged selection due to shadowing | Precise dependency closure and analytic equivalence are not automated |
+| Shared implementation cost | New module 135 physical lines including proofs/comments | Additional 146-line test; provider/context/adaptor costs excluded |
+| Runtime costs | No other-provider reacquisition or explicit graph fold | Repeated patches can form key-check wrapper chains; no compaction or speedup measurement |
+| Euler avoided edits, net lines and hours | Unmeasured | No integration, external build or real consumer migration |
+
+The sufficient preservation certificate is generic and covers all contexts;
+the two-context corpus checks execution and records conservative candidates.
+Neither the local negative-query proportion nor sampled changes estimate a
+percentage reduction in the external proof repository's source or labor cost.

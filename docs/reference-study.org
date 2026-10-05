@@ -1038,3 +1038,15 @@ queries, excludes undeclared providers, and prevents unrelated declarations
 from satisfying a root's missing capability. This closes shared registry
 construction for a fixed graph/family; it does not establish analytic provider
 interchangeability, new graph extension rules or original EPG equivalence.
+
+* Conservative maintenance impact from declared read scopes
+
+~Functional.RegistryPatch~ adds a constructive noninterference contract for a
+single typed provider/capability edit while retaining the graph and its verified
+orders. Indexed ancestry and caller-owned key lists supply a sufficient negative
+impact certificate. Entire preparation equality lets old consumer proofs and
+retained factory tuples survive the edit without handwritten alignment proofs.
+The positive query remains conservative: override shadowing supplies a concrete
+candidate with unchanged selection. This separates declared read-scope impact
+from precise semantic/analytic dependency closure, which is not inferred from
+the reference's lexical mention census or proved by the new API.

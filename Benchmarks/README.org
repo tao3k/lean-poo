@@ -110,3 +110,11 @@ Its 96 shared registries, 1728 preparations and 624 successes are semantic
 counts. Five local declarations versus six summed root-cut entries is a
 conditional construction-visit comparison, not a timing benchmark or upstream
 source saving. The pinned Euler checkout is unchanged; the schema remains 1.
+
+The [[file:receipts/euler-registry-patch-2026-10-05.json][registry-patch snapshot]] binds typed single-capability edits and conservative
+negative-impact certificates to local source/test hashes. The 960 patches and
+15360 queries are semantic checks; 1384 value/error changes are observations
+at two contexts, not a precise function-change or upstream fanout census.
+Persistent hash copies, key-equality checks and repeated wrapper chains remain
+explicit costs. No external integration or runtime benchmark is added; schema 1
+and the pinned reference manifest remain unchanged.

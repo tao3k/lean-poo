@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 111 independent Lean example/contract files
+The local complete gate runs the 112 independent Lean example/contract files
 with four workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run separately. Python tests in ~tools/tests~ verify exact shard coverage,
@@ -81,3 +81,11 @@ data/proof results at two contexts. Declared unrelated providers stay in the
 dictionary but cannot fill root capabilities; undeclared names remain absent.
 Generic consumer propositions reuse old proofs; nine kernel axiom reports
 contain only standard dependencies.
+
+[[file:FunctionalRegistryPatch.lean][FunctionalRegistryPatch]] checks 960 typed add/remove patches, 192 unknown-name
+errors and 15360 conservative impact queries across two roots and eight key
+lists. It checks retained snapshots, provider scope, dependent data/proof
+results and first errors against an independent oracle at two contexts. The
+positive-query shadowing boundary remains explicit; generic negative-impact
+clients reuse arbitrary old consumer claims. Eight axiom reports use only
+standard dependencies.

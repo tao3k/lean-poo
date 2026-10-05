@@ -837,3 +837,58 @@ many unused declarations can make it more expensive. The local two-root
 fixture has five declarations versus six summed ancestor entries, a structural
 count only. Hash/string costs, factory invocation and result data remain. No
 runtime speedup or actual Euler maintenance saving is inferred from these counts.
+
+* Patch one capability and reuse unaffected consumers
+
+Import ~LeanPoo.Functional.RegistryPatch~. This API requires ~DecidableEq Key~
+for typed single-key updates and checklist membership. Retain each root's
+~order.indexAncestors~ once. Apply ~registry.patch name key replacement~, where
+~replacement~ is ~some factory~ to add/replace a capability or ~none~ to remove
+it. Unknown provider names return ~.error name~; a successful patch retains
+exactly the old provider-name scope and leaves the original registry usable.
+The graph and verified orders are unchanged. The supplied factory must still
+inhabit the original context-indexed result contract.
+
+For each consumer, query ~Requirements.mayAffect index keys name key~. This
+combines indexed ancestry with membership in that consumer's explicit key list.
+When false, keep its old prepared factories and use
+~Requirements.prepare_patch_of_unaffected~ to retain their selection proof and
+arbitrary consumer-result claims. There is no provider-alignment premise,
+capability-by-capability ~require~ rewrite or analytic equivalence obligation
+for the unaffected consumer. The compiled [[file:../Tests/FunctionalRegistryPatch.lean][generic client]] is:
+
+#+begin_src lean
+example {Context Key : Type} [DecidableEq Key] {Value : Context → Key → Type}
+    {graph : C4.Graph} (index : C4.AncestryIndex graph root)
+    (registry updated : Functional.ProviderRegistry Context Key Value)
+    (name : String) (key : Key)
+    (replacement : Option (Functional.Factory Context (fun c => Value c key)))
+    (keys : List Key) (applied : registry.patch name key replacement = .ok updated)
+    (unaffected : Functional.Requirements.mayAffect index keys name key = false) :
+    Functional.Requirements.prepare (Functional.assemble index.order updated.dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble index.order registry.dictionary) keys :=
+  Functional.Requirements.prepare_patch_of_unaffected index registry name key replacement keys applied unaffected
+#+end_src
+
+~patch_at~ establishes the edited cell, ~patch_other~ preserves exact functions
+at other names/keys, and ~patch_scope~ preserves provider-name membership.
+~prepare_patch_stable~ also accepts the explicit negative ancestry or key-list
+premise without executing an impact query. First missing capabilities and
+successful tuples are both preserved by the negative contract, for all contexts.
+
+A true impact query is a candidate for rechecking, not proof of a changed result.
+A more specific provider may shadow the edited provider; preparation may also
+stop at an earlier missing key. The corpus includes an explicit A-before-B
+shadow case with true candidate impact and unchanged selected quantity. Actual
+change, observation equivalence and broader proof dependency closure require
+additional evidence. Changes to graph orders or context/key/result families
+are outside this contract.
+
+One patch performs a name lookup and a persistent hash insertion; it does not
+fold graph declarations, reconstruct orders or acquire all other provider
+functions. Retaining old snapshots can cause underlying hash storage copies.
+Capability lookup adds key-equality checks; repeated edits can accumulate
+provider-wrapper chains, which this API does not compact. An impact query adds
+an ancestry hash lookup and a linear checklist membership check. No constant-
+time, end-to-end speedup or factory-result cache is claimed. Preparing factories
+once avoids repeated dictionary/key selection during context application.

@@ -1853,3 +1853,41 @@ Registry's reusable scope helper, 101 lines in SharedRegistry and a 148-line
 test. Euler adapters, changed context/key/result families, arbitrary finite
 isomorphism and EPG/C4 suffix correspondence remain separate obligations. The
 reference repository is unchanged and has not been integrated or compiled.
+
+* Scoped capability edits and negative impact certificates
+
+~Functional.RegistryPatch~ extends retained registry use to a typed single-cell
+edit. Existing provider names admit capability replacement, addition or removal;
+unknown names fail with their exact name. Kernel proofs preserve provider-name
+scope, the original snapshot and exact functions at all other name/key cells.
+No graph traversal, verified-order construction or factory invocation is part
+of patch construction. Context/key/result families remain fixed.
+
+~Requirements.mayAffect~ identifies the conservative conjunction of a name's
+ancestry and membership of the edited capability in the caller checklist. Its
+negative result supplies whole-preparation equality through
+~prepare_patch_of_unaffected~, including first errors, retained dependent
+functions and arbitrary old consumer claims. This constructs a sufficient
+noninterference certificate from declared read scopes rather than requiring a
+client alignment proof at every untouched provider/key. It does not construct
+a precise semantic dependency closure or establish analytic interchangeability.
+
+The local corpus performs 960 known-name edits, 192 unknown-name rejections and
+15360 two-root/checklist impact queries over four graph presentations, eight
+availability masks, five provider names, three keys, add/remove modes and eight
+lists. Retained ancestry indexes are constructed once per root. An independent
+availability/value oracle checks each edited consumer at contexts 0 and 7,
+including first-error order. All 10752 negative queries preserve observations;
+4608 queries are candidates, with 1384 sampled value/error changes. These are
+local observations at two contexts, not a complete function-change count or
+Euler fanout measurement. The explicit shadowing case has positive candidate
+impact and unchanged selected output. Eight axiom reports contain only standard
+~propext~, ~Classical.choice~ and ~Quot.sound~ dependencies.
+
+The source cost is a 135-line shared module plus a 146-line test. A patch has one
+registry lookup/insertion rather than a declaration fold/provider reacquisition;
+hash storage may still copy under sharing. Key-equality checks and repeated
+wrapper chains add lookup costs; impact queries scan the requested key list.
+There is no new runtime benchmark, cache compaction or upstream migration.
+Original EPG equivalence, arbitrary graph extension, changed context families
+and actual external maintenance savings remain separate obligations.
