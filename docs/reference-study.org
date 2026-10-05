@@ -1025,3 +1025,16 @@ dictionary and proves its alignment generically on the verified ancestor cut.
 ~prepare_relabel_registry~ preserves the entire checklist without an application
 alignment lemma. This closes that implementation obligation; it does not extend
 the original EPG relation or arbitrary finite graph-isomorphism correspondence.
+
+* Shared declaration scope with root-local selection
+
+~Functional.SharedRegistry~ now provides the multi-root extension of the
+constructive provider-alignment slice. The same graph-wide table serves any
+verified root; exact checklist equality preserves old consumer proofs.
+~ProviderRegistry.relabelGraph~ additionally shares the explicit migrated table.
+A larger dictionary does not enlarge C4 ancestry or override precedence. The
+proved scope distinction retains declared unrelated providers for direct
+queries, excludes undeclared providers, and prevents unrelated declarations
+from satisfying a root's missing capability. This closes shared registry
+construction for a fixed graph/family; it does not establish analytic provider
+interchangeability, new graph extension rules or original EPG equivalence.

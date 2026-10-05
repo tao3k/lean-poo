@@ -781,3 +781,59 @@ string costs remain. Retaining prepared factories avoids repeated registry
 queries. This is a reusable hash index, not an elapsed-time speedup claim or
 factory-result cache. Original contexts, proof guards, keys, data payloads and
 factory bodies remain exact; embedded payload names are not rewritten.
+
+* Share a declaration registry across verified roots
+
+Import ~LeanPoo.Functional.SharedRegistry~. A multi-root application can retain
+~registry := ProviderRegistry.ofGraph graph providers~ once, then use
+~assemble left registry.dictionary~ and ~assemble right registry.dictionary~
+with independently verified orders of that same graph. Prepare each consumer's
+key list once and retain its factories. No per-root provider table, key
+enumeration, inverse name map or alignment proof is required. The constructor
+obtains provider functions but does not invoke factories or compile roots.
+
+The generic preservation contract is:
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble order
+          (Functional.ProviderRegistry.ofGraph graph providers).dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_ofGraph_registry order providers keys
+#+end_src
+
+~ofGraph_lookup~ preserves every declared provider; ~ofGraph_missing~ excludes
+undeclared application names. ~assemble_ofGraph_registry~ and
+~prepare_ofGraph_registry~ work for any verified root of the graph, without a
+new global name-uniqueness or migration premise. The index does not validate a
+graph: the assembly contracts still require a ~VerifiedOrder~.
+
+For an explicit migration, retain ~ProviderRegistry.relabelGraph change
+providers~ once and share its dictionary across all migrated orders.
+~relabelGraph_lookup~ proves whole-provider alignment on declarations and
+~relabelGraph_missing~ excludes mapped undeclared names;
+~assemble_relabelGraph_registry~ and ~prepare_relabelGraph_registry~ preserve
+functions, first errors and arbitrary consumer claims. The existing global
+injectivity, exact declaration permutation and source uniqueness requirements
+for migrated orders remain. ~relabelGraph_relabel~ proves agreement with the
+root-cut registry on every mapped ancestor.
+
+The scope choice is observable. A declared unrelated provider is present in a
+shared dictionary, while it is absent from a root-cut dictionary. ~assemble~
+still searches only that root's verified ancestor order, so an unrelated entry
+cannot fill a missing capability for the root. Direct dictionary clients see
+the wider declaration scope; they must choose the intended API accordingly.
+Undeclared providers are absent from either shared constructor. Compiled
+[[file:../Tests/FunctionalSharedRegistry.lean][shared-root clients]] test this difference and reuse generic old consumer proofs.
+
+Constructing one shared registry visits ~graph.nodes.length~ declarations and
+allocates a name list plus hash table. Separate root-cut indexes visit the sum
+of the retained ancestor-list lengths. Sharing reduces those construction
+visits only when the graph-wide declaration count is smaller than that sum;
+many unused declarations can make it more expensive. The local two-root
+fixture has five declarations versus six summed ancestor entries, a structural
+count only. Hash/string costs, factory invocation and result data remain. No
+runtime speedup or actual Euler maintenance saving is inferred from these counts.

@@ -53,21 +53,41 @@ private theorem registered_absent (rename : String → String)
     rw [List.foldl_cons, ih _ (fun name member => missing name (by simp [member]))]
     simp [register, Std.HashMap.getElem?_insert, missing head (by simp)]
 
+/-- Retain whole providers over an explicit name scope. Duplicate source names
+store the same provider again; lookup preservation requires an injective map. -/
+def ProviderRegistry.ofNames (names : List String) (rename : String → String)
+    (providers : String → Provider Context Key Value) : ProviderRegistry Context Key Value :=
+  ⟨names.foldl (register rename providers) {}⟩
+
+theorem ProviderRegistry.ofNames_lookup (names : List String) (rename : String → String)
+    (injective : Function.Injective rename) (providers : String → Provider Context Key Value)
+    (member : name ∈ names) :
+    (ofNames names rename providers).entries[rename name]? = some (providers name) := by
+  rw [ofNames, registered rename injective]
+  simp [member]
+
+theorem ProviderRegistry.ofNames_missing (names : List String) (rename : String → String)
+    (providers : String → Provider Context Key Value)
+    (missing : ∀ name ∈ names, rename name ≠ target) :
+    (ofNames names rename providers).dictionary target key = none := by
+  have absent := registered_absent rename providers names
+    ({} : Std.HashMap String (Provider Context Key Value)) target missing
+  simp [ofNames, dictionary, absent]
+
 /-- Build once from all original ancestors, including the root. Each node stores
 its whole provider function under the mapped name; no capability enumeration,
 context, inverse name map or factory invocation is needed. -/
 def ProviderRegistry.relabel (order : C4.VerifiedOrder graph root)
     (change : graph.Relabeling other) (providers : String → Provider Context Key Value) :
     ProviderRegistry Context Key Value :=
-  ⟨order.output.foldl (register change.rename providers) {}⟩
+  ofNames order.output change.rename providers
 
 /-- Automatic exact provider alignment on every original ancestor. -/
 theorem ProviderRegistry.relabel_lookup (order : C4.VerifiedOrder graph root)
     (change : graph.Relabeling other) (providers : String → Provider Context Key Value)
     (ancestor : C4.Ancestor graph name root) :
     (relabel order change providers).entries[change.rename name]? = some (providers name) := by
-  rw [relabel, registered change.rename change.injective]
-  simp [order.covers.mpr ancestor]
+  exact ofNames_lookup order.output change.rename change.injective providers (order.covers.mpr ancestor)
 
 /-- The public dictionary returns the original entire provider, not only one key. -/
 theorem ProviderRegistry.relabel_aligned (order : C4.VerifiedOrder graph root)
@@ -82,10 +102,8 @@ theorem ProviderRegistry.relabel_missing (order : C4.VerifiedOrder graph root)
     (change : graph.Relabeling other) (providers : String → Provider Context Key Value)
     (missing : ∀ name, C4.Ancestor graph name root → change.rename name ≠ target) :
     (relabel order change providers).dictionary target key = none := by
-  have absent := registered_absent change.rename providers order.output
-    ({} : Std.HashMap String (Provider Context Key Value)) target
+  exact ofNames_missing order.output change.rename providers
     (fun name member => missing name (order.covers.mp member))
-  simp [relabel, dictionary, absent]
 
 /-- Migrate capability selection with the automatically aligned cached registry. -/
 theorem assemble_relabel_registry (order : C4.VerifiedOrder graph root)

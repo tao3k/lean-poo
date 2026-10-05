@@ -431,3 +431,31 @@ The source's existing theorem interfaces and dependent contexts still have to be
 packaged by the application. This constructor addresses the registry-alignment
 maintenance seam only when C4 override precedence is justified. It adds no import,
 dependency or change to the reference repository, and preserves its source pin.
+
+* Share registration across consumers with different roots
+
+The [[file:../../Benchmarks/receipts/euler-shared-registry-2026-10-05.json][shared-registry snapshot]] retains schema 1 and the unchanged source manifest.
+This slice addresses repeated provider registration across multiple C4 roots,
+not the analytic proof bodies. The reference's existing reusable interfaces
+remain the baseline; no upstream multi-root C4 registry is assumed or added.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~ofNames~, ~ofGraph~ | Construct and retain one original provider table for declared names | Traverse all declarations; obtain provider functions and allocate names/table |
+| ~ofGraph_lookup~, ~ofGraph_missing~ | Generic whole-provider preservation; undeclared application names absent | Declared unrelated names remain directly queryable |
+| ~assemble_ofGraph_registry~, ~prepare_ofGraph_registry~ | All verified roots reuse one table and old checklist/consumer proofs | Each root still needs its own verified C4 order and selected factories |
+| ~relabelGraph~, ~relabelGraph_lookup~ | One mapped declaration table shared across migrated roots | Explicit graph relabeling and source uniqueness remain; no payload-name rewrite |
+| ~relabelGraph_relabel~, ~prepare_relabelGraph_registry~ | Agreement on ancestors with root-cut tables; functions and first errors unchanged | Shared and root-cut dictionaries can differ outside a root's ancestor cut |
+| Root scope | Unrelated declared provider cannot supply a root's missing capability | Direct dictionary access exposes graph-wide scope; index does not validate a graph |
+| Local evidence | 96 shared registries, 1728 preparations, 624 successes at two contexts and roots | Semantic counts and nine standard-axiom reports; no runtime benchmark |
+| Construction visits | Two local root cuts contain six entries; shared graph has five declarations | Conditional structural benefit; unused declarations can outweigh overlap |
+| Shared source cost | Registry helper adds 18 net physical lines; new module 101 | Additional 148-line test; providers, contexts and application adapters excluded |
+| Euler avoided edits, net lines and hours | Still unmeasured | No upstream migration, dependency, integration or external compilation |
+
+The preceding root-cut snapshot measured its 112-line Registry module. The
+current module has 130 physical lines after sharing its scope-construction
+proofs; this slice adds 18 net lines there. Sharing reduces registry construction
+visits only if the sum of root ancestor counts exceeds the declaration count.
+That criterion is not a percentage reduction in Euler source or maintenance
+cost. Application-owned context/guard adapters and actual change fanout still
+need measurement before any upstream saving is claimed.

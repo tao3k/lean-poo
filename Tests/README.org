@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 110 independent Lean example/contract files
+The local complete gate runs the 111 independent Lean example/contract files
 with four workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run separately. Python tests in ~tools/tests~ verify exact shard coverage,
@@ -74,3 +74,10 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:C4Relabeling.lean][C4Relabeling]] checks composed label/permutation witnesses, 1536 two-stage cases with 3072 independent target compilations, direct/sequential retained outputs, 25200 mapped pairs, aligned dependent values, generic consumer-claim reuse and a missing-capability counterexample when provider names are not aligned; eight kernel axiom reports.
 
 - [[file:FunctionalRegistry.lean][FunctionalRegistry]] checks automatic whole-provider alignment with 64 hash registries and 512 preparations, first errors, repeated/empty lists, dependent values at two contexts and unrelated-source-provider exclusion; compiles arbitrary result-claim reuse without a caller alignment lemma and reports five kernel axiom dependencies.
+
+[[file:FunctionalSharedRegistry.lean][FunctionalSharedRegistry]] checks original and migrated declaration-wide
+registries across two verified roots: 96 tables, 1728 preparations and dependent
+data/proof results at two contexts. Declared unrelated providers stay in the
+dictionary but cannot fill root capabilities; undeclared names remain absent.
+Generic consumer propositions reuse old proofs; nine kernel axiom reports
+contain only standard dependencies.

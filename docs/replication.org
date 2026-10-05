@@ -1817,3 +1817,39 @@ operations. No runtime benchmark, shared-root whole-graph registry, changed
 context/data adapter, analytic equivalence or actual Euler edit saving is implied.
 The fixed source cut, global-injective name witness and migrated graph-validation
 premises remain explicit. EPG and arbitrary finite isomorphism gates remain open.
+
+* One provider registry for multiple verified roots
+
+~Functional.SharedRegistry~ closes the previous root-sharing implementation
+boundary for roots of one declaration graph. ~ProviderRegistry.ofGraph~ stores
+whole provider functions once over declared names. Generic kernel proofs retain
+selection and full checklist equality for every verified root, with no new
+name-uniqueness premise on the unchanged-graph path. The migrated path uses
+~relabelGraph~ once, with the existing explicit relabeling/uniqueness premises,
+and proves agreement with the root-cut registry on mapped ancestors.
+
+This separates registry scope from C4 precedence: declarations outside a root's
+ancestor cut remain directly queryable in the shared table but cannot affect
+that root's assembly or supply its missing capability. Undeclared application
+providers remain absent. Neither constructor compiles/validates a graph,
+invokes factories or caches results. Generic compiled consumers preserve an
+arbitrary result proposition and its old proof through checklist equality.
+
+The local corpus covers four order presentations, eight availability masks,
+two roots and nine caller lists for unchanged names and two injective mapped
+presentations. It constructs 96 shared registries, checks 1728 preparations,
+and applies 624 successful factory tuples at contexts 0 and 7. Typed values
+include dependent data and context-indexed theorem witnesses. First-error
+oracles include a declared but unrelated provider. Nine axiom reports contain
+only standard ~propext~, ~Classical.choice~ and ~Quot.sound~ dependencies. The
+preceding 64-registry/512-preparation root-cut corpus also still passes.
+
+Shared construction traverses all declarations rather than each root's
+ancestors. In the five-node local graph, two retained roots have six ancestor
+entries in total. These counts describe possible setup sharing, not a measured
+speedup: name-list allocation, provider acquisition, hash/string costs and
+unused declarations remain. Added physical source cost is 18 net lines in
+Registry's reusable scope helper, 101 lines in SharedRegistry and a 148-line
+test. Euler adapters, changed context/key/result families, arbitrary finite
+isomorphism and EPG/C4 suffix correspondence remain separate obligations. The
+reference repository is unchanged and has not been integrated or compiled.

@@ -103,3 +103,10 @@ fixture are replaced by one generic cached constructor call. This is local
 adapter evidence, not upstream removed code, an elapsed-time benchmark or a
 claim that Euler needs a C4 registry. Provider/index construction, string/hash
 costs and actual upstream maintenance savings remain separate measurements.
+
+The [[file:receipts/euler-shared-registry-2026-10-05.json][shared-registry snapshot]] adds declaration-wide retention across verified
+roots, generic whole-checklist contracts and exact local source/test hashes.
+Its 96 shared registries, 1728 preparations and 624 successes are semantic
+counts. Five local declarations versus six summed root-cut entries is a
+conditional construction-visit comparison, not a timing benchmark or upstream
+source saving. The pinned Euler checkout is unchanged; the schema remains 1.
