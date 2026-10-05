@@ -49,6 +49,7 @@ check-merge: check-types
         LeanPoo.Functional.ConsumerRevision \
         LeanPoo.Functional.CertifiedView \
         LeanPoo.Functional.ResultView \
+        LeanPoo.Functional.CertifiedObservation \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -304,6 +305,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalConsumerRevision.lean
     {{lean}} Tests/FunctionalCertifiedView.lean
     {{lean}} Tests/FunctionalResultView.lean
+    {{lean}} Tests/FunctionalCertifiedObservation.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

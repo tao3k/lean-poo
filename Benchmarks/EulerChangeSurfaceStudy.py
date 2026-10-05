@@ -118,6 +118,31 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def certified_observation_audit(reference):
+    relative = "Euler/PacketInitializedResidualEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    records = {}
+    for name, tokens in [
+        ("toFieldTower_eq_of_path_eq", ["{raw raw' : VectorField}", "(h : G.path = H.path)", "G.toFieldTower = H.toFieldTower"]),
+        ("initializedNormalizedField_tower_eq", ["Field.toFieldTower_eq_of_path_eq", "initializedNormalizedField_path_eq"]),
+        ("initializedCorrectionData_eq_coordinate", ["unfold initializedCorrectionData coordinateData correctionDataOfFields", "rw [initializedNormalizedField_tower_eq", "(hN : 1 ≤ N)", "(hk : 4 ≤ k)", "(hκ : |k⁻¹| ≤ 1)"]),
+    ]:
+        starts = [i for i, row in enumerate(rows) if re.match(r"theorem " + name + r"\b", row)]
+        if len(starts) != 1:
+            raise ValueError(f"Expected one {name}")
+        start = starts[0]
+        end = next((i for i in range(start+1, len(rows)) if re.match(r"(?:def|theorem) ", rows[i])), len(rows))
+        body = "\n".join(rows[start:end])
+        for token in tokens:
+            if token not in body:
+                raise ValueError(f"Observation bridge changed: {name}: {token}")
+        records[name] = {"declaration_line": start+1,
+                         "token_lines": {token: [i+1 for i in range(start, end) if token in rows[i]] for token in tokens}}
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "declarations": records,
+            "scope": "Direct source equality chain from path to public field tower to correction data, with different raw field indices and explicit analytic guards; not elaborated/transitive dependencies or an adapter"}
+
+
 def built_result_audit(reference):
     relative = "Euler/AllOrderDriftEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -240,7 +265,8 @@ def study(reference):
              "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean",
              "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean",
              "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean",
-             "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean"]
+             "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean",
+             "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -252,6 +278,14 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "certified_observation": {
+            "reference_audit": certified_observation_audit(reference),
+            "local_api": ["observeResults", "observeResults_id", "build_observe", "Certified.observe", "Certified.observe_factories", "Certified.replaceObserved", "Certified.replaceObserved_factories", "Certified.replaceObserved_public"],
+            "mechanism": "Derive a certified public joint Claim from original data, or retain an existing observation-indexed joint Claim across explicitly pointwise compatible different internal types; entire certified public interface equality",
+            "tests": {"cases": 1536, "replacements": 375, "joint_candidates": 8, "joint_replacements": 1, "contexts": 3, "axiom_reports": 7, "visible_change_rejected": True, "separate_availability_and_first_errors": True},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean"]},
+            "cost": "Observed factories allocate wrappers and run supplied observation functions on each build; built-result observation executes observation functions and constructs a tuple. Proofs erase; candidate availability is separate",
+            "limits": ["Explicit compatibility and public analytic implication required", "Old joint Claim must depend only on public observation; hidden-field contracts excluded", "Context/key/public result types fixed", "No automatic path/field/type transport or open-recursion inference", "Reference only; actual Euler migrations 0; code/maintenance/native timing/allocation savings unmeasured"]},
         "result_view": {
             "reference_audit": built_result_audit(reference),
             "local_api": ["resultAt", "resultAt_build", "projectResults", "projectEvidence", "projectEvidence_val", "build_project", "Certified.projectData", "Certified.projectData_factories", "Certified.projectData_build"],

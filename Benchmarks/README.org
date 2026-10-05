@@ -340,3 +340,12 @@ source hashes, three pressure/gradient/equation consumers, nine APIs and the
 projection avoids factory application after a broad result exists; the reference
 already has named structures and no redundant external execution was established.
 Historical receipts remain unchanged; actual migration/maintenance savings unknown.
+
+* Certified observation source audit
+
+~receipts/euler-certified-observation-2026-10-05.json~ adds a source-hashed
+path/tower/correction-data equality chain, eight APIs and 50 local hashes.
+Schema stays v1 and historical receipts remain unchanged. Shared/test costs
+95/179 lines, wrappers, observation execution and candidate preparation are
+recorded. No external adapter, migration, native timing/allocation or code/
+maintenance saving is established.

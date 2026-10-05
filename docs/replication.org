@@ -2318,3 +2318,15 @@ Reproduce the v1 source audit with
 ~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-result-view.json~;
 compare 48 local hashes with the committed receipt. The three reference consumers
 are direct source readings, not an external Lean build or migration.
+
+* Certified observation replacement
+
+Build ~lake build LeanPoo.Functional.CertifiedObservation~ and run
+~lake env lean Tests/FunctionalCertifiedObservation.lean~. Expect
+~FUNCTIONAL-CERTIFIED-OBSERVATION-OK cases=1536 replaced=375 contexts=3~ and
+~FUNCTIONAL-CERTIFIED-OBSERVATION-JOINT-OK candidates=8 replaced=1 contexts=3~.
+Seven axiom reports contain no axioms or only Quot.sound. The generic public
+certificate equality client in reusable-contracts compiles without hand rewrites.
+Reproduce the v1 audit using
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-observation.json~;
+compare 50 local hashes. Reference reading is not external compilation or migration.

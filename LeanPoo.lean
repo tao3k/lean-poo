@@ -33,6 +33,7 @@ import LeanPoo.Functional.CachedPreparation
 import LeanPoo.Functional.ConsumerRevision
 import LeanPoo.Functional.CertifiedView
 import LeanPoo.Functional.ResultView
+import LeanPoo.Functional.CertifiedObservation
 import LeanPoo.Functional.Access
 import LeanPoo.Functional.View
 import LeanPoo.Functional.Observation

@@ -1651,3 +1651,44 @@ avoid unrequested application. Projecting already built data adds no factory
 application. Value commutation proves no equality of costs or effects, and no
 native speedup or allocation claim. The inclusion and analytic implication
 remain explicit; missing broad caches still use the earlier narrow fallback API.
+
+* Reuse joint certificates across public observation equivalence
+
+Import ~LeanPoo.Functional.CertifiedObservation~. ~observeResults~ applies a
+public observation to already built heterogeneous data; ~observeResults_id~
+and ~build_observe~ give identity and factory/data commutation.
+~Certified.observe~ derives a public joint Claim from an internal certificate
+using an explicit data-level implication. ~observe_factories~ exposes its wrappers.
+
+~Certified.replaceObserved~ accepts a candidate with a different internal result
+family, and pointwise equality of the two public observations on every requested
+key. An old Claim indexed only by the public observation transfers to the new
+internal tuple without fresh analytic admission. ~replaceObserved_factories~
+retains the exact candidate; ~replaceObserved_public~ proves equality of the
+entire certified public interface. Candidate preparation/availability is separate.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedObservation
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value Other PublicValue : Context → Key → Type}
+    (keys : List Key)
+    (expose : ∀ c key, Value c key → PublicValue c key)
+    (reveal : ∀ c key, Other c key → PublicValue c key)
+    (Claim : ∀ c, Results PublicValue c keys → Prop)
+    (ready : Certified keys (fun c data => Claim c (observeResults expose data)))
+    (candidate : Factories Context Other keys)
+    (same : Related (fun c key a b => expose c key a = reveal c key b)
+      keys ready.factories candidate) :
+    ready.observe expose Claim (fun _ _ proof => proof) =
+      (Certified.replaceObserved keys expose reveal Claim ready candidate same).observe
+        reveal Claim (fun _ _ proof => proof) :=
+  Certified.replaceObserved_public keys expose reveal Claim ready candidate same
+#+end_src
+
+This centralizes representation-to-public conversion and joint proof rewriting.
+Compatibility is explicit, not inferred from matching names or availability.
+An internal-only contract cannot be retained through a public observation that
+hides its data. Contexts, keys and public result types remain fixed. Observed
+factories allocate wrappers and run observations on every build; observeResults
+runs observations and constructs a tuple without factory calls. These costs
+and candidate preparation remain; no native timing or allocation claim is made.

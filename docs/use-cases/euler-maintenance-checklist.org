@@ -829,3 +829,16 @@ not an Euler-wide edit-count estimate.
 - [ ] Supply complete reference-compatible dependent adapters and analytic implications.
 - [ ] Measure actual migrated code/maintenance costs: migrations 0, savings unknown.
 - [ ] Measure native timings/allocations; source correspondence is not a performance result.
+
+* Keep a public joint certificate through internal replacement
+
+- [X] Eight APIs: ~observeResults~, ~observeResults_id~, ~build_observe~, ~Certified.observe~, ~observe_factories~, ~Certified.replaceObserved~, ~replaceObserved_factories~, ~replaceObserved_public~.
+- [X] Public data-level implication and explicit observation equality centralize conversion and joint proof rewrites.
+- [X] Whole certified public interface equality proved across different internal types.
+- [X] 1536 availability/order/duplicate cases, 375 replacements, three contexts; eight joint quantity/limit/flag/duplicate candidates with one available replacement.
+- [X] Separate source/candidate first errors retained; visible change rejected; seven standard-only axiom reports.
+- [X] Three source equality declarations audited with differing raw indices and hN/hk/hκ guards.
+- [X] Shared/test costs 95/179 lines; wrapper/observation/application/preparation costs explicit.
+- [ ] Supply reference-compatible dependent adapters and observation equality proofs.
+- [ ] Measure actual migrated costs: current migrations 0, maintenance and code savings unknown.
+- [ ] Measure native timing/allocations; semantic equality establishes no performance win.

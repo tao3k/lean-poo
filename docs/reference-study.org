@@ -1273,3 +1273,28 @@ with factory application, at fixed types/context. This completes that bounded
 client interface correspondence; it does not prove open recursion, fix/mix or
 Scheme compatibility. Broad-build and narrow-build routes have equal projected
 values but may execute different numbers of factory applications.
+
+* Certified public interfaces under representation replacement
+
+The [[file:../Benchmarks/receipts/euler-certified-observation-2026-10-05.json][v1 certified-observation receipt]]
+reads a three-declaration equality chain in the pinned reference.
+~toFieldTower_eq_of_path_eq~ permits different raw field indices and turns explicit
+path equality into field-tower equality. ~initializedNormalizedField_tower_eq~
+uses it; ~initializedCorrectionData_eq_coordinate~ rewrites the whole data after
+that equality with explicit hN/hk/hκ guards. Tokens and source hashes bind the
+reading; no external Lean build, dependent adapter or analytic equivalence is inferred.
+
+~Certified.observe~ admits a public joint theorem from original data.
+~Certified.replaceObserved~ then retains that observation-indexed theorem across
+different internal result types with explicit pointwise observation equality.
+~replaceObserved_public~ proves equality of the whole certified public interface.
+This consolidates conversion/proof plumbing for users who already have the
+semantic compatibility proof; it does not remove that proof's analytic premises.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 supplies the
+named functional-record model. This extension formalizes a fixed public consumer
+interface over such prepared functions; original representations may differ.
+It remains a closed provider contract, without open-recursion invalidation or
+Scheme compatibility. Shared module/test costs are 95/179 physical lines.
+Actual Euler migrations remain 0; complete adapters, net code/maintenance savings,
+native timings and allocations remain unmeasured.

@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 126 independent Lean example/contract files
+The local complete gate runs the 127 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -214,3 +214,13 @@ An inconsistent duplicate tuple (11/99) must yield the first value; wrong-contex
 access is rejected. Five axiom reports use only propext. Current inventory:
 126 independent files + four diagnostics (130 standalone), 32 native admissions,
 nine supervisor tests, 16 CI jobs and twelve Lean shards.
+
+* Certified public observations
+
+~FunctionalCertifiedObservation.lean~ checks 1536 availability/order/duplicate
+cases with 375 successful representation replacements, plus eight joint
+quantity/limit/flag/duplicate candidates, three contexts, separate first errors
+and rejection of a visible change. Seven axiom reports contain no axioms or
+only Quot.sound. Current inventory: 127 independent files + four diagnostics
+(131 standalone), 32 native admissions, nine supervisor tests, 16 CI jobs,
+twelve Lean shards. The source/candidate providers have different result types.
