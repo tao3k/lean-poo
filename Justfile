@@ -56,6 +56,7 @@ check-merge: check-types
         LeanPoo.Functional.RegistryPatch \
         LeanPoo.Functional.Overlay \
         LeanPoo.Functional.IndexedOverlay \
+        LeanPoo.Functional.KeyIndex \
         LeanPoo.Functional.ScopedTransaction \
         LeanPoo.Functional.TransactionCheck \
         LeanPoo.Functional.IndexedTransaction \
@@ -283,6 +284,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalRegistryPatch.lean
     {{lean}} Tests/FunctionalOverlay.lean
     {{lean}} Tests/FunctionalIndexedOverlay.lean
+    {{lean}} Tests/FunctionalKeyIndex.lean
     {{lean}} Tests/FunctionalScopedTransaction.lean
     {{lean}} Tests/FunctionalTransactionCheck.lean
     {{lean}} Tests/FunctionalIndexedTransaction.lean
@@ -428,3 +430,16 @@ _check-native-scoped:
     .lake/build/bin/scopedTransactionScale scoped positive 64 16 4
     .lake/build/bin/scopedTransactionScale full unknown 64 16 4
     .lake/build/bin/scopedTransactionScale scoped unknown 64 16 4
+
+# Retained requested-key index admission, without timing thresholds.
+_check-native-key-index:
+    .lake/build/bin/keyIndexScale list outside 64 16 4
+    .lake/build/bin/keyIndexScale indexed outside 64 16 4
+    .lake/build/bin/keyIndexScale list keys 64 16 4
+    .lake/build/bin/keyIndexScale indexed keys 64 16 4
+    .lake/build/bin/keyIndexScale list early 64 16 4
+    .lake/build/bin/keyIndexScale indexed early 64 16 4
+    .lake/build/bin/keyIndexScale list late 64 16 4
+    .lake/build/bin/keyIndexScale indexed late 64 16 4
+    .lake/build/bin/keyIndexScale list unknown 64 16 4
+    .lake/build/bin/keyIndexScale indexed unknown 64 16 4

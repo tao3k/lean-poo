@@ -709,3 +709,24 @@ logic and proof reuse; it does not infer dependencies or replace publishing the
 full changed registry. Sharing a full result across consumers can be cheaper.
 The [[file:../../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][source snapshot]] retains schema 1 and the reference manifest. Factory execution,
 allocation/peak-memory and whole Euler maintenance benefits are unmeasured.
+
+* Retained requested-key index capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~KeyIndex.ofKeys~, ~KeyIndex.contains~ | Compile and share a consumer's key membership | Build once; exact list-bound witness; collisions/copies remain |
+| ~batchMayAffectIndexed~, ~transactionMayAffectIndexed~ | Remove repeated requested-list scans from change checks | Raw edit history still scanned; same conservative impact result |
+| ~prepareTransactionIndexed~ | Prepare a transaction consumer with retained ancestry AND key indices | Exact errors, order, duplicates and typed functions; no state publication |
+| ~prepareTransactionIndexed_eq/ofRegistry~ | Reuse list/ordinary consumer claims with one rewrite | No per-key ~require~, branch proof or new alignment premise |
+| Semantic corpus | 4,096 cases, 2,304 negative, 1,792 positive, 1,024 name errors | All-key collisions; membership/deduplication; four paths; two contexts |
+| Shared source/test and benchmark cost | Library/test 79/157; benchmark 52/64 lines | Proofs/comments included; user provider/dependency declarations extra |
+| Native large disjoint-key evidence | 21.014521/0.063708 ms list/indexed query | Indexed build+query 0.084354 ms; local four pairs |
+| Negative one-use evidence | Outside/early/unknown totals may regress | Construction separated; no universal crossover |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+A user-defined analytic tower with repeated narrow-consumer checks can retain its
+ancestry and requested-key indices and reuse existing transaction proofs. This
+reduces shared caller branch/alignment scaffolding; it does not infer analytic
+dependencies or establish external savings. The [[file:../../Benchmarks/receipts/euler-key-index-2026-10-05.json][source snapshot]] keeps schema 1
+and the unchanged reference manifest. Factory bodies, allocation/peak memory and
+whole Euler maintenance effects remain unmeasured.

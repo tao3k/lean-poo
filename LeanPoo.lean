@@ -40,6 +40,7 @@ import LeanPoo.Functional.SharedRegistry
 import LeanPoo.Functional.RegistryPatch
 import LeanPoo.Functional.Overlay
 import LeanPoo.Functional.IndexedOverlay
+import LeanPoo.Functional.KeyIndex
 import LeanPoo.Functional.ScopedTransaction
 import LeanPoo.Functional.TransactionCheck
 import LeanPoo.Functional.IndexedTransaction

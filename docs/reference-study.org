@@ -1140,3 +1140,10 @@ The [[file:../Benchmarks/receipts/scoped-transaction-native-2026-10-05.json][nat
 fallback and late unknown-name paths. Positive fallback overhead is retained.
 This may support user-supplied narrow analytic consumers, with no external
 adapter/integration/migration and no measured upstream source or maintenance saving.
+
+The [[file:../Benchmarks/receipts/euler-key-index-2026-10-05.json][retained-key-index source snapshot]] binds 38 local files at the unchanged Euler
+pin/manifest. It records exact consumer outcome preservation and compiled requested-
+key membership, complementing retained ancestry. The [[file:../Benchmarks/receipts/key-index-native-2026-10-05.json][native receipt]] separates
+construction, reuse and one-use totals, retaining outside/early/unknown regressions.
+This is a local user-interface pattern; external migration remains zero and
+source/maintenance savings unknown. No analytic provider adapter is integrated.

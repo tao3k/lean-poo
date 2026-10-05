@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 120 independent example/contract
+once, checks C4's source-owned types, and runs 121 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 124 unique example/test files, including the typed
+The current gate covers 125 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -286,7 +286,7 @@ outside timing. Allocated bytes and peak live storage are not measured.
 
 The complete gate now builds ~LeanPoo~ and ~indexedRegistryScale~ once. A fourth
 independent post-preparation phase runs four native semantic cases covering both
-representations and retention policies, with no timing threshold. All 120 atomic
+representations and retention policies, with no timing threshold. All 121 atomic
 Lean files, four bounded diagnostic files and nine Python supervision tests remain.
 CI builds the same executable and admits those four cases in the required
 diagnostics job; the existing sixteen-job aggregate is preserved.
@@ -325,10 +325,20 @@ Shared preparation builds ~LeanPoo~, ~indexedRegistryScale~ and
 ~scopedTransactionScale~ once. The existing native phase/CI diagnostic job admits
 eight new full/scoped cases for outside ancestry, disjoint keys, positive fallback
 and late unknown names, alongside four registry cases. No timing threshold is used.
-Current inventory: 120 independent Lean files plus four bounded diagnostics
+At that stage the inventory was 120 independent Lean files plus four bounded diagnostics
 (124 standalone files), twelve shards, nine supervision tests and sixteen CI jobs.
 
 The new native paired receipt measures single-consumer preparation, including
 impact scans, with scalar outcome controls. It retains positive fallback overhead
 and excludes factory bodies, graph/index/registration/conversion/inputs/oracles.
 Its operation medians are not a controlled full-gate performance comparison.
+
+* Requested-key index admission
+
+Shared preparation builds ~LeanPoo~ and the three native study executables once.
+The existing native phase/CI diagnostic job now admits ten additional list/indexed
+key-scope cases, including outside/disjoint/early/late/unknown paths and capability
+errors, bringing the native total to 22. No timing threshold or new CI job is added.
+Current inventory: 121 independent files plus four bounded diagnostics (125 standalone
+files), twelve shards, nine supervision tests and sixteen CI jobs. The new native
+receipt records index construction separately and retains one-use regressions.

@@ -1350,3 +1350,59 @@ is slightly slower, 0.118313/0.119542 ms. Graph/index/registration/conversion,
 inputs, factory execution and scalar validation are outside timers. Four local
 alternating pairs per workload establish no universal crossover, allocation
 saving or whole Euler speedup.
+
+* Retain a requested-key index across transaction views
+
+Import ~LeanPoo.Functional.KeyIndex~. Build
+~let scope := Requirements.KeyIndex.ofKeys keys~ once, then use
+~Requirements.prepareTransactionIndexed ancestry scope registry changes~ for
+repeated plans. The ancestry index is already retained; this adds a verified hash
+index for requested-key membership. It removes repeated requested-list scans
+inside the edit-history loop. Raw edit histories still scan until first overlap.
+
+~KeyIndex keys~ ties membership to the exact list. The set deduplicates only
+impact queries: preparation retains original order, repeated keys, dependent
+result types, first capability errors and all future context functions.
+~transactionMayAffectIndexed_eq~ and ~prepareTransactionIndexed_eq~ prove exact
+agreement with the existing list path. Collisions are permitted; correctness
+does not depend on average hash performance. Rebuild for a different requested
+list; an index can be shared across roots/registries with the same list.
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (ancestry : C4.AncestryIndex graph root)
+    (keys : List Key)
+    (scope : Functional.Requirements.KeyIndex keys)
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value))
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except String (Except Key Result) → Prop)
+    (known : Claim ((registry.patchTransaction changes).map (fun updated =>
+      (Functional.Requirements.prepare
+        (Functional.assemble ancestry.order updated.dictionary) keys).map consume))) :
+    Claim ((Functional.Requirements.prepareTransactionIndexed ancestry scope
+      (Functional.IndexedRegistry.ofRegistry registry) changes).map
+        (fun ready => ready.map consume)) := by
+  rw [Functional.Requirements.prepareTransactionIndexed_ofRegistry]
+  cases applied : registry.patchTransaction changes <;>
+    simpa only [applied, Except.map] using known
+#+end_src
+
+This combines retained ancestry/key scope, exact name diagnostics and typed
+consumer preparation without user branch/per-key ~require~ proofs. It remains a
+consumer view, not updated state publication. Full ~patchTransaction~ still
+publishes changes. Hash collisions, copies, set construction, scope scans,
+preparation and user factory costs remain.
+
+Native evidence separates index construction from retained use. For 512 requested
+keys and 4,096 disjoint edits, list/indexed query medians are 21.014521/0.063708 ms;
+indexed per-sample build+query median is 0.084354 ms. Late overlap gives
+20.979250/0.156208 ms, with indexed total 0.175458 ms. For 512-key outside
+ancestry, totals regress from 0.048500 to 0.071521 ms; early overlap from
+0.152521 to 0.174750 ms; unknown names from 0.005730 to 0.025313 ms. Eight-key
+outside/unknown one-use totals also regress. Retain/choose the index by workload;
+there is no automatic global crossover. These local calls exclude factory bodies
+and graph/ancestry/registration/conversion/inputs/build/oracle costs, and do not
+measure allocated bytes, peak memory or Euler maintenance savings.

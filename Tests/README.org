@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 120 independent Lean example/contract files
+The local complete gate runs the 121 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -131,7 +131,7 @@ The complete gate additionally builds the native registry benchmark and runs
 four semantic cases: list/indexed crossed with latest/retained snapshots.
 Current per-name/key outputs, retained counts and old snapshot observations are
 checked by Lean; timing values have no admission threshold. CI requires the same
-cases after compiling the executable. The current atomic inventory includes 120 files.
+cases after compiling the executable. The current atomic inventory includes 121 files.
 
 [[file:FunctionalIndexedTransaction.lean][FunctionalIndexedTransaction]] checks 192 successful atomic indexed transactions,
 64 first unknown-name failures, 3072 queries (1920 negative), two contexts and
@@ -158,3 +158,10 @@ capability errors, empty/repeated keys, hash collisions and conservative impact.
 Three axiom reports and a generic arbitrary-claim client verify whole-outcome
 reuse. Eight new native admission cases bring the full gate's native total to
 twelve; current independent Lean inventory is 120 files.
+
+[[file:FunctionalKeyIndex.lean][FunctionalKeyIndex]] checks exact retained-key-index membership and deduplicated
+size, plus 4,096 scalar/list-scoped/full-indexed/ordinary consumer outcomes. All keys
+hash to zero; empty/repeated/reordered requests, 2,304 negative/1,792 positive
+scopes, 1,024 name errors and two contexts are covered. Six axiom reports and a
+generic ordinary-client proof accompany the controls. Ten new native cases bring
+the gate's native total to 22; current independent Lean inventory is 121 files.

@@ -248,3 +248,27 @@ regression and scope-scan cost; no universal policy or whole Euler gain is claim
 Shared benchmark Lean/Python costs are 49/60 lines, separate from library/test
 59/144 lines. No allocations/peak memory are measured. The [[file:receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]]
 keeps the reference pin/manifest, 36 local files and zero external migrations.
+
+* Native retained requested-key index study
+
+#+begin_src sh
+lake build keyIndexScale
+python3 Benchmarks/KeyIndexStudy.py --output /tmp/key-index.json
+#+end_src
+
+The [[file:receipts/key-index-native-2026-10-05.json][native receipt]] uses 80 samples/four alternating pairs for 8/512 requested keys,
+4,096 edits and outside/disjoint/early-overlap/late-overlap/unknown modes. Scalar
+status/checksum controls match per pair; fourteen source/config hashes, host and
+native digest are bound. Index construction is timed separately; query includes
+the complete impact/preflight/fallback/preparation call. Per-sample compile+query
+totals include one-use cost. Factory evaluation, graph/ancestry/registration/
+conversion/inputs/oracle/build are outside timing.
+
+For 512 disjoint keys, list/indexed query medians are 21.014521/0.063708 ms,
+indexed total 0.084354 ms. Late overlap is 20.979250/0.156208 ms, indexed total
+0.175458 ms. One-use totals regress for outside (0.048500/0.071521 ms), early
+(0.152521/0.174750 ms) and unknown (0.005730/0.025313 ms); small outside/unknown
+cases regress too. Raw history scans/collisions/copies remain; no universal
+representation switch, allocated-byte or whole Euler gain is claimed. Shared
+benchmark source is 52/64 lines, library/test 79/157 separate. The [[file:receipts/euler-key-index-2026-10-05.json][schema-1 snapshot]]
+keeps the reference manifest, 38 local files and zero external migrations.

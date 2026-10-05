@@ -2190,3 +2190,41 @@ independent Lean files plus four diagnostics; sixteen CI jobs remain unchanged.
 The [[file:../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]] binds 36 local files at the unchanged Euler pin/manifest.
 External migrations remain zero; net lines/hours/avoided edits remain unknown.
 Original EPG correspondence and analytic dependency inference remain open.
+
+* Requested-key index correctness and cost separation
+
+~Requirements.KeyIndex keys~ stores a hash set plus an erased exact-membership
+witness. Hash-set construction and ~contains_iff/contains_eq~ connect runtime
+membership to requested list membership. Boolean predicate equivalence transfers
+batch and transaction impact; ~prepareTransactionIndexed_eq~ then preserves the
+entire nested consumer result. The conversion theorem gives an ordinary client
+one proof rewrite with no new alignment/success/negative-scope premise. Six kernel
+reports use only standard Lean axioms.
+
+The 4,096-case scalar corpus also compares retained-index, list-scoped, full-indexed
+and ordinary paths: 2,304 negative scopes, 1,792 positive scopes, 1,024 unknown-name
+outcomes, two contexts and all-key hash collisions. Membership and exact deduplicated
+set size are checked for empty, reordered and repeated requests. Consumer ordering,
+errors and typed guards remain unchanged. Shared source/test cost is 79/157 lines.
+
+The [[file:../Benchmarks/receipts/key-index-native-2026-10-05.json][native receipt]] records 80 samples, four alternating pairs per size/workload,
+8/512 requested keys and five modes over 4,096 edits/256 batches. Fourteen source/
+config hashes and the binary digest bind controls. Construction, query and per-sample
+construction+query totals are recorded separately. Factories are evaluated for
+scalar checks after timing. The 512-key disjoint list/indexed query medians are
+21.014521/0.063708 ms, indexed total 0.084354 ms. Late overlap gives
+20.979250/0.156208 ms, indexed total 0.175458 ms. Gains remove the nested requested-
+list scan in these workloads; raw history and fallback/preparation work remain.
+
+Negative one-use results are retained: 512-key outside ancestry 0.048500/0.071521 ms,
+early overlap 0.152521/0.174750 ms, unknown names 0.005730/0.025313 ms list/indexed
+totals. Small outside/unknown cases regress too; no universal switch is justified.
+No allocated-byte/peak-memory/application speedup is measured. Benchmark Lean/Python
+cost is 52/64 lines, separate from the shared implementation and user adapters.
+
+Ten native cases cover list/indexed outside, disjoint, early/late overlap and unknown
+names, including missing capability errors. The gate now admits 22 native cases,
+121 independent Lean files plus four diagnostics, with the same sixteen CI jobs.
+The [[file:../Benchmarks/receipts/euler-key-index-2026-10-05.json][schema-1 source snapshot]] binds 38 local files at the unchanged Euler reference.
+No external consumer is migrated; net source/maintenance savings remain unknown.
+Original EPG correspondence and analytic dependency inference remain open.

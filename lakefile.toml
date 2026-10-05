@@ -12,3 +12,7 @@ root = "Benchmarks.IndexedRegistryScale"
 [[lean_exe]]
 name = "scopedTransactionScale"
 root = "Benchmarks.ScopedTransactionScale"
+
+[[lean_exe]]
+name = "keyIndexScale"
+root = "Benchmarks.KeyIndexScale"
