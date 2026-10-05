@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 116 independent example/contract
+once, checks C4's source-owned types, and runs 117 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 120 unique example/test files, including the typed
+The current gate covers 121 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -208,3 +208,32 @@ graph/registry/preparation, retained-snapshot copy workloads and Euler proofs
 are excluded. There is no native-code, allocation or whole-application speedup
 claim. Collisions/resizing/shared storage retain costs; the semantic test forces
 all keys to collide but is not a collision performance study.
+
+* Named registry batch measurement
+
+The [[file:../Benchmarks/receipts/indexed-registry-2026-10-05.json][named-batch receipt]] separately measures the actual registry workflow with
+four provider names, an absent fifth name, removals, fallback keys and two
+contexts. Each variant performs identical caller-ordered named batches and
+direct queries. Four alternating pairs retain per-name/key oracle equality.
+The indexed construction timer includes initial conversion of the ordinary
+registry; common initial name registration is excluded.
+
+| Interpreter workload | List updates ms | Indexed updates ms | List queries ms | Indexed queries ms |
+|----------------------+-----------------+--------------------+-----------------+--------------------|
+| 1 batch / 8 edits / width 8 | 0.556 | 0.640 | 0.690 | 0.858 |
+| 64 batches / 4096 edits / width 1024 | 15.271 | 9.348 | 986.765 | 41.297 |
+| 256 batches / 4096 edits / width 256 | 7.305 | 8.868 | 301.686 | 10.617 |
+
+For the 64-batch workload the update/query ratios of medians are 1.63x/23.89x.
+For 256 repeated batches, queries improve by 28.41x but indexed updates are
+1.21x slower. The small-table case is also negative (updates 1.15x slower,
+queries 1.24x slower). Tiny timings vary. Favor retained indexed state for the
+measured query-heavy continued-update pattern; retain ordinary/list APIs for
+small or update-heavy workloads unless caller measurements show a benefit.
+
+These are local interpreter measurements, not standalone-overlay multipliers,
+native-code guarantees or whole Euler proof gains. Imports, input generation,
+common initial registration, scalar oracle, graph/order/preparation and copy-heavy
+retained-snapshot workloads are excluded. Hash collision/resizing and shared
+storage costs remain. ~snapshot~ full-table materialization is not in the timed
+query path. All raw output belongs in TMP and fixtures stay schema-1 JSON.

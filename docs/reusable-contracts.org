@@ -1096,3 +1096,49 @@ The paired performance receipt isolates construction and direct queries under
 the Lean interpreter; it excludes imports, graph/registry/preparation costs and
 Euler proofs. Semantic tests force all keys to collide. Euler migration and net
 maintenance savings remain unmeasured.
+
+* Indexed state retained inside the provider registry
+
+Convert an existing scoped registry once with ~IndexedRegistry.ofRegistry~.
+The named table now stores ~IndexedOverlay~ states rather than only materialized
+provider functions. ~patchBatch name edits~ extends that name's retained state,
+so arbitrarily many calls preserve the original base. Unknown names, including
+empty batches, are errors. Other names and declared-name membership remain
+unchanged. Initial conversion maps entries; each successful batch performs one
+name lookup/insertion plus indexed cell writes, without a graph fold or factories.
+
+Use ~registry.dictionary~ directly with ~assemble~ and ~Requirements.prepare~.
+No extra table is constructed in that query path. ~snapshot~ materializes a
+~ProviderRegistry~ for older APIs requiring that concrete type, and traverses
+all entries; keep it out of repeated queries. ~ofRegistry_dictionary~ and
+~snapshot_dictionary~ establish exact whole-function agreement.
+
+#+begin_src lean
+def continueNamedEdits {Context Key : Type} [BEq Key] [Hashable Key]
+    [LawfulBEq Key] [DecidableEq Key] {Value : Context → Key → Type}
+    (state : Functional.IndexedRegistry Context Key Value) (name : String)
+    (changes : List (Functional.CapabilityEdit Context Key Value)) :=
+  state.patchBatch name changes
+#+end_src
+
+The practical workflow is: retain verified root/ancestry indexes and consumer
+key lists; convert the registry once; check the returned ~Except~ at every update;
+use the new dictionary directly; reuse consumers for which ~batchMayAffect~ is
+false via ~prepare_indexedRegistry_of_unaffected~. That theorem internally proves
+the ordinary batch correspondence. Users do not construct comparison snapshots,
+write per-name alignment lemmas or repeat per-key ~require~ proofs.
+
+~patchBatch_agreement~ equates the whole updated dictionary to an ordinary batch
+on the old snapshot. ~patchBatch_base~ preserves bases at every name, including
+the edited one. The ordinary batch's sequential semantics, repeated-key last
+write and removals therefore transfer exactly. The tests check old snapshots,
+base retention, first errors and independent consumer results with colliding keys.
+
+The ~IndexedRegistry~ type currently exposes individual batches, not one atomic
+multi-name transaction call: successive calls have separate results and prior
+successful states remain available when a later call fails. ~ProviderRegistry~'s
+pure transaction remains available with its previously documented costs. Hash
+collisions/resizing/shared copies, base costs and conservative footprint scans
+remain. Retaining an already wrapped input base does not compact it. Performance
+of named updates is measured separately from standalone overlay measurements;
+there is no graph/Euler proof or native-code speedup claim.

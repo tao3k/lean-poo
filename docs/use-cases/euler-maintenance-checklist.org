@@ -589,3 +589,28 @@ Euler proof time or code savings. Shared source/test cost is 103/128 physical
 lines including proofs/comments; application adapters and benchmark code are
 separate costs. Original EPG correspondence and analytic dependency inference
 remain open.
+
+* Retained indexed registry capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-indexed-registry-2026-10-05.json][indexed-registry source snapshot]] retains schema 1 and the reference manifest.
+
+| Capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------+---------------------------------+------------------------|
+| ~IndexedRegistry.ofRegistry~ | Convert an existing scoped registry once | Initial full-table mapping; no factories |
+| ~patchBatch~, ~patchBatch_base~ | Continue named changes without nesting prior provider bases | One name lookup/insertion; cell/hash/copy costs remain |
+| ~dictionary~, ~snapshot_dictionary~ | Reuse ordinary assembly/preparation and concrete-registry consumers | Direct queries avoid mapping; explicit snapshot maps all entries |
+| ~patchBatch_agreement~, ~prepare_indexedRegistry_of_unaffected~ | Reuse exact sequential behavior and unaffected whole-consumer claims | No handwritten comparison snapshot, per-name alignment or per-key ~require~ |
+| Semantic corpus | 352 batches, 64 unknown errors, 5632 queries, 3136 negative | Two contexts, colliding capability hashes, original bases/snapshots, nine axiom reports |
+| Shared library/test cost | 130/166 physical lines | Proofs/comments included; benchmark/application adapters separate |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+Named indexed measurements are separate from prior standalone-overlay results.
+Small-table overhead, retained copies and collisions remain material costs.
+Successive batch calls do not give atomic multi-name transaction semantics.
+
+Matched named-registry interpreter measurements retain both gains and losses:
+256 batches of 4096 total edits over width 256 give list/indexed update medians
+7.305/8.868 ms and direct query medians 301.686/10.617 ms. Indexed updates
+are slower in this case; query gains do not establish an update-only or Euler
+proof speedup. The small-table case is negative too. Benchmark Lean/Python
+source costs are 59/55 physical lines, separate from library/test costs.

@@ -2029,3 +2029,31 @@ at 57.046/6.043 ms and queries at 158.632/5.707 ms under the interpreter.
 Eight-key indexed medians are slower, retained as a negative result. These are
 operation-level local measurements; no native/Euler proof speedup is established.
 Shared module/test cost is 103/128 physical lines including proofs/comments.
+
+* Indexed registry update and selection correspondence
+
+~Functional.IndexedRegistry~ closes the gap between retained indexed capability
+state and named shared-provider selection. Initial conversion and explicit
+snapshot materialization preserve the entire dictionary; each named batch has
+exact ordinary-batch agreement, unchanged other providers/name membership and
+original-base retention. Nine axiom reports include whole-consumer preparation
+noninterference from a negative ancestry/key read scope. The generic client
+requires one rewrite, with no user alignment or comparison-snapshot premise.
+
+The scalar corpus uses four presentations, eight masks, eight plans, two roots,
+eight key lists and two contexts. It checks 352 successful sequential batches,
+64 unknown-name errors, 5632 impact queries (3136 negative), original bases and
+retained snapshots; all capability hashes collide. Direct dictionaries, explicit
+snapshots and ordinary batches agree with the independent oracle at each prefix.
+Shared source/test cost is 130/166 physical lines including proofs/comments.
+The new schema-1 snapshot binds 30 local source/test hashes at the unchanged
+Euler reference pin. No external consumer is migrated; source reduction and
+maintenance hours remain unmeasured. Multi-name transaction atomicity on this
+new type and original EPG/analytic correspondence remain separate obligations.
+
+Matched named-registry interpreter measurements retain both gains and losses:
+256 batches of 4096 total edits over width 256 give list/indexed update medians
+7.305/8.868 ms and direct query medians 301.686/10.617 ms. Indexed updates
+are slower in this case; query gains do not establish an update-only or Euler
+proof speedup. The small-table case is negative too. Benchmark Lean/Python
+source costs are 59/55 physical lines, separate from library/test costs.

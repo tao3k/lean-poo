@@ -1094,3 +1094,15 @@ Reproduce after building the library with:
 #+begin_src sh
 python3 Benchmarks/IndexedOverlayStudy.py --output /tmp/indexed-overlay.json
 #+end_src
+
+The [[file:../Benchmarks/receipts/euler-indexed-registry-2026-10-05.json][indexed-registry source snapshot]] binds 30 local source/test hashes and records
+retained named bases, dictionary/ordinary-batch agreement and consumer reuse.
+The [[file:../Benchmarks/receipts/indexed-registry-2026-10-05.json][named-batch runtime receipt]] compares actual list/indexed registry updates and
+direct queries with per-name/key scalar controls. Initial name registration,
+inputs/imports, oracle, graph/order/preparation and Euler proofs are excluded;
+indexed conversion is included in its construction phase. Both retain old
+snapshots in semantic tests; copy-heavy retained-snapshot performance is unmeasured.
+
+#+begin_src sh
+python3 Benchmarks/IndexedRegistryStudy.py --output /tmp/indexed-registry.json
+#+end_src

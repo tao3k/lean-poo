@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 116 independent Lean example/contract files
+The local complete gate runs the 117 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -120,3 +120,9 @@ colliding: 5504 prefix, 512 final and 5504 retained-snapshot observations,
 32 histories and 344 writes at two contexts. Exact list/sequential agreement,
 base retention and extension composition have nine standard-axiom reports;
 a generic consumer claim reuses the preparation proof in one rewrite.
+
+[[file:FunctionalIndexedRegistry.lean][FunctionalIndexedRegistry]] checks 352 named indexed-state updates, 64 unknown
+errors, 5632 impact queries and 3136 negative scopes across two roots/contexts.
+Colliding hashes, original-base retention, old snapshots and explicit materialized
+snapshots are checked against ordinary batches and a scalar oracle at each
+prefix. A generic client and nine standard-axiom reports close consumer reuse.
