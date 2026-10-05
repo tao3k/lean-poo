@@ -331,3 +331,12 @@ five projection APIs, broad-failure fallback semantics and 78/120 line costs.
 There is no new native benchmark: projection scans and fallback preparation
 costs are explicit, allocations/timing and actual Euler maintenance savings
 are unmeasured. Earlier receipts remain historical evidence.
+
+* Built result-view audit
+
+~receipts/euler-result-view-2026-10-05.json~ preserves schema v1 and adds 48 local
+source hashes, three pressure/gradient/equation consumers, nine APIs and the
+98/118 shared/test line costs. No native benchmark was added. The local result
+projection avoids factory application after a broad result exists; the reference
+already has named structures and no redundant external execution was established.
+Historical receipts remain unchanged; actual migration/maintenance savings unknown.

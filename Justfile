@@ -48,6 +48,7 @@ check-merge: check-types
         LeanPoo.Functional.CachedPreparation \
         LeanPoo.Functional.ConsumerRevision \
         LeanPoo.Functional.CertifiedView \
+        LeanPoo.Functional.ResultView \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -302,6 +303,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean
     {{lean}} Tests/FunctionalCertifiedView.lean
+    {{lean}} Tests/FunctionalResultView.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

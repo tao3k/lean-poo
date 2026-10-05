@@ -816,3 +816,16 @@ not an Euler-wide edit-count estimate.
 - [ ] Supply actual Euler-dependent adapters, inclusion and analytic consequence proofs.
 - [ ] Measure complete migrated costs and avoided edits: current migrations 0, savings unknown.
 - [ ] Measure native timing/allocations; no new performance claim in this increment.
+
+* Consume built data and joint evidence by capability name
+
+- [X] Nine APIs: ~resultAt~, ~resultAt_build~, ~projectResults~, ~projectEvidence~, ~projectEvidence_val~, ~build_project~, ~Certified.projectData~, ~projectData_factories~, ~projectData_build~.
+- [X] Consumers access named dependent results without tuple-position plumbing.
+- [X] Built data/proof projects without factory application; repeated new contexts can retain narrow factories.
+- [X] 4608 cases, 1944 successful broad preparations, three contexts, independent scalar expectations; inconsistent duplicate values select the first occurrence.
+- [X] Wrong-context access rejected; five propext-only axiom reports.
+- [X] Three pressure/gradient/equation consumers audited with explicit order/time guards.
+- [X] Shared/test costs 98/118 lines; source scans, tuple construction and unequal evaluation costs documented.
+- [ ] Supply complete reference-compatible dependent adapters and analytic implications.
+- [ ] Measure actual migrated code/maintenance costs: migrations 0, savings unknown.
+- [ ] Measure native timings/allocations; source correspondence is not a performance result.

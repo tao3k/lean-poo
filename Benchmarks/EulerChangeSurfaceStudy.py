@@ -118,6 +118,31 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def built_result_audit(reference):
+    relative = "Euler/AllOrderDriftEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    consumers = {}
+    for name, tokens in [
+        ("Budget.correctedPressureTower", ["R.pressure.field", "R.pressure.realization", "R.pressure.value_eq"]),
+        ("Budget.correctedPressureTower_gradient", ["R.gradient t", "gradientSpace period A.κ A.direction"]),
+        ("Budget.correctedFieldTower_hasDerivAt", ["R.equation q hq t ht", "R.pressure.realization q", "q : ℕ", "hq : 6 ≤ q", "ht : t ∈ Ioo 0 T"]),
+    ]:
+        starts = [i for i, row in enumerate(rows) if re.match(r"(?:def|theorem) " + re.escape(name) + r"\b", row)]
+        if len(starts) != 1:
+            raise ValueError(f"Expected one {name}")
+        start = starts[0]
+        end = next((i for i in range(start+1, len(rows)) if re.match(r"(?:def|theorem) ", rows[i])), len(rows))
+        body = "\n".join(rows[start:end])
+        for token in tokens:
+            if token not in body:
+                raise ValueError(f"Built result obligation changed: {name}: {token}")
+        consumers[name] = {"declaration_line": start+1,
+                           "token_lines": {token: [i+1 for i in range(start, end) if token in rows[i]] for token in tokens}}
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "consumers": consumers,
+            "scope": "Direct reading of named pressure data and joint gradient/equation evidence; not elaboration, transitive dependency closure, or evidence of redundant external factory execution"}
+
+
 def narrow_consumer_audit(reference):
     relative = "Euler/PacketSourceEquations.lean"
     raw = (reference / relative).read_bytes()
@@ -214,7 +239,8 @@ def study(reference):
              "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean",
              "LeanPoo/Functional/CachedPreparation.lean", "Tests/FunctionalCachedPreparation.lean",
              "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean",
-             "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean"]
+             "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean",
+             "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -226,6 +252,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "result_view": {
+            "reference_audit": built_result_audit(reference),
+            "local_api": ["resultAt", "resultAt_build", "projectResults", "projectEvidence", "projectEvidence_val", "build_project", "Certified.projectData", "Certified.projectData_factories", "Certified.projectData_build"],
+            "mechanism": "Named dependent result access and proof-bearing projection of already built data; data-level analytic consequences avoid client factory tuple destructuring; exact projection/build commutation",
+            "duplicates": "First source occurrence even for arbitrary inconsistent duplicate tuples; requested order and repeats preserved",
+            "tests": {"cases": 4608, "successes": 1944, "contexts": 3, "axiom_reports": 5, "different_duplicate_values": [11, 99], "wrong_context_rejected": True},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean"]},
+            "cost": "Named reads scan source; result projection scans source per requested key and constructs a tuple. Building broad first computes all its factories; building projected factories computes only requested ones, including repeats. Value commutation is not cost equality",
+            "limits": ["Analytic implication and inclusion remain explicit", "No changed-context transport or inference", "Already built data avoids factory reapplication only on this local projection path", "Reference already uses named structures; no claim of external duplicate computation", "No external integration; actual Euler migrations 0; code/maintenance/native timing/allocation savings unmeasured"]},
         "certified_view": {
             "reference_audit": narrow_consumer_audit(reference),
             "local_api": ["Certified.project", "Certified.project_factories", "CachedPreparation.narrow", "CachedPreparation.narrow_of_ok", "CachedPreparation.narrow_eq"],

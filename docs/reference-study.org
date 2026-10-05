@@ -1247,3 +1247,29 @@ to named record access; it does not establish the paper's open-recursive fix/mix
 semantics or automatic analytic dependency tracking. See the
 [[https://fare.tunes.org/files/cs/poof.pdf][author's paper]]. Actual Euler migrations
 remain 0; net lines, adapter costs and maintenance savings remain unmeasured.
+
+* Built dependent results and data-level joint consequences
+
+The new [[file:../Benchmarks/receipts/euler-result-view-2026-10-05.json][v1 result-view receipt]]
+reads three pinned ~AllOrderDriftEquation~ consumers. ~Budget.correctedPressureTower~
+uses actual pressure data and its realization equality; the gradient theorem
+uses ~R.gradient t~; the derivative theorem uses ~R.equation q hq t ht~ and
+~R.pressure.realization q~ with order/time guards. Declarations and tokens are
+source-hash bound. The reference already uses named structures; this reading
+establishes no redundant computation or saved Euler edits.
+
+~resultAt~ and ~projectResults~ supply named access to the corresponding closed
+heterogeneous data interface. ~projectEvidence~ projects built data/proof without
+factory application. ~Certified.projectData~ lets analytic implications be
+written over values instead of unpacking retained factories. Inter-key analytic
+relationships remain explicit joint Claims: the API does not automatically
+translate the reference's pressure-indexed fields or dependent time/order inputs.
+Shared module/test costs are 98/118 physical lines. Actual migrations remain 0;
+adapter cost, net lines, maintenance hours, timings and allocations are unmeasured.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 describes
+named access to functional records. Here named result access is proved to commute
+with factory application, at fixed types/context. This completes that bounded
+client interface correspondence; it does not prove open recursion, fix/mix or
+Scheme compatibility. Broad-build and narrow-build routes have equal projected
+values but may execute different numbers of factory applications.

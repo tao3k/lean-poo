@@ -2306,3 +2306,15 @@ and three standard-only axiom reports. Reproduce the source audit with
 Compare the 46 local source hashes with the committed v1 receipt. Reference
 pin, direct-source reading limits and zero actual Euler migrations remain explicit.
 The public client in reusable-contracts compiles without handwritten requires.
+
+* Built result views and analytic implications
+
+Build ~lake build LeanPoo.Functional.ResultView~ and run
+~lake env lean Tests/FunctionalResultView.lean~. Expect
+~FUNCTIONAL-RESULT-VIEW-OK cases=4608 successes=1944 contexts=3~ and
+~FUNCTIONAL-RESULT-VIEW-DUPLICATE-OK first=11 later=99~ with five propext-only
+axiom reports. The public projectEvidence client compiles with fixed context types.
+Reproduce the v1 source audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-result-view.json~;
+compare 48 local hashes with the committed receipt. The three reference consumers
+are direct source readings, not an external Lean build or migration.

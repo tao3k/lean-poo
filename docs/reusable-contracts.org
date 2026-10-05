@@ -1613,3 +1613,41 @@ repeated builds; factory bodies still run on each build. Inclusion, analytic
 consequence and fallback admission are explicit proofs, erased at runtime.
 Changed context/result types still need separate transport. No analytic proof,
 open-recursive dependency closure, native speedup or allocation saving is inferred.
+
+* Read and reuse already built data by name
+
+Import ~LeanPoo.Functional.ResultView~. ~resultAt data key member~ returns the
+key's exact context-indexed value, without encoding tuple positions. It selects
+the first source occurrence, even if an arbitrary tuple has inconsistent
+duplicate values. ~resultAt_build~ equates it with applying ~factoryAt~.
+~projectResults~ narrows built data in consumer order, including repeats.
+
+~projectEvidence~ projects a proof-bearing built value using a supplied logical
+consequence. It calls no factory or provider. Use this when a broad result has
+already been built and several consumers need views of that same context.
+~projectEvidence_val~ exposes the exact data projection. For repeated calls at
+new contexts, ~Certified.projectData~ retains narrow factories instead. Its
+consequence is stated over data, eliminating client factory-tuple destructuring.
+~projectData_factories~ and ~projectData_build~ expose its implementation and
+value equality. ~build_project~ gives the general commutation theorem.
+
+#+begin_src lean
+import LeanPoo.Functional.ResultView
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Key]
+    {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
+    (ready : Certified source Claim) (keys : List Key)
+    (included : ∀ key ∈ keys, key ∈ source)
+    (Narrow : ∀ c, Results Value c keys → Prop)
+    (derive : ∀ c data, Claim c data → Narrow c (projectResults data keys included))
+    (c : Context) : {data : Results Value c keys // Narrow c data} :=
+  projectEvidence (ready.build c) keys included (Narrow c) (derive c)
+#+end_src
+
+Named reads scan the source list; projection scans it per requested key and
+constructs a tuple. Building broad data first computes every requested broad
+factory, including duplicate positions; building only the narrow factories can
+avoid unrequested application. Projecting already built data adds no factory
+application. Value commutation proves no equality of costs or effects, and no
+native speedup or allocation claim. The inclusion and analytic implication
+remain explicit; missing broad caches still use the earlier narrow fallback API.

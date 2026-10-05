@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 125 independent Lean example/contract files
+The local complete gate runs the 126 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -204,3 +204,13 @@ three broad failures rescued by a successful small consumer. A false analytic
 consequence is rejected; three axiom reports use only propext. Current inventory:
 125 independent files + four diagnostics (129 standalone), 32 native admissions,
 nine Python supervisor tests, 16 CI jobs with twelve Lean shards.
+
+* Built result views
+
+~FunctionalResultView.lean~ checks 4608 cases (1944 successful preparations),
+three contexts, source/target order and duplicate controls, proof-bearing value
+views and retained certified views against independent scalar expectations.
+An inconsistent duplicate tuple (11/99) must yield the first value; wrong-context
+access is rejected. Five axiom reports use only propext. Current inventory:
+126 independent files + four diagnostics (130 standalone), 32 native admissions,
+nine supervisor tests, 16 CI jobs and twelve Lean shards.
