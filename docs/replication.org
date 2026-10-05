@@ -2408,3 +2408,9 @@ Separate v1 receipt ~euler-observed-view-2026-10-05.json~ binds 64 local hashes.
 Build ~LeanPoo.Functional.BorrowedView~, then run ~Tests/FunctionalBorrowedView.lean~.
 Expect 120 reads / 113 hits / seven misses and three propext-only axiom reports.
 [[file:contracts/borrowed-view.org][Contract and cost guide]] explains broad cache retention and per-call view costs.
+
+* View composition replication
+
+Build ~LeanPoo.Functional.ViewComposition~ and run ~Tests/FunctionalViewComposition.lean~.
+Expect 5184 cases, positive=9/1 and negative=13/30 structural cost controls,
+and four propext-only axiom reports. [[file:contracts/view-composition.org][Contract and choice guide]].

@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 134 independent Lean example/contract files
+The local complete gate runs the 135 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -293,3 +293,10 @@ standalone), 40 native admissions and nine supervisor tests.
 three traces: 120 reads / 113 hits / seven misses, independent values, uncached
 outputs, broad-state retention and inconsistent duplicates. Three propext-only
 axiom reports. Current inventory: 134 atoms + four diagnostics (138 standalone).
+
+* View composition laws
+
+~FunctionalViewComposition.lean~ checks 5184 cases at three contexts against
+an independent first-occurrence oracle. Four propext-only axiom reports;
+same-list identity counterexample and positive/negative scanner-cost controls.
+Current inventory: 135 independent atoms + four diagnostics (139 standalone).

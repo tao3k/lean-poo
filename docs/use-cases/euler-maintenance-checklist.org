@@ -934,3 +934,13 @@ not an Euler-wide edit-count estimate.
 - [X] Original paper and shared reference R/Pa hashed in a separate v1 receipt.
 - [X] Local costs 59 + 75 lines; per-request views and broad misses remain.
 - [ ] Euler integrations/migrations 0; net lines, hours and native savings unknown.
+
+* View composition checklist
+
+- [X] Four reusable laws for named access and direct/two-stage value/function projection.
+- [X] 5184 cases, independent first-occurrence oracle, empty/order/duplicate controls.
+- [X] Four propext-only axiom reports; no unconditional projection identity claim.
+- [X] Positive 9/1 and negative 13/30 comparison counts; no universal cost reduction.
+- [X] Pinned original getter/composition discussion and reference field consumers hashed; v1 receipt.
+- [X] Local shared costs 61 + 80 lines; no automatic rewrite or analytic inference.
+- [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.

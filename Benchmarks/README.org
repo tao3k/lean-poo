@@ -414,3 +414,10 @@ previous cache timings remain historical and cannot be transferred.
 ~euler-borrowed-view-2026-10-05.json~ records five local APIs, 66 local source
 hashes and pinned paper/reference evidence. It is a source/semantic audit;
 view timing, allocation and external maintenance gains are unmeasured.
+
+* View composition source audit
+
+~euler-view-composition-2026-10-05.json~ records four laws, 68 local source
+hashes, pinned original getter/composition discussion and existing nested
+reference field access. Structural comparison counts retain a regression;
+no native timing/allocation or external maintenance gain is inferred.

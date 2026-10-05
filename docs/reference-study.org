@@ -1443,3 +1443,10 @@ field consumers, without asserting redundant external observation or migration.
 [[file:contracts/borrowed-view.org][Borrowed view contracts]] preserve one broad cache across different public
 consumers. The original POOF cache discussion and existing Euler R/Pa sharing
 are source-bound in the [[file:../Benchmarks/receipts/euler-borrowed-view-2026-10-05.json][v1 audit]]. No external savings are measured.
+
+* Named view composition laws
+
+[[file:contracts/view-composition.org][Four view laws]] prove direct/two-stage equality for dependent values and
+functions, including inconsistent duplicates. The local generalized-prototype
+getter/composition discussion is hashed in a [[file:../Benchmarks/receipts/euler-view-composition-2026-10-05.json][v1 audit]]. This is a closed-view
+correspondence; it does not establish lens setters or external savings.

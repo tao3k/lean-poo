@@ -1,0 +1,69 @@
+#+TITLE: Compose named dependency views
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalViewComposition.lean][Compiled controls]]
+
+* Flatten a chain of interfaces
+
+Import ~LeanPoo.Functional.ViewComposition~. If final keys are included in an
+intermediate interface and that interface is included in the source, project
+straight from source to final keys. Four theorem APIs let clients reuse the
+existing chain's function/value equality without unfolding dependent tuples:
+
+| API | Guarantee |
+|-----+-----------|
+| ~resultAt_project~ | Named view data equals the original first source occurrence |
+| ~projectResults_trans~ | Two value projections equal direct final projection |
+| ~factoryAt_project~ | Named view factory equals the original named function |
+| ~project_trans~ | Two prepared-family projections equal direct final projection |
+
+#+begin_src lean
+import LeanPoo.Functional.ViewComposition
+open LeanPoo.Functional.Requirements
+example {C K : Type} [DecidableEq K] {V : C → K → Type} {c : C}
+    {source : List K} (data : Results V c source) (middle final : List K)
+    (first : ∀ k ∈ middle, k ∈ source) (second : ∀ k ∈ final, k ∈ middle) :
+    projectResults (projectResults data middle first) final second =
+      projectResults data final (fun k h => first k (second k h)) :=
+  projectResults_trans data middle final first second
+
+example {C K : Type} [DecidableEq K] {V : C → K → Type} {c : C}
+    {source : List K} (data : Results V c source) (middle final : List K)
+    (first : ∀ k ∈ middle, k ∈ source) (second : ∀ k ∈ final, k ∈ middle)
+    (Final : Results V c final → Prop)
+    (known : Final (projectResults (projectResults data middle first) final second)) :
+    Final (projectResults data final (fun k h => first k (second k h))) := by
+  rw [← projectResults_trans data middle final first second]
+  exact known
+#+end_src
+
+Use the right-hand expression to omit an intermediate tuple that is needed
+only for this final view. Use the equality to transport an existing final-value
+proof. The laws are explicit: they do not automatically rewrite client code,
+change constructor behavior or infer dependency membership. They hold for
+heterogeneous dependent families and inconsistent duplicate source values.
+Final order and repeated keys remain; named access always takes the first
+source occurrence. Projection to the source list itself need not be identity.
+
+* Choose direct projection or retain an intermediate view
+
+Direct projection omits middle tuple construction and middle-list scans. Each
+final key still scans the broad source. A small retained intermediate interface
+can make repeated final access cheaper. Structural scanner controls retain both
+outcomes: source [0,1,2], middle [2,1,0], final [0] uses 9 comparisons in two
+stages versus 1 directly; middle [2] and ten final requests for 2 use 13 versus
+30. These are list comparison counts, not measured runtime or allocation wins.
+
+5184 cases cover three contexts and three list orderings, including empty,
+reversed/repeated requests and inconsistent duplicate values. Data and factory
+projections match an independent first-occurrence oracle. Four axiom reports
+use propext; a counterexample rejects unconditional same-list identity.
+Shared costs: 61 module / 80 test lines.
+
+* Paper and reference scope
+
+The local [[file:../../.data/poof/poof.scrbl][POOF paper]] discusses getter-based component access and composition
+under generalized prototypes. These laws cover closed immutable named views;
+lens setters and general prototype conformance remain separate. The [[file:../../Benchmarks/receipts/euler-view-composition-2026-10-05.json][v1 audit]]
+hashes that source and existing Euler nested pressure/gradient field access.
+Avoidable intermediate projection in Euler is not established. External
+integrations/migrations: zero; net code and maintenance savings unmeasured.

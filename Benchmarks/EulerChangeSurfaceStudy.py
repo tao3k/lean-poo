@@ -42,6 +42,21 @@ def paper_cache_audit():
             "token_lines": located, "scope": "Local original paper source; cache policy discussion, not a benchmark prediction or whole-language implementation"}
 
 
+def paper_view_composition_audit():
+    audit = paper_cache_audit()
+    raw = (ROOT / audit["file"]).read_text()
+    tokens = ["The lens, passed below as two function arguments", "it may be a composition of some of the above and more."]
+    located = {}
+    for token in tokens:
+        lines = [i+1 for i, row in enumerate(raw.splitlines()) if token in row]
+        if len(lines) != 1:
+            raise ValueError(f"Expected one POOF composition token: {token}")
+        located[token] = lines[0]
+    audit["view_composition_token_lines"] = located
+    audit["scope"] = "Original generalized prototype getter/composition discussion; local closed named-view laws do not implement lens setters or generalized prototype conformance"
+    return audit
+
+
 def observation_bridge(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -382,7 +397,8 @@ def study(reference):
              "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean",
              "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py",
              "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean",
-             "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean"]
+             "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean",
+             "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -394,6 +410,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "view_composition": {
+            "paper_source": paper_view_composition_audit(),
+            "reference_audit": context_view_audit(reference),
+            "local_api": ["resultAt_project", "projectResults_trans", "factoryAt_project", "project_trans"],
+            "tests": {"cases": 5184, "contexts": 3, "orderings": 3, "inconsistent_duplicates": True, "identity_counterexample": True, "axiom_reports": 4},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean"]},
+            "mechanism": "Direct final projection equals two-stage projection for arbitrary dependent values/functions; clients may omit the intermediate tuple and transport existing equalities",
+            "structural_controls": {"positive_two_stage_direct_checks": [9, 1], "negative_two_stage_direct_checks": [13, 30], "scope": "Independent list scanner comparison counts, not native allocation or timing evidence"},
+            "limits": ["Direct broad scans can cost more than repeated access to a small retained intermediate view", "Reference already uses nested named fields; avoidable intermediate projection not established", "No automatic rewrite, lens updates, runtime speedup or Euler migration; net lines and maintenance savings unmeasured"]},
         "borrowed_view": {
             "paper_source": paper_cache_audit(),
             "reference_audit": context_view_audit(reference),
