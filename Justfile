@@ -51,6 +51,7 @@ check-merge: check-types
         LeanPoo.Functional.ResultView \
         LeanPoo.Functional.CertifiedObservation \
         LeanPoo.Functional.CertifiedConsumer \
+        LeanPoo.Functional.ContextSlot \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -308,6 +309,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalResultView.lean
     {{lean}} Tests/FunctionalCertifiedObservation.lean
     {{lean}} Tests/FunctionalCertifiedConsumer.lean
+    {{lean}} Tests/FunctionalContextSlot.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

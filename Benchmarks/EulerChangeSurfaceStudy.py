@@ -118,6 +118,27 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def context_slot_audit(reference):
+    relative = "Euler/PacketInitializedResidualEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    starts = [i for i, row in enumerate(rows) if row.startswith("def initializedApproximationResidual ")]
+    if len(starts) != 1:
+        raise ValueError("Expected one initializedApproximationResidual")
+    start = starts[0]
+    end = next((i for i in range(start+1, len(rows)) if rows[i].startswith("end ")), len(rows))
+    tokens = ["let Pa := initializedCoordinatePressureField", "pressure := Pa.toFieldTower",
+              "Pa q hq t ht", "intro q hq t ht", "(N : ℕ)", "(hN : 1 ≤ N)", "(hk : 4 ≤ k)"]
+    body = "\n".join(rows[start:end])
+    for token in tokens:
+        if token not in body:
+            raise ValueError(f"Shared pressure construction changed: {token}")
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "declaration_line": start+1,
+            "token_lines": {token: [i+1 for i in range(start, end) if token in rows[i]] for token in tokens},
+            "scope": "Source already binds Pa once and uses it for tower/equation; direct source reading only. No redundant external execution, native timing, context memo benefit or migration inferred",
+            "context_obligation": "All varying inputs must be represented in exact context; captured inputs remain fixed by the certified factory family. Matching N/k alone cannot justify reuse when other inputs vary; computable reference context equality not demonstrated"}
+
+
 def certified_consumer_audit(reference):
     relative = "Euler/AllOrderDriftEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -294,7 +315,8 @@ def study(reference):
              "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean",
              "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean",
              "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean",
-             "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean"]
+             "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean",
+             "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -306,6 +328,14 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "context_slot": {
+            "reference_audit": context_slot_audit(reference),
+            "local_api": ["Snapshot", "ContextSlot", "ContextSlot.empty", "ContextSlot.read", "ContextSlot.read_hit", "ContextSlot.read_miss", "ContextSlot.read_value", "ContextSlot.consume", "ContextSlot.consume_value", "ContextSlot.rebind", "ContextSlot.rebind_consume"],
+            "mechanism": "Retain zero or one exact context/aligned built tuple/joint proof for one certified factory family; hit skips whole dependency build, miss builds and replaces previous pair; constructor still runs",
+            "tests": {"cases": 192, "reads": 1215, "hits": 405, "misses": 810, "traces": 4, "rebind_hit": 1, "replacement_misses": 2, "axiom_reports": 5, "wrong_context_and_family_rejected": True},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean"]},
+            "cost": "Context equality, retained context and whole tuple memory; miss allocation and factory applications; constructor executes every time. One-pair bound per cache value, not across externally retained immutable histories",
+            "limits": ["No output/action memoization or automatic dependency invalidation", "Family changes require explicit exact factory equality or fresh empty slot", "Complete context equality is user supplied; comparisons may be expensive", "Source Pa sharing already present; no external speedup or redundant computation established", "Reference only; migrations 0; code/maintenance/native timing/allocation savings unmeasured"]},
         "certified_consumer": {
             "reference_audit": certified_consumer_audit(reference),
             "local_api": ["Certified.consume", "Certified.consume_apply", "Certified.consume_congr", "Certified.consume_observed", "prepareConsumer", "prepareConsumer_error_iff"],

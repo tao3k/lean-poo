@@ -1327,3 +1327,31 @@ records as functions. This extension gives a typed consumer from a closed record
 of dependency functions and explicit joint evidence to a result factory. It does
 not establish open recursion, fix/mix or Scheme compatibility. It completes the
 prepare/build/consume route for this bounded user interface.
+
+* Bounded memoization of context-indexed built data
+
+The [[file:../Benchmarks/receipts/euler-context-slot-2026-10-05.json][v1 context-slot receipt]]
+reads ~initializedApproximationResidual~. Its source already binds ~Pa~ once,
+uses ~Pa.toFieldTower~ for pressure and reuses ~Pa q hq t ht~ for the equation.
+Tokens, source hash and explicit N/hN/k/hk/order/time inputs bind the reading.
+No redundant external execution or existing cache performance is established.
+
+~ContextSlot~ supplies an explicit latest-context memo for closed certified
+factory families. Hits reuse already built values and their joint proof; misses
+replace the single pair; ~consume~ runs the constructor each time. Factory
+family alignment is explicit in Snapshot and slot types. Exact factory equality
+allows rebinding, without automatic dependency tracking. Source contexts can
+contain rich dependent/function-valued data: a computable equality for the
+reference context has not been demonstrated. All varying inputs must be in the
+context, with other captured inputs fixed by the certified family.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 discusses explicit
+caches versus recomputation and broader invalidation policies. This is a bounded
+explicit cache over immutable functional data, without the language-wide mutation
+tracking discussed there or mutable object identity from section 6.1.3. Closed
+provider preparation caches, built-data slots and output construction are distinct.
+
+The local corpus checks 1215 reads (405 hits/810 misses), four repeated/alternating/
+empty traces, rebind reuse and eviction, plus full uncached/scalar output parity.
+Shared module/test costs are 96/138 lines. Actual Euler migrations remain 0;
+net code/maintenance savings, allocations and native timings remain unmeasured.

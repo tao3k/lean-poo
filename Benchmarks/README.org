@@ -357,3 +357,12 @@ final field-tower witness/proof constructor, six APIs and 52 local hashes.
 Shared/test costs are 66/165 lines. No native benchmark or external migration
 is added. A Prop-only existential does not provide executable Type data;
 explicit data/analytic constructors are required. Historical receipts remain.
+
+* Latest-context slot source audit
+
+~receipts/euler-context-slot-2026-10-05.json~ retains schema v1 and adds 54 local
+hashes, the existing Pa binding/use audit and eleven slot APIs. Shared/test costs
+are 96/138 lines. No native benchmark was added: hit/miss decisions and semantic
+parity are evidence, not execution-time or allocation savings. One retained pair
+bounds each slot value, while externally retained histories have separate costs.
+Historical receipts remain unchanged and actual Euler migrations remain 0.

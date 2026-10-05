@@ -2342,3 +2342,15 @@ Reproduce the audit with
 ~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-consumer.json~;
 compare 52 local source hashes in the v1 receipt. Explicit data constructors,
 analytic proofs and external dependent adapters remain separate obligations.
+
+* Latest-context data slot
+
+Build ~lake build LeanPoo.Functional.ContextSlot~ and run
+~lake env lean Tests/FunctionalContextSlot.lean~. Expect
+~FUNCTIONAL-CONTEXT-SLOT-OK cases=192 reads=1215 hits=405 misses=810 traces=4~ and
+~FUNCTIONAL-CONTEXT-SLOT-REBIND-OK hit=1 replaced=2~. Five axiom reports use none
+or propext. The generic cached/uncached dependent consumer client compiles.
+Reproduce the audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-context-slot.json~;
+compare 54 local hashes with the v1 receipt. Reference Pa sharing already exists;
+no external context equality, native timing or redundant execution is established.

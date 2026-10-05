@@ -855,3 +855,16 @@ not an Euler-wide edit-count estimate.
 - [ ] Supply complete Euler-dependent data constructors, adapters and analytic admissions.
 - [ ] Measure migrated net costs: actual migrations 0, maintenance/code savings unknown.
 - [ ] Measure native allocation/timing; semantic output preservation is not a speedup claim.
+
+* Retain the last built dependency context
+
+- [X] Eleven APIs: ~Snapshot~, ~ContextSlot~, ~empty~, ~read~, ~read_hit~, ~read_miss~, ~read_value~, ~consume~, ~consume_value~, ~rebind~, ~rebind_consume~.
+- [X] Same-context hits skip dependency building; misses replace the single context/data pair. Constructor runs every call.
+- [X] Exact family/context alignment checked; another family with the same Claim cannot silently reuse the slot.
+- [X] Explicit equal-factory rebinding preserves outputs and stored-data reuse.
+- [X] 192 preparation cases, 1215 reads, 405 hits/810 misses; four traces, rebind hit and two eviction/replacement misses; five standard-only axiom reports.
+- [X] Source already shares Pa between tower/equation; its tokens and dependent input guards recorded.
+- [X] Shared/test costs 96/138 lines; equality, tuple retention, miss allocation and immutable-history costs explicit.
+- [ ] Demonstrate a computable complete context and actual dependent reference adapters.
+- [ ] Measure native hit/miss timing and allocations; no universal cache benefit inferred.
+- [ ] Measure migrated code/maintenance costs: migrations 0, savings unknown.
