@@ -356,7 +356,8 @@ def study(reference):
              "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean",
              "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean",
              "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean",
-             "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean"]
+             "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean",
+             "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -368,6 +369,14 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "context_pullback": {
+            "reference_audit": context_reindex(reference),
+            "local_api": ["ContextSlot.readAlong", "ContextSlot.readAlong_value", "ContextSlot.readAlong_hit", "ContextSlot.consumeAlong", "ContextSlot.consumeAlong_value", "ContextSlot.consumeAlong_reindex"],
+            "tests": {"cases": 192, "reads": 729, "hits": 324, "misses": 405, "outer_equality_required": False, "outer_function_field": True, "dependent_output_and_factory_reindex_parity": True, "varying_dependency_factorization_counterexample": True, "axiom_reports": 4},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean"]},
+            "mechanism": "Read fixed base certified factories at an explicit projection of the outer request, using executable equality only on complete base context; constructor uses full outer context every time",
+            "cost": "Execute projection once per read, compare base context, keep one base tuple; missed base builds remain. No outer equality or outer-context storage is needed in the slot",
+            "limits": ["All dependency variation must be in base context or fixed captured factory inputs; arbitrary outer-dependent factories are not accepted", "Reference full-context factoring into a small comparable base is not demonstrated; N/k alone do not suffice when other inputs vary", "No automatic dependency inference or native time/allocation benchmark; Euler migrations 0; net lines and maintenance savings unmeasured"]},
         "context_observation": {
             "reference_audit": context_observation_audit(reference),
             "local_api": ["Snapshot.observe", "Snapshot.observe_val", "ContextSlot.observe", "ContextSlot.observe_empty", "ContextSlot.observe_retained", "ContextSlot.observe_hit", "ContextSlot.observe_consume", "ContextSlot.replaceObservedPublic", "ContextSlot.replaceObservedPublic_consume"],

@@ -1404,3 +1404,26 @@ Visible changes and wrong context/hidden types are rejected. Shared costs are
 96 module lines / 208 test lines, plus tuple traversal/allocation and supplied
 observers. Euler migrations remain 0; net code, maintenance, native time and
 allocation savings are unmeasured.
+
+* Rich outer requests with a comparable complete dependency context
+
+The [[file:../Benchmarks/receipts/euler-context-pullback-2026-10-05.json][v1 context-pullback receipt]]
+retains the pinned initialized/forward correction-data input audit. The full
+context includes guards, data and implicit instances. A usable small comparable
+base for this reference has not been demonstrated; N/k alone cannot justify
+reuse if other inputs vary. No reference adapter or migration is added.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 motivates explicit cache choices.
+This bounded implementation separates complete dependency context from extra
+outer request fields, with factory factoring structural in the API. Only the
+base requires executable equality; the constructor still receives Outer and
+runs every time. It does not infer dependencies or perform language-wide
+mutation tracking. The existing reindex route has a proved consumer parity law.
+
+192 preparation cases give 729 reads / 324 hits / 405 misses. Outer contains a
+function with no DecidableEq; changing tags/callbacks changes dependent outputs
+even on base hits. An independent scalar model and uncached construction agree.
+A counterexample rejects factoring a genuinely varying dependency through a
+projection that drops it. Costs: 62 module / 130 test lines; projection and base
+equality plus miss builds remain. Euler migrations 0; code/maintenance/native
+time/allocation savings unmeasured.

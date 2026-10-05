@@ -893,3 +893,15 @@ not an Euler-wide edit-count estimate.
 - [X] Local cost 96 + 208 lines; separate schema v1 receipt, 58 local hashes.
 - [ ] Actual Euler migration: 0; net lines/maintenance savings unmeasured.
 - [ ] Native observer time/tuple allocation costs remain unmeasured.
+
+* Projected-context cache checklist
+
+- [X] Six APIs for projected reads, hits, consumption and reindex parity.
+- [X] No Outer equality needed; full outer request passed to every constructor.
+- [X] 192 cases / 729 reads / 324 hits / 405 misses, function-bearing outer
+  requests, dependent outputs, independent and uncached controls.
+- [X] Wrong dependent index rejected; omitted varying dependency counterexample.
+- [X] Four axiom reports without sorryAx; public client compiles.
+- [X] Shared cost 62 + 130 lines; v1 receipt, 60 local hashes.
+- [ ] Reference small comparable base factoring not demonstrated.
+- [ ] Actual Euler migrations 0; net lines/maintenance/native savings unmeasured.

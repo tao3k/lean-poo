@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 131 independent Lean example/contract files
+The local complete gate runs the 132 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -262,3 +262,12 @@ populated observation, hidden metadata and eviction. Joint-bound consumers
 are checked separately. Visible change, hidden type recovery and wrong context
 are rejected. Six axiom reports have no sorryAx. Current inventory: 131
 independent files plus four diagnostics (135 standalone); native admissions 32.
+
+* Rich outer request cache reads
+
+~FunctionalContextPullback.lean~ checks 192 cases / 729 reads / 324 hits / 405
+misses with no executable Outer equality, a function-bearing Outer, changing
+constructor inputs, dependent outputs and independent/uncached controls. A
+counterexample rejects omitting a varying dependency. Four theorem axiom
+reports have no sorryAx. Current inventory: 132 independent files plus four
+diagnostics (136 standalone); native admissions remain 32.

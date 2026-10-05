@@ -384,3 +384,12 @@ local source hashes. It records 1536 semantic cases / 6750 reads, nine APIs,
 caller observers. The reference already has path/tower equality bridges. This
 is not native benchmark evidence; Euler migrations 0 and net code/maintenance
 savings remain unmeasured.
+
+* Projected-context cache receipt
+
+~receipts/euler-context-pullback-2026-10-05.json~ is schema v1, binding 60 local
+source hashes. Six APIs cache complete base dependencies independently of
+extra outer fields. 192 cases / 729 reads establish semantics, not native
+performance. Shared costs 62 module / 130 test lines; projection and base
+equality remain. Reference comparable-base factoring is unproven; migrations
+0 and net code/maintenance savings unmeasured.

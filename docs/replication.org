@@ -2378,3 +2378,14 @@ sorryAx. The public client in reusable-contracts compiles.
 ~euler-context-observation-2026-10-05.json~ remains v1, with 58 local source
 hashes and a pinned clean reference. Existing receipts are unchanged; the PDE
 corpus is not integrated or compiled by this audit.
+
+* Projected-context cache replication
+
+Build ~LeanPoo.Functional.ContextPullback~ and run
+~Tests/FunctionalContextPullback.lean~. Expect
+~FUNCTIONAL-CONTEXT-PULLBACK-OK cases=192 reads=729 hits=324 misses=405
+outer_eq=not-required~. Four axiom reports: three none, one propext, no sorryAx.
+The public client in reusable-contracts compiles. The separate
+~euler-context-pullback-2026-10-05.json~ receipt stays v1 and binds 60 local
+source hashes and the clean pinned reference. Factoring the reference context
+into a comparable base and native performance qualification remain open.

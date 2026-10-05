@@ -1842,3 +1842,37 @@ Observing traverses the tuple and allocates public data, with costs of supplied
 observers. It is a deliberate conversion, not lazy observation or native
 performance evidence. Changed visible values require new evidence/cache;
 public equivalence does not preserve discarded hidden assertions.
+
+* Cache base dependencies while consuming a rich outer context
+
+Import ~LeanPoo.Functional.ContextPullback~. Supply ~project : Outer → Context~
+and a ~ContextSlot~ for a fixed certified family on Context. ~readAlong project
+outer~ computes this projection once and reads the base slot. Only Context
+needs executable ~DecidableEq~; Outer can include functions without equality.
+The returned Snapshot retains the exact dependent index ~project outer~.
+
+Six APIs: ~readAlong~, ~readAlong_value~, ~readAlong_hit~, ~consumeAlong~,
+~consumeAlong_value~, ~consumeAlong_reindex~ in namespace ContextSlot.
+~consumeAlong~ gives the full outer request, base data and joint proof to the
+constructor. Output can be indexed by Outer and the constructor runs on hits
+too. Base-only constructors agree with the existing Factory.reindex route.
+Carry the returned base slot into subsequent outer calls.
+
+#+begin_src lean
+import LeanPoo.Functional.ContextPullback
+open LeanPoo.Functional.Requirements
+example {Context Outer Key : Type} {Value : Context → Key → Type}
+    [DecidableEq Context] {keys : List Key}
+    {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (project : Outer → Context) (outer : Outer) :
+    (slot.readAlong project outer).1.val = build ready.factories (project outer) :=
+  slot.readAlong_value project outer
+#+end_src
+
+The dependency family is intrinsically defined on the complete base context.
+This does not accept arbitrary outer-dependent factories or infer which fields
+can be omitted. If an outer field varies and affects a dependency, include it
+in the base context or prove an appropriate application-specific factoring.
+Captured inputs remain fixed by the certified family. Equal output hashes or
+matching selected numeric parameters alone are insufficient. Projection and
+base equality have costs; no native time/allocation win is measured here.

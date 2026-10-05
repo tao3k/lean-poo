@@ -54,6 +54,7 @@ check-merge: check-types
         LeanPoo.Functional.ContextSlot \
         LeanPoo.Functional.ContextView \
         LeanPoo.Functional.ContextObservation \
+        LeanPoo.Functional.ContextPullback \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -314,6 +315,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalContextSlot.lean
     {{lean}} Tests/FunctionalContextView.lean
     {{lean}} Tests/FunctionalContextObservation.lean
+    {{lean}} Tests/FunctionalContextPullback.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean
