@@ -2330,3 +2330,15 @@ certificate equality client in reusable-contracts compiles without hand rewrites
 Reproduce the v1 audit using
 ~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-observation.json~;
 compare 50 local hashes. Reference reading is not external compilation or migration.
+
+* Certified output consumers
+
+Build ~lake build LeanPoo.Functional.CertifiedConsumer~ and run
+~lake env lean Tests/FunctionalCertifiedConsumer.lean~. Expect
+~FUNCTIONAL-CERTIFIED-CONSUMER-OK cases=192 successful=81 contexts=3~ and
+~FUNCTIONAL-CERTIFIED-CONSUMER-OUTPUT-OK masks=8 outputs=3~. Four axiom reports
+use no axioms, propext or Quot.sound. The one-call public client compiles.
+Reproduce the audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-consumer.json~;
+compare 52 local source hashes in the v1 receipt. Explicit data constructors,
+analytic proofs and external dependent adapters remain separate obligations.

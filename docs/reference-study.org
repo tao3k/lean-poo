@@ -1298,3 +1298,32 @@ It remains a closed provider contract, without open-recursion invalidation or
 Scheme compatibility. Shared module/test costs are 95/179 physical lines.
 Actual Euler migrations remain 0; complete adapters, net code/maintenance savings,
 native timings and allocations remain unmeasured.
+
+* Construct a consumer output from dependency data and joint proofs
+
+The [[file:../Benchmarks/receipts/euler-certified-consumer-2026-10-05.json][v1 consumer receipt]]
+reads ~exists_exact_lifted_solution~ in the pinned ~AllOrderDriftEquation~ source.
+Its final constructor supplies two field-tower data witnesses and five proof
+calls, with paired energy bounds and explicit order/time guards. Declarations,
+constructor calls and guards are source-hash/token bound. This is direct source
+reading, without elaboration, dependency inference or a reference adapter.
+
+~Certified.consume~ passes complete prepared data and the joint proof to an
+explicit output constructor. ~prepareConsumer~ exposes the preparation-to-output
+path as one atomic missing-key result. ~consume_observed~ preserves an arbitrary
+proof-aware public output under the earlier representation equivalence contract.
+The local Type-valued output has lower-bound, quantity-balance and enabled-state
+proofs, checked against a separate scalar model.
+
+The reference existence theorem lives in Prop; it does not by itself provide an
+executable Type-level witness. Its explicitly constructed towers motivate the
+client constructor boundary. This API neither extracts arbitrary existential
+witnesses nor synthesizes the reference's analytic proofs. Shared module/test
+costs are 66/165 physical lines, actual Euler migrations 0, net code/maintenance
+savings and native timing/allocations unmeasured.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 models named
+records as functions. This extension gives a typed consumer from a closed record
+of dependency functions and explicit joint evidence to a result factory. It does
+not establish open recursion, fix/mix or Scheme compatibility. It completes the
+prepare/build/consume route for this bounded user interface.

@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 127 independent Lean example/contract files
+The local complete gate runs the 128 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -224,3 +224,14 @@ and rejection of a visible change. Seven axiom reports contain no axioms or
 only Quot.sound. Current inventory: 127 independent files + four diagnostics
 (131 standalone), 32 native admissions, nine supervisor tests, 16 CI jobs,
 twelve Lean shards. The source/candidate providers have different result types.
+
+* Proof-aware output consumers
+
+~FunctionalCertifiedConsumer.lean~ checks 192 order/repeat/availability cases
+(81 successes), three contexts, plus eight masks for a proof-bearing Type output
+with lower-bound, quantity-balance and enabled-state constraints. Scalar expected
+values are independent of construction. Wrong context, invalid joint budgets and
+Prop-only executable witness extraction are excluded. Four reports use only
+standard axioms. Current inventory: 128 independent files + four diagnostics
+(132 standalone), 32 native admissions, nine supervisor tests, 16 CI jobs,
+twelve Lean shards.

@@ -842,3 +842,16 @@ not an Euler-wide edit-count estimate.
 - [ ] Supply reference-compatible dependent adapters and observation equality proofs.
 - [ ] Measure actual migrated costs: current migrations 0, maintenance and code savings unknown.
 - [ ] Measure native timing/allocations; semantic equality establishes no performance win.
+
+* Build user results from admitted dependency families
+
+- [X] Six APIs: ~Certified.consume~, ~consume_apply~, ~consume_congr~, ~consume_observed~, ~prepareConsumer~, ~prepareConsumer_error_iff~.
+- [X] One preparation call replaces per-key require plumbing in the compiled client; constructor gets data and joint evidence.
+- [X] Type-valued output retains lower-bound, balanced-quantity and enabled-state proofs; three contexts checked against scalar values.
+- [X] 192 order/duplicate/availability cases, 81 successes; eight output availability masks, exact first errors.
+- [X] Wrong output context, invalid cross-key budget and Prop-only executable witness extraction rejected; four standard-only axiom reports.
+- [X] Source audit records two data witnesses, five proof calls and explicit order/time guards.
+- [X] Shared/test costs 66/165 lines; repeated factory/constructor and setup costs remain explicit.
+- [ ] Supply complete Euler-dependent data constructors, adapters and analytic admissions.
+- [ ] Measure migrated net costs: actual migrations 0, maintenance/code savings unknown.
+- [ ] Measure native allocation/timing; semantic output preservation is not a speedup claim.

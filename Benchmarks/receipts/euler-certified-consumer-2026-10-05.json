@@ -1,0 +1,1692 @@
+{
+  "schema": "lean-poo.euler-change-surface.v1",
+  "reference": {
+    "repository": "openai/NavierStokesAndEuler",
+    "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
+    "tracked_lean_files": 2659,
+    "physical_lines": 641332,
+    "files_by_top_level": {
+      "ComparatorChallenges": 2,
+      "Euler": 1839,
+      "Euler.lean": 1,
+      "NavierStokes": 816,
+      "NavierStokes.lean": 1
+    },
+    "source_manifest_sha256": "a5406c1ba5dfc1f1023569f54e36e36d793f7ce622e1be1e03f44ac5be1178ff",
+    "scope": "Git-tracked .lean files only; dependencies/generated/untracked files excluded"
+  },
+  "lexical_mentions": {
+    "initializedCorrection_background": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          86
+        ]
+      }
+    ],
+    "initializedCorrection_background_derivative": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          89
+        ]
+      }
+    ],
+    "initializedCorrection_drift": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          111
+        ]
+      }
+    ],
+    "initializedCorrection_residual": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          96
+        ]
+      }
+    ]
+  },
+  "candidate_interfaces": {
+    "SourceCoefficientAgreement": {
+      "files": 67,
+      "occurrences": 90,
+      "sample": [
+        {
+          "file": "Euler/BaseFirstPacket.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketCylinderMeanSolenoidal.lean",
+          "occurrences": 2
+        },
+        {
+          "file": "Euler/PacketExactGlobalChoice.lean",
+          "occurrences": 1
+        }
+      ]
+    },
+    "initializedCorrectionData": {
+      "files": 31,
+      "occurrences": 50,
+      "sample": [
+        {
+          "file": "Euler/PacketChildFieldMatch.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketExactGlobalChoice.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketExactGlobalShear.lean",
+          "occurrences": 1
+        }
+      ]
+    },
+    "velocityMap": {
+      "files": 28,
+      "occurrences": 158,
+      "sample": [
+        {
+          "file": "Euler/BaseTransportL2.lean",
+          "occurrences": 5
+        },
+        {
+          "file": "Euler/DriftCorrectionBudget.lean",
+          "occurrences": 3
+        },
+        {
+          "file": "Euler/DriftCorrectionForcing.lean",
+          "occurrences": 5
+        }
+      ]
+    }
+  },
+  "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
+  "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+  "certified_consumer": {
+    "reference_audit": {
+      "file": "Euler/AllOrderDriftEquation.lean",
+      "sha256": "57a0c2aa36eb36f12bcc4f22c24d401cfd27f7573e52b28ae82a4c5ebba8d6d5",
+      "declaration": "exists_exact_lifted_solution",
+      "declaration_line": 141,
+      "token_lines": {
+        "(B : Budget period hT A)": [
+          141
+        ],
+        "(R : ApproximationResidual period hT A)": [
+          142
+        ],
+        "∃ (Z Q : FieldTower period T)": [
+          143
+        ],
+        "(hq : 6 ≤ q)": [
+          157
+        ],
+        "(ht : t ∈ Ioo 0 T)": [
+          157
+        ],
+        "B.correctedFieldTower period": [
+          163
+        ],
+        "B.correctedPressureTower period R": [
+          163
+        ],
+        "B.correctedFieldTower_initial period": [
+          164
+        ],
+        "B.correctedFieldTower_divergence period": [
+          164
+        ],
+        "B.correctedPressureTower_gradient period R": [
+          165
+        ],
+        "B.correctedFieldTower_error_energy period": [
+          165
+        ],
+        "B.correctedFieldTower_hasDerivAt period R": [
+          166
+        ]
+      },
+      "reviewed_output": "Two explicit field-tower data witnesses and five proof-producing calls, including paired energy bounds; shared period/time/data/order guards remain",
+      "scope": "Direct source reading with token/hash guards; not elaboration, a Lean adapter, proof synthesis or a measured maintenance reduction"
+    },
+    "local_api": [
+      "Certified.consume",
+      "Certified.consume_apply",
+      "Certified.consume_congr",
+      "Certified.consume_observed",
+      "prepareConsumer",
+      "prepareConsumer_error_iff"
+    ],
+    "mechanism": "Compile an explicit constructor receiving the complete built dependency data and its joint proof into a context-indexed result factory; outputs may contain Type data and Prop fields",
+    "reuse": "Equal prepared tuples preserve consumers regardless of proof choices; explicit public observation equivalence preserves arbitrary proof-aware public consumers across representations",
+    "tests": {
+      "cases": 192,
+      "successful": 81,
+      "output_masks": 8,
+      "typed_outputs": 3,
+      "contexts": 3,
+      "axiom_reports": 4,
+      "wrong_context_rejected": true,
+      "invalid_joint_budget_excluded": true,
+      "prop_only_witness_extraction_rejected": true
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/CertifiedConsumer.lean": 66,
+      "Tests/FunctionalCertifiedConsumer.lean": 165
+    },
+    "cost": "One whole dependency build in the wrapper per application; factory bodies and constructor run on every application; duplicate requested positions remain; no context memoization. Proofs erase, output data and user computation remain",
+    "limits": [
+      "Constructor and analytic joint admission explicit; no executable Type witness extraction from a Prop-only existential",
+      "Missing dependency outcomes handled before consumption, not silently recovered",
+      "No automatic synthesis of source witness constructions",
+      "Public replacement requires explicit compatibility and excludes hidden-field consumers",
+      "Reference only; migrations 0, net code/maintenance/native timing/allocation savings unmeasured"
+    ]
+  },
+  "certified_observation": {
+    "reference_audit": {
+      "file": "Euler/PacketInitializedResidualEquation.lean",
+      "sha256": "12ec7e1ddf042255202098bc2af8b2a0d2d81308020f5bdf794bb19c187ab597",
+      "declarations": {
+        "toFieldTower_eq_of_path_eq": {
+          "declaration_line": 18,
+          "token_lines": {
+            "{raw raw' : VectorField}": [
+              19
+            ],
+            "(h : G.path = H.path)": [
+              20
+            ],
+            "G.toFieldTower = H.toFieldTower": [
+              20
+            ]
+          }
+        },
+        "initializedNormalizedField_tower_eq": {
+          "declaration_line": 74,
+          "token_lines": {
+            "Field.toFieldTower_eq_of_path_eq": [
+              77
+            ],
+            "initializedNormalizedField_path_eq": [
+              78
+            ]
+          }
+        },
+        "initializedCorrectionData_eq_coordinate": {
+          "declaration_line": 101,
+          "token_lines": {
+            "unfold initializedCorrectionData coordinateData correctionDataOfFields": [
+              108
+            ],
+            "rw [initializedNormalizedField_tower_eq": [
+              109
+            ],
+            "(hN : 1 ≤ N)": [
+              102
+            ],
+            "(hk : 4 ≤ k)": [
+              102
+            ],
+            "(hκ : |k⁻¹| ≤ 1)": [
+              102
+            ]
+          }
+        }
+      },
+      "scope": "Direct source equality chain from path to public field tower to correction data, with different raw field indices and explicit analytic guards; not elaborated/transitive dependencies or an adapter"
+    },
+    "local_api": [
+      "observeResults",
+      "observeResults_id",
+      "build_observe",
+      "Certified.observe",
+      "Certified.observe_factories",
+      "Certified.replaceObserved",
+      "Certified.replaceObserved_factories",
+      "Certified.replaceObserved_public"
+    ],
+    "mechanism": "Derive a certified public joint Claim from original data, or retain an existing observation-indexed joint Claim across explicitly pointwise compatible different internal types; entire certified public interface equality",
+    "tests": {
+      "cases": 1536,
+      "replacements": 375,
+      "joint_candidates": 8,
+      "joint_replacements": 1,
+      "contexts": 3,
+      "axiom_reports": 7,
+      "visible_change_rejected": true,
+      "separate_availability_and_first_errors": true
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/CertifiedObservation.lean": 95,
+      "Tests/FunctionalCertifiedObservation.lean": 179
+    },
+    "cost": "Observed factories allocate wrappers and run supplied observation functions on each build; built-result observation executes observation functions and constructs a tuple. Proofs erase; candidate availability is separate",
+    "limits": [
+      "Explicit compatibility and public analytic implication required",
+      "Old joint Claim must depend only on public observation; hidden-field contracts excluded",
+      "Context/key/public result types fixed",
+      "No automatic path/field/type transport or open-recursion inference",
+      "Reference only; actual Euler migrations 0; code/maintenance/native timing/allocation savings unmeasured"
+    ]
+  },
+  "result_view": {
+    "reference_audit": {
+      "file": "Euler/AllOrderDriftEquation.lean",
+      "sha256": "57a0c2aa36eb36f12bcc4f22c24d401cfd27f7573e52b28ae82a4c5ebba8d6d5",
+      "consumers": {
+        "Budget.correctedPressureTower": {
+          "declaration_line": 60,
+          "token_lines": {
+            "R.pressure.field": [
+              62,
+              67
+            ],
+            "R.pressure.realization": [
+              63,
+              65
+            ],
+            "R.pressure.value_eq": [
+              68
+            ]
+          }
+        },
+        "Budget.correctedPressureTower_gradient": {
+          "declaration_line": 86,
+          "token_lines": {
+            "R.gradient t": [
+              89
+            ],
+            "gradientSpace period A.κ A.direction": [
+              88,
+              89
+            ]
+          }
+        },
+        "Budget.correctedFieldTower_hasDerivAt": {
+          "declaration_line": 119,
+          "token_lines": {
+            "R.equation q hq t ht": [
+              128
+            ],
+            "R.pressure.realization q": [
+              132
+            ],
+            "q : ℕ": [
+              120
+            ],
+            "hq : 6 ≤ q": [
+              120
+            ],
+            "ht : t ∈ Ioo 0 T": [
+              121
+            ]
+          }
+        }
+      },
+      "scope": "Direct reading of named pressure data and joint gradient/equation evidence; not elaboration, transitive dependency closure, or evidence of redundant external factory execution"
+    },
+    "local_api": [
+      "resultAt",
+      "resultAt_build",
+      "projectResults",
+      "projectEvidence",
+      "projectEvidence_val",
+      "build_project",
+      "Certified.projectData",
+      "Certified.projectData_factories",
+      "Certified.projectData_build"
+    ],
+    "mechanism": "Named dependent result access and proof-bearing projection of already built data; data-level analytic consequences avoid client factory tuple destructuring; exact projection/build commutation",
+    "duplicates": "First source occurrence even for arbitrary inconsistent duplicate tuples; requested order and repeats preserved",
+    "tests": {
+      "cases": 4608,
+      "successes": 1944,
+      "contexts": 3,
+      "axiom_reports": 5,
+      "different_duplicate_values": [
+        11,
+        99
+      ],
+      "wrong_context_rejected": true
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/ResultView.lean": 98,
+      "Tests/FunctionalResultView.lean": 118
+    },
+    "cost": "Named reads scan source; result projection scans source per requested key and constructs a tuple. Building broad first computes all its factories; building projected factories computes only requested ones, including repeats. Value commutation is not cost equality",
+    "limits": [
+      "Analytic implication and inclusion remain explicit",
+      "No changed-context transport or inference",
+      "Already built data avoids factory reapplication only on this local projection path",
+      "Reference already uses named structures; no claim of external duplicate computation",
+      "No external integration; actual Euler migrations 0; code/maintenance/native timing/allocation savings unmeasured"
+    ]
+  },
+  "certified_view": {
+    "reference_audit": {
+      "file": "Euler/PacketSourceEquations.lean",
+      "sha256": "379a8625e65b92efb0f69d0a171fe91494acf29061187012b553c62b8de9f39c",
+      "consumers": {
+        "sourceInverse_eq_mean": {
+          "declaration_line": 25,
+          "certificate_field": "inverse",
+          "field_use_lines": [
+            30
+          ],
+          "retained_obligations": [
+            "dependent M/D types and instances",
+            "time clamp equality"
+          ]
+        },
+        "sourceStrain_eq_mean": {
+          "declaration_line": 32,
+          "certificate_field": "strain",
+          "field_use_lines": [
+            37
+          ],
+          "retained_obligations": [
+            "dependent M/D types and instances",
+            "time clamp equality"
+          ]
+        }
+      },
+      "scope": "Manual direct source reading with declaration/token guards; not elaboration or transitive dependency closure"
+    },
+    "local_api": [
+      "Certified.project",
+      "Certified.project_factories",
+      "CachedPreparation.narrow",
+      "CachedPreparation.narrow_of_ok",
+      "CachedPreparation.narrow_eq"
+    ],
+    "success": "Project retained functions and derive the consumer Claim explicitly; no provider lookup, factory execution, or preparation",
+    "failure": "Prepare the narrower keys independently with fresh admission; broad first error may be absent or reordered in the consumer interface",
+    "tests": {
+      "availability_masks": 8,
+      "requests": 24,
+      "duplicate_successes": 4,
+      "rescued_broad_failures": 3,
+      "contexts": 3,
+      "axiom_reports": 3
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/CertifiedView.lean": 78,
+      "Tests/FunctionalCertifiedView.lean": 120
+    },
+    "cost": "Shared library/test additions are costs; successful projection scans the retained list for each requested key; allocate/project once before repeated builds; failed broad cache performs narrow preparation",
+    "limits": [
+      "Explicit analytic consequence and fallback admission required",
+      "Fixed context/result types; no automatic transport or dependency inference",
+      "Closed provider tuple, not open recursive object invalidation",
+      "No native timing or allocation claim",
+      "Actual Euler migrations 0; net code and maintenance savings unmeasured"
+    ]
+  },
+  "consumer_revision": {
+    "time_transport_audit": {
+      "file": "Euler/PacketInitializedResidualEquation.lean",
+      "sha256": "12ec7e1ddf042255202098bc2af8b2a0d2d81308020f5bdf794bb19c187ab597",
+      "declarations": {
+        "initializedVelocityField": 45,
+        "initializedVelocityDerivativeField": 54,
+        "initializedVelocityField_time": 59
+      },
+      "change_time_lines": [
+        48,
+        57
+      ],
+      "derivative_transport_lines": [
+        63
+      ],
+      "scope": "Manual reading plus exact declaration/token checks; not elaborated implicit-instance or transitive dependency closure"
+    },
+    "reference_seam": "PacketInitializedResidualEquation:45-64 uses explicit changeTime hTime for both velocity/derivative and derivative proof. Provider cache alignment is distinct from transporting these dependent types",
+    "local_api": [
+      "Prepared",
+      "Prepared.certify",
+      "Prepared.certify_forget",
+      "CachedPreparation.rebind",
+      "CachedPreparation.rebind_outcome",
+      "ConsumerRevision.reused",
+      "ConsumerRevision.fresh",
+      "ConsumerRevision.registry",
+      "ConsumerRevision.forget",
+      "ConsumerRevision.certify",
+      "ConsumerRevision.certify_forget",
+      "applyTransactionCached",
+      "applyTransactionCached_registry",
+      "applyTransactionCached_forget",
+      "applyTransactionCached_ofRegistry"
+    ],
+    "publication": "Always full immutable patchTransaction; unrequested and nonancestor edits remain in the returned registry, no updated prefix on unknown name errors",
+    "negative_scope": "Automatically rebind exact old cached outcome/certificate to the new registry through preparation equality; no client per-name/key alignment or fresh joint proof",
+    "positive_scope": "Prepare fresh data once. Prepared.certify attaches supplied new analytic admission to that saved outcome without preparing again",
+    "fixed_parameters": [
+      "graph/root/order",
+      "key list",
+      "Context",
+      "Value family",
+      "joint Claim"
+    ],
+    "tests": {
+      "first_transactions": 4096,
+      "second_transactions": 3072,
+      "negative": 2304,
+      "positive": 1792,
+      "first_name_errors": 1024,
+      "contexts": 2,
+      "axiom_reports": 6,
+      "forced_collisions": true,
+      "nonconsumer_publication_checked": true,
+      "runtime_claim": "True isolates revision plumbing; generic kernel theorems cover arbitrary joint Claims"
+    },
+    "shared_lines": 164,
+    "fixture_lines": 203,
+    "gate": {
+      "independent_atoms": 124,
+      "diagnostics": 4,
+      "native_admissions": 32,
+      "ci_jobs": 16
+    },
+    "limits": [
+      "Full update construction still costs on negative scope; earlier view-only microbench is not a publication benchmark",
+      "Fresh analytic admission still required; no automatic dependency inference",
+      "Dependent time/context/result family changes need explicit transport/reindex, not mere provider rebind",
+      "No external adapter/build/integration; actual Euler migrations 0",
+      "Runtime/allocated-byte/peak-memory publication gains and code/maintenance savings unmeasured"
+    ]
+  },
+  "prepared_certificate_reuse": {
+    "reference_seam": "Hash-bound joint_certificate_audit sources and observation_bridge: pressure-dependent equation uses explicit correction-data equality; no automatic analytic change footprint",
+    "local_api": [
+      "CachedPreparation",
+      "cacheCertified",
+      "TransactionPreparation.reused",
+      "TransactionPreparation.fresh",
+      "TransactionPreparation.forget",
+      "prepareTransactionCached",
+      "prepareTransactionCached_forget",
+      "prepareTransactionCached_ofRegistry",
+      "prepareTransactionCached_unaffected",
+      "prepareTransactionCached_affected"
+    ],
+    "alignment": "Cached certified success/first-key error is proof-bound to the exact original prepared provider. Graph/root/keys/context/result family remain fixed",
+    "negative_scope": "Check every transaction name, then return the same prepared tuple/error and joint proof without provider lookup, preparation or update construction",
+    "positive_scope": "Full transaction update and fresh data preparation; old joint certificate not reused, caller must supply a new analytic admission proof. Overlap does not imply the old claim is false",
+    "tests": {
+      "cases": 4096,
+      "negative": 2304,
+      "positive": 1792,
+      "name_errors": 1024,
+      "contexts": 2,
+      "axiom_reports": 4,
+      "hash_collisions": true,
+      "wrong_provider_and_uncertified_data_rejected": true
+    },
+    "native": {
+      "receipt": "cached-preparation-native-2026-10-05.json",
+      "samples": 80,
+      "alternating_pairs_per_workload": 4,
+      "requests": [
+        8,
+        512
+      ],
+      "admission_cases": 10,
+      "all_gate_native_cases": 32,
+      "ci_jobs": 16,
+      "scope": "Both paths materialize the same initial certified tuple/key index in IO before query timing; setup reported separately; not a one-use migration comparison"
+    },
+    "limits": [
+      "Closed functional providers, not automatic open-recursion/object invalidation",
+      "Consumer view only, not updated registry publication",
+      "Raw histories and name preflight still scan",
+      "Factory bodies still run at each build",
+      "Retained tuple and indexes cost memory; allocations/peak memory unmeasured",
+      "No external adapter/build, actual Euler migrations 0, maintenance/code savings unmeasured"
+    ]
+  },
+  "joint_certificate_audit": {
+    "sources": {
+      "SourceCoefficientAgreement": {
+        "file": "Euler/PacketSourceEquations.lean",
+        "sha256": "379a8625e65b92efb0f69d0a171fe91494acf29061187012b553c62b8de9f39c",
+        "declaration_line": 16,
+        "field_lines": {
+          "inverse": 18,
+          "strain": 19
+        }
+      },
+      "ApproximationResidual": {
+        "file": "Euler/AllOrderDriftEquation.lean",
+        "sha256": "57a0c2aa36eb36f12bcc4f22c24d401cfd27f7573e52b28ae82a4c5ebba8d6d5",
+        "declaration_line": 33,
+        "field_lines": {
+          "pressure": 35,
+          "gradient": 37,
+          "equation": 39
+        }
+      },
+      "initializedApproximationResidual": {
+        "file": "Euler/PacketInitializedResidualEquation.lean",
+        "sha256": "12ec7e1ddf042255202098bc2af8b2a0d2d81308020f5bdf794bb19c187ab597",
+        "declaration_line": 114,
+        "field_lines": {}
+      }
+    },
+    "reviewed_dependencies": [
+      {
+        "field": "SourceCoefficientAgreement.inverse",
+        "depends_on": [
+          "M.FInv",
+          "D.FInv.field",
+          "D.clamp",
+          "time interval M.T"
+        ]
+      },
+      {
+        "field": "SourceCoefficientAgreement.strain",
+        "depends_on": [
+          "M.M.field",
+          "D.M.field",
+          "D.clamp",
+          "time interval M.T"
+        ]
+      },
+      {
+        "field": "ApproximationResidual.gradient",
+        "depends_on": [
+          "pressure.field",
+          "A.κ",
+          "A.direction",
+          "period"
+        ]
+      },
+      {
+        "field": "ApproximationResidual.equation",
+        "depends_on": [
+          "A.approximation",
+          "A.residual",
+          "A.metric",
+          "pressure.realization",
+          "q/hq",
+          "t/ht",
+          "hT"
+        ]
+      }
+    ],
+    "constructor_obligations": [
+      "have hk0 : k ≠ 0",
+      "have hκ : |k⁻¹| ≤ 1",
+      "pressure := Pa.toFieldTower",
+      "gradient := ?_",
+      "equation := ?_",
+      "rw [initializedCorrectionData_eq_coordinate",
+      "Pa q hq t ht"
+    ],
+    "reading_scope": "Manual direct-dependency reading of three declarations, validated by source hashes/tokens; not elaborated references, transitive dependency closure, or a migration proof",
+    "local_api": [
+      "Requirements.Certified",
+      "Certified.build",
+      "certify",
+      "prepareCertified",
+      "Certified.build_val",
+      "prepareCertified_forget",
+      "Certified.ext",
+      "Certified.forget_injective",
+      "prepareCertified_error_iff",
+      "prepareCertified_congr"
+    ],
+    "local_validation": {
+      "preparations": 192,
+      "joint_contract_cases": 8,
+      "contexts_per_success": 3,
+      "axiom_reports": 6,
+      "heterogeneous_results": true,
+      "duplicates_reversal_empty_missing": true
+    },
+    "mechanism": "Explicit joint Claim about the whole prepared tuple; supplied analytic proof retained with functions and erased at runtime. No automatic proof synthesis, dependency tracking, or runtime predicate validation",
+    "scope": "Consumer contract only; Type-valued pressure data must remain in result tuples, while Prop-valued guards/certificates may enter Claim. Existing Factory.transport supports data-indexed Type witnesses",
+    "euler_adapter_implemented": false,
+    "external_lean_compilation": false,
+    "actual_migrations": 0,
+    "net_code_saved": null,
+    "maintenance_hours_saved": null,
+    "runtime_benchmark": false
+  },
+  "observation_bridge": {
+    "file": "Euler/PacketInitializedResidualEquation.lean",
+    "sha256": "12ec7e1ddf042255202098bc2af8b2a0d2d81308020f5bdf794bb19c187ab597",
+    "declarations": {
+      "toFieldTower_eq_of_path_eq": 18,
+      "initializedNormalizedField_path_eq": 69,
+      "initializedNormalizedField_tower_eq": 74,
+      "initializedCorrectionData_eq_coordinate": 101
+    },
+    "scope": "Existing source bridge: path equality implies field-tower equality; correction-data equality is used by the residual identity",
+    "external_lean_compilation": false,
+    "proposed_contract": "Different representation families, fixed context/key/public observation family, pointwise observation equality on declared consumer keys",
+    "euler_adapter_implemented": false
+  },
+  "evidence_transport": {
+    "reference_file": "Euler/PacketInitializedResidualEquation.lean",
+    "data_equality_line": 101,
+    "dependent_certificate_line": 114,
+    "equality_rewrite_line": 127,
+    "local_api": [
+      "Factory.transport",
+      "Factory.transportProof",
+      "Factory.transport_refl",
+      "Factory.transport_trans",
+      "Factory.transport_roundtrip"
+    ],
+    "scope": "Retarget an explicitly data-indexed witness or proposition at the same context, given equality of the entire indexed datum",
+    "analytic_equivalence_inferred": false,
+    "euler_adapter_implemented": false
+  },
+  "context_reindex": {
+    "sources": {
+      "Euler/PacketInitializedCorrectionData.lean": {
+        "sha256": "6248945adb4bc4183a0d2db024359e765c59a1d6c30645bee9057f97a903fcba",
+        "input_block_lines": [
+          18,
+          21
+        ],
+        "declaration": "initializedCorrectionData",
+        "declaration_line": 32
+      },
+      "Euler/PacketForwardInitializedCorrectionData.lean": {
+        "sha256": "66eead5e5cef03af987db1b449d672efc25d849acbdbc971bb324583496a0d30",
+        "input_block_lines": [
+          18,
+          20
+        ],
+        "declaration": "forwardInitializedCorrectionData",
+        "declaration_line": 31
+      }
+    },
+    "local_api": [
+      "reindexProvider",
+      "select_reindex",
+      "assemble_reindex",
+      "Requirements.reindex",
+      "Requirements.prepare_reindex",
+      "Requirements.results_reindex_type",
+      "Requirements.projectedResults",
+      "Requirements.build_reindex"
+    ],
+    "scope": "Complete provider/checklist adaptation along one explicit Outer-to-Context projection; exact first errors and projected dependent results",
+    "projection_obligation": "Supply the entire old dependent context, including history/time guards and implicit instances; shared names do not establish a projection",
+    "local_preparation_cases": 64,
+    "outer_contexts_per_successful_case": 2,
+    "analytic_equivalence_inferred": false,
+    "euler_adapter_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "declaration_presentation": {
+    "local_api": [
+      "Graph.SameLookup",
+      "Graph.sameLookup_of_perm",
+      "GraphTrace.represent",
+      "VerifiedOrder.represent",
+      "VerifiedOrder.permute",
+      "VerifiedOrder.permute_unique",
+      "linearizeChecked_permute_ok",
+      "assemble_permute",
+      "Requirements.prepare_permute"
+    ],
+    "scope": "Outer declaration-list permutation under unique names; exact successful checked outputs and retained provider/checklist functions",
+    "premises": [
+      "Exact original node declarations including parent-row order and suffix flags",
+      "Global node-name uniqueness",
+      "Same named provider dictionary and capability families"
+    ],
+    "local_test": {
+      "file": "Tests/C4Presentation.lean",
+      "families": 64,
+      "permutations_per_family": 24,
+      "permutation_runs": 1536,
+      "accepted_runs": 1008,
+      "retained_pair_queries": 25200,
+      "dependent_value_contexts": 2,
+      "counts_origin": "Passing local Lean test output; the inventory script does not execute Lean"
+    },
+    "added_physical_lines": {
+      "LeanPoo/C4/Presentation.lean": 93,
+      "LeanPoo/Functional/Presentation.lean": 27,
+      "Tests/C4Presentation.lean": 118
+    },
+    "negative_results": [
+      "First missing-reference validation error can change under permutation",
+      "Duplicate node names can change first-declaration lookup"
+    ],
+    "error_payload_invariance": false,
+    "arbitrary_graph_isomorphism_proved": false,
+    "euler_registry_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "relabeling_composition": {
+    "local_api": [
+      "Graph.Relabeling",
+      "Graph.Relabeling.trans",
+      "Graph.Relabeling.unique",
+      "VerifiedOrder.relabel",
+      "VerifiedOrder.relabel_unique",
+      "VerifiedOrder.relabel_trans_output",
+      "VerifiedOrder.relabel_precedes",
+      "assemble_relabel",
+      "Requirements.prepare_relabel"
+    ],
+    "scope": "Explicit injective label map plus exact declaration permutation; compose witnesses before retained-order migration",
+    "premises": [
+      "Global injectivity of each name map",
+      "Exact mapped node declarations and local parent rows/flags",
+      "Global source name uniqueness",
+      "Provider alignment on original ancestors and requested keys"
+    ],
+    "local_test": {
+      "file": "Tests/C4Relabeling.lean",
+      "families": 64,
+      "cases": 1536,
+      "stages_per_case": 2,
+      "independent_target_compilations": 3072,
+      "successful_cases": 1008,
+      "mapped_pair_queries": 25200,
+      "dependent_value_contexts": 2,
+      "counts_origin": "Passing local Lean test output; this source inventory does not execute Lean"
+    },
+    "added_physical_lines": {
+      "LeanPoo/C4/Relabeling.lean": 85,
+      "LeanPoo/Functional/Relabeling.lean": 35,
+      "Tests/C4Relabeling.lean": 132
+    },
+    "output_map_passes": {
+      "composed_direct": 1,
+      "two_sequential_migrations": 2,
+      "basis": "Definitions and generic output-composition theorem, not a timing benchmark"
+    },
+    "negative_result": "Renaming graph labels without aligned provider names loses an existing capability",
+    "arbitrary_finite_isomorphism_proved": false,
+    "general_rejection_equivalence_proved": false,
+    "error_payload_invariance": false,
+    "euler_registry_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "provider_registry": {
+    "local_api": [
+      "ProviderRegistry.relabel",
+      "ProviderRegistry.dictionary",
+      "ProviderRegistry.relabel_lookup",
+      "ProviderRegistry.relabel_aligned",
+      "ProviderRegistry.relabel_missing",
+      "assemble_relabel_registry",
+      "Requirements.prepare_relabel_registry"
+    ],
+    "scope": "Construct and retain a root-specific hash registry of whole original provider functions over the verified ancestor cut; alignment for every key is proved by the library",
+    "premises": [
+      "Explicit globally injective graph relabeling witness",
+      "Global source name uniqueness for order migration",
+      "Original context, key and dependent result families"
+    ],
+    "local_test": {
+      "file": "Tests/FunctionalRegistry.lean",
+      "order_presentations": 4,
+      "name_maps": 2,
+      "availability_masks": 8,
+      "key_lists": 8,
+      "registries": 64,
+      "preparations": 512,
+      "successful_cases": 224,
+      "dependent_value_contexts": 2,
+      "unrelated_source_provider_excluded": true,
+      "counts_origin": "Passing local Lean test output; this inventory script does not execute Lean"
+    },
+    "local_adapter_comparison": {
+      "baseline_file": "Tests/C4Relabeling.lean",
+      "handwritten_mapped_name_branches": 3,
+      "generic_registry_constructor_calls": 1,
+      "caller_alignment_lemma_required": false,
+      "scope": "Local fixtures only; no upstream Euler code removed or net line saving established"
+    },
+    "added_physical_lines": {
+      "LeanPoo/Functional/Registry.lean": 130,
+      "Tests/FunctionalRegistry.lean": 118
+    },
+    "cost_boundary": [
+      "Construct once by traversing this root's retained ancestor list and obtaining each provider function",
+      "Retain the hash table; rebuilding repeats construction work",
+      "Later dictionary accesses hash and compare strings; no worst-case constant-time or elapsed-time claim",
+      "Factory invocation retains original bodies and guards; no result memoization",
+      "Payload names are not rewritten; registry is not global or shared across roots"
+    ],
+    "capability_key_enumeration_required": false,
+    "inverse_name_map_required": false,
+    "euler_registry_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "shared_provider_registry": {
+    "local_api": [
+      "ProviderRegistry.ofNames",
+      "ProviderRegistry.ofNames_lookup",
+      "ProviderRegistry.ofNames_missing",
+      "ProviderRegistry.ofGraph",
+      "ProviderRegistry.ofGraph_lookup",
+      "ProviderRegistry.ofGraph_missing",
+      "assemble_ofGraph_registry",
+      "Requirements.prepare_ofGraph_registry",
+      "ProviderRegistry.relabelGraph",
+      "ProviderRegistry.relabelGraph_lookup",
+      "ProviderRegistry.relabelGraph_missing",
+      "ProviderRegistry.relabelGraph_relabel",
+      "assemble_relabelGraph_registry",
+      "Requirements.prepare_relabelGraph_registry"
+    ],
+    "scope": "One declaration-wide original or explicitly mapped table shared across any verified roots of the same graph and provider families",
+    "unchanged_graph_new_uniqueness_premise": false,
+    "migrated_graph_premises": [
+      "Explicit globally injective relabeling",
+      "Exact mapped declaration permutation",
+      "Global source name uniqueness for verified-order migration"
+    ],
+    "local_test": {
+      "file": "Tests/FunctionalSharedRegistry.lean",
+      "order_presentations": 4,
+      "availability_masks": 8,
+      "roots": 2,
+      "key_lists": 9,
+      "mapped_name_maps": 2,
+      "shared_registries": 96,
+      "preparations": 1728,
+      "successful_cases": 624,
+      "dependent_value_contexts": 2,
+      "declared_unrelated_provider_retained": true,
+      "unrelated_provider_cannot_fill_root_capability": true,
+      "undeclared_provider_excluded": true,
+      "standard_axiom_reports": 9,
+      "counts_origin": "Passing local Lean test output; this inventory script does not execute Lean"
+    },
+    "construction_visit_comparison": {
+      "fixture_declarations": 5,
+      "summed_root_ancestor_entries": 6,
+      "root_cut_constructions": 2,
+      "shared_constructions": 1,
+      "criterion": "Whole-graph visits are fewer only if declaration count is below the sum of selected roots' ancestor counts",
+      "scope": "Definition-level local setup counts; not a runtime, source-reduction or Euler maintenance measurement"
+    },
+    "physical_source_cost": {
+      "registry_scope_helper_net_added_lines": 18,
+      "current_registry_module_lines": 130,
+      "new_files": {
+        "LeanPoo/Functional/SharedRegistry.lean": 101,
+        "Tests/FunctionalSharedRegistry.lean": 148
+      }
+    },
+    "cost_boundary": [
+      "Traverse all graph declarations, allocate a name list and retain one hash table",
+      "Unrelated declared entries are directly queryable but root selection still uses only its verified order",
+      "Unused declarations can outweigh root overlap; no unconditional performance benefit",
+      "Obtain provider functions without factory invocation or result memoization",
+      "Original contexts, keys, dependent result families and payload names remain unchanged"
+    ],
+    "graph_validation_by_registry": false,
+    "euler_registry_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "registry_patch": {
+    "local_api": [
+      "Provider.patchKey",
+      "Provider.patchKey_at",
+      "Provider.patchKey_other",
+      "ProviderRegistry.patch",
+      "ProviderRegistry.patch_missing",
+      "ProviderRegistry.patch_at",
+      "ProviderRegistry.patch_other",
+      "ProviderRegistry.patch_scope",
+      "assemble_patch_stable",
+      "Requirements.prepare_patch_stable",
+      "Requirements.mayAffect",
+      "Requirements.mayAffect_iff",
+      "Requirements.prepare_patch_of_unaffected"
+    ],
+    "scope": "One typed capability edit at an existing registry name; negative ancestry/requested-key impact supplies exact preparation equality across all contexts",
+    "premises": [
+      "Decidable equality of capability keys",
+      "Successful known-name patch",
+      "Unchanged graph, verified order and context/key/result families",
+      "Replacement factory inhabits the original dependent result contract"
+    ],
+    "local_test": {
+      "file": "Tests/FunctionalRegistryPatch.lean",
+      "order_presentations": 4,
+      "availability_masks": 8,
+      "provider_names": 5,
+      "keys": 3,
+      "patch_modes": 2,
+      "roots": 2,
+      "key_lists": 8,
+      "patches": 960,
+      "queries": 15360,
+      "negative_queries": 10752,
+      "candidate_queries": 4608,
+      "sampled_value_or_error_changes": 1384,
+      "unknown_name_errors": 192,
+      "contexts": 2,
+      "retained_ancestry_indexes": 8,
+      "standard_axiom_reports": 8,
+      "counts_origin": "Passing local Lean test output; this inventory script does not execute Lean",
+      "sample_limit": "Observed changes at contexts 0 and 7 are not a complete function-change or external fanout count"
+    },
+    "added_physical_lines": {
+      "LeanPoo/Functional/RegistryPatch.lean": 202,
+      "Tests/FunctionalRegistryPatch.lean": 182
+    },
+    "patch_operation_counts": {
+      "name_lookups": 1,
+      "successful_insertions": 1,
+      "explicit_declaration_folds": 0,
+      "factory_invocations": 0,
+      "scope": "Definitions only; persistent hash storage can still copy under sharing"
+    },
+    "negative_result": "A true candidate-impact query can leave selection unchanged because a more specific provider shadows the edited cell",
+    "cost_boundary": [
+      "Retain ancestry indexes once; candidate queries hash a name and scan the requested key list",
+      "Typed edits require key equality; repeated edits can accumulate provider-wrapper chains",
+      "Old registry snapshots remain usable, with possible hash storage copies",
+      "Negative impact preserves exact functions and first errors without re-preparing consumers",
+      "True impact is conservative; precise dependency closure and analytic equivalence require separate evidence"
+    ],
+    "precise_dependency_closure": false,
+    "wrapper_compaction": false,
+    "euler_consumer_scopes_implemented": false,
+    "external_lean_compilation": false,
+    "runtime_benchmark": false
+  },
+  "registry_rollback": {
+    "local_api": [
+      "Provider.patchKey_restore",
+      "Provider.patchKey_overwrite",
+      "Provider.patchKey_commute",
+      "ProviderRegistry.patch_restore_exists",
+      "ProviderRegistry.patch_restore",
+      "Requirements.prepare_patch_restore"
+    ],
+    "scope": "Dependent provider edit algebra and immediate original-cell rollback; exact dictionary and whole-preparation equality across all contexts",
+    "premises": [
+      "DecidableEq Key",
+      "Same context/key/result families",
+      "Successful edit and immediate restoration of saved original cell"
+    ],
+    "local_test": {
+      "rollbacks": 960,
+      "checklist_comparisons": 15360,
+      "contexts": 2,
+      "additional_axiom_reports": 6,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing local Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/RegistryPatch.lean": 202,
+      "Tests/FunctionalRegistryPatch.lean": 182
+    },
+    "cost_boundary": [
+      "Rollback adds a name lookup/insertion and a key-check wrapper",
+      "Retained original snapshots can cause persistent hash storage copies",
+      "Equalities support explicitly constructing normalized plans; do not compact existing closures",
+      "Intervening edits need separate proof; no general transaction rollback"
+    ],
+    "automatic_batch_optimizer": false,
+    "wrapper_compaction": false,
+    "runtime_benchmark": false,
+    "external_lean_compilation": false,
+    "euler_consumer_migration": false
+  },
+  "provider_overlay": {
+    "local_api": [
+      "CapabilityEdit",
+      "ProviderOverlay.ofProvider",
+      "ProviderOverlay.set",
+      "ProviderOverlay.compile",
+      "ProviderOverlay.provider",
+      "ProviderOverlay.set_provider",
+      "ProviderOverlay.compile_provider",
+      "Requirements.prepare_overlay_set",
+      "Requirements.prepare_overlay_compile"
+    ],
+    "scope": "Unique-key typed overlay normalizes an explicit edit history over an original retained base; exact equality with sequential patching and whole preparations",
+    "premises": [
+      "DecidableEq Key",
+      "Same context/key/dependent result families",
+      "Explicit original base and caller-ordered typed edits"
+    ],
+    "local_test": {
+      "histories": 32,
+      "prefix_updates": 344,
+      "prefix_checklist_observations": 5504,
+      "final_batch_observations": 512,
+      "contexts": 2,
+      "standard_axiom_reports": 4,
+      "independent_last_cell_oracle": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing local Lean test; inventory script does not execute Lean"
+    },
+    "structural_case": {
+      "same_key_edits": 256,
+      "stored_override_keys": 1,
+      "scope": "Stored entries only; not runtime timing, allocated bytes or external source savings"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/Overlay.lean": 110,
+      "Tests/FunctionalOverlay.lean": 117
+    },
+    "cost_boundary": [
+      "Each set filters current unique override list and allocates a new list",
+      "All-distinct compilation can require quadratic scans",
+      "Query scans current distinct override keys and then may delegate to retained base",
+      "Existing base wrappers are not compacted; retain original base and compiled result",
+      "Explicit removal differs from absent override; no factory invocation during compilation"
+    ],
+    "explicit_edit_history_normalization": true,
+    "arbitrary_base_closure_compaction": false,
+    "runtime_benchmark": false,
+    "external_lean_compilation": false,
+    "euler_consumer_migration": false
+  },
+  "registry_batch": {
+    "local_api": [
+      "ProviderRegistry.patchBatch",
+      "ProviderRegistry.patchBatch_missing",
+      "ProviderRegistry.patchBatch_at",
+      "ProviderRegistry.patchBatch_dictionary",
+      "ProviderRegistry.patchBatch_nil",
+      "ProviderRegistry.patchBatch_other",
+      "ProviderRegistry.patchBatch_scope",
+      "ProviderRegistry.patchBatch_untouched",
+      "Requirements.batchMayAffect",
+      "Requirements.batchMayAffect_iff",
+      "Requirements.prepare_patchBatch_stable",
+      "Requirements.prepare_patchBatch_of_unaffected"
+    ],
+    "scope": "One known-name normalized typed batch; exact sequential provider/dictionary semantics and whole-consumer negative impact preservation",
+    "premises": [
+      "DecidableEq Key",
+      "Successful known-name batch",
+      "Unchanged graph/order/context/key/result families",
+      "Caller-declared consumer keys"
+    ],
+    "local_test": {
+      "graph_presentations": 4,
+      "availability_masks": 8,
+      "provider_names": 5,
+      "batch_recipes": 6,
+      "roots": 2,
+      "key_lists": 8,
+      "batches": 960,
+      "queries": 15360,
+      "negative_queries": 10368,
+      "candidate_queries": 4992,
+      "unknown_name_errors": 192,
+      "contexts": 2,
+      "standard_axiom_reports": 10,
+      "longest_batch": 256,
+      "independent_last_cell_oracle": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing local Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/RegistryBatch.lean": 150,
+      "Tests/FunctionalRegistryBatch.lean": 139
+    },
+    "structural_operation_case": {
+      "same_key_edits": 256,
+      "repeated_patch_name_lookups": 256,
+      "repeated_patch_insertions": 256,
+      "batch_name_lookups": 1,
+      "batch_insertions": 1,
+      "explicit_graph_folds": 0,
+      "factory_invocations": 0,
+      "scope": "Definitions only; excludes normalization/list allocations, hash storage copies and factory bodies"
+    },
+    "cost_boundary": [
+      "Normalization filters current override lists; all-distinct batches can be quadratic",
+      "Impact scans explicit edit history and requested key list after ancestry query",
+      "One persistent hash insertion can copy shared storage",
+      "Repeated batches can retain prior provider/base overlay layers; no arbitrary closure compaction",
+      "Empty known-name batch preserves functions, unknown name still fails; no general multi-name transaction"
+    ],
+    "runtime_benchmark": false,
+    "precise_dependency_closure": false,
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "registry_transaction": {
+    "local_api": [
+      "RegistryEdit",
+      "ProviderRegistry.patchTransaction",
+      "ProviderRegistry.patchTransaction_nil",
+      "ProviderRegistry.patchTransaction_cons",
+      "ProviderRegistry.patchTransaction_missing",
+      "ProviderRegistry.patchTransaction_scope",
+      "Requirements.transactionMayAffect",
+      "Requirements.transactionMayAffect_iff",
+      "Requirements.prepare_patchTransaction_of_unaffected"
+    ],
+    "scope": "Caller-ordered multi-name pure transaction; first unknown-name error exposes no partial registry; whole-consumer negative scope reuse",
+    "premises": [
+      "DecidableEq Key",
+      "Successful transaction",
+      "Fixed graph/order/context/key/result families",
+      "Explicit consumer keys"
+    ],
+    "local_test": {
+      "presentations": 4,
+      "masks": 8,
+      "plans": 8,
+      "roots": 2,
+      "key_lists": 8,
+      "successes": 192,
+      "first_unknown_errors": 64,
+      "queries": 3072,
+      "negative_queries": 1920,
+      "contexts": 2,
+      "standard_axiom_reports": 6,
+      "independent_scalar_oracle": true,
+      "generic_arbitrary_claim_client": true,
+      "failure_after_valid_prefix": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/RegistryTransaction.lean": 94,
+      "Tests/FunctionalRegistryTransaction.lean": 142
+    },
+    "cost_boundary": [
+      "One lookup per reached named batch and one insertion per successful batch",
+      "Stops at first unknown name; valid prefix work still costs CPU/allocation",
+      "Repeated names are not grouped; prior base-overlay layers can accumulate",
+      "Impact scans named batches and explicit key histories; no precise dependency inference",
+      "Return-value atomicity only; no external effects, concurrency transaction or storage identity claim"
+    ],
+    "runtime_benchmark": false,
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "indexed_overlay": {
+    "local_api": [
+      "IndexedOverlay.ofProvider",
+      "IndexedOverlay.provider",
+      "IndexedOverlay.set",
+      "IndexedOverlay.extend",
+      "IndexedOverlay.compile",
+      "IndexedOverlay.set_provider",
+      "IndexedOverlay.extend_base",
+      "IndexedOverlay.extend_provider",
+      "IndexedOverlay.extend_append",
+      "IndexedOverlay.compile_provider",
+      "Requirements.prepare_indexed_extend",
+      "Requirements.prepare_indexed_compile"
+    ],
+    "scope": "Retained dependent hash overrides; exact list-overlay/sequential function and whole-preparation equality; original base preserved across extensions",
+    "premises": [
+      "BEq Key",
+      "Hashable Key",
+      "LawfulBEq Key",
+      "DecidableEq Key",
+      "Fixed context/key/result families",
+      "Retain overlay state between updates"
+    ],
+    "local_test": {
+      "histories": 32,
+      "prefix_updates": 344,
+      "prefix_observations": 5504,
+      "batch_observations": 512,
+      "retained_snapshot_observations": 5504,
+      "contexts": 2,
+      "all_keys_hash_collide": true,
+      "same_key_history": 256,
+      "stored_overrides": 1,
+      "standard_axiom_reports": 9,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/IndexedOverlay.lean": 103,
+      "Tests/FunctionalIndexedOverlay.lean": 128
+    },
+    "cost_boundary": [
+      "Hash insertion/query replace full override-list filtering/scanning; no unconditional constant-time claim",
+      "Hash collisions, resizing and shared persistent storage copies retain costs",
+      "Dependent hash payload stores original typed functions without invoking factories",
+      "Original base retained when state is extended; already wrapped input base is not compacted",
+      "Small tables may not benefit; key hashes/equality and adapter costs matter"
+    ],
+    "runtime_benchmark_receipt": "Benchmarks/receipts/indexed-overlay-2026-10-05.json",
+    "runtime_scope": "Paired local interpreter workloads only; not whole preparation/graph/Euler proof speedup",
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "indexed_registry": {
+    "local_api": [
+      "IndexedRegistry.ofRegistry",
+      "IndexedRegistry.dictionary",
+      "IndexedRegistry.snapshot",
+      "IndexedRegistry.patchBatch",
+      "IndexedRegistry.ofRegistry_dictionary",
+      "IndexedRegistry.snapshot_dictionary",
+      "IndexedRegistry.patchBatch_missing",
+      "IndexedRegistry.patchBatch_at",
+      "IndexedRegistry.patchBatch_other",
+      "IndexedRegistry.patchBatch_base",
+      "IndexedRegistry.patchBatch_scope",
+      "IndexedRegistry.patchBatch_agreement",
+      "Requirements.prepare_indexedRegistry_of_unaffected"
+    ],
+    "scope": "Per-name indexed state retained across batches; exact dictionary/consumer agreement with ordinary batches and original-base retention",
+    "premises": [
+      "Lawful BEq, Hashable and DecidableEq Key",
+      "Known provider for successful update",
+      "Fixed graph/order/context/key/result families",
+      "Explicit consumer read scopes"
+    ],
+    "local_test": {
+      "presentations": 4,
+      "availability_masks": 8,
+      "plans": 8,
+      "roots": 2,
+      "key_lists": 8,
+      "batches": 352,
+      "unknown_name_errors": 64,
+      "queries": 5632,
+      "negative_queries": 3136,
+      "contexts": 2,
+      "standard_axiom_reports": 9,
+      "all_capability_hashes_collide": true,
+      "independent_scalar_oracle": true,
+      "generic_arbitrary_claim_client": true,
+      "retained_bases_and_snapshots": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/IndexedRegistry.lean": 130,
+      "Tests/FunctionalIndexedRegistry.lean": 166
+    },
+    "cost_boundary": [
+      "Initial conversion maps all entries once; no factory invocation",
+      "Successful batch performs one name lookup/insertion and indexed cell writes, retaining original base",
+      "Dictionary queries do not materialize registry or reconstruct declarations",
+      "Snapshot maps the full table; use only when concrete ProviderRegistry is required",
+      "Collisions/resizing/persistent copies/base costs and small-table overhead remain",
+      "Individual batches expose successful prefixes; IndexedTransaction separately supplies pure atomic multi-name updates"
+    ],
+    "runtime_benchmark_receipt": "Benchmarks/receipts/indexed-registry-2026-10-05.json",
+    "runtime_scope": "Paired selected named-batch interpreter updates and direct queries only",
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "indexed_transaction": {
+    "local_api": [
+      "IndexedRegistry.patchTransaction",
+      "IndexedRegistry.patchTransaction_nil",
+      "IndexedRegistry.patchTransaction_cons",
+      "IndexedRegistry.patchTransaction_missing",
+      "IndexedRegistry.patchTransaction_base",
+      "IndexedRegistry.patchTransaction_scope",
+      "Requirements.prepare_indexedTransaction_of_unaffected",
+      "IndexedRegistry.patchTransaction_congr",
+      "IndexedRegistry.ofRegistry_patchTransaction",
+      "IndexedRegistry.ofRegistry_transaction_consumer"
+    ],
+    "reused_api": [
+      "RegistryEdit",
+      "Requirements.transactionMayAffect"
+    ],
+    "premises": [
+      "Lawful BEq, Hashable and DecidableEq Key for consumer equality",
+      "Fixed graph/order/context/key/result families",
+      "Successful transaction and negative read scope"
+    ],
+    "local_test": {
+      "successful_transactions": 192,
+      "first_unknown_errors": 64,
+      "queries": 3072,
+      "negative_queries": 1920,
+      "contexts": 2,
+      "standard_axiom_reports": 9,
+      "all_capability_hashes_collide": true,
+      "independent_scalar_oracle": true,
+      "ordinary_transaction_control": true,
+      "retained_bases_and_snapshots": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/IndexedTransaction.lean": 174,
+      "Tests/FunctionalIndexedTransaction.lean": 206
+    },
+    "cost_boundary": [
+      "Pure return-value atomicity: first unknown name returns no prefix registry",
+      "One name lookup/insertion per reached successful batch; retains original indexed bases",
+      "No full-table snapshot, graph rebuilding or factory execution in transaction path",
+      "One whole-consumer rewrite replaces caller per-batch proof chaining for negative scopes",
+      "Touched scopes still require alignment; collisions/copies/retention and scope scans remain",
+      "No new transaction timing, allocated-byte, peak-memory or Euler savings measurement"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "transaction_outcome_equivalence": {
+    "local_api": [
+      "IndexedRegistry.patchTransaction_congr",
+      "IndexedRegistry.ofRegistry_patchTransaction",
+      "IndexedRegistry.ofRegistry_transaction_consumer"
+    ],
+    "scope": "Exact complete mapped transaction outcomes across ordinary/indexed representations, including first unknown names and arbitrary dictionary consumers",
+    "premises": [
+      "Same edit list and fixed Context/Key/result family",
+      "Lawful BEq, Hashable and DecidableEq Key",
+      "General theorem requires exact dictionaries and identical name membership",
+      "ofRegistry discharges both alignment premises; no success or negative-impact premise"
+    ],
+    "local_test": {
+      "complete_outcome_arbitrary_claim_client": true,
+      "full_dictionary_equality_empty_name_counterexample": true,
+      "empty_name_runtime_cells": 12,
+      "new_standard_axiom_reports": 3,
+      "existing_transaction_successes": 192,
+      "existing_first_unknown_errors": 64,
+      "ordinary_and_scalar_controls": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/IndexedTransaction.lean": 174,
+      "Tests/FunctionalIndexedTransaction.lean": 206
+    },
+    "prior_physical_lines": {
+      "LeanPoo/Functional/IndexedTransaction.lean": 101,
+      "Tests/FunctionalIndexedTransaction.lean": 159
+    },
+    "cost_boundary": [
+      "Three erased proof APIs; runtime transaction implementation unchanged",
+      "No per-name/key alignment or negative-impact proof needed after ofRegistry conversion",
+      "Nested consumer missing-key errors, caller context evaluation and arbitrary claims transfer exactly",
+      "This compares representations under the same edits, not old/new affected consumers",
+      "No new timing, allocation, peak-memory or external savings measurement"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "transaction_preflight": {
+    "local_api": [
+      "checkTransactionNames",
+      "ProviderRegistry.checkTransaction",
+      "IndexedRegistry.checkTransaction",
+      "checkTransactionNames_ok_iff",
+      "checkTransactionNames_congr",
+      "ProviderRegistry.checkTransaction_outcome",
+      "IndexedRegistry.checkTransaction_outcome",
+      "ProviderRegistry.checkTransaction_after",
+      "IndexedRegistry.checkTransaction_after",
+      "IndexedRegistry.ofRegistry_checkTransaction"
+    ],
+    "scope": "Optional initial-name-scope preflight with exact transaction success/first-error agreement",
+    "premises": [
+      "Immutable registry scope; all batches preserve membership",
+      "Scope agreement required to carry a cached preflight to a different registry",
+      "Success establishes registered names only, not capability availability"
+    ],
+    "local_test": {
+      "scope_masks": 16,
+      "name_plans": 259,
+      "batch_widths": [
+        0,
+        3,
+        64
+      ],
+      "cases": 12432,
+      "successes": 1056,
+      "first_unknown_errors": 11376,
+      "cached_scope_controls": 1056,
+      "contexts": 2,
+      "standard_axiom_reports": 7,
+      "independent_initial_name_oracle": true,
+      "ordinary_and_indexed_transaction_controls": true,
+      "preflight_success_with_capability_error": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/TransactionCheck.lean": 113,
+      "Tests/FunctionalTransactionCheck.lean": 95
+    },
+    "cost_boundary": [
+      "One name membership query per reached batch, stopping at first unknown name",
+      "Does not traverse capability edit cells, invoke factories or construct update tables",
+      "Inputs/edit-list construction, hash collisions and name-scan costs remain",
+      "Running preflight then a successful transaction adds an extra name scan; optional, not default",
+      "No elapsed-time/allocation/peak-memory or external maintenance win measured"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "scoped_transaction_preparation": {
+    "local_api": [
+      "Requirements.prepareTransaction",
+      "Requirements.prepareTransaction_eq",
+      "Requirements.prepareTransaction_ofRegistry",
+      "Requirements.prepareTransaction_unaffected"
+    ],
+    "scope": "Consumer-only preparation with complete full-transaction outcome semantics; no updated registry returned",
+    "premises": [
+      "Fixed verified graph/order, context/key/result family",
+      "Lawful BEq, Hashable and DecidableEq Key",
+      "Conservative declared ancestor/key scope; all unknown names still checked"
+    ],
+    "local_test": {
+      "cases": 4096,
+      "negative_scopes": 2304,
+      "positive_scopes": 1792,
+      "first_name_errors": 1024,
+      "contexts": 2,
+      "standard_axiom_reports": 3,
+      "independent_scalar_oracle": true,
+      "ordinary_and_full_indexed_controls": true,
+      "all_capability_hashes_collide": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/ScopedTransaction.lean": 59,
+      "Tests/FunctionalScopedTransaction.lean": 144,
+      "Benchmarks/ScopedTransactionScale.lean": 49,
+      "Benchmarks/ScopedTransactionStudy.py": 60
+    },
+    "native_receipt": "Benchmarks/receipts/scoped-transaction-native-2026-10-05.json",
+    "native_samples": 32,
+    "alternating_pairs_per_workload": 4,
+    "mandatory_native_cases": 8,
+    "all_gate_native_cases": 32,
+    "ci_jobs": 16,
+    "cost_boundary": [
+      "Negative scope does no update table/cell writes, but performs scope scan, name preflight and original preparation",
+      "Positive scope adds impact scan then executes full transaction",
+      "Disjoint keys still require edit-cell scans; conservative positives may be shadowed",
+      "Shared already-updated registries can amortize updates across consumers; this is not a replacement for publishing state",
+      "Measured local native consumer-only calls exclude graph/index/registration/conversion/inputs/factory bodies/oracle",
+      "No allocation/peak-memory/whole Euler/maintenance saving measurement"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "retained_key_index": {
+    "local_api": [
+      "Requirements.KeyIndex",
+      "Requirements.KeyIndex.ofKeys",
+      "Requirements.KeyIndex.contains",
+      "Requirements.batchMayAffectIndexed",
+      "Requirements.transactionMayAffectIndexed",
+      "Requirements.prepareTransactionIndexed",
+      "Requirements.KeyIndex.contains_iff",
+      "Requirements.KeyIndex.contains_eq",
+      "Requirements.batchMayAffectIndexed_eq",
+      "Requirements.transactionMayAffectIndexed_eq",
+      "Requirements.prepareTransactionIndexed_eq",
+      "Requirements.prepareTransactionIndexed_ofRegistry"
+    ],
+    "scope": "Retained requested-key hash index, tied to exact list membership; consumer key order/duplicates and complete transaction outcomes preserved",
+    "premises": [
+      "Lawful BEq, Hashable and DecidableEq Key",
+      "Index tied to requested list; rebuild for a different list",
+      "Conservative ancestor/key impact; raw history scans, unknown-name checks and full positive fallback retained"
+    ],
+    "local_test": {
+      "cases": 4096,
+      "negative_scopes": 2304,
+      "positive_scopes": 1792,
+      "first_name_errors": 1024,
+      "contexts": 2,
+      "standard_axiom_reports": 6,
+      "all_capability_hashes_collide": true,
+      "membership_and_deduplication_controls": true,
+      "independent_scalar_oracle": true,
+      "list_scoped_full_indexed_and_ordinary_controls": true,
+      "generic_arbitrary_claim_client": true,
+      "counts_origin": "Passing Lean corpus; inventory script does not execute Lean"
+    },
+    "physical_lines": {
+      "LeanPoo/Functional/KeyIndex.lean": 79,
+      "Tests/FunctionalKeyIndex.lean": 157,
+      "Benchmarks/KeyIndexScale.lean": 52,
+      "Benchmarks/KeyIndexStudy.py": 64
+    },
+    "native_receipt": "Benchmarks/receipts/key-index-native-2026-10-05.json",
+    "native_samples": 80,
+    "alternating_pairs_per_workload": 4,
+    "request_widths": [
+      8,
+      512
+    ],
+    "mandatory_native_cases": 10,
+    "all_gate_native_cases": 32,
+    "ci_jobs": 16,
+    "cost_boundary": [
+      "Build requested-key set once; duplicates removed only for impact membership",
+      "One hash probe per reached edit cell instead of repeated requested-list scans; raw history still scanned",
+      "Collision/copy/build costs remain; no unconditional O(1) or universal switch",
+      "Construction and retained query timings separate; per-sample compile+query totals preserve one-use losses",
+      "Outside ancestry/early overlap/unknown names may gain no indexed membership work",
+      "No allocations/peak-memory/whole Euler/maintenance savings measured"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "native_registry_validation": {
+    "entry_points": [
+      "lake build indexedRegistryScale",
+      "IndexedRegistryStudy.py --engine native/interpreter --policy latest/retained",
+      "just _check-native-registry"
+    ],
+    "new_library_api": false,
+    "existing_contracts": [
+      "IndexedRegistry.patchBatch",
+      "IndexedRegistry.dictionary",
+      "Requirements.prepare_indexedRegistry_of_unaffected"
+    ],
+    "receipts": [
+      "Benchmarks/receipts/indexed-registry-native-latest-2026-10-05.json",
+      "Benchmarks/receipts/indexed-registry-native-retained-2026-10-05.json",
+      "Benchmarks/receipts/indexed-registry-interpreter-latest-2026-10-05.json",
+      "Benchmarks/receipts/indexed-registry-interpreter-retained-2026-10-05.json"
+    ],
+    "samples": 96,
+    "alternating_pairs_per_workload_engine_policy": 4,
+    "cross_engine_current_and_snapshot_controls": true,
+    "mandatory_native_cases": 4,
+    "ci_jobs": 16,
+    "physical_lines": {
+      "Benchmarks/IndexedRegistryScale.lean": 89,
+      "Benchmarks/IndexedRegistryStudy.py": 62
+    },
+    "cost_boundary": [
+      "Retained query views of every pre-update state stay live across timed updates and final queries",
+      "Current cells and sampled old-snapshot cells checked by independent scalar oracle outside timers",
+      "Source/toolchain/config and native binary hashes bind selected execution receipts",
+      "Native and interpreter update conclusions can differ; no universal representation switch",
+      "Initial common registration, inputs/imports/build/oracle and graph/order/preparation/Euler proofs excluded",
+      "Allocated bytes, peak memory and external maintenance savings unmeasured"
+    ],
+    "euler_consumer_migration": false,
+    "external_lean_compilation": false
+  },
+  "local_contract": {
+    "files": {
+      "LeanPoo/Functional/View.lean": "192f5ab369c3c8b4908569747ee8c7783548832a4a1fb5b529cf40ad8f5fbf7e",
+      "Tests/FunctionalView.lean": "2173b60339e85bf447ae69d07f98bedc38863425b68da82541767d56cb65bd3d",
+      "LeanPoo/Functional/Observation.lean": "cfb644760448a4ff9bb4a49f6485461c40c4770886f4bb7b878c5c3f7b97da80",
+      "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b",
+      "LeanPoo/Functional/Transport.lean": "487963aa6e2ce9cb0bf34b2c42867acbe848a97998f297e9d37577751ce0c982",
+      "Tests/FunctionalTransport.lean": "d357f3ced56aa0fb65428e50161b5b5f27b1728c07f8aa4945910dfab82f73f3",
+      "LeanPoo/Functional/Reindex.lean": "313fb64bc9c3e4c7538dc8b9a520ce07b4cb38a3f99c83bd656a9e09b41ba8f3",
+      "Tests/FunctionalReindex.lean": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0",
+      "LeanPoo/C4/Presentation.lean": "b660c81f45fcd9e604a8dcfe951fd697a79aadb6b775169f349bc3b31f3a7591",
+      "LeanPoo/Functional/Presentation.lean": "cfdcf69ee17580947a8087f05bce8ac1233b3c0d341723fe840b8b5667f4a956",
+      "Tests/C4Presentation.lean": "49b608b5282cb404019d7819abc3214e073f318f288a448ae1b0999dee779a44",
+      "LeanPoo/C4/Relabeling.lean": "3855c992cea135b52ec68ee1ec15b940a6992eb552c63fecfc2666f48f7c539d",
+      "LeanPoo/Functional/Relabeling.lean": "9980aab46cb91350785096b5a935c42f77612fa196e9ed32e104228bcf6b06ca",
+      "Tests/C4Relabeling.lean": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb",
+      "LeanPoo/Functional/Registry.lean": "8e8eb29fa6f7f0c525a10956eff1b38cefde115d75147b9d95a2e09c8a3860d1",
+      "Tests/FunctionalRegistry.lean": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e",
+      "LeanPoo/Functional/SharedRegistry.lean": "7958845034813346f27a0fde789e9812bc66a401ef539cf3a0f186757aad7b69",
+      "Tests/FunctionalSharedRegistry.lean": "1be6c8e43a19691bec04ec45bf3b12cee9501a54a956a2e1eabf5dc082c9ec00",
+      "LeanPoo/Functional/RegistryPatch.lean": "d48b4da507df1206bac77fa037edfd305fbd85b565b48a1beddc90c5db454af2",
+      "Tests/FunctionalRegistryPatch.lean": "40a4cdff23a5bf11d7223efa13ecb6bd83497650b7ed481ef5aa077d98455926",
+      "LeanPoo/Functional/Overlay.lean": "677384e575f628b62198294db2aaf6d24f55aef8797edffd8c55c7ce6a0e4f73",
+      "Tests/FunctionalOverlay.lean": "15aac81a64354b20bf7efba75fc24bfbe95d02615f495952b59536f08d271050",
+      "LeanPoo/Functional/RegistryBatch.lean": "61553e7c833cf46d008ba085f4e7dd64f4ad1fac3c694c40743b12de7d3a6ff6",
+      "Tests/FunctionalRegistryBatch.lean": "44efd6b10725f7c79842ea27213c6e0e04c40276ed978598814b8caf61a5bef8",
+      "LeanPoo/Functional/RegistryTransaction.lean": "7b18031f3b0b6a1aa69cf93e1b2c1eb4fee2b5777ab829ef1730f9abd1d16a2f",
+      "Tests/FunctionalRegistryTransaction.lean": "20ef97430b69e6c6e85b03219ab60114a48ce451c55197c0682590c0c7428f9f",
+      "LeanPoo/Functional/IndexedOverlay.lean": "3b8fd6df5295c3cf82565e588c1dfd0fdc55ede14c61b7e092536e88f556f3a0",
+      "Tests/FunctionalIndexedOverlay.lean": "84db829b9675eeef4fb31600a1d3937b387262c9c59c19a6f55de49d3aa6b0e4",
+      "LeanPoo/Functional/IndexedRegistry.lean": "8640e370bf2c40008fe0cc49e809c4e918ab71b609cc2c7c222a12571f3d55b7",
+      "Tests/FunctionalIndexedRegistry.lean": "f73b7c3d536b5f6bc4cef6f26ad8244a855b434b39dc011a7c0875637fb85fbc",
+      "LeanPoo/Functional/IndexedTransaction.lean": "d1b00ebab50ca8b51decf7f9b2c77e4c123724250fc2031a7db70b405b27aba9",
+      "Tests/FunctionalIndexedTransaction.lean": "02e6f61a20fecc2cc0b1c514f716a9e7644ced80272669f6df51814a2f9be369",
+      "LeanPoo/Functional/TransactionCheck.lean": "85192e2c51655e9eda0002b51bb2fbdf41cdeeb95f471e1c2dc5ec977e3e3bba",
+      "Tests/FunctionalTransactionCheck.lean": "5c914185dbb263b11fbde775707a960ceb6970da44b50284adf4269f7efe865d",
+      "LeanPoo/Functional/ScopedTransaction.lean": "e00d08f00e33d405383ddd6de464ddfcf918d2fcdb1d1a3e4ee316fec58b37d5",
+      "Tests/FunctionalScopedTransaction.lean": "06de48db38741530a00e32696de56bb0376eb8bf0d1aa7b0dadf3a0fda6cccd5",
+      "LeanPoo/Functional/KeyIndex.lean": "be5e82418df37f85ab665c2567b0e8cca9470d4530448616cd1fb572fdaec313",
+      "Tests/FunctionalKeyIndex.lean": "5471370513128f5468b0f2e21e6c79b8d610ab8e3e7821c3c8f5714715c5e20f",
+      "LeanPoo/Functional/CertifiedRequirements.lean": "b7b400f3121458ac485686e5fa9e3b50541c5e6d9c97580379771e1fa7c80e99",
+      "Tests/FunctionalCertifiedRequirements.lean": "329dad2fac25302772609c7e04ad48dcc0c61770353b1cb7805f48b914741a5a",
+      "LeanPoo/Functional/CachedPreparation.lean": "c92c99579095eed12d443ab90065b0b6df93a1b7906daa9d9274cb137e3a5f2c",
+      "Tests/FunctionalCachedPreparation.lean": "3e25988644553672ce6c9741ca133b38d1c5cbd5ad4bf3aa18ec958ffcdb9f58",
+      "LeanPoo/Functional/ConsumerRevision.lean": "589dc9df4f3dd7b67bd8d270325cc1ef29c341f01de4d7b6fb753922a2f88632",
+      "Tests/FunctionalConsumerRevision.lean": "c8d72a017159188be340de1e0719a09ea8282f585d2d136dfba7fed14f69b273",
+      "LeanPoo/Functional/CertifiedView.lean": "5c0e3b1ff8f6dfeaf50e72494156b1eafd44218a4ab3879d1058162fa75e5f63",
+      "Tests/FunctionalCertifiedView.lean": "afd21ba5ede2ec103350e8739168821bdd9e48b2a9ef362acfb0e256e602d317",
+      "LeanPoo/Functional/ResultView.lean": "2edbad0c2fb006cded82a179e3eace7ccd2472a0283e9f894723bf2e2f1c84b8",
+      "Tests/FunctionalResultView.lean": "5bc15ae8d5e2125ea3581c6bd3ffe8da790e82055808a821c20a9c47c4d01f8a",
+      "LeanPoo/Functional/CertifiedObservation.lean": "589169e50c2485f95618fc6a396d42e4677d7339c345ac7ffc5e2790a0553c3f",
+      "Tests/FunctionalCertifiedObservation.lean": "16b72600dfb04f717a77053ae594336a9254371f81ad223b4407128a2b96048e",
+      "LeanPoo/Functional/CertifiedConsumer.lean": "6d35729383a51eb9b4f8a731e0f0a62bb2e04bafea6a32ca7e620d737a5efb71",
+      "Tests/FunctionalCertifiedConsumer.lean": "b11686d5005564058c978a9f7f3683e2c0d541d35718966564b9dbee6fe915ce"
+    },
+    "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types; explicit context projection through Reindex; unique-name declaration permutation through Presentation; composed explicit Relabeling witnesses with scoped provider alignment; constructive whole-provider alignment through a retained ancestor-cut Registry and a declaration-wide SharedRegistry for multiple verified roots; typed single-capability patch noninterference from negative ancestry/checklist impact",
+    "runtime_benchmark": false
+  },
+  "unmeasured": {
+    "actual_euler_consumers_migrated": 0,
+    "net_lines_saved": null,
+    "maintenance_hours_saved": null,
+    "affected_euler_consumers_avoided": null
+  }
+}

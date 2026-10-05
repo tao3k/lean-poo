@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 127 independent example/contract
+once, checks C4's source-owned types, and runs 128 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 131 unique example/test files, including the typed
+The current gate covers 132 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -394,3 +394,11 @@ diagnostics (131 standalone). Twelve Lean shards, 16 CI jobs, 32 native
 admissions and nine supervisor tests remain. Joint observation equivalence
 is a semantic result; wrappers, observation functions and preparation have
 explicit costs. No new native timing/allocation claim is made.
+
+* Certified output consumer gate inventory
+
+The new atom brings coverage to 128 independent files plus four diagnostics
+(132 standalone). Twelve Lean shards, 16 CI jobs, 32 native admissions and nine
+supervisor tests remain. Consumer setup retains the full dependency family;
+factory bodies and constructor run per context call. This increment adds no
+native timing/allocation claim and does not memoize contexts.

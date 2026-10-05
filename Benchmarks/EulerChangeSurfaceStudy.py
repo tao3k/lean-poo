@@ -118,6 +118,33 @@ def joint_certificate_audit(reference):
             "runtime_benchmark": False}
 
 
+def certified_consumer_audit(reference):
+    relative = "Euler/AllOrderDriftEquation.lean"
+    raw = (reference / relative).read_bytes()
+    rows = raw.decode().splitlines()
+    name = "exists_exact_lifted_solution"
+    starts = [i for i, row in enumerate(rows) if re.match(r"theorem " + name + r"\b", row)]
+    if len(starts) != 1:
+        raise ValueError(f"Expected one {name}")
+    start = starts[0]
+    end = next((i for i in range(start+1, len(rows)) if rows[i].startswith("end ")), len(rows))
+    body = "\n".join(rows[start:end])
+    tokens = ["(B : Budget period hT A)", "(R : ApproximationResidual period hT A)",
+              "∃ (Z Q : FieldTower period T)", "(hq : 6 ≤ q)", "(ht : t ∈ Ioo 0 T)",
+              "B.correctedFieldTower period", "B.correctedPressureTower period R",
+              "B.correctedFieldTower_initial period", "B.correctedFieldTower_divergence period",
+              "B.correctedPressureTower_gradient period R", "B.correctedFieldTower_error_energy period",
+              "B.correctedFieldTower_hasDerivAt period R"]
+    for token in tokens:
+        if token not in body:
+            raise ValueError(f"Joint construction changed: {token}")
+    return {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(), "declaration": name,
+            "declaration_line": start+1,
+            "token_lines": {token: [i+1 for i in range(start, end) if token in rows[i]] for token in tokens},
+            "reviewed_output": "Two explicit field-tower data witnesses and five proof-producing calls, including paired energy bounds; shared period/time/data/order guards remain",
+            "scope": "Direct source reading with token/hash guards; not elaboration, a Lean adapter, proof synthesis or a measured maintenance reduction"}
+
+
 def certified_observation_audit(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -266,7 +293,8 @@ def study(reference):
              "LeanPoo/Functional/ConsumerRevision.lean", "Tests/FunctionalConsumerRevision.lean",
              "LeanPoo/Functional/CertifiedView.lean", "Tests/FunctionalCertifiedView.lean",
              "LeanPoo/Functional/ResultView.lean", "Tests/FunctionalResultView.lean",
-             "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean"]
+             "LeanPoo/Functional/CertifiedObservation.lean", "Tests/FunctionalCertifiedObservation.lean",
+             "LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -278,6 +306,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "certified_consumer": {
+            "reference_audit": certified_consumer_audit(reference),
+            "local_api": ["Certified.consume", "Certified.consume_apply", "Certified.consume_congr", "Certified.consume_observed", "prepareConsumer", "prepareConsumer_error_iff"],
+            "mechanism": "Compile an explicit constructor receiving the complete built dependency data and its joint proof into a context-indexed result factory; outputs may contain Type data and Prop fields",
+            "reuse": "Equal prepared tuples preserve consumers regardless of proof choices; explicit public observation equivalence preserves arbitrary proof-aware public consumers across representations",
+            "tests": {"cases": 192, "successful": 81, "output_masks": 8, "typed_outputs": 3, "contexts": 3, "axiom_reports": 4, "wrong_context_rejected": True, "invalid_joint_budget_excluded": True, "prop_only_witness_extraction_rejected": True},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/CertifiedConsumer.lean", "Tests/FunctionalCertifiedConsumer.lean"]},
+            "cost": "One whole dependency build in the wrapper per application; factory bodies and constructor run on every application; duplicate requested positions remain; no context memoization. Proofs erase, output data and user computation remain",
+            "limits": ["Constructor and analytic joint admission explicit; no executable Type witness extraction from a Prop-only existential", "Missing dependency outcomes handled before consumption, not silently recovered", "No automatic synthesis of source witness constructions", "Public replacement requires explicit compatibility and excludes hidden-field consumers", "Reference only; migrations 0, net code/maintenance/native timing/allocation savings unmeasured"]},
         "certified_observation": {
             "reference_audit": certified_observation_audit(reference),
             "local_api": ["observeResults", "observeResults_id", "build_observe", "Certified.observe", "Certified.observe_factories", "Certified.replaceObserved", "Certified.replaceObserved_factories", "Certified.replaceObserved_public"],

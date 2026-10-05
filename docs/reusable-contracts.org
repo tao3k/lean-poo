@@ -1692,3 +1692,39 @@ hides its data. Contexts, keys and public result types remain fixed. Observed
 factories allocate wrappers and run observations on every build; observeResults
 runs observations and constructs a tuple without factory calls. These costs
 and candidate preparation remain; no native timing or allocation claim is made.
+
+* Compile a constructor that consumes joint evidence
+
+Import ~LeanPoo.Functional.CertifiedConsumer~. ~Certified.consume~ turns a
+prepared certified dependency family into an output factory. The constructor
+receives built data and its joint proof, and may return a Type-valued record
+with data and Prop fields. The wrapper has one whole-tuple build per context
+call, with no provider lookup, preparation or graph computation.
+~consume_apply~ exposes the application; ~consume_congr~ makes certificate proof
+choices irrelevant when the retained functions agree. ~consume_observed~ reuses
+an arbitrary proof-aware public constructor through explicit observation equality.
+
+~prepareConsumer~ prepares/certifies/compiles in one all-or-error call. It returns
+the first missing key before factory application, or the result factory with
+retained dependencies. ~prepareConsumer_error_iff~ proves exact first-error
+semantics. This avoids per-key require chains and nested binary combinations.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedConsumer
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type}
+    (provider : Provider Context Key Value) (keys : List Key)
+    (Claim : ∀ c, Results Value c keys → Prop)
+    (admit : ∀ factories, Selected provider keys factories →
+      ∀ c, Claim c (build factories c))
+    {Output : Context → Type} (construct : ∀ c data, Claim c data → Output c) :
+    Except Key (Factory Context Output) :=
+  prepareConsumer provider keys Claim admit construct
+#+end_src
+
+The constructor and analytic admission remain explicit. A Prop-only existential
+is not an executable Type-valued witness: supply actual data constructors.
+Factory bodies and constructor run on each invocation, duplicates remain, and
+no context memoization is added. Result/proof fields keep their dependent context;
+proofs erase but output data and user computation remain. Setup tuple/closure and
+application costs are not benchmarked by this increment.
