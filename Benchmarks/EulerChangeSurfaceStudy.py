@@ -10,6 +10,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "f9e8bc5b38b6e212696e8a30e3e91517af887bbd"
+POOF_PIN = "9affa8fbbb4f12cbd98cb97f8b8b84474fc39429"
 DEFINITION = "Euler/PacketInitializedCorrectionNorms.lean"
 NAMES = ["initializedCorrection_background", "initializedCorrection_background_derivative",
          "initializedCorrection_drift", "initializedCorrection_residual"]
@@ -18,6 +19,27 @@ CANDIDATES = ["SourceCoefficientAgreement", "initializedCorrectionData", "veloci
 
 def git(reference, *args):
     return subprocess.check_output(["git", "-C", str(reference), *args])
+
+
+def paper_cache_audit():
+    reference = ROOT / ".data/poof"
+    if git(reference, "rev-parse", "HEAD").decode().strip() != POOF_PIN or git(reference, "status", "--porcelain"):
+        raise ValueError("POOF source must match the clean pinned reference")
+    path = reference / "poof.scrbl"
+    raw = path.read_bytes()
+    rows = raw.decode().splitlines()
+    tokens = ["@subsection{Cache invalidation}", "and let the users explicitly insert any cache desired.",
+              "At the opposite end of the spectrum, the object system may assume purity-by-default",
+              "must be pervasive in the entire language, not just the object system implementation,"]
+    located = {}
+    for token in tokens:
+        lines = [i+1 for i, row in enumerate(rows) if token in row]
+        if len(lines) != 1:
+            raise ValueError(f"Expected one POOF cache token: {token}")
+        located[token] = lines[0]
+    return {"repository": "metareflection/poof", "commit": POOF_PIN,
+            "file": ".data/poof/poof.scrbl", "sha256": hashlib.sha256(raw).hexdigest(),
+            "token_lines": located, "scope": "Local original paper source; cache policy discussion, not a benchmark prediction or whole-language implementation"}
 
 
 def observation_bridge(reference):
@@ -357,7 +379,8 @@ def study(reference):
              "LeanPoo/Functional/ContextSlot.lean", "Tests/FunctionalContextSlot.lean",
              "LeanPoo/Functional/ContextView.lean", "Tests/FunctionalContextView.lean",
              "LeanPoo/Functional/ContextObservation.lean", "Tests/FunctionalContextObservation.lean",
-             "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean"]
+             "LeanPoo/Functional/ContextPullback.lean", "Tests/FunctionalContextPullback.lean",
+             "Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -369,6 +392,17 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "context_slot_native": {
+            "paper_source": paper_cache_audit(),
+            "reference_audit": context_slot_audit(reference),
+            "local_receipt": "Benchmarks/receipts/context-slot-native-2026-10-05.json",
+            "receipt_sha256": hashlib.sha256((ROOT / "Benchmarks/receipts/context-slot-native-2026-10-05.json").read_bytes()).hexdigest(),
+            "new_runtime_api": [],
+            "validated_interfaces": ["ContextSlot.empty", "ContextSlot.read", "ContextSlot.consume", "Certified.consume"],
+            "samples": 96, "alternating_pairs": 4, "native_gate_admissions_added": 8,
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["Benchmarks/ContextSlotScale.lean", "Benchmarks/ContextSlotStudy.py"]},
+            "scope": "Synthetic local native warm built-data cache versus uncached dependencies, matched independent checksums and policy oracle; setup/query separately recorded",
+            "limits": ["Reference already shares Pa; external cache or redundant builds not established", "Cheap all-miss regression retained; all-miss heavy workloads show no substantial benefit", "No Euler runtime, allocation, net lines or maintenance savings; migrations 0"]},
         "context_pullback": {
             "reference_audit": context_reindex(reference),
             "local_api": ["ContextSlot.readAlong", "ContextSlot.readAlong_value", "ContextSlot.readAlong_hit", "ContextSlot.consumeAlong", "ContextSlot.consumeAlong_value", "ContextSlot.consumeAlong_reindex"],

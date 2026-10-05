@@ -2389,3 +2389,8 @@ The public client in reusable-contracts compiles. The separate
 ~euler-context-pullback-2026-10-05.json~ receipt stays v1 and binds 60 local
 source hashes and the clean pinned reference. Factoring the reference context
 into a comparable base and native performance qualification remain open.
+
+* Native built-data cache replication
+
+[[file:performance/context-cache.org::*Replicate and admit semantics][The dedicated replication instructions]] specify source/binary-bound local
+samples and eight small native admissions; setup and query clocks are separate.

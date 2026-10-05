@@ -2,7 +2,7 @@
 
 | Repository | Source | Role |
 |------------+--------+------|
-| [[https://github.com/metareflection/poof][POOF]] | ~poof-code-only.rkt~ | Functional account and executable Racket examples |
+| [[https://github.com/metareflection/poof][POOF]] | ~poof.scrbl~, ~poof-code-only.rkt~ | Original local paper and executable Racket examples |
 | [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] | ~proto.ss~, ~object.ss~, ~mop.ss~, ~type.ss~ | Prototype, object, and expression layers |
 | [[https://github.com/fare/c4-mixins][C4-Mixins]] | ~include/c4/linearize.hpp~ | C++20 C4 linearizer |
 
@@ -1427,3 +1427,8 @@ A counterexample rejects factoring a genuinely varying dependency through a
 projection that drops it. Costs: 62 module / 130 test lines; projection and base
 equality plus miss builds remain. Euler migrations 0; code/maintenance/native
 time/allocation savings unmeasured.
+
+* Native cache qualification boundary
+
+[[file:performance/context-cache.org][Native built-data cache evidence]] separates local matched timing from
+Euler reference sharing, with negative miss controls and no migration claim.

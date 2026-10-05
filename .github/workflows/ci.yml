@@ -25,7 +25,7 @@ jobs:
           lint: false
       - name: Build public library and proofs
         run: |
-          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale
+          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale
           lake env lean LeanPoo/C4/Types.lean
           python3 -m unittest discover -s tools/tests -p 'test_*.py'
       - name: Package this run's build
@@ -83,7 +83,7 @@ jobs:
       - name: Restore this run's build
         run: tar -xzf lean-build.tar.gz
       - name: Check bounded diagnostics
-        run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached
+        run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context
 
   docs:
     runs-on: ubuntu-latest

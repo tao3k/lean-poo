@@ -393,3 +393,11 @@ extra outer fields. 192 cases / 729 reads establish semantics, not native
 performance. Shared costs 62 module / 130 test lines; projection and base
 equality remain. Reference comparable-base factoring is unproven; migrations
 0 and net code/maintenance savings unmeasured.
+
+* Native built-data cache study
+
+[[file:../docs/performance/context-cache.org][Method, results and replication]] covers 96 alternating native samples
+and eight CI admissions, with setup/query separation and negative controls.
+~receipts/context-slot-native-2026-10-05.json~ binds sources/binary; the separate
+~euler-context-cache-native-2026-10-05.json~ audit remains reference-only. Both
+are schema v1. Native admissions now total 40; raw logs stay in TMP.

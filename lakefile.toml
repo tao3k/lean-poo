@@ -20,3 +20,7 @@ root = "Benchmarks.KeyIndexScale"
 [[lean_exe]]
 name = "cachedPreparationScale"
 root = "Benchmarks.CachedPreparationScale"
+
+[[lean_exe]]
+name = "contextSlotScale"
+root = "Benchmarks.ContextSlotScale"

@@ -478,3 +478,14 @@ _check-native-cached:
     .lake/build/bin/cachedPreparationScale cached late 64 16 4
     .lake/build/bin/cachedPreparationScale indexed unknown 64 16 4
     .lake/build/bin/cachedPreparationScale cached unknown 64 16 4
+
+# Native built-data cache admission: retain positive and negative cost controls.
+_check-native-context:
+    .lake/build/bin/contextSlotScale uncached hit 0 4 32
+    .lake/build/bin/contextSlotScale cached hit 0 4 32
+    .lake/build/bin/contextSlotScale uncached hit 16 4 32
+    .lake/build/bin/contextSlotScale cached hit 16 4 32
+    .lake/build/bin/contextSlotScale uncached miss 16 4 32
+    .lake/build/bin/contextSlotScale cached miss 16 4 32
+    .lake/build/bin/contextSlotScale uncached blocks 16 4 32
+    .lake/build/bin/contextSlotScale cached blocks 16 4 32

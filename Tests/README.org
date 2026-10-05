@@ -271,3 +271,10 @@ constructor inputs, dependent outputs and independent/uncached controls. A
 counterexample rejects omitting a varying dependency. Four theorem axiom
 reports have no sorryAx. Current inventory: 132 independent files plus four
 diagnostics (136 standalone); native admissions remain 32.
+
+* Native built-data cache admission
+
+Eight additional small matched controls in ~_check-native-context~ check
+independent checksums and reuse policy. Total native admissions are now 40.
+Lean atom/diagnostic counts and nine supervisor tests remain unchanged.
+[[file:../docs/performance/context-cache.org][Native cache evidence]] separates local timing from CI semantic admission.

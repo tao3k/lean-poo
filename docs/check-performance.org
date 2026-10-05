@@ -434,3 +434,11 @@ diagnostics (136 standalone). Twelve Lean shards / 16 CI jobs, 32 native
 admissions and nine supervision tests remain. Base-context equality avoids
 requiring equality on function-bearing Outer; native timing/allocation wins
 are unmeasured. Raw transcripts stay in TMP.
+
+* Native built-data cache gate
+
+The library phase also builds ~contextSlotScale~. Eight small native admission
+controls run in the existing native phase / CI diagnostic job, bringing the
+total to 40. No timing threshold or additional CI job is introduced.
+[[file:performance/context-cache.org][The dedicated evidence module]] records local results, negative controls
+and replication; atom count 132 plus four diagnostics remains unchanged.

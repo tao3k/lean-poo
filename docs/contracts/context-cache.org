@@ -39,8 +39,9 @@ remain fixed by the family. No automatic analytic dependency invalidation occurs
 One retained pair per cache value is a structural bound; externally keeping old
 immutable slots retains their data too. Equality comparisons and whole-tuple
 retention can be expensive. Misses allocate/build; constructors still run on
-hits. Source costs and hit decisions are checked, native timing/allocations are
-unmeasured. This is not a universal speedup or an output/action cache.
+hits. Source costs and hit decisions are checked; [[file:../performance/context-cache.org][native timing controls]]
+now qualify selected synthetic workloads. Allocations remain unmeasured. This
+is not a universal speedup or an output/action cache.
 
 * Hand built caches to a narrower consumer
 
@@ -149,3 +150,12 @@ in the base context or prove an appropriate application-specific factoring.
 Captured inputs remain fixed by the certified family. Equal output hashes or
 matching selected numeric parameters alone are insufficient. Projection and
 base equality have costs; no native time/allocation win is measured here.
+
+* Choose caching using native evidence
+
+See [[file:../performance/context-cache.org][Native built-data cache evidence]] for matched warm setup/query timings,
+negative all-miss controls and replication commands. The validated interfaces
+are ~ContextSlot.empty~, ~read~, ~consume~ and ~Certified.consume~; no new
+runtime API is added. A recurring expensive dependency workload can benefit
+from hits, while miss-only work still pays cache overhead. Measure the actual
+consumer's dependency and constructor costs before choosing a policy.

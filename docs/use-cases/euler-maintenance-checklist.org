@@ -905,3 +905,13 @@ not an Euler-wide edit-count estimate.
 - [X] Shared cost 62 + 130 lines; v1 receipt, 60 local hashes.
 - [ ] Reference small comparable base factoring not demonstrated.
 - [ ] Actual Euler migrations 0; net lines/maintenance/native savings unmeasured.
+
+* Native cache measurement checklist
+
+- [X] Existing empty/read/consume interfaces qualified with 96 native samples.
+- [X] Common warm setup and query separately timed; independent checksum oracle.
+- [X] Negative controls retained: cheap miss regression, heavy miss no clear gain.
+- [X] Eight native admissions added (40 total); no new runtime API or CI job.
+- [X] Measurement code cost 63 Lean + 77 Python lines; separate v1 receipts.
+- [X] Reference pressure sharing acknowledged; no redundant builds established.
+- [ ] Euler migration 0; net lines/maintenance/allocation savings unmeasured.
