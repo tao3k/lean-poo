@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 121 independent Lean example/contract files
+The local complete gate runs the 122 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -131,7 +131,7 @@ The complete gate additionally builds the native registry benchmark and runs
 four semantic cases: list/indexed crossed with latest/retained snapshots.
 Current per-name/key outputs, retained counts and old snapshot observations are
 checked by Lean; timing values have no admission threshold. CI requires the same
-cases after compiling the executable. The current atomic inventory includes 121 files.
+cases after compiling the executable. At this stage the atomic inventory included 121 files.
 
 [[file:FunctionalIndexedTransaction.lean][FunctionalIndexedTransaction]] checks 192 successful atomic indexed transactions,
 64 first unknown-name failures, 3072 queries (1920 negative), two contexts and
@@ -164,4 +164,13 @@ size, plus 4,096 scalar/list-scoped/full-indexed/ordinary consumer outcomes. All
 hash to zero; empty/repeated/reordered requests, 2,304 negative/1,792 positive
 scopes, 1,024 name errors and two contexts are covered. Six axiom reports and a
 generic ordinary-client proof accompany the controls. Ten new native cases bring
-the gate's native total to 22; current independent Lean inventory is 121 files.
+the gate's native total to 22; the independent Lean inventory at this stage was 121 files.
+
+* Joint certified requirement contract
+
+~FunctionalCertifiedRequirements.lean~ adds 192 preparation cases and 8 joint
+contracts at three contexts, including heterogeneous results, duplicates,
+reversal, empty/missing lists, a generic provider-change client and a rejected
+context mismatch. Six axiom reports use at most ~propext~. The canonical inventory
+now contains 122 independent Lean files plus four diagnostics (126 standalone),
+with 22 native admissions and 16 CI jobs; this test runs as one independent atom.

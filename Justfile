@@ -44,6 +44,7 @@ check-merge: check-types
         LeanPoo.C4.Relabeling \
         LeanPoo.Functional.Assembly \
         LeanPoo.Functional.Requirements \
+        LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.Access \
         LeanPoo.Functional.View \
         LeanPoo.Functional.Observation \
@@ -294,6 +295,7 @@ _check-contracts:
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
     {{lean}} Tests/FunctionalRequirements.lean
+    {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalMaintenance.lean
     {{lean}} Tests/FunctionalAccess.lean
     {{lean}} Tests/FunctionalView.lean

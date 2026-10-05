@@ -2228,3 +2228,26 @@ names, including missing capability errors. The gate now admits 22 native cases,
 The [[file:../Benchmarks/receipts/euler-key-index-2026-10-05.json][schema-1 source snapshot]] binds 38 local files at the unchanged Euler reference.
 No external consumer is migrated; net source/maintenance savings remain unknown.
 Original EPG correspondence and analytic dependency inference remain open.
+
+* Reproduce joint certified requirements and the source audit
+
+Build ~lake build LeanPoo.Functional.CertifiedRequirements~, then run
+~lake env lean Tests/FunctionalCertifiedRequirements.lean~. Expect
+~FUNCTIONAL-CERTIFIED-REQUIREMENTS-OK preparations=192 joint=8 contexts=3~ and six
+axiom reports using at most standard ~propext~. The heterogeneous fixture checks
+empty, reversed, repeated and missing-key tuples plus a joint bound/flag/duplicate
+contract. The negative type check retains exact context indexing.
+
+The source audit is read-only:
+
+#+begin_src sh
+python3 Benchmarks/EulerChangeSurfaceStudy.py \
+  --reference .data/NavierStokesAndEuler \
+  --output /tmp/euler-joint-certificate.json
+#+end_src
+
+Compare ~joint_certificate_audit~ and source hashes against
+~Benchmarks/receipts/euler-joint-certificate-2026-10-05.json~. Source dependency
+lists are manually reviewed direct fields, not compiler-inferred closures.
+Schema remains v1; no external Lean/PDE build or integration. Proof admission is
+erased; no timing/allocation experiment or Euler savings is asserted.

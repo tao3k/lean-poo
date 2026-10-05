@@ -1147,3 +1147,32 @@ key membership, complementing retained ancestry. The [[file:../Benchmarks/receip
 construction, reuse and one-use totals, retaining outside/early/unknown regressions.
 This is a local user-interface pattern; external migration remains zero and
 source/maintenance savings unknown. No analytic provider adapter is integrated.
+
+* POOF record composition and joint proof-bearing consumers
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]], sections 1.2.1–1.2.3 (printed pages 2–4), represents
+records as named-value functions and composes prototypes whose fields can depend
+on other fields. ~Functional.Provider~ / ~Requirements.Factories~ retain typed
+functions; the new ~CertifiedRequirements~ layer additionally binds their whole
+result tuple to a supplied Lean ~Prop~ contract. This is a client-facing proof
+extension, not a claim that POOF proves Euler equations or infers dependencies.
+The existing open recursion/prototype laws remain separate from closed factory
+preparation and certification.
+
+The pinned OpenAI source provides a concrete audit seam:
+~SourceCoefficientAgreement~ has inverse/strain relations between two sources;
+~ApproximationResidual~ carries pressure data and gradient/equation proofs that
+refer to that data and the approximation. ~initializedApproximationResidual~
+constructs the pressure, proves its gradient membership, rewrites correction data
+and invokes the residual identity with order/time guards. The new
+[[file:../Benchmarks/receipts/euler-joint-certificate-2026-10-05.json][audit receipt]] binds three declaration files, field lines and reviewed
+constructor tokens. Its dependency inventory is a manual direct source reading,
+not elaborated references or a transitive dependency analysis.
+
+~prepareCertified_forget~ proves complete original outcome preservation;
+~prepareCertified_error_iff~ retains exact first missing keys; proof irrelevance
+and ~prepareCertified_congr~ preserve exact certificates across equal selection
+outcomes. ~Certified.build~ provides both data and the joint proof at each supplied
+context. The original analytic obligations, instances, time/order guards and
+Type-valued pressure remain. No upstream adapter/PDE build/integration was added;
+actual migrations remain 0 and maintenance/source savings unmeasured.

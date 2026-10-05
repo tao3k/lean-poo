@@ -67,6 +67,57 @@ def context_reindex(reference):
             "external_lean_compilation": False, "runtime_benchmark": False}
 
 
+def joint_certificate_audit(reference):
+    """Hash-bound manual dependency reading; no elaboration or inferred graph."""
+    records = {}
+    for relative, declaration, fields in [
+        ("Euler/PacketSourceEquations.lean", "SourceCoefficientAgreement", ["inverse", "strain"]),
+        ("Euler/AllOrderDriftEquation.lean", "ApproximationResidual", ["pressure", "gradient", "equation"]),
+        ("Euler/PacketInitializedResidualEquation.lean", "initializedApproximationResidual", []),
+    ]:
+        raw = (reference / relative).read_bytes()
+        rows = raw.decode().splitlines()
+        starts = [i for i, row in enumerate(rows, 1)
+                  if re.match(r"(?:structure|def) " + re.escape(declaration) + r"\b", row)]
+        if len(starts) != 1:
+            raise ValueError(f"Expected one {declaration}")
+        start = starts[0]
+        field_rows = {}
+        for field in fields:
+            matches = [i for i, row in enumerate(rows, 1) if start < i < start + 20
+                       and re.match(r"  " + re.escape(field) + r"\s*:", row)]
+            if len(matches) != 1:
+                raise ValueError(f"Expected one field {declaration}.{field}")
+            field_rows[field] = matches[0]
+        records[declaration] = {"file": relative, "sha256": hashlib.sha256(raw).hexdigest(),
+                                "declaration_line": start, "field_lines": field_rows}
+    constructor_rows = (reference / records['initializedApproximationResidual']['file']).read_text().splitlines()
+    start = records['initializedApproximationResidual']['declaration_line']
+    constructor = '\n'.join(constructor_rows[start-1:]).split('\nend ')[0]
+    obligations = ['have hk0 : k ≠ 0', 'have hκ : |k⁻¹| ≤ 1',
+                   'pressure := Pa.toFieldTower', 'gradient := ?_', 'equation := ?_',
+                   'rw [initializedCorrectionData_eq_coordinate', 'Pa q hq t ht']
+    for token in obligations:
+        if token not in constructor:
+            raise ValueError(f"Constructor obligation changed: {token}")
+    return {"sources": records,
+            "reviewed_dependencies": [
+                {"field": "SourceCoefficientAgreement.inverse", "depends_on": ["M.FInv", "D.FInv.field", "D.clamp", "time interval M.T"]},
+                {"field": "SourceCoefficientAgreement.strain", "depends_on": ["M.M.field", "D.M.field", "D.clamp", "time interval M.T"]},
+                {"field": "ApproximationResidual.gradient", "depends_on": ["pressure.field", "A.κ", "A.direction", "period"]},
+                {"field": "ApproximationResidual.equation", "depends_on": ["A.approximation", "A.residual", "A.metric", "pressure.realization", "q/hq", "t/ht", "hT"]}],
+            "constructor_obligations": obligations,
+            "reading_scope": "Manual direct-dependency reading of three declarations, validated by source hashes/tokens; not elaborated references, transitive dependency closure, or a migration proof",
+            "local_api": ["Requirements.Certified", "Certified.build", "certify", "prepareCertified", "Certified.build_val", "prepareCertified_forget", "Certified.ext", "Certified.forget_injective", "prepareCertified_error_iff", "prepareCertified_congr"],
+            "local_validation": {"preparations": 192, "joint_contract_cases": 8, "contexts_per_success": 3,
+                                 "axiom_reports": 6, "heterogeneous_results": True, "duplicates_reversal_empty_missing": True},
+            "mechanism": "Explicit joint Claim about the whole prepared tuple; supplied analytic proof retained with functions and erased at runtime. No automatic proof synthesis, dependency tracking, or runtime predicate validation",
+            "scope": "Consumer contract only; Type-valued pressure data must remain in result tuples, while Prop-valued guards/certificates may enter Claim. Existing Factory.transport supports data-indexed Type witnesses",
+            "euler_adapter_implemented": False, "external_lean_compilation": False,
+            "actual_migrations": 0, "net_code_saved": None, "maintenance_hours_saved": None,
+            "runtime_benchmark": False}
+
+
 def study(reference):
     if git(reference, "rev-parse", "HEAD").decode().strip() != PIN:
         raise ValueError("Reference pin mismatch")
@@ -116,7 +167,8 @@ def study(reference):
              "LeanPoo/Functional/IndexedTransaction.lean", "Tests/FunctionalIndexedTransaction.lean",
              "LeanPoo/Functional/TransactionCheck.lean", "Tests/FunctionalTransactionCheck.lean",
              "LeanPoo/Functional/ScopedTransaction.lean", "Tests/FunctionalScopedTransaction.lean",
-             "LeanPoo/Functional/KeyIndex.lean", "Tests/FunctionalKeyIndex.lean"]
+             "LeanPoo/Functional/KeyIndex.lean", "Tests/FunctionalKeyIndex.lean",
+             "LeanPoo/Functional/CertifiedRequirements.lean", "Tests/FunctionalCertifiedRequirements.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -128,6 +180,7 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "joint_certificate_audit": joint_certificate_audit(reference),
         "observation_bridge": observation_bridge(reference),
         "evidence_transport": {
             "reference_file": "Euler/PacketInitializedResidualEquation.lean",

@@ -1406,3 +1406,54 @@ outside/unknown one-use totals also regress. Retain/choose the index by workload
 there is no automatic global crossover. These local calls exclude factory bodies
 and graph/ancestry/registration/conversion/inputs/build/oracle costs, and do not
 measure allocated bytes, peak memory or Euler maintenance savings.
+
+* Prepare and retain a joint consumer certificate
+
+Import ~LeanPoo.Functional.CertifiedRequirements~. ~Requirements.Certified keys
+Claim~ retains the complete heterogeneous factory tuple and an explicit proof
+~∀ context, Claim context (Requirements.build factories context)~. The claim can
+relate several selected capabilities: a pressure value and its gradient/equation
+guards, or a quantity, limit and enabled flag. This is an additional Lean client
+contract layer; POOF's record/prototype model does not supply analytic proofs.
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    {Value : Context → Key → Type w} (keys : List Key)
+    (provider : Functional.Provider Context Key Value)
+    (Claim : ∀ c, Functional.Requirements.Results Value c keys → Prop)
+    (admit : ∀ factories,
+      Functional.Requirements.Selected provider keys factories →
+      ∀ c, Claim c (Functional.Requirements.build factories c)) :
+    (Functional.Requirements.prepareCertified provider keys Claim admit).map
+      Functional.Requirements.Certified.factories =
+      Functional.Requirements.prepare provider keys :=
+  Functional.Requirements.prepareCertified_forget provider keys Claim admit
+#+end_src
+
+- ~prepareCertified provider keys Claim admit~ selects once and returns either
+  the original first missing key or the complete functions with their joint proof.
+  The admission premise must hold for the exact provider-selected tuple. It is
+  vacuous when no full tuple can be selected, so missing-key clients need no fake
+  successful certificate.
+- ~ready.build context~ returns ~{data // Claim context data}~. Read ~.val~ for the
+  results and ~.property~ for the proof, avoiding repeated per-key ~require~ calls.
+- ~certify factories Claim valid~ attaches an existing joint proof to a tuple from
+  any preparation path, including indexed/scoped transactions. It adds no second
+  provider lookup or branch selection.
+- ~prepareCertified_congr~ transfers exact certified outcomes from equal complete
+  preparation results, even with different admission proof terms. Use
+  ~prepare_congr~ to discharge its premise when providers agree on requested keys.
+  ~prepareCertified_error_iff~ retains the exact first error.
+
+~Claim~ lives in ~Prop~ and is erased at runtime. Data/functions still have their
+normal cost; factory bodies execute on every build. There is no runtime predicate
+checker, automatic dependency analysis, or analytic proof synthesis. Put
+Type-valued pressure/evidence data in the result family; ~Factory.transport~
+remains available for data-indexed Type witnesses. A changed context, key family,
+or joint predicate requires aligned data/proofs. A local negative type check
+rejects using results prepared at context 0 as context 9.
+
+Shared API/proofs: 104 physical lines; semantic/client fixture: 115 lines. These
+are added local costs, not Euler source savings. Local validation covers 192
+availability/order/duplicate/empty preparations plus 8 joint-contract plans at
+three future contexts; six kernel axiom reports. No runtime speedup is measured.

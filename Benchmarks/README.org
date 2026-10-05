@@ -272,3 +272,13 @@ cases regress too. Raw history scans/collisions/copies remain; no universal
 representation switch, allocated-byte or whole Euler gain is claimed. Shared
 benchmark source is 52/64 lines, library/test 79/157 separate. The [[file:receipts/euler-key-index-2026-10-05.json][schema-1 snapshot]]
 keeps the reference manifest, 38 local files and zero external migrations.
+
+* Joint consumer certificate source audit
+
+~receipts/euler-joint-certificate-2026-10-05.json~ adds a hash-bound direct reading
+of SourceCoefficientAgreement, ApproximationResidual and its initialized
+constructor. It records data/proof dependencies and retained analytic guards.
+The local CertifiedRequirements API costs 104 lines, its fixture 115 lines;
+192 preparation plus 8 joint plans pass at three contexts with six axiom reports.
+No runtime benchmark, upstream adapter, actual migration or measured source/
+maintenance saving is added. Reproduce with EulerChangeSurfaceStudy; schema v1.

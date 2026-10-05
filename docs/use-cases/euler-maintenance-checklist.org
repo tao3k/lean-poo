@@ -730,3 +730,30 @@ reduces shared caller branch/alignment scaffolding; it does not infer analytic
 dependencies or establish external savings. The [[file:../../Benchmarks/receipts/euler-key-index-2026-10-05.json][source snapshot]] keeps schema 1
 and the unchanged reference manifest. Factory bodies, allocation/peak memory and
 whole Euler maintenance effects remain unmeasured.
+
+* Joint data-and-proof contracts: direct source audit
+
+The [[file:../../Benchmarks/receipts/euler-joint-certificate-2026-10-05.json][joint-certificate receipt]] audits three declarations at the same source pin.
+
+| Actual source seam | Dependency read from source | New client capability | Remaining cost |
+|--------------------+-----------------------------+-----------------------+----------------|
+| ~SourceCoefficientAgreement~ (PacketSourceEquations:16–19) | inverse/strain depend on M/D and clamped time | Put a supplied joint proposition beside selected data | Prove both relations; full dependent contexts/instances remain |
+| ~ApproximationResidual~ (AllOrderDriftEquation:33–45) | gradient depends on pressure; equation depends on pressure plus A fields and order/time guards | ~Certified keys Claim~ couples the complete tuple to a joint proof | Pressure is Type-valued runtime data and must remain; all analytic guards remain |
+| ~initializedApproximationResidual~ (PacketInitializedResidualEquation:114–134) | constructs pressure, proves gradient, rewrites data equality, invokes residual identity | ~prepareCertified~ selects once; ~Certified.build~ returns data and proof together | Existing proof bodies/adapters still required; no automatic equation proof |
+
+Capability / evidence checklist:
+
+- [X] ~certify~ can attach an existing joint proof to an already retained tuple.
+- [X] ~prepareCertified~ preserves ordinary complete data/error outcomes after forgetting proofs.
+- [X] ~prepareCertified_congr~ preserves the exact certificate under equal preparation outcomes.
+- [X] ~Certified.build~ exposes the data-indexed proof without repeated capability requests.
+- [X] 192 preparation + 8 joint plans; three contexts; six standard-only axiom reports.
+- [X] Reference pin, three source hashes, field lines and constructor obligations recorded.
+- [X] Added shared API/proof cost 104 lines and fixture cost 115 lines recorded separately.
+- [ ] Compile a reference-compatible dependent context and account for complete adapter costs.
+- [ ] Measure actual migrated proof/consumer edits and net lines, including the new API costs.
+- [ ] Measure maintenance time; actual migrations remain 0, savings unknown.
+
+This exposes a broader reusable contract than individual theorem wrappers. It
+reduces repeated selection/certificate plumbing for clients adopting the API;
+there is no measured Euler-wide reduction or runtime performance claim.
