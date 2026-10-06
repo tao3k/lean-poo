@@ -397,6 +397,86 @@ theorem linearizeUncached_one_leaf_parent (graph : Graph)
       simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
         pure, Except.pure] using rootSource
 
+/-- The paper C3 merge of two distinct leaf orders and their declaration
+order is exactly the declared left-to-right order. -/
+theorem mergeCertified_two_leaf (left right : String) (distinct : left ≠ right) :
+    ∃ certificate,
+      Precedence.mergeCertified [[left], [right], [left, right]] = .ok certificate ∧
+      certificate.output = [left, right] := by
+  have first : Precedence.choose [[left], [right], [left, right]] = some left := by
+    simp [Precedence.choose, Precedence.heads, Precedence.eligible, distinct]
+  have second : Precedence.choose
+      (Precedence.advance [[left], [right], [left, right]] left) = some right := by
+    simp [Precedence.choose, Precedence.heads, Precedence.eligible,
+      Precedence.advance, Precedence.advanceOrder, Ne.symm distinct]
+  have finished : Precedence.Trace
+      (Precedence.advance (Precedence.advance [[left], [right], [left, right]] left)
+        right) [] :=
+    .done (by simp [Precedence.advance, Precedence.advanceOrder, Ne.symm distinct])
+  exact Precedence.mergeCertified_complete (.step first (.step second finished))
+
+/-- One root with two distinct leaf parents follows the declared C3 order;
+other rows in the validated graph are unrestricted. -/
+theorem linearizeUncached_two_leaf_parents (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (root left right : String)
+    (rootLeft : root ≠ left) (rootRight : root ≠ right)
+    (distinct : left ≠ right)
+    (rootLookup : graph.find? (fun row => row.1 == root) =
+      some (root, [left, right]))
+    (leftLookup : graph.find? (fun row => row.1 == left) = some (left, []))
+    (rightLookup : graph.find? (fun row => row.1 == right) = some (right, [])) :
+    linearizeUncached graph root = .ok [root, left, right] := by
+  have emptyOk : linearizeMany graph [] = .ok [] := by
+    simp [linearizeMany, valid, bind, Except.bind]
+    rfl
+  cases graph with
+  | nil => simp at rootLookup
+  | cons row rest =>
+    have freshLeft : [root].contains left = false := by
+      simp [rootLeft.symm]
+    have freshRight : [root].contains right = false := by
+      simp [rootRight.symm]
+    have leftSource := sourceVisit_leaf_at (row :: rest) left [root]
+      rest.length (left, []) freshLeft leftLookup rfl
+    have rightSource := sourceVisit_leaf_at (row :: rest) right [root]
+      rest.length (right, []) freshRight rightLookup rfl
+    cases leftResult : sourceVisit (row :: rest) left [root] (rest.length+1) with
+    | error err => simp [leftResult, Except.map] at leftSource
+    | ok leftWitness =>
+      have leftOrder : leftWitness.val = [left] := by
+        simpa [leftResult, Except.map] using leftSource
+      cases rightResult : sourceVisit (row :: rest) right [root] (rest.length+1) with
+      | error err => simp [rightResult, Except.map] at rightSource
+      | ok rightWitness =>
+        have rightOrder : rightWitness.val = [right] := by
+          simpa [rightResult, Except.map] using rightSource
+        obtain ⟨certificate, merged, output⟩ :=
+          mergeCertified_two_leaf left right distinct
+        have rootSource :
+            (sourceVisit (row :: rest) root [] ((row :: rest).length+1)).map
+              Subtype.val = .ok [root, left, right] := by
+          simp [sourceVisit]
+          split
+          · simp_all
+          · rename_i selected found
+            have same : selected = (root, [left, right]) :=
+              Option.some.inj (found.symm.trans rootLookup)
+            subst selected
+            simp only [sourceVisit.parents, leftResult, rightResult,
+              leftOrder, rightOrder, bind, Except.bind,
+              pure, Except.pure, Except.map]
+            cases certificate with
+            | mk certOutput certTrace =>
+              dsimp at output
+              subst certOutput
+              dsimp only [mergeCertified]
+              simp only [List.cons_append, List.nil_append]
+              rw [merged]
+              rfl
+        simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
+          pure, Except.pure] using rootSource
+
 /-- Every successful uncached order has a recursive paper-style graph trace. -/
 theorem linearizeUncached_sound (graph : Graph) (root : String)
     (output : List String) (success : linearizeUncached graph root = .ok output) :

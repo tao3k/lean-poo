@@ -253,6 +253,7 @@ _check-contracts:
     {{lean}} Tests/PaperC3GraphSemantics.lean
     {{lean}} Tests/PaperC3BatchCoherence.lean
     {{lean}} Tests/PaperC3UnaryLeaf.lean
+    {{lean}} Tests/PaperC3TwoLeaf.lean
     {{lean}} Tests/PaperPrototypeChecks.lean
     {{lean}} Tests/PaperDictionaryRecord.lean
     {{lean}} Tests/PaperMetaPrototype.lean

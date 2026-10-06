@@ -92,6 +92,15 @@ capability therefore has no identified Euler replacement site or measured
 ~require~, line, or maintenance reduction. It remains a reference-only
 applicability check, with no upstream code change.
 
+The paper C3 ~AtMostTwoLeafGraph~ theorem now proves cached/uncached batch
+outcomes for at most two leaf parents per node. At the inspected Euler
+~initializedSpatialBudget~ seam, the four named fields are direct theorem
+applications inside a typed structure; that file has no C3 graph lookup or
+shared ancestor cache. This new theorem therefore removes zero handwritten
+~require~ calls there. No source lines or maintenance hours are attributed to
+it; a separate graph-backed client would need its own typed adapter and cost
+receipt before an Euler-wide saving could be estimated.
+
 * Completed and open gates
 
 - [X] Immutable source pin and clean reference checkout.
