@@ -19,6 +19,8 @@
 | Handle every batch on a parent-free graph | ~C3.FlatGraph.of_members~, ~C3.linearizeUncached_flat~, ~C3.linearizeMany_eq_uncached_flat~ | Prove the finite declaration rows have no parents, then obtain full success and error outcome equality for all root lists after validation |
 | Handle shared leaf parents across arbitrary batches | ~C3.UnaryLeafGraph~, ~C3.linearizeMany_eq_uncached_unary_leaf~ | Every row is a leaf or has one distinct leaf parent; full ~Except~ equality covers cache hits, repeated roots and later missing roots |
 | Handle two leaf parents and shared cache reuse | ~C3.AtMostTwoLeafGraph~, ~C3.AtMostTwoLeafGraph.of_unary~, ~C3.linearizeMany_eq_uncached_atMostTwoLeaf~ | Each row may have up to two distinct leaf parents; exact batch equality holds for arbitrary roots, including opposite parent orders across roots |
+| Handle any finite number of leaf parents | ~C3.LeafParentGraph~, ~C3.linearizeMany_eq_uncached_leafParents~ | Every row lists distinct leaves and excludes itself; exact ~Except~ equality holds for every root list and derivation-backed cache, including shared leaves and late errors |
+| Reuse a local arbitrary-parent proof | ~C3.mergeCertified_leaf_parents~, ~C3.linearizeUncached_leaf_parents~, ~C3.visit_leaf_parents_coherence~ | Declared-order merge and cached/uncached scalar result follow from lookup, distinctness and leaf facts; no parent-count-specific proof script |
 | Reuse local graph facts | ~C3.linearizeUncached_leaf~, ~C3.linearizeUncached_missing~, ~C3.linearizeUncached_one_leaf_parent~, ~C3.visit_leaf_at~, ~C3.visit_one_leaf_parent_coherence~ | Prove a single lookup or parent edge without restricting unrelated graph rows; derived cache entries agree at any positive fuel and fresh path |
 | Reuse the two-parent local proof | ~C3.mergeCertified_two_leaf~, ~C3.linearizeUncached_two_leaf_parents~, ~C3.visit_two_leaf_parents_coherence~, ~C3.visit_missing_coherence~ | Reuse the declared-order C3 merge and cache-invariant step without repeating the parent-loop or missing-node proof |
 | Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Batch validates once, including empty roots; recomputes every root and parent occurrence, possibly exponential on shared ancestry |
@@ -67,13 +69,25 @@ equality for any ~roots~ without admission. For a richer graph,
 ~linearizeMany_eq_uncached_unary_leaf~ provides the same all-batch equality.
 [[file:../../Tests/PaperC3UnaryLeaf.lean][PaperC3UnaryLeaf]] shows the declaration proof and checks a repeated root,
 shared parent and later missing root. ~AtMostTwoLeafGraph~ extends this to two
-distinct leaf parents. [[file:../../Tests/PaperC3TwoLeaf.lean][PaperC3TwoLeaf]] has two roots sharing both leaves in opposite
-orders, followed by repeated and missing requests. For deeper or unbounded
-multiple-parent graphs,
+distinct leaf parents. [[file:../../Tests/PaperC3TwoLeaf.lean][PaperC3TwoLeaf]] retains that focused instance.
+~LeafParentGraph~ covers any finite number of distinct leaf parents.
+[[file:../../Tests/PaperC3LeafParents.lean][PaperC3LeafParents]] proves the graph premise for two roots sharing four leaves in
+opposite orders, then checks repeated and missing requests. The theorem itself
+quantifies over every root list. For graphs with deeper parent chains,
 ~linearizeMany_eq_uncached_of_visit_coherence~ isolates the remaining premise:
 prove each root call returns the same full ~Except~ result for every cache
 backed by ~CacheDerivations~. The theorem carries that cache invariant across
 successful requests, so callers do not handwrite the batch loop proof.
+
+The local reuse path can bypass admission entirely:
+
+#+begin_src lean
+theorem heightOneBatch (graph : C3.Graph) (roots : List String)
+    (valid : C3.validateGraph graph = .ok ())
+    (heightOne : C3.LeafParentGraph graph) :
+    C3.linearizeMany graph roots = C3.linearizeUncachedMany graph roots :=
+  C3.linearizeMany_eq_uncached_leafParents graph valid heightOne roots
+#+end_src
 
 For a nonempty request, a client can use ~certificate.source_traces.head~
 to obtain the first result's ~GraphTrace~. Each ~GraphTrace.node~ carries

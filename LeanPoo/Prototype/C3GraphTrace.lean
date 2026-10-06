@@ -298,6 +298,47 @@ private theorem sourceVisit_leaf_at (graph : Graph) (root : String)
         bind, Except.bind, Except.map]
       rfl
 
+private theorem sourceVisit_leaf_parents (graph : Graph) (root : String)
+    (fuel : Nat) (names : List String)
+    (fresh : root ∉ names)
+    (leaves : ∀ parent ∈ names,
+      graph.find? (fun row => row.1 == parent) = some (parent, [])) :
+    (sourceVisit.parents graph root [] (fuel+1) names).map Subtype.val =
+      .ok (names.map (fun name => [name])) := by
+  induction names with
+  | nil =>
+    simp [sourceVisit.parents, Except.map]
+  | cons parent rest ih =>
+    have notRootParent : root ≠ parent := by
+      intro same
+      exact fresh (by simp [same])
+    have freshParent : [root].contains parent = false := by
+      simp [notRootParent.symm]
+    have lookup := leaves parent (by simp)
+    have head := sourceVisit_leaf_at graph parent [root] fuel (parent, [])
+      freshParent lookup rfl
+    cases headResult : sourceVisit graph parent [root] (fuel+1) with
+    | error err => simp [headResult, Except.map] at head
+    | ok witness =>
+      have headOrder : witness.val = [parent] := by
+        simpa [headResult, Except.map] using head
+      have freshRest : root ∉ rest := by
+        intro member
+        exact fresh (by simp [member])
+      have leavesRest : ∀ child ∈ rest,
+          graph.find? (fun row => row.1 == child) = some (child, []) := by
+        intro child member
+        exact leaves child (by simp [member])
+      have tail := ih freshRest leavesRest
+      cases tailResult : sourceVisit.parents graph root [] (fuel+1) rest with
+      | error err => simp [tailResult, Except.map] at tail
+      | ok restWitness =>
+        have tailOrder : restWitness.val = rest.map (fun name => [name]) := by
+          simpa [tailResult, Except.map] using tail
+        simp [sourceVisit.parents, headResult, tailResult, headOrder, tailOrder,
+          Except.map, bind, Except.bind]
+        rfl
+
 /-- A single leaf needs no restriction on the other graph rows: its uncached
 observation is the singleton order after graph validation. -/
 theorem linearizeUncached_leaf (graph : Graph)
@@ -476,6 +517,106 @@ theorem linearizeUncached_two_leaf_parents (graph : Graph)
               rfl
         simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
           pure, Except.pure] using rootSource
+
+private theorem trace_cons_empty (trace : Precedence.Trace lists output) :
+    Precedence.Trace ([] :: lists) output := by
+  induction trace with
+  | done empty => exact .done (by simpa using empty)
+  | @step lists name output chosen rest ih =>
+    have eligibleEq (candidate : String) :
+        Precedence.eligible ([] :: lists) candidate = Precedence.eligible lists candidate := by
+      simp [Precedence.eligible]
+    have predicate :
+        (fun row : List String => Option.any (Precedence.eligible ([] :: lists)) row.head?) =
+        (fun row : List String => Option.any (Precedence.eligible lists) row.head?) := by
+      funext row
+      cases row.head? <;> simp [eligibleEq]
+    have chooseEq : Precedence.choose ([] :: lists) = Precedence.choose lists := by
+      simp [Precedence.choose, Precedence.heads, predicate]
+    exact .step (by simpa [chooseEq] using chosen)
+      (by simpa [Precedence.advance, Precedence.advanceOrder] using ih)
+
+private theorem singleton_parent_trace (parents : List String)
+    (nodup : parents.Nodup) :
+    Precedence.Trace (parents.map (fun parent => [parent]) ++ [parents]) parents := by
+  induction parents with
+  | nil => exact .done (by simp)
+  | cons parent rest ih =>
+    have absent : parent ∉ rest := (List.nodup_cons.mp nodup).1
+    have restNodup : rest.Nodup := (List.nodup_cons.mp nodup).2
+    have selected : Precedence.choose
+        ((parent :: rest).map (fun name => [name]) ++ [parent :: rest]) =
+        some parent := by
+      simp [Precedence.choose, Precedence.heads, Precedence.eligible, absent]
+    have allNe : ∀ name ∈ rest, name ≠ parent := by
+      intro name member same
+      exact absent (same ▸ member)
+    have advanced : Precedence.advance
+        ((parent :: rest).map (fun name => [name]) ++ [parent :: rest]) parent =
+        [] :: (rest.map (fun name => [name]) ++ [rest]) := by
+      simp [Precedence.advance, Precedence.advanceOrder]
+      exact allNe
+    apply Precedence.Trace.step selected
+    rw [advanced]
+    exact trace_cons_empty (ih restNodup)
+
+/-- Arbitrarily many distinct leaf parents merge in declared order. -/
+theorem mergeCertified_leaf_parents (parents : List String)
+    (nodup : parents.Nodup) :
+    ∃ certificate,
+      Precedence.mergeCertified (parents.map (fun parent => [parent]) ++ [parents]) =
+        .ok certificate ∧ certificate.output = parents :=
+  Precedence.mergeCertified_complete (singleton_parent_trace parents nodup)
+
+/-- A root whose direct parents are all leaves has its declared C3 order. -/
+theorem linearizeUncached_leaf_parents (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (root : String)
+    (parents : List String)
+    (rootLookup : graph.find? (fun row => row.1 == root) = some (root, parents))
+    (fresh : root ∉ parents) (nodup : parents.Nodup)
+    (leaves : ∀ parent ∈ parents,
+      graph.find? (fun row => row.1 == parent) = some (parent, [])) :
+    linearizeUncached graph root = .ok (root :: parents) := by
+  have emptyOk : linearizeMany graph [] = .ok [] := by
+    simp [linearizeMany, valid, bind, Except.bind]
+    rfl
+  cases graph with
+  | nil => simp at rootLookup
+  | cons row rest =>
+    have parentSource := sourceVisit_leaf_parents (row :: rest) root
+      rest.length parents fresh leaves
+    cases parentResult : sourceVisit.parents (row :: rest) root [] (rest.length+1)
+        parents with
+    | error err => simp [parentResult, Except.map] at parentSource
+    | ok witness =>
+      have orders : witness.val = parents.map (fun name => [name]) := by
+        simpa [parentResult, Except.map] using parentSource
+      cases witness with
+      | mk actual parentProof =>
+        dsimp at orders
+        subst actual
+        obtain ⟨certificate, merged, output⟩ :=
+          mergeCertified_leaf_parents parents nodup
+        have rootSource :
+            (sourceVisit (row :: rest) root [] ((row :: rest).length+1)).map
+              Subtype.val = .ok (root :: parents) := by
+          simp [sourceVisit]
+          split
+          · simp_all
+          · rename_i selected found
+            have same : selected = (root, parents) :=
+              Option.some.inj (found.symm.trans rootLookup)
+            subst selected
+            simp only [parentResult, bind, Except.bind, Except.map]
+            cases certificate with
+            | mk certOutput certTrace =>
+              dsimp at output
+              subst certOutput
+              dsimp only [mergeCertified]
+              simp only [merged]
+              rfl
+        simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
+        pure, Except.pure] using rootSource
 
 /-- Every successful uncached order has a recursive paper-style graph trace. -/
 theorem linearizeUncached_sound (graph : Graph) (root : String)

@@ -420,10 +420,11 @@ whose declarations are leaves or have one distinct leaf parent. Its concrete
 graph has two roots sharing a parent and checks repeated and missing roots;
 the theorem itself quantifies over every requested root list and every
 derivation-backed cache reached by the batch.
-PaperC3TwoLeaf extends the graph class to two distinct leaf parents per node.
-Its roots share both leaves in opposite orders, then exercise repeated and
-missing requests. The theorem again quantifies over every root list.
+PaperC3TwoLeaf retains the two-parent case. PaperC3LeafParents proves the
+graph premise for four distinct leaf parents per root; its roots share all
+four leaves in opposite orders, then exercise repeated and missing requests.
+The general theorem quantifies over every finite parent list and root list.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 160 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 161 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.
