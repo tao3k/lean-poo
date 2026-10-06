@@ -433,3 +433,9 @@ and source audit; native time, allocations and external savings are unmeasured.
 ~euler-contract-join-2026-10-06.json~ records nine APIs, 72 local source hashes
 and pinned original/reference evidence. It is a source/semantic audit; native
 time, allocations and external code/maintenance gains remain unmeasured.
+
+* Dependent result index source audit
+
+~euler-result-index-2026-10-06.json~ records nine APIs, 74 local source hashes
+and pinned named-record/cache/reference evidence. Native timing, memory and
+break-even are unmeasured; collision correctness does not establish speedup.

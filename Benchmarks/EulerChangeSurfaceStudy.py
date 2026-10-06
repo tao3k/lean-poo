@@ -57,6 +57,21 @@ def paper_view_composition_audit():
     return audit
 
 
+def paper_record_index_audit():
+    audit = paper_cache_audit()
+    rows = (ROOT / audit["file"]).read_text().splitlines()
+    tokens = ["@subsubsection{Records as functions}", "by first encoding “records” of multiple named values as functions"]
+    located = {}
+    for token in tokens:
+        matches = [i+1 for i, row in enumerate(rows) if token in row]
+        if len(matches) != 1:
+            raise ValueError(f"Expected one POOF named-record token: {token}")
+        located[token] = matches[0]
+    audit["named_record_token_lines"] = located
+    audit["scope"] = "Original named-record and explicit-cache discussion; local immutable dependent hash access, not a paper runtime benchmark or generalized object implementation"
+    return audit
+
+
 def observation_bridge(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -400,7 +415,8 @@ def study(reference):
              "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean",
              "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean",
              "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean",
-             "LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean"]
+             "LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean",
+             "LeanPoo/Functional/ResultIndex.lean", "Tests/FunctionalResultIndex.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -412,6 +428,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "result_index": {
+            "paper_source": paper_record_index_audit(),
+            "reference_audit": context_view_audit(reference),
+            "local_api": ["ResultIndex", "ResultIndex.ofResults", "ResultIndex.find?", "ResultIndex.find?_present", "ResultIndex.find?_absent", "ResultIndex.get", "ResultIndex.get_eq", "ResultIndex.project", "ResultIndex.project_eq"],
+            "tests": {"indices": 72, "queries": 288, "projections": 729, "projected_positions": 972, "contexts": 3, "forced_hash_collisions": True, "heterogeneous_dependent_values": True, "inconsistent_duplicate_first_occurrence": True, "missing_keys": True, "wrong_tuple_and_context_rejected": True, "joint_proof_transport_client": True, "axiom_reports": 4, "axioms": ["propext", "Classical.choice", "Quot.sound"]},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ResultIndex.lean", "Tests/FunctionalResultIndex.lean"]},
+            "mechanism": "Build a dependent hash table once from exact built data, tail-first insertion preserves first source occurrence; retained named access/projection uses one hash lookup per requested position instead of a source-list scan",
+            "cost": "Full source traversal and hash insertion at setup, map storage/value retention, hashing/collision costs and output tuple construction remain; duplicate target keys repeat lookups; changed data/context requires a new index",
+            "limits": ["Reference already uses Lean structure projections; linear field scans or replaceable upstream access not established", "No automatic dependency graph, cache invalidation or integration; exact data/context index required", "No native timing, allocation or break-even measurement; collision correctness is not a speedup; Euler migrations 0, net lines and maintenance hours unmeasured"]},
         "contract_join": {
             "paper_source": paper_cache_audit(),
             "reference_audit": joint_certificate_audit(reference),

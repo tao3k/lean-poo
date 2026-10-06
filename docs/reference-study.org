@@ -1465,3 +1465,11 @@ and retain cached values. This Lean-specific extension is audited against
 original explicit-cache policy and existing reference joint structures in a
 [[file:../Benchmarks/receipts/euler-contract-join-2026-10-06.json][v1 receipt]]. Analytic admissions and equality remain obligations; no external
 rebuild or cost reduction has been demonstrated.
+
+* Indexed built named values
+
+[[file:contracts/result-index.org][Nine result-index APIs]] preserve exact dependent data and first-occurrence
+semantics while replacing repeated local list scans with retained hash probes.
+The original named-record/cache discussion and existing reference field projection
+are hashed in a [[file:../Benchmarks/receipts/euler-result-index-2026-10-06.json][v1 audit]]. Upstream linear scans or speedups are not established;
+native break-even and allocation measurements remain open.

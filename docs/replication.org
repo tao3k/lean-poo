@@ -2426,3 +2426,9 @@ propext-only). [[file:contracts/contract-consequence.org][Contract, compiled cli
 Build ~LeanPoo.Functional.ContractJoin~ and run ~Tests/FunctionalContractJoin.lean~.
 Expect 224 reads / 112 hits / 112 misses and six axiom reports (four none, two
 propext-only). [[file:contracts/contract-join.org][Joint proof contract and compiled client]].
+
+* Dependent result index replication
+
+Build ~LeanPoo.Functional.ResultIndex~ and run ~Tests/FunctionalResultIndex.lean~.
+Expect 72 indices / 288 queries / 729 projections / 972 positions, all keys
+colliding, and four standard-axiom reports. [[file:contracts/result-index.org][Contract, proof client and cost guide]].

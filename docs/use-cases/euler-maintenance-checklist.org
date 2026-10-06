@@ -969,3 +969,15 @@ not an Euler-wide edit-count estimate.
 - [X] Shared costs 64 + 80 lines; mapped wrapper and normal read costs remain.
 - [ ] Reference already combines proofs; redundant admission/rebuild not established.
 - [ ] Euler migrations/integrations 0; net lines, hours and native benefits unmeasured.
+
+* Dependent result index checklist
+
+- [X] Nine APIs retain typed built values for repeated lookup/projection.
+- [X] Exact data/context index; first duplicate value and target order preserved.
+- [X] 72 indices / 288 queries / 729 projections / 972 positions; forced hash collisions.
+- [X] Independent/list controls; missing keys, heterogeneous values, wrong tuple/context rejection.
+- [X] Four standard-axiom reports and compiled joint-proof transport client.
+- [X] Original named-record/cache source and existing reference field consumers hashed; v1 receipt.
+- [X] Shared costs 94 + 86 lines; full setup, map memory, collisions and output construction remain.
+- [ ] Euler already uses structure projections; avoidable linear scans not established.
+- [ ] Native time/allocation/break-even unmeasured; integrations/migrations 0, net lines/hours unknown.
