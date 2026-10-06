@@ -220,6 +220,147 @@ theorem linearizeMany_eq_uncached_validation_error (graph : Graph)
     linearizeMany graph roots = linearizeUncachedMany graph roots := by
   simp [linearizeMany, linearizeUncachedMany, invalid, bind, Except.bind]
 
+private theorem uncachedMany_mapM (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (roots : List String) :
+    linearizeUncachedMany graph roots = roots.mapM (linearizeUncached graph) := by
+  have emptyOk : linearizeMany graph [] = .ok [] := by
+    simp [linearizeMany, valid, bind, Except.bind]
+    rfl
+  simp only [linearizeUncachedMany, emptyOk, bind, Except.bind]
+  congr 1
+  funext root
+  simp [linearizeUncached, emptyOk, bind, Except.bind, Except.map]
+  rfl
+
+private def batchLoop (graph : Graph) (roots : List String)
+    (cache : Cache) (acc : List (List String)) :
+    Except C4.Error (Cache × List (List String)) :=
+  forIn roots (cache, acc) (fun root state => do
+    let result ← visit graph root [] state.fst (graph.length+1)
+    pure (ForInStep.yield (result.snd, result.fst :: state.snd)))
+
+private theorem visitMany_coherent (graph : Graph)
+    (coherent : ∀ (root : String) (cache : Cache),
+      CacheDerivations graph cache →
+      (visit graph root [] cache (graph.length+1)).map Prod.fst =
+        linearizeUncached graph root)
+    (roots : List String) (cache : Cache) (acc : List (List String))
+    (valid : CacheDerivations graph cache) :
+    (batchLoop graph roots cache acc).map (fun state => state.snd.reverse) =
+    (roots.mapM (linearizeUncached graph)).map
+      (fun orders => acc.reverse ++ orders) := by
+  induction roots generalizing cache acc with
+  | nil => simp [batchLoop, List.forIn_nil, List.mapM_nil, pure, Except.pure, Except.map]
+  | cons root rest ih =>
+    simp only [batchLoop, List.forIn_cons, List.mapM_cons]
+    cases first : visit graph root [] cache (graph.length+1) with
+    | error err =>
+      have scalar : linearizeUncached graph root = .error err := by
+        rw [← coherent root cache valid, first]
+        rfl
+      simp [scalar, bind, Except.bind, Except.map]
+    | ok pair =>
+      obtain ⟨order, updated⟩ := pair
+      have validUpdated : CacheDerivations graph updated :=
+        (visit_sound graph root [] cache (graph.length+1)
+          order updated valid first).2
+      have scalar : linearizeUncached graph root = .ok order := by
+        rw [← coherent root cache valid, first]
+        rfl
+      simp [scalar, bind, Except.bind, Except.map, pure, Except.pure]
+      change (batchLoop graph rest updated (order :: acc)).map
+          (fun state => state.snd.reverse) = _
+      rw [ih updated (order :: acc) validUpdated]
+      cases tail : rest.mapM (linearizeUncached graph) with
+      | error err => simp [Except.map]
+      | ok orders => simp [List.reverse_cons, List.append_assoc, Except.map]
+
+/-- To prove full batch outcome equality on a validated graph, it suffices to
+prove one-root `Except` coherence for every memo table whose entries already
+have paper derivations. Successful visits preserve that invariant, so the
+premise applies to each later requested root, including after cache reuse. -/
+theorem linearizeMany_eq_uncached_of_visit_coherence (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (coherent : ∀ (root : String) (cache : Cache),
+      CacheDerivations graph cache →
+      (visit graph root [] cache (graph.length+1)).map Prod.fst =
+        linearizeUncached graph root)
+    (roots : List String) :
+    linearizeMany graph roots = linearizeUncachedMany graph roots := by
+  have cached : linearizeMany graph roots =
+      (batchLoop graph roots {} []).map (fun state => state.snd.reverse) := by
+    simp [linearizeMany, batchLoop, valid, bind, Except.bind, Except.map,
+      pure, Except.pure]
+  rw [cached, uncachedMany_mapM graph valid roots]
+  have h := visitMany_coherent graph coherent roots {} []
+    (CacheDerivations.empty graph)
+  cases result : roots.mapM (linearizeUncached graph) with
+  | error err => simpa [result, Except.map] using h
+  | ok orders => simpa [result, Except.map] using h
+
+private theorem flat_derived_singleton (graph : Graph)
+    (flat : FlatGraph graph)
+    (derived : GraphDerivation graph root order) : order = [root] := by
+  cases derived with
+  | @node name entry orders tail lookup parents merged certified =>
+    have empty : entry.2 = [] := flat root entry lookup
+    cases entry with
+    | mk entryName parentNames =>
+      dsimp at empty
+      subst parentNames
+      cases parents
+      have zero : SourceTrace ([[]] : List (List String)) [] :=
+        .done (by simp [removeNulls])
+      have tailEmpty : tail = [] := merged.unique zero
+      simp [tailEmpty]
+
+private theorem flat_visit_coherence (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (flat : FlatGraph graph)
+    (root : String) (cache : Cache)
+    (cacheValid : CacheDerivations graph cache) :
+    (visit graph root [] cache (graph.length+1)).map Prod.fst =
+      linearizeUncached graph root := by
+  cases hit : cache.get? root with
+  | some order =>
+    have derived := cacheValid root order hit
+    have singleton := flat_derived_singleton graph flat derived
+    obtain ⟨entry, _, lookup, _, _, _⟩ := derived.parent_order
+    rw [linearizeUncached_flat graph valid flat root]
+    have visitHit : visit graph root [] cache (graph.length+1) =
+        .ok (order, cache) := by
+      simp only [visit, hit]
+      rfl
+    simp [lookup, visitHit, singleton, Except.map]
+  | none =>
+    cases lookup : graph.find? (fun row => row.1 == root) with
+    | none =>
+      rw [linearizeUncached_flat graph valid flat root]
+      have visitMissing : visit graph root [] cache (graph.length+1) =
+          .error (.unknownNode root) := by
+        simp only [visit, hit, lookup]
+        rfl
+      simp [lookup, visitMissing, Except.map]
+    | some entry =>
+      have empty : entry.2 = [] := flat root entry lookup
+      cases entry with
+      | mk entryName parents =>
+        dsimp at empty
+        subst parents
+        rw [linearizeUncached_flat graph valid flat root]
+        simp only [visit, hit, lookup]
+        rfl
+
+/-- For every validated graph with no direct-parent edges, cached and
+uncached traversal have the same complete result on arbitrary root lists.
+This includes repeated roots, cache hits, and a missing root after earlier
+successful requests. -/
+theorem linearizeMany_eq_uncached_flat (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (flat : FlatGraph graph)
+    (roots : List String) :
+    linearizeMany graph roots = linearizeUncachedMany graph roots :=
+  linearizeMany_eq_uncached_of_visit_coherence graph valid
+    (flat_visit_coherence graph valid flat) roots
+
 inductive GraphAdmissionError where
   | cached (error : C4.Error)
   | reference (error : C4.Error)

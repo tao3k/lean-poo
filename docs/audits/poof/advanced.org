@@ -28,8 +28,11 @@ one-root batch/scalar laws include exact error results.
 Two further kernel theorems cover nonempty batches whose first root is absent
 or lists itself as its first parent, including arbitrary later roots.
 [[file:../../contracts/c3-graph.org][The graph guide]] distinguishes this zero-replay proof from admission's
-recomputation cost. Valid-graph, nonempty-root cached/uncached error and
-success equivalence remains open.
+recomputation cost. The batch lifting theorem reduces complete outcome
+equivalence to one-root coherence on every derivation-backed cache. That
+premise is proved for validated graphs without parent edges, yielding exact
+outcomes for arbitrary roots, repeated hits and later missing roots. Graphs
+with parent edges remain open.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 

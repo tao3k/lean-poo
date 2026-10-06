@@ -366,7 +366,7 @@ PaperPrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 PaperDictionaryRecord guards 33 contexts and 528 reads; PaperMetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 157 atoms plus four diagnostics, 48 native admissions and
+Current inventory: 158 atoms plus four diagnostics, 48 native admissions and
 16 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
@@ -410,7 +410,12 @@ scalar and batched successful results have paper derivations without admission.
 Two successful cached/uncached runs have equal outputs, and the unreachable
 admission disagreement branch is removed. Full executable outcome and error
 equivalence remains open.
+PaperC3BatchCoherence proves that one-root complete-result coherence on every
+derivation-backed cache lifts to any root list. A separate proof discharges
+that premise for every validated graph with no parent edges, including repeated
+root cache hits and a missing root after an earlier success. General graph
+coherence still needs the corresponding one-root proof.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 156 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 158 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.

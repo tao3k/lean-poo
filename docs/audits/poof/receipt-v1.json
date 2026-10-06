@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "9f5d358ef9efee197793eb5ead8f47fde4d34b2aaf3e5e7b55b1b6f70b412848",
+  "requirements_sha256": "baae22f1a5d6414f2bd7fab3f19c69f7cba531209b4063303439967aef2bd437",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -58,9 +58,10 @@
           "Tests/PaperC3.lean",
           "Tests/PaperC3Semantics.lean",
           "Tests/PaperC3GraphSemantics.lean",
+          "Tests/PaperC3BatchCoherence.lean",
           "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -171,7 +172,7 @@
       }
     ]
   },
-  "closure_sha256": "7671e6fb6f3296394de7651f4ce42f67333faeaff657805f8eba166b685526fd",
+  "closure_sha256": "a6dbb366a7c693f91ee6c60b985fa466224d23d020f6662d1c9cc37a19981e39",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -634,9 +635,10 @@
         "Tests/PaperC3.lean",
         "Tests/PaperC3Semantics.lean",
         "Tests/PaperC3GraphSemantics.lean",
+        "Tests/PaperC3BatchCoherence.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -835,9 +837,10 @@
       "checks": [
         "Tests/PaperC3.lean",
         "Tests/PaperC3Semantics.lean",
-        "Tests/PaperC3GraphSemantics.lean"
+        "Tests/PaperC3GraphSemantics.lean",
+        "Tests/PaperC3BatchCoherence.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches, graph-validation failures, absent first roots and first-parent self cycles have identical complete cached/uncached outcomes. Matching first-root scalar failures lift to arbitrary batch tails. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches, graph-validation failures, absent first roots and first-parent self cycles have identical complete cached/uncached outcomes. Matching first-root scalar failures lift to arbitrary batch tails. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Valid-graph, nonempty-root parent-edge outcome equivalence and C3/C4 policy equivalence remain unproved."
     },
     {
       "id": "helpers",
@@ -1707,15 +1710,15 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphSemantics.lean": {
-      "sha256": "50d64e1c5023e3f20d98252ddcaa6231dba59c30f20597b880da4ed1f1f97b33",
-      "physical_lines": 284,
+      "sha256": "f245bba2b94ea0d791f424a27c05507a2aad4bf12f77f35bced87b62dd2d2029",
+      "physical_lines": 425,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphTrace.lean": {
-      "sha256": "31a0c012b3085078fa4d02b602ecfd7c5d16a654450ab36d37716535e2498a41",
-      "physical_lines": 461,
+      "sha256": "92be222e08df87d199704db079a527357dbb54d05b5bbc17a9f5f49d5636da15",
+      "physical_lines": 519,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2061,6 +2064,19 @@
         70
       ]
     },
+    "Tests/PaperC3BatchCoherence.lean": {
+      "sha256": "6d6145fecd072335ca9742e98f9d9d7b81eb71d12d473a7a2b5afd7259642a25",
+      "physical_lines": 38,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        26,
+        28,
+        30
+      ],
+      "eval_lines": [
+        33
+      ]
+    },
     "Tests/PaperC3GraphSemantics.lean": {
       "sha256": "d8f0c7cd12cd8101163c2a339ff60aad02d2c2af2aa6e947a31846b3aa87450f",
       "physical_lines": 205,
@@ -2291,8 +2307,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "7671e6fb6f3296394de7651f4ce42f67333faeaff657805f8eba166b685526fd",
-      "physical_lines": 161,
+      "sha256": "a6dbb366a7c693f91ee6c60b985fa466224d23d020f6662d1c9cc37a19981e39",
+      "physical_lines": 162,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2577,6 +2593,7 @@
     "Tests/OrderRelation.lean",
     "Tests/OrdinaryNode.lean",
     "Tests/PaperC3.lean",
+    "Tests/PaperC3BatchCoherence.lean",
     "Tests/PaperC3GraphSemantics.lean",
     "Tests/PaperC3Semantics.lean",
     "Tests/PaperCheckedMeta.lean",

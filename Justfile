@@ -251,6 +251,7 @@ _check-contracts:
     {{lean}} Tests/PaperC3.lean
     {{lean}} Tests/PaperC3Semantics.lean
     {{lean}} Tests/PaperC3GraphSemantics.lean
+    {{lean}} Tests/PaperC3BatchCoherence.lean
     {{lean}} Tests/PaperPrototypeChecks.lean
     {{lean}} Tests/PaperDictionaryRecord.lean
     {{lean}} Tests/PaperMetaPrototype.lean
