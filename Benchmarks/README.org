@@ -482,3 +482,11 @@ internal threads. [[file:../docs/performance/check-worker-overlap.org][Capacity 
 OpenAI's existing explicit witness/proof constructor and noncomputable section.
 Eleven APIs reuse typed target solvers and C4 certificates; 96 independent reads
 and negative type/elimination controls qualify local semantics. [[file:../docs/contracts/solver-transport.org][Use and cost limits]].
+
+* Finite refusal source audit
+
+~receipts/euler-finite-refusal-2026-10-06.json~ is a new v1 receipt with 84
+local source hashes, three finite admission/diagnostic API names, exhaustive
+16,384-route local controls and five source-token-bound universal Euler clauses.
+No analytic finite sampling certificate, integration or measured external saving
+is established. Historical receipts remain unchanged.

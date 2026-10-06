@@ -1015,3 +1015,13 @@ not an Euler-wide edit-count estimate.
 - [X] Integration/migration count 0; net external code, maintenance hours and runtime gains unmeasured.
 
 See [[file:../contracts/solver-transport.org][API use and boundaries]] and [[file:../../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][v1 source audit]].
+
+* Finite refusal admission checklist
+
+- [X] Three new API names: FiniteFailure, FiniteFailure.rejects, certifyFiniteOrFailure; four typed data/proof fields.
+- [X] Supplied finite Bool routes need no separate handwritten admission proof; failures expose an actual counterexample.
+- [X] All 16,384 small routes checked; 6,248 admitted / 10,136 refused, exact first witnesses and two solver reads.
+- [X] Vacuous admission explicitly distinguished from target solver existence.
+- [X] Five universal Euler order/time clauses source-bound; finite sampling cannot certify them.
+- [X] Local extension to explicit composition boundaries, not full Fare POOF semantics.
+- [ ] External migration, net lines/maintenance hours and runtime benefits measured (currently unknown; migrations 0).

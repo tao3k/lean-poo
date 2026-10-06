@@ -156,7 +156,7 @@ def main():
     parser.add_argument('--shards', type=int, default=1)
     parser.add_argument('--files', nargs='+')
     parser.add_argument('--list', action='store_true')
-    parser.add_argument('--receipt', type=Path)
+    parser.add_argument('--receipt', type=Path, default=os.environ.get('LEAN_POO_ATOM_RECEIPT'))
     args = parser.parse_args()
     try:
         inventory = load_atoms()

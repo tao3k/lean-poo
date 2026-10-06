@@ -1496,3 +1496,19 @@ getter/wrapper hints and the explicit two-tower/five-proof constructor in
 OpenAI's noncomputable all-order theorem. Neither existence in Prop nor that
 source inspection supplies a native solver. Local correctness/proof reuse is
 qualified; external migration, net code and maintenance savings remain unknown.
+
+* Finite refusal evidence and the analytic boundary
+
+The [[file:contracts/finite-diagnostics.org][finite diagnostic interface]] admits an explicit route or returns an
+input/target-answer pair with both target-correct and source-incorrect proofs.
+Nested scanning avoids a Cartesian-product table and repeated admission check;
+it does not synthesize target solver existence. Independent 2x2 arithmetic
+controls exhaust 16,384 routes and check the first refusal witness.
+
+The [[file:../Benchmarks/receipts/euler-finite-refusal-2026-10-06.json][v1 receipt]] pins five universal clauses in OpenAI's
+~exists_exact_lifted_solution~: initial data at every order, divergence/gradient
+at every time, energy bounds at every order/time, and derivatives at every
+qualifying Nat order in the open time interval. Finite samples are not an
+exhaustive analytic specification. Fare's generalized prototype hints motivate
+explicit representation/composition boundaries but do not prescribe this
+checker. No integration, external code/maintenance or runtime saving measured.

@@ -275,6 +275,21 @@ def solver_witness_audit(reference):
     return audit
 
 
+def finite_refusal_boundary_audit(reference):
+    audit = solver_witness_audit(reference)
+    rows = (reference / audit["file"]).read_text().splitlines()
+    start = audit["declaration_line"]-1
+    end = next(i for i in range(start+1, len(rows)) if rows[i].startswith("end "))
+    tokens = ["(∀ q, Z.realization q", "(∀ t, Z.field t", "(∀ t, Q.field t",
+              "(∀ (P : ℕ) t,", "∀ (q : ℕ) (hq : 6 ≤ q) t (ht : t ∈ Ioo 0 T)"]
+    found = {token: [i+1 for i in range(start, end) if token in rows[i]] for token in tokens}
+    if any(len(lines) != 1 for lines in found.values()):
+        raise ValueError("Expected unbounded order/time analytic clauses")
+    audit["unbounded_clause_token_lines"] = found
+    audit["scope"] = "Five universal order/time clauses are not exhaustive finite Bool specifications. Local finite refusal data diagnoses supplied finite models only; no analytic decision procedure, sampled Euler certification or external adapter established"
+    return audit
+
+
 def certified_observation_audit(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -439,7 +454,8 @@ def study(reference):
              "Benchmarks/ResultIndexScale.lean", "Benchmarks/ResultIndexStudy.py",
              "LeanPoo/Functional/Transformation.lean", "LeanPoo/Functional/FiniteTransformation.lean",
              "LeanPoo/Proof/Transformation.lean", "Tests/FunctionalTransformation.lean",
-             "LeanPoo/Functional/SolverTransport.lean", "Tests/FunctionalSolverTransport.lean"]
+             "LeanPoo/Functional/SolverTransport.lean", "Tests/FunctionalSolverTransport.lean",
+             "LeanPoo/Functional/FiniteDiagnostics.lean", "Tests/FunctionalFiniteDiagnostics.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -451,6 +467,18 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "finite_refusal": {
+            "paper_source": paper_view_composition_audit(),
+            "reference_audit": finite_refusal_boundary_audit(reference),
+            "new_api": ["FiniteFailure", "FiniteFailure.rejects", "certifyFiniteOrFailure"],
+            "failure_fields": ["input", "answer", "target_correct", "source_incorrect"],
+            "local_test": {"file": "Tests/FunctionalFiniteDiagnostics.lean", "routes": 16384,
+                           "admitted": 6248, "refused": 10136, "solver_reads": 2,
+                           "controls": ["All 2x2 Bool truth tables and forward/extract maps", "Independent division/power/modulo scalar oracle; exact first refusal witness", "Admitted forward/extractor values and complemented route solver", "Empty input, empty answer and all-false target vacuous soundness", "Forged refusal proof rejected"],
+                           "axiom_reports": 2, "axioms": ["propext", "Quot.sound"]},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/FiniteDiagnostics.lean", "Tests/FunctionalFiniteDiagnostics.lean"]},
+            "cost": "Nested ascending scans, early refusal, no Cartesian-product table or separate repeated finiteCheck; up to n*q predicate checks, input-range and per-input answer-range construction plus recursion remain. Runtime timing/allocation benefit unmeasured",
+            "limits": ["Admits supplied finite implication, not target solver existence or source satisfiability", "Original generalized prototype hints do not prescribe this finite checker; closed local route diagnostic only", "Universal analytic Euler clauses are not reduced to finite truth tables; integration/migrations 0", "External net code savings, maintenance hours and runtime speedup unmeasured"]},
         "solver_transport": {
             "paper_source": paper_view_composition_audit(),
             "reference_audit": solver_witness_audit(reference),

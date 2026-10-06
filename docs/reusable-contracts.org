@@ -19,6 +19,7 @@ these guides explain reusable library contracts.
 | Prepare transaction views, retain key indices and joint certificates | [[file:contracts/preparation-cache.org][Certified preparation caches]] |
 | Publish cache revisions, project data and construct proof-aware outputs | [[file:contracts/certified-consumers.org][Certified consumer construction]] |
 | Transport correct witness data through routes or reuse C4 certificates as solvers | [[file:contracts/solver-transport.org][Certified solver transport]] |
+| Admit finite routes or inspect proof-carrying refusal cases | [[file:contracts/finite-diagnostics.org][Finite route diagnostics]] |
 | Index immutable built values for repeated named access and projections | [[file:contracts/result-index.org][Dependent result index]] |
 | Combine independently admitted contracts of the same dependency family | [[file:contracts/contract-join.org][Joining joint contracts]] |
 | Derive another joint contract while retaining functions and cached data | [[file:contracts/contract-consequence.org][Contract consequences]] |

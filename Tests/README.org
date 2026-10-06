@@ -338,3 +338,13 @@ reads, three composed routes, 32 contexts, Fin/Bool joint C4 certificate and
 wrong-input/witness/validity/Prop-elimination rejection. Five axiom reports are
 empty. Current inventory: 140 atoms + four diagnostics (144 standalone files),
 48 native admissions and eleven supervisor tests; 12 shards / 16 CI jobs remain.
+
+* Finite refusal diagnostics
+
+~FunctionalFiniteDiagnostics.lean~ exhausts 16,384 2x2 Bool routes (6,248
+admissions / 10,136 refusals), checks the exact first witness with an independent
+arithmetic oracle, and reuses one admitted complemented route for two solver
+reads. Vacuous-domain and forged-proof controls are included; two axiom reports
+contain propext/Quot.sound without Classical.choice. Current inventory: 141 atoms
+plus four diagnostics, 48 native admissions, eleven supervisor tests, 12 shards
+and 16 CI jobs.

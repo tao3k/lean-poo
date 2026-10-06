@@ -323,6 +323,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalContextSlot.lean
     {{lean}} Tests/FunctionalTransformation.lean
     {{lean}} Tests/FunctionalSolverTransport.lean
+    {{lean}} Tests/FunctionalFiniteDiagnostics.lean
     {{lean}} Tests/FunctionalContractConsequence.lean
     {{lean}} Tests/FunctionalContractJoin.lean
     {{lean}} Tests/FunctionalContextView.lean
