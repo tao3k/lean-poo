@@ -1473,3 +1473,10 @@ semantics while replacing repeated local list scans with retained hash probes.
 The original named-record/cache discussion and existing reference field projection
 are hashed in a [[file:../Benchmarks/receipts/euler-result-index-2026-10-06.json][v1 audit]]. Upstream linear scans or speedups are not established;
 native break-even and allocation measurements remain open.
+
+* Native named-result access costs
+
+[[file:performance/result-index.org][Result-index cost evidence]] retains 192 native samples and negative setup/query
+results. The [[file:../Benchmarks/receipts/euler-result-index-native-2026-10-06.json][source audit]] binds original named-record/cache policy, existing
+reference field projections and the native receipt. Earlier cache gains do not
+transfer; no external timing, code or maintenance reduction is established.

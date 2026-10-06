@@ -501,3 +501,14 @@ _check-native-context:
     .lake/build/bin/contextSlotScale cached miss 16 4 32
     .lake/build/bin/contextSlotScale uncached blocks 16 4 32
     .lake/build/bin/contextSlotScale cached blocks 16 4 32
+
+# Native named-value lookup controls; no timing threshold.
+_check-native-result-index:
+    .lake/build/bin/resultIndexScale list head uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed head uniform 8 32 17
+    .lake/build/bin/resultIndexScale list tail uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed tail uniform 8 32 17
+    .lake/build/bin/resultIndexScale list cycle uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed cycle uniform 8 32 17
+    .lake/build/bin/resultIndexScale list tail collision 8 32 17
+    .lake/build/bin/resultIndexScale indexed tail collision 8 32 17

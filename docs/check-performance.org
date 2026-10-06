@@ -483,3 +483,10 @@ benefits are unmeasured. Complete factory equality remains explicit.
 (142 standalone), twelve Lean shards / 16 CI jobs, 40 native admissions.
 Setup traverses/inserts the full tuple; queries probe the retained hash map.
 Collision checks are correctness evidence, not native timing or allocation gains.
+
+* Native result-index costs
+
+[[file:performance/result-index.org][192 matched native samples]] retain setup/query regressions against a source-list
+control that keeps its keys. Eight small checksum controls bring native admissions
+to 48; twelve shards / 16 jobs / 138 atoms + four diagnostics remain. No
+allocation, peak-memory or universal speedup claim is made.

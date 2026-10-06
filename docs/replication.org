@@ -2432,3 +2432,9 @@ propext-only). [[file:contracts/contract-join.org][Joint proof contract and comp
 Build ~LeanPoo.Functional.ResultIndex~ and run ~Tests/FunctionalResultIndex.lean~.
 Expect 72 indices / 288 queries / 729 projections / 972 positions, all keys
 colliding, and four standard-axiom reports. [[file:contracts/result-index.org][Contract, proof client and cost guide]].
+
+* Native result-index replication
+
+Build ~resultIndexScale~, run ~Benchmarks/ResultIndexStudy.py~ with output in TMP,
+and ~just _check-native-result-index~. Expect 192 matched samples and eight small
+checksum admissions; [[file:performance/result-index.org][protocol and retained negative controls]].

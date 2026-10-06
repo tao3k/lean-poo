@@ -439,3 +439,11 @@ time, allocations and external code/maintenance gains remain unmeasured.
 ~euler-result-index-2026-10-06.json~ records nine APIs, 74 local source hashes
 and pinned named-record/cache/reference evidence. Native timing, memory and
 break-even are unmeasured; collision correctness does not establish speedup.
+
+* Native result-index measurement
+
+~result-index-native-2026-10-06.json~ records 192 matched native samples, 144
+source hashes and binary identity. ~euler-result-index-native-2026-10-06.json~
+adds 76 local audit hashes and pinned paper/reference evidence. [[file:../docs/performance/result-index.org][Protocol and
+negative results]]: setup/query regressions retained; no default performance
+recommendation, allocation/peak-memory or external benefit established.

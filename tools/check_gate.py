@@ -113,12 +113,12 @@ def main():
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale']), ('types', ['lean', 'LeanPoo/C4/Types.lean']),
+        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale']), ('types', ['lean', 'LeanPoo/C4/Types.lean']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
          ('docs', ['just', 'check-docs']),
-         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context'])])
+         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index'])])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = dict(schema='lean-poo.check-gate.v1', jobs=jobs, phases=results,
                    wall_seconds=time.monotonic() - started,

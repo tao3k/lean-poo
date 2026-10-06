@@ -981,3 +981,14 @@ not an Euler-wide edit-count estimate.
 - [X] Shared costs 94 + 86 lines; full setup, map memory, collisions and output construction remain.
 - [ ] Euler already uses structure projections; avoidable linear scans not established.
 - [ ] Native time/allocation/break-even unmeasured; integrations/migrations 0, net lines/hours unknown.
+
+* Native result-index measurement checklist
+
+- [X] 192 samples, four alternating pairs, independent Lean/Python scalar checks.
+- [X] Matched retained-source list control; setup/query separately timed.
+- [X] One-use/head/tail/cycle and ordinary/all-collision controls; regressions retained.
+- [X] Eight native admissions added (48 total); no new runtime API or CI job.
+- [X] 52 Lean + 77 Python measurement lines; native and source schema v1 receipts.
+- [X] No default speed recommendation for the measured small workload.
+- [ ] Allocation/peak memory and broader break-even remain unknown.
+- [ ] Reference already projects fields; Euler migration 0, net lines/hours unknown.

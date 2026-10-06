@@ -60,3 +60,10 @@ The [[file:../../Benchmarks/receipts/euler-result-index-2026-10-06.json][v1 audi
 Euler already uses Lean structure projection; linear source scans there are
 not established. No integration/migration: net code and maintenance savings
 remain unmeasured, and this index is not proposed as an upstream speedup.
+
+* Native qualification
+
+The [[file:../performance/result-index.org][native cost study]] now records 192 matched samples and negative setup/query
+results against a retained source-list control. Do not select this API by default
+for speed in small Nat-key UInt64 workloads. Allocation/peak-memory and broader
+break-even remain unknown; semantic guarantees above are unchanged.

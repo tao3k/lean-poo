@@ -416,7 +416,8 @@ def study(reference):
              "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean",
              "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean",
              "LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean",
-             "LeanPoo/Functional/ResultIndex.lean", "Tests/FunctionalResultIndex.lean"]
+             "LeanPoo/Functional/ResultIndex.lean", "Tests/FunctionalResultIndex.lean",
+             "Benchmarks/ResultIndexScale.lean", "Benchmarks/ResultIndexStudy.py"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -428,6 +429,18 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "result_index_native": {
+            "paper_source": paper_record_index_audit(),
+            "reference_audit": context_view_audit(reference),
+            "local_receipt": "Benchmarks/receipts/result-index-native-2026-10-06.json",
+            "receipt_sha256": hashlib.sha256((ROOT / "Benchmarks/receipts/result-index-native-2026-10-06.json").read_bytes()).hexdigest(),
+            "new_runtime_api": [],
+            "validated_interfaces": ["ResultIndex.ofResults", "ResultIndex.get", "resultAt"],
+            "samples": 192, "alternating_pairs": 4, "native_gate_admissions_added": 8,
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["Benchmarks/ResultIndexScale.lean", "Benchmarks/ResultIndexStudy.py"]},
+            "scope": "Matched native identical runtime-seeded immutable values; retained source-list lookup versus additional dependent hash table, setup/query separately timed, head/tail/cycle and uniform/collision controls",
+            "result": "Retained-list control excludes repeated key-list construction; no performance benefit established for this small synthetic workload, with setup and query regressions retained",
+            "limits": ["Four local pairs and synthetic Nat-key UInt64 data; no universal benefit or break-even threshold", "Reference already projects Lean structure fields, replaceable list scans not established", "No allocated bytes, peak memory or Euler native execution, net code or maintenance savings; migrations/integrations 0"]},
         "result_index": {
             "paper_source": paper_record_index_audit(),
             "reference_audit": context_view_audit(reference),
