@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "5af0f1acff4ab00f2c9965688b8611363dd4db417c749e7feee3003ef353c21d",
+  "requirements_sha256": "908c966035cc5718335901b3e79b438ef8e33f2d5aa9cc04b19bf9ba3629f837",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -381,12 +381,14 @@
       "status": "lean_translation",
       "title": "Records as functions",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperRecordDispatch.lean"
       ],
-      "boundary": "Dependent key/value family and Option missing values; no arbitrary Scheme message interface."
+      "boundary": "Dependent key/value family, Option storage and checked missing-key dispatch. The original Scheme message syntax is not interpreted."
     },
     {
       "id": "record-prototypes",
@@ -394,12 +396,14 @@
       "status": "lean_translation",
       "title": "Record prototypes",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperRecordDispatch.lean"
       ],
-      "boundary": "slotGen, self and delayed inherited values; example outputs are observations."
+      "boundary": "slotGen, self and delayed inherited values; checked slot/modify/compute laws preserve all-key observations for the stated error policy. General Scheme effects remain outside this typed fragment."
     },
     {
       "id": "basic-tests",
@@ -407,13 +411,15 @@
       "status": "lean_translation",
       "title": "Paper basic checks",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
         "Tests/PaperPrototypeChecks.lean",
+        "Tests/PaperRecordDispatch.lean",
         "docs/audits/poof/checks-v1.json"
       ],
-      "boundary": "All ten core record source checks guarded; complex literal coordinates represented by integral pairs."
+      "boundary": "All ten core record source checks guarded; the x/y override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
     },
     {
       "id": "slot-construction",
@@ -1750,8 +1756,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/FiniteFix.lean": {
-      "sha256": "4954c174db893fe2ce49d92d53d3cf6ad35ef725f21486de465c7b30ea8fe25d",
-      "physical_lines": 72,
+      "sha256": "a13bdc8b3ff1b6341e8019c16f5549332758f445e83af29e3c17fef3a863ba29",
+      "physical_lines": 88,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1869,6 +1875,13 @@
     "LeanPoo/Prototype/RecordDescription.lean": {
       "sha256": "a42783f462865caa630ba1c7eaae97935cf21a162f029f2329ce487b1ea92599",
       "physical_lines": 167,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/RecordDispatch.lean": {
+      "sha256": "29d47d4be61b506867603df340bad41d9daf165c27d45bf96eb7a6925c446ec5",
+      "physical_lines": 113,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2097,6 +2110,21 @@
       "eval_lines": [
         81,
         82
+      ]
+    },
+    "Tests/PaperRecordDispatch.lean": {
+      "sha256": "7d420a2292794e4ebde0295ee0148e915468b39c82ce5752abe44eb3bd292ffa",
+      "physical_lines": 217,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        190,
+        191,
+        192,
+        199,
+        200
+      ],
+      "eval_lines": [
+        204
       ]
     },
     "Tests/PaperRepresentations.lean": {
@@ -2360,6 +2388,7 @@
     "LeanPoo/Prototype/Record.lean",
     "LeanPoo/Prototype/RecordCodec.lean",
     "LeanPoo/Prototype/RecordDescription.lean",
+    "LeanPoo/Prototype/RecordDispatch.lean",
     "LeanPoo/Prototype/SkewLens.lean",
     "LeanPoo/Prototype/SlotSpec.lean",
     "LeanPoo/Prototype/Target.lean",
@@ -2462,6 +2491,7 @@
     "Tests/PaperMetaPrototype.lean",
     "Tests/PaperPrototypeChecks.lean",
     "Tests/PaperRecordCodec.lean",
+    "Tests/PaperRecordDispatch.lean",
     "Tests/PaperRepresentations.lean",
     "Tests/PaperTrees.lean",
     "Tests/ParentInvariant.lean",

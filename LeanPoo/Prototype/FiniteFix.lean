@@ -24,6 +24,22 @@ theorem unfold_compose (child : Proto α Middle α)
       child (iterate (compose child parent) base seed depth)
         (parent (iterate (compose child parent) base seed depth) base) := rfl
 
+/-- A relation preserved by one prototype step is preserved at every finite
+unfolding depth. The relation may compare different source/target carriers. -/
+theorem iterate_relation (source : Proto α β α) (target : Proto γ δ γ)
+    (related : α → γ → Prop) (sourceBase : β) (targetBase : δ)
+    (sourceSeed : α) (targetSeed : γ)
+    (seedRelated : related sourceSeed targetSeed)
+    (stepRelated : ∀ sourceValue targetValue,
+      related sourceValue targetValue →
+      related (source sourceValue sourceBase) (target targetValue targetBase))
+    (depth : Nat) :
+    related (iterate source sourceBase sourceSeed depth)
+      (iterate target targetBase targetSeed depth) := by
+  induction depth with
+  | zero => exact seedRelated
+  | succ depth ih => exact stepRelated _ _ ih
+
 /-- An equal adjacent pair is an actual fixed point of the prototype. -/
 def certified (prototype : Proto α β α) (base : β) (seed : α) (depth : Nat)
     (stable : iterate prototype base seed depth =

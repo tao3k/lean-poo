@@ -67,12 +67,14 @@
       "status": "lean_translation",
       "title": "Records as functions",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperRecordDispatch.lean"
       ],
-      "boundary": "Dependent key/value family and Option missing values; no arbitrary Scheme message interface."
+      "boundary": "Dependent key/value family, Option storage and checked missing-key dispatch. The original Scheme message syntax is not interpreted."
     },
     {
       "id": "record-prototypes",
@@ -80,12 +82,14 @@
       "status": "lean_translation",
       "title": "Record prototypes",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperRecordDispatch.lean"
       ],
-      "boundary": "slotGen, self and delayed inherited values; example outputs are observations."
+      "boundary": "slotGen, self and delayed inherited values; checked slot/modify/compute laws preserve all-key observations for the stated error policy. General Scheme effects remain outside this typed fragment."
     },
     {
       "id": "basic-tests",
@@ -93,13 +97,15 @@
       "status": "lean_translation",
       "title": "Paper basic checks",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/RecordDispatch.lean"
       ],
       "checks": [
         "Tests/PaperPrototypeChecks.lean",
+        "Tests/PaperRecordDispatch.lean",
         "docs/audits/poof/checks-v1.json"
       ],
-      "boundary": "All ten core record source checks guarded; complex literal coordinates represented by integral pairs."
+      "boundary": "All ten core record source checks guarded; the x/y override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
     },
     {
       "id": "slot-construction",

@@ -382,7 +382,12 @@ inputs and construction counts 1 shared / 32 rebuilding / 1 delayed.
 PaperFiniteFix proves finite unfolding and stabilization laws, a two-step
 Boolean fixed point and all-input triangular recursion at depth ~n+1~; 65
 bounded outputs are compared with the shared unsafe knot.
+PaperRecordDispatch proves checked source/typed record equality for every
+String key at every finite unfolding depth. Its paper-style self calculation
+propagates errors, the source stabilizes at depth two, and typed observations
+remain stable afterward. The reusable slot/modify/compute laws expose the
+same missing-key behavior to clients.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 153 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 154 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.
