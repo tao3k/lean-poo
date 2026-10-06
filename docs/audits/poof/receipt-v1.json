@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "2b152f0a75953b6d531e891299ef747c93e891ff29efe874dd8ef052a2e878a3",
+  "requirements_sha256": "b218214f1bf2e7df70165ef1ddf17479426bd2cc0b75dc478389ca944bcc9caf",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -95,7 +95,9 @@
           "exact descriptor/object reconstruction",
           "prepared generated JSON codec",
           "strict wire and refinement admission",
-          "typed field update lookup laws"
+          "typed field update lookup laws",
+          "heterogeneous ordered record patch",
+          "valid-record preservation and untouched-field kernel laws"
         ],
         "implementation": [
           "LeanPoo/Prototype/RecordDescription.lean",
@@ -110,7 +112,7 @@
           "Tests/IntegratedPrototype.lean",
           "Tests/PaperRecordCodec.lean"
         ],
-        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
+        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
       },
       {
         "id": "pure-linearity",
@@ -159,7 +161,7 @@
       }
     ]
   },
-  "closure_sha256": "573d0a26b6ef5432f4c2d1e161509af6364b03efa6c970fbd73fc9f1b150038a",
+  "closure_sha256": "9b2624e77496fa1b07464811bd8e23c515fd611335c2b7903ead0e03041b2222",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -710,7 +712,7 @@
         "docs/audits/poof/closure-v1.json",
         "Tests/PaperRecordCodec.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
     },
     {
       "id": "typeclass-correspondence",
@@ -1849,8 +1851,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/RecordDescription.lean": {
-      "sha256": "d60c785ceb67ff072d4505fb6ad5b622359ed9431df23e9e3047971946629e8e",
-      "physical_lines": 72,
+      "sha256": "a42783f462865caa630ba1c7eaae97935cf21a162f029f2329ce487b1ea92599",
+      "physical_lines": 167,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2058,13 +2060,13 @@
       ]
     },
     "Tests/PaperRecordCodec.lean": {
-      "sha256": "f08e8fd1530a91018c8ed4363f39e60fbd36da5e3d23514c70f1899035c50f8e",
-      "physical_lines": 74,
+      "sha256": "f3c30556dc43fbeb188a40c61c0963db8de59e7a255e280278b9c54cfb885ab7",
+      "physical_lines": 88,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        70,
-        71
+        81,
+        82
       ]
     },
     "Tests/PaperRepresentations.lean": {
@@ -2139,8 +2141,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "573d0a26b6ef5432f4c2d1e161509af6364b03efa6c970fbd73fc9f1b150038a",
-      "physical_lines": 149,
+      "sha256": "9b2624e77496fa1b07464811bd8e23c515fd611335c2b7903ead0e03041b2222",
+      "physical_lines": 151,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []

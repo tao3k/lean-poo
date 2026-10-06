@@ -63,4 +63,6 @@ frozen together before repeated instantiation. It rejects six poisoned caches
 and five invalid graphs, and guards metadata whose getters depend on precedence.
 [[file:../../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] generates codecs from one finite field catalog, guards
 102 wire round trips and rejects malformed wire/schema/record input. Field
-update lookup laws are kernel checked; callable serialization remains outside scope.
+update lookup, valid-record preservation and heterogeneous batch frame laws are
+kernel checked. Three patch cases guard typed edit order and rejected partial
+results; callable serialization remains outside scope.

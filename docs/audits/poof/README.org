@@ -69,4 +69,6 @@ the receipt. Do not merely regenerate to turn a drift failure into a pass.
 binds the six remaining constructions. Receipts bind manual review and code
 identity; actual execution and kernel theorem checks are separate evidence.
 Current gate: 152 atoms plus four diagnostics, 48 native admissions and 16
-supervisor controls. No external OpenAI integration or measured saving is added.
+supervisor controls. The record catalog now has a typed batch patch with kernel
+validity and untouched-field laws. No external OpenAI integration or measured
+saving is added.

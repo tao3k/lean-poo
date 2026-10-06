@@ -83,7 +83,9 @@
         "exact descriptor/object reconstruction",
         "prepared generated JSON codec",
         "strict wire and refinement admission",
-        "typed field update lookup laws"
+        "typed field update lookup laws",
+        "heterogeneous ordered record patch",
+        "valid-record preservation and untouched-field kernel laws"
       ],
       "implementation": [
         "LeanPoo/Prototype/RecordDescription.lean",
@@ -98,7 +100,7 @@
         "Tests/IntegratedPrototype.lean",
         "Tests/PaperRecordCodec.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
     },
     {
       "id": "pure-linearity",

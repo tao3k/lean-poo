@@ -533,6 +533,17 @@ separately; no target promises that every source change stays below 22.8 seconds
 No skipped proof, transcript cache acceptance, synthetic progress or longer
 failure timeout is used to make a faster result pass.
 
+** Current-head worker comparison for the paper atom inventory
+
+The [[file:../Benchmarks/receipts/poof-atom-workers-2026-10-06.json][v1 worker receipt]] records an alternating 12/14/14/12 probe at
+~46eda696cfd0d53f723421eddb8d6f7cae36494c~. Each run executed all 152
+canonical Lean atoms. File names, source hashes, output hashes and success
+statuses matched across all four runs. Atom-only wall seconds were 31.429,
+19.382, 17.239 and 19.895 in that order; summed child CPU seconds were
+140.127, 142.734, 130.187 and 140.834. The first-run difference and host
+variation do not establish a stable full-gate improvement. Keep the existing
+14-worker default; no timeout, Lean thread setting or proof inventory changed.
+
 ** Complete gate, thread-policy withdrawal preserved
 
 The [[file:../Benchmarks/receipts/check-gate-overlap-2026-10-06.json][complete-gate paired receipt]] executes the exact prior dispatcher from

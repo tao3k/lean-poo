@@ -54,8 +54,19 @@ private def run : IO Unit := do
   let changed ← IO.ofExcept (fields.set original .count 4)
   unless changed.lookup .count == some 4 && changed.lookup .tag == original.lookup .tag &&
       changed.lookup .flag == original.lookup .flag do throw (IO.userError "typed update frame")
+  let edits : List (Sigma Value) := [⟨.count, 5⟩, ⟨.tag, "new"⟩]
+  let patched ← IO.ofExcept (fields.patch original edits)
+  unless patched.lookup .count == some 5 && patched.lookup .tag == some "new" &&
+      patched.lookup .flag == original.lookup .flag && fields.accepts patched &&
+      original.lookup .count == some 3 do throw (IO.userError "heterogeneous patch or snapshot")
+  let repeated : List (Sigma Value) := [⟨.count, 5⟩, ⟨.count, 6⟩]
+  let replaced ← IO.ofExcept (fields.patch original repeated)
+  unless replaced.lookup .count == some 6 do throw (IO.userError "patch order")
+  let badEdits : List (Sigma Value) := [⟨.count, 5⟩, ⟨.tag, ""⟩]
+  unless !(fields.patch original badEdits).isOk && original.lookup .count == some 3 do
+    throw (IO.userError "rejected patch returned partial state")
   unless contexts == 102 do throw (IO.userError "codec context coverage drift")
-  IO.println "POOF-RECORD-CODEC-OK contexts=102 malformedWire=6 encodeRefusals=2 schemaRefusals=4 unicode=true emptySchema=true"
+  IO.println "POOF-RECORD-CODEC-OK contexts=102 malformedWire=6 encodeRefusals=2 schemaRefusals=4 patchCases=3 unicode=true emptySchema=true"
 private unsafe def prepareOnce : IO Unit := do
   let calls ← IO.mkRef (0 : Nat)
   let counted := { fields with field := fun key => unsafeBaseIO do
@@ -71,4 +82,7 @@ private unsafe def prepareOnce : IO Unit := do
 #eval prepareOnce
 #print axioms RecordDescription.set_lookup_same
 #print axioms RecordDescription.set_lookup_other
+#print axioms RecordDescription.set_preserves_accepts
+#print axioms RecordDescription.patch_preserves_accepts
+#print axioms RecordDescription.patch_lookup_untouched
 end LeanPoo.Tests.PaperRecordCodec

@@ -7,7 +7,7 @@
 | Task | API | Contract |
 |------+-----+----------|
 | Supply source Number operations | ~NumberDescriptor.ofTypeclasses~, ~int~, ~rational~, ~checkedAdd~, ~checkedSubtract~ | Reuse Lean arithmetic; check argument/result refinements |
-| Describe a dependent record once | ~RecordDescription.toDescriptor~, ~schema~, ~inspect~, ~set~ | Shared field catalog owns validation, generated metadata/presentation and typed updates |
+| Describe a dependent record once | ~RecordDescription.toDescriptor~, ~schema~, ~inspect~, ~set~, ~patch~ | Shared field catalog owns validation, generated metadata/presentation and typed updates; patch accepts heterogeneous edits |
 | Describe descriptors and codecs | ~DescriptorReflection.description~, ~codecDescription~, ~codecOf~, ~selfOf~, ~toRecord~, ~fromRecord~ | Five descriptor fields, two codec fields and nested self-description; exact reconstruction law |
 | Admit descriptor-factory results | ~DescriptorReflection.classOf~, ~checkedClass~ | Lean fixes callable carrier; produced descriptor/default must pass runtime refinement |
 | Describe objects and meta objects | ~PrototypeReflection.description~, ~metaDescription~, ~metaObjectDescription~, ~toRecord~, ~fromRecord~ | Three object fields and three meta slots reuse the same catalog; inherited base remains unforced |

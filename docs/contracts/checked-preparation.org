@@ -8,7 +8,8 @@
 |------+-----+-----------|
 | Generate a finite record codec | ~RecordCodec.prepare description~ | Parse the field catalog once; refuse empty/duplicate labels and missing codecs |
 | Admit record input/output | Prepared ~Descriptor.encodeJson~, ~decodeJson~, ~encodeText~, ~decodeText~ | Require every declared field and its refinement; decoding refuses unknown fields |
-| Update one dependent field | ~RecordDescription.set~, ~set_lookup_same~, ~set_lookup_other~ | Accepted update reads back its value and preserves every different field |
+| Update one dependent field | ~RecordDescription.set~, ~set_lookup_same~, ~set_lookup_other~, ~set_preserves_accepts~ | Accepted update reads back its value, preserves other fields and keeps a valid record valid |
+| Apply different field edits | ~RecordDescription.patch~, ~patch_preserves_accepts~, ~patch_lookup_untouched~ | One typed list applies edits in order; failure returns no partial record; untouched fields and validity have kernel laws |
 | Validate inherited metadata | ~MetaPrototype.prepareChecked name metadata registry~ | Compare every registry cache with its declared C3 graph before admitting a plan |
 | Reuse the admitted plan | ~MetaPrototype.Prepared.order~, ~Prepared.instantiate base~ | Reuse captured functions/order across bases; freeze function/supers/precedence together |
 | Construct once with checking | ~MetaPrototype.instantiateChecked~ | Preparation plus instantiation through the same admission path |
@@ -30,6 +31,15 @@ def exchange [DecidableEq Key] (description : RecordDescription Key Value)
 For repeated exchanges, retain ~prepared~ outside the request loop. The same
 catalog owns labels, field types, refinements and codecs; callers need not
 maintain separate encode/decode field lists or handwritten field requirements.
+For several dependent fields, supply ~List (Sigma Value)~ to
+~description.patch record edits~. This replaces a caller's sequence of typed
+~set~ calls. Its validity theorem assumes that the starting record passes the
+catalog recognizer and that every edited field is declared and accepted. The
+untouched-field theorem needs the same edit admission plus a proof that the
+queried key does not appear in the edit list. Repeated edits apply in list order.
+Each edit adds a persistent lookup layer, so a lookup after many edits can
+inspect the edit list. Use this API for small checked batches; no patch
+throughput improvement is claimed.
 Each field must supply its own codec. The returned descriptor admits input and
 output; its direct ~json~ codec is the existing unchecked codec layer.
 Only declared fields are serialized. A record can contain additional undeclared
@@ -68,7 +78,9 @@ certificates, C4 policy equivalence or general termination proofs.
 wire cases, two encode refusals, four schema refusals and an empty catalog.
 Instrumentation observes three descriptor discoveries during preparation and
 no further discovery in 17 round trips. This is an operation count, not a
-wall-clock speedup. Both field update laws are kernel checked and inherit
+wall-clock speedup. Three patch cases check different field types, repeated
+updates and rejection without a returned partial record. All five update laws
+are kernel checked and inherit
 propext/Classical.choice/Quot.sound from the Descriptor/JSON carrier.
 
 [[file:../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] reuses one plan across 33 bases, refuses six poisoned
