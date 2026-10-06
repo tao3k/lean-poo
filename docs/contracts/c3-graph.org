@@ -13,6 +13,8 @@
 | Relate one-root batch and scalar calls | ~C3.linearizeMany_singleton~ | Kernel equality for every graph/root, including errors |
 | Relate uncached one-root batch and scalar calls | ~C3.linearizeUncachedMany_singleton~ | Kernel equality for every graph/root, including errors |
 | Compare empty-root and invalid-graph outcomes | ~C3.linearizeMany_nil_eq_uncached~, ~C3.linearizeMany_eq_uncached_validation_error~ | Exact ~Except~ equality for every empty batch and every graph-validation failure, with arbitrary requested roots |
+| Reuse a matching scalar failure for a batch | ~C3.linearizeMany_eq_uncached_of_first_scalar_error~ | If cached and uncached scalar calls fail with the same error on the first root, adding any later roots preserves complete batch-result equality |
+| Compare two nonempty error cases | ~C3.linearizeMany_eq_uncached_missing_first~, ~C3.linearizeMany_eq_uncached_self_parent_first~ | Exact batch-result equality when the first root is absent or lists itself as its first parent; any remaining roots are allowed |
 | Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Batch validates once, including empty roots; recomputes every root and parent occurrence, possibly exponential on shared ancestry |
 | Retain a recursive paper-style derivation | ~C3.linearizeUncached_sound~, ~linearizeUncachedMany_sound~ | Every successful reference order has graph lookup, positional parent and C3 merge traces |
 | Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
@@ -88,8 +90,11 @@ every successful batch without admission. Optional admission establishes
 executable equality on the supplied inputs when the uncached run also
 succeeds. Empty-root batches and graph-validation failures have equal complete
 ~Except~ outcomes for arbitrary graphs and roots. For a valid graph with
-nonempty roots, executable cached/uncached success and error outcome
-equivalence and Racket/Lean language equivalence remain open.
+nonempty roots, absent first roots and direct first-parent self cycles also
+have equal complete outcomes. A matching first-root scalar failure also lifts
+to any batch tail without rerunning a proof for each tail. General
+cached/uncached success and error outcome equivalence and Racket/Lean
+language equivalence remain open.
 
 [[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's

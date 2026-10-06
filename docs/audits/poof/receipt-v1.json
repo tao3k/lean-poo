@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "8cba871f4212c9191fa14b4b2cdcde4ac3cdc4976780fba57873ea16c444357e",
+  "requirements_sha256": "cf4aaaee195462b5059dca4cf7c70e0b13745aa9a015994ed1b1fade715a2bcf",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -60,7 +60,7 @@
           "Tests/PaperC3GraphSemantics.lean",
           "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches and graph-validation failures; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -171,7 +171,7 @@
       }
     ]
   },
-  "closure_sha256": "117df821a46456b037746d1eaeb1a7b0bbe3e62cd6c3538e0fc3d7f424a71e44",
+  "closure_sha256": "7671e6fb6f3296394de7651f4ce42f67333faeaff657805f8eba166b685526fd",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -633,7 +633,7 @@
         "Tests/PaperC3GraphSemantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches and graph-validation failures; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -834,7 +834,7 @@
         "Tests/PaperC3Semantics.lean",
         "Tests/PaperC3GraphSemantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches and graph-validation failures have identical complete cached/uncached outcomes. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches, graph-validation failures, absent first roots and first-parent self cycles have identical complete cached/uncached outcomes. Matching first-root scalar failures lift to arbitrary batch tails. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. Valid-graph, nonempty-root cached/uncached success and error outcome equivalence and C3/C4 policy equivalence remain unproved."
     },
     {
       "id": "helpers",
@@ -1711,8 +1711,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphTrace.lean": {
-      "sha256": "cc217e8805588e10f17cab9b7fd88929b9846bf30a00e262c66b69aa4139538b",
-      "physical_lines": 359,
+      "sha256": "31a0c012b3085078fa4d02b602ecfd7c5d16a654450ab36d37716535e2498a41",
+      "physical_lines": 461,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2059,8 +2059,8 @@
       ]
     },
     "Tests/PaperC3GraphSemantics.lean": {
-      "sha256": "93d96977f638669bb1df5bfff1ee293b69b73b7cc9fd37208640160c435387c9",
-      "physical_lines": 174,
+      "sha256": "d8f0c7cd12cd8101163c2a339ff60aad02d2c2af2aa6e947a31846b3aa87450f",
+      "physical_lines": 205,
       "unsafe_declaration_lines": [],
       "guard_lines": [
         12,
@@ -2073,10 +2073,12 @@
         28,
         30,
         32,
-        33
+        33,
+        35,
+        37
       ],
       "eval_lines": [
-        131
+        159
       ]
     },
     "Tests/PaperC3Semantics.lean": {
@@ -2270,7 +2272,7 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "117df821a46456b037746d1eaeb1a7b0bbe3e62cd6c3538e0fc3d7f424a71e44",
+      "sha256": "7671e6fb6f3296394de7651f4ce42f67333faeaff657805f8eba166b685526fd",
       "physical_lines": 161,
       "unsafe_declaration_lines": [],
       "guard_lines": [],

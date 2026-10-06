@@ -25,6 +25,8 @@ scalar and batch success directly implies a paper derivation. The uncached
 batch validates once, including empty roots. Both batch APIs have identical
 outcomes for empty roots and for every graph-validation failure; both
 one-root batch/scalar laws include exact error results.
+Two further kernel theorems cover nonempty batches whose first root is absent
+or lists itself as its first parent, including arbitrary later roots.
 [[file:../../contracts/c3-graph.org][The graph guide]] distinguishes this zero-replay proof from admission's
 recomputation cost. Valid-graph, nonempty-root cached/uncached error and
 success equivalence remains open.

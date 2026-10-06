@@ -304,6 +304,108 @@ theorem linearizeUncachedMany_singleton (graph : Graph) (root : String) :
         bind, Except.bind, Except.map]
       rfl
 
+/-- Once both scalar traversals fail with the same error on the first root,
+adding any later roots cannot change either batch outcome. -/
+theorem linearizeMany_eq_uncached_of_first_scalar_error (graph : Graph)
+    (root : String) (rest : List String) (error : C4.Error)
+    (cached : linearize graph root = .error error)
+    (reference : linearizeUncached graph root = .error error) :
+    linearizeMany graph (root :: rest) =
+      linearizeUncachedMany graph (root :: rest) := by
+  cases valid : validateGraph graph with
+  | error err =>
+    simp [linearizeMany, linearizeUncachedMany, valid, bind, Except.bind]
+  | ok _ =>
+    have emptyOk : linearizeMany graph [] = .ok [] := by
+      simp [linearizeMany, valid, bind, Except.bind]
+      rfl
+    unfold linearize at cached
+    simp only [valid, bind, Except.bind] at cached
+    unfold linearizeUncached at reference
+    simp only [emptyOk, bind, Except.bind] at reference
+    cases first : visit graph root [] {} (graph.length+1) with
+    | ok pair => simp [first, pure, Except.pure] at cached
+    | error cachedError =>
+      cases source : sourceVisit graph root [] (graph.length+1) with
+      | ok witness => simp [source, pure, Except.pure] at reference
+      | error sourceError =>
+        simp [first] at cached
+        simp [source] at reference
+        cases cached
+        cases reference
+        simp [linearizeMany, linearizeUncachedMany, valid,
+          List.forIn_cons, List.mapM_cons, first, source,
+          bind, Except.bind, Except.map]
+        rfl
+
+/-- If the first requested root is absent, neither interpreter reaches the
+remaining roots or any cache reuse. The exact validation/unknown-node outcome
+agrees for every graph. -/
+theorem linearizeMany_eq_uncached_missing_first (graph : Graph)
+    (root : String) (rest : List String)
+    (missing : graph.find? (fun entry => entry.1 == root) = none) :
+    linearizeMany graph (root :: rest) =
+      linearizeUncachedMany graph (root :: rest) := by
+  cases valid : validateGraph graph with
+  | error err =>
+    simp [linearizeMany, linearizeUncachedMany, valid, bind, Except.bind]
+  | ok _ =>
+    have firstCached : visit graph root [] {} (graph.length+1) =
+        .error (.unknownNode root) := by
+      simp [visit, missing]
+      rfl
+    have firstSource : sourceVisit graph root [] (graph.length+1) =
+        .error (.unknownNode root) := by
+      simp [sourceVisit]
+      split <;> simp_all <;> rfl
+    have cachedScalar : linearize graph root = .error (.unknownNode root) := by
+      simp [linearize, valid, firstCached, bind, Except.bind]
+    have sourceScalar : linearizeUncached graph root =
+        .error (.unknownNode root) := by
+      simp [linearizeUncached, linearizeMany, valid, firstSource,
+        bind, Except.bind]
+      rfl
+    exact linearizeMany_eq_uncached_of_first_scalar_error graph root rest
+      (.unknownNode root) cachedScalar sourceScalar
+
+/-- A first root whose first direct parent is itself has the same exact
+validation/cycle outcome in both interpreters, regardless of later roots. -/
+theorem linearizeMany_eq_uncached_self_parent_first (graph : Graph)
+    (root : String) (parents rest : List String)
+    (found : graph.find? (fun entry => entry.1 == root) =
+      some (root, root :: parents)) :
+    linearizeMany graph (root :: rest) =
+      linearizeUncachedMany graph (root :: rest) := by
+  cases valid : validateGraph graph with
+  | error err =>
+    simp [linearizeMany, linearizeUncachedMany, valid, bind, Except.bind]
+  | ok _ =>
+    have repeatedCached (fuel : Nat) : visit graph root [root] {} fuel =
+        .error (.cycle root) := by
+      cases fuel <;> simp [visit, bind, Except.bind]
+      rfl
+    have firstCached : visit graph root [] {} (graph.length+1) =
+        .error (.cycle root) := by
+      simp [visit, found, List.forIn_cons, repeatedCached, bind, Except.bind]
+    have firstSource : sourceVisit graph root [] (graph.length+1) =
+        .error (.cycle root) := by
+      have repeatedSource (fuel : Nat) : sourceVisit graph root [root] fuel =
+          .error (.cycle root) := by
+        cases fuel <;> simp [sourceVisit, bind, Except.bind]
+        rfl
+      simp [sourceVisit]
+      split <;> simp_all [bind, Except.bind]
+      subst_vars
+      simp [sourceVisit.parents, repeatedSource, bind, Except.bind]
+    have cachedScalar : linearize graph root = .error (.cycle root) := by
+      simp [linearize, valid, firstCached, bind, Except.bind]
+    have sourceScalar : linearizeUncached graph root = .error (.cycle root) := by
+      simp [linearizeUncached, linearizeMany, valid, firstSource,
+        bind, Except.bind]
+      rfl
+    exact linearizeMany_eq_uncached_of_first_scalar_error graph root rest
+      (.cycle root) cachedScalar sourceScalar
+
 private theorem sourceVisitMany_sound (graph : Graph) (roots : List String)
     (orders : List (List String))
     (success : roots.mapM (fun root =>

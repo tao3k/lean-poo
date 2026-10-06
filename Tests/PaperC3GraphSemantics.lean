@@ -30,6 +30,10 @@ private def roots : List String := ["X", "Y", "A", "X"]
 #guard C3.linearizeUncachedMany [("A", ["B", "B"])] ["A"] matches
   .error .inconsistentOrder
 #guard C3.linearizeUncachedMany graph [] matches .ok []
+#guard C3.linearizeUncachedMany [("A", [])] ["missing", "A"] matches
+  .error (.unknownNode "missing")
+#guard C3.linearizeUncachedMany [("A", ["A"])] ["A", "missing"] matches
+  .error (.cycle "A")
 #guard C3.linearizeUncached [("O", []), ("A", ["O"]), ("B", ["O"]),
   ("X", ["A", "B"]), ("Y", ["B", "A"]), ("Z", ["X", "Y"])] "Z" matches
   .error .inconsistentOrder
@@ -105,6 +109,30 @@ private theorem uncached_singleton_agrees (other : C3.Graph) (requested : String
       (C3.linearizeUncached other requested).map (fun order => [order]) :=
   C3.linearizeUncachedMany_singleton other requested
 
+private theorem missing_first_agrees (other : C3.Graph) (requested : String)
+    (remaining : List String)
+    (missing : other.find? (fun entry => entry.1 == requested) = none) :
+    C3.linearizeMany other (requested :: remaining) =
+      C3.linearizeUncachedMany other (requested :: remaining) :=
+  C3.linearizeMany_eq_uncached_missing_first other requested remaining missing
+
+private theorem self_parent_first_agrees (other : C3.Graph) (requested : String)
+    (parents remaining : List String)
+    (found : other.find? (fun entry => entry.1 == requested) =
+      some (requested, requested :: parents)) :
+    C3.linearizeMany other (requested :: remaining) =
+      C3.linearizeUncachedMany other (requested :: remaining) :=
+  C3.linearizeMany_eq_uncached_self_parent_first other requested parents remaining found
+
+private theorem first_scalar_error_stops (other : C3.Graph) (requested : String)
+    (remaining : List String) (err : LeanPoo.C4.Error)
+    (cached : C3.linearize other requested = .error err)
+    (reference : C3.linearizeUncached other requested = .error err) :
+    C3.linearizeMany other (requested :: remaining) =
+      C3.linearizeUncachedMany other (requested :: remaining) :=
+  C3.linearizeMany_eq_uncached_of_first_scalar_error other requested remaining err
+    cached reference
+
 private theorem admitted_derivation (certificate : C3.GraphCertificate graph roots) :
     C3.ParentDerivations graph roots certificate.orders :=
   certificate.derivations
@@ -150,6 +178,9 @@ private theorem memoized_hit_agrees
 #print axioms C3.linearizeMany_eq_uncached_success
 #print axioms C3.linearizeMany_nil_eq_uncached
 #print axioms C3.linearizeMany_eq_uncached_validation_error
+#print axioms C3.linearizeMany_eq_uncached_missing_first
+#print axioms C3.linearizeMany_eq_uncached_self_parent_first
+#print axioms C3.linearizeMany_eq_uncached_of_first_scalar_error
 #print axioms C3.GraphCertificate.source_traces
 #print axioms C3.GraphCertificate.derivations
 #print axioms C3.GraphCertificate.eq_source
