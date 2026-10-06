@@ -1,0 +1,40 @@
+#+TITLE: Fare POOF semantic closure obligations
+
+[[file:README.org][Audit index]] · [[file:closure-v1.json][Reviewed typed construction map]] · [[file:../../contracts/fixed-point-semantics.org][Finite fix API]]
+
+* Acceptance boundary
+
+The paper gives executable Scheme/Scribble constructions and mathematical
+explanations, rather than a machine-checked small-step specification. A claim
+that the Lean library implements the whole paper needs an explicit relation
+between source observations and Lean observations, beyond matching named
+features or counting translated files. The current ~whole_paper_implemented~
+flag stays false until the relevant obligations below have actual evidence.
+The paper's explicit future proposals are separately classified; they are
+not silently promoted into specified executable behavior.
+
+* Obligations
+
+| Area | Current evidence | Stronger closure evidence still needed |
+|------+------------------+----------------------------------------|
+| Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
+| Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws | A reusable translation/observation relation that covers final self, inherited reads, errors and open recursion, not just selected outputs |
+| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission | Prove the intended precedence and composition relation for arbitrary admitted finite source graphs, including cache assumptions |
+| Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
+| Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
+| Appendices and research proposals | Typed dispatch, method combination, lens and finite fix implementations; explicit boundaries | Prove the claimed correspondence for specified Appendix B constructs; keep Appendix C notation and future proposals in their stated research scope |
+
+* First mechanized step
+
+[[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] supplies total finite unfoldings of the minimal nucleus.
+For any prototype, equality of adjacent unfoldings yields a kernel-checked
+fixed-point certificate and equality at every later finite depth.
+[[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a complete two-value-domain fixed point and a
+triangular result for every natural input at sufficient depth. Its comparison
+with the existing shared thunk covers 65 concrete inputs. This is a bounded
+observation, not a proof about arbitrary source programs or divergence.
+
+The local toolchain does not currently contain Racket. Installing or running
+that separate source evaluator is a future verification step; CI continues to
+use the pinned source identity and Lean-owned checks without making the
+reference checkout a build dependency.

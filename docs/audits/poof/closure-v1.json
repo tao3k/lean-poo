@@ -134,18 +134,23 @@
         "shared delayed non-function knot",
         "rebuilding function alternative",
         "construction count distinction",
-        "finite recursive value controls"
+        "finite recursive value controls",
+        "pure finite fix/mix unfoldings",
+        "certified stable fixed point",
+        "all-input guarded triangular approximation theorem"
       ],
       "implementation": [
         "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/Delayed.lean"
+        "LeanPoo/Prototype/Delayed.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean"
+        "Tests/PaperFixedPoints.lean",
+        "Tests/PaperFiniteFix.lean"
       ],
-      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
     }
   ]
 }

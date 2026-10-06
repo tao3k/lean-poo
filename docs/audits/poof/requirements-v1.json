@@ -20,12 +20,14 @@
       "title": "Minimal fix/mix nucleus",
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/FixedPoint.lean"
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean"
+        "Examples/PrototypeCore.lean",
+        "Tests/PaperFiniteFix.lean"
       ],
-      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof."
+      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof. Pure finite unfoldings and stabilization certificates cover bounded typed observations; they do not characterize every unsafe recursive execution."
     },
     {
       "id": "claims-plan",
@@ -594,12 +596,14 @@
         "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/Delayed.lean"
+        "LeanPoo/Prototype/Delayed.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean"
+        "Tests/PaperFixedPoints.lean",
+        "Tests/PaperFiniteFix.lean"
       ],
-      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
     },
     {
       "id": "minimalism",

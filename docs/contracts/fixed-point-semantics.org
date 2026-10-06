@@ -1,0 +1,66 @@
+#+TITLE: Finite fixed-point observations and certificates
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/advanced.org][Paper Appendix D audit]]
+
+* Capability/API checklist
+
+| Task | API | Contract |
+|------+-----+----------|
+| Observe a finite recursion depth | ~FiniteFix.iterate prototype base seed depth~ | Pure total iteration; depth zero returns the supplied seed |
+| Unfold one layer | ~FiniteFix.unfold~ | The next approximation applies the prototype to the previous one |
+| Preserve paper mix order | ~FiniteFix.unfold_compose~ | Child and parent receive the same finite self approximation |
+| Certify a stabilized result | ~FiniteFix.certified~ | Adjacent equality supplies an actual fixed-point proof |
+| Reuse a stability certificate | ~FiniteFix.stable_forever~ | Every later finite unfolding is the same value |
+| Bound a checked function | ~CheckedFunction.approximate prototype depth~ | The default seed and inherited base are explicit checked bottom |
+
+* Use a bounded recursive function
+
+#+begin_src lean
+import LeanPoo.Prototype.FiniteFix
+open LeanPoo.Prototype
+
+def observeAt (prototype : Proto (CheckedFunction Nat Nat)
+    (CheckedFunction Nat Nat) (CheckedFunction Nat Nat))
+    (fuel input : Nat) : Except String Nat :=
+  (CheckedFunction.approximate prototype fuel) input
+#+end_src
+
+Each call to ~approximate~ builds exactly the requested number of pure layers.
+A bottom result can mean that the observation needs more layers or that the
+prototype itself returns an error. This API is for bounded reasoning and
+inspection, not a faster substitute for the shared runtime thunk.
+
+* Supply the proof that stops unfolding
+
+#+begin_src lean
+import LeanPoo.Prototype.FiniteFix
+open LeanPoo.Prototype
+
+def certifyAt (prototype : Proto α β α) (base : β) (seed : α)
+    (depth : Nat)
+    (stable : FiniteFix.iterate prototype base seed depth =
+      FiniteFix.iterate prototype base seed (depth + 1)) :
+    { value : α // prototype value base = value } :=
+  FiniteFix.certified prototype base seed depth stable
+#+end_src
+
+~certified~ accepts a Lean equality proof, not a Boolean similarity test.
+~stable_forever~ then covers every additional finite depth. This is a
+certificate for the particular prototype, base and seed; it says nothing
+about other fixed points or arbitrary unsafe recursive computations.
+
+* Executable and proof evidence
+
+[[file:../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] certifies a two-step recursive Boolean function over its
+entire finite input domain. It also proves for every natural ~n~ that a
+triangular-number function returns its result at depth ~n+1~, then checks 65
+inputs against the existing shared-thunk implementation. The latter is a
+bounded observation, not a kernel proof equating unsafe runtime execution
+with finite iteration. ~unfold~, ~unfold_compose~, ~certified~ and the checked
+successor equation are axiom-free; ~stable_forever~ uses propext, and the
+triangular-number theorem uses propext/Quot.sound from the checked carrier.
+
+The original Scribble evaluator has not been run in this checkout because
+Racket is not installed in the local toolchain. Paper syntax, unrestricted
+Scheme recursion and all-source-program operational equivalence remain
+outside these Lean theorems.

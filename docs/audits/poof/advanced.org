@@ -41,6 +41,11 @@ lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] u
 thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
 [[file:../../../LeanPoo/Prototype/CheckedFunction.lean][rebuildingFix]] supplies the source rebuild-per-call contrast;
 [[file:../../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
+[[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] now defines pure finite unfoldings of ~fix~ and the one-step
+~mix~ equation. Adjacent equality constructs a proof-bearing fixed point and
+implies stability at every later depth. [[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a two-step Boolean fixed point
+over its entire input domain, proves the triangular result for every natural
+input at sufficient depth, and compares 65 observations with the shared thunk.
 Internal-define/letrec/lazy routes share the Lean knot; direct untyped self-application
 is a language choice. There is no universal termination theorem or all-variants operational
 equivalence. The paper permits divergence; such a theorem is not required to

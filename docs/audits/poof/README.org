@@ -5,7 +5,8 @@
 The reviewed typed constructive path is now closed: Order/BST/AVL, all 24
 original checks, ordinary C3, both alternate representations, overridable meta
 slots, Number operations, self-description/generated field tools, consuming state
-references and executable shared/rebuilding fixed-point controls.
+references, executable shared/rebuilding fixed-point controls and certified
+finite fixed-point unfoldings.
 [[file:closure-v1.json][The six-item closure map]] lists operations, implementations, tests and limits.
 
 This is not whole-paper operational equivalence or unrestricted dynamic
@@ -27,8 +28,9 @@ POOF paper, not every other essay in the same reference checkout.
 | [[file:objects.org][Objects, classes and mutability]] | Representations, inheritance, descriptors and effect boundaries |
 | [[file:advanced.org][Appendices and research proposals]] | C3, dispatch, combination, lenses, notation and fixed points |
 | [[file:gaps.org][Closure checklist]] | Closed typed operations and stronger research gates |
+| [[file:semantic-closure.org][Semantic closure obligations]] | Source/Lean correspondence gates and first finite fix proof |
 | [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
-| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 312 source filenames and 70 evidence-file hashes |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 314 source filenames and 72 evidence-file hashes |
 
 * Status meaning
 
@@ -68,7 +70,8 @@ the receipt. Do not merely regenerate to turn a drift failure into a pass.
 [[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
 binds the six remaining constructions. Receipts bind manual review and code
 identity; actual execution and kernel theorem checks are separate evidence.
-Current gate: 152 atoms plus four diagnostics, 48 native admissions and 16
+Current gate: 153 atoms plus four diagnostics, 48 native admissions and 16
 supervisor controls. The record catalog now has a typed batch patch with kernel
-validity and untouched-field laws. No external OpenAI integration or measured
+validity and untouched-field laws; finite fix/mix unfoldings have a separate pure
+semantics. No external OpenAI integration or measured
 saving is added.

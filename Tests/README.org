@@ -379,7 +379,10 @@ PaperLinearState checks 64 arithmetic traces, alias consumption/refusal, failed
 transition retention and 32 races with exactly one successful consumer.
 PaperFixedPoints checks bottom/default/constant-tail behavior, 65 recursive
 inputs and construction counts 1 shared / 32 rebuilding / 1 delayed.
+PaperFiniteFix proves finite unfolding and stabilization laws, a two-step
+Boolean fixed point and all-input triangular recursion at depth ~n+1~; 65
+bounded outputs are compared with the shared unsafe knot.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 152 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 153 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.

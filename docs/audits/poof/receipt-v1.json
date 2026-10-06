@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "b218214f1bf2e7df70165ef1ddf17479426bd2cc0b75dc478389ca944bcc9caf",
+  "requirements_sha256": "5af0f1acff4ab00f2c9965688b8611363dd4db417c749e7feee3003ef353c21d",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -146,22 +146,27 @@
           "shared delayed non-function knot",
           "rebuilding function alternative",
           "construction count distinction",
-          "finite recursive value controls"
+          "finite recursive value controls",
+          "pure finite fix/mix unfoldings",
+          "certified stable fixed point",
+          "all-input guarded triangular approximation theorem"
         ],
         "implementation": [
           "LeanPoo/Prototype/CheckedFunction.lean",
           "LeanPoo/Prototype/FixedPoint.lean",
           "LeanPoo/Prototype/Compose.lean",
-          "LeanPoo/Prototype/Delayed.lean"
+          "LeanPoo/Prototype/Delayed.lean",
+          "LeanPoo/Prototype/FiniteFix.lean"
         ],
         "checks": [
-          "Tests/PaperFixedPoints.lean"
+          "Tests/PaperFixedPoints.lean",
+          "Tests/PaperFiniteFix.lean"
         ],
-        "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+        "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
       }
     ]
   },
-  "closure_sha256": "9b2624e77496fa1b07464811bd8e23c515fd611335c2b7903ead0e03041b2222",
+  "closure_sha256": "b3afc41fe5320289fd8d8629e93b79eac2f8ae4669f2ea4335cc12620455f8d6",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -329,12 +334,14 @@
       "title": "Minimal fix/mix nucleus",
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/FixedPoint.lean"
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean"
+        "Examples/PrototypeCore.lean",
+        "Tests/PaperFiniteFix.lean"
       ],
-      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof."
+      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof. Pure finite unfoldings and stabilization certificates cover bounded typed observations; they do not characterize every unsafe recursive execution."
     },
     {
       "id": "claims-plan",
@@ -903,12 +910,14 @@
         "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/Delayed.lean"
+        "LeanPoo/Prototype/Delayed.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean"
+        "Tests/PaperFixedPoints.lean",
+        "Tests/PaperFiniteFix.lean"
       ],
-      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
     },
     {
       "id": "minimalism",
@@ -1740,6 +1749,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/FiniteFix.lean": {
+      "sha256": "4954c174db893fe2ce49d92d53d3cf6ad35ef725f21486de465c7b30ea8fe25d",
+      "physical_lines": 72,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/FixedPoint.lean": {
       "sha256": "137a432cd8d64317049e7c10f4a73d24aa792018c420a02475a796d9451031c1",
       "physical_lines": 20,
@@ -2021,6 +2037,20 @@
         30
       ]
     },
+    "Tests/PaperFiniteFix.lean": {
+      "sha256": "cec02b22d0aee23ea9c097e2044b4bb25d62481e260de564e11f3940febe4607",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        22,
+        23,
+        24,
+        25
+      ],
+      "eval_lines": [
+        56
+      ]
+    },
     "Tests/PaperFixedPoints.lean": {
       "sha256": "eca4c892fc0c175fa6e37bc56c537f418c4fa64f1278631d7e408e1c4fde688c",
       "physical_lines": 42,
@@ -2141,8 +2171,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "9b2624e77496fa1b07464811bd8e23c515fd611335c2b7903ead0e03041b2222",
-      "physical_lines": 151,
+      "sha256": "b3afc41fe5320289fd8d8629e93b79eac2f8ae4669f2ea4335cc12620455f8d6",
+      "physical_lines": 156,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2314,6 +2344,7 @@
     "LeanPoo/Prototype/Delayed.lean",
     "LeanPoo/Prototype/DescriptorReflection.lean",
     "LeanPoo/Prototype/DictionaryRecord.lean",
+    "LeanPoo/Prototype/FiniteFix.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
     "LeanPoo/Prototype/Generator.lean",
     "LeanPoo/Prototype/KeyedPrototype.lean",
@@ -2425,6 +2456,7 @@
     "Tests/PaperCheckedMeta.lean",
     "Tests/PaperDescriptorReflection.lean",
     "Tests/PaperDictionaryRecord.lean",
+    "Tests/PaperFiniteFix.lean",
     "Tests/PaperFixedPoints.lean",
     "Tests/PaperLinearState.lean",
     "Tests/PaperMetaPrototype.lean",

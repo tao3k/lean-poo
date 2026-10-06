@@ -82,6 +82,7 @@ import LeanPoo.Prototype.MetaPrototype
 import LeanPoo.Prototype.CheckedMetaPrototype
 import LeanPoo.Prototype.KeyedPrototype
 import LeanPoo.Prototype.CheckedFunction
+import LeanPoo.Prototype.FiniteFix
 import LeanPoo.Prototype.LinearState
 import LeanPoo.Prototype.NumberDescriptor
 import LeanPoo.Prototype.RecordDescription
