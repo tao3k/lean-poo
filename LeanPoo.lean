@@ -133,3 +133,5 @@ import LeanPoo.Proof.Transformation
 import LeanPoo.Functional.FiniteTransformation
 import LeanPoo.Functional.SolverTransport
 import LeanPoo.Functional.FiniteDiagnostics
+import LeanPoo.Functional.TransformationProfiles
+import LeanPoo.Functional.TransformationResources
