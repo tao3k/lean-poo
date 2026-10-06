@@ -322,6 +322,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalCertifiedConsumer.lean
     {{lean}} Tests/FunctionalContextSlot.lean
     {{lean}} Tests/FunctionalTransformation.lean
+    {{lean}} Tests/FunctionalTransformationProfiles.lean
     {{lean}} Tests/FunctionalSolverTransport.lean
     {{lean}} Tests/FunctionalFiniteDiagnostics.lean
     {{lean}} Tests/FunctionalContractConsequence.lean

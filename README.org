@@ -95,3 +95,17 @@ retain attribution to Faré and the applicable upstream license notices.
 forward/extraction associativity. =LeanPoo.Proof.Transformation= checks a
 concrete two-step transport. Runtime source authority, codec refinement,
 resource authorization, and publication remain consumer obligations.
+
+=LeanPoo.Functional.TransformationProfiles= adds separate certified laws for
+bidirectional decision reductions, successful partial transport, and optimality
+transport. An unavailable partial result is =none=; a witness proof alone cannot
+construct a decision equivalence or optimality reduction.
+
+=LeanPoo.Functional.TransformationResources= composes affine output-size and
+cost bounds at the actual intermediate input. =CertifiedResourceTransformation=
+requires bounds on the declared implementation's measured size and cost.
+=CertifiedEffectTransformation= composes the actual forward and reverse effect
+traces, retaining authorization at each state transition. These are generic
+proof interfaces: native consumers supply implementation refinement, measurements,
+authority and publication. The modules do not infer CPU complexity or permission
+from an unverified declaration.
