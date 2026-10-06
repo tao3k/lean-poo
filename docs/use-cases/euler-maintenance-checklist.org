@@ -992,3 +992,13 @@ not an Euler-wide edit-count estimate.
 - [X] No default speed recommendation for the measured small workload.
 - [ ] Allocation/peak memory and broader break-even remain unknown.
 - [ ] Reference already projects fields; Euler migration 0, net lines/hours unknown.
+
+* Result-index compiler qualification checklist
+
+- [X] New public API: 0; existing find?/get wrappers marked inline.
+- [X] Paper named-record semantics and existing Euler structure fields re-audited.
+- [X] Two builds, 192 samples each, four alternating list/index pairs per workload.
+- [X] Only ResultIndex.lean differs across 144 native source hashes.
+- [X] Conditional repeated-read gains; head/single-query/small-key negatives retained.
+- [X] No allocation, peak-memory or external code/maintenance-hour savings claim.
+- [X] Integration/migration count 0. Details: [[file:../performance/result-index.org][native specialization evidence]].

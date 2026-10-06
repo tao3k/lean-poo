@@ -67,3 +67,9 @@ The [[file:../performance/result-index.org][native cost study]] now records 192 
 results against a retained source-list control. Do not select this API by default
 for speed in small Nat-key UInt64 workloads. Allocation/peak-memory and broader
 break-even remain unknown; semantic guarantees above are unchanged.
+
+* Native client specialization
+
+find? and get expose their small wrappers to native compiler specialization.
+No signature or proof changes. See [[file:../performance/result-index.org][the same-session qualification]] for conditional
+64-key repeated-read gains and retained head/single-query/small-key negatives.

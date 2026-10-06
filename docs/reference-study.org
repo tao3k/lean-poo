@@ -1480,3 +1480,10 @@ native break-even and allocation measurements remain open.
 results. The [[file:../Benchmarks/receipts/euler-result-index-native-2026-10-06.json][source audit]] binds original named-record/cache policy, existing
 reference field projections and the native receipt. Earlier cache gains do not
 transfer; no external timing, code or maintenance reduction is established.
+
+* Retained getter specialization
+
+[[file:../Benchmarks/receipts/euler-result-index-inline-2026-10-06.json][The v1 audit]] binds same-session baseline and inline native receipts to the
+original POOF named-record source and Euler field consumers. Compiler changes
+add no public API or reference integration; conditional local timing results
+and negative controls are documented in [[file:performance/result-index.org][the result-index cost guide]].

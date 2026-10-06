@@ -49,7 +49,9 @@ def ResultIndex.ofResults {context : Context} {source : List Key} (data : Result
 
 variable {context : Context} {source : List Key} {data : Results Value context source}
 
-def ResultIndex.find? (index : ResultIndex data) (key : Key) : Option (Value context key) :=
+-- Expose the small lookup wrapper so native clients can specialize key/value
+-- operations; semantic alignment proofs and the retained table are unchanged.
+@[inline] def ResultIndex.find? (index : ResultIndex data) (key : Key) : Option (Value context key) :=
   index.entries.get? key
 
 theorem ResultIndex.find?_present (index : ResultIndex data) (key : Key) (member : key ∈ source) :
@@ -59,7 +61,7 @@ theorem ResultIndex.find?_absent (index : ResultIndex data) (key : Key) (missing
     index.find? key = none := index.absent key missing
 
 /-- A membership proof rules out the missing branch; exactly one hash lookup. -/
-def ResultIndex.get (index : ResultIndex data) (key : Key) (member : key ∈ source) : Value context key :=
+@[inline] def ResultIndex.get (index : ResultIndex data) (key : Key) (member : key ∈ source) : Value context key :=
   match found : index.find? key with
   | some value => value
   | none => False.elim (by have aligned := index.find?_present key member; rw [found] at aligned; cases aligned)

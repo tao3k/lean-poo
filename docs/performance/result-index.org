@@ -18,7 +18,7 @@ The ordinary hash is UInt64.ofNat, matching Lean's Nat Hashable implementation.
 The collision hash maps every key to zero. Data and requested values agree
 under both hashes; collision correctness is not a timing benefit.
 
-* Negative results retained
+* Historical baseline negative results retained
 
 Local medians in milliseconds (four pairs), rounded here; receipt retains all
 samples and nanoseconds. These workloads establish no performance win:
@@ -62,3 +62,38 @@ receipt. OpenAI already uses structure projections; avoidable linear scans there
 are not established. No integration or migration; external code, maintenance
 hours and analytical runtime gains remain unmeasured. These negative local
 results cannot be replaced with earlier context-cache timing gains.
+
+* Client specialization qualification
+
+The [[file:../../Benchmarks/receipts/result-index-inline-baseline-2026-10-06.json][same-session rebuilt baseline]] retains commit 5028d45's source hashes.
+The [[file:../../Benchmarks/receipts/result-index-inline-2026-10-06.json][optimized v1 receipt]] differs in exactly one of 144 source hashes:
+ResultIndex.lean adds inline attributes to find? and get, plus a comment.
+No API, table representation or alignment proof changes. Generated C exposes
+specialized Nat-key lookup in the client instead of calling only the generic
+ResultIndex.get wrapper. This is compiler evidence, not an allocation count.
+
+Each build has 192 samples/four alternating list-index pairs per workload.
+Builds were run sequentially in one session, not paired across builds; local
+wall times vary. Do not interpret their ratio as a stable universal speedup.
+Historical receipts above remain immutable. Optimized medians, milliseconds:
+
+| Keys/reads/schedule/hash | List query | Index query | List setup + query | Index setup + query |
+|-------------------------+------------+-------------+--------------------+---------------------|
+| 64/4096/tail/ordinary | 0.641375 | 0.250729 | 0.644500 | 0.272062 |
+| 64/4096/cycle/ordinary | 0.336750 | 0.220584 | 0.339084 | 0.242750 |
+| 64/4096/head/ordinary | 0.150876 | 0.229625 | 0.154188 | 0.250750 |
+| 64/4096/tail/collision | 0.671771 | 0.455501 | 0.675251 | 0.493855 |
+| 64/1/tail/ordinary | 0.001584 | 0.002229 | 0.003875 | 0.012292 |
+| 8/4096/cycle/ordinary | 0.130521 | 0.211709 | 0.131771 | 0.218354 |
+
+Repeated tail/cycle reads at 64 keys improve relative to their optimized-build
+list controls here; head, single-query and small-key controls still regress.
+Retain direct structure fields for static records; qualify retained indexing
+against the actual key/read distribution before selecting it. Collision tail
+results do not establish constant-time behavior or benefit for other schedules.
+No allocated-byte, peak-memory, cold application or Euler execution claims.
+
+The [[file:../../Benchmarks/receipts/euler-result-index-inline-2026-10-06.json][separate v1 paper/Euler audit]] binds both receipts and 76 local source hashes.
+Paper named getters still describe semantics independently of this compiler
+choice; Euler already projects structure fields and has no demonstrated list
+scan to replace. New public API 0, integrations 0, external savings unmeasured.

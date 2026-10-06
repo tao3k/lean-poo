@@ -447,3 +447,10 @@ source hashes and binary identity. ~euler-result-index-native-2026-10-06.json~
 adds 76 local audit hashes and pinned paper/reference evidence. [[file:../docs/performance/result-index.org][Protocol and
 negative results]]: setup/query regressions retained; no default performance
 recommendation, allocation/peak-memory or external benefit established.
+
+* Result-index client specialization
+
+[[file:receipts/result-index-inline-baseline-2026-10-06.json][Rebuilt baseline]] and [[file:receipts/result-index-inline-2026-10-06.json][inline qualification]] each retain 192 samples,
+144 source hashes and binary SHA; source manifests differ only in ResultIndex.lean.
+[[file:receipts/euler-result-index-inline-2026-10-06.json][Paper/Euler audit]] binds both receipts and 76 local hashes. See
+[[file:../docs/performance/result-index.org][conditional gains and negative controls]]; historical receipts remain immutable.

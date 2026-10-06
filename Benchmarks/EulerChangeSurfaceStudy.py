@@ -429,6 +429,17 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "result_index_specialization": {
+            "paper_source": paper_record_index_audit(),
+            "reference_audit": context_view_audit(reference),
+            "new_runtime_api": [],
+            "compiler_change": "Inline only ResultIndex.find? and ResultIndex.get; client may specialize key/value operations, same dependent table and proofs",
+            "receipts": {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in [
+                "Benchmarks/receipts/result-index-inline-baseline-2026-10-06.json",
+                "Benchmarks/receipts/result-index-inline-2026-10-06.json"]},
+            "baseline_commit": "5028d45fc6e3f51300af39874acaf0326f120125",
+            "samples_per_build": 192, "alternating_pairs_per_workload": 4,
+            "limits": ["Sequential baseline/optimized builds in one local session; no paired cross-build confidence interval", "Within each build list/index controls alternate and retain setup, head, single-query and collision costs", "No automatic benefit for existing Euler structure projections; integrations and external savings 0", "No allocation or peak-memory measurement; historical negative receipts retained"]},
         "result_index_native": {
             "paper_source": paper_record_index_audit(),
             "reference_audit": context_view_audit(reference),
