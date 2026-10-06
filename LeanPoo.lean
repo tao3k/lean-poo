@@ -73,6 +73,13 @@ import LeanPoo.Prototype.MVP
 import LeanPoo.Prototype.Computation
 import LeanPoo.Prototype.Generator
 import LeanPoo.Prototype.Delayed
+import LeanPoo.Prototype.Order
+import LeanPoo.Prototype.BinaryTree
+import LeanPoo.Prototype.AVL
+import LeanPoo.Prototype.C3
+import LeanPoo.Prototype.DictionaryRecord
+import LeanPoo.Prototype.MetaPrototype
+import LeanPoo.Prototype.KeyedPrototype
 import LeanPoo.Prototype.Object
 import LeanPoo.Prototype.Class
 import LeanPoo.Prototype.Types

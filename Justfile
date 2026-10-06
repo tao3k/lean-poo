@@ -239,6 +239,12 @@ check-tests: check-proof
 
 [private]
 _check-contracts:
+    {{lean}} Tests/PaperTrees.lean
+    {{lean}} Tests/PaperC3.lean
+    {{lean}} Tests/PaperPrototypeChecks.lean
+    {{lean}} Tests/PaperDictionaryRecord.lean
+    {{lean}} Tests/PaperMetaPrototype.lean
+    {{lean}} Tests/PaperRepresentations.lean
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean

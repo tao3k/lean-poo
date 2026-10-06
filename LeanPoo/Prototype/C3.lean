@@ -1,0 +1,49 @@
+import LeanPoo.C4.Precedence
+
+/-! The paper's ordinary C3 policy, separate from the C4 object policy. -/
+namespace LeanPoo.Prototype.C3
+
+abbrev Graph := List (String × List String)
+abbrev Cache := Std.HashMap String (List String)
+
+/-- Typed source not-null?: the empty list differs from every atomic value. -/
+def notNull (value : Sum (List α) β) : Bool :=
+  match value with
+  | .inl values => !values.isEmpty
+  | .inr _ => true
+
+def removeNulls (lists : List (List α)) : List (List α) :=
+  lists.filter (!·.isEmpty)
+
+def removeNext [BEq α] (next : α) (lists : List (List α)) : List (List α) :=
+  removeNulls (lists.map (fun row => if row.head? == some next then row.tail else row))
+
+private def visit (graph : Graph) (name : String) (path : List String) (cache : Cache) :
+    Nat → Except LeanPoo.C4.Error (List String × Cache)
+  | 0 => .error (.cycle name)
+  | fuel+1 => do
+    if path.contains name then throw (.cycle name)
+    if let some result := cache.get? name then return (result,cache)
+    let some entry := graph.find? (fun entry => entry.1 == name) | throw (.unknownNode name)
+    let mut current := cache
+    let mut orders := []
+    for parent in entry.2 do
+      let (order, updated) ← visit graph parent (name :: path) current fuel
+      current := updated
+      orders := order :: orders
+    -- Standard C3: merge parent linearizations, followed by direct-parent order.
+    let tail ← LeanPoo.C4.Precedence.mergeCertified (orders.reverse ++ [entry.2])
+    let result := name :: tail.output
+    return (result,current.insert name result)
+
+/-- Ordinary C3 over a finite graph. Memoize shared ancestors within one call.
+    Duplicate node names and duplicate direct parents are rejected explicitly. -/
+def linearize (graph : Graph) (root : String) : Except LeanPoo.C4.Error (List String) := do
+  let mut seen : Std.HashSet String := {}
+  for (name,parents) in graph do
+    if seen.contains name then throw (.duplicateNode name)
+    seen := seen.insert name
+    if parents.length != (LeanPoo.C4.unique parents).length then throw .inconsistentOrder
+  return (← visit graph root [] {} (graph.length+1)).1
+
+end LeanPoo.Prototype.C3

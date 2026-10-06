@@ -356,3 +356,15 @@ evidence identity and an unreviewed original paper. The supervisor suite is now
 14 tests; Lean inventory remains 141 atoms plus four diagnostics, with 48 native
 admissions. ~check-docs~ checks the saved POOF audit without a reference checkout.
 This is audit integrity evidence, not a Scheme/Lean semantic equivalence test.
+
+* Paper implementation atoms
+
+PaperTrees guards all six Order/BST/AVL source checks, 6,368 insertion updates,
+four rotations and two axiom-free inherited-method equalities. PaperC3 guards
+four source orders, five refusals and 640 independent oracle comparisons.
+PaperPrototypeChecks guards the other record/numeric/object source checks;
+[[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
+PaperDictionaryRecord guards 33 contexts and 528 reads; PaperMetaPrototype
+checks three metadata overrides, special base merge and C3 cache behavior.
+Current inventory: 147 atoms plus four diagnostics, 48 native admissions and
+15 Python supervisor controls. Older counts above belong to their stated milestones.

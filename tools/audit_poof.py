@@ -16,6 +16,8 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'docs/audits/poof/requirements-v1.json'
 RECEIPT = ROOT / 'docs/audits/poof/receipt-v1.json'
+CHECKS = ROOT / 'docs/audits/poof/checks-v1.json'
+PAPER_CHECK_LINES = [272,328,332,336,344,352,362,376,456,465,715,731,792,797,839,842,869,878,1895,1896,1897,1974,1975,1976]
 STATUSES = {'lean_translation', 'partial', 'not_implemented', 'discussion', 'future_proposal'}
 
 
@@ -43,6 +45,22 @@ def config_rows():
             if not path.is_file() or not path.resolve().is_relative_to(ROOT):
                 raise ValueError(f'Missing or nonlocal evidence: {name}')
     return config
+
+
+def source_checks():
+    mapping = json.loads(CHECKS.read_text())
+    if mapping['schema'] != 'lean-poo.poof-checks.v1':
+        raise ValueError('Expected source checks v1')
+    cases = mapping['paper_checks']
+    if [case['source_line'] for case in cases] != PAPER_CHECK_LINES:
+        raise ValueError('Source check coverage changed')
+    for case in cases:
+        path = ROOT / case['test']
+        if not path.is_file() or not path.resolve().is_relative_to(ROOT):
+            raise ValueError('Missing or nonlocal source check')
+        if not case['adaptation'] or case['marker'] not in path.read_text():
+            raise ValueError('Source check marker or adaptation missing')
+    return mapping
 
 
 def evidence(config):
@@ -92,6 +110,8 @@ def generate(paper):
     if commit != config['paper_commit']:
         raise ValueError('Unexpected paper checkout commit')
     lines = paper.read_text().splitlines()
+    if [i for i,line in enumerate(lines,1) if '(eval:check' in line] != PAPER_CHECK_LINES:
+        raise ValueError('Original source checks changed')
     headings = [{'line': i, 'source': line} for i, line in enumerate(lines, 1)
                 if re.match(r'^@(section|subsection|subsubsection)\b', line)]
     if not headings:
@@ -104,6 +124,7 @@ def generate(paper):
         'paper': {'repository': 'metareflection/poof', 'file': 'poof.scrbl',
                   'commit': commit, 'sha256': sha(paper), 'physical_lines': len(lines)},
         'requirements_sha256': sha(CONFIG), 'audit_tool_sha256': sha(Path(__file__)),
+        'source_checks': source_checks(), 'checks_sha256': sha(CHECKS),
         'review_units': config['rows'], 'headings': assign_headings(config, headings, len(lines)),
         'unit_status_counts': dict(sorted(Counter(row['status'] for row in config['rows']).items())),
         'local_evidence': evidence(config), 'source_file_inventory': source_inventory(),
@@ -131,6 +152,8 @@ def check():
     for name in ['commit', 'sha256']:
         if receipt['paper'][name] != config['paper_' + name]:
             raise ValueError('Saved paper identity differs from reviewed pin')
+    if receipt['source_checks'] != source_checks() or receipt['checks_sha256'] != sha(CHECKS):
+        raise ValueError('Source check mapping changed')
     headings = [{'line': h['line'], 'source': h['source']} for h in receipt['headings']]
     if outline_sha(headings) != config['outline_sha256']:
         raise ValueError('Saved outline differs from the reviewed paper')
@@ -156,7 +179,7 @@ def main():
         result = generate(args.paper)
         args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     print('POOF-AUDIT-OK ' + json.dumps({'review_units': len(result['review_units']),
-          'headings': len(result['headings']), 'local_files': len(result['local_evidence']),
+          'headings': len(result['headings']), 'source_checks': len(result['source_checks']['paper_checks']), 'local_files': len(result['local_evidence']),
           'whole_paper_implemented': False, 'mode': 'saved-local-check' if args.check else 'original-paper-generation'}))
 
 

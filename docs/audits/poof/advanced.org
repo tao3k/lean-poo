@@ -2,18 +2,18 @@
 
 [[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
 
-* Appendix A: executable source library
+* Appendix A: executable C3 and checks
 
-The paper uses a literate Racket/Scheme evaluator. This audit reads its source;
-it does not run that evaluator or compare original runtime results to Lean.
-Therefore it does not claim the original library/test suite was reproduced.
+[[file:../../../LeanPoo/Prototype/C3.lean][C3.linearize]] implements the ordinary finite paper graph policy separately
+from the main C4 object policy. [[file:../../../Tests/PaperC3.lean][PaperC3]] asserts all four source orders,
+five refusal cases, both helper checks and 640 comparisons across 160 ordered
+parent DAGs against an independent recursive merge oracle.
 
-C3 (1851–1900) has a specific precedence policy and a concrete inheritance DAG.
-LeanPoo's public object path is C4. [[file:../../../LeanPoo/C4/ReferenceMerge.lean][ReferenceMerge]] proves structural merge
-facts in the C4 framework, and [[file:../../../Tests/C4Ranked.lean][C4Ranked]] tests that framework. Neither is
-an exact replay of the paper's C3 graph/results or whole-policy equivalence.
-Helper functions (1901–1942) and extra object checks (1943–1979) have selected
-Lean counterparts; an exhaustive function/check map is still open.
+The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
+typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records
+all 24 original expressions. The three c3-extra-definitions helpers are implemented by Dictionary.fromList,
+toList and merge, with 594 scalar merge controls. Whole-policy C3/C4 equivalence
+remains a separate claim.
 
 * Appendix B: substantial existing implementations
 

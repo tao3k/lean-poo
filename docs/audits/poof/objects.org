@@ -21,9 +21,9 @@ exist; they do not establish every source dynamic-type operation.
 
 | Paper lines | Open correspondence | What already exists |
 |-------------+---------------------+---------------------|
-| 980–1038 | All alternative object representations | Indexed/prepared resolvers and local equalities; the paper's AVL-backed representation is missing |
-| 1140–1253 | Paper inheritance policy | C4 object ordering and rejection controls; paper policy is C3 |
-| 1254–1314 | Prototype as a self-hosted extensible meta-object | Typed schema/plan metadata; no demonstrated dynamic override of all function/supers/precedence meta-slots |
+| 980–1038 | All alternative object representations | Both concrete source routes: lazy AVL DictionaryRecord and KeyedPrototype; no universal representation equivalence theorem |
+| 1140–1253 | Paper inheritance policy | Separate ordinary C3 path now provided; main object policy remains C4 |
+| 1254–1314 | Dynamic identity/cache correspondence beyond typed meta operations | MetaPrototype uses first-class metadata Object slots with function/supers/precedence overrides; typed registry identity and caller parent caches |
 | 1388–1408 | Complete dynamic simple-type repertoire | Many Lean runtime refinements; no all-source-carrier mapping |
 | 1420–1433 | Self-description of every descriptor/prototype component | Function/object/slot descriptors; full generated meta-level automation not established |
 | 1449–1495 | Pure/mutable linearity correspondence | IO identity cells, persistent snapshots and effect composition; no ownership calculus or isomorphism theorem |
@@ -48,3 +48,12 @@ That distinction is a research boundary, not a claim that the paper supplied
 an algorithm we failed to copy. Likewise, OpenAI factory/consumer audits and C4
 contract APIs are local extensions. Their existence and large test corpus do
 not establish full POOF implementation coverage.
+
+* New executable representation and meta evidence
+
+[[file:../../../Tests/PaperDictionaryRecord.lean][PaperDictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
+inherited values, missing-slot refusals and a cold failing slot.
+[[file:../../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] guards all three ordinary metadata slot overrides,
+C3 diamond caches, a special constant-record base and retained snapshots.
+These operations are implemented; unrestricted dynamic identity, arbitrary
+cached-ancestry correctness and all self-descriptor automation remain open.

@@ -88,15 +88,16 @@
     {
       "id": "basic-tests",
       "start_line": 322,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Paper basic checks",
       "implementation": [
         "LeanPoo/Prototype/Record.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Tests/PaperPrototypeChecks.lean",
+        "docs/audits/poof/checks-v1.json"
       ],
-      "boundary": "Representative outputs exist; exact replay of every original @Checks case is not established."
+      "boundary": "All ten core record source checks guarded; complex literal coordinates represented by integral pairs."
     },
     {
       "id": "slot-construction",
@@ -108,9 +109,10 @@
         "LeanPoo/Prototype/SlotSpec.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperPrototypeChecks.lean"
       ],
-      "boundary": "Typed slot/modify/compute constructors; source expected-value suite not fully replicated."
+      "boundary": "Typed slot/modify/compute constructors; original slot construction checks asserted."
     },
     {
       "id": "compose",
@@ -157,29 +159,41 @@
     {
       "id": "order-case",
       "start_line": 674,
-      "status": "not_implemented",
+      "status": "lean_translation",
       "title": "Order prototype case",
-      "implementation": [],
-      "checks": [],
-      "boundary": "No corresponding end-to-end number/string/symbol order prototypes plus compare mixin found. C4 order relations do not implement this data-order example."
+      "implementation": [
+        "LeanPoo/Prototype/Order.lean"
+      ],
+      "checks": [
+        "Tests/PaperTrees.lean"
+      ],
+      "boundary": "Final-self comparison and string-to-symbol delegation; typed name symbols, not Scheme interning."
     },
     {
       "id": "binary-tree-case",
       "start_line": 737,
-      "status": "not_implemented",
+      "status": "lean_translation",
       "title": "Binary-tree dictionary case",
-      "implementation": [],
-      "checks": [],
-      "boundary": "No corresponding open-recursive binary-tree map node/acons/ref/afoldr implementation and paper-output controls found."
+      "implementation": [
+        "LeanPoo/Prototype/BinaryTree.lean"
+      ],
+      "checks": [
+        "Tests/PaperTrees.lean"
+      ],
+      "boundary": "Inherited open-recursive node/acons/ref/afoldr; explicit typed fold accumulator and errors."
     },
     {
       "id": "avl-case",
       "start_line": 800,
-      "status": "not_implemented",
+      "status": "lean_translation",
       "title": "AVL override case",
-      "implementation": [],
-      "checks": [],
-      "boundary": "No corresponding node-only rebalance mixin, rotations, height checks or paper five-entry dictionary controls found."
+      "implementation": [
+        "LeanPoo/Prototype/AVL.lean"
+      ],
+      "checks": [
+        "Tests/PaperTrees.lean"
+      ],
+      "boundary": "Node-only extension; source shapes plus independent balance/height/query controls; two inheritance equalities, not a universal AVL preservation proof."
     },
     {
       "id": "numeric",
@@ -192,9 +206,10 @@
       ],
       "checks": [
         "Examples/PrototypeFunctions.lean",
-        "Examples/DelayedNumbers.lean"
+        "Examples/DelayedNumbers.lean",
+        "Tests/PaperPrototypeChecks.lean"
       ],
-      "boundary": "Representative numeric computations; observed outputs do not replay all paper checks."
+      "boundary": "Both original numeric expected-value checks asserted with typed integer/natural carriers."
     },
     {
       "id": "computation-not-value",
@@ -241,17 +256,21 @@
     {
       "id": "representations",
       "start_line": 980,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Alternative instance/prototype representations",
       "implementation": [
         "LeanPoo/Object/Indexed.lean",
         "LeanPoo/Object/Prepare.lean",
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/DictionaryRecord.lean",
+        "LeanPoo/Prototype/KeyedPrototype.lean"
       ],
       "checks": [
-        "Tests/ObjectDefinition.lean"
+        "Tests/ObjectDefinition.lean",
+        "Tests/PaperDictionaryRecord.lean",
+        "Tests/PaperRepresentations.lean"
       ],
-      "boundary": "Several representations and local resolver equivalences exist; paper AVL-backed representation route is absent."
+      "boundary": "Both concrete source alternatives implemented: shared AVL cells and prototype/key-list pairs. Typed homogeneous/dependent families and explicit key-slot override policy; no universal representation equivalence theorem."
     },
     {
       "id": "first-class",
@@ -286,16 +305,15 @@
     {
       "id": "meta-prototype",
       "start_line": 1254,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Prototype as extensible meta-object",
       "implementation": [
-        "LeanPoo/Object/Schema.lean",
-        "LeanPoo/Object/Prototype.lean"
+        "LeanPoo/Prototype/MetaPrototype.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/PaperMetaPrototype.lean"
       ],
-      "boundary": "Typed schema/plan metadata exists; self-hosted dynamic meta-object protocol with overridable function/supers/precedence slots is not established."
+      "boundary": "Function/supers/precedence are overridable slots of first-class metadata objects; string registry identifiers replace recursive dynamic identity. Parent caches are caller metadata, not ancestry-certified C4 orders."
     },
     {
       "id": "further-features",
@@ -462,42 +480,46 @@
     {
       "id": "c3",
       "start_line": 1851,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Appendix A C3 algorithm",
       "implementation": [
-        "LeanPoo/C4/ReferenceMerge.lean",
-        "LeanPoo/C4/Linearize.lean"
+        "LeanPoo/Prototype/C3.lean"
       ],
       "checks": [
-        "Tests/C4Ranked.lean"
+        "Tests/PaperC3.lean"
       ],
-      "boundary": "Structural merge proofs and C4 tests exist; standalone paper C3 graph/results and exact policy correspondence not established."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons; no whole-policy C3/C4 equivalence claim."
     },
     {
       "id": "helpers",
       "start_line": 1901,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Appendix A helper functions",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean"
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/BinaryTree.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Examples/RecordPrototype.lean",
+        "Tests/PaperC3.lean",
+        "Tests/PaperRepresentations.lean"
       ],
-      "boundary": "Lean constructors cover selected operations; no all-helper semantic translation checklist."
+      "boundary": "The three c3-extra-definitions helpers map to fromList/toList/merge, using typed fold accumulators and explicit errors. Commented memoization sketches are not concrete executable requirements."
     },
     {
       "id": "extra-checks",
       "start_line": 1943,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Appendix A extra checks",
       "implementation": [
-        "LeanPoo/Prototype/Object.lean"
+        "LeanPoo/Prototype/Object.lean",
+        "LeanPoo/Prototype/Class.lean"
       ],
       "checks": [
-        "Examples/FirstClassObject.lean"
+        "Tests/PaperPrototypeChecks.lean"
       ],
-      "boundary": "Selected object mixing cases observed; every paper expected value not guarded."
+      "boundary": "All three source extra checks with typed JSON list boundary; no Scheme wire compatibility."
     },
     {
       "id": "multiple-dispatch",

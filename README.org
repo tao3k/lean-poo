@@ -6,8 +6,8 @@ described in [[https://github.com/metareflection/poof][POOF]] with Lean's types,
 linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
 The complete POOF paper is not yet implemented and verified. The
-[[file:docs/audits/poof/README.org][whole-paper audit]] separates the existing prototype core from missing
-Order/BST/AVL cases, partial correspondences and explicit research proposals.
+[[file:docs/audits/poof/README.org][whole-paper audit]] separates the existing prototype core and new
+Order/BST/AVL cases from partial correspondences and explicit research proposals.
 
 The library is domain-neutral: applications supply their own typed keys,
 values, obligations, and dependency graph. It does not define a policy

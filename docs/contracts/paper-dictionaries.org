@@ -1,0 +1,82 @@
+#+TITLE: Paper dictionaries, records and meta-prototypes
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/README.org][Paper audit]]
+
+* Capability checklist
+
+| Need | Public API | Guarantee or boundary |
+|------+------------+-----------------------|
+| Supply an order | ~OrderOps.predicates~, ~compareMixin~, ~number~, ~string~, ~symbol~, ~instantiate~ | compare reads final-self predicates; incomparable pairs return an error |
+| Reuse dictionary algorithms | ~Dictionary.binaryTree~, ~withOrder~, ~instantiate~, ~fromList~, ~toList~, ~merge~; node/singleton/acons/ref/afoldr | Recursion dispatches through final self; overwrite is persistent, missing lookup is Option |
+| Add AVL balance | ~Dictionary.avlRebalance~, ~avlNode~ | Overrides only node; cached heights and four rotation cases; malformed input can be refused |
+| Reuse inheritance proofs | ~avlRebalance_inherits~, ~avlRebalance_node~ | Exact field equalities, no axioms; not a universal insertion preservation theorem |
+| Use ordinary paper C3 | ~C3.linearize~, ~notNull~, ~removeNulls~, ~removeNext~ | Finite graph with explicit cycle/duplicate/inconsistency errors; main object C4 policy is separate |
+| Store lazy slots in AVL | ~DictionaryRecord.fromOrder~, ~slotGen~, ~slot~, ~compute~, ~modify~, ~lookup~, ~get~, ~instantiate~ | Homogeneous typed values; only requested value is forced; explicit construction/lookup errors |
+| Retain prototype keys | ~KeyedPrototype.slot~, ~compose~, ~instantiate~ | Child key lists append before parent lists; duplicate keys retained; explicit keys-slot override policy |
+| Extend meta slots | ~MetaPrototype.make~, ~fromRecord~, ~function~, ~supers~, ~precedence~, ~instantiate~ | First-class metadata Object uses the same slot constructors; string registry identifies supers |
+
+* Construct an AVL dictionary
+
+#+begin_src lean
+import LeanPoo.Prototype.AVL
+open LeanPoo.Prototype
+unsafe def scores : Except String (Tree Int String) := do
+  let order := OrderOps.instantiate
+    (DelayedProto.compose OrderOps.compareMixin OrderOps.number)
+  let dictionary : Dictionary Int String Unit := Dictionary.instantiate order
+    (DelayedProto.compose Dictionary.avlRebalance Dictionary.binaryTree)
+  dictionary.fromList [(3,"three"),(1,"one"),(2,"two")]
+#+end_src
+
+The Dictionary accumulator type parameter selects the type of ~afoldr~ results.
+Use another typed dictionary family when a different fold accumulator is needed.
+~afoldr~ visits left/root/right while threading an accumulator; prepending keys
+therefore returns descending order. ~Tree.inorder~ returns ascending pairs.
+The same insertion, lookup and fold closures serve BST and AVL variants.
+Changing the node layer supplies balancing; callers need not rewrite algorithms.
+
+* Key enumeration and dictionary merge
+
+~KeyedPrototype~ retains a layer and its key list. Ordinary values use ~Sum.inl key~
+and the key-list slot uses ~Sum.inr ()~. Instantiation publishes keys before the
+layer by default; ~allowOverride := true~ lets the layer intercept this slot.
+This is the paper's two prototype-representation choices, with explicit types.
+
+~Dictionary.toList~ uses a pair-list accumulator and returns descending pairs.
+~Dictionary.merge~ uses an Except/tree accumulator: override entries win over
+base entries through the inherited acons method. Both operations reuse afoldr.
+[[file:../../Tests/PaperRepresentations.lean][PaperRepresentations]] guards 33 merge contexts, 594 independent reads,
+retained base trees, duplicate-key enumeration and both key-slot policies.
+
+* Compose record and metadata behavior
+
+~DictionaryRecord.compute~ receives final self; ~modify~ receives an inherited
+slot and refuses a missing one. Compose with ~DelayedProto.compose child parent~.
+The AVL record keeps delayed cells and inherited dictionaries shared through
+Lean thunks. It does not silently turn dictionary errors into missing slots.
+
+~MetaPrototype.make function supers precedence~ constructs a metadata object.
+Use ~metadata.extend (Object.recordSlotGen .function ...)~ or the corresponding
+~.supers~ / ~.precedence~ slot to derive metadata through the ordinary Object API.
+~instantiate name metadata registry base~ computes a new root C3 cache and
+closes the composed functions. Parent caches are observable, overridable caller
+metadata; they do not carry C4 ancestry certificates. Unknown cached names,
+missing slots, duplicate identities and a retained cycle back to the new root
+are refused. General arbitrary cache consistency is a caller contract.
+
+The ~fromRecord~ special base has empty supers/cache and merges constant slots
+over inherited slots. This avoids an infinite tower of metadata constructors.
+Typed registries replace recursive dynamic Scheme object identity. This API
+implements the named meta operations; it does not provide an untyped type universe
+or automatically generate every self-describing descriptor interaction.
+
+* Executable controls and costs
+
+[[file:../../Tests/PaperTrees.lean][PaperTrees]] compiles the dictionary construction pattern and asserts original
+shapes, queries, fold, overwrite, 6,368 updates and four rotation cases.
+[[file:../../Tests/PaperDictionaryRecord.lean][PaperDictionaryRecord]] checks 33 contexts, 528 reads and an unused failing slot.
+[[file:../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] checks all three metadata overrides, a diamond, retained
+snapshots, special base merge and six refusal controls.
+[[file:../../Tests/PaperC3.lean][PaperC3]] compares 640 outputs to an independent recursive merge oracle.
+General knots remain unsafe and may diverge on premature self forcing.
+No stable end-to-end speedup or external OpenAI maintenance saving is measured.

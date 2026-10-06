@@ -33,6 +33,16 @@ class PoofAuditTests(unittest.TestCase):
         changed['local_evidence'][name]['sha256'] = '0' * 64
         self.check_bad_receipt(changed, 'Local source or reviewed scope changed')
 
+    def test_removed_source_check_is_rejected(self):
+        mapping = copy.deepcopy(self.receipt['source_checks'])
+        mapping['paper_checks'].pop()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'checks.json'
+            path.write_text(json.dumps(mapping))
+            with patch.object(audit_poof, 'CHECKS', path):
+                with self.assertRaisesRegex(ValueError, 'Source check coverage changed'):
+                    audit_poof.check()
+
     def test_unreviewed_original_paper_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             paper = Path(directory) / 'poof.scrbl'
