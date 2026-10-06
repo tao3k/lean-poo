@@ -37,15 +37,17 @@
         "LeanPoo/Prototype/MetaPrototype.lean",
         "LeanPoo/Prototype/C3.lean",
         "LeanPoo/Prototype/C3Semantics.lean",
+        "LeanPoo/Prototype/C3GraphSemantics.lean",
         "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
       "checks": [
         "Tests/PaperMetaPrototype.lean",
         "Tests/PaperC3.lean",
         "Tests/PaperC3Semantics.lean",
+        "Tests/PaperC3GraphSemantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge; recursive graph traversal and cache semantics still lack a general correspondence theorem. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; optional graph admission proves cached/uncached equality on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "simple-types",

@@ -45,7 +45,8 @@ certificate proves retained parent order, exact name coverage and no repeats.
 The axiom reports list propext, Classical.choice and Quot.sound where used;
 none of these theorems admits ~sorryAx~.
 
-The recursive C3 graph traversal and retained metadata caches still need a
-separate graph-level correspondence proof. The ordinary C3 policy is also
+[[file:c3-graph.org][Graph admission]] now checks cached graph outputs against uncached finite
+recursion on exact supplied inputs; a universal graph/cache theorem remains open.
+The ordinary C3 policy is also
 distinct from the main C4 object policy; no policy-wide equivalence follows
 from these merge laws.

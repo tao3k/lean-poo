@@ -11,6 +11,7 @@ these guides explain reusable library contracts.
 | Observe finite fixed-point unfoldings and certify stable results | [[file:contracts/fixed-point-semantics.org][Finite fix semantics]] |
 | Read typed records with explicit missing-key errors and prove source dispatch correspondence | [[file:contracts/record-dispatch.org][Checked record dispatch]] |
 | Certify ordinary C3 merge order against the paper's selection and trace | [[file:contracts/c3-merge.org][Certified C3 merge]] |
+| Check a cached C3 graph against uncached finite recursion | [[file:contracts/c3-graph.org][C3 graph admission]] |
 | Prepare record JSON codecs and validate reusable C3 metadata plans | [[file:contracts/checked-preparation.org][Checked preparation APIs]] |
 | Describe descriptors/objects, generate field tools and consume state references | [[file:contracts/descriptor-reflection.org][Descriptor reflection and state consumption]] |
 | Compose paper BST/AVL dictionaries, lazy records and metadata objects | [[file:contracts/paper-dictionaries.org][Paper dictionary and meta APIs]] |

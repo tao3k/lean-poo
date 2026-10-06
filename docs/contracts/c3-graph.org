@@ -1,0 +1,43 @@
+#+TITLE: Ordinary C3 graph admission
+
+[[file:../reusable-contracts.org][Capability index]] · [[file:c3-merge.org][Merge certificate]] · [[file:../audits/poof/semantic-closure.org][Paper boundary]]
+
+* API checklist
+
+| Need | API | Guarantee and cost |
+|------+-----+--------------------|
+| Execute a validated graph with shared ancestor work | ~C3.linearizeMany graph roots~ | Fast ordinary path; one cache is reused across roots |
+| Relate one-root batch and scalar calls | ~C3.linearizeMany_singleton~ | Kernel equality for every graph/root, including errors |
+| Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Recomputes each parent occurrence and root; semantic reference, possibly exponential on shared ancestry |
+| Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
+| Consume the receipt | ~GraphCertificate.agrees~ | Cached and uncached ~Except~ outputs are equal for this exact graph/root list |
+| Check result cardinality | ~GraphCertificate.order_count~ | The number of order rows equals the number of requested roots, including repeated roots |
+
+* Client pattern
+
+#+begin_src lean
+import LeanPoo.Prototype.C3GraphSemantics
+
+open LeanPoo.Prototype
+
+def admittedOrders (graph : C3.Graph) (roots : List String) :
+    Except C3.GraphAdmissionError (List (List String)) := do
+  let certificate ← C3.certifyGraph graph roots
+  return certificate.orders
+#+end_src
+
+~GraphAdmissionError.cached~ reports the production computation's error;
+~reference~ reports failure of the uncached interpreter after a cached success;
+~disagreement~ reports two successful but different orders. These cases are
+separate so a cache mismatch is not mislabeled as a precedence conflict.
+
+The uncached interpreter uses the same validated graph shape and the certified
+merge. [[file:c3-merge.org][The merge theorem]] relates each candidate-list merge to the paper's
+selection and trace. The graph receipt checks the recursive implementation on
+the supplied finite inputs. It is not an unconditional theorem that all finite
+graphs yield matching cached and uncached results, nor a Racket/Lean language
+equivalence proof. Ordinary calls incur no admission recomputation.
+
+[[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
+errors, and checks the reusable theorems without extra axioms beyond Lean's
+standard kernel axioms.

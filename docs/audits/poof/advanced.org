@@ -13,8 +13,11 @@ deletion step agree with the certified merger for every candidate list. Every
 certified output has a paper-style source trace; any source trace over the
 same candidates has that output. The [[file:../../contracts/c3-merge.org][reusable C3 guide]] shows how callers retain
 the certificate to prove parent-order preservation, coverage and no repeats.
-This merge result does not yet establish arbitrary graph traversal/cache
-correspondence.
+[[file:../../../LeanPoo/Prototype/C3.lean][C3]] proves one-root batch/scalar equality for every graph and error outcome.
+[[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] adds an uncached finite interpreter and an optional receipt
+that proves cached and uncached output agreement on admitted graph/root inputs.
+[[file:../../contracts/c3-graph.org][The graph guide]] records its recomputation cost. An unconditional graph/cache
+correspondence theorem remains open.
 
 The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
 typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records

@@ -30,7 +30,7 @@ POOF paper, not every other essay in the same reference checkout.
 | [[file:gaps.org][Closure checklist]] | Closed typed operations and stronger research gates |
 | [[file:semantic-closure.org][Semantic closure obligations]] | Source/Lean correspondence gates and proved finite fix/record fragments |
 | [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
-| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 318 source filenames and 76 evidence-file hashes |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 318 source filenames and 78 evidence-file hashes |
 
 * Status meaning
 
@@ -66,13 +66,14 @@ the receipt. Do not merely regenerate to turn a drift failure into a pass.
 
 * Capability and execution evidence
 
-[[file:../../contracts/paper-dictionaries.org][Dictionary/meta APIs]], [[file:../../contracts/descriptor-reflection.org][descriptor/reflection/state APIs]], [[file:../../contracts/record-dispatch.org][checked record dispatch]] and [[file:../../contracts/c3-merge.org][certified C3 merge]] document practical reuse.
+[[file:../../contracts/paper-dictionaries.org][Dictionary/meta APIs]], [[file:../../contracts/descriptor-reflection.org][descriptor/reflection/state APIs]], [[file:../../contracts/record-dispatch.org][checked record dispatch]], [[file:../../contracts/c3-merge.org][certified C3 merge]] and [[file:../../contracts/c3-graph.org][C3 graph admission]] document practical reuse.
 [[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
 binds the six remaining constructions. Receipts bind manual review and code
 identity; actual execution and kernel theorem checks are separate evidence.
-Current gate: 155 atoms plus four diagnostics, 48 native admissions and 16
+Current gate: 156 atoms plus four diagnostics, 48 native admissions and 16
 supervisor controls. The record catalog now has a typed batch patch with kernel
 validity and untouched-field laws; finite fix/mix unfoldings have a separate pure
 semantics. The checked record x/y fragment has an all-depth source/target
-observation theorem, and C3 merge has generic source-trace correspondence.
+observation theorem. C3 merge has generic source-trace correspondence; the new
+graph receipt checks cached traversal against uncached recursion on exact inputs.
 No external OpenAI integration or measured saving is added.

@@ -60,4 +60,17 @@ def linearize (graph : Graph) (root : String) : Except LeanPoo.C4.Error (List St
   validateGraph graph
   return (← visit graph root [] {} (graph.length+1)).1
 
+/-- A one-root batch has the same result and error as the scalar entry point,
+for every graph and root. Both start with an empty cache. -/
+theorem linearizeMany_singleton (graph : Graph) (root : String) :
+    linearizeMany graph [root] = (linearize graph root).map (fun order => [order]) := by
+  cases valid : validateGraph graph with
+  | error err => simp [linearizeMany, linearize, valid, bind, Except.bind, Except.map]
+  | ok _ =>
+    cases result : visit graph root [] {} (graph.length+1) with
+    | error err => simp [linearizeMany, linearize, valid, result, bind, Except.bind, Except.map]
+    | ok value =>
+      simp [linearizeMany, linearize, valid, result, bind, Except.bind, Except.map]
+      rfl
+
 end LeanPoo.Prototype.C3
