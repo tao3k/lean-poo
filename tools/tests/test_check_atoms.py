@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from tools.check_atoms import execute, load_atoms, select_atoms
+from tools.check_atoms import configure_threads, execute, load_atoms, select_atoms
 
 
 class CheckAtomsTests(unittest.TestCase):
@@ -24,6 +24,20 @@ class CheckAtomsTests(unittest.TestCase):
             self.assertIn('30s', atom['command'])
             self.assertIn('2048', atom['command'])
             self.assertIn('10000000', atom['command'])
+
+    def test_thread_policy_preserves_inventory_and_bounded_arguments(self):
+        atoms = load_atoms()
+        changed = configure_threads(atoms, 1)
+        self.assertEqual([a['file'] for a in atoms], [a['file'] for a in changed])
+        for original, configured in zip(atoms, changed):
+            command = list(configured['command'])
+            position = command.index('lean') + 1
+            self.assertEqual(command[position:position+2], ['-j', '1'])
+            del command[position:position+2]
+            self.assertEqual(command, original['command'])
+        self.assertIs(configure_threads(atoms, None), atoms)
+        with self.assertRaises(ValueError):
+            configure_threads(atoms, 0)
 
     def test_bad_or_empty_shard_and_unknown_file_fail(self):
         atoms = load_atoms()

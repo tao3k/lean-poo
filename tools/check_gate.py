@@ -85,10 +85,12 @@ def stop_children(signum, frame):
 
 def execute(preparation, checks):
     results = []
-    for name, command in preparation:
-        result = run_phase(name, command)
-        results.append(result)
-        if result['returncode']:
+    if preparation:
+        # These phases are independent; library completion still gates atoms/native.
+        with ThreadPoolExecutor(max_workers=len(preparation)) as pool:
+            futures = [pool.submit(run_phase, name, command) for name, command in preparation]
+            results.extend(task.result() for task in futures)
+        if any(result['returncode'] for result in results):
             return results
     with ThreadPoolExecutor(max_workers=len(checks)) as pool:
         futures = [pool.submit(run_phase, name, command) for name, command in checks]
@@ -113,9 +115,10 @@ def main():
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale']), ('types', ['lean', 'LeanPoo/C4/Types.lean']),
+        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
-        [('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
+        [('types', ['lean', 'LeanPoo/C4/Types.lean']),
+         ('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
          ('docs', ['just', 'check-docs']),
          ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index'])])

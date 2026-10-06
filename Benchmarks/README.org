@@ -454,3 +454,18 @@ recommendation, allocation/peak-memory or external benefit established.
 144 source hashes and binary SHA; source manifests differ only in ResultIndex.lean.
 [[file:receipts/euler-result-index-inline-2026-10-06.json][Paper/Euler audit]] binds both receipts and 76 local hashes. See
 [[file:../docs/performance/result-index.org][conditional gains and negative controls]]; historical receipts remain immutable.
+
+* Internal Lean threads at fixed file concurrency
+
+[[file:receipts/check-threads-2026-10-06.json][Thread admission]] compares all 138 warm atoms with twelve file workers and
+default/one internal Lean thread, two alternating pairs. Exact source, transcript
+and return-code parity is required. See [[file:../docs/check-performance.org][gate scheduling and measurement limits]];
+this receipt excludes library preparation and the other gate phases.
+
+* Complete-gate scheduling qualification
+
+[[file:receipts/check-gate-overlap-2026-10-06.json][Complete-gate pairs]] preserve four successful full runs, exact dispatcher
+source snapshots and per-file attributed Lean transcript parity. Local warm
+wall medians: 37.555 to 32.130 seconds; CPU 130.665 to 132.876 seconds.
+[[file:receipts/check-gate-thread-trial-2026-10-06.json][The rejected automatic-thread trial]] remains: its full-gate medians regress,
+so the default thread policy stays unchanged. [[file:../docs/check-performance.org][Protocol, phase diagnosis and limits]].

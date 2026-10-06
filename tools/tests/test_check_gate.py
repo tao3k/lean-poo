@@ -45,6 +45,23 @@ class CheckGateTests(unittest.TestCase):
             self.assertEqual([r['returncode'] for r in results], [0, 0, 0])
             self.assertEqual(marker.read_text().splitlines(), ['started'] * 3)
 
+    def test_independent_preparation_overlaps_but_checks_wait_for_all(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / 'prepare.py'
+            markers = [Path(temporary) / name for name in ['library', 'types', 'supervision']]
+            source.write_text('import pathlib,sys,time\n'
+                              'markers=[pathlib.Path(p) for p in sys.argv[1:]]\n'
+                              'markers[0].touch()\ndeadline=time.monotonic()+5\n'
+                              'while not all(p.exists() for p in markers):\n'
+                              ' if time.monotonic()>deadline: raise SystemExit(8)\n'
+                              ' time.sleep(0.01)\n')
+            preparations = [(path.name, [sys.executable, str(source), str(path),
+                                        *[str(p) for p in markers if p != path]]) for path in markers]
+            verify = 'from pathlib import Path; assert all(Path(p).exists() for p in ' + repr([str(p) for p in markers]) + ')'
+            with contextlib.redirect_stdout(io.StringIO()):
+                results = execute(preparations, [('checks', [sys.executable, '-c', verify])])
+            self.assertEqual([r['returncode'] for r in results], [0, 0, 0, 0])
+
     def test_interruption_stops_active_phase_processes(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / 'waiting.py'

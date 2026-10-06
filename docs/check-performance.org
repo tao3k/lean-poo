@@ -134,15 +134,15 @@ Startup improvements cannot be reported as runtime factory or resolver gains.
 
 * Resource-capped local concurrency and phase receipts
 
-The [[file:../tools/check_gate.py][complete-gate dispatcher]] builds the library, checks source-owned types and
-runs Python supervision admission tests. Only after all preparation succeeds,
-it starts independent atom, bounded-diagnostic and Org phases concurrently.
+The [[file:../tools/check_gate.py][complete-gate dispatcher]] builds the library and runs Python supervision
+admission tests concurrently. After both succeed, source-owned types,
+independent atoms, bounded diagnostics, native checks and Org checks run together.
 Every phase emits actual start/completion records with exit status and elapsed
 time. All phases must succeed; a failed preparation prevents check launches,
 and failed checks or launch errors cannot be hidden by successful siblings.
 Interrupting the gate terminates active phase process groups; the atomic runner
 also terminates its own children. No synthetic heartbeat or relaxed timeout is
-introduced. Five gate admission tests join the existing four runner tests.
+introduced. Six gate admission tests join the five runner tests.
 
 The default file-worker count is the minimum of logical CPUs, twelve and a
 physical-memory budget of 2 GiB per worker after reserving 4 GiB for the host
@@ -490,3 +490,71 @@ Collision checks are correctness evidence, not native timing or allocation gains
 control that keeps its keys. Eight small checksum controls bring native admissions
 to 48; twelve shards / 16 jobs / 138 atoms + four diagnostics remain. No
 allocation, peak-memory or universal speedup claim is made.
+
+* 2026-10-06 preparation overlap and Lean thread admission
+
+The earlier 22.772/33.550-second receipts had nearly equal child CPU totals
+(140.718/141.798 seconds). Library preparation increased from 0.143 to 7.600
+seconds; atoms increased from 21.520 to 24.844 seconds. Those phase observations
+explain where the wall increase occurred; they do not prove a kernel regression
+or identify the library phase's precise build/startup/host-wait contribution.
+
+Library build and Python supervisor tests now run together. Both must finish
+successfully before later checks launch. The source-type check joins atom,
+diagnostic, native and Org checks: it does not produce an artifact that they
+consume. Its failure still fails the full gate. A barrier admission test requires
+preparation overlap; preparation failure still prevents later launches. Interrupt and real-child failure controls remain.
+The supervisor suite now has eleven tests. No check or resource limit is removed.
+
+The [[file:../Benchmarks/receipts/check-threads-2026-10-06.json][matched thread study]] checks all 138 canonical atoms with twelve file workers,
+using two alternating pairs of Lean's default internal threads and explicit
+~-j 1~. Each pair requires identical per-file source hashes, actual transcript
+hashes and return codes. Local wall medians are 21.215/20.600 seconds;
+CPU medians are 125.461/118.986 seconds (default/one). The small wall difference
+is about 2.9%, CPU about 5.2%; two pairs establish no confidence interval or
+stable full-gate improvement. Library, diagnostics, docs and CI queues are excluded.
+
+The standalone runner exposes ~--lean-threads~ for explicit comparisons.
+Default Lean thread policy remains unchanged: a full-gate trial with automatic
+single-thread atoms regressed (46.558 baseline / 49.829 current wall medians;
+133.203 / 136.809 CPU seconds). The [[file:../Benchmarks/receipts/check-gate-thread-trial-2026-10-06.json][negative trial]] preserves executed dispatcher
+sources and their hashes. The automatic policy was withdrawn. Small atom-only
+gains cannot qualify a complete-gate change. Timeout, kill grace, allocation,
+memory limits and exact inventory remain unchanged.
+
+#+begin_src sh
+lake env python3 Benchmarks/CheckThreadsStudy.py --output /private/tmp/check-threads.json
+LEAN_POO_CHECK_RECEIPT=/private/tmp/check-gate.json just check
+#+end_src
+
+Warm full gates and gates that rebuild changed dependencies must be reported
+separately; no target promises that every source change stays below 22.8 seconds.
+No skipped proof, transcript cache acceptance, synthetic progress or longer
+failure timeout is used to make a faster result pass.
+
+** Complete gate, thread-policy withdrawal preserved
+
+The [[file:../Benchmarks/receipts/check-gate-overlap-2026-10-06.json][complete-gate paired receipt]] executes the exact prior dispatcher from
+commit 9a1b176 against the same current checkout as the optimized dispatcher.
+Both use twelve file workers and Lean's unchanged default thread policy. Two
+alternating pairs execute all 138 atoms and all seven gate phases; attributed
+per-file Lean output must match. Dispatcher source text/hashes, checkout source
+hashes, every phase status/cost and before/after host load are retained.
+
+| Warm complete gate | Wall median seconds | Child CPU median seconds |
+|--------------------+---------------------+--------------------------|
+| Prior serial preparation | 37.555 | 130.665 |
+| Parallel preparation / independent type check | 32.130 | 132.876 |
+
+Local wall median decreases about 14.4%; CPU increases about 1.7%. This is a
+scheduling observation for two pairs under varying host load, not a kernel
+improvement, confidence interval, cold/rebuild or exact CI speedup. It cannot
+promise that every commit is faster than the earlier 22.8-second warm gate.
+The negative automatic-thread trial above remains visible and is not selected
+as the active policy. The study streams actual child output and gives each full
+gate a 180-second watchdog, terminating its process group on expiry; this does
+not change canonical per-file/diagnostic limits or extend any timeout.
+
+#+begin_src sh
+lake env python3 Benchmarks/CheckGateStudy.py --output /private/tmp/check-gate-study.json
+#+end_src

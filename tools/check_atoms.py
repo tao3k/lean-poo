@@ -71,6 +71,22 @@ def select_atoms(atoms, shard, shards, files=None):
     return selected
 
 
+
+def configure_threads(atoms, threads):
+    """Adjust only Lean's worker pool, retaining timeout/resource arguments."""
+    if threads is None:
+        return atoms
+    if threads < 1:
+        raise ValueError('Lean thread count must be positive')
+    configured = []
+    for atom in atoms:
+        command = list(atom['command'])
+        position = command.index('lean') + 1
+        command[position:position] = ['-j', str(threads)]
+        configured.append(dict(atom, command=command))
+    return configured
+
+
 def run_atom(atom):
     file = atom['file']
     emit(f'CHECK-ATOM-START {file}')
@@ -132,6 +148,7 @@ def execute(atoms, jobs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--lean-threads', type=int)
     parser.add_argument('--shard', type=int, default=0)
     parser.add_argument('--shards', type=int, default=1)
     parser.add_argument('--files', nargs='+')
@@ -140,7 +157,7 @@ def main():
     args = parser.parse_args()
     try:
         inventory = load_atoms()
-        atoms = select_atoms(inventory, args.shard, args.shards, args.files)
+        atoms = configure_threads(select_atoms(inventory, args.shard, args.shards, args.files), args.lean_threads)
         if args.jobs < 1:
             raise ValueError('Jobs must be positive')
     except (ValueError, subprocess.SubprocessError) as error:
@@ -155,7 +172,7 @@ def main():
     results = execute(atoms, args.jobs)
     failures = [r['file'] for r in results if r['returncode'] != 0]
     receipt = dict(schema='lean-poo.check-atoms.v1', jobs=args.jobs, shard=args.shard,
-                   shards=args.shards, inventory_files=len(inventory), selected_files=len(atoms),
+                   shards=args.shards, lean_threads=args.lean_threads, inventory_files=len(inventory), selected_files=len(atoms),
                    wall_seconds=time.monotonic() - started, failures=failures, results=results,
                    justfile_sha256=hashlib.sha256((ROOT / 'Justfile').read_bytes()).hexdigest())
     if args.receipt:
