@@ -13,7 +13,9 @@ from tools.check_gate import GIB, choose_jobs, execute
 
 class CheckGateTests(unittest.TestCase):
     def test_auto_workers_obey_cpu_and_memory_caps(self):
-        self.assertEqual(choose_jobs(12, 32 * GIB), 12)
+        self.assertEqual(choose_jobs(12, 32 * GIB), 14)
+        self.assertEqual(choose_jobs(12, 24 * GIB), 10)
+        self.assertEqual(choose_jobs(8, 32 * GIB), 8)
         self.assertEqual(choose_jobs(64, 8 * GIB), 2)
         self.assertEqual(choose_jobs(2, 32 * GIB), 2)
         self.assertEqual(choose_jobs(12, None), 1)

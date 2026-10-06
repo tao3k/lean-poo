@@ -102,7 +102,10 @@ def run_atom(atom):
         for line in iter(process.stdout.readline, b''):
             digest.update(line)
             emit(f'[{file}] {line.decode(errors="replace").rstrip()}')
-        code = process.wait()
+        _, status, usage = os.wait4(process.pid, 0)
+        code = os.waitstatus_to_exitcode(status)
+        process.returncode = code
+        cpu = usage.ru_utime + usage.ru_stime
     finally:
         if process.poll() is None:
             os.killpg(process.pid, signal.SIGKILL)
@@ -111,9 +114,9 @@ def run_atom(atom):
         with PROCESS_LOCK:
             ACTIVE.discard(process)
     elapsed = time.monotonic() - started
-    emit(f'CHECK-ATOM-END {file} exit={code} wall={elapsed:.3f}s')
+    emit(f'CHECK-ATOM-END {file} exit={code} wall={elapsed:.3f}s cpu={cpu:.3f}s')
     return dict(file=file, recipe=atom['recipe'], command=atom['command'],
-                returncode=code, wall_seconds=elapsed, transcript_sha256=digest.hexdigest(),
+                returncode=code, wall_seconds=elapsed, cpu_seconds=cpu, transcript_sha256=digest.hexdigest(),
                 source_sha256=hashlib.sha256((ROOT / file).read_bytes()).hexdigest())
 
 

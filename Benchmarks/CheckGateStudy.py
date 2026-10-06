@@ -20,9 +20,11 @@ def main():
     parser.add_argument('--baseline-ref', default='9a1b17661fcc3189ff762be1865cc737ab5a3434')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--repeats', type=int, default=2)
+    parser.add_argument('--baseline-jobs', type=int, default=12)
+    parser.add_argument('--current-jobs', type=int, default=12)
     args = parser.parse_args()
-    if args.repeats < 1:
-        parser.error('repeats must be positive')
+    if min(args.repeats, args.baseline_jobs, args.current_jobs) < 1:
+        parser.error('repeats/jobs must be positive')
     baseline = subprocess.check_output(['git', 'show', args.baseline_ref+':tools/check_gate.py'], cwd=ROOT)
     current = (ROOT/'tools/check_gate.py').read_bytes()
     inventory = json.loads(subprocess.check_output(['python3', 'tools/check_atoms.py', '--list'], cwd=ROOT))
@@ -42,7 +44,8 @@ def main():
                 print(f'CHECK-GATE-STUDY-RUN repeat={repeat} variant={variant}', flush=True)
                 output = []
                 load_before = os.getloadavg()
-                with subprocess.Popen(['python3', str(launcher), '--jobs', '12'], cwd=ROOT,
+                jobs = args.baseline_jobs if variant == 'baseline' else args.current_jobs
+                with subprocess.Popen(['python3', str(launcher), '--jobs', str(jobs)], cwd=ROOT,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, start_new_session=True) as process:
                     def expire():
                         try:
@@ -86,7 +89,7 @@ def main():
                   samples=samples, medians=medians, host_cpus=host_cpus, printed_atom_transcript_parity=True,
                   executed_dispatcher_sources={'baseline': baseline.decode(), 'current': current.decode()},
                   source_sha256={p: hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in files},
-                  limits=['Warm complete gates at fixed 12 file workers, two alternating pairs; host contention uncontrolled',
+                  limits=['Warm complete gates with recorded file-worker counts, two alternating pairs; host contention uncontrolled',
                           'Historical dispatcher uses current checkout and atomic runner with default threads; exact dispatcher hash recorded separately',
                           'Gate source_sha256 fields describe checkout files; executed_dispatcher_sha256 identifies executed source',
                           'Printed attributed Lean lines match; not byte-for-byte unformatted process output',

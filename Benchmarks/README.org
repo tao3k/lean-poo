@@ -469,3 +469,9 @@ source snapshots and per-file attributed Lean transcript parity. Local warm
 wall medians: 37.555 to 32.130 seconds; CPU 130.665 to 132.876 seconds.
 [[file:receipts/check-gate-thread-trial-2026-10-06.json][The rejected automatic-thread trial]] remains: its full-gate medians regress,
 so the default thread policy stays unchanged. [[file:../docs/check-performance.org][Protocol, phase diagnosis and limits]].
+
+* Twelve/fourteen complete-gate workers
+
+[[file:receipts/check-gate-12-vs-14-2026-10-06.json][Full-gate worker study]] keeps two alternating pairs, all 552 atom successes and
+per-file CPU/wall observations. Medians: 31.297/24.105 seconds, with default Lean
+internal threads. [[file:../docs/performance/check-worker-overlap.org][Capacity admission, complete controls and remaining 22.8-second gap]].

@@ -20,12 +20,14 @@ GIB = 1024 ** 3
 
 
 def choose_jobs(cpus, memory_bytes):
-    """Cap file workers by CPUs, 12, and a conservative 2 GiB per process.
+    """Cap workers by CPU capacity and a conservative 2 GiB per process.
+    On >=12 logical CPUs, two overlap slots are qualified; absolute cap is 14.
     Reserve 4 GiB for host/diagnostics; unknown memory permits one worker.
     This is physical-memory capacity, not a measurement of current free memory.
     """
     memory_cap = max(1, (memory_bytes - 4 * GIB) // (2 * GIB)) if memory_bytes else 1
-    return max(1, min(cpus or 1, 12, memory_cap))
+    cpu_cap = (cpus + 2) if cpus and cpus >= 12 else (cpus or 1)
+    return max(1, min(cpu_cap, 14, memory_cap))
 
 
 def host_jobs():

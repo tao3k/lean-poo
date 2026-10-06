@@ -65,6 +65,10 @@ class CheckAtomsTests(unittest.TestCase):
             self.assertEqual(sorted(r['returncode'] for r in results), [0, 1, 7, 124])
             self.assertEqual(len(results), len(atoms))
             self.assertEqual(len([r for r in results if r['returncode']]), 3)
+            for result in results:
+                if 'wall_seconds' in result:
+                    self.assertGreaterEqual(result['cpu_seconds'], 0)
+                    self.assertLess(result['cpu_seconds'], result['wall_seconds'] + 0.1)
 
     def test_interruption_stops_children_and_prevents_queued_launches(self):
         with tempfile.TemporaryDirectory() as temporary:

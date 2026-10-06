@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 138 independent example/contract
+once, checks C4's source-owned types, and runs 139 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 142 unique example/test files, including the typed
+The current gate covers 143 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -144,12 +144,13 @@ Interrupting the gate terminates active phase process groups; the atomic runner
 also terminates its own children. No synthetic heartbeat or relaxed timeout is
 introduced. Six gate admission tests join the five runner tests.
 
-The default file-worker count is the minimum of logical CPUs, twelve and a
-physical-memory budget of 2 GiB per worker after reserving 4 GiB for the host
+The default file-worker count is capped at fourteen, with two overlap slots
+on hosts with at least twelve logical CPUs, and a physical-memory budget of 2 GiB per worker after reserving 4 GiB for the host
 and diagnostics; the minimum is one. Unknown physical memory permits one
 worker. This is a conservative capacity rule, not a free-memory reservation or
 an adaptive load controller. ~LEAN_POO_CHECK_JOBS~ can explicitly select a
-positive count for a constrained host. This 12-core, 32-GiB host selects twelve.
+positive count for a constrained host. This 12-core, 32-GiB host now selects fourteen after the full-gate qualification
+linked below. Hosts below twelve logical CPUs retain their CPU-count cap.
 Lean's own thread policy and all canonical file commands remain unchanged.
 
 The [[file:../Benchmarks/receipts/check-atoms-4-vs-12-2026-10-05.json][four/twelve-worker receipt]] uses identical twelve warm Lean files, alternating
@@ -558,3 +559,8 @@ not change canonical per-file/diagnostic limits or extend any timeout.
 #+begin_src sh
 lake env python3 Benchmarks/CheckGateStudy.py --output /private/tmp/check-gate-study.json
 #+end_src
+
+* Qualified fourteen-worker overlap
+
+See [[file:performance/check-worker-overlap.org][the complete-gate worker and per-file CPU study]] for the 31.297/24.105-second
+matched medians, capacity policy, unchanged semantic admission and measurement limits.
