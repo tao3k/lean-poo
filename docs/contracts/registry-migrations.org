@@ -1,0 +1,139 @@
+#+TITLE: Registry migrations
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Reuse verified orders after registry declaration reordering
+
+Import ~LeanPoo.C4.Presentation~ and ~LeanPoo.Functional.Presentation~.
+Keep each node's exact name, local parent rows and suffix flag. Supply
+~same : graph.nodes.Perm other.nodes~ and
+~unique : (graph.nodes.map C4.Node.name).Nodup~. The permutation concerns the
+outer declaration list; reordering a node's parent rows can change precedence.
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (same : graph.nodes.Perm other.nodes)
+    (unique : (graph.nodes.map C4.Node.name).Nodup)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble (order.permute same unique) providers) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_permute order same unique providers keys
+#+end_src
+
+~VerifiedOrder.permute~ retains the existing output list without mapping it or
+running either resolver. ~permute_unique~ identifies the output of any fresh
+verified compilation. ~linearizeChecked_permute_ok~ proves exact successful
+checked outputs in both directions, including that a rejected graph cannot
+become accepted under these premises. It does not equate error payloads:
+validation reports its first invalid reference in declaration-list order.
+
+~assemble_permute~ preserves the whole provider dictionary, and
+~Requirements.prepare_permute~ preserves exact functions and first missing
+capability errors for any checklist. Apply ~congrArg~ to reuse any downstream
+consumer result or result proposition; there are no per-key ~require~ rewrites.
+Provider names, context, keys and dependent result types remain unchanged.
+No factory is invoked by retained-order migration.
+
+The caller must establish the permutation and uniqueness evidence; the library
+does not infer equivalence of edited declarations. Duplicate names can change
+first lookup when reordered and are outside this guarantee. The more general
+~Graph.SameLookup~, ~GraphTrace.represent~ and ~VerifiedOrder.represent~ APIs
+accept explicit complete lookup agreement; the target must have unique names
+for checked acceptance. This exact-lookup condition includes absent names and
+is stronger than a consumer-specific reachable equivalence.
+
+See [[file:../../Tests/C4Presentation.lean][the compiled generic consumer and corpus]] and the [[file:../use-cases/euler-maintenance-checklist.org][reference checklist]].
+These contracts preserve semantic consumers under registry restructuring;
+Lean module recompilation, error diagnostic order, changed local precedence,
+net source savings and elapsed-time improvement are separate measurements.
+
+* Combine label changes and declaration reordering
+
+Import ~LeanPoo.C4.Relabeling~ and ~LeanPoo.Functional.Relabeling~.
+~Graph.Relabeling graph other~ packages ~rename~, its global injectivity proof,
+and ~declarations : (graph.rename rename).nodes.Perm other.nodes~. This witness
+preserves exact parent rows and suffix flags after name mapping. It does not
+infer a mapping from similar-looking graphs or align provider dictionaries.
+
+#+begin_src lean
+example {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (rename : String → String) (injective : Function.Injective rename)
+    (declarations : (graph.rename rename).nodes.Perm other.nodes)
+    (unique : (graph.nodes.map C4.Node.name).Nodup) :
+    C4.VerifiedOrder other (rename root) :=
+  order.relabel ⟨rename, injective, declarations⟩ unique
+#+end_src
+
+~change.unique~ transports source name uniqueness to the target.
+~VerifiedOrder.relabel~ maps the retained output once and invokes no resolver.
+~relabel_unique~ identifies any freshly verified target output, and
+~relabel_precedes~ preserves mapped pair queries, including absent/self queries.
+For multiple migrations, compose witnesses with ~first.trans second~ and migrate
+once. ~relabel_trans_output~ proves equality with sequential migration. The
+direct path avoids building and traversing an intermediate output list; the
+composed name function still evaluates both name transformations. This is a
+structural allocation/pass boundary, not an elapsed-time benchmark.
+
+~assemble_relabel~ preserves a requested factory when providers align under
+~change.rename~ on original ancestors. ~Requirements.prepare_relabel~ lifts
+that condition to the complete caller checklist, including exact functions
+and the first missing key. Its alignment premise is required only for keys
+in the checklist; unrelated capabilities and unrelated graph names need no
+alignment proof. A generic consumer and its existing result proposition use
+this equality through ~congrArg~ or rewriting, with no per-key ~require~ edits.
+The context, keys and dependent result families remain fixed.
+
+Provider alignment is essential: the [[file:../../Tests/C4Relabeling.lean][compiled client]] shows an entry becomes
+missing if the graph is renamed but the old dictionary is kept. Applications
+own mapping construction, provider adapters, injectivity, exact declaration
+permutation and source uniqueness. Global injectivity is an explicit sufficient
+premise, stronger than injectivity merely on declared nodes. This API does not
+prove arbitrary finite graph-isomorphism extension, changed local parent orders,
+new analytic claims, or equal error diagnostic payloads. See the [[file:../use-cases/euler-maintenance-checklist.org][cost checklist]].
+
+* Build the migrated provider registry automatically
+
+Import ~LeanPoo.Functional.Registry~. Use one retained hash registry rather than
+writing an inverse name map, one branch per provider and an alignment lemma:
+
+#+begin_src lean
+example {Context Key : Type} {Value : Context → Key → Type}
+    {graph other : C4.Graph} (order : C4.VerifiedOrder graph root)
+    (change : graph.Relabeling other)
+    (unique : (graph.nodes.map C4.Node.name).Nodup)
+    (providers : String → Functional.Provider Context Key Value) (keys : List Key) :
+    Functional.Requirements.prepare
+        (Functional.assemble (order.relabel change unique)
+          (Functional.ProviderRegistry.relabel order change providers).dictionary) keys =
+      Functional.Requirements.prepare (Functional.assemble order providers) keys :=
+  Functional.Requirements.prepare_relabel_registry order change unique providers keys
+#+end_src
+
+In executable client code, retain ~registry := ProviderRegistry.relabel order
+change providers~ once, then give ~registry.dictionary~ to ~assemble~ with the
+migrated verified order. Prepare the consumer checklist once and retain its
+factories for repeated context application. ~dictionary name~ returns the whole
+stored provider through a hash query. No capability enumeration, ~DecidableEq
+Key~, inverse name function, context or factory invocation is needed to build
+the registry. ~relabel_lookup~ and ~relabel_aligned~ prove the automatic alignment;
+~assemble_relabel_registry~ and ~prepare_relabel_registry~ preserve exact selected
+functions and first missing keys. Consumers can rewrite arbitrary result claims
+with the old proof, as compiled in [[file:../../Tests/FunctionalRegistry.lean][FunctionalRegistry]].
+
+The index is scoped to the source order's ancestors, including the root.
+~relabel_missing~ proves names outside the mapped scope provide no capabilities,
+even if the original application dictionary has other providers. This registry
+cannot serve an unrelated root without rebuilding an appropriate ancestor cut.
+Source graph uniqueness and the explicit relabeling witness remain prerequisites
+for migrated verified orders; the registry does not infer graph equivalence.
+
+Construction traverses the retained ancestor list once and stores one whole
+provider function per mapped name. It computes the name map and obtains each
+provider function, so application dictionary construction can have a cost.
+Later dictionary access hashes/compares names; worst-case collision behavior and
+string costs remain. Retaining prepared factories avoids repeated registry
+queries. This is a reusable hash index, not an elapsed-time speedup claim or
+factory-result cache. Original contexts, proof guards, keys, data payloads and
+factory bodies remain exact; embedded payload names are not rewritten.

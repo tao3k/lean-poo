@@ -1,0 +1,140 @@
+{
+  "schema": "lean-poo.euler-change-surface.v1",
+  "reference": {
+    "repository": "openai/NavierStokesAndEuler",
+    "commit": "f9e8bc5b38b6e212696e8a30e3e91517af887bbd",
+    "tracked_lean_files": 2659,
+    "physical_lines": 641332,
+    "files_by_top_level": {
+      "ComparatorChallenges": 2,
+      "Euler": 1839,
+      "Euler.lean": 1,
+      "NavierStokes": 816,
+      "NavierStokes.lean": 1
+    },
+    "source_manifest_sha256": "a5406c1ba5dfc1f1023569f54e36e36d793f7ce622e1be1e03f44ac5be1178ff",
+    "scope": "Git-tracked .lean files only; dependencies/generated/untracked files excluded"
+  },
+  "lexical_mentions": {
+    "initializedCorrection_background": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          86
+        ]
+      }
+    ],
+    "initializedCorrection_background_derivative": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          89
+        ]
+      }
+    ],
+    "initializedCorrection_drift": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          111
+        ]
+      }
+    ],
+    "initializedCorrection_residual": [
+      {
+        "file": "Euler/PacketInitializedSpatialBudget.lean",
+        "lines": [
+          96
+        ]
+      }
+    ]
+  },
+  "candidate_interfaces": {
+    "SourceCoefficientAgreement": {
+      "files": 67,
+      "occurrences": 90,
+      "sample": [
+        {
+          "file": "Euler/BaseFirstPacket.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketCylinderMeanSolenoidal.lean",
+          "occurrences": 2
+        },
+        {
+          "file": "Euler/PacketExactGlobalChoice.lean",
+          "occurrences": 1
+        }
+      ]
+    },
+    "initializedCorrectionData": {
+      "files": 31,
+      "occurrences": 50,
+      "sample": [
+        {
+          "file": "Euler/PacketChildFieldMatch.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketExactGlobalChoice.lean",
+          "occurrences": 1
+        },
+        {
+          "file": "Euler/PacketExactGlobalShear.lean",
+          "occurrences": 1
+        }
+      ]
+    },
+    "velocityMap": {
+      "files": 28,
+      "occurrences": 158,
+      "sample": [
+        {
+          "file": "Euler/BaseTransportL2.lean",
+          "occurrences": 5
+        },
+        {
+          "file": "Euler/DriftCorrectionBudget.lean",
+          "occurrences": 3
+        },
+        {
+          "file": "Euler/DriftCorrectionForcing.lean",
+          "occurrences": 5
+        }
+      ]
+    }
+  },
+  "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
+  "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+  "observation_bridge": {
+    "file": "Euler/PacketInitializedResidualEquation.lean",
+    "sha256": "12ec7e1ddf042255202098bc2af8b2a0d2d81308020f5bdf794bb19c187ab597",
+    "declarations": {
+      "toFieldTower_eq_of_path_eq": 18,
+      "initializedNormalizedField_path_eq": 69,
+      "initializedNormalizedField_tower_eq": 74,
+      "initializedCorrectionData_eq_coordinate": 101
+    },
+    "scope": "Existing source bridge: path equality implies field-tower equality; correction-data equality is used by the residual identity",
+    "external_lean_compilation": false,
+    "proposed_contract": "Different representation families, fixed context/key/public observation family, pointwise observation equality on declared consumer keys",
+    "euler_adapter_implemented": false
+  },
+  "local_contract": {
+    "files": {
+      "LeanPoo/Functional/View.lean": "192f5ab369c3c8b4908569747ee8c7783548832a4a1fb5b529cf40ad8f5fbf7e",
+      "Tests/FunctionalView.lean": "2173b60339e85bf447ae69d07f98bedc38863425b68da82541767d56cb65bd3d",
+      "LeanPoo/Functional/Observation.lean": "cfb644760448a4ff9bb4a49f6485461c40c4770886f4bb7b878c5c3f7b97da80",
+      "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+    },
+    "scope": "Exact factory agreement for View; pointwise public observation equality for Observation, allowing different representation types; both source preparations successful; fixed Context/Key/public observation types",
+    "runtime_benchmark": false
+  },
+  "unmeasured": {
+    "actual_euler_consumers_migrated": 0,
+    "net_lines_saved": null,
+    "maintenance_hours_saved": null,
+    "affected_euler_consumers_avoided": null
+  }
+}

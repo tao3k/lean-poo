@@ -1,0 +1,75 @@
+#+TITLE: Retain an index of built dependent values
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalResultIndex.lean][Compiled clients]]
+
+* Build once, reuse named access and projections
+
+Import ~LeanPoo.Functional.ResultIndex~. Use ~ResultIndex.ofResults data~ once
+for an immutable built tuple, retain the index, then use ~find?~, ~get~ or
+~project~ for repeated requests. The dependent hash table stores values at their
+exact key and context types. Building it executes no dependency factory.
+
+Nine APIs: ~ResultIndex~, ~ofResults~, ~find?~, ~find?_present~, ~find?_absent~,
+~get~, ~get_eq~, ~project~, ~project_eq~. ~find?~ reports a missing key as none;
+~get~ accepts source membership. Each requested position uses one hash lookup.
+~project_eq~ transports existing joint proofs from ordinary list projection:
+
+#+begin_src lean
+import LeanPoo.Functional.ResultIndex
+open LeanPoo.Functional.Requirements
+example {C K : Type} {V : C → K → Type}
+    [BEq K] [Hashable K] [LawfulBEq K] [DecidableEq K]
+    {c : C} {source : List K} (data : Results V c source) (index : ResultIndex data)
+    (keys : List K) (included : ∀ k ∈ keys, k ∈ source)
+    (Claim : Results V c keys → Prop) (known : Claim (projectResults data keys included)) :
+    Claim (index.project keys included) := by
+  rw [ResultIndex.project_eq]
+  exact known
+#+end_src
+
+The index is tied to the exact data, not just its key list. Another tuple or
+context cannot silently substitute it. Rebuild for changed data. Tail-first
+insertion preserves the first source occurrence, even when duplicate values
+differ. Requested order and duplicates remain. Absent values are not invented.
+A Snapshot's ~val~ can supply the input; retain its index only for that snapshot.
+
+* Setup, memory and collision costs
+
+Setup traverses the complete tuple and inserts every source position. Repeated
+queries avoid list scanning but still hash and probe; collisions can make probes
+expensive. The map retains selected values and needs storage. If the original
+tuple is also retained, both representations remain live. Projection constructs
+a new result tuple and repeated requested keys repeat probes. For one small
+projection the setup can cost more than direct list access; native time,
+allocation, peak memory and break-even counts have not been measured.
+
+72 indices are reused for 729 projections / 972 positions and 288 named queries
+at three contexts. All keys deliberately hash to zero. Independent scalar and
+ordinary list controls cover heterogeneous subtype/Bool/proof values, empty
+lists, absent keys, reordered/repeated requests and inconsistent duplicates.
+Another data tuple/context is rejected. Four axiom reports use standard propext,
+Classical.choice and Quot.sound from dependent hash reasoning; no sorryAx.
+Shared costs: 94 module / 86 test lines.
+
+* Paper and reference evidence
+
+The local [[file:../../.data/poof/poof.scrbl][POOF source]] describes records as functions from names to values,
+and explicit cache policy. This is one retained implementation of immutable
+named access, not automatic cache invalidation or full prototype conformance.
+The [[file:../../Benchmarks/receipts/euler-result-index-2026-10-06.json][v1 audit]] hashes that source and existing pressure/gradient field consumers.
+Euler already uses Lean structure projection; linear source scans there are
+not established. No integration/migration: net code and maintenance savings
+remain unmeasured, and this index is not proposed as an upstream speedup.
+
+* Native qualification
+
+The [[file:../performance/result-index.org][native cost study]] now records 192 matched samples and negative setup/query
+results against a retained source-list control. Do not select this API by default
+for speed in small Nat-key UInt64 workloads. Allocation/peak-memory and broader
+break-even remain unknown; semantic guarantees above are unchanged.
+
+* Native client specialization
+
+find? and get expose their small wrappers to native compiler specialization.
+No signature or proof changes. See [[file:../performance/result-index.org][the same-session qualification]] for conditional
+64-key repeated-read gains and retained head/single-query/small-key negatives.

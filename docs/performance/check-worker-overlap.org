@@ -1,0 +1,75 @@
+#+TITLE: Complete-gate worker overlap and per-file CPU evidence
+
+[[file:../check-performance.org][Check pipeline]] · [[file:../../Benchmarks/README.org][Benchmark index]]
+
+* Why 22.8 and 31.1 are different
+
+Historical full-gate receipts show 22.772 seconds / 140.718 child CPU seconds
+and 31.057 seconds / 136.787 child CPU seconds. The atom phase accounts for
+21.520 and 30.145 seconds respectively. Library preparation is warm in both
+(0.143/0.154 seconds); the latter increase is not a larger proof inventory or
+increased total CPU work. Those separate runs do not establish the exact host
+cause, or a kernel regression. Never use them as a matched before/after ratio.
+
+The atomic runner now records exact-child CPU through wait4, including status
+conversion for signal exits, alongside elapsed wall and transcript hashes.
+Parallel children do not contaminate each other's CPU counters. Wall minus CPU
+is not a pure wait measurement: CPU can include multiple internal threads and
+child processes. This exposes the gap, without attributing it to disk or scheduler.
+
+* Full-gate twelve/fourteen-worker control
+
+The [[file:../../Benchmarks/receipts/check-gate-12-vs-14-2026-10-06.json][v1 receipt]] runs two alternating complete-gate pairs in one prepared Lake
+environment. Prior dispatcher c15f95b is used with explicit twelve workers;
+the same scheduling implementation uses fourteen workers. Canonical commands,
+Lean internal thread policy, source inputs and all seven required phases agree.
+All 552 atom executions succeed, with 138 distinct files per run and matching
+attributed per-file Lean output. Source/dispatcher hashes, host load, every
+phase and per-file wall/CPU (rounded to 0.001 s) remain in the receipt.
+
+| Complete warm gate | Wall median seconds | Child CPU median seconds |
+|--------------------+---------------------+--------------------------|
+| Twelve workers | 31.297 | 139.835 |
+| Fourteen workers | 24.105 | 138.035 |
+
+Samples: twelve 30.545/32.048 s; fourteen 24.297/23.913 s. Both paired orders
+favor fourteen here. Wall median decreases about 23.0%; CPU is about 1.3% lower.
+Two pairs under varying host load give no confidence interval, stable threshold,
+cold/rebuild or CI setup/queue estimate. The historical 22.8-second run remains
+faster; this result does not claim that threshold has been achieved consistently.
+
+For example, one QuiescentUpgrade run uses about 1.985 CPU seconds within 9.492
+wall seconds. Overlapping more independently admitted files helps this corpus;
+that example alone does not identify the wait mechanism.
+
+* Bounded capacity and semantic admission
+
+On hosts with at least twelve logical CPUs, the local automatic policy allows
+two additional file overlap slots, capped at fourteen. Below twelve CPUs the
+CPU cap remains unchanged. The physical-memory capacity rule still reserves
+4 GiB plus 2 GiB per worker: twelve CPUs/32 GiB selects fourteen, twelve
+CPUs/24 GiB selects ten, eight CPUs/32 GiB selects eight, unknown memory one.
+These are capacity estimates, not free-memory guarantees or runtime reservations.
+Explicit --jobs remains available for constrained hosts. CI's twelve one-worker
+shards keep their existing policy and sixteen jobs; no CI speedup is inferred.
+
+No source file, proof, axiom report, native check or diagnostic is skipped.
+The worker experiment covered 138 atoms. Concurrent commit 82c2746 adds one
+transformation atom; the current full gate covers 139 atoms, four diagnostics,
+48 native admissions and eleven supervisor tests. The historical worker
+measurement is not silently promoted to that expanded inventory. Timeout, memory/allocation limits and rejection controls remain. The
+rejected automatic internal-single-thread trial remains rejected; Lean's default
+internal thread setting is unchanged. New public Lean capability/API count: zero.
+
+* Reproduce
+
+#+begin_src sh
+lake env python3 Benchmarks/CheckGateStudy.py --baseline-ref c15f95bb3396d4328f74ac94574d1a76a737508b --baseline-jobs 12 --current-jobs 14 --output /private/tmp/check-gate-workers.json
+lake env python3 tools/check_atoms.py --jobs 14 --receipt /private/tmp/check-atom-cpu.json
+LEAN_POO_CHECK_RECEIPT=/private/tmp/check-gate.json just check
+#+end_src
+
+The runner receipt keeps full-precision per-file CPU/wall values. Full-gate study
+streams real output; its archived per-file metrics were parsed from those lines.
+Raw transcripts live in TMP. These observations concern proof-check orchestration,
+not runtime C4 getters or OpenAI Euler performance/code/maintenance savings.

@@ -1,0 +1,57 @@
+#+TITLE: Several public consumers sharing broad cached dependencies
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalBorrowedView.lean][Compiled clients]]
+
+* Read a view and retain the broad slot
+
+Import ~LeanPoo.Functional.BorrowedView~. Use ~slot.readView keys included
+expose Public derive context~ when different consumers need different views
+of the same certified dependency family. It returns a public Snapshot, the
+next broad ContextSlot and a dependency-cache hit flag. Thread that broad slot
+into the next consumer. ~consumeView~ also runs a proof-aware constructor.
+
+Five APIs: ~ContextSlot.readView~, ~readView_state~, ~readView_value~,
+~consumeView~, ~consumeView_value~. The state theorem establishes that the
+returned broad slot and hit flag equal the ordinary broad read exactly.
+The value/output theorems identify results with an uncached public view.
+
+#+begin_src lean
+import LeanPoo.Functional.BorrowedView
+open LeanPoo.Functional.Requirements
+example {C K : Type} [DecidableEq C] [DecidableEq K]
+    {V O : C → K → Type} {source : List K}
+    {Claim : ∀ c, Results V c source → Prop} {ready : Certified source Claim}
+    (slot : ContextSlot ready) (keys : List K)
+    (included : ∀ k ∈ keys, k ∈ source) (expose : ∀ c k, V c k → O c k)
+    (Public : ∀ c, Results O c keys → Prop)
+    (derive : ∀ c data, Claim c data → Public c (observeResults expose (projectResults data keys included)))
+    (c : C) :
+    (slot.readView keys included expose Public derive c).2 = (slot.read c).2 :=
+  ContextSlot.readView_state slot keys included expose Public derive c
+#+end_src
+
+* Choose the cache lifetime
+
+Use [[file:observed-view.org][observeProject]] to retain one narrow public view across future calls.
+Use ~readView~ or ~consumeView~ to keep one broad slot available across different
+views. On each call the latter projects and observes requested fields again;
+constructors always run. A miss builds the entire broad family. Source scans,
+view tuple construction and broad tuple retention remain. Duplicate requests
+repeat observers and select the first source occurrence even when later data
+differs. Native time, allocations and peak memory are unmeasured.
+
+The compiled client alternates five views and two observers over three traces:
+120 reads, 113 hits, seven misses, including empty/reordered/repeated requests.
+Dependent proof-bearing output agrees with independent scalar computations
+and uncached construction. Every view retains all broad fields, including a
+later inconsistent duplicate; three axiom reports use only propext.
+Shared costs: 59 module lines and 75 test lines.
+
+* Paper and reference evidence
+
+The local [[file:../../.data/poof/poof.scrbl][POOF paper]] discusses explicit caches under Cache invalidation.
+This operation is an explicit policy over immutable certified families.
+The [[file:../../Benchmarks/receipts/euler-borrowed-view-2026-10-05.json][schema v1 audit]] hashes the original paper and reference pressure/gradient
+consumers. Those consumers already share R, and the residual construction
+already shares Pa. No redundant external computation has been demonstrated.
+Euler integrations/migrations: zero; net code and maintenance savings unknown.

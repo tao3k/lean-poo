@@ -1,0 +1,501 @@
+{
+  "schema": "lean-poo.check-atoms-study.v1",
+  "files": [
+    "Examples/ContextualFactories.lean",
+    "Examples/SharedFamily.lean",
+    "Tests/FunctionalRegistry.lean",
+    "Tests/FunctionalReindex.lean",
+    "Tests/C4Relabeling.lean",
+    "Tests/ReusableContracts.lean",
+    "Tests/FunctionalRequirements.lean",
+    "Tests/FunctionalObservation.lean"
+  ],
+  "repeats": 2,
+  "samples": [
+    {
+      "repeat": 0,
+      "jobs": 1,
+      "wall_seconds": 103.89914524999767,
+      "cpu_seconds": 9.616444999999999,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 1,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 110,
+        "selected_files": 8,
+        "wall_seconds": 103.04112962500221,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 21.311161624995293,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.07322233299783,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 21.267165500001283,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.982133166995482,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.479551082993567,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.133856500004185,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 13.341948792003677,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 10.44473399999697,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "5572704661939612f57591a1707eebbbd291e68c060cb54fa9adcd2c177cf14b"
+      }
+    },
+    {
+      "repeat": 0,
+      "jobs": 4,
+      "wall_seconds": 25.863994792001904,
+      "cpu_seconds": 8.629031000000001,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 4,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 110,
+        "selected_files": 8,
+        "wall_seconds": 25.337244624999585,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 15.625286625006993,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.896093832998304,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 21.40390099999786,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.576083291001851,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 11.973823583000922,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.859736291997251,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.900603000001865,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.561546167002234,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "5572704661939612f57591a1707eebbbd291e68c060cb54fa9adcd2c177cf14b"
+      }
+    },
+    {
+      "repeat": 1,
+      "jobs": 4,
+      "wall_seconds": 27.715504707994114,
+      "cpu_seconds": 8.862568,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 4,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 110,
+        "selected_files": 8,
+        "wall_seconds": 26.931974959006766,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 17.822803458002454,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.681345416000113,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 23.618316708001657,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.293398458998126,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 12.417492750006204,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.106930708003347,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.433308542000304,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.738717542000813,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "5572704661939612f57591a1707eebbbd291e68c060cb54fa9adcd2c177cf14b"
+      }
+    },
+    {
+      "repeat": 1,
+      "jobs": 1,
+      "wall_seconds": 84.57266895799694,
+      "cpu_seconds": 8.877577000000002,
+      "atoms": {
+        "schema": "lean-poo.check-atoms.v1",
+        "jobs": 1,
+        "shard": 0,
+        "shards": 1,
+        "inventory_files": 110,
+        "selected_files": 8,
+        "wall_seconds": 83.64860504100216,
+        "failures": [],
+        "results": [
+          {
+            "file": "Examples/ContextualFactories.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/ContextualFactories.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 14.652486040999065,
+            "transcript_sha256": "2fa9f581f45dc4b7fd48d4f586588b5f25426f379050631628ffc98e55949b06",
+            "source_sha256": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5"
+          },
+          {
+            "file": "Examples/SharedFamily.lean",
+            "recipe": "_check-examples",
+            "command": [
+              "lean",
+              "Examples/SharedFamily.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.238852417001908,
+            "transcript_sha256": "c039cb99f17bc09ed469080a0f499e1809aef4473012dbd1935edb074cc17e5d",
+            "source_sha256": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7"
+          },
+          {
+            "file": "Tests/C4Relabeling.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/C4Relabeling.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 17.651665290999517,
+            "transcript_sha256": "4598c5a8533a9d8cb3a4c4af40d85ef22b5d6958b545797591aeec4b82cc3077",
+            "source_sha256": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb"
+          },
+          {
+            "file": "Tests/FunctionalObservation.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalObservation.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 8.620278624999628,
+            "transcript_sha256": "de0d9899a7b03c4cd5d386216c810a4c92c7039534393fe76196977d857ba99d",
+            "source_sha256": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+          },
+          {
+            "file": "Tests/FunctionalRegistry.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRegistry.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 7.36625854200247,
+            "transcript_sha256": "0d7ebb35c5f4b43cd145654cc2a822e024c07e8c5fed7a3b600c36d9c8e1d854",
+            "source_sha256": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e"
+          },
+          {
+            "file": "Tests/FunctionalReindex.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalReindex.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.612120041994785,
+            "transcript_sha256": "728ba435460d9068dc049dcd3ea415d8dcdfa09926af9c3738cd0e2d1d058f6f",
+            "source_sha256": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0"
+          },
+          {
+            "file": "Tests/FunctionalRequirements.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/FunctionalRequirements.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 9.617815457997494,
+            "transcript_sha256": "70b9e30ec2541d3716b8e4f036af665c0a486f1fbd796b5da274621de8e180be",
+            "source_sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52"
+          },
+          {
+            "file": "Tests/ReusableContracts.lean",
+            "recipe": "_check-contracts",
+            "command": [
+              "lean",
+              "Tests/ReusableContracts.lean"
+            ],
+            "returncode": 0,
+            "wall_seconds": 6.865695458000118,
+            "transcript_sha256": "ae0143d05f07324882ef434c43c48620261fdc0ce6fd9293197c2461e44d57be",
+            "source_sha256": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b"
+          }
+        ],
+        "justfile_sha256": "5572704661939612f57591a1707eebbbd291e68c060cb54fa9adcd2c177cf14b"
+      }
+    }
+  ],
+  "medians": {
+    "1": {
+      "wall_seconds": 94.2359071039973,
+      "cpu_seconds": 9.247011
+    },
+    "4": {
+      "wall_seconds": 26.78974974999801,
+      "cpu_seconds": 8.7457995
+    }
+  },
+  "transcript_parity": true,
+  "scope": "Warm selected eight-file corpus in one prepared Lake environment; excludes initial library build, diagnostics, docs, CI setup and runner queues; not a full-gate or CI speedup estimate",
+  "source_sha256": {
+    "tools/check_atoms.py": "ae4ca18c49d6663901d0a03d587a1bf29c39802095f19d1447ec8f385f3954f4",
+    "Justfile": "5572704661939612f57591a1707eebbbd291e68c060cb54fa9adcd2c177cf14b",
+    "Benchmarks/CheckAtomsStudy.py": "7decc8120518e511c0a02737e5289fecabdd5dacd0de3e5846e4a4614ec4511a",
+    "Examples/ContextualFactories.lean": "f985a4c084162a542c001a85e3777c299cf29a61db8ad8643bc29699a8a1d0c5",
+    "Examples/SharedFamily.lean": "4fd0c9bacc7a9618a89dc0ca2a8bfd71c4e1f56e8a6cd8535e560c1250b3e8d7",
+    "Tests/FunctionalRegistry.lean": "395c6a75e0478f336d80f22628858642cef7b97d610bfa7f648d742a3a4d8a5e",
+    "Tests/FunctionalReindex.lean": "f8f1b4aab2d5db416f95071ca14cd3d6c230565a2f72091774a3dbbeb0fdfdd0",
+    "Tests/C4Relabeling.lean": "39bf491e82f7294f4ebbec82b520ed9e7840d3b353533db6cf105268e3669ccb",
+    "Tests/ReusableContracts.lean": "ab0488469c7af60862e54974d910d1b064b66ecb358075c530948803bd9e864b",
+    "Tests/FunctionalRequirements.lean": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52",
+    "Tests/FunctionalObservation.lean": "ecf5165355a8812822efe450eb1b4e3550d137dfaf3ca70040e17ccb0cfcdd1b"
+  }
+}

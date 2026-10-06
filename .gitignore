@@ -1,3 +1,7 @@
 /.data/
 /.lake/
 /.devenv/
+
+# Keep run logs in the system temporary directory.
+*.log
+__pycache__/

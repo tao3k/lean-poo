@@ -1,5 +1,13 @@
 #+TITLE: LeanPoo tests
 
+The local complete gate runs the 138 independent Lean example/contract files
+with resource-capped workers from the canonical Justfile recipes. CI partitions those
+same commands across twelve independent file-shard jobs; four bounded diagnostic
+files run concurrently with the local atom and document phases after shared
+preparation, and in a separate CI job. Python tests in ~tools/tests~ verify exact shard coverage,
+preserved bounded arguments, failure/timeout/launch-error propagation and
+interruption cleanup. Semantic assertions and proofs remain in Lean.
+
 This directory contains executable assertions and regression cases for the
 library. Run ~just check-tests~ for focused contracts or ~just check~ for the
 complete project gate. Diagnostic and incremental checks use bounded Lean
@@ -47,3 +55,296 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:VerifiedOrder.lean][VerifiedOrder]] checks recursive checked soundness, original graph evidence without caller premises, 512 graph combinations, exact wrapper outcomes, and indexed ancestry decisions.
 - [[file:FunctionalAssembly.lean][FunctionalAssembly]] checks selected-provider provenance, typed context-dependent witnesses, first-provider selection, missing capabilities, and exact factory application.
 - [[file:ReusableContracts.lean][ReusableContracts]] compiles the generic client contracts documented in the API guide for ancestry, ordering constraints, certificate reuse, and batch updates.
+
+- [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries.
+
+- [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
+
+- [[file:FunctionalAccess.lean][FunctionalAccess]] checks named access under successful checklist insertion/reordering/repetition, exact selected-provider provenance, positional type rejection, and proposition-valued proof adapters.
+
+- [[file:FunctionalView.lean][FunctionalView]] checks projection, arbitrary consumer/result-claim transport, unrelated provider edits and deletion, independently prepared small lists, and preserved dependent witnesses; four kernel axiom reports use only propext.
+
+- [[file:FunctionalObservation.lean][FunctionalObservation]] checks public consumers and claim transport across distinct result families, repeated/reordered capability lists, changed-public-value rejection, hidden-key/wrong-context boundaries, and four standard kernel axiom reports.
+
+- [[file:FunctionalTransport.lean][FunctionalTransport]] connects observation consumers to dependent evidence migration; checks payload/guard preservation, identity/composition/roundtrip, Prop and PLift reuse, missing-equality/wrong-context rejection, and four kernel axiom reports.
+
+- [[file:FunctionalReindex.lean][FunctionalReindex]] checks complete-provider and checklist context projection, exact first errors in 64 preparations, two outer contexts, dependent results and old proof reuse; rejects unrelated context claims and reports five kernel axiom dependencies.
+
+- [[file:C4Presentation.lean][C4Presentation]] checks all 24 declaration permutations of 64 four-node families, checked/audited successful outputs, retained dependent provider values and 25200 pair queries; compiles arbitrary consumer preservation and retains diagnostic-order/duplicate-lookup counterexamples with seven kernel axiom reports.
+
+- [[file:C4Relabeling.lean][C4Relabeling]] checks composed label/permutation witnesses, 1536 two-stage cases with 3072 independent target compilations, direct/sequential retained outputs, 25200 mapped pairs, aligned dependent values, generic consumer-claim reuse and a missing-capability counterexample when provider names are not aligned; eight kernel axiom reports.
+
+- [[file:FunctionalRegistry.lean][FunctionalRegistry]] checks automatic whole-provider alignment with 64 hash registries and 512 preparations, first errors, repeated/empty lists, dependent values at two contexts and unrelated-source-provider exclusion; compiles arbitrary result-claim reuse without a caller alignment lemma and reports five kernel axiom dependencies.
+
+[[file:FunctionalSharedRegistry.lean][FunctionalSharedRegistry]] checks original and migrated declaration-wide
+registries across two verified roots: 96 tables, 1728 preparations and dependent
+data/proof results at two contexts. Declared unrelated providers stay in the
+dictionary but cannot fill root capabilities; undeclared names remain absent.
+Generic consumer propositions reuse old proofs; nine kernel axiom reports
+contain only standard dependencies.
+
+[[file:FunctionalRegistryPatch.lean][FunctionalRegistryPatch]] checks 960 typed add/remove patches, 192 unknown-name
+errors and 15360 conservative impact queries across two roots and eight key
+lists. It checks retained snapshots, provider scope, dependent data/proof
+results and first errors against an independent oracle at two contexts. The
+positive-query shadowing boundary remains explicit; generic negative-impact
+clients reuse arbitrary old consumer claims. Eight axiom reports use only
+standard dependencies.
+
+FunctionalRegistryPatch additionally executes 960 immediate original-cell
+rollbacks over the same 15360 checklist queries at two contexts, and compiles a
+generic arbitrary-claim rollback client plus six update-algebra axiom reports.
+
+[[file:FunctionalOverlay.lean][FunctionalOverlay]] checks normalized typed overlays against sequential edits
+and an independent last-cell oracle: 32 histories, 344 updates, 5504 prefix
+and 512 final batch observations at two contexts. It compiles a generic
+whole-consumer claim client, retains unique-key invariants, checks a 256-to-1
+same-key structural case and prints four standard-axiom reports.
+
+[[file:FunctionalRegistryBatch.lean][FunctionalRegistryBatch]] checks 960 shared-registry batches, 192 unknown-name
+errors and 15360 impact queries across four graph presentations, eight masks,
+five names, six recipes, two roots and eight lists. An independent last-cell
+oracle checks results/first errors at two contexts; 10368 negative scopes
+preserve consumers. The test compiles an arbitrary-claim client and prints ten
+standard-axiom reports, including empty-batch identity and exact dictionary
+agreement. A 256-edit recipe exercises normalization through installation.
+
+[[file:FunctionalRegistryTransaction.lean][FunctionalRegistryTransaction]] checks 192 successful multi-provider pure
+transactions, 64 first-unknown errors (including after valid prefixes), 3072
+consumer queries and retained original snapshots at two contexts. Repeated
+names, deletions and empty batches are compared with an independent scalar
+oracle. A generic arbitrary-claim client and six axiom reports exercise reuse.
+
+[[file:FunctionalIndexedOverlay.lean][FunctionalIndexedOverlay]] checks dependent hash overlays with all keys
+colliding: 5504 prefix, 512 final and 5504 retained-snapshot observations,
+32 histories and 344 writes at two contexts. Exact list/sequential agreement,
+base retention and extension composition have nine standard-axiom reports;
+a generic consumer claim reuses the preparation proof in one rewrite.
+
+[[file:FunctionalIndexedRegistry.lean][FunctionalIndexedRegistry]] checks 352 named indexed-state updates, 64 unknown
+errors, 5632 impact queries and 3136 negative scopes across two roots/contexts.
+Colliding hashes, original-base retention, old snapshots and explicit materialized
+snapshots are checked against ordinary batches and a scalar oracle at each
+prefix. A generic client and nine standard-axiom reports close consumer reuse.
+
+The complete gate additionally builds the native registry benchmark and runs
+four semantic cases: list/indexed crossed with latest/retained snapshots.
+Current per-name/key outputs, retained counts and old snapshot observations are
+checked by Lean; timing values have no admission threshold. CI requires the same
+cases after compiling the executable. At this stage the atomic inventory included 121 files.
+
+[[file:FunctionalIndexedTransaction.lean][FunctionalIndexedTransaction]] checks 192 successful atomic indexed transactions,
+64 first unknown-name failures, 3072 queries (1920 negative), two contexts and
+all-key hash collisions. Independent scalar and ordinary-transaction controls
+check repeated names/keys, removals, first capability errors, preserved bases and
+old snapshots. Generic arbitrary consumer claims use one rewrite for negative
+scope and complete representation outcomes. A kernel proof shows equal empty
+dictionaries can still differ in name scope; twelve runtime cells and opposite
+empty-name outcomes guard this boundary. Nine kernel axiom reports accompany
+the reusable transaction laws.
+
+[[file:FunctionalTransactionCheck.lean][FunctionalTransactionCheck]] checks name-only preflight against an independent
+initial-name oracle and both actual transaction implementations: sixteen scope
+masks, 259 name plans, widths 0/3/64, 12,432 cases (1,056 successes and 11,376
+first-name errors), 1,056 cache controls and two-context snapshot observations.
+It checks empty/repeated names, failures after valid prefixes and successful
+name checks with missing capabilities. Seven axiom reports and a generic
+arbitrary-claim cache client accompany the runtime controls.
+
+[[file:FunctionalScopedTransaction.lean][FunctionalScopedTransaction]] checks the fast consumer view against independent
+scalar, full indexed and ordinary outcomes: 4,096 cases, 2,304 negative scopes,
+1,792 positive scopes, 1,024 unknown-name cases and two contexts. It covers
+capability errors, empty/repeated keys, hash collisions and conservative impact.
+Three axiom reports and a generic arbitrary-claim client verify whole-outcome
+reuse. Eight new native admission cases bring the full gate's native total to
+twelve; current independent Lean inventory is 120 files.
+
+[[file:FunctionalKeyIndex.lean][FunctionalKeyIndex]] checks exact retained-key-index membership and deduplicated
+size, plus 4,096 scalar/list-scoped/full-indexed/ordinary consumer outcomes. All keys
+hash to zero; empty/repeated/reordered requests, 2,304 negative/1,792 positive
+scopes, 1,024 name errors and two contexts are covered. Six axiom reports and a
+generic ordinary-client proof accompany the controls. Ten new native cases bring
+the gate's native total to 22; the independent Lean inventory at this stage was 121 files.
+
+* Joint certified requirement contract
+
+~FunctionalCertifiedRequirements.lean~ adds 192 preparation cases and 8 joint
+contracts at three contexts, including heterogeneous results, duplicates,
+reversal, empty/missing lists, a generic provider-change client and a rejected
+context mismatch. Six axiom reports use at most ~propext~. The canonical inventory
+at this stage contained 122 independent Lean files plus four diagnostics (126 standalone),
+with 22 native admissions and 16 CI jobs; this test runs as one independent atom.
+
+* Cached certified preparation
+
+~FunctionalCachedPreparation.lean~ exercises 4096 plans with 2304 negative scopes,
+1792 positive scopes, 1024 first-name errors and two contexts, against scalar,
+ordinary, indexed-full and previous scoped controls. Forced hash collisions,
+empty/repeated/reversed requests, cached capability failures and conservative
+reuse/fresh decisions are included. Wrong-provider caches and uncertified fresh
+data fail type checks. Four standard-only axiom reports. At this stage:
+123 independent files plus four diagnostics (127 standalone), 32 native admissions,
+and 16 CI jobs with 12 Lean shards.
+
+* Continuous consumer revision contract
+
+~FunctionalConsumerRevision.lean~ checks 4096 initial + 3072 chained transactions,
+full nonconsumer state publication, reuse/fresh branches, cached capability errors,
+1024 first-name errors, collisions and two contexts. Six kernel reports use only
+standard axioms. Runtime Claim=True isolates registry/cache plumbing; generic
+clients prove arbitrary joint-claim outcomes. Current inventory: 124 independent
+files + four diagnostics (128 standalone), 32 native admissions, nine Python
+supervisor checks and 16 CI jobs with 12 Lean shards.
+
+* Certified narrow views
+
+~FunctionalCertifiedView.lean~ checks 24 requests over eight availability masks,
+three contexts, reordered narrow first errors, empty/duplicate interfaces and
+three broad failures rescued by a successful small consumer. A false analytic
+consequence is rejected; three axiom reports use only propext. Current inventory:
+125 independent files + four diagnostics (129 standalone), 32 native admissions,
+nine Python supervisor tests, 16 CI jobs with twelve Lean shards.
+
+* Built result views
+
+~FunctionalResultView.lean~ checks 4608 cases (1944 successful preparations),
+three contexts, source/target order and duplicate controls, proof-bearing value
+views and retained certified views against independent scalar expectations.
+An inconsistent duplicate tuple (11/99) must yield the first value; wrong-context
+access is rejected. Five axiom reports use only propext. Current inventory:
+126 independent files + four diagnostics (130 standalone), 32 native admissions,
+nine supervisor tests, 16 CI jobs and twelve Lean shards.
+
+* Certified public observations
+
+~FunctionalCertifiedObservation.lean~ checks 1536 availability/order/duplicate
+cases with 375 successful representation replacements, plus eight joint
+quantity/limit/flag/duplicate candidates, three contexts, separate first errors
+and rejection of a visible change. Seven axiom reports contain no axioms or
+only Quot.sound. Current inventory: 127 independent files + four diagnostics
+(131 standalone), 32 native admissions, nine supervisor tests, 16 CI jobs,
+twelve Lean shards. The source/candidate providers have different result types.
+
+* Proof-aware output consumers
+
+~FunctionalCertifiedConsumer.lean~ checks 192 order/repeat/availability cases
+(81 successes), three contexts, plus eight masks for a proof-bearing Type output
+with lower-bound, quantity-balance and enabled-state constraints. Scalar expected
+values are independent of construction. Wrong context, invalid joint budgets and
+Prop-only executable witness extraction are excluded. Four reports use only
+standard axioms. Current inventory: 128 independent files + four diagnostics
+(132 standalone), 32 native admissions, nine supervisor tests, 16 CI jobs,
+twelve Lean shards.
+
+* Latest-context built dependency memo
+
+~FunctionalContextSlot.lean~ checks 192 preparation cases, 1215 reads (405 hits,
+810 misses), four traces including empty, repeated and alternating contexts,
+rebind reuse, eviction and cached/uncached/scalar output parity. Wrong context
+and factory family are rejected. Five axiom reports use none or propext.
+Current inventory: 129 independent files + four diagnostics (133 standalone),
+32 native admissions, nine supervisor tests, 16 CI jobs and twelve Lean shards.
+
+* Narrow built-data context caches
+
+~FunctionalContextView.lean~ covers 4608 scenarios, 1944 successful preparations,
+29160 reads and 11664 hits, with three contexts, empty/reordered/duplicate and
+chained projections plus independent and uncached controls. Separate checks
+consume joint bounds and select the first inconsistent duplicate source value.
+Five theorem axiom reports use propext. Current inventory: 130 independent
+files plus four diagnostics (134 standalone). Native admissions remain 32.
+
+* Public built context-cache observation
+
+~FunctionalContextObservation.lean~ checks 1536 cases / 375 replacements / 6750
+reads / 3375 hits, independent and uncached results, three contexts, empty and
+populated observation, hidden metadata and eviction. Joint-bound consumers
+are checked separately. Visible change, hidden type recovery and wrong context
+are rejected. Six axiom reports have no sorryAx. Current inventory: 131
+independent files plus four diagnostics (135 standalone); native admissions 32.
+
+* Rich outer request cache reads
+
+~FunctionalContextPullback.lean~ checks 192 cases / 729 reads / 324 hits / 405
+misses with no executable Outer equality, a function-bearing Outer, changing
+constructor inputs, dependent outputs and independent/uncached controls. A
+counterexample rejects omitting a varying dependency. Four theorem axiom
+reports have no sorryAx. Current inventory: 132 independent files plus four
+diagnostics (136 standalone); native admissions remain 32.
+
+* Native built-data cache admission
+
+Eight additional small matched controls in ~_check-native-context~ check
+independent checksums and reuse policy. Total native admissions are now 40.
+Lean atom/diagnostic counts and nine supervisor tests remain unchanged.
+[[file:../docs/performance/context-cache.org][Native cache evidence]] separates local timing from CI semantic admission.
+
+* Narrow public views
+
+~FunctionalObservedView.lean~ checks 4608 cases / 1944 successes, 23328 reads /
+5832 hits, nonidentity observations, broad-first/uncached/independent parity,
+first duplicates and joint-proof result construction. Seven axiom reports use
+propext. Current inventory: 133 independent atoms + four diagnostics (137
+standalone), 40 native admissions and nine supervisor tests.
+
+* Borrowed public view coverage
+
+~FunctionalBorrowedView.lean~ alternates five views and two observations over
+three traces: 120 reads / 113 hits / seven misses, independent values, uncached
+outputs, broad-state retention and inconsistent duplicates. Three propext-only
+axiom reports. Current inventory: 134 atoms + four diagnostics (138 standalone).
+
+* View composition laws
+
+~FunctionalViewComposition.lean~ checks 5184 cases at three contexts against
+an independent first-occurrence oracle. Four propext-only axiom reports;
+same-list identity counterexample and positive/negative scanner-cost controls.
+Current inventory: 135 independent atoms + four diagnostics (139 standalone).
+
+* Contract consequences
+
+~FunctionalContractConsequence.lean~ covers eight families / 192 reads / 104 hits
+/ 88 misses, cold/warm traces, independent dependent outputs and chained hits.
+Seven axiom reports: five axiom-free, two propext-only. Current inventory:
+136 independent atoms + four diagnostics (140 standalone).
+
+* Independent contract joins
+
+~FunctionalContractJoin.lean~ covers 224 reads / 112 hits / 112 misses over eight
+families and cold/warm traces. Both proofs feed dependent output; heterogeneous
+data and post-join consequences retain hits. Wrong family/context and a general
+Left-to-Right implication counterexample checked. Six axiom reports: four none,
+two propext-only. Current inventory: 137 atoms + four diagnostics (141 standalone).
+
+* Retained dependent result index
+
+~FunctionalResultIndex.lean~ checks 72 indices, 288 named queries, 729 projections
+/ 972 positions at three contexts, all keys colliding. Independent first-occurrence
+and ordinary-list controls; absent keys, heterogeneous values and wrong tuple/context
+rejection. Four standard-axiom reports; joint proof client compiles. Current
+inventory: 138 atoms + four diagnostics (142 standalone).
+
+* Native result-index admission
+
+Eight native result-index controls admit identical independent checksums for
+list/indexed ordinary head/tail/cycle and all-collision tail access. Native
+admissions total 48; 138 Lean atoms + four diagnostics remain. Local timing
+receipts retain regressions; CI has no timing threshold.
+
+* Solver transport atom
+
+~FunctionalSolverTransport.lean~ adds a focused atom: 96 independent witness
+reads, three composed routes, 32 contexts, Fin/Bool joint C4 certificate and
+wrong-input/witness/validity/Prop-elimination rejection. Five axiom reports are
+empty. Current inventory: 140 atoms + four diagnostics (144 standalone files),
+48 native admissions and eleven supervisor tests; 12 shards / 16 CI jobs remain.
+
+* Finite refusal diagnostics
+
+~FunctionalFiniteDiagnostics.lean~ exhausts 16,384 2x2 Bool routes (6,248
+admissions / 10,136 refusals), checks the exact first witness with an independent
+arithmetic oracle, and reuses one admitted complemented route for two solver
+reads. Vacuous-domain and forged-proof controls are included; two axiom reports
+contain propext/Quot.sound without Classical.choice. Current inventory: 141 atoms
+plus four diagnostics, 48 native admissions, eleven supervisor tests, 12 shards
+and 16 CI jobs.

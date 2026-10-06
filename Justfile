@@ -40,7 +40,46 @@ check-merge: check-types
         LeanPoo.C4.VerifiedOrder \
         LeanPoo.C4.OrderRelation \
         LeanPoo.C4.Renaming \
-        LeanPoo.Functional.Assembly
+        LeanPoo.C4.Presentation \
+        LeanPoo.C4.Relabeling \
+        LeanPoo.Functional.Assembly \
+        LeanPoo.Functional.Requirements \
+        LeanPoo.Functional.CertifiedRequirements \
+        LeanPoo.Functional.CachedPreparation \
+        LeanPoo.Functional.ConsumerRevision \
+        LeanPoo.Functional.CertifiedView \
+        LeanPoo.Functional.ResultView \
+        LeanPoo.Functional.ResultIndex \
+        LeanPoo.Functional.ViewComposition \
+        LeanPoo.Functional.CertifiedObservation \
+        LeanPoo.Functional.CertifiedConsumer \
+        LeanPoo.Functional.ContextSlot \
+        LeanPoo.Functional.ContractConsequence \
+        LeanPoo.Functional.ContractJoin \
+        LeanPoo.Functional.ContextView \
+        LeanPoo.Functional.ContextObservation \
+        LeanPoo.Functional.ContextPullback \
+        LeanPoo.Functional.ObservedView \
+        LeanPoo.Functional.BorrowedView \
+        LeanPoo.Functional.Access \
+        LeanPoo.Functional.View \
+        LeanPoo.Functional.Observation \
+        LeanPoo.Functional.Transport \
+        LeanPoo.Functional.Reindex \
+        LeanPoo.Functional.Presentation \
+        LeanPoo.Functional.Relabeling \
+        LeanPoo.Functional.Registry \
+        LeanPoo.Functional.SharedRegistry \
+        LeanPoo.Functional.RegistryPatch \
+        LeanPoo.Functional.Overlay \
+        LeanPoo.Functional.IndexedOverlay \
+        LeanPoo.Functional.KeyIndex \
+        LeanPoo.Functional.ScopedTransaction \
+        LeanPoo.Functional.TransactionCheck \
+        LeanPoo.Functional.IndexedTransaction \
+        LeanPoo.Functional.IndexedRegistry \
+        LeanPoo.Functional.RegistryBatch \
+        LeanPoo.Functional.RegistryTransaction
 
 # Check the C4 rewrite and its imports.
 check-c4: check-merge
@@ -255,8 +294,49 @@ _check-contracts:
     {{lean}} Tests/VerifiedOrder.lean
     {{lean}} Tests/OrderRelation.lean
     {{lean}} Tests/C4Renaming.lean
+    {{lean}} Tests/C4Presentation.lean
+    {{lean}} Tests/C4Relabeling.lean
+    {{lean}} Tests/FunctionalRegistry.lean
+    {{lean}} Tests/FunctionalSharedRegistry.lean
+    {{lean}} Tests/FunctionalRegistryPatch.lean
+    {{lean}} Tests/FunctionalOverlay.lean
+    {{lean}} Tests/FunctionalIndexedOverlay.lean
+    {{lean}} Tests/FunctionalKeyIndex.lean
+    {{lean}} Tests/FunctionalScopedTransaction.lean
+    {{lean}} Tests/FunctionalTransactionCheck.lean
+    {{lean}} Tests/FunctionalIndexedTransaction.lean
+    {{lean}} Tests/FunctionalIndexedRegistry.lean
+    {{lean}} Tests/FunctionalRegistryBatch.lean
+    {{lean}} Tests/FunctionalRegistryTransaction.lean
     {{lean}} Tests/ReusableContracts.lean
     {{lean}} Tests/FunctionalAssembly.lean
+    {{lean}} Tests/FunctionalRequirements.lean
+    {{lean}} Tests/FunctionalCertifiedRequirements.lean
+    {{lean}} Tests/FunctionalCachedPreparation.lean
+    {{lean}} Tests/FunctionalConsumerRevision.lean
+    {{lean}} Tests/FunctionalCertifiedView.lean
+    {{lean}} Tests/FunctionalResultView.lean
+    {{lean}} Tests/FunctionalResultIndex.lean
+    {{lean}} Tests/FunctionalViewComposition.lean
+    {{lean}} Tests/FunctionalCertifiedObservation.lean
+    {{lean}} Tests/FunctionalCertifiedConsumer.lean
+    {{lean}} Tests/FunctionalContextSlot.lean
+    {{lean}} Tests/FunctionalTransformation.lean
+    {{lean}} Tests/FunctionalSolverTransport.lean
+    {{lean}} Tests/FunctionalFiniteDiagnostics.lean
+    {{lean}} Tests/FunctionalContractConsequence.lean
+    {{lean}} Tests/FunctionalContractJoin.lean
+    {{lean}} Tests/FunctionalContextView.lean
+    {{lean}} Tests/FunctionalContextObservation.lean
+    {{lean}} Tests/FunctionalContextPullback.lean
+    {{lean}} Tests/FunctionalObservedView.lean
+    {{lean}} Tests/FunctionalBorrowedView.lean
+    {{lean}} Tests/FunctionalMaintenance.lean
+    {{lean}} Tests/FunctionalAccess.lean
+    {{lean}} Tests/FunctionalView.lean
+    {{lean}} Tests/FunctionalObservation.lean
+    {{lean}} Tests/FunctionalTransport.lean
+    {{lean}} Tests/FunctionalReindex.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QuiescentUpgrade.lean
     {{lean}} Tests/MutablePrototype.lean
     {{lean}} Tests/TypedSlots.lean
@@ -345,15 +425,17 @@ benchmark-mutable-prototype:
 benchmark-check-startup:
     python3 Benchmarks/CheckStartup.py
 
+# Compare identical warm Lean file checks with one and four workers.
+benchmark-check-atoms:
+    lake env python3 Benchmarks/CheckAtomsStudy.py --output /tmp/lean-poo-check-atoms.json
+
 # Share one configured Lean environment across the complete gate.
 check:
     lake env just --set lean lean _check
 
 [private]
 _check:
-    lake build
-    {{lean}} LeanPoo/C4/Types.lean
-    just --set lean "{{lean}}" _check-examples _check-contracts _check-diagnostics check-docs
+    python3 tools/check_gate.py
 
 # Build the complete Lean library.
 build: check
@@ -365,4 +447,71 @@ clean:
 # Existing bounded diagnostic recipes retain their memory/time limits.
 [private]
 _check-diagnostics:
-    just --set lean "{{lean}}" check-incremental check-proof-reuse check-debug
+    just --set lean "{{lean}}" check-incremental false check-proof-reuse check-debug false
+
+# Native admission verifies semantics under both snapshot retention policies.
+_check-native-registry:
+    .lake/build/bin/indexedRegistryScale list 64 16 4 latest
+    .lake/build/bin/indexedRegistryScale indexed 64 16 4 latest
+    .lake/build/bin/indexedRegistryScale list 64 16 4 retained
+    .lake/build/bin/indexedRegistryScale indexed 64 16 4 retained
+
+# Scoped consumer admission: both paths, negative/positive scopes and first errors.
+
+_check-native-scoped:
+    .lake/build/bin/scopedTransactionScale full outside 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped outside 64 16 4
+    .lake/build/bin/scopedTransactionScale full keys 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped keys 64 16 4
+    .lake/build/bin/scopedTransactionScale full positive 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped positive 64 16 4
+    .lake/build/bin/scopedTransactionScale full unknown 64 16 4
+    .lake/build/bin/scopedTransactionScale scoped unknown 64 16 4
+
+# Retained requested-key index admission, without timing thresholds.
+_check-native-key-index:
+    .lake/build/bin/keyIndexScale list outside 64 16 4
+    .lake/build/bin/keyIndexScale indexed outside 64 16 4
+    .lake/build/bin/keyIndexScale list keys 64 16 4
+    .lake/build/bin/keyIndexScale indexed keys 64 16 4
+    .lake/build/bin/keyIndexScale list early 64 16 4
+    .lake/build/bin/keyIndexScale indexed early 64 16 4
+    .lake/build/bin/keyIndexScale list late 64 16 4
+    .lake/build/bin/keyIndexScale indexed late 64 16 4
+    .lake/build/bin/keyIndexScale list unknown 64 16 4
+    .lake/build/bin/keyIndexScale indexed unknown 64 16 4
+
+# Cached tuple/proof reuse admission, without timing thresholds.
+_check-native-cached:
+    .lake/build/bin/cachedPreparationScale indexed outside 64 16 4
+    .lake/build/bin/cachedPreparationScale cached outside 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed keys 64 16 4
+    .lake/build/bin/cachedPreparationScale cached keys 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed early 64 16 4
+    .lake/build/bin/cachedPreparationScale cached early 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed late 64 16 4
+    .lake/build/bin/cachedPreparationScale cached late 64 16 4
+    .lake/build/bin/cachedPreparationScale indexed unknown 64 16 4
+    .lake/build/bin/cachedPreparationScale cached unknown 64 16 4
+
+# Native built-data cache admission: retain positive and negative cost controls.
+_check-native-context:
+    .lake/build/bin/contextSlotScale uncached hit 0 4 32
+    .lake/build/bin/contextSlotScale cached hit 0 4 32
+    .lake/build/bin/contextSlotScale uncached hit 16 4 32
+    .lake/build/bin/contextSlotScale cached hit 16 4 32
+    .lake/build/bin/contextSlotScale uncached miss 16 4 32
+    .lake/build/bin/contextSlotScale cached miss 16 4 32
+    .lake/build/bin/contextSlotScale uncached blocks 16 4 32
+    .lake/build/bin/contextSlotScale cached blocks 16 4 32
+
+# Native named-value lookup controls; no timing threshold.
+_check-native-result-index:
+    .lake/build/bin/resultIndexScale list head uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed head uniform 8 32 17
+    .lake/build/bin/resultIndexScale list tail uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed tail uniform 8 32 17
+    .lake/build/bin/resultIndexScale list cycle uniform 8 32 17
+    .lake/build/bin/resultIndexScale indexed cycle uniform 8 32 17
+    .lake/build/bin/resultIndexScale list tail collision 8 32 17
+    .lake/build/bin/resultIndexScale indexed tail collision 8 32 17

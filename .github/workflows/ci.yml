@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@just
       - uses: leanprover/lean-action@v1
         with:
           auto-config: false
@@ -24,8 +25,9 @@ jobs:
           lint: false
       - name: Build public library and proofs
         run: |
-          lake build
+          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale
           lake env lean LeanPoo/C4/Types.lean
+          python3 -m unittest discover -s tools/tests -p 'test_*.py'
       - name: Package this run's build
         run: tar -czf lean-build.tar.gz .lake/build
       - uses: actions/upload-artifact@v4
@@ -36,14 +38,15 @@ jobs:
           retention-days: 1
 
   lean-checks:
-    name: ${{ matrix.atom }}
+    name: lean shard ${{ matrix.shard }}
     needs: library
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
+      max-parallel: 12
       matrix:
-        atom: [examples, contracts, diagnostics]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1
@@ -58,8 +61,29 @@ jobs:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
         run: tar -xzf lean-build.tar.gz
-      - name: Check atom
-        run: lake env just --set lean lean _check-${{ matrix.atom }}
+      - name: Check independent file shard
+        run: lake env python3 tools/check_atoms.py --shard ${{ matrix.shard }} --shards 12 --jobs 1
+
+  diagnostics:
+    needs: library
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          lint: false
+      - uses: taiki-e/install-action@just
+      - uses: actions/download-artifact@v4
+        with:
+          name: lean-build-${{ github.sha }}
+      - name: Restore this run's build
+        run: tar -xzf lean-build.tar.gz
+      - name: Check bounded diagnostics
+        run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context _check-native-result-index
 
   docs:
     runs-on: ubuntu-latest
@@ -76,7 +100,7 @@ jobs:
   # skipped prerequisite must never turn this aggregate green.
   check:
     if: ${{ always() }}
-    needs: [library, lean-checks, docs]
+    needs: [library, lean-checks, diagnostics, docs]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -84,8 +108,10 @@ jobs:
         env:
           LIBRARY: ${{ needs.library.result }}
           LEAN_CHECKS: ${{ needs.lean-checks.result }}
+          DIAGNOSTICS: ${{ needs.diagnostics.result }}
           DOCS: ${{ needs.docs.result }}
         run: |
           test "$LIBRARY" = success
           test "$LEAN_CHECKS" = success
+          test "$DIAGNOSTICS" = success
           test "$DOCS" = success

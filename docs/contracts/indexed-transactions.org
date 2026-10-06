@@ -1,0 +1,142 @@
+#+TITLE: Indexed transactions and preflight
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Atomic transactions on retained indexed registries
+
+Import ~LeanPoo.Functional.IndexedTransaction~. Use the same ~RegistryEdit~ list
+and ~Requirements.transactionMayAffect~ predicate as ordinary registry clients.
+Call ~state.patchTransaction changes~ once and publish only its ~.ok updated~
+result. An empty transaction returns the original state. Repeated names execute
+in caller order; an unknown name, even with an empty batch, stops with that name.
+A successful prefix is never returned on failure. The original immutable state
+and prepared views remain available; this is pure return-value atomicity.
+
+Unlike chaining individual batches in caller code, this API packages sequencing
+and first-error handling. ~patchTransaction_base~ proves that every original base
+is retained. ~patchTransaction_scope~ preserves the complete name membership.
+Each reached successful batch does one name lookup/insertion and indexed writes.
+There is no full-table snapshot, graph rebuild or factory invocation in the path.
+Hash collisions, persistent copies and retaining old versions remain costs.
+
+For a successful transaction with negative ancestor/key read scope, reuse an
+arbitrary consumer claim with one rewrite:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : C4.AncestryIndex graph root)
+    (state updated : Functional.IndexedRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) (keys : List Key)
+    (applied : state.patchTransaction changes = .ok updated)
+    (unaffected : Functional.Requirements.transactionMayAffect index keys changes = false)
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except Key Result → Prop)
+    (known : Claim ((Functional.Requirements.prepare
+      (Functional.assemble index.order state.dictionary) keys).map consume)) :
+    Claim ((Functional.Requirements.prepare
+      (Functional.assemble index.order updated.dictionary) keys).map consume) := by
+  rw [Functional.Requirements.prepare_indexedTransaction_of_unaffected
+    index state changes keys applied unaffected]
+  exact known
+#+end_src
+
+This covers all contexts, repeated consumer keys and first missing-key errors.
+It removes caller per-batch proof chaining and per-key ~require~ scaffolding for
+unaffected consumers. A positive candidate still needs explicit alignment;
+negative scope does not suppress unknown-name errors. The reference Euler tower
+could group named analytic-provider changes before reusing an unaffected
+consumer, once a user supplies typed providers and actual dependency scopes.
+No such external adapter or consumer migration is implemented here.
+
+* Transfer complete transaction consumers between representations
+
+Import ~LeanPoo.Functional.IndexedTransaction~. Once a client has a scoped
+~ProviderRegistry~, convert it with ~IndexedRegistry.ofRegistry~ and pass the same
+~RegistryEdit~ transaction. ~ofRegistry_patchTransaction~ proves equality of the
+complete ~Except String~ dictionary result: all successful provider functions
+and the first unknown-name error agree. A success premise and negative impact
+check are unnecessary for this representation comparison.
+
+~ofRegistry_transaction_consumer~ transfers any dictionary consumer, including
+C4 assembly, heterogeneous preparation, caller-context evaluation and arbitrary
+claims about the resulting nested errors. For example:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} {Result : Type x}
+    (index : C4.AncestryIndex graph root)
+    (registry : Functional.ProviderRegistry Context Key Value)
+    (changes : List (Functional.RegistryEdit Context Key Value)) (keys : List Key)
+    (consume : Functional.Requirements.Factories Context Value keys → Result)
+    (Claim : Except String (Except Key Result) → Prop)
+    (known : Claim ((registry.patchTransaction changes).map (fun updated =>
+      (Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys).map consume))) :
+    Claim (((Functional.IndexedRegistry.ofRegistry registry).patchTransaction changes).map
+      (fun updated => (Functional.Requirements.prepare
+        (Functional.assemble index.order updated.dictionary) keys).map consume)) := by
+  rw [Functional.IndexedRegistry.ofRegistry_transaction_consumer registry changes
+    (fun dictionary => (Functional.Requirements.prepare
+      (Functional.assemble index.order dictionary) keys).map consume)]
+  exact known
+#+end_src
+
+For already aligned custom states, ~patchTransaction_congr~ takes exact dictionary
+agreement plus equal name membership. Both conditions matter: a registered empty
+provider has the same dictionary functions as an unknown name, but an empty batch
+at that name succeeds in only the registered case. The tests prove this full
+function equality and execute the distinct outcomes.
+
+This supports changing storage representation while keeping existing transaction
+consumer proofs, including affected keys. It compares the same transaction on
+two representations. To reuse a claim across different old/new changes, use the
+negative-scope theorem or provide explicit alignment for affected consumers.
+No new runtime algorithm or performance threshold is introduced by these proofs.
+
+* Optional name-only transaction preflight
+
+Import ~LeanPoo.Functional.TransactionCheck~. Both ordinary and indexed registries
+expose ~registry.checkTransaction changes : Except String Unit~. It stops at the
+first unknown name in caller order, including names paired with empty batches.
+It queries only initial name membership: no capability-edit cells, factories,
+update tables, graph resolution or explicit snapshots are needed during the check.
+Inputs still have their own construction cost.
+
+Use this for a dry-run diagnostic or before allocating a large successful prefix
+that might later be rejected. On ~.ok ()~, the caller can execute the transaction
+and then prepare its consumer. ~checkTransaction_outcome~ proves that the check
+has exactly the actual transaction's success/first-name-error result. It does not
+promise requested capabilities: a registered empty provider passes preflight but
+its preparation can still return a missing key. Factory guards remain typed and
+caller-owned.
+
+Successful transactions preserve membership, so cache a name-check result across
+updates with one rewrite instead of checking/alignment proofs for each name:
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v} [BEq Key] [Hashable Key]
+    {Value : Context → Key → Type w}
+    (registry updated : Functional.IndexedRegistry Context Key Value)
+    (changes pending : List (Functional.RegistryEdit Context Key Value))
+    (applied : registry.patchTransaction changes = .ok updated)
+    (Claim : Except String Unit → Prop)
+    (known : Claim (registry.checkTransaction pending)) :
+    Claim (updated.checkTransaction pending) := by
+  rw [Functional.IndexedRegistry.checkTransaction_after registry updated changes pending applied]
+  exact known
+#+end_src
+
+~ofRegistry_checkTransaction~ preserves the check during storage conversion;
+~checkTransactionNames_congr~ covers explicitly equal name scopes. A different
+name scope needs new validation. ~checkTransactionNames_ok_iff~ characterizes
+success as every batch name being registered, regardless of repeated names/keys.
+
+Each reached batch needs one name membership query, stopping at the first absent
+name. Hash/collision costs remain. Preflight followed by a successful transaction
+adds another name scan; this is optional and does not replace normal execution.
+No elapsed-time or allocation improvement has been measured. This API packages
+name diagnostics and their exact reuse contracts; it does not infer analytic
+provider dependencies or migrate an external Euler consumer.

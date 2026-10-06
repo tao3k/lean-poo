@@ -13,11 +13,14 @@
 {
   # https://devenv.sh/basics/
   env.GREET = "lean-poo";
+  # Keep hook trace logs outside the checkout.
+  env.PREK_HOME = lib.mkForce "/tmp/lean-poo-prek";
 
   # https://devenv.sh/packages/
   packages = [
     pkgs.just
     pkgs.elan
+    pkgs.python3
   ];
 
   dotenv.enable = true;

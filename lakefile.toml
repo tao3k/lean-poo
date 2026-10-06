@@ -4,3 +4,27 @@ defaultTargets = ["LeanPoo"]
 
 [[lean_lib]]
 name = "LeanPoo"
+
+[[lean_exe]]
+name = "indexedRegistryScale"
+root = "Benchmarks.IndexedRegistryScale"
+
+[[lean_exe]]
+name = "scopedTransactionScale"
+root = "Benchmarks.ScopedTransactionScale"
+
+[[lean_exe]]
+name = "keyIndexScale"
+root = "Benchmarks.KeyIndexScale"
+
+[[lean_exe]]
+name = "cachedPreparationScale"
+root = "Benchmarks.CachedPreparationScale"
+
+[[lean_exe]]
+name = "contextSlotScale"
+root = "Benchmarks.ContextSlotScale"
+
+[[lean_exe]]
+name = "resultIndexScale"
+root = "Benchmarks.ResultIndexScale"

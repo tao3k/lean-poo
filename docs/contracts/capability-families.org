@@ -1,0 +1,180 @@
+#+TITLE: Capability families and proof reuse
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Assemble context-dependent mathematical factories
+
+Import ~LeanPoo.Functional.Assembly~. A ~Factory Context Result~ is
+~(context : Context) → Result context~. A ~Provider Context Key Value~
+maps a typed capability key to an optional factory. The result type can
+include data and witnesses depending on the supplied context.
+
+~Functional.assemble order providers~ chooses the first provided factory for
+each key in the verified precedence. Selection returns function values; it
+does not invoke factories. Resolve a capability once, retain that function,
+and apply it to each context where its type permits. Missing capabilities
+remain ~none~. ~assemble_origin~ proves the selected provider is an original
+graph ancestor. ~apply_selected~ proves application uses the exact selected
+function and supplied context.
+
+Use one ~Context~ for mutually dependent source data, radius choices, and
+their proof witnesses. Give the value family the type ~Context → Key → Type~.
+If changing a parameter changes the required theorem, the factory must supply
+the witness at the new indexed type. C4 selection supplies precedence and
+provider provenance; the mathematical contract comes from this result type.
+It does not automatically transport proofs across changed data.
+
+For a required capability, use ~Functional.require provider key~ during
+preparation. Match its ~Except~ once: ~.error key~ identifies the missing
+capability and ~.ok build~ supplies a retained factory. Later calls to
+~build context~ perform no provider lookup. ~require_ok_iff~ turns a successful
+preparation receipt into ~provider key = some build~; combine it with
+~assemble_origin~ to recover the original graph provider.
+
+~Factory.zipWith combine left right~ invokes retained factories at the same
+context and passes their data and witnesses to ~combine~. The result may be
+a client's dependent record. ~Factory.reindex project build~ adapts a factory
+to a larger context; the result is ~Result (project outer)~, preserving its
+exact dependency. Supplying a fixed old witness where a new context requires
+a different witness is still rejected by Lean.
+
+The [[file:../use-cases/navier-stokes-euler.org][Euler budget study]] identifies actual upstream factory call sites.
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories]] shows the provider boundary with arbitrary
+context-indexed mathematical types, a residual-only override, and a
+~Prepared~ consumer retaining its required background/residual functions.
+The external Euler repository supplies design references; no import or
+build dependency is introduced.
+
+* Prepare a typed capability checklist once
+
+Import ~LeanPoo.Functional.Requirements~. Declare the capabilities needed by
+one consumer as a ~List Key~. ~Requirements.prepare provider keys~ returns
+~Except Key (Requirements.Factories Context Value keys)~. The tuple follows
+the caller's key order; each component has its own context-indexed result
+type. Empty lists succeed, and repeated keys retain repeated selected functions.
+The first missing key is reported before any factory is invoked.
+
+After matching success once, retain the tuple and call
+~Requirements.build (keys := requested) retained context~ for every compatible
+context, where ~requested~ is the checklist used for preparation. It returns
+~Requirements.Results Value context keys~, a heterogeneous tuple indexed by
+exactly that context and checklist. The builder adds no provider lookup or graph compilation; supplied factory
+bodies keep their own behavior. Pass the results to your existing constructor; mathematical guards
+and witnesses remain part of its own types.
+
+~prepare_ok_iff~ proves the tuple's ~Selected~ contract: every component is
+exactly the provider's selected function. ~Selected.available~ exposes this
+for any requested key. ~prepare_origin~ combines it with a verified C4 order
+and proves original-graph ancestry for every requested capability. These
+contracts are generic over arbitrary key and context/result types.
+
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] now uses this library tuple instead of a
+consumer-owned preparation record and repeated ~require~ statements. Changing
+the checklist changes its type as well; adapt the consumer's constructor to
+the new fields. This API removes repeated preparation plumbing, not the
+consumer's domain-specific construction or analytic proof obligations.
+
+* Preserve selected factories across provider-family renaming
+
+~Functional.select_rename~ equates selection on mapped names when each mapped
+provider agrees with the original provider on the requested key. Agreement is
+needed only on the retained precedence. ~assemble_rename~ lifts that contract
+to ~VerifiedOrder.rename~: supply the injective map, original global declaration
+uniqueness, and provider agreement on original graph ancestors.
+
+Graph renaming alone cannot rename a String-indexed provider dictionary.
+Store the same factory values under the new names. If that alignment is
+missing, selection can return a missing capability or a different factory;
+the theorem requires the alignment explicitly. Capability keys and mathematical
+contexts do not change. With it, selected functions agree exactly, so the
+existing requirement tuple and consumer proofs remain reusable.
+
+[[file:../../Tests/FunctionalRequirements.lean][FunctionalRequirements]] compiles both generic provenance and renaming
+clients, checks 192 preparation cases with heterogeneous result types, and
+checks an aligned namespace prefix against independently compiled renamed
+C4 output. A deliberately unaligned dictionary fails preparation.
+
+* Reuse proofs after an unrelated change
+
+~Proof.Obligation~ declares a predicate and the dependencies sufficient to
+transport its proof. ~Patch.frame~ proves that untouched keys retain their
+values. ~Proof.reuse~ combines those existing contracts:
+
+#+begin_src lean
+example (current : ProofObject Key Value) (update : Patch Key Value)
+    (certificate : Certificate current) (obligation : Obligation Key Value)
+    (owned : obligation ∈ current.obligations) (safe : unaffected obligation update) :
+    obligation.holds (append current update).state :=
+  reuse current update certificate obligation owned safe
+#+end_src
+
+~Proof.close~ builds the next certificate from the old certificate plus
+proofs for affected old obligations and newly added obligations. The stability
+and dependency contracts are premises, not facts inferred from a function's
+source code. A change to viscosity, geometry, or forcing may affect many
+obligations and cannot be certified as unrelated merely by choosing a new
+provider name.
+
+For several writes, ~Patch.setMany~ preserves dependent key types and uses
+last-write semantics. ~Patch.setMany_last~ exposes that guarantee.
+~CertifiedObject.applyRevision~ connects this proof workflow to the object's
+checked finite change footprint when the caller supplies its resolver
+alignment and discharges the pending obligations.
+
+
+* Keep a prepared checklist stable across unrelated edits
+
+~Requirements.prepare_congr provider other keys same~ proves exact equality
+of preparation results when the providers agree on the requested keys.
+Unrequested keys require no agreement. Both retained function tuples and
+first-missing errors are preserved. This is a contract about provider values;
+it does not inspect arbitrary factory bodies to infer their stability.
+
+~Requirements.prepare_rename~ preserves the whole checklist through verified
+graph renaming, with alignment needed only on requested keys at original
+ancestors. It combines ~assemble_rename~ with ~prepare_congr~ and preserves
+errors as well as successes. Namespace alignment remains a caller obligation.
+
+[[file:../../Tests/FunctionalMaintenance.lean][FunctionalMaintenance.same_client]] proves a five-field manual provider
+client and the general checklist API return exactly the same function or
+first missing error. The [[file:../use-cases/euler-maintenance-checklist.org][Euler maintenance report]] gives reproducible local
+code counts, actual reference repetitions, and shared/adapter cost boundaries.
+
+
+* Access prepared factories by typed key
+
+Import ~LeanPoo.Functional.Access~ and derive or supply ~DecidableEq Key~.
+After a successful preparation, use
+~Requirements.factoryAt (keys := requested) retained key member~. The proof
+~member : key ∈ requested~ excludes a missing key and the return type is the
+factory for that exact key. Literal lists usually discharge membership with
+~by simp [requested]~. Repeated keys use their first tuple occurrence.
+
+Retain this returned function before repeated context calls. Named access
+scans the checklist; it is not a constant-time field offset. It invokes no
+factory during the scan, and subsequent calls invoke the retained factory's
+own body. A consumer no longer embeds positions such as ~.2.2.1~.
+
+~factoryAt_selected~ gives ~provider key = some (factoryAt ...)~ from the
+selected-tuple contract. ~factoryAt_stable~ proves named factory equality for
+any two successful checklists from that provider containing the key. A newly
+missing required key can still fail preparation. ~factoryAt_origin~ exposes
+the exact original C4 ancestor supplying this function after verified assembly.
+
+[[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared.build]] now extracts background and residual
+by key, then retains them in ~Factory.zipWith~. Membership proofs and user
+constructors still need to follow their capability types. This is a maintenance
+contract, not a measured resolver throughput improvement.
+
+* Adapt existing proposition-valued theorems
+
+~Factory.fromProof prove~ accepts ~prove : ∀ context, Claim context~ for
+~Claim : Context → Prop~ and returns ~Factory Context (fun c => PLift (Claim c))~.
+Its result's ~down~ is a proof of the exact supplied context's claim;
+~fromProof_down~ is definitionally equal to the existing theorem call and
+requires no axioms. This bridges the result sort without rewriting analytic
+proofs. Context/guard binding and noncomputable source behavior remain caller
+responsibilities.
+
+The [[file:../use-cases/euler-maintenance-checklist.org][follow-up Euler checklist]] records an unchanged named read after a field
+insertion, added reader/library costs, and the actual source adapter arities.

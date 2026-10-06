@@ -1,0 +1,74 @@
+#+TITLE: Finite route admission with an actual refusal witness
+
+[[file:../reusable-contracts.org][Reusable contracts]] · [[file:../../Tests/FunctionalFiniteDiagnostics.lean][Compiled controls]]
+
+* Capability and API checklist
+
+Import ~LeanPoo.Functional.FiniteDiagnostics~. Three new public names:
+
+| API | Contract |
+|-----+----------|
+| ~FiniteFailure~ | Input and target answer, with proofs that the target is correct and extraction fails |
+| ~FiniteFailure.rejects~ | A failure witness implies the existing ~finiteCheck~ is false |
+| ~certifyFiniteOrFailure~ | Return an admitted ~CertifiedTransformation~ or a typed refusal |
+
+The four failure fields are ~input~, ~answer~, ~target_correct~ and
+~source_incorrect~. The last two are proofs, rather than unchecked text reasons.
+Users supply finite Bool specifications and forward/extract functions. Admission
+does not require a separately handwritten ~finiteCheck = true~ proof.
+
+* Use admission or inspect a refusal
+
+#+begin_src lean
+import LeanPoo.Functional.FiniteDiagnostics
+open LeanPoo.Functional.Transformation
+example (source : FiniteSpecification n m) (target : FiniteSpecification p q)
+    (forward : Fin n → Fin p) (extract : Fin n → Fin q → Fin m) :
+    Except (FiniteFailure source target forward extract)
+      (CertifiedTransformation source.problem target.problem) :=
+  certifyFiniteOrFailure source target forward extract
+
+example (bad : FiniteFailure source target forward extract) :
+    finiteCheck source target forward extract = false := bad.rejects
+#+end_src
+
+In the ~.ok route~ branch, reuse ~route.pullSolver suppliedTargetSolver~ from
+[[file:solver-transport.org][solver transport]]. In the ~.error bad~ branch, report
+~bad.input.val~ and ~bad.answer.val~ to locate the failing case. Fix the supplied
+mapping or specification, then admit again; the API does not repair them.
+
+The nested scans follow ascending input/answer order and stop at the first
+failure. They build no Cartesian-product table and do not rerun ~finiteCheck~
+after admission. Finite-range construction, up to ~n*q~ predicate evaluations,
+recursion and retained certificates still cost resources. No timing, allocation
+or universal speedup claim is established.
+
+* Implication is not solver existence
+
+The guarantee is: every correct target answer extracts to a correct source
+answer. An all-false target specification or empty answer domain can make this
+implication vacuously true. An empty input domain is also vacuous. Admission
+does not construct a target solver or prove either problem has answers.
+The previous explicit ~certifyFinite~ interface remains useful when a successful
+Boolean check proof is already available.
+
+Compiled controls enumerate all 16 source and 16 target 2x2 truth tables, four
+forward maps and sixteen extractors: 16,384 routes. An independent arithmetic
+oracle confirms 6,248 admissions and 10,136 first-failure witnesses. Successful
+routes preserve supplied forward/extract values; a complemented route reuses a
+target solver for two reads. Empty domains, all-false target and forged failure
+controls are included. Both axiom reports contain ~propext~ and ~Quot.sound~;
+neither contains ~Classical.choice~.
+
+* Paper and reference boundary
+
+Fare POOF's generalized prototype discussion motivates explicit representation
+and composition boundaries. This finite route diagnostic is a local extension,
+not a checker prescribed by the paper or full generalized prototype semantics.
+
+OpenAI's ~exists_exact_lifted_solution~ has five universal clauses over orders
+and/or time, including unbounded Nat orders and an open real time interval.
+These are source-token/hash bound in the [[file:../../Benchmarks/receipts/euler-finite-refusal-2026-10-06.json][v1 audit]].
+Testing finite samples cannot admit these analytic clauses. No reference
+integration, migration or automatic analytic decision procedure is provided;
+external net lines saved and maintenance hours remain unmeasured.

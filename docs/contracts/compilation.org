@@ -1,0 +1,163 @@
+#+TITLE: Compilation and audit receipts
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Choose the compilation result
+
+| Need | Interface | Contract and cost |
+|------+-----------+-------------------|
+| An executable precedence | ~C4.linearize~ | Source-shaped finite compiler; returns ~Except Error (List String)~; suffix crossing can reorder an ancestor's local constraint. |
+| Independent checks at each reachable node | ~C4.linearizeChecked~ | Successful output has an original ~GraphTrace~, by ~linearizeChecked_graph_sound~. |
+| Retain that result with proofs for client code | ~C4.linearizeVerified~ | One checked compilation; returns ~VerifiedOrder graph root~. Proof fields erase at runtime. |
+| Repeated ancestry queries | ~order.indexAncestors~ | One hash-set construction from the retained order, followed by hash-set queries. |
+| Independent full graph reconstruction | ~C4.linearizeCertified~ | Ordinary compilation plus separate reconstruction; shared parent work may repeat. |
+
+~linearizeVerified_projection~ proves exact output and error preservation
+relative to ~linearizeChecked~. The new wrapper does not independently replay
+the graph a second time. It validates the root's reachable declarations;
+unreachable duplicate names or missing references do not become global schema
+errors. None of these interfaces proves equivalence with the original
+Ducournau relation. Ordinary-to-checked acceptance fails in general: the
+[[file:../reference-study.org::*Suffix crossing and the stronger graph contract][suffix-crossing study]] records a five-node counterexample. Use
+~linearizeVerified~ when the application relies on complete ancestor-order
+preservation.
+
+* Audit an ordinary node already computed from canonical parents
+
+Advanced clients retaining a resolver cache can use
+~LinearizeState.computeAuditedNode table node~. It executes one ordinary node
+merge and audits the result's uniqueness and complete parent-order
+compatibility. It returns ~AuditedNode table node~, retaining the exact
+ordinary execution and audit receipts. Its proof fields erase at runtime.
+The audit reads parent/suffix metadata and scans the orders; it invokes no
+merger. No measured speedup is claimed.
+
+Supply ~valid : MetadataInvariant graph table~ to ~receipt.checked~ to prove
+exact checked acceptance without executing checked again. With the original
+node lookup ~found~, ~receipt.graphSound valid found~ recovers ~GraphTrace~:
+
+#+begin_src lean
+example (receipt : LinearizeState.AuditedNode table node)
+    (valid : LinearizeState.MetadataInvariant graph table)
+    (found : graph.findNode? node.name = some node) :
+    GraphTrace graph node.name receipt.result.precedence
+      (if node.suffix then receipt.result.precedence else
+        LinearizeState.selectedTail table receipt.result.inheritedSuffix) :=
+  receipt.graphSound valid found
+#+end_src
+
+~receipt.insertSound valid found fresh~ preserves canonical metadata when
+inserting at a fresh node name. Starting with an arbitrary raw cache requires
+its own metadata proof. An audit of an invented result is insufficient;
+the retained ordinary execution receipt binds the proof to the actual result.
+
+~computeNode_checked_iff~ characterizes single-node acceptance on canonical
+parents: ordinary success, duplicate-free output, and ~ParentCompatible~
+are necessary and sufficient. ~auditNode_acceptance_iff~ characterizes the
+executable audit when the exact ordinary success is supplied. Audit errors
+are its own diagnostics; this does not assert complete error-payload equality
+with checked mode.
+
+* Compile a whole graph through ordinary computation and audits
+
+~linearizeAudited graph root~ resolves parents recursively from an empty cache.
+Each fresh node executes ordinary computation once, followed by its audit;
+shared ancestors use the retained cache. Validation, reachability, cache hits,
+and fuel follow the existing resolver. No checked compiler is executed by this
+API. The audit still reads and scans metadata; no measured speedup is claimed.
+
+Successful execution establishes an original ~GraphTrace~ without caller
+compatibility, metadata, or trace premises:
+
+#+begin_src lean
+example (success : linearizeAudited graph root = .ok output) :
+    ∃ tail, GraphTrace graph root output tail := linearizeAudited_graph_sound success
+#+end_src
+
+~linearizeAudited_accepts_mode success true~ proves checked acceptance of the
+same output; ~linearizeAudited_ordinary success~ proves ordinary acceptance.
+For an advanced client starting from a canonical cache,
+~resolveAuditedNode_acceptance valid success~ supplies both exact resolver
+successes and the final ~MetadataInvariant~. These are successful-execution
+contracts; complete error-payload equivalence is not claimed.
+
+~resolveAuditedNode_success_iff valid~ supplies the converse as well: checked
+recursion on the same canonical cache and fuel succeeds exactly when audited
+recursion returns that same cache. Cached zero-fuel hits are included.
+
+Use ~linearizeAuditedVerified graph root~ to retain a ~VerifiedOrder~ with all
+existing ancestry, hash-index, ancestor-order, and suffix contracts. It runs
+the audited compiler and uses erased proofs to supply checked acceptance;
+it does not rerun checked compilation. Its projection theorem preserves the
+audited compiler's output or error exactly. ~linearizeVerified~ continues to
+provide the checked compiler and its exact diagnostics.
+
+The ordinary compiler alone still accepts the demonstrated suffix-crossing
+counterexample. The audit rejects it. A successful audited execution closes
+the graph soundness path for this API, without asserting unrestricted ordinary
+soundness or measured performance gains.
+
+* Interchange audited and checked successful results
+
+~linearizeAudited_success_iff~ proves exact success equivalence for every graph,
+root, and output, without caller validity premises. A client that already has
+a checked execution receipt can transfer it directly:
+
+#+begin_src lean
+example (checked : linearizeChecked graph root = .ok output) :
+    linearizeAudited graph root = .ok output := linearizeAudited_checked_complete checked
+#+end_src
+
+For clients intentionally discarding failure diagnostics,
+~linearizeAudited_toOption~ proves the two optional outputs equal.
+The same guarantee is available after retaining a ~VerifiedOrder~:
+
+#+begin_src lean
+example : ((linearizeAuditedVerified graph root).map (·.output)).toOption =
+    (linearizeChecked graph root).toOption := linearizeAuditedVerified_toOption
+#+end_src
+
+Thus choosing ordinary computation plus audits loses no checked successful
+input or output. On failure, retain the original ~Except~ value if the specific
+diagnostic matters: these theorems do not equate error payloads. No performance
+improvement follows from success equivalence alone.
+
+* Retain failure receipts and prove the rejection boundary
+
+~diagnoseAudited graph root~ executes audited compilation once and returns
+~Except (RejectedOrder graph root) (VerifiedOrder graph root)~. On success,
+retain the existing verified queries. On failure, ~receipt.error~ is the actual
+audited diagnostic and ~receipt.rejected~ retains its execution equality.
+Proof fields erase. ~diagnoseAudited_projection~ recovers the original audited
+output or error exactly, so this wrapper does not rewrite diagnostics.
+
+A rejection always excludes successful verified compilation:
+
+#+begin_src lean
+example (receipt : RejectedOrder graph root) : ¬ Nonempty (VerifiedOrder graph root) :=
+  receipt.noVerified
+#+end_src
+
+~receipt.checkedRejected~ supplies checked rejection, with an existential
+error rather than an equal error payload. A seven-node executable witness
+combines contradictory prefix orders and a complete-parent suffix crossing:
+audited reports ~inconsistentOrder~ while checked reports
+~suffixOrderViolation~. Their successful-output equivalence does not imply
+identical diagnostic priority.
+
+To conclude there is no original finite graph derivation, supply reachable
+declaration uniqueness. A common stronger input is global name uniqueness:
+
+#+begin_src lean
+example (receipt : RejectedOrder graph root) (unique : (graph.nodes.map Node.name).Nodup) :
+    ¬ ∃ output tail, GraphTrace graph root output tail :=
+  receipt.noGraphTrace (LinearizeState.reachableUnique_of_global unique)
+#+end_src
+
+~linearizeAudited_graph_iff unique~ characterizes successful execution by
+original graph evidence; ~linearizeAudited_rejection_iff unique~ characterizes
+failure by absence of any such evidence. The uniqueness premise matters:
+two identical leaf declarations admit a kernel ~GraphTrace~ via first lookup,
+but validation rejects the duplicate. Preserve ~receipt.error~ when explaining
+validation failures to users; do not label every rejection as absence of graph
+evidence without the required premise.

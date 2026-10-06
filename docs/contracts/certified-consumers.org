@@ -1,0 +1,217 @@
+#+TITLE: Certified consumer construction
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/ReusableContracts.lean][Compiled generic clients]]
+
+* Publish a full transaction and continue with an aligned consumer cache
+
+Import ~LeanPoo.Functional.ConsumerRevision~. ~applyTransactionCached~ always
+applies the full immutable transaction, preserving edits outside this consumer.
+It returns the first unknown name with no updated prefix, or a ~ConsumerRevision~:
+
+- ~.reused updated cache~ publishes ~updated~ and carries the old complete
+  certified outcome with alignment to that new registry supplied by the library.
+  This cache can go directly into the next transaction with the same graph/root,
+  key list, context/result family and joint claim. No per-name/key alignment proof
+  or fresh joint proof is required in this branch.
+- ~.fresh updated prepared~ publishes ~updated~ and carries exact new data/errors
+  in ~Prepared~. ~prepared.certify Claim admit~ attaches the supplied new analytic
+  proof to the saved tuple without preparing again. The resulting cache is tied
+  to ~updated~ and can continue the next transaction.
+
+~ConsumerRevision.registry~ and ~forget~ expose the complete state and ordinary
+consumer outcome. ~ConsumerRevision.certify~ is a convenience when an admission
+proof for the returned provider is available; it returns reused caches directly.
+Branch explicitly on ~.reused~ when no fresh admission is needed. Merely receiving
+fresh data does not supply an analytic proof.
+
+#+begin_src lean
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} (keys : List Key)
+    (Claim : ∀ c, Functional.Requirements.Results Value c keys → Prop)
+    (index : C4.AncestryIndex graph root)
+    (registry : Functional.IndexedRegistry Context Key Value)
+    (edits : List (Functional.RegistryEdit Context Key Value))
+    (cache : Functional.Requirements.CachedPreparation
+      (Functional.assemble index.order registry.dictionary) keys Claim) :
+    (Functional.Requirements.applyTransactionCached index
+      (Functional.Requirements.KeyIndex.ofKeys keys) registry edits cache).map
+        Functional.Requirements.ConsumerRevision.registry =
+      registry.patchTransaction edits :=
+  Functional.Requirements.applyTransactionCached_registry index
+    (Functional.Requirements.KeyIndex.ofKeys keys) registry edits cache
+#+end_src
+
+~applyTransactionCached_registry~ proves exact published registry/error equality;
+~applyTransactionCached_forget/ofRegistry~ prove complete indexed/ordinary consumer
+outcomes. ~CachedPreparation.rebind~ changes only the erased alignment using an
+explicit preparation equality; ~rebind_outcome~ preserves the exact certificate
+or cached first-key error. ~Prepared.certify_forget~ and
+~ConsumerRevision.certify_forget~ certify already prepared data without another
+lookup. Generic direct rebinding still requires equality; the transaction API
+discharges it automatically for negative scope.
+
+This closes the preceding cache-view publication/rebinding gap for fixed closed
+providers. It does not transport a changed dependent context/result type or
+infer analytic dependencies. Full registry update construction remains even on
+negative scope; earlier view-only microbenchmark numbers do not measure this
+publication path. No new runtime/allocated-byte/peak-memory speedup is asserted.
+Shared API/proofs cost 164 physical lines; semantic fixture 203. It checks 4096
+first transactions, 3072 second transactions, nonconsumer updates, cached errors,
+collisions, two contexts and six standard-only axiom reports. Runtime fixtures
+use ~Claim=True~ to isolate revision plumbing; generic kernel contracts cover
+arbitrary joint claims. Actual Euler migration and savings remain unmeasured.
+
+* Give a small consumer a derived joint certificate
+
+Import ~LeanPoo.Functional.CertifiedView~. ~Certified.project~ takes an explicit
+key inclusion and analytic consequence, returning only the requested functions
+and their joint proof. It preserves consumer order and duplicate requests.
+~Certified.project_factories~ exposes the exact underlying projection.
+
+~CachedPreparation.narrow~ also handles cached failures. On success it projects
+retained functions and derives the narrow certificate without provider lookup,
+preparation, or factory execution. On broad failure it prepares the narrow
+interface with the supplied admission proof. A missing broad-only key must not
+poison a consumer; a differently ordered consumer must get its own first error.
+~CachedPreparation.narrow_eq~ proves complete equality with independent certified
+preparation. ~CachedPreparation.narrow_of_ok~ identifies the reuse branch.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedView
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Key]
+    (provider : Provider Context Key Value) (source keys : List Key)
+    (Claim : ∀ c, Results Value c source → Prop)
+    (Narrow : ∀ c, Results Value c keys → Prop)
+    (cache : CachedPreparation provider source Claim)
+    (included : ∀ key ∈ keys, key ∈ source)
+    (derive : ∀ ready : Certified source Claim, ∀ c,
+      Claim c (build ready.factories c) →
+      Narrow c (build (project ready.factories keys included) c))
+    (admit : ∀ f, Selected provider keys f → ∀ c, Narrow c (build f c)) :
+    (cache.narrow provider source keys Claim Narrow included derive admit).outcome =
+      prepareCertified provider keys Narrow admit :=
+  cache.narrow_eq provider source keys Claim Narrow included derive admit
+#+end_src
+
+Projection scans the retained list for each requested key. Project once before
+repeated builds; factory bodies still run on each build. Inclusion, analytic
+consequence and fallback admission are explicit proofs, erased at runtime.
+Changed context/result types still need separate transport. No analytic proof,
+open-recursive dependency closure, native speedup or allocation saving is inferred.
+
+* Read and reuse already built data by name
+
+Import ~LeanPoo.Functional.ResultView~. ~resultAt data key member~ returns the
+key's exact context-indexed value, without encoding tuple positions. It selects
+the first source occurrence, even if an arbitrary tuple has inconsistent
+duplicate values. ~resultAt_build~ equates it with applying ~factoryAt~.
+~projectResults~ narrows built data in consumer order, including repeats.
+
+~projectEvidence~ projects a proof-bearing built value using a supplied logical
+consequence. It calls no factory or provider. Use this when a broad result has
+already been built and several consumers need views of that same context.
+~projectEvidence_val~ exposes the exact data projection. For repeated calls at
+new contexts, ~Certified.projectData~ retains narrow factories instead. Its
+consequence is stated over data, eliminating client factory-tuple destructuring.
+~projectData_factories~ and ~projectData_build~ expose its implementation and
+value equality. ~build_project~ gives the general commutation theorem.
+
+#+begin_src lean
+import LeanPoo.Functional.ResultView
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Key]
+    {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
+    (ready : Certified source Claim) (keys : List Key)
+    (included : ∀ key ∈ keys, key ∈ source)
+    (Narrow : ∀ c, Results Value c keys → Prop)
+    (derive : ∀ c data, Claim c data → Narrow c (projectResults data keys included))
+    (c : Context) : {data : Results Value c keys // Narrow c data} :=
+  projectEvidence (ready.build c) keys included (Narrow c) (derive c)
+#+end_src
+
+Named reads scan the source list; projection scans it per requested key and
+constructs a tuple. Building broad data first computes every requested broad
+factory, including duplicate positions; building only the narrow factories can
+avoid unrequested application. Projecting already built data adds no factory
+application. Value commutation proves no equality of costs or effects, and no
+native speedup or allocation claim. The inclusion and analytic implication
+remain explicit; missing broad caches still use the earlier narrow fallback API.
+
+* Reuse joint certificates across public observation equivalence
+
+Import ~LeanPoo.Functional.CertifiedObservation~. ~observeResults~ applies a
+public observation to already built heterogeneous data; ~observeResults_id~
+and ~build_observe~ give identity and factory/data commutation.
+~Certified.observe~ derives a public joint Claim from an internal certificate
+using an explicit data-level implication. ~observe_factories~ exposes its wrappers.
+
+~Certified.replaceObserved~ accepts a candidate with a different internal result
+family, and pointwise equality of the two public observations on every requested
+key. An old Claim indexed only by the public observation transfers to the new
+internal tuple without fresh analytic admission. ~replaceObserved_factories~
+retains the exact candidate; ~replaceObserved_public~ proves equality of the
+entire certified public interface. Candidate preparation/availability is separate.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedObservation
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value Other PublicValue : Context → Key → Type}
+    (keys : List Key)
+    (expose : ∀ c key, Value c key → PublicValue c key)
+    (reveal : ∀ c key, Other c key → PublicValue c key)
+    (Claim : ∀ c, Results PublicValue c keys → Prop)
+    (ready : Certified keys (fun c data => Claim c (observeResults expose data)))
+    (candidate : Factories Context Other keys)
+    (same : Related (fun c key a b => expose c key a = reveal c key b)
+      keys ready.factories candidate) :
+    ready.observe expose Claim (fun _ _ proof => proof) =
+      (Certified.replaceObserved keys expose reveal Claim ready candidate same).observe
+        reveal Claim (fun _ _ proof => proof) :=
+  Certified.replaceObserved_public keys expose reveal Claim ready candidate same
+#+end_src
+
+This centralizes representation-to-public conversion and joint proof rewriting.
+Compatibility is explicit, not inferred from matching names or availability.
+An internal-only contract cannot be retained through a public observation that
+hides its data. Contexts, keys and public result types remain fixed. Observed
+factories allocate wrappers and run observations on every build; observeResults
+runs observations and constructs a tuple without factory calls. These costs
+and candidate preparation remain; no native timing or allocation claim is made.
+
+* Compile a constructor that consumes joint evidence
+
+Import ~LeanPoo.Functional.CertifiedConsumer~. ~Certified.consume~ turns a
+prepared certified dependency family into an output factory. The constructor
+receives built data and its joint proof, and may return a Type-valued record
+with data and Prop fields. The wrapper has one whole-tuple build per context
+call, with no provider lookup, preparation or graph computation.
+~consume_apply~ exposes the application; ~consume_congr~ makes certificate proof
+choices irrelevant when the retained functions agree. ~consume_observed~ reuses
+an arbitrary proof-aware public constructor through explicit observation equality.
+
+~prepareConsumer~ prepares/certifies/compiles in one all-or-error call. It returns
+the first missing key before factory application, or the result factory with
+retained dependencies. ~prepareConsumer_error_iff~ proves exact first-error
+semantics. This avoids per-key require chains and nested binary combinations.
+
+#+begin_src lean
+import LeanPoo.Functional.CertifiedConsumer
+open LeanPoo.Functional LeanPoo.Functional.Requirements
+example {Context Key : Type} {Value : Context → Key → Type}
+    (provider : Provider Context Key Value) (keys : List Key)
+    (Claim : ∀ c, Results Value c keys → Prop)
+    (admit : ∀ factories, Selected provider keys factories →
+      ∀ c, Claim c (build factories c))
+    {Output : Context → Type} (construct : ∀ c data, Claim c data → Output c) :
+    Except Key (Factory Context Output) :=
+  prepareConsumer provider keys Claim admit construct
+#+end_src
+
+The constructor and analytic admission remain explicit. A Prop-only existential
+is not an executable Type-valued witness: supply actual data constructors.
+Factory bodies and constructor run on each invocation, duplicates remain, and
+no context memoization is added. Result/proof fields keep their dependent context;
+proofs erase but output data and user computation remain. Setup tuple/closure and
+application costs are not benchmarked by this increment.

@@ -2,7 +2,7 @@
 
 | Repository | Source | Role |
 |------------+--------+------|
-| [[https://github.com/metareflection/poof][POOF]] | ~poof-code-only.rkt~ | Functional account and executable Racket examples |
+| [[https://github.com/metareflection/poof][POOF]] | ~poof.scrbl~, ~poof-code-only.rkt~ | Original local paper and executable Racket examples |
 | [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] | ~proto.ss~, ~object.ss~, ~mop.ss~, ~type.ss~ | Prototype, object, and expression layers |
 | [[https://github.com/fare/c4-mixins][C4-Mixins]] | ~include/c4/linearize.hpp~ | C++20 C4 linearizer |
 
@@ -841,7 +841,7 @@ subset and leaves original-paper equivalence as a separate research task.
 
 The 256-family regression distinguishes 116 promoted from 20 rejected ordinary
 successes, and explicitly guards the execution-receipt boundary. The public
-consumer workflow is in [[file:reusable-contracts.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
+consumer workflow is in [[file:contracts/compilation.org::*Audit an ordinary node already computed from canonical parents][the reusable contract guide]]. The external Euler repository
 continues to serve as a reference for typed factory interfaces, with no
 integration or dependency introduced.
 
@@ -931,7 +931,7 @@ been fully inspected in this study.
 | Ancestor order preserved | ~VerifiedOrder.ancestor_order~, ~monotone_precedes~ | Same graph; independently retained ancestor result identified by trace uniqueness |
 | Marked ancestry is a literal suffix | ~VerifiedOrder.ancestor_suffix~ | Existing stronger graph contract |
 | Extended precedence graph | No graph-level EPG theorem yet | Formalize maximal common subclasses, directed constraints, cycles, and C4 suffix exemption |
-| Shape determinism | ~GraphTrace.rename~, ~VerifiedOrder.rename_unique~ for injective relabeling | Arbitrary graph isomorphism and declaration permutation remain separate |
+| Shape determinism | ~GraphTrace.rename~, ~VerifiedOrder.rename_unique~ for injective relabeling; ~VerifiedOrder.permute_unique~ and ~linearizeChecked_permute_ok~ for declaration permutation under unique names; ~Graph.Relabeling.trans~, ~VerifiedOrder.relabel_unique~ for combined witnesses | Arbitrary graph-isomorphism witnesses, edited parent rows and exact error payloads remain separate |
 
 ~LeanPoo/C4/OrderRelation.lean~ exposes executable pair queries backed by the
 first three contracts. ~Precedes~ means an ordered two-element sublist;
@@ -965,7 +965,550 @@ retained output; compilers and source reference checkouts are unchanged.
 
 This proves identity relabeling for a fixed ordered declaration structure.
 It does not establish invariance under arbitrary graph-isomorphism witnesses,
-declaration permutation, or edits to parent-row order. Cross-compiler complete
+declaration permutation by itself, or edits to parent-row order. The new
+~C4.Presentation~ slice separately proves unique-name declaration permutation
+for successful checked outputs. Cross-compiler complete
 error-payload relabeling and unrestricted ordinary soundness are not derived.
 Extended precedence graph correspondence and its C4 suffix exemption remain
 open. The external Euler repository remains reference material only.
+
+
+* Functional consumer contracts informed by the Euler reference
+
+~Functional.Requirements~ prepares an arbitrary caller-ordered, heterogeneous
+capability list and retains its functions for repeated contexts. Exact selection,
+requested-key availability, and original C4 ancestor provenance have kernel
+contracts. The existing contextual factory client uses this API instead of its
+own preparation record. Empty and duplicated lists retain defined behavior.
+
+~Functional.select_rename~ and ~assemble_rename~ extend the completed injective
+relabeling slice to consumer selection: align provider dictionary names, then
+selected factories are equal. This is a consumer consequence of the existing
+paper property, not a new full graph-isomorphism or EPG proof.
+
+The pinned [[file:use-cases/navier-stokes-euler.org][source study]] compares ~FunctionalVelocity.velocityMap~'s fixed
+coordinate assembly with interchangeable initialized-budget capabilities.
+Ordinary dependent contexts remain the baseline; C4 adds precedence among
+actual replacement providers. Only LeanPoo's generic contracts are compiled.
+
+
+* Measured interface surface versus reference migration estimates
+
+The [[file:use-cases/euler-maintenance-checklist.org][Euler benefit checklist]] binds source argument repetitions to immutable
+call ranges and compares two typed local provider clients with a generic
+same-function/first-error theorem. The client comparison includes its capability
+list and result builder. Shared library and unknown source-adapter costs are
+reported separately; it is not a global Euler source-reduction claim.
+
+~prepare_congr~ and ~prepare_rename~ advance the paper/interface chain to exact
+whole-checklist stability, including failure results. The source-study script
+is optional and reads reference material only; CI has no dependency on it.
+
+
+* Stable capability access under successful checklist extensions
+
+~factoryAt_stable~ closes typed consumer access stability across arbitrary
+successful requirement lists sharing a provider. Named access preserves the
+exact selected function and original C4 ancestor; inserted, reordered, and
+repeated keys need no position-sensitive consumer rewrite. This conditional
+consumer property does not prove ordinary C4 graph soundness or EPG equivalence.
+
+The pinned Euler source supplies four theorem-valued interface examples.
+~Factory.fromProof~ preserves their proposition/context shape through ~PLift~,
+while the [[file:use-cases/euler-maintenance-checklist.org][cost checklist]] counts retained adapter arguments and explicit
+context slots separately from verified local source-edit savings. Upstream
+analytic proofs and implicit-instance closure are not integrated or compiled.
+
+The explicit relabeling consumer slice now has a constructive provider boundary:
+~Functional.ProviderRegistry.relabel~ supplies the previously assumed mapped
+dictionary and proves its alignment generically on the verified ancestor cut.
+~prepare_relabel_registry~ preserves the entire checklist without an application
+alignment lemma. This closes that implementation obligation; it does not extend
+the original EPG relation or arbitrary finite graph-isomorphism correspondence.
+
+* Shared declaration scope with root-local selection
+
+~Functional.SharedRegistry~ now provides the multi-root extension of the
+constructive provider-alignment slice. The same graph-wide table serves any
+verified root; exact checklist equality preserves old consumer proofs.
+~ProviderRegistry.relabelGraph~ additionally shares the explicit migrated table.
+A larger dictionary does not enlarge C4 ancestry or override precedence. The
+proved scope distinction retains declared unrelated providers for direct
+queries, excludes undeclared providers, and prevents unrelated declarations
+from satisfying a root's missing capability. This closes shared registry
+construction for a fixed graph/family; it does not establish analytic provider
+interchangeability, new graph extension rules or original EPG equivalence.
+
+* Conservative maintenance impact from declared read scopes
+
+~Functional.RegistryPatch~ adds a constructive noninterference contract for a
+single typed provider/capability edit while retaining the graph and its verified
+orders. Indexed ancestry and caller-owned key lists supply a sufficient negative
+impact certificate. Entire preparation equality lets old consumer proofs and
+retained factory tuples survive the edit without handwritten alignment proofs.
+The positive query remains conservative: override shadowing supplies a concrete
+candidate with unchanged selection. This separates declared read-scope impact
+from precise semantic/analytic dependency closure, which is not inferred from
+the reference's lexical mention census or proved by the new API.
+
+
+RegistryPatch additionally supplies same-key overwrite, distinct-key commutation
+and exact immediate original-cell rollback. These dependent-function algebra
+proofs let clients normalize their own edit plans and reuse arbitrary consumer
+claims after rollback. They do not supply runtime closure compaction, general
+transaction isolation, or analytic dependency equivalence. The pinned external
+Euler checkout remains reference material only.
+
+
+Functional.Overlay implements normalized finite dependent capability edits:
+last-write semantics with unique stored keys, explicit removal, retained base
+fallback and whole-checklist equality to sequential patching. This closes the
+explicit edit-list normalization gate after the algebraic update identities.
+It does not compact arbitrary base closures. List scans and allocation remain
+construction costs; no runtime or Euler maintenance saving is inferred from
+stored override counts.
+
+
+RegistryBatch closes installation of one explicit normalized capability batch
+at an existing shared-registry name. Exact dictionary/whole-checklist contracts
+and negative ancestry/footprint queries remove manual untouched-provider
+alignment for consumers. The single-name batch uses one lookup/insertion and
+preserves graph/order/result families. It does not flatten earlier base overlays
+or infer multi-name transaction/analytic dependency equivalence. The reference
+Euler checkout remains unchanged and outside build/CI dependencies.
+
+The [[file:../Benchmarks/receipts/euler-registry-transaction-2026-10-05.json][multi-provider transaction snapshot]] binds 26 local source/test hashes,
+pure first-unknown-name semantics and whole-consumer negative-scope reuse.
+It records shared source/test costs, retained prefix/normalization/storage costs,
+and zero actual Euler migrations. External code and maintenance savings remain
+unmeasured; the reference pin/manifest and schema 1 are retained.
+
+The [[file:../Benchmarks/receipts/euler-indexed-overlay-2026-10-05.json][indexed-overlay source snapshot]] binds 28 local source/test hashes and retains
+schema 1, the unchanged Euler source manifest and zero actual migrations.
+The [[file:../Benchmarks/receipts/indexed-overlay-2026-10-05.json][paired runtime receipt]] compares identical small, distinct-key and repeated-key
+workloads using internal construction/query timers under Lean's interpreter.
+Imports, input generation, the scalar oracle and application/graph/preparation
+costs are excluded. It does not establish a native-code or Euler proof speedup.
+Reproduce after building the library with:
+
+#+begin_src sh
+python3 Benchmarks/IndexedOverlayStudy.py --output /tmp/indexed-overlay.json
+#+end_src
+
+The [[file:../Benchmarks/receipts/euler-indexed-registry-2026-10-05.json][indexed-registry source snapshot]] binds 30 local source/test hashes and records
+retained named bases, dictionary/ordinary-batch agreement and consumer reuse.
+The [[file:../Benchmarks/receipts/indexed-registry-2026-10-05.json][named-batch runtime receipt]] compares actual list/indexed registry updates and
+direct queries with per-name/key scalar controls. Initial name registration,
+inputs/imports, oracle, graph/order/preparation and Euler proofs are excluded;
+indexed conversion is included in its construction phase. Both retain old
+snapshots in semantic tests; copy-heavy retained-snapshot performance is unmeasured.
+
+#+begin_src sh
+python3 Benchmarks/IndexedRegistryStudy.py --output /tmp/indexed-registry.json
+#+end_src
+
+The [[file:../Benchmarks/receipts/euler-native-registry-2026-10-05.json][native-registry source snapshot]] preserves the Euler reference and 30 local
+source/test hashes. Four engine/lifetime receipts strengthen local execution
+validation; they do not migrate any Euler consumer or measure upstream lines,
+hours or avoided proof edits. Benchmark code costs and unchanged library API
+boundaries are recorded separately.
+
+The [[file:../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][indexed-transaction source snapshot]] records the added atomic indexed API,
+base/scope laws and whole-consumer reuse proof, binding 32 local source/test files.
+Reference source and manifest remain unchanged. This is a potential workflow for
+user-supplied analytic provider changes, with zero actual Euler migrations and
+unmeasured source/maintenance savings. Local semantic evidence and shared costs
+are recorded separately from previous batch performance measurements.
+
+The [[file:../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][transaction-outcome source snapshot]] records complete representation equality,
+including errors and arbitrary consumer claims, with 32 local hashes. A registered
+empty provider versus absent-name control establishes why equal name membership
+is required in addition to equal dictionary functions. Conversion provides both
+premises automatically. This supports a potential user migration between local
+storage representations; the Euler reference remains untouched, with zero
+actual migrations and unmeasured code/maintenance savings.
+
+The [[file:../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][transaction-preflight source snapshot]] records optional name diagnostics,
+exact first-error agreement and scope-based reuse. It binds 34 local files at the
+unchanged Euler pin/manifest. Registered names do not imply available analytic
+capabilities; the test retains that negative boundary. No external adapter or
+consumer is migrated, and time, allocation and maintenance savings remain unknown.
+
+The [[file:../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][scoped-transaction source snapshot]] records the consumer-only fast path,
+complete nested-error correspondence, 36 local hashes and unchanged Euler source.
+The [[file:../Benchmarks/receipts/scoped-transaction-native-2026-10-05.json][native operation receipt]] separates outside ancestry, disjoint keys, positive
+fallback and late unknown-name paths. Positive fallback overhead is retained.
+This may support user-supplied narrow analytic consumers, with no external
+adapter/integration/migration and no measured upstream source or maintenance saving.
+
+The [[file:../Benchmarks/receipts/euler-key-index-2026-10-05.json][retained-key-index source snapshot]] binds 38 local files at the unchanged Euler
+pin/manifest. It records exact consumer outcome preservation and compiled requested-
+key membership, complementing retained ancestry. The [[file:../Benchmarks/receipts/key-index-native-2026-10-05.json][native receipt]] separates
+construction, reuse and one-use totals, retaining outside/early/unknown regressions.
+This is a local user-interface pattern; external migration remains zero and
+source/maintenance savings unknown. No analytic provider adapter is integrated.
+
+* POOF record composition and joint proof-bearing consumers
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]], sections 1.2.1–1.2.3 (printed pages 2–4), represents
+records as named-value functions and composes prototypes whose fields can depend
+on other fields. ~Functional.Provider~ / ~Requirements.Factories~ retain typed
+functions; the new ~CertifiedRequirements~ layer additionally binds their whole
+result tuple to a supplied Lean ~Prop~ contract. This is a client-facing proof
+extension, not a claim that POOF proves Euler equations or infers dependencies.
+The existing open recursion/prototype laws remain separate from closed factory
+preparation and certification.
+
+The pinned OpenAI source provides a concrete audit seam:
+~SourceCoefficientAgreement~ has inverse/strain relations between two sources;
+~ApproximationResidual~ carries pressure data and gradient/equation proofs that
+refer to that data and the approximation. ~initializedApproximationResidual~
+constructs the pressure, proves its gradient membership, rewrites correction data
+and invokes the residual identity with order/time guards. The new
+[[file:../Benchmarks/receipts/euler-joint-certificate-2026-10-05.json][audit receipt]] binds three declaration files, field lines and reviewed
+constructor tokens. Its dependency inventory is a manual direct source reading,
+not elaborated references or a transitive dependency analysis.
+
+~prepareCertified_forget~ proves complete original outcome preservation;
+~prepareCertified_error_iff~ retains exact first missing keys; proof irrelevance
+and ~prepareCertified_congr~ preserve exact certificates across equal selection
+outcomes. ~Certified.build~ provides both data and the joint proof at each supplied
+context. The original analytic obligations, instances, time/order guards and
+Type-valued pressure remain. No upstream adapter/PDE build/integration was added;
+actual migrations remain 0 and maintenance/source savings unmeasured.
+
+* POOF cache policy: retained certified preparation
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]], section 6.2 (printed page 20), discusses explicit caches,
+purity and mutation invalidation, and explains why general automatic invalidation
+would require tracking across the language. ~Functional.CachedPreparation~ now
+implements an explicit bounded policy for closed provider functions: retain the
+prepared tuple/error and its joint certificate, prove alignment with the initial
+provider, and reuse it only when C4 ancestry/requested-key impact is negative.
+This does not infer dependencies of arbitrary functions or replace the separately
+certified open-recursion/object runtime.
+
+The same OpenAI equality/certificate audit illustrates the boundary: pressure,
+metric, approximation and residual data occur in the equation, with original
+order/time guards. ~initializedCorrectionData_eq_coordinate~ is explicitly
+rewritten in ~initializedApproximationResidual~; source equality is evidence,
+not a consequence of a lexical name or missing C4 edit. A hypothetical client
+must represent these dependent inputs accurately in its context/result family and
+supply its joint claim. Negative scope preserves an exact selected function tuple;
+positive scope returns fresh data without silently transferring its old proof.
+The [[file:../Benchmarks/receipts/euler-cached-preparation-2026-10-05.json][reference-only receipt]] records this seam and its limits; no external adapter or
+PDE build was added. Actual Euler migrations remain 0 and savings unmeasured.
+
+* Continuous certified revisions and explicit dependent transport
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 discusses preserving useful cached computation
+while handling changes. ~Functional.ConsumerRevision~ adds full immutable
+transaction state publication with an aligned retained certificate on negative
+scope, and already prepared data awaiting new admission on positive scope.
+This is a bounded pure-provider revision policy; it does not reproduce the
+mutable object identity protocol of section 6.1.3 or general language-wide
+invalidation. Existing ~Object.Runtime~ remains a separate open-recursion layer.
+
+The pinned OpenAI audit now also reads
+~initializedVelocityField~/~initializedVelocityDerivativeField~ (lines 45/54),
+whose results explicitly use ~changeTime hTime~ at lines 48/57, and
+~initializedVelocityField_time~ (59), whose derivative witness is transported at
+63. Source hashes, declaration and token lines are in the
+[[file:../Benchmarks/receipts/euler-consumer-revision-2026-10-05.json][new audit receipt]]. These are manually reviewed direct source relationships,
+not elaborated implicit-instance or transitive dependency closure.
+
+Rebinding a cached preparation to an equal provider view keeps its fixed context,
+result family and claim. Transporting time-indexed fields requires the source's
+explicit equality/positivity obligations. Neither operation implies the other.
+The continuous-revision API removes repeated provider/cache alignment plumbing
+for negative declared transactions; it preserves all nonconsumer registry edits
+and never silently supplies a positive branch's new analytic proof. No external
+adapter/integration/PDE build, measured Euler migration or code/labor saving is added.
+
+* Narrow certified consumers without propagating broad failures
+
+At the pinned reference, ~sourceInverse_eq_mean~ and ~sourceStrain_eq_mean~ in
+~Euler/PacketSourceEquations.lean~ each use one field of
+~SourceCoefficientAgreement~. Both still rewrite the explicit time clamp.
+The new [[file:../Benchmarks/receipts/euler-certified-view-2026-10-05.json][v1 receipt]]
+hashes the source and guards the declarations, field uses and clamp obligations.
+This is direct source reading, not elaboration or transitive dependency inference.
+
+~Certified.project~ derives a smaller joint proof explicitly; the cache API
+reuses successful broad tuples and independently prepares narrow keys after a
+broad failure. Three of eight availability masks demonstrate broad failure
+with successful duplicate-key consumers. Reordered errors and empty consumers
+are checked too. The shared module/test cost is 78/120 physical lines.
+
+POOF section 1.2.1 models records as functions from names to values. This API is
+a typed projection of an already prepared closed functional interface, with
+explicit joint evidence. It supplies a bounded client interface corresponding
+to named record access; it does not establish the paper's open-recursive fix/mix
+semantics or automatic analytic dependency tracking. See the
+[[https://fare.tunes.org/files/cs/poof.pdf][author's paper]]. Actual Euler migrations
+remain 0; net lines, adapter costs and maintenance savings remain unmeasured.
+
+* Built dependent results and data-level joint consequences
+
+The new [[file:../Benchmarks/receipts/euler-result-view-2026-10-05.json][v1 result-view receipt]]
+reads three pinned ~AllOrderDriftEquation~ consumers. ~Budget.correctedPressureTower~
+uses actual pressure data and its realization equality; the gradient theorem
+uses ~R.gradient t~; the derivative theorem uses ~R.equation q hq t ht~ and
+~R.pressure.realization q~ with order/time guards. Declarations and tokens are
+source-hash bound. The reference already uses named structures; this reading
+establishes no redundant computation or saved Euler edits.
+
+~resultAt~ and ~projectResults~ supply named access to the corresponding closed
+heterogeneous data interface. ~projectEvidence~ projects built data/proof without
+factory application. ~Certified.projectData~ lets analytic implications be
+written over values instead of unpacking retained factories. Inter-key analytic
+relationships remain explicit joint Claims: the API does not automatically
+translate the reference's pressure-indexed fields or dependent time/order inputs.
+Shared module/test costs are 98/118 physical lines. Actual migrations remain 0;
+adapter cost, net lines, maintenance hours, timings and allocations are unmeasured.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 describes
+named access to functional records. Here named result access is proved to commute
+with factory application, at fixed types/context. This completes that bounded
+client interface correspondence; it does not prove open recursion, fix/mix or
+Scheme compatibility. Broad-build and narrow-build routes have equal projected
+values but may execute different numbers of factory applications.
+
+* Certified public interfaces under representation replacement
+
+The [[file:../Benchmarks/receipts/euler-certified-observation-2026-10-05.json][v1 certified-observation receipt]]
+reads a three-declaration equality chain in the pinned reference.
+~toFieldTower_eq_of_path_eq~ permits different raw field indices and turns explicit
+path equality into field-tower equality. ~initializedNormalizedField_tower_eq~
+uses it; ~initializedCorrectionData_eq_coordinate~ rewrites the whole data after
+that equality with explicit hN/hk/hκ guards. Tokens and source hashes bind the
+reading; no external Lean build, dependent adapter or analytic equivalence is inferred.
+
+~Certified.observe~ admits a public joint theorem from original data.
+~Certified.replaceObserved~ then retains that observation-indexed theorem across
+different internal result types with explicit pointwise observation equality.
+~replaceObserved_public~ proves equality of the whole certified public interface.
+This consolidates conversion/proof plumbing for users who already have the
+semantic compatibility proof; it does not remove that proof's analytic premises.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 supplies the
+named functional-record model. This extension formalizes a fixed public consumer
+interface over such prepared functions; original representations may differ.
+It remains a closed provider contract, without open-recursion invalidation or
+Scheme compatibility. Shared module/test costs are 95/179 physical lines.
+Actual Euler migrations remain 0; complete adapters, net code/maintenance savings,
+native timings and allocations remain unmeasured.
+
+* Construct a consumer output from dependency data and joint proofs
+
+The [[file:../Benchmarks/receipts/euler-certified-consumer-2026-10-05.json][v1 consumer receipt]]
+reads ~exists_exact_lifted_solution~ in the pinned ~AllOrderDriftEquation~ source.
+Its final constructor supplies two field-tower data witnesses and five proof
+calls, with paired energy bounds and explicit order/time guards. Declarations,
+constructor calls and guards are source-hash/token bound. This is direct source
+reading, without elaboration, dependency inference or a reference adapter.
+
+~Certified.consume~ passes complete prepared data and the joint proof to an
+explicit output constructor. ~prepareConsumer~ exposes the preparation-to-output
+path as one atomic missing-key result. ~consume_observed~ preserves an arbitrary
+proof-aware public output under the earlier representation equivalence contract.
+The local Type-valued output has lower-bound, quantity-balance and enabled-state
+proofs, checked against a separate scalar model.
+
+The reference existence theorem lives in Prop; it does not by itself provide an
+executable Type-level witness. Its explicitly constructed towers motivate the
+client constructor boundary. This API neither extracts arbitrary existential
+witnesses nor synthesizes the reference's analytic proofs. Shared module/test
+costs are 66/165 physical lines, actual Euler migrations 0, net code/maintenance
+savings and native timing/allocations unmeasured.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 1.2.1 models named
+records as functions. This extension gives a typed consumer from a closed record
+of dependency functions and explicit joint evidence to a result factory. It does
+not establish open recursion, fix/mix or Scheme compatibility. It completes the
+prepare/build/consume route for this bounded user interface.
+
+* Bounded memoization of context-indexed built data
+
+The [[file:../Benchmarks/receipts/euler-context-slot-2026-10-05.json][v1 context-slot receipt]]
+reads ~initializedApproximationResidual~. Its source already binds ~Pa~ once,
+uses ~Pa.toFieldTower~ for pressure and reuses ~Pa q hq t ht~ for the equation.
+Tokens, source hash and explicit N/hN/k/hk/order/time inputs bind the reading.
+No redundant external execution or existing cache performance is established.
+
+~ContextSlot~ supplies an explicit latest-context memo for closed certified
+factory families. Hits reuse already built values and their joint proof; misses
+replace the single pair; ~consume~ runs the constructor each time. Factory
+family alignment is explicit in Snapshot and slot types. Exact factory equality
+allows rebinding, without automatic dependency tracking. Source contexts can
+contain rich dependent/function-valued data: a computable equality for the
+reference context has not been demonstrated. All varying inputs must be in the
+context, with other captured inputs fixed by the certified family.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 discusses explicit
+caches versus recomputation and broader invalidation policies. This is a bounded
+explicit cache over immutable functional data, without the language-wide mutation
+tracking discussed there or mutable object identity from section 6.1.3. Closed
+provider preparation caches, built-data slots and output construction are distinct.
+
+The local corpus checks 1215 reads (405 hits/810 misses), four repeated/alternating/
+empty traces, rebind reuse and eviction, plus full uncached/scalar output parity.
+Shared module/test costs are 96/138 lines. Actual Euler migrations remain 0;
+net code/maintenance savings, allocations and native timings remain unmeasured.
+
+* Narrow consumers inherit built data cache hits
+
+The [[file:../Benchmarks/receipts/euler-context-view-2026-10-05.json][v1 context-view receipt]] binds
+~Budget.correctedPressureTower~ and ~Budget.correctedPressureTower_gradient~ in
+~AllOrderDriftEquation.lean~ to their source hash and named field uses. The first
+reads ~R.pressure~ fields; the second reads ~R.gradient t~. Existing named
+structures already support field projection. This is interface design evidence,
+not proof of redundant work, dependency closure or a useful executable adapter.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] sections 1.2.1 and 6.2 motivate named records
+and explicit caches. This implementation composes those bounded mechanisms:
+project immutable built data and its joint evidence into a smaller certified
+interface while retaining the exact-context hit. It does not implement open
+recursion, mutation tracking or automatic analytic proof derivation.
+
+Seven APIs remove manual snapshot and slot reconstruction from this route.
+4608 cases include 1944 successful preparations, 29160 narrow reads and 11664
+hits; empty, repeated, reordered and chained views match independent values.
+Joint numeric proof consumers and inconsistent duplicate source values are
+checked separately. Shared costs: 70 module lines and 152 test lines. Scans and
+new tuples remain; native timing/allocation savings are unmeasured. Actual Euler
+migrations are 0; net code and maintenance savings remain unmeasured.
+
+* Public cache continuity across representation replacement
+
+The [[file:../Benchmarks/receipts/euler-context-observation-2026-10-05.json][v1 context-observation receipt]]
+binds the existing ~toFieldTower_eq_of_path_eq~ and normalized path/tower
+equality chain in ~PacketInitializedResidualEquation.lean~. Exact token lines
+and source hashes confirm the public equality bridge; the reference already
+provides it. No reference cache or computable rich-context equality, redundant
+construction, or external performance benefit is demonstrated.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 discusses explicit cache policies.
+This extension keeps a public cache through an explicitly compatible change
+of closed immutable factory representation. Observers execute during conversion,
+public factories execute on misses, and output constructors run on every call.
+It provides no language-wide tracking, mutable identity, open recursion or
+automatic analytical equivalence. Hidden replacement data cannot be recovered
+from the public cache.
+
+Nine APIs combine existing observation/certificate/rebind mechanisms without
+client slot reconstruction. 1536 cases have 375 compatible available pairs,
+6750 public reads and 3375 hits; independent and uncached values agree. Eight
+joint candidates yield one available replacement, checked at three contexts.
+Visible changes and wrong context/hidden types are rejected. Shared costs are
+96 module lines / 208 test lines, plus tuple traversal/allocation and supplied
+observers. Euler migrations remain 0; net code, maintenance, native time and
+allocation savings are unmeasured.
+
+* Rich outer requests with a comparable complete dependency context
+
+The [[file:../Benchmarks/receipts/euler-context-pullback-2026-10-05.json][v1 context-pullback receipt]]
+retains the pinned initialized/forward correction-data input audit. The full
+context includes guards, data and implicit instances. A usable small comparable
+base for this reference has not been demonstrated; N/k alone cannot justify
+reuse if other inputs vary. No reference adapter or migration is added.
+
+The [[https://fare.tunes.org/files/cs/poof.pdf][POOF paper]] section 6.2 motivates explicit cache choices.
+This bounded implementation separates complete dependency context from extra
+outer request fields, with factory factoring structural in the API. Only the
+base requires executable equality; the constructor still receives Outer and
+runs every time. It does not infer dependencies or perform language-wide
+mutation tracking. The existing reindex route has a proved consumer parity law.
+
+192 preparation cases give 729 reads / 324 hits / 405 misses. Outer contains a
+function with no DecidableEq; changing tags/callbacks changes dependent outputs
+even on base hits. An independent scalar model and uncached construction agree.
+A counterexample rejects factoring a genuinely varying dependency through a
+projection that drops it. Costs: 62 module / 130 test lines; projection and base
+equality plus miss builds remain. Euler migrations 0; code/maintenance/native
+time/allocation savings unmeasured.
+
+* Native cache qualification boundary
+
+[[file:performance/context-cache.org][Native built-data cache evidence]] separates local matched timing from
+Euler reference sharing, with negative miss controls and no migration claim.
+
+* Narrow public interface qualification
+
+[[file:contracts/observed-view.org][Narrow public views]] bind the local POOF source and existing reference
+field consumers, without asserting redundant external observation or migration.
+
+* Broad dependency retention across public consumers
+
+[[file:contracts/borrowed-view.org][Borrowed view contracts]] preserve one broad cache across different public
+consumers. The original POOF cache discussion and existing Euler R/Pa sharing
+are source-bound in the [[file:../Benchmarks/receipts/euler-borrowed-view-2026-10-05.json][v1 audit]]. No external savings are measured.
+
+* Named view composition laws
+
+[[file:contracts/view-composition.org][Four view laws]] prove direct/two-stage equality for dependent values and
+functions, including inconsistent duplicates. The local generalized-prototype
+getter/composition discussion is hashed in a [[file:../Benchmarks/receipts/euler-view-composition-2026-10-05.json][v1 audit]]. This is a closed-view
+correspondence; it does not establish lens setters or external savings.
+
+* Joint contract consequences without rebuilding values
+
+[[file:contracts/contract-consequence.org][Ten contract-consequence APIs]] retain the exact family/data while deriving
+a new joint proof. This Lean-specific extension of immutable explicit caching
+is source-bound to the paper and existing reference contracts in a [[file:../Benchmarks/receipts/euler-contract-consequence-2026-10-06.json][v1 audit]].
+It does not infer stronger analytic facts or establish external savings.
+
+* Independently admitted proof composition
+
+[[file:contracts/contract-join.org][Nine joint-contract APIs]] combine proofs for explicitly equal factory tuples
+and retain cached values. This Lean-specific extension is audited against
+original explicit-cache policy and existing reference joint structures in a
+[[file:../Benchmarks/receipts/euler-contract-join-2026-10-06.json][v1 receipt]]. Analytic admissions and equality remain obligations; no external
+rebuild or cost reduction has been demonstrated.
+
+* Indexed built named values
+
+[[file:contracts/result-index.org][Nine result-index APIs]] preserve exact dependent data and first-occurrence
+semantics while replacing repeated local list scans with retained hash probes.
+The original named-record/cache discussion and existing reference field projection
+are hashed in a [[file:../Benchmarks/receipts/euler-result-index-2026-10-06.json][v1 audit]]. Upstream linear scans or speedups are not established;
+native break-even and allocation measurements remain open.
+
+* Native named-result access costs
+
+[[file:performance/result-index.org][Result-index cost evidence]] retains 192 native samples and negative setup/query
+results. The [[file:../Benchmarks/receipts/euler-result-index-native-2026-10-06.json][source audit]] binds original named-record/cache policy, existing
+reference field projections and the native receipt. Earlier cache gains do not
+transfer; no external timing, code or maintenance reduction is established.
+
+* Retained getter specialization
+
+[[file:../Benchmarks/receipts/euler-result-index-inline-2026-10-06.json][The v1 audit]] binds same-session baseline and inline native receipts to the
+original POOF named-record source and Euler field consumers. Compiler changes
+add no public API or reference integration; conditional local timing results
+and negative controls are documented in [[file:performance/result-index.org][the result-index cost guide]].
+
+* Solver witness transport
+
+[[file:contracts/solver-transport.org][The solver bridge]] connects admitted input-indexed witness transformations
+to retained C4 joint certificates. The [[file:../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][v1 audit]] checks original generalized
+getter/wrapper hints and the explicit two-tower/five-proof constructor in
+OpenAI's noncomputable all-order theorem. Neither existence in Prop nor that
+source inspection supplies a native solver. Local correctness/proof reuse is
+qualified; external migration, net code and maintenance savings remain unknown.
+
+* Finite refusal evidence and the analytic boundary
+
+The [[file:contracts/finite-diagnostics.org][finite diagnostic interface]] admits an explicit route or returns an
+input/target-answer pair with both target-correct and source-incorrect proofs.
+Nested scanning avoids a Cartesian-product table and repeated admission check;
+it does not synthesize target solver existence. Independent 2x2 arithmetic
+controls exhaust 16,384 routes and check the first refusal witness.
+
+The [[file:../Benchmarks/receipts/euler-finite-refusal-2026-10-06.json][v1 receipt]] pins five universal clauses in OpenAI's
+~exists_exact_lifted_solution~: initial data at every order, divergence/gradient
+at every time, energy bounds at every order/time, and derivatives at every
+qualifying Nat order in the open time interval. Finite samples are not an
+exhaustive analytic specification. Fare's generalized prototype hints motivate
+explicit representation/composition boundaries but do not prescribe this
+checker. No integration, external code/maintenance or runtime saving measured.

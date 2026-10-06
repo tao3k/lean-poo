@@ -1,0 +1,203 @@
+import LeanPoo.Functional.ConsumerRevision
+namespace LeanPoo.Tests.FunctionalConsumerRevision
+open C4 Functional
+universe u v w
+/- Arbitrary joint contracts are retained on a proved negative scope. -/
+example {Context : Type u} {Key : Type v}
+    [BEq Key] [Hashable Key] [LawfulBEq Key] [DecidableEq Key]
+    {Value : Context → Key → Type w} (keys : List Key)
+    (Claim : ∀ c, Requirements.Results Value c keys → Prop)
+    (index : AncestryIndex graph root) (registry : ProviderRegistry Context Key Value)
+    (changes : List (RegistryEdit Context Key Value))
+    (scope : Requirements.KeyIndex keys)
+    (cache : Requirements.CachedPreparation
+      (assemble index.order (IndexedRegistry.ofRegistry registry).dictionary) keys Claim) :
+    (Requirements.applyTransactionCached index scope (IndexedRegistry.ofRegistry registry) changes cache).map
+      Requirements.ConsumerRevision.forget =
+    (registry.patchTransaction changes).map (fun updated =>
+      Requirements.prepare (assemble index.order updated.dictionary) keys) :=
+  Requirements.applyTransactionCached_ofRegistry index scope registry changes cache
+private inductive Capability where
+  | quantity | flag | bound
+  deriving BEq, ReflBEq, LawfulBEq, DecidableEq
+private instance : Hashable Capability where
+  hash _ := 0
+private def Value (c : Nat) : Capability → Type
+  | .quantity => {n : Nat // c ≤ n}
+  | .flag => Bool
+  | .bound => PLift (c ≤ c + 2)
+private def available (mask : Nat) (name : String) : Capability → Bool
+  | .quantity => name == "Outside" || (mask % 2 == 1 && (name == "A" || name == "B"))
+  | .flag => mask / 2 % 2 == 1 && (name == "Left" || name == "B")
+  | .bound => mask / 4 % 2 == 1 && name == "A"
+private def providers (mask : Nat) (name : String) : Provider Nat Capability Value
+  | .quantity => if available mask name .quantity then
+      some (fun c => ⟨c + (if name == "A" then 1 else if name == "B" then 2 else 3), by omega⟩) else none
+  | .flag => if available mask name .flag then some (fun c => name == "Left" || c % 2 == 0) else none
+  | .bound => if available mask name .bound then some (Factory.fromProof (fun _ => by omega)) else none
+private def replacement (present : Bool) (value : Nat) : (key : Capability) →
+    Option (Factory Nat (fun c => Value c key))
+  | .quantity => if present then some (fun c => ⟨c + value, by omega⟩) else none
+  | .flag => if present then some (fun _ => value % 2 == 1) else none
+  | .bound => if present then some (Factory.fromProof (fun _ => by omega)) else none
+private abbrev Step := Capability × Bool × Nat
+private def edits (recipe : List Step) : List (CapabilityEdit Nat Capability Value) :=
+  recipe.map (fun step => ⟨step.1, replacement step.2.1 step.2.2 step.1⟩)
+private def values : {keys : List Capability} → Requirements.Results Value c keys → List Nat
+  | [], _ => []
+  | .quantity :: _, (head, tail) => head.val :: values tail
+  | .flag :: _, (head, tail) => (if (show Bool from head) then 1 else 0) :: values tail
+  | .bound :: _, (_, tail) => 1 :: values tail
+private def observe (provider : Provider Nat Capability Value) (keys : List Capability) (c : Nat) :
+    Except Capability (List Nat) := (Requirements.prepare provider keys).map (fun ready => values (Requirements.build ready c))
+private def same : Except Capability (List Nat) → Except Capability (List Nat) → Bool
+  | .ok a, .ok b => a == b
+  | .error a, .error b => a == b
+  | _, _ => false
+private abbrev Plan := List (String × List Step)
+private def plans : List Plan :=
+  [[], [("A", [])], [("A", [(.quantity, false, 0)]), ("B", [(.quantity, true, 12)])],
+   [("A", [(.quantity, true, 10)]), ("A", [(.quantity, false, 0)]), ("A", [(.quantity, true, 20)])],
+   [("Outside", [(.flag, true, 1)]), ("Right", [(.bound, true, 0)])],
+   [("B", [(.flag, false, 0), (.quantity, true, 8)]), ("Left", [(.bound, true, 0)])],
+   [("A", [(.quantity, true, 9)]), ("Missing", []), ("LaterMissing", [])],
+   [("Missing", [(.flag, true, 1)]), ("A", [(.quantity, false, 0)])]]
+private def changes (plan : Plan) : List (RegistryEdit Nat Capability Value) :=
+  plan.map (fun entry => (entry.1, edits entry.2))
+private def oracle (mask : Nat) (order : List String) (plan : Plan)
+    (keys : List Capability) (c : Nat) : Except Capability (List Nat) := do
+  let mut output := []
+  for key in keys do
+    let mut selected := none
+    for source in order do
+      let mut value := if available mask source key then some (match key with
+        | .quantity => c + (if source == "A" then 1 else if source == "B" then 2 else 3)
+        | .flag => if source == "Left" || c % 2 == 0 then 1 else 0
+        | .bound => 1) else none
+      for (name, recipe) in plan do
+        for step in recipe do
+          if source == name && key == step.1 then
+            value := if step.2.1 then some (match key with
+              | .quantity => c + step.2.2 | .flag => step.2.2 % 2 | .bound => 1) else none
+      if selected.isNone then selected := value
+    let some value := selected | throw key
+    output := output ++ [value]
+  return output
+private def lists : List (List Capability) :=
+  [[], [.quantity], [.flag], [.bound], [.quantity, .flag, .bound],
+   [.bound, .flag, .quantity], [.quantity, .quantity], [.flag, .quantity, .flag]]
+private def observeOutcome (result : Except String (Except Capability
+    (Requirements.Factories Nat Value keys))) (c : Nat) : Except String (Except Capability (List Nat)) :=
+  result.map (fun ready => ready.map (fun factories => values (Requirements.build factories c)))
+private def sameOutcome : Except String (Except Capability (List Nat)) →
+    Except String (Except Capability (List Nat)) → Bool
+  | .error a, .error b => a == b
+  | .ok a, .ok b => same a b
+  | _, _ => false
+#eval do
+  IO.println "FUNCTIONAL-CONSUMER-REVISION-START"
+  let mut cases := 0
+  let mut chained := 0
+  let mut negative := 0
+  let mut positive := 0
+  let mut errors := 0
+  let names := ["A", "B", "Left", "Right", "Outside"]
+  for rows in [[["A", "B"]], [["B", "A"]], [["A"], ["B"]], [[], ["A", "B"], []]] do
+    let graph : Graph := {nodes := [{name := "A"}, {name := "B"}, {name := "Outside"},
+      {name := "Left", parentOrders := rows}, {name := "Right", parentOrders := rows.map List.reverse}]}
+    let .ok left := linearizeVerified graph "Left" | throw (IO.userError "left rejected")
+    let .ok right := linearizeVerified graph "Right" | throw (IO.userError "right rejected")
+    let indices : List (Σ root : String, AncestryIndex graph root) :=
+      [⟨"Left", left.indexAncestors⟩, ⟨"Right", right.indexAncestors⟩]
+    for mask in List.range 8 do
+      let ordinary := ProviderRegistry.ofGraph graph (providers mask)
+      let indexed := IndexedRegistry.ofRegistry ordinary
+      for plan in plans do
+        let edits := changes plan
+        let firstMissing := plan.find? (fun (entry : String × List Step) => !names.contains entry.1)
+        for packed in indices do
+          for keys in lists do
+            let scope := Requirements.KeyIndex.ofKeys keys
+            let initial := assemble packed.2.order indexed.dictionary
+            -- Runtime fixture isolates registry/cache plumbing; generic theorems
+            -- above and axiom reports retain arbitrary joint Claims.
+            let claim := fun _ (_ : Requirements.Results Value _ keys) => True
+            let cache := Requirements.cacheCertified initial keys claim
+              (fun _ _ _ => True.intro)
+            let cached := Requirements.applyTransactionCached packed.2 scope indexed edits cache
+            let view := cached.map Requirements.ConsumerRevision.forget
+            let priorView := Requirements.prepareTransaction packed.2 indexed edits keys
+            let full := (indexed.patchTransaction edits).map (fun updated : IndexedRegistry Nat Capability Value =>
+              Requirements.prepare (assemble packed.2.order updated.dictionary) keys)
+            let reference := (ordinary.patchTransaction edits).map (fun updated : ProviderRegistry Nat Capability Value =>
+              Requirements.prepare (assemble packed.2.order updated.dictionary) keys)
+            let candidate := Requirements.transactionMayAffectIndexed packed.2 scope edits
+            unless candidate == Requirements.transactionMayAffect packed.2 keys edits do
+              throw (IO.userError "indexed/list impact mismatch")
+            match cached, firstMissing with
+            | .error actual, some missing =>
+              unless actual == missing.1 do throw (IO.userError "cached first name mismatch")
+            | .ok (.reused _ _), none =>
+              if candidate then throw (IO.userError "overlap silently reused joint proof")
+            | .ok (.fresh _ _), none =>
+              unless candidate do throw (IO.userError "negative scope re-prepared")
+            | _, _ => throw (IO.userError "cached branch/name mismatch")
+            if candidate then positive := positive + 1 else negative := negative + 1
+            for c in [0, 7] do
+              let expected : Except String (Except Capability (List Nat)) := match firstMissing with
+                | some missing => .error missing.1
+                | none => .ok (oracle mask packed.2.order.output plan keys c)
+              let actual := observeOutcome view c
+              unless sameOutcome actual expected && sameOutcome actual (observeOutcome full c) &&
+                  sameOutcome actual (observeOutcome priorView c) &&
+                  sameOutcome actual (observeOutcome reference c) do
+                throw (IO.userError "scoped/full/scalar consumer outcome mismatch")
+              if !candidate && firstMissing.isNone then
+                unless sameOutcome actual (.ok (observe (assemble packed.2.order indexed.dictionary) keys c)) do
+                  throw (IO.userError "negative branch changed retained preparation")
+            match cached with
+            | .error _ => pure ()
+            | .ok revision =>
+              let updated := revision.registry
+              let nextCache := revision.certify (fun _ _ _ => True.intro)
+              let nextPlan : List (String × List Step) :=
+                [("Outside", [(.quantity, true, 17)]), ("A", [(.flag, true, 7)])]
+              let next := Requirements.applyTransactionCached packed.2 scope updated (changes nextPlan) nextCache
+              for c in [0, 7] do
+                for nameKey in [("Outside", Capability.quantity), ("A", Capability.flag)] do
+                  let published := observe (updated.dictionary nameKey.1) [nameKey.2] c
+                  unless same published (oracle mask [nameKey.1] plan [nameKey.2] c) do
+                    throw (IO.userError "publication lost nonconsumer update")
+                let actual := observeOutcome (next.map Requirements.ConsumerRevision.forget) c
+                let expected : Except String (Except Capability (List Nat)) :=
+                  .ok (oracle mask packed.2.order.output (plan ++ nextPlan) keys c)
+                unless sameOutcome actual expected do
+                  throw (IO.userError "chained revision consumer mismatch")
+              let .ok nextRevision := next | throw (IO.userError "known next transaction failed")
+              for c in [0, 7] do
+                unless same (observe (nextRevision.registry.dictionary "Outside") [.quantity] c)
+                    (.ok [c+17]) do
+                  throw (IO.userError "chained publication lost outside update")
+              chained := chained+1
+            if firstMissing.isSome then errors := errors + 1
+            cases := cases + 1
+      IO.println s!"FUNCTIONAL-CONSUMER-REVISION-PROGRESS cases={cases}"
+  unless cases == 4096 && errors == 1024 && chained == 3072 do throw (IO.userError "unexpected scoped corpus")
+  IO.println s!"FUNCTIONAL-CONSUMER-REVISION-OK cases={cases} negative={negative} positive={positive} name_errors={errors} chained={chained} contexts=2"
+/- Cache alignment cannot be silently reused for another provider; fresh data
+cannot be treated as certified without a supplied joint proof. -/
+example {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
+    (provider _other : Provider Context Key Value) (keys : List Key)
+    (Claim : ∀ c, Requirements.Results Value c keys → Prop)
+    (_cache : Requirements.CachedPreparation provider keys Claim)
+    (_fresh : Requirements.Factories Context Value keys) : True := by
+  fail_if_success have _wrong : Requirements.CachedPreparation _other keys Claim := _cache
+  fail_if_success have _unchecked : Requirements.Certified keys Claim := _fresh
+  trivial
+#print axioms Requirements.Prepared.certify_forget
+#print axioms Requirements.CachedPreparation.rebind_outcome
+#print axioms Requirements.ConsumerRevision.certify_forget
+#print axioms Requirements.applyTransactionCached_registry
+#print axioms Requirements.applyTransactionCached_forget
+#print axioms Requirements.applyTransactionCached_ofRegistry
+end LeanPoo.Tests.FunctionalConsumerRevision

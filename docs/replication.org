@@ -1534,8 +1534,9 @@ malformed graphs, and a collapsing-map boundary. These finite checks support
 the generic kernel proofs; they are not the proof of arbitrary relabeling.
 
 The paper correspondence table now records this completed relabeling slice.
-Arbitrary graph-isomorphism/declaration-permutation invariance, original EPG
-correspondence, and full error relabeling remain separate obligations. No
+Arbitrary graph-isomorphism witnesses, original EPG correspondence, and full
+error relabeling remain separate obligations. The later presentation slice
+closes unique-name declaration permutation for successful checked outputs. No
 measured speedup or external integration is claimed.
 
 
@@ -1556,3 +1557,884 @@ For two selected Lean checks, wall time is 16.320 to 14.770 seconds and CPU is
 1.910 to 1.724, excluding separately recorded one-time environment preparation.
 [[file:check-performance.org][The performance guide]] bounds these claims to warm startup orchestration;
 no whole-suite percentage, cold-build gain, or C4 runtime speedup is inferred.
+
+
+* Contextual requirement preparation and consumer relabeling
+
+~LeanPoo/Functional/Requirements.lean~ implements a caller-ordered typed
+capability checklist. Preparation returns either its first missing key or a
+complete heterogeneous tuple of retained factories. ~build~ invokes those
+functions with one exact context and has no graph/provider argument.
+~prepare_ok_iff~ establishes exact selection for every tuple component;
+~Selected.available~ and ~prepare_origin~ expose requested-key availability and
+original-graph ancestry. Empty and repeated requirements are supported.
+
+The paper's name-independence slice now reaches the functional consumer API:
+~select_rename~ proves equality of selection under aligned provider names;
+~assemble_rename~ combines this with proof-preserving verified graph renaming.
+Alignment is explicit on original ancestors. A renamed graph does not change
+a separate provider dictionary. The result types and context stay identical.
+These theorems do not close arbitrary graph-isomorphism/declaration-permutation
+invariance, EPG correspondence, or unrestricted ordinary C4 soundness.
+
+~Tests/FunctionalRequirements.lean~ checks all eight three-capability provider
+availability patterns against all eight checklists in normal, reversed, and
+duplicated order: 192 preparations. Successful tuples use three heterogeneous
+result types and are applied at two contexts. An independent first-missing
+oracle checks failure order. Aligned and deliberately unaligned dictionary
+cases exercise independently compiled namespace renaming. Negative elaboration
+checks reject a witness at a changed capability or context. Eight axiom reports
+use only Lean's standard axioms, with no admitted or native-evaluation proof.
+
+The existing contextual-factory example consumes the general preparation API.
+The pinned [[file:use-cases/navier-stokes-euler.org][Euler study]] now also distinguishes fixed functional-coordinate
+assembly from the proposed interchangeable budget-provider seam. The source
+clone remains reference-only; no upstream build or dependency is introduced.
+Maintenance benefits are removal of repeated preparation code and reuse of
+generic contracts, not an established PDE line-count or runtime speedup.
+
+
+* Whole-checklist preservation and reference maintenance accounting
+
+~Requirements.prepare_congr~ closes exact preparation stability under changes
+outside requested capabilities. ~prepare_rename~ lifts the existing provider
+name-alignment contract to an entire checklist, including its missing-key
+failure. Both are generic kernel proofs over arbitrary dependent result types.
+
+~Tests/FunctionalMaintenance.lean~ compares a manual five-capability prepared
+record with the shared checklist. ~same_client~ establishes identical successful
+functions and first-missing errors for every provider, preserving abstract
+context-indexed result types. Its axiom report contains only standard Lean axioms.
+
+The optional ~Benchmarks/EulerMaintenanceStudy.py~ records source hashes and
+lexical argument groups at the immutable Euler reference pin, then counts the
+compiled client's complete preparation/application sections. Its tracked
+receipt and [[file:use-cases/euler-maintenance-checklist.org][benefit checklist]] distinguish 17-to-8 local client code lines from
+four upstream 33-argument common prefixes. Shared implementation, adapter,
+context, and provider costs remain explicit. No upstream integration, net PDE
+line reduction, maintenance-hour saving, or runtime speedup is established.
+
+
+* Key-based retained access and exact proof adapters
+
+~Functional.Access~ adds ~Requirements.factoryAt~, selected-provider equality,
+exact original C4 provenance, and stability across successful checklists.
+Extensions, reorderings, and duplicates change no named factory from the same
+provider. The caller supplies typed membership and decidable key equality;
+access scans the checklist and should occur before repeated context calls.
+~Factory.fromProof~ preserves a proposition-valued theorem as a ~PLift~ factory;
+its ~down~ equation is axiom-free and binds the exact context/claim.
+
+~Tests/FunctionalAccess.lean~ compiles the generic stability/provenance clients,
+checks four checklist shapes at two contexts, checks changed positional access,
+and rejects a theorem witness at a different context. Four axiom reports use
+only standard Lean axioms or none. The contextual example now uses typed keys.
+
+The reference-only Euler ledger expands to 33 common field slots in a
+conditional one-to-one context model, three explicit ambient typeclasses,
+four proof-valued adapter entries, and 164 retained explicit argument groups.
+The marked client shows one positional-expression edit versus zero named-read
+edits, but adds reader/proof/membership costs. Full dependent context/implicit
+instance elaboration, adapter bodies, net source reduction, and maintenance
+hours remain separate gates. No upstream source or build dependency is added.
+
+* Consumer dependency boundaries and change propagation
+
+~Functional.View~ realizes explicit capability projection over prepared
+context-indexed functions. ~project_selected~ and ~project_ready~ retain exact
+selection, while ~project_stable~ permits provider and source-list changes
+outside a consumer's keys. ~consumer_stable~ preserves arbitrary consumers;
+[[file:../Tests/FunctionalView.lean][FunctionalView]] also compiles transport of an arbitrary result proposition.
+The fixed Context/Key/Value families and requested-function equality are explicit
+premises. Small-list independent preparation avoids unrelated missing-key gates.
+
+This implements a bounded interface extension consequence alongside the existing
+POOF-inspired composition and verified C4 order contracts. It is not a proof
+of arbitrary graph extension invariance, EPG correspondence, changed theorem
+statements, or changed context types. C4 order changes may change requested
+provider selections and therefore fail the preservation premise. The revised
+[[file:use-cases/euler-maintenance-checklist.org][reference evaluation protocol]] measures change propagation and full boundary
+costs; the earlier line fixtures cannot establish a large-library benefit.
+
+* Representation substitution through observations
+
+~Functional.Observation~ allows different provider result families related at
+each exact context/key. ~RelatedOn~ scopes the relation to a consumer checklist;
+~project_related~ transfers it to two successfully prepared views.
+~observe_congr~ and ~observed_consumer_stable~ prove equality of the public
+interface and all its consumers from pointwise observation equality. The
+[[file:../Tests/FunctionalObservation.lean][compiled fixture]] transports arbitrary result propositions and rejects changed
+public values and wrong-context witnesses. Kernel reports use ~propext~ for
+selection and ~Quot.sound~ for function extensionality, with no ~sorryAx~ or
+native decision axiom.
+
+This realizes a bounded substitutability contract in the implementation:
+representation families may differ, while the consumer's public observation
+family, keys, and contexts remain fixed. It does not prove claims about hidden
+fields, arbitrary implementation relations, availability, graph isomorphism,
+or changed context types. The [[file:use-cases/euler-maintenance-checklist.org][reference analysis]] identifies existing Euler
+path/tower/data equality bridges; no upstream analytic adapter or runtime
+speedup is established, and no C4 precedence requirement follows merely from
+this interface contract.
+
+* Indexed evidence reuse after semantic replacement
+
+~Functional.Transport~ implements migration of an existing context/data-indexed
+certificate to equal replacement data. ~transportProof~ handles Prop families
+directly; ~transport_refl~, ~transport_trans~, and ~transport_roundtrip~ establish
+identity, coherent composition, and exact return. The [[file:../Tests/FunctionalTransport.lean][generic compiled client]]
+connects observation-compatible providers to equal consumer data factories and
+reuses dependent evidence without requiring equal original representation types.
+
+Identity and direct proof transport require no axioms; composition and return
+use ~Quot.sound~ through function extensionality. This is a bounded typed evidence
+migration consequence of the implemented functional substitution interfaces.
+Whole indexed-data equality and the existing witness remain explicit inputs;
+analytic equivalence, changed claims/contexts, and hidden-field dependencies are
+not inferred. The [[file:use-cases/euler-maintenance-checklist.org][reference source]] already uses the corresponding data rewrite
+in its residual equation proof. No compiled PDE adapter, original EPG closure,
+net maintenance saving, or runtime improvement follows from this local contract.
+
+* Context projection for complete capability families
+
+~Functional.Reindex~ lifts the whole provider or a retained checklist along an
+explicit ~Outer → Context~ projection. ~select_reindex~, ~assemble_reindex~ and
+~prepare_reindex~ establish selection, verified-order assembly, and exact
+success/first-error preservation. ~results_reindex_type~ identifies the two
+recursive result types; ~projectedResults~ exposes the cast and ~build_reindex~
+proves exact projected results. Result type equality and result preservation
+require no axioms; assembly uses function extensionality and the existing
+selection proof. The [[file:../Tests/FunctionalReindex.lean][compiled contract]] checks 64 availability/list combinations,
+two outer contexts for successful preparations, repeated/empty requests, old
+proof reuse and rejection of unrelated context claims.
+
+This closes an explicit context-adaptation consequence for existing factories,
+providers, checklists and proofs. It does not establish unrestricted context
+extension: all old obligations must be supplied by the projection, and claims
+remain indexed by that projection. The reference's initialized-history and
+forward zero-history constructions have distinct input obligations; matching
+parameter names do not imply a valid projection or analytic equality. Original
+EPG correspondence, arbitrary graph equivalence and measured reference change
+fanout remain open. The [[file:use-cases/euler-maintenance-checklist.org][source receipt]] records these obligations without an
+external adapter or integration.
+
+* Declaration storage permutation and retained consumer invariance
+
+~C4.Presentation~ closes declaration-list permutation invariance for successful
+checked outputs with globally unique node names. ~Graph.sameLookup_of_perm~
+proves exact name lookup agreement. ~GraphTrace.represent~ transfers the complete
+finite derivation, retaining every original parent row and literal suffix.
+~VerifiedOrder.permute~ retains the output list and supplies erased acceptance
+and derivation evidence without executing a resolver; ~permute_unique~ identifies
+independent verified results. ~linearizeChecked_permute_ok~ is a bidirectional
+kernel theorem for every successful output, not a finite-corpus inference.
+
+~Functional.assemble_permute~ and ~Requirements.prepare_permute~ extend that
+property to exact selected functions, dependent proof families and first missing
+capability errors. A generic arbitrary consumer/result-claim can use equality
+without altering its checklist or proof body. This is a concrete registration
+order independence property in the implementation's shape-determinism chain.
+It does not cover edits to parent-order lists, flags, identifiers or providers.
+
+The [[file:../Tests/C4Presentation.lean][compiled corpus]] enumerates all 24 declaration permutations of 64 four-node
+families: 1536 checked/audited output comparisons, 1008 successes and 25200
+retained pair comparisons, including absent/self queries. It also compares
+selected dependent values at two contexts. Seven axiom reports show trace
+transfer is axiom-free; lookup permutation uses ~propext~/~Quot.sound~ and
+acceptance/consumer contracts also use existing ~Classical.choice~ dependencies.
+No ~sorryAx~ or native decision axiom is introduced.
+
+A unique-name malformed graph produces ~unknownNode MissingA~ in one declaration
+order and ~unknownNode MissingB~ in reverse order. Both reject. Another fixture
+shows first lookup changes under duplicate-name permutation. These retained
+counterexamples bound the result: exact graph error-payload invariance is false
+for current validation priority, while checklist errors are exactly preserved
+once a verified order exists. Arbitrary graph-isomorphism witnesses and original
+EPG/C4 suffix-exemption correspondence remain separate research obligations.
+
+* Composition of explicit relabeling and declaration presentation
+
+~Graph.Relabeling~ packages a global injective name map with the exact target
+permutation of renamed declarations. ~trans~ composes these witnesses and
+~unique~ transports the source validation premise. ~VerifiedOrder.relabel~
+retains the mapped output and erased checked/derivation evidence.
+~relabel_unique~ equates independently verified target output,
+~relabel_precedes~ preserves mapped pairs and ~relabel_trans_output~ equates
+direct composed migration with sequential migration. Composition changes no
+parent-row order or suffix flag; it closes this combined witness slice of the
+shape-determinism implementation without asserting arbitrary graph isomorphism.
+
+~Functional.assemble_relabel~ and ~Requirements.prepare_relabel~ transfer this
+graph property to selected dependent functions and the whole consumer checklist.
+Provider alignment is explicit on original ancestors and requested keys only.
+The [[file:../Tests/C4Relabeling.lean][generic client]] rewrites an arbitrary consumer result proposition while retaining
+its old proof. No new mathematical equivalence is inferred from graph shape.
+
+The executable corpus covers 64 four-node families and all 24 declaration
+permutations, followed by an A/B label exchange and then a Unicode prefix plus
+reverse storage. Its 1536 cases independently compile both targets (3072 target
+compilations), retain 1008 successful cases and check 25200 mapped pairs. Direct
+and sequential outputs agree; aligned dependent values are checked at two
+contexts. Eight axiom reports contain only ~propext~, ~Quot.sound~ and existing
+~Classical.choice~ dependencies. A concrete unaligned provider loses the source
+capability, recording a negative boundary of consumer preservation.
+
+Composing descriptions permits one output-list map instead of the two maps in
+sequential migration. Name computation and application alignment proofs remain;
+no runtime timing, build speedup or upstream edit saving is established.
+Success migration and uniqueness for a supplied verified target are proved.
+The finite acceptance comparison is regression evidence, not a new general
+rejection/error-payload theorem for injective relabeling. Arbitrary finite
+isomorphism witnesses, EPG/C4 suffix-exemption correspondence and changed
+context/claims remain separate research gates.
+
+* Automatic provider alignment over a verified ancestor cut
+
+~Functional.Registry~ builds a hash registry of whole provider functions from
+one retained verified order and an explicit ~Graph.Relabeling~ witness.
+~relabel_lookup~ and ~relabel_aligned~ prove exact automatic name alignment on
+every original ancestor. ~relabel_missing~ proves that names outside the mapped
+cut remain absent. ~assemble_relabel_registry~ and ~prepare_relabel_registry~
+remove the caller-supplied mapped dictionary and alignment premise from the
+consumer interface, preserving exact functions, dependent proof families and
+first missing capabilities. The [[file:../Tests/FunctionalRegistry.lean][generic client]] reuses an arbitrary consumer-result
+proposition and its old proof without an application alignment lemma.
+
+The executable corpus covers four valid precedence presentations, two injective
+name maps, eight availability masks and eight caller lists: 64 registry builds,
+512 preparations and 224 successful cases checked at two contexts. Empty,
+repeated and reversed lists, skipped providers, first-error priority and an
+available unrelated source provider outside the root's cut are included.
+Five kernel axiom reports contain only standard ~propext~, ~Quot.sound~ and
+existing ~Classical.choice~ dependencies; no ~sorryAx~ or native decision axiom.
+
+This implements the graph-to-provider alignment obligation as a generic library
+construction, rather than assuming an application has already supplied it.
+Factories and their mathematical results are retained, not invoked during index
+construction. The constructor traverses the ancestor list, obtains provider
+functions and stores hash entries; subsequent dictionary access uses hash/name
+operations. No runtime benchmark, shared-root whole-graph registry, changed
+context/data adapter, analytic equivalence or actual Euler edit saving is implied.
+The fixed source cut, global-injective name witness and migrated graph-validation
+premises remain explicit. EPG and arbitrary finite isomorphism gates remain open.
+
+* One provider registry for multiple verified roots
+
+~Functional.SharedRegistry~ closes the previous root-sharing implementation
+boundary for roots of one declaration graph. ~ProviderRegistry.ofGraph~ stores
+whole provider functions once over declared names. Generic kernel proofs retain
+selection and full checklist equality for every verified root, with no new
+name-uniqueness premise on the unchanged-graph path. The migrated path uses
+~relabelGraph~ once, with the existing explicit relabeling/uniqueness premises,
+and proves agreement with the root-cut registry on mapped ancestors.
+
+This separates registry scope from C4 precedence: declarations outside a root's
+ancestor cut remain directly queryable in the shared table but cannot affect
+that root's assembly or supply its missing capability. Undeclared application
+providers remain absent. Neither constructor compiles/validates a graph,
+invokes factories or caches results. Generic compiled consumers preserve an
+arbitrary result proposition and its old proof through checklist equality.
+
+The local corpus covers four order presentations, eight availability masks,
+two roots and nine caller lists for unchanged names and two injective mapped
+presentations. It constructs 96 shared registries, checks 1728 preparations,
+and applies 624 successful factory tuples at contexts 0 and 7. Typed values
+include dependent data and context-indexed theorem witnesses. First-error
+oracles include a declared but unrelated provider. Nine axiom reports contain
+only standard ~propext~, ~Classical.choice~ and ~Quot.sound~ dependencies. The
+preceding 64-registry/512-preparation root-cut corpus also still passes.
+
+Shared construction traverses all declarations rather than each root's
+ancestors. In the five-node local graph, two retained roots have six ancestor
+entries in total. These counts describe possible setup sharing, not a measured
+speedup: name-list allocation, provider acquisition, hash/string costs and
+unused declarations remain. Added physical source cost is 18 net lines in
+Registry's reusable scope helper, 101 lines in SharedRegistry and a 148-line
+test. Euler adapters, changed context/key/result families, arbitrary finite
+isomorphism and EPG/C4 suffix correspondence remain separate obligations. The
+reference repository is unchanged and has not been integrated or compiled.
+
+* Scoped capability edits and negative impact certificates
+
+~Functional.RegistryPatch~ extends retained registry use to a typed single-cell
+edit. Existing provider names admit capability replacement, addition or removal;
+unknown names fail with their exact name. Kernel proofs preserve provider-name
+scope, the original snapshot and exact functions at all other name/key cells.
+No graph traversal, verified-order construction or factory invocation is part
+of patch construction. Context/key/result families remain fixed.
+
+~Requirements.mayAffect~ identifies the conservative conjunction of a name's
+ancestry and membership of the edited capability in the caller checklist. Its
+negative result supplies whole-preparation equality through
+~prepare_patch_of_unaffected~, including first errors, retained dependent
+functions and arbitrary old consumer claims. This constructs a sufficient
+noninterference certificate from declared read scopes rather than requiring a
+client alignment proof at every untouched provider/key. It does not construct
+a precise semantic dependency closure or establish analytic interchangeability.
+
+The local corpus performs 960 known-name edits, 192 unknown-name rejections and
+15360 two-root/checklist impact queries over four graph presentations, eight
+availability masks, five provider names, three keys, add/remove modes and eight
+lists. Retained ancestry indexes are constructed once per root. An independent
+availability/value oracle checks each edited consumer at contexts 0 and 7,
+including first-error order. All 10752 negative queries preserve observations;
+4608 queries are candidates, with 1384 sampled value/error changes. These are
+local observations at two contexts, not a complete function-change count or
+Euler fanout measurement. The explicit shadowing case has positive candidate
+impact and unchanged selected output. Eight axiom reports contain only standard
+~propext~, ~Classical.choice~ and ~Quot.sound~ dependencies.
+
+The original patch snapshot cost is a 135-line shared module plus a 146-line test. A patch has one
+registry lookup/insertion rather than a declaration fold/provider reacquisition;
+hash storage may still copy under sharing. Key-equality checks and repeated
+wrapper chains add lookup costs; impact queries scan the requested key list.
+There is no new runtime benchmark, cache compaction or upstream migration.
+Original EPG equivalence, arbitrary graph extension, changed context families
+and actual external maintenance savings remain separate obligations.
+
+* Capability update algebra and exact rollback
+
+RegistryPatch now proves same-key overwrite, distinct-key commutation and
+original-cell identity for arbitrary dependent capability families. Successful
+registry edits retain their name, so an immediate original-cell rollback exists.
+Its dictionary is extensionally the original dictionary. Whole checklist
+preparation equality transports an arbitrary consumer claim through rollback,
+with no manual capability-by-capability alignment premises. This closes the
+single-cell rollback and provider-edit algebra obligations, not a general
+transaction or analytic dependency theorem.
+
+The existing corpus now executes all 960 immediate rollbacks and compares their
+15360 root/checklist results at both contexts with original selections and first
+errors. Six additional axiom reports check the update/rollback theorems. Source
+cost adds 67 module lines and 38 test lines (202 and 182 total), recorded in
+the new schema-1 rollback snapshot. Extensional update
+identities support a caller-constructed normalized plan; no automatic batch
+optimizer, closure compaction, runtime speedup or Euler migration is claimed.
+
+* Normalized typed capability overlays
+
+~Functional.Overlay~ closes the previously unimplemented normalization gate for
+an explicit caller-supplied list of typed capability edits over a retained base
+provider. ~ProviderOverlay~ stores a unique-key override list. ~set~ removes any
+old occurrence of the edited key; ~compile~ folds sets in caller order. Explicit
+capability removal is retained and distinguished from falling back to the base.
+The flat provider interface scans current overrides, not edit-history closures.
+
+Kernel proofs establish exact single-step and whole-batch equality with existing
+~patchKey~ semantics for arbitrary context/key/dependent result families. Whole
+~Requirements.prepare~ equality retains exact factories and first errors; a
+generic client transports an arbitrary old claim with one rewrite. Four axiom
+reports contain only standard Lean axioms. This is finite provider-edit
+normalization, not compaction of an arbitrary pre-existing provider closure or
+a precise analytic dependency closure.
+
+The corpus checks 32 histories, 344 prefix updates, 5504 prefix checklist
+observations and 512 final batch observations at two contexts against an
+independent last-cell oracle and sequential patching. A separate 256 same-key
+edit list leaves one stored override, while unedited and missing keys preserve
+base semantics. The unique-key invariant is retained by construction.
+
+Normalization trades per-set list scans/allocations for bounded current-override
+queries; with all-distinct keys compilation can be quadratic. Base provider costs
+remain. Stored edit counts are structural evidence, not a measured runtime gain.
+The new schema-1 source receipt records 110 module lines and 117 test lines,
+including proofs/comments and excluding caller adapters. Euler
+adapters, avoided source edits, net lines and maintenance hours remain unmeasured;
+the pinned external checkout is unchanged and reference-only.
+
+
+The complete local validation gate now exposes phase timings and runs independent
+atom, diagnostic and document phases concurrently after successful preparation.
+Resource-capped file concurrency selects twelve workers on this 12-core/32-GiB
+host. Same-source/output paired twelve-file measurements compare four/twelve
+workers at 36.917/23.448-second medians; this is scheduling evidence for that
+selected corpus, not a Lean kernel/C4 algorithm speedup. Negative one-thread
+measurements are retained. Canonical proofs, bounded checks, complete pre-commit
+validation and all sixteen CI jobs remain admission requirements.
+
+* Shared registry installation of normalized capability batches
+
+~Functional.RegistryBatch~ implements ~ProviderRegistry.patchBatch~: a checked
+existing provider name, one normalized typed edit batch and one registry
+insertion. Kernel proofs establish exact sequential provider-edit semantics,
+whole-dictionary agreement, empty-batch identity at known names, unchanged
+provider-name scope, unchanged other providers and untouched typed keys.
+Unknown names fail even with no edits. No graph/order reconstruction or factory
+invocation occurs during installation.
+
+~Requirements.batchMayAffect~ combines retained ancestry with overlap of an
+explicit edit footprint and caller checklist. Its negative result supplies
+whole-preparation equality, including first errors and arbitrary old consumer
+claims, without per-key or provider-alignment premises. True remains a candidate,
+not precise semantic/analytic dependency closure. A compiled generic client
+uses one rewrite. Ten theorem axiom reports contain only Lean standard axioms.
+
+The independent last-cell/availability oracle covers four graph presentations,
+eight masks, five providers, six batch recipes (including empty, deletion,
+mixed keys, repeated updates and 256 same-key edits), two verified roots and
+eight key lists. All 960 batches, 192 unknown-name rejections and 15360 impact
+queries pass at contexts 0 and 7. The 10368 negative scopes preserve original
+consumer results; 4992 queries are candidates. Old snapshots remain usable.
+
+Shared source cost is 150 module lines and 139 test lines, including
+proofs/comments and excluding caller adapters. A 256-edit same-key batch makes
+one name lookup/insertion rather than 256 repeated registry patch operations;
+this is source-level structure, not a measured runtime or allocated-byte gain.
+Normalized list filtering, footprint scans, persistent hash copies and retained
+base costs remain. Normalizing a batch does not flatten prior base overlays or
+supply a general multi-name transaction. The schema-1 source snapshot retains
+the unchanged Euler pin/manifest; actual avoided edits, net lines and hours
+remain unmeasured.
+
+* Named multi-provider transaction contract
+
+The implementation now composes known-name batch transitions into one pure
+~patchTransaction~ result. Six kernel theorem reports cover empty identity,
+sequential bind, head unknown-name rejection, unchanged name membership, the
+union-of-read-scopes candidate criterion and whole-preparation preservation.
+This closes the multi-name return-value transaction slice, with success and
+negative scope premises explicit. It does not close graph/context/type migration,
+external concurrency isolation, precise analytic dependencies or EPG relation
+correspondence.
+
+The compiled generic client reuses an arbitrary consumer claim by one rewrite.
+The independent scalar corpus checks four graph presentations, eight masks,
+eight plans, two roots, eight lists and two contexts: 192 successful transactions,
+64 first-unknown-name errors and 3072 consumer queries. Plans include deletion,
+multiple names, repeated names and failures after a valid prefix. Retained
+snapshots are checked after failures too. The new schema-1 reference snapshot
+binds source and test costs while keeping external consumers migrated at zero;
+Euler code reduction and maintenance time remain unmeasured.
+
+* Retained dependent hash overlay correspondence
+
+~Functional.IndexedOverlay~ replaces normalized override-list filtering/query
+scans with a dependent hash table. Nine axiom reports establish base retention,
+exact single-write and sequential extension semantics, concatenated-state
+composition, list-overlay agreement and whole-consumer preparation equality.
+This closes the representation substitution and repeated-extension slice with
+explicit lawful equality/hash instances and fixed context/key/result families.
+It does not close the original EPG relation mapping or analytic dependency gates.
+
+The independent scalar oracle checks 32 histories, 344 updates, 5504 prefix
+observations, 512 final observations and 5504 retained-snapshot observations at
+two contexts. All typed keys intentionally share one hash. A 256-write same-key
+history retains one override; collisions do not compromise correctness.
+Source/test physical costs and 28 local source hashes are recorded in the new
+schema-1 reference snapshot. Local runtime measurements are separated from
+upstream maintenance claims; no Euler consumer is migrated.
+
+Paired runtime evidence separately records 1024-key list/indexed construction
+at 57.046/6.043 ms and queries at 158.632/5.707 ms under the interpreter.
+Eight-key indexed medians are slower, retained as a negative result. These are
+operation-level local measurements; no native/Euler proof speedup is established.
+Shared module/test cost is 103/128 physical lines including proofs/comments.
+
+* Indexed registry update and selection correspondence
+
+~Functional.IndexedRegistry~ closes the gap between retained indexed capability
+state and named shared-provider selection. Initial conversion and explicit
+snapshot materialization preserve the entire dictionary; each named batch has
+exact ordinary-batch agreement, unchanged other providers/name membership and
+original-base retention. Nine axiom reports include whole-consumer preparation
+noninterference from a negative ancestry/key read scope. The generic client
+requires one rewrite, with no user alignment or comparison-snapshot premise.
+
+The scalar corpus uses four presentations, eight masks, eight plans, two roots,
+eight key lists and two contexts. It checks 352 successful sequential batches,
+64 unknown-name errors, 5632 impact queries (3136 negative), original bases and
+retained snapshots; all capability hashes collide. Direct dictionaries, explicit
+snapshots and ordinary batches agree with the independent oracle at each prefix.
+Shared source/test cost is 130/166 physical lines including proofs/comments.
+The new schema-1 snapshot binds 30 local source/test hashes at the unchanged
+Euler reference pin. No external consumer is migrated; source reduction and
+maintenance hours remain unmeasured. The later indexed-transaction section closes multi-name return-value atomicity;
+original EPG/analytic correspondence remains open.
+
+Matched named-registry interpreter measurements retain both gains and losses:
+256 batches of 4096 total edits over width 256 give list/indexed update medians
+7.305/8.868 ms and direct query medians 301.686/10.617 ms. Indexed updates
+are slower in this case; query gains do not establish an update-only or Euler
+proof speedup. The small-table case is negative too. Benchmark Lean/Python
+source costs are 59/55 physical lines, separate from library/test costs.
+
+* Native execution and lifetime-policy replication
+
+Four schema-1 receipts bind the same benchmark source under native/interpreter
+execution and latest/retained policies. Ninety-six samples retain four alternating
+pairs per workload and per combination; current and retained-prefix control
+checksums agree across engines. Native binary and source/toolchain/config hashes
+are included. Retained query views stay live across timed updates and queries.
+
+The native retained repeated workload gives list/indexed update medians
+0.306/0.266 ms and queries 4.868/0.160 ms. Interpreter retained updates remain
+slower for indexed state (6.737/8.399 ms). Native latest repeated updates are
+slightly slower too (0.268/0.275 ms). These observations bound the representation
+advice by engine/workload/lifetime rather than declaring a universal winner.
+Allocated bytes, peak memory, whole Euler proof times and maintenance savings
+remain unmeasured; no external consumer is migrated.
+
+Mandatory native compilation and four semantic admission cases extend local/CI
+validation while preserving all canonical proofs, diagnostic bounds and the
+sixteen-job aggregate. The benchmark Lean/Python costs are now 89/62 physical
+lines (previously 59/55); no new library API/proof is asserted in this slice.
+Original EPG/analytic correspondence obligations remain open.
+
+* Indexed transaction correspondence and consumer reuse
+
+~Functional.IndexedTransaction~ adds caller-order transactions to retained named
+indexed state. Structural induction over successful batch results proves base
+and scope preservation. A second induction composes the exact whole-preparation
+batch equalities under ~transactionMayAffect = false~. Six kernel axiom reports
+contain only ~propext~, ~Classical.choice~ and ~Quot.sound~. First-error propagation
+is the definition's bind law; a failed transaction returns no prefix registry.
+
+The independent scalar corpus covers 192 successful transactions, 64 first
+unknown-name errors, 3072 read-scope queries (1920 negative), two contexts,
+repeated names/keys, removals, all-key hash collisions and retained old snapshots.
+Ordinary transactions provide a second semantic control. A generic arbitrary
+consumer claim compiles using one whole-preparation rewrite. The new module/test
+cost is 101/159 physical lines, including proofs/comments. No transaction timing
+or allocation gain is claimed from the earlier named-batch benchmarks.
+
+The [[file:../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][schema-1 source snapshot]] binds 32 local source/test files at the unchanged Euler
+pin/manifest. External consumers migrated remain zero; net lines, hours and
+avoided proof edits remain unknown. This closes a reusable library contract;
+original EPG correspondence and analytic dependency inference remain open.
+
+* Complete indexed/ordinary transaction outcome correspondence
+
+~IndexedRegistry.patchTransaction_congr~ strengthens the earlier successful,
+negative-scope result to equality of the entire dictionary-valued transaction
+outcome across representations. Induction follows caller-order batches, using
+per-name exact dictionary updates and unchanged membership at each successful
+step. Equal membership ensures both sides fail at the same first unknown name.
+Dictionary equality alone is insufficient: a registered empty provider and an
+unknown name have equal complete query functions but different empty-batch results.
+A kernel example proves full dictionary equality; twelve runtime observations
+and the opposite outcomes preserve this negative control.
+
+~ofRegistry_patchTransaction~ discharges dictionary/scope premises for the
+provided conversion. ~ofRegistry_transaction_consumer~ then maps any consumer
+across equal outcomes, covering nested capability errors and arbitrary claims.
+A generic prepared-consumer client compiles with one rewrite, without a success
+or unaffected-scope premise. Three new axiom reports use only the existing standard
+axioms, bringing this module's reports to nine. The scalar/ordinary corpus still
+checks 192 successes and 64 first-name failures across two contexts.
+
+Current module/test costs are 174/206 physical lines, increments of 73/47 over
+101/159. The runtime transaction definition is unchanged; these are erased proofs
+and semantic/client validation, with no new timing/allocation claim. The
+[[file:../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][schema-1 source snapshot]] binds 32 local files at the unchanged Euler reference.
+Euler migration remains zero and upstream savings unknown. This establishes
+same-edit representation correspondence; it does not prove old/new affected
+consumers equal, original EPG correspondence or analytic dependency inference.
+
+* Initial name-scope transaction validation
+
+~Functional.TransactionCheck~ supplies an executable name-only preflight for both
+registry representations. Induction over caller-order batches proves exact
+~Except String Unit~ equality with the real transaction outcome after mapping
+away the final registry. Successful batch scope preservation permits each check
+to read initial membership; the first unknown name is preserved even after a
+valid prefix. Empty batches still require a known name. Further scope laws
+preserve cached future-plan checks after successful transactions and conversion.
+Seven kernel reports use only subsets of the standard Lean axioms.
+
+The independent initial-name corpus uses sixteen registration masks, all 259
+name sequences of length zero through three from six names, and batch widths
+0/3/64. It checks 12,432 cases, 1,056 successes, 11,376 first-name errors and
+1,056 cached checks against actual ordinary/indexed transactions. Snapshot
+observations use two contexts. A registered empty provider passes preflight but
+fails capability preparation, preserving the name/capability boundary. The
+arbitrary-claim cache client compiles using one rewrite.
+
+Shared source/test cost is 113/95 physical lines including proofs/comments. The
+[[file:../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][schema-1 source snapshot]] binds 34 local files at the unchanged Euler reference.
+Preflight scans names without constructing update prefixes or traversing edit
+cells; successful check-plus-execution adds a name scan. No time/allocation gain
+or external maintenance saving is measured. Euler migration stays zero, and
+original EPG correspondence/analytic dependency inference remain open.
+
+* Scoped transaction consumer preparation
+
+~Requirements.prepareTransaction~ chooses between the full indexed transaction
+and a name-preflight/original-preparation branch using the retained ancestor/key
+scope. The negative branch builds no update prefix. ~prepareTransaction_eq~
+proves complete nested-outcome equality: scope noninterference covers successful
+results, while exact name preflight covers errors. The conversion corollary
+transfers ordinary consumers without user alignment or success assumptions.
+Three standard-axiom reports and a compiled arbitrary-claim client accompany it.
+
+The corpus checks 4,096 consumer cases: 2,304 negative and 1,792 positive scopes,
+1,024 unknown-name outcomes, four presentations, eight availability masks, eight
+plans, two roots, eight key lists and two contexts. All capability hashes collide.
+Independent scalar, full indexed and ordinary paths agree, preserving capability
+errors and duplicate-key order. Shared library/test cost is 59/144 physical lines.
+
+The [[file:../Benchmarks/receipts/scoped-transaction-native-2026-10-05.json][paired native receipt]] has 32 samples, four alternating pairs per workload,
+exact paired outcome controls, thirteen source/config hashes and a binary digest.
+For 4,096 edits over width 32 in 256 batches, outside-name full/scoped medians are
+0.123917/0.010792 ms; disjoint-key 0.186938/0.144771 ms; late unknown-name
+0.118646/0.009084 ms. Positive fallback retains a negative result:
+0.118313/0.119542 ms. The negative path eliminates update writes, but scope/name/
+preparation scans remain; disjoint keys scan the entire edit history. These are
+single-consumer operation timings, excluding factory execution and graph/index/
+registration/conversion/input/oracle/build costs. No full-application gain follows.
+Benchmark Lean/Python costs are 49/60 lines; allocations/peak memory are unmeasured.
+
+Eight native full/scoped admission cases cover both negative modes, positive
+fallback and late unknown names. Together with four registry cases, the gate
+admits twelve native cases without timing thresholds. Current inventory has 120
+independent Lean files plus four diagnostics; sixteen CI jobs remain unchanged.
+The [[file:../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]] binds 36 local files at the unchanged Euler pin/manifest.
+External migrations remain zero; net lines/hours/avoided edits remain unknown.
+Original EPG correspondence and analytic dependency inference remain open.
+
+* Requested-key index correctness and cost separation
+
+~Requirements.KeyIndex keys~ stores a hash set plus an erased exact-membership
+witness. Hash-set construction and ~contains_iff/contains_eq~ connect runtime
+membership to requested list membership. Boolean predicate equivalence transfers
+batch and transaction impact; ~prepareTransactionIndexed_eq~ then preserves the
+entire nested consumer result. The conversion theorem gives an ordinary client
+one proof rewrite with no new alignment/success/negative-scope premise. Six kernel
+reports use only standard Lean axioms.
+
+The 4,096-case scalar corpus also compares retained-index, list-scoped, full-indexed
+and ordinary paths: 2,304 negative scopes, 1,792 positive scopes, 1,024 unknown-name
+outcomes, two contexts and all-key hash collisions. Membership and exact deduplicated
+set size are checked for empty, reordered and repeated requests. Consumer ordering,
+errors and typed guards remain unchanged. Shared source/test cost is 79/157 lines.
+
+The [[file:../Benchmarks/receipts/key-index-native-2026-10-05.json][native receipt]] records 80 samples, four alternating pairs per size/workload,
+8/512 requested keys and five modes over 4,096 edits/256 batches. Fourteen source/
+config hashes and the binary digest bind controls. Construction, query and per-sample
+construction+query totals are recorded separately. Factories are evaluated for
+scalar checks after timing. The 512-key disjoint list/indexed query medians are
+21.014521/0.063708 ms, indexed total 0.084354 ms. Late overlap gives
+20.979250/0.156208 ms, indexed total 0.175458 ms. Gains remove the nested requested-
+list scan in these workloads; raw history and fallback/preparation work remain.
+
+Negative one-use results are retained: 512-key outside ancestry 0.048500/0.071521 ms,
+early overlap 0.152521/0.174750 ms, unknown names 0.005730/0.025313 ms list/indexed
+totals. Small outside/unknown cases regress too; no universal switch is justified.
+No allocated-byte/peak-memory/application speedup is measured. Benchmark Lean/Python
+cost is 52/64 lines, separate from the shared implementation and user adapters.
+
+Ten native cases cover list/indexed outside, disjoint, early/late overlap and unknown
+names, including missing capability errors. The gate now admits 22 native cases,
+121 independent Lean files plus four diagnostics, with the same sixteen CI jobs.
+The [[file:../Benchmarks/receipts/euler-key-index-2026-10-05.json][schema-1 source snapshot]] binds 38 local files at the unchanged Euler reference.
+No external consumer is migrated; net source/maintenance savings remain unknown.
+Original EPG correspondence and analytic dependency inference remain open.
+
+* Reproduce joint certified requirements and the source audit
+
+Build ~lake build LeanPoo.Functional.CertifiedRequirements~, then run
+~lake env lean Tests/FunctionalCertifiedRequirements.lean~. Expect
+~FUNCTIONAL-CERTIFIED-REQUIREMENTS-OK preparations=192 joint=8 contexts=3~ and six
+axiom reports using at most standard ~propext~. The heterogeneous fixture checks
+empty, reversed, repeated and missing-key tuples plus a joint bound/flag/duplicate
+contract. The negative type check retains exact context indexing.
+
+The source audit is read-only:
+
+#+begin_src sh
+python3 Benchmarks/EulerChangeSurfaceStudy.py \
+  --reference .data/NavierStokesAndEuler \
+  --output /tmp/euler-joint-certificate.json
+#+end_src
+
+Compare ~joint_certificate_audit~ and source hashes against
+~Benchmarks/receipts/euler-joint-certificate-2026-10-05.json~. Source dependency
+lists are manually reviewed direct fields, not compiler-inferred closures.
+Schema remains v1; no external Lean/PDE build or integration. Proof admission is
+erased; no timing/allocation experiment or Euler savings is asserted.
+
+* Reproduce cached certified transaction views
+
+Build ~lake build LeanPoo.Functional.CachedPreparation cachedPreparationScale~;
+run ~lake env lean Tests/FunctionalCachedPreparation.lean~. Expect
+~FUNCTIONAL-CACHED-PREPARATION-OK cases=4096 negative=2304 positive=1792 name_errors=1024 contexts=2~
+and four reports with only standard axioms. The test also checks conservative
+reuse/fresh branches, wrong-provider alignment and uncertified fresh data.
+
+#+begin_src sh
+python3 Benchmarks/CachedPreparationStudy.py \
+  --output /tmp/cached-preparation-native.json
+python3 Benchmarks/EulerChangeSurfaceStudy.py \
+  --reference .data/NavierStokesAndEuler \
+  --output /tmp/euler-cached-preparation.json
+#+end_src
+
+Compare against the separately named v1 receipts. Both native variants materialize
+the same initial key index and certified tuple in an IO cell before timing queries;
+setup includes that cell's creation/read. This blocks pure initialization from
+sinking across the clock boundary. Query includes impact/preflight/full fallback
+and certificate/tag erasure; factory bodies/oracle run after timing. Eight/512
+requests, five modes, four alternating pairs produce 80 scalar-matched samples.
+The native claim is ~True~, isolating preparation/cache overhead; kernel theorems
+cover arbitrary joint claims and semantic fixtures use provenance witnesses.
+This is retained-input query evidence, not a one-use comparison, allocation study,
+or whole Euler speedup. Ten new native admission cases join the existing 22.
+
+* Reproduce continuous consumer revisions
+
+Build ~lake build LeanPoo.Functional.ConsumerRevision~ and run
+~lake env lean Tests/FunctionalConsumerRevision.lean~. Expect
+~FUNCTIONAL-CONSUMER-REVISION-OK cases=4096 negative=2304 positive=1792 name_errors=1024 chained=3072 contexts=2~
+and six standard-only axiom reports. Every successful first transaction is
+followed by a second known transaction using the returned registry/aligned cache;
+nonconsumer updates are checked independently. Runtime Claim=True isolates the
+revision plumbing; generic kernel theorems retain arbitrary joint contracts.
+
+Re-run EulerChangeSurfaceStudy with ~--output /tmp/euler-consumer-revision.json~
+and compare ~consumer_revision.time_transport_audit~ against the separately named
+v1 receipt. Direct declaration/token checks do not elaborate external Lean or
+infer analytic dependencies. The new publication API always constructs full
+updates; prior view-only microbench results do not quantify this path. No new
+runtime/memory or Euler maintenance saving is asserted.
+
+* Certified narrow views
+
+Build ~lake build LeanPoo.Functional.CertifiedView~ and run
+~lake env lean Tests/FunctionalCertifiedView.lean~. Expect
+~FUNCTIONAL-CERTIFIED-VIEW-OK masks=8 requests=24 successes=4 rescued=3 contexts=3~
+and three standard-only axiom reports. Reproduce the source audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-view.json~.
+Compare the 46 local source hashes with the committed v1 receipt. Reference
+pin, direct-source reading limits and zero actual Euler migrations remain explicit.
+The public client in reusable-contracts compiles without handwritten requires.
+
+* Built result views and analytic implications
+
+Build ~lake build LeanPoo.Functional.ResultView~ and run
+~lake env lean Tests/FunctionalResultView.lean~. Expect
+~FUNCTIONAL-RESULT-VIEW-OK cases=4608 successes=1944 contexts=3~ and
+~FUNCTIONAL-RESULT-VIEW-DUPLICATE-OK first=11 later=99~ with five propext-only
+axiom reports. The public projectEvidence client compiles with fixed context types.
+Reproduce the v1 source audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-result-view.json~;
+compare 48 local hashes with the committed receipt. The three reference consumers
+are direct source readings, not an external Lean build or migration.
+
+* Certified observation replacement
+
+Build ~lake build LeanPoo.Functional.CertifiedObservation~ and run
+~lake env lean Tests/FunctionalCertifiedObservation.lean~. Expect
+~FUNCTIONAL-CERTIFIED-OBSERVATION-OK cases=1536 replaced=375 contexts=3~ and
+~FUNCTIONAL-CERTIFIED-OBSERVATION-JOINT-OK candidates=8 replaced=1 contexts=3~.
+Seven axiom reports contain no axioms or only Quot.sound. The generic public
+certificate equality client in reusable-contracts compiles without hand rewrites.
+Reproduce the v1 audit using
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-observation.json~;
+compare 50 local hashes. Reference reading is not external compilation or migration.
+
+* Certified output consumers
+
+Build ~lake build LeanPoo.Functional.CertifiedConsumer~ and run
+~lake env lean Tests/FunctionalCertifiedConsumer.lean~. Expect
+~FUNCTIONAL-CERTIFIED-CONSUMER-OK cases=192 successful=81 contexts=3~ and
+~FUNCTIONAL-CERTIFIED-CONSUMER-OUTPUT-OK masks=8 outputs=3~. Four axiom reports
+use no axioms, propext or Quot.sound. The one-call public client compiles.
+Reproduce the audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-certified-consumer.json~;
+compare 52 local source hashes in the v1 receipt. Explicit data constructors,
+analytic proofs and external dependent adapters remain separate obligations.
+
+* Latest-context data slot
+
+Build ~lake build LeanPoo.Functional.ContextSlot~ and run
+~lake env lean Tests/FunctionalContextSlot.lean~. Expect
+~FUNCTIONAL-CONTEXT-SLOT-OK cases=192 reads=1215 hits=405 misses=810 traces=4~ and
+~FUNCTIONAL-CONTEXT-SLOT-REBIND-OK hit=1 replaced=2~. Five axiom reports use none
+or propext. The generic cached/uncached dependent consumer client compiles.
+Reproduce the audit with
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-context-slot.json~;
+compare 54 local hashes with the v1 receipt. Reference Pa sharing already exists;
+no external context equality, native timing or redundant execution is established.
+
+* Context-view replication
+
+Build ~LeanPoo.Functional.ContextView~ and run ~Tests/FunctionalContextView.lean~.
+Expect ~FUNCTIONAL-CONTEXT-VIEW-OK cases=4608 successes=1944 contexts=3
+reads=29160 hits=11664~, ~FUNCTIONAL-CONTEXT-VIEW-JOINT-OK reordered=3~, and
+~FUNCTIONAL-CONTEXT-VIEW-DUPLICATE-OK first=11 later=99~. Five axiom reports use
+~propext~, without ~sorryAx~. The public client in reusable-contracts compiles.
+The new ~euler-context-view-2026-10-05.json~ receipt remains schema v1 and binds
+56 local source hashes and the pinned clean reference. Historical receipts stay
+unchanged. Reference source reads do not compile the PDE corpus or establish
+external performance/maintenance savings.
+
+* Public context-cache replication
+
+Build ~LeanPoo.Functional.ContextObservation~ and run
+~Tests/FunctionalContextObservation.lean~. Expect
+~FUNCTIONAL-CONTEXT-OBSERVATION-OK cases=1536 replaced=375 contexts=3 reads=6750
+hits=3375~ and ~FUNCTIONAL-CONTEXT-OBSERVATION-JOINT-OK candidates=8 replaced=1
+contexts=3~. Six axiom reports: two none, three propext, one Quot.sound; no
+sorryAx. The public client in reusable-contracts compiles.
+~euler-context-observation-2026-10-05.json~ remains v1, with 58 local source
+hashes and a pinned clean reference. Existing receipts are unchanged; the PDE
+corpus is not integrated or compiled by this audit.
+
+* Projected-context cache replication
+
+Build ~LeanPoo.Functional.ContextPullback~ and run
+~Tests/FunctionalContextPullback.lean~. Expect
+~FUNCTIONAL-CONTEXT-PULLBACK-OK cases=192 reads=729 hits=324 misses=405
+outer_eq=not-required~. Four axiom reports: three none, one propext, no sorryAx.
+The public client in reusable-contracts compiles. The separate
+~euler-context-pullback-2026-10-05.json~ receipt stays v1 and binds 60 local
+source hashes and the clean pinned reference. Factoring the reference context
+into a comparable base and native performance qualification remain open.
+
+* Native built-data cache replication
+
+[[file:performance/context-cache.org::*Replicate and admit semantics][The dedicated replication instructions]] specify source/binary-bound local
+samples and eight small native admissions; setup and query clocks are separate.
+
+* Narrow public view replication
+
+Build ~LeanPoo.Functional.ObservedView~ and run ~Tests/FunctionalObservedView.lean~.
+Expect FUNCTIONAL-OBSERVED-VIEW-OK (4608/1944 cases/successes, 23328 reads/5832
+hits), DUPLICATE-OK (first=21/later=109) and JOINT-OK (contexts=3), with seven
+propext axiom reports. [[file:contracts/observed-view.org][The dedicated API module]] gives the public client.
+Separate v1 receipt ~euler-observed-view-2026-10-05.json~ binds 64 local hashes.
+
+* Borrowed public view replication
+
+Build ~LeanPoo.Functional.BorrowedView~, then run ~Tests/FunctionalBorrowedView.lean~.
+Expect 120 reads / 113 hits / seven misses and three propext-only axiom reports.
+[[file:contracts/borrowed-view.org][Contract and cost guide]] explains broad cache retention and per-call view costs.
+
+* View composition replication
+
+Build ~LeanPoo.Functional.ViewComposition~ and run ~Tests/FunctionalViewComposition.lean~.
+Expect 5184 cases, positive=9/1 and negative=13/30 structural cost controls,
+and four propext-only axiom reports. [[file:contracts/view-composition.org][Contract and choice guide]].
+
+* Contract consequence replication
+
+Build ~LeanPoo.Functional.ContractConsequence~ and run ~Tests/FunctionalContractConsequence.lean~.
+Expect 192 reads / 104 hits / 88 misses and seven axiom reports (five none, two
+propext-only). [[file:contracts/contract-consequence.org][Contract, compiled client and cost guide]].
+
+* Independent contract join replication
+
+Build ~LeanPoo.Functional.ContractJoin~ and run ~Tests/FunctionalContractJoin.lean~.
+Expect 224 reads / 112 hits / 112 misses and six axiom reports (four none, two
+propext-only). [[file:contracts/contract-join.org][Joint proof contract and compiled client]].
+
+* Dependent result index replication
+
+Build ~LeanPoo.Functional.ResultIndex~ and run ~Tests/FunctionalResultIndex.lean~.
+Expect 72 indices / 288 queries / 729 projections / 972 positions, all keys
+colliding, and four standard-axiom reports. [[file:contracts/result-index.org][Contract, proof client and cost guide]].
+
+* Native result-index replication
+
+Build ~resultIndexScale~, run ~Benchmarks/ResultIndexStudy.py~ with output in TMP,
+and ~just _check-native-result-index~. Expect 192 matched samples and eight small
+checksum admissions; [[file:performance/result-index.org][protocol and retained negative controls]].

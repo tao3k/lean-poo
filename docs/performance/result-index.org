@@ -1,0 +1,99 @@
+#+TITLE: Native retained result-index cost evidence
+
+[[file:../contracts/result-index.org][Result-index API guide]] · [[file:../../Benchmarks/README.org][Benchmark index]]
+
+* Matched native experiment
+
+The [[file:../../Benchmarks/receipts/result-index-native-2026-10-06.json][v1 native receipt]] records 192 samples: 8/64 keys, 1/4096 named reads,
+head/tail/cycle schedules, ordinary Nat hash/all-zero hash, four alternating
+pairs and two variants. Both paths build the same UInt64 tuple from runtime
+seed 17 and retain it in an IO cell before query timing. The list path retains
+its original key list; it does not reconstruct List.range for every lookup.
+The index path additionally builds a dependent hash table. Setup and query
+are timed separately; checksum-cell creation and process startup are excluded.
+Query includes the same request schedule, IO checksum loop and noinline lookup.
+Independent Nat scalar oracles in Lean and Python verify every checksum.
+
+The ordinary hash is UInt64.ofNat, matching Lean's Nat Hashable implementation.
+The collision hash maps every key to zero. Data and requested values agree
+under both hashes; collision correctness is not a timing benefit.
+
+* Historical baseline negative results retained
+
+Local medians in milliseconds (four pairs), rounded here; receipt retains all
+samples and nanoseconds. These workloads establish no performance win:
+
+| Keys | Reads | Schedule/hash | List query | Index query | List setup + query | Index setup + query |
+|------+-------+---------------+------------+-------------+--------------------+---------------------|
+| 64 | 4096 | tail/ordinary | 0.420958 | 3.234209 | 0.422479 | 3.249272 |
+| 64 | 4096 | head/ordinary | 0.113604 | 3.083105 | 0.116063 | 3.103730 |
+| 64 | 4096 | tail/collision | 0.391646 | 4.012334 | 0.393167 | 4.038313 |
+| 64 | 1 | tail/ordinary | 0.001375 | 0.004459 | 0.003021 | 0.025167 |
+
+For 64-key ordinary tail access, setup medians are 0.001521/0.015125 ms
+(list/index). One-query setup costs and hash overhead outweigh any eliminated
+list comparisons here. The API remains semantically useful for typed retained
+lookup, but is not qualified as the default performance path. Results do not
+establish a break-even count, confidence interval, universal regression or
+larger/heterogeneous workload behavior. Allocations and peak memory are unknown.
+Projected tuple construction, observers and other dependency caches are not timed.
+
+* Reproduce and admit semantics
+
+#+begin_src sh
+lake build resultIndexScale
+python3 Benchmarks/ResultIndexStudy.py --output /private/tmp/result-index-study.json
+just _check-native-result-index
+#+end_src
+
+The binary takes variant (list/indexed), schedule (head/tail/cycle), hash mode
+(uniform/collision), key count, read count and seed. CI/local gates add eight
+small native controls: both variants for ordinary head/tail/cycle and collision
+tail. They enforce independent checksums, with no timing thresholds. Native
+admissions total 48; 138 Lean atoms + four diagnostics, 12 shards and 16 jobs
+remain. Code costs: 52 Lean + 77 Python lines. The receipt binds 144 source
+hashes and the native binary hash; CI semantics are checked on CI's own build.
+
+* Paper and OpenAI boundary
+
+The local [[file:../../.data/poof/poof.scrbl][POOF source]] describes named records and explicit caching. The [[file:../../Benchmarks/receipts/euler-result-index-native-2026-10-06.json][v1 audit]]
+hashes that source, existing Euler structure-field consumers and the native
+receipt. OpenAI already uses structure projections; avoidable linear scans there
+are not established. No integration or migration; external code, maintenance
+hours and analytical runtime gains remain unmeasured. These negative local
+results cannot be replaced with earlier context-cache timing gains.
+
+* Client specialization qualification
+
+The [[file:../../Benchmarks/receipts/result-index-inline-baseline-2026-10-06.json][same-session rebuilt baseline]] retains commit 5028d45's source hashes.
+The [[file:../../Benchmarks/receipts/result-index-inline-2026-10-06.json][optimized v1 receipt]] differs in exactly one of 144 source hashes:
+ResultIndex.lean adds inline attributes to find? and get, plus a comment.
+No API, table representation or alignment proof changes. Generated C exposes
+specialized Nat-key lookup in the client instead of calling only the generic
+ResultIndex.get wrapper. This is compiler evidence, not an allocation count.
+
+Each build has 192 samples/four alternating list-index pairs per workload.
+Builds were run sequentially in one session, not paired across builds; local
+wall times vary. Do not interpret their ratio as a stable universal speedup.
+Historical receipts above remain immutable. Optimized medians, milliseconds:
+
+| Keys/reads/schedule/hash | List query | Index query | List setup + query | Index setup + query |
+|-------------------------+------------+-------------+--------------------+---------------------|
+| 64/4096/tail/ordinary | 0.641375 | 0.250729 | 0.644500 | 0.272062 |
+| 64/4096/cycle/ordinary | 0.336750 | 0.220584 | 0.339084 | 0.242750 |
+| 64/4096/head/ordinary | 0.150876 | 0.229625 | 0.154188 | 0.250750 |
+| 64/4096/tail/collision | 0.671771 | 0.455501 | 0.675251 | 0.493855 |
+| 64/1/tail/ordinary | 0.001584 | 0.002229 | 0.003875 | 0.012292 |
+| 8/4096/cycle/ordinary | 0.130521 | 0.211709 | 0.131771 | 0.218354 |
+
+Repeated tail/cycle reads at 64 keys improve relative to their optimized-build
+list controls here; head, single-query and small-key controls still regress.
+Retain direct structure fields for static records; qualify retained indexing
+against the actual key/read distribution before selecting it. Collision tail
+results do not establish constant-time behavior or benefit for other schedules.
+No allocated-byte, peak-memory, cold application or Euler execution claims.
+
+The [[file:../../Benchmarks/receipts/euler-result-index-inline-2026-10-06.json][separate v1 paper/Euler audit]] binds both receipts and 76 local source hashes.
+Paper named getters still describe semantics independently of this compiler
+choice; Euler already projects structure fields and has no demonstrated list
+scan to replace. New public API 0, integrations 0, external savings unmeasured.

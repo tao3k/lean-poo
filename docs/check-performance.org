@@ -3,36 +3,48 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs four shared atoms: examples,
-contracts, bounded diagnostics, and Org documentation. The source commands
-live in the Justfile; CI does not maintain a second list. Standalone public
+once, checks C4's source-owned types, and runs 141 independent example/contract
+files with automatically capped workers, alongside four bounded diagnostic
+files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
+reads the two canonical recipes through ~just --dump --dump-format json~ and
+CI does not maintain a second file list. Standalone public
 ~check-*~ recipes retain their build prerequisites. The full gate avoids their
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The 104 unique example/test files remain covered. Existing memory/allocation
+The current gate covers 145 unique example/test files, including the typed
+requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
 that C4's compilation algorithm became faster.
+
+The diagnostic dispatcher explicitly supplies ~false~ to both optional
+~verbose~ parameters. Without those arguments, ~just~ consumes the following
+~check-proof-reuse~ recipe name as ~check-incremental~'s parameter and omits that
+check. The earlier source inventory alone did not establish execution of all
+114 files. The corrected dispatcher runs the bounded proof-reuse corpus too;
+the prior successful gate is not complete evidence for that diagnostic.
 
 * Atomic CI and its merge gate
 
 The ~library~ job builds the public library and proofs. Its compressed build
 artifact is named with the current workflow SHA and passed only within that
-run. The ~examples~, ~contracts~, and ~diagnostics~ jobs consume it and run
-independently with ~fail-fast: false~. The ~docs~ job installs only the Org
+run. Twelve file-shard jobs each consume it and check nine or ten files. The
+matrix has ~max-parallel: 12~ and ~fail-fast: false~; an independent ~diagnostics~
+job consumes the same artifact. Including library, docs and the aggregate,
+the workflow has sixteen jobs. The ~docs~ job installs only the Org
 parser and runs independently of Lean. Each job has a bounded timeout.
 
 The ~check~ job retains the previous status name and runs even after failure.
-It requires ~success~ from the library, complete Lean matrix, and docs; failed,
+It requires ~success~ from the library, all twelve shards, diagnostics and docs; failed,
 cancelled, and skipped prerequisites cannot pass. No path filters skip checks.
 The local pre-commit hook still requires the complete ~just check~ gate.
 
 The recipes can be reproduced after ~lake build~:
 
 #+begin_src sh
-lake env just --set lean lean _check-examples
-lake env just --set lean lean _check-contracts
+lake env python3 tools/check_atoms.py --jobs 4
+lake env python3 tools/check_atoms.py --shard 0 --shards 12 --jobs 1
 lake env just --set lean lean _check-diagnostics
 just check-docs
 #+end_src
@@ -41,6 +53,39 @@ Artifact transfer and runner setup have costs. The earlier single-job Linux
 check took 113 seconds at commit ~2abf644~; compare exact new-run job/critical
 path timings before claiming an overall CI speedup. Parallel jobs improve
 failure localization even when setup dominates wall time.
+
+The shard partition is deterministic and exhaustive over the canonical recipe
+rows. Python admission tests require nonempty shards, exact once-only coverage,
+unchanged bounded command arguments, and nonzero status for real child failure,
+timeout and launch error. Unsupported recipe expressions and unknown or empty
+selections fail. Each process emits a file start, actual Lean output, and a
+completion with status and elapsed time; no progress heartbeat is synthesized.
+Failure output stays attributed to its file. Interrupting the runner stops its
+active process groups and prevents pending files from launching.
+
+Lean's internal parallel work does not make separate shell invocations run
+concurrently. The corrected serial complete gate on this host took 1085.70 s
+wall and 115.04 s CPU. This exposes a large wall/CPU gap but does not identify
+its operating-system or host cause. Independent workers remove the file-by-file scheduling dependency. The local
+gate now selects up to twelve workers from CPU/physical-memory capacity; CI
+schedules twelve shards after the library is ready. GitHub runner availability and artifact/setup costs still
+bound the actual concurrency and end-to-end improvement.
+
+The [[file:../Benchmarks/receipts/check-atoms-2026-10-05.json][paired atom study]] runs the same eight warm Lean files with one and four
+workers, alternates order over two repetitions, and requires exact per-file
+Lean transcript hashes and source identity. Its schema remains 1. The study
+excludes library preparation, remaining files, diagnostics, docs and CI runner
+queues; it cannot establish a full-gate or CI speedup by itself.
+
+| Same eight warm Lean files | Wall median (s) | CPU median (s) |
+|---------------------------+-----------------+----------------|
+| One worker | 94.236 | 9.247 |
+| Four workers | 26.790 | 8.746 |
+
+The two paired repetitions preserve per-file output hashes and source hashes.
+For this selected corpus the wall median is 3.52 times faster (71.6% less wall
+time). CPU time remains similar. This supports parallel scheduling of these
+independent files; it is not a Lean kernel or C4 algorithm speedup claim.
 
 * Controlled warm startup measurements
 
@@ -86,3 +131,460 @@ Declaration, schema merge, memoization, revision, dispatch, layout, and mutable
 prototype benchmarks have their own recipes. Use unchanged inputs, semantic
 checks, and repeated A/B measurements before changing those algorithms.
 Startup improvements cannot be reported as runtime factory or resolver gains.
+
+* Resource-capped local concurrency and phase receipts
+
+The [[file:../tools/check_gate.py][complete-gate dispatcher]] builds the library and runs Python supervision
+admission tests concurrently. After both succeed, source-owned types,
+independent atoms, bounded diagnostics, native checks and Org checks run together.
+Every phase emits actual start/completion records with exit status and elapsed
+time. All phases must succeed; a failed preparation prevents check launches,
+and failed checks or launch errors cannot be hidden by successful siblings.
+Interrupting the gate terminates active phase process groups; the atomic runner
+also terminates its own children. No synthetic heartbeat or relaxed timeout is
+introduced. Six gate admission tests join the five runner tests.
+
+The default file-worker count is capped at fourteen, with two overlap slots
+on hosts with at least twelve logical CPUs, and a physical-memory budget of 2 GiB per worker after reserving 4 GiB for the host
+and diagnostics; the minimum is one. Unknown physical memory permits one
+worker. This is a conservative capacity rule, not a free-memory reservation or
+an adaptive load controller. ~LEAN_POO_CHECK_JOBS~ can explicitly select a
+positive count for a constrained host. This 12-core, 32-GiB host now selects fourteen after the full-gate qualification
+linked below. Hosts below twelve logical CPUs retain their CPU-count cap.
+Lean's own thread policy and all canonical file commands remain unchanged.
+
+The [[file:../Benchmarks/receipts/check-atoms-4-vs-12-2026-10-05.json][four/twelve-worker receipt]] uses identical twelve warm Lean files, alternating
+4/12 then 12/4 over two repetitions, with exact source/output/status parity.
+
+| Selected twelve-file workload | Wall median s | CPU median s |
+|-------------------------------+---------------+--------------|
+| Four workers | 36.917 | 12.792 |
+| Twelve workers | 23.448 | 12.929 |
+
+This selected workload is 1.57 times faster (36.5% less wall time), with similar
+CPU cost. Build, remaining files, diagnostic/docs phases and CI runner/setup
+costs are excluded; this is not a measured full-gate or Lean kernel speedup.
+The benchmark now accepts explicit job counts and selected files while retaining
+its prior defaults, schema 1, failure checks and transcript-parity requirement.
+
+The [[file:../Benchmarks/receipts/check-thread-policy-2026-10-05.json][thread-policy negative result]] retains two alternating single-file comparisons.
+Default-thread walls were 14.641 and 14.018 seconds; single-thread walls were
+14.399 and 15.060 seconds, with identical output. There is no consistent gain,
+so Lean's thread policy is retained. A wall/CPU gap identifies waiting but does
+not by itself identify its operating-system/import/scheduling cause.
+
+For a complete current phase receipt (JSON, no repository log):
+
+#+begin_src sh
+LEAN_POO_CHECK_RECEIPT=/tmp/lean-poo-check-gate.json just check
+#+end_src
+
+Receipts keep per-phase wall times, total child CPU, worker count, exact exits
+and orchestration hashes under schema 1. Performance fixtures stay in JSON;
+transient raw output belongs in TMP. The mandatory complete pre-commit gate and
+sixteen exact-head CI jobs remain required.
+
+* Indexed overlay paired runtime evidence
+
+The [[file:../Benchmarks/receipts/indexed-overlay-2026-10-05.json][paired overlay receipt]] retains four alternating list/indexed pairs for each
+selected Nat-key workload. Internal monotonic timers separate construction and
+direct typed factory queries; each observed key/result and stored-key count is
+checked against an independent scalar oracle outside the timed regions.
+
+| Local interpreter workload | List construction ms | Indexed construction ms | List query ms | Indexed query ms |
+|----------------------------+----------------------+-------------------------+---------------+------------------|
+| 8 writes / 8 keys / 64 queries | 0.300 | 0.802 | 0.281 | 0.605 |
+| 1024 writes / 1024 keys / 4128 queries | 57.046 | 6.043 | 158.632 | 5.707 |
+| 2048 writes / 256 keys / 1056 queries | 51.916 | 3.739 | 10.839 | 1.614 |
+
+For the 1024-key workload, ratios of medians are 9.44x for construction and
+27.80x for direct queries. Repeated writes over 256 keys give 13.88x and 6.72x.
+The eight-key case is negative: indexed construction/query medians are 2.67x /
+2.15x slower. Tiny sub-millisecond timings vary; this is not a universal
+crossover estimate. Both representations remain available.
+
+These are Lean ~--run~ interpreter results for selected local workloads, with
+ordinary Nat hashes. Imports, input construction, the independent oracle,
+graph/registry/preparation, retained-snapshot copy workloads and Euler proofs
+are excluded from this earlier interpreter-only receipt. It supplies no
+native-code, allocation or whole-application speedup claim; the native/lifetime
+study below is separate. Collisions/resizing/shared storage retain costs; the semantic test forces
+all keys to collide but is not a collision performance study.
+
+* Named registry batch measurement
+
+The [[file:../Benchmarks/receipts/indexed-registry-2026-10-05.json][named-batch receipt]] separately measures the actual registry workflow with
+four provider names, an absent fifth name, removals, fallback keys and two
+contexts. Each variant performs identical caller-ordered named batches and
+direct queries. Four alternating pairs retain per-name/key oracle equality.
+The indexed construction timer includes initial conversion of the ordinary
+registry; common initial name registration is excluded.
+
+| Interpreter workload | List updates ms | Indexed updates ms | List queries ms | Indexed queries ms |
+|----------------------+-----------------+--------------------+-----------------+--------------------|
+| 1 batch / 8 edits / width 8 | 0.556 | 0.640 | 0.690 | 0.858 |
+| 64 batches / 4096 edits / width 1024 | 15.271 | 9.348 | 986.765 | 41.297 |
+| 256 batches / 4096 edits / width 256 | 7.305 | 8.868 | 301.686 | 10.617 |
+
+For the 64-batch workload the update/query ratios of medians are 1.63x/23.89x.
+For 256 repeated batches, queries improve by 28.41x but indexed updates are
+1.21x slower. The small-table case is also negative (updates 1.15x slower,
+queries 1.24x slower). Tiny timings vary. Favor retained indexed state for the
+measured query-heavy continued-update pattern; retain ordinary/list APIs for
+small or update-heavy workloads unless caller measurements show a benefit.
+
+These earlier local interpreter measurements support their own named workflow,
+without standalone-overlay multipliers, native-code guarantees or whole Euler
+proof gains. The native/lifetime study below is separate. Imports, input generation,
+common initial registration, scalar oracle, graph/order/preparation and copy-heavy
+retained-snapshot workloads are excluded. Hash collision/resizing and shared
+storage costs remain. ~snapshot~ full-table materialization is not in the timed
+query path. All raw output belongs in TMP and fixtures stay schema-1 JSON.
+
+* Native execution and retained snapshot controls
+
+The [[file:../Benchmarks/receipts/indexed-registry-native-latest-2026-10-05.json][native latest]] and [[file:../Benchmarks/receipts/indexed-registry-native-retained-2026-10-05.json][native retained]] receipts use the compiled Lake executable;
+[[file:../Benchmarks/receipts/indexed-registry-interpreter-latest-2026-10-05.json][interpreter latest]] and [[file:../Benchmarks/receipts/indexed-registry-interpreter-retained-2026-10-05.json][interpreter retained]] use precisely the same Lean benchmark source and controls.
+Each combination retains 24 samples: four alternating list/indexed pairs for
+three workloads. Current results and old-snapshot checksums agree across engines.
+Source/toolchain/build-config hashes and native executable hashes are retained.
+The retained policy saves every pre-update registry, keeps its query view alive
+across timed updates and final queries, then checks one typed observation from
+each old snapshot against an independent scalar prefix oracle outside timing.
+All current query cells are checked at both contexts outside timing.
+
+| Native policy / workload | List updates ms | Indexed updates ms | List queries ms | Indexed queries ms |
+|--------------------------+-----------------+--------------------+-----------------+--------------------|
+| latest / small | 0.007563 | 0.007250 | 0.021604 | 0.021687 |
+| latest / distinct | 0.594876 | 0.274583 | 37.446646 | 0.586854 |
+| latest / repeated | 0.268146 | 0.275000 | 4.997125 | 0.154771 |
+| retained / small | 0.007833 | 0.006646 | 0.015104 | 0.013375 |
+| retained / distinct | 0.592021 | 0.269666 | 31.186459 | 0.601646 |
+| retained / repeated | 0.305897 | 0.266479 | 4.868021 | 0.159792 |
+
+The native retained repeated workload has update medians 0.306/0.266 ms and
+query medians 4.868/0.160 ms (30.46x query ratio of medians). The same-source
+interpreter retained workload has update medians 6.737/8.399 ms and queries
+277.887/10.170 ms: the update regression remains there. Do not reuse interpreter
+update ratios as native claims. The native latest repeated update medians are
+0.268/0.275 ms, a small negative result. Microsecond small-table differences
+vary by policy/order; no universal crossover or default representation switch
+is justified. Both APIs remain available.
+
+Build and reproduce after shared library preparation:
+
+#+begin_src sh
+lake build indexedRegistryScale
+python3 Benchmarks/IndexedRegistryStudy.py --engine native --policy retained --output /tmp/registry-native.json
+#+end_src
+
+~--engine~ accepts ~interpreter~ (default) or ~native~. ~--policy~ accepts ~latest~
+(default) or ~retained~. Native execution requires the built executable and fails
+when it is absent. Each run fails on exit/timeout, scalar result, retained count
+or snapshot/parity mismatch. Source/build setup, input generation, scalar oracles,
+initial common registration, graph/order/preparation and Euler proofs remain
+outside timing. Allocated bytes and peak live storage are not measured.
+
+The complete gate now builds ~LeanPoo~ and ~indexedRegistryScale~ once. A fourth
+independent post-preparation phase runs four native semantic cases covering both
+representations and retention policies, with no timing threshold. At this stage all 121 atomic
+Lean files, four bounded diagnostic files and nine Python supervision tests remain.
+CI builds the same executable and admits those four cases in the required
+diagnostics job; the existing sixteen-job aggregate is preserved.
+
+* Indexed transaction admission
+
+The atomic inventory now includes ~Tests/FunctionalIndexedTransaction.lean~:
+At that stage: 118 independent files plus four bounded diagnostic files (122 standalone files).
+The dispatcher distributes the new contract through its existing twelve shards;
+no serial global pass or new CI job is added. Four native named-batch admission
+cases and nine Python supervision tests remain part of the full gate.
+Transaction semantics are checked by the Lean corpus; previous native timings
+are evidence for batches/queries and do not measure transaction performance.
+
+* Complete transaction outcome admission
+
+The existing indexed transaction atom now checks representation outcome transfer
+and the registered-empty/unknown-name control. It adds no atom, serial phase or
+CI job: at that stage the inventory remained 118 independent plus four diagnostic files, using
+twelve shards and sixteen CI jobs. The three new library APIs are erased proofs;
+the runtime transaction body is unchanged. Prior batch/query timings remain
+scoped to their benchmark source and are not transaction timing evidence.
+
+* Transaction preflight admission
+
+The new ~Tests/FunctionalTransactionCheck.lean~ runs as one independent atom in the
+existing twelve shards. At that stage the inventory was 119 independent files plus four
+bounded diagnostics (123 standalone files); sixteen CI jobs remain unchanged.
+The full gate retains nine supervision tests and four native batch cases. The
+preflight corpus checks exact errors, cached scope and capability-failure limits;
+no performance threshold or optional benchmark is added to the gate.
+
+* Scoped consumer native admission
+
+Shared preparation builds ~LeanPoo~, ~indexedRegistryScale~ and
+~scopedTransactionScale~ once. The existing native phase/CI diagnostic job admits
+eight new full/scoped cases for outside ancestry, disjoint keys, positive fallback
+and late unknown names, alongside four registry cases. No timing threshold is used.
+At that stage the inventory was 120 independent Lean files plus four bounded diagnostics
+(124 standalone files), twelve shards, nine supervision tests and sixteen CI jobs.
+
+The new native paired receipt measures single-consumer preparation, including
+impact scans, with scalar outcome controls. It retains positive fallback overhead
+and excludes factory bodies, graph/index/registration/conversion/inputs/oracles.
+Its operation medians are not a controlled full-gate performance comparison.
+
+* Requested-key index admission
+
+Shared preparation builds ~LeanPoo~ and the three native study executables once.
+The existing native phase/CI diagnostic job now admits ten additional list/indexed
+key-scope cases, including outside/disjoint/early/late/unknown paths and capability
+errors, bringing the native total to 22. No timing threshold or new CI job is added.
+At this stage: 122 independent files plus four bounded diagnostics (126 standalone
+files), twelve shards, nine supervision tests and sixteen CI jobs. The new native
+receipt records index construction separately and retains one-use regressions.
+
+* Cached prepared certificate qualification
+
+At this stage: 123 independent Lean files plus four bounded diagnostics
+(127 standalone), 32 native admissions, nine Python supervisor tests, 16 CI jobs.
+Twelve shards remain the maximum parallel Lean matrix; cached preparation adds
+one atom and ten admissions in the existing diagnostic job, without serializing
+the file checks or imposing noisy timing thresholds.
+
+The native retained-input study compares indexed-key re-preparation with cached
+tuple reuse using a shared initial snapshot and IO materialization before query
+clocks. 512 requests / 4096 outside-ancestry edits: median query 0.049646 to
+0.0084795 ms; disjoint ancestor keys: 0.0582705 to 0.0167285 ms. Positive scopes
+both take full fallback; no fallback gain is claimed. Unknown-name cached queries
+are slightly slower at both widths. Setup, IO-cell costs and per-sample totals
+are reported separately; this is not a one-use or end-to-end comparison. No
+allocation/peak-memory, arbitrary function dependency tracking, or whole Euler
+maintenance gain is measured. Raw output remains in TMP; receipts keep schema v1.
+
+
+* Continuous revision gate
+
+Current inventory: 124 independent Lean files plus four diagnostics (128 standalone),
+32 native admissions, nine Python supervisor checks and 16 CI jobs. One additional
+atomic test checks 4096 first + 3072 second transactions. File checks still run in
+12 parallel shards/workers; no optional timing threshold or new native microbench
+was added. Full publication intentionally constructs all registry updates, so
+cached-view timing receipts are not evidence of publication-path speedups.
+
+* Certified narrow-view gate inventory
+
+One new independently dispatched Lean atom brings the current inventory to
+125 independent files plus four diagnostics (129 standalone). Twelve shards,
+16 CI jobs, 32 native admissions and nine supervision tests remain. No native
+performance comparison is added: this change proves narrower consumer semantics
+and records source/library costs; historical timings remain historical samples.
+
+* Built result-view gate inventory
+
+The new atom brings current coverage to 126 independent files plus four
+diagnostics (130 standalone). Twelve shards, 16 CI jobs, 32 native admissions
+and nine supervisor tests remain. Result/build commutation establishes value
+semantics only; source-list scans and potentially different factory applications
+are explicit costs. No new native timing or allocation claim is made.
+
+* Certified observation gate inventory
+
+One new atom brings the current inventory to 127 independent files plus four
+diagnostics (131 standalone). Twelve Lean shards, 16 CI jobs, 32 native
+admissions and nine supervisor tests remain. Joint observation equivalence
+is a semantic result; wrappers, observation functions and preparation have
+explicit costs. No new native timing/allocation claim is made.
+
+* Certified output consumer gate inventory
+
+The new atom brings coverage to 128 independent files plus four diagnostics
+(132 standalone). Twelve Lean shards, 16 CI jobs, 32 native admissions and nine
+supervisor tests remain. Consumer setup retains the full dependency family;
+factory bodies and constructor run per context call. This increment adds no
+native timing/allocation claim and does not memoize contexts.
+
+* Latest-context slot gate inventory
+
+The new atom brings coverage to 129 independent files plus four diagnostics
+(133 standalone). Twelve Lean shards, 16 CI jobs, 32 native admissions and nine
+supervisor tests remain. The explicit one-pair memo avoids dependency builds on
+hits but still compares contexts and runs constructors. Native timings and
+allocations remain unmeasured; it is not an output cache or universal speedup.
+
+* Context-view gate coverage
+
+~FunctionalContextView.lean~ is an independent atom. Current inventory is 130
+independent files plus four diagnostics (134 standalone), twelve Lean shards and
+16 CI jobs. Native admissions remain 32 and supervision tests remain nine.
+Its 29160 cached reads verify semantics; no new native projection benchmark or
+end-to-end performance claim is introduced. Raw transcripts remain in TMP.
+
+* Public context-cache observation gate coverage
+
+The new independent atom brings inventory to 131 independent files plus four
+diagnostics (135 standalone). Twelve Lean shards / 16 CI jobs, 32 native
+admissions and nine supervision tests remain unchanged. Semantic observation
+reads establish parity and cache policy, not allocation or timing gains. Raw
+transcripts remain in TMP.
+
+* Projected-context cache gate coverage
+
+The new independent atom brings coverage to 132 independent files plus four
+diagnostics (136 standalone). Twelve Lean shards / 16 CI jobs, 32 native
+admissions and nine supervision tests remain. Base-context equality avoids
+requiring equality on function-bearing Outer; native timing/allocation wins
+are unmeasured. Raw transcripts stay in TMP.
+
+* Native built-data cache gate
+
+The library phase also builds ~contextSlotScale~. Eight small native admission
+controls run in the existing native phase / CI diagnostic job, bringing the
+total to 40. No timing threshold or additional CI job is introduced.
+[[file:performance/context-cache.org][The dedicated evidence module]] records local results, negative controls
+and replication; atom count 132 plus four diagnostics remains unchanged.
+
+* Narrow public view atom
+
+~FunctionalObservedView.lean~ brings coverage to 133 independent atoms plus
+four diagnostics (137 standalone). Twelve Lean shards / 16 CI jobs, 40 native
+admissions and nine supervision tests remain. This is semantic coverage, not
+native qualification of projection/observation costs.
+
+* Broad cache shared by view consumers
+
+~FunctionalBorrowedView.lean~ adds one independent atom: 134 atoms + four
+diagnostics (138 standalone), twelve Lean shards / 16 CI jobs, 40 native
+admissions. View conversion runs on every read; no native speedup is measured.
+
+* Composed views
+
+~FunctionalViewComposition.lean~ adds one atom: 135 atoms + four diagnostics
+(139 standalone), twelve Lean shards / 16 CI jobs, 40 native admissions.
+List-comparison controls retain both 9-to-1 reduction and 13-to-30 increase;
+these counts do not establish native timing/allocation benefits.
+
+* Proof-only contract conversion
+
+~FunctionalContractConsequence.lean~ adds one atom: 136 atoms + four diagnostics
+(140 standalone), twelve Lean shards / 16 CI jobs, 40 native admissions.
+Conversion retains the Results tuple and maps the slot wrapper; native
+allocation/timing benefits remain unmeasured.
+
+* Joining proofs of one dependency family
+
+~FunctionalContractJoin.lean~ adds one atom: 137 atoms + four diagnostics
+(141 standalone), twelve Lean shards / 16 CI jobs, 40 native admissions.
+Joined proofs retain Results and map the slot wrapper; native timing/allocation
+benefits are unmeasured. Complete factory equality remains explicit.
+
+* Retained result access
+
+~FunctionalResultIndex.lean~ adds one atom: 138 atoms + four diagnostics
+(142 standalone), twelve Lean shards / 16 CI jobs, 40 native admissions.
+Setup traverses/inserts the full tuple; queries probe the retained hash map.
+Collision checks are correctness evidence, not native timing or allocation gains.
+
+* Native result-index costs
+
+[[file:performance/result-index.org][192 matched native samples]] retain setup/query regressions against a source-list
+control that keeps its keys. Eight small checksum controls bring native admissions
+to 48; twelve shards / 16 jobs / 138 atoms + four diagnostics remain. No
+allocation, peak-memory or universal speedup claim is made.
+
+* 2026-10-06 preparation overlap and Lean thread admission
+
+The earlier 22.772/33.550-second receipts had nearly equal child CPU totals
+(140.718/141.798 seconds). Library preparation increased from 0.143 to 7.600
+seconds; atoms increased from 21.520 to 24.844 seconds. Those phase observations
+explain where the wall increase occurred; they do not prove a kernel regression
+or identify the library phase's precise build/startup/host-wait contribution.
+
+Library build and Python supervisor tests now run together. Both must finish
+successfully before later checks launch. The source-type check joins atom,
+diagnostic, native and Org checks: it does not produce an artifact that they
+consume. Its failure still fails the full gate. A barrier admission test requires
+preparation overlap; preparation failure still prevents later launches. Interrupt and real-child failure controls remain.
+The supervisor suite now has eleven tests. No check or resource limit is removed.
+
+The [[file:../Benchmarks/receipts/check-threads-2026-10-06.json][matched thread study]] checks all 138 canonical atoms with twelve file workers,
+using two alternating pairs of Lean's default internal threads and explicit
+~-j 1~. Each pair requires identical per-file source hashes, actual transcript
+hashes and return codes. Local wall medians are 21.215/20.600 seconds;
+CPU medians are 125.461/118.986 seconds (default/one). The small wall difference
+is about 2.9%, CPU about 5.2%; two pairs establish no confidence interval or
+stable full-gate improvement. Library, diagnostics, docs and CI queues are excluded.
+
+The standalone runner exposes ~--lean-threads~ for explicit comparisons.
+Default Lean thread policy remains unchanged: a full-gate trial with automatic
+single-thread atoms regressed (46.558 baseline / 49.829 current wall medians;
+133.203 / 136.809 CPU seconds). The [[file:../Benchmarks/receipts/check-gate-thread-trial-2026-10-06.json][negative trial]] preserves executed dispatcher
+sources and their hashes. The automatic policy was withdrawn. Small atom-only
+gains cannot qualify a complete-gate change. Timeout, kill grace, allocation,
+memory limits and exact inventory remain unchanged.
+
+#+begin_src sh
+lake env python3 Benchmarks/CheckThreadsStudy.py --output /private/tmp/check-threads.json
+LEAN_POO_CHECK_RECEIPT=/private/tmp/check-gate.json just check
+#+end_src
+
+Warm full gates and gates that rebuild changed dependencies must be reported
+separately; no target promises that every source change stays below 22.8 seconds.
+No skipped proof, transcript cache acceptance, synthetic progress or longer
+failure timeout is used to make a faster result pass.
+
+** Complete gate, thread-policy withdrawal preserved
+
+The [[file:../Benchmarks/receipts/check-gate-overlap-2026-10-06.json][complete-gate paired receipt]] executes the exact prior dispatcher from
+commit 9a1b176 against the same current checkout as the optimized dispatcher.
+Both use twelve file workers and Lean's unchanged default thread policy. Two
+alternating pairs execute all 138 atoms and all seven gate phases; attributed
+per-file Lean output must match. Dispatcher source text/hashes, checkout source
+hashes, every phase status/cost and before/after host load are retained.
+
+| Warm complete gate | Wall median seconds | Child CPU median seconds |
+|--------------------+---------------------+--------------------------|
+| Prior serial preparation | 37.555 | 130.665 |
+| Parallel preparation / independent type check | 32.130 | 132.876 |
+
+Local wall median decreases about 14.4%; CPU increases about 1.7%. This is a
+scheduling observation for two pairs under varying host load, not a kernel
+improvement, confidence interval, cold/rebuild or exact CI speedup. It cannot
+promise that every commit is faster than the earlier 22.8-second warm gate.
+The negative automatic-thread trial above remains visible and is not selected
+as the active policy. The study streams actual child output and gives each full
+gate a 180-second watchdog, terminating its process group on expiry; this does
+not change canonical per-file/diagnostic limits or extend any timeout.
+
+#+begin_src sh
+lake env python3 Benchmarks/CheckGateStudy.py --output /private/tmp/check-gate-study.json
+#+end_src
+
+* Qualified fourteen-worker overlap
+
+See [[file:performance/check-worker-overlap.org][the complete-gate worker and per-file CPU study]] for the 31.297/24.105-second
+matched medians, capacity policy, unchanged semantic admission and measurement limits.
+
+* Solver transport admission
+
+The new solver-transport atom adds 96 independent routed witness reads and
+negative context/witness/Prop-elimination controls, with five empty axiom reports.
+Current full gate: 140 atoms + four diagnostics, 48 native admissions and eleven
+supervisor tests. Fourteen-worker local capacity and 12-shard/16-job CI remain.
+Earlier 138-atom worker timing is not promoted to this expanded inventory.
+
+
+* Finite refusal controls
+
+~FunctionalFiniteDiagnostics.lean~ adds one independent atom. It exhausts
+16,384 tiny truth-table/mapping routes with an independent scalar oracle and
+checks admitted solver reuse, typed refusal data and vacuous domains. Current
+inventory is 141 atoms + four diagnostics (145 files), 48 native admissions,
+eleven supervisor tests and twelve CI shards / sixteen jobs. Historical timing
+receipts describe their original corpora; this addition establishes no gate
+speedup or recovery to 22.8 seconds.
+
+Set ~LEAN_POO_ATOM_RECEIPT~ to a TMP JSON path to retain per-file child CPU,
+wall time and transcript hashes from the mandatory gate. Explicit ~--receipt~
+takes precedence. This adds observation without repeating the complete gate,
+changing worker limits or changing failure admission; v1 schema is unchanged.

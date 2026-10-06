@@ -1,4 +1,4 @@
-import LeanPoo.C4.VerifiedOrder
+import LeanPoo.C4.Renaming
 
 /-! C4 selection of typed, context-dependent factories. Selection resolves
 function values before applying a context; mathematical factories can remain
@@ -13,6 +13,16 @@ abbrev Factory (Context : Type u) (Result : Context → Type v) :=
   (context : Context) → Result context
 
 namespace Factory
+
+/-- Preserve an existing context-indexed theorem as a proof-bearing factory.
+PLift changes its sort, not its proposition, data, or guards. -/
+def fromProof {Context : Type u} {Claim : Context → Prop}
+    (prove : ∀ context, Claim context) : Factory Context (fun context => PLift (Claim context)) :=
+  fun context => ⟨prove context⟩
+
+@[simp] theorem fromProof_down {Context : Type u} {Claim : Context → Prop}
+    (prove : ∀ context, Claim context) (context : Context) :
+    (fromProof prove context).down = prove context := rfl
 
 /-- Adapt a factory to a larger context by an explicit projection. Its result
 is indexed by that projection; this does not transport a witness to new data. -/
@@ -86,6 +96,34 @@ theorem assemble_origin {order : C4.VerifiedOrder graph root}
     ∃ name, C4.Ancestor graph name root ∧ providers name key = some factory := by
   obtain ⟨name, member, same⟩ := select_origin selected
   exact ⟨name, order.covers.mp member, same⟩
+
+/-- Aligned provider names preserve first-provider selection. Alignment is
+required only on this precedence; no inverse dictionary or key cast is used. -/
+theorem select_rename (rename : String → String)
+    (mapped : String → Provider Context Key Value)
+    (aligned : ∀ name ∈ names, mapped (rename name) key = providers name key) :
+    select (names.map rename) mapped key = select names providers key := by
+  induction names with
+  | nil => rfl
+  | cons name rest ih =>
+    have head := aligned name (by simp)
+    have tail := ih (fun other member => aligned other (by simp [member]))
+    simp only [List.map_cons, select, head]
+    cases providers name key <;> simp_all
+
+/-- The retained graph-renaming proof also preserves consumer capability
+selection when providers are aligned on original ancestors. -/
+theorem assemble_rename (order : C4.VerifiedOrder graph root)
+    (rename : String → String) (injective : Function.Injective rename)
+    (unique : (graph.nodes.map C4.Node.name).Nodup)
+    (mapped : String → Provider Context Key Value)
+    (aligned : ∀ name, C4.Ancestor graph name root →
+      mapped (rename name) key = providers name key) :
+    assemble (order.rename rename injective unique) mapped key =
+      assemble order providers key := by
+  apply select_rename
+  intro name member
+  exact aligned name (order.covers.mp member)
 
 /-- Invoke a retained provider with the exact context determining its result. -/
 def apply (provider : Provider Context Key Value) (context : Context) (key : Key) :

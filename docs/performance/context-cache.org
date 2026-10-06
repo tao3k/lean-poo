@@ -1,0 +1,76 @@
+#+TITLE: Native built-data cache evidence
+
+[[file:../contracts/context-cache.org][Context-cache API guide]] · [[file:../../Benchmarks/README.org][Benchmark index]]
+
+* Workload and matched controls
+
+The [[file:../../Benchmarks/receipts/context-slot-native-2026-10-05.json][v1 native receipt]] records 96 samples:
+two key counts (8/32), two factory work counts (0/1024 UInt64 recurrence steps),
+three request schedules, four alternating pairs and two variants. Every query
+has 256 requests. Hit repeats context 7; miss alternates 0/1; blocks repeats
+each context eight times. Both controls prepare the same certified functions
+and materialize the same warm snapshot at context 7 in an IO cell. Setup and
+query are measured separately. State-cell creation and process startup are
+outside query timing. Query includes result construction, checksum accumulation,
+IO state access and dependency builds or cache matching/replacement.
+
+A separate scalar recurrence and key loop, after timing, checks every output
+checksum. A schedule oracle checks cache decisions. Uncached performs no reuse;
+cached reports 256/0/224 reused reads for hit/miss/blocks. Payload and the
+uncached consumer are noinline. Both produce the same visible results.
+
+* Local results and negative controls
+
+These are query medians in milliseconds, from four local alternating pairs.
+
+| Keys | Factory work | Schedule | Uncached | Cached |
+|------+--------------+----------+----------+--------|
+| 32 | 1024 | hit | 71.395250 | 0.052104 |
+| 32 | 1024 | blocks | 68.126728 | 8.537417 |
+| 32 | 1024 | miss | 68.236979 | 68.282208 |
+| 8 | 0 | miss | 0.064521 | 0.070042 |
+
+For the first row, setup medians are 0.272583/0.272083 ms (uncached/cached).
+Setup-plus-query medians are 71.697355/0.323688 ms. These totals include the
+common warm preparation; they are not cold one-use or process-latency results.
+The cheap all-miss control regresses locally. Heavy all-miss workloads show no
+substantial gain. The other workloads and every sample remain in the receipt.
+No confidence interval, universal speedup or crossover is established.
+
+* Replicate and admit semantics
+
+#+begin_src sh
+lake build contextSlotScale
+python3 Benchmarks/ContextSlotStudy.py --output /private/tmp/context-slot-study.json
+just _check-native-context
+#+end_src
+
+The binary takes ~variant mode work keys reads~. CI and the complete local gate
+admit eight small native controls: both variants for cheap hit, heavy hit, miss
+and blocks. They check checksums and reuse policy, not timing thresholds.
+There are now 40 native admissions; 132 independent Lean atoms, four diagnostics,
+nine supervisor tests, twelve Lean shards and 16 CI jobs remain unchanged.
+The receipt binds 138 source hashes and the local binary hash. Performance
+samples are a local measurement; CI establishes semantics on its built binary.
+
+* Paper and reference boundary
+
+The local [[file:../../.data/poof/poof.scrbl][POOF paper source]], ~Cache invalidation~ at lines 1525–1554,
+discusses explicit caches and recomputation/invalidation tradeoffs. The clean
+checkout is pinned to ~9affa8fbbb4f12cbd98cb97f8b8b84474fc39429~; its file hash
+and exact policy token lines are in the reference audit. The [[https://fare.tunes.org/files/cs/poof.pdf][online PDF]] is a
+supplementary reading link. These controls qualify one fixed immutable
+family's latest-context data cache. They do not establish mutation tracking,
+open-recursive object performance or equality costs for rich contexts.
+
+The [[file:../../Benchmarks/receipts/euler-context-cache-native-2026-10-05.json][v1 reference audit]] checks the existing pressure-sharing source.
+It already binds Pa once; redundant construction or a usable external cache
+is not demonstrated. Euler remains a reference input, with migrations 0.
+External code/maintenance savings, allocated bytes and peak memory are unmeasured.
+
+The native Claim is True to isolate data-cache costs; existing Lean tests prove
+arbitrary dependent joint consumer parity. Output constructors still execute
+on every request. Factory loop allocation is part of this synthetic workload;
+this is not an Euler analytical computation. Observation, projection and rich
+outer-context adapters are not benchmarked here. Added measurement code costs
+63 Lean lines and 77 Python lines; no runtime library API is added.

@@ -1,0 +1,62 @@
+#+TITLE: Reuse dependency data under a derived joint contract
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalContractConsequence.lean][Compiled clients]]
+
+* Change the proof and retain the data
+
+Import ~LeanPoo.Functional.ContractConsequence~. If ~Claim~ implies ~Next~ for
+all data at each context, use ~ready.entails Next derive~ to retain its exact
+factory tuple under the new contract. ~data.entails~ and ~slot.entails~ also
+retain built values and context alignment. No key equality is needed for
+conversion. No dependency projection, value observation or provider query runs.
+
+| API | Guarantee |
+|-----+-----------|
+| ~Certified.entails~, ~entails_factories~ | Retain exact functions with a supplied joint consequence |
+| ~Certified.entails_trans~ | Chained and composed logical consequences give equal certificates |
+| ~Snapshot.entails~, ~entails_val~ | Retain the same built tuple under the derived proof |
+| ~ContextSlot.entails~, ~entails_empty~ | Convert populated/empty caches without rebuilding dependency values |
+| ~entails_retained~, ~entails_hit~ | Preserve retained context/data and same-context reuse |
+| ~entails_consume~ | New-contract consumer equals original consumer with the consequence supplied |
+
+#+begin_src lean
+import LeanPoo.Functional.ContractConsequence
+open LeanPoo.Functional.Requirements
+example {C K : Type} [DecidableEq C] {V : C → K → Type} {keys : List K}
+    {Claim Next : ∀ c, Results V c keys → Prop} {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (derive : ∀ c data, Claim c data → Next c data)
+    {Output : C → Type} (construct : ∀ c data, Next c data → Output c) (c : C) :
+    ((slot.entails Next derive).consume construct c).1 =
+      ready.consume (fun c data proof => construct c data (derive c data proof)) c :=
+  ContextSlot.entails_consume slot Next derive construct c
+#+end_src
+
+For example, a joint theorem ~quantity + 1 ≤ limit~ supplies ~quantity ≤ limit~.
+A lower bound carried by the quantity's subtype then supplies ~context ≤ limit~.
+The test constructs a dependent result with that final proof. Clients declare
+the logical implication once and retain the resulting slot across requests.
+Chained consequences can use ~Certified.entails_trans~ to reuse one final proof.
+A false implication must be proved before any of these APIs can accept it.
+
+* Cost and verification
+
+Proof fields are erased. Snapshot conversion keeps the original Results value;
+it does not traverse or rebuild the tuple. Slot conversion maps the retained
+Option/context wrapper; no zero-allocation claim is made. Hits still compare
+contexts, misses build the original family, and constructors run every request.
+Use a data view or observation instead when values, keys or representation change.
+Native timing, allocation and peak-memory benefits are unmeasured.
+
+192 reads cover eight families, three traces and cold/warm starts: 104 hits,
+88 misses, exact independent values, uncached consumers and chained-proof hits.
+Wrong context and invalid consequence are rejected. Of seven axiom reports,
+five require none and two use only propext. Shared costs: 63 module / 73 test lines.
+
+* Paper and reference evidence
+
+The local [[file:../../.data/poof/poof.scrbl][POOF paper]] discusses explicit cache policy. Contract conversion is
+a Lean-specific extension over immutable certified data, rather than a new
+paper conformance claim. The [[file:../../Benchmarks/receipts/euler-contract-consequence-2026-10-06.json][schema v1 audit]] hashes that source and reference
+inverse/strain and pressure/gradient/equation contracts. Those proofs already
+travel with their structures. Repeated admission or avoidable rebuild is not
+demonstrated. Euler integrations/migrations zero; net code and hours unmeasured.

@@ -23,3 +23,470 @@ saves samples and exact Lean-source hashes. These are warm pipeline startup
 measurements, not C4 algorithm throughput or a whole-suite speedup claim.
 
 See [[file:../docs/check-performance.org][check pipeline performance]] for the measured boundary and full gate policy.
+
+~just benchmark-check-atoms~ compares identical eight-file warm checks using
+one and four workers in one Lake environment. Two paired repetitions alternate
+variant order and require per-file Lean transcript/source hashes to agree.
+The [[file:receipts/check-atoms-2026-10-05.json][schema-1 receipt]] records each sample and source identity, separate wall/CPU
+medians and the exclusion of library builds, full-suite coverage and CI queues.
+
+
+~python3 Benchmarks/EulerMaintenanceStudy.py --output /tmp/euler-maintenance.json~
+is an optional source/maintenance study, not a runtime benchmark. It requires
+and only reads the pinned clean ~.data/NavierStokesAndEuler~ reference. It counts
+common explicit arguments and marked code sections in the kernel-checked
+~Tests/FunctionalMaintenance.lean~ comparison, including checklist/application
+code and shared library costs. It runs no upstream builds. See the
+[[file:../docs/use-cases/euler-maintenance-checklist.org][benefit checklist]] and tracked receipt for scope and unknown adapter costs.
+
+
+The access-cost receipt also includes marked positional/named definitions
+from ~Tests/FunctionalAccess.lean~, shared Access/proof-adapter costs, and source
+context-slot/adapter-arity inventory. The preparation receipt records the earlier
+measurement scope. Both use ~lean-poo.euler-maintenance.v1~. Full implicit
+instance/context/adapter elaboration and global source savings remain unknown.
+
+* Change propagation reference inventory
+
+~python3 Benchmarks/EulerChangeSurfaceStudy.py --output /tmp/euler-change-surface.json~
+reads only Git-tracked Lean files at the pinned clean Euler reference. The
+[[file:receipts/euler-change-surface-2026-10-04.json][receipt]] records a content manifest, physical line/file counts, lexical mentions
+of the four earlier theorem entry points outside their defining file, and
+hashes of the local projection contract and test. It does not resolve Lean
+references or measure affected consumers, source savings, or runtime. It is
+optional reference research and is not a CI dependency. The [[file:../docs/use-cases/euler-maintenance-checklist.org][evaluation protocol]]
+now prioritizes real change fanout and complete migration costs.
+
+All change-surface receipts and the current inventory script use
+~lean-poo.euler-change-surface.v1~. The [[file:receipts/euler-change-surface-2026-10-04.json][projection snapshot]],
+[[file:receipts/euler-observation-contracts-2026-10-04.json][observation snapshot]], and [[file:receipts/euler-evidence-transport-2026-10-04.json][evidence snapshot]] differ in measurement scope,
+not schema version. They bind the same reference manifest and the local
+contracts/tests covered by each study. Existing path/tower/data bridges remain
+reference-only; external analytic adapters and avoided edit/time savings are
+unmeasured. These are unreleased schema-1 studies; adding evidence fields does
+not trigger a version increment.
+
+Run logs belong in the system temporary directory, such as ~/tmp/~ or the
+host's ~$TMPDIR~. The repository ignores ~*.log~ at every depth. Preserve stable
+benchmark and test evidence as JSON receipts, with source hashes, measurement
+scope, and units; do not retain log files as benchmark artifacts.
+
+
+The [[file:receipts/euler-context-reindex-2026-10-04.json][context snapshot]] adds the two correction-data input blocks and hashes of
+~Functional.Reindex~ and its compiled test. Its schema remains
+~lean-poo.euler-change-surface.v1~. Distinct initialized-history and forward
+zero-history obligations are recorded as projection/analytic proof gates;
+shared parameter names do not establish provider interchangeability. The local
+64-case contract is not a runtime measurement or avoided-Euler-edit count.
+
+
+The [[file:receipts/euler-declaration-presentation-2026-10-04.json][declaration-presentation snapshot]] adds exact local module/test hashes and
+bounded registration-order contracts to the unchanged source inventory, still
+using schema 1. Its 1536 permutation runs and 25200 pair queries are semantic
+checks, not timing samples. No upstream C4 registry, avoided consumer edits or
+net maintenance saving has been measured. Validation diagnostic order is a
+retained negative result.
+
+
+The [[file:receipts/euler-relabeling-composition-2026-10-04.json][relabeling-composition snapshot]] binds the local composed-witness modules and
+test to the same upstream manifest, still under schema 1. Its 1536 two-stage
+cases compare fresh target compilation with retained direct/sequential migration;
+3072 independent target compilations and 25200 pair queries are semantic counts,
+not runtime benchmark samples. The direct path maps the output once rather than
+twice; no elapsed-time or actual Euler maintenance saving has been measured.
+
+
+The [[file:receipts/euler-provider-registry-2026-10-05.json][provider-registry snapshot]] records automatic alignment and root-cut exclusion,
+64 registry builds and 512 preparations with exact local source hashes, still
+under schema 1. Three handwritten mapped-name branches in the prior local
+fixture are replaced by one generic cached constructor call. This is local
+adapter evidence, not upstream removed code, an elapsed-time benchmark or a
+claim that Euler needs a C4 registry. Provider/index construction, string/hash
+costs and actual upstream maintenance savings remain separate measurements.
+
+The [[file:receipts/euler-shared-registry-2026-10-05.json][shared-registry snapshot]] adds declaration-wide retention across verified
+roots, generic whole-checklist contracts and exact local source/test hashes.
+Its 96 shared registries, 1728 preparations and 624 successes are semantic
+counts. Five local declarations versus six summed root-cut entries is a
+conditional construction-visit comparison, not a timing benchmark or upstream
+source saving. The pinned Euler checkout is unchanged; the schema remains 1.
+
+The [[file:receipts/euler-registry-patch-2026-10-05.json][registry-patch snapshot]] binds typed single-capability edits and conservative
+negative-impact certificates to local source/test hashes. The 960 patches and
+15360 queries are semantic checks; 1384 value/error changes are observations
+at two contexts, not a precise function-change or upstream fanout census.
+Persistent hash copies, key-equality checks and repeated wrapper chains remain
+explicit costs. No external integration or runtime benchmark is added; schema 1
+and the pinned reference manifest remain unchanged.
+
+
+The [[file:receipts/euler-registry-rollback-2026-10-05.json][registry-rollback snapshot]] binds same-key overwrite, distinct-key commutation
+and immediate original-cell rollback to updated local hashes. All 960 rollback
+operations restore the original 15360 checklist observations at two contexts.
+Generic proofs cover dependent functions at every context. Source cost and
+additional wrapper/hash costs are explicit; no automatic compaction, runtime
+benchmark or measured external maintenance saving is asserted. Schema remains 1.
+
+
+The [[file:receipts/euler-provider-overlay-2026-10-05.json][provider-overlay snapshot]] binds normalized typed edit batches and whole-checklist
+equivalence to sequential patching to exact local hashes. Local semantic checks
+cover 32 histories, 344 updates, 5504 prefix and 512 batch observations at two
+contexts. A 256-to-1 same-key override count is structural evidence only. Linear
+filter/query costs, potentially quadratic all-distinct compilation, and unchanged
+base costs are explicit. Schema 1, reference pin and manifest remain unchanged;
+actual Euler savings and runtime gains remain unmeasured.
+
+
+The [[file:receipts/check-atoms-4-vs-12-2026-10-05.json][4/12-worker study]] compares the same twelve warm Lean files over two alternating
+pairs. Wall medians are 36.917/23.448 s, CPU 12.792/12.929 s, with exact transcript
+and source parity. This selected workload improves 1.57 times; full-gate/CI and
+kernel speedup remain separate claims. ~CheckAtomsStudy.py~ accepts explicit
+worker counts and files while keeping its old defaults and schema 1.
+The [[file:receipts/check-thread-policy-2026-10-05.json][thread-policy negative receipt]] shows no consistent one-thread improvement;
+Lean's internal thread policy remains unchanged. ~tools/check_gate.py~ emits
+complete phase receipts on request, launches independent checks after successful
+shared preparation, and caps automatic file workers by CPU/memory capacity.
+
+
+The [[file:receipts/euler-registry-batch-2026-10-05.json][registry-batch snapshot]] binds normalized shared-registry batch installation and
+negative-impact consumer contracts to exact local hashes. The corpus has 960
+batches, 192 unknown-name errors and 15360 queries, with 10368 negative scopes.
+A 256→1 name lookup/insertion comparison is structural source evidence, not a
+runtime or external source-saving estimate. List scans, hash copies and retained
+base layers remain costs; schema 1 and the reference manifest remain unchanged.
+
+The [[file:receipts/euler-registry-transaction-2026-10-05.json][multi-provider transaction snapshot]] binds 26 local source/test hashes,
+pure first-unknown-name semantics and whole-consumer negative-scope reuse.
+It records shared source/test costs, retained prefix/normalization/storage costs,
+and zero actual Euler migrations. External code and maintenance savings remain
+unmeasured; the reference pin/manifest and schema 1 are retained.
+
+The [[file:receipts/euler-indexed-overlay-2026-10-05.json][indexed-overlay source snapshot]] binds 28 local source/test hashes and retains
+schema 1, the unchanged Euler source manifest and zero actual migrations.
+The [[file:receipts/indexed-overlay-2026-10-05.json][paired runtime receipt]] compares identical small, distinct-key and repeated-key
+workloads using internal construction/query timers under Lean's interpreter.
+Imports, input generation, the scalar oracle and application/graph/preparation
+costs are excluded. This earlier interpreter-only receipt does not establish
+a native-code or Euler proof speedup; later native/lifetime receipts have their
+own local scope.
+Reproduce after building the library with:
+
+#+begin_src sh
+python3 Benchmarks/IndexedOverlayStudy.py --output /tmp/indexed-overlay.json
+#+end_src
+
+The [[file:receipts/euler-indexed-registry-2026-10-05.json][indexed-registry source snapshot]] binds 30 local source/test hashes and records
+retained named bases, dictionary/ordinary-batch agreement and consumer reuse.
+The [[file:receipts/indexed-registry-2026-10-05.json][named-batch runtime receipt]] compares actual list/indexed registry updates and
+direct queries with per-name/key scalar controls. Initial name registration,
+inputs/imports, oracle, graph/order/preparation and Euler proofs are excluded;
+indexed conversion is included in its construction phase. Both retain old
+snapshots in semantic tests; copy-heavy retained-snapshot performance is unmeasured.
+
+#+begin_src sh
+python3 Benchmarks/IndexedRegistryStudy.py --output /tmp/indexed-registry.json
+#+end_src
+
+The [[file:receipts/indexed-registry-native-latest-2026-10-05.json][native latest]], [[file:receipts/indexed-registry-native-retained-2026-10-05.json][native retained]],
+[[file:receipts/indexed-registry-interpreter-latest-2026-10-05.json][interpreter latest]] and [[file:receipts/indexed-registry-interpreter-retained-2026-10-05.json][interpreter retained]] receipts share source/toolchain/config hashes and cross-engine
+scalar control parity. Native binary hashes are recorded. Four alternating
+pairs per workload per combination retain negative update cases and tiny-table
+variation. No allocation or whole-Euler speedup is inferred. Schema stays v1;
+earlier interpreter receipts remain historical.
+
+#+begin_src sh
+lake build indexedRegistryScale
+python3 Benchmarks/IndexedRegistryStudy.py --engine native --policy retained --output /tmp/registry-native.json
+#+end_src
+
+* Indexed transaction source boundary
+
+[[file:receipts/euler-indexed-transaction-2026-10-05.json][Indexed transaction source snapshot]] records the new library API, six kernel
+reports and independent scalar/ordinary semantic controls. It retains schema 1
+and the unchanged Euler pin/manifest, with 32 local source/test hashes. This is
+not a new timing receipt: earlier indexed-registry measurements cover named
+batches and queries. Transaction allocations, peak memory and external savings
+remain unmeasured; source/test cost is 101/159 physical lines.
+
+* Complete transaction outcome source boundary
+
+[[file:receipts/euler-transaction-outcomes-2026-10-05.json][Transaction-outcome source snapshot]] records three new erased proof APIs,
+a generic complete-result consumer and the empty-provider/name-scope control.
+Current transaction module/test costs are 174/206 lines, increments of 73/47.
+The runtime transaction implementation and earlier benchmark sources are unchanged.
+This source receipt measures no new timing, allocation or external savings;
+it keeps schema 1, 32 local hashes and the unchanged Euler pin/manifest.
+
+* Transaction preflight source boundary
+
+[[file:receipts/euler-transaction-preflight-2026-10-05.json][Preflight source snapshot]] retains schema 1 and the Euler pin/manifest, binding
+34 local files. It records seven proof reports, 12,432 scalar/ordinary/indexed
+semantic cases and source/test costs of 113/95 physical lines. This is not a new
+performance receipt: preflight avoids update-prefix construction but a successful
+preflight-plus-execution adds a name scan. Timing/allocation gains and external
+savings are unmeasured. Existing batch performance receipts keep their scope.
+
+* Native scoped transaction consumer study
+
+Build with ~lake build scopedTransactionScale~ and reproduce with:
+
+#+begin_src sh
+python3 Benchmarks/ScopedTransactionStudy.py --output /tmp/scoped-transaction.json
+#+end_src
+
+The [[file:receipts/scoped-transaction-native-2026-10-05.json][native receipt]] compares full indexed transaction preparation and the scoped
+consumer API over 4,096 edits, width 32, 256 batches. Thirty-two samples retain
+four alternating pairs for each of outside-name, disjoint-key, positive and late
+unknown-name modes. Internal timers include impact scan, preflight/full updates
+and preparation; graph/index/registration/conversion/inputs/factory execution/
+scalar oracle/build are excluded. Scalar status/checksum controls match per pair.
+Thirteen source/config hashes, host architecture and native binary digest are bound.
+
+Full/scoped medians in ms: outside 0.123917/0.010792; keys 0.186938/0.144771;
+positive 0.118313/0.119542; unknown 0.118646/0.009084. Retain the positive
+regression and scope-scan cost; no universal policy or whole Euler gain is claimed.
+Shared benchmark Lean/Python costs are 49/60 lines, separate from library/test
+59/144 lines. No allocations/peak memory are measured. The [[file:receipts/euler-scoped-transaction-2026-10-05.json][schema-1 source snapshot]]
+keeps the reference pin/manifest, 36 local files and zero external migrations.
+
+* Native retained requested-key index study
+
+#+begin_src sh
+lake build keyIndexScale
+python3 Benchmarks/KeyIndexStudy.py --output /tmp/key-index.json
+#+end_src
+
+The [[file:receipts/key-index-native-2026-10-05.json][native receipt]] uses 80 samples/four alternating pairs for 8/512 requested keys,
+4,096 edits and outside/disjoint/early-overlap/late-overlap/unknown modes. Scalar
+status/checksum controls match per pair; fourteen source/config hashes, host and
+native digest are bound. Index construction is timed separately; query includes
+the complete impact/preflight/fallback/preparation call. Per-sample compile+query
+totals include one-use cost. Factory evaluation, graph/ancestry/registration/
+conversion/inputs/oracle/build are outside timing.
+
+For 512 disjoint keys, list/indexed query medians are 21.014521/0.063708 ms,
+indexed total 0.084354 ms. Late overlap is 20.979250/0.156208 ms, indexed total
+0.175458 ms. One-use totals regress for outside (0.048500/0.071521 ms), early
+(0.152521/0.174750 ms) and unknown (0.005730/0.025313 ms); small outside/unknown
+cases regress too. Raw history scans/collisions/copies remain; no universal
+representation switch, allocated-byte or whole Euler gain is claimed. Shared
+benchmark source is 52/64 lines, library/test 79/157 separate. The [[file:receipts/euler-key-index-2026-10-05.json][schema-1 snapshot]]
+keeps the reference manifest, 38 local files and zero external migrations.
+
+* Joint consumer certificate source audit
+
+~receipts/euler-joint-certificate-2026-10-05.json~ adds a hash-bound direct reading
+of SourceCoefficientAgreement, ApproximationResidual and its initialized
+constructor. It records data/proof dependencies and retained analytic guards.
+The local CertifiedRequirements API costs 104 lines, its fixture 115 lines;
+192 preparation plus 8 joint plans pass at three contexts with six axiom reports.
+No runtime benchmark, upstream adapter, actual migration or measured source/
+maintenance saving is added. Reproduce with EulerChangeSurfaceStudy; schema v1.
+
+* Retained certified tuple versus repeated preparation
+
+~receipts/cached-preparation-native-2026-10-05.json~ records 80 matched native
+samples (four alternating pairs for eight/512 requests across five modes).
+Both paths materialize the same initial certified tuple/key index in an IO cell
+before query timing; setup including the IO cell is separate. Query compares the
+existing retained-key scoped API to whole-tuple reuse; it includes tag/certificate
+forgetting, impact, preflight and any full fallback. Native ~Claim=True~ isolates
+runtime plumbing; generic theorems admit arbitrary joint propositions.
+
+| Requests / edits | Indexed re-preparation query ms | Cached query ms | Interpretation |
+|------------------+---------------------------------+-----------------+----------------|
+| 512 / outside ancestry | 0.049646 | 0.0084795 | Same retained tuple avoids repeated selection |
+| 512 / disjoint ancestor keys | 0.0582705 | 0.0167285 | Impact scan remains; repeated preparation removed |
+| 512 / early overlap | 0.1563125 | 0.152792 | Both full fallback; no claimed fallback speedup |
+| 512 / late overlap | 0.1641455 | 0.1575625 | Both full fallback; no claimed fallback speedup |
+| 512 / unknown name | 0.0116045 | 0.011771 | Cached path slightly slower; name error still exact |
+| 8 / unknown name | 0.0055205 | 0.005688 | Cached path slightly slower |
+
+For 512 outside-ancestry requests, common initial setup medians are 0.0641045/
+0.0667295 ms; per-sample setup+query medians 0.1141875/0.075188 ms. These totals
+include a common prepared cache even in the baseline and are not a one-use
+comparison or process-latency measurement. Four pairs do not establish universal
+crossovers or significance; all workloads and negative results are retained.
+Raw histories, name preflight, factory bodies and retained memory remain; no
+allocated-byte/peak-memory or Euler application/maintenance benefit was measured.
+Shared/test/native Lean/Python costs are 101/175/56/65 physical lines; the gate
+admits ten new small native cases (32 total). Historic receipts remain unchanged.
+
+* Continuous consumer revision source snapshot
+
+~receipts/euler-consumer-revision-2026-10-05.json~ records full immutable registry
+publication plus automatically rebound negative-scope cached certificates and
+fresh-data certification without a repeated prepare. Shared API/proofs cost 164
+lines, the fixture 203. 4096 first + 3072 second transactions cover other-consumer
+state, collisions, errors and two contexts, with six standard-only axiom reports.
+Explicit OpenAI time-transport declarations/token lines are hash-bound. No new
+publication runtime/memory benchmark, external adapter/build, actual migration or
+measured code/labor saving. Prior view-only timings apply only to their own API.
+
+* Certified narrow-view source audit
+
+~receipts/euler-certified-view-2026-10-05.json~ uses the existing v1 schema.
+It adds source-hashed individual inverse/strain consumers and 46 local hashes,
+five projection APIs, broad-failure fallback semantics and 78/120 line costs.
+There is no new native benchmark: projection scans and fallback preparation
+costs are explicit, allocations/timing and actual Euler maintenance savings
+are unmeasured. Earlier receipts remain historical evidence.
+
+* Built result-view audit
+
+~receipts/euler-result-view-2026-10-05.json~ preserves schema v1 and adds 48 local
+source hashes, three pressure/gradient/equation consumers, nine APIs and the
+98/118 shared/test line costs. No native benchmark was added. The local result
+projection avoids factory application after a broad result exists; the reference
+already has named structures and no redundant external execution was established.
+Historical receipts remain unchanged; actual migration/maintenance savings unknown.
+
+* Certified observation source audit
+
+~receipts/euler-certified-observation-2026-10-05.json~ adds a source-hashed
+path/tower/correction-data equality chain, eight APIs and 50 local hashes.
+Schema stays v1 and historical receipts remain unchanged. Shared/test costs
+95/179 lines, wrappers, observation execution and candidate preparation are
+recorded. No external adapter, migration, native timing/allocation or code/
+maintenance saving is established.
+
+* Certified consumer construction audit
+
+~receipts/euler-certified-consumer-2026-10-05.json~ uses schema v1, records the
+final field-tower witness/proof constructor, six APIs and 52 local hashes.
+Shared/test costs are 66/165 lines. No native benchmark or external migration
+is added. A Prop-only existential does not provide executable Type data;
+explicit data/analytic constructors are required. Historical receipts remain.
+
+* Latest-context slot source audit
+
+~receipts/euler-context-slot-2026-10-05.json~ retains schema v1 and adds 54 local
+hashes, the existing Pa binding/use audit and eleven slot APIs. Shared/test costs
+are 96/138 lines. No native benchmark was added: hit/miss decisions and semantic
+parity are evidence, not execution-time or allocation savings. One retained pair
+bounds each slot value, while externally retained histories have separate costs.
+Historical receipts remain unchanged and actual Euler migrations remain 0.
+
+* Built cache projection audit
+
+~receipts/euler-context-view-2026-10-05.json~ is a separate schema v1 receipt,
+with 56 local source hashes. Seven APIs retain a built-data hit for a narrow
+consumer. Local costs are 70 module / 152 test lines; source scans and new tuple
+allocation remain. 4608 cases / 29160 reads are semantic evidence, not native
+performance data. Pressure/gradient consumers already use named reference
+fields; migrations 0, code and maintenance savings unmeasured.
+
+* Public built-cache observation receipt
+
+~receipts/euler-context-observation-2026-10-05.json~ is schema v1 and binds 58
+local source hashes. It records 1536 semantic cases / 6750 reads, nine APIs,
+96 module and 208 test lines. Observation traverses/allocates a tuple and runs
+caller observers. The reference already has path/tower equality bridges. This
+is not native benchmark evidence; Euler migrations 0 and net code/maintenance
+savings remain unmeasured.
+
+* Projected-context cache receipt
+
+~receipts/euler-context-pullback-2026-10-05.json~ is schema v1, binding 60 local
+source hashes. Six APIs cache complete base dependencies independently of
+extra outer fields. 192 cases / 729 reads establish semantics, not native
+performance. Shared costs 62 module / 130 test lines; projection and base
+equality remain. Reference comparable-base factoring is unproven; migrations
+0 and net code/maintenance savings unmeasured.
+
+* Native built-data cache study
+
+[[file:../docs/performance/context-cache.org][Method, results and replication]] covers 96 alternating native samples
+and eight CI admissions, with setup/query separation and negative controls.
+~receipts/context-slot-native-2026-10-05.json~ binds sources/binary; the separate
+~euler-context-cache-native-2026-10-05.json~ audit remains reference-only. Both
+are schema v1. Native admissions now total 40; raw logs stay in TMP.
+
+* Narrow observed view audit
+
+~receipts/euler-observed-view-2026-10-05.json~ stays v1 and binds 64 local hashes,
+the local original paper and reference field consumers. Ten APIs avoid observing
+unrequested positions during conversion. This path has no native timing study;
+previous cache timings remain historical and cannot be transferred.
+
+* Borrowed public views
+
+~euler-borrowed-view-2026-10-05.json~ records five local APIs, 66 local source
+hashes and pinned paper/reference evidence. It is a source/semantic audit;
+view timing, allocation and external maintenance gains are unmeasured.
+
+* View composition source audit
+
+~euler-view-composition-2026-10-05.json~ records four laws, 68 local source
+hashes, pinned original getter/composition discussion and existing nested
+reference field access. Structural comparison counts retain a regression;
+no native timing/allocation or external maintenance gain is inferred.
+
+* Contract consequence source audit
+
+~euler-contract-consequence-2026-10-06.json~ records ten local APIs, 70 local
+source hashes and pinned paper/reference joint contracts. It is a semantic
+and source audit; native time, allocations and external savings are unmeasured.
+
+* Independent contract join audit
+
+~euler-contract-join-2026-10-06.json~ records nine APIs, 72 local source hashes
+and pinned original/reference evidence. It is a source/semantic audit; native
+time, allocations and external code/maintenance gains remain unmeasured.
+
+* Dependent result index source audit
+
+~euler-result-index-2026-10-06.json~ records nine APIs, 74 local source hashes
+and pinned named-record/cache/reference evidence. Native timing, memory and
+break-even are unmeasured; collision correctness does not establish speedup.
+
+* Native result-index measurement
+
+~result-index-native-2026-10-06.json~ records 192 matched native samples, 144
+source hashes and binary identity. ~euler-result-index-native-2026-10-06.json~
+adds 76 local audit hashes and pinned paper/reference evidence. [[file:../docs/performance/result-index.org][Protocol and
+negative results]]: setup/query regressions retained; no default performance
+recommendation, allocation/peak-memory or external benefit established.
+
+* Result-index client specialization
+
+[[file:receipts/result-index-inline-baseline-2026-10-06.json][Rebuilt baseline]] and [[file:receipts/result-index-inline-2026-10-06.json][inline qualification]] each retain 192 samples,
+144 source hashes and binary SHA; source manifests differ only in ResultIndex.lean.
+[[file:receipts/euler-result-index-inline-2026-10-06.json][Paper/Euler audit]] binds both receipts and 76 local hashes. See
+[[file:../docs/performance/result-index.org][conditional gains and negative controls]]; historical receipts remain immutable.
+
+* Internal Lean threads at fixed file concurrency
+
+[[file:receipts/check-threads-2026-10-06.json][Thread admission]] compares all 138 warm atoms with twelve file workers and
+default/one internal Lean thread, two alternating pairs. Exact source, transcript
+and return-code parity is required. See [[file:../docs/check-performance.org][gate scheduling and measurement limits]];
+this receipt excludes library preparation and the other gate phases.
+
+* Complete-gate scheduling qualification
+
+[[file:receipts/check-gate-overlap-2026-10-06.json][Complete-gate pairs]] preserve four successful full runs, exact dispatcher
+source snapshots and per-file attributed Lean transcript parity. Local warm
+wall medians: 37.555 to 32.130 seconds; CPU 130.665 to 132.876 seconds.
+[[file:receipts/check-gate-thread-trial-2026-10-06.json][The rejected automatic-thread trial]] remains: its full-gate medians regress,
+so the default thread policy stays unchanged. [[file:../docs/check-performance.org][Protocol, phase diagnosis and limits]].
+
+* Twelve/fourteen complete-gate workers
+
+[[file:receipts/check-gate-12-vs-14-2026-10-06.json][Full-gate worker study]] keeps two alternating pairs, all 552 atom successes and
+per-file CPU/wall observations. Medians: 31.297/24.105 seconds, with default Lean
+internal threads. [[file:../docs/performance/check-worker-overlap.org][Capacity admission, complete controls and remaining 22.8-second gap]].
+
+* Certified solver transport audit
+
+[[file:receipts/euler-solver-transport-2026-10-06.json][The v1 audit]] binds 82 local files, original POOF getter/wrapper text and
+OpenAI's existing explicit witness/proof constructor and noncomputable section.
+Eleven APIs reuse typed target solvers and C4 certificates; 96 independent reads
+and negative type/elimination controls qualify local semantics. [[file:../docs/contracts/solver-transport.org][Use and cost limits]].
+
+* Finite refusal source audit
+
+~receipts/euler-finite-refusal-2026-10-06.json~ is a new v1 receipt with 84
+local source hashes, three finite admission/diagnostic API names, exhaustive
+16,384-route local controls and five source-token-bound universal Euler clauses.
+No analytic finite sampling certificate, integration or measured external saving
+is established. Historical receipts remain unchanged.

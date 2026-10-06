@@ -1,0 +1,1027 @@
+#+TITLE: Euler interface benefits: measured costs and reference-only forecasts
+
+* Scope and reproducible receipt
+
+This report compares the immutable OpenAI reference at
+~f9e8bc5b38b6e212696e8a30e3e91517af887bbd~ with a self-contained typed
+client fixture. The reference checkout is unchanged. Its current code uses
+ordinary direct constructors, not ~Functional.require~. The provider-client
+comparison is a proposed interface seam, not an existing upstream refactor.
+
+The [[file:../../Benchmarks/receipts/euler-maintenance-2026-10-04.json][machine-readable receipt]] records input hashes, exact source call ranges,
+counting rules, shared costs, and unmeasured forecast fields. Reproduce it with:
+
+#+begin_src sh
+python3 Benchmarks/EulerMaintenanceStudy.py --output /tmp/euler-maintenance.json
+lake env lean Tests/FunctionalMaintenance.lean
+#+end_src
+
+The optional Python study only reads the pinned source and local fixture;
+it does not build, import, or modify upstream code. It is outside CI's test
+dependencies. The Lean fixture is part of the shared local/CI contract gate.
+The Python output alone does not certify a Lean proof.
+
+* Benefit checklist for this capability
+
+| Item | Before | After / forecast | Evidence and excluded costs |
+|------+--------+------------------+-----------------------------|
+| Five-capability client preparation and application | 17 nonblank, noncomment code lines | 8 lines: 9 fewer, 52.94% | Measured fixture; counts checklist declaration, tuple alias, preparation, and result builder. Shared interface is 3 additional lines on both sides. |
+| Handwritten selection statements | 5 ~require~ calls | 1 ~Requirements.prepare~ call: 80% fewer statements | Measured provider-client fixture; existing Euler code has zero such ~require~ calls, so this is not an upstream deletion percentage. |
+| Consumer-owned prepared record fields | 5 | 0 | Tuple replaces this record. Capability declarations, provider definitions, mathematical data/guards, and consumer output types still exist. |
+| Analytic function/data/guard semantics | Arbitrary context-indexed factory values | Exactly the same returned function or first missing key | Kernel ~same_client~ theorem, not scalar substitution for Euler analysis. |
+| Shared requirement implementation | None in a standalone manual client | 104 code lines including general kernel proofs | Count the entire current ~Functional.Requirements~ module once. A toy source balance crosses zero at 12 identical consumers saving 9 lines each; context/provider/adapter and other library costs are excluded. |
+| Euler repeated common arguments | Four field calls, 33 identical explicit prefix arguments each: 132 occurrences | Proposed consumer surface: four context references | Lexical source inventory only. Adapters keeping the original signatures still need all 132 original arguments; context construction adds code. Net Euler lines saved are unmeasured. |
+| Change outside a consumer's requested capabilities | Manually reason about selection impact | Checklist preparation, including errors, remains exactly equal if requested provider values agree | Generic ~prepare_congr~ theorem; no measured engineer-hours estimate. |
+| Graph/provider namespace migration | Rename graph and update dictionary consistently | Entire checklist preparation stays equal under the stated alignment | Generic ~prepare_rename~ theorem. Unaligned dictionaries can fail; dictionary alignment work is still required. |
+| Whole Euler proof or maintenance reduction | Existing analytic proof bodies and guards | No established percentage or labor-hour saving | No upstream migration, adapter implementation, PDE build, or timed maintenance experiment. |
+
+The 17-to-8 comparison is narrowly about preparation/application plumbing.
+The same-capability/result types are shared. It excludes the common provider
+registry and C4 graph, which both variants already receive. Adding C4 to an
+existing fixed constructor introduces those costs, so the fixture percentage
+must not be applied to the whole Euler repository.
+
+The 104-line shared module includes more than runtime preparation: its selection,
+provenance, congruence, and rename proofs. The 12-consumer arithmetic is only
+~ceil(104 / 9)~, not a measured migration break-even point. Real context records,
+adapters preserving source signatures, capability declarations, provider
+configuration, constructors, and application-specific proofs must also be counted.
+
+* Source checklist: actual Euler call points
+
+All four locations are in ~Euler/PacketInitializedSpatialBudget.lean~ at the pin:
+
+| Field | Source lines | Explicit argument groups | Common prefix groups |
+|-------+--------------+--------------------------+----------------------|
+| ~background~ | 86-88 | 40 | 33 |
+| ~background_derivative~ | 89-91 | 40 | 33 |
+| ~residual_bound~ | 96-98 | 44 | 33 |
+| ~drift_bound~ | 111-113 | 40 | 33 |
+
+Parenthesized expressions and proof terms count as one explicit lexical argument
+group; implicit Lean arguments are not inferred. The identical prefix is:
+
+#+begin_example
+M D hTime τ hτ hτT B δ hδ ξ hs α L H NB W LM WM BC hRc hcost hδ1 hα hR WP S hgrowth Cagree N hN k hk hbase
+#+end_example
+
+A context can bind this common data and its guards. That would concentrate
+consumer argument changes, but compatibility adapters still call the original
+four theorems with the original parameters. No theorem proof or guard disappears.
+Repeated uses beyond the first call number 99; this is a repetition inventory,
+not a proven deletion of 99 arguments from the whole implementation.
+
+* Attribute each benefit to its mechanism
+
+- Ordinary dependent context/function binding: packages repeated source data,
+  orders, radii, and guards. Existing fixed constructors can already use it.
+- ~Requirements.prepare~: removes repetitive all-or-error preparation and
+  exposes generic exact-selection/provenance contracts.
+- C4: chooses among actual replacement providers with declared precedence;
+  residual-only replacement does not require rebuilding selection code for
+  other capabilities. Fixed coordinate assembly alone does not need C4.
+- Retained factory tuple: adds no provider lookup or graph compilation at the
+  builder layer. Factory bodies keep their own behavior; runtime speedup is
+  not measured here.
+
+* Completed and open gates
+
+- [X] Immutable source pin and clean reference checkout.
+- [X] Four actual source call ranges, 33-argument common prefix, and source hash.
+- [X] Client before/after counts including new checklist and result application.
+- [X] Generic same-client proof covers successful functions and exact failure.
+- [X] Generic stable-checklist and full-checklist namespace migration proofs.
+- [X] Shared implementation cost reported separately.
+- [ ] Reference-only accounting of full dependent contexts and compatibility adapters.
+- [ ] Net source estimate including provider registry, graph, consumer construction, and adapter costs.
+- [ ] Measured maintenance-change effort; no hours or global percentage asserted.
+
+* Follow-up: stable named access and context/adapter cost ledger
+
+The [[file:../../Benchmarks/receipts/euler-access-costs-2026-10-04.json][follow-up receipt]] retains the same 17-to-8 preparation comparison and
+adds the costs below. Its hashes bind the new Access implementation, typed
+client fixture, proof adapter, and actual upstream theorem declarations.
+Reproduce it with the same optional study command and
+~lake env lean Tests/FunctionalAccess.lean~.
+
+| New capability / reference seam | Before | After / conditional estimate | Added costs / evidence |
+|---------------------------------+--------+------------------------------+------------------------|
+| Residual access when inserting derivative into ~[background,residual]~ | ~retained.2.1~ must become ~retained.2.2.1~: one consumer expression edit | Named ~factoryAt~ expression needs zero edits | Checked generic client; checklist/provider declarations still change. |
+| Access helper source | Fixed positional reader: 2 code lines | Generic named reader: 4 code lines | Two added client lines in this fixture, membership proof, and ~DecidableEq Key~; not a universal source-size estimate. |
+| Shared named-access library | Existing preparation module | 47 additional code lines including selection, stability, and provenance proofs | Optional ~Functional.Access~ module. These lines were excluded from the earlier 12-consumer toy balance. |
+| Raw Euler theorem result | Four proof-valued source entry points | ~Factory.fromProof~ produces ~PLift (Claim context)~ | Six added shared code lines including the exact ~down~ equation; original theorem arguments and guards remain. No wrapper-line reduction is claimed. |
+| Common source context | 33 unique explicitly supplied prefix names | One-to-one context model: 33 field slots | Conditional schema inventory, not compiled Euler context code or a minimal field count. |
+| Ambient constraints | Source ~U~ plus three written typeclass assumptions | Retain them when forming dependent context/adapters | Actual declaration inventory; implicit ~period~/instance closure has not been elaborated. |
+| Four source adapters | Explicit arities 40, 40, 44, 40 | Four retained theorem entry points still pass 164 argument groups | Includes the original 132 common groups and 32 remaining groups. This is retained adapter cost, not a source deletion. |
+
+~factoryAt_selected~ proves the named reader is exactly the provider-selected
+factory. ~factoryAt_stable~ proves equality across arbitrary successful
+checklists for the same provider, including extensions, reorderings, and
+repeats. Both preparations must succeed: adding a missing required capability
+can still reject the larger checklist. ~factoryAt_origin~ retains the exact
+original C4 ancestor and selected function. This strengthens the functional
+consumer contract without assuming arbitrary graph-isomorphism invariance.
+
+A positional read can become ill-typed after an inserted heterogeneous field;
+the fixture checks that rejection. A named read instead carries a membership
+proof. It scans the checklist once per access, so retain the returned factory
+before an order/time loop. Its body and any user callback retain their own
+behavior; no runtime speedup is established.
+
+The source's four original declarations are theorems. A raw proof has sort
+~Prop~, while a provider capability uses a result in ~Type~. ~Factory.fromProof~
+packages an existing theorem in ~PLift~ and its ~down~ equation is axiom-free.
+It preserves the exact context-indexed claim; changing source data or guards
+still requires the new claim's proof. This helper does not make noncomputable
+upstream analysis executable or construct its dependent context automatically.
+
+The cost ledger now closes explicit interface-slot/adapter-arity inventory,
+but the full dependent context, its construction, implicit instances, actual
+adapter bodies, provider registry, and graph setup remain unimplemented in the
+reference study. The 164 source arguments have not disappeared. Net Euler
+source savings and maintenance hours remain unknown. The earlier 12-consumer
+arithmetic excludes this follow-up's optional 53 shared code lines and reader
+cost; it cannot be treated as the current full migration break-even point.
+
+* Checklist to include in every subsequent progress report
+
+For each new reusable capability, report:
+
+1. Capability and concrete reference call point, with immutable source location.
+2. Before/after unit: lines, selection statements, repeated arguments, or edit sites.
+3. What is measured locally, what is a conditional source forecast, and what is unknown.
+4. Added context/adapter/provider/graph/proof costs and their accounting scope.
+5. Kernel/API contract showing the comparison preserves the exact domain types.
+6. Remaining evidence gate and the next reference-only study to close it.
+
+A concise report table should always include ~Reference point | Before | After
+or forecast | Added costs | Evidence status~. Unknown savings remain unknown;
+no repository-wide percentage is extrapolated from a small client fixture.
+
+* Revised research objective: bound change propagation
+
+The earlier source-line fixtures establish small interface contracts. They do
+not establish a worthwhile migration for a large proof library. Source size is
+no longer the primary success metric. The research question is which changes
+can be confined behind an interface while preserving existing consumers and
+proofs, with adapter and verification costs included.
+
+The [[file:../../Benchmarks/receipts/euler-change-surface-2026-10-04.json][tracked-source census]] at the same immutable pin finds 2,659 Lean files and
+641,332 physical lines. This counts Git-tracked Lean files, including blank and
+comment lines, and excludes dependencies, generated files, and untracked
+material. A different overall workspace-size figure needs its own counting
+scope; it cannot serve as this inventory's denominator.
+
+All four previously studied theorem identifiers have just one lexical mention
+each outside their defining file, at the four known SpatialBudget call points.
+This seam supplies four calls in one file, not evidence of a repository-wide
+high-fanout opportunity. Identifier-text counting is not Lean elaboration or a
+transitive dependency graph, and aliases/unqualified references may be missed.
+
+** Wider candidates, not established savings
+
+The same census identifies ~SourceCoefficientAgreement~ in 67 files (90 lexical
+occurrences), ~initializedCorrectionData~ in 31 files (50 occurrences), and
+~velocityMap~ in 28 files (158 occurrences). These counts include defining
+files and possible comments. They prioritize manual/elaborated dependency
+analysis; they are not counts of affected callers or removable arguments.
+The source already has reusable agreement/data/function interfaces, so further
+packaging alone may add maintenance cost. Before proposing a C4 provider graph,
+a real need for interchangeable implementations or override precedence must
+be established. No such large-family replacement has been demonstrated yet.
+
+** Implemented change contract
+
+~Requirements.project~ gives a consumer only the capabilities it declares.
+~project_ready~ equates this projection with independent preparation.
+~project_stable~ permits different providers and source lists, with agreement
+only on the consumer's declared keys. ~consumer_stable~ then preserves every
+consumer function and transports claims about its result. These are generic
+kernel proofs, not a finite count of simulated consumer edits.
+
+| Change | Established boundary | Remaining obligation |
+|-------+----------------------+----------------------|
+| Add/reorder/remove unrequested capabilities in an available source | Equal projected interface and arbitrary consumer result | Both source preparations succeed; requested keys remain present |
+| Change unrelated provider functions | Same consumer result for all supplied contexts | Exact function agreement on the consumer's keys |
+| Delete an unrelated capability so a global checklist fails | Independent small-list preparation can still succeed | Do not force consumers through a global all-capabilities gate |
+| Change a requested theorem's implementation | Same contract applies if its factory equality is proved | Caller must prove equality; no automatic analytic equivalence solver |
+| Change context fields, requested result type, or theorem statement | No preservation claim from this contract | Typed adapters and statement-level compatibility proofs |
+| Change a module imported by the consumer | Consumer semantics may be preserved | Lean rebuilds are still possible; no build-time saving proved |
+
+Projection adds a shared library with four general proofs, a membership
+obligation at each source/view boundary, and repeated source-list scanning at
+projection time. Small-list preparation is already supported and needs no
+projection. A provider registry, graph, dependent context, and source adapters
+still have to be justified and counted. Ordinary fixed function composition
+remains appropriate where no interchangeable provider precedence exists.
+
+** Evaluation protocol for a substantial reference case
+
+1. Identify a real interface with multiple independently maintained consumers,
+   and a real provider/implementation change. Count elaborated dependencies or
+   manually verify candidate lexical references before claiming fanout.
+2. Declare each consumer's minimal capability list; inventory context and
+   statement dependencies separately from provider lookup dependencies.
+3. Keep an explicit baseline change and compare changed consumer expressions,
+   theorem statements, proof scripts, adapters, and files. Count required
+   verification work separately from text edits.
+4. Apply the same change to the narrow-interface design; use kernel contracts
+   to preserve consumers outside the changed capability set. Consumers of a
+   changed capability still require equivalence evidence or migration.
+5. Report the break-even boundary including shared implementation, provider
+   registry, graph, context, adapters, and proof obligations. Benchmark actual
+   elaboration/build time under a controlled baseline only if claiming speed.
+
+For an arbitrary number of consumers satisfying the preservation premises,
+no consumer result or claim needs to change. This is a conditional semantic
+bound, not a measured count of avoided Euler edits. Actual reference migration,
+maintenance hours saved, net source savings, and C4-specific large-library
+benefit remain unestablished. No external integration is required for this study.
+
+* Representation changes through a public observation interface
+
+The [[file:../../Benchmarks/receipts/euler-observation-contracts-2026-10-04.json][observation receipt]] extends the earlier source census without overwriting its
+historical receipt. In the fixed source ~Euler/PacketInitializedResidualEquation.lean~:
+
+| Source declaration / use | Line | Existing source obligation |
+|--------------------------+------+----------------------------|
+| ~toFieldTower_eq_of_path_eq~ | 18 | ~Field P T raw~ and ~Field P T raw'~ have equal paths; their field towers are equal |
+| ~initializedNormalizedField_path_eq~ | 69 | The normalized and coordinate field paths agree |
+| ~initializedNormalizedField_tower_eq~ | 74 | Reuse the path bridge to establish tower equality |
+| ~initializedCorrectionData_eq_coordinate~ | 101 | Reuse tower equality to identify correction data |
+| Residual equation rewrite | 127 | Use correction-data equality before the analytic derivative theorem |
+
+These are existing analytic bridges. This source supplies a concrete semantic
+replacement boundary, not evidence that a new C4 graph is necessary. The source
+has not been elaborated against its external Lean/Mathlib toolchain in this
+workspace. No adapter to its PDE types has been implemented or counted as a
+completed migration.
+
+The previous ~consumer_stable~ requires identical original result families and
+selected functions. That cannot even express differently typed representations.
+The new ~Related~, ~RelatedOn~, ~observe~, ~project_related~, ~observe_congr~, and
+~observed_consumer_stable~ API expresses a weaker sufficient condition: equal
+public observations for each consumer key at every context. Different original
+result types and hidden metadata are allowed. Consumers must use the fixed
+public interface. Equality of paths alone does not preserve a consumer of an
+unrelated hidden field; a tower consumer needs tower equality or the source's
+path-to-tower bridge.
+
+| Capability / benefit | Previous boundary | Implemented boundary | Added cost / evidence |
+|----------------------+-------------------+----------------------+-----------------------|
+| Replace a selected capability's representation type | Exact-factory preservation contract cannot apply | Different result families with equal public observations | Two observation maps and a pointwise compatibility proof; generic kernel contracts |
+| Preserve a consumer and its result claim | Manual use of the particular compatibility lemma | One shared observation consumer is used on both representations; generic claim transport | Consumer must use public observations; local compiled fixture, not measured Euler edits |
+| Preserve dependent context binding | Same context-indexed original family | Different original families, same exact context and public family | Context/key/public type changes are still open; negative elaboration guards |
+| Wrong public observation | No compatibility evidence | Concrete changed path is proved incompatible | Counterexample in the local test |
+| Actual Euler reduction and maintenance time | Unknown | Unknown | Existing upstream bridges remain; no external integration, net line estimate, or hours estimate |
+
+Observation constructs function wrappers and evaluates the maps on each later
+call. It adds a shared module with four general proofs, observation adapters,
+and compatibility obligations. It does not cache values or establish runtime
+improvement. Preparation success is required separately; ~RelatedOn~ alone
+says nothing about absent capabilities or equal error results.
+
+This closes a typed representation-replacement contract, rather than asserting
+arbitrary graph extension invariance or full paper correspondence. A substantial
+reference evaluation still needs a real change, verified consumers of the
+chosen observation, full adapter costs, and before/after edit and build receipts.
+
+* Reuse indexed analytic evidence after a certified replacement
+
+The [[file:../../Benchmarks/receipts/euler-evidence-transport-2026-10-04.json][evidence receipt]] retains the immutable source census and adds the dependent
+evidence boundary. At ~Euler/PacketInitializedResidualEquation.lean:101~,
+~initializedCorrectionData_eq_coordinate~ identifies two complete correction
+data constructions. ~initializedApproximationResidual~ at line 114 is indexed
+by that correction datum. Its equation proof at line 127 rewrites by the data
+equality before applying the existing analytic derivative theorem. All its
+pressure, gradient, order, time, and guard obligations remain present.
+
+The new ~Factory.transport~ models this index migration for arbitrary
+Type-valued certificate families, and ~Factory.transportProof~ handles existing
+Prop-valued theorem families. ~transport_refl~, ~transport_trans~, and
+~transport_roundtrip~ prove identity, composition coherence, and exact reversal.
+The generic local client connects observation-compatible representations to a
+data-producing consumer and then transports its already constructed evidence.
+
+| Capability / reference point | Before | Implemented after | Added costs / evidence |
+|------------------------------+--------+-------------------+------------------------|
+| Retarget a dependent certificate, following the source's data rewrite | Manually express each dependent cast/rewrite | ~Factory.transport~ returns the exact replacement-indexed family | Entire datum equality and explicit witness family; generic compiled client |
+| Retarget an existing analytic proposition | Caller writes the equality substitution around the old proof | ~Factory.transportProof~ reuses the theorem directly | Old proof and data equality remain; kernel report has no axioms |
+| Multiple certified replacements | Caller manages dependent casts and their alignment | Chained migration equals direct migration; return migration restores evidence | Two general equality laws use function extensionality (~Quot.sound~) |
+| Existing Euler equation at line 127 | Source already has a data-equality rewrite | Same dependency pattern is expressible by the local API | No upstream adapter compiled; no existing rewrite counted as newly avoided work |
+| Net Euler lines, avoided edits, maintenance time, execution cost | Unmeasured | Unmeasured | Shared module, evidence-family declarations, equality proofs, and adapters must be included |
+
+The fixture checks non-definitional equal data constructions, retained
+certificate payload/bound fields, direct versus chained migration, roundtrip,
+raw theorem reuse and PLift adaptation, and rejection of missing equality or
+wrong-context evidence. This is proof reuse under explicit equality, not a
+solver for analytic equivalence. Observation equality must first imply equality
+of the whole datum on which the certificate depends. A bound about hidden fields
+cannot be transported using equality of a smaller public projection alone.
+The original evidence body remains, including any computations it performs.
+
+This closes the local chain from provider selection through public observations
+and consumer data equality to dependent evidence reuse. The graph acceptance,
+EPG correspondence, changed-context/statement adapters, and actual reference
+migration gates remain separate.
+
+* Context changes without rewriting each capability and old proof
+
+The [[file:../../Benchmarks/receipts/euler-context-reindex-2026-10-04.json][context receipt]] retains schema 1 and hashes both reference input blocks and
+the compiled local API/test. The initialized correction input block at
+~Euler/PacketInitializedCorrectionData.lean:18–21~ includes time ~τ~, its guards
+and dependent history ~B~. The forward input block at
+~Euler/PacketForwardInitializedCorrectionData.lean:18–20~ supplies a zero-history
+construction through different definitions. Their shared names are a useful
+boundary-design reference, not evidence of interchangeable analytic providers.
+A projection to the initialized context must actually supply the history and
+its time-indexed guards; the forward context alone does not establish this.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~reindexProvider~ and ~select_reindex~ | Adapt the whole provider; preserve precedence selection | One complete typed context projection; factory wrappers |
+| ~assemble_reindex~ | Reuse the existing verified C4 order | Graph/provider names fixed; no graph extension result |
+| ~Requirements.reindex~ and ~prepare_reindex~ | Reuse one checklist and preserve exact first missing item | Linear wrapper construction over retained factories; no individual handwritten ~require~ additions |
+| ~projectedResults~ and ~build_reindex~ | Preserve the exact projected dependent result tuple | Explicit type cast API; old factory computations retained |
+| Existing theorem consumer via ~Factory.reindex~ | Reuse old proof bodies at the projected context | Claims about new fields or changed old data require separate proofs |
+| Shared implementation cost | 96 physical lines including definitions, proofs and comments | Additional 93-line test; projection and application adapters excluded |
+| Local verification | 64 availability/list cases; two outer contexts on successful cases; five kernel axiom reports | Local test is not an Euler migration or runtime benchmark |
+| Euler avoided consumer edits, net lines and hours | Unmeasured | Projection elaboration, dependent history/guards, instances, registry and analytic compatibility costs still required |
+
+For consumers using only the old interface, the shared projection can contain
+context packaging changes while their proof bodies remain reusable. This is a
+generic conditional contract, not a count of avoided upstream edits. It extends
+the earlier fixed-context observation/evidence pipeline; arbitrary new context
+semantics and forward-versus-history equality remain application obligations.
+Measure a concrete change and its consumer fanout before claiming a library-wide
+maintenance reduction. No upstream files, imports or dependencies are added.
+
+* Registration order as a change boundary
+
+The [[file:../../Benchmarks/receipts/euler-declaration-presentation-2026-10-04.json][declaration-presentation receipt]] preserves schema 1 and the pinned source
+manifest. The reference's four theorem entry points and parameter blocks remain
+source-only evidence. No Euler C4 registry is implemented, so this new contract
+is conditional on a user's existing C4 capability design. Source interfaces do
+not by themselves justify adding override precedence.
+
+| Capability / API checklist | Implemented benefit | Cost / boundary |
+|---------------------------+---------------------+-----------------|
+| ~Graph.sameLookup_of_perm~ | Proves lookup identity after outer declaration permutation | Names globally unique; declarations themselves exact |
+| ~VerifiedOrder.permute~, ~permute_unique~ | Reuse retained output and identify fresh compilation | Explicit permutation/uniqueness evidence; no resolver invocation by migration |
+| ~linearizeChecked_permute_ok~ | Preserve success/rejection and exact successful output | Error diagnostic priority can differ; concrete counterexample retained |
+| ~assemble_permute~ | Same whole capability dictionary after registry reordering | Provider dictionary and original names unchanged |
+| ~Requirements.prepare_permute~ | One checklist, same retained functions and first missing capability | No per-capability ~require~ rewrites; changed declarations/providers need separate contracts |
+| Existing consumers and proof bodies | Exact interface equality preserves arbitrary consumer results/claims | Conditional kernel guarantee; avoided Euler consumer count remains unknown |
+| Shared implementation cost | C4 module 93 physical lines; Functional bridge 27 | 118-line test; registry and evidence-construction costs excluded |
+| Local evidence | 64 families × 24 permutations; 1008 accepted; 25200 pair checks | Not a runtime comparison or an upstream migration |
+| Net Euler source reduction, edit fanout and hours | Unmeasured | Registry construction, uniqueness/permutation proofs, context and application adapters must be included |
+
+This removes declaration storage order from the successful consumer contract.
+It does not remove semantically significant parent order or the application's
+mathematical compatibility obligations. The original reference remains clean
+and read-only. Full graph-isomorphism/EPG correspondence, actual change-fanout
+receipts and build/elaboration speed remain separate gates.
+
+* Multi-step graph/name migration with one consumer boundary
+
+The [[file:../../Benchmarks/receipts/euler-relabeling-composition-2026-10-04.json][relabeling-composition receipt]] adds local witness/consumer contracts while
+retaining schema 1 and the same pinned Euler manifest. No source C4 registry,
+provider adapter or external dependency is introduced. This remains a conditional
+application interface for users who need actual override precedence.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~Graph.Relabeling~ | One shared descriptor for labels and declaration storage | Global injectivity and exact permutation evidence; parent rows/flags fixed |
+| ~Relabeling.trans~, ~unique~ | Compose descriptors and carry uniqueness across stages | Caller must first supply valid stage descriptors |
+| ~VerifiedOrder.relabel~, ~relabel_unique~, ~relabel_precedes~ | Reuse verified output and mapped pair queries without a resolver call | One name-map pass; output allocation and name transformations retained |
+| ~relabel_trans_output~ | Composed/direct output equals sequential output | Direct maps once rather than twice; elapsed-time savings unmeasured |
+| ~assemble_relabel~, ~Requirements.prepare_relabel~ | Reuse checklist and consumer proof under requested-key alignment | Application provider mapping; no new handwritten per-key ~require~ adapters |
+| Provider alignment counterexample | Renaming the graph alone loses an existing capability | This premise cannot be discarded or synthesized from graph shape |
+| Shared implementation cost | C4 module 85 physical lines; Functional bridge 35 | 132-line test; application witness/provider construction costs excluded |
+| Local corpus | 1536 cases, 3072 independent target compilations, 25200 pair checks | Local semantic evidence; no external analytic migration |
+| Euler avoided edits, net lines and maintenance hours | Unmeasured | Registry/witness/context/provider adapter costs and real change fanout still required |
+
+This completes the explicit label/permutation composition path to a consumer
+checklist. It preserves claims only in the fixed context/key/result families;
+Euler's analytic equivalence and dependent context guards are separate inputs.
+The reference already contains reusable interfaces, and this result does not
+imply that adding C4 would reduce its source or maintenance time.
+
+* Remove handwritten provider-name adapters
+
+The [[file:../../Benchmarks/receipts/euler-provider-registry-2026-10-05.json][provider-registry receipt]] binds the new local constructor/test to the unchanged
+Euler source manifest and keeps schema 1. The preceding local relabeling fixture
+contains three handwritten mapped-name branches for ~A~, ~B~ and ~P~. The new
+client calls ~ProviderRegistry.relabel~ once; its automatic alignment proof works
+for any number of original ancestors and any capability key type. This is a
+local adapter boundary, not a count of removed Euler declarations or arguments.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~ProviderRegistry.relabel~, ~dictionary~ | Replace per-provider mapped-name branches with one cached constructor | Traverse the source ancestor order; store one whole provider function per name |
+| ~relabel_lookup~, ~relabel_aligned~ | Library proves whole-provider alignment automatically | Explicit injective graph relabeling witness remains; no arbitrary equivalence inference |
+| ~assemble_relabel_registry~, ~prepare_relabel_registry~ | Reuse selection, one capability checklist and its consumer proofs | No user mapped dictionary or alignment lemma; graph uniqueness, original providers and key/result families remain |
+| ~relabel_missing~ | Keep unrelated source providers outside this root's mapped cut | Registry is root-specific; it is not a global/shared-root registry |
+| Original function invocation | Factory bodies and proof guards remain unchanged | Index construction obtains provider functions; results are not memoized and payload names are not rewritten |
+| Local evidence | 64 registries, 512 preparations, 224 successes at two contexts | Semantic checks; hash collision/string costs and elapsed time are unmeasured |
+| Shared implementation cost | Registry module 112 physical lines including proofs and comments | Additional 118-line test; source provider and graph-witness construction costs excluded |
+| Euler avoided edits, net lines and hours | Unmeasured | No upstream C4 registry or PDE adapter; real migration and change fanout still required |
+
+The source's existing theorem interfaces and dependent contexts still have to be
+packaged by the application. This constructor addresses the registry-alignment
+maintenance seam only when C4 override precedence is justified. It adds no import,
+dependency or change to the reference repository, and preserves its source pin.
+
+* Share registration across consumers with different roots
+
+The [[file:../../Benchmarks/receipts/euler-shared-registry-2026-10-05.json][shared-registry snapshot]] retains schema 1 and the unchanged source manifest.
+This slice addresses repeated provider registration across multiple C4 roots,
+not the analytic proof bodies. The reference's existing reusable interfaces
+remain the baseline; no upstream multi-root C4 registry is assumed or added.
+
+| Capability / API checklist | Implemented benefit | Added cost / boundary |
+|---------------------------+---------------------+-----------------------|
+| ~ofNames~, ~ofGraph~ | Construct and retain one original provider table for declared names | Traverse all declarations; obtain provider functions and allocate names/table |
+| ~ofGraph_lookup~, ~ofGraph_missing~ | Generic whole-provider preservation; undeclared application names absent | Declared unrelated names remain directly queryable |
+| ~assemble_ofGraph_registry~, ~prepare_ofGraph_registry~ | All verified roots reuse one table and old checklist/consumer proofs | Each root still needs its own verified C4 order and selected factories |
+| ~relabelGraph~, ~relabelGraph_lookup~ | One mapped declaration table shared across migrated roots | Explicit graph relabeling and source uniqueness remain; no payload-name rewrite |
+| ~relabelGraph_relabel~, ~prepare_relabelGraph_registry~ | Agreement on ancestors with root-cut tables; functions and first errors unchanged | Shared and root-cut dictionaries can differ outside a root's ancestor cut |
+| Root scope | Unrelated declared provider cannot supply a root's missing capability | Direct dictionary access exposes graph-wide scope; index does not validate a graph |
+| Local evidence | 96 shared registries, 1728 preparations, 624 successes at two contexts and roots | Semantic counts and nine standard-axiom reports; no runtime benchmark |
+| Construction visits | Two local root cuts contain six entries; shared graph has five declarations | Conditional structural benefit; unused declarations can outweigh overlap |
+| Shared source cost | Registry helper adds 18 net physical lines; new module 101 | Additional 148-line test; providers, contexts and application adapters excluded |
+| Euler avoided edits, net lines and hours | Still unmeasured | No upstream migration, dependency, integration or external compilation |
+
+The preceding root-cut snapshot measured its 112-line Registry module. The
+current module has 130 physical lines after sharing its scope-construction
+proofs; this slice adds 18 net lines there. Sharing reduces registry construction
+visits only if the sum of root ancestor counts exceeds the declaration count.
+That criterion is not a percentage reduction in Euler source or maintenance
+cost. Application-owned context/guard adapters and actual change fanout still
+need measurement before any upstream saving is claimed.
+
+* Reuse unaffected consumers after one capability edit
+
+The [[file:../../Benchmarks/receipts/euler-registry-patch-2026-10-05.json][patch snapshot]] adds a local change-fanout mechanism to the unchanged reference
+inventory, still under schema 1. It addresses update/proof maintenance once an
+application has explicit C4 roots and capability checklists. The Euler reference
+has not been given those declarations, adapters or dependency scopes.
+
+| Capability / API checklist | Implemented benefit | Cost / boundary |
+|---------------------------+---------------------+-----------------|
+| ~Provider.patchKey~, ~ProviderRegistry.patch~ | Edit one typed capability without a declaration fold or other-provider acquisition | ~DecidableEq Key~ required; one name lookup/insertion, possible shared-storage copy |
+| ~patch_at~, ~patch_other~, ~patch_scope~ | Exact edited cell, untouched functions and provider-name scope | Unknown names are rejected; graph/order and result families unchanged |
+| ~mayAffect~, ~mayAffect_iff~ | Reusable ancestry plus requested-key candidate impact | Retain index once; key membership is linear; true is not proof of actual change |
+| ~prepare_patch_stable~, ~prepare_patch_of_unaffected~ | Reuse old tuples, first-error result and consumer proofs for negative scopes | Supplied factory still satisfies its original dependent contract; no per-key ~require~ rewrites |
+| Local semantic evidence | 960 patches, 192 unknown-name errors, 15360 queries; 10752 negative scopes | 4608 candidates, 1384 sampled value/error changes at two contexts; not Euler affected-file counts |
+| Retained negative boundary | Positive candidate query can have unchanged selection due to shadowing | Precise dependency closure and analytic equivalence are not automated |
+| Shared implementation cost | Initial patch snapshot: module 135 physical lines including proofs/comments | Initial 146-line test; extended source cost below |
+| Runtime costs | No other-provider reacquisition or explicit graph fold | Repeated patches can form key-check wrapper chains; no compaction or speedup measurement |
+| Euler avoided edits, net lines and hours | Unmeasured | No integration, external build or real consumer migration |
+
+The sufficient preservation certificate is generic and covers all contexts;
+the two-context corpus checks execution and records conservative candidates.
+Neither the local negative-query proportion nor sampled changes estimate a
+percentage reduction in the external proof repository's source or labor cost.
+
+* Single-capability rollback and update-plan checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-rollback-2026-10-05.json][rollback snapshot]] retains the same reference pin and schema 1.
+
+| New API/capability | Reusable obligation | Remaining cost or gate |
+|-------------------+---------------------+------------------------|
+| ~patchKey_overwrite~ | Prove a same-key edit sequence equals its final edit | Caller constructs normalized plan; no automatic closure compaction |
+| ~patchKey_commute~ | Reorder distinct typed capabilities | Distinct-key premise; fixed dependent result families |
+| ~patchKey_restore~ | Writing the original cell is identity | Save the original cell/provider |
+| ~patch_restore_exists~, ~patch_restore~ | Immediate rollback succeeds and restores exact dictionary functions | One additional lookup/insertion, possible hash copy and another wrapper |
+| ~prepare_patch_restore~ | Reuse arbitrary old consumer proof by one whole-checklist rewrite | All roots/checklists; no intervening edits without separate proof |
+| Local validation | 960 rollbacks, 15360 checklist comparisons at two contexts | Generic kernel equality covers all contexts; corpus is not upstream savings |
+| Shared source cost | 67 added module lines, 38 added test lines | Current totals: 202 module lines, 182 test lines; consumer/adaptor costs excluded |
+| Euler avoided edits/net lines/hours | Unmeasured | Reference only; no actual consumer adapters or migration |
+
+This reduces repeated local rollback alignment obligations. It supplies no claim
+that Euler requires these operations or that an upstream analytic theorem becomes
+interchangeable. Precise dependency closure and external savings stay open.
+
+* Normalized overlay capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-provider-overlay-2026-10-05.json][overlay snapshot]] retains schema 1 and the same reference manifest.
+
+| New API/capability | Reusable obligation or structural benefit | Remaining cost/gate |
+|-------------------+-------------------------------------------+---------------------|
+| ~CapabilityEdit~, ~ProviderOverlay.ofProvider~ | Heterogeneous typed edit list and one retained original base | Same Context/Key/result families; decidable keys |
+| ~ProviderOverlay.set~, ~compile~ | Last edit wins; kernel-certified unique stored override keys | Linear list filtering per set; all-distinct compilation can be quadratic |
+| ~ProviderOverlay.provider~ | Ordinary provider interface; scan overrides rather than history | Linear distinct-key scan; unchanged base may have its own wrappers |
+| ~set_provider~, ~compile_provider~ | Exact equality with existing patch semantics | Explicit deletion retained; no factory evaluation during compilation |
+| ~prepare_overlay_compile~ | Whole-checklist proof reuse without per-key ~require~ or step alignment | Retain overlay/prepared factories to avoid rebuilding |
+| Local semantic corpus | 32 histories, 344 updates; 5504 prefix and 512 batch observations, two contexts | Independent cell oracle plus generic proofs; no external adapters |
+| Local structural case | 256 same-key edits compile to one stored override | Storage/key-check structure only; runtime speedup unmeasured |
+| Shared implementation cost | 110 module lines plus 117 test lines | Includes proofs/comments; caller providers/adapters excluded |
+| Euler avoided edits/net lines/hours | Still unmeasured | No integration, external compilation or actual consumer migration |
+
+A user with an explicit typed edit history can now compile it with one generic
+API and retain a whole-consumer proof. This is a reusable local mechanism; it
+does not establish that the inspected Euler proofs have this provider/edit
+shape or that they can discard analytic premises. Provider adapters and actual
+external savings remain separate measurements.
+
+* Shared-registry batch capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-batch-2026-10-05.json][registry-batch snapshot]] retains schema 1 and the same reference pin/manifest.
+
+| New API/capability | Reusable maintenance obligation | Cost or remaining gate |
+|-------------------+---------------------------------+------------------------|
+| ~ProviderRegistry.patchBatch~ | One call installs a typed normalized edit batch at a known provider | One lookup/insertion; no graph fold or other-provider acquisition |
+| ~patchBatch_at~, ~patchBatch_dictionary~ | Exact sequential-reference provider and whole-dictionary agreement | Same Context/Key/result families; supplied factories keep their contracts |
+| ~patchBatch_other~, ~patchBatch_scope~, ~patchBatch_untouched~, ~patchBatch_nil~ | Other providers/unedited keys/name membership preserved; empty known-name identity | Unknown names rejected even for empty batch; no physical table identity |
+| ~batchMayAffect~, ~prepare_patchBatch_of_unaffected~ | Reuse whole unaffected consumer proof without per-key ~require~ or alignment | Explicit read scopes; candidate truth can be shadowed/blocked |
+| Local semantic evidence | 960 batches, 192 unknown errors, 15360 queries; 10368 negative scopes | Two contexts, four presentations; generic kernel proofs cover all contexts |
+| Local structural case | 256 same-key edits: registry lookup/insertion count 256→1 | Definition-level counts; no runtime/allocated-byte measurement |
+| Shared source cost | 150 module lines and 139 test lines | Proofs/comments included; caller adapters excluded |
+| Retained costs | List filtering/allocation, footprint scans and possible hash copies | New batches can retain old base-overlay layers |
+| Euler avoided edits/net lines/hours | Still unmeasured | Reference only; no adapters, integration or external compilation |
+
+The practical call removes client-side per-edit error plumbing and generated
+untouched-provider alignment. It does not establish that Euler's analytic
+consumers have declared this capability shape, or turn lexical source mentions
+into measured avoided proof maintenance. Those upstream obligations remain open.
+
+* Multi-provider transaction capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-registry-transaction-2026-10-05.json][transaction snapshot]] retains schema 1 and the same read-only Euler reference.
+
+| Capability/API | User maintenance action covered | Evidence/cost boundary |
+|----------------+---------------------------------+------------------------|
+| ~RegistryEdit~, ~patchTransaction~ | Submit one list across several named providers | Pure first-error result; no partial registry returned |
+| ~patchTransaction_cons~, ~patchTransaction_missing~ | Reuse exact sequential/unknown-name behavior | Unknown empty batches also fail; prefix work still costs CPU |
+| ~patchTransaction_scope~ | Retain the same declared provider names | Success premise; no physical storage identity |
+| ~transactionMayAffect~, ~prepare_patchTransaction_of_unaffected~ | Reuse unaffected whole consumer claims | No per-name alignment or per-key ~require~; explicit scopes and success |
+| Local semantic evidence | 192 successes, 64 unknown errors, 3072 queries, two contexts | Independent scalar oracle; failure after valid prefix; six axiom reports |
+| Shared implementation cost | Source/test physical lines recorded in snapshot | Caller adapters excluded; repeated names can retain base layers |
+| Actual Euler consumers migrated | 0 | Reference only; no integration |
+| Euler net lines / maintenance hours / avoided edits | Unknown / unknown / unknown | No matched consumer migration or timing measurement |
+
+This addresses coordinated application changes rather than a local example-only
+wrapper. Consumer mathematical proofs still need their own semantic premises
+when a requested capability actually changes. No upstream-scale extrapolation
+is justified by this local contract.
+
+* Indexed retained-state capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-indexed-overlay-2026-10-05.json][indexed-overlay source snapshot]] retains schema 1 and the unchanged reference.
+
+| Capability/API | User action covered | Cost/evidence boundary |
+|----------------+---------------------+------------------------|
+| ~IndexedOverlay.ofProvider~, ~set~, ~extend~ | Retain typed state and continue edits without wrapping its prior provider | Original base unchanged; supplied pre-existing base wrappers remain |
+| ~provider~, ~compile_provider~ | Use indexed lookup with the existing provider interface | Exact whole-function equality to list overlay; lawful equality/hash instances |
+| ~extend_append~, ~extend_base~ | Reuse batching/composition and base-retention proofs | Repeated same-key entries overwrite; explicit removals retained |
+| ~prepare_indexed_extend~, ~prepare_indexed_compile~ | Reuse whole consumer claims without handwritten ~require~ per key | Same context/key/result families; semantic changes still need mathematical premises |
+| Local semantic corpus | 5504 prefix + 512 final + 5504 snapshot observations, two contexts | All keys collide; nine axiom reports; generic arbitrary-claim client |
+| Runtime study | Matched construction and direct-query workloads | Interpreter only; collisions/storage copies/small-table overhead remain |
+| Euler integration / migrated consumers | None / 0 | Reference only |
+| Euler net lines / hours / avoided proof edits | Unknown / unknown / unknown | No whole-consumer migration measurement |
+
+The matched 1024-key interpreter workload records list/indexed construction
+medians of 57.046/6.043 ms and direct query medians of 158.632/5.707 ms.
+The eight-key negative result is retained: 0.300/0.802 ms construction and
+0.281/0.605 ms queries. These local operation measurements do not measure
+Euler proof time or code savings. Shared source/test cost is 103/128 physical
+lines including proofs/comments; application adapters and benchmark code are
+separate costs. Original EPG correspondence and analytic dependency inference
+remain open.
+
+* Retained indexed registry capability checklist
+
+The [[file:../../Benchmarks/receipts/euler-indexed-registry-2026-10-05.json][indexed-registry source snapshot]] retains schema 1 and the reference manifest.
+
+| Capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------+---------------------------------+------------------------|
+| ~IndexedRegistry.ofRegistry~ | Convert an existing scoped registry once | Initial full-table mapping; no factories |
+| ~patchBatch~, ~patchBatch_base~ | Continue named changes without nesting prior provider bases | One name lookup/insertion; cell/hash/copy costs remain |
+| ~dictionary~, ~snapshot_dictionary~ | Reuse ordinary assembly/preparation and concrete-registry consumers | Direct queries avoid mapping; explicit snapshot maps all entries |
+| ~patchBatch_agreement~, ~prepare_indexedRegistry_of_unaffected~ | Reuse exact sequential behavior and unaffected whole-consumer claims | No handwritten comparison snapshot, per-name alignment or per-key ~require~ |
+| Semantic corpus | 352 batches, 64 unknown errors, 5632 queries, 3136 negative | Two contexts, colliding capability hashes, original bases/snapshots, nine axiom reports |
+| Shared library/test cost | 130/166 physical lines | Proofs/comments included; benchmark/application adapters separate |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+Named indexed measurements are separate from prior standalone-overlay results.
+Small-table overhead, retained copies and collisions remain material costs.
+Successive batch calls do not give atomic multi-name transaction semantics.
+
+Matched named-registry interpreter measurements retain both gains and losses:
+256 batches of 4096 total edits over width 256 give list/indexed update medians
+7.305/8.868 ms and direct query medians 301.686/10.617 ms. Indexed updates
+are slower in this case; query gains do not establish an update-only or Euler
+proof speedup. The small-table case is negative too. Benchmark Lean/Python
+source costs are 59/55 physical lines, separate from library/test costs.
+
+* Native and retained-state validation checklist
+
+| Added capability / entry point | User action covered | Cost/evidence boundary |
+|--------------------------------+---------------------+------------------------|
+| ~lake build indexedRegistryScale~ | Compile the actual registry benchmark | Native binary hash and source/toolchain/config identity |
+| Study ~--engine native/interpreter~ | Measure the caller's execution engine | Same source and current-result controls across engines |
+| Study ~--policy latest/retained~ | Measure keeping every prior query snapshot alive | Retained counts and scalar prefix observations checked after updates |
+| Mandatory native admission | Catch compilation/runtime/snapshot regressions | Four cases; no unstable performance threshold; all existing gates retained |
+| Shared benchmark source costs | Lean/Python 89/62 physical lines | Earlier 59/55; existing library API/proofs unchanged |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only |
+
+Native retained repeated-batch queries give 4.868/0.160 ms list/indexed medians;
+updates give 0.306/0.266 ms. Same-source interpreter updates still regress;
+native latest updates show a small regression. Advice remains engine/workload/
+lifetime-specific. No allocations/peak memory or whole Euler speedup is measured.
+The [[file:../../Benchmarks/receipts/euler-native-registry-2026-10-05.json][schema-1 source snapshot]] preserves the unchanged reference pin/manifest.
+
+* Indexed transaction capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~IndexedRegistry.patchTransaction~ | Publish several named changes only after all succeed | First unknown name returns error; no prefix state returned |
+| ~patchTransaction_base~, ~patchTransaction_scope~ | Retain original bases and declaration membership across repeated names | Kernel proofs; no full-table materialization |
+| ~prepare_indexedTransaction_of_unaffected~ | Reuse an entire unaffected consumer claim with one rewrite | Successful transaction and explicit negative ancestor/key scope required |
+| Reused ~RegistryEdit~, ~transactionMayAffect~ | Share existing change representation and impact checks | No second edit format or handwritten per-key ~require~ |
+| Semantic corpus | 192 successes, 64 first errors, 3072 queries, 1920 negative | Two contexts; colliding hashes; scalar/ordinary controls; old snapshots |
+| Shared library/test cost | 101/159 physical lines | Proofs/comments included; user providers/dependency scopes are extra |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+For a user-defined analytic tower, group coefficient/velocity/provider changes
+into a transaction, then reuse unaffected prepared consumers using its scope
+check and one theorem. This packages error sequencing and proof chaining; the
+user must still specify actual dependencies and align affected consumers.
+Separate batch calls retain their earlier behavior. No new transaction timing,
+allocation or peak-memory study is claimed. The [[file:../../Benchmarks/receipts/euler-indexed-transaction-2026-10-05.json][source snapshot]] retains schema 1
+and the unchanged reference manifest. Original EPG/analytic closure remains open.
+
+* Complete transaction outcome capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~patchTransaction_congr~ | Preserve all query functions and first transaction errors for aligned states | Exact dictionaries AND equal name membership required |
+| ~ofRegistry_patchTransaction~ | Change ordinary storage to indexed storage with the same edits | Conversion supplies alignment; no user per-name/key proof |
+| ~ofRegistry_transaction_consumer~ | Reuse existing transaction consumer claims, including affected keys and nested errors | One rewrite; compares representations under the same changes |
+| Scope negative control | Prevent treating unknown names as registered empty providers | Full dictionary equality proved; twelve cells and opposite empty-batch outcomes checked |
+| Shared library/test cost | Current 174/206 physical lines; added 73/47 | Proofs/comments included; runtime transaction body unchanged |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or extrapolation |
+
+A user-defined coefficient/velocity provider workflow can retain its ordinary
+transaction consumer contract while choosing indexed storage for measured query
+workloads. The common theorem replaces per-consumer representation alignment;
+the user still supplies actual typed providers and dependency scopes. This is
+an application pattern, with no external adapter or consumer migration measured.
+Changing the transaction's edits still needs negative read scope or affected
+consumer alignment. The [[file:../../Benchmarks/receipts/euler-transaction-outcomes-2026-10-05.json][source snapshot]] keeps schema 1 and the reference pin.
+
+* Transaction preflight capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| Ordinary/indexed ~checkTransaction~ | Report a transaction's first unknown name before update construction | Initial membership only; empty batches included |
+| ~checkTransaction_outcome~ | Reuse the real transaction success/error contract for dry-run diagnostics | Exact first-name error; capability preparation may still fail |
+| ~checkTransaction_after~ | Keep a future-plan check across successful value updates | Scope-preserving transaction required; one rewrite |
+| ~ofRegistry_checkTransaction~, ~checkTransactionNames_congr~ | Keep checks during conversion or equal-scope changes | No dictionary-value comparison or per-key ~require~ |
+| Semantic corpus | 12,432 cases; 1,056 successes; 11,376 first errors; 1,056 cache controls | Ordinary/indexed/scalar controls; empty-provider boundary; two contexts |
+| Shared source/test cost | 113/95 physical lines | Proofs/comments included; user adapters separate |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or extrapolation |
+
+For a user-defined analytic provider workflow, preflight grouped name edits before
+constructing update prefixes and reuse the name diagnostic as values change.
+Actual provider/dependency declarations remain user responsibilities. The API
+has one membership query per reached batch and no capability-cell traversal;
+preflight plus successful execution adds a name scan. No runtime/allocation gain
+is claimed. The [[file:../../Benchmarks/receipts/euler-transaction-preflight-2026-10-05.json][source snapshot]] preserves schema 1 and the reference manifest.
+
+* Scoped transaction consumer capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~Requirements.prepareTransaction~ | Prepare only the consumer result of planned changes | Negative scope avoids update prefixes; positive falls back; no registry publication |
+| ~prepareTransaction_eq~ | Reuse the full indexed transaction consumer proof | Exact name/capability errors and all context functions preserved |
+| ~prepareTransaction_ofRegistry~ | Move an ordinary consumer to the fast path with one rewrite | Conversion supplies alignment; no success/negative-scope caller premise |
+| ~prepareTransaction_unaffected~ | Expose the exact preflight/original-preparation branch | Unknown out-of-scope names still fail |
+| Semantic corpus | 4,096 cases, 2,304 negative, 1,792 positive, 1,024 name errors | Scalar/ordinary/full-indexed controls; colliding hashes; two contexts |
+| Shared source/test cost | 59/144 physical lines | Proofs/comments included; benchmark 49/60 lines separate |
+| Native operation evidence | 32 samples; outside-name 0.124/0.011 ms full/scoped | Positive fallback slightly slower; disjoint-key scans remain |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+A user-defined analytic tower can preview a narrow coefficient/velocity consumer
+under grouped edits without constructing unrelated updates. This packages branch
+logic and proof reuse; it does not infer dependencies or replace publishing the
+full changed registry. Sharing a full result across consumers can be cheaper.
+The [[file:../../Benchmarks/receipts/euler-scoped-transaction-2026-10-05.json][source snapshot]] retains schema 1 and the reference manifest. Factory execution,
+allocation/peak-memory and whole Euler maintenance benefits are unmeasured.
+
+* Retained requested-key index capability checklist
+
+| Added capability/API | User maintenance action covered | Cost/evidence boundary |
+|----------------------+---------------------------------+------------------------|
+| ~KeyIndex.ofKeys~, ~KeyIndex.contains~ | Compile and share a consumer's key membership | Build once; exact list-bound witness; collisions/copies remain |
+| ~batchMayAffectIndexed~, ~transactionMayAffectIndexed~ | Remove repeated requested-list scans from change checks | Raw edit history still scanned; same conservative impact result |
+| ~prepareTransactionIndexed~ | Prepare a transaction consumer with retained ancestry AND key indices | Exact errors, order, duplicates and typed functions; no state publication |
+| ~prepareTransactionIndexed_eq/ofRegistry~ | Reuse list/ordinary consumer claims with one rewrite | No per-key ~require~, branch proof or new alignment premise |
+| Semantic corpus | 4,096 cases, 2,304 negative, 1,792 positive, 1,024 name errors | All-key collisions; membership/deduplication; four paths; two contexts |
+| Shared source/test and benchmark cost | Library/test 79/157; benchmark 52/64 lines | Proofs/comments included; user provider/dependency declarations extra |
+| Native large disjoint-key evidence | 21.014521/0.063708 ms list/indexed query | Indexed build+query 0.084354 ms; local four pairs |
+| Negative one-use evidence | Outside/early/unknown totals may regress | Construction separated; no universal crossover |
+| Actual Euler migrations / net lines / hours / avoided edits | 0 / unknown / unknown / unknown | Reference only; no integration or upstream extrapolation |
+
+A user-defined analytic tower with repeated narrow-consumer checks can retain its
+ancestry and requested-key indices and reuse existing transaction proofs. This
+reduces shared caller branch/alignment scaffolding; it does not infer analytic
+dependencies or establish external savings. The [[file:../../Benchmarks/receipts/euler-key-index-2026-10-05.json][source snapshot]] keeps schema 1
+and the unchanged reference manifest. Factory bodies, allocation/peak memory and
+whole Euler maintenance effects remain unmeasured.
+
+* Joint data-and-proof contracts: direct source audit
+
+The [[file:../../Benchmarks/receipts/euler-joint-certificate-2026-10-05.json][joint-certificate receipt]] audits three declarations at the same source pin.
+
+| Actual source seam | Dependency read from source | New client capability | Remaining cost |
+|--------------------+-----------------------------+-----------------------+----------------|
+| ~SourceCoefficientAgreement~ (PacketSourceEquations:16–19) | inverse/strain depend on M/D and clamped time | Put a supplied joint proposition beside selected data | Prove both relations; full dependent contexts/instances remain |
+| ~ApproximationResidual~ (AllOrderDriftEquation:33–45) | gradient depends on pressure; equation depends on pressure plus A fields and order/time guards | ~Certified keys Claim~ couples the complete tuple to a joint proof | Pressure is Type-valued runtime data and must remain; all analytic guards remain |
+| ~initializedApproximationResidual~ (PacketInitializedResidualEquation:114–134) | constructs pressure, proves gradient, rewrites data equality, invokes residual identity | ~prepareCertified~ selects once; ~Certified.build~ returns data and proof together | Existing proof bodies/adapters still required; no automatic equation proof |
+
+Capability / evidence checklist:
+
+- [X] ~certify~ can attach an existing joint proof to an already retained tuple.
+- [X] ~prepareCertified~ preserves ordinary complete data/error outcomes after forgetting proofs.
+- [X] ~prepareCertified_congr~ preserves the exact certificate under equal preparation outcomes.
+- [X] ~Certified.build~ exposes the data-indexed proof without repeated capability requests.
+- [X] 192 preparation + 8 joint plans; three contexts; six standard-only axiom reports.
+- [X] Reference pin, three source hashes, field lines and constructor obligations recorded.
+- [X] Added shared API/proof cost 104 lines and fixture cost 115 lines recorded separately.
+- [ ] Compile a reference-compatible dependent context and account for complete adapter costs.
+- [ ] Measure actual migrated proof/consumer edits and net lines, including the new API costs.
+- [ ] Measure maintenance time; actual migrations remain 0, savings unknown.
+
+This exposes a broader reusable contract than individual theorem wrappers. It
+reduces repeated selection/certificate plumbing for clients adopting the API;
+there is no measured Euler-wide reduction or runtime performance claim.
+
+* Cache whole preparation outcomes, including joint evidence
+
+| Capability / scenario | Existing scoped path | Retained cached path | Cost / limit |
+|-----------------------+----------------------+----------------------+--------------|
+| Negative scope with all requested keys available | Prepare the keys again | Return the same factory tuple and joint proof | Initial cache alignment/admission plus retained tuple memory |
+| Negative scope with a requested key missing | Find the first missing key again | Return the same first-key error | Unknown names still override that cached capability error |
+| Positive requested-key impact | Full update and preparation | Full update and fresh data, requiring new joint admission | Overlap alone does not prove the old claim false |
+| Unknown named batch, including empty | First name error | Same first name error | Name preflight remains on negative scopes |
+| Whole Euler analytic change footprint | No inferred contract | No inferred contract | Source equality/guards and accurate dependent inputs still required |
+
+Checklist:
+
+- [X] ~cacheCertified~ stores an exact prepared success/error with provider alignment.
+- [X] ~prepareTransactionCached~ exposes certified reuse versus fresh data explicitly.
+- [X] Full ordinary/indexed data/error equality and arbitrary joint Claims proved.
+- [X] 4096 plans, cached failures, collisions and two future contexts; four axiom reports.
+- [X] Wrong provider cache and fresh-as-certified data rejected by type checks.
+- [X] Native matched study separates retained-input setup from query using an IO materialization boundary.
+- [X] Added shared/test/native Lean/Python costs 101/175/56/65 lines recorded separately.
+- [ ] Compile an accurate Euler context/capability mapping and account for adapters.
+- [ ] Measure actual migrated proof/plumbing edits and maintenance time; migrations remain 0.
+
+The narrow benefit is zero capability selection/preparation and zero fresh joint
+proof obligations on a certified negative transaction view. Raw history/name
+checks and user factory computation remain. This is a conditional local guarantee,
+not an Euler-wide edit-count estimate.
+
+* Continue after publishing a registry revision
+
+| Capability / audit seam | New guarantee | Remaining obligation / cost |
+|-------------------------+---------------+-----------------------------|
+| ~applyTransactionCached~ | Full updated registry equals ~patchTransaction~, including first name errors | All registry edit construction still runs; no prefix on error |
+| Negative scope | Old entire certificate/error is automatically aligned to the returned registry for the next transaction | Fixed graph/root/keys/context/result family/claim; initial admission remains |
+| Positive scope | ~Prepared.certify~ admits already prepared new data without repeating selection | Supply the new provider's joint analytic proof |
+| Velocity and derivative ~changeTime hTime~ | Actual source tokens at 48/57 and derivative transport at 63 recorded | Time equality/positivity and dependent-type transportation remain explicit |
+| Cache rebinding vs time transport | Distinct proof interfaces documented | Provider preparation equality does not prove equality of changed time-indexed types |
+
+- [X] Complete registry and indexed/ordinary consumer equality proved.
+- [X] Negative transaction supplies cache alignment without client per-name/key proofs.
+- [X] Fresh prepared data can be certified without preparing again.
+- [X] 4096 first + 3072 second transactions, two contexts, collisions and nonconsumer updates checked.
+- [X] Six standard-only axiom reports; shared/test costs 164/203 physical lines.
+- [X] Three source declarations and explicit time-transport token lines hash-bound.
+- [ ] Compile reference-compatible dependent inputs and account for complete adapters.
+- [ ] Measure actual migrated proof/maintenance edits; migrations remain 0, savings unknown.
+- [ ] Measure publication-path runtime/memory costs; view-only timings cannot be reused for this claim.
+
+* Narrow a joint certificate for individual consumers
+
+- [X] Five APIs: ~Certified.project~, ~project_factories~, ~CachedPreparation.narrow~, ~narrow_of_ok~, ~narrow_eq~.
+- [X] Success reuses functions/proof; broad failure independently checks narrow keys.
+- [X] 24 requests over eight availability masks; three rescued broad failures, reordered first errors, empty and duplicate requests, three contexts.
+- [X] Three axiom reports use only propext; arbitrary false consequence rejected.
+- [X] Two reference consumers, field-use and clamp tokens are source-hash bound.
+- [X] Shared/test cost 78/120 lines; success projection scans source per requested key.
+- [ ] Supply actual Euler-dependent adapters, inclusion and analytic consequence proofs.
+- [ ] Measure complete migrated costs and avoided edits: current migrations 0, savings unknown.
+- [ ] Measure native timing/allocations; no new performance claim in this increment.
+
+* Consume built data and joint evidence by capability name
+
+- [X] Nine APIs: ~resultAt~, ~resultAt_build~, ~projectResults~, ~projectEvidence~, ~projectEvidence_val~, ~build_project~, ~Certified.projectData~, ~projectData_factories~, ~projectData_build~.
+- [X] Consumers access named dependent results without tuple-position plumbing.
+- [X] Built data/proof projects without factory application; repeated new contexts can retain narrow factories.
+- [X] 4608 cases, 1944 successful broad preparations, three contexts, independent scalar expectations; inconsistent duplicate values select the first occurrence.
+- [X] Wrong-context access rejected; five propext-only axiom reports.
+- [X] Three pressure/gradient/equation consumers audited with explicit order/time guards.
+- [X] Shared/test costs 98/118 lines; source scans, tuple construction and unequal evaluation costs documented.
+- [ ] Supply complete reference-compatible dependent adapters and analytic implications.
+- [ ] Measure actual migrated code/maintenance costs: migrations 0, savings unknown.
+- [ ] Measure native timings/allocations; source correspondence is not a performance result.
+
+* Keep a public joint certificate through internal replacement
+
+- [X] Eight APIs: ~observeResults~, ~observeResults_id~, ~build_observe~, ~Certified.observe~, ~observe_factories~, ~Certified.replaceObserved~, ~replaceObserved_factories~, ~replaceObserved_public~.
+- [X] Public data-level implication and explicit observation equality centralize conversion and joint proof rewrites.
+- [X] Whole certified public interface equality proved across different internal types.
+- [X] 1536 availability/order/duplicate cases, 375 replacements, three contexts; eight joint quantity/limit/flag/duplicate candidates with one available replacement.
+- [X] Separate source/candidate first errors retained; visible change rejected; seven standard-only axiom reports.
+- [X] Three source equality declarations audited with differing raw indices and hN/hk/hκ guards.
+- [X] Shared/test costs 95/179 lines; wrapper/observation/application/preparation costs explicit.
+- [ ] Supply reference-compatible dependent adapters and observation equality proofs.
+- [ ] Measure actual migrated costs: current migrations 0, maintenance and code savings unknown.
+- [ ] Measure native timing/allocations; semantic equality establishes no performance win.
+
+* Build user results from admitted dependency families
+
+- [X] Six APIs: ~Certified.consume~, ~consume_apply~, ~consume_congr~, ~consume_observed~, ~prepareConsumer~, ~prepareConsumer_error_iff~.
+- [X] One preparation call replaces per-key require plumbing in the compiled client; constructor gets data and joint evidence.
+- [X] Type-valued output retains lower-bound, balanced-quantity and enabled-state proofs; three contexts checked against scalar values.
+- [X] 192 order/duplicate/availability cases, 81 successes; eight output availability masks, exact first errors.
+- [X] Wrong output context, invalid cross-key budget and Prop-only executable witness extraction rejected; four standard-only axiom reports.
+- [X] Source audit records two data witnesses, five proof calls and explicit order/time guards.
+- [X] Shared/test costs 66/165 lines; repeated factory/constructor and setup costs remain explicit.
+- [ ] Supply complete Euler-dependent data constructors, adapters and analytic admissions.
+- [ ] Measure migrated net costs: actual migrations 0, maintenance/code savings unknown.
+- [ ] Measure native allocation/timing; semantic output preservation is not a speedup claim.
+
+* Retain the last built dependency context
+
+- [X] Eleven APIs: ~Snapshot~, ~ContextSlot~, ~empty~, ~read~, ~read_hit~, ~read_miss~, ~read_value~, ~consume~, ~consume_value~, ~rebind~, ~rebind_consume~.
+- [X] Same-context hits skip dependency building; misses replace the single context/data pair. Constructor runs every call.
+- [X] Exact family/context alignment checked; another family with the same Claim cannot silently reuse the slot.
+- [X] Explicit equal-factory rebinding preserves outputs and stored-data reuse.
+- [X] 192 preparation cases, 1215 reads, 405 hits/810 misses; four traces, rebind hit and two eviction/replacement misses; five standard-only axiom reports.
+- [X] Source already shares Pa between tower/equation; its tokens and dependent input guards recorded.
+- [X] Shared/test costs 96/138 lines; equality, tuple retention, miss allocation and immutable-history costs explicit.
+- [ ] Demonstrate a computable complete context and actual dependent reference adapters.
+- [ ] Measure native hit/miss timing and allocations; no universal cache benefit inferred.
+- [ ] Measure migrated code/maintenance costs: migrations 0, savings unknown.
+
+* Context-view capability checklist
+
+- [X] Seven APIs for snapshot/slot projection and value, empty, retained, hit
+  and consumer correctness theorems. Narrow consumers reuse populated data
+  without manual slot reconstruction or factory execution.
+- [X] 4608 cases, 1944 successes, 29160 reads / 11664 hits; independent and
+  uncached controls, context replacement, empty and chained projections.
+- [X] Three joint-bound consumers; duplicate sources select the first value.
+- [X] Reference field consumers hashed; existing projection acknowledged.
+- [X] Local shared cost 70 + 152 lines; v1 receipt with 56 local hashes.
+- [ ] Euler adapters/migrations: 0; code and maintenance savings unmeasured.
+- [ ] Native projection timing and allocation cost remain unmeasured.
+
+* Public context-cache continuity checklist
+
+- [X] Nine APIs for cached observation, alignment and compatible public handoff.
+- [X] 1536 cases / 375 replacements / 6750 reads / 3375 hits, three contexts,
+  empty slots, hidden observation, context replacement and uncached controls.
+- [X] Joint numeric/flag/duplicate proofs consumed; visible changes rejected.
+- [X] Six axiom reports, with no sorryAx; public client compiles.
+- [X] Existing reference path/tower equality bridge acknowledged and hashed.
+- [X] Local cost 96 + 208 lines; separate schema v1 receipt, 58 local hashes.
+- [ ] Actual Euler migration: 0; net lines/maintenance savings unmeasured.
+- [ ] Native observer time/tuple allocation costs remain unmeasured.
+
+* Projected-context cache checklist
+
+- [X] Six APIs for projected reads, hits, consumption and reindex parity.
+- [X] No Outer equality needed; full outer request passed to every constructor.
+- [X] 192 cases / 729 reads / 324 hits / 405 misses, function-bearing outer
+  requests, dependent outputs, independent and uncached controls.
+- [X] Wrong dependent index rejected; omitted varying dependency counterexample.
+- [X] Four axiom reports without sorryAx; public client compiles.
+- [X] Shared cost 62 + 130 lines; v1 receipt, 60 local hashes.
+- [ ] Reference small comparable base factoring not demonstrated.
+- [ ] Actual Euler migrations 0; net lines/maintenance/native savings unmeasured.
+
+* Native cache measurement checklist
+
+- [X] Existing empty/read/consume interfaces qualified with 96 native samples.
+- [X] Common warm setup and query separately timed; independent checksum oracle.
+- [X] Negative controls retained: cheap miss regression, heavy miss no clear gain.
+- [X] Eight native admissions added (40 total); no new runtime API or CI job.
+- [X] Measurement code cost 63 Lean + 77 Python lines; separate v1 receipts.
+- [X] Reference pressure sharing acknowledged; no redundant builds established.
+- [ ] Euler migration 0; net lines/maintenance/allocation savings unmeasured.
+
+* Narrow public view checklist
+
+- [X] Ten APIs; one direct public consequence replaces intermediate Claims.
+- [X] Only requested positions observed; result equals broad-first observation.
+- [X] 4608 cases / 23328 reads / 5832 hits; seven axiom reports and joint outputs.
+- [X] Local paper and existing reference field consumers hashed; v1 receipt.
+- [X] Shared costs 105 + 164 lines; no integration or new native timing claim.
+- [ ] Actual Euler migration 0; net code/maintenance/allocation savings unmeasured.
+
+* Borrowed public view checklist
+
+- [X] Five APIs return a narrow public result and the original broad cache state.
+- [X] Different keys/observers share one broad slot; no manual reconstruction.
+- [X] 120 reads / 113 hits / seven misses; independent values and dependent outputs.
+- [X] Empty/reordered/repeated views, inconsistent duplicate preservation; three axiom reports.
+- [X] Original paper and shared reference R/Pa hashed in a separate v1 receipt.
+- [X] Local costs 59 + 75 lines; per-request views and broad misses remain.
+- [ ] Euler integrations/migrations 0; net lines, hours and native savings unknown.
+
+* View composition checklist
+
+- [X] Four reusable laws for named access and direct/two-stage value/function projection.
+- [X] 5184 cases, independent first-occurrence oracle, empty/order/duplicate controls.
+- [X] Four propext-only axiom reports; no unconditional projection identity claim.
+- [X] Positive 9/1 and negative 13/30 comparison counts; no universal cost reduction.
+- [X] Pinned original getter/composition discussion and reference field consumers hashed; v1 receipt.
+- [X] Local shared costs 61 + 80 lines; no automatic rewrite or analytic inference.
+- [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.
+
+* Contract consequence checklist
+
+- [X] Ten APIs retain functions/built data while deriving another joint proof.
+- [X] No key projection, observer or dependency factory runs during conversion.
+- [X] 192 reads / 104 hits / 88 misses; eight families, cold/warm starts, chained hits.
+- [X] Dependent outputs, independent values, invalid-consequence/context rejection.
+- [X] Seven axiom reports: five axiom-free, two propext-only; compiled public client.
+- [X] Original cache policy and reference joint structures hashed; separate v1 receipt.
+- [X] Shared costs 63 + 73 lines; mapped wrapper and normal read costs retained.
+- [ ] Reference already carries joint proofs; redundant admission/rebuild unestablished.
+- [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.
+
+* Independent contract join checklist
+
+- [X] Nine APIs combine independently admitted proofs of equal complete factory tuples.
+- [X] Retained Results unchanged; no projection, observer or dependency factory in conversion.
+- [X] 224 reads / 112 hits / 112 misses, eight families, four cold/warm traces.
+- [X] Both proofs used in dependent outputs, heterogeneous retention and post-join hits.
+- [X] Wrong family/context rejected; arbitrary-data Left-to-Right counterexample.
+- [X] Six axiom reports: four none, two propext-only; public client compiles.
+- [X] Original cache policy and reference joint structures hashed; separate v1 receipt.
+- [X] Shared costs 64 + 80 lines; mapped wrapper and normal read costs remain.
+- [ ] Reference already combines proofs; redundant admission/rebuild not established.
+- [ ] Euler migrations/integrations 0; net lines, hours and native benefits unmeasured.
+
+* Dependent result index checklist
+
+- [X] Nine APIs retain typed built values for repeated lookup/projection.
+- [X] Exact data/context index; first duplicate value and target order preserved.
+- [X] 72 indices / 288 queries / 729 projections / 972 positions; forced hash collisions.
+- [X] Independent/list controls; missing keys, heterogeneous values, wrong tuple/context rejection.
+- [X] Four standard-axiom reports and compiled joint-proof transport client.
+- [X] Original named-record/cache source and existing reference field consumers hashed; v1 receipt.
+- [X] Shared costs 94 + 86 lines; full setup, map memory, collisions and output construction remain.
+- [ ] Euler already uses structure projections; avoidable linear scans not established.
+- [ ] Native time/allocation/break-even unmeasured; integrations/migrations 0, net lines/hours unknown.
+
+* Native result-index measurement checklist
+
+- [X] 192 samples, four alternating pairs, independent Lean/Python scalar checks.
+- [X] Matched retained-source list control; setup/query separately timed.
+- [X] One-use/head/tail/cycle and ordinary/all-collision controls; regressions retained.
+- [X] Eight native admissions added (48 total); no new runtime API or CI job.
+- [X] 52 Lean + 77 Python measurement lines; native and source schema v1 receipts.
+- [X] No default speed recommendation for the measured small workload.
+- [ ] Allocation/peak memory and broader break-even remain unknown.
+- [ ] Reference already projects fields; Euler migration 0, net lines/hours unknown.
+
+* Result-index compiler qualification checklist
+
+- [X] New public API: 0; existing find?/get wrappers marked inline.
+- [X] Paper named-record semantics and existing Euler structure fields re-audited.
+- [X] Two builds, 192 samples each, four alternating list/index pairs per workload.
+- [X] Only ResultIndex.lean differs across 144 native source hashes.
+- [X] Conditional repeated-read gains; head/single-query/small-key negatives retained.
+- [X] No allocation, peak-memory or external code/maintenance-hour savings claim.
+- [X] Integration/migration count 0. Details: [[file:../performance/result-index.org][native specialization evidence]].
+
+* Certified solver transport checklist
+
+- [X] Eleven new APIs: witness/solver types, pullSolution/pullSolver, composition/identity laws, C4 problem/solver bridge.
+- [X] One admitted route reuses validity and correctness through composed consumers.
+- [X] 96 scalar-oracle reads, three routes, 32 contexts; exact-input Fin/Bool joint certificate.
+- [X] Wrong input/witness, invalid context and Prop-to-data elimination rejected.
+- [X] Five new theorem axiom reports empty.
+- [X] Reference packages two explicit towers and five proof producers in a noncomputable section.
+- [X] Original analytical premises and supplied target solver still required.
+- [X] Integration/migration count 0; net external code, maintenance hours and runtime gains unmeasured.
+
+See [[file:../contracts/solver-transport.org][API use and boundaries]] and [[file:../../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][v1 source audit]].
+
+* Finite refusal admission checklist
+
+- [X] Three new API names: FiniteFailure, FiniteFailure.rejects, certifyFiniteOrFailure; four typed data/proof fields.
+- [X] Supplied finite Bool routes need no separate handwritten admission proof; failures expose an actual counterexample.
+- [X] All 16,384 small routes checked; 6,248 admitted / 10,136 refused, exact first witnesses and two solver reads.
+- [X] Vacuous admission explicitly distinguished from target solver existence.
+- [X] Five universal Euler order/time clauses source-bound; finite sampling cannot certify them.
+- [X] Local extension to explicit composition boundaries, not full Fare POOF semantics.
+- [ ] External migration, net lines/maintenance hours and runtime benefits measured (currently unknown; migrations 0).
