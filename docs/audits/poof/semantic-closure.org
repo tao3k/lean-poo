@@ -1,0 +1,119 @@
+#+TITLE: Fare POOF semantic closure obligations
+
+[[file:README.org][Audit index]] · [[file:closure-v1.json][Reviewed typed construction map]] · [[file:../../contracts/fixed-point-semantics.org][Finite fix API]]
+
+* Acceptance boundary
+
+The paper gives executable Scheme/Scribble constructions and mathematical
+explanations, rather than a machine-checked small-step specification. A claim
+that the Lean library implements the whole paper needs an explicit relation
+between source observations and Lean observations, beyond matching named
+features or counting translated files. The current ~whole_paper_implemented~
+flag stays false until the relevant obligations below have actual evidence.
+The paper's explicit future proposals are separately classified; they are
+not silently promoted into specified executable behavior.
+
+* Obligations
+
+| Area | Current evidence | Stronger closure evidence still needed |
+|------+------------------+----------------------------------------|
+| Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
+| Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y/z integral complex-coordinate fragment with checked final-self reads | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
+| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list merge correspondence; arbitrary-graph cached and uncached singleton theorems; exact outcomes for empty roots, validation errors and two first-root errors; all root lists on validated graphs with any finite number of distinct leaf parents per node; recursive source-style graph traces and production cache invariants | Prove complete cached/uncached outcomes for general valid graphs with parent edges, then connect precedence to composition |
+| Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
+| Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
+| Appendices and research proposals | Typed dispatch, method combination, lens and finite fix implementations; explicit boundaries | Prove the claimed correspondence for specified Appendix B constructs; keep Appendix C notation and future proposals in their stated research scope |
+
+* First mechanized step
+
+[[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] supplies total finite unfoldings of the minimal nucleus.
+For any prototype, equality of adjacent unfoldings yields a kernel-checked
+fixed-point certificate and equality at every later finite depth.
+[[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a complete two-value-domain fixed point and a
+triangular result for every natural input at sufficient depth. Its comparison
+with the existing shared thunk covers 65 concrete inputs. This is a bounded
+observation, not a proof about arbitrary source programs or divergence.
+
+[[file:../../../LeanPoo/Prototype/RecordDispatch.lean][RecordDispatch]] makes the paper's error-reporting function-record
+boundary explicit. [[file:../../../Tests/PaperRecordDispatch.lean][PaperRecordDispatch]] proves that the paper-style x/y fragment and
+typed record have identical checked observations for every String key at
+every finite unfolding depth. The source fragment's final-self reads keep
+their error propagation; its reachable x/y reads are proved present. At
+depth two, the source dispatcher has a fixed-point certificate and the typed
+record's checked observations remain stable. This does not extend the
+correspondence to arbitrary Scheme values, effects or unrestricted recursion.
+
+[[file:../../../Tests/PaperRecordComplexRelation.lean][PaperRecordComplexRelation]] follows the source's ~z<-xy~ construction more closely:
+~z~ holds the integral pair ~(x,y)~, and its source calculation reads ~x~ and
+~y~ through the checked final self. The relation includes successful reads
+as premises for the reusable ~toChecked_computeM~ transport theorem. It proves
+all-key checked equality at every finite depth, depth-two source stability,
+and persistent target observations. The integral pair is a typed adaptation
+of the paper's complex number, not a proof about Racket's numeric tower.
+
+[[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the Appendix A merge selector and normalized step
+agree with the certified Lean merger for every candidate list. It constructs
+a paper-style trace from each certificate and proves any source trace yields
+that same order, with inherited orders preserved, exact name coverage and no
+duplicates. [[file:../../../LeanPoo/Prototype/C3.lean][C3]] also proves that one-root batched and scalar traversal are equal
+for every graph and error outcome. [[file:../../../LeanPoo/Prototype/C3GraphTrace.lean][C3GraphTrace]] constructs a recursive
+source-style derivation for every successful cache-free run: each node has a
+graph lookup, matching parent derivations, the paper's merge trace and a
+certified order trace. The actual direct-parent row is proved a sublist of the
+duplicate-free merged tail.
+The graph relation determines a unique result for the same graph and root,
+independent of successful recursion fuel; positional root batches are unique
+too. The fuel-independent relation below makes that uniqueness usable across
+memoized visits at different recursion depths.
+The fuel-independent ~GraphDerivation~ retains lookup, positional parent and
+paper merge premises across memo reuse. ~CacheDerivations.empty~ and ~insert~
+preserve proven entries; ~agrees~ compares any proven hit with an independent
+paper derivation. ~visit_sound~ proves the actual production parent loop
+preserves that invariant on success. ~linearizeMany_derivation~ gives every
+successful cached batch a paper derivation without running the reference.
+When cached and uncached executions both succeed, uniqueness proves their
+outputs equal; admission no longer compares result lists at runtime.
+The uncached batch now validates once before visiting roots, including an
+empty root list. The previous empty-root behavior accepted malformed graphs;
+~linearizeMany_nil_eq_uncached~ and
+~linearizeMany_eq_uncached_validation_error~ prove exact complete-result
+equality for arbitrary empty batches and all graph-validation failures.
+~linearizeUncachedMany_singleton~ proves its scalar/batch result and error
+identity on every graph.
+~linearizeMany_eq_uncached_missing_first~ and
+~linearizeMany_eq_uncached_self_parent_first~ additionally prove complete
+result equality for two nonempty error paths, with any remaining requested
+roots. Both first validate the graph; when validation succeeds, the first
+traversal fails with the same ~unknownNode~ or ~cycle~ value before cache reuse.
+~linearizeMany_eq_uncached_of_first_scalar_error~ generalizes the batch-tail
+step: any matching error from the two scalar calls remains the complete
+result after adding arbitrary later roots. It does not prove that the two
+scalar calls always fail or succeed together.
+~linearizeMany_eq_uncached_of_visit_coherence~ proves that exact one-root
+~Except~ equality on every derivation-backed cache lifts through the actual
+shared-cache batch loop to any root list. ~FlatGraph~ and
+~linearizeMany_eq_uncached_flat~ discharge that premise for every validated
+graph without parent edges, including repeated-root cache hits and a missing
+root after previous successes. ~UnaryLeafGraph~ and
+~linearizeMany_eq_uncached_unary_leaf~ now discharge it for every validated
+graph whose nodes are leaves or have one distinct leaf parent. Roots may share
+that parent, repeat, or precede a missing root. ~visit_leaf_at~ proves the
+parent's cache hit/miss order for any fresh path and positive fuel;
+~visit_one_leaf_parent_coherence~ proves the complete single-root outcome.
+~LeafParentGraph~ extends the batch result to any finite number of distinct
+leaf parents. ~visit_leaf_parents_coherence~ preserves the cache invariant
+through the whole parent loop; ~mergeCertified_leaf_parents~ certifies the
+declared order. The checked graph shares four leaves between roots in opposite
+orders. Graphs with deeper parent chains still need the one-root
+cache/path/fuel coherence proof.
+[[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] also offers optional admission when callers need an exact
+proof that cached and uncached executable results coincide on supplied graph
+and roots. That check may recompute shared ancestry exponentially and is
+kept out of the ordinary path. General deeper parent-edge graph cached/uncached
+outcome equivalence and graph-to-composition simulation remain
+open; 640 finite graph comparisons remain observation evidence.
+
+The local toolchain does not currently contain Racket. Installing or running
+that separate source evaluator is a future verification step; CI continues to
+use the pinned source identity and Lean-owned checks without making the
+reference checkout a build dependency.

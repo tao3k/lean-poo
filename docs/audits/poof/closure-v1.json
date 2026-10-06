@@ -1,0 +1,165 @@
+{
+  "schema": "lean-poo.poof-closure.v1",
+  "reviewed_constructive_path_closed": true,
+  "scope": "Manually reviewed typed constructive operations, not whole-paper operational equivalence or unspecified automation.",
+  "requirements": [
+    {
+      "id": "bottom",
+      "source_line": 583,
+      "status": "closed_typed_construction",
+      "operations": [
+        "explicit checked bottom",
+        "prototype-list default base",
+        "constant tail bypass"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean"
+      ],
+      "checks": [
+        "Tests/PaperFixedPoints.lean"
+      ],
+      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+    },
+    {
+      "id": "multiple-inheritance",
+      "source_line": 1140,
+      "status": "closed_typed_construction",
+      "operations": [
+        "C3 cached parent merge",
+        "shared ancestor composition",
+        "original ten-object graph",
+        "retained function/supers/precedence overrides",
+        "shared memoized C3 batch traversal",
+        "checked retained-cache admission",
+        "reusable frozen metadata/function plan"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/MetaPrototype.lean",
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/C3Semantics.lean",
+        "LeanPoo/Prototype/C3GraphTrace.lean",
+        "LeanPoo/Prototype/C3GraphSemantics.lean",
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
+      ],
+      "checks": [
+        "Tests/PaperMetaPrototype.lean",
+        "Tests/PaperC3.lean",
+        "Tests/PaperC3Semantics.lean",
+        "Tests/PaperC3GraphSemantics.lean",
+        "Tests/PaperC3BatchCoherence.lean",
+        "Tests/PaperC3UnaryLeaf.lean",
+        "Tests/PaperC3TwoLeaf.lean",
+        "Tests/PaperC3LeafParents.lean",
+        "Tests/PaperCheckedMeta.lean"
+      ],
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+    },
+    {
+      "id": "simple-types",
+      "source_line": 1388,
+      "status": "closed_typed_construction",
+      "operations": [
+        "Top and Bottom recognizers",
+        "runtime presentation/codec",
+        "Number add/subtract/zero/one",
+        "typed ListOf and rejected mixed/improper input"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/NumberDescriptor.lean",
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/PaperPrototypeChecks.lean"
+      ],
+      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+    },
+    {
+      "id": "elaborate-types",
+      "source_line": 1420,
+      "status": "closed_typed_construction",
+      "operations": [
+        "finite dependent-record field descriptors",
+        "descriptor five-field self catalog",
+        "codec two-field self catalog",
+        "typed descriptor factory admission",
+        "object three-field catalog",
+        "meta-prototype three-field catalog",
+        "nested metadata-object description",
+        "generated validator/schema/inspection",
+        "typed field updates",
+        "exact descriptor/object reconstruction",
+        "prepared generated JSON codec",
+        "strict wire and refinement admission",
+        "typed field update lookup laws",
+        "heterogeneous ordered record patch",
+        "valid-record preservation and untouched-field kernel laws"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/RecordDescription.lean",
+        "LeanPoo/Prototype/DescriptorReflection.lean",
+        "LeanPoo/Prototype/PrototypeReflection.lean",
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/RecordCodec.lean"
+      ],
+      "checks": [
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/IntegratedPrototype.lean",
+        "Tests/PaperRecordCodec.lean"
+      ],
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
+    },
+    {
+      "id": "pure-linearity",
+      "source_line": 1449,
+      "status": "closed_typed_construction",
+      "operations": [
+        "pure state threading",
+        "persistent snapshot to mutable identity",
+        "consume-old/return-new reference",
+        "alias use refusal",
+        "mutex-serialized competing consumers",
+        "rejected transition retains reference",
+        "checked composition associativity"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/LinearState.lean",
+        "LeanPoo/Prototype/Mutable.lean"
+      ],
+      "checks": [
+        "Tests/PaperLinearState.lean",
+        "Tests/MutablePrototype.lean"
+      ],
+      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+    },
+    {
+      "id": "fixed-point-variants",
+      "source_line": 2256,
+      "status": "closed_typed_construction",
+      "operations": [
+        "shared function knot",
+        "shared delayed non-function knot",
+        "rebuilding function alternative",
+        "construction count distinction",
+        "finite recursive value controls",
+        "pure finite fix/mix unfoldings",
+        "certified stable fixed point",
+        "all-input guarded triangular approximation theorem"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean",
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Delayed.lean",
+        "LeanPoo/Prototype/FiniteFix.lean"
+      ],
+      "checks": [
+        "Tests/PaperFixedPoints.lean",
+        "Tests/PaperFiniteFix.lean"
+      ],
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
+    }
+  ]
+}

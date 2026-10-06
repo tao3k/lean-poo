@@ -1,0 +1,52 @@
+#+TITLE: Certified ordinary C3 merge
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/advanced.org][Paper Appendix A audit]]
+
+* Capability/API checklist
+
+| Task | API | Contract |
+|------+-----+----------|
+| Select the next paper candidate | ~C3.sourceChoose lists~ | Scans nonempty heads left to right; ~sourceChoose_eq~ proves equality with the certified selector for every list |
+| Remove a selected head | ~C3.removeNext name lists~ | ~removeNext_eq_advance~ proves equality with the optimized step after removing empty rows |
+| Certify a merged order | ~C3.mergeCertified lists~ | Returns a merge result with a kernel ~Trace~ or a typed rejection |
+| Relate a paper trace to the certificate | ~C3.SourceTrace.ofCertified~ / ~eq_certified~ | The normalized paper trace exists for each certificate, and any source trace has the same output |
+| Reuse order guarantees | ~C3.mergeCertified_preserves~, ~covers~, ~nodup~ | Every input order remains a sublist; output has exactly the input names and no repeats |
+
+* Use the certificate
+
+#+begin_src lean
+import LeanPoo.Prototype.C3Semantics
+open LeanPoo.Prototype
+
+def admitParentMerge (lists : List (List String)) :
+    Except LeanPoo.C4.Error (LeanPoo.C4.Precedence.Certified lists) :=
+  C3.mergeCertified lists
+
+theorem keepsParentOrder (lists : List (List String))
+    (certificate : LeanPoo.C4.Precedence.Certified lists)
+    (parentOrder : List String) (present : parentOrder ∈ lists) :
+    parentOrder.Sublist certificate.output :=
+  C3.mergeCertified_preserves lists certificate parentOrder present
+#+end_src
+
+The certificate can be retained and reused for every parent's order and for
+coverage/no-duplicate obligations. A successful raw list alone does not
+carry these proof fields. The API reuses the existing optimized merger and
+its independent trace replay; it does not maintain a second merger or add a
+runtime dependency on the source paper.
+
+* Proof scope
+
+[[file:../../Tests/PaperC3Semantics.lean][PaperC3Semantics]] checks a concrete merge and rejection, while the Lean
+theorems quantify over *all candidate lists and all source merge traces*.
+They establish the paper's leftmost eligibility choice, normalized deletion
+step and equality of any source-trace output with a certified output. The
+certificate proves retained parent order, exact name coverage and no repeats.
+The axiom reports list propext, Classical.choice and Quot.sound where used;
+none of these theorems admits ~sorryAx~.
+
+[[file:c3-graph.org][Graph admission]] now checks cached graph outputs against uncached finite
+recursion on exact supplied inputs; a universal graph/cache theorem remains open.
+The ordinary C3 policy is also
+distinct from the main C4 object policy; no policy-wide equivalence follows
+from these merge laws.

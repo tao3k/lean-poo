@@ -5,6 +5,11 @@ incremental proof reuse. It implements the functional prototype construction
 described in [[https://github.com/metareflection/poof][POOF]] with Lean's types, functions, and thunks. Its C4
 linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
+The reviewed Lean-native constructive path is implemented and checked, including
+Order/BST/AVL, original checks, C3, representations and descriptor/meta operations.
+The [[file:docs/audits/poof/README.org][whole-paper audit]] records the precise typed scope. Whole-paper operational
+correspondence and unrestricted dynamic automation are not established.
+
 The library is domain-neutral: applications supply their own typed keys,
 values, obligations, and dependency graph. It does not define a policy
 language or a domain-specific proof system.
@@ -29,7 +34,8 @@ runtime boundary.
 Install the Lean toolchain named in [[file:lean-toolchain][lean-toolchain]]. Build the library with
 ~lake build~. The full project check uses ~just~, ~zsh~, Emacs for Org parsing,
 Python 3, and a ~timeout~ command. The complete local gate checks independent
-Lean files with four workers after the public library build:
+Lean files with automatically bounded workers after the public library build;
+[[file:docs/check-performance.org][check performance]] records the host-dependent worker limits:
 
 #+begin_src sh
 lake build
@@ -63,6 +69,7 @@ Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and perfor
 - [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the
   paper-model construction.
 - [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
+- [[file:docs/audits/poof/README.org][Whole-paper POOF audit]] records the original source pin, chapter coverage and concrete closure gaps.
 - [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
 
 Documentation is maintained in Org. [[file:Examples/README.org][Examples]] contains user-facing usage scenarios;

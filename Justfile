@@ -239,6 +239,26 @@ check-tests: check-proof
 
 [private]
 _check-contracts:
+    {{lean}} Tests/PaperRecordCodec.lean
+    {{lean}} Tests/PaperCheckedMeta.lean
+    {{lean}} Tests/PaperDescriptorReflection.lean
+    {{lean}} Tests/PaperLinearState.lean
+    {{lean}} Tests/PaperFixedPoints.lean
+    {{lean}} Tests/PaperFiniteFix.lean
+    {{lean}} Tests/PaperRecordDispatch.lean
+    {{lean}} Tests/PaperRecordComplexRelation.lean
+    {{lean}} Tests/PaperTrees.lean
+    {{lean}} Tests/PaperC3.lean
+    {{lean}} Tests/PaperC3Semantics.lean
+    {{lean}} Tests/PaperC3GraphSemantics.lean
+    {{lean}} Tests/PaperC3BatchCoherence.lean
+    {{lean}} Tests/PaperC3UnaryLeaf.lean
+    {{lean}} Tests/PaperC3TwoLeaf.lean
+    {{lean}} Tests/PaperC3LeafParents.lean
+    {{lean}} Tests/PaperPrototypeChecks.lean
+    {{lean}} Tests/PaperDictionaryRecord.lean
+    {{lean}} Tests/PaperMetaPrototype.lean
+    {{lean}} Tests/PaperRepresentations.lean
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean
@@ -364,6 +384,7 @@ check-po: check-example check-tests check-docs
 
 # Parse every maintained Org page, including the root and directory indexes.
 check-docs:
+    python3 tools/audit_poof.py --check
     emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (append (list "README.org" "Examples/README.org" "Tests/README.org" "Benchmarks/README.org") (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
 
 # Compare equality-only, hash-indexed ordered, and sorted-map construction.

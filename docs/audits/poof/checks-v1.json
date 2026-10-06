@@ -1,0 +1,149 @@
+{
+  "schema": "lean-poo.poof-checks.v1",
+  "paper_checks": [
+    {
+      "source_line": 272,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:272",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 328,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:328",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 332,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:332",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 336,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:336",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 344,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:344",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 352,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:352",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 362,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:362",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 376,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:376",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 456,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:456",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 465,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:465",
+      "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
+    },
+    {
+      "source_line": 715,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:715",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 731,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:731",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 792,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:792",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 797,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:797",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 839,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:839",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 842,
+      "test": "Tests/PaperTrees.lean",
+      "marker": "paper:842",
+      "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
+    },
+    {
+      "source_line": 869,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:869",
+      "adaptation": "Typed integer functions and delayed natural computations."
+    },
+    {
+      "source_line": 878,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:878",
+      "adaptation": "Typed integer functions and delayed natural computations."
+    },
+    {
+      "source_line": 1895,
+      "test": "Tests/PaperC3.lean",
+      "marker": "paper:1895",
+      "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
+    },
+    {
+      "source_line": 1896,
+      "test": "Tests/PaperC3.lean",
+      "marker": "paper:1896",
+      "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
+    },
+    {
+      "source_line": 1897,
+      "test": "Tests/PaperC3.lean",
+      "marker": "paper:1897",
+      "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
+    },
+    {
+      "source_line": 1974,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:1974",
+      "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
+    },
+    {
+      "source_line": 1975,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:1975",
+      "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
+    },
+    {
+      "source_line": 1976,
+      "test": "Tests/PaperPrototypeChecks.lean",
+      "marker": "paper:1976",
+      "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
+    }
+  ]
+}

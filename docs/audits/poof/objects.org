@@ -1,0 +1,68 @@
+#+TITLE: POOF audit — objects, classes and mutability
+
+[[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
+
+* Existing bounded Lean constructions
+
+| Paper lines | Capability | Evidence and scope |
+|-------------+------------+--------------------|
+| 943–979 | Slot introspection | [[file:../../../LeanPoo/Object/Memo.lean][Memo]] and [[file:../../../Tests/IntegratedPrototype.lean][IntegratedPrototype]] enumerate finite declared keys |
+| 1039–1139 | First-class instance/prototype pair | [[file:../../../LeanPoo/Prototype/Object.lean][Object]] and [[file:../../../Examples/FirstClassObject.lean][FirstClassObject]] retain and extend prototypes |
+| 1323–1387 | Classes as descriptor prototypes, validation | [[file:../../../LeanPoo/Prototype/Class.lean][Prototype.Class]], [[file:../../../LeanPoo/Object/Class.lean][Object.Class]], [[file:../../../Tests/DescriptorClass.lean][DescriptorClass]] and IntegratedPrototype |
+| 1409–1419 | Parameterized type descriptors | Class/[[file:../../../LeanPoo/Prototype/Types.lean][Types]] provide typed list/array/map/option/product/sum/HList boundaries |
+| 1496–1524 | Single-identity mutable prototype protocol | [[file:../../../LeanPoo/Prototype/Mutable.lean][MutableProto]] and [[file:../../../Tests/MutablePrototype.lean][MutablePrototype]] compose parent/child effects on one cell |
+
+The implementation uses Lean carrier types, explicit errors and Lean codecs.
+Those adaptation choices do not require Scheme macro/API or binary-wire
+compatibility. Representative type checks, JSON controls and mutable controls
+exist; they do not establish every source dynamic-type operation.
+
+* Newly closed typed constructions
+
+| Paper lines | Implementation and control | Limit |
+|-------------+----------------------------+-------|
+| 980–1038 | Lazy AVL DictionaryRecord and KeyedPrototype | Both concrete source routes; no universal representation theorem |
+| 1140–1314 | MetaPrototype, PaperMetaPrototype | Original ten-object C3 graph, inherited slots/caches and three overrides; main C4 is a separate policy |
+| 1388–1408 | NumberDescriptor, PaperDescriptorReflection | Int/Rat arithmetic and typed presentation/recognition; no dynamic Scheme universe |
+| 1420–1433 | RecordDescription, DescriptorReflection, PrototypeReflection | Descriptor/codec/object/meta catalogs, nested self-description and generated validation/schema/inspection/update |
+| 1449–1495 | LinearState, PaperLinearState | Runtime alias consumption, pure threading and serialized races; no static ownership or universal isomorphism |
+
+[[file:closure-v1.json][The closure map]] records named operations and explicit typed boundaries.
+[[file:../../contracts/descriptor-reflection.org][The API guide]] explains actual generated tools and callable refinement checks.
+Whole-machine reflection, closure serialization, arbitrary function behavior,
+automated typeclass transformations and universal descriptor automation are not
+consequences of a finite catalog or an exact field reconstruction theorem.
+
+Standard mutable prototype layers still stage persistent schema edits before
+installation. LinearState complements that identity protocol by invalidating
+successful old references; snapshots of pure values remain usable.
+
+* Research proposals and project extensions
+
+The cache section (1525–1559) discusses explicit caches and language-wide purity
+or effect tracking. Current dependency schedules, incremental revisions and
+proof reuse depend on explicit finite contracts. They do not inspect arbitrary
+Lean bodies or implement a language-wide invalidation policy.
+
+That distinction is a research boundary, not a claim that the paper supplied
+an algorithm we failed to copy. Likewise, OpenAI factory/consumer audits and C4
+contract APIs are local extensions. Their existence and large test corpus do
+not establish full POOF implementation coverage.
+
+* New executable representation and meta evidence
+
+[[file:../../../Tests/PaperDictionaryRecord.lean][PaperDictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
+inherited values, missing-slot refusals and a cold failing slot.
+[[file:../../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] guards all three ordinary metadata slot overrides,
+C3 diamond caches, a special constant-record base and retained snapshots.
+These operations are implemented; unrestricted dynamic identity, arbitrary
+cached-ancestry correctness through the raw API and universal self-descriptor automation remain open.
+[[file:../../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] adds an explicit checked preparation path: all retained
+caches are compared with the current C3 graph; function, parents and order are
+frozen together before repeated instantiation. It rejects six poisoned caches
+and five invalid graphs, and guards metadata whose getters depend on precedence.
+[[file:../../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] generates codecs from one finite field catalog, guards
+102 wire round trips and rejects malformed wire/schema/record input. Field
+update lookup, valid-record preservation and heterogeneous batch frame laws are
+kernel checked. Three patch cases guard typed edit order and rejected partial
+results; callable serialization remains outside scope.

@@ -1,0 +1,63 @@
+#+TITLE: Checked record dispatch and source correspondence
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/semantic-closure.org][Paper semantic obligations]]
+
+* Capability/API checklist
+
+| Task | API | Contract |
+|------+-----+----------|
+| Turn a typed record into an error-reporting function | ~Record.toChecked record missing~ | Every present value is returned; each absent key receives ~missing key~ |
+| Import a checked function record | ~CheckedRecord.toRecord source~ | Successful slots are retained; error payloads are discarded |
+| Recover exact checked observations | ~CheckedRecord.toChecked_toRecord~ | Requires proof that every source error follows the declared missing-key policy |
+| Override, modify or compute a named slot | ~CheckedRecord.slot~, ~modify~, ~compute~ | Checked dispatcher versions of the corresponding typed record layers |
+| Compute a slot with checked final-self reads | ~CheckedRecord.computeM~ | A failed read becomes the computed slot's error; inherited keys keep their original outcome |
+| Reuse a source/target layer proof | ~Record.toChecked_slot~, ~toChecked_modify~, ~toChecked_compute~ | All-key equality, including inherited missing-key errors; compute requires matching self calculations |
+| Transport a checked calculation to a typed layer | ~Record.toChecked_computeM~ | Requires the source calculation to return the target value and exact inherited observations; then all keys agree |
+| Lift a one-step relation through recursion | ~FiniteFix.iterate_relation~ | The relation holds at every finite unfolding depth from related seeds |
+
+* Checked public client
+
+#+begin_src lean
+import LeanPoo.Prototype.RecordDispatch
+open LeanPoo.Prototype
+
+def readWithError (record : Record String (fun _ => Nat))
+    (key : String) : Except String Nat :=
+  record.toChecked (fun missing => "unbound slot: " ++ missing) key
+#+end_src
+
+The checked view is useful when a client needs a failure carrying the queried
+key instead of ~Option.none~. It is a per-read function view of an existing
+record; no JSON codec, cache, or mutable state is involved. Importing an
+arbitrary checked function loses its error payload at failed keys. Exact
+round-trip equivalence therefore needs the canonical-error premise in the API.
+
+* Paper fragment proved
+
+[[file:../../Tests/PaperRecordDispatch.lean][PaperRecordDispatch]] defines a source-style function record whose ~x~ and
+~y~ slots are 1 and 2, whose other keys return ~(unbound slot, key)~, and whose
+prototypes override ~x~, double the inherited ~x~, then compute ~sum~ from
+final self. It proves the checked source and typed record observations equal
+for *every String key and every finite unfolding depth*. The source-style
+calculation propagates failures from final-self reads. Separate lemmas prove
+that ~x~ and ~y~ are present at every reachable depth, so the total typed
+calculation uses no fallback there. The source dispatcher stabilizes after
+depth two and has a fixed-point certificate; the typed record's checked
+observations stay equal at every later depth.
+
+[[file:../../Tests/PaperRecordComplexRelation.lean][PaperRecordComplexRelation]] uses the paper's ~x/y/z~ shape: ~z~ reads both
+coordinates from final self and stores the integral complex pair ~(x,y)~.
+The checked source calculation uses ~computeM~, so a missing ~x~ or ~y~
+propagates its original error. A strengthened relation proves the two reads
+succeed in this construction, then ~toChecked_computeM~ transports the ~z~
+layer. The result is exact checked equality for every key and every finite
+unfolding depth, including unknown-key errors. The source reaches ~(6,2)~
+and stabilizes at depth two; target observations remain stable thereafter.
+
+This formalizes one explicit record fragment, including the missing-key
+error policy. It does not execute the original Racket Scribble evaluator or
+establish whole-language equivalence, general effect behavior, or equality of
+unsafe shared fixed-point implementations. These proofs have no ~sorry~;
+function equality and String-based record proofs inherit Lean's reported
+~propext~/~Quot.sound~ and, in the earlier String-key mixed proof,
+~Classical.choice~.

@@ -1,0 +1,94 @@
+#+TITLE: POOF audit — appendices and research boundaries
+
+[[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
+
+* Appendix A: executable C3 and checks
+
+[[file:../../../LeanPoo/Prototype/C3.lean][C3.linearize]] implements the ordinary finite paper graph policy separately
+from the main C4 object policy. [[file:../../../Tests/PaperC3.lean][PaperC3]] asserts all four source orders,
+five refusal cases, both helper checks and 640 comparisons across 160 ordered
+parent DAGs against an independent recursive merge oracle.
+[[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the paper's leftmost eligible selection and normalized
+deletion step agree with the certified merger for every candidate list. Every
+certified output has a paper-style source trace; any source trace over the
+same candidates has that output. The [[file:../../contracts/c3-merge.org][reusable C3 guide]] shows how callers retain
+the certificate to prove parent-order preservation, coverage and no repeats.
+[[file:../../../LeanPoo/Prototype/C3.lean][C3]] proves one-root batch/scalar equality for every graph and error outcome.
+[[file:../../../LeanPoo/Prototype/C3GraphTrace.lean][C3GraphTrace]] gives every successful uncached result a recursive paper-style
+graph derivation. The derivation determines a unique order even when two
+successful runs use different fuel. It also erases the fuel index into a
+unique paper relation. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] proves empty/insert preservation and cache-hit
+agreement for memo entries carrying that relation, and adds an optional
+receipt that transfers derivations to cached results on admitted inputs.
+The production visit now preserves the invariant on success, so ordinary
+scalar and batch success directly implies a paper derivation. The uncached
+batch validates once, including empty roots. Both batch APIs have identical
+outcomes for empty roots and for every graph-validation failure; both
+one-root batch/scalar laws include exact error results.
+Two further kernel theorems cover nonempty batches whose first root is absent
+or lists itself as its first parent, including arbitrary later roots.
+[[file:../../contracts/c3-graph.org][The graph guide]] distinguishes this zero-replay proof from admission's
+recomputation cost. The batch lifting theorem reduces complete outcome
+equivalence to one-root coherence on every derivation-backed cache. That
+premise is proved for validated graphs without parent edges, yielding exact
+outcomes for arbitrary roots, repeated hits and later missing roots. It is
+also proved for validated graphs with any finite number of distinct leaf parents per node, including shared
+parents and opposite declarations across roots. Deeper parent-chain graph
+coherence remains open.
+Two successful executable traversals now provably agree, so admission omits a
+runtime order-comparison branch.
+
+The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
+typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records
+all 24 original expressions. The three c3-extra-definitions helpers are implemented by Dictionary.fromList,
+toList and merge, with 594 scalar merge controls. Whole-policy C3/C4 equivalence
+remains a separate claim.
+
+* Appendix B: substantial existing implementations
+
+| Paper lines | Existing mechanism | Scope |
+|-------------+--------------------+-------|
+| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Typed registration, applicability, selection and context/cache controls |
+| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Ordered primary/before/after/around and user-defined combinations |
+| 2084–2154 | [[file:../../../LeanPoo/Prototype/Lens.lean][lensGen]], [[file:../../../LeanPoo/Prototype/SkewLens.lean][SkewLens]], [[file:../../../Examples/LensPrototype.lean][LensPrototype]], [[file:../../../Tests/SkewExtension.lean][SkewExtension]] | Actual getter/setter/wrapper constructor plus typed focus laws |
+
+The last row is implemented: the narrower Functional view/solver contract
+guides do not mean the whole repository lacks prototype setters. Full
+generalized prototype treatment is explicitly future work in the paper.
+The existing constructor is not evidence that every conceivable generalized
+combination, dynamic MOP or cross-library conflict policy has been solved.
+
+* Appendices C, D and E
+
+Appendix C (2155–2255) supplies explanatory type notation. Lean's dependent
+types replace that notation; no source row/subtyping calculus translation
+theorem is supplied. This is a formal correspondence question, rather than
+a missing literal notation parser.
+
+Appendix D (2256–2389) explains multiple ways to tie fixed points in eager and
+lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] uses an unsafe private reference cell and one shared
+thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
+[[file:../../../LeanPoo/Prototype/CheckedFunction.lean][rebuildingFix]] supplies the source rebuild-per-call contrast;
+[[file:../../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
+[[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] now defines pure finite unfoldings of ~fix~ and the one-step
+~mix~ equation. Adjacent equality constructs a proof-bearing fixed point and
+implies stability at every later depth. [[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a two-step Boolean fixed point
+over its entire input domain, proves the triangular result for every natural
+input at sufficient depth, and compares 65 observations with the shared thunk.
+Internal-define/letrec/lazy routes share the Lean knot; direct untyped self-application
+is a language choice. There is no universal termination theorem or all-variants operational
+equivalence. The paper permits divergence; such a theorem is not required to
+implement unrestricted executable recursion. Safe finite dependency schedules
+have a stronger, separate contract and do not certify every unsafe knot.
+
+Appendix E (2390–2434) compares Scheme source sizes. The character/cons-cell
+figures are illustrative and do not impose Lean line-count requirements.
+
+* Future Work and related literature
+
+Related Work (1560–1800) describes other systems and research; reproducing each
+system is not a feature requirement. Future Work (1801–1830) proposes fuller
+generalized prototypes, meta-level type/logical constraints and staging/cache
+research. Those proposals must not be counted as completed formal results.
+Conversely, their open status alone does not invalidate the existing core
+executable construction. The audit preserves both distinctions.

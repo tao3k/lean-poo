@@ -1,0 +1,89 @@
+#+TITLE: Fare POOF whole-paper implementation audit
+
+* Verdict and closure scope
+
+The reviewed typed constructive path is now closed: Order/BST/AVL, all 24
+original checks, ordinary C3, both alternate representations, overridable meta
+slots, Number operations, self-description/generated field tools, consuming state
+references, executable shared/rebuilding fixed-point controls and certified
+finite fixed-point unfoldings.
+[[file:closure-v1.json][The six-item closure map]] lists operations, implementations, tests and limits.
+
+This is not whole-paper operational equivalence or unrestricted dynamic
+self-description/automation. General fixed points remain unsafe and may diverge.
+The stronger ~whole_paper_implemented~ flag stays false; the manually reviewed
+~reviewed_constructive_path_closed~ flag is true. Neither is inferred from counts.
+
+This audit reviews ~poof.scrbl~ at commit
+~9affa8fbbb4f12cbd98cb97f8b8b84474fc39429~, with SHA-256
+~ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17~.
+The implementation baseline is squash commit ~247d1d6~ on main. This is the
+POOF paper, not every other essay in the same reference checkout.
+
+* Read the audit
+
+| Module | Purpose |
+|--------+---------|
+| [[file:core.org][Prototype core and complete examples]] | fix/mix, record, numeric, delayed and tree constructions |
+| [[file:objects.org][Objects, classes and mutability]] | Representations, inheritance, descriptors and effect boundaries |
+| [[file:advanced.org][Appendices and research proposals]] | C3, dispatch, combination, lenses, notation and fixed points |
+| [[file:gaps.org][Closure checklist]] | Closed typed operations and stronger research gates |
+| [[file:semantic-closure.org][Semantic closure obligations]] | Source/Lean correspondence gates and proved finite fix/record fragments |
+| [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 321 source filenames and 79 evidence-file hashes |
+
+* Status meaning
+
+| Status | Review units | Meaning |
+|--------+--------------+---------|
+| ~lean_translation~ | 34 | The named bounded construction has Lean source and representative executable references |
+| ~partial~ | 0 | Related mechanisms exist, but an explicit behavior/policy/representation correspondence is open |
+| ~not_implemented~ | 0 | The complete named paper case has no corresponding implementation found in the reviewed source inventory |
+| ~discussion~ | 8 | Motivation, literature, notation or explanatory context |
+| ~future_proposal~ | 3 | Explicit further research, not an already-specified completed implementation |
+
+These counts are review units, not a completion percentage. Units differ in
+size and include non-executable discussion. Assigning every heading does not
+prove every behavior. ~lean_translation~ is not a whole-paper simulation theorem.
+The original Racket/Scheme evaluator and differential output comparison were
+not run by this audit. Many Examples use ~#eval~ to print observations; those
+are weaker than ~#guard~ expected-value assertions or a general theorem.
+
+* Reproduce and retain the evidence
+
+#+begin_src sh
+python3 tools/audit_poof.py --paper .data/poof/poof.scrbl
+python3 tools/audit_poof.py --check
+#+end_src
+
+Generation reads and checks the local original paper and its repository pin.
+~--check~, also run by ~just check-docs~, verifies saved outline coverage,
+review config/tool identity, local source hashes and inventory. CI does not
+download the reference or rerun its evaluator. Hashes and marker counts bind
+the manual assessment; they do not independently infer semantics.
+After a relevant source change, re-review the affected requirement and rebuild
+the receipt. Do not merely regenerate to turn a drift failure into a pass.
+
+* Capability and execution evidence
+
+[[file:../../contracts/paper-dictionaries.org][Dictionary/meta APIs]], [[file:../../contracts/descriptor-reflection.org][descriptor/reflection/state APIs]], [[file:../../contracts/record-dispatch.org][checked record dispatch]], [[file:../../contracts/c3-merge.org][certified C3 merge]] and [[file:../../contracts/c3-graph.org][C3 graph admission]] document practical reuse.
+[[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
+binds the six remaining constructions. Receipts bind manual review and code
+identity; actual execution and kernel theorem checks are separate evidence.
+Current gate: 162 atoms plus four diagnostics, 48 native admissions and 16
+supervisor controls. The record catalog now has a typed batch patch with kernel
+validity and untouched-field laws; finite fix/mix unfoldings have a separate pure
+semantics. The checked record x/y fragment has an all-depth source/target
+observation theorem. C3 merge has generic source-trace correspondence; the new
+graph receipt carries a recursive paper-style derivation for each admitted root;
+the derivation's output is unique across successful fuel budgets. A
+fuel-independent relation and cache-entry invariant now support reasoning
+about memo reuse. Production cached successes now have graph derivations
+without reference recomputation; full error/outcome equivalence remains open.
+Validated unary leaf-parent graphs now have complete batch outcome equality,
+including shared parents, repeated roots and late missing roots.
+The height-one class now allows any finite number of distinct leaf parents and
+opposite orders across roots; deeper parent chains still need coherence proofs.
+When both traversals succeed, output equality is proved and admission has no
+runtime disagreement check.
+No external OpenAI integration or measured saving is added.

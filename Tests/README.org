@@ -348,3 +348,83 @@ reads. Vacuous-domain and forged-proof controls are included; two axiom reports
 contain propext/Quot.sound without Classical.choice. Current inventory: 141 atoms
 plus four diagnostics, 48 native admissions, eleven supervisor tests, 12 shards
 and 16 CI jobs.
+
+* Whole-paper audit controls
+
+Three Python supervisor controls reject removed outline entries, altered local
+evidence identity and an unreviewed original paper. The supervisor suite is now
+14 tests; Lean inventory remains 141 atoms plus four diagnostics, with 48 native
+admissions. ~check-docs~ checks the saved POOF audit without a reference checkout.
+This is audit integrity evidence, not a Scheme/Lean semantic equivalence test.
+
+* Paper implementation atoms
+
+PaperTrees guards all six Order/BST/AVL source checks, 6,368 insertion updates,
+four rotations and two axiom-free inherited-method equalities. PaperC3 guards
+four source orders, five refusals and 640 independent oracle comparisons.
+PaperPrototypeChecks guards the other record/numeric/object source checks;
+[[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
+PaperDictionaryRecord guards 33 contexts and 528 reads; PaperMetaPrototype
+checks three metadata overrides, special base merge and C3 cache behavior.
+Current inventory: 158 atoms plus four diagnostics, 48 native admissions and
+16 Python supervisor controls. Older counts above belong to their stated milestones.
+
+* Reviewed paper construction closure
+
+PaperDescriptorReflection checks source Number slots, five descriptor fields,
+two codec fields, three object fields and three meta fields, nested self-description,
+generated tools and 101 descriptor/codec contexts. Exact reconstruction laws
+report their actual axioms; callable behavior is admitted at use boundaries.
+PaperLinearState checks 64 arithmetic traces, alias consumption/refusal, failed
+transition retention and 32 races with exactly one successful consumer.
+PaperFixedPoints checks bottom/default/constant-tail behavior, 65 recursive
+inputs and construction counts 1 shared / 32 rebuilding / 1 delayed.
+PaperFiniteFix proves finite unfolding and stabilization laws, a two-step
+Boolean fixed point and all-input triangular recursion at depth ~n+1~; 65
+bounded outputs are compared with the shared unsafe knot.
+PaperRecordDispatch proves checked source/typed record equality for every
+String key at every finite unfolding depth. Its paper-style self calculation
+propagates errors, the source stabilizes at depth two, and typed observations
+remain stable afterward. The reusable slot/modify/compute laws expose the
+same missing-key behavior to clients.
+PaperRecordComplexRelation strengthens this to the paper's ~x/y/z~ shape:
+~z~ is an integral complex pair read from final self with checked error
+propagation. It proves exact observations at every key and finite depth,
+including unknown-key errors, and source stability at depth two. The public
+~computeM~ and ~toChecked_computeM~ APIs carry this calculation across layers.
+PaperC3Semantics proves the Appendix A selector, normalized deletion and
+paper-style merge trace agree with the certified merger for arbitrary candidate
+lists. Each certificate preserves all parent orders and covers exactly the
+input names without repeats; unconditional graph cache coherence remains separate.
+PaperC3GraphSemantics proves one-root batch/scalar equality for every graph and
+uses an optional receipt to compare cached multi-root traversal with uncached
+finite recursion on an exact graph/root list. Every successful uncached result
+has a recursive source-style graph trace; the receipt transfers that trace to
+admitted cached results and proves output equality and row count. Universal
+cache coherence remains open. GraphTrace and ParentTraces also prove that
+successful graph derivations have unique outputs across fuel budgets. A
+fuel-independent graph relation retains those paper premises; its cache
+invariant proves empty/insert preservation and agreement of proven cache hits.
+The production visit now proves preservation on every successful call, so
+scalar and batched successful results have paper derivations without admission.
+Two successful cached/uncached runs have equal outputs, and the unreachable
+admission disagreement branch is removed. Full executable outcome and error
+equivalence remains open.
+PaperC3BatchCoherence proves that one-root complete-result coherence on every
+derivation-backed cache lifts to any root list. A separate proof discharges
+that premise for every validated graph with no parent edges, including repeated
+root cache hits and a missing root after an earlier success. General graph
+coherence still needs the corresponding one-root proof.
+PaperC3UnaryLeaf extends complete batch equality to every validated graph
+whose declarations are leaves or have one distinct leaf parent. Its concrete
+graph has two roots sharing a parent and checks repeated and missing roots;
+the theorem itself quantifies over every requested root list and every
+derivation-backed cache reached by the batch.
+PaperC3TwoLeaf retains the two-parent case. PaperC3LeafParents proves the
+graph premise for four distinct leaf parents per root; its roots share all
+four leaves in opposite orders, then exercise repeated and missing requests.
+The general theorem quantifies over every finite parent list and root list.
+PaperMetaPrototype additionally constructs all ten original C3 graph objects.
+[[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
+correspondence. Current inventory: 162 atoms + four diagnostics, 48 native
+admissions and 16 supervisor controls; all schemas remain v1.

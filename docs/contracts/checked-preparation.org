@@ -1,0 +1,89 @@
+#+TITLE: Prepared record codecs and checked metadata plans
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/closure-v1.json][Reviewed paper operations]]
+
+* Capability/API checklist
+
+| Task | API | Guarantee |
+|------+-----+-----------|
+| Generate a finite record codec | ~RecordCodec.prepare description~ | Parse the field catalog once; refuse empty/duplicate labels and missing codecs |
+| Admit record input/output | Prepared ~Descriptor.encodeJson~, ~decodeJson~, ~encodeText~, ~decodeText~ | Require every declared field and its refinement; decoding refuses unknown fields |
+| Update one dependent field | ~RecordDescription.set~, ~set_lookup_same~, ~set_lookup_other~, ~set_preserves_accepts~ | Accepted update reads back its value, preserves other fields and keeps a valid record valid |
+| Apply different field edits | ~RecordDescription.patch~, ~patch_preserves_accepts~, ~patch_lookup_untouched~ | One typed list applies edits in order; failure returns no partial record; untouched fields and validity have kernel laws |
+| Validate inherited metadata | ~MetaPrototype.prepareChecked name metadata registry~ | Compare every registry cache with its declared C3 graph before admitting a plan |
+| Reuse the admitted plan | ~MetaPrototype.Prepared.order~, ~Prepared.instantiate base~ | Reuse captured functions/order across bases; freeze function/supers/precedence together |
+| Construct once with checking | ~MetaPrototype.instantiateChecked~ | Preparation plus instantiation through the same admission path |
+| Share C3 ancestry work | ~C3.linearizeMany graph roots~ | Validate the graph once and retain one memo cache across roots |
+
+* Compile the field catalog once
+
+#+begin_src lean
+import LeanPoo.Prototype.RecordCodec
+open LeanPoo.Prototype
+
+def exchange [DecidableEq Key] (description : RecordDescription Key Value)
+    (record : Record Key Value) : Except String (Record Key Value) := do
+  let prepared ← RecordCodec.prepare description
+  let wire ← prepared.encodeText record
+  prepared.decodeText wire
+#+end_src
+
+For repeated exchanges, retain ~prepared~ outside the request loop. The same
+catalog owns labels, field types, refinements and codecs; callers need not
+maintain separate encode/decode field lists or handwritten field requirements.
+For several dependent fields, supply ~List (Sigma Value)~ to
+~description.patch record edits~. This replaces a caller's sequence of typed
+~set~ calls. Its validity theorem assumes that the starting record passes the
+catalog recognizer and that every edited field is declared and accepted. The
+untouched-field theorem needs the same edit admission plus a proof that the
+queried key does not appear in the edit list. Repeated edits apply in list order.
+Each edit adds a persistent lookup layer, so a lookup after many edits can
+inspect the edit list. Use this API for small checked batches; no patch
+throughput improvement is claimed.
+Each field must supply its own codec. The returned descriptor admits input and
+output; its direct ~json~ codec is the existing unchecked codec layer.
+Only declared fields are serialized. A record can contain additional undeclared
+slots; a wire object cannot. Lean JSON normalizes object keys, so this API does
+not detect duplicate spellings in the original JSON text. Field codecs do not
+carry inverse laws; no generic round-trip theorem is claimed.
+
+* Prepare metadata before repeated construction
+
+#+begin_src lean
+import LeanPoo.Prototype.CheckedMetaPrototype
+open LeanPoo.Prototype
+
+unsafe def constructMany (name : String) (metadata : MetaPrototype.Meta α)
+    (registry : MetaPrototype.Registry α) (bases : List α) :
+    Except String (List (MetaPrototype.Instance α)) := do
+  let prepared ← MetaPrototype.prepareChecked name metadata registry
+  return bases.map prepared.instantiate
+#+end_src
+
+Preparation reads metadata but does not execute instance layer bodies. It
+checks every registry component, including components unreachable from the
+requested root. An ordinary parent retains its exact C3 order; the special
+paper base retains an empty cache. Unknown names, cycles, duplicate names or
+parents and altered caches are refused. Published function, supers and order
+are the admitted snapshot, including when original getters depend on metadata
+precedence. Changed metadata requires another preparation.
+
+The permissive raw ~MetaPrototype.instantiate~ remains available for paper
+metadata overrides. Checked plans are runtime admitted data, not kernel C3
+certificates, C4 policy equivalence or general termination proofs.
+
+* Executable evidence and cost boundaries
+
+[[file:../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] checks 102 heterogeneous text round trips, six malformed
+wire cases, two encode refusals, four schema refusals and an empty catalog.
+Instrumentation observes three descriptor discoveries during preparation and
+no further discovery in 17 round trips. This is an operation count, not a
+wall-clock speedup. Three patch cases check different field types, repeated
+updates and rejection without a returned partial record. All five update laws
+are kernel checked and inherit
+propext/Classical.choice/Quot.sound from the Descriptor/JSON carrier.
+
+[[file:../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] reuses one plan across 33 bases, refuses six poisoned
+caches and five malformed graphs, and checks frozen self-dependent metadata.
+[[file:../../Tests/PaperC3.lean][PaperC3]] compares 640 batched orders and 640 individual orders with an
+independent oracle. No external Euler migration or measured saving is claimed.

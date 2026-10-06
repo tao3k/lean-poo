@@ -1,0 +1,43 @@
+{
+  "schema": "lean-poo.atom-worker-study.v1",
+  "head": "46eda696cfd0d53f723421eddb8d6f7cae36494c",
+  "scope": "atom phase only; 152 canonical Lean files; same source and transcript in all four runs",
+  "command": "lake env python3 tools/check_atoms.py --jobs {workers} --receipt /private/tmp/<sample>.json",
+  "order": "12,14,14,12",
+  "samples": [
+    {
+      "sequence": 1,
+      "workers": 12,
+      "wall_seconds": 31.429,
+      "sum_atom_cpu_seconds": 140.127,
+      "passed_atoms": 152,
+      "inventory_and_transcript_sha256": "21d75c2a82770868339be4c6fc835553fa3cc9c6a2491c3b2559633e4e8b65a8"
+    },
+    {
+      "sequence": 2,
+      "workers": 14,
+      "wall_seconds": 19.382,
+      "sum_atom_cpu_seconds": 142.734,
+      "passed_atoms": 152,
+      "inventory_and_transcript_sha256": "21d75c2a82770868339be4c6fc835553fa3cc9c6a2491c3b2559633e4e8b65a8"
+    },
+    {
+      "sequence": 3,
+      "workers": 14,
+      "wall_seconds": 17.239,
+      "sum_atom_cpu_seconds": 130.187,
+      "passed_atoms": 152,
+      "inventory_and_transcript_sha256": "21d75c2a82770868339be4c6fc835553fa3cc9c6a2491c3b2559633e4e8b65a8"
+    },
+    {
+      "sequence": 4,
+      "workers": 12,
+      "wall_seconds": 19.895,
+      "sum_atom_cpu_seconds": 140.834,
+      "passed_atoms": 152,
+      "inventory_and_transcript_sha256": "21d75c2a82770868339be4c6fc835553fa3cc9c6a2491c3b2559633e4e8b65a8"
+    }
+  ],
+  "source_and_transcript_identical": true,
+  "interpretation": "Both worker counts pass. Large first-run variation and uncontrolled host load prevent a stable full-gate performance claim; keep the qualified 14-worker default."
+}
