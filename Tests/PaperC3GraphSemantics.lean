@@ -58,20 +58,95 @@ private theorem admitted_batch_unique (certificate : C3.GraphCertificate graph r
     certificate.orders = orders :=
   certificate.eq_source other
 
-#eval IO.println "POOF-C3-GRAPH-SEMANTICS-OK singleton=allGraphs recursiveSourceTrace=true cachedBatchAdmission=true"
+private theorem reference_derivation
+    (success : C3.linearizeUncachedMany graph roots = .ok orders) :
+    C3.ParentDerivations graph roots orders :=
+  C3.linearizeUncachedMany_derivation graph roots orders success
+
+private theorem cached_derivation
+    (success : C3.linearizeMany graph roots = .ok orders) :
+    C3.ParentDerivations graph roots orders :=
+  C3.linearizeMany_derivation graph roots orders success
+
+private theorem cached_matches_paper
+    (success : C3.linearizeMany graph roots = .ok orders)
+    (source : C3.ParentDerivations graph roots expected) :
+    orders = expected :=
+  C3.linearizeMany_eq_derivation graph roots orders success source
+
+private theorem cached_row_count
+    (success : C3.linearizeMany graph roots = .ok orders) :
+    orders.length = roots.length :=
+  C3.linearizeMany_order_count graph roots orders success
+
+private theorem successful_traversals_equal
+    (cached : C3.linearizeMany graph roots = .ok cachedOrders)
+    (reference : C3.linearizeUncachedMany graph roots = .ok referenceOrders) :
+    cachedOrders = referenceOrders :=
+  C3.linearizeMany_eq_uncached_success graph roots cachedOrders referenceOrders
+    cached reference
+
+private theorem admitted_derivation (certificate : C3.GraphCertificate graph roots) :
+    C3.ParentDerivations graph roots certificate.orders :=
+  certificate.derivations
+
+private theorem admitted_derivation_unique
+    (certificate : C3.GraphCertificate graph roots)
+    (other : C3.ParentDerivations graph roots orders) :
+    certificate.orders = orders :=
+  certificate.eq_derivation other
+
+private theorem memoize_derived
+    (valid : C3.CacheDerivations graph cache)
+    (derived : C3.GraphDerivation graph root order) :
+    C3.CacheDerivations graph (cache.insert root order) :=
+  valid.insert derived
+
+private theorem memoized_hit_agrees
+    (valid : C3.CacheDerivations graph cache)
+    (found : cache.get? root = some cached)
+    (source : C3.GraphDerivation graph root expected) :
+    cached = expected :=
+  valid.agrees found source
+
+#eval IO.println "POOF-C3-GRAPH-SEMANTICS-OK singleton=allGraphs recursiveSourceTrace=true cachedDerivation=true cachedBatchAdmission=true"
 #print axioms C3.linearizeMany_singleton
 #print axioms C3.linearizeUncached_sound
 #print axioms C3.linearizeUncachedMany_sound
 #print axioms C3.GraphTrace.unique
 #print axioms C3.ParentTraces.unique
+#print axioms C3.GraphTrace.eraseFuel
+#print axioms C3.GraphDerivation.unique
+#print axioms C3.ParentDerivations.unique
+#print axioms C3.linearizeUncachedMany_derivation
+#print axioms C3.CacheDerivations.empty
+#print axioms C3.CacheDerivations.insert
+#print axioms C3.CacheDerivations.agrees
+#print axioms C3.visit_sound
+#print axioms C3.linearize_derivation
+#print axioms C3.linearizeMany_derivation
+#print axioms C3.linearizeMany_eq_derivation
+#print axioms C3.linearizeMany_order_count
+#print axioms C3.linearizeMany_eq_uncached_success
 #print axioms C3.GraphCertificate.source_traces
+#print axioms C3.GraphCertificate.derivations
 #print axioms C3.GraphCertificate.eq_source
+#print axioms C3.GraphCertificate.eq_derivation
 #print axioms C3.GraphCertificate.order_count
 #print axioms C3.GraphCertificate.agrees
 #print axioms admitted_first_root
 #print axioms admitted_first_parent_order
 #print axioms source_root_unique
 #print axioms admitted_batch_unique
+#print axioms reference_derivation
+#print axioms cached_derivation
+#print axioms cached_matches_paper
+#print axioms cached_row_count
+#print axioms successful_traversals_equal
+#print axioms admitted_derivation
+#print axioms admitted_derivation_unique
+#print axioms memoize_derived
+#print axioms memoized_hit_agrees
 #print axioms admitted_agrees
 
 end LeanPoo.Tests.PaperC3GraphSemantics

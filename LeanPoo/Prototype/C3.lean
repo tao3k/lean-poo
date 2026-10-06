@@ -18,7 +18,9 @@ def removeNulls (lists : List (List α)) : List (List α) :=
 def removeNext [BEq α] (next : α) (lists : List (List α)) : List (List α) :=
   removeNulls (lists.map (fun row => if row.head? == some next then row.tail else row))
 
-private def visit (graph : Graph) (name : String) (path : List String) (cache : Cache) :
+/-- Internal production traversal; exposed so graph-level soundness can state
+an invariant over its incoming and outgoing memo tables. -/
+def visit (graph : Graph) (name : String) (path : List String) (cache : Cache) :
     Nat → Except LeanPoo.C4.Error (List String × Cache)
   | 0 => .error (.cycle name)
   | fuel+1 => do
@@ -36,7 +38,8 @@ private def visit (graph : Graph) (name : String) (path : List String) (cache : 
     let result := name :: tail.output
     return (result,current.insert name result)
 
-private def validateGraph (graph : Graph) : Except LeanPoo.C4.Error Unit := do
+/-- Internal validation used by the scalar and batched production paths. -/
+def validateGraph (graph : Graph) : Except LeanPoo.C4.Error Unit := do
   let mut seen : Std.HashSet String := {}
   for (name,parents) in graph do
     if seen.contains name then throw (.duplicateNode name)

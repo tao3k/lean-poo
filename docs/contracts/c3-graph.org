@@ -7,6 +7,9 @@
 | Need | API | Guarantee and cost |
 |------+-----+--------------------|
 | Execute a validated graph with shared ancestor work | ~C3.linearizeMany graph roots~ | Fast ordinary path; one cache is reused across roots |
+| Prove a successful production result follows the paper graph relation | ~C3.linearize_derivation~, ~C3.linearizeMany_derivation~ | Direct kernel proof from the production traversal; no uncached replay or admission pass |
+| Compare a production batch with a paper derivation | ~C3.linearizeMany_eq_derivation~, ~C3.linearizeMany_order_count~ | Unique order and requested row count on every successful batch |
+| Compare two successful executable traversals | ~C3.linearizeMany_eq_uncached_success~ | Cached and uncached orders are equal on every graph/root list whenever both succeed |
 | Relate one-root batch and scalar calls | ~C3.linearizeMany_singleton~ | Kernel equality for every graph/root, including errors |
 | Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Recomputes each parent occurrence and root; semantic reference, possibly exponential on shared ancestry |
 | Retain a recursive paper-style derivation | ~C3.linearizeUncached_sound~, ~linearizeUncachedMany_sound~ | Every successful reference order has graph lookup, positional parent and C3 merge traces |
@@ -15,6 +18,9 @@
 | Avoid reconstructing parent proofs | ~GraphCertificate.source_traces~, ~ParentTraces.head~, ~GraphTrace.root_head~, ~GraphTrace.parent_order~ | Retrieve a root derivation, leading name, actual parent row and direct-parent order law |
 | Compare independent derivations | ~GraphTrace.unique~, ~ParentTraces.unique~ | Same graph/root or root list has one successful order, even when derivations use different fuel budgets |
 | Compare admitted cache with another source derivation | ~GraphCertificate.eq_source~ | The admitted batch equals any paper-style derivation of the same graph and roots, without another traversal |
+| Drop the execution budget from a proof | ~GraphTrace.eraseFuel~, ~ParentTraces.eraseFuel~, ~GraphDerivation.unique~, ~ParentDerivations.unique~ | Retain graph lookup, parents and merge premises while comparing results reused at different cache depths |
+| Preserve proven memo entries | ~CacheDerivations.empty~, ~CacheDerivations.insert~, ~CacheDerivations.agrees~, ~C3.visit_sound~ | The production visit preserves the invariant on success; a proven hit agrees with any independent derivation |
+| Compare admitted results with a budget-free proof | ~GraphCertificate.derivations~, ~GraphCertificate.eq_derivation~ | Extract the admitted batch proof and compare it with another derivation without replay or fuel alignment |
 | Check result cardinality | ~GraphCertificate.order_count~ | The number of order rows equals the number of requested roots, including repeated roots |
 
 * Client pattern
@@ -30,6 +36,19 @@ def admittedOrders (graph : C3.Graph) (roots : List String) :
   return certificate.orders
 #+end_src
 
+For an ordinary successful call, clients can use the production proof directly:
+
+#+begin_src lean
+theorem ordinaryRows (graph : C3.Graph) (roots : List String)
+    (orders : List (List String))
+    (ok : C3.linearizeMany graph roots = .ok orders) :
+    orders.length = roots.length :=
+  C3.linearizeMany_order_count graph roots orders ok
+#+end_src
+
+~C3.linearizeMany_derivation graph roots orders ok~ additionally returns the
+full positional paper proof. It needs no ~certifyGraph~ call.
+
 For a nonempty request, a client can use ~certificate.source_traces.head~
 to obtain the first result's ~GraphTrace~. Each ~GraphTrace.node~ carries
 the actual graph lookup, positional derivations for its direct parents, the
@@ -41,21 +60,32 @@ avoids replaying the graph or rebuilding parent-order premises downstream.
 ~ParentTraces.unique~ lifts this to a requested root list.
 ~GraphCertificate.eq_source~ compares an admitted batch with any independently
 supplied paper-style derivation without another executable traversal.
+~eraseFuel~ turns an indexed execution trace into a ~GraphDerivation~ or
+~ParentDerivations~. ~CacheDerivations~ records which memo entries have such a
+proof; ~insert~ preserves this invariant and ~agrees~ discharges a cache-hit
+equality. ~GraphCertificate.eq_derivation~ accepts a batch proof with no common
+fuel index.
+For ordinary execution, ~linearizeMany_derivation~ supplies that batch proof
+directly from a successful ~linearizeMany~ call. It follows the same shared
+cache loop and does not run ~linearizeUncachedMany~. With an independently
+supplied ~ParentDerivations~, use ~linearizeMany_eq_derivation~ for equality
+without constructing a ~GraphCertificate~.
 
 ~GraphAdmissionError.cached~ reports the production computation's error;
-~reference~ reports failure of the uncached interpreter after a cached success;
-~disagreement~ reports two successful but different orders. These cases are
-separate so a cache mismatch is not mislabeled as a precedence conflict.
+~reference~ reports failure of the uncached interpreter after a cached success.
+Two successful traversals cannot disagree, so admission has no disagreement
+branch or runtime list comparison.
 
 The uncached interpreter uses the same validated graph shape and the certified
 merge. [[file:c3-merge.org][The merge theorem]] relates each candidate-list merge to the paper's
 selection and trace. The recursive source-style trace exists for every
 successful uncached interpretation; those derivations have unique outputs even
-across different successful fuel budgets. The graph receipt transfers them to
-cached results on the supplied finite inputs. This is not an unconditional theorem
-that all finite graphs yield matching cached and uncached results, nor a
-Racket/Lean language equivalence proof. Ordinary calls incur no admission
-recomputation.
+across different successful fuel budgets. The production traversal preserves
+~CacheDerivations~ on every successful visit and yields a paper derivation for
+every successful batch without admission. Optional admission establishes
+executable equality on the supplied inputs when the uncached run also
+succeeds. Executable cached/uncached success and error outcome equivalence for
+all finite graphs and Racket/Lean language equivalence remain open.
 
 [[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's

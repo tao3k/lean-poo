@@ -397,7 +397,14 @@ finite recursion on an exact graph/root list. Every successful uncached result
 has a recursive source-style graph trace; the receipt transfers that trace to
 admitted cached results and proves output equality and row count. Universal
 cache coherence remains open. GraphTrace and ParentTraces also prove that
-successful graph derivations have unique outputs across fuel budgets.
+successful graph derivations have unique outputs across fuel budgets. A
+fuel-independent graph relation retains those paper premises; its cache
+invariant proves empty/insert preservation and agreement of proven cache hits.
+The production visit now proves preservation on every successful call, so
+scalar and batched successful results have paper derivations without admission.
+Two successful cached/uncached runs have equal outputs, and the unreachable
+admission disagreement branch is removed. Full executable outcome and error
+equivalence remains open.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
 correspondence. Current inventory: 156 atoms + four diagnostics, 48 native

@@ -16,10 +16,16 @@ the certificate to prove parent-order preservation, coverage and no repeats.
 [[file:../../../LeanPoo/Prototype/C3.lean][C3]] proves one-root batch/scalar equality for every graph and error outcome.
 [[file:../../../LeanPoo/Prototype/C3GraphTrace.lean][C3GraphTrace]] gives every successful uncached result a recursive paper-style
 graph derivation. The derivation determines a unique order even when two
-successful runs use different fuel. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] adds an optional receipt that transfers that
-derivation to cached results on admitted graph/root inputs.
-[[file:../../contracts/c3-graph.org][The graph guide]] records its recomputation cost. An unconditional graph/cache
-correspondence theorem remains open.
+successful runs use different fuel. It also erases the fuel index into a
+unique paper relation. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] proves empty/insert preservation and cache-hit
+agreement for memo entries carrying that relation, and adds an optional
+receipt that transfers derivations to cached results on admitted inputs.
+The production visit now preserves the invariant on success, so ordinary
+scalar and batch success directly implies a paper derivation.
+[[file:../../contracts/c3-graph.org][The graph guide]] distinguishes this zero-replay proof from admission's
+recomputation cost. Full cached/uncached error and success equivalence remains open.
+Two successful executable traversals now provably agree, so admission omits a
+runtime order-comparison branch.
 
 The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
 typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records

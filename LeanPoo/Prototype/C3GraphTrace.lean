@@ -103,6 +103,139 @@ theorem ParentTraces.unique (left : ParentTraces graph fuelLeft roots first)
     (right : ParentTraces graph fuelRight roots second) : first = second :=
   parentTraces_unique_of (fun _ _ _ a b => a.unique b) left right
 
+mutual
+/-- The paper's graph derivation without an execution fuel index. This is
+the relation retained for values reused from a cache at a different depth. -/
+inductive GraphDerivation (graph : Graph) : String → List String → Prop where
+  | node {name : String} {entry : String × List String}
+      {orders : List (List String)} {tail : List String}
+      (lookup : graph.find? (fun row => row.1 == name) = some entry)
+      (parents : ParentDerivations graph entry.2 orders)
+      (merged : SourceTrace (orders ++ [entry.2]) tail)
+      (certified : Precedence.Trace (orders ++ [entry.2]) tail) :
+      GraphDerivation graph name (name :: tail)
+
+/-- Positional parent and root derivations without a common fuel index. -/
+inductive ParentDerivations (graph : Graph) :
+    List String → List (List String) → Prop where
+  | nil : ParentDerivations graph [] []
+  | cons (head : GraphDerivation graph parent order)
+      (tail : ParentDerivations graph parents orders) :
+      ParentDerivations graph (parent :: parents) (order :: orders)
+end
+
+/-- A fuel-independent derivation starts with its requested root. -/
+theorem GraphDerivation.root_head (trace : GraphDerivation graph root output) :
+    output.head? = some root := by
+  cases trace
+  rfl
+
+/-- The actual direct-parent row is retained, ordered and duplicate-free. -/
+theorem GraphDerivation.parent_order (trace : GraphDerivation graph root output) :
+    ∃ (entry : String × List String) (tail : List String),
+      graph.find? (fun row => row.1 == root) = some entry ∧
+      output = root :: tail ∧ entry.2.Sublist tail ∧ tail.Nodup := by
+  cases trace with
+  | @node name entry orders tail lookup parents merged certified =>
+    exact ⟨entry, tail, lookup, rfl, certified.preserves (by simp), certified.nodup⟩
+
+/-- Fuel-independent positional proofs preserve the requested row count. -/
+theorem ParentDerivations.length :
+    (trace : ParentDerivations graph roots orders) → orders.length = roots.length
+  | .nil => rfl
+  | .cons _ tail => by simpa using congrArg Nat.succ tail.length
+
+/-- Take the first requested root's derivation without replaying traversal. -/
+theorem ParentDerivations.head
+    (trace : ParentDerivations graph (root :: roots) orders) :
+    ∃ order tail, orders = order :: tail ∧ GraphDerivation graph root order := by
+  cases trace with
+  | cons head _ => exact ⟨_, _, rfl, head⟩
+
+private theorem parentTraces_erase_of
+    (step : ∀ (root : String) (order : List String),
+      GraphTrace graph fuel root order → GraphDerivation graph root order)
+    (trace : ParentTraces graph fuel roots orders) :
+    ParentDerivations graph roots orders := by
+  induction roots generalizing orders with
+  | nil =>
+    cases trace
+    exact .nil
+  | cons root rest ih =>
+    cases trace with
+    | cons head tail => exact .cons (step root _ head) (ih tail)
+
+/-- Forget the execution budget while retaining every paper premise. -/
+theorem GraphTrace.eraseFuel (trace : GraphTrace graph fuel root output) :
+    GraphDerivation graph root output := by
+  induction fuel generalizing root output with
+  | zero => cases trace
+  | succ fuel ih =>
+    cases trace with
+    | node lookup parents merged certified =>
+      exact .node lookup
+        (parentTraces_erase_of (fun _ _ head => ih head) parents)
+        merged certified
+
+/-- Forget the common execution budget of a positional batch. -/
+theorem ParentTraces.eraseFuel (trace : ParentTraces graph fuel roots orders) :
+    ParentDerivations graph roots orders :=
+  parentTraces_erase_of (fun _ _ head => head.eraseFuel) trace
+
+private theorem graphDerivation_unique_core
+    (left : GraphDerivation graph root first) :
+    ∀ {second}, GraphDerivation graph root second → first = second :=
+  GraphDerivation.recOn
+    (motive_1 := fun root first _ =>
+      ∀ {second}, GraphDerivation graph root second → first = second)
+    (motive_2 := fun roots first _ =>
+      ∀ {second}, ParentDerivations graph roots second → first = second)
+    left
+    (fun lookup parents merged certified ihParents => by
+      intro second right
+      cases right with
+      | @node _ entryRight ordersRight tailRight lookupRight parentsRight mergedRight certifiedRight =>
+        have sameEntry := Option.some.inj (lookup.symm.trans lookupRight)
+        subst entryRight
+        have sameParents := ihParents parentsRight
+        subst ordersRight
+        have sameTail := merged.unique mergedRight
+        simp [sameTail])
+    (by
+      intro second right
+      cases right
+      rfl)
+    (fun head tail ihHead ihTail => by
+      intro second right
+      cases right with
+      | cons headRight tailRight =>
+        have sameHead := ihHead headRight
+        have sameTail := ihTail tailRight
+        simp [sameHead, sameTail])
+
+/-- The fuel-free paper relation determines a unique root order. -/
+theorem GraphDerivation.unique (left : GraphDerivation graph root first)
+    (right : GraphDerivation graph root second) : first = second :=
+  graphDerivation_unique_core left right
+
+/-- Positional batches of fuel-free paper derivations have unique orders. -/
+theorem ParentDerivations.unique (left : ParentDerivations graph roots first)
+    (right : ParentDerivations graph roots second) : first = second :=
+  by
+    induction roots generalizing first second with
+    | nil =>
+      cases left
+      cases right
+      rfl
+    | cons root rest ih =>
+      cases left with
+      | cons headLeft tailLeft =>
+        cases right with
+        | cons headRight tailRight =>
+          have head := headLeft.unique headRight
+          have tail := ih tailLeft tailRight
+          simp [head, tail]
+
 private def sourceVisit (graph : Graph) (name : String) (path : List String) :
     (fuel : Nat) → Except C4.Error {order : List String // GraphTrace graph fuel name order}
   | 0 => .error (.cycle name)
@@ -172,5 +305,18 @@ theorem linearizeUncachedMany_sound (graph : Graph) (roots : List String)
         cases success
         exact .cons (linearizeUncached_sound graph root order first)
           (ih tails tail)
+
+/-- Successful uncached orders satisfy the fuel-independent paper relation. -/
+theorem linearizeUncached_derivation (graph : Graph) (root : String)
+    (output : List String) (success : linearizeUncached graph root = .ok output) :
+    GraphDerivation graph root output :=
+  (linearizeUncached_sound graph root output success).eraseFuel
+
+/-- Successful uncached batches satisfy the positional paper relation. -/
+theorem linearizeUncachedMany_derivation (graph : Graph) (roots : List String)
+    (orders : List (List String))
+    (success : linearizeUncachedMany graph roots = .ok orders) :
+    ParentDerivations graph roots orders :=
+  (linearizeUncachedMany_sound graph roots orders success).eraseFuel
 
 end LeanPoo.Prototype.C3
