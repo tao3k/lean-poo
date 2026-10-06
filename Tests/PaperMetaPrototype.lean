@@ -48,4 +48,21 @@ private unsafe def run : IO Unit := do
   unless !(MetaPrototype.instantiate "C" absent registry empty).isOk do throw (IO.userError "missing metadata admitted")
   IO.println "POOF-META-OK slotOverrides=3 diamond=true baseMerge=true retainedSnapshot=true refusals=6"
 #eval run
+private unsafe def paperGraph : IO Unit := do
+  let graph : C3.Graph := [("O",[]),("A",["O"]),("B",["O"]),("C",["O"]),("D",["O"]),("E",["O"]),
+    ("K1",["A","B","C"]),("K2",["D","B","E"]),("K3",["D","A"]),("Z",["K1","K2","K3"])]
+  let mut registry : MetaPrototype.Registry Rec := []
+  let mut ordinal := 0
+  for (name,parents) in graph do
+    let metadata := MetaPrototype.make (slot name ordinal) parents []
+    let built ← IO.ofExcept (MetaPrototype.instantiate name metadata registry Record.empty)
+    let order ← IO.ofExcept ((C3.linearize graph name).mapError (fun _ => "C3 oracle error"))
+    unless (MetaPrototype.precedence built).toOption == some order do
+      throw (IO.userError "metadata C3 cache differs from graph C3")
+    for ancestor in order do
+      unless (built.value.get.lookup ancestor).isSome do throw (IO.userError "missing inherited paper graph slot")
+    registry := (name,built) :: registry
+    ordinal := ordinal+1
+  IO.println "POOF-META-GRAPH-OK originalGraphObjects=10 inheritedSlots=true cachedOrders=true"
+#eval paperGraph
 end LeanPoo.Tests.PaperMetaPrototype

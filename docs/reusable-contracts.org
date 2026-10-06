@@ -8,6 +8,7 @@ these guides explain reusable library contracts.
 
 | Task | Module |
 |------+--------|
+| Describe descriptors/objects, generate field tools and consume state references | [[file:contracts/descriptor-reflection.org][Descriptor reflection and state consumption]] |
 | Compose paper BST/AVL dictionaries, lazy records and metadata objects | [[file:contracts/paper-dictionaries.org][Paper dictionary and meta APIs]] |
 | Choose a compiler, audit execution or retain rejection evidence | [[file:contracts/compilation.org][Compilation and audit receipts]] |
 | Query ancestry/precedence or transfer verified names | [[file:contracts/verified-orders.org][Verified order queries]] |

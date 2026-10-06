@@ -39,7 +39,10 @@ a missing literal notation parser.
 Appendix D (2256–2389) explains multiple ways to tie fixed points in eager and
 lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] uses an unsafe private reference cell and one shared
 thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
-There is no universal termination theorem or all-variants operational
+[[file:../../../LeanPoo/Prototype/CheckedFunction.lean][rebuildingFix]] supplies the source rebuild-per-call contrast;
+[[file:../../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
+Internal-define/letrec/lazy routes share the Lean knot; direct untyped self-application
+is a language choice. There is no universal termination theorem or all-variants operational
 equivalence. The paper permits divergence; such a theorem is not required to
 implement unrestricted executable recursion. Safe finite dependency schedules
 have a stronger, separate contract and do not certify every unsafe knot.

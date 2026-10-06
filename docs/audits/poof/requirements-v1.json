@@ -131,16 +131,15 @@
     {
       "id": "bottom",
       "start_line": 583,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Bottom and missing behavior",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/Compose.lean"
+        "LeanPoo/Prototype/CheckedFunction.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Tests/PaperFixedPoints.lean"
       ],
-      "boundary": "Option, explicit callbacks and runtime divergence are different boundaries; no common untyped bottom formalization."
+      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
     },
     {
       "id": "single-inheritance",
@@ -290,17 +289,17 @@
     {
       "id": "multiple-inheritance",
       "start_line": 1140,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Multiple inheritance",
       "implementation": [
-        "LeanPoo/C4/Linearize.lean",
-        "LeanPoo/Object/SortedInheritance.lean"
+        "LeanPoo/Prototype/MetaPrototype.lean",
+        "LeanPoo/Prototype/C3.lean"
       ],
       "checks": [
-        "Tests/SortedInheritance.lean",
-        "Tests/C4Ranked.lean"
+        "Tests/PaperMetaPrototype.lean",
+        "Tests/PaperC3.lean"
       ],
-      "boundary": "Main object order is C4; paper uses C3. Shared merge concepts and local proofs are not whole-policy equivalence."
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
     },
     {
       "id": "meta-prototype",
@@ -356,16 +355,18 @@
     {
       "id": "simple-types",
       "start_line": 1388,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Simple type repertoire",
       "implementation": [
+        "LeanPoo/Prototype/NumberDescriptor.lean",
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/PaperPrototypeChecks.lean"
       ],
-      "boundary": "Selected Lean carriers and recognizers exist; no exhaustive mapping of all dynamic Scheme simple-type distinctions."
+      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
     },
     {
       "id": "parameterized-types",
@@ -384,17 +385,21 @@
     {
       "id": "elaborate-types",
       "start_line": 1420,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Self-describing elaborate descriptors",
       "implementation": [
+        "LeanPoo/Prototype/RecordDescription.lean",
+        "LeanPoo/Prototype/DescriptorReflection.lean",
+        "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Prototype/Types.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/IntegratedPrototype.lean",
+        "docs/audits/poof/closure-v1.json"
       ],
-      "boundary": "Function and object descriptors exist; self-description of all descriptor/prototype machinery and generated automation not established."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
     },
     {
       "id": "typeclass-correspondence",
@@ -410,17 +415,17 @@
     {
       "id": "pure-linearity",
       "start_line": 1449,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Pure linearity and mutable/functional interaction",
       "implementation": [
-        "LeanPoo/Object/Mutable.lean",
+        "LeanPoo/Prototype/LinearState.lean",
         "LeanPoo/Prototype/Mutable.lean"
       ],
       "checks": [
-        "Tests/MutableObject.lean",
+        "Tests/PaperLinearState.lean",
         "Tests/MutablePrototype.lean"
       ],
-      "boundary": "IO identity cells and persistent snapshots exist; no linear ownership calculus or pure/mutable isomorphism theorem."
+      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
     },
     {
       "id": "mutable-protocol",
@@ -579,18 +584,18 @@
     {
       "id": "fixed-point-variants",
       "start_line": 2256,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Appendix D fixed-point functions",
       "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/Delayed.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean",
-        "Tests/DebugObject.lean"
+        "Tests/PaperFixedPoints.lean"
       ],
-      "boundary": "Shared unsafe thunk knot plus bounded diagnostics; no all eager/lazy/Y variants equivalence or universal termination theorem. Divergence is allowed by the paper."
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
     },
     {
       "id": "minimalism",
@@ -602,5 +607,6 @@
       "boundary": "Scheme cons-cell/character counts are illustrative, not Lean size or semantic requirements."
     }
   ],
-  "outline_sha256": "f3144a002c226adc281163ad4ad827cbf0c3fa8daf108a59c42b4e7bf7e8c096"
+  "outline_sha256": "f3144a002c226adc281163ad4ad827cbf0c3fa8daf108a59c42b4e7bf7e8c096",
+  "reviewed_constructive_path_closed": true
 }

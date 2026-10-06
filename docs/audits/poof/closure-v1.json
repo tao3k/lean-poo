@@ -1,0 +1,139 @@
+{
+  "schema": "lean-poo.poof-closure.v1",
+  "reviewed_constructive_path_closed": true,
+  "scope": "Manually reviewed typed constructive operations, not whole-paper operational equivalence or unspecified automation.",
+  "requirements": [
+    {
+      "id": "bottom",
+      "source_line": 583,
+      "status": "closed_typed_construction",
+      "operations": [
+        "explicit checked bottom",
+        "prototype-list default base",
+        "constant tail bypass"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean"
+      ],
+      "checks": [
+        "Tests/PaperFixedPoints.lean"
+      ],
+      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+    },
+    {
+      "id": "multiple-inheritance",
+      "source_line": 1140,
+      "status": "closed_typed_construction",
+      "operations": [
+        "C3 cached parent merge",
+        "shared ancestor composition",
+        "original ten-object graph",
+        "retained function/supers/precedence overrides"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/MetaPrototype.lean",
+        "LeanPoo/Prototype/C3.lean"
+      ],
+      "checks": [
+        "Tests/PaperMetaPrototype.lean",
+        "Tests/PaperC3.lean"
+      ],
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+    },
+    {
+      "id": "simple-types",
+      "source_line": 1388,
+      "status": "closed_typed_construction",
+      "operations": [
+        "Top and Bottom recognizers",
+        "runtime presentation/codec",
+        "Number add/subtract/zero/one",
+        "typed ListOf and rejected mixed/improper input"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/NumberDescriptor.lean",
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/PaperPrototypeChecks.lean"
+      ],
+      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+    },
+    {
+      "id": "elaborate-types",
+      "source_line": 1420,
+      "status": "closed_typed_construction",
+      "operations": [
+        "finite dependent-record field descriptors",
+        "descriptor five-field self catalog",
+        "codec two-field self catalog",
+        "typed descriptor factory admission",
+        "object three-field catalog",
+        "meta-prototype three-field catalog",
+        "nested metadata-object description",
+        "generated validator/schema/inspection",
+        "typed field updates",
+        "exact descriptor/object reconstruction"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/RecordDescription.lean",
+        "LeanPoo/Prototype/DescriptorReflection.lean",
+        "LeanPoo/Prototype/PrototypeReflection.lean",
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+    },
+    {
+      "id": "pure-linearity",
+      "source_line": 1449,
+      "status": "closed_typed_construction",
+      "operations": [
+        "pure state threading",
+        "persistent snapshot to mutable identity",
+        "consume-old/return-new reference",
+        "alias use refusal",
+        "mutex-serialized competing consumers",
+        "rejected transition retains reference",
+        "checked composition associativity"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/LinearState.lean",
+        "LeanPoo/Prototype/Mutable.lean"
+      ],
+      "checks": [
+        "Tests/PaperLinearState.lean",
+        "Tests/MutablePrototype.lean"
+      ],
+      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+    },
+    {
+      "id": "fixed-point-variants",
+      "source_line": 2256,
+      "status": "closed_typed_construction",
+      "operations": [
+        "shared function knot",
+        "shared delayed non-function knot",
+        "rebuilding function alternative",
+        "construction count distinction",
+        "finite recursive value controls"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean",
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Delayed.lean"
+      ],
+      "checks": [
+        "Tests/PaperFixedPoints.lean"
+      ],
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+    }
+  ]
+}

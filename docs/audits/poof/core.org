@@ -25,7 +25,8 @@ The map establishes bounded source cases, not general cross-language equivalence
 
 The Bottom discussion mixes missing-field errors, computations and divergence.
 Option/Except and unsafe fixed points implement separate Lean interfaces;
-a common source operational model remains open.
+CheckedFunction now supplies explicit bottom, default-base instantiation and
+constant-tail bypass. A universal source operational model remains open.
 
 * Implemented Order → BST → AVL case
 

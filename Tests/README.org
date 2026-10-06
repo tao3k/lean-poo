@@ -368,3 +368,18 @@ PaperDictionaryRecord guards 33 contexts and 528 reads; PaperMetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
 Current inventory: 147 atoms plus four diagnostics, 48 native admissions and
 15 Python supervisor controls. Older counts above belong to their stated milestones.
+
+* Reviewed paper construction closure
+
+PaperDescriptorReflection checks source Number slots, five descriptor fields,
+two codec fields, three object fields and three meta fields, nested self-description,
+generated tools and 101 descriptor/codec contexts. Exact reconstruction laws
+report their actual axioms; callable behavior is admitted at use boundaries.
+PaperLinearState checks 64 arithmetic traces, alias consumption/refusal, failed
+transition retention and 32 races with exactly one successful consumer.
+PaperFixedPoints checks bottom/default/constant-tail behavior, 65 recursive
+inputs and construction counts 1 shared / 32 rebuilding / 1 delayed.
+PaperMetaPrototype additionally constructs all ten original C3 graph objects.
+[[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
+correspondence. Current inventory: 150 atoms + four diagnostics, 48 native
+admissions and 16 supervisor controls; all schemas remain v1.

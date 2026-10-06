@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'docs/audits/poof/requirements-v1.json'
 RECEIPT = ROOT / 'docs/audits/poof/receipt-v1.json'
 CHECKS = ROOT / 'docs/audits/poof/checks-v1.json'
+CLOSURE = ROOT / 'docs/audits/poof/closure-v1.json'
 PAPER_CHECK_LINES = [272,328,332,336,344,352,362,376,456,465,715,731,792,797,839,842,869,878,1895,1896,1897,1974,1975,1976]
 STATUSES = {'lean_translation', 'partial', 'not_implemented', 'discussion', 'future_proposal'}
 
@@ -45,6 +46,28 @@ def config_rows():
             if not path.is_file() or not path.resolve().is_relative_to(ROOT):
                 raise ValueError(f'Missing or nonlocal evidence: {name}')
     return config
+
+
+def construction_closure(config):
+    closure = json.loads(CLOSURE.read_text())
+    if closure['schema'] != 'lean-poo.poof-closure.v1' or closure['reviewed_constructive_path_closed'] is not True:
+        raise ValueError('Expected reviewed typed construction closure v1')
+    ids = ['bottom', 'multiple-inheritance', 'simple-types', 'elaborate-types', 'pure-linearity', 'fixed-point-variants']
+    if [entry['id'] for entry in closure['requirements']] != ids or not closure['scope']:
+        raise ValueError('Construction closure coverage changed')
+    rows = {row['id']: row for row in config['rows']}
+    if config.get('reviewed_constructive_path_closed') is not True:
+        raise ValueError('Construction closure is not reviewed')
+    for entry in closure['requirements']:
+        row = rows[entry['id']]
+        if entry['status'] != 'closed_typed_construction' or not entry['operations']:
+            raise ValueError('Unclosed constructive requirement')
+        if row['status'] != 'lean_translation' or entry['source_line'] != row['start_line'] or entry['boundary'] != row['boundary']:
+            raise ValueError('Construction closure differs from reviewed requirement')
+        for kind in ['implementation', 'checks']:
+            if not entry[kind] or not set(entry[kind]).issubset(row[kind]):
+                raise ValueError('Construction closure evidence differs from requirement')
+    return closure
 
 
 def source_checks():
@@ -124,6 +147,7 @@ def generate(paper):
         'paper': {'repository': 'metareflection/poof', 'file': 'poof.scrbl',
                   'commit': commit, 'sha256': sha(paper), 'physical_lines': len(lines)},
         'requirements_sha256': sha(CONFIG), 'audit_tool_sha256': sha(Path(__file__)),
+        'construction_closure': construction_closure(config), 'closure_sha256': sha(CLOSURE),
         'source_checks': source_checks(), 'checks_sha256': sha(CHECKS),
         'review_units': config['rows'], 'headings': assign_headings(config, headings, len(lines)),
         'unit_status_counts': dict(sorted(Counter(row['status'] for row in config['rows']).items())),
@@ -152,6 +176,8 @@ def check():
     for name in ['commit', 'sha256']:
         if receipt['paper'][name] != config['paper_' + name]:
             raise ValueError('Saved paper identity differs from reviewed pin')
+    if receipt['construction_closure'] != construction_closure(config) or receipt['closure_sha256'] != sha(CLOSURE):
+        raise ValueError('Construction closure changed')
     if receipt['source_checks'] != source_checks() or receipt['checks_sha256'] != sha(CHECKS):
         raise ValueError('Source check mapping changed')
     headings = [{'line': h['line'], 'source': h['source']} for h in receipt['headings']]
@@ -180,6 +206,7 @@ def main():
         args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     print('POOF-AUDIT-OK ' + json.dumps({'review_units': len(result['review_units']),
           'headings': len(result['headings']), 'source_checks': len(result['source_checks']['paper_checks']), 'local_files': len(result['local_evidence']),
+          'reviewed_constructive_path_closed': result['construction_closure']['reviewed_constructive_path_closed'],
           'whole_paper_implemented': False, 'mode': 'saved-local-check' if args.check else 'original-paper-generation'}))
 
 

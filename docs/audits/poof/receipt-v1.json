@@ -8,8 +8,148 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "1a36c1297bb824a0c94464f8fa370877695f8386cb975c9f5a113ee75e766871",
-  "audit_tool_sha256": "60ec3e5694a0a1ef221ffaf1a4d093f48fe4d772a4454797fa93eb30b928e355",
+  "requirements_sha256": "8fc5087f4c1e305dab4d6932eb785b838df7a7bcea1a7117f4709aa61ba4819e",
+  "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
+  "construction_closure": {
+    "schema": "lean-poo.poof-closure.v1",
+    "reviewed_constructive_path_closed": true,
+    "scope": "Manually reviewed typed constructive operations, not whole-paper operational equivalence or unspecified automation.",
+    "requirements": [
+      {
+        "id": "bottom",
+        "source_line": 583,
+        "status": "closed_typed_construction",
+        "operations": [
+          "explicit checked bottom",
+          "prototype-list default base",
+          "constant tail bypass"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/CheckedFunction.lean"
+        ],
+        "checks": [
+          "Tests/PaperFixedPoints.lean"
+        ],
+        "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+      },
+      {
+        "id": "multiple-inheritance",
+        "source_line": 1140,
+        "status": "closed_typed_construction",
+        "operations": [
+          "C3 cached parent merge",
+          "shared ancestor composition",
+          "original ten-object graph",
+          "retained function/supers/precedence overrides"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/MetaPrototype.lean",
+          "LeanPoo/Prototype/C3.lean"
+        ],
+        "checks": [
+          "Tests/PaperMetaPrototype.lean",
+          "Tests/PaperC3.lean"
+        ],
+        "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+      },
+      {
+        "id": "simple-types",
+        "source_line": 1388,
+        "status": "closed_typed_construction",
+        "operations": [
+          "Top and Bottom recognizers",
+          "runtime presentation/codec",
+          "Number add/subtract/zero/one",
+          "typed ListOf and rejected mixed/improper input"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/NumberDescriptor.lean",
+          "LeanPoo/Prototype/Class.lean",
+          "LeanPoo/Prototype/Types.lean"
+        ],
+        "checks": [
+          "Tests/PaperDescriptorReflection.lean",
+          "Tests/PaperPrototypeChecks.lean"
+        ],
+        "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+      },
+      {
+        "id": "elaborate-types",
+        "source_line": 1420,
+        "status": "closed_typed_construction",
+        "operations": [
+          "finite dependent-record field descriptors",
+          "descriptor five-field self catalog",
+          "codec two-field self catalog",
+          "typed descriptor factory admission",
+          "object three-field catalog",
+          "meta-prototype three-field catalog",
+          "nested metadata-object description",
+          "generated validator/schema/inspection",
+          "typed field updates",
+          "exact descriptor/object reconstruction"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/RecordDescription.lean",
+          "LeanPoo/Prototype/DescriptorReflection.lean",
+          "LeanPoo/Prototype/PrototypeReflection.lean",
+          "LeanPoo/Prototype/Class.lean",
+          "LeanPoo/Prototype/Types.lean"
+        ],
+        "checks": [
+          "Tests/PaperDescriptorReflection.lean",
+          "Tests/IntegratedPrototype.lean"
+        ],
+        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+      },
+      {
+        "id": "pure-linearity",
+        "source_line": 1449,
+        "status": "closed_typed_construction",
+        "operations": [
+          "pure state threading",
+          "persistent snapshot to mutable identity",
+          "consume-old/return-new reference",
+          "alias use refusal",
+          "mutex-serialized competing consumers",
+          "rejected transition retains reference",
+          "checked composition associativity"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/LinearState.lean",
+          "LeanPoo/Prototype/Mutable.lean"
+        ],
+        "checks": [
+          "Tests/PaperLinearState.lean",
+          "Tests/MutablePrototype.lean"
+        ],
+        "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+      },
+      {
+        "id": "fixed-point-variants",
+        "source_line": 2256,
+        "status": "closed_typed_construction",
+        "operations": [
+          "shared function knot",
+          "shared delayed non-function knot",
+          "rebuilding function alternative",
+          "construction count distinction",
+          "finite recursive value controls"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/CheckedFunction.lean",
+          "LeanPoo/Prototype/FixedPoint.lean",
+          "LeanPoo/Prototype/Compose.lean",
+          "LeanPoo/Prototype/Delayed.lean"
+        ],
+        "checks": [
+          "Tests/PaperFixedPoints.lean"
+        ],
+        "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
+      }
+    ]
+  },
+  "closure_sha256": "bdc34b6da1b41a6c71d72fb7479db687a76a73ee8da5ffffd07fa71e0722af25",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -288,16 +428,15 @@
     {
       "id": "bottom",
       "start_line": 583,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Bottom and missing behavior",
       "implementation": [
-        "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/Compose.lean"
+        "LeanPoo/Prototype/CheckedFunction.lean"
       ],
       "checks": [
-        "Examples/RecordPrototype.lean"
+        "Tests/PaperFixedPoints.lean"
       ],
-      "boundary": "Option, explicit callbacks and runtime divergence are different boundaries; no common untyped bottom formalization."
+      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
     },
     {
       "id": "single-inheritance",
@@ -447,17 +586,17 @@
     {
       "id": "multiple-inheritance",
       "start_line": 1140,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Multiple inheritance",
       "implementation": [
-        "LeanPoo/C4/Linearize.lean",
-        "LeanPoo/Object/SortedInheritance.lean"
+        "LeanPoo/Prototype/MetaPrototype.lean",
+        "LeanPoo/Prototype/C3.lean"
       ],
       "checks": [
-        "Tests/SortedInheritance.lean",
-        "Tests/C4Ranked.lean"
+        "Tests/PaperMetaPrototype.lean",
+        "Tests/PaperC3.lean"
       ],
-      "boundary": "Main object order is C4; paper uses C3. Shared merge concepts and local proofs are not whole-policy equivalence."
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
     },
     {
       "id": "meta-prototype",
@@ -513,16 +652,18 @@
     {
       "id": "simple-types",
       "start_line": 1388,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Simple type repertoire",
       "implementation": [
+        "LeanPoo/Prototype/NumberDescriptor.lean",
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/PaperPrototypeChecks.lean"
       ],
-      "boundary": "Selected Lean carriers and recognizers exist; no exhaustive mapping of all dynamic Scheme simple-type distinctions."
+      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
     },
     {
       "id": "parameterized-types",
@@ -541,17 +682,21 @@
     {
       "id": "elaborate-types",
       "start_line": 1420,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Self-describing elaborate descriptors",
       "implementation": [
+        "LeanPoo/Prototype/RecordDescription.lean",
+        "LeanPoo/Prototype/DescriptorReflection.lean",
+        "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Prototype/Types.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/PaperDescriptorReflection.lean",
+        "Tests/IntegratedPrototype.lean",
+        "docs/audits/poof/closure-v1.json"
       ],
-      "boundary": "Function and object descriptors exist; self-description of all descriptor/prototype machinery and generated automation not established."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
     },
     {
       "id": "typeclass-correspondence",
@@ -567,17 +712,17 @@
     {
       "id": "pure-linearity",
       "start_line": 1449,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Pure linearity and mutable/functional interaction",
       "implementation": [
-        "LeanPoo/Object/Mutable.lean",
+        "LeanPoo/Prototype/LinearState.lean",
         "LeanPoo/Prototype/Mutable.lean"
       ],
       "checks": [
-        "Tests/MutableObject.lean",
+        "Tests/PaperLinearState.lean",
         "Tests/MutablePrototype.lean"
       ],
-      "boundary": "IO identity cells and persistent snapshots exist; no linear ownership calculus or pure/mutable isomorphism theorem."
+      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
     },
     {
       "id": "mutable-protocol",
@@ -736,18 +881,18 @@
     {
       "id": "fixed-point-variants",
       "start_line": 2256,
-      "status": "partial",
+      "status": "lean_translation",
       "title": "Appendix D fixed-point functions",
       "implementation": [
+        "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/Delayed.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean",
-        "Tests/DebugObject.lean"
+        "Tests/PaperFixedPoints.lean"
       ],
-      "boundary": "Shared unsafe thunk knot plus bounded diagnostics; no all eager/lazy/Y variants equivalence or universal termination theorem. Divergence is allowed by the paper."
+      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem."
     },
     {
       "id": "minimalism",
@@ -854,7 +999,7 @@
       "line": 583,
       "source": "@subsubsection{The Bottom of it}",
       "review_unit": "bottom",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 633,
@@ -992,19 +1137,19 @@
       "line": 1140,
       "source": "@subsection[#:tag \"multiple_inheritance\"]{Multiple Inheritance}",
       "review_unit": "multiple-inheritance",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1143,
       "source": "@subsubsection{The inheritance modularity issue}",
       "review_unit": "multiple-inheritance",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1189,
       "source": "@subsubsection{Multiple inheritance to the rescue}",
       "review_unit": "multiple-inheritance",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1254,
@@ -1058,7 +1203,7 @@
       "line": 1388,
       "source": "@subsubsection{Simple Types}",
       "review_unit": "simple-types",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1409,
@@ -1070,7 +1215,7 @@
       "line": 1420,
       "source": "@subsubsection{More Elaborate Types}",
       "review_unit": "elaborate-types",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1434,
@@ -1082,25 +1227,25 @@
       "line": 1449,
       "source": "@section[#:tag \"Mutability\"]{Mutability}",
       "review_unit": "pure-linearity",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1451,
       "source": "@subsection{Mutability as Pure Linearity}",
       "review_unit": "pure-linearity",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1452,
       "source": "@subsubsection{From Pure to Mutable and Back}",
       "review_unit": "pure-linearity",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1468,
       "source": "@subsubsection{Combining Mutable and Functional Wins}",
       "review_unit": "pure-linearity",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 1496,
@@ -1292,7 +1437,7 @@
       "line": 2256,
       "source": "@section[#:tag \"Appendix_D\"]{Fixed-Point functions}",
       "review_unit": "fixed-point-variants",
-      "status": "partial"
+      "status": "lean_translation"
     },
     {
       "line": 2390,
@@ -1304,8 +1449,7 @@
   "unit_status_counts": {
     "discussion": 8,
     "future_proposal": 3,
-    "lean_translation": 28,
-    "partial": 6
+    "lean_translation": 34
   },
   "local_evidence": {
     "Examples/DelayedNumbers.lean": {
@@ -1390,13 +1534,6 @@
         33
       ]
     },
-    "LeanPoo/C4/Linearize.lean": {
-      "sha256": "29fe6752ac8725d53a63642947b51bf23eece6e217bf864b8cc89ca4e598fafd",
-      "physical_lines": 200,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": []
-    },
     "LeanPoo/Object/Cache.lean": {
       "sha256": "29694ff611870eba60849fdde98f8609b963e87378455c51494a9031e98cf8d7",
       "physical_lines": 135,
@@ -1453,13 +1590,6 @@
       "guard_lines": [],
       "eval_lines": []
     },
-    "LeanPoo/Object/Mutable.lean": {
-      "sha256": "3488e9865bc6d936a1869c7fa41b4f80dc54e47130f5540b786287f4d3da8220",
-      "physical_lines": 141,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": []
-    },
     "LeanPoo/Object/Prepare.lean": {
       "sha256": "16dac14bf4ecf80c16ff5e46d8a4edd9b117b797370e871f08c91191bbe33c45",
       "physical_lines": 62,
@@ -1486,13 +1616,6 @@
     "LeanPoo/Object/Schema.lean": {
       "sha256": "17accc11306072bb41c9722109f78910eb6b3bd7f9bbe0e9eb6934bb998998df",
       "physical_lines": 355,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": []
-    },
-    "LeanPoo/Object/SortedInheritance.lean": {
-      "sha256": "4f93df08545d508ccc959cf0cda07caa8f672dfe08454606fc183d7e5ff6530d",
-      "physical_lines": 126,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1534,6 +1657,16 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/CheckedFunction.lean": {
+      "sha256": "824a162b3abbbd4213090817549b963e4e2a2d855b92c156dd460289577e4b12",
+      "physical_lines": 29,
+      "unsafe_declaration_lines": [
+        12,
+        22
+      ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/Class.lean": {
       "sha256": "c9eb9e0d62da6d618def37fbb5887c2b7c4f3ca8e0ad97afba9acbf2a313029d",
       "physical_lines": 358,
@@ -1561,6 +1694,13 @@
         69,
         74
       ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/DescriptorReflection.lean": {
+      "sha256": "a5e43565dac9c0eb8475706df24c8b5992193c8efae962741b2696f3f2480587",
+      "physical_lines": 90,
+      "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
@@ -1608,6 +1748,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/LinearState.lean": {
+      "sha256": "1d4489b08ca3dbdc4377d3189c963b3874fb730ac54f5bc8fede5d862d66e588",
+      "physical_lines": 58,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/MetaPrototype.lean": {
       "sha256": "558dd1fe8d6630de0e713b11c32eccaa0f93605552d31ac803fb85f25a9e6146",
       "physical_lines": 85,
@@ -1621,6 +1768,13 @@
     "LeanPoo/Prototype/Mutable.lean": {
       "sha256": "6393f6a10519a8e4e00c9c57063a29d7bd775bc6889bca41e53f65058ba0b4a6",
       "physical_lines": 159,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/NumberDescriptor.lean": {
+      "sha256": "65c126b5964b7b95372e2d468c2d9fe03cc886fba100c3900ab6e175e4223edf",
+      "physical_lines": 35,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1647,12 +1801,26 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/PrototypeReflection.lean": {
+      "sha256": "4d96887025c4e0410da141fd57256ab0f613a072c0696c46e40b9438d40f310f",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/Record.lean": {
       "sha256": "bc627ca90aafd39a400188064aa668e69a9ec552e51290413582e357e6d46634",
       "physical_lines": 54,
       "unsafe_declaration_lines": [
         48
       ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/RecordDescription.lean": {
+      "sha256": "e1fbae507e4209414c3f5d7d754d79ab617011151514c73d225a8bea5f14baa9",
+      "physical_lines": 53,
+      "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
@@ -1676,46 +1844,6 @@
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
-    },
-    "Tests/C4Ranked.lean": {
-      "sha256": "4329e5cd8cee1ae984366e3a17213c32a4dbba4f86c6711a470ec03e641c383d",
-      "physical_lines": 109,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        15,
-        20,
-        21,
-        22,
-        23,
-        25,
-        28,
-        33,
-        35,
-        39,
-        43,
-        47,
-        54,
-        56,
-        66,
-        67,
-        73,
-        74,
-        78,
-        79,
-        85,
-        88,
-        89
-      ],
-      "eval_lines": []
-    },
-    "Tests/DebugObject.lean": {
-      "sha256": "a506860f2b0fc019e90d59d7316ff51593ce1c29e9f6bd022628ac1f78318409",
-      "physical_lines": 62,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        57
-      ]
     },
     "Tests/DescriptorClass.lean": {
       "sha256": "7c37119e7337e2f784356fcad105c3651fe2b309dcf6d8c7a06bfd903e891bd6",
@@ -1784,17 +1912,6 @@
       ],
       "eval_lines": []
     },
-    "Tests/MutableObject.lean": {
-      "sha256": "a8ca09f95183d2adb8c9c061f0b56e03d3ed86ac53dc645ae910ce09329455bc",
-      "physical_lines": 113,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        21,
-        57,
-        107
-      ]
-    },
     "Tests/MutablePrototype.lean": {
       "sha256": "5aab8bfd2818e2cab5369b23a33e457e9884a4b8db9fd9309db175f6ebeaeb9a",
       "physical_lines": 161,
@@ -1841,6 +1958,16 @@
         65
       ]
     },
+    "Tests/PaperDescriptorReflection.lean": {
+      "sha256": "5359ed322f0f32aa42ced909f96d6502f991ce4140617db7af02c5e9e6e15f23",
+      "physical_lines": 86,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        58,
+        83
+      ]
+    },
     "Tests/PaperDictionaryRecord.lean": {
       "sha256": "182a152840cffc7bb7eb03bfc2a8cac996e0f694d7b3c7e8cdcd1c5990982d64",
       "physical_lines": 30,
@@ -1850,13 +1977,32 @@
         30
       ]
     },
-    "Tests/PaperMetaPrototype.lean": {
-      "sha256": "48a6fa9e5ace1457ec792d37be427a2d0b6d9a2df3ed36dd0744ed2ed78fe726",
-      "physical_lines": 51,
+    "Tests/PaperFixedPoints.lean": {
+      "sha256": "eca4c892fc0c175fa6e37bc56c537f418c4fa64f1278631d7e408e1c4fde688c",
+      "physical_lines": 42,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        50
+        40
+      ]
+    },
+    "Tests/PaperLinearState.lean": {
+      "sha256": "bb8353b765c2ad63f917295e0c42096f1829b274ad5d3b9fd4a370e91815cb9e",
+      "physical_lines": 38,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        36
+      ]
+    },
+    "Tests/PaperMetaPrototype.lean": {
+      "sha256": "6966ae4adaf090ae4ec1683eccd08f470e549d828ff02d0ee6c1a210e459aad5",
+      "physical_lines": 68,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        50,
+        67
       ]
     },
     "Tests/PaperPrototypeChecks.lean": {
@@ -1923,20 +2069,6 @@
       ],
       "eval_lines": []
     },
-    "Tests/SortedInheritance.lean": {
-      "sha256": "9da0d195761e9ac6da24b16bd31e87e2b4160ddb1a7ce93d058bc75cc1deae12",
-      "physical_lines": 146,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        60,
-        61,
-        62,
-        96,
-        107,
-        142
-      ],
-      "eval_lines": []
-    },
     "Tests/SubjectiveDispatch.lean": {
       "sha256": "28b0a4e55f9265ac75b607739f23845f7a9f98d3196e881fe4ff2f10807838ab",
       "physical_lines": 89,
@@ -1950,6 +2082,13 @@
     "docs/audits/poof/checks-v1.json": {
       "sha256": "119dfc6196fe9324e337e17238e5b1e2fb92a690444aa490772d207918536215",
       "physical_lines": 149,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "docs/audits/poof/closure-v1.json": {
+      "sha256": "bdc34b6da1b41a6c71d72fb7479db687a76a73ee8da5ffffd07fa71e0722af25",
+      "physical_lines": 139,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2113,21 +2252,27 @@
     "LeanPoo/Prototype/AVL.lean",
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
+    "LeanPoo/Prototype/CheckedFunction.lean",
     "LeanPoo/Prototype/Class.lean",
     "LeanPoo/Prototype/Compose.lean",
     "LeanPoo/Prototype/Computation.lean",
     "LeanPoo/Prototype/Delayed.lean",
+    "LeanPoo/Prototype/DescriptorReflection.lean",
     "LeanPoo/Prototype/DictionaryRecord.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
     "LeanPoo/Prototype/Generator.lean",
     "LeanPoo/Prototype/KeyedPrototype.lean",
     "LeanPoo/Prototype/Lens.lean",
+    "LeanPoo/Prototype/LinearState.lean",
     "LeanPoo/Prototype/MVP.lean",
     "LeanPoo/Prototype/MetaPrototype.lean",
     "LeanPoo/Prototype/Mutable.lean",
+    "LeanPoo/Prototype/NumberDescriptor.lean",
     "LeanPoo/Prototype/Object.lean",
     "LeanPoo/Prototype/Order.lean",
+    "LeanPoo/Prototype/PrototypeReflection.lean",
     "LeanPoo/Prototype/Record.lean",
+    "LeanPoo/Prototype/RecordDescription.lean",
     "LeanPoo/Prototype/SkewLens.lean",
     "LeanPoo/Prototype/SlotSpec.lean",
     "LeanPoo/Prototype/Target.lean",
@@ -2221,7 +2366,10 @@
     "Tests/OrderRelation.lean",
     "Tests/OrdinaryNode.lean",
     "Tests/PaperC3.lean",
+    "Tests/PaperDescriptorReflection.lean",
     "Tests/PaperDictionaryRecord.lean",
+    "Tests/PaperFixedPoints.lean",
+    "Tests/PaperLinearState.lean",
     "Tests/PaperMetaPrototype.lean",
     "Tests/PaperPrototypeChecks.lean",
     "Tests/PaperRepresentations.lean",

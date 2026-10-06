@@ -80,6 +80,12 @@ import LeanPoo.Prototype.C3
 import LeanPoo.Prototype.DictionaryRecord
 import LeanPoo.Prototype.MetaPrototype
 import LeanPoo.Prototype.KeyedPrototype
+import LeanPoo.Prototype.CheckedFunction
+import LeanPoo.Prototype.LinearState
+import LeanPoo.Prototype.NumberDescriptor
+import LeanPoo.Prototype.RecordDescription
+import LeanPoo.Prototype.DescriptorReflection
+import LeanPoo.Prototype.PrototypeReflection
 import LeanPoo.Prototype.Object
 import LeanPoo.Prototype.Class
 import LeanPoo.Prototype.Types

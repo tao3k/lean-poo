@@ -2,7 +2,7 @@
 
 [[file:README.org][Audit index]]
 
-* Concrete executable-paper gaps
+* Reviewed typed constructive closure
 
 - [X] P0: Reproduce number/string/symbol Order prototypes and the inherited compare mixin, with source expected-value assertions.
 - [X] P0: Build the open-recursive binary-tree map using the supplied Order; assert lookup, missing keys, overwrite, fold and ordered-input skew behavior.
@@ -10,16 +10,17 @@
 - [X] P1: Map every original @Checks case to a Lean assertion or explain an explicit typed adaptation. Printing via #eval is not an expected-value gate.
 - [X] P1: Reproduce the paper C3 graph/results separately from C4. Either provide a bounded C3-compatible path or document the deliberate policy divergence; do not label C4 as proven paper C3 equivalence.
 - [X] P1: Use the completed dictionary case to close the corresponding alternative object-representation example.
-- [ ] P1: Review meta-prototype function/supers/precedence slots and self-describing descriptor operations against explicit source operations; the named meta slot operations now execute, but all self-descriptor automation remains open.
+- [X] P1: Review meta-prototype function/supers/precedence slots and self-describing descriptor operations against explicit source operations; the named typed catalogs and generated validator/schema/inspection/update now execute; unrestricted automation is excluded from this closed scope.
 
 The concrete Order/BST/AVL, C3, source-check and AVL-record milestones are now
 implemented. Meta slots also use ordinary Object constructors and overrides.
-See [[file:../../contracts/paper-dictionaries.org][the capability checklist]] and source-bound evidence. Full self-descriptor
-operation coverage needs a separate reviewed inventory, not a completeness label.
+See [[file:../../contracts/paper-dictionaries.org][the capability checklist]] and source-bound evidence. [[file:closure-v1.json][The six-item operation inventory]] now binds descriptor/codec/object/meta reflection,
+Number operations, bottom, reference consumption and fixed-point alternatives.
+Unspecified universal automation is not part of this closure scope.
 
 * Formal and language boundaries
 
-- [ ] State an operational correspondence scope before claiming Scheme/Lean semantic equivalence; representative tests and local theorems are weaker evidence.
+- [X] State an operational correspondence scope before claiming Scheme/Lean semantic equivalence; representative tests and local theorems are weaker evidence.
 - [X] Document general unsafe fixed points and possible divergence; do not require an impossible totality proof for unrestricted recursion.
 - [X] Keep safe finite dependency-instance proofs separate from general recursive thunk execution.
 - [X] Treat Scheme syntax/macros/wire formats and illustrative source-size counts as language choices, not missing Lean features by default.
@@ -35,12 +36,13 @@ later elects that stronger completion standard.
 
 - [X] Pin original POOF paper commit, content hash and complete heading outline.
 - [X] Classify all 90 headings into 45 reviewed units; retain rationale and limits.
-- [X] Bind 63 local evidence files and 299 source filenames; check drift without downloading the reference in CI.
+- [X] Bind 66 local evidence files and 308 source filenames; check drift without downloading the reference in CI.
 - [X] Distinguish observation examples, assertions, source identity and semantic proof claims.
 - [X] Correct broad completion wording and link the modular whole-paper audit.
-- [ ] Whole concrete executable-paper case path reproduced and guarded.
+- [X] Reviewed typed concrete construction/case path reproduced and guarded.
 - [ ] Whole-paper semantic equivalence established (a separate stronger scope).
 
-Public additions: seven modules, two inheritance laws and six atomic test files.
+This follow-up adds six modules, four kernel laws and three atomic test files.
+The existing meta atom also constructs the complete ten-object paper graph.
 External OpenAI integrations: 0. Measured external maintenance savings: unmeasured.
 The new guide explains algorithm reuse; no repository-wide saving is inferred.

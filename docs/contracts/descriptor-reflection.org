@@ -1,0 +1,75 @@
+#+TITLE: Descriptors, reflection and consuming state references
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/closure-v1.json][Reviewed paper closure operations]]
+
+* New capability/API checklist
+
+| Task | API | Contract |
+|------+-----+----------|
+| Supply source Number operations | ~NumberDescriptor.ofTypeclasses~, ~int~, ~rational~, ~checkedAdd~, ~checkedSubtract~ | Reuse Lean arithmetic; check argument/result refinements |
+| Describe a dependent record once | ~RecordDescription.toDescriptor~, ~schema~, ~inspect~, ~set~ | Shared field catalog owns validation, generated metadata/presentation and typed updates |
+| Describe descriptors and codecs | ~DescriptorReflection.description~, ~codecDescription~, ~codecOf~, ~selfOf~, ~toRecord~, ~fromRecord~ | Five descriptor fields, two codec fields and nested self-description; exact reconstruction law |
+| Admit descriptor-factory results | ~DescriptorReflection.classOf~, ~checkedClass~ | Lean fixes callable carrier; produced descriptor/default must pass runtime refinement |
+| Describe objects and meta objects | ~PrototypeReflection.description~, ~metaDescription~, ~metaObjectDescription~, ~toRecord~, ~fromRecord~ | Three object fields and three meta slots reuse the same catalog; inherited base remains unforced |
+| Consume a state reference | ~LinearState.create~, ~read~, ~step~, ~run~, ~runPure~, ~compose~ | Success invalidates every alias; rejection retains reference; mutex serializes competing consumers |
+| Use an explicit checked bottom | ~CheckedFunction.bottom~, ~instance~ | Error outcome and default bottom base; a terminal constant layer bypasses it |
+| Compare rebuilding with sharing | ~rebuildingFix~, existing ~instantiate~ / ~DelayedProto.instantiate~ | Rebuilding computes the prototype per invocation; shared routes retain one construction |
+
+* Update a descriptor through its own description
+
+#+begin_src lean
+import LeanPoo.Prototype.DescriptorReflection
+import LeanPoo.Prototype.Types
+open LeanPoo.Prototype
+
+def renameScore (name : String) : Except String (Descriptor Int) := do
+  let element := Descriptor.intRange 0 100
+  let fields := DescriptorReflection.description element
+  let updated ← fields.set (DescriptorReflection.toRecord element) .name name
+  DescriptorReflection.fromRecord updated
+#+end_src
+
+The caller writes one typed update. Validation, schema and inspection reuse the
+same catalog; users need not maintain separate field lists for each operation.
+~selfOf~ describes a descriptor and can itself be passed to ~selfOf~ again.
+Names must be nonempty; optional defaults must satisfy both the supplied carrier
+refinement and the descriptor's own recognizer. ~fromRecord~ checks field presence;
+use ~selfOf.validate~ when also admitting its semantic refinement.
+
+Inspection uses a codec when available and otherwise the descriptor's display.
+Schema records field names/types/codec availability. This generates metadata and
+presentation, not arbitrary callable serialization or universal function checking.
+Functions are statically typed; ~checkedCall~ / ~checkedClass~ admit actual results.
+Object inspection forces the completed result deliberately, while leaving its
+inherited base unforced. Inspecting an unsafe divergent result can still diverge.
+
+* Thread pure values through consumed references
+
+~step old update~ returns a new reference after a successful pure checked update.
+Every alias of ~old~ then rejects ~read~ and ~step~. A rejected update preserves
+~old~. Pure values already read remain ordinary snapshots; this is capability
+consumption, not deep cloning or a static linear ownership type system.
+~runPure~ specifies pure value threading; ~run~ executes it through references.
+~compose_assoc~ proves checked parent-before-child value composition associative.
+The interface does not accept arbitrary effectful callbacks or promise rollback
+of external effects. It does not imply an in-place allocation or speedup result.
+
+* Evidence and fixed-point choices
+
+[[file:../../Tests/PaperDescriptorReflection.lean][PaperDescriptorReflection]] guards 101 descriptor/codec contexts, generated
+schema/inspection, missing fields, nested self-description, object/meta catalogs,
+refinement rejection and an inherited base that remains unforced.
+Two exact reconstruction laws are kernel checked. Object reconstruction uses
+propext; descriptor reconstruction inherits propext/Classical.choice/Quot.sound
+from the existing Descriptor/JSON carrier. No axiom-free blanket claim is made.
+
+[[file:../../Tests/PaperLinearState.lean][PaperLinearState]] guards 64 scalar traces against an independent arithmetic
+oracle and 32 races with exactly one successful consumer. Its composition law
+uses propext/Quot.sound. [[file:../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] guards 65 recursive inputs and observes
+one shared construction versus 32 rebuilding constructions, plus one delayed
+non-function construction. ~bottom_apply~ is axiom-free.
+
+Appendix D's invalid eager self reference is not an implementation target.
+Internal-define/letrec/lazy routes use the shared Lean thunk knot; untyped Y
+self-application is a target-language choice. These controls do not prove
+universal Y equivalence, general termination or whole Scheme/Lean semantics.

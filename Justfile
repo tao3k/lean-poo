@@ -239,6 +239,9 @@ check-tests: check-proof
 
 [private]
 _check-contracts:
+    {{lean}} Tests/PaperDescriptorReflection.lean
+    {{lean}} Tests/PaperLinearState.lean
+    {{lean}} Tests/PaperFixedPoints.lean
     {{lean}} Tests/PaperTrees.lean
     {{lean}} Tests/PaperC3.lean
     {{lean}} Tests/PaperPrototypeChecks.lean

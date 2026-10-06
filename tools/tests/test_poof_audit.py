@@ -43,6 +43,16 @@ class PoofAuditTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'Source check coverage changed'):
                     audit_poof.check()
 
+    def test_removed_closure_requirement_is_rejected(self):
+        closure = copy.deepcopy(self.receipt['construction_closure'])
+        closure['requirements'].pop()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'closure.json'
+            path.write_text(json.dumps(closure))
+            with patch.object(audit_poof, 'CLOSURE', path):
+                with self.assertRaisesRegex(ValueError, 'Construction closure coverage changed'):
+                    audit_poof.check()
+
     def test_unreviewed_original_paper_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             paper = Path(directory) / 'poof.scrbl'

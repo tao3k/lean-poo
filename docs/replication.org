@@ -590,8 +590,8 @@ the value returned by the new runtime through both read paths.
 
 This section assesses the bounded Lean-native construction path. It does not
 establish whole-paper completion. The [[file:audits/poof/README.org][whole-paper audit]] records implemented
-Order/BST/AVL and all 24 mapped source checks, remaining representation correspondences,
-C3/C4 policy differences and the paper's explicit research proposals.
+Order/BST/AVL and all 24 mapped source checks, closed typed representation/descriptor/state operations,
+C3/C4 policy choices and open whole-language correspondence and the paper's explicit research proposals.
 
 The POOF PO construction has an executable Lean main path:
 ~prototype -> composition -> generator/delay -> fixed point -> object -> C4 composition~.

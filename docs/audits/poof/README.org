@@ -1,15 +1,17 @@
 #+TITLE: Fare POOF whole-paper implementation audit
 
-* Verdict
+* Verdict and closure scope
 
-No: the entire paper is not implemented and verified in LeanPoo.
-The Order → binary-tree dictionary → AVL override case, ordinary C3, lazy
-dictionary records and overridable meta-prototype slots now have Lean implementations.
-All 24 original eval:check expressions have mapped typed assertions.
-Several representation, descriptor and operational correspondences remain partial.
-General fixed points remain executable unsafe recursion, not total kernel
-proofs. The paper itself permits divergence; this is a boundary, not a claim
-that its algorithm is incorrect.
+The reviewed typed constructive path is now closed: Order/BST/AVL, all 24
+original checks, ordinary C3, both alternate representations, overridable meta
+slots, Number operations, self-description/generated field tools, consuming state
+references and executable shared/rebuilding fixed-point controls.
+[[file:closure-v1.json][The six-item closure map]] lists operations, implementations, tests and limits.
+
+This is not whole-paper operational equivalence or unrestricted dynamic
+self-description/automation. General fixed points remain unsafe and may diverge.
+The stronger ~whole_paper_implemented~ flag stays false; the manually reviewed
+~reviewed_constructive_path_closed~ flag is true. Neither is inferred from counts.
 
 This audit reviews ~poof.scrbl~ at commit
 ~9affa8fbbb4f12cbd98cb97f8b8b84474fc39429~, with SHA-256
@@ -24,16 +26,16 @@ POOF paper, not every other essay in the same reference checkout.
 | [[file:core.org][Prototype core and complete examples]] | fix/mix, record, numeric, delayed and tree constructions |
 | [[file:objects.org][Objects, classes and mutability]] | Representations, inheritance, descriptors and effect boundaries |
 | [[file:advanced.org][Appendices and research proposals]] | C3, dispatch, combination, lenses, notation and fixed points |
-| [[file:gaps.org][Closure checklist]] | Concrete missing work, acceptance evidence and priority |
+| [[file:gaps.org][Closure checklist]] | Closed typed operations and stronger research gates |
 | [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
-| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 299 source filenames and 63 evidence-file hashes |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 308 source filenames and 66 evidence-file hashes |
 
 * Status meaning
 
 | Status | Review units | Meaning |
 |--------+--------------+---------|
-| ~lean_translation~ | 28 | The named bounded construction has Lean source and representative executable references |
-| ~partial~ | 6 | Related mechanisms exist, but an explicit behavior/policy/representation correspondence is open |
+| ~lean_translation~ | 34 | The named bounded construction has Lean source and representative executable references |
+| ~partial~ | 0 | Related mechanisms exist, but an explicit behavior/policy/representation correspondence is open |
 | ~not_implemented~ | 0 | The complete named paper case has no corresponding implementation found in the reviewed source inventory |
 | ~discussion~ | 8 | Motivation, literature, notation or explanatory context |
 | ~future_proposal~ | 3 | Explicit further research, not an already-specified completed implementation |
@@ -60,10 +62,11 @@ the manual assessment; they do not independently infer semantics.
 After a relevant source change, re-review the affected requirement and rebuild
 the receipt. Do not merely regenerate to turn a drift failure into a pass.
 
-* Implemented capability versus remaining scope
+* Capability and execution evidence
 
-[[file:../../contracts/paper-dictionaries.org][New capability/API checklist]] covers seven public modules and two inheritance
-proofs. [[file:checks-v1.json][Source check map]] binds all 24 checks to assertion markers and typed adaptations.
-The map and hashes bind manual review; execution and semantic proof are separate.
-The current gate contains 147 atoms plus four diagnostics; 48 native admissions
-remain separate. No external OpenAI integration or measured saving is added.
+[[file:../../contracts/paper-dictionaries.org][Dictionary/meta APIs]] and [[file:../../contracts/descriptor-reflection.org][descriptor/reflection/state APIs]] document practical reuse.
+[[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
+binds the six remaining constructions. Receipts bind manual review and code
+identity; actual execution and kernel theorem checks are separate evidence.
+Current gate: 150 atoms plus four diagnostics, 48 native admissions and 16
+supervisor controls. No external OpenAI integration or measured saving is added.
