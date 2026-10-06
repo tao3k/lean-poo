@@ -9,8 +9,10 @@
 | Execute a validated graph with shared ancestor work | ~C3.linearizeMany graph roots~ | Fast ordinary path; one cache is reused across roots |
 | Relate one-root batch and scalar calls | ~C3.linearizeMany_singleton~ | Kernel equality for every graph/root, including errors |
 | Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Recomputes each parent occurrence and root; semantic reference, possibly exponential on shared ancestry |
+| Retain a recursive paper-style derivation | ~C3.linearizeUncached_sound~, ~linearizeUncachedMany_sound~ | Every successful reference order has graph lookup, positional parent and C3 merge traces |
 | Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
 | Consume the receipt | ~GraphCertificate.agrees~ | Cached and uncached ~Except~ outputs are equal for this exact graph/root list |
+| Avoid reconstructing parent proofs | ~GraphCertificate.source_traces~, ~ParentTraces.head~, ~GraphTrace.root_head~, ~GraphTrace.parent_order~ | Retrieve a root derivation, leading name, actual parent row and direct-parent order law |
 | Check result cardinality | ~GraphCertificate.order_count~ | The number of order rows equals the number of requested roots, including repeated roots |
 
 * Client pattern
@@ -26,6 +28,14 @@ def admittedOrders (graph : C3.Graph) (roots : List String) :
   return certificate.orders
 #+end_src
 
+For a nonempty request, a client can use ~certificate.source_traces.head~
+to obtain the first result's ~GraphTrace~. Each ~GraphTrace.node~ carries
+the actual graph lookup, positional derivations for its direct parents, the
+paper-style ~SourceTrace~ and the certified merge trace. ~GraphTrace.root_head~
+proves the result begins with the requested name; ~parent_order~ proves the
+actual direct-parent row is a sublist of a duplicate-free merged tail. This
+avoids replaying the graph or rebuilding parent-order premises downstream.
+
 ~GraphAdmissionError.cached~ reports the production computation's error;
 ~reference~ reports failure of the uncached interpreter after a cached success;
 ~disagreement~ reports two successful but different orders. These cases are
@@ -33,10 +43,12 @@ separate so a cache mismatch is not mislabeled as a precedence conflict.
 
 The uncached interpreter uses the same validated graph shape and the certified
 merge. [[file:c3-merge.org][The merge theorem]] relates each candidate-list merge to the paper's
-selection and trace. The graph receipt checks the recursive implementation on
-the supplied finite inputs. It is not an unconditional theorem that all finite
-graphs yield matching cached and uncached results, nor a Racket/Lean language
-equivalence proof. Ordinary calls incur no admission recomputation.
+selection and trace. The recursive source-style trace exists for every
+successful uncached interpretation; the graph receipt transfers it to cached
+results on the supplied finite inputs. This is not an unconditional theorem
+that all finite graphs yield matching cached and uncached results, nor a
+Racket/Lean language equivalence proof. Ordinary calls incur no admission
+recomputation.
 
 [[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's

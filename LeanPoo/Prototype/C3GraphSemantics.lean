@@ -1,39 +1,11 @@
-import LeanPoo.Prototype.C3Semantics
+import LeanPoo.Prototype.C3GraphTrace
 
-/-! An uncached finite graph interpretation of Appendix A and an optional
-admission check for the production C3 cache. Unlike `C3.linearizeMany`, each
-parent occurrence is recomputed. This is a semantic reference, not the fast
-execution path. -/
+/-! Optional admission of the production C3 cache against the proof-producing
+uncached finite interpreter. -/
 
 namespace LeanPoo.Prototype.C3
 
 open LeanPoo.C4
-
-private def visitUncached (graph : Graph) (name : String) (path : List String) :
-    Nat → Except C4.Error (List String)
-  | 0 => .error (.cycle name)
-  | fuel+1 => do
-    if path.contains name then throw (.cycle name)
-    let some entry := graph.find? (fun entry => entry.1 == name) |
-      throw (.unknownNode name)
-    let mut orders := []
-    for parent in entry.2 do
-      let order ← visitUncached graph parent (name :: path) fuel
-      orders := order :: orders
-    let tail ← mergeCertified (orders.reverse ++ [entry.2])
-    return name :: tail.output
-
-/-- Independently interpret a validated finite graph without any cache.
-`linearizeMany graph []` performs exactly the public graph validation. -/
-def linearizeUncached (graph : Graph) (root : String) :
-    Except C4.Error (List String) := do
-  let _ ← linearizeMany graph []
-  visitUncached graph root [] (graph.length+1)
-
-/-- Recompute every root and every ancestor occurrence independently. -/
-def linearizeUncachedMany (graph : Graph) (roots : List String) :
-    Except C4.Error (List (List String)) :=
-  roots.mapM (linearizeUncached graph)
 
 inductive GraphAdmissionError where
   | cached (error : C4.Error)
@@ -48,31 +20,16 @@ structure GraphCertificate (graph : Graph) (roots : List String) where
   cached : linearizeMany graph roots = .ok orders
   reference : linearizeUncachedMany graph roots = .ok orders
 
-private theorem mapM_ok_length (f : α → Except ε β) (inputs : List α)
-    (outputs : List β) (success : inputs.mapM f = .ok outputs) :
-    outputs.length = inputs.length := by
-  induction inputs generalizing outputs with
-  | nil =>
-    change Except.ok [] = Except.ok outputs at success
-    cases success
-    rfl
-  | cons input rest ih =>
-    cases first : f input with
-    | error error =>
-      simp [List.mapM_cons, first, bind, Except.bind] at success
-    | ok value =>
-      cases tail : rest.mapM f with
-      | error error =>
-        simp [List.mapM_cons, first, tail, bind, Except.bind] at success
-      | ok values =>
-        simp [List.mapM_cons, first, tail, bind, Except.bind] at success
-        cases success
-        simp [ih values tail]
+/-- An admitted cached batch carries a paper-style recursive trace for every
+requested root, including all visited parents and each node's C3 merge. -/
+theorem GraphCertificate.source_traces (certificate : GraphCertificate graph roots) :
+    ParentTraces graph (graph.length+1) roots certificate.orders :=
+  linearizeUncachedMany_sound graph roots certificate.orders certificate.reference
 
 /-- A successful admission has as many output rows as requested roots. -/
 theorem GraphCertificate.order_count (certificate : GraphCertificate graph roots) :
     certificate.orders.length = roots.length :=
-  mapM_ok_length (linearizeUncached graph) roots certificate.orders certificate.reference
+  certificate.source_traces.length
 
 theorem GraphCertificate.agrees (certificate : GraphCertificate graph roots) :
     linearizeMany graph roots = linearizeUncachedMany graph roots := by

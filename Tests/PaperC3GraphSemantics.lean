@@ -19,15 +19,45 @@ private def roots : List String := ["X", "Y", "A", "X"]
   .error (.cached (.cycle _))
 #guard C3.certifyGraph [("A", []), ("A", [])] [] matches
   .error (.cached (.duplicateNode "A"))
+#guard C3.linearizeUncached [("A", ["B"]), ("B", ["A"])] "A" matches
+  .error (.cycle _)
+#guard C3.linearizeUncached [("A", ["missing"])] "A" matches
+  .error (.unknownNode "missing")
+#guard C3.linearizeUncached [("A", []), ("A", [])] "A" matches
+  .error (.duplicateNode "A")
+#guard C3.linearizeUncached [("O", []), ("A", ["O"]), ("B", ["O"]),
+  ("X", ["A", "B"]), ("Y", ["B", "A"]), ("Z", ["X", "Y"])] "Z" matches
+  .error .inconsistentOrder
 
 private theorem admitted_agrees (certificate : C3.GraphCertificate graph roots) :
     C3.linearizeMany graph roots = C3.linearizeUncachedMany graph roots :=
   certificate.agrees
 
-#eval IO.println "POOF-C3-GRAPH-SEMANTICS-OK singleton=allGraphs uncachedReference=true cachedBatchAdmission=true"
+private theorem admitted_first_root (certificate : C3.GraphCertificate graph roots) :
+    ∃ order tail, certificate.orders = order :: tail ∧ order.head? = some "X" := by
+  obtain ⟨order, tail, rows, trace⟩ := certificate.source_traces.head
+  exact ⟨order, tail, rows, trace.root_head⟩
+
+private theorem admitted_first_parent_order (certificate : C3.GraphCertificate graph roots) :
+    ∃ (entry : String × List String) (tail : List String)
+      (rest : List (List String)),
+      graph.find? (fun row => row.1 == "X") = some entry ∧
+      certificate.orders = ("X" :: tail) :: rest ∧
+      entry.2.Sublist tail ∧ tail.Nodup := by
+  obtain ⟨order, rest, rows, trace⟩ := certificate.source_traces.head
+  obtain ⟨entry, tail, lookup, same, parents, nodup⟩ := trace.parent_order
+  subst order
+  exact ⟨entry, tail, rest, lookup, rows, parents, nodup⟩
+
+#eval IO.println "POOF-C3-GRAPH-SEMANTICS-OK singleton=allGraphs recursiveSourceTrace=true cachedBatchAdmission=true"
 #print axioms C3.linearizeMany_singleton
+#print axioms C3.linearizeUncached_sound
+#print axioms C3.linearizeUncachedMany_sound
+#print axioms C3.GraphCertificate.source_traces
 #print axioms C3.GraphCertificate.order_count
 #print axioms C3.GraphCertificate.agrees
+#print axioms admitted_first_root
+#print axioms admitted_first_parent_order
 #print axioms admitted_agrees
 
 end LeanPoo.Tests.PaperC3GraphSemantics

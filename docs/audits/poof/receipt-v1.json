@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "a97531842fcb32dc853f0502dff060fd157a32a54e110f979bf040d1c7fb6ea9",
+  "requirements_sha256": "87f29c0f37bc81c66b3888db4841e50e68a625c60233e1e1d332b4ca348eebf9",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -49,6 +49,7 @@
           "LeanPoo/Prototype/MetaPrototype.lean",
           "LeanPoo/Prototype/C3.lean",
           "LeanPoo/Prototype/C3Semantics.lean",
+          "LeanPoo/Prototype/C3GraphTrace.lean",
           "LeanPoo/Prototype/C3GraphSemantics.lean",
           "LeanPoo/Prototype/CheckedMetaPrototype.lean"
         ],
@@ -59,7 +60,7 @@
           "Tests/PaperC3GraphSemantics.lean",
           "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; optional graph admission proves cached/uncached equality on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -170,7 +171,7 @@
       }
     ]
   },
-  "closure_sha256": "a964b101297f723ded451bbc1b68e00f3cd52a7a523a5335a971edce9fa41d11",
+  "closure_sha256": "ff6f70d71d1725b8cae5654f54bacc60938c27e32c535553cc5adfb73e3f34a4",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -621,6 +622,7 @@
         "LeanPoo/Prototype/MetaPrototype.lean",
         "LeanPoo/Prototype/C3.lean",
         "LeanPoo/Prototype/C3Semantics.lean",
+        "LeanPoo/Prototype/C3GraphTrace.lean",
         "LeanPoo/Prototype/C3GraphSemantics.lean",
         "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
@@ -631,7 +633,7 @@
         "Tests/PaperC3GraphSemantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; optional graph admission proves cached/uncached equality on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -824,6 +826,7 @@
       "implementation": [
         "LeanPoo/Prototype/C3.lean",
         "LeanPoo/Prototype/C3Semantics.lean",
+        "LeanPoo/Prototype/C3GraphTrace.lean",
         "LeanPoo/Prototype/C3GraphSemantics.lean"
       ],
       "checks": [
@@ -831,7 +834,7 @@
         "Tests/PaperC3Semantics.lean",
         "Tests/PaperC3GraphSemantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. One-root batch/scalar equality holds on arbitrary graphs; optional admission checks full cached output against uncached recursion on supplied inputs. Universal graph/cache coherence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. One-root batch/scalar equality holds on arbitrary graphs. Every successful uncached result has a recursive source-style graph trace; optional admission transfers it to cached output on supplied inputs. Universal graph/cache coherence and C3/C4 policy equivalence remain unproved."
     },
     {
       "id": "helpers",
@@ -1701,8 +1704,15 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphSemantics.lean": {
-      "sha256": "6af8503f14209685700506b364988d2f4e996e164398fc2c72583b85d32d68a5",
-      "physical_lines": 96,
+      "sha256": "31571b3871a6706cd23b40ad577fa2e229cfd2cdd01862ed7a67d0f2596d9095",
+      "physical_lines": 53,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/C3GraphTrace.lean": {
+      "sha256": "24c4c07cfbb46a26f5873a30c7ecdd7338c913c25b2ff0bc5eaacdef7e3fc9c9",
+      "physical_lines": 129,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2049,17 +2059,21 @@
       ]
     },
     "Tests/PaperC3GraphSemantics.lean": {
-      "sha256": "3082ce429d7e290dfc8968b07c4e5ee6c8e79ae9d664e1e903eb5ee652ea9032",
-      "physical_lines": 33,
+      "sha256": "c87e5d1a073079109df8924512d3970df5c873a160860377626ba0048fca0fc8",
+      "physical_lines": 63,
       "unsafe_declaration_lines": [],
       "guard_lines": [
         12,
         15,
         18,
-        20
+        20,
+        22,
+        24,
+        26,
+        28
       ],
       "eval_lines": [
-        27
+        52
       ]
     },
     "Tests/PaperC3Semantics.lean": {
@@ -2253,8 +2267,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "a964b101297f723ded451bbc1b68e00f3cd52a7a523a5335a971edce9fa41d11",
-      "physical_lines": 160,
+      "sha256": "ff6f70d71d1725b8cae5654f54bacc60938c27e32c535553cc5adfb73e3f34a4",
+      "physical_lines": 161,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2419,6 +2433,7 @@
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
     "LeanPoo/Prototype/C3GraphSemantics.lean",
+    "LeanPoo/Prototype/C3GraphTrace.lean",
     "LeanPoo/Prototype/C3Semantics.lean",
     "LeanPoo/Prototype/CheckedFunction.lean",
     "LeanPoo/Prototype/CheckedMetaPrototype.lean",

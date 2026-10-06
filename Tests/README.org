@@ -393,8 +393,10 @@ lists. Each certificate preserves all parent orders and covers exactly the
 input names without repeats; unconditional graph cache coherence remains separate.
 PaperC3GraphSemantics proves one-root batch/scalar equality for every graph and
 uses an optional receipt to compare cached multi-root traversal with uncached
-finite recursion on an exact graph/root list. The receipt proves output equality
-and row count, while universal cache coherence remains open.
+finite recursion on an exact graph/root list. Every successful uncached result
+has a recursive source-style graph trace; the receipt transfers that trace to
+admitted cached results and proves output equality and row count. Universal
+cache coherence remains open.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
 correspondence. Current inventory: 156 atoms + four diagnostics, 48 native
