@@ -426,5 +426,5 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 161 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 162 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.
