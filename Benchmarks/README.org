@@ -475,3 +475,10 @@ so the default thread policy stays unchanged. [[file:../docs/check-performance.o
 [[file:receipts/check-gate-12-vs-14-2026-10-06.json][Full-gate worker study]] keeps two alternating pairs, all 552 atom successes and
 per-file CPU/wall observations. Medians: 31.297/24.105 seconds, with default Lean
 internal threads. [[file:../docs/performance/check-worker-overlap.org][Capacity admission, complete controls and remaining 22.8-second gap]].
+
+* Certified solver transport audit
+
+[[file:receipts/euler-solver-transport-2026-10-06.json][The v1 audit]] binds 82 local files, original POOF getter/wrapper text and
+OpenAI's existing explicit witness/proof constructor and noncomputable section.
+Eleven APIs reuse typed target solvers and C4 certificates; 96 independent reads
+and negative type/elimination controls qualify local semantics. [[file:../docs/contracts/solver-transport.org][Use and cost limits]].

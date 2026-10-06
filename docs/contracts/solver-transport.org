@@ -1,0 +1,80 @@
+#+TITLE: Transport certified witness data through solver routes
+
+[[file:../reusable-contracts.org][Reusable contracts]] · [[file:../../Tests/FunctionalSolverTransport.lean][Compiled clients]]
+
+* Capability and API checklist
+
+Import ~LeanPoo.Functional.SolverTransport~. Eleven new public names:
+
+| API | Contract |
+|-----+----------|
+| ~Solution~, ~Solver~ | Exact-input witness plus correctness; total on valid inputs |
+| ~CertifiedTransformation.pullSolution~ | Extract source data and reuse admitted soundness |
+| ~pullSolution_val~ | Extracted value is exactly the supplied extractor's value |
+| ~CertifiedTransformation.pullSolver~ | Map input/validity, call target solver, extract back |
+| ~pullSolver_val~ | Source value agrees with that explicit routed construction |
+| ~pullSolver_compose~, ~pullSolver_identity~ | Reuse composed and identity routes without new client proofs |
+| ~requirementsProblem~ | Expose a C4 joint result contract as a witness problem |
+| ~Certified.asSolver~, ~asSolver_val~ | Reuse retained factories and their exact joint certificate |
+
+The user supplies each route's ~forward~, ~preserves~, ~extract~ and ~sound~
+obligations once. Consumers then reuse ~pullSolver~ through any admitted
+composition. A supplied target solver already returns data and correctness;
+this API does not generate a solver or discover analytical facts.
+
+* Use existing C4 certificates
+
+#+begin_src lean
+import LeanPoo.Functional.SolverTransport
+open LeanPoo.Functional LeanPoo.Functional.Transformation
+open LeanPoo.Functional.Requirements
+example {C K : Type} {V : C → K → Type} {keys : List K}
+    {Claim : ∀ c, Results V c keys → Prop}
+    (ready : Certified keys Claim) (A : Problem)
+    (route : CertifiedTransformation A (requirementsProblem keys Claim)) : Solver A :=
+  route.pullSolver ready.asSolver
+
+example {A B C : Problem} (first : CertifiedTransformation A B)
+    (second : CertifiedTransformation B C) (target : Solver C) :
+    (compose first second).pullSolver target = first.pullSolver (second.pullSolver target) :=
+  pullSolver_compose first second target
+#+end_src
+
+This replaces repeated forward-validity / target-witness / reverse-correctness
+plumbing per consumer with a reusable admitted route. It adds no provider lookup,
+cache, finite enumeration or runtime correctness predicate of its own. The
+underlying supplied factories, solver and extractors retain their costs.
+C4's ~Certified~ covers all its typed contexts; restricted domains still need
+explicit validity in the source problem or a context type that carries guards.
+
+* Data and proof boundary
+
+~Solution~ lives in Type and contains the witness. A theorem merely proving
+~∃ result, Correct input result~ lives in Prop and does not supply this interface
+by pattern matching. No Classical.choose or existence-to-data conversion is
+introduced. Noncomputable supplied data remains noncomputable; these wrappers
+do not qualify it for native execution. Changing input cannot substitute an
+unrelated ~Fin~ witness or certificate. Invalid source contexts need a proof of
+validity before the routed solver can be called.
+
+Compiled controls reuse one C4 Fin/Bool family through three routes at 32
+positive contexts (96 scalar-oracle reads), including two composed shifts.
+Negative controls reject wrong-input solutions, wrong witness proofs, invalid
+contexts and existential elimination into data. Five axiom reports are empty.
+See [[file:../../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][the source-bound v1 audit]] for exact code costs and pinned evidence.
+
+* Fare POOF and OpenAI reference audit
+
+POOF's generalized prototype discussion separates representation-specific
+getters, wrappers and produced/consumed computations. This closed deterministic
+witness transport explores that boundary; it does not implement generalized
+prototype setters, self/super fixed points or full paper conformance.
+
+OpenAI's ~exists_exact_lifted_solution~ explicitly packages two field towers and
+five proof-producing calls. Its file is in a ~noncomputable section~. This
+source supports a design distinction between data expressions and existence
+proofs, not a computable Euler solver or an automatic transport adapter. Any
+candidate problem must preserve period/time/data/budget/residual/order guards.
+No reference integration or migration; measured net external code reduction,
+maintenance hours and analytic runtime gains remain unknown. The benefit
+established here is reusable proof plumbing on typed local routes.

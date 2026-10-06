@@ -1002,3 +1002,16 @@ not an Euler-wide edit-count estimate.
 - [X] Conditional repeated-read gains; head/single-query/small-key negatives retained.
 - [X] No allocation, peak-memory or external code/maintenance-hour savings claim.
 - [X] Integration/migration count 0. Details: [[file:../performance/result-index.org][native specialization evidence]].
+
+* Certified solver transport checklist
+
+- [X] Eleven new APIs: witness/solver types, pullSolution/pullSolver, composition/identity laws, C4 problem/solver bridge.
+- [X] One admitted route reuses validity and correctness through composed consumers.
+- [X] 96 scalar-oracle reads, three routes, 32 contexts; exact-input Fin/Bool joint certificate.
+- [X] Wrong input/witness, invalid context and Prop-to-data elimination rejected.
+- [X] Five new theorem axiom reports empty.
+- [X] Reference packages two explicit towers and five proof producers in a noncomputable section.
+- [X] Original analytical premises and supplied target solver still required.
+- [X] Integration/migration count 0; net external code, maintenance hours and runtime gains unmeasured.
+
+See [[file:../contracts/solver-transport.org][API use and boundaries]] and [[file:../../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][v1 source audit]].

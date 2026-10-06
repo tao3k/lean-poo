@@ -131,3 +131,4 @@ import LeanPoo.Object.Debug
 import LeanPoo.Functional.Transformation
 import LeanPoo.Proof.Transformation
 import LeanPoo.Functional.FiniteTransformation
+import LeanPoo.Functional.SolverTransport

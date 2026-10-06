@@ -330,3 +330,11 @@ Eight native result-index controls admit identical independent checksums for
 list/indexed ordinary head/tail/cycle and all-collision tail access. Native
 admissions total 48; 138 Lean atoms + four diagnostics remain. Local timing
 receipts retain regressions; CI has no timing threshold.
+
+* Solver transport atom
+
+~FunctionalSolverTransport.lean~ adds a focused atom: 96 independent witness
+reads, three composed routes, 32 contexts, Fin/Bool joint C4 certificate and
+wrong-input/witness/validity/Prop-elimination rejection. Five axiom reports are
+empty. Current inventory: 140 atoms + four diagnostics (144 standalone files),
+48 native admissions and eleven supervisor tests; 12 shards / 16 CI jobs remain.

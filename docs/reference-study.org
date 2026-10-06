@@ -1487,3 +1487,12 @@ transfer; no external timing, code or maintenance reduction is established.
 original POOF named-record source and Euler field consumers. Compiler changes
 add no public API or reference integration; conditional local timing results
 and negative controls are documented in [[file:performance/result-index.org][the result-index cost guide]].
+
+* Solver witness transport
+
+[[file:contracts/solver-transport.org][The solver bridge]] connects admitted input-indexed witness transformations
+to retained C4 joint certificates. The [[file:../Benchmarks/receipts/euler-solver-transport-2026-10-06.json][v1 audit]] checks original generalized
+getter/wrapper hints and the explicit two-tower/five-proof constructor in
+OpenAI's noncomputable all-order theorem. Neither existence in Prop nor that
+source inspection supplies a native solver. Local correctness/proof reuse is
+qualified; external migration, net code and maintenance savings remain unknown.

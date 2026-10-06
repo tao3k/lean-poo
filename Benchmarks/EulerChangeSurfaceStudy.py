@@ -256,6 +256,25 @@ def certified_consumer_audit(reference):
             "scope": "Direct source reading with token/hash guards; not elaboration, a Lean adapter, proof synthesis or a measured maintenance reduction"}
 
 
+
+def solver_witness_audit(reference):
+    audit = certified_consumer_audit(reference)
+    rows = (reference / audit["file"]).read_text().splitlines()
+    start = audit["declaration_line"]-1
+    end = next(i for i in range(start+1, len(rows)) if rows[i].startswith("end "))
+    token = "exact ⟨B.correctedFieldTower period, B.correctedPressureTower period R,"
+    constructor = [i+1 for i in range(start, end) if token in rows[i]]
+    if len(constructor) != 1:
+        raise ValueError("Expected explicit data/proof witness constructor")
+    noncomputable = [i+1 for i in range(start) if rows[i].strip() == "noncomputable section"]
+    if len(noncomputable) != 1:
+        raise ValueError("Expected reference noncomputable section")
+    audit["witness_constructor_line"] = constructor[0]
+    audit["noncomputable_section_line"] = noncomputable[0]
+    audit["scope"] = "Existing existential theorem explicitly packages two tower data expressions and five proof producers under noncomputable section; no computable solver, extraction from Prop, analytical transport premise, Lean adapter or external cost saving established"
+    return audit
+
+
 def certified_observation_audit(reference):
     relative = "Euler/PacketInitializedResidualEquation.lean"
     raw = (reference / relative).read_bytes()
@@ -417,7 +436,10 @@ def study(reference):
              "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean",
              "LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean",
              "LeanPoo/Functional/ResultIndex.lean", "Tests/FunctionalResultIndex.lean",
-             "Benchmarks/ResultIndexScale.lean", "Benchmarks/ResultIndexStudy.py"]
+             "Benchmarks/ResultIndexScale.lean", "Benchmarks/ResultIndexStudy.py",
+             "LeanPoo/Functional/Transformation.lean", "LeanPoo/Functional/FiniteTransformation.lean",
+             "LeanPoo/Proof/Transformation.lean", "Tests/FunctionalTransformation.lean",
+             "LeanPoo/Functional/SolverTransport.lean", "Tests/FunctionalSolverTransport.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -429,6 +451,16 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "solver_transport": {
+            "paper_source": paper_view_composition_audit(),
+            "reference_audit": solver_witness_audit(reference),
+            "new_api": ["Solution", "Solver", "CertifiedTransformation.pullSolution", "CertifiedTransformation.pullSolution_val", "CertifiedTransformation.pullSolver", "CertifiedTransformation.pullSolver_val", "pullSolver_compose", "pullSolver_identity", "requirementsProblem", "Certified.asSolver", "Certified.asSolver_val"],
+            "local_test": {"file": "Tests/FunctionalSolverTransport.lean", "reads": 96, "routes": 3, "contexts": 32,
+                           "controls": ["Independent scalar answer oracle", "Exact-input Fin witness and Bool joint contract", "Wrong input/witness and invalid context rejected", "Existential Prop elimination into Solution rejected"],
+                           "axiom_reports": 5, "axioms": []},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/SolverTransport.lean", "Tests/FunctionalSolverTransport.lean"]},
+            "structural_reuse": "Admit route once, transport validity and correct witness data through composed routes; existing C4 joint certificate supplies target solver. No per-route client replay of source soundness proof",
+            "limits": ["Target solver and route soundness remain supplied obligations; no analytical theorem inferred", "Original generalized prototype hints are broader than this closed deterministic witness transport", "Reference theorem and towers are noncomputable, not a native Euler solver", "No actual migrations, net external lines, maintenance hours or runtime speedup measured"]},
         "result_index_specialization": {
             "paper_source": paper_record_index_audit(),
             "reference_audit": context_view_audit(reference),

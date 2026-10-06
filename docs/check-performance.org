@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 139 independent example/contract
+once, checks C4's source-owned types, and runs 140 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 143 unique example/test files, including the typed
+The current gate covers 144 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -564,3 +564,11 @@ lake env python3 Benchmarks/CheckGateStudy.py --output /private/tmp/check-gate-s
 
 See [[file:performance/check-worker-overlap.org][the complete-gate worker and per-file CPU study]] for the 31.297/24.105-second
 matched medians, capacity policy, unchanged semantic admission and measurement limits.
+
+* Solver transport admission
+
+The new solver-transport atom adds 96 independent routed witness reads and
+negative context/witness/Prop-elimination controls, with five empty axiom reports.
+Current full gate: 140 atoms + four diagnostics, 48 native admissions and eleven
+supervisor tests. Fourteen-worker local capacity and 12-shard/16-job CI remain.
+Earlier 138-atom worker timing is not promoted to this expanded inventory.

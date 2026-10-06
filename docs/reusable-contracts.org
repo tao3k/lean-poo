@@ -18,6 +18,7 @@ these guides explain reusable library contracts.
 | Apply indexed transactions and run name-only preflight | [[file:contracts/indexed-transactions.org][Indexed transactions and preflight]] |
 | Prepare transaction views, retain key indices and joint certificates | [[file:contracts/preparation-cache.org][Certified preparation caches]] |
 | Publish cache revisions, project data and construct proof-aware outputs | [[file:contracts/certified-consumers.org][Certified consumer construction]] |
+| Transport correct witness data through routes or reuse C4 certificates as solvers | [[file:contracts/solver-transport.org][Certified solver transport]] |
 | Index immutable built values for repeated named access and projections | [[file:contracts/result-index.org][Dependent result index]] |
 | Combine independently admitted contracts of the same dependency family | [[file:contracts/contract-join.org][Joining joint contracts]] |
 | Derive another joint contract while retaining functions and cached data | [[file:contracts/contract-consequence.org][Contract consequences]] |
