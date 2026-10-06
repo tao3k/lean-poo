@@ -127,3 +127,7 @@ import LeanPoo.Proof.Runtime
 import LeanPoo.Proof.Batch
 import LeanPoo.Proof.Product
 import LeanPoo.Object.Debug
+
+import LeanPoo.Functional.Transformation
+import LeanPoo.Proof.Transformation
+import LeanPoo.Functional.FiniteTransformation

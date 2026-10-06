@@ -87,3 +87,11 @@ implementation.
 
 This repository's [[file:LICENSE][LICENSE]] is Apache License 2.0. The Lean translations
 retain attribution to Faré and the applicable upstream license notices.
+
+* Certified witness transformations
+
+=LeanPoo.Functional.Transformation= exports input-indexed =Problem= and
+=CertifiedTransformation=, identity, ordered composition, soundness, and
+forward/extraction associativity. =LeanPoo.Proof.Transformation= checks a
+concrete two-step transport. Runtime source authority, codec refinement,
+resource authorization, and publication remain consumer obligations.
