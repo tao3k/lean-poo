@@ -26,6 +26,13 @@ theorem GraphCertificate.source_traces (certificate : GraphCertificate graph roo
     ParentTraces graph (graph.length+1) roots certificate.orders :=
   linearizeUncachedMany_sound graph roots certificate.orders certificate.reference
 
+/-- Compare an admitted cached batch with any independently supplied
+paper-style graph derivations, without rerunning either interpreter. -/
+theorem GraphCertificate.eq_source (certificate : GraphCertificate graph roots)
+    (source : ParentTraces graph fuel roots output) :
+    certificate.orders = output :=
+  certificate.source_traces.unique source
+
 /-- A successful admission has as many output rows as requested roots. -/
 theorem GraphCertificate.order_count (certificate : GraphCertificate graph roots) :
     certificate.orders.length = roots.length :=

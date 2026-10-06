@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "87f29c0f37bc81c66b3888db4841e50e68a625c60233e1e1d332b4ca348eebf9",
+  "requirements_sha256": "e624f6e49022a0fde24ddba94fb914c404323a510b09c0f2c2f7234a30c471bd",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -60,7 +60,7 @@
           "Tests/PaperC3GraphSemantics.lean",
           "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Successful graph derivations have unique outputs across fuel budgets. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -171,7 +171,7 @@
       }
     ]
   },
-  "closure_sha256": "ff6f70d71d1725b8cae5654f54bacc60938c27e32c535553cc5adfb73e3f34a4",
+  "closure_sha256": "00d4efa637ff257905dacc56404d8d132908548d8261a91d3ec089ec1c674da2",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -633,7 +633,7 @@
         "Tests/PaperC3GraphSemantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Successful graph derivations have unique outputs across fuel budgets. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -834,7 +834,7 @@
         "Tests/PaperC3Semantics.lean",
         "Tests/PaperC3GraphSemantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. One-root batch/scalar equality holds on arbitrary graphs. Every successful uncached result has a recursive source-style graph trace; optional admission transfers it to cached output on supplied inputs. Universal graph/cache coherence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. One-root batch/scalar equality holds on arbitrary graphs. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; optional admission transfers it to cached output on supplied inputs. Universal graph/cache coherence and C3/C4 policy equivalence remain unproved."
     },
     {
       "id": "helpers",
@@ -1704,15 +1704,15 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphSemantics.lean": {
-      "sha256": "31571b3871a6706cd23b40ad577fa2e229cfd2cdd01862ed7a67d0f2596d9095",
-      "physical_lines": 53,
+      "sha256": "2d8989fdb7d1935359feccf66062ca3ce1834f9bd6bee41b0b8973b0a85c5db5",
+      "physical_lines": 60,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphTrace.lean": {
-      "sha256": "24c4c07cfbb46a26f5873a30c7ecdd7338c913c25b2ff0bc5eaacdef7e3fc9c9",
-      "physical_lines": 129,
+      "sha256": "a3cfb2fd63cf1295429af2491ef027b7f75cd3e1da87ed74570a44d7bbac5fdd",
+      "physical_lines": 176,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2059,8 +2059,8 @@
       ]
     },
     "Tests/PaperC3GraphSemantics.lean": {
-      "sha256": "c87e5d1a073079109df8924512d3970df5c873a160860377626ba0048fca0fc8",
-      "physical_lines": 63,
+      "sha256": "27002fa0f9c5f47d0bde580d75bdb23f852c1b50295017cb7ea4501f8f953850",
+      "physical_lines": 77,
       "unsafe_declaration_lines": [],
       "guard_lines": [
         12,
@@ -2073,7 +2073,7 @@
         28
       ],
       "eval_lines": [
-        52
+        61
       ]
     },
     "Tests/PaperC3Semantics.lean": {
@@ -2267,7 +2267,7 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "ff6f70d71d1725b8cae5654f54bacc60938c27e32c535553cc5adfb73e3f34a4",
+      "sha256": "00d4efa637ff257905dacc56404d8d132908548d8261a91d3ec089ec1c674da2",
       "physical_lines": 161,
       "unsafe_declaration_lines": [],
       "guard_lines": [],

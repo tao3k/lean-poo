@@ -49,15 +49,29 @@ private theorem admitted_first_parent_order (certificate : C3.GraphCertificate g
   subst order
   exact ⟨entry, tail, rest, lookup, rows, parents, nodup⟩
 
+private theorem source_root_unique (left : C3.GraphTrace graph fuel₁ "X" first)
+    (right : C3.GraphTrace graph fuel₂ "X" second) : first = second :=
+  left.unique right
+
+private theorem admitted_batch_unique (certificate : C3.GraphCertificate graph roots)
+    (other : C3.ParentTraces graph fuel roots orders) :
+    certificate.orders = orders :=
+  certificate.eq_source other
+
 #eval IO.println "POOF-C3-GRAPH-SEMANTICS-OK singleton=allGraphs recursiveSourceTrace=true cachedBatchAdmission=true"
 #print axioms C3.linearizeMany_singleton
 #print axioms C3.linearizeUncached_sound
 #print axioms C3.linearizeUncachedMany_sound
+#print axioms C3.GraphTrace.unique
+#print axioms C3.ParentTraces.unique
 #print axioms C3.GraphCertificate.source_traces
+#print axioms C3.GraphCertificate.eq_source
 #print axioms C3.GraphCertificate.order_count
 #print axioms C3.GraphCertificate.agrees
 #print axioms admitted_first_root
 #print axioms admitted_first_parent_order
+#print axioms source_root_unique
+#print axioms admitted_batch_unique
 #print axioms admitted_agrees
 
 end LeanPoo.Tests.PaperC3GraphSemantics

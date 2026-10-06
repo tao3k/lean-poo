@@ -13,6 +13,8 @@
 | Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
 | Consume the receipt | ~GraphCertificate.agrees~ | Cached and uncached ~Except~ outputs are equal for this exact graph/root list |
 | Avoid reconstructing parent proofs | ~GraphCertificate.source_traces~, ~ParentTraces.head~, ~GraphTrace.root_head~, ~GraphTrace.parent_order~ | Retrieve a root derivation, leading name, actual parent row and direct-parent order law |
+| Compare independent derivations | ~GraphTrace.unique~, ~ParentTraces.unique~ | Same graph/root or root list has one successful order, even when derivations use different fuel budgets |
+| Compare admitted cache with another source derivation | ~GraphCertificate.eq_source~ | The admitted batch equals any paper-style derivation of the same graph and roots, without another traversal |
 | Check result cardinality | ~GraphCertificate.order_count~ | The number of order rows equals the number of requested roots, including repeated roots |
 
 * Client pattern
@@ -35,6 +37,10 @@ paper-style ~SourceTrace~ and the certified merge trace. ~GraphTrace.root_head~
 proves the result begins with the requested name; ~parent_order~ proves the
 actual direct-parent row is a sublist of a duplicate-free merged tail. This
 avoids replaying the graph or rebuilding parent-order premises downstream.
+~GraphTrace.unique~ compares two successful graph derivations directly;
+~ParentTraces.unique~ lifts this to a requested root list.
+~GraphCertificate.eq_source~ compares an admitted batch with any independently
+supplied paper-style derivation without another executable traversal.
 
 ~GraphAdmissionError.cached~ reports the production computation's error;
 ~reference~ reports failure of the uncached interpreter after a cached success;
@@ -44,8 +50,9 @@ separate so a cache mismatch is not mislabeled as a precedence conflict.
 The uncached interpreter uses the same validated graph shape and the certified
 merge. [[file:c3-merge.org][The merge theorem]] relates each candidate-list merge to the paper's
 selection and trace. The recursive source-style trace exists for every
-successful uncached interpretation; the graph receipt transfers it to cached
-results on the supplied finite inputs. This is not an unconditional theorem
+successful uncached interpretation; those derivations have unique outputs even
+across different successful fuel budgets. The graph receipt transfers them to
+cached results on the supplied finite inputs. This is not an unconditional theorem
 that all finite graphs yield matching cached and uncached results, nor a
 Racket/Lean language equivalence proof. Ordinary calls incur no admission
 recomputation.

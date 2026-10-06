@@ -48,7 +48,7 @@
         "Tests/PaperC3GraphSemantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. One-root batch/scalar equality holds for every graph; every successful uncached run has a recursive source-style graph trace, transferred to a cached batch by optional admission on supplied inputs. Successful graph derivations have unique outputs across fuel budgets. Universal graph/cache coherence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "simple-types",

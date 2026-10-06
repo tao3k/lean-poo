@@ -56,6 +56,53 @@ theorem ParentTraces.head (trace : ParentTraces graph fuel (root :: roots) order
   cases trace with
   | cons head _ => exact ⟨_, _, rfl, head⟩
 
+private theorem parentTraces_unique_of
+    (step : ∀ (root : String) (first second : List String),
+      GraphTrace graph fuelLeft root first →
+      GraphTrace graph fuelRight root second → first = second)
+    (left : ParentTraces graph fuelLeft roots first)
+    (right : ParentTraces graph fuelRight roots second) : first = second := by
+  induction roots generalizing first second with
+  | nil =>
+    cases left
+    cases right
+    rfl
+  | cons root rest ih =>
+    cases left with
+    | cons headLeft tailLeft =>
+      cases right with
+      | cons headRight tailRight =>
+        have head := step root _ _ headLeft headRight
+        have tail := ih tailLeft tailRight
+        simp [head, tail]
+
+/-- The paper-style recursive graph relation determines a unique output for
+the same graph and root, even if successful derivations use different fuels. -/
+theorem GraphTrace.unique (left : GraphTrace graph fuelLeft root first)
+    (right : GraphTrace graph fuelRight root second) : first = second := by
+  induction fuelLeft generalizing fuelRight root first second with
+  | zero => cases left
+  | succ fuel ih =>
+    cases left with
+    | @node _ _ entryLeft ordersLeft tailLeft lookupLeft parentsLeft mergedLeft certifiedLeft =>
+      cases right with
+      | @node _ _ entryRight ordersRight tailRight lookupRight parentsRight mergedRight certifiedRight =>
+        have sameEntry : entryLeft = entryRight :=
+          Option.some.inj (lookupLeft.symm.trans lookupRight)
+        subst entryRight
+        have sameParents : ordersLeft = ordersRight :=
+          parentTraces_unique_of (fun parent left right a b => ih a b)
+            parentsLeft parentsRight
+        subst ordersRight
+        have sameTail : tailLeft = tailRight := mergedLeft.unique mergedRight
+        simp [sameTail]
+
+/-- A list of source-style root derivations determines one positional batch,
+independently of the fuel used by either derivation. -/
+theorem ParentTraces.unique (left : ParentTraces graph fuelLeft roots first)
+    (right : ParentTraces graph fuelRight roots second) : first = second :=
+  parentTraces_unique_of (fun _ _ _ a b => a.unique b) left right
+
 private def sourceVisit (graph : Graph) (name : String) (path : List String) :
     (fuel : Nat) → Except C4.Error {order : List String // GraphTrace graph fuel name order}
   | 0 => .error (.cycle name)

@@ -75,5 +75,6 @@ supervisor controls. The record catalog now has a typed batch patch with kernel
 validity and untouched-field laws; finite fix/mix unfoldings have a separate pure
 semantics. The checked record x/y fragment has an all-depth source/target
 observation theorem. C3 merge has generic source-trace correspondence; the new
-graph receipt carries a recursive paper-style derivation for each admitted root.
+graph receipt carries a recursive paper-style derivation for each admitted root;
+the derivation's output is unique across successful fuel budgets.
 No external OpenAI integration or measured saving is added.

@@ -15,7 +15,8 @@ same candidates has that output. The [[file:../../contracts/c3-merge.org][reusab
 the certificate to prove parent-order preservation, coverage and no repeats.
 [[file:../../../LeanPoo/Prototype/C3.lean][C3]] proves one-root batch/scalar equality for every graph and error outcome.
 [[file:../../../LeanPoo/Prototype/C3GraphTrace.lean][C3GraphTrace]] gives every successful uncached result a recursive paper-style
-graph derivation. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] adds an optional receipt that transfers that
+graph derivation. The derivation determines a unique order even when two
+successful runs use different fuel. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] adds an optional receipt that transfers that
 derivation to cached results on admitted graph/root inputs.
 [[file:../../contracts/c3-graph.org][The graph guide]] records its recomputation cost. An unconditional graph/cache
 correspondence theorem remains open.

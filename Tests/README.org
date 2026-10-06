@@ -396,7 +396,8 @@ uses an optional receipt to compare cached multi-root traversal with uncached
 finite recursion on an exact graph/root list. Every successful uncached result
 has a recursive source-style graph trace; the receipt transfers that trace to
 admitted cached results and proves output equality and row count. Universal
-cache coherence remains open.
+cache coherence remains open. GraphTrace and ParentTraces also prove that
+successful graph derivations have unique outputs across fuel budgets.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
 correspondence. Current inventory: 156 atoms + four diagnostics, 48 native
