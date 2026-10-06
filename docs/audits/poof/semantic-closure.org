@@ -19,7 +19,7 @@ not silently promoted into specified executable behavior.
 |------+------------------+----------------------------------------|
 | Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
 | Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y override-modify-final-self fragment | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
-| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission | Prove the intended precedence and composition relation for arbitrary admitted finite source graphs, including cache assumptions |
+| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list paper/Lean merge trace correspondence | Prove graph traversal and cache coherence for arbitrary admitted finite source graphs, then connect precedence to composition |
 | Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
 | Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
 | Appendices and research proposals | Typed dispatch, method combination, lens and finite fix implementations; explicit boundaries | Prove the claimed correspondence for specified Appendix B constructs; keep Appendix C notation and future proposals in their stated research scope |
@@ -42,6 +42,13 @@ their error propagation; its reachable x/y reads are proved present. At
 depth two, the source dispatcher has a fixed-point certificate and the typed
 record's checked observations remain stable. This does not extend the
 correspondence to arbitrary Scheme values, effects or unrestricted recursion.
+
+[[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the Appendix A merge selector and normalized step
+agree with the certified Lean merger for every candidate list. It constructs
+a paper-style trace from each certificate and proves any source trace yields
+that same order, with inherited orders preserved, exact name coverage and no
+duplicates. Recursive graph lookup and cache coherence are the next C3 proof
+boundary; 640 finite graph comparisons remain observation evidence.
 
 The local toolchain does not currently contain Racket. Installing or running
 that separate source evaluator is a future verification step; CI continues to

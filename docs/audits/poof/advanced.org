@@ -8,6 +8,13 @@
 from the main C4 object policy. [[file:../../../Tests/PaperC3.lean][PaperC3]] asserts all four source orders,
 five refusal cases, both helper checks and 640 comparisons across 160 ordered
 parent DAGs against an independent recursive merge oracle.
+[[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the paper's leftmost eligible selection and normalized
+deletion step agree with the certified merger for every candidate list. Every
+certified output has a paper-style source trace; any source trace over the
+same candidates has that output. The [[file:../../contracts/c3-merge.org][reusable C3 guide]] shows how callers retain
+the certificate to prove parent-order preservation, coverage and no repeats.
+This merge result does not yet establish arbitrary graph traversal/cache
+correspondence.
 
 The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
 typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records

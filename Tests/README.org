@@ -387,7 +387,11 @@ String key at every finite unfolding depth. Its paper-style self calculation
 propagates errors, the source stabilizes at depth two, and typed observations
 remain stable afterward. The reusable slot/modify/compute laws expose the
 same missing-key behavior to clients.
+PaperC3Semantics proves the Appendix A selector, normalized deletion and
+paper-style merge trace agree with the certified merger for arbitrary candidate
+lists. Each certificate preserves all parent orders and covers exactly the
+input names without repeats; graph traversal/cache proofs remain separate.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 154 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 155 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.

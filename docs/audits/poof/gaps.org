@@ -36,7 +36,7 @@ later elects that stronger completion standard.
 
 - [X] Pin original POOF paper commit, content hash and complete heading outline.
 - [X] Classify all 90 headings into 45 reviewed units; retain rationale and limits.
-- [X] Bind 74 local evidence files and 316 source filenames; check drift without downloading the reference in CI.
+- [X] Bind 76 local evidence files and 318 source filenames; check drift without downloading the reference in CI.
 - [X] Distinguish observation examples, assertions, source identity and semantic proof claims.
 - [X] Correct broad completion wording and link the modular whole-paper audit.
 - [X] Reviewed typed concrete construction/case path reproduced and guarded; the fix/mix nucleus also has finite pure unfoldings and stabilization certificates.
@@ -44,7 +44,8 @@ later elects that stronger completion standard.
 
 The closure series includes the complete ten-object paper graph, finite
 fix/mix certificates, an all-depth checked correspondence for one record
-fragment and exact bounded tests. The source evaluator and a whole-language
+fragment, generic C3 merge-trace correspondence and exact bounded tests.
+The source evaluator and a whole-language
 correspondence theorem remain separate gates.
 External OpenAI integrations: 0. Measured external maintenance savings: unmeasured.
 The new guide explains algorithm reuse; no repository-wide saving is inferred.

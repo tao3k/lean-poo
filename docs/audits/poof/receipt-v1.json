@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "908c966035cc5718335901b3e79b438ef8e33f2d5aa9cc04b19bf9ba3629f837",
+  "requirements_sha256": "1f297938f64092549a8e8edadc9e917b15661dff0e94230a86188c889820efbb",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -48,14 +48,16 @@
         "implementation": [
           "LeanPoo/Prototype/MetaPrototype.lean",
           "LeanPoo/Prototype/C3.lean",
+          "LeanPoo/Prototype/C3Semantics.lean",
           "LeanPoo/Prototype/CheckedMetaPrototype.lean"
         ],
         "checks": [
           "Tests/PaperMetaPrototype.lean",
           "Tests/PaperC3.lean",
+          "Tests/PaperC3Semantics.lean",
           "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge; recursive graph traversal and cache semantics still lack a general correspondence theorem. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -166,7 +168,7 @@
       }
     ]
   },
-  "closure_sha256": "b3afc41fe5320289fd8d8629e93b79eac2f8ae4669f2ea4335cc12620455f8d6",
+  "closure_sha256": "9a26b04ef7696616dd1669105b5401de7d9314c9e56848c3a21fc8cc000cd534",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -616,14 +618,16 @@
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
         "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/C3Semantics.lean",
         "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
       "checks": [
         "Tests/PaperMetaPrototype.lean",
         "Tests/PaperC3.lean",
+        "Tests/PaperC3Semantics.lean",
         "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge; recursive graph traversal and cache semantics still lack a general correspondence theorem. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -814,12 +818,14 @@
       "status": "lean_translation",
       "title": "Appendix A C3 algorithm",
       "implementation": [
-        "LeanPoo/Prototype/C3.lean"
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/C3Semantics.lean"
       ],
       "checks": [
-        "Tests/PaperC3.lean"
+        "Tests/PaperC3.lean",
+        "Tests/PaperC3Semantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons; no whole-policy C3/C4 equivalence claim."
+      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output now have all-candidate-list kernel proofs; generic graph recursion/cache correspondence and C3/C4 policy equivalence remain unproved."
     },
     {
       "id": "helpers",
@@ -1688,6 +1694,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/C3Semantics.lean": {
+      "sha256": "ed23b6260d1b403d61262d343e8dfe50d58c2daa7fd700a9e69fffbb49b1af3f",
+      "physical_lines": 191,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/CheckedFunction.lean": {
       "sha256": "824a162b3abbbd4213090817549b963e4e2a2d855b92c156dd460289577e4b12",
       "physical_lines": 29,
@@ -2022,6 +2035,20 @@
         70
       ]
     },
+    "Tests/PaperC3Semantics.lean": {
+      "sha256": "c7b383702df57b893214115f4a0e3d43446960e65cddd4642e3f1db57f494bc1",
+      "physical_lines": 52,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        9,
+        10,
+        11,
+        13
+      ],
+      "eval_lines": [
+        38
+      ]
+    },
     "Tests/PaperCheckedMeta.lean": {
       "sha256": "33085b271805e0ac1dc278a0e794ee8910043acd86cdf4508f7033473062d01c",
       "physical_lines": 56,
@@ -2199,8 +2226,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "b3afc41fe5320289fd8d8629e93b79eac2f8ae4669f2ea4335cc12620455f8d6",
-      "physical_lines": 156,
+      "sha256": "9a26b04ef7696616dd1669105b5401de7d9314c9e56848c3a21fc8cc000cd534",
+      "physical_lines": 158,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2364,6 +2391,7 @@
     "LeanPoo/Prototype/AVL.lean",
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
+    "LeanPoo/Prototype/C3Semantics.lean",
     "LeanPoo/Prototype/CheckedFunction.lean",
     "LeanPoo/Prototype/CheckedMetaPrototype.lean",
     "LeanPoo/Prototype/Class.lean",
@@ -2482,6 +2510,7 @@
     "Tests/OrderRelation.lean",
     "Tests/OrdinaryNode.lean",
     "Tests/PaperC3.lean",
+    "Tests/PaperC3Semantics.lean",
     "Tests/PaperCheckedMeta.lean",
     "Tests/PaperDescriptorReflection.lean",
     "Tests/PaperDictionaryRecord.lean",

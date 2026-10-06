@@ -80,6 +80,7 @@ import LeanPoo.Prototype.C3
 import LeanPoo.Prototype.DictionaryRecord
 import LeanPoo.Prototype.MetaPrototype
 import LeanPoo.Prototype.CheckedMetaPrototype
+import LeanPoo.Prototype.C3Semantics
 import LeanPoo.Prototype.KeyedPrototype
 import LeanPoo.Prototype.CheckedFunction
 import LeanPoo.Prototype.FiniteFix
