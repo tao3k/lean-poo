@@ -50,4 +50,23 @@ def RecordDescription.set [DecidableEq Key] (description : RecordDescription Key
   return { record with lookup := fun query =>
     if same : query = key then some (same.symm ▸ checked) else record.lookup query }
 
+/-- A declared accepted update supplies exactly the requested value. -/
+theorem RecordDescription.set_lookup_same [DecidableEq Key]
+    (description : RecordDescription Key Value) (record : Record Key Value)
+    (key : Key) (value : Value key)
+    (declared : description.keys.any (fun candidate => decide (candidate = key)) = true)
+    (accepted : (description.field key).accepts value = true) :
+    (description.set record key value).map (fun updated => updated.lookup key) = .ok (some value) := by
+  simp [set, Descriptor.validate, declared, accepted, Except.map, Functor.map]
+
+/-- Updating one field preserves every differently named dependent field. -/
+theorem RecordDescription.set_lookup_other [DecidableEq Key]
+    (description : RecordDescription Key Value) (record : Record Key Value)
+    (key query : Key) (value : Value key)
+    (different : query ≠ key)
+    (declared : description.keys.any (fun candidate => decide (candidate = key)) = true)
+    (accepted : (description.field key).accepts value = true) :
+    (description.set record key value).map (fun updated => updated.lookup query) = .ok (record.lookup query) := by
+  simp [set, Descriptor.validate, declared, accepted, different, Except.map, Functor.map]
+
 end LeanPoo.Prototype

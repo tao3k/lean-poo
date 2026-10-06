@@ -36,7 +36,7 @@ later elects that stronger completion standard.
 
 - [X] Pin original POOF paper commit, content hash and complete heading outline.
 - [X] Classify all 90 headings into 45 reviewed units; retain rationale and limits.
-- [X] Bind 66 local evidence files and 308 source filenames; check drift without downloading the reference in CI.
+- [X] Bind 70 local evidence files and 312 source filenames; check drift without downloading the reference in CI.
 - [X] Distinguish observation examples, assertions, source identity and semantic proof claims.
 - [X] Correct broad completion wording and link the modular whole-paper audit.
 - [X] Reviewed typed concrete construction/case path reproduced and guarded.

@@ -28,17 +28,22 @@
         "C3 cached parent merge",
         "shared ancestor composition",
         "original ten-object graph",
-        "retained function/supers/precedence overrides"
+        "retained function/supers/precedence overrides",
+        "shared memoized C3 batch traversal",
+        "checked retained-cache admission",
+        "reusable frozen metadata/function plan"
       ],
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
-        "LeanPoo/Prototype/C3.lean"
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
       "checks": [
         "Tests/PaperMetaPrototype.lean",
-        "Tests/PaperC3.lean"
+        "Tests/PaperC3.lean",
+        "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "simple-types",
@@ -75,20 +80,25 @@
         "nested metadata-object description",
         "generated validator/schema/inspection",
         "typed field updates",
-        "exact descriptor/object reconstruction"
+        "exact descriptor/object reconstruction",
+        "prepared generated JSON codec",
+        "strict wire and refinement admission",
+        "typed field update lookup laws"
       ],
       "implementation": [
         "LeanPoo/Prototype/RecordDescription.lean",
         "LeanPoo/Prototype/DescriptorReflection.lean",
         "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/RecordCodec.lean"
       ],
       "checks": [
         "Tests/PaperDescriptorReflection.lean",
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/PaperRecordCodec.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
     },
     {
       "id": "pure-linearity",

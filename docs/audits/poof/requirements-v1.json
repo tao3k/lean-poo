@@ -293,13 +293,15 @@
       "title": "Multiple inheritance",
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
-        "LeanPoo/Prototype/C3.lean"
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
       "checks": [
         "Tests/PaperMetaPrototype.lean",
-        "Tests/PaperC3.lean"
+        "Tests/PaperC3.lean",
+        "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -392,14 +394,16 @@
         "LeanPoo/Prototype/DescriptorReflection.lean",
         "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/RecordCodec.lean"
       ],
       "checks": [
         "Tests/PaperDescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
-        "docs/audits/poof/closure-v1.json"
+        "docs/audits/poof/closure-v1.json",
+        "Tests/PaperRecordCodec.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
     },
     {
       "id": "typeclass-correspondence",

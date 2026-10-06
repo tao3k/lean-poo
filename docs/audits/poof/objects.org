@@ -56,4 +56,11 @@ inherited values, missing-slot refusals and a cold failing slot.
 [[file:../../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] guards all three ordinary metadata slot overrides,
 C3 diamond caches, a special constant-record base and retained snapshots.
 These operations are implemented; unrestricted dynamic identity, arbitrary
-cached-ancestry correctness and all self-descriptor automation remain open.
+cached-ancestry correctness through the raw API and universal self-descriptor automation remain open.
+[[file:../../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] adds an explicit checked preparation path: all retained
+caches are compared with the current C3 graph; function, parents and order are
+frozen together before repeated instantiation. It rejects six poisoned caches
+and five invalid graphs, and guards metadata whose getters depend on precedence.
+[[file:../../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] generates codecs from one finite field catalog, guards
+102 wire round trips and rejects malformed wire/schema/record input. Field
+update lookup laws are kernel checked; callable serialization remains outside scope.

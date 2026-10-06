@@ -38,7 +38,9 @@ use ~selfOf.validate~ when also admitting its semantic refinement.
 
 Inspection uses a codec when available and otherwise the descriptor's display.
 Schema records field names/types/codec availability. This generates metadata and
-presentation, not arbitrary callable serialization or universal function checking.
+presentation. [[file:checked-preparation.org][RecordCodec.prepare]] also generates admitted JSON codecs for fully
+codable catalogs. Arbitrary callable serialization and universal function checking
+remain outside this interface.
 Functions are statically typed; ~checkedCall~ / ~checkedClass~ admit actual results.
 Object inspection forces the completed result deliberately, while leaving its
 inherited base unforced. Inspecting an unsafe divergent result can still diverge.

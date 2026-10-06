@@ -11,6 +11,8 @@ private def graph : C3.Graph :=
 #guard C3.removeNulls [["a","b","c"],[],["d","e"],[],["f"],[],[]] == [["a","b","c"],["d","e"],["f"]]
 #guard C3.removeNext "a" [["a","b"],["b","a"],[],["a"]] == [["b"],["b","a"]]
 -- paper:1897 (the following four assertions)
+#guard (C3.linearizeMany graph []).toOption == some []
+#guard (C3.linearizeMany graph ["missing"]) matches .error (.unknownNode "missing")
 #guard (C3.linearize graph "O").toOption == some ["O"]
 #guard (C3.linearize graph "A").toOption == some ["A","O"]
 #guard (C3.linearize graph "K1").toOption == some ["K1","A","B","C","O"]
@@ -56,10 +58,13 @@ private def run : IO Unit := do
       for three in parentOrders 3 ["0","1","2"] do
         let nodes : C3.Graph := [("0",[]),("1",one),("2",two),("3",three)]
         graphs := graphs+1
+        let roots := ["0","1","2","3"]
+        unless (C3.linearizeMany nodes roots).toOption == roots.mapM (oracle nodes 5) do
+          throw (IO.userError "batched C3 differs from independent oracle")
         for root in ["0","1","2","3"] do
           unless (C3.linearize nodes root).toOption == oracle nodes 5 root do
             throw (IO.userError "C3 differs from independent recursive merge")
           cases := cases+1
   unless graphs == 160 && cases == 640 do throw (IO.userError "C3 coverage drift")
-  IO.println s!"POOF-C3-OK paperOrders=4 rejectionCases=5 graphs={graphs} oracleComparisons={cases}"
+  IO.println s!"POOF-C3-OK paperOrders=4 rejectionCases=5 graphs={graphs} oracleComparisons={cases} batchedComparisons={cases}"
 #eval run

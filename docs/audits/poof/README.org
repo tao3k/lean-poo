@@ -28,7 +28,7 @@ POOF paper, not every other essay in the same reference checkout.
 | [[file:advanced.org][Appendices and research proposals]] | C3, dispatch, combination, lenses, notation and fixed points |
 | [[file:gaps.org][Closure checklist]] | Closed typed operations and stronger research gates |
 | [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
-| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 308 source filenames and 66 evidence-file hashes |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 312 source filenames and 70 evidence-file hashes |
 
 * Status meaning
 
@@ -68,5 +68,5 @@ the receipt. Do not merely regenerate to turn a drift failure into a pass.
 [[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
 binds the six remaining constructions. Receipts bind manual review and code
 identity; actual execution and kernel theorem checks are separate evidence.
-Current gate: 150 atoms plus four diagnostics, 48 native admissions and 16
+Current gate: 152 atoms plus four diagnostics, 48 native admissions and 16
 supervisor controls. No external OpenAI integration or measured saving is added.

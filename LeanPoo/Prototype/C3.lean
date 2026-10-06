@@ -36,14 +36,28 @@ private def visit (graph : Graph) (name : String) (path : List String) (cache : 
     let result := name :: tail.output
     return (result,current.insert name result)
 
-/-- Ordinary C3 over a finite graph. Memoize shared ancestors within one call.
-    Duplicate node names and duplicate direct parents are rejected explicitly. -/
-def linearize (graph : Graph) (root : String) : Except LeanPoo.C4.Error (List String) := do
+private def validateGraph (graph : Graph) : Except LeanPoo.C4.Error Unit := do
   let mut seen : Std.HashSet String := {}
   for (name,parents) in graph do
     if seen.contains name then throw (.duplicateNode name)
     seen := seen.insert name
     if parents.length != (LeanPoo.C4.unique parents).length then throw .inconsistentOrder
+
+/-- Validate one finite graph and share ancestor computations across roots. -/
+def linearizeMany (graph : Graph) (roots : List String) :
+    Except LeanPoo.C4.Error (List (List String)) := do
+  validateGraph graph
+  let mut cache : Cache := {}
+  let mut orders := []
+  for root in roots do
+    let (order, updated) ← visit graph root [] cache (graph.length+1)
+    cache := updated
+    orders := order :: orders
+  return orders.reverse
+
+/-- Ordinary C3 over a finite graph. Duplicate names/parents are refused. -/
+def linearize (graph : Graph) (root : String) : Except LeanPoo.C4.Error (List String) := do
+  validateGraph graph
   return (← visit graph root [] {} (graph.length+1)).1
 
 end LeanPoo.Prototype.C3

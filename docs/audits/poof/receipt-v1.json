@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "8fc5087f4c1e305dab4d6932eb785b838df7a7bcea1a7117f4709aa61ba4819e",
+  "requirements_sha256": "2b152f0a75953b6d531e891299ef747c93e891ff29efe874dd8ef052a2e878a3",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -40,17 +40,22 @@
           "C3 cached parent merge",
           "shared ancestor composition",
           "original ten-object graph",
-          "retained function/supers/precedence overrides"
+          "retained function/supers/precedence overrides",
+          "shared memoized C3 batch traversal",
+          "checked retained-cache admission",
+          "reusable frozen metadata/function plan"
         ],
         "implementation": [
           "LeanPoo/Prototype/MetaPrototype.lean",
-          "LeanPoo/Prototype/C3.lean"
+          "LeanPoo/Prototype/C3.lean",
+          "LeanPoo/Prototype/CheckedMetaPrototype.lean"
         ],
         "checks": [
           "Tests/PaperMetaPrototype.lean",
-          "Tests/PaperC3.lean"
+          "Tests/PaperC3.lean",
+          "Tests/PaperCheckedMeta.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+        "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
       },
       {
         "id": "simple-types",
@@ -87,20 +92,25 @@
           "nested metadata-object description",
           "generated validator/schema/inspection",
           "typed field updates",
-          "exact descriptor/object reconstruction"
+          "exact descriptor/object reconstruction",
+          "prepared generated JSON codec",
+          "strict wire and refinement admission",
+          "typed field update lookup laws"
         ],
         "implementation": [
           "LeanPoo/Prototype/RecordDescription.lean",
           "LeanPoo/Prototype/DescriptorReflection.lean",
           "LeanPoo/Prototype/PrototypeReflection.lean",
           "LeanPoo/Prototype/Class.lean",
-          "LeanPoo/Prototype/Types.lean"
+          "LeanPoo/Prototype/Types.lean",
+          "LeanPoo/Prototype/RecordCodec.lean"
         ],
         "checks": [
           "Tests/PaperDescriptorReflection.lean",
-          "Tests/IntegratedPrototype.lean"
+          "Tests/IntegratedPrototype.lean",
+          "Tests/PaperRecordCodec.lean"
         ],
-        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
       },
       {
         "id": "pure-linearity",
@@ -149,7 +159,7 @@
       }
     ]
   },
-  "closure_sha256": "bdc34b6da1b41a6c71d72fb7479db687a76a73ee8da5ffffd07fa71e0722af25",
+  "closure_sha256": "573d0a26b6ef5432f4c2d1e161509af6364b03efa6c970fbd73fc9f1b150038a",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -590,13 +600,15 @@
       "title": "Multiple inheritance",
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
-        "LeanPoo/Prototype/C3.lean"
+        "LeanPoo/Prototype/C3.lean",
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
       ],
       "checks": [
         "Tests/PaperMetaPrototype.lean",
-        "Tests/PaperC3.lean"
+        "Tests/PaperC3.lean",
+        "Tests/PaperCheckedMeta.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted."
+      "boundary": "Paper C3 exists as a separate typed object path. The main C4 object path has its own policy; no policy equivalence is asserted. The checked preparation path validates all registry caches against C3, then freezes function/supers/order together; raw metadata overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
     },
     {
       "id": "meta-prototype",
@@ -689,14 +701,16 @@
         "LeanPoo/Prototype/DescriptorReflection.lean",
         "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/RecordCodec.lean"
       ],
       "checks": [
         "Tests/PaperDescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
-        "docs/audits/poof/closure-v1.json"
+        "docs/audits/poof/closure-v1.json",
+        "Tests/PaperRecordCodec.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established."
+      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed."
     },
     {
       "id": "typeclass-correspondence",
@@ -1651,8 +1665,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3.lean": {
-      "sha256": "f6f2e1b6ab36307af7a523a957d3fc90b4b303fd6838b7c1853060ffe62dd935",
-      "physical_lines": 49,
+      "sha256": "d9e581314fe8a715f5e40aece889b3d9455f9b77b8f60a67c8e22753e3a9a88a",
+      "physical_lines": 63,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1663,6 +1677,16 @@
       "unsafe_declaration_lines": [
         12,
         22
+      ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/CheckedMetaPrototype.lean": {
+      "sha256": "8cf98723532c98a4d7fb7545a81fe83339c9a9ac46252e74cacafaed297691e1",
+      "physical_lines": 55,
+      "unsafe_declaration_lines": [
+        40,
+        51
       ],
       "guard_lines": [],
       "eval_lines": []
@@ -1817,9 +1841,16 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/RecordCodec.lean": {
+      "sha256": "5b80578c96c35944cf9b1b57194f2832e73ed870cbd4bfefce91f2dff3a1bc0d",
+      "physical_lines": 50,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/RecordDescription.lean": {
-      "sha256": "e1fbae507e4209414c3f5d7d754d79ab617011151514c73d225a8bea5f14baa9",
-      "physical_lines": 53,
+      "sha256": "d60c785ceb67ff072d4505fb6ad5b622359ed9431df23e9e3047971946629e8e",
+      "physical_lines": 72,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1937,8 +1968,8 @@
       "eval_lines": []
     },
     "Tests/PaperC3.lean": {
-      "sha256": "da398b884e6cacbda3b7af11c48b45a2876abb1618e771460f5c920258aca8ba",
-      "physical_lines": 65,
+      "sha256": "78480510267e6cf9a6a12178c737a5aa4cca5ae96a68339811040808fa45e318",
+      "physical_lines": 70,
       "unsafe_declaration_lines": [],
       "guard_lines": [
         9,
@@ -1952,10 +1983,21 @@
         19,
         20,
         21,
-        22
+        22,
+        23,
+        24
       ],
       "eval_lines": [
-        65
+        70
+      ]
+    },
+    "Tests/PaperCheckedMeta.lean": {
+      "sha256": "33085b271805e0ac1dc278a0e794ee8910043acd86cdf4508f7033473062d01c",
+      "physical_lines": 56,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        55
       ]
     },
     "Tests/PaperDescriptorReflection.lean": {
@@ -2013,6 +2055,16 @@
       "eval_lines": [
         84,
         85
+      ]
+    },
+    "Tests/PaperRecordCodec.lean": {
+      "sha256": "f08e8fd1530a91018c8ed4363f39e60fbd36da5e3d23514c70f1899035c50f8e",
+      "physical_lines": 74,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        70,
+        71
       ]
     },
     "Tests/PaperRepresentations.lean": {
@@ -2087,8 +2139,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "bdc34b6da1b41a6c71d72fb7479db687a76a73ee8da5ffffd07fa71e0722af25",
-      "physical_lines": 139,
+      "sha256": "573d0a26b6ef5432f4c2d1e161509af6364b03efa6c970fbd73fc9f1b150038a",
+      "physical_lines": 149,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2253,6 +2305,7 @@
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
     "LeanPoo/Prototype/CheckedFunction.lean",
+    "LeanPoo/Prototype/CheckedMetaPrototype.lean",
     "LeanPoo/Prototype/Class.lean",
     "LeanPoo/Prototype/Compose.lean",
     "LeanPoo/Prototype/Computation.lean",
@@ -2272,6 +2325,7 @@
     "LeanPoo/Prototype/Order.lean",
     "LeanPoo/Prototype/PrototypeReflection.lean",
     "LeanPoo/Prototype/Record.lean",
+    "LeanPoo/Prototype/RecordCodec.lean",
     "LeanPoo/Prototype/RecordDescription.lean",
     "LeanPoo/Prototype/SkewLens.lean",
     "LeanPoo/Prototype/SlotSpec.lean",
@@ -2366,12 +2420,14 @@
     "Tests/OrderRelation.lean",
     "Tests/OrdinaryNode.lean",
     "Tests/PaperC3.lean",
+    "Tests/PaperCheckedMeta.lean",
     "Tests/PaperDescriptorReflection.lean",
     "Tests/PaperDictionaryRecord.lean",
     "Tests/PaperFixedPoints.lean",
     "Tests/PaperLinearState.lean",
     "Tests/PaperMetaPrototype.lean",
     "Tests/PaperPrototypeChecks.lean",
+    "Tests/PaperRecordCodec.lean",
     "Tests/PaperRepresentations.lean",
     "Tests/PaperTrees.lean",
     "Tests/ParentInvariant.lean",
