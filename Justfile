@@ -246,6 +246,7 @@ _check-contracts:
     {{lean}} Tests/PaperFixedPoints.lean
     {{lean}} Tests/PaperFiniteFix.lean
     {{lean}} Tests/PaperRecordDispatch.lean
+    {{lean}} Tests/PaperRecordComplexRelation.lean
     {{lean}} Tests/PaperTrees.lean
     {{lean}} Tests/PaperC3.lean
     {{lean}} Tests/PaperC3Semantics.lean

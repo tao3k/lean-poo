@@ -64,6 +64,14 @@ def CheckedRecord.compute [DecidableEq Key] (key : Key)
     (self inherited : CheckedRecord Key Value Error) : CheckedRecord Key Value Error :=
   CheckedRecord.slot key (calculate self) inherited
 
+/-- A final-self calculation that propagates a checked read failure. -/
+def CheckedRecord.computeM [DecidableEq Key] (key : Key)
+    (calculate : CheckedRecord Key Value Error → Except Error (Value key))
+    (self inherited : CheckedRecord Key Value Error) : CheckedRecord Key Value Error :=
+  fun query =>
+    if same : query = key then same.symm ▸ calculate self
+    else inherited query
+
 /-- Typed slot override has the same checked observations on every key. -/
 theorem Record.toChecked_slot [DecidableEq Key]
     (key : Key) (value : Value key) (self inherited : Record Key Value)
@@ -109,5 +117,27 @@ theorem Record.toChecked_compute [DecidableEq Key]
     CheckedRecord.slot key (calculateSource sourceSelf) sourceInherited
   simpa only [selfCalculation, inheritedExact] using
     (Record.toChecked_slot key (calculateTarget self) self inherited missing)
+
+/-- A total typed calculation and an error-propagating source calculation
+have the same checked record when the source's final-self reads succeed with
+the typed value. Other keys preserve the inherited checked outcome exactly. -/
+theorem Record.toChecked_computeM [DecidableEq Key]
+    (key : Key) (calculateTarget : Record Key Value → Value key)
+    (calculateSource : CheckedRecord Key Value Error → Except Error (Value key))
+    (self inherited : Record Key Value)
+    (sourceSelf sourceInherited : CheckedRecord Key Value Error)
+    (missing : Key → Error)
+    (calculation : calculateSource sourceSelf = .ok (calculateTarget self))
+    (inheritedExact : inherited.toChecked missing = sourceInherited) :
+    ((Record.compute key calculateTarget) self inherited).toChecked missing =
+      CheckedRecord.computeM key calculateSource sourceSelf sourceInherited := by
+  change ((Record.slot key (calculateTarget self)) self inherited).toChecked missing =
+    CheckedRecord.computeM key calculateSource sourceSelf sourceInherited
+  rw [Record.toChecked_slot]
+  funext query
+  by_cases same : query = key
+  · subst query
+    simp [CheckedRecord.slot, CheckedRecord.computeM, calculation]
+  · simp [CheckedRecord.slot, CheckedRecord.computeM, same, inheritedExact]
 
 end LeanPoo.Prototype

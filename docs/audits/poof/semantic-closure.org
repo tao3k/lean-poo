@@ -18,7 +18,7 @@ not silently promoted into specified executable behavior.
 | Area | Current evidence | Stronger closure evidence still needed |
 |------+------------------+----------------------------------------|
 | Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
-| Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y override-modify-final-self fragment | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
+| Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y/z integral complex-coordinate fragment with checked final-self reads | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
 | C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list merge correspondence; arbitrary-graph cached and uncached singleton theorems; exact cached/uncached outcome equality for empty roots, graph-validation errors, absent first roots and first-parent self cycles; recursive source-style graph trace for successful uncached runs; production cached successes directly have fuel-independent graph derivations through a preserved cache invariant | Prove complete cached/uncached success and error outcome equivalence for valid finite graphs with nonempty roots, then connect precedence to composition |
 | Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
 | Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
@@ -42,6 +42,14 @@ their error propagation; its reachable x/y reads are proved present. At
 depth two, the source dispatcher has a fixed-point certificate and the typed
 record's checked observations remain stable. This does not extend the
 correspondence to arbitrary Scheme values, effects or unrestricted recursion.
+
+[[file:../../../Tests/PaperRecordComplexRelation.lean][PaperRecordComplexRelation]] follows the source's ~z<-xy~ construction more closely:
+~z~ holds the integral pair ~(x,y)~, and its source calculation reads ~x~ and
+~y~ through the checked final self. The relation includes successful reads
+as premises for the reusable ~toChecked_computeM~ transport theorem. It proves
+all-key checked equality at every finite depth, depth-two source stability,
+and persistent target observations. The integral pair is a typed adaptation
+of the paper's complex number, not a proof about Racket's numeric tower.
 
 [[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the Appendix A merge selector and normalized step
 agree with the certified Lean merger for every candidate list. It constructs

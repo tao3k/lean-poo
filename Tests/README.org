@@ -366,8 +366,8 @@ PaperPrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 PaperDictionaryRecord guards 33 contexts and 528 reads; PaperMetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 147 atoms plus four diagnostics, 48 native admissions and
-15 Python supervisor controls. Older counts above belong to their stated milestones.
+Current inventory: 157 atoms plus four diagnostics, 48 native admissions and
+16 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
 
@@ -387,6 +387,11 @@ String key at every finite unfolding depth. Its paper-style self calculation
 propagates errors, the source stabilizes at depth two, and typed observations
 remain stable afterward. The reusable slot/modify/compute laws expose the
 same missing-key behavior to clients.
+PaperRecordComplexRelation strengthens this to the paper's ~x/y/z~ shape:
+~z~ is an integral complex pair read from final self with checked error
+propagation. It proves exact observations at every key and finite depth,
+including unknown-key errors, and source stability at depth two. The public
+~computeM~ and ~toChecked_computeM~ APIs carry this calculation across layers.
 PaperC3Semantics proves the Appendix A selector, normalized deletion and
 paper-style merge trace agree with the certified merger for arbitrary candidate
 lists. Each certificate preserves all parent orders and covers exactly the

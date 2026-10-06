@@ -84,6 +84,14 @@ not a proven deletion of 99 arguments from the whole implementation.
   builder layer. Factory bodies keep their own behavior; runtime speedup is
   not measured here.
 
+The paper's new ~CheckedRecord.computeM~ and ~Record.toChecked_computeM~
+address error-propagating final-self slot calculations. The inspected Euler
+call point above directly constructs a typed ~Budget~ from existing theorems;
+it has no checked record dispatcher or final-self slot read. This paper
+capability therefore has no identified Euler replacement site or measured
+~require~, line, or maintenance reduction. It remains a reference-only
+applicability check, with no upstream code change.
+
 * Completed and open gates
 
 - [X] Immutable source pin and clean reference checkout.

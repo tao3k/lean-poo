@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "cf4aaaee195462b5059dca4cf7c70e0b13745aa9a015994ed1b1fade715a2bcf",
+  "requirements_sha256": "9f5d358ef9efee197793eb5ead8f47fde4d34b2aaf3e5e7b55b1b6f70b412848",
   "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -391,7 +391,8 @@
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean"
+        "Tests/PaperRecordDispatch.lean",
+        "Tests/PaperRecordComplexRelation.lean"
       ],
       "boundary": "Dependent key/value family, Option storage and checked missing-key dispatch. The original Scheme message syntax is not interpreted."
     },
@@ -406,7 +407,8 @@
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean"
+        "Tests/PaperRecordDispatch.lean",
+        "Tests/PaperRecordComplexRelation.lean"
       ],
       "boundary": "slotGen, self and delayed inherited values; checked slot/modify/compute laws preserve all-key observations for the stated error policy. General Scheme effects remain outside this typed fragment."
     },
@@ -422,9 +424,10 @@
       "checks": [
         "Tests/PaperPrototypeChecks.lean",
         "Tests/PaperRecordDispatch.lean",
+        "Tests/PaperRecordComplexRelation.lean",
         "docs/audits/poof/checks-v1.json"
       ],
-      "boundary": "All ten core record source checks guarded; the x/y override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
+      "boundary": "All ten core record source checks guarded; the x/y/z override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
     },
     {
       "id": "slot-construction",
@@ -1916,8 +1919,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/RecordDispatch.lean": {
-      "sha256": "29d47d4be61b506867603df340bad41d9daf165c27d45bf96eb7a6925c446ec5",
-      "physical_lines": 113,
+      "sha256": "c210465619aefa07edc0a03a113de3fb1fd7ad721230ecc891a620da5e7426f3",
+      "physical_lines": 143,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2183,6 +2186,22 @@
       "eval_lines": [
         81,
         82
+      ]
+    },
+    "Tests/PaperRecordComplexRelation.lean": {
+      "sha256": "d93c2a90d863993b097668c77594928994097d82bb4404354334d290d4d5e614",
+      "physical_lines": 184,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        160,
+        161,
+        162,
+        163,
+        164,
+        170
+      ],
+      "eval_lines": [
+        177
       ]
     },
     "Tests/PaperRecordDispatch.lean": {
@@ -2569,6 +2588,7 @@
     "Tests/PaperMetaPrototype.lean",
     "Tests/PaperPrototypeChecks.lean",
     "Tests/PaperRecordCodec.lean",
+    "Tests/PaperRecordComplexRelation.lean",
     "Tests/PaperRecordDispatch.lean",
     "Tests/PaperRepresentations.lean",
     "Tests/PaperTrees.lean",
