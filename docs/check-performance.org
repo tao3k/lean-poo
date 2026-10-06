@@ -588,3 +588,11 @@ Set ~LEAN_POO_ATOM_RECEIPT~ to a TMP JSON path to retain per-file child CPU,
 wall time and transcript hashes from the mandatory gate. Explicit ~--receipt~
 takes precedence. This adds observation without repeating the complete gate,
 changing worker limits or changing failure admission; v1 schema is unchanged.
+
+* Whole-paper POOF audit gate
+
+The audit adds no Lean atom or native admission: inventory remains 141 atoms
+plus four diagnostics and 48 native admissions. The supervisor suite now has
+14 tests, including three audit drift/refusal controls. ~check-docs~ additionally
+checks the saved paper-outline/config/tool identity and local evidence hashes.
+It does not download reference repositories or execute their evaluators.

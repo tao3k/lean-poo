@@ -588,6 +588,11 @@ the value returned by the new runtime through both read paths.
 
 * Conclusion
 
+This section assesses the bounded Lean-native construction path. It does not
+establish whole-paper completion. The [[file:audits/poof/README.org][whole-paper audit]] records missing
+Order/BST/AVL cases, partial source-test and representation correspondences,
+C3/C4 policy differences and the paper's explicit research proposals.
+
 The POOF PO construction has an executable Lean main path:
 ~prototype -> composition -> generator/delay -> fixed point -> object -> C4 composition~.
 The independent [[file:../Examples/PrototypeCore.lean][prototype core]] and
@@ -598,20 +603,20 @@ The independent [[file:../Examples/PrototypeCore.lean][prototype core]] and
 ~just check-po~, provide executable receipts. The C4 plan connects the
 general first-class object construction to typed slot resolution. Descriptor
 classes and a pure-to-mutable cell cover the paper's constructive extensions.
-The paper's constructive prototype path and the in-scope Gerbil-POO
-semantic capabilities are implemented in Lean-native form. The operation
-inventory above gives the correspondence and ~just check~ executes the
-integrated construction. This is a complete implementation conclusion for
-the stated Lean-native scope, not a claim of Scheme API, macro, or wire-format
-compatibility. Gerbil's dynamic MOP and mutable hash-table optimization are
-language-specific implementation choices.
+The core prototype path and the listed in-scope Gerbil-POO capabilities have
+Lean-native implementations. The operation inventory describes those local
+correspondences and ~just check~ executes representative constructions. This
+does not complete every executable example or operation in the original POOF
+paper, and it is not a whole Scheme/Lean semantic equivalence theorem. Gerbil's
+dynamic MOP and mutable hash-table optimization have separate language and
+representation boundaries.
 
 * Completion gates
 
 The target is semantic capability using Lean's own types, functions, and
 type classes. Reproducing Scheme's dynamic MOP, macro syntax, or binary wire
-format is outside this target. These gates close the Lean-native PO
-reproduction.
+format is outside this target. These gates assess the bounded Lean-native PO
+construction; the whole-paper closure checklist remains separate.
 
 | Gate | State | Evidence |
 |------+-------+----------|

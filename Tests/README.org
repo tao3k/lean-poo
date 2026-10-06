@@ -348,3 +348,11 @@ reads. Vacuous-domain and forged-proof controls are included; two axiom reports
 contain propext/Quot.sound without Classical.choice. Current inventory: 141 atoms
 plus four diagnostics, 48 native admissions, eleven supervisor tests, 12 shards
 and 16 CI jobs.
+
+* Whole-paper audit controls
+
+Three Python supervisor controls reject removed outline entries, altered local
+evidence identity and an unreviewed original paper. The supervisor suite is now
+14 tests; Lean inventory remains 141 atoms plus four diagnostics, with 48 native
+admissions. ~check-docs~ checks the saved POOF audit without a reference checkout.
+This is audit integrity evidence, not a Scheme/Lean semantic equivalence test.

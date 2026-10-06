@@ -1,0 +1,57 @@
+#+TITLE: POOF audit — appendices and research boundaries
+
+[[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
+
+* Appendix A: executable source library
+
+The paper uses a literate Racket/Scheme evaluator. This audit reads its source;
+it does not run that evaluator or compare original runtime results to Lean.
+Therefore it does not claim the original library/test suite was reproduced.
+
+C3 (1851–1900) has a specific precedence policy and a concrete inheritance DAG.
+LeanPoo's public object path is C4. [[file:../../../LeanPoo/C4/ReferenceMerge.lean][ReferenceMerge]] proves structural merge
+facts in the C4 framework, and [[file:../../../Tests/C4Ranked.lean][C4Ranked]] tests that framework. Neither is
+an exact replay of the paper's C3 graph/results or whole-policy equivalence.
+Helper functions (1901–1942) and extra object checks (1943–1979) have selected
+Lean counterparts; an exhaustive function/check map is still open.
+
+* Appendix B: substantial existing implementations
+
+| Paper lines | Existing mechanism | Scope |
+|-------------+--------------------+-------|
+| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Typed registration, applicability, selection and context/cache controls |
+| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Ordered primary/before/after/around and user-defined combinations |
+| 2084–2154 | [[file:../../../LeanPoo/Prototype/Lens.lean][lensGen]], [[file:../../../LeanPoo/Prototype/SkewLens.lean][SkewLens]], [[file:../../../Examples/LensPrototype.lean][LensPrototype]], [[file:../../../Tests/SkewExtension.lean][SkewExtension]] | Actual getter/setter/wrapper constructor plus typed focus laws |
+
+The last row is implemented: the narrower Functional view/solver contract
+guides do not mean the whole repository lacks prototype setters. Full
+generalized prototype treatment is explicitly future work in the paper.
+The existing constructor is not evidence that every conceivable generalized
+combination, dynamic MOP or cross-library conflict policy has been solved.
+
+* Appendices C, D and E
+
+Appendix C (2155–2255) supplies explanatory type notation. Lean's dependent
+types replace that notation; no source row/subtyping calculus translation
+theorem is supplied. This is a formal correspondence question, rather than
+a missing literal notation parser.
+
+Appendix D (2256–2389) explains multiple ways to tie fixed points in eager and
+lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] uses an unsafe private reference cell and one shared
+thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
+There is no universal termination theorem or all-variants operational
+equivalence. The paper permits divergence; such a theorem is not required to
+implement unrestricted executable recursion. Safe finite dependency schedules
+have a stronger, separate contract and do not certify every unsafe knot.
+
+Appendix E (2390–2434) compares Scheme source sizes. The character/cons-cell
+figures are illustrative and do not impose Lean line-count requirements.
+
+* Future Work and related literature
+
+Related Work (1560–1800) describes other systems and research; reproducing each
+system is not a feature requirement. Future Work (1801–1830) proposes fuller
+generalized prototypes, meta-level type/logical constraints and staging/cache
+research. Those proposals must not be counted as completed formal results.
+Conversely, their open status alone does not invalidate the existing core
+executable construction. The audit preserves both distinctions.

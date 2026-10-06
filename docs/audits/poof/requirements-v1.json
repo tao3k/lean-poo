@@ -1,0 +1,584 @@
+{
+  "schema": "lean-poo.poof-requirements.v1",
+  "paper_commit": "9affa8fbbb4f12cbd98cb97f8b8b84474fc39429",
+  "paper_sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
+  "baseline_commit": "247d1d6094b6af1bb873f69564b271bc978730ed",
+  "rows": [
+    {
+      "id": "frontmatter",
+      "start_line": 1,
+      "status": "discussion",
+      "title": "Front matter and abstract",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Motivation and publication context; not executable requirements."
+    },
+    {
+      "id": "nucleus",
+      "start_line": 118,
+      "status": "lean_translation",
+      "title": "Minimal fix/mix nucleus",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/FixedPoint.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeCore.lean"
+      ],
+      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof."
+    },
+    {
+      "id": "claims-plan",
+      "start_line": 135,
+      "status": "discussion",
+      "title": "Claims and reading plan",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Broad OOP expressiveness claims are not established by local examples."
+    },
+    {
+      "id": "modular-computation",
+      "start_line": 172,
+      "status": "lean_translation",
+      "title": "Modular increments of computation",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Generator.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeCore.lean"
+      ],
+      "boundary": "Open self/inherited inputs and generators; typed Lean adaptation of untyped Scheme."
+    },
+    {
+      "id": "other-languages",
+      "start_line": 232,
+      "status": "discussion",
+      "title": "Applicability to other languages",
+      "implementation": [],
+      "checks": [],
+      "boundary": "No requirement to implement every language discussed."
+    },
+    {
+      "id": "records",
+      "start_line": 245,
+      "status": "lean_translation",
+      "title": "Records as functions",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "Dependent key/value family and Option missing values; no arbitrary Scheme message interface."
+    },
+    {
+      "id": "record-prototypes",
+      "start_line": 282,
+      "status": "lean_translation",
+      "title": "Record prototypes",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "slotGen, self and delayed inherited values; example outputs are observations."
+    },
+    {
+      "id": "basic-tests",
+      "start_line": 322,
+      "status": "partial",
+      "title": "Paper basic checks",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "Representative outputs exist; exact replay of every original @Checks case is not established."
+    },
+    {
+      "id": "slot-construction",
+      "start_line": 379,
+      "status": "lean_translation",
+      "title": "Building record prototypes",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/SlotSpec.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "Typed slot/modify/compute constructors; source expected-value suite not fully replicated."
+    },
+    {
+      "id": "compose",
+      "start_line": 468,
+      "status": "lean_translation",
+      "title": "Long-form basics and ordered composition",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Generator.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeCore.lean"
+      ],
+      "boundary": "Heterogeneous chain types and local laws; no paper operational-semantics relation."
+    },
+    {
+      "id": "bottom",
+      "start_line": 583,
+      "status": "partial",
+      "title": "Bottom and missing behavior",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean",
+        "LeanPoo/Prototype/Compose.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "Option, explicit callbacks and runtime divergence are different boundaries; no common untyped bottom formalization."
+    },
+    {
+      "id": "single-inheritance",
+      "start_line": 633,
+      "status": "lean_translation",
+      "title": "Single inheritance",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Object.lean"
+      ],
+      "checks": [
+        "Examples/FirstClassObject.lean"
+      ],
+      "boundary": "Typed child-over-parent composition and extension."
+    },
+    {
+      "id": "order-case",
+      "start_line": 674,
+      "status": "not_implemented",
+      "title": "Order prototype case",
+      "implementation": [],
+      "checks": [],
+      "boundary": "No corresponding end-to-end number/string/symbol order prototypes plus compare mixin found. C4 order relations do not implement this data-order example."
+    },
+    {
+      "id": "binary-tree-case",
+      "start_line": 737,
+      "status": "not_implemented",
+      "title": "Binary-tree dictionary case",
+      "implementation": [],
+      "checks": [],
+      "boundary": "No corresponding open-recursive binary-tree map node/acons/ref/afoldr implementation and paper-output controls found."
+    },
+    {
+      "id": "avl-case",
+      "start_line": 800,
+      "status": "not_implemented",
+      "title": "AVL override case",
+      "implementation": [],
+      "checks": [],
+      "boundary": "No corresponding node-only rebalance mixin, rotations, height checks or paper five-entry dictionary controls found."
+    },
+    {
+      "id": "numeric",
+      "start_line": 846,
+      "status": "lean_translation",
+      "title": "Numeric functions and number thunks",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Delayed.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeFunctions.lean",
+        "Examples/DelayedNumbers.lean"
+      ],
+      "boundary": "Representative numeric computations; observed outputs do not replay all paper checks."
+    },
+    {
+      "id": "computation-not-value",
+      "start_line": 883,
+      "status": "lean_translation",
+      "title": "Computations rather than values",
+      "implementation": [
+        "LeanPoo/Prototype/Delayed.lean",
+        "LeanPoo/Prototype/FixedPoint.lean"
+      ],
+      "checks": [
+        "Examples/DelayedNumbers.lean"
+      ],
+      "boundary": "Delayed self/super computes non-function values; premature forcing can diverge."
+    },
+    {
+      "id": "without-subtyping",
+      "start_line": 918,
+      "status": "lean_translation",
+      "title": "Use without subtyping",
+      "implementation": [
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Delayed.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeCore.lean"
+      ],
+      "boundary": "Explicit Lean intermediate types replace paper subtyping notation."
+    },
+    {
+      "id": "introspection",
+      "start_line": 943,
+      "status": "lean_translation",
+      "title": "Slot introspection",
+      "implementation": [
+        "LeanPoo/Object/Memo.lean",
+        "LeanPoo/Object/Schema.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery."
+    },
+    {
+      "id": "representations",
+      "start_line": 980,
+      "status": "partial",
+      "title": "Alternative instance/prototype representations",
+      "implementation": [
+        "LeanPoo/Object/Indexed.lean",
+        "LeanPoo/Object/Prepare.lean",
+        "LeanPoo/Prototype/Record.lean"
+      ],
+      "checks": [
+        "Tests/ObjectDefinition.lean"
+      ],
+      "boundary": "Several representations and local resolver equivalences exist; paper AVL-backed representation route is absent."
+    },
+    {
+      "id": "first-class",
+      "start_line": 1039,
+      "status": "lean_translation",
+      "title": "Unified instance/prototype objects",
+      "implementation": [
+        "LeanPoo/Prototype/Object.lean",
+        "LeanPoo/Object/Prototype.lean"
+      ],
+      "checks": [
+        "Examples/FirstClassObject.lean",
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Retained prototype/value pair and later extension; typed carriers and unsafe recursive instantiation."
+    },
+    {
+      "id": "multiple-inheritance",
+      "start_line": 1140,
+      "status": "partial",
+      "title": "Multiple inheritance",
+      "implementation": [
+        "LeanPoo/C4/Linearize.lean",
+        "LeanPoo/Object/SortedInheritance.lean"
+      ],
+      "checks": [
+        "Tests/SortedInheritance.lean",
+        "Tests/C4Ranked.lean"
+      ],
+      "boundary": "Main object order is C4; paper uses C3. Shared merge concepts and local proofs are not whole-policy equivalence."
+    },
+    {
+      "id": "meta-prototype",
+      "start_line": 1254,
+      "status": "partial",
+      "title": "Prototype as extensible meta-object",
+      "implementation": [
+        "LeanPoo/Object/Schema.lean",
+        "LeanPoo/Object/Prototype.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Typed schema/plan metadata exists; self-hosted dynamic meta-object protocol with overridable function/supers/precedence slots is not established."
+    },
+    {
+      "id": "further-features",
+      "start_line": 1315,
+      "status": "future_proposal",
+      "title": "Further feature overview",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Points to advanced extensions; evaluate the concrete Appendix B constructions separately."
+    },
+    {
+      "id": "class-prototypes",
+      "start_line": 1323,
+      "status": "lean_translation",
+      "title": "Classes as descriptor prototypes",
+      "implementation": [
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Object/Class.lean"
+      ],
+      "checks": [
+        "Tests/DescriptorClass.lean",
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Runtime descriptors compose over a fixed Lean carrier type; Scheme dynamic type universe not reproduced."
+    },
+    {
+      "id": "validation",
+      "start_line": 1359,
+      "status": "lean_translation",
+      "title": "I/O validation",
+      "implementation": [
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Object/Class.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility."
+    },
+    {
+      "id": "simple-types",
+      "start_line": 1388,
+      "status": "partial",
+      "title": "Simple type repertoire",
+      "implementation": [
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Selected Lean carriers and recognizers exist; no exhaustive mapping of all dynamic Scheme simple-type distinctions."
+    },
+    {
+      "id": "parameterized-types",
+      "start_line": 1409,
+      "status": "lean_translation",
+      "title": "Parameterized descriptors",
+      "implementation": [
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "List/array/map/option/product/sum/HList construction; typed rather than unrestricted dynamic values."
+    },
+    {
+      "id": "elaborate-types",
+      "start_line": 1420,
+      "status": "partial",
+      "title": "Self-describing elaborate descriptors",
+      "implementation": [
+        "LeanPoo/Prototype/Class.lean",
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Object/Class.lean"
+      ],
+      "checks": [
+        "Tests/IntegratedPrototype.lean"
+      ],
+      "boundary": "Function and object descriptors exist; self-description of all descriptor/prototype machinery and generated automation not established."
+    },
+    {
+      "id": "typeclass-correspondence",
+      "start_line": 1434,
+      "status": "discussion",
+      "title": "Classes/typeclasses correspondence",
+      "implementation": [
+        "LeanPoo/Prototype/Types.lean"
+      ],
+      "checks": [],
+      "boundary": "TypedValue and descriptors do not prove an automated bidirectional transformation between typeclasses and prototype classes."
+    },
+    {
+      "id": "pure-linearity",
+      "start_line": 1449,
+      "status": "partial",
+      "title": "Pure linearity and mutable/functional interaction",
+      "implementation": [
+        "LeanPoo/Object/Mutable.lean",
+        "LeanPoo/Prototype/Mutable.lean"
+      ],
+      "checks": [
+        "Tests/MutableObject.lean",
+        "Tests/MutablePrototype.lean"
+      ],
+      "boundary": "IO identity cells and persistent snapshots exist; no linear ownership calculus or pure/mutable isomorphism theorem."
+    },
+    {
+      "id": "mutable-protocol",
+      "start_line": 1496,
+      "status": "lean_translation",
+      "title": "Simplified mutable prototype protocol",
+      "implementation": [
+        "LeanPoo/Prototype/Mutable.lean"
+      ],
+      "checks": [
+        "Tests/MutablePrototype.lean"
+      ],
+      "boundary": "Parent/child effects share identity; standard layers stage persistent schema edits, not literal in-place Scheme hash mutation."
+    },
+    {
+      "id": "cache-proposals",
+      "start_line": 1525,
+      "status": "future_proposal",
+      "title": "Cache invalidation alternatives",
+      "implementation": [
+        "LeanPoo/Object/Incremental.lean",
+        "LeanPoo/Object/Cache.lean",
+        "LeanPoo/Proof/Invalidation.lean"
+      ],
+      "checks": [
+        "Tests/IncrementalObject.lean"
+      ],
+      "boundary": "Explicit dependency contracts and proof reuse are local extensions; no language-wide purity/effect inference or arbitrary-body invalidation."
+    },
+    {
+      "id": "related-work",
+      "start_line": 1560,
+      "status": "discussion",
+      "title": "Related work",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Other systems and semantic literature are context, not features to reproduce."
+    },
+    {
+      "id": "future-work",
+      "start_line": 1801,
+      "status": "future_proposal",
+      "title": "Future research",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Generalized MOP, full dependent formal treatment and staging/cache proposals remain research, not already-closed paper semantics."
+    },
+    {
+      "id": "code-library",
+      "start_line": 1831,
+      "status": "discussion",
+      "title": "Executable Racket library context",
+      "implementation": [],
+      "checks": [],
+      "boundary": "The original literate Racket/Scheme evaluator was not run or differentially compared by this audit."
+    },
+    {
+      "id": "c3",
+      "start_line": 1851,
+      "status": "partial",
+      "title": "Appendix A C3 algorithm",
+      "implementation": [
+        "LeanPoo/C4/ReferenceMerge.lean",
+        "LeanPoo/C4/Linearize.lean"
+      ],
+      "checks": [
+        "Tests/C4Ranked.lean"
+      ],
+      "boundary": "Structural merge proofs and C4 tests exist; standalone paper C3 graph/results and exact policy correspondence not established."
+    },
+    {
+      "id": "helpers",
+      "start_line": 1901,
+      "status": "partial",
+      "title": "Appendix A helper functions",
+      "implementation": [
+        "LeanPoo/Prototype/Record.lean"
+      ],
+      "checks": [
+        "Examples/RecordPrototype.lean"
+      ],
+      "boundary": "Lean constructors cover selected operations; no all-helper semantic translation checklist."
+    },
+    {
+      "id": "extra-checks",
+      "start_line": 1943,
+      "status": "partial",
+      "title": "Appendix A extra checks",
+      "implementation": [
+        "LeanPoo/Prototype/Object.lean"
+      ],
+      "checks": [
+        "Examples/FirstClassObject.lean"
+      ],
+      "boundary": "Selected object mixing cases observed; every paper expected value not guarded."
+    },
+    {
+      "id": "multiple-dispatch",
+      "start_line": 1980,
+      "status": "lean_translation",
+      "title": "Appendix B multiple dispatch",
+      "implementation": [
+        "LeanPoo/Object/Multimethod.lean",
+        "LeanPoo/Object/Subjective.lean"
+      ],
+      "checks": [
+        "Tests/MultipleDispatch.lean",
+        "Tests/SubjectiveDispatch.lean"
+      ],
+      "boundary": "Typed registration, per-context selection and cache controls; not a formal resolution of every cross-library extension/conflict policy in the discussion."
+    },
+    {
+      "id": "method-combination",
+      "start_line": 2060,
+      "status": "lean_translation",
+      "title": "Appendix B method fragments",
+      "implementation": [
+        "LeanPoo/Object/MethodCombination.lean",
+        "LeanPoo/Object/QualifiedMethods.lean"
+      ],
+      "checks": [
+        "Tests/QualifiedMethodCombination.lean",
+        "Tests/SimpleMethodCombination.lean"
+      ],
+      "boundary": "Ordered before/after/around/primary and user combinations; no CLOS syntax or universal standard-combination correspondence."
+    },
+    {
+      "id": "lens-constructor",
+      "start_line": 2084,
+      "status": "lean_translation",
+      "title": "Appendix B generalized lens constructor",
+      "implementation": [
+        "LeanPoo/Prototype/Lens.lean",
+        "LeanPoo/Prototype/SkewLens.lean",
+        "LeanPoo/Object/Lens.lean"
+      ],
+      "checks": [
+        "Examples/LensPrototype.lean",
+        "Tests/SkewExtension.lean"
+      ],
+      "boundary": "lensGen implements getter/setter/wrapper and skew-focus laws exist. The paper itself calls full generalized prototypes future work; no claim that all such semantics are closed."
+    },
+    {
+      "id": "type-notation",
+      "start_line": 2155,
+      "status": "discussion",
+      "title": "Appendix C type notation",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Lean dependent types replace expository notation; no formal source row/subtyping calculus translation is established."
+    },
+    {
+      "id": "fixed-point-variants",
+      "start_line": 2256,
+      "status": "partial",
+      "title": "Appendix D fixed-point functions",
+      "implementation": [
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/Compose.lean",
+        "LeanPoo/Prototype/Delayed.lean"
+      ],
+      "checks": [
+        "Examples/PrototypeCore.lean",
+        "Tests/DebugObject.lean"
+      ],
+      "boundary": "Shared unsafe thunk knot plus bounded diagnostics; no all eager/lazy/Y variants equivalence or universal termination theorem. Divergence is allowed by the paper."
+    },
+    {
+      "id": "minimalism",
+      "start_line": 2390,
+      "status": "discussion",
+      "title": "Appendix E code minimalism",
+      "implementation": [],
+      "checks": [],
+      "boundary": "Scheme cons-cell/character counts are illustrative, not Lean size or semantic requirements."
+    }
+  ],
+  "outline_sha256": "f3144a002c226adc281163ad4ad827cbf0c3fa8daf108a59c42b4e7bf7e8c096"
+}

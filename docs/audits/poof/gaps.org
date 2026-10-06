@@ -1,0 +1,46 @@
+#+TITLE: POOF closure checklist
+
+[[file:README.org][Audit index]]
+
+* Concrete executable-paper gaps
+
+- [ ] P0: Reproduce number/string/symbol Order prototypes and the inherited compare mixin, with source expected-value assertions.
+- [ ] P0: Build the open-recursive binary-tree map using the supplied Order; assert lookup, missing keys, overwrite, fold and ordered-input skew behavior.
+- [ ] P0: Add AVL balancing as the paper's node override; retain inherited insertion/lookup/fold, exercise rotations and heights, and assert the five-entry source case.
+- [ ] P1: Map every original @Checks case to a Lean assertion or explain an explicit typed adaptation. Printing via #eval is not an expected-value gate.
+- [ ] P1: Reproduce the paper C3 graph/results separately from C4. Either provide a bounded C3-compatible path or document the deliberate policy divergence; do not label C4 as proven paper C3 equivalence.
+- [ ] P1: Use the completed dictionary case to close the corresponding alternative object-representation example.
+- [ ] P1: Review meta-prototype function/supers/precedence slots and self-describing descriptor operations against explicit source operations; current static metadata is not evidence of full dynamic meta-object behavior.
+
+These are criteria for closing the concrete source example/operation path,
+not authorization in this PR to implement all of them. The audit PR records
+the gap and its acceptance evidence; follow-up implementation can be scoped
+to one coherent case rather than adding unrelated capabilities.
+
+* Formal and language boundaries
+
+- [ ] State an operational correspondence scope before claiming Scheme/Lean semantic equivalence; representative tests and local theorems are weaker evidence.
+- [X] Document general unsafe fixed points and possible divergence; do not require an impossible totality proof for unrestricted recursion.
+- [X] Keep safe finite dependency-instance proofs separate from general recursive thunk execution.
+- [X] Treat Scheme syntax/macros/wire formats and illustrative source-size counts as language choices, not missing Lean features by default.
+- [X] Recognize implemented lensGen getter/setter/wrapper and method combination; narrower Functional guides do not negate Prototype-layer capabilities.
+- [X] Classify explicit Future Work and literature separately from concrete executable requirements.
+
+Full operational correspondence and dependent formalization are research
+goals, not claims that the paper already supplied a formal specification or
+that all runtime behavior must become total. They remain open if the project
+later elects that stronger completion standard.
+
+* Audit receipt and reporting gates
+
+- [X] Pin original POOF paper commit, content hash and complete heading outline.
+- [X] Classify all 90 headings into 45 reviewed units; retain rationale and limits.
+- [X] Bind 50 local evidence files and 286 source filenames; check drift without downloading the reference in CI.
+- [X] Distinguish observation examples, assertions, source identity and semantic proof claims.
+- [X] Correct broad completion wording and link the modular whole-paper audit.
+- [ ] Whole concrete executable-paper case path reproduced and guarded.
+- [ ] Whole-paper semantic equivalence established (a separate stronger scope).
+
+Public Lean API additions in this audit: 0. External OpenAI integrations or
+measured maintenance savings in this audit: 0 / unmeasured. Neither count is
+used as evidence that the paper itself is fully implemented.

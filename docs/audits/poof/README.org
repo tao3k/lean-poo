@@ -1,0 +1,67 @@
+#+TITLE: Fare POOF whole-paper implementation audit
+
+* Verdict
+
+No: the entire paper is not implemented and verified in LeanPoo.
+The main prototype construction has a Lean implementation, but the complete
+Order → binary-tree dictionary → AVL override example is absent. Several
+representation/meta-object and source-test correspondences are partial.
+General fixed points remain executable unsafe recursion, not total kernel
+proofs. The paper itself permits divergence; this is a boundary, not a claim
+that its algorithm is incorrect.
+
+This audit reviews ~poof.scrbl~ at commit
+~9affa8fbbb4f12cbd98cb97f8b8b84474fc39429~, with SHA-256
+~ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17~.
+The implementation baseline is squash commit ~247d1d6~ on main. This is the
+POOF paper, not every other essay in the same reference checkout.
+
+* Read the audit
+
+| Module | Purpose |
+|--------+---------|
+| [[file:core.org][Prototype core and complete examples]] | fix/mix, record, numeric, delayed and tree constructions |
+| [[file:objects.org][Objects, classes and mutability]] | Representations, inheritance, descriptors and effect boundaries |
+| [[file:advanced.org][Appendices and research proposals]] | C3, dispatch, combination, lenses, notation and fixed points |
+| [[file:gaps.org][Closure checklist]] | Concrete missing work, acceptance evidence and priority |
+| [[file:requirements-v1.json][Reviewed requirements]] | 45 manually classified review intervals and local evidence references |
+| [[file:receipt-v1.json][Source-bound v1 receipt]] | All 90 headings, 286 source filenames and 50 evidence-file hashes |
+
+* Status meaning
+
+| Status | Review units | Meaning |
+|--------+--------------+---------|
+| ~lean_translation~ | 19 | The named bounded construction has Lean source and representative executable references |
+| ~partial~ | 12 | Related mechanisms exist, but an explicit behavior/policy/representation correspondence is open |
+| ~not_implemented~ | 3 | The complete named paper case has no corresponding implementation found in the reviewed source inventory |
+| ~discussion~ | 8 | Motivation, literature, notation or explanatory context |
+| ~future_proposal~ | 3 | Explicit further research, not an already-specified completed implementation |
+
+These counts are review units, not a completion percentage. Units differ in
+size and include non-executable discussion. Assigning every heading does not
+prove every behavior. ~lean_translation~ is not a whole-paper simulation theorem.
+The original Racket/Scheme evaluator and differential output comparison were
+not run by this audit. Many Examples use ~#eval~ to print observations; those
+are weaker than ~#guard~ expected-value assertions or a general theorem.
+
+* Reproduce and retain the evidence
+
+#+begin_src sh
+python3 tools/audit_poof.py --paper .data/poof/poof.scrbl
+python3 tools/audit_poof.py --check
+#+end_src
+
+Generation reads and checks the local original paper and its repository pin.
+~--check~, also run by ~just check-docs~, verifies saved outline coverage,
+review config/tool identity, local source hashes and inventory. CI does not
+download the reference or rerun its evaluator. Hashes and marker counts bind
+the manual assessment; they do not independently infer semantics.
+After a relevant source change, re-review the affected requirement and rebuild
+the receipt. Do not merely regenerate to turn a drift failure into a pass.
+
+* Existing capability versus new capability
+
+This PR adds no public Lean capability. It makes the paper completion claim
+reviewable and guards its source identity. C4, contract reuse, solver transport,
+finite diagnostic admission and OpenAI audits are useful project extensions;
+they do not fill absent paper examples or prove the whole POOF semantics.

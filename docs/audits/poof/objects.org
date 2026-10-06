@@ -1,0 +1,50 @@
+#+TITLE: POOF audit — objects, classes and mutability
+
+[[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
+
+* Existing bounded Lean constructions
+
+| Paper lines | Capability | Evidence and scope |
+|-------------+------------+--------------------|
+| 943–979 | Slot introspection | [[file:../../../LeanPoo/Object/Memo.lean][Memo]] and [[file:../../../Tests/IntegratedPrototype.lean][IntegratedPrototype]] enumerate finite declared keys |
+| 1039–1139 | First-class instance/prototype pair | [[file:../../../LeanPoo/Prototype/Object.lean][Object]] and [[file:../../../Examples/FirstClassObject.lean][FirstClassObject]] retain and extend prototypes |
+| 1323–1387 | Classes as descriptor prototypes, validation | [[file:../../../LeanPoo/Prototype/Class.lean][Prototype.Class]], [[file:../../../LeanPoo/Object/Class.lean][Object.Class]], [[file:../../../Tests/DescriptorClass.lean][DescriptorClass]] and IntegratedPrototype |
+| 1409–1419 | Parameterized type descriptors | Class/[[file:../../../LeanPoo/Prototype/Types.lean][Types]] provide typed list/array/map/option/product/sum/HList boundaries |
+| 1496–1524 | Single-identity mutable prototype protocol | [[file:../../../LeanPoo/Prototype/Mutable.lean][MutableProto]] and [[file:../../../Tests/MutablePrototype.lean][MutablePrototype]] compose parent/child effects on one cell |
+
+The implementation uses Lean carrier types, explicit errors and Lean codecs.
+Those adaptation choices do not require Scheme macro/API or binary-wire
+compatibility. Representative type checks, JSON controls and mutable controls
+exist; they do not establish every source dynamic-type operation.
+
+* Partial correspondences
+
+| Paper lines | Open correspondence | What already exists |
+|-------------+---------------------+---------------------|
+| 980–1038 | All alternative object representations | Indexed/prepared resolvers and local equalities; the paper's AVL-backed representation is missing |
+| 1140–1253 | Paper inheritance policy | C4 object ordering and rejection controls; paper policy is C3 |
+| 1254–1314 | Prototype as a self-hosted extensible meta-object | Typed schema/plan metadata; no demonstrated dynamic override of all function/supers/precedence meta-slots |
+| 1388–1408 | Complete dynamic simple-type repertoire | Many Lean runtime refinements; no all-source-carrier mapping |
+| 1420–1433 | Self-description of every descriptor/prototype component | Function/object/slot descriptors; full generated meta-level automation not established |
+| 1449–1495 | Pure/mutable linearity correspondence | IO identity cells, persistent snapshots and effect composition; no ownership calculus or isomorphism theorem |
+
+Literal in-place Scheme hash mutation is not the current implementation path:
+standard mutable layers stage persistent schema edits and build a new instance
+before installation. This can implement the bounded identity/extension behavior
+while leaving a representation/cost correspondence unproved.
+
+The classes/typeclasses discussion (1434–1448) is explanatory. ~TypedValue~
+and descriptors are concrete capabilities, but they are not an automated
+bidirectional translation between arbitrary Lean typeclasses and source classes.
+
+* Research proposals and project extensions
+
+The cache section (1525–1559) discusses explicit caches and language-wide purity
+or effect tracking. Current dependency schedules, incremental revisions and
+proof reuse depend on explicit finite contracts. They do not inspect arbitrary
+Lean bodies or implement a language-wide invalidation policy.
+
+That distinction is a research boundary, not a claim that the paper supplied
+an algorithm we failed to copy. Likewise, OpenAI factory/consumer audits and C4
+contract APIs are local extensions. Their existence and large test corpus do
+not establish full POOF implementation coverage.

@@ -1,0 +1,49 @@
+#+TITLE: POOF audit — prototype core and examples
+
+[[file:README.org][Audit index]] · [[file:gaps.org][Closure checklist]]
+
+* Existing constructions
+
+| Paper lines | Construction | Local evidence | Boundary |
+|-------------+--------------+----------------+----------|
+| 118–134, 172–231 | Open self/super, fix/mix, generators | [[file:../../../LeanPoo/Prototype/Compose.lean][Compose]], [[file:../../../LeanPoo/Prototype/Generator.lean][Generator]], [[file:../../../Examples/PrototypeCore.lean][PrototypeCore]] | Composition is typed; recursive instantiation is unsafe |
+| 245–321, 379–467 | Records as functions and slot generators | [[file:../../../LeanPoo/Prototype/Record.lean][Record]], [[file:../../../Examples/RecordPrototype.lean][RecordPrototype]] | Dependent key/value family, Option missing reads; no unrestricted Scheme messages |
+| 468–582, 633–673 | Ordered composition and single inheritance | [[file:../../../LeanPoo/Prototype/Compose.lean][Compose]], [[file:../../../Examples/FirstClassObject.lean][FirstClassObject]] | Heterogeneous typed chains; runtime instance may diverge |
+| 846–882 | Numeric functions and number thunks | [[file:../../../Examples/PrototypeFunctions.lean][PrototypeFunctions]], [[file:../../../Examples/DelayedNumbers.lean][DelayedNumbers]] | Representative output observations, not every original expected-value check |
+| 883–942 | Delayed computations, use without subtyping | [[file:../../../LeanPoo/Prototype/Delayed.lean][Delayed]], [[file:../../../Examples/PrototypeCore.lean][PrototypeCore]] | Thunk self/super; explicit intermediate Lean types replace source notation |
+
+These implement bounded Lean forms of the constructive nucleus. They do not
+establish equality of all untyped Scheme programs and Lean programs. Existing
+safe composition laws also do not prove termination of unsafe instantiation.
+
+* Partial behavior and test correspondence
+
+Paper basic checks (322–378) and Appendix A checks use expected values.
+~RecordPrototype~ and several other current Examples instead print values via
+~#eval~. Successful elaboration/evaluation alone does not reject an incorrect
+expected answer. A complete case map must identify each paper check, its
+typed Lean input, expected observation and assertion, including order changes.
+
+The Bottom discussion (583–632) mixes missing-field error behavior, arbitrary
+computations and divergence. LeanPoo exposes Option reads, typed callbacks and
+unsafe recursive computations. These are documented interfaces, but no common
+operational model relates all three to the paper's untyped bottom.
+
+* Missing complete Order → BST → AVL case
+
+| Paper lines | Missing case | Required closure evidence |
+|-------------+--------------+---------------------------|
+| 674–736 | Number/string/symbol order prototypes and compare mixin | Same open self-based comparison/delegation and all paper outcomes |
+| 737–799 | Binary-tree dictionary | node/singleton/acons/ref/afoldr composed through the prototype; missing-key path and ordered-key skew case |
+| 800–845 | AVL extension | Override only node construction; retain inherited dictionary algorithms; rotation, height and five-entry lookup controls |
+
+No corresponding end-to-end implementations were found in the reviewed 286
+Lean source filenames and targeted source searches. An ancestry/order theorem
+in C4 is not a number/string comparator, and a Std.HashMap backing table is not
+the paper's open-recursive binary-tree/AVL extension. The absence judgment is
+manual source review, not a proof obtained by searching one identifier.
+
+This is the clearest concrete gap in the original executable paper path.
+Adding unrelated reusable functions cannot close it. A standalone AVL library
+would also be insufficient unless it demonstrates the inherited-method override
+mechanism and reproduces the source case outcomes.
