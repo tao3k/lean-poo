@@ -31,8 +31,9 @@ or lists itself as its first parent, including arbitrary later roots.
 recomputation cost. The batch lifting theorem reduces complete outcome
 equivalence to one-root coherence on every derivation-backed cache. That
 premise is proved for validated graphs without parent edges, yielding exact
-outcomes for arbitrary roots, repeated hits and later missing roots. Graphs
-with parent edges remain open.
+outcomes for arbitrary roots, repeated hits and later missing roots. It is
+also proved for validated unary leaf-parent graphs, including shared parents.
+General deeper or multiple-parent graph coherence remains open.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 

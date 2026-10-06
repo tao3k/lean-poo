@@ -415,7 +415,12 @@ derivation-backed cache lifts to any root list. A separate proof discharges
 that premise for every validated graph with no parent edges, including repeated
 root cache hits and a missing root after an earlier success. General graph
 coherence still needs the corresponding one-root proof.
+PaperC3UnaryLeaf extends complete batch equality to every validated graph
+whose declarations are leaves or have one distinct leaf parent. Its concrete
+graph has two roots sharing a parent and checks repeated and missing roots;
+the theorem itself quantifies over every requested root list and every
+derivation-backed cache reached by the batch.
 PaperMetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 158 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 159 atoms + four diagnostics, 48 native
 admissions and 16 supervisor controls; all schemas remain v1.

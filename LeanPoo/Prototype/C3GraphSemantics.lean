@@ -298,21 +298,170 @@ theorem linearizeMany_eq_uncached_of_visit_coherence (graph : Graph)
   | error err => simpa [result, Except.map] using h
   | ok orders => simpa [result, Except.map] using h
 
-private theorem flat_derived_singleton (graph : Graph)
-    (flat : FlatGraph graph)
-    (derived : GraphDerivation graph root order) : order = [root] := by
+theorem GraphDerivation.leaf_singleton (graph : Graph)
+    (derived : GraphDerivation graph root order)
+    (entry : String × List String)
+    (lookupLeaf : graph.find? (fun row => row.1 == root) = some entry)
+    (leaf : entry.2 = []) : order = [root] := by
   cases derived with
-  | @node name entry orders tail lookup parents merged certified =>
-    have empty : entry.2 = [] := flat root entry lookup
+  | @node name derivedEntry orders tail lookup parents merged certified =>
+    have sameEntry := Option.some.inj (lookup.symm.trans lookupLeaf)
+    subst derivedEntry
     cases entry with
     | mk entryName parentNames =>
-      dsimp at empty
+      dsimp at leaf
       subst parentNames
       cases parents
       have zero : SourceTrace ([[]] : List (List String)) [] :=
         .done (by simp [removeNulls])
       have tailEmpty : tail = [] := merged.unique zero
       simp [tailEmpty]
+
+/-- A leaf returns its singleton order at every positive fuel and path where
+its own name has not already been visited. -/
+theorem visit_leaf_at (graph : Graph)
+    (root : String) (entry : String × List String)
+    (lookup : graph.find? (fun row => row.1 == root) = some entry)
+    (leaf : entry.2 = []) (path : List String)
+    (fresh : path.contains root = false) (fuel : Nat) (cache : Cache)
+    (cacheValid : CacheDerivations graph cache) :
+    (visit graph root path cache (fuel+1)).map Prod.fst = .ok [root] := by
+  cases hit : cache.get? root with
+  | some order =>
+    have singleton := (cacheValid root order hit).leaf_singleton graph entry lookup leaf
+    have visitHit : visit graph root path cache (fuel+1) =
+        .ok (order, cache) := by
+      simp only [visit, fresh, Bool.false_eq_true, ↓reduceIte, hit]
+      rfl
+    simp [visitHit, singleton, Except.map]
+  | none =>
+    cases entry with
+    | mk entryName parents =>
+      dsimp at leaf
+      subst parents
+      simp only [visit, fresh, Bool.false_eq_true, ↓reduceIte, hit, lookup]
+      rfl
+
+/-- A leaf row remains a singleton under any derivation-backed memo table,
+even when the rest of the graph has parent edges. -/
+theorem visit_leaf_coherence (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (root : String) (entry : String × List String)
+    (lookup : graph.find? (fun row => row.1 == root) = some entry)
+    (leaf : entry.2 = []) (cache : Cache)
+    (cacheValid : CacheDerivations graph cache) :
+    (visit graph root [] cache (graph.length+1)).map Prod.fst =
+      linearizeUncached graph root := by
+  rw [linearizeUncached_leaf graph valid root entry lookup leaf]
+  exact visit_leaf_at graph root entry lookup leaf [] (by rfl)
+    graph.length cache cacheValid
+
+/-- The complete cached and uncached result agrees for one root with one
+leaf parent, under any cache of proven graph orders. -/
+theorem visit_one_leaf_parent_coherence (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (root parent : String) (distinct : root ≠ parent)
+    (rootLookup : graph.find? (fun row => row.1 == root) = some (root, [parent]))
+    (parentLookup : graph.find? (fun row => row.1 == parent) = some (parent, []))
+    (cache : Cache) (cacheValid : CacheDerivations graph cache) :
+    (visit graph root [] cache (graph.length+1)).map Prod.fst =
+      linearizeUncached graph root := by
+  have source : linearizeUncached graph root = .ok [root, parent] :=
+    linearizeUncached_one_leaf_parent graph valid root parent distinct
+      rootLookup parentLookup
+  have sourceDerived : GraphDerivation graph root [root, parent] :=
+    linearizeUncached_derivation graph root [root, parent] source
+  rw [source]
+  cases hit : cache.get? root with
+  | some order =>
+    have same : order = [root, parent] :=
+      cacheValid.agrees hit sourceDerived
+    have visitHit : visit graph root [] cache (graph.length+1) =
+        .ok (order, cache) := by
+      simp only [visit, hit]
+      rfl
+    simp [visitHit, same, Except.map]
+  | none =>
+    cases graph with
+    | nil => simp at rootLookup
+    | cons row rest =>
+      have fresh : [root].contains parent = false := by
+        simp [distinct.symm]
+      have parentOrder := visit_leaf_at (row :: rest) parent (parent, [])
+        parentLookup rfl [root] fresh rest.length cache cacheValid
+      cases parentResult : visit (row :: rest) parent [root] cache (rest.length+1) with
+      | error err => simp [parentResult, Except.map] at parentOrder
+      | ok pair =>
+        obtain ⟨order, updated⟩ := pair
+        have orderEq : order = [parent] := by
+          simpa [parentResult, Except.map] using parentOrder
+        have selected : Precedence.choose [[parent], [parent]] = some parent := by
+          simp [Precedence.choose, Precedence.heads, Precedence.eligible]
+        have finished : Precedence.Trace
+            (Precedence.advance [[parent], [parent]] parent) [] :=
+          .done (by simp [Precedence.advance, Precedence.advanceOrder])
+        obtain ⟨certificate, merged, output⟩ :=
+          Precedence.mergeCertified_complete (.step selected finished)
+        have parentResult' :
+            visit (row :: rest) parent [root] cache (row :: rest).length =
+              .ok (order, updated) := by simpa using parentResult
+        simp only [visit, List.contains_nil, Bool.false_eq_true, ↓reduceIte,
+          hit, rootLookup]
+        simp only [List.forIn_cons, List.forIn_nil, parentResult', orderEq,
+          bind, Except.bind, pure, Except.pure, Except.map]
+        cases certificate with
+        | mk certOutput certTrace =>
+          dsimp at output
+          subst certOutput
+          rw [show ([[parent]] : List (List String)).reverse ++ [[parent]] =
+            [[parent], [parent]] from by rfl]
+          rw [merged]
+
+/-- Every declared node is either a leaf or has one distinct leaf parent.
+Different roots may share that parent; roots may be requested repeatedly. -/
+def UnaryLeafGraph (graph : Graph) : Prop :=
+  ∀ root entry, graph.find? (fun row => row.1 == root) = some entry →
+    graph.find? (fun row => row.1 == root) = some (root, []) ∨
+      ∃ parent, root ≠ parent ∧
+        graph.find? (fun row => row.1 == root) = some (root, [parent]) ∧
+        graph.find? (fun row => row.1 == parent) = some (parent, [])
+
+private theorem unary_visit_coherence (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (unary : UnaryLeafGraph graph)
+    (root : String) (cache : Cache)
+    (cacheValid : CacheDerivations graph cache) :
+    (visit graph root [] cache (graph.length+1)).map Prod.fst =
+      linearizeUncached graph root := by
+  cases lookup : graph.find? (fun row => row.1 == root) with
+  | none =>
+    rw [linearizeUncached_missing graph valid root lookup]
+    have noHit : cache.get? root = none := by
+      cases hit : cache.get? root with
+      | none => rfl
+      | some order =>
+        obtain ⟨_, _, found, _, _, _⟩ :=
+          (cacheValid root order hit).parent_order
+        simp [lookup] at found
+    have missingVisit : visit graph root [] cache (graph.length+1) =
+        .error (.unknownNode root) := by
+      simp only [visit, noHit, lookup]
+      rfl
+    simp [missingVisit, Except.map]
+  | some entry =>
+    rcases unary root entry lookup with leaf | ⟨parent, distinct, rootLookup, parentLookup⟩
+    · exact visit_leaf_coherence graph valid root (root, []) leaf rfl cache cacheValid
+    · exact visit_one_leaf_parent_coherence graph valid root parent distinct
+        rootLookup parentLookup cache cacheValid
+
+/-- Full cached/uncached `Except` equality for every batch on a validated
+unary leaf graph, including shared parents, repeated roots, and late errors. -/
+theorem linearizeMany_eq_uncached_unary_leaf (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (unary : UnaryLeafGraph graph) (roots : List String) :
+    linearizeMany graph roots = linearizeUncachedMany graph roots :=
+  linearizeMany_eq_uncached_of_visit_coherence graph valid
+    (unary_visit_coherence graph valid unary) roots
 
 private theorem flat_visit_coherence (graph : Graph)
     (valid : validateGraph graph = .ok ()) (flat : FlatGraph graph)
@@ -323,14 +472,9 @@ private theorem flat_visit_coherence (graph : Graph)
   cases hit : cache.get? root with
   | some order =>
     have derived := cacheValid root order hit
-    have singleton := flat_derived_singleton graph flat derived
     obtain ⟨entry, _, lookup, _, _, _⟩ := derived.parent_order
-    rw [linearizeUncached_flat graph valid flat root]
-    have visitHit : visit graph root [] cache (graph.length+1) =
-        .ok (order, cache) := by
-      simp only [visit, hit]
-      rfl
-    simp [lookup, visitHit, singleton, Except.map]
+    exact visit_leaf_coherence graph valid root entry lookup
+      (flat root entry lookup) cache cacheValid
   | none =>
     cases lookup : graph.find? (fun row => row.1 == root) with
     | none =>
@@ -341,14 +485,8 @@ private theorem flat_visit_coherence (graph : Graph)
         rfl
       simp [lookup, visitMissing, Except.map]
     | some entry =>
-      have empty : entry.2 = [] := flat root entry lookup
-      cases entry with
-      | mk entryName parents =>
-        dsimp at empty
-        subst parents
-        rw [linearizeUncached_flat graph valid flat root]
-        simp only [visit, hit, lookup]
-        rfl
+      exact visit_leaf_coherence graph valid root entry lookup
+        (flat root entry lookup) cache cacheValid
 
 /-- For every validated graph with no direct-parent edges, cached and
 uncached traversal have the same complete result on arbitrary root lists.

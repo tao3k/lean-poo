@@ -70,7 +70,7 @@ the receipt. Do not merely regenerate to turn a drift failure into a pass.
 [[file:checks-v1.json][The source check map]] binds all 24 checks and typed adaptations; the closure map
 binds the six remaining constructions. Receipts bind manual review and code
 identity; actual execution and kernel theorem checks are separate evidence.
-Current gate: 156 atoms plus four diagnostics, 48 native admissions and 16
+Current gate: 159 atoms plus four diagnostics, 48 native admissions and 16
 supervisor controls. The record catalog now has a typed batch patch with kernel
 validity and untouched-field laws; finite fix/mix unfoldings have a separate pure
 semantics. The checked record x/y fragment has an all-depth source/target
@@ -80,6 +80,8 @@ the derivation's output is unique across successful fuel budgets. A
 fuel-independent relation and cache-entry invariant now support reasoning
 about memo reuse. Production cached successes now have graph derivations
 without reference recomputation; full error/outcome equivalence remains open.
+Validated unary leaf-parent graphs now have complete batch outcome equality,
+including shared parents, repeated roots and late missing roots.
 When both traversals succeed, output equality is proved and admission has no
 runtime disagreement check.
 No external OpenAI integration or measured saving is added.

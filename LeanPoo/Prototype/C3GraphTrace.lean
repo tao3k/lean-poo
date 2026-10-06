@@ -1,4 +1,5 @@
 import LeanPoo.Prototype.C3Semantics
+import LeanPoo.C4.MergeInvariant
 
 /-! A proof-producing, cache-free finite interpretation of the paper's C3
 graph recursion. Each successful node records its parent derivations and the
@@ -276,6 +277,56 @@ theorem FlatGraph.of_members (graph : Graph)
   intro root entry found
   exact all entry (List.mem_of_find?_eq_some found)
 
+private theorem sourceVisit_leaf_at (graph : Graph) (root : String)
+    (path : List String) (fuel : Nat) (entry : String × List String)
+    (fresh : path.contains root = false)
+    (lookup : graph.find? (fun row => row.1 == root) = some entry)
+    (leaf : entry.2 = []) :
+    (sourceVisit graph root path (fuel+1)).map Subtype.val = .ok [root] := by
+  cases entry with
+  | mk entryName parents =>
+    dsimp at leaf
+    subst parents
+    simp only [sourceVisit, fresh, Bool.false_eq_true, ↓reduceIte]
+    split
+    · simp_all
+    · rename_i selected found
+      have same : selected = (entryName, []) :=
+        Option.some.inj (found.symm.trans lookup)
+      subst selected
+      simp [sourceVisit.parents, mergeCertified,
+        bind, Except.bind, Except.map]
+      rfl
+
+/-- A single leaf needs no restriction on the other graph rows: its uncached
+observation is the singleton order after graph validation. -/
+theorem linearizeUncached_leaf (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (root : String)
+    (entry : String × List String)
+    (lookup : graph.find? (fun row => row.1 == root) = some entry)
+    (leaf : entry.2 = []) : linearizeUncached graph root = .ok [root] := by
+  have emptyOk : linearizeMany graph [] = .ok [] := by
+    simp [linearizeMany, valid, bind, Except.bind]
+    rfl
+  have firstSource :=
+    sourceVisit_leaf_at graph root [] graph.length entry rfl lookup leaf
+  simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
+    pure, Except.pure] using firstSource
+
+/-- A missing root reports the same lookup error regardless of other rows. -/
+theorem linearizeUncached_missing (graph : Graph)
+    (valid : validateGraph graph = .ok ()) (root : String)
+    (missing : graph.find? (fun row => row.1 == root) = none) :
+    linearizeUncached graph root = .error (.unknownNode root) := by
+  have emptyOk : linearizeMany graph [] = .ok [] := by
+    simp [linearizeMany, valid, bind, Except.bind]
+    rfl
+  have firstSource : sourceVisit graph root [] (graph.length+1) =
+      .error (.unknownNode root) := by
+    simp [sourceVisit]
+    split <;> simp_all <;> rfl
+  simp [linearizeUncached, emptyOk, firstSource, bind, Except.bind]
+
 /-- With no direct-parent edges, a validated reference lookup either reports
 the missing root or returns its singleton precedence order. -/
 theorem linearizeUncached_flat (graph : Graph)
@@ -286,41 +337,65 @@ theorem linearizeUncached_flat (graph : Graph)
       match graph.find? (fun row => row.1 == root) with
       | none => .error (.unknownNode root)
       | some _ => .ok [root] := by
+  cases lookup : graph.find? (fun row => row.1 == root) with
+  | none =>
+    simpa [lookup] using linearizeUncached_missing graph valid root lookup
+  | some entry =>
+    simpa [lookup] using linearizeUncached_leaf graph valid root entry lookup
+      (flat root entry lookup)
+
+/-- A root with one direct parent whose own row is a leaf has the ordinary
+two-element C3 order, independently of unrelated rows. -/
+theorem linearizeUncached_one_leaf_parent (graph : Graph)
+    (valid : validateGraph graph = .ok ())
+    (root parent : String) (distinct : root ≠ parent)
+    (rootLookup : graph.find? (fun row => row.1 == root) = some (root, [parent]))
+    (parentLookup : graph.find? (fun row => row.1 == parent) = some (parent, [])) :
+    linearizeUncached graph root = .ok [root, parent] := by
   have emptyOk : linearizeMany graph [] = .ok [] := by
     simp [linearizeMany, valid, bind, Except.bind]
     rfl
-  cases lookup : graph.find? (fun row => row.1 == root) with
-  | none =>
-    have firstSource : sourceVisit graph root [] (graph.length+1) =
-        .error (.unknownNode root) := by
-      simp [sourceVisit]
-      split <;> simp_all <;> rfl
-    simp [linearizeUncached, emptyOk, firstSource, bind, Except.bind]
-  | some entry =>
-    have empty : entry.2 = [] := flat root entry lookup
-    cases entry with
-    | mk entryName parentNames =>
-      dsimp at empty
-      subst parentNames
-      have firstSource : (sourceVisit graph root [] (graph.length+1)).map Subtype.val =
-          .ok [root] := by
+  cases graph with
+  | nil => simp at rootLookup
+  | cons row rest =>
+    have fresh : [root].contains parent = false := by
+      simp [distinct.symm]
+    have parentSource := sourceVisit_leaf_at (row :: rest) parent [root]
+      rest.length (parent, []) fresh parentLookup rfl
+    cases result : sourceVisit (row :: rest) parent [root] (rest.length+1) with
+    | error err => simp [result, Except.map] at parentSource
+    | ok witness =>
+      have order : witness.val = [parent] := by
+        simpa [result, Except.map] using parentSource
+      have selected : Precedence.choose [[parent], [parent]] = some parent := by
+        simp [Precedence.choose, Precedence.heads, Precedence.eligible]
+      have finished : Precedence.Trace
+          (Precedence.advance [[parent], [parent]] parent) [] :=
+        .done (by simp [Precedence.advance, Precedence.advanceOrder])
+      obtain ⟨certificate, merged, output⟩ :=
+        Precedence.mergeCertified_complete (.step selected finished)
+      have rootSource :
+          (sourceVisit (row :: rest) root [] ((row :: rest).length+1)).map
+            Subtype.val = .ok [root, parent] := by
         simp [sourceVisit]
         split
         · simp_all
         · rename_i selected found
-          have same : selected = (entryName, []) :=
-            Option.some.inj (found.symm.trans lookup)
+          have same : selected = (root, [parent]) :=
+            Option.some.inj (found.symm.trans rootLookup)
           subst selected
-          simp [sourceVisit.parents, mergeCertified,
-            bind, Except.bind, Except.map]
-          rfl
-      cases result : sourceVisit graph root [] (graph.length+1) with
-      | error err => simp [result, Except.map] at firstSource
-      | ok witness =>
-        simp [result, Except.map] at firstSource
-        simp [linearizeUncached, emptyOk, result, firstSource,
-          bind, Except.bind]
-        rfl
+          simp only [sourceVisit.parents, result, order, bind, Except.bind,
+            pure, Except.pure, Except.map]
+          cases certificate with
+          | mk certOutput certTrace =>
+            dsimp at output
+            subst certOutput
+            dsimp only [mergeCertified]
+            simp only [List.cons_append, List.nil_append]
+            rw [merged]
+            rfl
+      simpa [linearizeUncached, emptyOk, Except.map, bind, Except.bind,
+        pure, Except.pure] using rootSource
 
 /-- Every successful uncached order has a recursive paper-style graph trace. -/
 theorem linearizeUncached_sound (graph : Graph) (root : String)

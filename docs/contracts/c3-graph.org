@@ -17,6 +17,8 @@
 | Compare two nonempty error cases | ~C3.linearizeMany_eq_uncached_missing_first~, ~C3.linearizeMany_eq_uncached_self_parent_first~ | Exact batch-result equality when the first root is absent or lists itself as its first parent; any remaining roots are allowed |
 | Lift one-root coherence through a shared cache | ~C3.linearizeMany_eq_uncached_of_visit_coherence~ | For a validated graph, exact one-root ~Except~ equality on every derivation-backed cache implies exact cached/uncached equality for any root list |
 | Handle every batch on a parent-free graph | ~C3.FlatGraph.of_members~, ~C3.linearizeUncached_flat~, ~C3.linearizeMany_eq_uncached_flat~ | Prove the finite declaration rows have no parents, then obtain full success and error outcome equality for all root lists after validation |
+| Handle shared leaf parents across arbitrary batches | ~C3.UnaryLeafGraph~, ~C3.linearizeMany_eq_uncached_unary_leaf~ | Every row is a leaf or has one distinct leaf parent; full ~Except~ equality covers cache hits, repeated roots and later missing roots |
+| Reuse local graph facts | ~C3.linearizeUncached_leaf~, ~C3.linearizeUncached_missing~, ~C3.linearizeUncached_one_leaf_parent~, ~C3.visit_leaf_at~, ~C3.visit_one_leaf_parent_coherence~ | Prove a single lookup or parent edge without restricting unrelated graph rows; derived cache entries agree at any positive fuel and fresh path |
 | Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Batch validates once, including empty roots; recomputes every root and parent occurrence, possibly exponential on shared ancestry |
 | Retain a recursive paper-style derivation | ~C3.linearizeUncached_sound~, ~linearizeUncachedMany_sound~ | Every successful reference order has graph lookup, positional parent and C3 merge traces |
 | Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
@@ -59,6 +61,10 @@ For a validated graph whose successful lookups all have empty parent lists,
 ~FlatGraph.of_members~ builds the premise from the finite declaration rows.
 ~linearizeMany_eq_uncached_flat graph valid flat roots~ supplies executable
 equality for any ~roots~ without admission. For a richer graph,
+~UnaryLeafGraph~ covers a two-level graph whose roots may share a leaf parent;
+~linearizeMany_eq_uncached_unary_leaf~ provides the same all-batch equality.
+[[file:../../Tests/PaperC3UnaryLeaf.lean][PaperC3UnaryLeaf]] shows the declaration proof and checks a repeated root,
+shared parent and later missing root. For deeper or multiple-parent graphs,
 ~linearizeMany_eq_uncached_of_visit_coherence~ isolates the remaining premise:
 prove each root call returns the same full ~Except~ result for every cache
 backed by ~CacheDerivations~. The theorem carries that cache invariant across
@@ -104,8 +110,8 @@ succeeds. Empty-root batches and graph-validation failures have equal complete
 nonempty roots, absent first roots and direct first-parent self cycles also
 have equal complete outcomes. A matching first-root scalar failure also lifts
 to any batch tail without rerunning a proof for each tail. General
-cached/uncached success and error outcome equivalence for graphs with parent
-edges, and Racket/Lean
+cached/uncached success and error outcome equivalence for general graphs with
+parent edges, and Racket/Lean
 language equivalence remain open.
 
 [[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
