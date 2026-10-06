@@ -38,6 +38,7 @@ import LeanPoo.Functional.CertifiedObservation
 import LeanPoo.Functional.CertifiedConsumer
 import LeanPoo.Functional.ContextSlot
 import LeanPoo.Functional.ContractConsequence
+import LeanPoo.Functional.ContractJoin
 import LeanPoo.Functional.ContextView
 import LeanPoo.Functional.ContextObservation
 import LeanPoo.Functional.ContextPullback

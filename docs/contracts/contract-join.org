@@ -1,0 +1,64 @@
+#+TITLE: Combine independent contracts of the same dependency family
+
+[[file:../reusable-contracts.org][Reusable API contracts]] · [[file:../../Tests/FunctionalContractJoin.lean][Compiled clients]]
+
+* Join separately admitted proofs
+
+Import ~LeanPoo.Functional.ContractJoin~. Two certificates may separately prove
+~Left~ and ~Right~ for the same functions. Use ~ready.conjoin other same~ to
+retain the left factory tuple under ~Left ∧ Right~. The premise ~same~ is an
+explicit equality of complete factory tuples. No executable function comparison
+is added. Equal keys, context or contract names are insufficient.
+
+| API | Guarantee |
+|-----+-----------|
+| ~Certified.conjoin~, ~conjoin_factories~ | Retain exact functions and combine both admissions |
+| ~Snapshot.conjoin~, ~conjoin_val~ | Retain built values; exact alignment justifies the second proof |
+| ~ContextSlot.conjoin~, ~conjoin_empty~ | Join cached proofs without rebuilding dependency data |
+| ~conjoin_retained~, ~conjoin_hit~ | Preserve retained data/context and same-context reuse |
+| ~conjoin_consume~ | Joined cache consumer agrees with uncached joined certificate |
+
+#+begin_src lean
+import LeanPoo.Functional.ContractJoin
+open LeanPoo.Functional.Requirements
+example {C K : Type} [DecidableEq C] {V : C → K → Type} {keys : List K}
+    {Left Right : ∀ c, Results V c keys → Prop} {ready : Certified keys Left}
+    (slot : ContextSlot ready) (other : Certified keys Right)
+    (same : ready.factories = other.factories) {Output : C → Type}
+    (construct : ∀ c data, Left c data ∧ Right c data → Output c) (c : C) :
+    ((slot.conjoin other same).consume construct c).1 =
+      (ready.conjoin other same).consume construct c :=
+  ContextSlot.conjoin_consume slot other same construct c
+#+end_src
+
+A certificate proving ~context ≤ quantity~ and another proving ~quantity ≤ limit~
+can jointly supply a result with ~context ≤ limit~. Neither a re-preparation nor
+a general implication ~∀ data, Left data → Right data~ is needed: the second
+admission is about the exact retained functions' built data. Snapshot alignment
+bridges that admission to cached data. Use [[file:contract-consequence.org][entails]] afterwards to expose the
+combined consequence, or conjoin another equal-family certificate for more proofs.
+
+* Costs and checks
+
+Logical proofs and the equality premise are erased. Conversion does not traverse
+Results, call dependency factories, observers or constructors. It maps the slot's
+Option/context wrapper; zero allocation and native timing gains are unmeasured.
+Misses build the original family and constructors run on every request.
+Caller obligations remain: separately admit both facts and prove full factory
+equality. Analytic facts are not inferred and changed families are not admitted.
+
+224 reads cover eight families, four traces, cold/warm starts, 112 hits and
+112 misses. Independent values, uncached outputs, heterogeneous Bool retention,
+dependent output using both proofs and a post-join consequence are checked.
+Another factory family/wrong context is rejected. A concrete arbitrary-data
+counterexample rejects general Left-to-Right inference. Six axiom reports: four
+require none, two use only propext. Shared costs: 64 module / 80 test lines.
+
+* Paper and reference evidence
+
+The local [[file:../../.data/poof/poof.scrbl][POOF paper]] discusses explicit cache policy. This is a Lean-specific
+proof-composition extension over immutable cached data, not a new conformance
+claim for generalized prototypes. The [[file:../../Benchmarks/receipts/euler-contract-join-2026-10-06.json][v1 audit]] hashes the original paper and
+reference inverse/strain and pressure/gradient/equation structures. They already
+combine proofs; repeated admission or redundant rebuild is not demonstrated.
+Euler migrations/integrations zero; actual net code and maintenance hours unknown.

@@ -1457,3 +1457,11 @@ correspondence; it does not establish lens setters or external savings.
 a new joint proof. This Lean-specific extension of immutable explicit caching
 is source-bound to the paper and existing reference contracts in a [[file:../Benchmarks/receipts/euler-contract-consequence-2026-10-06.json][v1 audit]].
 It does not infer stronger analytic facts or establish external savings.
+
+* Independently admitted proof composition
+
+[[file:contracts/contract-join.org][Nine joint-contract APIs]] combine proofs for explicitly equal factory tuples
+and retain cached values. This Lean-specific extension is audited against
+original explicit-cache policy and existing reference joint structures in a
+[[file:../Benchmarks/receipts/euler-contract-join-2026-10-06.json][v1 receipt]]. Analytic admissions and equality remain obligations; no external
+rebuild or cost reduction has been demonstrated.

@@ -956,3 +956,16 @@ not an Euler-wide edit-count estimate.
 - [X] Shared costs 63 + 73 lines; mapped wrapper and normal read costs retained.
 - [ ] Reference already carries joint proofs; redundant admission/rebuild unestablished.
 - [ ] Euler migrations/integrations 0; net lines, hours and native savings unmeasured.
+
+* Independent contract join checklist
+
+- [X] Nine APIs combine independently admitted proofs of equal complete factory tuples.
+- [X] Retained Results unchanged; no projection, observer or dependency factory in conversion.
+- [X] 224 reads / 112 hits / 112 misses, eight families, four cold/warm traces.
+- [X] Both proofs used in dependent outputs, heterogeneous retention and post-join hits.
+- [X] Wrong family/context rejected; arbitrary-data Left-to-Right counterexample.
+- [X] Six axiom reports: four none, two propext-only; public client compiles.
+- [X] Original cache policy and reference joint structures hashed; separate v1 receipt.
+- [X] Shared costs 64 + 80 lines; mapped wrapper and normal read costs remain.
+- [ ] Reference already combines proofs; redundant admission/rebuild not established.
+- [ ] Euler migrations/integrations 0; net lines, hours and native benefits unmeasured.

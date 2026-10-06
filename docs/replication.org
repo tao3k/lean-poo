@@ -2420,3 +2420,9 @@ and four propext-only axiom reports. [[file:contracts/view-composition.org][Cont
 Build ~LeanPoo.Functional.ContractConsequence~ and run ~Tests/FunctionalContractConsequence.lean~.
 Expect 192 reads / 104 hits / 88 misses and seven axiom reports (five none, two
 propext-only). [[file:contracts/contract-consequence.org][Contract, compiled client and cost guide]].
+
+* Independent contract join replication
+
+Build ~LeanPoo.Functional.ContractJoin~ and run ~Tests/FunctionalContractJoin.lean~.
+Expect 224 reads / 112 hits / 112 misses and six axiom reports (four none, two
+propext-only). [[file:contracts/contract-join.org][Joint proof contract and compiled client]].

@@ -399,7 +399,8 @@ def study(reference):
              "LeanPoo/Functional/ObservedView.lean", "Tests/FunctionalObservedView.lean",
              "LeanPoo/Functional/BorrowedView.lean", "Tests/FunctionalBorrowedView.lean",
              "LeanPoo/Functional/ViewComposition.lean", "Tests/FunctionalViewComposition.lean",
-             "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean"]
+             "LeanPoo/Functional/ContractConsequence.lean", "Tests/FunctionalContractConsequence.lean",
+             "LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean"]
     return {
         "schema": "lean-poo.euler-change-surface.v1",
         "reference": {"repository": "openai/NavierStokesAndEuler", "commit": PIN,
@@ -411,6 +412,15 @@ def study(reference):
         "candidate_interfaces": candidates,
         "candidate_limit": "All identifier-text occurrences, including defining files/comments; prioritization only, not evidence of interchangeable providers or C4 benefit",
         "mention_limit": "Identifier-text rows outside defining file, including possible comments; not elaborated references, dependency closure, or affected-file count",
+        "contract_join": {
+            "paper_source": paper_cache_audit(),
+            "reference_audit": joint_certificate_audit(reference),
+            "local_api": ["Certified.conjoin", "Certified.conjoin_factories", "Snapshot.conjoin", "Snapshot.conjoin_val", "ContextSlot.conjoin", "ContextSlot.conjoin_empty", "ContextSlot.conjoin_retained", "ContextSlot.conjoin_hit", "ContextSlot.conjoin_consume"],
+            "tests": {"families": 8, "reads": 224, "hits": 112, "misses": 112, "traces": 4, "warm_modes": 2, "heterogeneous_retention": True, "dependent_output_uses_both_proofs": True, "post_join_consequence_hits": True, "wrong_family_and_context_rejected": True, "arbitrary_data_implication_counterexample": True, "axiom_reports": 6, "axiom_free_reports": 4},
+            "physical_lines": {p: len((ROOT / p).read_text().splitlines()) for p in ["LeanPoo/Functional/ContractJoin.lean", "Tests/FunctionalContractJoin.lean"]},
+            "mechanism": "Conjoin independently admitted joint proofs about explicitly equal complete factory tuples; retain left functions and cached values without re-preparing or rebuilding a joint certificate manually",
+            "cost": "Explicit factory equality and both admission proofs are erased; slot Option/context wrapper is mapped, Results is not traversed; normal equality/miss builds/constructors remain",
+            "limits": ["Exact full-family equality is required; equal names, context or Claim shapes do not suffice", "No general arbitrary-data implication from Left to Right is required or inferred; cached alignment justifies right admission", "Reference already has joint inverse/strain and pressure/gradient/equation structures; repeated admission or rebuild not established", "Explicit immutable cache policy extension; no full paper conformance or native time/allocation qualification; Euler integrations/migrations 0, net lines and hours unmeasured"]},
         "contract_consequence": {
             "paper_source": paper_cache_audit(),
             "reference_audit": joint_certificate_audit(reference),

@@ -54,6 +54,7 @@ check-merge: check-types
         LeanPoo.Functional.CertifiedConsumer \
         LeanPoo.Functional.ContextSlot \
         LeanPoo.Functional.ContractConsequence \
+        LeanPoo.Functional.ContractJoin \
         LeanPoo.Functional.ContextView \
         LeanPoo.Functional.ContextObservation \
         LeanPoo.Functional.ContextPullback \
@@ -319,6 +320,7 @@ _check-contracts:
     {{lean}} Tests/FunctionalCertifiedConsumer.lean
     {{lean}} Tests/FunctionalContextSlot.lean
     {{lean}} Tests/FunctionalContractConsequence.lean
+    {{lean}} Tests/FunctionalContractJoin.lean
     {{lean}} Tests/FunctionalContextView.lean
     {{lean}} Tests/FunctionalContextObservation.lean
     {{lean}} Tests/FunctionalContextPullback.lean
