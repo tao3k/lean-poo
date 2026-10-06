@@ -19,7 +19,7 @@ not silently promoted into specified executable behavior.
 |------+------------------+----------------------------------------|
 | Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
 | Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y override-modify-final-self fragment | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
-| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list merge correspondence; arbitrary-graph singleton theorem; recursive source-style graph trace for successful uncached runs; production cached successes directly have fuel-independent graph derivations through a preserved cache invariant | Prove complete cached/uncached success and error outcome equivalence for valid finite graphs, then connect precedence to composition |
+| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list merge correspondence; arbitrary-graph cached and uncached singleton theorems; exact cached/uncached outcome equality for empty roots and all graph-validation errors; recursive source-style graph trace for successful uncached runs; production cached successes directly have fuel-independent graph derivations through a preserved cache invariant | Prove complete cached/uncached success and error outcome equivalence for valid finite graphs with nonempty roots, then connect precedence to composition |
 | Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
 | Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
 | Appendices and research proposals | Typed dispatch, method combination, lens and finite fix implementations; explicit boundaries | Prove the claimed correspondence for specified Appendix B constructs; keep Appendix C notation and future proposals in their stated research scope |
@@ -65,12 +65,19 @@ preserves that invariant on success. ~linearizeMany_derivation~ gives every
 successful cached batch a paper derivation without running the reference.
 When cached and uncached executions both succeed, uniqueness proves their
 outputs equal; admission no longer compares result lists at runtime.
+The uncached batch now validates once before visiting roots, including an
+empty root list. The previous empty-root behavior accepted malformed graphs;
+~linearizeMany_nil_eq_uncached~ and
+~linearizeMany_eq_uncached_validation_error~ prove exact complete-result
+equality for arbitrary empty batches and all graph-validation failures.
+~linearizeUncachedMany_singleton~ proves its scalar/batch result and error
+identity on every graph.
 [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] also offers optional admission when callers need an exact
 proof that cached and uncached executable results coincide on supplied graph
 and roots. That check may recompute shared ancestry exponentially and is
-kept out of the ordinary path. Full cached/uncached outcome equivalence and
-graph-to-composition simulation remain open; 640 finite graph comparisons
-remain observation evidence.
+kept out of the ordinary path. Valid-graph, nonempty-root cached/uncached
+outcome equivalence and graph-to-composition simulation remain open; 640
+finite graph comparisons remain observation evidence.
 
 The local toolchain does not currently contain Racket. Installing or running
 that separate source evaluator is a future verification step; CI continues to

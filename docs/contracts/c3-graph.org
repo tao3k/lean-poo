@@ -11,7 +11,9 @@
 | Compare a production batch with a paper derivation | ~C3.linearizeMany_eq_derivation~, ~C3.linearizeMany_order_count~ | Unique order and requested row count on every successful batch |
 | Compare two successful executable traversals | ~C3.linearizeMany_eq_uncached_success~ | Cached and uncached orders are equal on every graph/root list whenever both succeed |
 | Relate one-root batch and scalar calls | ~C3.linearizeMany_singleton~ | Kernel equality for every graph/root, including errors |
-| Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Recomputes each parent occurrence and root; semantic reference, possibly exponential on shared ancestry |
+| Relate uncached one-root batch and scalar calls | ~C3.linearizeUncachedMany_singleton~ | Kernel equality for every graph/root, including errors |
+| Compare empty-root and invalid-graph outcomes | ~C3.linearizeMany_nil_eq_uncached~, ~C3.linearizeMany_eq_uncached_validation_error~ | Exact ~Except~ equality for every empty batch and every graph-validation failure, with arbitrary requested roots |
+| Interpret a graph without cache | ~C3.linearizeUncached graph root~, ~linearizeUncachedMany graph roots~ | Batch validates once, including empty roots; recomputes every root and parent occurrence, possibly exponential on shared ancestry |
 | Retain a recursive paper-style derivation | ~C3.linearizeUncached_sound~, ~linearizeUncachedMany_sound~ | Every successful reference order has graph lookup, positional parent and C3 merge traces |
 | Admit cached graph results against the reference | ~C3.certifyGraph graph roots~ | On success, returns ~GraphCertificate~ with kernel proofs that both computations returned the same orders |
 | Consume the receipt | ~GraphCertificate.agrees~ | Cached and uncached ~Except~ outputs are equal for this exact graph/root list |
@@ -84,8 +86,10 @@ across different successful fuel budgets. The production traversal preserves
 ~CacheDerivations~ on every successful visit and yields a paper derivation for
 every successful batch without admission. Optional admission establishes
 executable equality on the supplied inputs when the uncached run also
-succeeds. Executable cached/uncached success and error outcome equivalence for
-all finite graphs and Racket/Lean language equivalence remain open.
+succeeds. Empty-root batches and graph-validation failures have equal complete
+~Except~ outcomes for arbitrary graphs and roots. For a valid graph with
+nonempty roots, executable cached/uncached success and error outcome
+equivalence and Racket/Lean language equivalence remain open.
 
 [[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's

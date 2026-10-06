@@ -279,14 +279,35 @@ theorem linearizeUncached_sound (graph : Graph) (root : String)
       cases success
       exact witness.property
 
-/-- Recompute every root and every parent occurrence independently. -/
+/-- Validate the graph once, then recompute every root and parent occurrence
+independently. In particular, an empty root list still validates the graph. -/
 def linearizeUncachedMany (graph : Graph) (roots : List String) :
-    Except C4.Error (List (List String)) :=
-  roots.mapM (linearizeUncached graph)
+    Except C4.Error (List (List String)) := do
+  let _ ← linearizeMany graph []
+  roots.mapM (fun root => (sourceVisit graph root [] (graph.length+1)).map Subtype.val)
 
-/-- Successful uncached batch results have one graph derivation per root. -/
-theorem linearizeUncachedMany_sound (graph : Graph) (roots : List String)
-    (orders : List (List String)) (success : linearizeUncachedMany graph roots = .ok orders) :
+/-- The one-root uncached batch has exactly the scalar result and error. -/
+theorem linearizeUncachedMany_singleton (graph : Graph) (root : String) :
+    linearizeUncachedMany graph [root] =
+      (linearizeUncached graph root).map (fun order => [order]) := by
+  cases valid : linearizeMany graph [] with
+  | error err =>
+    simp [linearizeUncachedMany, linearizeUncached, valid,
+      bind, Except.bind, Except.map]
+  | ok _ =>
+    cases result : sourceVisit graph root [] (graph.length+1) with
+    | error err =>
+      simp [linearizeUncachedMany, linearizeUncached, valid, result,
+        bind, Except.bind, Except.map]
+    | ok witness =>
+      simp [linearizeUncachedMany, linearizeUncached, valid, result,
+        bind, Except.bind, Except.map]
+      rfl
+
+private theorem sourceVisitMany_sound (graph : Graph) (roots : List String)
+    (orders : List (List String))
+    (success : roots.mapM (fun root =>
+      (sourceVisit graph root [] (graph.length+1)).map Subtype.val) = .ok orders) :
     ParentTraces graph (graph.length+1) roots orders := by
   induction roots generalizing orders with
   | nil =>
@@ -294,17 +315,33 @@ theorem linearizeUncachedMany_sound (graph : Graph) (roots : List String)
     cases success
     exact .nil
   | cons root rest ih =>
-    simp only [linearizeUncachedMany, List.mapM_cons] at success
-    cases first : linearizeUncached graph root with
+    simp only [List.mapM_cons] at success
+    cases first : (sourceVisit graph root [] (graph.length+1)).map Subtype.val with
     | error err => simp [first, bind, Except.bind] at success
     | ok order =>
-      cases tail : rest.mapM (linearizeUncached graph) with
-      | error err => simp [first, tail, bind, Except.bind] at success
-      | ok tails =>
-        simp [first, tail, bind, Except.bind] at success
-        cases success
-        exact .cons (linearizeUncached_sound graph root order first)
-          (ih tails tail)
+      cases source : sourceVisit graph root [] (graph.length+1) with
+      | error err => simp [source, Except.map] at first
+      | ok witness =>
+        have valEq : witness.val = order := by simpa [source, Except.map] using first
+        subst order
+        cases tail : rest.mapM (fun root =>
+            (sourceVisit graph root [] (graph.length+1)).map Subtype.val) with
+        | error err => simp [first, tail, bind, Except.bind] at success
+        | ok tails =>
+          simp [first, tail, bind, Except.bind] at success
+          cases success
+          exact .cons witness.property (ih tails tail)
+
+/-- Successful uncached batch results have one graph derivation per root. -/
+theorem linearizeUncachedMany_sound (graph : Graph) (roots : List String)
+    (orders : List (List String)) (success : linearizeUncachedMany graph roots = .ok orders) :
+    ParentTraces graph (graph.length+1) roots orders := by
+  unfold linearizeUncachedMany at success
+  cases valid : linearizeMany graph [] with
+  | error err => simp [valid, bind, Except.bind] at success
+  | ok _ =>
+    simp [valid, bind, Except.bind] at success
+    exact sourceVisitMany_sound graph roots orders success
 
 /-- Successful uncached orders satisfy the fuel-independent paper relation. -/
 theorem linearizeUncached_derivation (graph : Graph) (root : String)

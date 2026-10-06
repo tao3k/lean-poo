@@ -201,6 +201,25 @@ theorem linearizeMany_eq_uncached_success (graph : Graph) (roots : List String)
   (linearizeMany_derivation graph roots cachedOrders cached).unique
     (linearizeUncachedMany_derivation graph roots referenceOrders reference)
 
+/-- Empty batches now agree on both successful output and graph-validation
+errors, for every graph. This also covers duplicate-name and parent errors. -/
+theorem linearizeMany_nil_eq_uncached (graph : Graph) :
+    linearizeMany graph [] = linearizeUncachedMany graph [] := by
+  cases valid : validateGraph graph with
+  | error err =>
+    simp [linearizeMany, linearizeUncachedMany, valid, bind, Except.bind]
+  | ok _ =>
+    simp [linearizeMany, linearizeUncachedMany, valid, bind, Except.bind]
+    rfl
+
+/-- Every graph-validation failure is identical in both batch APIs, for any
+requested roots. No traversal or cache access occurs after that failure. -/
+theorem linearizeMany_eq_uncached_validation_error (graph : Graph)
+    (roots : List String) (error : C4.Error)
+    (invalid : validateGraph graph = .error error) :
+    linearizeMany graph roots = linearizeUncachedMany graph roots := by
+  simp [linearizeMany, linearizeUncachedMany, invalid, bind, Except.bind]
+
 inductive GraphAdmissionError where
   | cached (error : C4.Error)
   | reference (error : C4.Error)

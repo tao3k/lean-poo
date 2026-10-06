@@ -21,9 +21,13 @@ unique paper relation. [[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][
 agreement for memo entries carrying that relation, and adds an optional
 receipt that transfers derivations to cached results on admitted inputs.
 The production visit now preserves the invariant on success, so ordinary
-scalar and batch success directly implies a paper derivation.
+scalar and batch success directly implies a paper derivation. The uncached
+batch validates once, including empty roots. Both batch APIs have identical
+outcomes for empty roots and for every graph-validation failure; both
+one-root batch/scalar laws include exact error results.
 [[file:../../contracts/c3-graph.org][The graph guide]] distinguishes this zero-replay proof from admission's
-recomputation cost. Full cached/uncached error and success equivalence remains open.
+recomputation cost. Valid-graph, nonempty-root cached/uncached error and
+success equivalence remains open.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 

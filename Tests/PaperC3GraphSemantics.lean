@@ -25,6 +25,11 @@ private def roots : List String := ["X", "Y", "A", "X"]
   .error (.unknownNode "missing")
 #guard C3.linearizeUncached [("A", []), ("A", [])] "A" matches
   .error (.duplicateNode "A")
+#guard C3.linearizeUncachedMany [("A", []), ("A", [])] [] matches
+  .error (.duplicateNode "A")
+#guard C3.linearizeUncachedMany [("A", ["B", "B"])] ["A"] matches
+  .error .inconsistentOrder
+#guard C3.linearizeUncachedMany graph [] matches .ok []
 #guard C3.linearizeUncached [("O", []), ("A", ["O"]), ("B", ["O"]),
   ("X", ["A", "B"]), ("Y", ["B", "A"]), ("Z", ["X", "Y"])] "Z" matches
   .error .inconsistentOrder
@@ -86,6 +91,20 @@ private theorem successful_traversals_equal
   C3.linearizeMany_eq_uncached_success graph roots cachedOrders referenceOrders
     cached reference
 
+private theorem empty_batch_agrees (other : C3.Graph) :
+    C3.linearizeMany other [] = C3.linearizeUncachedMany other [] :=
+  C3.linearizeMany_nil_eq_uncached other
+
+private theorem invalid_batch_agrees (other : C3.Graph) (requested : List String)
+    (err : LeanPoo.C4.Error) (invalid : C3.validateGraph other = .error err) :
+    C3.linearizeMany other requested = C3.linearizeUncachedMany other requested :=
+  C3.linearizeMany_eq_uncached_validation_error other requested err invalid
+
+private theorem uncached_singleton_agrees (other : C3.Graph) (requested : String) :
+    C3.linearizeUncachedMany other [requested] =
+      (C3.linearizeUncached other requested).map (fun order => [order]) :=
+  C3.linearizeUncachedMany_singleton other requested
+
 private theorem admitted_derivation (certificate : C3.GraphCertificate graph roots) :
     C3.ParentDerivations graph roots certificate.orders :=
   certificate.derivations
@@ -113,6 +132,7 @@ private theorem memoized_hit_agrees
 #print axioms C3.linearizeMany_singleton
 #print axioms C3.linearizeUncached_sound
 #print axioms C3.linearizeUncachedMany_sound
+#print axioms C3.linearizeUncachedMany_singleton
 #print axioms C3.GraphTrace.unique
 #print axioms C3.ParentTraces.unique
 #print axioms C3.GraphTrace.eraseFuel
@@ -128,6 +148,8 @@ private theorem memoized_hit_agrees
 #print axioms C3.linearizeMany_eq_derivation
 #print axioms C3.linearizeMany_order_count
 #print axioms C3.linearizeMany_eq_uncached_success
+#print axioms C3.linearizeMany_nil_eq_uncached
+#print axioms C3.linearizeMany_eq_uncached_validation_error
 #print axioms C3.GraphCertificate.source_traces
 #print axioms C3.GraphCertificate.derivations
 #print axioms C3.GraphCertificate.eq_source
