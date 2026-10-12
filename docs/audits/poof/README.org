@@ -7,8 +7,9 @@ C3 object composition, alternate representations, descriptor/meta operations,
 dynamic contracts, parameterized safe C3 methods and the mutable hash-slot protocol.
 [[file:../../contracts/recursive-objects.org][Recursive objects]] add a safe interaction calculus with sound/complete
 unbounded evaluation, divergence characterization and related-carrier transfer.
-Complete cached/reference C3 outcomes are proved for finite DAGs of arbitrary
-depth with bounded decreasing ranks. The ordinary C3 order now reaches actual
+Complete cached/reference C3 outcomes are proved for every finite graph and
+root list, including cycles, exact first errors and sound warm caches at the
+production budget. The ordinary C3 order now reaches actual
 typed declaration composition and safe dynamic object observations.
 Typed Lean structure/class constructors now compile automatically into dependent
 field dictionaries, with inverse laws and proved prototype/descriptor/provider
@@ -40,9 +41,9 @@ to succeed. The reference checkout is not a library or CI dependency.
 | Manually reviewed units | 45: 35 translations, 7 discussions, 3 future proposals |
 | Original headings | 90, each assigned to a reviewed interval |
 | Source check map | 24 declared value adaptations |
-| Bound local evidence files | 174 |
-| Lean source inventory | 386 |
-| Canonical Lean check atoms | 187; diagnostics and native admissions are separate |
+| Bound local evidence files | 176 |
+| Lean source inventory | 388 |
+| Canonical Lean check atoms | 188; diagnostics and native admissions are separate |
 
 Counts bind review coverage and identities. Execution receipts, kernel
 proofs and a CI result at a particular head are distinct evidence.

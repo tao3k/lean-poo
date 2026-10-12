@@ -88,6 +88,7 @@ import LeanPoo.Prototype.CheckedMetaPrototype
 import LeanPoo.Prototype.C3Semantics
 import LeanPoo.Prototype.C3GraphSemantics
 import LeanPoo.Prototype.C3DAG
+import LeanPoo.Prototype.C3CacheCoherence
 import LeanPoo.Object.C3
 import LeanPoo.Object.Recursive
 import LeanPoo.Object.RecursiveValidation

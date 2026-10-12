@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "b92ad28bf40abe5cfcf3fae2a47d43d466af615d8353beb3ba527092f32517ac",
+  "requirements_sha256": "f08776b8ac6772747c1147e17a4abff427eedc5b615fa58d18e23398ba6a8069",
   "audit_tool_sha256": "87349a81ba508adc6b138fc3ad6020d9872198c1969aa42da559e7cd43dd1075",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -66,7 +66,10 @@
           "complete finite DAG outcomes",
           "C3 object slot composition",
           "safe dynamic recursive C3 objects",
-          "parameterized safe object methods with complete request sharing and field observation preservation"
+          "parameterized safe object methods with complete request sharing and field observation preservation",
+          "complete cached/reference scalar and batch outcomes on all finite graphs including cycles",
+          "active-path and finite-declaration budget coherence for sound warm caches",
+          "existing semantic certificate construction from actual cached success without reference replay"
         ],
         "implementation": [
           "LeanPoo/Prototype/MetaPrototype.lean",
@@ -82,7 +85,8 @@
           "LeanPoo/Prototype/CallableRecord.lean",
           "LeanPoo/Prototype/RecursiveReindex.lean",
           "LeanPoo/Prototype/DynamicValueEquality.lean",
-          "LeanPoo/Object/Callable.lean"
+          "LeanPoo/Object/Callable.lean",
+          "LeanPoo/Prototype/C3CacheCoherence.lean"
         ],
         "checks": [
           "Tests/MetaPrototype.lean",
@@ -98,9 +102,10 @@
           "Tests/C3Object.lean",
           "Tests/ObjectSemantics.lean",
           "Tests/CallableObjects.lean",
-          "Tests/DynamicValueEquality.lean"
+          "Tests/DynamicValueEquality.lean",
+          "Tests/C3CacheCoherence.lean"
         ],
-        "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+        "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
       },
       {
         "id": "simple-types",
@@ -346,7 +351,7 @@
       }
     ]
   },
-  "closure_sha256": "5665ed7aa34d29bab3eb24b81bccbdc21de917fd2160643d6e9a647da7604b3c",
+  "closure_sha256": "907aae1802c42642195e2f73db21a9934228fa1385aabbcc970b292d4344e03f",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -959,7 +964,8 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/C3CacheCoherence.lean"
       ],
       "checks": [
         "Tests/MetaPrototype.lean",
@@ -975,9 +981,10 @@
         "Tests/C3Object.lean",
         "Tests/ObjectSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/C3CacheCoherence.lean"
       ],
-      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
     },
     {
       "id": "meta-prototype",
@@ -1358,7 +1365,8 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/C3CacheCoherence.lean"
       ],
       "checks": [
         "Tests/C3.lean",
@@ -1372,9 +1380,10 @@
         "Tests/C3Object.lean",
         "Tests/ObjectSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/C3CacheCoherence.lean"
       ],
-      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
     },
     {
       "id": "helpers",
@@ -2503,6 +2512,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/C3CacheCoherence.lean": {
+      "sha256": "089e9b0918da461bbecc8b9d010484936d5d478fe5b27b42d4dc9ed575a94704",
+      "physical_lines": 284,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/C3DAG.lean": {
       "sha256": "0e4a17cf127a1df81d8c617840ae46423b82cf0f06a3c0732857bfac040d2d87",
       "physical_lines": 312,
@@ -2890,6 +2906,26 @@
       ],
       "eval_lines": [
         33
+      ]
+    },
+    "Tests/C3CacheCoherence.lean": {
+      "sha256": "0f9281030ea247bec56b36697f952724b003334865995b53ec38a04ce86f4a25",
+      "physical_lines": 172,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        82,
+        83,
+        91,
+        92
+      ],
+      "eval_lines": [
+        164
       ]
     },
     "Tests/C3DAG.lean": {
@@ -3685,8 +3721,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "5665ed7aa34d29bab3eb24b81bccbdc21de917fd2160643d6e9a647da7604b3c",
-      "physical_lines": 336,
+      "sha256": "907aae1802c42642195e2f73db21a9934228fa1385aabbcc970b292d4344e03f",
+      "physical_lines": 341,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3882,6 +3918,7 @@
     "LeanPoo/Prototype/AVL.lean",
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
+    "LeanPoo/Prototype/C3CacheCoherence.lean",
     "LeanPoo/Prototype/C3DAG.lean",
     "LeanPoo/Prototype/C3GraphSemantics.lean",
     "LeanPoo/Prototype/C3GraphTrace.lean",
@@ -3935,6 +3972,7 @@
     "Tests/AuditedResolver.lean",
     "Tests/C3.lean",
     "Tests/C3BatchCoherence.lean",
+    "Tests/C3CacheCoherence.lean",
     "Tests/C3DAG.lean",
     "Tests/C3GraphSemantics.lean",
     "Tests/C3LeafParents.lean",

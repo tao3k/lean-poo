@@ -37,7 +37,12 @@ parents and opposite declarations across roots. [[file:../../../LeanPoo/Prototyp
 arbitrary depth under bounded decreasing ranks, including missing parents and
 inconsistent merges. [[file:../../../LeanPoo/Object/C3.lean][Object.C3]] connects the certified order to actual slot
 composition, and [[file:../../../LeanPoo/Object/Recursive.lean][Object.Recursive]] supplies safe dynamic recursive reads.
-The general cyclic-graph outcome theorem remains outside the DAG scope.
+[[file:../../../LeanPoo/Prototype/C3CacheCoherence.lean][C3CacheCoherence]] extends complete scalar/batch outcome equality to every
+finite graph and root list, including cycles and validation failures. Successful
+derivations cannot contain a nonempty self walk. Actual active-path invariants
+and the finite declaration count justify each sound cache hit at the production
+budget. [[file:../../../Tests/C3CacheCoherence.lean][Coherence controls]] compare complete results to an independent scalar
+oracle, including concrete cycle names, first errors and warm ancestor reuse.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 

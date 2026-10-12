@@ -54,7 +54,10 @@
         "complete finite DAG outcomes",
         "C3 object slot composition",
         "safe dynamic recursive C3 objects",
-        "parameterized safe object methods with complete request sharing and field observation preservation"
+        "parameterized safe object methods with complete request sharing and field observation preservation",
+        "complete cached/reference scalar and batch outcomes on all finite graphs including cycles",
+        "active-path and finite-declaration budget coherence for sound warm caches",
+        "existing semantic certificate construction from actual cached success without reference replay"
       ],
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
@@ -70,7 +73,8 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/C3CacheCoherence.lean"
       ],
       "checks": [
         "Tests/MetaPrototype.lean",
@@ -86,9 +90,10 @@
         "Tests/C3Object.lean",
         "Tests/ObjectSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/C3CacheCoherence.lean"
       ],
-      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
     },
     {
       "id": "simple-types",

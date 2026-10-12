@@ -270,6 +270,7 @@ _check-contracts:
     {{lean}} Tests/C3TwoLeaf.lean
     {{lean}} Tests/C3LeafParents.lean
     {{lean}} Tests/C3DAG.lean
+    {{lean}} Tests/C3CacheCoherence.lean
     {{lean}} Tests/C3Object.lean
     {{lean}} Tests/ObjectSemantics.lean
     {{lean}} Tests/RecursiveValidation.lean

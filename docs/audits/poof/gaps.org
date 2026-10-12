@@ -9,6 +9,7 @@
 - [X] Execute all 76 original code blocks and compare canonical Racket/Lean results; enforce the gate in CI.
 - [X] Certified C3 order connected to actual typed declaration composition.
 - [X] Complete cached/reference outcomes on finite DAGs of arbitrary depth, under bounded decreasing ranks.
+- [X] Complete cached/reference scalar and batch outcomes on every finite graph, including cycles, exact first-error identities and sound warm caches at the production budget.
 - [X] Safe recursive interactions with unbounded operational soundness/completeness, stable observations, related-carrier transfer and divergence characterization.
 - [X] Safe C3 dynamic objects joining order, composition, final-self recursion and observable errors/pending results.
 - [X] Dynamic values and named recursive contracts; current registered function/descriptor identities.
@@ -40,7 +41,7 @@
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 174 local evidence files and 386 Lean source filenames; reject drift.
+- [X] Bind 176 local evidence files and 388 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.
@@ -48,7 +49,6 @@
 * Stronger claims outside the declared completion scope
 
 - [ ] Whole-language Scheme/Lean operational equivalence.
-- [ ] General cyclic-graph cached/reference C3 outcome theorem.
 - [ ] Arbitrary unsafe shared-thunk equivalence with the safe recursive calculus.
 - [ ] Unrestricted kernel IO refinement and machine-level time/allocation bounds.
 - [ ] Universal callable-property decisions, closure serialization and unspecified dynamic automation.

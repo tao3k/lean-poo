@@ -35,10 +35,26 @@ inputs with the separate unsafe shared-thunk runtime.
 [[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] proves cached/reference equality by induction on production fuel,
 using ranks to rule out active-path cycles and preserved derivation-backed
 cache entries to justify hits. Its theorem includes complete ~Except~ results.
-The general cyclic-graph outcome equality theorem remains outside this DAG
-scope. Existing cycle controls and arbitrary validation-error theorems remain
-separate evidence. [[file:../../../Tests/C3DAG.lean][C3DAG controls]] include deep shared ancestry, repeated
+[[file:../../../Tests/C3DAG.lean][C3DAG controls]] include deep shared ancestry, repeated
 roots, missing roots, missing parents and inconsistent orders.
+
+[[file:../../../LeanPoo/Prototype/C3CacheCoherence.lean][C3CacheCoherence]] now proves complete cached/reference scalar and batch
+~Except~ equality for every finite graph and root list. An edge below a successful
+derivation strictly decreases its unique order length, so a finite derived cache
+value cannot lie on an ancestry cycle. ~ActivePath~ retains declared, distinct
+ancestors and their actual nonempty walks to the current node. That invariant
+and the graph-size remaining budget prove reference completion at every sound
+hit. The parent loop preserves cache derivations and exact first errors, then
+the existing batch lifting theorem supplies arbitrary empty/repeated root lists.
+No DAG witness or successful-result premise is required by the public equality.
+
+[[file:../../../Tests/C3CacheCoherence.lean][New controls]] compare 4913 graphs, 34433 batches and 14739 warm reads to an
+independent scalar oracle, including 20795 cyclic batches and 2364 hot root hits.
+They retain missing/merge errors and validation priority. Forged cache entries,
+insufficient fuel and fabricated active paths discriminate the internal theorem's
+necessary hypotheses. The universal result concerns the actual production
+budget and sound current-graph caches; it asserts no arbitrary-cache or arbitrary-
+fuel equality and no unrestricted Scheme/Lean language equivalence.
 
 [[file:../../../LeanPoo/Object/Recursive.lean][Recursive objects]] assemble storage using the certified C3 order and read it
 through the same safe recursive semantics. [[file:../../../Tests/ObjectSemantics.lean][Object controls]] cover inheritance,

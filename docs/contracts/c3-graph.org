@@ -1,4 +1,4 @@
-#+TITLE: Ordinary C3 graph admission
+#+TITLE: Ordinary C3 graph coherence and admission
 
 [[file:../reusable-contracts.org][Capability index]] · [[file:c3-merge.org][Merge certificate]] · [[file:../audits/poof/semantic-closure.org][Paper boundary]]
 
@@ -7,6 +7,11 @@
 | Need | API | Guarantee and cost |
 |------+-----+--------------------|
 | Execute a validated graph with shared ancestor work | ~C3.linearizeMany graph roots~ | Fast ordinary path; one cache is reused across roots |
+| Compare complete results on every finite graph | ~C3.linearizeMany_eq_uncached~, ~C3.linearize_eq_uncached~ | Exact scalar/batch ~Except~ equality for every graph/root list, including cyclic ancestry, concrete first errors and validation failures |
+| Compare an arbitrary sound warm root cache | ~C3.visit_reference_root~ | Derivation-backed current-graph memo entries agree with the reference at ~graph.length + 1~ fuel |
+| Prove internal active-path coherence | ~C3.ActivePath~, ~C3.visit_reference_active~ | Declared/distinct actual ancestors and ~graph.length < path.length + fuel~ suffice for exact values/errors at every recursive visit |
+| Rule out a cycle behind a cache hit | ~C3.GraphDerivation.no_cycle~, ~reaches_decreases~ | A nonempty self walk contradicts a finite successful derivation; descendant order lengths strictly decrease |
+| Package a semantic receipt from an actual cached success | ~C3.GraphCertificate.of_cached~ | The existing certificate's reference proof follows from general coherence; constructing it executes no reference replay |
 | Prove a successful production result follows the paper graph relation | ~C3.linearize_derivation~, ~C3.linearizeMany_derivation~ | Direct kernel proof from the production traversal; no uncached replay or admission pass |
 | Compare a production batch with a paper derivation | ~C3.linearizeMany_eq_derivation~, ~C3.linearizeMany_order_count~ | Unique order and requested row count on every successful batch |
 | Compare two successful executable traversals | ~C3.linearizeMany_eq_uncached_success~ | Cached and uncached orders are equal on every graph/root list whenever both succeed |
@@ -38,7 +43,7 @@
 * Client pattern
 
 #+begin_src lean
-import LeanPoo.Prototype.C3GraphSemantics
+import LeanPoo.Prototype.C3CacheCoherence
 
 open LeanPoo.Prototype
 
@@ -61,6 +66,18 @@ theorem ordinaryRows (graph : C3.Graph) (roots : List String)
 ~C3.linearizeMany_derivation graph roots orders ok~ additionally returns the
 full positional paper proof. It needs no ~certifyGraph~ call.
 
+The complete equation has no graph-shape or successful-result premise:
+
+#+begin_src lean
+theorem completeBatch (graph : C3.Graph) (roots : List String) :
+    C3.linearizeMany graph roots = C3.linearizeUncachedMany graph roots :=
+  C3.linearizeMany_eq_uncached graph roots
+#+end_src
+
+~GraphCertificate.of_cached graph roots orders ok~ packages both executable
+success proofs from the actual production success. It supplies the existing
+~source_traces~, ~derivations~ and order/parent laws without a reference replay.
+
 For a validated graph whose successful lookups all have empty parent lists,
 ~FlatGraph.of_members~ builds the premise from the finite declaration rows.
 ~linearizeMany_eq_uncached_flat graph valid flat roots~ supplies executable
@@ -74,12 +91,11 @@ distinct leaf parents. [[file:../../Tests/C3TwoLeaf.lean][C3TwoLeaf]] retains th
 [[file:../../Tests/C3LeafParents.lean][C3LeafParents]] proves the graph premise for two roots sharing four leaves in
 opposite orders, then checks repeated and missing requests. The theorem itself
 quantifies over every root list. For graphs with deeper parent chains, [[file:../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now supplies
-~linearizeMany_eq_uncached_dag~ under bounded decreasing ranks. For arbitrary
-graphs outside that scope,
-~linearizeMany_eq_uncached_of_visit_coherence~ isolates the remaining premise:
-prove each root call returns the same full ~Except~ result for every cache
-backed by ~CacheDerivations~. The theorem carries that cache invariant across
-successful requests, so callers do not handwrite the batch loop proof.
+~linearizeMany_eq_uncached_dag~ under bounded decreasing ranks.
+[[file:../../LeanPoo/Prototype/C3CacheCoherence.lean][C3CacheCoherence]] supplies the general scalar coherence premise for every
+sound cache and finite graph, including cycles. The existing batch lifting
+theorem carries cache derivations across each successful root. The resulting
+~linearizeMany_eq_uncached~ requires only the graph and requested roots.
 
 The local reuse path can bypass admission entirely:
 
@@ -114,9 +130,10 @@ supplied ~ParentDerivations~, use ~linearizeMany_eq_derivation~ for equality
 without constructing a ~GraphCertificate~.
 
 ~GraphAdmissionError.cached~ reports the production computation's error;
-~reference~ reports failure of the uncached interpreter after a cached success.
-Two successful traversals cannot disagree, so admission has no disagreement
-branch or runtime list comparison.
+~reference~ is the retained error constructor for a reference failure after a
+cached success. General coherence proves this branch unreachable for the same
+graph/root list. The existing admission function still executes both paths;
+~GraphCertificate.of_cached~ builds its receipt directly from production success.
 
 The uncached interpreter uses the same validated graph shape and the certified
 merge. [[file:c3-merge.org][The merge theorem]] relates each candidate-list merge to the paper's
@@ -133,8 +150,36 @@ have equal complete outcomes. A matching first-root scalar failure also lifts
 to any batch tail without rerunning a proof for each tail. [[file:../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now establishes complete outcomes for finite DAGs with bounded
 decreasing ranks, including arbitrary depth and shared ancestry.
 [[file:recursive-objects.org][Recursive objects]] connects these orders to actual typed declarations and
-safe dynamic reads. General cyclic-graph outcome equality and unrestricted
-Racket/Lean language equivalence remain outside these theorems.
+safe dynamic reads. Complete cyclic-graph outcomes now follow from
+~linearizeMany_eq_uncached~ and ~linearize_eq_uncached~. Unrestricted Racket/Lean
+language equivalence remains outside these typed graph theorems.
+
+* Actual path, cache and budget boundaries
+
+~Edge~ uses the same first matching declaration as both traversals. ~Reaches~
+is a nonempty ancestry walk. A derived node's direct-parent orders are sublists
+of its merged tail, so every edge strictly decreases derived order length.
+Unique orders make a nonempty self walk impossible for a cached derivation.
+
+~ActivePath~ records distinct declared ancestors and their actual walks to the
+current node. Its length is bounded by the actual graph declaration count.
+At each lookup, pushing a fresh declared name preserves that invariant for all
+direct parents. The production remaining budget satisfies
+~graph.length < path.length + fuel~. These facts justify reference completion at
+every sound hit and preserve exact first errors through the parent loop.
+
+The root theorem uses an empty active path and ~graph.length + 1~ fuel. A forged
+cache can conceal a cycle. A genuine cache at insufficient fuel can return an
+order while the reference reports budget exhaustion as a cycle. A fabricated
+internal path can intersect the cached node's dependencies. The theorem retains
+its sound-cache, actual-path and budget hypotheses; it claims no equality for
+those unrelated inputs. Cyclic ancestry and insufficient fuel use the existing
+~cycle name~ error constructor, with the exact name retained by equality.
+
+[[file:../../Tests/C3CacheCoherence.lean][C3CacheCoherence controls]] compile generic equality and certificate clients,
+then compare 4913 graphs, 34433 batches, 14739 warm reads and 2364 hot roots to
+an independent scalar validator/merge oracle. They check concrete cycle names,
+missing/merge errors, validation/first-error priority and all three boundaries.
 
 [[file:../../Tests/C3GraphSemantics.lean][C3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's
