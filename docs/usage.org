@@ -5,6 +5,24 @@ This page is a compact map of the current Lean API.
 For task-oriented choices and generic proof contracts, see
 [[file:reusable-contracts.org][Reusable API contracts]].
 
+* Prepare and compose Functional consumers
+
+~Functional.Provider~ is a typed dictionary of optional context-dependent
+functions. ~Provider.compose child parent~ selects the child's factory when
+present and falls through to the parent otherwise. ~Provider.patchKey~ edits
+one key in a derived dictionary. Both keep the original dictionary reusable.
+
+~Requirements.prepareWith provider keys construct~ returns either the first
+missing key or a consumer function. Retain that function and call it with
+different contexts. ~Factory.map~ transforms its result; ~Factory.bind~ chooses
+a follow-up factory from that result and runs it at the same context.
+[[file:../Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] demonstrates these four operations with a basket
+quote. [[file:contracts/capability-families.org][Capability families]] states their dependent types and kernel laws.
+
+[[file:../Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and self/super record construction.
+[[file:../Examples/MutableState.lean][MutableState.lean]] shows the common failure convention: keep earlier writes,
+skip later writes, and retain a failed linear reference for a later attempt.
+
 * Build an object
 
 Gerbil-POO's ~.o~ is an object-definition form: it declares slots and returns

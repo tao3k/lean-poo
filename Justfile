@@ -213,6 +213,9 @@ check-example: check-compose
 [private]
 _check-examples:
     {{lean}} Examples/PrototypeCore.lean
+    {{lean}} Examples/DictionaryRecords.lean
+    {{lean}} Examples/MutableState.lean
+    {{lean}} Examples/FunctionalPipeline.lean
     {{lean}} Examples/DelayedNumbers.lean
     {{lean}} Examples/PrototypeFunctions.lean
     {{lean}} Examples/RecordPrototype.lean

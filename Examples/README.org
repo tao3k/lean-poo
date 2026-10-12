@@ -31,6 +31,9 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:TargetAndWrapping.lean][TargetAndWrapping]] | Wrap existing ancestor contributions and compare target-update policies under later extension. |
 | [[file:FirstClassObject.lean][FirstClassObject]] | First-class prototype values and delayed construction. |
 | [[file:PrototypeCore.lean][PrototypeCore]] | Open-recursive prototype composition and delayed values. |
+| [[file:DictionaryRecords.lean][DictionaryRecords]] | AVL lookup and overwrite, delayed self/super record slots, and a derived record that keeps the original readable. |
+| [[file:MutableState.lean][MutableState]] | The same partial writes after failure in pure, mutable and linear state; resume a failed linear alias and consume it on success. |
+| [[file:FunctionalPipeline.lean][FunctionalPipeline]] | Compose capability providers, prepare a consumer once, map its result and choose a follow-up factory at the same context. |
 
 The smaller files in this directory introduce one paper operation at a time.
 See [[file:../docs/usage.org][API usage]] for the corresponding library entry points.

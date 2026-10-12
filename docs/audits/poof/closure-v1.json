@@ -68,7 +68,8 @@
       ],
       "checks": [
         "Tests/Trees.lean",
-        "Tests/ConstructionSemantics.lean"
+        "Tests/ConstructionSemantics.lean",
+        "Examples/DictionaryRecords.lean"
       ],
       "boundary": "The structural dictionary satisfies the actual open-recursive source prototype equation, retaining final-self node/acons/ref/afoldr dispatch. Universal insertion ordering, exact overwrite/frame content and lookup laws assume OrderOps.Laws and initially sorted trees. BST insertion is total under a total comparator; folds equal in-order accumulation for every tree and accumulator. Arbitrary replacement node methods must preserve in-order contents."
     },
@@ -88,7 +89,8 @@
       ],
       "checks": [
         "Tests/Trees.lean",
-        "Tests/ConstructionSemantics.lean"
+        "Tests/ConstructionSemantics.lean",
+        "Examples/DictionaryRecords.lean"
       ],
       "boundary": "Node-only source extension and exact structural prototype equation. All successful rotations preserve the complete in-order key/value sequence. ValidAVL includes every cached height and balance condition. For arbitrary valid children differing by at most two, avlNode succeeds. Insertion into every valid AVL tree succeeds under a total comparator, preserves validity and grows height by zero or one. OrderOps.Laws adds ordering, lookup overwrite/frame and arbitrary-list construction correspondence. Malformed cached input retains explicit errors."
     },
@@ -114,7 +116,8 @@
         "Tests/ObjectDefinition.lean",
         "Tests/DictionaryRecord.lean",
         "Tests/Representations.lean",
-        "Tests/ConstructionSemantics.lean"
+        "Tests/ConstructionSemantics.lean",
+        "Examples/DictionaryRecords.lean"
       ],
       "boundary": "Universal observational simulation connects function records and certified AVL dictionary records for arbitrary corresponding delayed slot bodies and composed layers. It retains related final-self and lazy inherited observations, missing slots, user errors and every untouched key; dictionary parents must be valid and sorted under OrderOps.Laws. DictionaryRecord.fromOrder uses the structural source solution. Key-list projection, child-before-parent lists including duplicates, metadata exposure and both override policies are kernel laws. The relation is on the concrete typed carriers."
     },
@@ -392,7 +395,8 @@
         "Tests/FunctionalDependencyAnalysis.lean",
         "Tests/FunctionalAnalyzedCache.lean",
         "Tests/FunctionalAnalyzedMigration.lean",
-        "Tests/MutableRecordSemantics.lean"
+        "Tests/MutableRecordSemantics.lean",
+        "Examples/MutableState.lean"
       ],
       "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
     },

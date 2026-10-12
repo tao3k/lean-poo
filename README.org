@@ -66,6 +66,9 @@ caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.le
 [[file:Examples/QualifiedCombination.lean][QualifiedCombination.lean]] defines a custom typed method combination over those dispatch
 shapes.
 [[file:Examples/BoundedDispatch.lean][BoundedDispatch.lean]] shows the eight-shape LRU cache under dynamic dispatch.
+[[file:Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and delayed self/super records.
+[[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
+[[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
 [[file:Benchmarks/README.org][Benchmarks]].
 

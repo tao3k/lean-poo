@@ -38,6 +38,20 @@ to a larger context; the result is ~Result (project outer)~, preserving its
 exact dependency. Supplying a fixed old witness where a new context requires
 a different witness is still rejected by Lean.
 
+~Factory.map change factory~ transforms one result with access to its context;
+the output remains indexed by that exact context. ~map_identity~ and
+~map_compose~ prove its identity and composition laws. ~Factory.bind factory next~
+uses the result to choose a follow-up factory, then invokes it at the same
+context. ~bind_apply~ and ~bind_assoc~ prove application and associativity for
+arbitrary dependent result families.
+
+~Provider.compose child parent~ builds a capability dictionary where a present
+child factory wins and an absent child key falls through to the parent.
+Composition selects functions without invoking them. ~compose_provided~,
+~compose_inherited~ and ~compose_assoc~ establish these lookup and ordering laws.
+Use ~Provider.patchKey~ from ~LeanPoo.Functional.RegistryPatch~ to provide,
+replace or remove one capability in a derived immutable dictionary.
+
 The [[file:../use-cases/navier-stokes-euler.org][Euler budget study]] identifies actual upstream factory call sites.
 [[file:../../Examples/ContextualFactories.lean][ContextualFactories]] shows the provider boundary with arbitrary
 context-indexed mathematical types, a residual-only override, and a
@@ -67,6 +81,15 @@ exactly the provider's selected function. ~Selected.available~ exposes this
 for any requested key. ~prepare_origin~ combines it with a verified C4 order
 and proves original-graph ancestry for every requested capability. These
 contracts are generic over arbitrary key and context/result types.
+
+For an ordinary consumer, ~Requirements.prepareWith provider keys construct~
+combines preparation, tuple building and ~Factory.map~. Match success once and
+retain the returned ~Factory~. ~prepareWith_ready~ proves it uses the exact
+selected tuple; ~prepareWith_error_iff~ preserves the first missing key exactly.
+The [[file:../../Examples/FunctionalPipeline.lean][FunctionalPipeline]] scenario constructs quotes for two baskets,
+overrides one price capability and reuses the original provider. Consumers that
+also need a joint result certificate use the existing ~Requirements.prepareConsumer~
+API in [[file:certified-consumers.org][Certified consumer construction]].
 
 [[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] now uses this library tuple instead of a
 consumer-owned preparation record and repeated ~require~ statements. Changing

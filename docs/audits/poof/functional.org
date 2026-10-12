@@ -28,6 +28,17 @@ those semantics for arbitrary host callbacks.
 | F07, 2084–2154 | How can generalized getters/setters and wrappers compose different representations? | [[file:../../../LeanPoo/Functional/ViewComposition.lean][ViewComposition]], [[file:../../../LeanPoo/Functional/BorrowedView.lean][BorrowedView]] and [[file:../../../LeanPoo/Functional/ObservedView.lean][ObservedView]] compose/narrow named consumer interfaces while retaining public proofs; [[file:../../../Tests/FunctionalViewComposition.lean][view controls]] check flattened composition. | These are consumer projections. The paper's prototype lens constructor is Prototype.lensGen; a complete dynamic meta-object protocol remains a research proposal. |
 | F08, 1434–1448 | Can descriptor objects and typeclass dictionaries be transformed automatically? | [[file:../../../LeanPoo/Deriving/DictionaryCompiler.lean][derive_dictionary]] reads actual Lean structure/class constructors and generates dependent fields, both conversions and kernel inverse proofs. [[file:../../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] transports actual self/super prototypes, delayed composition, finite unfoldings and typed descriptors; [[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport]] preserves C4 provider selection, first errors, joint proofs and exact context-cache hits. [[file:../../contracts/dictionary-classes.org][Compiled clients and API guide]] cover dependent data/proofs, inherited dictionaries and actual migrations. | Typed Lean constructor compilation is implemented for Type-valued structures/classes, including Sort-valued fields and parameters. Prop-valued classes and unsupported indexed constructors are refused. General Scheme source compilation, closure serialization and unrestricted IO/cost equivalence remain open. |
 
+* Small composition APIs
+
+[[file:../../../Examples/FunctionalPipeline.lean][FunctionalPipeline]] demonstrates the reusable operations corresponding to
+F01: ~Provider.compose~ for child-first capability dictionaries,
+~Factory.map~ for result adaptation, ~Factory.bind~ for a follow-up at the same
+context, and ~Requirements.prepareWith~ for a prepared consumer. The library
+proves identity/composition, associativity, exact selected-tuple construction
+and first-missing-error preservation. [[file:../../../Tests/FunctionalRequirements.lean][Generic clients]] use dependent result
+families. These are Lean convenience APIs for the construction; the source does
+not prescribe their names or infer requirements from arbitrary callbacks.
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and
