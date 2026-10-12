@@ -49,6 +49,83 @@ theorem bind_assoc {Context : Type u} {Input : Context → Type v}
     (second : ∀ context, Middle context → Factory Context Output) :
     bind (bind factory first) second = bind factory (fun context value => bind (first context value) second) := rfl
 
+/-- Select a factory at application time using the supplied context. -/
+def choose {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result) :
+    Factory Context Result := fun context =>
+  if condition context then whenTrue context else whenFalse context
+
+theorem choose_true {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result)
+    (context : Context) (yes : condition context = true) :
+    choose condition whenTrue whenFalse context = whenTrue context := by
+  simp [choose, yes]
+
+theorem choose_false {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result)
+    (context : Context) (no : condition context = false) :
+    choose condition whenTrue whenFalse context = whenFalse context := by
+  simp [choose, no]
+
+/-- Apply a list of retained factories at one context, preserving its order. -/
+def sequence {Context : Type u} {Result : Context → Type v}
+    (factories : List (Factory Context Result)) : Factory Context (fun context => List (Result context)) :=
+  fun context => factories.map (fun factory => factory context)
+
+@[simp] theorem sequence_append {Context : Type u} {Result : Context → Type v}
+    (left right : List (Factory Context Result)) (context : Context) :
+    sequence (left ++ right) context = sequence left context ++ sequence right context := by
+  simp [sequence]
+
+@[simp] theorem sequence_length {Context : Type u} {Result : Context → Type v}
+    (factories : List (Factory Context Result)) (context : Context) :
+    (sequence factories context).length = factories.length := by
+  simp [sequence]
+
+/-- Aggregate factory results in list order at the same context. Every listed
+factory is applied; error-valued results follow the supplied combine policy. -/
+def fold {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (factories : List (Factory Context Result)) : Factory Context Acc :=
+  fun context => factories.foldl (fun acc factory => combine context acc (factory context)) (initial context)
+
+theorem fold_sequence {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (factories : List (Factory Context Result)) (context : Context) :
+    fold combine initial factories context = (sequence factories context).foldl (combine context) (initial context) := by
+  simp [fold, sequence, List.foldl_map]
+
+theorem fold_append {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (left right : List (Factory Context Result)) :
+    fold combine initial (left ++ right) = fold combine (fold combine initial left) right := by
+  funext context
+  simp [fold, List.foldl_append]
+
+/-- Recover a context-dependent domain error. Successful results are retained
+exactly; the handler's result, including a second error, is returned unchanged. -/
+def recover {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context))) :
+    Factory Context (fun context => Except Error (Result context)) := fun context =>
+  match attempt context with
+  | .ok value => .ok value
+  | .error error => handler error context
+
+theorem recover_ok {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (value : Result context) (success : attempt context = .ok value) :
+    recover attempt handler context = .ok value := by
+  simp [recover, success]
+
+theorem recover_error {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (error : Error) (failed : attempt context = .error error) :
+    recover attempt handler context = handler error context := by
+  simp [recover, failed]
+
 /-- Preserve an existing context-indexed theorem as a proof-bearing factory.
 PLift changes its sort, not its proposition, data, or guards. -/
 def fromProof {Context : Type u} {Claim : Context → Prop}

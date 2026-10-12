@@ -19,6 +19,13 @@ a follow-up factory from that result and runs it at the same context.
 [[file:../Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] demonstrates these four operations with a basket
 quote. [[file:contracts/capability-families.org][Capability families]] states their dependent types and kernel laws.
 
+For context-selected policies and batches, use ~Factory.choose~, ~sequence~
+and ~fold~. ~Factory.recover~ applies an explicit handler to a selected factory's
+domain error. [[file:../Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] collects bounded readings and reports them.
+[[file:../Examples/PreparedViews.lean][PreparedViews.lean]] shares prepared functions through named and narrow readers.
+[[file:../Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] reuses certified dependency data while constructing
+outputs for each current request.
+
 [[file:../Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and self/super record construction.
 [[file:../Examples/MutableState.lean][MutableState.lean]] shows the common failure convention: keep earlier writes,
 skip later writes, and retain a failed linear reference for a later attempt.

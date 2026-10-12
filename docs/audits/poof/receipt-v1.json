@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "c9c374c65860b7b1e9c0733e602fdc70df7021a1ff24eb7bd2134c38b4248851",
+  "requirements_sha256": "7ee9908b48ea3cf76c2e2508e90afa3522b88d63929536ed3c553cc3490645e0",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1032,7 +1032,9 @@
         "LeanPoo/Object/Callable.lean",
         "LeanPoo/Functional/Assembly.lean",
         "LeanPoo/Functional/Requirements.lean",
-        "LeanPoo/Functional/CertifiedRequirements.lean"
+        "LeanPoo/Functional/CertifiedRequirements.lean",
+        "LeanPoo/Functional/Access.lean",
+        "LeanPoo/Functional/View.lean"
       ],
       "checks": [
         "Examples/DelayedNumbers.lean",
@@ -1044,9 +1046,13 @@
         "Tests/DynamicValueEquality.lean",
         "Tests/FunctionalRequirements.lean",
         "Tests/FunctionalCertifiedRequirements.lean",
-        "Examples/FunctionalPipeline.lean"
+        "Examples/FunctionalPipeline.lean",
+        "Examples/ValidationWorkflow.lean",
+        "Examples/PreparedViews.lean",
+        "Tests/FunctionalAccess.lean",
+        "Tests/FunctionalView.lean"
       ],
-      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional providers retain context-indexed factories and explicitly prepare heterogeneous provided/required capability contracts. Joint result proofs admit consumer constraints; availability does not infer arbitrary callback termination. Context-preserving factory map/bind and child-first provider composition have kernel composition laws. prepareWith builds an ordinary consumer from the exact selected tuple and preserves the original first missing key; these are local convenience APIs for this construction."
+      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional providers retain context-indexed factories and explicitly prepare heterogeneous provided/required capability contracts. Joint result proofs admit consumer constraints; availability does not infer arbitrary callback termination. Context-preserving factory map/bind and child-first provider composition have kernel composition laws. prepareWith builds an ordinary consumer from the exact selected tuple and preserves the original first missing key; these are local convenience APIs for this construction. Factory choose/sequence/fold/recover preserve dependent context indices, selected branches, ordered aggregation and complete success/handler error outcomes. Named access and narrow consumer projection retain exact selected factories and can prepare independently of unrequested missing capabilities. These local consumer APIs are demonstrated by bounded validation and shared prepared views."
     },
     {
       "id": "without-subtyping",
@@ -1151,7 +1157,8 @@
         "Tests/DynamicValueEquality.lean",
         "Tests/FunctionalCachedPreparation.lean",
         "Tests/FunctionalContextSlot.lean",
-        "Tests/FunctionalContextPullback.lean"
+        "Tests/FunctionalContextPullback.lean",
+        "Examples/CertifiedContextCache.lean"
       ],
       "boundary": "Typed retained prototype/value pairs and later extension coexist with safe recursive C3 plans and fresh shared instances. Slot reads preserve final-self requests and carry evaluation proofs for the exact plan; arbitrary Scheme closures are outside the declared value universe. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional preparation and exact-context caches retain consumer factories, results and joint proofs; these typed consumer caches complement the first-class object pair."
     },
@@ -2321,6 +2328,17 @@
     "lean_translation": 35
   },
   "local_evidence": {
+    "Examples/CertifiedContextCache.lean": {
+      "sha256": "34ed31834957e1d613100a35b9b084e4ef19dd62640478968e8ad9c5219aaae9",
+      "physical_lines": 68,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        63
+      ],
+      "eval_lines": [
+        66
+      ]
+    },
     "Examples/DelayedNumbers.lean": {
       "sha256": "369a977987d8f87d218bdc8733fd9df5152461f19aa33719cd1a1b757537110f",
       "physical_lines": 24,
@@ -2396,6 +2414,20 @@
         32
       ]
     },
+    "Examples/PreparedViews.lean": {
+      "sha256": "8a6e8b27ebb13786eb9c9ff9828c624c5add7733d97ca7c496c348571c9e25c6",
+      "physical_lines": 68,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        50,
+        53,
+        54,
+        60
+      ],
+      "eval_lines": [
+        62
+      ]
+    },
     "Examples/PrototypeCore.lean": {
       "sha256": "af0d8c18a26eb2e71afa97ff6fcd13494811e7834e688a3a85c53cc2396c4ae7",
       "physical_lines": 48,
@@ -2438,6 +2470,20 @@
         33
       ]
     },
+    "Examples/ValidationWorkflow.lean": {
+      "sha256": "aa292053440b89a8774f00678cb5c09ea7e2bbe6a4445294ff05f55559285750",
+      "physical_lines": 47,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        37,
+        38,
+        39,
+        40
+      ],
+      "eval_lines": [
+        43
+      ]
+    },
     "LeanPoo/Deriving/DictionaryCompiler.lean": {
       "sha256": "b3b6cc4a51dcd3d9681d80e2926bbf30616e7ab7e4b429c383d345d456e3341b",
       "physical_lines": 121,
@@ -2448,6 +2494,13 @@
     "LeanPoo/Functional/Absence.lean": {
       "sha256": "eaa5ab3a4649b9922c5e6c1ce632ab71b5192bd3685d86872712a6044fcfcaf6",
       "physical_lines": 96,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/Access.lean": {
+      "sha256": "8075540dfc19274c25dacacf9ad37fa107cbb7a82f143942f864057bb15af4e9",
+      "physical_lines": 65,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2467,8 +2520,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/Assembly.lean": {
-      "sha256": "9845ef510bbe2cca181f3c4eda72e6965cf7780185aff58bb6ff04a4fbeaa580",
-      "physical_lines": 210,
+      "sha256": "2119d01e36980a551ca3152a270f8f1383342e945c70fdcd57a80d835fa9545d",
+      "physical_lines": 287,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2595,6 +2648,13 @@
     "LeanPoo/Functional/Requirements.lean": {
       "sha256": "c52b9cba0d4291dc5c0d3563c1b547c088760ef04d6fee22576d19e230cae606",
       "physical_lines": 158,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/View.lean": {
+      "sha256": "192f5ab369c3c8b4908569747ee8c7783548832a4a1fb5b529cf40ad8f5fbf7e",
+      "physical_lines": 67,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3601,6 +3661,21 @@
         80
       ]
     },
+    "Tests/FunctionalAccess.lean": {
+      "sha256": "49bf667172bbbacdc489d7cc289fd2e62e67b63016f51d715719e176ff2b97a2",
+      "physical_lines": 101,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        74,
+        75,
+        76,
+        77,
+        84
+      ],
+      "eval_lines": [
+        100
+      ]
+    },
     "Tests/FunctionalAnalyzedCache.lean": {
       "sha256": "5df92fdb670005ba3c3c026642f3f88fc65b60497189b2c5658acf5af6693579",
       "physical_lines": 103,
@@ -3777,15 +3852,28 @@
       ]
     },
     "Tests/FunctionalRequirements.lean": {
-      "sha256": "7be634b81295779f21b4fcc4505ec4b9691230bd52d96a4fd47eaa0592140206",
-      "physical_lines": 175,
+      "sha256": "75e9811824a91938425bcaaf45dcc7935b456d26145968fcb742ab8b28965033",
+      "physical_lines": 202,
       "unsafe_declaration_lines": [],
       "guard_lines": [
-        121,
-        159
+        140,
+        178
       ],
       "eval_lines": [
-        122
+        141
+      ]
+    },
+    "Tests/FunctionalView.lean": {
+      "sha256": "2173b60339e85bf447ae69d07f98bedc38863425b68da82541767d56cb65bd3d",
+      "physical_lines": 95,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        62,
+        63,
+        72
+      ],
+      "eval_lines": [
+        94
       ]
     },
     "Tests/FunctionalViewComposition.lean": {
@@ -4164,6 +4252,7 @@
   },
   "source_file_inventory": [
     "Examples/BoundedDispatch.lean",
+    "Examples/CertifiedContextCache.lean",
     "Examples/CertifiedInvalidation.lean",
     "Examples/ClassMigration.lean",
     "Examples/ContextualFactories.lean",
@@ -4182,6 +4271,7 @@
     "Examples/MutableState.lean",
     "Examples/NestedObjectDefinition.lean",
     "Examples/ObjectDefinition.lean",
+    "Examples/PreparedViews.lean",
     "Examples/ProofReuse.lean",
     "Examples/PrototypeCore.lean",
     "Examples/PrototypeFunctions.lean",
@@ -4195,6 +4285,7 @@
     "Examples/SpecificationComposition.lean",
     "Examples/StaticMethodSelection.lean",
     "Examples/TargetAndWrapping.lean",
+    "Examples/ValidationWorkflow.lean",
     "LeanPoo/C4/AuditedResolver.lean",
     "LeanPoo/C4/CertificateExpansion.lean",
     "LeanPoo/C4/ComputeInvariant.lean",

@@ -39,6 +39,14 @@ and first-missing-error preservation. [[file:../../../Tests/FunctionalRequiremen
 families. These are Lean convenience APIs for the construction; the source does
 not prescribe their names or infer requirements from arbitrary callbacks.
 
+The same context-preserving layer includes ~Factory.choose~, ~sequence~, ~fold~
+and ~recover~. Their branch, order, aggregation and exact recovery contracts
+compile for dependent result families. [[file:../../../Examples/ValidationWorkflow.lean][ValidationWorkflow]] demonstrates these
+APIs with bounded readings. [[file:../../../Examples/PreparedViews.lean][PreparedViews]] exercises the existing named/narrow
+consumer APIs; [[file:../../../Examples/CertifiedContextCache.lean][CertifiedContextCache]] demonstrates joint admission and exact-base
+dependency caching for outer requests. These are usage scenarios for the typed
+construction and consumer machinery.
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and

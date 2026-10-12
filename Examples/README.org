@@ -34,6 +34,9 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:DictionaryRecords.lean][DictionaryRecords]] | AVL lookup and overwrite, delayed self/super record slots, and a derived record that keeps the original readable. |
 | [[file:MutableState.lean][MutableState]] | The same partial writes after failure in pure, mutable and linear state; resume a failed linear alias and consume it on success. |
 | [[file:FunctionalPipeline.lean][FunctionalPipeline]] | Compose capability providers, prepare a consumer once, map its result and choose a follow-up factory at the same context. |
+| [[file:ValidationWorkflow.lean][ValidationWorkflow]] | Select strict or clamping validation per context, recover domain errors explicitly, and collect/aggregate independent readings in order. |
+| [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
+| [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 
 The smaller files in this directory introduce one paper operation at a time.
 See [[file:../docs/usage.org][API usage]] for the corresponding library entry points.

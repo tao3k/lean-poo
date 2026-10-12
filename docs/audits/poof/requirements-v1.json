@@ -353,7 +353,9 @@
         "LeanPoo/Object/Callable.lean",
         "LeanPoo/Functional/Assembly.lean",
         "LeanPoo/Functional/Requirements.lean",
-        "LeanPoo/Functional/CertifiedRequirements.lean"
+        "LeanPoo/Functional/CertifiedRequirements.lean",
+        "LeanPoo/Functional/Access.lean",
+        "LeanPoo/Functional/View.lean"
       ],
       "checks": [
         "Examples/DelayedNumbers.lean",
@@ -365,9 +367,13 @@
         "Tests/DynamicValueEquality.lean",
         "Tests/FunctionalRequirements.lean",
         "Tests/FunctionalCertifiedRequirements.lean",
-        "Examples/FunctionalPipeline.lean"
+        "Examples/FunctionalPipeline.lean",
+        "Examples/ValidationWorkflow.lean",
+        "Examples/PreparedViews.lean",
+        "Tests/FunctionalAccess.lean",
+        "Tests/FunctionalView.lean"
       ],
-      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional providers retain context-indexed factories and explicitly prepare heterogeneous provided/required capability contracts. Joint result proofs admit consumer constraints; availability does not infer arbitrary callback termination. Context-preserving factory map/bind and child-first provider composition have kernel composition laws. prepareWith builds an ordinary consumer from the exact selected tuple and preserves the original first missing key; these are local convenience APIs for this construction."
+      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional providers retain context-indexed factories and explicitly prepare heterogeneous provided/required capability contracts. Joint result proofs admit consumer constraints; availability does not infer arbitrary callback termination. Context-preserving factory map/bind and child-first provider composition have kernel composition laws. prepareWith builds an ordinary consumer from the exact selected tuple and preserves the original first missing key; these are local convenience APIs for this construction. Factory choose/sequence/fold/recover preserve dependent context indices, selected branches, ordered aggregation and complete success/handler error outcomes. Named access and narrow consumer projection retain exact selected factories and can prepare independently of unrequested missing capabilities. These local consumer APIs are demonstrated by bounded validation and shared prepared views."
     },
     {
       "id": "without-subtyping",
@@ -472,7 +478,8 @@
         "Tests/DynamicValueEquality.lean",
         "Tests/FunctionalCachedPreparation.lean",
         "Tests/FunctionalContextSlot.lean",
-        "Tests/FunctionalContextPullback.lean"
+        "Tests/FunctionalContextPullback.lean",
+        "Examples/CertifiedContextCache.lean"
       ],
       "boundary": "Typed retained prototype/value pairs and later extension coexist with safe recursive C3 plans and fresh shared instances. Slot reads preserve final-self requests and carry evaluation proofs for the exact plan; arbitrary Scheme closures are outside the declared value universe. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional preparation and exact-context caches retain consumer factories, results and joint proofs; these typed consumer caches complement the first-class object pair."
     },

@@ -69,6 +69,9 @@ shapes.
 [[file:Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and delayed self/super records.
 [[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
 [[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
+[[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
+[[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
+[[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
 [[file:Benchmarks/README.org][Benchmarks]].
 

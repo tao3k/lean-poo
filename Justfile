@@ -216,6 +216,9 @@ _check-examples:
     {{lean}} Examples/DictionaryRecords.lean
     {{lean}} Examples/MutableState.lean
     {{lean}} Examples/FunctionalPipeline.lean
+    {{lean}} Examples/ValidationWorkflow.lean
+    {{lean}} Examples/PreparedViews.lean
+    {{lean}} Examples/CertifiedContextCache.lean
     {{lean}} Examples/DelayedNumbers.lean
     {{lean}} Examples/PrototypeFunctions.lean
     {{lean}} Examples/RecordPrototype.lean

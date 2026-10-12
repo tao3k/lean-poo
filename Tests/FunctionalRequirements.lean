@@ -6,6 +6,25 @@ open Functional C4
 universe u v w x y
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
 
+example {Result : Context → Type v} (condition : Context → Bool)
+    (first second : Factory Context Result) (context : Context) (selected : condition context = false) :
+    Factory.choose condition first second context = second context :=
+  Factory.choose_false condition first second context selected
+
+example {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (left right : List (Factory Context Result)) :
+    Factory.fold combine initial (left ++ right) =
+      Factory.fold combine (Factory.fold combine initial left) right :=
+  Factory.fold_append combine initial left right
+
+example {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (error : Error) (failed : attempt context = .error error) :
+    Factory.recover attempt handler context = handler error context :=
+  Factory.recover_error attempt handler context error failed
+
 /- Public composition clients retain genuinely context-dependent result types. -/
 example {Input : Context → Type v} {Middle : Context → Type w} {Output : Context → Type x}
     (factory : Factory Context Input) (first : ∀ context, Input context → Middle context)
@@ -172,4 +191,12 @@ private def renamedCase : Bool :=
 #print axioms Provider.compose_assoc
 #print axioms Requirements.prepareWith_ready
 #print axioms Requirements.prepareWith_error_iff
+#print axioms Factory.choose_true
+#print axioms Factory.choose_false
+#print axioms Factory.sequence_append
+#print axioms Factory.sequence_length
+#print axioms Factory.fold_sequence
+#print axioms Factory.fold_append
+#print axioms Factory.recover_ok
+#print axioms Factory.recover_error
 end LeanPoo.Tests.FunctionalRequirements
