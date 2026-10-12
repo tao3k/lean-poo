@@ -29,6 +29,7 @@ import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
 import LeanPoo.Functional.Requirements
 import LeanPoo.Functional.GuardedExtension
+import LeanPoo.Functional.GraphConstraints
 import LeanPoo.Functional.CertifiedRequirements
 import LeanPoo.Functional.CachedPreparation
 import LeanPoo.Functional.ConsumerRevision

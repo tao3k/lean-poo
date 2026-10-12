@@ -33,10 +33,12 @@
 - [X] Functional capabilities, consumer contracts and local witness problems are mapped to the paper's design questions with explicit evidence boundaries.
 - [X] Watched method absences have complete admission and first-present factory proofs; guarded provider transactions preserve all absences or retain a conflict, including changes hidden after a first missing key.
 
+- [X] Changed graph/root compilation joins positive and negative contracts with exact factory/proof/context-cache revision; surviving overlays and refused snapshots retain their declared identities.
+
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 158 local evidence files and 370 Lean source filenames; reject drift.
+- [X] Bind 162 local evidence files and 374 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.
@@ -48,7 +50,7 @@
 - [ ] Arbitrary unsafe shared-thunk equivalence with the safe recursive calculus.
 - [ ] Unrestricted kernel IO refinement and machine-level time/allocation bounds.
 - [ ] Universal callable-property decisions, closure serialization and unspecified dynamic automation.
-- [ ] Automatic discovery of hidden capability assumptions and graph-changing migration of positive/negative contracts.
+- [ ] Automatic discovery of hidden capability assumptions and language-wide invalidation.
 - [ ] General compiler transformations between typeclass dictionaries and prototype descriptor classes.
 
 The reviewed construction flag is true. The stronger whole-paper semantic flag

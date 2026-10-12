@@ -142,6 +142,28 @@ why preserving one cached error cannot prove absence of every later key.
 
 [[file:functional.org][The question map]] distinguishes these explicit contracts, existing
 consumer machinery, local witness-transport extensions and broader unresolved
-questions. The new policy retains a fixed graph/order and key family. It does
-not infer hidden negative assumptions, migrate changed topology or supply a
-universal cross-library method conflict policy.
+questions. The provider-transaction policy retains a fixed graph/order;
+[[file:../../contracts/graph-migrations.org][Graph migration]] now admits arbitrary verified target topology/root changes
+and joins positive/negative contracts with cache revision. It retains the
+context/key/value family and explicit watched lists. Hidden assumptions and a
+universal cross-library conflict policy remain outside the contract.
+
+* Verified graph migration and constraint caches
+
+[[file:../../../LeanPoo/Functional/GraphMigration.lean][GraphMigration]] compiles the actual target graph/root, retains complete overlays
+for surviving names, installs new providers and completes all requested edits.
+Its acceptance theorem characterizes actual compilation and transaction success.
+The computed reuse decision proves exact preparation equality when first winning
+identities remain equal and target ancestry/key edit scopes are disjoint.
+No host function equality is tested.
+
+[[file:../../../LeanPoo/Functional/GraphConstraints.lean][GraphConstraints]] proves complete acceptance exactly for watched absences and
+available positive factories on the completed target. A negative refusal contains
+the actual first present factory; a positive refusal proves the exact missing
+error. Stable success retains arbitrary joint proof and the exact hot context
+slot. Fresh success requires new joint admission, starts an empty slot and uses
+the already prepared factories. Certified availability prevents publication of
+a missing positive requirement. These laws hold for arbitrary dependent families.
+The [[file:../../../Tests/FunctionalGraphMigration.lean][660 migration controls]] and [[file:../../../Tests/FunctionalGraphConstraints.lean][6300 constraint/cache controls]] include changed
+roots, deletion/fallback, new reachability, suffixes, retained overrides, repeated
+keys, chained migrations and nonterminating factories that must remain unforced.

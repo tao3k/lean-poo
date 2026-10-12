@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 179 independent Lean example/contract files
+The local complete gate runs the 181 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -366,7 +366,7 @@ PrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 DictionaryRecord guards 33 contexts and 528 reads; MetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 158 atoms plus four diagnostics, 48 native admissions and
+Current inventory: 181 atoms plus four diagnostics, 48 native admissions and
 16 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
@@ -426,7 +426,7 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 179 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 181 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -455,3 +455,15 @@ cases. It covers later conflicts hidden by ordinary first-missing preparation,
 unknown-name priority, disjoint roots, removals, last-write cancellation,
 heterogeneous proof results and a divergent factory that must remain unforced.
 Generic kernel clients quantify over arbitrary context/key/result families.
+
+* Functional graph and constraint migration
+
+[[file:FunctionalGraphMigration.lean][FunctionalGraphMigration]] checks 660 independent scalar state cases, including
+304 reusable preparations, actual topology/root/suffix changes, retained
+complete overlays, new/removed providers and graph-before-provider error order.
+[[file:FunctionalGraphConstraints.lean][FunctionalGraphConstraints]] checks 6300 cases (1087 accepted reuses, 1537 fresh
+admissions and 3676 capability refusals), chained published targets, hot context
+retention/replacement, heterogeneous values, repeated keys, genuine joint proofs,
+negative-before-positive conflicts and unforced nonterminating factories.
+Generic clients check preparation equality, complete capability acceptance and
+exact certified availability. New theorems use only standard Lean axioms.

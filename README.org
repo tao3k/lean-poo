@@ -23,7 +23,7 @@ language or a domain-specific proof system.
 | ~LeanPoo.Prototype~ | Open-recursive prototypes, safe recursive observations, ordered composition, delayed instances, first-class descriptors, mutable slots and classes. |
 | ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
-| ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, cache revisions and witness transformations. |
+| ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, verified graph migration, cache revisions and witness transformations. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 
 Lean's type system expresses slot families and composition boundaries. The

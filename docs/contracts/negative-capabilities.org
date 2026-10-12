@@ -51,8 +51,9 @@ false. The negative checker reports ~flag~ and retains the absent ~quantity~
 prefix. ~FunctionalAbsence~ exercises that distinction and 570 independent
 state cases, including proof-bearing values and an unforced divergent factory.
 
-The declared policy retains one fixed graph/order and key family. It supports
-explicit watched absences when methods are added to existing named providers.
-It does not discover assumptions hidden in arbitrary code, choose a universal
-cross-library conflict policy, or equate host function bodies. Positive result
-contracts still use ~Requirements.Certified~ and their existing revision gates.
+This provider-transaction API retains one fixed graph/order and key family.
+[[file:graph-migrations.org][Graph migration]] additionally compiles changed topology and joins watched absences
+with positive capabilities, joint proofs and context cache revisions. Both
+policies require explicit watched assumptions. Hidden code assumptions, a
+universal cross-library conflict policy and host function-body equality remain
+outside their contracts.

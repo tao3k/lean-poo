@@ -1,0 +1,93 @@
+#+TITLE: Graph migration with positive and negative capability contracts
+
+[[file:../reusable-contracts.org][API index]] · [[file:../audits/poof/functional.org][Paper questions]] · [[file:../../Tests/FunctionalGraphMigration.lean][Migration clients]] · [[file:../../Tests/FunctionalGraphConstraints.lean][Constraint/cache clients]]
+
+* Prepare the actual next graph
+
+Import ~LeanPoo.Functional.GraphConstraints~. ~prepareGraphMigration registry
+graph root newProviders edits~ runs the verified C4 compiler on the target graph
+and root, constructs the target named provider registry, then applies the complete
+pure provider transaction. A successful ~PreparedGraphMigration~ retains its
+new ancestry index, the actual compiler equation and the final transaction
+equation. ~prepareGraphMigration_ok_iff~ proves complete acceptance for those
+two gates. Graph errors precede provider-name errors; a failed transaction
+returns no accepted prefix.
+
+~IndexedRegistry.regraph~ retains the entire indexed overlay for every surviving
+name, including removals and overrides. Only names absent from the old registry
+receive ~newProviders name~. Removed declarations disappear. To replace an
+existing provider capability, use the target transaction. Removing and later
+reintroducing a name installs its new provider after the removal is published.
+The target graph/root may change parents, their order, declarations and suffix
+flags; the same C4 compiler validates the resulting order. A surviving name is
+the explicit provider identity policy, not an assertion about host source code.
+
+* Join the contracts and cache revision
+
+A ~Requirements.ConstraintCache provider positiveKeys negativeKeys Claim~ holds
+an exact positive preparation cache, its bounded one-context built-data slot,
+and a certificate that every watched negative key is absent. ~cacheCertified~
+and ~BuiltContextCache.empty~ supply the positive pieces; ~checkAbsent~ supplies
+the negative certificate. A preparation error can be cached, but it cannot become
+an accepted constraint revision while required keys remain missing.
+
+Call ~migrateGraphConstraints oldIndex cache keyIndex graph root newProviders
+edits~. It first prepares the target, then checks all watched negative keys,
+then checks all positive keys. Its outer error is a graph/provider error.
+Its successful outer result contains the prepared target and either a
+~GraphConstraintFailure~ or an accepted ~GraphConstraintRevision~.
+~introduced~ retains the actual first conflicting factory and absent prefix;
+~missing~ retains the exact first positive preparation error. A refused target
+is diagnostic data. Publication uses only an accepted and certified revision.
+
+~reviseGraphConstraints_ok_iff~ proves acceptance exactly when the completed
+target provider lacks all negative keys and provides the complete positive
+factory tuple. Negative conflicts take priority over missing positive keys,
+including conflicts hidden after an ordinary first missing error. Availability
+checks select functions without executing their bodies.
+
+* Retain proof and built data only on justified reuse
+
+~PreparedGraphMigration.canReuse~ compares each positive key's first winning
+provider name in the old and new orders, before edits. Equal names retain the
+exact old overlay; equal absence retains the exact missing result. It also
+excludes any edit to a requested key at a target ancestor. The retained target
+ancestry index governs this test, so old non-ancestors that become reachable
+cannot bypass invalidation. ~reuse_preparation~ proves exact equality of the
+entire preparation, including factory functions and first errors. This decision
+is conservative: an overlapping edit may require fresh preparation even when
+the final function happens to be unchanged.
+
+Accepted ~PositiveGraphRevision.reused~ retains the exact certified family,
+joint proof and hot built-data slot. Its ~Admission~ is ~True~.
+~PositiveGraphRevision.fresh~ retains the actual already prepared tuple and
+requires a new universal joint proof for its selected factories. Call
+~GraphConstraintRevision.certify admission~ to obtain the target-indexed
+~ConstraintCache~. Fresh certification starts an empty context slot; it does
+not perform another provider selection. ~certify_reused~ proves exact retention,
+~certify_forget~ preserves the prepared factories, and ~certify_available~ proves
+that publication has a complete certified family.
+
+~ConstraintCache.read context~ returns data, its joint proof, exact factory
+alignment, the next cache and a reuse Bool. Repeating the same context can reuse
+the retained data; a different context builds fresh data and replaces the one
+slot. The target registry and ancestry index are retained for subsequent
+migrations. Registry/provider failure or contract refusal leaves the old pure
+snapshot, its cache and proofs usable.
+
+* Evidence and scope
+
+~FunctionalGraphMigration~ checks 660 cases against an independent scalar state
+model, including topology/root/suffix changes, original overlays, new providers,
+removed names and target edit scopes. ~FunctionalGraphConstraints~ checks 6300
+cases: 1087 accepted cache reuses, 1537 fresh admissions and 3676 capability
+refusals. It checks chained accepted migrations, hot and changed contexts,
+heterogeneous values, repeated keys, genuine joint contracts and unforced
+nonterminating factories. Generic clients exercise arbitrary dependent result
+families and joint Claims; the new theorems use only standard Lean axioms.
+
+The context/key/value family and watched key lists stay fixed across this API.
+Context/key transformations have separate proved APIs. Hidden assumptions,
+automatic effect or termination inference, unrestricted IO refinement and
+machine cost bounds remain outside this contract. The broader cyclic C3
+cached/reference theorem also remains separate from verified target migration.
