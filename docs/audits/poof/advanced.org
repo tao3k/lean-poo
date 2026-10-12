@@ -107,6 +107,15 @@ equivalence. The paper permits divergence; such a theorem is not required to
 implement unrestricted executable recursion. Safe finite dependency schedules
 have a stronger, separate contract and do not certify every unsafe knot.
 
+[[file:../../contracts/shared-thunks.org][The shared-thunk guide]] now specifies the declared Interaction compiler and
+its safe admission boundary. The actual native knot produces demand traces;
+completed trace executions and safe evaluations are equivalent, and the safe
+checker compares actual reported values/errors against the exact current
+program. The sequential private-cell model proves installation/current-body
+and one-constructor invariants. Checked C3 field/method reads transfer to the
+existing source graph laws. Native IO/thunk/compiler implementation and arbitrary
+unchecked callbacks remain runtime boundaries rather than new kernel axioms.
+
 Appendix E (2390–2434) compares Scheme source sizes. The character/cons-cell
 figures are illustrative and do not impose Lean line-count requirements.
 

@@ -187,6 +187,9 @@ check-compose: check-object
 # Check the proof-composition extension.
 check-proof: check-compose
     lake build \
+        LeanPoo.Prototype.SharedThunk \
+        LeanPoo.Prototype.SharedThunkHeap \
+        LeanPoo.Object.SharedRecursive \
         LeanPoo.Proof.Types \
         LeanPoo.Proof.Patch \
         LeanPoo.Proof.Reuse \
@@ -251,6 +254,8 @@ _check-contracts:
     {{lean}} Tests/FixedPoints.lean
     {{lean}} Tests/FiniteFix.lean
     {{lean}} Tests/RecursiveSemantics.lean
+    {{lean}} Tests/SharedThunk.lean
+    {{lean}} Tests/SharedRecursive.lean
     {{lean}} Tests/RecursiveCache.lean
     {{lean}} Tests/RecursiveCacheSemantics.lean
     {{lean}} Tests/DynamicDescriptor.lean

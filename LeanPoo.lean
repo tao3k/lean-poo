@@ -100,6 +100,9 @@ import LeanPoo.Prototype.KeyedPrototype
 import LeanPoo.Prototype.CheckedFunction
 import LeanPoo.Prototype.FiniteFix
 import LeanPoo.Prototype.RecursiveSemantics
+import LeanPoo.Prototype.SharedThunk
+import LeanPoo.Prototype.SharedThunkHeap
+import LeanPoo.Object.SharedRecursive
 import LeanPoo.Prototype.DynamicDescriptorSemantics
 import LeanPoo.Prototype.MutableRecord
 import LeanPoo.Prototype.RecordDispatch

@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "f08776b8ac6772747c1147e17a4abff427eedc5b615fa58d18e23398ba6a8069",
+  "requirements_sha256": "0dccadfaa8440e4371ea907d452e0e3b51f56ffda884e26cc8b25a06a35525c6",
   "audit_tool_sha256": "87349a81ba508adc6b138fc3ad6020d9872198c1969aa42da559e7cd43dd1075",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -25,7 +25,11 @@
           "constant tail bypass",
           "operational return/error/divergence distinction",
           "separate cycle diagnostics and memoized source errors",
-          "parameterized safe object methods with complete request sharing and field observation preservation"
+          "parameterized safe object methods with complete request sharing and field observation preservation",
+          "native shared Interaction compilation with complete trace admission and reported-result checking",
+          "shared demand/safe evaluation equivalence and all-depth recorded observation correspondence",
+          "sequential current-body heap invariant and one constructor start per ready closure",
+          "checked native C3 fields and parameterized methods bound to immutable programs"
         ],
         "implementation": [
           "LeanPoo/Prototype/CheckedFunction.lean",
@@ -38,7 +42,10 @@
           "LeanPoo/Prototype/CallableRecord.lean",
           "LeanPoo/Prototype/RecursiveReindex.lean",
           "LeanPoo/Prototype/DynamicValueEquality.lean",
-          "LeanPoo/Object/Callable.lean"
+          "LeanPoo/Object/Callable.lean",
+          "LeanPoo/Prototype/SharedThunk.lean",
+          "LeanPoo/Prototype/SharedThunkHeap.lean",
+          "LeanPoo/Object/SharedRecursive.lean"
         ],
         "checks": [
           "Tests/FixedPoints.lean",
@@ -47,9 +54,11 @@
           "Tests/RecursiveValidation.lean",
           "Tests/RecursiveCacheSemantics.lean",
           "Tests/CallableObjects.lean",
-          "Tests/DynamicValueEquality.lean"
+          "Tests/DynamicValueEquality.lean",
+          "Tests/SharedThunk.lean",
+          "Tests/SharedRecursive.lean"
         ],
-        "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+        "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. The declared Interaction compiler now executes through the existing unsafe sharedFix/instantiate constructor, records native demand traces, and uses a total safe checker to reconstruct exact-program evaluation proofs and compare reported values/errors. Shared demand executions and safe Evaluates derivations are equivalent; bounded recordings agree at every source depth, and every finite derivation has an admitted trace. A sequential private-cell operational model proves current-body identity, installation before forcing and exactly one constructor start for every ready heap. Checked native C3 field/method reads transfer to existing plan and source graph derivations. These native closures share construction rather than request results. Native IO.Ref/Thunk/compiler/concurrency behavior and arbitrary unsafe callbacks remain runtime boundaries; no unchecked unsafe fixed-point equation is assumed."
       },
       {
         "id": "multiple-inheritance",
@@ -69,7 +78,8 @@
           "parameterized safe object methods with complete request sharing and field observation preservation",
           "complete cached/reference scalar and batch outcomes on all finite graphs including cycles",
           "active-path and finite-declaration budget coherence for sound warm caches",
-          "existing semantic certificate construction from actual cached success without reference replay"
+          "existing semantic certificate construction from actual cached success without reference replay",
+          "checked native shared reads with exact-program receipts and source C3 derivation transfer"
         ],
         "implementation": [
           "LeanPoo/Prototype/MetaPrototype.lean",
@@ -86,7 +96,8 @@
           "LeanPoo/Prototype/RecursiveReindex.lean",
           "LeanPoo/Prototype/DynamicValueEquality.lean",
           "LeanPoo/Object/Callable.lean",
-          "LeanPoo/Prototype/C3CacheCoherence.lean"
+          "LeanPoo/Prototype/C3CacheCoherence.lean",
+          "LeanPoo/Object/SharedRecursive.lean"
         ],
         "checks": [
           "Tests/MetaPrototype.lean",
@@ -103,9 +114,10 @@
           "Tests/ObjectSemantics.lean",
           "Tests/CallableObjects.lean",
           "Tests/DynamicValueEquality.lean",
-          "Tests/C3CacheCoherence.lean"
+          "Tests/C3CacheCoherence.lean",
+          "Tests/SharedRecursive.lean"
         ],
-        "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
+        "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay. Checked native shared closures now execute actual immutable field/method programs; admitted values/errors have exact-program safe observations and transfer to every source C3 derivation of the current graph/root. Retained old executors must be rechecked against a changed program; no request-memoization or unrestricted native-IO equivalence is inferred."
       },
       {
         "id": "simple-types",
@@ -318,7 +330,11 @@
           "unbounded operational soundness and completeness",
           "divergence and all-depth relational transfer",
           "safe call-by-need cache with kernel receipts",
-          "parameterized safe object methods with complete request sharing and field observation preservation"
+          "parameterized safe object methods with complete request sharing and field observation preservation",
+          "native shared Interaction compilation with complete trace admission and reported-result checking",
+          "shared demand/safe evaluation equivalence and all-depth recorded observation correspondence",
+          "sequential current-body heap invariant and one constructor start per ready closure",
+          "checked native C3 fields and parameterized methods bound to immutable programs"
         ],
         "implementation": [
           "LeanPoo/Prototype/CheckedFunction.lean",
@@ -335,7 +351,10 @@
           "LeanPoo/Prototype/CallableRecord.lean",
           "LeanPoo/Prototype/RecursiveReindex.lean",
           "LeanPoo/Prototype/DynamicValueEquality.lean",
-          "LeanPoo/Object/Callable.lean"
+          "LeanPoo/Object/Callable.lean",
+          "LeanPoo/Prototype/SharedThunk.lean",
+          "LeanPoo/Prototype/SharedThunkHeap.lean",
+          "LeanPoo/Object/SharedRecursive.lean"
         ],
         "checks": [
           "Tests/FixedPoints.lean",
@@ -345,13 +364,15 @@
           "Tests/RecursiveValidation.lean",
           "Tests/RecursiveCacheSemantics.lean",
           "Tests/CallableObjects.lean",
-          "Tests/DynamicValueEquality.lean"
+          "Tests/DynamicValueEquality.lean",
+          "Tests/SharedThunk.lean",
+          "Tests/SharedRecursive.lean"
         ],
-        "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+        "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Native shared execution is checked through the declared interaction compiler; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. The declared Interaction compiler now executes through the existing unsafe sharedFix/instantiate constructor, records native demand traces, and uses a total safe checker to reconstruct exact-program evaluation proofs and compare reported values/errors. Shared demand executions and safe Evaluates derivations are equivalent; bounded recordings agree at every source depth, and every finite derivation has an admitted trace. A sequential private-cell operational model proves current-body identity, installation before forcing and exactly one constructor start for every ready heap. Checked native C3 field/method reads transfer to existing plan and source graph derivations. These native closures share construction rather than request results. Native IO.Ref/Thunk/compiler/concurrency behavior and arbitrary unsafe callbacks remain runtime boundaries; no unchecked unsafe fixed-point equation is assumed."
       }
     ]
   },
-  "closure_sha256": "907aae1802c42642195e2f73db21a9934228fa1385aabbcc970b292d4344e03f",
+  "closure_sha256": "700eadbe8e0898a675569607fa536801bbbcf227e644bda7823a4ae9d3fcab2c",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -530,7 +551,10 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/SharedThunk.lean",
+        "LeanPoo/Prototype/SharedThunkHeap.lean",
+        "LeanPoo/Object/SharedRecursive.lean"
       ],
       "checks": [
         "Examples/PrototypeCore.lean",
@@ -540,9 +564,11 @@
         "Tests/RecursiveValidation.lean",
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/SharedThunk.lean",
+        "Tests/SharedRecursive.lean"
       ],
-      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Shared unsafe thunks remain an alternate runtime; arbitrary Scheme programs are outside the stated calculus. Call-by-need caches carry evaluation proofs indexed by the exact program; completed source errors are shared. Active cycles are separate runtime diagnostics. Mutable writes reset the cache and advance the generation. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Arbitrary Scheme programs are outside the stated calculus. Call-by-need caches carry evaluation proofs indexed by the exact program; completed source errors are shared. Active cycles are separate runtime diagnostics. Mutable writes reset the cache and advance the generation. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. The declared Interaction compiler now executes through the existing unsafe sharedFix/instantiate constructor, records native demand traces, and uses a total safe checker to reconstruct exact-program evaluation proofs and compare reported values/errors. Shared demand executions and safe Evaluates derivations are equivalent; bounded recordings agree at every source depth, and every finite derivation has an admitted trace. A sequential private-cell operational model proves current-body identity, installation before forcing and exactly one constructor start for every ready heap. Checked native C3 field/method reads transfer to existing plan and source graph derivations. These native closures share construction rather than request results. Native IO.Ref/Thunk/compiler/concurrency behavior and arbitrary unsafe callbacks remain runtime boundaries; no unchecked unsafe fixed-point equation is assumed."
     },
     {
       "id": "claims-plan",
@@ -713,7 +739,10 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/SharedThunk.lean",
+        "LeanPoo/Prototype/SharedThunkHeap.lean",
+        "LeanPoo/Object/SharedRecursive.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
@@ -722,9 +751,11 @@
         "Tests/RecursiveValidation.lean",
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/SharedThunk.lean",
+        "Tests/SharedRecursive.lean"
       ],
-      "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. The declared Interaction compiler now executes through the existing unsafe sharedFix/instantiate constructor, records native demand traces, and uses a total safe checker to reconstruct exact-program evaluation proofs and compare reported values/errors. Shared demand executions and safe Evaluates derivations are equivalent; bounded recordings agree at every source depth, and every finite derivation has an admitted trace. A sequential private-cell operational model proves current-body identity, installation before forcing and exactly one constructor start for every ready heap. Checked native C3 field/method reads transfer to existing plan and source graph derivations. These native closures share construction rather than request results. Native IO.Ref/Thunk/compiler/concurrency behavior and arbitrary unsafe callbacks remain runtime boundaries; no unchecked unsafe fixed-point equation is assumed."
     },
     {
       "id": "single-inheritance",
@@ -965,7 +996,8 @@
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
-        "LeanPoo/Prototype/C3CacheCoherence.lean"
+        "LeanPoo/Prototype/C3CacheCoherence.lean",
+        "LeanPoo/Object/SharedRecursive.lean"
       ],
       "checks": [
         "Tests/MetaPrototype.lean",
@@ -982,9 +1014,10 @@
         "Tests/ObjectSemantics.lean",
         "Tests/CallableObjects.lean",
         "Tests/DynamicValueEquality.lean",
-        "Tests/C3CacheCoherence.lean"
+        "Tests/C3CacheCoherence.lean",
+        "Tests/SharedRecursive.lean"
       ],
-      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. Complete cached/reference scalar and batch Except outcomes agree for every finite graph and root list, including cyclic ancestry, exact cycle names, missing-node and inconsistent-merge errors, validation failures and empty/repeated roots. Every successful derivation excludes nonempty ancestry self walks. Actual declared/distinct active paths and the graph-size remaining budget justify reference completion for every derivation-backed cache hit; production visits preserve that cache invariant. The root theorem permits any sound current-graph warm cache at the production budget, without a DAG witness or a successful-result premise. Arbitrary forged caches, fabricated internal paths and insufficient-fuel equality are not asserted. C4 remains a separately selectable policy with its own extensions. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Actual cached success constructs the existing GraphCertificate with its reference proof by coherence, without executing a reference replay. Checked native shared closures now execute actual immutable field/method programs; admitted values/errors have exact-program safe observations and transfer to every source C3 derivation of the current graph/root. Retained old executors must be rechecked against a changed program; no request-memoization or unrestricted native-IO equivalence is inferred."
     },
     {
       "id": "meta-prototype",
@@ -1514,7 +1547,10 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Prototype/SharedThunk.lean",
+        "LeanPoo/Prototype/SharedThunkHeap.lean",
+        "LeanPoo/Object/SharedRecursive.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
@@ -1524,9 +1560,11 @@
         "Tests/RecursiveValidation.lean",
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/SharedThunk.lean",
+        "Tests/SharedRecursive.lean"
       ],
-      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Native shared execution is checked through the declared interaction compiler; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. The declared Interaction compiler now executes through the existing unsafe sharedFix/instantiate constructor, records native demand traces, and uses a total safe checker to reconstruct exact-program evaluation proofs and compare reported values/errors. Shared demand executions and safe Evaluates derivations are equivalent; bounded recordings agree at every source depth, and every finite derivation has an admitted trace. A sequential private-cell operational model proves current-body identity, installation before forcing and exactly one constructor start for every ready heap. Checked native C3 field/method reads transfer to existing plan and source graph derivations. These native closures share construction rather than request results. Native IO.Ref/Thunk/compiler/concurrency behavior and arbitrary unsafe callbacks remain runtime boundaries; no unchecked unsafe fixed-point equation is assumed."
     },
     {
       "id": "minimalism",
@@ -2466,6 +2504,18 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Object/SharedRecursive.lean": {
+      "sha256": "cb9ca74363006c568ad150f6770c2b86e59a14cdf028fff514c2b261ec70e914",
+      "physical_lines": 66,
+      "unsafe_declaration_lines": [
+        16,
+        19,
+        44,
+        46
+      ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Object/SlotSyntax.lean": {
       "sha256": "576965fc479db98b4ccb57f4a82df7e41bdd0155607f9845496b0bd9ee975025",
       "physical_lines": 107,
@@ -2846,6 +2896,26 @@
     "LeanPoo/Prototype/RecursiveSemantics.lean": {
       "sha256": "53e4959c3bca21bd899c19f857807f85b0503bc37f42e0d64b66b63192799b83",
       "physical_lines": 231,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/SharedThunk.lean": {
+      "sha256": "1e177117286d9086df0ff2fdc12860140868aee84c0d2da08cf683e882a35e18",
+      "physical_lines": 390,
+      "unsafe_declaration_lines": [
+        313,
+        321,
+        330,
+        338,
+        340
+      ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/SharedThunkHeap.lean": {
+      "sha256": "397a9bb0ba7a617c71e53ae357694c86779bfa47bd4071dd4db0f93e7cca4d99",
+      "physical_lines": 118,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3658,6 +3728,24 @@
         42
       ]
     },
+    "Tests/SharedRecursive.lean": {
+      "sha256": "46b6dd2c4d441ea163cde5e96f202db345c3a27f2da93f56eb6d5a2f2d6e0be1",
+      "physical_lines": 137,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        132
+      ]
+    },
+    "Tests/SharedThunk.lean": {
+      "sha256": "fbe1deb29b3c0ab55bf53af2090b4519425679c2fc2d03c61e80f22a94b798c6",
+      "physical_lines": 238,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        228
+      ]
+    },
     "Tests/SimpleMethodCombination.lean": {
       "sha256": "d1f1226ffab58c29cd43c3364a7ab87db621055ad12a77bdef332b8713a3599f",
       "physical_lines": 76,
@@ -3721,8 +3809,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "907aae1802c42642195e2f73db21a9934228fa1385aabbcc970b292d4344e03f",
-      "physical_lines": 341,
+      "sha256": "700eadbe8e0898a675569607fa536801bbbcf227e644bda7823a4ae9d3fcab2c",
+      "physical_lines": 362,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3898,6 +3986,7 @@
     "LeanPoo/Object/Schema.lean",
     "LeanPoo/Object/ShapeCache.lean",
     "LeanPoo/Object/SharedFamily.lean",
+    "LeanPoo/Object/SharedRecursive.lean",
     "LeanPoo/Object/SlotSyntax.lean",
     "LeanPoo/Object/SortedInheritance.lean",
     "LeanPoo/Object/SpecificationComposition.lean",
@@ -3963,6 +4052,8 @@
     "LeanPoo/Prototype/RecursiveCacheSemantics.lean",
     "LeanPoo/Prototype/RecursiveReindex.lean",
     "LeanPoo/Prototype/RecursiveSemantics.lean",
+    "LeanPoo/Prototype/SharedThunk.lean",
+    "LeanPoo/Prototype/SharedThunkHeap.lean",
     "LeanPoo/Prototype/SkewLens.lean",
     "LeanPoo/Prototype/SlotSpec.lean",
     "LeanPoo/Prototype/Target.lean",
@@ -4114,6 +4205,8 @@
     "Tests/SelectionInvariant.lean",
     "Tests/ShapeCache.lean",
     "Tests/SharedFamily.lean",
+    "Tests/SharedRecursive.lean",
+    "Tests/SharedThunk.lean",
     "Tests/SimpleMethodCombination.lean",
     "Tests/SkewExtension.lean",
     "Tests/SortedInheritance.lean",

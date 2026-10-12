@@ -23,6 +23,12 @@ kernel correspondence theorem. [[file:../../Tests/RecursiveSemantics.lean][Recur
 factorial inputs with the shared runtime and prove factorial carrier transfer
 and a diverging self loop.
 
+[[file:shared-thunks.org][Checked shared-thunk execution]] now compiles this declared interaction language
+through the existing native knot. Its demand traces have a safe operational
+equivalence theorem, and successful safe admission binds the actual executor's
+reported result to the current program. Native IO/thunk implementation and
+arbitrary unsafe callback equivalence remain outside that theorem.
+
 * C3 object construction
 
 [[file:../../LeanPoo/Object/SlotSyntax.lean][SlotSyntax]] composes actual declarations in precedence order. Its

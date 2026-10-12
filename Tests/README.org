@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 188 independent Lean example/contract files
+The local complete gate runs the 190 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -366,7 +366,7 @@ PrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 DictionaryRecord guards 33 contexts and 528 reads; MetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 188 atoms plus four diagnostics, 48 native admissions and
+Current inventory: 190 atoms plus four diagnostics, 48 native admissions and
 19 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
@@ -426,7 +426,7 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds seven typed constructions separately from whole-language
-correspondence. Current inventory: 188 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 190 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -508,3 +508,24 @@ and memo entries. Cycles after successful/repeated roots and disconnected cyclic
 components remain observable at the intended point. Three discriminating controls
 cover a forged cyclic cache, a genuine cache with insufficient fuel and a
 fabricated active path. Only Lean's standard axioms occur in the kernel results.
+
+* Checked native shared execution
+
+[[file:SharedThunk.lean][SharedThunk]] exercises 1144 actual bounded recordings (517 completed and
+627 pending), 66 unbounded completed executions, 66 checked native/safe cold
+and hot reads, 44 independent arithmetic controls and 11 typed composition
+reads. Twelve forged candidates/executors are refused. A divergent continuation
+stays unforced after a source error; delayed value/error thunks are read 64
+times. Native constructor instrumentation reports exactly one build over 33
+recursive inputs. The kernel clients cover demand/evaluation and admission
+equivalence, all-depth recorded results, completeness and divergence. The
+sequential heap model keeps the current code and one constructor start across
+65 read sequences and refuses six early/repeated/relinked protocols.
+
+[[file:SharedRecursive.lean][SharedRecursive]] connects those receipts to actual C3 field/method storage
+and source graph derivations: eight field reads, 40 bounded field observations,
+132 parameterized method reads, diamond ordering, final-self overrides, missing
+and source errors, six unfinished recursive reads and a changed-program
+executor refusal. Retained old runtimes keep their old immutable values.
+[[file:../docs/contracts/shared-thunks.org][The shared-thunk guide]] distinguishes the proved protocol and safe result
+admission from native IO/thunk implementation and arbitrary unchecked callbacks.

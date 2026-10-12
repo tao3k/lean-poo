@@ -16,7 +16,8 @@ are outside these theorems. The explicit future proposals remain research.
 | Area | Kernel or executable evidence | Scope |
 |------+-------------------------------+-------|
 | ~fix~ / ~mix~ | Recursive ~Evaluates~, ~solve_sound~, ~solve_complete~, ~diverges_iff_no_evaluation~, ~solve_relation~, fixed-observation refinement | Explicit self requests, heterogeneous inherited carriers, delayed values; every finite depth and unbounded return/error derivations |
-| C3 graph outcomes | ~linearizeMany_eq_uncached_dag~ | Finite DAGs with bounded decreasing ranks; arbitrary graph depth, root lists, cache reuse, missing-parent and inconsistent-merge errors |
+| Checked native shared execution | ~runs_iff_evaluates~, ~admit_iff_runs~, ~recordSolve_result~, ~Runtime.read_matches~, ~Knot.one_build~ | Declared Interaction compiler; complete finite traces and exact reported results, sequential constructor model; native IO/thunk implementation remains a runtime boundary |
+| C3 graph outcomes | ~linearizeMany_eq_uncached~, ~linearize_eq_uncached~ | Every finite graph and root list, including exact cycle, validation, missing and merge errors; sound warm caches at the production budget |
 | C3 object composition | ~SlotSyntax.resolveForward_eq~, ~C3.Plan.resolve_paper~, ~Recursive.Plan.read_derivation~ | Actual declarations and effective dynamic slots; every key/self or depth/key observation |
 | Parameterized methods | ~Callable.Plan.call_derivation~, ~call_fromFields~, ~solve_reindex~, ~Value.equalAt_correct~ and CheckedCall receipts | Actual C3 methods; every argument/depth, exact request sharing, checked immutable/mutable calls and retained snapshots |
 | Dynamic descriptors | ~accepts_sound~, ~Descriptor.call_sound~; recursive contract and reflection controls | Recursive dynamic values, current registered identities, named types and checked call boundaries |
@@ -31,6 +32,27 @@ remain stable as depth increases; the semantic divergence predicate quantifies
 over every depth. [[file:../../../Tests/RecursiveSemantics.lean][RecursiveSemantics controls]] prove a diverging loop and
 all-depth Nat/Int factorial correspondence, and compare thirteen concrete
 inputs with the separate unsafe shared-thunk runtime.
+
+[[file:../../../LeanPoo/Prototype/SharedThunk.lean][SharedThunk]] now compiles the declared calculus through the actual existing
+shared constructor and records demand traces during that execution. The safe
+checker recovers values/errors from the current program, follows those finite
+demands and compares the reported result. Demand executions are exactly safe
+~Evaluates~ derivations; admission succeeds exactly for their complete traces.
+Every finite derivation has an admitted recorded observation, and recorded
+results agree with ~solve~ at every depth. Safe successful ~Runtime.read~ returns
+an exact-program receipt and proves the actual executor's reported result was
+observed at some safe depth. Pending/cut traces supply no divergence proof.
+
+[[file:../../../LeanPoo/Prototype/SharedThunkHeap.lean][SharedThunkHeap]] proves current-body identity and exactly one constructor
+start for every ready heap in the sequential private-cell protocol. Early self
+forcing, repeated construction and relinking have no completed transition.
+[[file:../../../LeanPoo/Object/SharedRecursive.lean][SharedRecursive]] connects checked native field/method reads to the current
+assembled C3 programs and every source graph derivation. These native closures
+share constructor work; request memoization belongs to the existing safe cache.
+[[file:../../../Tests/SharedThunk.lean][SharedThunk controls]] and [[file:../../../Tests/SharedRecursive.lean][C3 controls]] execute both paths, including
+exact errors, cold loops, changed arguments and changed-program executor refusal.
+Native IO/thunk/compiler/concurrency refinement and arbitrary unchecked unsafe
+callbacks remain outside these theorems. No unsafe fixed-point axiom is used.
 
 [[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] proves cached/reference equality by induction on production fuel,
 using ranks to rule out active-path cycles and preserved derivation-backed
@@ -95,8 +117,9 @@ DynamicSchema supplies registered runtime dependent factories and field-owned
 defaults, inspection, updates and reconstructible catalogs. DynamicCodec admits
 text/bytes through nested current-registry identity checks and Accepted proofs.
 RecursiveValidation attaches the actual C3 field evaluations to those same
-schema/wire values. General unsafe-thunk correspondence and unrestricted IO
-refinement remain separate proof questions.
+schema/wire values. The declared shared Interaction compiler now has a checked
+correspondence interface. Arbitrary unchecked unsafe thunks and unrestricted
+native IO refinement remain separate proof questions.
 
 * Execution and admission completeness
 

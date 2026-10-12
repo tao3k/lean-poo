@@ -14,6 +14,9 @@ typed declaration composition and safe dynamic object observations.
 Typed Lean structure/class constructors now compile automatically into dependent
 field dictionaries, with inverse laws and proved prototype/descriptor/provider
 and context-cache transport.
+[[file:../../contracts/shared-thunks.org][Checked native shared execution]] now supplies demand/safe-evaluation
+correspondence, finite trace admission, current-body constructor protocol proofs
+and exact-program receipts for actual C3 fields and parameterized methods.
 
 The ~whole_paper_implemented~ flag stays false. The declared proofs do not
 cover every Scheme program, arbitrary unsafe thunk execution, universal
@@ -41,9 +44,9 @@ to succeed. The reference checkout is not a library or CI dependency.
 | Manually reviewed units | 45: 35 translations, 7 discussions, 3 future proposals |
 | Original headings | 90, each assigned to a reviewed interval |
 | Source check map | 24 declared value adaptations |
-| Bound local evidence files | 176 |
-| Lean source inventory | 388 |
-| Canonical Lean check atoms | 188; diagnostics and native admissions are separate |
+| Bound local evidence files | 181 |
+| Lean source inventory | 393 |
+| Canonical Lean check atoms | 190; diagnostics and native admissions are separate |
 
 Counts bind review coverage and identities. Execution receipts, kernel
 proofs and a CI result at a particular head are distinct evidence.

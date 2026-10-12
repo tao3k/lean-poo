@@ -1,0 +1,125 @@
+#+TITLE: Checked shared thunks and safe recursive semantics
+
+* Execute through the existing shared constructor
+
+[[file:../../LeanPoo/Prototype/SharedThunk.lean][SharedThunk]] compiles an explicit ~Recursive.Generator~ through the existing
+~instantiate~ / ~sharedFix~ constructor. Recursive calls use the tied final-self
+handle. The same execution records its finite demand tree. ~compileValue~ uses
+the existing shared thunk directly for delayed non-function values.
+
+~Runtime.new~ constructs an unbounded native executor; it may diverge.
+~Runtime.bounded~ bounds recursive source depth, including changing-argument
+recursion. This is the depth of ~solve~, not a wall-clock or machine-step bound.
+Neither constructor evaluates a function body before a request.
+
+~Runtime.read~ is a safe admission interface. It checks the actual executor's
+trace against the current program and compares the reported result. A completed
+source error is a valid receipt containing that exact error. ~unfinished~ and
+~invalidTrace~ are admission diagnostics, separate from source errors.
+Reported-result admission requires ~DecidableEq Output~; dynamic C3 values
+already have computable, kernel justified equality. The trace/evaluation
+correspondence itself does not require decidable output equality.
+
+#+begin_src lean
+import LeanPoo.Object.SharedRecursive
+open LeanPoo.Prototype
+open LeanPoo.Prototype.Recursive
+open LeanPoo.Prototype.Recursive.Shared
+
+def total : Recursive.Generator Nat Nat
+  | 0 => .value 0
+  | n + 1 => .call n fun answer => .value (answer + n + 1)
+
+unsafe def demonstrate : IO Unit := do
+  let runtime := Runtime.bounded total 20
+  match runtime.read 10 with
+  | .ok receipt => IO.println s!"{repr receipt.result.observation}"
+  | .error diagnostic => throw (IO.userError (reprStr diagnostic))
+
+#eval demonstrate
+
+example (runtime : Runtime total) (input : Nat)
+    (receipt : Cached.Receipt total (total input))
+    (accepted : runtime.read input = .ok receipt) :
+    ∃ depth, solve total depth input = (runtime.executor input).result :=
+  runtime.read_observed input receipt accepted
+#+end_src
+
+* Kernel correspondence
+
+The declared language is the explicit ~Interaction~ calculus. Its local
+continuations are checked Lean functions; recursive self calls are syntax.
+The following theorems have no custom axioms or unsafe premises.
+
+| Theorem | Guarantee |
+|---------+-----------|
+| ~runs_iff_evaluates~ | Completed shared-closure demand executions are exactly the safe unbounded value/error derivations. |
+| ~admit_iff_runs~ | Admission succeeds exactly for a valid complete trace with its correct reported result. |
+| ~recordSolve_result~ | Recorded finite observations agree with ~solve~ at every depth, including pending and exact errors. |
+| ~evaluation_admitted~ | Every finite safe derivation has a sufficient depth and an admitted trace. |
+| ~diverges_iff_no_runs~ | All-depth pending behavior is exactly the absence of a completed demand execution. |
+| ~Runtime.read_matches~ | A successful receipt has the actual executor's reported result. |
+| ~Runtime.read_observed~ | That reported result occurs at a finite safe depth for this exact program. |
+
+The checker traverses only the supplied finite demand tree. It recomputes local
+program expressions and continuations to recover their current values/errors;
+it does not invoke another recursive solver or guess a completion budget.
+Its work is additional admission work. No speed or allocation improvement is
+claimed. Native proof fields are never trusted: execution produces ordinary
+candidate data, and the safe checker constructs the evaluation proof.
+
+* Shared-cell protocol
+
+[[file:../../LeanPoo/Prototype/SharedThunkHeap.lean][SharedThunkHeap]] models the sequential private-cell protocol: allocation,
+placeholder, link, constructor start, publication, then self reads/cache hits.
+~replay_preserves~ keeps the current installed body and constructor count.
+~one_build~ proves every reachable ready heap has that body and exactly one
+constructor start. Self forcing before publication, relinking and another
+constructor start are refused. ~invocation_iff~ connects an invocation of a
+ready current body to the same safe trace admission.
+
+This is a formal operational model of the constructor protocol. Lean's native
+~IO.Ref~, thunk memoization, compiler/FFI and concurrent memory behavior remain
+runtime implementation boundaries. The kernel does not unfold ~unsafe sharedFix~
+or prove arbitrary host callbacks correct. No ~implemented_by~ replacement or
+unsafe fixed-point axiom is used to claim that result. A function constructor
+publishes its closure before its body demands self; a non-function value that
+forces self during construction can fail to complete.
+
+* Actual C3 field and method plans
+
+[[file:../../LeanPoo/Object/SharedRecursive.lean][SharedRecursive]] provides ~Plan.sharedRuntime~ and ~Plan.boundedSharedRuntime~
+for existing recursive field plans and callable method plans. The receipt is
+indexed by the actual assembled storage/program. ~shared_observed~ connects a
+successful native read to the existing safe plan observer; ~shared_derivation~
+transfers it to any paper-style C3 derivation of that plan's graph/root.
+Parameterized methods retain the complete name/argument request, delayed
+inherited method and final self.
+
+These native closures share construction. Recursive request results are not
+memoized by this compiler. The existing [[file:../../LeanPoo/Prototype/RecursiveCacheSemantics.lean][safe Cached evaluator]] provides that
+different capability, with proof-bearing request entries and cycle diagnostics.
+Each runtime refers to an immutable program. A retained old runtime continues
+to describe its old snapshot. Passing its executor to a changed program must
+recheck the trace and result; a changed result is refused. An unchanged result
+may acquire a new valid current-program proof through the same checker.
+
+* Controls and remaining scope
+
+[[file:../../Tests/SharedThunk.lean][SharedThunk controls]] check 1144 actual bounded executions (517 completed,
+627 pending), 66 unbounded completed executions, 66 checked native/safe cached
+reads and 66 hot safe reads. They include independent arithmetic controls,
+branching/repeated recursive calls, exact errors, a divergent continuation that
+must remain unforced, typed prototype composition, delayed values, one native
+constructor build, 12 rejected candidates/executors, 65 heap read sequences
+and six refused constructor protocols.
+
+[[file:../../Tests/SharedRecursive.lean][SharedRecursive controls]] check eight native C3 field reads, 40 bounded field
+reads and 132 parameterized method reads, including diamond inheritance,
+final-self overrides, missing/source errors, changing arguments, six unfinished
+recursive reads and a changed-program executor refusal with retained snapshots.
+
+Arbitrary unsafe callbacks, whole-language Scheme execution, unrestricted IO
+refinement, native memory/concurrency guarantees and machine-level cost bounds
+remain outside these correspondence theorems. Finite exhaustion is inconclusive;
+the divergence theorem quantifies over every depth.
