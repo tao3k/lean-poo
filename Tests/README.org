@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 184 independent Lean example/contract files
+The local complete gate runs the 187 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -366,7 +366,7 @@ PrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 DictionaryRecord guards 33 contexts and 528 reads; MetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 184 atoms plus four diagnostics, 48 native admissions and
+Current inventory: 187 atoms plus four diagnostics, 48 native admissions and
 19 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
@@ -425,8 +425,8 @@ graph premise for four distinct leaf parents per root; its roots share all
 four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
-[[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 184 atoms + four diagnostics, 48 native
+[[file:../docs/audits/poof/closure-v1.json][The closure map]] binds seven typed constructions separately from whole-language
+correspondence. Current inventory: 187 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -482,3 +482,12 @@ snapshots after refusals, inferred divergent-factory conflicts and conservative
 mutually exclusive branch contracts. Generic clients check complete expanded
 capability acceptance, universal actual-evaluation equality and exact cache hit
 retention. New theorems use only standard Lean axioms.
+
+* Automatic typed dictionary/class compilation
+
+- [[file:DictionaryCompiler.lean][DictionaryCompiler]] compiles nine actual Lean constructor shapes, including inherited dictionaries, dependent carrier/proof fields, Sort parameters, implicit instances and the real Descriptor. It checks 1024 arithmetic dispatches, 33 polymorphic calls, three command refusals and rejection of erased/fabricated laws. Generated inverse clients compile against actual conversions.
+- [[file:DictionaryBridge.lean][DictionaryBridge]] checks 1280 actual self/super calls across converted/restored/native/delayed paths, 2304 finite unfoldings, 36 typed descriptor admissions, 44 refusals, eight codec errors and two terminal overrides retaining divergent thunks unforced. Generic composition/unfolding clients have kernel proofs.
+- [[file:DictionaryTransport.lean][DictionaryTransport]] checks ten missing preparations, 30 actual generated-dictionary method calls, three proof-retaining context-cache reads and 16 actual C4 constraint migrations (one reuse, two fresh admissions, thirteen refusals). A newly reachable divergent ghost factory is refused without invocation; first missing keys, joint proofs and selected-provider changes are checked.
+
+[[file:../docs/contracts/dictionary-classes.org][The API guide]] records typed constructor support and the remaining general
+Scheme compiler, closure/IO equivalence and machine-cost boundaries.

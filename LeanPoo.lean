@@ -31,6 +31,8 @@ import LeanPoo.Functional.Requirements
 import LeanPoo.Functional.GuardedExtension
 import LeanPoo.Functional.GraphConstraints
 import LeanPoo.Functional.AnalyzedMigration
+import LeanPoo.Functional.DictionaryTransport
+import LeanPoo.Deriving.DictionaryCompiler
 import LeanPoo.Functional.CertifiedRequirements
 import LeanPoo.Functional.CachedPreparation
 import LeanPoo.Functional.ConsumerRevision

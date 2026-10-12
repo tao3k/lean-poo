@@ -35,11 +35,12 @@
 
 - [X] Changed graph/root compilation joins positive and negative contracts with exact factory/proof/context-cache revision; surviving overlays and refused snapshots retain their declared identities.
 - [X] Finite pure computation analysis infers nested/conditional value and presence dependencies plus required/forbidden guards; actual graph migration preserves proved computed values/errors/hits or requires fresh result admission, with unknown callbacks always fresh.
+- [X] Actual Lean structure/class constructors compile automatically into dependent field dictionaries with kernel inverse laws; prototype/descriptor/provider conversions preserve composition, admission, joint proofs and cache hits.
 
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 168 local evidence files and 380 Lean source filenames; reject drift.
+- [X] Bind 174 local evidence files and 386 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.
@@ -52,7 +53,7 @@
 - [ ] Unrestricted kernel IO refinement and machine-level time/allocation bounds.
 - [ ] Universal callable-property decisions, closure serialization and unspecified dynamic automation.
 - [ ] Arbitrary-language discovery of hidden closure/effect dependencies and language-wide invalidation.
-- [ ] General compiler transformations between typeclass dictionaries and prototype descriptor classes.
+- [ ] General Scheme source compiler transformations and unrestricted dynamic class reflection beyond typed constructor compilation.
 
 The reviewed construction flag is true. The stronger whole-paper semantic flag
 remains false. A pending finite budget does not prove divergence; the divergence

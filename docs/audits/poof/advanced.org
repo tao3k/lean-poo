@@ -67,8 +67,17 @@ requirements, consumer proofs and immutable revisions address these questions.
 assumption: the checker admits every watched absence or returns the first present
 factory with proof. A guarded registry transaction accepts exactly completed
 snapshots preserving the whole negative contract, including keys after an
-ordinary first missing error. Graph-changing extensions and hidden code
-assumptions still need additional contracts.
+ordinary first missing error. [[file:../../contracts/graph-migrations.org][Graph migration]] checks changed roots/topologies and
+retains exact positive/negative proofs and hot data only under its reuse laws.
+[[file:../../contracts/dependency-analysis.org][Finite pure analysis]] infers nested/conditional guards and governs computed
+cache invalidation. Arbitrary host closure/effect inference remains open.
+
+[[file:../../contracts/dictionary-classes.org][Dictionary/class compilation]] now addresses the earlier typeclass correspondence
+discussion at lines 1434–1448. The command derives fields and exact inverse laws
+from actual typed Lean constructors. Existing prototype composition, delayed
+self/super, descriptor admission and Functional providers/caches use those
+conversions. General Scheme source compilation and dynamic closure serialization
+remain separate claims.
 
 * Appendices C, D and E
 

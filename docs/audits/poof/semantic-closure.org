@@ -193,3 +193,28 @@ and the unknown-callback boundary. The new clients check 1536 scalar observation
 9616 stable-footprint comparisons, 28 cache reads and 1792 actual graph migrations
 (330 reused, 514 fresh, 948 refused), plus divergent-presence and branch-conflict
 controls. Arbitrary-language dependency/effect/termination inference remains open.
+
+* Automatic typed dictionary/class correspondence
+
+[[file:../../../LeanPoo/Deriving/DictionaryCompiler.lean][DictionaryCompiler]] generates dependent field carriers and both conversions
+from actual Type-valued Lean structure/class constructors. Every generated
+roundtrip proof is checked against those functions by the kernel. Inherited
+subobjects, dependent Type/Sort/data/proof fields, functions, instance parameters
+and universes remain intact. Nonstructures, Prop-valued classes, unsupported
+indexed constructors and collisions are refused without a partial schema.
+
+[[file:../../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] proves exact bidirectional conversion of existing typed
+self/super prototypes and delayed prototypes. Actual composition, every finite
+unfolding and fixed-point equations commute. Typed Descriptor validation,
+display/default and optional codecs preserve values and error/refusal outcomes.
+[[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport]] proves actual first-provider/C4 assembly and requirement
+preparation correspondence, including first missing keys. Existing joint proofs
+and ContextSlot data/hit decisions survive representation conversion.
+
+The [[file:../../contracts/dictionary-classes.org][guide]] links generic proof clients and native controls: nine constructor
+shapes, 1024 arithmetic dispatches, 33 polymorphic calls, 1280 self/super calls,
+2304 finite unfoldings, descriptor admissions/refusals, retained lazy terminal
+overrides and sixteen actual graph/constraint migrations. This closes typed
+Lean constructor correspondence. General Scheme compilation, dynamic closure
+reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and
+machine-level time/allocation bounds remain outside the declared theorem scope.

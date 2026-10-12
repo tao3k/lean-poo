@@ -190,6 +190,38 @@
       "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
     },
     {
+      "id": "typeclass-correspondence",
+      "source_line": 1434,
+      "status": "closed_typed_construction",
+      "operations": [
+        "automatic actual Lean constructor field compilation",
+        "bidirectional dependent dictionary representations with kernel inverse laws",
+        "retained Type/Sort/function/inherited/proof fields and parameters",
+        "actual self/super prototype and delayed composition transport",
+        "finite unfolding and fixed-equation correspondence",
+        "typed descriptor validation and codec error/refusal transport",
+        "actual C4 provider selection and first missing requirement preservation",
+        "certified joint data and exact context-cache hit transport",
+        "atomic refusal and explicit local class search"
+      ],
+      "implementation": [
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Functional/Assembly.lean",
+        "LeanPoo/Functional/CertifiedRequirements.lean",
+        "LeanPoo/Deriving/DictionaryCompiler.lean",
+        "LeanPoo/Prototype/DictionaryBridge.lean",
+        "LeanPoo/Functional/DictionaryTransport.lean"
+      ],
+      "checks": [
+        "Tests/FunctionalAssembly.lean",
+        "Tests/FunctionalCertifiedRequirements.lean",
+        "Tests/DictionaryCompiler.lean",
+        "Tests/DictionaryBridge.lean",
+        "Tests/DictionaryTransport.lean"
+      ],
+      "boundary": "Actual Type-valued Lean structure/class constructors compile automatically into dependent PSigma/PLift field representations, with both exact conversions and kernel inverse laws. Type/Sort fields, functions, dependent proof fields, inherited subobjects, implicit instance parameters and universes are retained. Actual typed self/super prototypes, delayed composition, every finite self unfolding and fixed-point equations commute with conversion. Typed descriptor validation, defaults/display and optional JSON codec errors/refusals are preserved. Functional first-provider/C4 selection, first missing requirements, joint proofs and exact ContextSlot values/hit decisions are transported. Prop-valued classes, unsupported indexed constructors and generated-name collisions are refused. Local class search is explicit; no global instance is installed. General Scheme source compilation, dynamic closure reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and machine-level cost bounds remain separate."
+    },
+    {
       "id": "pure-linearity",
       "source_line": 1449,
       "status": "closed_typed_construction",

@@ -10,6 +10,9 @@ unbounded evaluation, divergence characterization and related-carrier transfer.
 Complete cached/reference C3 outcomes are proved for finite DAGs of arbitrary
 depth with bounded decreasing ranks. The ordinary C3 order now reaches actual
 typed declaration composition and safe dynamic object observations.
+Typed Lean structure/class constructors now compile automatically into dependent
+field dictionaries, with inverse laws and proved prototype/descriptor/provider
+and context-cache transport.
 
 The ~whole_paper_implemented~ flag stays false. The declared proofs do not
 cover every Scheme program, arbitrary unsafe thunk execution, universal
@@ -34,12 +37,12 @@ to succeed. The reference checkout is not a library or CI dependency.
 
 | Evidence | Count or scope |
 |----------+----------------|
-| Manually reviewed units | 45: 34 translations, 8 discussions, 3 future proposals |
+| Manually reviewed units | 45: 35 translations, 7 discussions, 3 future proposals |
 | Original headings | 90, each assigned to a reviewed interval |
 | Source check map | 24 declared value adaptations |
-| Bound local evidence files | 168 |
-| Lean source inventory | 380 |
-| Canonical Lean check atoms | 184; diagnostics and native admissions are separate |
+| Bound local evidence files | 174 |
+| Lean source inventory | 386 |
+| Canonical Lean check atoms | 187; diagnostics and native admissions are separate |
 
 Counts bind review coverage and identities. Execution receipts, kernel
 proofs and a CI result at a particular head are distinct evidence.
@@ -55,7 +58,7 @@ proofs and a CI result at a particular head are distinct evidence.
 | [[file:gaps.org][Closure checklist]] | Implemented construction gates and stronger remaining claims |
 | [[file:semantic-closure.org][Semantic evidence]] | Exact theorem and source-execution scopes |
 | [[file:requirements-v1.json][Requirements]] | Reviewed intervals, rationale and local references |
-| [[file:closure-v1.json][Construction map]] | Six construction families and their explicit limits |
+| [[file:closure-v1.json][Construction map]] | Seven construction families and their explicit limits |
 | [[file:receipt-v1.json][Audit receipt]] | Pinned source, hashes, heading map and Lean inventory |
 
 * Reproduce

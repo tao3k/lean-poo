@@ -24,6 +24,7 @@ language or a domain-specific proof system.
 | ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
 | ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, verified graph migration, inferred pure dependencies, computed cache revisions and witness transformations. |
+| ~LeanPoo.Deriving~ | Automatic typed class/structure dictionary conversion with kernel inverse proofs and adapters for prototypes, descriptors and consumer caches. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 
 Lean's type system expresses slot families and composition boundaries. The
@@ -67,6 +68,7 @@ Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and perfor
 - [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
 - [[file:docs/reusable-contracts.org][Reusable API contracts]] indexes capability modules for verified compilation,
   typed factories, proof reuse and retained consumer caches.
+- [[file:docs/contracts/dictionary-classes.org][Dictionary/class compilation]] generates dependent field representations and preserves prototype composition, validation and consumer proofs.
 - [[file:docs/use-cases/navier-stokes-euler.org][Euler budget factory study]] identifies actual upstream interfaces and
   the evidence required to establish code reduction.
 - [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the

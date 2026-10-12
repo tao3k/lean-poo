@@ -688,18 +688,24 @@
     {
       "id": "typeclass-correspondence",
       "start_line": 1434,
-      "status": "discussion",
+      "status": "lean_translation",
       "title": "Classes/typeclasses correspondence",
       "implementation": [
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Functional/Assembly.lean",
-        "LeanPoo/Functional/CertifiedRequirements.lean"
+        "LeanPoo/Functional/CertifiedRequirements.lean",
+        "LeanPoo/Deriving/DictionaryCompiler.lean",
+        "LeanPoo/Prototype/DictionaryBridge.lean",
+        "LeanPoo/Functional/DictionaryTransport.lean"
       ],
       "checks": [
         "Tests/FunctionalAssembly.lean",
-        "Tests/FunctionalCertifiedRequirements.lean"
+        "Tests/FunctionalCertifiedRequirements.lean",
+        "Tests/DictionaryCompiler.lean",
+        "Tests/DictionaryBridge.lean",
+        "Tests/DictionaryTransport.lean"
       ],
-      "boundary": "TypedValue and descriptors do not prove an automated bidirectional transformation between typeclasses and prototype classes."
+      "boundary": "Actual Type-valued Lean structure/class constructors compile automatically into dependent PSigma/PLift field representations, with both exact conversions and kernel inverse laws. Type/Sort fields, functions, dependent proof fields, inherited subobjects, implicit instance parameters and universes are retained. Actual typed self/super prototypes, delayed composition, every finite self unfolding and fixed-point equations commute with conversion. Typed descriptor validation, defaults/display and optional JSON codec errors/refusals are preserved. Functional first-provider/C4 selection, first missing requirements, joint proofs and exact ContextSlot values/hit decisions are transported. Prop-valued classes, unsupported indexed constructors and generated-name collisions are refused. Local class search is explicit; no global instance is installed. General Scheme source compilation, dynamic closure reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and machine-level cost bounds remain separate."
     },
     {
       "id": "pure-linearity",

@@ -8,8 +8,8 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "29671819690e08ac53c1989bfd01e73eb345c5dd5d5a946a5a248b0a68d544c5",
-  "audit_tool_sha256": "11ec317a3e109d7cbca29c2082ace6e09c58eb2975cbe088a54abced6d791cf4",
+  "requirements_sha256": "b92ad28bf40abe5cfcf3fae2a47d43d466af615d8353beb3ba527092f32517ac",
+  "audit_tool_sha256": "87349a81ba508adc6b138fc3ad6020d9872198c1969aa42da559e7cd43dd1075",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
     "reviewed_constructive_path_closed": true,
@@ -202,6 +202,38 @@
         "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
       },
       {
+        "id": "typeclass-correspondence",
+        "source_line": 1434,
+        "status": "closed_typed_construction",
+        "operations": [
+          "automatic actual Lean constructor field compilation",
+          "bidirectional dependent dictionary representations with kernel inverse laws",
+          "retained Type/Sort/function/inherited/proof fields and parameters",
+          "actual self/super prototype and delayed composition transport",
+          "finite unfolding and fixed-equation correspondence",
+          "typed descriptor validation and codec error/refusal transport",
+          "actual C4 provider selection and first missing requirement preservation",
+          "certified joint data and exact context-cache hit transport",
+          "atomic refusal and explicit local class search"
+        ],
+        "implementation": [
+          "LeanPoo/Prototype/Types.lean",
+          "LeanPoo/Functional/Assembly.lean",
+          "LeanPoo/Functional/CertifiedRequirements.lean",
+          "LeanPoo/Deriving/DictionaryCompiler.lean",
+          "LeanPoo/Prototype/DictionaryBridge.lean",
+          "LeanPoo/Functional/DictionaryTransport.lean"
+        ],
+        "checks": [
+          "Tests/FunctionalAssembly.lean",
+          "Tests/FunctionalCertifiedRequirements.lean",
+          "Tests/DictionaryCompiler.lean",
+          "Tests/DictionaryBridge.lean",
+          "Tests/DictionaryTransport.lean"
+        ],
+        "boundary": "Actual Type-valued Lean structure/class constructors compile automatically into dependent PSigma/PLift field representations, with both exact conversions and kernel inverse laws. Type/Sort fields, functions, dependent proof fields, inherited subobjects, implicit instance parameters and universes are retained. Actual typed self/super prototypes, delayed composition, every finite self unfolding and fixed-point equations commute with conversion. Typed descriptor validation, defaults/display and optional JSON codec errors/refusals are preserved. Functional first-provider/C4 selection, first missing requirements, joint proofs and exact ContextSlot values/hit decisions are transported. Prop-valued classes, unsupported indexed constructors and generated-name collisions are refused. Local class search is explicit; no global instance is installed. General Scheme source compilation, dynamic closure reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and machine-level cost bounds remain separate."
+      },
+      {
         "id": "pure-linearity",
         "source_line": 1449,
         "status": "closed_typed_construction",
@@ -314,7 +346,7 @@
       }
     ]
   },
-  "closure_sha256": "c059a7d4f04e09a9e7a86904ca46da88d12514ae37ebc890e59e95863314115e",
+  "closure_sha256": "5665ed7aa34d29bab3eb24b81bccbdc21de917fd2160643d6e9a647da7604b3c",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -1150,18 +1182,24 @@
     {
       "id": "typeclass-correspondence",
       "start_line": 1434,
-      "status": "discussion",
+      "status": "lean_translation",
       "title": "Classes/typeclasses correspondence",
       "implementation": [
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Functional/Assembly.lean",
-        "LeanPoo/Functional/CertifiedRequirements.lean"
+        "LeanPoo/Functional/CertifiedRequirements.lean",
+        "LeanPoo/Deriving/DictionaryCompiler.lean",
+        "LeanPoo/Prototype/DictionaryBridge.lean",
+        "LeanPoo/Functional/DictionaryTransport.lean"
       ],
       "checks": [
         "Tests/FunctionalAssembly.lean",
-        "Tests/FunctionalCertifiedRequirements.lean"
+        "Tests/FunctionalCertifiedRequirements.lean",
+        "Tests/DictionaryCompiler.lean",
+        "Tests/DictionaryBridge.lean",
+        "Tests/DictionaryTransport.lean"
       ],
-      "boundary": "TypedValue and descriptors do not prove an automated bidirectional transformation between typeclasses and prototype classes."
+      "boundary": "Actual Type-valued Lean structure/class constructors compile automatically into dependent PSigma/PLift field representations, with both exact conversions and kernel inverse laws. Type/Sort fields, functions, dependent proof fields, inherited subobjects, implicit instance parameters and universes are retained. Actual typed self/super prototypes, delayed composition, every finite self unfolding and fixed-point equations commute with conversion. Typed descriptor validation, defaults/display and optional JSON codec errors/refusals are preserved. Functional first-provider/C4 selection, first missing requirements, joint proofs and exact ContextSlot values/hit decisions are transported. Prop-valued classes, unsupported indexed constructors and generated-name collisions are refused. Local class search is explicit; no global instance is installed. General Scheme source compilation, dynamic closure reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and machine-level cost bounds remain separate."
     },
     {
       "id": "pure-linearity",
@@ -1808,7 +1846,7 @@
       "line": 1434,
       "source": "@subsubsection{Classes and Typeclasses}",
       "review_unit": "typeclass-correspondence",
-      "status": "discussion"
+      "status": "lean_translation"
     },
     {
       "line": 1449,
@@ -2034,9 +2072,9 @@
     }
   ],
   "unit_status_counts": {
-    "discussion": 8,
+    "discussion": 7,
     "future_proposal": 3,
-    "lean_translation": 34
+    "lean_translation": 35
   },
   "local_evidence": {
     "Examples/DelayedNumbers.lean": {
@@ -2120,6 +2158,13 @@
         32,
         33
       ]
+    },
+    "LeanPoo/Deriving/DictionaryCompiler.lean": {
+      "sha256": "b3b6cc4a51dcd3d9681d80e2926bbf30616e7ab7e4b429c383d345d456e3341b",
+      "physical_lines": 121,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
     },
     "LeanPoo/Functional/Absence.lean": {
       "sha256": "eaa5ab3a4649b9922c5e6c1ce632ab71b5192bd3685d86872712a6044fcfcaf6",
@@ -2215,6 +2260,13 @@
     "LeanPoo/Functional/DependencyAnalysis.lean": {
       "sha256": "e27cadab6e78c63e569fcf3984a9f72f0e344645bca8e7897fbd94e52e46acc0",
       "physical_lines": 190,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/DictionaryTransport.lean": {
+      "sha256": "c8a6aec2413622d02ad050d29a6473169b03f9a0d380feb0d60b3056f6330de8",
+      "physical_lines": 116,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2539,6 +2591,13 @@
     "LeanPoo/Prototype/DescriptorReflection.lean": {
       "sha256": "a5e43565dac9c0eb8475706df24c8b5992193c8efae962741b2696f3f2480587",
       "physical_lines": 90,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/DictionaryBridge.lean": {
+      "sha256": "41e32a0be8df18e83620cba800028c87a0128e643c0345a867cdb120c3e3838f",
+      "physical_lines": 199,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2989,6 +3048,24 @@
         83
       ]
     },
+    "Tests/DictionaryBridge.lean": {
+      "sha256": "06b515717c8ac8fe0b6a29c1a79179c891453dcd38eb66dd38f03ab07ab09fd4",
+      "physical_lines": 131,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        52
+      ]
+    },
+    "Tests/DictionaryCompiler.lean": {
+      "sha256": "2f9e218a6b99464e23eec78b183617fc1a249c4bce1251f22736762cffc94e6f",
+      "physical_lines": 139,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        95
+      ]
+    },
     "Tests/DictionaryRecord.lean": {
       "sha256": "182a152840cffc7bb7eb03bfc2a8cac996e0f694d7b3c7e8cdcd1c5990982d64",
       "physical_lines": 30,
@@ -2996,6 +3073,15 @@
       "guard_lines": [],
       "eval_lines": [
         30
+      ]
+    },
+    "Tests/DictionaryTransport.lean": {
+      "sha256": "d2ad6a0383fcd9f2f0c71594f4300309e0827c0b01c834f9db36a6e829d2c1d7",
+      "physical_lines": 167,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        73
       ]
     },
     "Tests/DynamicCodecSemantics.lean": {
@@ -3599,8 +3685,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "c059a7d4f04e09a9e7a86904ca46da88d12514ae37ebc890e59e95863314115e",
-      "physical_lines": 304,
+      "sha256": "5665ed7aa34d29bab3eb24b81bccbdc21de917fd2160643d6e9a647da7604b3c",
+      "physical_lines": 336,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3683,6 +3769,7 @@
     "LeanPoo/C4/ValidationInvariant.lean",
     "LeanPoo/C4/VerifiedOrder.lean",
     "LeanPoo/Compose.lean",
+    "LeanPoo/Deriving/DictionaryCompiler.lean",
     "LeanPoo/Functional/Absence.lean",
     "LeanPoo/Functional/Access.lean",
     "LeanPoo/Functional/AnalyzedCache.lean",
@@ -3702,6 +3789,7 @@
     "LeanPoo/Functional/ContractConsequence.lean",
     "LeanPoo/Functional/ContractJoin.lean",
     "LeanPoo/Functional/DependencyAnalysis.lean",
+    "LeanPoo/Functional/DictionaryTransport.lean",
     "LeanPoo/Functional/FiniteDiagnostics.lean",
     "LeanPoo/Functional/FiniteTransformation.lean",
     "LeanPoo/Functional/GraphConstraints.lean",
@@ -3806,6 +3894,7 @@
     "LeanPoo/Prototype/Computation.lean",
     "LeanPoo/Prototype/Delayed.lean",
     "LeanPoo/Prototype/DescriptorReflection.lean",
+    "LeanPoo/Prototype/DictionaryBridge.lean",
     "LeanPoo/Prototype/DictionaryRecord.lean",
     "LeanPoo/Prototype/DynamicCodec.lean",
     "LeanPoo/Prototype/DynamicCodecSemantics.lean",
@@ -3876,7 +3965,10 @@
     "Tests/DescriptorClass.lean",
     "Tests/DescriptorReflection.lean",
     "Tests/Diagnostics.lean",
+    "Tests/DictionaryBridge.lean",
+    "Tests/DictionaryCompiler.lean",
     "Tests/DictionaryRecord.lean",
+    "Tests/DictionaryTransport.lean",
     "Tests/DispatchTable.lean",
     "Tests/DynamicCodecSemantics.lean",
     "Tests/DynamicDescriptor.lean",
