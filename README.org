@@ -72,6 +72,8 @@ shapes.
 [[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
 [[file:Examples/ValidatedConfiguration.lean][ValidatedConfiguration.lean]] combines nested constraints and two proved wire layouts.
 [[file:Examples/IncrementalWorkflow.lean][IncrementalWorkflow.lean]] migrates validated workload caches through extensions and refusals.
+[[file:Examples/SharedReporting.lean][SharedReporting.lean]] bills and monitors one snapshot, then replaces its billing representation with a proved public cache transfer.
+[[file:Examples/DictionaryConsumers.lean][DictionaryConsumers.lean]] composes inherited price dictionaries and calls their methods from a converted cache with quota proofs.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in

@@ -70,6 +70,14 @@ private theorem fieldAdmit (provider : Provider Nat Key Fields) (factories : Fac
   let other := Flag.fromFields (f c)
   exact ⟨actual.lower, (@Quantity.law c actual 0).trans (Nat.zero_add _), other.law⟩
 
+private def methodConsumer {ready : Certified keys Claim} (c : Nat) (data : Snapshot ready c) :
+    {value : Nat // c ≤ value} :=
+  data.consume (Output := fun context => {value : Nat // context ≤ value}) (fun context values _ => by
+    letI : Quantity context := values.1
+    exact ⟨Quantity.apply (context := context) 5, by
+      rw [Quantity.law]
+      exact Nat.le_trans (Quantity.lower (context := context)) (Nat.le_add_left _ _)⟩)
+
 #eval do
   IO.println "DICTIONARY-TRANSPORT-START"
   let .ok order := C4.linearizeVerified graph "Root" | throw (IO.userError "graph")
@@ -120,6 +128,9 @@ private theorem fieldAdmit (provider : Provider Nat Key Fields) (factories : Fac
             @Quantity.apply c restored.1 5 == 5+c+1 && restored.2.1.label == prior.val.2.1.label do
           throw (IO.userError "joint proof/cache conversion changed context or dispatch")
         let _retainedJoint := actual.property.2
+        let (consumed, next, consumedHit) := DictionaryTransport.consumeSnapshot bridge converted methodConsumer c
+        unless consumed.val == 5+c+1 && consumedHit == priorHit && (next.read c).2.2 do
+          throw (IO.userError "proof-aware dictionary consumer changed method result/cache state")
         cacheReads := cacheReads+1
     let registry : IndexedRegistry Nat Key Fields :=
       IndexedRegistry.ofRegistry (ProviderRegistry.ofGraph graph (fun name => DictionaryTransport.provider bridge (sources mask name)))
@@ -164,4 +175,6 @@ private theorem fieldAdmit (provider : Provider Nat Key Fields) (factories : Fac
 #print axioms LeanPoo.Functional.DictionaryTransport.certified_build
 #print axioms LeanPoo.Functional.DictionaryTransport.slot_read_value
 #print axioms LeanPoo.Functional.DictionaryTransport.slot_read_reused
+#print axioms LeanPoo.Functional.DictionaryTransport.consumeSnapshot_state
+#print axioms LeanPoo.Functional.DictionaryTransport.consumeSnapshot_value
 end LeanPoo.Tests.DictionaryTransport

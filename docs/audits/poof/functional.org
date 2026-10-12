@@ -82,6 +82,37 @@ the selected priority method can turn a cached refusal into success.
 [[file:../../../Tests/FunctionalComputationBatch.lean][Batch controls]] compare independent values/errors and both cache states.
 The [[file:../../contracts/validation-batches.org][scenario contracts]] record the exact function and proof boundaries.
 
+* Shared consumers and different production representations
+
+F07 separates production representations from consumer interfaces; F08 connects
+class dictionaries with first-class typed values. The concrete scenarios in
+[[file:../../contracts/shared-views.org][Shared snapshots and representation replacement]] join those constructions with
+the explicit context-cache contract used for F02.
+
+[[file:../../../LeanPoo/Functional/SharedViews.lean][SharedViews]] reads one broad snapshot and supplies it to several consumers,
+each projecting/observing only its interface. Universal laws preserve every
+dependent output and the exact broad next cache/hit pair. [[file:../../../Examples/SharedReporting.lean][SharedReporting]]
+bills and monitors that snapshot, preserving repeated-key selection and hidden
+broad data. [[file:../../../LeanPoo/Functional/ViewRetarget.lean][ViewRetarget]] then changes the billing production carrier using
+only declared public observation equality. Its laws transfer the joint public
+proof, retain hot public data and preserve every consumer output and hit decision
+at every context. Candidate factories need only cover the narrow interface.
+[[file:../../../Tests/FunctionalSharedViews.lean][Shared-read controls]] and [[file:../../../Tests/FunctionalViewRetarget.lean][54 retarget controls]] check context changes,
+duplicates, incompatible public values and unforced private observers/functions.
+
+[[file:../../../Examples/DictionaryConsumers.lean][DictionaryConsumers]] derives inherited tariff/quote-policy fields, composes
+noncommuting prototypes, selects actual dictionaries through C3 and converts a
+warm cache to fields. [[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport.consumeSnapshot]] decodes one
+aligned snapshot for actual dictionary consumers and returns the next cache in
+field representation. The example's local typeclass method call constructs a
+quote carrying an inherited-law/joint-quota proof. Generic kernel laws preserve
+every dependent consumer and the exact field cache state; [[file:../../../Tests/DictionaryTransport.lean][converted-method
+controls]] cover hot and cold contexts alongside actual graph migrations.
+
+These are typed applications of the concrete representation and dictionary
+constructions. They do not close the source's proposed complete generalized
+prototype protocol or infer equivalence of arbitrary host callbacks.
+
 * The local Problem API
 
 [[file:../../../LeanPoo/Functional/Transformation.lean][Transformation.Problem]] specifies an input family, dependent results,

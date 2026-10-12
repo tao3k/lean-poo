@@ -39,6 +39,7 @@ these guides explain reusable library contracts.
 | Flatten multi-stage named interfaces and reuse their proofs | [[file:contracts/view-composition.org][View composition laws]] |
 | Share broad cached dependencies across different public consumers | [[file:contracts/borrowed-view.org][Borrowed public views]] |
 | Expose only requested positions with one public proof | [[file:contracts/observed-view.org][Narrow public views]] |
+| Serve several consumers from one snapshot and replace an internal representation | [[file:contracts/shared-views.org][Shared snapshots and representation replacement]] |
 | Reuse built data across contexts, narrow/public views and rich requests | [[file:contracts/context-cache.org][Built data and context caches]] |
 
 * Verification and reference study

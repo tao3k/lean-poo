@@ -61,6 +61,8 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalValidation.lean][FunctionalValidation]] checks universal first-error/append/success laws, 36 independent ordered-batch controls, six unreachable suffixes and wrong-context rejection.
 - [[file:FunctionalCodec.lean][FunctionalCodec]] checks nested refinement and roundtrip composition, 48 independent bound controls and product error priority.
 - [[file:FunctionalComputationBatch.lean][FunctionalComputationBatch]] checks finite analyzed batch execution/footprints, pure validation errors, 72 independent observations, cold/hot success/error caches and an unreachable suffix.
+- [[file:FunctionalSharedViews.lean][FunctionalSharedViews]] checks twelve shared reads, four hits, dependent/request-specific outputs, reordered/repeated keys, hidden broad-data retention, an unrequested divergent observer and wrong-context rejection.
+- [[file:FunctionalViewRetarget.lean][FunctionalViewRetarget]] checks 54 representation replacements across cold/warm states, requested contexts and empty/reordered/repeated views; it rejects incompatible public observations and never forces private divergent candidate functions.
 
 - [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
 
@@ -491,7 +493,7 @@ retention. New theorems use only standard Lean axioms.
 
 - [[file:DictionaryCompiler.lean][DictionaryCompiler]] compiles nine actual Lean constructor shapes, including inherited dictionaries, dependent carrier/proof fields, Sort parameters, implicit instances and the real Descriptor. It checks 1024 arithmetic dispatches, 33 polymorphic calls, three command refusals and rejection of erased/fabricated laws. Generated inverse clients compile against actual conversions.
 - [[file:DictionaryBridge.lean][DictionaryBridge]] checks 1280 actual self/super calls across converted/restored/native/delayed paths, 2304 finite unfoldings, 36 typed descriptor admissions, 44 refusals, eight codec errors and two terminal overrides retaining divergent thunks unforced. Generic composition/unfolding clients have kernel proofs.
-- [[file:DictionaryTransport.lean][DictionaryTransport]] checks ten missing preparations, 30 actual generated-dictionary method calls, three proof-retaining context-cache reads and 16 actual C4 constraint migrations (one reuse, two fresh admissions, thirteen refusals). A newly reachable divergent ghost factory is refused without invocation; first missing keys, joint proofs and selected-provider changes are checked.
+- [[file:DictionaryTransport.lean][DictionaryTransport]] checks ten missing preparations, 30 actual generated-dictionary method calls, three proof-retaining context-cache reads with three additional dependent method consumers and 16 actual C4 constraint migrations (one reuse, two fresh admissions, thirteen refusals). A newly reachable divergent ghost factory is refused without invocation; first missing keys, joint proofs and selected-provider changes are checked.
 
 [[file:../docs/contracts/dictionary-classes.org][The API guide]] records typed constructor support and the remaining general
 Scheme compiler, closure/IO equivalence and machine-cost boundaries.

@@ -51,6 +51,8 @@ check-merge: check-types
         LeanPoo.Functional.GraphConstraints \
         LeanPoo.Functional.AnalyzedMigration \
         LeanPoo.Functional.DictionaryTransport \
+        LeanPoo.Functional.SharedViews \
+        LeanPoo.Functional.ViewRetarget \
         LeanPoo.Deriving.DictionaryCompiler \
         LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.CachedPreparation \
@@ -222,6 +224,8 @@ _check-examples:
     {{lean}} Examples/ValidationWorkflow.lean
     {{lean}} Examples/ValidatedConfiguration.lean
     {{lean}} Examples/IncrementalWorkflow.lean
+    {{lean}} Examples/SharedReporting.lean
+    {{lean}} Examples/DictionaryConsumers.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
     {{lean}} Examples/DelayedNumbers.lean
@@ -385,6 +389,8 @@ _check-contracts:
     {{lean}} Tests/DictionaryCompiler.lean
     {{lean}} Tests/DictionaryBridge.lean
     {{lean}} Tests/DictionaryTransport.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalSharedViews.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalViewRetarget.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean
