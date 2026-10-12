@@ -18,6 +18,7 @@ these guides explain reusable library contracts.
 | Choose a compiler, audit execution or retain rejection evidence | [[file:contracts/compilation.org][Compilation and audit receipts]] |
 | Query ancestry/precedence or transfer verified names | [[file:contracts/verified-orders.org][Verified order queries]] |
 | Declare typed requirements, read factories and reuse proofs | [[file:contracts/capability-families.org][Capability families and proof reuse]] |
+| Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |
 | Narrow capabilities, expose public values or adapt contexts | [[file:contracts/interfaces.org][Consumer interfaces and context adaptation]] |
 | Reorder/relabel declarations and migrate provider registries | [[file:contracts/registry-migrations.org][Registry migrations]] |
 | Share roots, patch capabilities and normalize edits | [[file:contracts/registry-edits.org][Shared registries and edits]] |

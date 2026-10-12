@@ -127,3 +127,21 @@ numeric self/super calls, C3 diamonds, argument forwarding, concurrent sharing,
 source errors, changing-argument recursion, and refusal after registry changes.
 Unrestricted IO refinement and arbitrary Scheme closure correspondence remain
 outside these stated theorems.
+
+* Explicit negative Functional assumptions
+
+[[file:../../../LeanPoo/Functional/Absence.lean][Absence]] proves complete admission/refusal for an arbitrary dependent
+provider/key family. Every refusal carries the first present factory and an
+exact absent prefix. [[file:../../../LeanPoo/Functional/GuardedExtension.lean][GuardedExtension]] proves acceptance exactly when the
+underlying pure transaction succeeds and its final assembled snapshot preserves
+all watched absences. Disjoint scopes retain the old proof by exact per-key
+selection preservation. Conflict factories have actual graph provenance.
+[[file:../../../Tests/FunctionalAbsence.lean][FunctionalAbsence]] checks 570 independent state cases and a divergent
+factory that must remain unforced. The first-missing preparation control shows
+why preserving one cached error cannot prove absence of every later key.
+
+[[file:functional.org][The question map]] distinguishes these explicit contracts, existing
+consumer machinery, local witness-transport extensions and broader unresolved
+questions. The new policy retains a fixed graph/order and key family. It does
+not infer hidden negative assumptions, migrate changed topology or supply a
+universal cross-library method conflict policy.

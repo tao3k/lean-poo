@@ -23,6 +23,7 @@ language or a domain-specific proof system.
 | ~LeanPoo.Prototype~ | Open-recursive prototypes, safe recursive observations, ordered composition, delayed instances, first-class descriptors, mutable slots and classes. |
 | ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
+| ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, cache revisions and witness transformations. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 
 Lean's type system expresses slot families and composition boundaries. The
@@ -72,6 +73,7 @@ Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and perfor
   paper-model construction.
 - [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
 - [[file:docs/audits/poof/README.org][Whole-paper POOF audit]] records the original source pin, chapter coverage and concrete closure gaps.
+- [[file:docs/audits/poof/functional.org][Functional paper questions]] maps the paper's design problems to Functional APIs, kernel evidence and remaining research.
 - [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
 
 Documentation is maintained in Org. [[file:Examples/README.org][Examples]] contains user-facing usage scenarios;

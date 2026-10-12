@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 138 independent Lean example/contract files
+The local complete gate runs the 179 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -426,7 +426,7 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 178 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 179 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -446,3 +446,12 @@ admissions and 19 supervisor controls; all schemas remain v1.
 - [[file:CallableObjects.lean][CallableObjects]] checks actual C3 methods, numeric self/super calls, argument forwarding, Fibonacci(40) with 41 misses, parameterized cycles, changing-argument budget exhaustion, source errors, concurrent aliases, mutable replacement and lifted data objects.
 - [[file:CallableValidation.lean][CallableValidation]] checks actual method invocation proofs, runtime FunctionOf/catalog reuse, input refusal before forcing, output refusals on memo hits, current-registry identity changes, wire values and checked mutable snapshots.
 - [[file:DynamicValueEquality.lean][DynamicValueEquality]] instantiates the universal request comparator theorem and exercises 128 nested levels, large exact integers, Unicode, ordered duplicate entries and distinct reference identities.
+
+* Functional negative assumptions
+
+[[file:FunctionalAbsence.lean][FunctionalAbsence]] checks complete negative admission, exact first-present
+factory evidence and guarded registry extension over 570 independent state
+cases. It covers later conflicts hidden by ordinary first-missing preparation,
+unknown-name priority, disjoint roots, removals, last-write cancellation,
+heterogeneous proof results and a divergent factory that must remain unforced.
+Generic kernel clients quantify over arbitrary context/key/result families.

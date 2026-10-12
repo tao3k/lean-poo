@@ -61,6 +61,15 @@ generalized prototype treatment is explicitly future work in the paper.
 The existing constructor is not evidence that every conceivable generalized
 combination, dynamic MOP or cross-library conflict policy has been solved.
 
+[[file:functional.org][The Functional question map]] records how typed factories, explicit
+requirements, consumer proofs and immutable revisions address these questions.
+[[file:../../contracts/negative-capabilities.org][Negative capabilities]] now implement the paper's explicit absent-method
+assumption: the checker admits every watched absence or returns the first present
+factory with proof. A guarded registry transaction accepts exactly completed
+snapshots preserving the whole negative contract, including keys after an
+ordinary first missing error. Graph-changing extensions and hidden code
+assumptions still need additional contracts.
+
 * Appendices C, D and E
 
 Appendix C (2155–2255) supplies explanatory type notation. Lean's dependent

@@ -37,9 +37,9 @@ to succeed. The reference checkout is not a library or CI dependency.
 | Manually reviewed units | 45: 34 translations, 8 discussions, 3 future proposals |
 | Original headings | 90, each assigned to a reviewed interval |
 | Source check map | 24 declared value adaptations |
-| Bound local evidence files | 125 |
-| Lean source inventory | 367 |
-| Canonical Lean check atoms | 178; diagnostics and native admissions are separate |
+| Bound local evidence files | 158 |
+| Lean source inventory | 370 |
+| Canonical Lean check atoms | 179; diagnostics and native admissions are separate |
 
 Counts bind review coverage and identities. Execution receipts, kernel
 proofs and a CI result at a particular head are distinct evidence.
@@ -50,6 +50,7 @@ proofs and a CI result at a particular head are distinct evidence.
 |--------+---------|
 | [[file:core.org][Core and complete examples]] | fix/mix, records, numeric/delayed values and trees |
 | [[file:objects.org][Objects, descriptors and effects]] | Representations, inheritance, reflection and mutable boundaries |
+| [[file:functional.org][Functional questions]] | Paper problems, reusable factories/consumers, negative assumptions and local Problem extensions |
 | [[file:advanced.org][Appendices]] | C3, dispatch, combination, lenses and fixed-point alternatives |
 | [[file:gaps.org][Closure checklist]] | Implemented construction gates and stronger remaining claims |
 | [[file:semantic-closure.org][Semantic evidence]] | Exact theorem and source-execution scopes |

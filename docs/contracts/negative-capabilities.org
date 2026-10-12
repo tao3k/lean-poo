@@ -1,0 +1,58 @@
+#+TITLE: Negative capabilities and guarded extension
+
+[[file:../reusable-contracts.org][API index]] · [[file:../audits/poof/functional.org][Paper questions]] · [[file:../../Tests/FunctionalAbsence.lean][Compiled clients]]
+
+* Check an explicit absence assumption
+
+Import ~LeanPoo.Functional.Absence~. ~Requirements.checkAbsent provider keys~
+returns either an ~AbsenceCertificate provider keys~ or a ~Presence provider keys~.
+Successful admission proves every requested key maps to ~none~ in that exact
+provider snapshot. It handles empty/repeated lists and arbitrary dependent
+result families. ~checkAbsent_ok_iff~ and ~checkAbsent_error_iff~ establish
+complete admission and refusal.
+
+A refusal contains the actual factory, a decomposition into earlier keys,
+the conflicting key and later keys, and proofs that all earlier keys are absent
+and the conflicting factory is selected. The checker inspects availability
+without evaluating any factory or requiring equality of function bodies.
+~Presence.origin~ identifies an actual graph ancestor for an assembled factory.
+
+* Guard extensions of existing providers
+
+Import ~LeanPoo.Functional.GuardedExtension~. Call
+~guardAbsenceTransaction index registry keys certificate edits~ with a retained
+C4 ancestry index and a certificate for the old assembled provider. Its successful
+~AbsenceRevision~ contains the actual completed registry snapshot, its transaction
+equation and a fresh absence certificate indexed by that snapshot.
+
+~AbsenceExtensionFailure.unknownProvider~ retains the first transaction name
+error. ~introduced~ retains the completed candidate and a proof-bearing first
+conflict. Both are refused revisions. The caller publishes only successful
+revisions; pure candidates leave the old registry and its proofs usable.
+
+~guardAbsenceTransaction_ok_iff~ characterizes acceptance as a successful
+underlying transaction whose final assembled provider has every watched key
+absent. Unknown names take priority over capability conflicts. A conservative
+overlap is rechecked: removing an already absent capability or adding then
+removing it in one pure transaction can succeed. Validation concerns the final
+snapshot; intermediate candidate states are not published.
+
+Disjoint ancestry/key scopes rebind the old proof without inspecting provider
+availability again. ~assemble_transaction_stable~ proves exact preservation
+for every watched key, including keys after the first ordinary missing error.
+Name checking and construction of the requested final registry still occur.
+
+* Example boundary
+
+An old provider lacks both ~quantity~ and ~flag~. Ordinary preparation of
+~[quantity, flag]~ returns ~quantity~ even after an extension adds ~flag~.
+That first missing error is unchanged, but the two-key absence assumption is
+false. The negative checker reports ~flag~ and retains the absent ~quantity~
+prefix. ~FunctionalAbsence~ exercises that distinction and 570 independent
+state cases, including proof-bearing values and an unforced divergent factory.
+
+The declared policy retains one fixed graph/order and key family. It supports
+explicit watched absences when methods are added to existing named providers.
+It does not discover assumptions hidden in arbitrary code, choose a universal
+cross-library conflict policy, or equate host function bodies. Positive result
+contracts still use ~Requirements.Certified~ and their existing revision gates.

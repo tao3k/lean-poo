@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "151bed0b51f9cebdebb9709f427af6e855924e5d6979428776a5bf9df4b2ea02",
+  "requirements_sha256": "c099ff7da1636920c5270b70136ca136b09df7afd79b00cfc4773800bbe51685",
   "audit_tool_sha256": "11ec317a3e109d7cbca29c2082ace6e09c58eb2975cbe088a54abced6d791cf4",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -246,7 +246,7 @@
           "Tests/DynamicValueEquality.lean",
           "Tests/CallableValidation.lean"
         ],
-        "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+        "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol."
       },
       {
         "id": "fixed-point-variants",
@@ -298,7 +298,7 @@
       }
     ]
   },
-  "closure_sha256": "28e94897004606ce22ff74b0cc1be29e620983682cd7f99bf719b855d575f762",
+  "closure_sha256": "613dd32db42afb57ca8f795191b4abc5a947810820eb84bf97bb75d269af0699",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -771,7 +771,10 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Functional/Assembly.lean",
+        "LeanPoo/Functional/Requirements.lean",
+        "LeanPoo/Functional/CertifiedRequirements.lean"
       ],
       "checks": [
         "Examples/DelayedNumbers.lean",
@@ -780,9 +783,11 @@
         "Tests/RecursiveValidation.lean",
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/FunctionalRequirements.lean",
+        "Tests/FunctionalCertifiedRequirements.lean"
       ],
-      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional providers retain context-indexed factories and explicitly prepare heterogeneous provided/required capability contracts. Joint result proofs admit consumer constraints; availability does not infer arbitrary callback termination."
     },
     {
       "id": "without-subtyping",
@@ -866,7 +871,10 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Functional/CachedPreparation.lean",
+        "LeanPoo/Functional/ContextSlot.lean",
+        "LeanPoo/Functional/ContextPullback.lean"
       ],
       "checks": [
         "Examples/FirstClassObject.lean",
@@ -877,9 +885,12 @@
         "Tests/RecursiveValidation.lean",
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/FunctionalCachedPreparation.lean",
+        "Tests/FunctionalContextSlot.lean",
+        "Tests/FunctionalContextPullback.lean"
       ],
-      "boundary": "Typed retained prototype/value pairs and later extension coexist with safe recursive C3 plans and fresh shared instances. Slot reads preserve final-self requests and carry evaluation proofs for the exact plan; arbitrary Scheme closures are outside the declared value universe. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Typed retained prototype/value pairs and later extension coexist with safe recursive C3 plans and fresh shared instances. Slot reads preserve final-self requests and carry evaluation proofs for the exact plan; arbitrary Scheme closures are outside the declared value universe. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Functional preparation and exact-context caches retain consumer factories, results and joint proofs; these typed consumer caches complement the first-class object pair."
     },
     {
       "id": "multiple-inheritance",
@@ -996,7 +1007,10 @@
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
-        "LeanPoo/Object/CallableValidation.lean"
+        "LeanPoo/Object/CallableValidation.lean",
+        "LeanPoo/Functional/CertifiedConsumer.lean",
+        "LeanPoo/Functional/CertifiedObservation.lean",
+        "LeanPoo/Functional/ContractJoin.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1007,9 +1021,12 @@
         "Tests/DynamicCodecSemantics.lean",
         "Tests/CallableObjects.lean",
         "Tests/DynamicValueEquality.lean",
-        "Tests/CallableValidation.lean"
+        "Tests/CallableValidation.lean",
+        "Tests/FunctionalCertifiedConsumer.lean",
+        "Tests/FunctionalCertifiedObservation.lean",
+        "Tests/FunctionalContractJoin.lean"
       ],
-      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories."
     },
     {
       "id": "simple-types",
@@ -1120,9 +1137,14 @@
       "status": "discussion",
       "title": "Classes/typeclasses correspondence",
       "implementation": [
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Functional/Assembly.lean",
+        "LeanPoo/Functional/CertifiedRequirements.lean"
       ],
-      "checks": [],
+      "checks": [
+        "Tests/FunctionalAssembly.lean",
+        "Tests/FunctionalCertifiedRequirements.lean"
+      ],
       "boundary": "TypedValue and descriptors do not prove an automated bidirectional transformation between typeclasses and prototype classes."
     },
     {
@@ -1143,7 +1165,9 @@
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
-        "LeanPoo/Object/CallableValidation.lean"
+        "LeanPoo/Object/CallableValidation.lean",
+        "LeanPoo/Functional/RegistryTransaction.lean",
+        "LeanPoo/Functional/ConsumerRevision.lean"
       ],
       "checks": [
         "Tests/LinearState.lean",
@@ -1155,9 +1179,11 @@
         "Tests/RecursiveCacheSemantics.lean",
         "Tests/CallableObjects.lean",
         "Tests/DynamicValueEquality.lean",
-        "Tests/CallableValidation.lean"
+        "Tests/CallableValidation.lean",
+        "Tests/FunctionalRegistryTransaction.lean",
+        "Tests/FunctionalConsumerRevision.lean"
       ],
-      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol."
     },
     {
       "id": "mutable-protocol",
@@ -1199,12 +1225,20 @@
       "implementation": [
         "LeanPoo/Object/Incremental.lean",
         "LeanPoo/Object/Cache.lean",
-        "LeanPoo/Proof/Invalidation.lean"
+        "LeanPoo/Proof/Invalidation.lean",
+        "LeanPoo/Functional/KeyIndex.lean",
+        "LeanPoo/Functional/CachedPreparation.lean",
+        "LeanPoo/Functional/ConsumerRevision.lean",
+        "LeanPoo/Functional/ContextSlot.lean"
       ],
       "checks": [
-        "Tests/IncrementalObject.lean"
+        "Tests/IncrementalObject.lean",
+        "Tests/FunctionalKeyIndex.lean",
+        "Tests/FunctionalCachedPreparation.lean",
+        "Tests/FunctionalConsumerRevision.lean",
+        "Tests/FunctionalContextSlot.lean"
       ],
-      "boundary": "Explicit dependency contracts and proof reuse are local extensions; no language-wide purity/effect inference or arbitrary-body invalidation."
+      "boundary": "Explicit dependency contracts and proof reuse are local extensions; no language-wide purity/effect inference or arbitrary-body invalidation. Functional preparation caches retain success/error outcomes under explicit ancestry/key scopes and context/family equality. Language-wide inference remains open."
     },
     {
       "id": "related-work",
@@ -1310,13 +1344,16 @@
       "title": "Appendix B multiple dispatch",
       "implementation": [
         "LeanPoo/Object/Multimethod.lean",
-        "LeanPoo/Object/Subjective.lean"
+        "LeanPoo/Object/Subjective.lean",
+        "LeanPoo/Functional/Absence.lean",
+        "LeanPoo/Functional/GuardedExtension.lean"
       ],
       "checks": [
         "Tests/MultipleDispatch.lean",
-        "Tests/SubjectiveDispatch.lean"
+        "Tests/SubjectiveDispatch.lean",
+        "Tests/FunctionalAbsence.lean"
       ],
-      "boundary": "Typed registration, per-context selection and cache controls; not a formal resolution of every cross-library extension/conflict policy in the discussion."
+      "boundary": "Typed registration, per-context selection and cache controls; not a formal resolution of every cross-library extension/conflict policy in the discussion. Explicit watched-absence admission and guarded provider transactions now implement the proposed negative-assumption policy. Refusals retain the actual first present factory, its absent prefix and candidate transaction proof. Acceptance is complete for final transaction snapshots preserving all watched absences; disjoint edits rebind the old certificate. The graph/order and key family stay fixed; hidden assumptions and graph-changing extensions remain open."
     },
     {
       "id": "method-combination",
@@ -1341,13 +1378,19 @@
       "implementation": [
         "LeanPoo/Prototype/Lens.lean",
         "LeanPoo/Prototype/SkewLens.lean",
-        "LeanPoo/Object/Lens.lean"
+        "LeanPoo/Object/Lens.lean",
+        "LeanPoo/Functional/ViewComposition.lean",
+        "LeanPoo/Functional/BorrowedView.lean",
+        "LeanPoo/Functional/ObservedView.lean"
       ],
       "checks": [
         "Examples/LensPrototype.lean",
-        "Tests/SkewExtension.lean"
+        "Tests/SkewExtension.lean",
+        "Tests/FunctionalViewComposition.lean",
+        "Tests/FunctionalBorrowedView.lean",
+        "Tests/FunctionalObservedView.lean"
       ],
-      "boundary": "lensGen implements getter/setter/wrapper and skew-focus laws exist. The paper itself calls full generalized prototypes future work; no claim that all such semantics are closed."
+      "boundary": "lensGen implements getter/setter/wrapper and skew-focus laws exist. The paper itself calls full generalized prototypes future work; no claim that all such semantics are closed. Functional view composition and narrowing preserve consumer observations and proofs; these projections complement the prototype lens construction and do not implement a universal dynamic MOP."
     },
     {
       "id": "type-notation",
@@ -2031,6 +2074,125 @@
         32,
         33
       ]
+    },
+    "LeanPoo/Functional/Absence.lean": {
+      "sha256": "eaa5ab3a4649b9922c5e6c1ce632ab71b5192bd3685d86872712a6044fcfcaf6",
+      "physical_lines": 96,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/Assembly.lean": {
+      "sha256": "f60343d92f98cbb04d93d55845e89712d3a8a034e21eb7d33033b8a8a04a8823",
+      "physical_lines": 155,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/BorrowedView.lean": {
+      "sha256": "b1def7e66b93671691fc9c27be29cedaa3914445a17816e28658c78926fce4dc",
+      "physical_lines": 59,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/CachedPreparation.lean": {
+      "sha256": "c92c99579095eed12d443ab90065b0b6df93a1b7906daa9d9274cb137e3a5f2c",
+      "physical_lines": 101,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/CertifiedConsumer.lean": {
+      "sha256": "6d35729383a51eb9b4f8a731e0f0a62bb2e04bafea6a32ca7e620d737a5efb71",
+      "physical_lines": 66,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/CertifiedObservation.lean": {
+      "sha256": "589169e50c2485f95618fc6a396d42e4677d7339c345ac7ffc5e2790a0553c3f",
+      "physical_lines": 95,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/CertifiedRequirements.lean": {
+      "sha256": "b7b400f3121458ac485686e5fa9e3b50541c5e6d9c97580379771e1fa7c80e99",
+      "physical_lines": 104,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ConsumerRevision.lean": {
+      "sha256": "589dc9df4f3dd7b67bd8d270325cc1ef29c341f01de4d7b6fb753922a2f88632",
+      "physical_lines": 164,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ContextPullback.lean": {
+      "sha256": "f80ad4539aa5668d2c39546616f36c50e715e53213b1717c4e0e1ea50dbefebe",
+      "physical_lines": 62,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ContextSlot.lean": {
+      "sha256": "3ec719ba32990ff946c3216a6616f356a960f87a3006652a6c931f52adec5218",
+      "physical_lines": 96,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ContractJoin.lean": {
+      "sha256": "829c789aa1190013e5c22b92376b60361ec9c97f0b2c55bbc2f4b8c31bbbde92",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/GuardedExtension.lean": {
+      "sha256": "09e8c04ec17b5d7a808d42a96c1f920c9de95916bab7d78169988864504c4aa2",
+      "physical_lines": 109,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/KeyIndex.lean": {
+      "sha256": "be5e82418df37f85ab665c2567b0e8cca9470d4530448616cd1fb572fdaec313",
+      "physical_lines": 79,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ObservedView.lean": {
+      "sha256": "c97b841d59d1fb3692d6291fc6438d0a45975ffbafb52364b241e3bc7b9f2d3f",
+      "physical_lines": 105,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/RegistryTransaction.lean": {
+      "sha256": "7b18031f3b0b6a1aa69cf93e1b2c1eb4fee2b5777ab829ef1730f9abd1d16a2f",
+      "physical_lines": 94,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/Requirements.lean": {
+      "sha256": "bddb441539be34d5e8865afe2c180483c5db62e6541ca18a23364dcd621a39ff",
+      "physical_lines": 137,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ViewComposition.lean": {
+      "sha256": "d14d481b48fca7de32111a2c24d0bc18d86285f3b8e4382e9f8f139bb6f0e77f",
+      "physical_lines": 61,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
     },
     "LeanPoo/Object/C3.lean": {
       "sha256": "0489c6387a45e475badf9d1bd6b47f6e0b042d3b19845dd9900006364ab0c8ae",
@@ -2852,6 +3014,167 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "Tests/FunctionalAbsence.lean": {
+      "sha256": "497f1b7b5dc2130d107410d1bede41740d3978cacae713f75368f7badf5044f3",
+      "physical_lines": 153,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        80
+      ]
+    },
+    "Tests/FunctionalAssembly.lean": {
+      "sha256": "715ae5c2a70cae5df4aecacde84f89c7620b45005fed5daf5cb9f3118aafbed2",
+      "physical_lines": 75,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        36,
+        37,
+        38,
+        39,
+        46,
+        48,
+        57
+      ],
+      "eval_lines": [
+        74
+      ]
+    },
+    "Tests/FunctionalBorrowedView.lean": {
+      "sha256": "e1fc8e37610f4347a2cc903b17b4a2025f44ddeb93955d7cf6dc18724766bc33",
+      "physical_lines": 75,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        60
+      ]
+    },
+    "Tests/FunctionalCachedPreparation.lean": {
+      "sha256": "3e25988644553672ce6c9741ca133b38d1c5cbd5ad4bf3aa18ec958ffcdb9f58",
+      "physical_lines": 175,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        97
+      ]
+    },
+    "Tests/FunctionalCertifiedConsumer.lean": {
+      "sha256": "b11686d5005564058c978a9f7f3683e2c0d541d35718966564b9dbee6fe915ce",
+      "physical_lines": 165,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        79,
+        122
+      ]
+    },
+    "Tests/FunctionalCertifiedObservation.lean": {
+      "sha256": "16b72600dfb04f717a77053ae594336a9254371f81ad223b4407128a2b96048e",
+      "physical_lines": 179,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        107,
+        130
+      ]
+    },
+    "Tests/FunctionalCertifiedRequirements.lean": {
+      "sha256": "329dad2fac25302772609c7e04ad48dcc0c61770353b1cb7805f48b914741a5a",
+      "physical_lines": 115,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        86
+      ]
+    },
+    "Tests/FunctionalConsumerRevision.lean": {
+      "sha256": "c8d72a017159188be340de1e0719a09ea8282f585d2d136dfba7fed14f69b273",
+      "physical_lines": 203,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        97
+      ]
+    },
+    "Tests/FunctionalContextPullback.lean": {
+      "sha256": "05b5c01d65d53e9af355957360ab7303398d9a1be90825647e4eea14784e2985",
+      "physical_lines": 130,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        91
+      ]
+    },
+    "Tests/FunctionalContextSlot.lean": {
+      "sha256": "517121e5784d536858358f5dd94136268f67da13759fa76abf938f8794ee9ecb",
+      "physical_lines": 138,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        94,
+        109
+      ]
+    },
+    "Tests/FunctionalContractJoin.lean": {
+      "sha256": "b8d6cf6d560955388240e646c6777e72498dde7ea766502d1c5737cb262dc4b3",
+      "physical_lines": 80,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        61
+      ]
+    },
+    "Tests/FunctionalKeyIndex.lean": {
+      "sha256": "5471370513128f5468b0f2e21e6c79b8d610ab8e3e7821c3c8f5714715c5e20f",
+      "physical_lines": 157,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        96
+      ]
+    },
+    "Tests/FunctionalObservedView.lean": {
+      "sha256": "9d55515c100e66ec7e13899e94a7dfe3cc7727b482fd15ce35d2d96141e313c7",
+      "physical_lines": 164,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        92,
+        113,
+        131
+      ]
+    },
+    "Tests/FunctionalRegistryTransaction.lean": {
+      "sha256": "20ef97430b69e6c6e85b03219ab60114a48ce451c55197c0682590c0c7428f9f",
+      "physical_lines": 142,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        83
+      ]
+    },
+    "Tests/FunctionalRequirements.lean": {
+      "sha256": "7bcd8ce1b2f669d0e34737368bc2982729f13ac2f007be444a20a7d4a45e0a52",
+      "physical_lines": 136,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        88,
+        126
+      ],
+      "eval_lines": [
+        89
+      ]
+    },
+    "Tests/FunctionalViewComposition.lean": {
+      "sha256": "a42c9d88761c2033afdfc7277780b24ca5b6a5f87b6993fcef3de66d1e39937e",
+      "physical_lines": 80,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        43,
+        50
+      ]
+    },
     "Tests/IncrementalObject.lean": {
       "sha256": "dfa63fdf66f80db8a86f855a26999557f567a2ec9fccd036af6887e0c4e8b45a",
       "physical_lines": 313,
@@ -3150,7 +3473,7 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "28e94897004606ce22ff74b0cc1be29e620983682cd7f99bf719b855d575f762",
+      "sha256": "613dd32db42afb57ca8f795191b4abc5a947810820eb84bf97bb75d269af0699",
       "physical_lines": 288,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
@@ -3234,6 +3557,7 @@
     "LeanPoo/C4/ValidationInvariant.lean",
     "LeanPoo/C4/VerifiedOrder.lean",
     "LeanPoo/Compose.lean",
+    "LeanPoo/Functional/Absence.lean",
     "LeanPoo/Functional/Access.lean",
     "LeanPoo/Functional/Assembly.lean",
     "LeanPoo/Functional/BorrowedView.lean",
@@ -3251,6 +3575,7 @@
     "LeanPoo/Functional/ContractJoin.lean",
     "LeanPoo/Functional/FiniteDiagnostics.lean",
     "LeanPoo/Functional/FiniteTransformation.lean",
+    "LeanPoo/Functional/GuardedExtension.lean",
     "LeanPoo/Functional/IndexedOverlay.lean",
     "LeanPoo/Functional/IndexedRegistry.lean",
     "LeanPoo/Functional/IndexedTransaction.lean",
@@ -3432,6 +3757,7 @@
     "Tests/FiniteFix.lean",
     "Tests/FixedPoints.lean",
     "Tests/FocusedSpecification.lean",
+    "Tests/FunctionalAbsence.lean",
     "Tests/FunctionalAccess.lean",
     "Tests/FunctionalAssembly.lean",
     "Tests/FunctionalBorrowedView.lean",
