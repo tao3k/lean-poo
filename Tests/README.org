@@ -426,7 +426,7 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 175 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 178 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -440,3 +440,9 @@ admissions and 19 supervisor controls; all schemas remain v1.
 - [[file:RecursiveCacheSemantics.lean][RecursiveCacheSemantics]] instantiates unbounded shared completeness for all countdown values/errors and proves actual cycle divergence; existing cache controls exercise certified instance/snapshot failures.
 - [[file:DynamicDescriptorCompleteness.lean][DynamicDescriptorCompleteness]] proves recognition for every finite Accepted derivation and exercises recursive unions over 101 depths, unresolved diagnostics and the generated schema wire gate.
 - [[file:DynamicCodecSemantics.lean][DynamicCodecSemantics]] instantiates universal structural inversion and descriptor admission preservation; its runtime control uses the computable nesting depth with a large exact integer and Unicode/duplicate entries.
+
+* Parameterized safe methods
+
+- [[file:CallableObjects.lean][CallableObjects]] checks actual C3 methods, numeric self/super calls, argument forwarding, Fibonacci(40) with 41 misses, parameterized cycles, changing-argument budget exhaustion, source errors, concurrent aliases, mutable replacement and lifted data objects.
+- [[file:CallableValidation.lean][CallableValidation]] checks actual method invocation proofs, runtime FunctionOf/catalog reuse, input refusal before forcing, output refusals on memo hits, current-registry identity changes, wire values and checked mutable snapshots.
+- [[file:DynamicValueEquality.lean][DynamicValueEquality]] instantiates the universal request comparator theorem and exercises 128 nested levels, large exact integers, Unicode, ordered duplicate entries and distinct reference identities.

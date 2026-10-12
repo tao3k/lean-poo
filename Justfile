@@ -252,6 +252,7 @@ _check-contracts:
     {{lean}} Tests/DynamicDescriptorCompleteness.lean
     {{lean}} Tests/DynamicSchema.lean
     {{lean}} Tests/DynamicCodecSemantics.lean
+    {{lean}} Tests/DynamicValueEquality.lean
     {{lean}} Tests/MutableRecord.lean
     {{lean}} Tests/RecordDispatch.lean
     {{lean}} Tests/RecordComplexRelation.lean
@@ -267,6 +268,8 @@ _check-contracts:
     {{lean}} Tests/C3Object.lean
     {{lean}} Tests/ObjectSemantics.lean
     {{lean}} Tests/RecursiveValidation.lean
+    {{lean}} Tests/CallableObjects.lean
+    {{lean}} Tests/CallableValidation.lean
     {{lean}} Tests/SourceDifferential.lean
     {{lean}} Tests/PrototypeChecks.lean
     {{lean}} Tests/DictionaryRecord.lean

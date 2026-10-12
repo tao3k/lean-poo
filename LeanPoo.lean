@@ -86,6 +86,7 @@ import LeanPoo.Prototype.C3DAG
 import LeanPoo.Object.C3
 import LeanPoo.Object.Recursive
 import LeanPoo.Object.RecursiveValidation
+import LeanPoo.Object.CallableValidation
 import LeanPoo.Prototype.RecursiveCacheSemantics
 import LeanPoo.Prototype.DynamicDescriptorCompleteness
 import LeanPoo.Prototype.DynamicCodecSemantics

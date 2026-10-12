@@ -49,3 +49,15 @@ heterogeneous inherited carriers and related-carrier observation transfer.
 ~solve_sound~ and ~solve_complete~ connect finite observations to unbounded
 evaluation; divergence quantifies over all depths. This is the declared
 recursive calculus, rather than a claim about every Scheme program.
+
+* Actual parameterized object methods
+
+[[file:../../../LeanPoo/Object/Callable.lean][Callable]] connects method name/argument requests to actual C3 construction.
+Both final-self and delayed inherited methods can receive new arguments.
+[[file:../../../Tests/CallableObjects.lean][CallableObjects]] executes the paper's even/cube numeric layers, C3 diamond
+composition, argument forwarding, shared Fibonacci recursion and mutable
+replacement. The existing evaluator owns all execution and cache receipts.
+The generic argument carrier can be a Lean type or the recursive dynamic Value
+universe. A kernel theorem preserves every existing value-only object read
+when it enters this protocol. Runtime FunctionOf descriptors and catalogs
+validate actual calls, with current-registry checks on hot results.

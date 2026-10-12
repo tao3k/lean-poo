@@ -26,11 +26,15 @@
 - [X] Reported cycles prove divergence; certified instance/mutable failures retain the exact program/snapshot proof.
 - [X] Dynamic membership is recognized at every sufficiently large depth, including unions with unresolved alternatives.
 - [X] Structural JSON has a universal kernel inverse at the computable value nesting depth, with descriptor admission preserved.
+- [X] Actual safe C3 object methods accept parameters, call final self and delayed inherited methods, and share complete name/argument requests.
+- [X] Parameterized mutable calls retain snapshot-bound evaluation and descriptor proofs; replacement invalidates every argument result.
+- [X] Runtime FunctionOf descriptors and reflective catalogs validate actual methods before forcing and revalidate hot outputs in the current registry.
+- [X] Existing value-only objects preserve every observation when lifted into the parameterized method protocol; dynamic request equality is kernel justified.
 
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 117 local evidence files and 359 Lean source filenames; reject drift.
+- [X] Bind 125 local evidence files and 367 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.

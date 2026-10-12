@@ -18,6 +18,7 @@ are outside these theorems. The explicit future proposals remain research.
 | ~fix~ / ~mix~ | Recursive ~Evaluates~, ~solve_sound~, ~solve_complete~, ~diverges_iff_no_evaluation~, ~solve_relation~, fixed-observation refinement | Explicit self requests, heterogeneous inherited carriers, delayed values; every finite depth and unbounded return/error derivations |
 | C3 graph outcomes | ~linearizeMany_eq_uncached_dag~ | Finite DAGs with bounded decreasing ranks; arbitrary graph depth, root lists, cache reuse, missing-parent and inconsistent-merge errors |
 | C3 object composition | ~SlotSyntax.resolveForward_eq~, ~C3.Plan.resolve_paper~, ~Recursive.Plan.read_derivation~ | Actual declarations and effective dynamic slots; every key/self or depth/key observation |
+| Parameterized methods | ~Callable.Plan.call_derivation~, ~call_fromFields~, ~solve_reindex~, ~Value.equalAt_correct~ and CheckedCall receipts | Actual C3 methods; every argument/depth, exact request sharing, checked immutable/mutable calls and retained snapshots |
 | Dynamic descriptors | ~accepts_sound~, ~Descriptor.call_sound~; recursive contract and reflection controls | Recursive dynamic values, current registered identities, named types and checked call boundaries |
 | Mutable slots | Pure slot/compose laws and IO observation controls | One mutable hash identity, parent-first writes, captured inherited syntax, alias visibility, persistent snapshots and consuming-state conversion |
 | Original source | 76 exact code blocks and 24 canonical source/Lean comparisons | Pinned original expressions; executable Racket gate locally and in CI |
@@ -101,3 +102,28 @@ fuel reaches its computable wireDepth, including exact integers, Unicode and
 ordered duplicate entries. A descriptor-admitted value and its Accepted proof
 re-enter the same fixed registry gate. General JSON text-parser and UTF-8 inverse
 proofs and machine-level resource bounds are not supplied by this theorem.
+
+* Parameterized method execution
+
+CallableRecord stores method functions receiving an argument and explicit
+final-self requests; inherited methods remain delayed and can receive different
+arguments. Object.Callable composes them with the existing Proto operations in
+the certified C3 order. Calls use the existing RecursiveCache machine, keyed by
+the complete method name and argument. A repeating name with changing arguments
+is not an active cycle. Certified cycles retain the complete request path and
+the exact program's divergence proof.
+
+RecursiveReindex and Plan.call_fromFields preserve every value-only object
+observation when its field requests enter this protocol. DynamicValueEquality
+proves the computable argument comparator correct for every dynamic value at
+its structural depth; cache equality needs no registry, wire parser or hash.
+
+CallableValidation uses runtime FunctionOf descriptors and reflective slot
+catalogs as actual method calling conventions. Inputs validate before forcing;
+hot outputs still pass current-registry checks. CheckedCall retains the actual
+evaluation and both Accepted proofs. Mutable calls expose their immutable
+snapshot, and replacement clears every argument result. Controls include
+numeric self/super calls, C3 diamonds, argument forwarding, concurrent sharing,
+source errors, changing-argument recursion, and refusal after registry changes.
+Unrestricted IO refinement and arbitrary Scheme closure correspondence remain
+outside these stated theorems.

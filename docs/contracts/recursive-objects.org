@@ -57,7 +57,7 @@ universal properties of arbitrary functions or serialize closures.
 
 * Mutable protocol and conversions
 
-[[file:../../LeanPoo/Prototype/MutableRecord.lean][MutableRecord]] stores effective slot computations in one ~IO.Ref~ hash
+[[file:../../LeanPoo/Prototype/MutableRecord.lean][MutableRecord]] stores effective slot computations in one mutex-protected hash
 identity. ~Specification~ supports identity, slot, composition and error.
 Parent mutations precede child mutations. Each slot write captures inherited
 syntax, receives explicit final self, and performs one table insertion;
@@ -150,3 +150,44 @@ and separately checked function input/output boundaries.
 wireDepth is computable and depends on nesting, not numeric magnitude or text
 length. Descriptor.json_roundTrip preserves the actual admitted value/proof in
 the same registry at sufficient decoder depth.
+
+* Parameterized object methods
+
+[[file:../../LeanPoo/Prototype/CallableRecord.lean][CallableRecord]] extends a final-self request to a method name and an
+argument. A method layer receives final self and a delayed inherited method;
+it can call either with different arguments. The ordinary Proto/composeAll
+operations assemble these layers. The existing recursive machine evaluates
+them; the complete name/argument pair is its sharing and active-cycle key.
+Calling the same method with a different argument does not itself prove a cycle.
+
+[[file:../../LeanPoo/Object/Callable.lean][Object.Callable]] compiles these methods in the certified C3 order. A fresh
+instance leaves all methods cold, and aliases share one mutex-protected cache.
+Every successful value/error receipt is indexed by the actual method program.
+callCertified retains the divergence proof and parameterized path of a cycle;
+budget exhaustion remains inconclusive. call_derivation proves agreement with
+any source C3 derivation at every depth and argument.
+
+Plan.fromFields admits existing data objects using a distinguished field
+argument. [[file:../../LeanPoo/Prototype/RecursiveReindex.lean][RecursiveReindex]] proves observation and unbounded evaluation
+preservation under this request transformation. call_fromFields preserves
+every original read, including source errors and pending observations.
+
+[[file:../../LeanPoo/Prototype/DynamicValueEquality.lean][DynamicValueEquality]] supplies computable structural DecidableEq for
+dynamic arguments, justified by equalAt_correct at Value.wireDepth. Exact
+integers, Unicode, ordered entries, duplicate raw fields and reference
+identities remain distinct; the cache trusts no hash or unchecked comparator.
+
+[[file:../../LeanPoo/Object/CallableValidation.lean][CallableValidation]] applies runtime FunctionOf descriptors and reflective
+SlotDescription catalogs directly to these methods. Inputs are checked before
+forcing. Outputs, including cached results, pass the current registry gate on
+every invocation. CheckedCall retains the actual evaluation and input/output
+Accepted proofs. Mutable.invoke returns the exact retained snapshot with those
+proofs; replacements clear all argument results and advance its generation.
+
+[[file:../../Tests/CallableObjects.lean][Callable controls]] cover the paper's numeric self/super layers, C3 diamond
+composition, inherited argument forwarding, Fibonacci(40) with 41 misses,
+concurrent aliases, cold cyclic methods and mutable final-self rebinding.
+[[file:../../Tests/CallableValidation.lean][Boundary controls]] check runtime factories/catalogs, refusals before forcing,
+current-registry revalidation of hot results and snapshot-bound mutable calls.
+This protocol is the explicit interaction calculus with Lean argument carriers;
+it supplies neither arbitrary Scheme closure execution nor machine cost bounds.
