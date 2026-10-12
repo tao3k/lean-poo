@@ -2,7 +2,7 @@ import LeanPoo.Prototype.Record
 import LeanPoo.Prototype.Object
 import LeanPoo.Prototype.Class
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperPrototypeChecks
+namespace LeanPoo.Tests.PrototypeChecks
 
 inductive Key where | x | y | z deriving DecidableEq
 private abbrev Value : Key → Type
@@ -83,4 +83,4 @@ example : True := by
   trivial
 #eval records
 #eval otherCases
-end LeanPoo.Tests.PaperPrototypeChecks
+end LeanPoo.Tests.PrototypeChecks

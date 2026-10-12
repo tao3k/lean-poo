@@ -1,0 +1,89 @@
+#+TITLE: Recursive objects, dynamic descriptors and mutable slots
+
+* Recursive computation
+
+[[file:../../LeanPoo/Prototype/Recursive.lean][Recursive]] represents final-self calls as explicit ~Interaction~ syntax.
+~close~ composes a prototype with an inherited carrier; ~instantiate~ observes
+its function requests. ~instantiateValue~ handles delayed non-function values
+and permits a different inherited carrier. ~Observation~ distinguishes
+~value~, ~error~ and ~pending~. A pending finite observation is not a proof
+of divergence.
+
+[[file:../../LeanPoo/Prototype/RecursiveSemantics.lean][RecursiveSemantics]] defines unbounded ~Evaluates~ derivations. Every completed
+finite observation has a derivation, and every derivation completes at some
+finite depth. ~diverges_iff_no_evaluation~ characterizes programs that remain
+pending at every depth. ~solve_relation~ transfers observations between
+related carriers at every depth, preserving errors and pending outcomes.
+~solve_le_fixed~ gives refinement into any fixed observation satisfying the
+program equation. These proofs require no unsafe execution assumptions.
+
+The declared language is the explicit recursive interaction calculus. Arbitrary
+Scheme evaluation and arbitrary unsafe shared-thunk execution are outside its
+kernel correspondence theorem. [[file:../../Tests/RecursiveSemantics.lean][RecursiveSemantics controls]] compare thirteen
+factorial inputs with the shared runtime and prove factorial carrier transfer
+and a diverging self loop.
+
+* C3 object construction
+
+[[file:../../LeanPoo/Object/SlotSyntax.lean][SlotSyntax]] composes actual declarations in precedence order. Its
+~resolveForward_eq~ proves equality with reversed, parent-first assembly for
+every key and final self. ~Plan.slotSyntax_resolve~ connects the existing
+C4 resolver to this composition. [[file:../../LeanPoo/Object/C3.lean][Object.C3]] exposes ~compileC3~ and certifies
+that any source-style C3 derivation yields the same typed slot result.
+
+[[file:../../LeanPoo/Object/Recursive.lean][Object.Recursive]] joins C3 ordering, effective dynamic slots and the safe
+recursive observer. Compilation checks topology and prototype errors. A
+~Plan~ retains the actual order and assembled storage; ~read_derivation~
+proves object observations agree with any C3 derivation for every depth and
+key. ~read_returns~ and ~read_diverges~ connect those reads to the unbounded
+operational semantics. ~Plan.mutable~ allocates a fresh mutable identity from
+the certified storage. C3 and C4 are explicit policies with separate APIs.
+
+* Runtime descriptors
+
+[[file:../../LeanPoo/Prototype/DynamicDescriptor.lean][DynamicDescriptor]] supplies a recursive ~Value~ universe, first-class
+registered functions/descriptors and contracts for primitives, ranges, lists,
+dictionaries, objects, named recursive types, unions and intersections.
+Membership validates identities against the supplied current registry.
+Budget exhaustion is an error. ~Descriptor.call~ checks both argument and
+result contracts; [[file:../../LeanPoo/Prototype/DynamicDescriptorSemantics.lean][DynamicDescriptorSemantics]] proves successful membership
+and call admission against an inductive ~Accepted~ relation.
+
+~Contract.describe~ exposes constructors and arguments as ordinary dynamic
+objects. ~Registry.inspect~ resolves descriptor values and returns their
+contract, name and open metadata. Function membership establishes registered
+callability; behavioral refinements are checked on calls. It does not decide
+universal properties of arbitrary functions or serialize closures.
+
+* Mutable protocol and conversions
+
+[[file:../../LeanPoo/Prototype/MutableRecord.lean][MutableRecord]] stores effective slot computations in one ~IO.Ref~ hash
+identity. ~Specification~ supports identity, slot, composition and error.
+Parent mutations precede child mutations. Each slot write captures inherited
+syntax, receives explicit final self, and performs one table insertion;
+subsequent self reads see the current storage. An override can skip inherited
+errors. Failure retains earlier writes and skips subsequent mutations.
+
+~Specification.transition~ declares the pure state semantics. ~write_pureSlot~
+and ~compose_assoc~ are kernel laws. ~snapshot~, ~create~, ~fromValues~ and
+~applyLinear~ expose persistent, mutable and consuming-state conversions.
+Mutable failure retains partial writes; linear failure preserves the old
+reference. [[file:../../Tests/MutableRecord.lean][MutableRecord controls]] exercise both policies, alias visibility,
+snapshot isolation, fresh identity, inherited laziness and mutual recursion.
+An IO refinement theorem and machine-level constant-time allocation bounds
+are not supplied.
+
+* Source qualification
+
+#+begin_src sh
+lake build LeanPoo
+just check-poof-source /path/to/racket
+python3 tools/poof_source_check.py --paper .data/poof/poof.scrbl --compare-lean
+#+end_src
+
+The versioned fixture contains exactly the 76 code blocks extracted from the
+pinned paper. Racket executes all 24 original value checks; ~SourceDifferential~
+computes their corresponding Lean observations. The source-differential CI job
+compares canonical values and is required by the aggregate check. The fixture
+retains upstream attribution and the Apache 2.0 license. This gate establishes
+the declared examples, independently of the generic kernel theorems.

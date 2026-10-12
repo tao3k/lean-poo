@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.AVL
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperTrees
+namespace LeanPoo.Tests.Trees
 
 private def height : Tree K V → Nat
   | .empty => 0
@@ -113,4 +113,4 @@ private unsafe def exercise : IO Unit := do
 #eval exercise
 #print axioms Dictionary.avlRebalance_inherits
 #print axioms Dictionary.avlRebalance_node
-end LeanPoo.Tests.PaperTrees
+end LeanPoo.Tests.Trees

@@ -2,7 +2,7 @@ import LeanPoo.Prototype.DescriptorReflection
 import LeanPoo.Prototype.NumberDescriptor
 import LeanPoo.Prototype.PrototypeReflection
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperDescriptorReflection
+namespace LeanPoo.Tests.DescriptorReflection
 private def run : IO Unit := do
   let integer := NumberDescriptor.int
   unless integer.zero == 0 && integer.one == 1 && integer.add 23 42 == 65 &&
@@ -83,4 +83,4 @@ private unsafe def objects : IO Unit := do
 #eval objects
 #print axioms PrototypeReflection.fromRecord_toRecord
 #print axioms DescriptorReflection.fromRecord_toRecord
-end LeanPoo.Tests.PaperDescriptorReflection
+end LeanPoo.Tests.DescriptorReflection

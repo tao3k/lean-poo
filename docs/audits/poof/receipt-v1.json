@@ -1,6 +1,6 @@
 {
   "schema": "lean-poo.poof-audit.v1",
-  "baseline_commit": "247d1d6094b6af1bb873f69564b271bc978730ed",
+  "baseline_commit": "0a111f6",
   "paper": {
     "repository": "metareflection/poof",
     "file": "poof.scrbl",
@@ -8,8 +8,8 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "db8313126bada285b92e10eef644b9672d57ae119813d7efbda23132a07847a9",
-  "audit_tool_sha256": "f797f94ab8a3b74e3c3a5cab6864e2980654948c46bcbb1d5897db995ae05a86",
+  "requirements_sha256": "b18e9de2ee747e6327ae31fec9a7a6c3420da94ced4aa8024e269efdb0f7e7fa",
+  "audit_tool_sha256": "11ec317a3e109d7cbca29c2082ace6e09c58eb2975cbe088a54abced6d791cf4",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
     "reviewed_constructive_path_closed": true,
@@ -22,15 +22,19 @@
         "operations": [
           "explicit checked bottom",
           "prototype-list default base",
-          "constant tail bypass"
+          "constant tail bypass",
+          "operational return/error/divergence distinction"
         ],
         "implementation": [
-          "LeanPoo/Prototype/CheckedFunction.lean"
+          "LeanPoo/Prototype/CheckedFunction.lean",
+          "LeanPoo/Prototype/Recursive.lean",
+          "LeanPoo/Prototype/RecursiveSemantics.lean"
         ],
         "checks": [
-          "Tests/PaperFixedPoints.lean"
+          "Tests/FixedPoints.lean",
+          "Tests/RecursiveSemantics.lean"
         ],
-        "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+        "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof."
       },
       {
         "id": "multiple-inheritance",
@@ -43,7 +47,10 @@
           "retained function/supers/precedence overrides",
           "shared memoized C3 batch traversal",
           "checked retained-cache admission",
-          "reusable frozen metadata/function plan"
+          "reusable frozen metadata/function plan",
+          "complete finite DAG outcomes",
+          "C3 object slot composition",
+          "safe dynamic recursive C3 objects"
         ],
         "implementation": [
           "LeanPoo/Prototype/MetaPrototype.lean",
@@ -51,20 +58,27 @@
           "LeanPoo/Prototype/C3Semantics.lean",
           "LeanPoo/Prototype/C3GraphTrace.lean",
           "LeanPoo/Prototype/C3GraphSemantics.lean",
-          "LeanPoo/Prototype/CheckedMetaPrototype.lean"
+          "LeanPoo/Prototype/CheckedMetaPrototype.lean",
+          "LeanPoo/Prototype/C3DAG.lean",
+          "LeanPoo/Object/SlotSyntax.lean",
+          "LeanPoo/Object/C3.lean",
+          "LeanPoo/Object/Recursive.lean"
         ],
         "checks": [
-          "Tests/PaperMetaPrototype.lean",
-          "Tests/PaperC3.lean",
-          "Tests/PaperC3Semantics.lean",
-          "Tests/PaperC3GraphSemantics.lean",
-          "Tests/PaperC3BatchCoherence.lean",
-          "Tests/PaperC3UnaryLeaf.lean",
-          "Tests/PaperC3TwoLeaf.lean",
-          "Tests/PaperC3LeafParents.lean",
-          "Tests/PaperCheckedMeta.lean"
+          "Tests/MetaPrototype.lean",
+          "Tests/C3.lean",
+          "Tests/C3Semantics.lean",
+          "Tests/C3GraphSemantics.lean",
+          "Tests/C3BatchCoherence.lean",
+          "Tests/C3UnaryLeaf.lean",
+          "Tests/C3TwoLeaf.lean",
+          "Tests/C3LeafParents.lean",
+          "Tests/CheckedMeta.lean",
+          "Tests/C3DAG.lean",
+          "Tests/C3Object.lean",
+          "Tests/ObjectSemantics.lean"
         ],
-        "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+        "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions."
       },
       {
         "id": "simple-types",
@@ -74,18 +88,22 @@
           "Top and Bottom recognizers",
           "runtime presentation/codec",
           "Number add/subtract/zero/one",
-          "typed ListOf and rejected mixed/improper input"
+          "typed ListOf and rejected mixed/improper input",
+          "recursive dynamic values and named contracts"
         ],
         "implementation": [
           "LeanPoo/Prototype/NumberDescriptor.lean",
           "LeanPoo/Prototype/Class.lean",
-          "LeanPoo/Prototype/Types.lean"
+          "LeanPoo/Prototype/Types.lean",
+          "LeanPoo/Prototype/DynamicDescriptor.lean",
+          "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
         ],
         "checks": [
-          "Tests/PaperDescriptorReflection.lean",
-          "Tests/PaperPrototypeChecks.lean"
+          "Tests/DescriptorReflection.lean",
+          "Tests/PrototypeChecks.lean",
+          "Tests/DynamicDescriptor.lean"
         ],
-        "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+        "boundary": "Static typed descriptors and a recursive dynamic Value universe coexist. Dynamic contracts cover primitives, ranges, lists, dictionaries, objects, named recursive types and first-class descriptors. Current registry identity is required; budget exhaustion is an error. Lean Int/strings replace Scheme number/sexp carriers."
       },
       {
         "id": "elaborate-types",
@@ -106,7 +124,10 @@
           "strict wire and refinement admission",
           "typed field update lookup laws",
           "heterogeneous ordered record patch",
-          "valid-record preservation and untouched-field kernel laws"
+          "valid-record preservation and untouched-field kernel laws",
+          "contract constructor reflection",
+          "first-class runtime descriptor inspection",
+          "checked dynamic function boundaries with kernel soundness"
         ],
         "implementation": [
           "LeanPoo/Prototype/RecordDescription.lean",
@@ -114,14 +135,18 @@
           "LeanPoo/Prototype/PrototypeReflection.lean",
           "LeanPoo/Prototype/Class.lean",
           "LeanPoo/Prototype/Types.lean",
-          "LeanPoo/Prototype/RecordCodec.lean"
+          "LeanPoo/Prototype/RecordCodec.lean",
+          "LeanPoo/Prototype/DynamicDescriptor.lean",
+          "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
         ],
         "checks": [
-          "Tests/PaperDescriptorReflection.lean",
+          "Tests/DescriptorReflection.lean",
           "Tests/IntegratedPrototype.lean",
-          "Tests/PaperRecordCodec.lean"
+          "docs/audits/poof/closure-v1.json",
+          "Tests/RecordCodec.lean",
+          "Tests/DynamicDescriptor.lean"
         ],
-        "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
+        "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed."
       },
       {
         "id": "pure-linearity",
@@ -134,17 +159,23 @@
           "alias use refusal",
           "mutex-serialized competing consumers",
           "rejected transition retains reference",
-          "checked composition associativity"
+          "checked composition associativity",
+          "shared mutable hash slots",
+          "pure/mutable/linear observation controls"
         ],
         "implementation": [
           "LeanPoo/Prototype/LinearState.lean",
-          "LeanPoo/Prototype/Mutable.lean"
+          "LeanPoo/Prototype/Mutable.lean",
+          "LeanPoo/Prototype/MutableRecord.lean",
+          "LeanPoo/Object/Recursive.lean"
         ],
         "checks": [
-          "Tests/PaperLinearState.lean",
-          "Tests/MutablePrototype.lean"
+          "Tests/LinearState.lean",
+          "Tests/MutablePrototype.lean",
+          "Tests/MutableRecord.lean",
+          "Tests/ObjectSemantics.lean"
         ],
-        "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+        "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem."
       },
       {
         "id": "fixed-point-variants",
@@ -158,174 +189,180 @@
           "finite recursive value controls",
           "pure finite fix/mix unfoldings",
           "certified stable fixed point",
-          "all-input guarded triangular approximation theorem"
+          "all-input guarded triangular approximation theorem",
+          "safe explicit recursive interactions",
+          "unbounded operational soundness and completeness",
+          "divergence and all-depth relational transfer"
         ],
         "implementation": [
           "LeanPoo/Prototype/CheckedFunction.lean",
           "LeanPoo/Prototype/FixedPoint.lean",
           "LeanPoo/Prototype/Compose.lean",
           "LeanPoo/Prototype/Delayed.lean",
-          "LeanPoo/Prototype/FiniteFix.lean"
+          "LeanPoo/Prototype/FiniteFix.lean",
+          "LeanPoo/Prototype/Recursive.lean",
+          "LeanPoo/Prototype/RecursiveSemantics.lean"
         ],
         "checks": [
-          "Tests/PaperFixedPoints.lean",
-          "Tests/PaperFiniteFix.lean"
+          "Tests/FixedPoints.lean",
+          "Tests/FiniteFix.lean",
+          "Tests/RecursiveSemantics.lean"
         ],
-        "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
+        "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed."
       }
     ]
   },
-  "closure_sha256": "3bb40388b5bebece04830ffeea8acdf6782fb165f4984af66aaaccb23857ee1d",
+  "closure_sha256": "34a7a671061ed0287efc197bbdb2e88fe148b98cc05e07b60e43afe1618ab072",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
       {
         "source_line": 272,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:272",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 328,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:328",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 332,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:332",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 336,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:336",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 344,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:344",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 352,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:352",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 362,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:362",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 376,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:376",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 456,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:456",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 465,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:465",
         "adaptation": "Typed dependent records; source complex literals use integral real/imaginary pairs."
       },
       {
         "source_line": 715,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:715",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 731,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:731",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 792,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:792",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 797,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:797",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 839,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:839",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 842,
-        "test": "Tests/PaperTrees.lean",
+        "test": "Tests/Trees.lean",
         "marker": "paper:842",
         "adaptation": "Int/string/name-backed Symbol orders; explicit errors and Option missing values; cached heights annotate AVL nodes."
       },
       {
         "source_line": 869,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:869",
         "adaptation": "Typed integer functions and delayed natural computations."
       },
       {
         "source_line": 878,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:878",
         "adaptation": "Typed integer functions and delayed natural computations."
       },
       {
         "source_line": 1895,
-        "test": "Tests/PaperC3.lean",
+        "test": "Tests/C3.lean",
         "marker": "paper:1895",
         "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
       },
       {
         "source_line": 1896,
-        "test": "Tests/PaperC3.lean",
+        "test": "Tests/C3.lean",
         "marker": "paper:1896",
         "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
       },
       {
         "source_line": 1897,
-        "test": "Tests/PaperC3.lean",
+        "test": "Tests/C3.lean",
         "marker": "paper:1897",
         "adaptation": "Atomic nil is distinct from an empty typed list; finite string identifiers name C3 nodes."
       },
       {
         "source_line": 1974,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:1974",
         "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
       },
       {
         "source_line": 1975,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:1975",
         "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
       },
       {
         "source_line": 1976,
-        "test": "Tests/PaperPrototypeChecks.lean",
+        "test": "Tests/PrototypeChecks.lean",
         "marker": "paper:1976",
         "adaptation": "Typed delayed object slots; homogeneous list recognition uses JSON arrays with mixed/improper input rejection, not Scheme wire compatibility."
       }
     ]
   },
-  "checks_sha256": "119dfc6196fe9324e337e17238e5b1e2fb92a690444aa490772d207918536215",
+  "checks_sha256": "da8800b6d7e7a5c772e600587a464d5ea4f5d5c0b26f5c1aa593095c68d1b3bb",
   "review_units": [
     {
       "id": "frontmatter",
@@ -344,13 +381,16 @@
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
-        "LeanPoo/Prototype/FiniteFix.lean"
+        "LeanPoo/Prototype/FiniteFix.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
         "Examples/PrototypeCore.lean",
-        "Tests/PaperFiniteFix.lean"
+        "Tests/FiniteFix.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof. Pure finite unfoldings and stabilization certificates cover bounded typed observations; they do not characterize every unsafe recursive execution."
+      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Shared unsafe thunks remain an alternate runtime; arbitrary Scheme programs are outside the stated calculus."
     },
     {
       "id": "claims-plan",
@@ -391,12 +431,16 @@
       "title": "Records as functions",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean"
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Dependent key/value family, Option storage and checked missing-key dispatch. The original Scheme message syntax is not interpreted."
     },
@@ -407,12 +451,16 @@
       "title": "Record prototypes",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean"
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "slotGen, self and delayed inherited values; checked slot/modify/compute laws preserve all-key observations for the stated error policy. General Scheme effects remain outside this typed fragment."
     },
@@ -423,15 +471,19 @@
       "title": "Paper basic checks",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "tools/poof_source_check.py",
+        "Tests/Fixtures/poof-source-v1.json"
       ],
       "checks": [
-        "Tests/PaperPrototypeChecks.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean",
-        "docs/audits/poof/checks-v1.json"
+        "Tests/PrototypeChecks.lean",
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "docs/audits/poof/checks-v1.json",
+        "Tests/SourceDifferential.lean",
+        "tools/tests/test_poof_source_check.py"
       ],
-      "boundary": "All ten core record source checks guarded; the x/y/z override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
+      "boundary": "The 24 original value checks execute in Racket 9.0 and compare canonical outputs against computed Lean values. The versioned 76-block fixture is exactly extracted from the pinned source; CI reruns it without the reference checkout. Corrupt fixture identity and incomplete/duplicate/mismatched receipts fail closed. Differential examples do not establish whole-language equivalence."
     },
     {
       "id": "slot-construction",
@@ -440,11 +492,15 @@
       "title": "Building record prototypes",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/SlotSpec.lean"
+        "LeanPoo/Prototype/SlotSpec.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Typed slot/modify/compute constructors; original slot construction checks asserted."
     },
@@ -455,10 +511,13 @@
       "title": "Long-form basics and ordered composition",
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/Generator.lean"
+        "LeanPoo/Prototype/Generator.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean"
+        "Examples/PrototypeCore.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
       "boundary": "Heterogeneous chain types and local laws; no paper operational-semantics relation."
     },
@@ -468,12 +527,15 @@
       "status": "lean_translation",
       "title": "Bottom and missing behavior",
       "implementation": [
-        "LeanPoo/Prototype/CheckedFunction.lean"
+        "LeanPoo/Prototype/CheckedFunction.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean"
+        "Tests/FixedPoints.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+      "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof."
     },
     {
       "id": "single-inheritance",
@@ -498,7 +560,7 @@
         "LeanPoo/Prototype/Order.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Final-self comparison and string-to-symbol delegation; typed name symbols, not Scheme interning."
     },
@@ -511,7 +573,7 @@
         "LeanPoo/Prototype/BinaryTree.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Inherited open-recursive node/acons/ref/afoldr; explicit typed fold accumulator and errors."
     },
@@ -524,7 +586,7 @@
         "LeanPoo/Prototype/AVL.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Node-only extension; source shapes plus independent balance/height/query controls; two inheritance equalities, not a universal AVL preservation proof."
     },
@@ -540,7 +602,7 @@
       "checks": [
         "Examples/PrototypeFunctions.lean",
         "Examples/DelayedNumbers.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean"
       ],
       "boundary": "Both original numeric expected-value checks asserted with typed integer/natural carriers."
     },
@@ -551,12 +613,15 @@
       "title": "Computations rather than values",
       "implementation": [
         "LeanPoo/Prototype/Delayed.lean",
-        "LeanPoo/Prototype/FixedPoint.lean"
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Examples/DelayedNumbers.lean"
+        "Examples/DelayedNumbers.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Delayed self/super computes non-function values; premature forcing can diverge."
+      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option."
     },
     {
       "id": "without-subtyping",
@@ -579,10 +644,13 @@
       "title": "Slot introspection",
       "implementation": [
         "LeanPoo/Object/Memo.lean",
-        "LeanPoo/Object/Schema.lean"
+        "LeanPoo/Object/Schema.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery."
     },
@@ -600,8 +668,8 @@
       ],
       "checks": [
         "Tests/ObjectDefinition.lean",
-        "Tests/PaperDictionaryRecord.lean",
-        "Tests/PaperRepresentations.lean"
+        "Tests/DictionaryRecord.lean",
+        "Tests/Representations.lean"
       ],
       "boundary": "Both concrete source alternatives implemented: shared AVL cells and prototype/key-list pairs. Typed homogeneous/dependent families and explicit key-slot override policy; no universal representation equivalence theorem."
     },
@@ -612,11 +680,15 @@
       "title": "Unified instance/prototype objects",
       "implementation": [
         "LeanPoo/Prototype/Object.lean",
-        "LeanPoo/Object/Prototype.lean"
+        "LeanPoo/Object/Prototype.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/FirstClassObject.lean",
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Retained prototype/value pair and later extension; typed carriers and unsafe recursive instantiation."
     },
@@ -631,20 +703,27 @@
         "LeanPoo/Prototype/C3Semantics.lean",
         "LeanPoo/Prototype/C3GraphTrace.lean",
         "LeanPoo/Prototype/C3GraphSemantics.lean",
-        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean",
+        "LeanPoo/Prototype/C3DAG.lean",
+        "LeanPoo/Object/SlotSyntax.lean",
+        "LeanPoo/Object/C3.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperMetaPrototype.lean",
-        "Tests/PaperC3.lean",
-        "Tests/PaperC3Semantics.lean",
-        "Tests/PaperC3GraphSemantics.lean",
-        "Tests/PaperC3BatchCoherence.lean",
-        "Tests/PaperC3UnaryLeaf.lean",
-        "Tests/PaperC3TwoLeaf.lean",
-        "Tests/PaperC3LeafParents.lean",
-        "Tests/PaperCheckedMeta.lean"
+        "Tests/MetaPrototype.lean",
+        "Tests/C3.lean",
+        "Tests/C3Semantics.lean",
+        "Tests/C3GraphSemantics.lean",
+        "Tests/C3BatchCoherence.lean",
+        "Tests/C3UnaryLeaf.lean",
+        "Tests/C3TwoLeaf.lean",
+        "Tests/C3LeafParents.lean",
+        "Tests/CheckedMeta.lean",
+        "Tests/C3DAG.lean",
+        "Tests/C3Object.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions."
     },
     {
       "id": "meta-prototype",
@@ -655,7 +734,7 @@
         "LeanPoo/Prototype/MetaPrototype.lean"
       ],
       "checks": [
-        "Tests/PaperMetaPrototype.lean"
+        "Tests/MetaPrototype.lean"
       ],
       "boundary": "Function/supers/precedence are overridable slots of first-class metadata objects; string registry identifiers replace recursive dynamic identity. Parent caches are caller metadata, not ancestry-certified C4 orders."
     },
@@ -675,11 +754,14 @@
       "title": "Classes as descriptor prototypes",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Object/Class.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
         "Tests/DescriptorClass.lean",
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "Runtime descriptors compose over a fixed Lean carrier type; Scheme dynamic type universe not reproduced."
     },
@@ -690,10 +772,13 @@
       "title": "I/O validation",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Object/Class.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility."
     },
@@ -705,13 +790,16 @@
       "implementation": [
         "LeanPoo/Prototype/NumberDescriptor.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperDescriptorReflection.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/DescriptorReflection.lean",
+        "Tests/PrototypeChecks.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
-      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+      "boundary": "Static typed descriptors and a recursive dynamic Value universe coexist. Dynamic contracts cover primitives, ranges, lists, dictionaries, objects, named recursive types and first-class descriptors. Current registry identity is required; budget exhaustion is an error. Lean Int/strings replace Scheme number/sexp carriers."
     },
     {
       "id": "parameterized-types",
@@ -720,10 +808,13 @@
       "title": "Parameterized descriptors",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "List/array/map/option/product/sum/HList construction; typed rather than unrestricted dynamic values."
     },
@@ -738,15 +829,18 @@
         "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean",
-        "LeanPoo/Prototype/RecordCodec.lean"
+        "LeanPoo/Prototype/RecordCodec.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperDescriptorReflection.lean",
+        "Tests/DescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
         "docs/audits/poof/closure-v1.json",
-        "Tests/PaperRecordCodec.lean"
+        "Tests/RecordCodec.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed."
     },
     {
       "id": "typeclass-correspondence",
@@ -766,13 +860,17 @@
       "title": "Pure linearity and mutable/functional interaction",
       "implementation": [
         "LeanPoo/Prototype/LinearState.lean",
-        "LeanPoo/Prototype/Mutable.lean"
+        "LeanPoo/Prototype/Mutable.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperLinearState.lean",
-        "Tests/MutablePrototype.lean"
+        "Tests/LinearState.lean",
+        "Tests/MutablePrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem."
     },
     {
       "id": "mutable-protocol",
@@ -780,12 +878,16 @@
       "status": "lean_translation",
       "title": "Simplified mutable prototype protocol",
       "implementation": [
-        "LeanPoo/Prototype/Mutable.lean"
+        "LeanPoo/Prototype/Mutable.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/MutablePrototype.lean"
+        "Tests/MutablePrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Parent/child effects share identity; standard layers stage persistent schema edits, not literal in-place Scheme hash mutation."
+      "boundary": "fix!/mix! allocate one fresh IO.Ref hash identity, run parent before child, update each slot with one table insertion, capture inherited syntax lazily and resolve final-self requests on later reads. No topology rebuild is needed per write. Failure retains prior writes and skips subsequent child mutations. Snapshot and consuming-state conversions execute. No machine-level O(1) time or allocation bound is asserted."
     },
     {
       "id": "cache-proposals",
@@ -838,18 +940,25 @@
         "LeanPoo/Prototype/C3.lean",
         "LeanPoo/Prototype/C3Semantics.lean",
         "LeanPoo/Prototype/C3GraphTrace.lean",
-        "LeanPoo/Prototype/C3GraphSemantics.lean"
+        "LeanPoo/Prototype/C3GraphSemantics.lean",
+        "LeanPoo/Prototype/C3DAG.lean",
+        "LeanPoo/Object/SlotSyntax.lean",
+        "LeanPoo/Object/C3.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperC3.lean",
-        "Tests/PaperC3Semantics.lean",
-        "Tests/PaperC3GraphSemantics.lean",
-        "Tests/PaperC3BatchCoherence.lean",
-        "Tests/PaperC3UnaryLeaf.lean",
-        "Tests/PaperC3TwoLeaf.lean",
-        "Tests/PaperC3LeafParents.lean"
+        "Tests/C3.lean",
+        "Tests/C3Semantics.lean",
+        "Tests/C3GraphSemantics.lean",
+        "Tests/C3BatchCoherence.lean",
+        "Tests/C3UnaryLeaf.lean",
+        "Tests/C3TwoLeaf.lean",
+        "Tests/C3LeafParents.lean",
+        "Tests/C3DAG.lean",
+        "Tests/C3Object.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches, graph-validation failures, absent first roots and first-parent self cycles have identical complete cached/uncached outcomes. Matching first-root scalar failures lift to arbitrary batch tails. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions."
     },
     {
       "id": "helpers",
@@ -863,8 +972,8 @@
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperC3.lean",
-        "Tests/PaperRepresentations.lean"
+        "Tests/C3.lean",
+        "Tests/Representations.lean"
       ],
       "boundary": "The three c3-extra-definitions helpers map to fromList/toList/merge, using typed fold accumulators and explicit errors. Commented memoization sketches are not concrete executable requirements."
     },
@@ -875,10 +984,14 @@
       "title": "Appendix A extra checks",
       "implementation": [
         "LeanPoo/Prototype/Object.lean",
-        "LeanPoo/Prototype/Class.lean"
+        "LeanPoo/Prototype/Class.lean",
+        "tools/poof_source_check.py",
+        "Tests/Fixtures/poof-source-v1.json"
       ],
       "checks": [
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean",
+        "Tests/SourceDifferential.lean",
+        "tools/tests/test_poof_source_check.py"
       ],
       "boundary": "All three source extra checks with typed JSON list boundary; no Scheme wire compatibility."
     },
@@ -947,13 +1060,16 @@
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/Delayed.lean",
-        "LeanPoo/Prototype/FiniteFix.lean"
+        "LeanPoo/Prototype/FiniteFix.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean",
-        "Tests/PaperFiniteFix.lean"
+        "Tests/FixedPoints.lean",
+        "Tests/FiniteFix.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
+      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed."
     },
     {
       "id": "minimalism",
@@ -1595,6 +1711,15 @@
         33
       ]
     },
+    "LeanPoo/Object/C3.lean": {
+      "sha256": "0489c6387a45e475badf9d1bd6b47f6e0b042d3b19845dd9900006364ab0c8ae",
+      "physical_lines": 74,
+      "unsafe_declaration_lines": [
+        66
+      ],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Object/Cache.lean": {
       "sha256": "29694ff611870eba60849fdde98f8609b963e87378455c51494a9031e98cf8d7",
       "physical_lines": 135,
@@ -1674,10 +1799,26 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Object/Recursive.lean": {
+      "sha256": "2adbbd69a0ca66251a8e964fee191c38b7b4ff612d5faa372e8c94346b42b033",
+      "physical_lines": 73,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Object/Schema.lean": {
       "sha256": "17accc11306072bb41c9722109f78910eb6b3bd7f9bbe0e9eb6934bb998998df",
       "physical_lines": 355,
       "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Object/SlotSyntax.lean": {
+      "sha256": "576965fc479db98b4ccb57f4a82df7e41bdd0155607f9845496b0bd9ee975025",
+      "physical_lines": 107,
+      "unsafe_declaration_lines": [
+        103
+      ],
       "guard_lines": [],
       "eval_lines": []
     },
@@ -1718,6 +1859,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/C3DAG.lean": {
+      "sha256": "0e4a17cf127a1df81d8c617840ae46423b82cf0f06a3c0732857bfac040d2d87",
+      "physical_lines": 312,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/C3GraphSemantics.lean": {
       "sha256": "40162febae784db868bad335cc34b9ef9e87689978399aae5d2533a1d0bc3abe",
       "physical_lines": 745,
@@ -1726,8 +1874,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/C3GraphTrace.lean": {
-      "sha256": "1d6b8d563ca66d2bb4e58d98de7c861fa6f2f9eb8924b7ba4e42b80fcf8a2f5e",
-      "physical_lines": 815,
+      "sha256": "f0ebf35f4482991a5777352dc4553641d3fc6f5e116ca8f3e9c79293ac4170d7",
+      "physical_lines": 816,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1806,6 +1954,20 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/DynamicDescriptor.lean": {
+      "sha256": "4ecb9d15962b7f125c4e2b8a062f486153db04099e788e26b956a1455f51eb6d",
+      "physical_lines": 188,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/DynamicDescriptorSemantics.lean": {
+      "sha256": "c375aca54160e88d32f92d195a370a1c9f2dcdb8cdd80328ff9d61908535a578",
+      "physical_lines": 214,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/FiniteFix.lean": {
       "sha256": "a13bdc8b3ff1b6341e8019c16f5549332758f445e83af29e3c17fef3a863ba29",
       "physical_lines": 88,
@@ -1867,6 +2029,13 @@
     "LeanPoo/Prototype/Mutable.lean": {
       "sha256": "6393f6a10519a8e4e00c9c57063a29d7bd775bc6889bca41e53f65058ba0b4a6",
       "physical_lines": 159,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/MutableRecord.lean": {
+      "sha256": "4831219de157f9ea1d8e086866e39c65f2fd925e96b8a656f533c4bbae78888b",
+      "physical_lines": 129,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -1937,6 +2106,20 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/Recursive.lean": {
+      "sha256": "ca8c2eedbeac15ea41f8cfa73177c79020ec8764e764fc07afa893289fbd109a",
+      "physical_lines": 185,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/RecursiveSemantics.lean": {
+      "sha256": "53e4959c3bca21bd899c19f857807f85b0503bc37f42e0d64b66b63192799b83",
+      "physical_lines": 231,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/SkewLens.lean": {
       "sha256": "18bdf725e301e98609f9ff658d8cf3f4f692c5e9bd50ff03c2ff53120dd1bd16",
       "physical_lines": 130,
@@ -1958,6 +2141,159 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "Tests/C3.lean": {
+      "sha256": "78480510267e6cf9a6a12178c737a5aa4cca5ae96a68339811040808fa45e318",
+      "physical_lines": 70,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "eval_lines": [
+        70
+      ]
+    },
+    "Tests/C3BatchCoherence.lean": {
+      "sha256": "f9eeddafc9fdb44ee617546ba748ccf5c253d3b6ede8fc23bf3104db0787bd14",
+      "physical_lines": 38,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        26,
+        28,
+        30
+      ],
+      "eval_lines": [
+        33
+      ]
+    },
+    "Tests/C3DAG.lean": {
+      "sha256": "2d16038b31700fdc52742683b73478d19251bbf09c10f2782696f8730793e60d",
+      "physical_lines": 61,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        31,
+        38,
+        39,
+        44,
+        54,
+        55
+      ],
+      "eval_lines": [
+        58
+      ]
+    },
+    "Tests/C3GraphSemantics.lean": {
+      "sha256": "6c1be43c346115267f810c95196245936e74f4da13c598872a99de3c9cc26bd7",
+      "physical_lines": 205,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        12,
+        15,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28,
+        30,
+        32,
+        33,
+        35,
+        37
+      ],
+      "eval_lines": [
+        159
+      ]
+    },
+    "Tests/C3LeafParents.lean": {
+      "sha256": "c6ab19ed0fd8c318fa35dc7bb28ffee20c3d7a6a7c2535643dd21db9faa85001",
+      "physical_lines": 65,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        55,
+        58
+      ],
+      "eval_lines": [
+        61
+      ]
+    },
+    "Tests/C3Object.lean": {
+      "sha256": "364fdad92e91327c76771364cc7c48bae42fbe6b2268eee6d9d3582eec1ee323",
+      "physical_lines": 56,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        30,
+        31,
+        32
+      ],
+      "eval_lines": [
+        52
+      ]
+    },
+    "Tests/C3Semantics.lean": {
+      "sha256": "b717b31036de463f40fff589695001755b50c058c3e64e6228ada5304f6ee419",
+      "physical_lines": 52,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        9,
+        10,
+        11,
+        13
+      ],
+      "eval_lines": [
+        38
+      ]
+    },
+    "Tests/C3TwoLeaf.lean": {
+      "sha256": "12c915e5b59ed83f723ed2190eb38488bab643c1543f23aebb3d1be4b500e966",
+      "physical_lines": 57,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        48,
+        50
+      ],
+      "eval_lines": [
+        53
+      ]
+    },
+    "Tests/C3UnaryLeaf.lean": {
+      "sha256": "942cb83224f703e304a52dc85170395e4e1e673494df11cb80366d48b68bdb0b",
+      "physical_lines": 48,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        39,
+        41
+      ],
+      "eval_lines": [
+        44
+      ]
+    },
+    "Tests/CheckedMeta.lean": {
+      "sha256": "2347c997c10ca6c1211ea22c99f9659ca5d0950c6cfc4d2df12ac3f73855eece",
+      "physical_lines": 56,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        55
+      ]
+    },
     "Tests/DescriptorClass.lean": {
       "sha256": "7c37119e7337e2f784356fcad105c3651fe2b309dcf6d8c7a06bfd903e891bd6",
       "physical_lines": 31,
@@ -1969,6 +2305,86 @@
       "eval_lines": [
         27
       ]
+    },
+    "Tests/DescriptorReflection.lean": {
+      "sha256": "ec8f3d5d1516485d35dd538a54b09fedd4636de6c72b5663773b5b9ae63a349e",
+      "physical_lines": 86,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        58,
+        83
+      ]
+    },
+    "Tests/DictionaryRecord.lean": {
+      "sha256": "182a152840cffc7bb7eb03bfc2a8cac996e0f694d7b3c7e8cdcd1c5990982d64",
+      "physical_lines": 30,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        30
+      ]
+    },
+    "Tests/DynamicDescriptor.lean": {
+      "sha256": "9e2273bcedbedb8d436669df9230b3988a80dc75dd86ab12c4cf28c536338147",
+      "physical_lines": 66,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        31,
+        34,
+        36,
+        37,
+        39,
+        41,
+        43,
+        46,
+        54,
+        55
+      ],
+      "eval_lines": [
+        62
+      ]
+    },
+    "Tests/FiniteFix.lean": {
+      "sha256": "978b608df3dfa5be58570574f4c0bcd46ce6556c7578da8e8aa38c432a92cb69",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        22,
+        23,
+        24,
+        25
+      ],
+      "eval_lines": [
+        56
+      ]
+    },
+    "Tests/FixedPoints.lean": {
+      "sha256": "f363cda294cce766896728ea83a42c3b18e80adacde366d9639a6ab3f21dc9dd",
+      "physical_lines": 42,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        40
+      ]
+    },
+    "Tests/Fixtures/poof-source-v1.json": {
+      "sha256": "0b713ac3ffa097098ad64ebd96d26d326a12287e5b94a9149dc03a7ed774b3eb",
+      "physical_lines": 463,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
     },
     "Tests/IncrementalObject.lean": {
       "sha256": "dfa63fdf66f80db8a86f855a26999557f567a2ec9fccd036af6887e0c4e8b45a",
@@ -2014,6 +2430,25 @@
         394
       ]
     },
+    "Tests/LinearState.lean": {
+      "sha256": "b428378b069e4ae96820fb737b6d19e736cc83e74513a1ca792a8eccc05729bc",
+      "physical_lines": 38,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        36
+      ]
+    },
+    "Tests/MetaPrototype.lean": {
+      "sha256": "737492e8d3e4bbc82ab5c38b72c055dc84d48592c21a067a8d0078acee6afeee",
+      "physical_lines": 68,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        50,
+        67
+      ]
+    },
     "Tests/MultipleDispatch.lean": {
       "sha256": "eb6d9bf6854af5a100105408a2f09670ee20865bfd5d208965699c2e1dc7fcb5",
       "physical_lines": 113,
@@ -2034,6 +2469,19 @@
         157
       ]
     },
+    "Tests/MutableRecord.lean": {
+      "sha256": "d9d057b6b2076db25268f88ccdea1597227758bac501f152ff7c1bcacf2aee56",
+      "physical_lines": 72,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        18,
+        19,
+        20
+      ],
+      "eval_lines": [
+        68
+      ]
+    },
     "Tests/ObjectDefinition.lean": {
       "sha256": "185d931397036ab0976b02b222677733677d3e5bd0219ff0791e4044ec4946fe",
       "physical_lines": 178,
@@ -2049,188 +2497,17 @@
       ],
       "eval_lines": []
     },
-    "Tests/PaperC3.lean": {
-      "sha256": "78480510267e6cf9a6a12178c737a5aa4cca5ae96a68339811040808fa45e318",
-      "physical_lines": 70,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        9,
-        11,
-        12,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24
-      ],
-      "eval_lines": [
-        70
-      ]
-    },
-    "Tests/PaperC3BatchCoherence.lean": {
-      "sha256": "6d6145fecd072335ca9742e98f9d9d7b81eb71d12d473a7a2b5afd7259642a25",
-      "physical_lines": 38,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        26,
-        28,
-        30
-      ],
-      "eval_lines": [
-        33
-      ]
-    },
-    "Tests/PaperC3GraphSemantics.lean": {
-      "sha256": "d8f0c7cd12cd8101163c2a339ff60aad02d2c2af2aa6e947a31846b3aa87450f",
-      "physical_lines": 205,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        12,
-        15,
-        18,
-        20,
-        22,
-        24,
-        26,
-        28,
-        30,
-        32,
-        33,
-        35,
-        37
-      ],
-      "eval_lines": [
-        159
-      ]
-    },
-    "Tests/PaperC3LeafParents.lean": {
-      "sha256": "11bc205e16c1c1a42eee66dac62828545e02f2b0ce5868ae142819abcaf4e077",
-      "physical_lines": 65,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        55,
-        58
-      ],
-      "eval_lines": [
-        61
-      ]
-    },
-    "Tests/PaperC3Semantics.lean": {
-      "sha256": "c7b383702df57b893214115f4a0e3d43446960e65cddd4642e3f1db57f494bc1",
+    "Tests/ObjectSemantics.lean": {
+      "sha256": "7074c1b814935be416359e6f948fa4c3d340c8ad68c9509caa22f65c0c84b270",
       "physical_lines": 52,
       "unsafe_declaration_lines": [],
-      "guard_lines": [
-        9,
-        10,
-        11,
-        13
-      ],
-      "eval_lines": [
-        38
-      ]
-    },
-    "Tests/PaperC3TwoLeaf.lean": {
-      "sha256": "da122d87eed376a9569b64a8b02406978c51cef05151ec62a0cdb40d508b9617",
-      "physical_lines": 57,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        48,
-        50
-      ],
-      "eval_lines": [
-        53
-      ]
-    },
-    "Tests/PaperC3UnaryLeaf.lean": {
-      "sha256": "14b9184fed016ed4229f3da5c667a2ae6838f104db0e067596959f9cc358f026",
-      "physical_lines": 48,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        39,
-        41
-      ],
-      "eval_lines": [
-        44
-      ]
-    },
-    "Tests/PaperCheckedMeta.lean": {
-      "sha256": "33085b271805e0ac1dc278a0e794ee8910043acd86cdf4508f7033473062d01c",
-      "physical_lines": 56,
-      "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        55
+        48
       ]
     },
-    "Tests/PaperDescriptorReflection.lean": {
-      "sha256": "5359ed322f0f32aa42ced909f96d6502f991ce4140617db7af02c5e9e6e15f23",
-      "physical_lines": 86,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        58,
-        83
-      ]
-    },
-    "Tests/PaperDictionaryRecord.lean": {
-      "sha256": "182a152840cffc7bb7eb03bfc2a8cac996e0f694d7b3c7e8cdcd1c5990982d64",
-      "physical_lines": 30,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        30
-      ]
-    },
-    "Tests/PaperFiniteFix.lean": {
-      "sha256": "cec02b22d0aee23ea9c097e2044b4bb25d62481e260de564e11f3940febe4607",
-      "physical_lines": 64,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        22,
-        23,
-        24,
-        25
-      ],
-      "eval_lines": [
-        56
-      ]
-    },
-    "Tests/PaperFixedPoints.lean": {
-      "sha256": "eca4c892fc0c175fa6e37bc56c537f418c4fa64f1278631d7e408e1c4fde688c",
-      "physical_lines": 42,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        40
-      ]
-    },
-    "Tests/PaperLinearState.lean": {
-      "sha256": "bb8353b765c2ad63f917295e0c42096f1829b274ad5d3b9fd4a370e91815cb9e",
-      "physical_lines": 38,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        36
-      ]
-    },
-    "Tests/PaperMetaPrototype.lean": {
-      "sha256": "6966ae4adaf090ae4ec1683eccd08f470e549d828ff02d0ee6c1a210e459aad5",
-      "physical_lines": 68,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        50,
-        67
-      ]
-    },
-    "Tests/PaperPrototypeChecks.lean": {
-      "sha256": "fed68c260357101e869d8bb6d2a70e07ecb4a3b061df9448c95642dbd05c6199",
+    "Tests/PrototypeChecks.lean": {
+      "sha256": "325521519f1328c489d1039926578b809e2bda8076c7e532e5f46ffd9abd3bcd",
       "physical_lines": 86,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
@@ -2239,8 +2516,17 @@
         85
       ]
     },
-    "Tests/PaperRecordCodec.lean": {
-      "sha256": "f3c30556dc43fbeb188a40c61c0963db8de59e7a255e280278b9c54cfb885ab7",
+    "Tests/QualifiedMethodCombination.lean": {
+      "sha256": "62bee3dac77282da0a8f9c9836f32671c1a7927a39dd012fe9fdad50d32c75f0",
+      "physical_lines": 86,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        81
+      ],
+      "eval_lines": []
+    },
+    "Tests/RecordCodec.lean": {
+      "sha256": "375321e093e39e590bbef7d308996207da7d499dada11a21d314c51f90c38971",
       "physical_lines": 88,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
@@ -2249,8 +2535,8 @@
         82
       ]
     },
-    "Tests/PaperRecordComplexRelation.lean": {
-      "sha256": "d93c2a90d863993b097668c77594928994097d82bb4404354334d290d4d5e614",
+    "Tests/RecordComplexRelation.lean": {
+      "sha256": "f28c58e9dd6571fba0207d5810abdb3aa46ac340d08fdbcb7d2d18cdbd536275",
       "physical_lines": 184,
       "unsafe_declaration_lines": [],
       "guard_lines": [
@@ -2265,8 +2551,8 @@
         177
       ]
     },
-    "Tests/PaperRecordDispatch.lean": {
-      "sha256": "7d420a2292794e4ebde0295ee0148e915468b39c82ce5752abe44eb3bd292ffa",
+    "Tests/RecordDispatch.lean": {
+      "sha256": "df10fce0bfd188b30025ba4512894317a4eb77a3f11b0d77aba76e1d0efbb3c2",
       "physical_lines": 217,
       "unsafe_declaration_lines": [],
       "guard_lines": [
@@ -2280,33 +2566,33 @@
         204
       ]
     },
-    "Tests/PaperRepresentations.lean": {
-      "sha256": "17cbdb4e795bacc847967355f4e4d71b02fdc61c0bd18b4c5f63cb33fcaa474d",
+    "Tests/RecursiveSemantics.lean": {
+      "sha256": "87e9ae57de5e2805663465bf672f05c963f991497bcaae5a9fdb1f19bfb91ae0",
+      "physical_lines": 86,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        58,
+        62,
+        63,
+        65
+      ],
+      "eval_lines": [
+        79
+      ]
+    },
+    "Tests/Representations.lean": {
+      "sha256": "c739246310e7d65a2c24b9a6e9b38c0cd8dd9c52736624fa424c8ae909a2e7f1",
       "physical_lines": 43,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
         42
       ]
-    },
-    "Tests/PaperTrees.lean": {
-      "sha256": "5f991bd6baad23aabcbdb09c4bb11fa55a82a2ce3ddec5d0500ac6be068463cb",
-      "physical_lines": 116,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [],
-      "eval_lines": [
-        112,
-        113
-      ]
-    },
-    "Tests/QualifiedMethodCombination.lean": {
-      "sha256": "62bee3dac77282da0a8f9c9836f32671c1a7927a39dd012fe9fdad50d32c75f0",
-      "physical_lines": 86,
-      "unsafe_declaration_lines": [],
-      "guard_lines": [
-        81
-      ],
-      "eval_lines": []
     },
     "Tests/SimpleMethodCombination.lean": {
       "sha256": "d1f1226ffab58c29cd43c3364a7ab87db621055ad12a77bdef332b8713a3599f",
@@ -2334,6 +2620,15 @@
       ],
       "eval_lines": []
     },
+    "Tests/SourceDifferential.lean": {
+      "sha256": "83b3e77c36ee55e51379ab8acd992357d93c641c2b5b6129da097932749c5baa",
+      "physical_lines": 112,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        111
+      ]
+    },
     "Tests/SubjectiveDispatch.lean": {
       "sha256": "28b0a4e55f9265ac75b607739f23845f7a9f98d3196e881fe4ff2f10807838ab",
       "physical_lines": 89,
@@ -2344,16 +2639,40 @@
       ],
       "eval_lines": []
     },
+    "Tests/Trees.lean": {
+      "sha256": "136cb884d3c332100fe73f7ade341089babd7241b848306fa74e01ab4a81f9ad",
+      "physical_lines": 116,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        112,
+        113
+      ]
+    },
     "docs/audits/poof/checks-v1.json": {
-      "sha256": "119dfc6196fe9324e337e17238e5b1e2fb92a690444aa490772d207918536215",
+      "sha256": "da8800b6d7e7a5c772e600587a464d5ea4f5d5c0b26f5c1aa593095c68d1b3bb",
       "physical_lines": 149,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "3bb40388b5bebece04830ffeea8acdf6782fb165f4984af66aaaccb23857ee1d",
-      "physical_lines": 165,
+      "sha256": "34a7a671061ed0287efc197bbdb2e88fe148b98cc05e07b60e43afe1618ab072",
+      "physical_lines": 202,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "tools/poof_source_check.py": {
+      "sha256": "267871d3fc04a4b658d56ced2ab56802f2460e0ecca91d633580d88bfb9c25bb",
+      "physical_lines": 228,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "tools/tests/test_poof_source_check.py": {
+      "sha256": "df76141b8ce5ac31f5529354a9d8d5f5f449286f523f803a3dcd5be4ade271e8",
+      "physical_lines": 53,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2468,6 +2787,7 @@
     "LeanPoo/Functional/ViewComposition.lean",
     "LeanPoo/Object/AncestryTransform.lean",
     "LeanPoo/Object/Builder.lean",
+    "LeanPoo/Object/C3.lean",
     "LeanPoo/Object/Cache.lean",
     "LeanPoo/Object/Class.lean",
     "LeanPoo/Object/Debug.lean",
@@ -2495,11 +2815,13 @@
     "LeanPoo/Object/Prototype.lean",
     "LeanPoo/Object/QualifiedMethods.lean",
     "LeanPoo/Object/Ranked.lean",
+    "LeanPoo/Object/Recursive.lean",
     "LeanPoo/Object/Renaming.lean",
     "LeanPoo/Object/Resolve.lean",
     "LeanPoo/Object/Schema.lean",
     "LeanPoo/Object/ShapeCache.lean",
     "LeanPoo/Object/SharedFamily.lean",
+    "LeanPoo/Object/SlotSyntax.lean",
     "LeanPoo/Object/SortedInheritance.lean",
     "LeanPoo/Object/SpecificationComposition.lean",
     "LeanPoo/Object/StaticDispatch.lean",
@@ -2519,6 +2841,7 @@
     "LeanPoo/Prototype/AVL.lean",
     "LeanPoo/Prototype/BinaryTree.lean",
     "LeanPoo/Prototype/C3.lean",
+    "LeanPoo/Prototype/C3DAG.lean",
     "LeanPoo/Prototype/C3GraphSemantics.lean",
     "LeanPoo/Prototype/C3GraphTrace.lean",
     "LeanPoo/Prototype/C3Semantics.lean",
@@ -2530,6 +2853,8 @@
     "LeanPoo/Prototype/Delayed.lean",
     "LeanPoo/Prototype/DescriptorReflection.lean",
     "LeanPoo/Prototype/DictionaryRecord.lean",
+    "LeanPoo/Prototype/DynamicDescriptor.lean",
+    "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
     "LeanPoo/Prototype/FiniteFix.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
     "LeanPoo/Prototype/Generator.lean",
@@ -2539,6 +2864,7 @@
     "LeanPoo/Prototype/MVP.lean",
     "LeanPoo/Prototype/MetaPrototype.lean",
     "LeanPoo/Prototype/Mutable.lean",
+    "LeanPoo/Prototype/MutableRecord.lean",
     "LeanPoo/Prototype/NumberDescriptor.lean",
     "LeanPoo/Prototype/Object.lean",
     "LeanPoo/Prototype/Order.lean",
@@ -2547,6 +2873,8 @@
     "LeanPoo/Prototype/RecordCodec.lean",
     "LeanPoo/Prototype/RecordDescription.lean",
     "LeanPoo/Prototype/RecordDispatch.lean",
+    "LeanPoo/Prototype/Recursive.lean",
+    "LeanPoo/Prototype/RecursiveSemantics.lean",
     "LeanPoo/Prototype/SkewLens.lean",
     "LeanPoo/Prototype/SlotSpec.lean",
     "LeanPoo/Prototype/Target.lean",
@@ -2554,6 +2882,15 @@
     "LeanPoo/Slots.lean",
     "Tests/AncestryTransform.lean",
     "Tests/AuditedResolver.lean",
+    "Tests/C3.lean",
+    "Tests/C3BatchCoherence.lean",
+    "Tests/C3DAG.lean",
+    "Tests/C3GraphSemantics.lean",
+    "Tests/C3LeafParents.lean",
+    "Tests/C3Object.lean",
+    "Tests/C3Semantics.lean",
+    "Tests/C3TwoLeaf.lean",
+    "Tests/C3UnaryLeaf.lean",
     "Tests/C4Presentation.lean",
     "Tests/C4Ranked.lean",
     "Tests/C4Relabeling.lean",
@@ -2562,6 +2899,7 @@
     "Tests/C4Traversal.lean",
     "Tests/CertifiedCacheReuse.lean",
     "Tests/Chapter9Combination.lean",
+    "Tests/CheckedMeta.lean",
     "Tests/ClassInitialization.lean",
     "Tests/ClassInstanceMethods.lean",
     "Tests/ClassMigration.lean",
@@ -2572,10 +2910,15 @@
     "Tests/DebugUnboundedBody.lean",
     "Tests/DeclarationBuilder.lean",
     "Tests/DescriptorClass.lean",
+    "Tests/DescriptorReflection.lean",
     "Tests/Diagnostics.lean",
+    "Tests/DictionaryRecord.lean",
     "Tests/DispatchTable.lean",
+    "Tests/DynamicDescriptor.lean",
     "Tests/ExecutionInvariant.lean",
     "Tests/ExtendedPrecedence.lean",
+    "Tests/FiniteFix.lean",
+    "Tests/FixedPoints.lean",
     "Tests/FocusedSpecification.lean",
     "Tests/FunctionalAccess.lean",
     "Tests/FunctionalAssembly.lean",
@@ -2623,8 +2966,10 @@
     "Tests/IncrementalObject.lean",
     "Tests/InlineDispatch.lean",
     "Tests/IntegratedPrototype.lean",
+    "Tests/LinearState.lean",
     "Tests/MapDeclaration.lean",
     "Tests/MergeInvariant.lean",
+    "Tests/MetaPrototype.lean",
     "Tests/MetadataInvariant.lean",
     "Tests/MethodCombination.lean",
     "Tests/MethodDictionary.lean",
@@ -2632,43 +2977,31 @@
     "Tests/MultipleDispatch.lean",
     "Tests/MutableObject.lean",
     "Tests/MutablePrototype.lean",
+    "Tests/MutableRecord.lean",
     "Tests/NestedObjectDefinition.lean",
     "Tests/NestedPrototype.lean",
     "Tests/NodeCertificate.lean",
     "Tests/NodeSoundness.lean",
     "Tests/NormalizationInvariant.lean",
     "Tests/ObjectDefinition.lean",
+    "Tests/ObjectSemantics.lean",
     "Tests/OrderRelation.lean",
     "Tests/OrdinaryNode.lean",
-    "Tests/PaperC3.lean",
-    "Tests/PaperC3BatchCoherence.lean",
-    "Tests/PaperC3GraphSemantics.lean",
-    "Tests/PaperC3LeafParents.lean",
-    "Tests/PaperC3Semantics.lean",
-    "Tests/PaperC3TwoLeaf.lean",
-    "Tests/PaperC3UnaryLeaf.lean",
-    "Tests/PaperCheckedMeta.lean",
-    "Tests/PaperDescriptorReflection.lean",
-    "Tests/PaperDictionaryRecord.lean",
-    "Tests/PaperFiniteFix.lean",
-    "Tests/PaperFixedPoints.lean",
-    "Tests/PaperLinearState.lean",
-    "Tests/PaperMetaPrototype.lean",
-    "Tests/PaperPrototypeChecks.lean",
-    "Tests/PaperRecordCodec.lean",
-    "Tests/PaperRecordComplexRelation.lean",
-    "Tests/PaperRecordDispatch.lean",
-    "Tests/PaperRepresentations.lean",
-    "Tests/PaperTrees.lean",
     "Tests/ParentInvariant.lean",
     "Tests/ProofReuseScale.lean",
+    "Tests/PrototypeChecks.lean",
     "Tests/QualifiedCombination.lean",
     "Tests/QualifiedMethodCombination.lean",
     "Tests/QuiescentUpgrade.lean",
     "Tests/RankedObject.lean",
     "Tests/ReachabilityInvariant.lean",
+    "Tests/RecordCodec.lean",
+    "Tests/RecordComplexRelation.lean",
+    "Tests/RecordDispatch.lean",
+    "Tests/RecursiveSemantics.lean",
     "Tests/ReferenceMerge.lean",
     "Tests/Renaming.lean",
+    "Tests/Representations.lean",
     "Tests/ResolverInvariant.lean",
     "Tests/ReusableContracts.lean",
     "Tests/SelectionInvariant.lean",
@@ -2677,6 +3010,7 @@
     "Tests/SimpleMethodCombination.lean",
     "Tests/SkewExtension.lean",
     "Tests/SortedInheritance.lean",
+    "Tests/SourceDifferential.lean",
     "Tests/SpecificationComposition.lean",
     "Tests/SpecificationFocus.lean",
     "Tests/StaticDispatch.lean",
@@ -2686,6 +3020,7 @@
     "Tests/SuffixLayout.lean",
     "Tests/TargetPolicies.lean",
     "Tests/TraversalInvariant.lean",
+    "Tests/Trees.lean",
     "Tests/TypedSlots.lean",
     "Tests/ValidationInvariant.lean",
     "Tests/VerifiedOrder.lean"
@@ -2695,7 +3030,7 @@
     "Statuses are manually reviewed, not inferred semantic proofs",
     "Heading coverage means all outline entries are assigned, not all behaviors reproduced",
     "Guard/eval lines are lexical markers, not execution receipts; printed values need expected-value assertions",
-    "Original Scheme/Racket evaluation and cross-language differential checks not performed",
+    "Original 24 checks have executable source/Lean differential gates; whole-language equivalence is not inferred",
     "Local translation, formal correspondence, unsafe execution and paper proposals remain distinct",
     "C4, proof reuse and OpenAI reference audits do not substitute for missing paper cases"
   ]

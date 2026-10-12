@@ -5,7 +5,7 @@
 * Appendix A: executable C3 and checks
 
 [[file:../../../LeanPoo/Prototype/C3.lean][C3.linearize]] implements the ordinary finite paper graph policy separately
-from the main C4 object policy. [[file:../../../Tests/PaperC3.lean][PaperC3]] asserts all four source orders,
+from the main C4 object policy. [[file:../../../Tests/C3.lean][C3]] asserts all four source orders,
 five refusal cases, both helper checks and 640 comparisons across 160 ordered
 parent DAGs against an independent recursive merge oracle.
 [[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the paper's leftmost eligible selection and normalized
@@ -33,12 +33,15 @@ equivalence to one-root coherence on every derivation-backed cache. That
 premise is proved for validated graphs without parent edges, yielding exact
 outcomes for arbitrary roots, repeated hits and later missing roots. It is
 also proved for validated graphs with any finite number of distinct leaf parents per node, including shared
-parents and opposite declarations across roots. Deeper parent-chain graph
-coherence remains open.
+parents and opposite declarations across roots. [[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now proves complete cached/reference outcomes for finite DAGs of
+arbitrary depth under bounded decreasing ranks, including missing parents and
+inconsistent merges. [[file:../../../LeanPoo/Object/C3.lean][Object.C3]] connects the certified order to actual slot
+composition, and [[file:../../../LeanPoo/Object/Recursive.lean][Object.Recursive]] supplies safe dynamic recursive reads.
+The general cyclic-graph outcome theorem remains outside the DAG scope.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 
-The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
+The three extra checks are asserted in [[file:../../../Tests/PrototypeChecks.lean][PrototypeChecks]], with explicit
 typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records
 all 24 original expressions. The three c3-extra-definitions helpers are implemented by Dictionary.fromList,
 toList and merge, with 594 scalar merge controls. Whole-policy C3/C4 equivalence
@@ -69,10 +72,10 @@ Appendix D (2256–2389) explains multiple ways to tie fixed points in eager and
 lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] uses an unsafe private reference cell and one shared
 thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
 [[file:../../../LeanPoo/Prototype/CheckedFunction.lean][rebuildingFix]] supplies the source rebuild-per-call contrast;
-[[file:../../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
+[[file:../../../Tests/FixedPoints.lean][FixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
 [[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] now defines pure finite unfoldings of ~fix~ and the one-step
 ~mix~ equation. Adjacent equality constructs a proof-bearing fixed point and
-implies stability at every later depth. [[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a two-step Boolean fixed point
+implies stability at every later depth. [[file:../../../Tests/FiniteFix.lean][FiniteFix]] proves a two-step Boolean fixed point
 over its entire input domain, proves the triangular result for every natural
 input at sufficient depth, and compares 65 observations with the shared thunk.
 Internal-define/letrec/lazy routes share the Lean knot; direct untyped self-application

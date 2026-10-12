@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.C3GraphSemantics
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3GraphSemantics
+namespace LeanPoo.Tests.C3GraphSemantics
 
 private def graph : C3.Graph :=
   [("O", []), ("A", ["O"]), ("B", ["O"]),
@@ -202,4 +202,4 @@ private theorem memoized_hit_agrees
 #print axioms memoized_hit_agrees
 #print axioms admitted_agrees
 
-end LeanPoo.Tests.PaperC3GraphSemantics
+end LeanPoo.Tests.C3GraphSemantics

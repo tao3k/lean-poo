@@ -22,10 +22,10 @@ exist; they do not establish every source dynamic-type operation.
 | Paper lines | Implementation and control | Limit |
 |-------------+----------------------------+-------|
 | 980–1038 | Lazy AVL DictionaryRecord and KeyedPrototype | Both concrete source routes; no universal representation theorem |
-| 1140–1314 | MetaPrototype, PaperMetaPrototype | Original ten-object C3 graph, inherited slots/caches and three overrides; main C4 is a separate policy |
-| 1388–1408 | NumberDescriptor, PaperDescriptorReflection | Int/Rat arithmetic and typed presentation/recognition; no dynamic Scheme universe |
+| 1140–1314 | MetaPrototype, MetaPrototype | Original ten-object C3 graph, inherited slots/caches and three overrides; main C4 is a separate policy |
+| 1388–1408 | NumberDescriptor, DescriptorReflection | Int/Rat arithmetic and typed presentation/recognition; no dynamic Scheme universe |
 | 1420–1433 | RecordDescription, DescriptorReflection, PrototypeReflection | Descriptor/codec/object/meta catalogs, nested self-description and generated validation/schema/inspection/update |
-| 1449–1495 | LinearState, PaperLinearState | Runtime alias consumption, pure threading and serialized races; no static ownership or universal isomorphism |
+| 1449–1495 | LinearState, LinearState | Runtime alias consumption, pure threading and serialized races; no static ownership or universal isomorphism |
 
 [[file:closure-v1.json][The closure map]] records named operations and explicit typed boundaries.
 [[file:../../contracts/descriptor-reflection.org][The API guide]] explains actual generated tools and callable refinement checks.
@@ -51,18 +51,28 @@ not establish full POOF implementation coverage.
 
 * New executable representation and meta evidence
 
-[[file:../../../Tests/PaperDictionaryRecord.lean][PaperDictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
+[[file:../../../Tests/DictionaryRecord.lean][DictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
 inherited values, missing-slot refusals and a cold failing slot.
-[[file:../../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] guards all three ordinary metadata slot overrides,
+[[file:../../../Tests/MetaPrototype.lean][MetaPrototype]] guards all three ordinary metadata slot overrides,
 C3 diamond caches, a special constant-record base and retained snapshots.
 These operations are implemented; unrestricted dynamic identity, arbitrary
 cached-ancestry correctness through the raw API and universal self-descriptor automation remain open.
-[[file:../../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] adds an explicit checked preparation path: all retained
+[[file:../../../Tests/CheckedMeta.lean][CheckedMeta]] adds an explicit checked preparation path: all retained
 caches are compared with the current C3 graph; function, parents and order are
 frozen together before repeated instantiation. It rejects six poisoned caches
 and five invalid graphs, and guards metadata whose getters depend on precedence.
-[[file:../../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] generates codecs from one finite field catalog, guards
+[[file:../../../Tests/RecordCodec.lean][RecordCodec]] generates codecs from one finite field catalog, guards
 102 wire round trips and rejects malformed wire/schema/record input. Field
 update lookup, valid-record preservation and heterogeneous batch frame laws are
 kernel checked. Three patch cases guard typed edit order and rejected partial
 results; callable serialization remains outside scope.
+
+* Dynamic and mutable completion
+
+[[file:../../contracts/recursive-objects.org][The recursive object guide]] describes dynamic values, first-class runtime
+descriptor identities, recursive named contracts and reflective contract data.
+Successful membership and checked function calls have kernel soundness.
+The mutable hash protocol performs slot insertions on one shared identity,
+captures inherited syntax and resolves final self on later reads. Pure, mutable
+and consuming-state observations are compared, including partial errors and
+snapshot isolation. The IO refinement and machine-cost limits are explicit.

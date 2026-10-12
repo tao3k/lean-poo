@@ -37,7 +37,7 @@ runtime dependency on the source paper.
 
 * Proof scope
 
-[[file:../../Tests/PaperC3Semantics.lean][PaperC3Semantics]] checks a concrete merge and rejection, while the Lean
+[[file:../../Tests/C3Semantics.lean][C3Semantics]] checks a concrete merge and rejection, while the Lean
 theorems quantify over *all candidate lists and all source merge traces*.
 They establish the paper's leftmost eligibility choice, normalized deletion
 step and equality of any source-trace output with a certified output. The

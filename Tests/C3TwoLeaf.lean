@@ -4,7 +4,7 @@ import LeanPoo.Prototype.C3GraphSemantics
 The theorem handles every requested root list and the resulting cache hits. -/
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3TwoLeaf
+namespace LeanPoo.Tests.C3TwoLeaf
 
 private def graph : C3.Graph :=
   [("A", ["P", "Q"]), ("B", ["Q", "P"]), ("P", []), ("Q", [])]
@@ -54,4 +54,4 @@ private theorem every_batch (roots : List String) :
 #print axioms C3.linearizeMany_eq_uncached_atMostTwoLeaf
 #print axioms every_batch
 
-end LeanPoo.Tests.PaperC3TwoLeaf
+end LeanPoo.Tests.C3TwoLeaf

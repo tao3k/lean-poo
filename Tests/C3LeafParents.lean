@@ -4,7 +4,7 @@ import LeanPoo.Prototype.C3GraphSemantics
 premise proves equality for every root list, including late failures. -/
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3LeafParents
+namespace LeanPoo.Tests.C3LeafParents
 
 private def graph : C3.Graph :=
   [("A", ["P", "Q", "R", "S"]), ("B", ["S", "R", "Q", "P"]),
@@ -62,4 +62,4 @@ private theorem every_batch (roots : List String) :
 #print axioms C3.linearizeMany_eq_uncached_leafParents
 #print axioms every_batch
 
-end LeanPoo.Tests.PaperC3LeafParents
+end LeanPoo.Tests.C3LeafParents

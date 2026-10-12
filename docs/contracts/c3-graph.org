@@ -67,13 +67,15 @@ For a validated graph whose successful lookups all have empty parent lists,
 equality for any ~roots~ without admission. For a richer graph,
 ~UnaryLeafGraph~ covers a two-level graph whose roots may share a leaf parent;
 ~linearizeMany_eq_uncached_unary_leaf~ provides the same all-batch equality.
-[[file:../../Tests/PaperC3UnaryLeaf.lean][PaperC3UnaryLeaf]] shows the declaration proof and checks a repeated root,
+[[file:../../Tests/C3UnaryLeaf.lean][C3UnaryLeaf]] shows the declaration proof and checks a repeated root,
 shared parent and later missing root. ~AtMostTwoLeafGraph~ extends this to two
-distinct leaf parents. [[file:../../Tests/PaperC3TwoLeaf.lean][PaperC3TwoLeaf]] retains that focused instance.
+distinct leaf parents. [[file:../../Tests/C3TwoLeaf.lean][C3TwoLeaf]] retains that focused instance.
 ~LeafParentGraph~ covers any finite number of distinct leaf parents.
-[[file:../../Tests/PaperC3LeafParents.lean][PaperC3LeafParents]] proves the graph premise for two roots sharing four leaves in
+[[file:../../Tests/C3LeafParents.lean][C3LeafParents]] proves the graph premise for two roots sharing four leaves in
 opposite orders, then checks repeated and missing requests. The theorem itself
-quantifies over every root list. For graphs with deeper parent chains,
+quantifies over every root list. For graphs with deeper parent chains, [[file:../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now supplies
+~linearizeMany_eq_uncached_dag~ under bounded decreasing ranks. For arbitrary
+graphs outside that scope,
 ~linearizeMany_eq_uncached_of_visit_coherence~ isolates the remaining premise:
 prove each root call returns the same full ~Except~ result for every cache
 backed by ~CacheDerivations~. The theorem carries that cache invariant across
@@ -128,11 +130,12 @@ succeeds. Empty-root batches and graph-validation failures have equal complete
 ~Except~ outcomes for arbitrary graphs and roots. For a valid graph with
 nonempty roots, absent first roots and direct first-parent self cycles also
 have equal complete outcomes. A matching first-root scalar failure also lifts
-to any batch tail without rerunning a proof for each tail. General
-cached/uncached success and error outcome equivalence for general graphs with
-parent edges, and Racket/Lean
-language equivalence remain open.
+to any batch tail without rerunning a proof for each tail. [[file:../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now establishes complete outcomes for finite DAGs with bounded
+decreasing ranks, including arbitrary depth and shared ancestry.
+[[file:recursive-objects.org][Recursive objects]] connects these orders to actual typed declarations and
+safe dynamic reads. General cyclic-graph outcome equality and unrestricted
+Racket/Lean language equivalence remain outside these theorems.
 
-[[file:../../Tests/PaperC3GraphSemantics.lean][PaperC3GraphSemantics]] checks shared ancestors, repeated roots and typed
+[[file:../../Tests/C3GraphSemantics.lean][C3GraphSemantics]] checks shared ancestors, repeated roots and typed
 errors, and checks the reusable theorems without extra axioms beyond Lean's
 standard kernel axioms.

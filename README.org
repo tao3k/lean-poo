@@ -6,7 +6,9 @@ described in [[https://github.com/metareflection/poof][POOF]] with Lean's types,
 linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
 The reviewed Lean-native constructive path is implemented and checked, including
-Order/BST/AVL, original checks, C3, representations and descriptor/meta operations.
+Order/BST/AVL, source/Lean differential checks, C3 object composition, runtime
+descriptors and mutable hash slots. [[file:docs/contracts/recursive-objects.org][Safe recursive objects]] have sound/complete
+operational evaluation and divergence theorems.
 The [[file:docs/audits/poof/README.org][whole-paper audit]] records the precise typed scope. Whole-paper operational
 correspondence and unrestricted dynamic automation are not established.
 
@@ -18,8 +20,8 @@ language or a domain-specific proof system.
 
 | Layer | Public capability |
 |-------+-------------------|
-| ~LeanPoo.Prototype~ | Open-recursive prototypes, ordered composition, delayed instances, first-class objects, and classes. |
-| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
+| ~LeanPoo.Prototype~ | Open-recursive prototypes, safe recursive observations, ordered composition, delayed instances, first-class descriptors, mutable slots and classes. |
+| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 

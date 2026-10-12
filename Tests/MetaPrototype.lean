@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.MetaPrototype
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperMetaPrototype
+namespace LeanPoo.Tests.MetaPrototype
 abbrev Rec := Record String (fun _ => Int)
 private def slot (key : String) (value : Int) : MetaPrototype.Layer Rec :=
   Object.recordSlotGen key (fun _ _ => some value)
@@ -65,4 +65,4 @@ private unsafe def paperGraph : IO Unit := do
     ordinal := ordinal+1
   IO.println "POOF-META-GRAPH-OK originalGraphObjects=10 inheritedSlots=true cachedOrders=true"
 #eval paperGraph
-end LeanPoo.Tests.PaperMetaPrototype
+end LeanPoo.Tests.MetaPrototype

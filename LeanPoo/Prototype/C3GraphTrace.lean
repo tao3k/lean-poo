@@ -237,7 +237,8 @@ theorem ParentDerivations.unique (left : ParentDerivations graph roots first)
           have tail := ih tailLeft tailRight
           simp [head, tail]
 
-private def sourceVisit (graph : Graph) (name : String) (path : List String) :
+/-- Proof-producing reference traversal; public for graph completeness proofs. -/
+def sourceVisit (graph : Graph) (name : String) (path : List String) :
     (fuel : Nat) → Except C4.Error {order : List String // GraphTrace graph fuel name order}
   | 0 => .error (.cycle name)
   | fuel+1 => do

@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.FiniteFix
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperFiniteFix
+namespace LeanPoo.Tests.FiniteFix
 
 abbrev Pair := Bool → Option Nat
 
@@ -61,4 +61,4 @@ private unsafe def compareShared : IO Unit := do
 #print axioms CheckedFunction.approximate_succ
 #print axioms finite_triangular
 
-end LeanPoo.Tests.PaperFiniteFix
+end LeanPoo.Tests.FiniteFix

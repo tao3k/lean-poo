@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.CheckedMetaPrototype
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperCheckedMeta
+namespace LeanPoo.Tests.CheckedMeta
 abbrev Rec := Record String (fun _ => Int)
 private def slot (key : String) (value : Int) : MetaPrototype.Layer Rec :=
   Object.recordSlotGen key (fun _ _ => some value)
@@ -53,4 +53,4 @@ private unsafe def run : IO Unit := do
       frozen.value.get.lookup "z" == some 3 do throw (IO.userError "admitted metadata snapshot changed on closure")
   IO.println "POOF-CHECKED-META-OK contexts=33 cacheRefusals=6 graphRefusals=5 prepareUnforced=true sharedPlan=true frozenMetadata=true"
 #eval run
-end LeanPoo.Tests.PaperCheckedMeta
+end LeanPoo.Tests.CheckedMeta

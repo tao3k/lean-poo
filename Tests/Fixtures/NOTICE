@@ -1,0 +1,11 @@
+POOF source fixture
+
+Source: https://github.com/metareflection/poof/blob/9affa8fbbb4f12cbd98cb97f8b8b84474fc39429/poof.scrbl
+Authors: Francois-Rene Rideau, Alex Knauth, Nada Amin.
+Code licensed under the Apache License, Version 2.0; see poof-LICENSE.
+
+poof-source-v1.json retains the original Definitions, Examples and Checks
+code blocks, with their source line identities and SHA256 hashes. The code
+block contents are unmodified. The representation is an extracted JSON fixture.
+The separate source checker removes display-only code:comment forms and
+instruments eval:check/eval:error during test execution.

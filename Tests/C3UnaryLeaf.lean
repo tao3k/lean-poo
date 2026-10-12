@@ -4,7 +4,7 @@ import LeanPoo.Prototype.C3GraphSemantics
 all root lists, including repeated roots and a later missing lookup. -/
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3UnaryLeaf
+namespace LeanPoo.Tests.C3UnaryLeaf
 
 private def graph : C3.Graph :=
   [("A", ["P"]), ("B", ["P"]), ("P", [])]
@@ -45,4 +45,4 @@ private theorem every_batch (roots : List String) :
 #print axioms C3.linearizeMany_eq_uncached_unary_leaf
 #print axioms every_batch
 
-end LeanPoo.Tests.PaperC3UnaryLeaf
+end LeanPoo.Tests.C3UnaryLeaf

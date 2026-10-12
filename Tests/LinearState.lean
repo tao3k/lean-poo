@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.LinearState
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperLinearState
-private def run : IO Unit := do
+namespace LeanPoo.Tests.LinearState
+private def checkState : IO Unit := do
   for seed in List.range 64 do
     let base := seed*3
     let initial ← LinearState.create base
@@ -33,6 +33,6 @@ private def run : IO Unit := do
     unless !(← state.read).isOk do throw (IO.userError "raced reference remains live")
     races := races+1
   IO.println s!"POOF-LINEAR-STATE-OK scalarContexts=64 competingConsumers={races} snapshot=true aliasRefusal=true rejectPreserves=true"
-#eval run
+#eval checkState
 #print axioms LinearState.compose_assoc
-end LeanPoo.Tests.PaperLinearState
+end LeanPoo.Tests.LinearState

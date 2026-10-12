@@ -239,26 +239,33 @@ check-tests: check-proof
 
 [private]
 _check-contracts:
-    {{lean}} Tests/PaperRecordCodec.lean
-    {{lean}} Tests/PaperCheckedMeta.lean
-    {{lean}} Tests/PaperDescriptorReflection.lean
-    {{lean}} Tests/PaperLinearState.lean
-    {{lean}} Tests/PaperFixedPoints.lean
-    {{lean}} Tests/PaperFiniteFix.lean
-    {{lean}} Tests/PaperRecordDispatch.lean
-    {{lean}} Tests/PaperRecordComplexRelation.lean
-    {{lean}} Tests/PaperTrees.lean
-    {{lean}} Tests/PaperC3.lean
-    {{lean}} Tests/PaperC3Semantics.lean
-    {{lean}} Tests/PaperC3GraphSemantics.lean
-    {{lean}} Tests/PaperC3BatchCoherence.lean
-    {{lean}} Tests/PaperC3UnaryLeaf.lean
-    {{lean}} Tests/PaperC3TwoLeaf.lean
-    {{lean}} Tests/PaperC3LeafParents.lean
-    {{lean}} Tests/PaperPrototypeChecks.lean
-    {{lean}} Tests/PaperDictionaryRecord.lean
-    {{lean}} Tests/PaperMetaPrototype.lean
-    {{lean}} Tests/PaperRepresentations.lean
+    {{lean}} Tests/RecordCodec.lean
+    {{lean}} Tests/CheckedMeta.lean
+    {{lean}} Tests/DescriptorReflection.lean
+    {{lean}} Tests/LinearState.lean
+    {{lean}} Tests/FixedPoints.lean
+    {{lean}} Tests/FiniteFix.lean
+    {{lean}} Tests/RecursiveSemantics.lean
+    {{lean}} Tests/DynamicDescriptor.lean
+    {{lean}} Tests/MutableRecord.lean
+    {{lean}} Tests/RecordDispatch.lean
+    {{lean}} Tests/RecordComplexRelation.lean
+    {{lean}} Tests/Trees.lean
+    {{lean}} Tests/C3.lean
+    {{lean}} Tests/C3Semantics.lean
+    {{lean}} Tests/C3GraphSemantics.lean
+    {{lean}} Tests/C3BatchCoherence.lean
+    {{lean}} Tests/C3UnaryLeaf.lean
+    {{lean}} Tests/C3TwoLeaf.lean
+    {{lean}} Tests/C3LeafParents.lean
+    {{lean}} Tests/C3DAG.lean
+    {{lean}} Tests/C3Object.lean
+    {{lean}} Tests/ObjectSemantics.lean
+    {{lean}} Tests/SourceDifferential.lean
+    {{lean}} Tests/PrototypeChecks.lean
+    {{lean}} Tests/DictionaryRecord.lean
+    {{lean}} Tests/MetaPrototype.lean
+    {{lean}} Tests/Representations.lean
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean
@@ -386,6 +393,11 @@ check-po: check-example check-tests check-docs
 check-docs:
     python3 tools/audit_poof.py --check
     emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (append (list "README.org" "Examples/README.org" "Tests/README.org" "Benchmarks/README.org") (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
+
+# Execute the reviewed original Racket blocks and compare all 24 Lean observations.
+# A versioned source fixture removes the reference-checkout dependency in CI.
+check-poof-source racket="racket":
+    python3 tools/poof_source_check.py --racket "{{racket}}" --compare-lean
 
 # Compare equality-only, hash-indexed ordered, and sorted-map construction.
 benchmark-declaration:

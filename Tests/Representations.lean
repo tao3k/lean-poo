@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.AVL
 import LeanPoo.Prototype.KeyedPrototype
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperRepresentations
+namespace LeanPoo.Tests.Representations
 private unsafe def run : IO Unit := do
   let order := OrderOps.instantiate (DelayedProto.compose OrderOps.compareMixin OrderOps.number)
   let pairs : Dictionary Int Int (List (Int × Int)) := Dictionary.instantiate order
@@ -40,4 +40,4 @@ private unsafe def run : IO Unit := do
     throw (IO.userError "key-slot precedence policy")
   IO.println "POOF-REPRESENTATIONS-OK mergeContexts=33 mergeReads=594 duplicateKeys=true keysOverride=true"
 #eval run
-end LeanPoo.Tests.PaperRepresentations
+end LeanPoo.Tests.Representations

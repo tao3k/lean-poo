@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.C3Semantics
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3Semantics
+namespace LeanPoo.Tests.C3Semantics
 
 private def candidates : List (List String) :=
   [[], ["A", "O"], ["B", "O"], [], ["A", "B"]]
@@ -49,4 +49,4 @@ private theorem source_trace_same (source : C3.SourceTrace candidates output)
 #print axioms no_duplicates
 #print axioms source_trace_same
 
-end LeanPoo.Tests.PaperC3Semantics
+end LeanPoo.Tests.C3Semantics

@@ -156,7 +156,7 @@ def generate(paper):
         'limits': ['Statuses are manually reviewed, not inferred semantic proofs',
                    'Heading coverage means all outline entries are assigned, not all behaviors reproduced',
                    'Guard/eval lines are lexical markers, not execution receipts; printed values need expected-value assertions',
-                   'Original Scheme/Racket evaluation and cross-language differential checks not performed',
+                   'Original 24 checks have executable source/Lean differential gates; whole-language equivalence is not inferred',
                    'Local translation, formal correspondence, unsafe execution and paper proposals remain distinct',
                    'C4, proof reuse and OpenAI reference audits do not substitute for missing paper cases'],
     }

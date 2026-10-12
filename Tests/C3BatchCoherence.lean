@@ -4,7 +4,7 @@ import LeanPoo.Prototype.C3GraphSemantics
 outcome equality after cache hits and after a later missing root. -/
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperC3BatchCoherence
+namespace LeanPoo.Tests.C3BatchCoherence
 
 private def graph : C3.Graph :=
   [("A", []), ("B", []), ("C", [])]
@@ -35,4 +35,4 @@ private theorem every_batch (roots : List String) :
 #print axioms C3.linearizeMany_eq_uncached_flat
 #print axioms every_batch
 
-end LeanPoo.Tests.PaperC3BatchCoherence
+end LeanPoo.Tests.C3BatchCoherence

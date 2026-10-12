@@ -82,9 +82,15 @@ import LeanPoo.Prototype.MetaPrototype
 import LeanPoo.Prototype.CheckedMetaPrototype
 import LeanPoo.Prototype.C3Semantics
 import LeanPoo.Prototype.C3GraphSemantics
+import LeanPoo.Prototype.C3DAG
+import LeanPoo.Object.C3
+import LeanPoo.Object.Recursive
 import LeanPoo.Prototype.KeyedPrototype
 import LeanPoo.Prototype.CheckedFunction
 import LeanPoo.Prototype.FiniteFix
+import LeanPoo.Prototype.RecursiveSemantics
+import LeanPoo.Prototype.DynamicDescriptorSemantics
+import LeanPoo.Prototype.MutableRecord
 import LeanPoo.Prototype.RecordDispatch
 import LeanPoo.Prototype.LinearState
 import LeanPoo.Prototype.NumberDescriptor

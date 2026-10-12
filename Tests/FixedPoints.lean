@@ -1,7 +1,7 @@
 import LeanPoo.Prototype.CheckedFunction
 import LeanPoo.Prototype.Delayed
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperFixedPoints
+namespace LeanPoo.Tests.FixedPoints
 private unsafe def run : IO Unit := do
   let bottom : CheckedFunction Nat Nat := CheckedFunction.instance []
   unless (bottom 3).toOption == none do throw (IO.userError "source bottom default")
@@ -39,4 +39,4 @@ private unsafe def run : IO Unit := do
   IO.println "POOF-FIXED-POINTS-OK triangularInputs=65 sharedBuilds=1 rebuildingBuilds=32 delayedBuilds=1 bottom=true constantTail=true"
 #eval run
 #print axioms CheckedFunction.bottom_apply
-end LeanPoo.Tests.PaperFixedPoints
+end LeanPoo.Tests.FixedPoints

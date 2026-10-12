@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.RecordCodec
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperRecordCodec
+namespace LeanPoo.Tests.RecordCodec
 inductive Key where | count | tag | flag deriving BEq, DecidableEq
 abbrev Value : Key → Type
   | .count => Nat | .tag => String | .flag => Bool
@@ -85,4 +85,4 @@ private unsafe def prepareOnce : IO Unit := do
 #print axioms RecordDescription.set_preserves_accepts
 #print axioms RecordDescription.patch_preserves_accepts
 #print axioms RecordDescription.patch_lookup_untouched
-end LeanPoo.Tests.PaperRecordCodec
+end LeanPoo.Tests.RecordCodec

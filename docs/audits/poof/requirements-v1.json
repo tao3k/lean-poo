@@ -2,7 +2,7 @@
   "schema": "lean-poo.poof-requirements.v1",
   "paper_commit": "9affa8fbbb4f12cbd98cb97f8b8b84474fc39429",
   "paper_sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
-  "baseline_commit": "247d1d6094b6af1bb873f69564b271bc978730ed",
+  "baseline_commit": "0a111f6",
   "rows": [
     {
       "id": "frontmatter",
@@ -21,13 +21,16 @@
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
-        "LeanPoo/Prototype/FiniteFix.lean"
+        "LeanPoo/Prototype/FiniteFix.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
         "Examples/PrototypeCore.lean",
-        "Tests/PaperFiniteFix.lean"
+        "Tests/FiniteFix.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Typed composition exists; runtime fixed point is unsafe and can diverge; no whole Scheme/Lean correspondence proof. Pure finite unfoldings and stabilization certificates cover bounded typed observations; they do not characterize every unsafe recursive execution."
+      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Shared unsafe thunks remain an alternate runtime; arbitrary Scheme programs are outside the stated calculus."
     },
     {
       "id": "claims-plan",
@@ -68,12 +71,16 @@
       "title": "Records as functions",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean"
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Dependent key/value family, Option storage and checked missing-key dispatch. The original Scheme message syntax is not interpreted."
     },
@@ -84,12 +91,16 @@
       "title": "Record prototypes",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean"
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "slotGen, self and delayed inherited values; checked slot/modify/compute laws preserve all-key observations for the stated error policy. General Scheme effects remain outside this typed fragment."
     },
@@ -100,15 +111,19 @@
       "title": "Paper basic checks",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/RecordDispatch.lean"
+        "LeanPoo/Prototype/RecordDispatch.lean",
+        "tools/poof_source_check.py",
+        "Tests/Fixtures/poof-source-v1.json"
       ],
       "checks": [
-        "Tests/PaperPrototypeChecks.lean",
-        "Tests/PaperRecordDispatch.lean",
-        "Tests/PaperRecordComplexRelation.lean",
-        "docs/audits/poof/checks-v1.json"
+        "Tests/PrototypeChecks.lean",
+        "Tests/RecordDispatch.lean",
+        "Tests/RecordComplexRelation.lean",
+        "docs/audits/poof/checks-v1.json",
+        "Tests/SourceDifferential.lean",
+        "tools/tests/test_poof_source_check.py"
       ],
-      "boundary": "All ten core record source checks guarded; the x/y/z override-modify-final-self fragment additionally has all-depth checked observation correspondence and a source fixed-point certificate. Complex literals use integral pairs; no original Racket execution claim."
+      "boundary": "The 24 original value checks execute in Racket 9.0 and compare canonical outputs against computed Lean values. The versioned 76-block fixture is exactly extracted from the pinned source; CI reruns it without the reference checkout. Corrupt fixture identity and incomplete/duplicate/mismatched receipts fail closed. Differential examples do not establish whole-language equivalence."
     },
     {
       "id": "slot-construction",
@@ -117,11 +132,15 @@
       "title": "Building record prototypes",
       "implementation": [
         "LeanPoo/Prototype/Record.lean",
-        "LeanPoo/Prototype/SlotSpec.lean"
+        "LeanPoo/Prototype/SlotSpec.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Typed slot/modify/compute constructors; original slot construction checks asserted."
     },
@@ -132,10 +151,13 @@
       "title": "Long-form basics and ordered composition",
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
-        "LeanPoo/Prototype/Generator.lean"
+        "LeanPoo/Prototype/Generator.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Examples/PrototypeCore.lean"
+        "Examples/PrototypeCore.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
       "boundary": "Heterogeneous chain types and local laws; no paper operational-semantics relation."
     },
@@ -145,12 +167,15 @@
       "status": "lean_translation",
       "title": "Bottom and missing behavior",
       "implementation": [
-        "LeanPoo/Prototype/CheckedFunction.lean"
+        "LeanPoo/Prototype/CheckedFunction.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean"
+        "Tests/FixedPoints.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Except represents a typed error outcome; it is not an untyped universal bottom or divergence equivalence theorem."
+      "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof."
     },
     {
       "id": "single-inheritance",
@@ -175,7 +200,7 @@
         "LeanPoo/Prototype/Order.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Final-self comparison and string-to-symbol delegation; typed name symbols, not Scheme interning."
     },
@@ -188,7 +213,7 @@
         "LeanPoo/Prototype/BinaryTree.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Inherited open-recursive node/acons/ref/afoldr; explicit typed fold accumulator and errors."
     },
@@ -201,7 +226,7 @@
         "LeanPoo/Prototype/AVL.lean"
       ],
       "checks": [
-        "Tests/PaperTrees.lean"
+        "Tests/Trees.lean"
       ],
       "boundary": "Node-only extension; source shapes plus independent balance/height/query controls; two inheritance equalities, not a universal AVL preservation proof."
     },
@@ -217,7 +242,7 @@
       "checks": [
         "Examples/PrototypeFunctions.lean",
         "Examples/DelayedNumbers.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean"
       ],
       "boundary": "Both original numeric expected-value checks asserted with typed integer/natural carriers."
     },
@@ -228,12 +253,15 @@
       "title": "Computations rather than values",
       "implementation": [
         "LeanPoo/Prototype/Delayed.lean",
-        "LeanPoo/Prototype/FixedPoint.lean"
+        "LeanPoo/Prototype/FixedPoint.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Examples/DelayedNumbers.lean"
+        "Examples/DelayedNumbers.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Delayed self/super computes non-function values; premature forcing can diverge."
+      "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option."
     },
     {
       "id": "without-subtyping",
@@ -256,10 +284,13 @@
       "title": "Slot introspection",
       "implementation": [
         "LeanPoo/Object/Memo.lean",
-        "LeanPoo/Object/Schema.lean"
+        "LeanPoo/Object/Schema.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery."
     },
@@ -277,8 +308,8 @@
       ],
       "checks": [
         "Tests/ObjectDefinition.lean",
-        "Tests/PaperDictionaryRecord.lean",
-        "Tests/PaperRepresentations.lean"
+        "Tests/DictionaryRecord.lean",
+        "Tests/Representations.lean"
       ],
       "boundary": "Both concrete source alternatives implemented: shared AVL cells and prototype/key-list pairs. Typed homogeneous/dependent families and explicit key-slot override policy; no universal representation equivalence theorem."
     },
@@ -289,11 +320,15 @@
       "title": "Unified instance/prototype objects",
       "implementation": [
         "LeanPoo/Prototype/Object.lean",
-        "LeanPoo/Object/Prototype.lean"
+        "LeanPoo/Object/Prototype.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
         "Examples/FirstClassObject.lean",
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
       "boundary": "Retained prototype/value pair and later extension; typed carriers and unsafe recursive instantiation."
     },
@@ -308,20 +343,27 @@
         "LeanPoo/Prototype/C3Semantics.lean",
         "LeanPoo/Prototype/C3GraphTrace.lean",
         "LeanPoo/Prototype/C3GraphSemantics.lean",
-        "LeanPoo/Prototype/CheckedMetaPrototype.lean"
+        "LeanPoo/Prototype/CheckedMetaPrototype.lean",
+        "LeanPoo/Prototype/C3DAG.lean",
+        "LeanPoo/Object/SlotSyntax.lean",
+        "LeanPoo/Object/C3.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperMetaPrototype.lean",
-        "Tests/PaperC3.lean",
-        "Tests/PaperC3Semantics.lean",
-        "Tests/PaperC3GraphSemantics.lean",
-        "Tests/PaperC3BatchCoherence.lean",
-        "Tests/PaperC3UnaryLeaf.lean",
-        "Tests/PaperC3TwoLeaf.lean",
-        "Tests/PaperC3LeafParents.lean",
-        "Tests/PaperCheckedMeta.lean"
+        "Tests/MetaPrototype.lean",
+        "Tests/C3.lean",
+        "Tests/C3Semantics.lean",
+        "Tests/C3GraphSemantics.lean",
+        "Tests/C3BatchCoherence.lean",
+        "Tests/C3UnaryLeaf.lean",
+        "Tests/C3TwoLeaf.lean",
+        "Tests/C3LeafParents.lean",
+        "Tests/CheckedMeta.lean",
+        "Tests/C3DAG.lean",
+        "Tests/C3Object.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Paper C3 exists as a separate typed object path. Merge selection, normalization and source-trace output have generic kernel correspondence to the certified merge. Cached and uncached one-root batch/scalar equality holds for every graph; exact cached/uncached outcome equality holds for empty batches, graph-validation failures, absent first roots and first-parent self cycles; matching first-root scalar failures lift to arbitrary batch tails; every successful uncached run has a recursive source-style graph trace, and every successful production cached batch directly has fuel-independent paper graph derivations through a preserved cache invariant. Successful graph derivations have unique outputs across fuel budgets. Any two successful cached and uncached traversals provably return the same orders, so optional admission has no runtime disagreement branch. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence remains unproved. The main C4 object path has its own policy; no policy equivalence is asserted. Checked preparation validates retained caches and freezes function/supers/order; raw overrides remain permissive. Prepared values are runtime checked data, not kernel C3 certificates."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions."
     },
     {
       "id": "meta-prototype",
@@ -332,7 +374,7 @@
         "LeanPoo/Prototype/MetaPrototype.lean"
       ],
       "checks": [
-        "Tests/PaperMetaPrototype.lean"
+        "Tests/MetaPrototype.lean"
       ],
       "boundary": "Function/supers/precedence are overridable slots of first-class metadata objects; string registry identifiers replace recursive dynamic identity. Parent caches are caller metadata, not ancestry-certified C4 orders."
     },
@@ -352,11 +394,14 @@
       "title": "Classes as descriptor prototypes",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Object/Class.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
         "Tests/DescriptorClass.lean",
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "Runtime descriptors compose over a fixed Lean carrier type; Scheme dynamic type universe not reproduced."
     },
@@ -367,10 +412,13 @@
       "title": "I/O validation",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Object/Class.lean"
+        "LeanPoo/Object/Class.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility."
     },
@@ -382,13 +430,16 @@
       "implementation": [
         "LeanPoo/Prototype/NumberDescriptor.lean",
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperDescriptorReflection.lean",
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/DescriptorReflection.lean",
+        "Tests/PrototypeChecks.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
-      "boundary": "Lean fixes carriers; Int/Rat arithmetic and Lean presentation/JSON replace Scheme number universes and sexp/wire syntax."
+      "boundary": "Static typed descriptors and a recursive dynamic Value universe coexist. Dynamic contracts cover primitives, ranges, lists, dictionaries, objects, named recursive types and first-class descriptors. Current registry identity is required; budget exhaustion is an error. Lean Int/strings replace Scheme number/sexp carriers."
     },
     {
       "id": "parameterized-types",
@@ -397,10 +448,13 @@
       "title": "Parameterized descriptors",
       "implementation": [
         "LeanPoo/Prototype/Class.lean",
-        "LeanPoo/Prototype/Types.lean"
+        "LeanPoo/Prototype/Types.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/IntegratedPrototype.lean"
+        "Tests/IntegratedPrototype.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
       "boundary": "List/array/map/option/product/sum/HList construction; typed rather than unrestricted dynamic values."
     },
@@ -415,15 +469,18 @@
         "LeanPoo/Prototype/PrototypeReflection.lean",
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean",
-        "LeanPoo/Prototype/RecordCodec.lean"
+        "LeanPoo/Prototype/RecordCodec.lean",
+        "LeanPoo/Prototype/DynamicDescriptor.lean",
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperDescriptorReflection.lean",
+        "Tests/DescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
         "docs/audits/poof/closure-v1.json",
-        "Tests/PaperRecordCodec.lean"
+        "Tests/RecordCodec.lean",
+        "Tests/DynamicDescriptor.lean"
       ],
-      "boundary": "These catalogs close the named typed operations. Callable carriers are statically checked and application refinements are checked; arbitrary function behavior, closure serialization and unspecified universal automation are not established. Prepared JSON codecs cover finite catalogs with unique nonempty labels and codecs on every field. Descriptor APIs admit refinements; the raw codec layer is unchecked. No generic codec inverse theorem or textual duplicate-key rejection is claimed. Heterogeneous patch is supported with explicit declaration/refinement premises and kernel validity/frame laws."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed."
     },
     {
       "id": "typeclass-correspondence",
@@ -443,13 +500,17 @@
       "title": "Pure linearity and mutable/functional interaction",
       "implementation": [
         "LeanPoo/Prototype/LinearState.lean",
-        "LeanPoo/Prototype/Mutable.lean"
+        "LeanPoo/Prototype/Mutable.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperLinearState.lean",
-        "Tests/MutablePrototype.lean"
+        "Tests/LinearState.lean",
+        "Tests/MutablePrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Runtime capability consumption is enforced, including concurrent consumers. No static ownership calculus, generic effectful rollback or universal pure/mutable isomorphism theorem is claimed."
+      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem."
     },
     {
       "id": "mutable-protocol",
@@ -457,12 +518,16 @@
       "status": "lean_translation",
       "title": "Simplified mutable prototype protocol",
       "implementation": [
-        "LeanPoo/Prototype/Mutable.lean"
+        "LeanPoo/Prototype/Mutable.lean",
+        "LeanPoo/Prototype/MutableRecord.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/MutablePrototype.lean"
+        "Tests/MutablePrototype.lean",
+        "Tests/MutableRecord.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Parent/child effects share identity; standard layers stage persistent schema edits, not literal in-place Scheme hash mutation."
+      "boundary": "fix!/mix! allocate one fresh IO.Ref hash identity, run parent before child, update each slot with one table insertion, capture inherited syntax lazily and resolve final-self requests on later reads. No topology rebuild is needed per write. Failure retains prior writes and skips subsequent child mutations. Snapshot and consuming-state conversions execute. No machine-level O(1) time or allocation bound is asserted."
     },
     {
       "id": "cache-proposals",
@@ -515,18 +580,25 @@
         "LeanPoo/Prototype/C3.lean",
         "LeanPoo/Prototype/C3Semantics.lean",
         "LeanPoo/Prototype/C3GraphTrace.lean",
-        "LeanPoo/Prototype/C3GraphSemantics.lean"
+        "LeanPoo/Prototype/C3GraphSemantics.lean",
+        "LeanPoo/Prototype/C3DAG.lean",
+        "LeanPoo/Object/SlotSyntax.lean",
+        "LeanPoo/Object/C3.lean",
+        "LeanPoo/Object/Recursive.lean"
       ],
       "checks": [
-        "Tests/PaperC3.lean",
-        "Tests/PaperC3Semantics.lean",
-        "Tests/PaperC3GraphSemantics.lean",
-        "Tests/PaperC3BatchCoherence.lean",
-        "Tests/PaperC3UnaryLeaf.lean",
-        "Tests/PaperC3TwoLeaf.lean",
-        "Tests/PaperC3LeafParents.lean"
+        "Tests/C3.lean",
+        "Tests/C3Semantics.lean",
+        "Tests/C3GraphSemantics.lean",
+        "Tests/C3BatchCoherence.lean",
+        "Tests/C3UnaryLeaf.lean",
+        "Tests/C3TwoLeaf.lean",
+        "Tests/C3LeafParents.lean",
+        "Tests/C3DAG.lean",
+        "Tests/C3Object.lean",
+        "Tests/ObjectSemantics.lean"
       ],
-      "boundary": "Separate ordinary C3 API, four paper orders and 640 independent finite comparisons. The merge selector, normalized step and source-trace output have all-candidate-list kernel proofs. Cached and uncached one-root batch/scalar equality holds on arbitrary graphs. Empty-root batches, graph-validation failures, absent first roots and first-parent self cycles have identical complete cached/uncached outcomes. Matching first-root scalar failures lift to arbitrary batch tails. Every successful uncached result has a recursive source-style graph trace whose output is unique across fuel budgets; a fuel-independent relation and preserved cache-entry invariant give every successful production cached batch a paper graph derivation without reference replay. Any two successful cached and uncached traversals have equal orders, so optional admission omits a runtime disagreement comparison. A generic batch theorem reduces complete outcome equality to one-root coherence on derivation-backed caches; validated parent-free graphs discharge that premise for arbitrary root lists, including repeated cache hits and later missing roots. Validated graphs with any finite number of distinct leaf parents per node have complete batch outcome equality, including shared parents in opposite orders, repeated roots and late missing roots. General valid-graph, nonempty-root parent-edge outcome equivalence and C3/C4 policy equivalence remain unproved."
+      "boundary": "Certified C3 is connected to actual typed object slot composition and to the safe dynamic recursive object path. Any source-style graph derivation gives exactly the same order and object observation. For finite DAGs with rank bounded by the production graph-size fuel and strictly decreasing on declared edges, complete cached/uncached batch outcomes agree for arbitrary depth and root lists, including missing-parent and inconsistent-merge errors. Validation and existing cyclic/error controls remain. The general cyclic-graph cached/reference outcome theorem is not asserted. C4 remains a separately selectable policy with its own extensions."
     },
     {
       "id": "helpers",
@@ -540,8 +612,8 @@
       ],
       "checks": [
         "Examples/RecordPrototype.lean",
-        "Tests/PaperC3.lean",
-        "Tests/PaperRepresentations.lean"
+        "Tests/C3.lean",
+        "Tests/Representations.lean"
       ],
       "boundary": "The three c3-extra-definitions helpers map to fromList/toList/merge, using typed fold accumulators and explicit errors. Commented memoization sketches are not concrete executable requirements."
     },
@@ -552,10 +624,14 @@
       "title": "Appendix A extra checks",
       "implementation": [
         "LeanPoo/Prototype/Object.lean",
-        "LeanPoo/Prototype/Class.lean"
+        "LeanPoo/Prototype/Class.lean",
+        "tools/poof_source_check.py",
+        "Tests/Fixtures/poof-source-v1.json"
       ],
       "checks": [
-        "Tests/PaperPrototypeChecks.lean"
+        "Tests/PrototypeChecks.lean",
+        "Tests/SourceDifferential.lean",
+        "tools/tests/test_poof_source_check.py"
       ],
       "boundary": "All three source extra checks with typed JSON list boundary; no Scheme wire compatibility."
     },
@@ -624,13 +700,16 @@
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/Delayed.lean",
-        "LeanPoo/Prototype/FiniteFix.lean"
+        "LeanPoo/Prototype/FiniteFix.lean",
+        "LeanPoo/Prototype/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveSemantics.lean"
       ],
       "checks": [
-        "Tests/PaperFixedPoints.lean",
-        "Tests/PaperFiniteFix.lean"
+        "Tests/FixedPoints.lean",
+        "Tests/FiniteFix.lean",
+        "Tests/RecursiveSemantics.lean"
       ],
-      "boundary": "Lean uses the shared thunk implementation for the internal-define/letrec/lazy routes. Direct untyped Y self-application is a language choice; rebuilding behavior is tested, not a universal Y equivalence or termination theorem. The finite iteration API certifies a fixed point when adjacent approximations are proved equal. General shared-thunk equivalence remains unproved."
+      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed."
     },
     {
       "id": "minimalism",

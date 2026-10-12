@@ -6,7 +6,7 @@ source calculation reads final self through an error-propagating dispatcher;
 the typed target retains x/y as integers and z as an integer pair. -/
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperRecordComplexRelation
+namespace LeanPoo.Tests.RecordComplexRelation
 
 inductive Key where
   | x | y | z | other (name : String)
@@ -181,4 +181,4 @@ private def observed :=
 #print axioms source_stable
 #print axioms target_observation_stable
 
-end LeanPoo.Tests.PaperRecordComplexRelation
+end LeanPoo.Tests.RecordComplexRelation

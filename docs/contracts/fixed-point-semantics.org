@@ -51,7 +51,7 @@ about other fixed points or arbitrary unsafe recursive computations.
 
 * Executable and proof evidence
 
-[[file:../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] certifies a two-step recursive Boolean function over its
+[[file:../../Tests/FiniteFix.lean][FiniteFix]] certifies a two-step recursive Boolean function over its
 entire finite input domain. It also proves for every natural ~n~ that a
 triangular-number function returns its result at depth ~n+1~, then checks 65
 inputs against the existing shared-thunk implementation. The latter is a

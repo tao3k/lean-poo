@@ -2,7 +2,7 @@ import LeanPoo.Prototype.RecordDispatch
 import LeanPoo.Prototype.FiniteFix
 
 open LeanPoo.Prototype
-namespace LeanPoo.Tests.PaperRecordDispatch
+namespace LeanPoo.Tests.RecordDispatch
 
 abbrev Value : String → Type := fun _ => Int
 abbrev Source := CheckedRecord String Value (String × String)
@@ -214,4 +214,4 @@ private def observedFixed :=
 #print axioms source_paper_stable
 #print axioms target_observation_stable
 
-end LeanPoo.Tests.PaperRecordDispatch
+end LeanPoo.Tests.RecordDispatch

@@ -45,7 +45,7 @@ This is the paper's two prototype-representation choices, with explicit types.
 ~Dictionary.toList~ uses a pair-list accumulator and returns descending pairs.
 ~Dictionary.merge~ uses an Except/tree accumulator: override entries win over
 base entries through the inherited acons method. Both operations reuse afoldr.
-[[file:../../Tests/PaperRepresentations.lean][PaperRepresentations]] guards 33 merge contexts, 594 independent reads,
+[[file:../../Tests/Representations.lean][Representations]] guards 33 merge contexts, 594 independent reads,
 retained base trees, duplicate-key enumeration and both key-slot policies.
 
 * Compose record and metadata behavior
@@ -72,11 +72,11 @@ or automatically generate every self-describing descriptor interaction.
 
 * Executable controls and costs
 
-[[file:../../Tests/PaperTrees.lean][PaperTrees]] compiles the dictionary construction pattern and asserts original
+[[file:../../Tests/Trees.lean][Trees]] compiles the dictionary construction pattern and asserts original
 shapes, queries, fold, overwrite, 6,368 updates and four rotation cases.
-[[file:../../Tests/PaperDictionaryRecord.lean][PaperDictionaryRecord]] checks 33 contexts, 528 reads and an unused failing slot.
-[[file:../../Tests/PaperMetaPrototype.lean][PaperMetaPrototype]] checks all three metadata overrides, a diamond, retained
+[[file:../../Tests/DictionaryRecord.lean][DictionaryRecord]] checks 33 contexts, 528 reads and an unused failing slot.
+[[file:../../Tests/MetaPrototype.lean][MetaPrototype]] checks all three metadata overrides, a diamond, retained
 snapshots, special base merge and six refusal controls.
-[[file:../../Tests/PaperC3.lean][PaperC3]] compares 640 outputs to an independent recursive merge oracle.
+[[file:../../Tests/C3.lean][C3]] compares 640 outputs to an independent recursive merge oracle.
 General knots remain unsafe and may diverge on premature self forcing.
 No stable end-to-end speedup or external OpenAI maintenance saving is measured.
