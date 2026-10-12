@@ -52,10 +52,21 @@ private def runChecks : IO Unit := do
     throw (IO.userError "completed source errors are not memoized")
   unless (← instanceValue.read 20 "a") matches .error (.cycle ["a", "b", "a"]) do
     throw (IO.userError "mutual initialization cycle lacks its request path")
+  match ← instanceValue.readCertified 20 "a" with
+  | .error (.cycle path divergent) =>
+    have _kernelCycle : Diverges (MutableRecord.generator plan.storage) "a" := divergent
+    unless path == ["a", "b", "a"] do throw (IO.userError "certified instance cycle path")
+  | _ => throw (IO.userError "instance cycle lacks semantic evidence")
   let fresh ← plan.instantiate
   unless (← fresh.cachedKeys).isEmpty do
     throw (IO.userError "fresh instance reused another mutable cache identity")
   let mutable ← plan.mutable
+  let ⟨cycleSnapshot, cycleResult⟩ ← mutable.forceCertified 20 "a"
+  match cycleResult with
+  | .error (.cycle path divergent) =>
+    have _kernelCycle : Diverges (MutableRecord.generator cycleSnapshot.storage) "a" := divergent
+    unless path == ["a", "b", "a"] do throw (IO.userError "certified snapshot cycle path")
+  | _ => throw (IO.userError "mutable cycle lacks snapshot-bound semantic evidence")
   let frozen ← IO.ofExcept ((← mutable.force 20 "z").mapError reprStr)
   unless frozen.2.result == .value (.list [.integer 1, .integer 2]) &&
       (← mutable.cachedKeys).length == 3 do

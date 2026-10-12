@@ -114,11 +114,39 @@ input, and rejected pure patches do not publish earlier partial edits.
 [[file:../../LeanPoo/Prototype/DynamicCodec.lean][DynamicCodec]] preserves exact integers, Unicode, ordered/duplicate raw
 entries and registered identities in a tagged array format. Text/byte admission
 checks nested identities in the current registry and returns an Accepted proof.
-Functions serialize identities, not closure code. Generated codec round trips
-are controls rather than a universal inverse theorem.
+Functions serialize identities, not closure code. Structural JSON now has a
+universal kernel inverse at Value.wireDepth. Text/byte round trips remain
+execution controls; general text-parser and UTF-8 inversion are separate claims.
 
 [[file:../../LeanPoo/Object/RecursiveValidation.lean][RecursiveValidation]] materializes requested actual object fields with their
 kernel evaluation proofs, then admits those same values through the runtime
 schema. Open schemas leave unrelated cyclic slots cold; sealed schemas reject
 extra stored slots without forcing them. Source errors, cycles, exhaustion
 and descriptor refusals remain distinguishable.
+
+* Complete shared evaluation and dynamic recognition
+
+[[file:../../LeanPoo/Prototype/RecursiveCacheSemantics.lean][RecursiveCacheSemantics]] proves run_iff_evaluates for every program/request and
+sound warm cache. Every finite operational value/error derivation completes at
+some machine budget. diverges_iff_no_run characterizes absence of successful
+machine executions, and run_cycle_diverges admits actual cycle diagnostics as
+divergence proofs. Exhaustion alone remains inconclusive. These proofs do not
+give wall-time or allocation bounds.
+
+Instance.readCertified returns a Failure indexed by the plan and requested key.
+Mutable.forceCertified returns the exact immutable snapshot for either success
+or failure. A cycle contains its Diverges proof; an exhausted budget contains
+no impossibility claim. Ordinary read/force expose the same diagnostics through
+the checked execution path.
+
+[[file:../../LeanPoo/Prototype/DynamicDescriptorCompleteness.lean][DynamicDescriptorCompleteness]] proves that every finite Accepted derivation
+is recognized at all sufficiently large depths, including recursive named
+types. A successful union branch determines membership despite an unresolved
+alternative. An unresolved branch remains an error when neither succeeds.
+This describes finite inductive membership, with callable identity recognition
+and separately checked function input/output boundaries.
+
+[[file:../../LeanPoo/Prototype/DynamicCodecSemantics.lean][DynamicCodecSemantics]] proves decodeJson_encodeJson for every dynamic value.
+wireDepth is computable and depends on nesting, not numeric magnitude or text
+length. Descriptor.json_roundTrip preserves the actual admitted value/proof in
+the same registry at sufficient decoder depth.

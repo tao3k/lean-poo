@@ -1,4 +1,4 @@
-import LeanPoo.Prototype.RecursiveCache
+import LeanPoo.Prototype.RecursiveCacheSemantics
 import LeanPoo.Prototype.DynamicDescriptor
 import LeanPoo.Prototype.LinearState
 import Std.Data.HashMap
@@ -107,16 +107,22 @@ def Mutable.slot (object : Mutable) (key : String) (layer : SlotLayer) : IO Unit
 /-- Each successful force carries an evaluation proof for the exact immutable
 snapshot read while holding the mutex. Slot writes clear all memo entries and
 advance the generation; stale computations cannot inhabit the new cache. -/
-def Mutable.force (object : Mutable) (budget : Nat) (key : String) :
-    IO (Except (Cached.Diagnostic String) (Σ snapshot : Snapshot,
-      Cached.Receipt (generator snapshot.storage) (generator snapshot.storage key))) :=
+def Mutable.forceCertified (object : Mutable) (budget : Nat) (key : String) :
+    IO (Σ snapshot : Snapshot, Except (Cached.Failure (generator snapshot.storage) key)
+      (Cached.Receipt (generator snapshot.storage) (generator snapshot.storage key))) :=
   object.cell.atomically do
     let state ← get
-    match Cached.run (generator state.snapshot.storage) key budget state.memo with
-    | .error diagnostic => return .error diagnostic
+    match Cached.runCertified (generator state.snapshot.storage) key budget state.memo with
+    | .error failure => return ⟨state.snapshot, .error failure⟩
     | .ok (receipt, memo) =>
       set (⟨state.snapshot, memo⟩ : MutableState)
-      return .ok ⟨state.snapshot, receipt⟩
+      return ⟨state.snapshot, .ok receipt⟩
+
+def Mutable.force (object : Mutable) (budget : Nat) (key : String) :
+    IO (Except (Cached.Diagnostic String) (Σ snapshot : Snapshot,
+      Cached.Receipt (generator snapshot.storage) (generator snapshot.storage key))) := do
+  let ⟨snapshot, result⟩ ← object.forceCertified budget key
+  return (result.map fun receipt => ⟨snapshot, receipt⟩).mapError Cached.Failure.diagnostic
 
 def Mutable.cachedKeys (object : Mutable) : IO (List String) :=
   object.cell.atomically do return (← get).memo.entries.map Cached.Entry.input

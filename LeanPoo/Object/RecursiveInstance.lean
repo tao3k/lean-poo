@@ -1,5 +1,5 @@
 import LeanPoo.Object.Recursive
-import LeanPoo.Prototype.RecursiveCache
+import LeanPoo.Prototype.RecursiveCacheSemantics
 
 /-! Shared lazy instances for certified recursive objects. The cache is indexed
 by the plan's exact immutable generator and carries evaluation proofs. -/
@@ -16,14 +16,19 @@ structure Instance (plan : Plan) where private mk ::
 def Plan.instantiate (plan : Plan) : IO (Instance plan) := do
   return ⟨← Std.Mutex.new {}⟩
 
-def Instance.read (instanceValue : Instance plan) (budget : Nat) (key : String) :
-    IO (Except (Cached.Diagnostic String) (Cached.Receipt (generator plan.storage)
+def Instance.readCertified (instanceValue : Instance plan) (budget : Nat) (key : String) :
+    IO (Except (Cached.Failure (generator plan.storage) key) (Cached.Receipt (generator plan.storage)
       (generator plan.storage key))) := instanceValue.cache.atomically do
-  match Cached.run (generator plan.storage) key budget (← get) with
+  match Cached.runCertified (generator plan.storage) key budget (← get) with
   | .error diagnostic => return .error diagnostic
   | .ok (receipt, next) =>
     set next
     return .ok receipt
+
+def Instance.read (instanceValue : Instance plan) (budget : Nat) (key : String) :
+    IO (Except (Cached.Diagnostic String) (Cached.Receipt (generator plan.storage)
+      (generator plan.storage key))) := do
+  return (← instanceValue.readCertified budget key).mapError Cached.Failure.diagnostic
 
 def Instance.statistics (instanceValue : Instance plan) : IO Cached.Statistics :=
   instanceValue.cache.atomically do return (← get).statistics

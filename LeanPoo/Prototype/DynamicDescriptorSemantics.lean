@@ -164,14 +164,11 @@ theorem accepts_sound (registry : Registry) (fuel : Nat) (contract : Contract) (
         simp only [found] at success
         exact .named found (ih _ _ success)
     | union left right =>
-      simp only [accepts] at success
-      cases checked : accepts registry fuel left value with
-      | error err => simp [checked, bind, Except.bind] at success
-      | ok yes =>
-        cases yes
-        · simp [checked, bind, Except.bind] at success
-          exact .unionRight (ih _ _ success)
-        · exact .unionLeft (ih _ _ checked)
+      change unionResult (accepts registry fuel left value)
+        (fun _ => accepts registry fuel right value) = .ok true at success
+      rcases (unionResult_true _ _).mp success with leftTrue | rightTrue
+      · exact .unionLeft (ih _ _ leftTrue)
+      · exact .unionRight (ih _ _ rightTrue)
     | intersection left right =>
       simp only [accepts] at success
       cases checked : accepts registry fuel left value with

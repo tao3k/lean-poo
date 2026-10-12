@@ -247,8 +247,11 @@ _check-contracts:
     {{lean}} Tests/FiniteFix.lean
     {{lean}} Tests/RecursiveSemantics.lean
     {{lean}} Tests/RecursiveCache.lean
+    {{lean}} Tests/RecursiveCacheSemantics.lean
     {{lean}} Tests/DynamicDescriptor.lean
+    {{lean}} Tests/DynamicDescriptorCompleteness.lean
     {{lean}} Tests/DynamicSchema.lean
+    {{lean}} Tests/DynamicCodecSemantics.lean
     {{lean}} Tests/MutableRecord.lean
     {{lean}} Tests/RecordDispatch.lean
     {{lean}} Tests/RecordComplexRelation.lean

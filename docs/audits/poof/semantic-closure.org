@@ -78,5 +78,26 @@ DynamicSchema supplies registered runtime dependent factories and field-owned
 defaults, inspection, updates and reconstructible catalogs. DynamicCodec admits
 text/bytes through nested current-registry identity checks and Accepted proofs.
 RecursiveValidation attaches the actual C3 field evaluations to those same
-schema/wire values. General unsafe-thunk correspondence, unrestricted IO
-refinement and universal codec inversion remain separate proof questions.
+schema/wire values. General unsafe-thunk correspondence and unrestricted IO
+refinement remain separate proof questions.
+
+* Execution and admission completeness
+
+RecursiveCacheSemantics proves that every finite operational value/error
+derivation completes at some machine budget from any sound cache. Successful
+results and reported cycles are stable under larger budgets. A reported cycle
+therefore proves source divergence; exhaustion alone still proves neither
+divergence nor impossibility. readCertified and forceCertified return these
+proofs for the exact plan/request or retained mutable snapshot.
+
+DynamicDescriptorCompleteness proves membership iff recognition at some depth,
+and recognition at every sufficiently large depth. Union membership succeeds
+when either branch succeeds, even if the other exhausts its depth or refers to
+an unavailable descriptor. When neither succeeds, unresolved diagnostics remain
+errors rather than fabricated rejections.
+
+DynamicCodecSemantics proves structural JSON inversion for every Value when
+fuel reaches its computable wireDepth, including exact integers, Unicode and
+ordered duplicate entries. A descriptor-admitted value and its Accepted proof
+re-enter the same fixed registry gate. General JSON text-parser and UTF-8 inverse
+proofs and machine-level resource bounds are not supplied by this theorem.

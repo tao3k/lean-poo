@@ -71,6 +71,26 @@ def Value.slot? (value : Value) (key : String) : Option Value :=
   | .object slots => (slots.find? (fun entry => entry.1 == key)).map Prod.snd
   | _ => none
 
+/-- Either successful branch proves union membership. An unresolved branch
+must not hide a successful alternative; if neither succeeds, retain the first
+unresolved diagnostic rather than fabricating a rejection. -/
+def unionResult (left : Except Error Bool) (right : Unit → Except Error Bool) : Except Error Bool :=
+  match left with
+  | .ok true => .ok true
+  | .ok false => right ()
+  | .error error =>
+    match right () with
+    | .ok true => .ok true
+    | _ => .error error
+
+theorem unionResult_true (left : Except Error Bool) (right : Unit → Except Error Bool) :
+    unionResult left right = .ok true ↔ left = .ok true ∨ right () = .ok true := by
+  cases left with
+  | error error => cases result : right () with
+    | error => simp [unionResult, result]
+    | ok value => cases value <;> simp [unionResult, result]
+  | ok value => cases value <;> simp [unionResult]
+
 /-- Membership can recurse through arbitrary values and named descriptor
 graphs. Exhausting the supplied depth is a typed error, never a rejection. -/
 def accepts (registry : Registry) : Nat → Contract → Value → Except Error Bool
@@ -101,10 +121,8 @@ def accepts (registry : Registry) : Nat → Contract → Value → Except Error 
     | .named identity, value => do
       let some descriptor := registry.descriptor? identity | throw (.unknownDescriptor identity)
       accepts registry fuel descriptor.contract value
-    | .union left right, value => do
-      let leftOk ← accepts registry fuel left value
-      if leftOk then return true
-      accepts registry fuel right value
+    | .union left right, value =>
+      unionResult (accepts registry fuel left value) (fun _ => accepts registry fuel right value)
     | .intersection left right, value => do
       let leftOk ← accepts registry fuel left value
       if !leftOk then return false

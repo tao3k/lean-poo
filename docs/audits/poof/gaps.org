@@ -22,11 +22,15 @@
 - [X] Mutable writes invalidate memo entries and advance snapshot generations.
 - [X] Runtime dependent descriptor factories and schema-owned defaults, updates and wire codecs.
 - [X] Actual C3 object fields enter the same dynamic descriptor/wire gate with kernel evaluation receipts.
+- [X] Shared evaluation is complete for every finite value/error derivation, from any sound warm cache.
+- [X] Reported cycles prove divergence; certified instance/mutable failures retain the exact program/snapshot proof.
+- [X] Dynamic membership is recognized at every sufficiently large depth, including unions with unresolved alternatives.
+- [X] Structural JSON has a universal kernel inverse at the computable value nesting depth, with descriptor admission preserved.
 
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 111 local evidence files and 353 Lean source filenames; reject drift.
+- [X] Bind 117 local evidence files and 359 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.

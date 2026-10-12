@@ -35,6 +35,39 @@ decreasing_by
   all_goals simp_all
   all_goals omega
 
+def decodeDictionaryEntry (decode : Lean.Json → Except WireError Value)
+    (raw : Lean.Json) : Except WireError (Value × Value) := do
+  let .arr fields := raw | throw (.malformed "expected a dictionary entry")
+  let [key, value] := fields.toList | throw (.malformed "expected two dictionary entry values")
+  return (← decode key, ← decode value)
+
+def decodeObjectEntry (decode : Lean.Json → Except WireError Value)
+    (raw : Lean.Json) : Except WireError (String × Value) := do
+  let .arr fields := raw | throw (.malformed "expected an object entry")
+  let [.str key, value] := fields.toList | throw (.malformed "expected an object key and value")
+  return (key, ← decode value)
+
+/-- The decoder's exact nesting-depth requirement. Payload size and numeric
+magnitude do not consume recursive depth. -/
+def Value.wireDepth : Value → Nat
+  | .list values => 1 + ((values.map Value.wireDepth).max?).getD 0
+  | .dictionary entries => 1 + ((entries.map fun entry =>
+      max entry.1.wireDepth entry.2.wireDepth).max?).getD 0
+  | .object entries => 1 + ((entries.map fun entry => entry.2.wireDepth).max?).getD 0
+  | _ => 1
+termination_by value => sizeOf value
+decreasing_by
+  all_goals first | decreasing_trivial | skip
+  all_goals rename_i member
+  all_goals have smaller := List.sizeOf_lt_of_mem member
+  all_goals first | omega | skip
+  all_goals cases entry
+  all_goals simp_all
+  all_goals omega
+
+theorem Value.wireDepth_pos (value : Value) : 0 < value.wireDepth := by
+  cases value <;> simp [Value.wireDepth] <;> omega
+
 /-- Array tags and exact arities preserve order and duplicate dictionary or
 object entries without relying on a JSON object's key-collapsing parser. -/
 def Value.decodeJson : Nat → Lean.Json → Except WireError Value
@@ -53,15 +86,9 @@ def Value.decodeJson : Nat → Lean.Json → Except WireError Value
     | [.str "descriptor", .str identity] => return .descriptor identity
     | [.str "list", .arr values] => return .list (← values.toList.mapM (Value.decodeJson fuel))
     | [.str "dictionary", .arr entries] =>
-      return .dictionary (← entries.toList.mapM fun raw => do
-        let .arr fields := raw | throw (.malformed "expected a dictionary entry")
-        let [key, value] := fields.toList | throw (.malformed "expected two dictionary entry values")
-        return (← Value.decodeJson fuel key, ← Value.decodeJson fuel value))
+      return .dictionary (← entries.toList.mapM (decodeDictionaryEntry (Value.decodeJson fuel)))
     | [.str "object", .arr entries] =>
-      return .object (← entries.toList.mapM fun raw => do
-        let .arr fields := raw | throw (.malformed "expected an object entry")
-        let [.str key, value] := fields.toList | throw (.malformed "expected an object key and value")
-        return (key, ← Value.decodeJson fuel value))
+      return .object (← entries.toList.mapM (decodeObjectEntry (Value.decodeJson fuel)))
     | _ => throw (.malformed "unknown value tag, invalid payload or extra fields")
 
 def Value.checkReferences (registry : Registry) : Nat → Value → Except Error Unit
