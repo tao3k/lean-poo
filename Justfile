@@ -189,6 +189,7 @@ check-proof: check-compose
     lake build \
         LeanPoo.Prototype.SharedThunk \
         LeanPoo.Prototype.SharedThunkHeap \
+        LeanPoo.Prototype.SharedCellRefinement \
         LeanPoo.Object.SharedRecursive \
         LeanPoo.Proof.Types \
         LeanPoo.Proof.Patch \
@@ -255,6 +256,7 @@ _check-contracts:
     {{lean}} Tests/FiniteFix.lean
     {{lean}} Tests/RecursiveSemantics.lean
     {{lean}} Tests/SharedThunk.lean
+    {{lean}} Tests/SharedCellRefinement.lean
     {{lean}} Tests/SharedRecursive.lean
     {{lean}} Tests/RecursiveCache.lean
     {{lean}} Tests/RecursiveCacheSemantics.lean

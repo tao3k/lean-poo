@@ -529,3 +529,18 @@ and source errors, six unfinished recursive reads and a changed-program
 executor refusal. Retained old runtimes keep their old immutable values.
 [[file:../docs/contracts/shared-thunks.org][The shared-thunk guide]] distinguishes the proved protocol and safe result
 admission from native IO/thunk implementation and arbitrary unchecked callbacks.
+
+* Shared constructor primitive refinement
+
+[[file:SharedCellRefinement.lean][SharedCellRefinement]] checks the existing shared constructor through its
+observation adapter: 24 instances, 216 actual recursive requests (87 admitted,
+129 pending), 72 result cache gets, 48 private Ref pointer readbacks and 128
+delayed-value gets. Independent arithmetic and two interleaved private cells
+supply 38 further reads. The real result closure runs once; the real forwarding
+closure reads its private cell at most once. Twelve malformed operation logs
+and four incomplete/wrong/stale admission cases are refused. A return-only
+prefix is a valid unfinished trace and cannot establish cache publication.
+Kernel clients check step/trace refinement of the single production constructor,
+current reference/body identity and the universal forwarding read bound.
+Only standard Lean axioms occur; opaque IO/C++/compiler/memory correctness
+is not inferred from a source pin or from a valid data log.

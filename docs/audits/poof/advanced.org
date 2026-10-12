@@ -113,8 +113,14 @@ completed trace executions and safe evaluations are equivalent, and the safe
 checker compares actual reported values/errors against the exact current
 program. The sequential private-cell model proves installation/current-body
 and one-constructor invariants. Checked C3 field/method reads transfer to the
-existing source graph laws. Native IO/thunk/compiler implementation and arbitrary
-unchecked callbacks remain runtime boundaries rather than new kernel axioms.
+existing source graph laws. [[file:../../../LeanPoo/Prototype/SharedCellRefinement.lean][SharedCellRefinement]] now interprets the single
+constructor program that ~sharedFix~ itself executes. Its sequential primitive
+rules refine every step/trace to the protocol and prove one result build and
+at most one forwarding Ref read. Observed IO operations and reported results
+are safely checked together, including publication ordering and pointer
+readbacks. The source pin specifies the rules; verification of C++/reference
+counting/compiler/concurrent memory and arbitrary unchecked callbacks remains
+outside this refinement. A valid data log does not authenticate IO origins.
 
 Appendix E (2390–2434) compares Scheme source sizes. The character/cons-cell
 figures are illustrative and do not impose Lean line-count requirements.

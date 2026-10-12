@@ -102,6 +102,7 @@ import LeanPoo.Prototype.FiniteFix
 import LeanPoo.Prototype.RecursiveSemantics
 import LeanPoo.Prototype.SharedThunk
 import LeanPoo.Prototype.SharedThunkHeap
+import LeanPoo.Prototype.SharedCellRefinement
 import LeanPoo.Object.SharedRecursive
 import LeanPoo.Prototype.DynamicDescriptorSemantics
 import LeanPoo.Prototype.MutableRecord

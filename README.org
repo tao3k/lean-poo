@@ -11,6 +11,8 @@ descriptors and mutable hash slots. [[file:docs/contracts/recursive-objects.org]
 operational evaluation and divergence theorems.
 [[file:docs/contracts/shared-thunks.org][Checked shared thunks]] connect native execution of explicit recursive interactions
 to exact-program evaluation receipts and the existing C3 field/method observers.
+The existing ~sharedFix~ and its primitive model execute one shared constructor
+program; checked operation logs refine the shared-cell protocol.
 [[file:docs/contracts/c3-graph.org][C3 cache coherence]] proves complete cached/reference results for every finite
 graph and root list, including exact cyclic and validation failures.
 The [[file:docs/audits/poof/README.org][whole-paper audit]] records the precise typed scope. Whole-paper operational

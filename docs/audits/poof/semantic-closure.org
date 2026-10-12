@@ -16,7 +16,7 @@ are outside these theorems. The explicit future proposals remain research.
 | Area | Kernel or executable evidence | Scope |
 |------+-------------------------------+-------|
 | ~fix~ / ~mix~ | Recursive ~Evaluates~, ~solve_sound~, ~solve_complete~, ~diverges_iff_no_evaluation~, ~solve_relation~, fixed-observation refinement | Explicit self requests, heterogeneous inherited carriers, delayed values; every finite depth and unbounded return/error derivations |
-| Checked native shared execution | ~runs_iff_evaluates~, ~admit_iff_runs~, ~recordSolve_result~, ~Runtime.read_matches~, ~Knot.one_build~ | Declared Interaction compiler; complete finite traces and exact reported results, sequential constructor model; native IO/thunk implementation remains a runtime boundary |
+| Checked native shared execution | ~runs_iff_evaluates~, ~admit_iff_runs~, ~recordSolve_result~, ~Runtime.read_matches~, ~Knot.one_build~ | Declared Interaction compiler; complete finite traces and exact reported results, shared source constructor and sequential primitive-to-protocol refinement; C++/compiler/concurrency remain runtime boundaries |
 | C3 graph outcomes | ~linearizeMany_eq_uncached~, ~linearize_eq_uncached~ | Every finite graph and root list, including exact cycle, validation, missing and merge errors; sound warm caches at the production budget |
 | C3 object composition | ~SlotSyntax.resolveForward_eq~, ~C3.Plan.resolve_paper~, ~Recursive.Plan.read_derivation~ | Actual declarations and effective dynamic slots; every key/self or depth/key observation |
 | Parameterized methods | ~Callable.Plan.call_derivation~, ~call_fromFields~, ~solve_reindex~, ~Value.equalAt_correct~ and CheckedCall receipts | Actual C3 methods; every argument/depth, exact request sharing, checked immutable/mutable calls and retained snapshots |
@@ -51,8 +51,15 @@ assembled C3 programs and every source graph derivation. These native closures
 share constructor work; request memoization belongs to the existing safe cache.
 [[file:../../../Tests/SharedThunk.lean][SharedThunk controls]] and [[file:../../../Tests/SharedRecursive.lean][C3 controls]] execute both paths, including
 exact errors, cold loops, changed arguments and changed-program executor refusal.
-Native IO/thunk/compiler/concurrency refinement and arbitrary unchecked unsafe
-callbacks remain outside these theorems. No unsafe fixed-point axiom is used.
+[[file:../../../LeanPoo/Prototype/SharedCellRefinement.lean][SharedCellRefinement]] now interprets the same ~SharedCell.tie~ program used by
+~sharedFix~. Every completed primitive step/trace refines the protocol; current
+result identity, one build, publication ordering and at most one forwarding Ref
+read follow. Actual IO operation logs and candidate results are jointly checked.
+[[file:../../../Tests/SharedCellRefinement.lean][Operation controls]] check real Ref readbacks, cold/hot thunks and independent
+retained cells. The rules are pinned to the project's Lean runtime source.
+Verification of C++/reference counting/compiler/concurrent memory and arbitrary
+unchecked callbacks remains outside these theorems. Data receipts do not
+authenticate IO origins. No unsafe fixed-point axiom or opaque IO law is used.
 
 [[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] proves cached/reference equality by induction on production fuel,
 using ranks to rule out active-path cycles and preserved derivation-backed

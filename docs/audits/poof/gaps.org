@@ -13,6 +13,7 @@
 - [X] Safe recursive interactions with unbounded operational soundness/completeness, stable observations, related-carrier transfer and divergence characterization.
 - [X] Actual shared-knot Interaction compilation, completed demand/safe evaluation equivalence, all-depth recorded observations and safe reported-result admission.
 - [X] Sequential private-cell current-body and one-constructor protocol, including refused early forcing and relinking.
+- [X] Existing shared constructor interpreted by both actual IO/Thunk primitives and a pinned sequential primitive model, with step/trace refinement, cache-publication ordering and at-most-one forwarding cell read.
 - [X] Checked native C3 field and parameterized method reads with exact-program receipts and source graph derivation transfer.
 - [X] Safe C3 dynamic objects joining order, composition, final-self recursion and observable errors/pending results.
 - [X] Dynamic values and named recursive contracts; current registered function/descriptor identities.
@@ -52,7 +53,7 @@
 * Stronger claims outside the declared completion scope
 
 - [ ] Whole-language Scheme/Lean operational equivalence.
-- [ ] Unchecked arbitrary unsafe shared-thunk equivalence and native IO/thunk/compiler refinement beyond the declared operational model and checked result interface.
+- [ ] Unchecked arbitrary unsafe shared-thunk equivalence; verification of C++ primitives, reference counting, compiler and concurrent memory behavior beyond the shared constructor's declared sequential rules and checked operation/result interfaces.
 - [ ] Unrestricted kernel IO refinement and machine-level time/allocation bounds.
 - [ ] Universal callable-property decisions, closure serialization and unspecified dynamic automation.
 - [ ] Arbitrary-language discovery of hidden closure/effect dependencies and language-wide invalidation.
