@@ -145,8 +145,9 @@ consumer machinery, local witness-transport extensions and broader unresolved
 questions. The provider-transaction policy retains a fixed graph/order;
 [[file:../../contracts/graph-migrations.org][Graph migration]] now admits arbitrary verified target topology/root changes
 and joins positive/negative contracts with cache revision. It retains the
-context/key/value family and explicit watched lists. Hidden assumptions and a
-universal cross-library conflict policy remain outside the contract.
+context/key/value family and explicit watched lists. The analyzed computation
+extension below also infers finite pure dependencies and guards. Arbitrary
+closure introspection and a universal cross-library conflict policy remain open.
 
 * Verified graph migration and constraint caches
 
@@ -167,3 +168,28 @@ a missing positive requirement. These laws hold for arbitrary dependent families
 The [[file:../../../Tests/FunctionalGraphMigration.lean][660 migration controls]] and [[file:../../../Tests/FunctionalGraphConstraints.lean][6300 constraint/cache controls]] include changed
 roots, deletion/fallback, new reachability, suffixes, retained overrides, repeated
 keys, chained migrations and nonterminating factories that must remain unforced.
+
+* Inferred pure dependencies and computed output caches
+
+[[file:../../../LeanPoo/Functional/DependencyAnalysis.lean][DependencyAnalysis]] automatically collects value/presence reads and required/forbidden
+guards from typed finite pure computations, including nested helpers and both
+conditional branches. Its congruence theorem proves actual value/error equality
+at every context under preserved observations. Satisfied inferred guards prove
+capability safety for known syntax; source errors retain their ordinary meaning.
+Provider-wide callbacks carry an unknown footprint, including within dead branches.
+
+[[file:../../../LeanPoo/Functional/AnalyzedMigration.lean][AnalyzedMigration]] expands the existing positive/negative graph gate with those
+inferred guards and proves complete acceptance for the conservative static policy.
+Its reuse decision compares exact selected value factories and final availability
+observations, then proves universal equality of actual computation. A reused
+[[file:../../../LeanPoo/Functional/AnalyzedCache.lean][computed cache]] retains its result proof, stored value/error and exact hit decision
+through the existing ContextSlot. Affected or unknown computations store no old
+slot and require fresh result admission. Raw capability preparation and computed
+results have independent lifetimes, preventing hidden optional reads from retaining
+a stale output after explicit positive selection remains stable.
+
+The [[file:../../contracts/dependency-analysis.org][API guide]] records fixed body/family indices, conservative conditional contracts
+and the unknown-callback boundary. The new clients check 1536 scalar observations,
+9616 stable-footprint comparisons, 28 cache reads and 1792 actual graph migrations
+(330 reused, 514 fresh, 948 refused), plus divergent-presence and branch-conflict
+controls. Arbitrary-language dependency/effect/termination inference remains open.

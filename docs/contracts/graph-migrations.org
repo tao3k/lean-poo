@@ -87,7 +87,10 @@ nonterminating factories. Generic clients exercise arbitrary dependent result
 families and joint Claims; the new theorems use only standard Lean axioms.
 
 The context/key/value family and watched key lists stay fixed across this API.
-Context/key transformations have separate proved APIs. Hidden assumptions,
-automatic effect or termination inference, unrestricted IO refinement and
+Context/key transformations have separate proved APIs. [[file:dependency-analysis.org][Analyzed computations]]
+now infer finite pure read/presence dependencies, join required/forbidden keys
+with this gate, and migrate separately certified computed output caches.
+Arbitrary hidden closure dependencies, automatic effect or termination inference,
+unrestricted IO refinement and
 machine cost bounds remain outside this contract. The broader cyclic C3
 cached/reference theorem also remains separate from verified target migration.

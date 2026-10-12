@@ -54,6 +54,8 @@ state cases, including proof-bearing values and an unforced divergent factory.
 This provider-transaction API retains one fixed graph/order and key family.
 [[file:graph-migrations.org][Graph migration]] additionally compiles changed topology and joins watched absences
 with positive capabilities, joint proofs and context cache revisions. Both
-policies require explicit watched assumptions. Hidden code assumptions, a
-universal cross-library conflict policy and host function-body equality remain
-outside their contracts.
+policies accept explicit watched assumptions. [[file:dependency-analysis.org][Dependency analysis]] also derives
+required and forbidden keys from finite pure computations, joins them with these
+contracts, and refuses conflicts before any computed body runs. Arbitrary closure
+introspection, a universal cross-library conflict policy and host function-body
+equality remain outside these contracts.

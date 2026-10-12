@@ -20,6 +20,7 @@ these guides explain reusable library contracts.
 | Declare typed requirements, read factories and reuse proofs | [[file:contracts/capability-families.org][Capability families and proof reuse]] |
 | Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |
 | Change graph topology and migrate positive/negative proofs and cached data | [[file:contracts/graph-migrations.org][Graph migration and constraint caches]] |
+| Infer pure capability dependencies and migrate computed result caches | [[file:contracts/dependency-analysis.org][Dependency analysis and computed cache migration]] |
 | Narrow capabilities, expose public values or adapt contexts | [[file:contracts/interfaces.org][Consumer interfaces and context adaptation]] |
 | Reorder/relabel declarations and migrate provider registries | [[file:contracts/registry-migrations.org][Registry migrations]] |
 | Share roots, patch capabilities and normalize edits | [[file:contracts/registry-edits.org][Shared registries and edits]] |

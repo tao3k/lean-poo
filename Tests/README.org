@@ -1,6 +1,6 @@
 #+TITLE: LeanPoo tests
 
-The local complete gate runs the 181 independent Lean example/contract files
+The local complete gate runs the 184 independent Lean example/contract files
 with resource-capped workers from the canonical Justfile recipes. CI partitions those
 same commands across twelve independent file-shard jobs; four bounded diagnostic
 files run concurrently with the local atom and document phases after shared
@@ -366,8 +366,8 @@ PrototypeChecks guards the other record/numeric/object source checks;
 [[file:../docs/audits/poof/checks-v1.json][the source map]] records all 24 checks and typed adaptations.
 DictionaryRecord guards 33 contexts and 528 reads; MetaPrototype
 checks three metadata overrides, special base merge and C3 cache behavior.
-Current inventory: 181 atoms plus four diagnostics, 48 native admissions and
-16 Python supervisor controls. Older counts above belong to their stated milestones.
+Current inventory: 184 atoms plus four diagnostics, 48 native admissions and
+19 Python supervisor controls. Older counts above belong to their stated milestones.
 
 * Reviewed paper construction closure
 
@@ -426,7 +426,7 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 181 atoms + four diagnostics, 48 native
+correspondence. Current inventory: 184 atoms + four diagnostics, 48 native
 admissions and 19 supervisor controls; all schemas remain v1.
 
 * Shared recursive execution and dynamic admission
@@ -467,3 +467,18 @@ retention/replacement, heterogeneous values, repeated keys, genuine joint proofs
 negative-before-positive conflicts and unforced nonterminating factories.
 Generic clients check preparation equality, complete capability acceptance and
 exact certified availability. New theorems use only standard Lean axioms.
+
+* Inferred Functional dependencies and computed cache migration
+
+[[file:FunctionalDependencyAnalysis.lean][FunctionalDependencyAnalysis]] checks 1536 independent scalar observations and
+9616 stable-footprint comparisons for nested helpers, both conditional branches,
+heterogeneous values, unknown callbacks and factories that must remain unforced.
+[[file:FunctionalAnalyzedCache.lean][FunctionalAnalyzedCache]] checks 28 reads, 12 hits and four proved rebindings,
+including cached missing/source errors, exact contexts and a nontrivial result Claim.
+[[file:FunctionalAnalyzedMigration.lean][FunctionalAnalyzedMigration]] checks 1792 actual target cases (330 reused, 514 fresh,
+948 refused), including 16 hidden-read invalidations, 18 presence-only reuses,
+144 unknown-callback fresh admissions, chained published registries, old hot
+snapshots after refusals, inferred divergent-factory conflicts and conservative
+mutually exclusive branch contracts. Generic clients check complete expanded
+capability acceptance, universal actual-evaluation equality and exact cache hit
+retention. New theorems use only standard Lean axioms.

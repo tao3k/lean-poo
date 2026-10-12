@@ -201,14 +201,14 @@ def PreparedGraphMigration.canReuse (target : PreparedGraphMigration sourceRegis
       selectionOrigin oldOrder.output sourceRegistry.dictionary key) &&
     !Requirements.transactionMayAffectIndexed target.index scope edits
 
-/-- A computable reuse decision supplies exact complete preparation equality,
-including factory values and first missing errors at all future contexts. -/
-theorem PreparedGraphMigration.reuse_preparation
+/-- Reuse preserves every requested selection separately, including optional
+reads and keys hidden after the first missing preparation error. -/
+theorem PreparedGraphMigration.reuse_selection
     (target : PreparedGraphMigration sourceRegistry graph root newProviders edits)
     (oldOrder : C4.VerifiedOrder oldGraph oldRoot) (scope : Requirements.KeyIndex keys)
-    (retained : target.canReuse oldOrder scope = true) :
-    Requirements.prepare (assemble target.index.order target.registry.dictionary) keys =
-      Requirements.prepare (assemble oldOrder sourceRegistry.dictionary) keys := by
+    (retained : target.canReuse oldOrder scope = true) (key : Key) (requested : key ∈ keys) :
+    assemble target.index.order target.registry.dictionary key =
+      assemble oldOrder sourceRegistry.dictionary key := by
   have conditions :
       keys.all (fun key =>
         selectionOrigin target.index.order.output (sourceRegistry.regraph graph newProviders).dictionary key ==
@@ -218,11 +218,37 @@ theorem PreparedGraphMigration.reuse_preparation
   have unaffected : Requirements.transactionMayAffect target.index keys edits = false := by
     rw [← Requirements.transactionMayAffectIndexed_eq target.index scope edits]
     exact conditions.2
-  rw [Requirements.prepare_indexedTransaction_of_unaffected target.index
-    (sourceRegistry.regraph graph newProviders) edits keys target.applied unaffected]
+  have singleton : Requirements.transactionMayAffect target.index [key] edits = false := by
+    cases impact : Requirements.transactionMayAffect target.index [key] edits with
+    | false => rfl
+    | true =>
+      obtain ⟨edit, included, ancestor, cell, member, same⟩ :=
+        (Requirements.transactionMayAffect_iff target.index [key] edits).mp impact
+      have equal : cell.1 = key := by simpa using same
+      have forbidden := (Requirements.transactionMayAffect_iff target.index keys edits).mpr
+        ⟨edit, included, ancestor, cell, member, equal ▸ requested⟩
+      simp [unaffected] at forbidden
+  have preserved := Requirements.prepare_indexedTransaction_of_unaffected target.index
+    (sourceRegistry.regraph graph newProviders) edits [key] target.applied singleton
+  have stable : assemble target.index.order target.registry.dictionary key =
+      assemble target.index.order (sourceRegistry.regraph graph newProviders).dictionary key := by
+    cases old : assemble target.index.order (sourceRegistry.regraph graph newProviders).dictionary key <;>
+      cases fresh : assemble target.index.order target.registry.dictionary key <;>
+      simp_all [Requirements.prepare]
+    injection preserved with pair
+    exact congrArg Prod.fst pair
+  exact stable.trans (regraph_selection_same oldOrder target.index.order sourceRegistry newProviders key
+    (beq_iff_eq.mp ((List.all_eq_true.mp conditions.1) key requested)))
+
+/-- A computable reuse decision supplies exact complete preparation equality,
+including factory values and first missing errors at all future contexts. -/
+theorem PreparedGraphMigration.reuse_preparation
+    (target : PreparedGraphMigration sourceRegistry graph root newProviders edits)
+    (oldOrder : C4.VerifiedOrder oldGraph oldRoot) (scope : Requirements.KeyIndex keys)
+    (retained : target.canReuse oldOrder scope = true) :
+    Requirements.prepare (assemble target.index.order target.registry.dictionary) keys =
+      Requirements.prepare (assemble oldOrder sourceRegistry.dictionary) keys := by
   apply Requirements.prepare_congr
-  intro key member
-  apply regraph_selection_same oldOrder target.index.order sourceRegistry newProviders key
-  exact beq_iff_eq.mp ((List.all_eq_true.mp conditions.1) key member)
+  exact target.reuse_selection oldOrder scope retained
 
 end LeanPoo.Functional

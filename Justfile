@@ -46,6 +46,7 @@ check-merge: check-types
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.GuardedExtension \
         LeanPoo.Functional.GraphConstraints \
+        LeanPoo.Functional.AnalyzedMigration \
         LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.CachedPreparation \
         LeanPoo.Functional.ConsumerRevision \
@@ -352,6 +353,9 @@ _check-contracts:
     {{lean}} Tests/FunctionalAbsence.lean
     {{lean}} Tests/FunctionalGraphMigration.lean
     {{lean}} Tests/FunctionalGraphConstraints.lean
+    {{lean}} Tests/FunctionalDependencyAnalysis.lean
+    {{lean}} Tests/FunctionalAnalyzedCache.lean
+    {{lean}} Tests/FunctionalAnalyzedMigration.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean

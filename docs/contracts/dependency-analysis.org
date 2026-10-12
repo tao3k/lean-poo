@@ -1,0 +1,105 @@
+#+TITLE: Inferred capability dependencies and computed cache migration
+
+[[file:../reusable-contracts.org][API index]] · [[file:graph-migrations.org][Graph migration]] · [[file:../audits/poof/functional.org][Paper questions]] · [[file:../../Tests/FunctionalAnalyzedMigration.lean][Compiled migration clients]]
+
+* Analyze finite pure computations
+
+Import ~LeanPoo.Functional.AnalyzedMigration~. ~Computation Context Key Value Result~
+is a typed computation with context-dependent dependency and result families.
+~read~ observes an optional value; ~need~ requires a value; ~inspect~ observes
+availability without running the factory; ~deny~ requires absence. ~map~ and
+~both~ compose helper computations, and ~choose~ executes one selected branch.
+~pure~ and ~failure~ have no provider observations. Pure callbacks receive only
+the context and explicit child values. Varying external inputs must be carried
+in the context or supplied through provider reads.
+
+~code.analyze~ automatically traverses this syntax, collecting value reads,
+presence reads, required keys and forbidden keys, retaining order and duplicates.
+It visits both conditional branches, including nested helpers, without running
+factories or callbacks. ~evaluate_congr~ proves that every known computation has
+the same actual value or error at every context when its value selections and
+presence observations are preserved. ~evaluate_capabilitySafe~ proves that
+satisfied inferred guards exclude missing/introduced capability errors; explicit
+source errors remain possible.
+
+~opaque~ accepts a provider-wide callback. Its footprint is unknown, including
+when nested inside a helper or unselected branch. It always requires fresh
+computed-result admission during migration. This is not introspection of
+arbitrary Lean/Scheme closures, nor an effect or termination inference theorem.
+The typed syntax is finite; supplied factories and callbacks have their own
+termination and resource behavior.
+
+* Admit explicit and inferred capabilities together
+
+For explicit ~positive~ and ~negative~ lists, ~AnalyzedConstraintCache~ retains
+the existing ~ConstraintCache~ over ~positive ++ code.analyze.required~ and
+~negative ++ code.analyze.forbidden~. Its joint Claim applies to the complete
+expanded heterogeneous positive tuple. Build that raw cache with
+~cacheCertified~, ~BuiltContextCache.empty~ and ~checkAbsent~, then call
+~AnalyzedConstraintCache.start capabilities resultAdmission~. The separate result
+Claim requires ~OutcomeValid~ at every context: an error retains its ordinary
+semantics; every success must satisfy the Claim. The cache stores inferred key
+indices once.
+
+~migrateAnalyzedConstraints oldIndex cache graph root newProviders edits~ compiles
+and completes the actual graph/provider transaction using the existing migration
+API. The resulting inner revision checks every expanded negative key before
+every expanded positive key. ~reviseAnalyzedConstraints_ok_iff~ proves complete
+acceptance for that static policy. ~inferred_guards~ derives the required/absent
+facts from the accepted target; ~evaluate_safe~ binds capability safety to its
+actual provider. Refused candidates remain diagnostic snapshots and leave the
+old cache and proofs usable. No computed body runs during migration.
+
+Both conditional branches contribute conservative static contracts. A required
+key in one branch and a forbidden key in the other can make the policy
+unsatisfiable, even if a fixed guard selects only one branch. The API refuses
+that conflict instead of weakening an inferred assumption. Opaque callbacks
+still need explicit capability contracts; unknown analysis provides no automatic
+capability-safety guarantee for their hidden observations.
+
+* Reuse computed results only under the proved decision
+
+The raw capability tuple and computed output have separate caches and lifetimes.
+~PreparedGraphMigration.canReuseComputation~ requires a known footprint, identical
+first winning provider identities for every value read before edits, no target
+ancestor/key edit affecting those reads, and identical final presence for every
+presence read. Surviving names retain exact overlays under the graph identity
+policy. ~reuse_selection~ covers every watched optional selection, including
+keys after a first missing preparation error. Presence-only checks can retain a
+hot output after factory replacement when availability is unchanged.
+
+~reuse_computation~ proves universal equality of actual evaluation under this
+decision. ~ComputedRevision.reused~ rebinds the existing certified ~ContextSlot~,
+retaining its stored value/error, result proof and exact context-hit decision.
+~ComputedRevision.fresh~ stores no old slot and requires a new universal result
+admission. The raw positive revision independently requires its joint admission
+when affected. ~accepted.certify jointAdmission resultAdmission~ creates the
+target-indexed combined cache without evaluating factories. Its actual computed
+branch agrees with the decision by ~reviseAnalyzedConstraints_reuse~.
+
+~cache.read context~ returns an actual evaluation equation, its result Claim,
+the next cache and a hit Bool. Repeating the retained context is a hit; changing
+context replaces the single slot. Source and missing errors can be memoized.
+The computation/provider/family indices prevent attaching the old slot to a
+changed body. A code change requires fresh analysis, capability preparation and
+result admission. Pure callers can retain older immutable snapshots separately.
+
+* Evidence and remaining scope
+
+~FunctionalDependencyAnalysis~ checks 1536 independent scalar observations and
+9616 stable-footprint comparisons across nested helpers, conditional branches,
+heterogeneous values, unknown callbacks and divergent factories left unforced.
+~FunctionalAnalyzedCache~ checks 28 reads, 12 hits and four proved rebindings,
+including cached missing/source errors and a nontrivial result Claim.
+~FunctionalAnalyzedMigration~ checks 1792 actual target cases: 330 reused, 514
+fresh and 948 refused. Discriminating controls include 16 changes hidden from
+explicit capability scopes, 18 presence-only reuses and 144 unknown-callback
+fresh admissions. Additional controls reject inferred divergent factories and
+mutually exclusive static guards without forcing them. Chained migrations use
+the actually published registry and index; refused candidates preserve the old
+hot snapshot. Generic clients exercise the kernel laws with arbitrary families.
+
+The key/context/value/result family and computation stay fixed during a
+migration. Arbitrary-language dependency/effect inference, unrestricted IO
+refinement and machine cost bounds remain open. These APIs implement a sound
+finite pure analysis and conservative invalidation policy within that scope.
