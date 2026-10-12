@@ -70,6 +70,8 @@ shapes.
 [[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
 [[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
 [[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
+[[file:Examples/ValidatedConfiguration.lean][ValidatedConfiguration.lean]] combines nested constraints and two proved wire layouts.
+[[file:Examples/IncrementalWorkflow.lean][IncrementalWorkflow.lean]] migrates validated workload caches through extensions and refusals.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in

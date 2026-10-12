@@ -27,6 +27,9 @@ import LeanPoo.C4.Relabeling
 import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
+import LeanPoo.Functional.Validation
+import LeanPoo.Functional.Codec
+import LeanPoo.Functional.ComputationBatch
 import LeanPoo.Functional.Requirements
 import LeanPoo.Functional.GuardedExtension
 import LeanPoo.Functional.GraphConstraints

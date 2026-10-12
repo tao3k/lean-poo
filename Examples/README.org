@@ -35,6 +35,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:MutableState.lean][MutableState]] | The same partial writes after failure in pure, mutable and linear state; resume a failed linear alias and consume it on success. |
 | [[file:FunctionalPipeline.lean][FunctionalPipeline]] | Compose capability providers, prepare a consumer once, map its result and choose a follow-up factory at the same context. |
 | [[file:ValidationWorkflow.lean][ValidationWorkflow]] | Select strict or clamping validation per context, recover domain errors explicitly, and collect/aggregate independent readings in order. |
+| [[file:ValidatedConfiguration.lean][ValidatedConfiguration]] | Construct a capacity-dependent nested descriptor, enforce per-route and whole-list bounds, and prove two wire layouts feed the same public consumer. |
+| [[file:IncrementalWorkflow.lean][IncrementalWorkflow]] | Validate a workload through optional/required/absent capabilities; migrate hot successes/errors through graph extensions, refusals, fresh admission and a second revision. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 

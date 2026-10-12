@@ -19,6 +19,7 @@ these guides explain reusable library contracts.
 | Choose a compiler, audit execution or retain rejection evidence | [[file:contracts/compilation.org][Compilation and audit receipts]] |
 | Query ancestry/precedence or transfer verified names | [[file:contracts/verified-orders.org][Verified order queries]] |
 | Declare typed requirements, read factories and reuse proofs | [[file:contracts/capability-families.org][Capability families and proof reuse]] |
+| Validate nested configurations and finite capability batches with first-error proofs | [[file:contracts/validation-batches.org][Validation, descriptors and incremental workflows]] |
 | Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |
 | Change graph topology and migrate positive/negative proofs and cached data | [[file:contracts/graph-migrations.org][Graph migration and constraint caches]] |
 | Infer pure capability dependencies and migrate computed result caches | [[file:contracts/dependency-analysis.org][Dependency analysis and computed cache migration]] |

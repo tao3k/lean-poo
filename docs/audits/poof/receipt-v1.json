@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "7ee9908b48ea3cf76c2e2508e90afa3522b88d63929536ed3c553cc3490645e0",
+  "requirements_sha256": "ac1dec534de21aeb9e91483f10a9916759de2f505dd7b95e382bb618e37bab69",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1287,7 +1287,9 @@
         "LeanPoo/Object/CallableValidation.lean",
         "LeanPoo/Functional/CertifiedConsumer.lean",
         "LeanPoo/Functional/CertifiedObservation.lean",
-        "LeanPoo/Functional/ContractJoin.lean"
+        "LeanPoo/Functional/ContractJoin.lean",
+        "LeanPoo/Functional/Validation.lean",
+        "LeanPoo/Functional/Codec.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1301,7 +1303,10 @@
         "Tests/CallableValidation.lean",
         "Tests/FunctionalCertifiedConsumer.lean",
         "Tests/FunctionalCertifiedObservation.lean",
-        "Tests/FunctionalContractJoin.lean"
+        "Tests/FunctionalContractJoin.lean",
+        "Tests/FunctionalValidation.lean",
+        "Tests/FunctionalCodec.lean",
+        "Examples/ValidatedConfiguration.lean"
       ],
       "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories."
     },
@@ -1352,7 +1357,8 @@
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
-        "LeanPoo/Object/CallableValidation.lean"
+        "LeanPoo/Object/CallableValidation.lean",
+        "LeanPoo/Functional/Codec.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1363,7 +1369,9 @@
         "Tests/DynamicCodecSemantics.lean",
         "Tests/CallableObjects.lean",
         "Tests/DynamicValueEquality.lean",
-        "Tests/CallableValidation.lean"
+        "Tests/CallableValidation.lean",
+        "Examples/ValidatedConfiguration.lean",
+        "Tests/FunctionalCodec.lean"
       ],
       "boundary": "Runtime DescriptorFactory consumes dynamic descriptors or ordinary values and registers fresh descriptors with unique explicit identities. ListOf, DictionaryOf, FunctionOf, ObjectOf, range, union and intersection constructors execute. Duplicate identities and invalid/missing descriptor parameters are rejected. Arbitrary closure serialization and universal automation are excluded. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
     },
@@ -1533,7 +1541,8 @@
         "LeanPoo/Functional/GraphConstraints.lean",
         "LeanPoo/Functional/DependencyAnalysis.lean",
         "LeanPoo/Functional/AnalyzedCache.lean",
-        "LeanPoo/Functional/AnalyzedMigration.lean"
+        "LeanPoo/Functional/AnalyzedMigration.lean",
+        "LeanPoo/Functional/ComputationBatch.lean"
       ],
       "checks": [
         "Tests/IncrementalObject.lean",
@@ -1545,7 +1554,9 @@
         "Tests/FunctionalGraphConstraints.lean",
         "Tests/FunctionalDependencyAnalysis.lean",
         "Tests/FunctionalAnalyzedCache.lean",
-        "Tests/FunctionalAnalyzedMigration.lean"
+        "Tests/FunctionalAnalyzedMigration.lean",
+        "Tests/FunctionalComputationBatch.lean",
+        "Examples/IncrementalWorkflow.lean"
       ],
       "boundary": "Dependency contracts, finite pure syntax analysis and proof reuse are local extensions; no language-wide purity/effect inference or arbitrary-body introspection. Functional preparation caches retain success/error outcomes under explicit ancestry/key scopes and context/family equality. Language-wide inference remains open. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
     },
@@ -1666,7 +1677,8 @@
         "LeanPoo/Functional/AnalyzedCache.lean",
         "LeanPoo/Functional/AnalyzedMigration.lean",
         "LeanPoo/Object/MultimethodSemantics.lean",
-        "LeanPoo/Object/ShapeCache.lean"
+        "LeanPoo/Object/ShapeCache.lean",
+        "LeanPoo/Functional/ComputationBatch.lean"
       ],
       "checks": [
         "Tests/MultipleDispatch.lean",
@@ -1676,7 +1688,9 @@
         "Tests/FunctionalGraphConstraints.lean",
         "Tests/FunctionalDependencyAnalysis.lean",
         "Tests/FunctionalAnalyzedCache.lean",
-        "Tests/FunctionalAnalyzedMigration.lean"
+        "Tests/FunctionalAnalyzedMigration.lean",
+        "Tests/FunctionalComputationBatch.lean",
+        "Examples/IncrementalWorkflow.lean"
       ],
       "boundary": "Sparse index traversal equals complete lexicographic specialization-tuple enumeration, including sparse/missing paths and arbitrary arity. Applicability equals current-argument filterMap on every call. Sound candidate caches preserve complete value/arity-error outcomes and remain sound under lookup, touch and LRU eviction. Successful registration, contribution and predicate registration invalidate the old candidate cache. These are universal kernel laws for the concrete typed generic. Typed registration, per-context selection and cache controls; not a formal resolution of every cross-library extension/conflict policy in the discussion. Explicit watched-absence admission and guarded provider transactions now implement the proposed negative-assumption policy. Refusals retain the actual first present factory, its absent prefix and candidate transaction proof. Acceptance is complete for final transaction snapshots preserving all watched absences; disjoint edits rebind the old certificate. The provider-transaction gate retains its fixed graph; changed topology uses the verified migration gate below. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
     },
@@ -2394,6 +2408,16 @@
         59
       ]
     },
+    "Examples/IncrementalWorkflow.lean": {
+      "sha256": "25c6eb93142e5c52273399663fef368a29d80d636227899cb47c0041cd65e510",
+      "physical_lines": 177,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        175,
+        176
+      ]
+    },
     "Examples/LensPrototype.lean": {
       "sha256": "3f3091c8b16222e9dcdaaacc607dce3498b48f8dd1581256e87b601a32c5599d",
       "physical_lines": 19,
@@ -2468,6 +2492,21 @@
       "eval_lines": [
         32,
         33
+      ]
+    },
+    "Examples/ValidatedConfiguration.lean": {
+      "sha256": "935101a9195553941cf13ff0227f4a70f84d08595c527451e5869f0cc75cbd72",
+      "physical_lines": 71,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "eval_lines": [
+        64
       ]
     },
     "Examples/ValidationWorkflow.lean": {
@@ -2561,6 +2600,20 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Functional/Codec.lean": {
+      "sha256": "e947fc82fd4f180dd9f7ee69cdafa136c81cdf901033ecda7909664411581ed7",
+      "physical_lines": 92,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/ComputationBatch.lean": {
+      "sha256": "f3240002c916ee506f7cb31a963999a57f59161319832476ec5eed91bba9cc24",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Functional/ConsumerRevision.lean": {
       "sha256": "589dc9df4f3dd7b67bd8d270325cc1ef29c341f01de4d7b6fb753922a2f88632",
       "physical_lines": 164,
@@ -2590,8 +2643,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/DependencyAnalysis.lean": {
-      "sha256": "e27cadab6e78c63e569fcf3984a9f72f0e344645bca8e7897fbd94e52e46acc0",
-      "physical_lines": 190,
+      "sha256": "d734761b3f582b06f3b1565740419e0503efdb5283c7f52dffcec9813ba9d456",
+      "physical_lines": 203,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -2648,6 +2701,13 @@
     "LeanPoo/Functional/Requirements.lean": {
       "sha256": "c52b9cba0d4291dc5c0d3563c1b547c088760ef04d6fee22576d19e230cae606",
       "physical_lines": 158,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/Validation.lean": {
+      "sha256": "db6fed8b4711229f21e0df8eb05a1eeb37e4c3661e01ecdba0efee1e6243bab6",
+      "physical_lines": 79,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3758,6 +3818,25 @@
         86
       ]
     },
+    "Tests/FunctionalCodec.lean": {
+      "sha256": "9f14833f37e1e6fa8fbabdd3dbc24b05eab6f00814ee80011c9f5bb3855af0c8",
+      "physical_lines": 53,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        13
+      ]
+    },
+    "Tests/FunctionalComputationBatch.lean": {
+      "sha256": "83be8eb0a5460dfc1819b21997ed76001b2ff3c36e42cc41ca7af20284d6afe2",
+      "physical_lines": 67,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        26,
+        55
+      ]
+    },
     "Tests/FunctionalConsumerRevision.lean": {
       "sha256": "c8d72a017159188be340de1e0719a09ea8282f585d2d136dfba7fed14f69b273",
       "physical_lines": 203,
@@ -3861,6 +3940,15 @@
       ],
       "eval_lines": [
         141
+      ]
+    },
+    "Tests/FunctionalValidation.lean": {
+      "sha256": "1c2aa97de6d02bd2baaa88663e74f033efed813aaa44f916a2734bc3e8c475d9",
+      "physical_lines": 47,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        18
       ]
     },
     "Tests/FunctionalView.lean": {
@@ -4264,6 +4352,7 @@
     "Examples/FirstClassObject.lean",
     "Examples/FirstClassRecord.lean",
     "Examples/FunctionalPipeline.lean",
+    "Examples/IncrementalWorkflow.lean",
     "Examples/LayeredObject.lean",
     "Examples/LensPrototype.lean",
     "Examples/LiveRevision.lean",
@@ -4285,6 +4374,7 @@
     "Examples/SpecificationComposition.lean",
     "Examples/StaticMethodSelection.lean",
     "Examples/TargetAndWrapping.lean",
+    "Examples/ValidatedConfiguration.lean",
     "Examples/ValidationWorkflow.lean",
     "LeanPoo/C4/AuditedResolver.lean",
     "LeanPoo/C4/CertificateExpansion.lean",
@@ -4331,6 +4421,8 @@
     "LeanPoo/Functional/CertifiedObservation.lean",
     "LeanPoo/Functional/CertifiedRequirements.lean",
     "LeanPoo/Functional/CertifiedView.lean",
+    "LeanPoo/Functional/Codec.lean",
+    "LeanPoo/Functional/ComputationBatch.lean",
     "LeanPoo/Functional/ConsumerRevision.lean",
     "LeanPoo/Functional/ContextObservation.lean",
     "LeanPoo/Functional/ContextPullback.lean",
@@ -4370,6 +4462,7 @@
     "LeanPoo/Functional/TransformationProfiles.lean",
     "LeanPoo/Functional/TransformationResources.lean",
     "LeanPoo/Functional/Transport.lean",
+    "LeanPoo/Functional/Validation.lean",
     "LeanPoo/Functional/View.lean",
     "LeanPoo/Functional/ViewComposition.lean",
     "LeanPoo/Object/AncestryTransform.lean",
@@ -4555,6 +4648,8 @@
     "Tests/FunctionalCertifiedObservation.lean",
     "Tests/FunctionalCertifiedRequirements.lean",
     "Tests/FunctionalCertifiedView.lean",
+    "Tests/FunctionalCodec.lean",
+    "Tests/FunctionalComputationBatch.lean",
     "Tests/FunctionalConsumerRevision.lean",
     "Tests/FunctionalContextObservation.lean",
     "Tests/FunctionalContextPullback.lean",
@@ -4589,6 +4684,7 @@
     "Tests/FunctionalTransformation.lean",
     "Tests/FunctionalTransformationProfiles.lean",
     "Tests/FunctionalTransport.lean",
+    "Tests/FunctionalValidation.lean",
     "Tests/FunctionalView.lean",
     "Tests/FunctionalViewComposition.lean",
     "Tests/GraphCertificate.lean",

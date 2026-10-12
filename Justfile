@@ -43,6 +43,9 @@ check-merge: check-types
         LeanPoo.C4.Presentation \
         LeanPoo.C4.Relabeling \
         LeanPoo.Functional.Assembly \
+        LeanPoo.Functional.Validation \
+        LeanPoo.Functional.Codec \
+        LeanPoo.Functional.ComputationBatch \
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.GuardedExtension \
         LeanPoo.Functional.GraphConstraints \
@@ -217,6 +220,8 @@ _check-examples:
     {{lean}} Examples/MutableState.lean
     {{lean}} Examples/FunctionalPipeline.lean
     {{lean}} Examples/ValidationWorkflow.lean
+    {{lean}} Examples/ValidatedConfiguration.lean
+    {{lean}} Examples/IncrementalWorkflow.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
     {{lean}} Examples/DelayedNumbers.lean
@@ -372,6 +377,9 @@ _check-contracts:
     {{lean}} Tests/FunctionalGraphMigration.lean
     {{lean}} Tests/FunctionalGraphConstraints.lean
     {{lean}} Tests/FunctionalDependencyAnalysis.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalValidation.lean
+    {{lean}} Tests/FunctionalCodec.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalComputationBatch.lean
     {{lean}} Tests/FunctionalAnalyzedCache.lean
     {{lean}} Tests/FunctionalAnalyzedMigration.lean
     {{lean}} Tests/DictionaryCompiler.lean

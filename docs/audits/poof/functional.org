@@ -47,6 +47,14 @@ consumer APIs; [[file:../../../Examples/CertifiedContextCache.lean][CertifiedCon
 dependency caching for outer requests. These are usage scenarios for the typed
 construction and consumer machinery.
 
+The more involved [[file:../../../Examples/ValidatedConfiguration.lean][ValidatedConfiguration]] applies F03's descriptor operations to
+capacity-dependent nested routes and a joint total constraint. [[file:../../../LeanPoo/Functional/Codec.lean][Codec]] composes
+roundtrip laws, refinements and representation changes; its existing descriptor
+JSON adapters require an explicit roundtrip proof. Two wire layouts have equal
+public results/errors for every input. [[file:../../../Tests/FunctionalCodec.lean][Nested controls]] use independent bounds.
+[[file:../../../LeanPoo/Functional/Validation.lean][Validation]] adds all-or-error context-dependent batches and a universal
+first-failure characterization, with [[file:../../../Tests/FunctionalValidation.lean][stopping and order controls]].
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and
@@ -62,6 +70,17 @@ and both conditional branches. Known stable footprints preserve actual cached
 values/errors and context hits; affected or unknown computations require fresh
 result admission. The raw capability tuple and computed output have separate
 cache lifetimes. Arbitrary host closures remain outside automatic analysis.
+
+[[file:../../../Examples/IncrementalWorkflow.lean][IncrementalWorkflow]] joins F04–F06 in a complete workload scenario: required
+capacity, optional priority, an absent legacy method, per-job validation and a
+joint result bound. Nine changes at two contexts include negative conflicts
+before a missing key, add-then-remove transactions, fresh admission and a second
+migration. Stable graph changes retain hot success/error observations; changing
+the selected priority method can turn a cached refusal into success.
+[[file:../../../LeanPoo/Functional/ComputationBatch.lean][ComputationBatch]] supplies inspectable finite sequence/traverse; the added
+~Computation.validate~ retains child dependencies and reports pure check errors.
+[[file:../../../Tests/FunctionalComputationBatch.lean][Batch controls]] compare independent values/errors and both cache states.
+The [[file:../../contracts/validation-batches.org][scenario contracts]] record the exact function and proof boundaries.
 
 * The local Problem API
 

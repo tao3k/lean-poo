@@ -58,6 +58,10 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries. Generic clients also compile dependent factory composition/branch/aggregation/recovery laws, provider fallback, and exact prepareWith success/error contracts.
 
+- [[file:FunctionalValidation.lean][FunctionalValidation]] checks universal first-error/append/success laws, 36 independent ordered-batch controls, six unreachable suffixes and wrong-context rejection.
+- [[file:FunctionalCodec.lean][FunctionalCodec]] checks nested refinement and roundtrip composition, 48 independent bound controls and product error priority.
+- [[file:FunctionalComputationBatch.lean][FunctionalComputationBatch]] checks finite analyzed batch execution/footprints, pure validation errors, 72 independent observations, cold/hot success/error caches and an unreachable suffix.
+
 - [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
 
 - [[file:FunctionalAccess.lean][FunctionalAccess]] checks named access under successful checklist insertion/reordering/repetition, exact selected-provider provenance, positional type rejection, and proposition-valued proof adapters.
