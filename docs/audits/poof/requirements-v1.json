@@ -23,14 +23,19 @@
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/FiniteFix.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Examples/PrototypeCore.lean",
         "Tests/FiniteFix.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Shared unsafe thunks remain an alternate runtime; arbitrary Scheme programs are outside the stated calculus."
+      "boundary": "The explicit recursive Interaction calculus has a total finite observer, an unbounded inductive operational semantics, soundness/completeness, stable observations, divergence correspondence and related-carrier transfer. It supports heterogeneous inherited carriers and delayed values. Shared unsafe thunks remain an alternate runtime; arbitrary Scheme programs are outside the stated calculus. Call-by-need caches carry evaluation proofs indexed by the exact program; completed source errors are shared. Active cycles are separate runtime diagnostics. Mutable writes reset the cache and advance the generation."
     },
     {
       "id": "claims-plan",
@@ -169,11 +174,16 @@
       "implementation": [
         "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof."
     },
@@ -255,11 +265,16 @@
         "LeanPoo/Prototype/Delayed.lean",
         "LeanPoo/Prototype/FixedPoint.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Examples/DelayedNumbers.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Function requests and unit-input delayed values use the safe Interaction semantics with explicit final self, inherited evaluation, errors and pending observations. Original delayed thunks are also retained as a runtime option."
     },
@@ -286,11 +301,16 @@
         "LeanPoo/Object/Memo.lean",
         "LeanPoo/Object/Schema.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery."
     },
@@ -322,15 +342,20 @@
         "LeanPoo/Prototype/Object.lean",
         "LeanPoo/Object/Prototype.lean",
         "LeanPoo/Prototype/MutableRecord.lean",
-        "LeanPoo/Object/Recursive.lean"
+        "LeanPoo/Object/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Examples/FirstClassObject.lean",
         "Tests/IntegratedPrototype.lean",
         "Tests/MutableRecord.lean",
-        "Tests/ObjectSemantics.lean"
+        "Tests/ObjectSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Retained prototype/value pair and later extension; typed carriers and unsafe recursive instantiation."
+      "boundary": "Typed retained prototype/value pairs and later extension coexist with safe recursive C3 plans and fresh shared instances. Slot reads preserve final-self requests and carry evaluation proofs for the exact plan; arbitrary Scheme closures are outside the declared value universe."
     },
     {
       "id": "multiple-inheritance",
@@ -396,14 +421,19 @@
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Object/Class.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/DescriptorClass.lean",
         "Tests/IntegratedPrototype.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Runtime descriptors compose over a fixed Lean carrier type; Scheme dynamic type universe not reproduced."
+      "boundary": "Static class prototypes compose descriptors over typed carriers. Dynamic class prototypes compose descriptors in the recursive Value universe; runtime factories and actual C3 field admission execute. Arbitrary Scheme values and closures are outside the declared universe."
     },
     {
       "id": "validation",
@@ -414,11 +444,16 @@
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Object/Class.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility."
     },
@@ -432,12 +467,17 @@
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
         "Tests/PrototypeChecks.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Static typed descriptors and a recursive dynamic Value universe coexist. Dynamic contracts cover primitives, ranges, lists, dictionaries, objects, named recursive types and first-class descriptors. Current registry identity is required; budget exhaustion is an error. Lean Int/strings replace Scheme number/sexp carriers."
     },
@@ -450,13 +490,18 @@
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "List/array/map/option/product/sum/HList construction; typed rather than unrestricted dynamic values."
+      "boundary": "Runtime DescriptorFactory consumes dynamic descriptors or ordinary values and registers fresh descriptors with unique explicit identities. ListOf, DictionaryOf, FunctionOf, ObjectOf, range, union and intersection constructors execute. Duplicate identities and invalid/missing descriptor parameters are rejected. Arbitrary closure serialization and universal automation are excluded."
     },
     {
       "id": "elaborate-types",
@@ -471,16 +516,21 @@
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Prototype/RecordCodec.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
         "docs/audits/poof/closure-v1.json",
         "Tests/RecordCodec.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Generated codec round trips are executable controls, not a general codec inverse theorem."
     },
     {
       "id": "typeclass-correspondence",
@@ -502,15 +552,20 @@
         "LeanPoo/Prototype/LinearState.lean",
         "LeanPoo/Prototype/Mutable.lean",
         "LeanPoo/Prototype/MutableRecord.lean",
-        "LeanPoo/Object/Recursive.lean"
+        "LeanPoo/Object/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/LinearState.lean",
         "Tests/MutablePrototype.lean",
         "Tests/MutableRecord.lean",
-        "Tests/ObjectSemantics.lean"
+        "Tests/ObjectSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem."
+      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex."
     },
     {
       "id": "mutable-protocol",
@@ -520,14 +575,19 @@
       "implementation": [
         "LeanPoo/Prototype/Mutable.lean",
         "LeanPoo/Prototype/MutableRecord.lean",
-        "LeanPoo/Object/Recursive.lean"
+        "LeanPoo/Object/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/MutablePrototype.lean",
         "Tests/MutableRecord.lean",
-        "Tests/ObjectSemantics.lean"
+        "Tests/ObjectSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "fix!/mix! allocate one fresh IO.Ref hash identity, run parent before child, update each slot with one table insertion, capture inherited syntax lazily and resolve final-self requests on later reads. No topology rebuild is needed per write. Failure retains prior writes and skips subsequent child mutations. Snapshot and consuming-state conversions execute. No machine-level O(1) time or allocation bound is asserted."
+      "boundary": "fix!/mix! allocate one fresh mutex-protected hash identity, run parent before child, update each slot with one table insertion, capture inherited syntax lazily and resolve final-self requests on later reads. No topology rebuild is needed per write. Failure retains prior writes and skips subsequent child mutations. Snapshot and consuming-state conversions execute. No machine-level O(1) time or allocation bound is asserted. Optional safe forcing shares completed values/errors and diagnoses active cycles. All cached results are invalidated on mutation; snapshot-indexed receipts prevent reuse in a changed program."
     },
     {
       "id": "cache-proposals",
@@ -702,14 +762,19 @@
         "LeanPoo/Prototype/Delayed.lean",
         "LeanPoo/Prototype/FiniteFix.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
         "Tests/FiniteFix.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed."
+      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex."
     },
     {
       "id": "minimalism",

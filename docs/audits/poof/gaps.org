@@ -18,10 +18,15 @@
 - [X] Persistent snapshot, fresh mutable identity and consuming-state conversions, with observation controls.
 - [X] Existing alternate representations, typed reflection/codecs, dispatch, method combination and lens constructors.
 
+- [X] Safe call-by-need sharing, proof-bearing cached values/errors, concurrent forcing and active-cycle paths.
+- [X] Mutable writes invalidate memo entries and advance snapshot generations.
+- [X] Runtime dependent descriptor factories and schema-owned defaults, updates and wire codecs.
+- [X] Actual C3 object fields enter the same dynamic descriptor/wire gate with kernel evaluation receipts.
+
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 103 local evidence files and 345 Lean source filenames; reject drift.
+- [X] Bind 111 local evidence files and 353 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.

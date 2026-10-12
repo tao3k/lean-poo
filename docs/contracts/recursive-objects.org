@@ -87,3 +87,38 @@ computes their corresponding Lean observations. The source-differential CI job
 compares canonical values and is required by the aggregate check. The fixture
 retains upstream attribution and the Apache 2.0 license. This gate establishes
 the declared examples, independently of the generic kernel theorems.
+
+* Shared lazy execution and descriptor integration
+
+[[file:../../LeanPoo/Prototype/RecursiveCache.lean][RecursiveCache]] evaluates final-self requests by need. Each cache entry
+contains an unbounded evaluation proof for the exact indexed program.
+Completed values and source errors are shared; active requests produce cycle
+paths. Budget exhaustion and cycles remain separate diagnostics. A cached
+receipt agrees with every completed finite source observation. The machine
+budget bounds recursion depth, including administrative continuations; it is
+not the observer's self-call depth or a machine-time limit.
+
+[[file:../../LeanPoo/Object/RecursiveInstance.lean][RecursiveInstance]] gives a fresh, initially unforced identity. Mutex-protected
+reads serialize concurrent aliases. MutableRecord.force retains a receipt for
+the exact read snapshot; writes clear the memo and advance the generation.
+Escaped snapshots remain immutable. The controls compute Fibonacci(40) with
+41 distinct input misses, test concurrent sharing, cached errors, cycle paths
+and mutation invalidation. These are work counters, not a timing claim.
+
+[[file:../../LeanPoo/Prototype/DynamicSchema.lean][DynamicSchema]] registers descriptors built from runtime type/value parameters.
+One SlotDescription catalog generates defaults, inspection, ordered updates
+and a reconstructible schema. Sealed records reject extra fields; read-only
+fields and invalid refinements are refused. Empty patches still validate the
+input, and rejected pure patches do not publish earlier partial edits.
+
+[[file:../../LeanPoo/Prototype/DynamicCodec.lean][DynamicCodec]] preserves exact integers, Unicode, ordered/duplicate raw
+entries and registered identities in a tagged array format. Text/byte admission
+checks nested identities in the current registry and returns an Accepted proof.
+Functions serialize identities, not closure code. Generated codec round trips
+are controls rather than a universal inverse theorem.
+
+[[file:../../LeanPoo/Object/RecursiveValidation.lean][RecursiveValidation]] materializes requested actual object fields with their
+kernel evaluation proofs, then admits those same values through the runtime
+schema. Open schemas leave unrelated cyclic slots cold; sealed schemas reject
+extra stored slots without forcing them. Source errors, cycles, exhaustion
+and descriptor refusals remain distinguishable.

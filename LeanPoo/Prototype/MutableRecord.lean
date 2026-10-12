@@ -1,4 +1,4 @@
-import LeanPoo.Prototype.RecursiveSemantics
+import LeanPoo.Prototype.RecursiveCache
 import LeanPoo.Prototype.DynamicDescriptor
 import LeanPoo.Prototype.LinearState
 import Std.Data.HashMap
@@ -70,14 +70,27 @@ theorem Specification.compose_assoc (outer middle inner : Specification) (storag
       cases second : middle.transition inherited with
       | mk inheritedAgain status => cases status <;> rfl
 
+structure Snapshot where
+  storage : Storage
+  generation : Nat := 0
+
+private structure MutableState where
+  snapshot : Snapshot
+  memo : Cached.Cache (generator snapshot.storage) := {}
+
 structure Mutable where private mk ::
-  private cell : IO.Ref Storage
+  private cell : Std.Mutex MutableState
 
 /-- `hash-copy` means a fresh mutable identity sharing only immutable storage. -/
-def create (base : Storage) : IO Mutable := do return ⟨← IO.mkRef base⟩
+def create (base : Storage) : IO Mutable := do
+  return ⟨← Std.Mutex.new ⟨⟨base, 0⟩, {}⟩⟩
 
 /-- Conversion to pure state is a retained immutable snapshot. -/
-def Mutable.snapshot (object : Mutable) : IO Storage := object.cell.get
+def Mutable.snapshot (object : Mutable) : IO Storage :=
+  object.cell.atomically do return (← get).snapshot.storage
+
+def Mutable.generation (object : Mutable) : IO Nat :=
+  object.cell.atomically do return (← get).snapshot.generation
 
 def Mutable.read (object : Mutable) (depth : Nat) (key : String) : IO (Observation Value) := do
   return readPure (← object.snapshot) depth key
@@ -85,7 +98,31 @@ def Mutable.read (object : Mutable) (depth : Nat) (key : String) : IO (Observati
 /-- One slot update captures the previous effective computation and retains
 the same cell as final-self identity. Self requests resolve on each later read. -/
 def Mutable.slot (object : Mutable) (key : String) (layer : SlotLayer) : IO Unit :=
-  object.cell.modify (fun storage => write storage key layer)
+  object.cell.atomically do
+    let state ← get
+    let snapshot : Snapshot :=
+      ⟨write state.snapshot.storage key layer, state.snapshot.generation + 1⟩
+    set (⟨snapshot, {}⟩ : MutableState)
+
+/-- Each successful force carries an evaluation proof for the exact immutable
+snapshot read while holding the mutex. Slot writes clear all memo entries and
+advance the generation; stale computations cannot inhabit the new cache. -/
+def Mutable.force (object : Mutable) (budget : Nat) (key : String) :
+    IO (Except (Cached.Diagnostic String) (Σ snapshot : Snapshot,
+      Cached.Receipt (generator snapshot.storage) (generator snapshot.storage key))) :=
+  object.cell.atomically do
+    let state ← get
+    match Cached.run (generator state.snapshot.storage) key budget state.memo with
+    | .error diagnostic => return .error diagnostic
+    | .ok (receipt, memo) =>
+      set (⟨state.snapshot, memo⟩ : MutableState)
+      return .ok ⟨state.snapshot, receipt⟩
+
+def Mutable.cachedKeys (object : Mutable) : IO (List String) :=
+  object.cell.atomically do return (← get).memo.entries.map Cached.Entry.input
+
+def Mutable.statistics (object : Mutable) : IO Cached.Statistics :=
+  object.cell.atomically do return (← get).memo.statistics
 
 def Specification.apply : Specification → Mutable → IO (Except String Unit)
   | .identity, _ => pure (.ok ())

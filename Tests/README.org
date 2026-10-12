@@ -426,5 +426,11 @@ four leaves in opposite orders, then exercise repeated and missing requests.
 The general theorem quantifies over every finite parent list and root list.
 MetaPrototype additionally constructs all ten original C3 graph objects.
 [[file:../docs/audits/poof/closure-v1.json][The closure map]] binds six typed constructions separately from whole-language
-correspondence. Current inventory: 162 atoms + four diagnostics, 48 native
-admissions and 16 supervisor controls; all schemas remain v1.
+correspondence. Current inventory: 172 atoms + four diagnostics, 48 native
+admissions and 19 supervisor controls; all schemas remain v1.
+
+* Shared recursive execution and dynamic admission
+
+- [[file:RecursiveCache.lean][RecursiveCache]] checks shared work, source parity, cold slots, cached errors, concurrent aliases, cycle paths and mutable invalidation; cached observations have kernel receipts.
+- [[file:DynamicSchema.lean][DynamicSchema]] checks runtime dependent factories, self-describing field catalogs, generated defaults/updates, 101 schema round trips, exact text/bytes values and wire refusals.
+- [[file:RecursiveValidation.lean][RecursiveValidation]] connects actual C3 slots, cache receipts, dynamic refinement and wire observations; unrelated cycles remain cold.

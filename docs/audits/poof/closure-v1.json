@@ -11,16 +11,22 @@
         "explicit checked bottom",
         "prototype-list default base",
         "constant tail bypass",
-        "operational return/error/divergence distinction"
+        "operational return/error/divergence distinction",
+        "separate cycle diagnostics and memoized source errors"
       ],
       "implementation": [
         "LeanPoo/Prototype/CheckedFunction.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Checked errors and pending recursive observations are distinct. The operational semantics characterizes both completed errors and divergence; finite budget exhaustion alone is not a divergence proof."
     },
@@ -84,12 +90,17 @@
         "LeanPoo/Prototype/Class.lean",
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
         "Tests/PrototypeChecks.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
       "boundary": "Static typed descriptors and a recursive dynamic Value universe coexist. Dynamic contracts cover primitives, ranges, lists, dictionaries, objects, named recursive types and first-class descriptors. Current registry identity is required; budget exhaustion is an error. Lean Int/strings replace Scheme number/sexp carriers."
     },
@@ -115,7 +126,10 @@
         "valid-record preservation and untouched-field kernel laws",
         "contract constructor reflection",
         "first-class runtime descriptor inspection",
-        "checked dynamic function boundaries with kernel soundness"
+        "checked dynamic function boundaries with kernel soundness",
+        "dynamic schema-owned defaults, inspection, updates and wire admission",
+        "runtime descriptor factories with value-dependent parameters",
+        "actual recursive object field validation"
       ],
       "implementation": [
         "LeanPoo/Prototype/RecordDescription.lean",
@@ -125,16 +139,21 @@
         "LeanPoo/Prototype/Types.lean",
         "LeanPoo/Prototype/RecordCodec.lean",
         "LeanPoo/Prototype/DynamicDescriptor.lean",
-        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean"
+        "LeanPoo/Prototype/DynamicDescriptorSemantics.lean",
+        "LeanPoo/Prototype/DynamicCodec.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
         "Tests/IntegratedPrototype.lean",
         "docs/audits/poof/closure-v1.json",
         "Tests/RecordCodec.lean",
-        "Tests/DynamicDescriptor.lean"
+        "Tests/DynamicDescriptor.lean",
+        "Tests/DynamicSchema.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Generated codec round trips are executable controls, not a general codec inverse theorem."
     },
     {
       "id": "pure-linearity",
@@ -149,21 +168,27 @@
         "rejected transition retains reference",
         "checked composition associativity",
         "shared mutable hash slots",
-        "pure/mutable/linear observation controls"
+        "pure/mutable/linear observation controls",
+        "generation-bound cache reset on writes"
       ],
       "implementation": [
         "LeanPoo/Prototype/LinearState.lean",
         "LeanPoo/Prototype/Mutable.lean",
         "LeanPoo/Prototype/MutableRecord.lean",
-        "LeanPoo/Object/Recursive.lean"
+        "LeanPoo/Object/Recursive.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/LinearState.lean",
         "Tests/MutablePrototype.lean",
         "Tests/MutableRecord.lean",
-        "Tests/ObjectSemantics.lean"
+        "Tests/ObjectSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem."
+      "boundary": "Pure storage, mutable hash identities and consumed linear references share one declared slot transition. write_pureSlot and composition associativity are kernel laws. Tests compare pure/mutable/linear observations, alias visibility and persistent snapshots. Linear failure preserves the old reference; mutable failure retains prior writes. IO effect correspondence is exercised, not an unrestricted kernel IO refinement theorem. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex."
     },
     {
       "id": "fixed-point-variants",
@@ -180,7 +205,8 @@
         "all-input guarded triangular approximation theorem",
         "safe explicit recursive interactions",
         "unbounded operational soundness and completeness",
-        "divergence and all-depth relational transfer"
+        "divergence and all-depth relational transfer",
+        "safe call-by-need cache with kernel receipts"
       ],
       "implementation": [
         "LeanPoo/Prototype/CheckedFunction.lean",
@@ -189,14 +215,19 @@
         "LeanPoo/Prototype/Delayed.lean",
         "LeanPoo/Prototype/FiniteFix.lean",
         "LeanPoo/Prototype/Recursive.lean",
-        "LeanPoo/Prototype/RecursiveSemantics.lean"
+        "LeanPoo/Prototype/RecursiveSemantics.lean",
+        "LeanPoo/Prototype/RecursiveCache.lean",
+        "LeanPoo/Object/RecursiveInstance.lean",
+        "LeanPoo/Object/RecursiveValidation.lean"
       ],
       "checks": [
         "Tests/FixedPoints.lean",
         "Tests/FiniteFix.lean",
-        "Tests/RecursiveSemantics.lean"
+        "Tests/RecursiveSemantics.lean",
+        "Tests/RecursiveCache.lean",
+        "Tests/RecursiveValidation.lean"
       ],
-      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed."
+      "boundary": "Shared/rebuilding unsafe thunks remain executable alternatives. The safe recursive calculus supplies sound/complete finite observation, unbounded return/error semantics, divergence characterization, and least-information refinement against any fixed observation. Concrete shared-thunk parity is tested; no arbitrary unsafe-thunk equivalence is claimed. The safe shared evaluator provides proven memo receipts, cold-slot laziness, cached errors and active-path cycle diagnostics; concurrent instance reads serialize on a mutex."
     }
   ]
 }

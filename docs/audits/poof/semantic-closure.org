@@ -66,3 +66,17 @@ library. Fail-fast check macros retain canonical source outcomes.
 rejects mismatches, omissions and duplicate check identities. CI runs this
 comparison and requires its job to succeed. Local Racket 9.0 passed all
 24 comparisons. This example gate is distinct from whole-language equivalence.
+
+* Shared execution and generated dynamic tools
+
+RecursiveCache now memoizes values and source errors with kernel evaluation
+receipts for the exact immutable program. RecursiveInstance serializes aliases
+and leaves unread slots cold. Mutable writes clear cached computations and
+advance snapshot generations. Runtime cycle paths are separate diagnostics,
+not fabricated source-error derivations or a divergence claim from exhaustion.
+DynamicSchema supplies registered runtime dependent factories and field-owned
+defaults, inspection, updates and reconstructible catalogs. DynamicCodec admits
+text/bytes through nested current-registry identity checks and Accepted proofs.
+RecursiveValidation attaches the actual C3 field evaluations to those same
+schema/wire values. General unsafe-thunk correspondence, unrestricted IO
+refinement and universal codec inversion remain separate proof questions.

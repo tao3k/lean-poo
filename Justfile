@@ -246,7 +246,9 @@ _check-contracts:
     {{lean}} Tests/FixedPoints.lean
     {{lean}} Tests/FiniteFix.lean
     {{lean}} Tests/RecursiveSemantics.lean
+    {{lean}} Tests/RecursiveCache.lean
     {{lean}} Tests/DynamicDescriptor.lean
+    {{lean}} Tests/DynamicSchema.lean
     {{lean}} Tests/MutableRecord.lean
     {{lean}} Tests/RecordDispatch.lean
     {{lean}} Tests/RecordComplexRelation.lean
@@ -261,6 +263,7 @@ _check-contracts:
     {{lean}} Tests/C3DAG.lean
     {{lean}} Tests/C3Object.lean
     {{lean}} Tests/ObjectSemantics.lean
+    {{lean}} Tests/RecursiveValidation.lean
     {{lean}} Tests/SourceDifferential.lean
     {{lean}} Tests/PrototypeChecks.lean
     {{lean}} Tests/DictionaryRecord.lean
