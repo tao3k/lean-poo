@@ -24,12 +24,11 @@ def get? (cache : ShapeCache Value) (shape : DispatchShape) : Option Value :=
 /-- Insert or refresh a shape and evict the least recently used entry after
 the eighth shape. Existing immutable cache values are unchanged. -/
 def remember (cache : ShapeCache Value) (shape : DispatchShape)
-    (value : Value) : ShapeCache Value := Id.run do
+    (value : Value) : ShapeCache Value :=
   let order := shape :: cache.recent.filter (· != shape)
-  let mut values := cache.values.insert shape value
-  for stale in order.drop capacity do
-    values := values.erase stale
-  return { values, recent := order.take capacity }
+  let values := (order.drop capacity).foldl (fun current stale => current.erase stale)
+    (cache.values.insert shape value)
+  { values, recent := order.take capacity }
 
 /-- A hit on the most recent shape needs no new cache allocation. -/
 def touch (cache : ShapeCache Value) (shape : DispatchShape) : ShapeCache Value :=

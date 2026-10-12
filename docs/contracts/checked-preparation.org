@@ -74,7 +74,7 @@ certificates, C4 policy equivalence or general termination proofs.
 
 * Executable evidence and cost boundaries
 
-[[file:../../Tests/PaperRecordCodec.lean][PaperRecordCodec]] checks 102 heterogeneous text round trips, six malformed
+[[file:../../Tests/RecordCodec.lean][RecordCodec]] checks 102 heterogeneous text round trips, six malformed
 wire cases, two encode refusals, four schema refusals and an empty catalog.
 Instrumentation observes three descriptor discoveries during preparation and
 no further discovery in 17 round trips. This is an operation count, not a
@@ -83,7 +83,7 @@ updates and rejection without a returned partial record. All five update laws
 are kernel checked and inherit
 propext/Classical.choice/Quot.sound from the Descriptor/JSON carrier.
 
-[[file:../../Tests/PaperCheckedMeta.lean][PaperCheckedMeta]] reuses one plan across 33 bases, refuses six poisoned
+[[file:../../Tests/CheckedMeta.lean][CheckedMeta]] reuses one plan across 33 bases, refuses six poisoned
 caches and five malformed graphs, and checks frozen self-dependent metadata.
-[[file:../../Tests/PaperC3.lean][PaperC3]] compares 640 batched orders and 640 individual orders with an
+[[file:../../Tests/C3.lean][C3]] compares 640 batched orders and 640 individual orders with an
 independent oracle. No external Euler migration or measured saving is claimed.

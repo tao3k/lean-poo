@@ -96,11 +96,38 @@ jobs:
       - name: Parse maintained Org documents
         run: just check-docs
 
+  source-differential:
+    needs: library
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          lint: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: lean-build-${{ github.sha }}
+      - name: Restore this run's build
+        run: tar -xzf lean-build.tar.gz
+      - name: Install the source evaluator
+        run: sudo apt-get update && sudo apt-get install -y racket
+      - name: Compare all original checks against Lean
+        run: lake env python3 tools/poof_source_check.py --compare-lean --receipt source-differential.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-differential-${{ github.sha }}
+          path: source-differential.json
+          if-no-files-found: error
+
   # Preserve the existing required-check context. Failure, cancellation, or a
   # skipped prerequisite must never turn this aggregate green.
   check:
     if: ${{ always() }}
-    needs: [library, lean-checks, diagnostics, docs]
+    needs: [library, lean-checks, diagnostics, docs, source-differential]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -110,8 +137,10 @@ jobs:
           LEAN_CHECKS: ${{ needs.lean-checks.result }}
           DIAGNOSTICS: ${{ needs.diagnostics.result }}
           DOCS: ${{ needs.docs.result }}
+          SOURCE_DIFFERENTIAL: ${{ needs.source-differential.result }}
         run: |
           test "$LIBRARY" = success
           test "$LEAN_CHECKS" = success
           test "$DIAGNOSTICS" = success
           test "$DOCS" = success
+          test "$SOURCE_DIFFERENTIAL" = success

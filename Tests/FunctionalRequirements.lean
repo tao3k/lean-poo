@@ -3,8 +3,60 @@ import LeanPoo.Functional.Requirements
 namespace LeanPoo.Tests.FunctionalRequirements
 open Functional C4
 
-universe u v w
+universe u v w x y
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
+
+example {Result : Context → Type v} (condition : Context → Bool)
+    (first second : Factory Context Result) (context : Context) (selected : condition context = false) :
+    Factory.choose condition first second context = second context :=
+  Factory.choose_false condition first second context selected
+
+example {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (left right : List (Factory Context Result)) :
+    Factory.fold combine initial (left ++ right) =
+      Factory.fold combine (Factory.fold combine initial left) right :=
+  Factory.fold_append combine initial left right
+
+example {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (error : Error) (failed : attempt context = .error error) :
+    Factory.recover attempt handler context = handler error context :=
+  Factory.recover_error attempt handler context error failed
+
+/- Public composition clients retain genuinely context-dependent result types. -/
+example {Input : Context → Type v} {Middle : Context → Type w} {Output : Context → Type x}
+    (factory : Factory Context Input) (first : ∀ context, Input context → Middle context)
+    (second : ∀ context, Middle context → Output context) :
+    Factory.map second (Factory.map first factory) =
+      Factory.map (fun context value => second context (first context value)) factory :=
+  Factory.map_compose first second factory
+
+example {Input : Context → Type v} {Middle : Context → Type w} {Output : Context → Type x}
+    (factory : Factory Context Input) (first : ∀ context, Input context → Factory Context Middle)
+    (second : ∀ context, Middle context → Factory Context Output) :
+    Factory.bind (Factory.bind factory first) second =
+      Factory.bind factory (fun context value => Factory.bind (first context value) second) :=
+  Factory.bind_assoc factory first second
+
+example (child parent : Provider Context Key Value) (key : Key) (absent : child key = none) :
+    Provider.compose child parent key = parent key := Provider.compose_inherited child parent key absent
+
+example (provider : Provider Context Key Value) (keys : List Key)
+    (factories : Requirements.Factories Context Value keys)
+    (ready : Requirements.prepare provider keys = .ok factories)
+    {Output : Context → Type y} (construct : ∀ context, Requirements.Results Value context keys → Output context) :
+    Requirements.prepareWith provider keys construct =
+      .ok (Factory.map construct (Requirements.build factories)) :=
+  Requirements.prepareWith_ready provider keys factories ready construct
+
+example (provider : Provider Context Key Value) (keys : List Key)
+    {Output : Context → Type y} (construct : ∀ context, Requirements.Results Value context keys → Output context)
+    (missing : Key) :
+    Requirements.prepareWith provider keys construct = .error missing ↔
+      Requirements.prepare provider keys = .error missing :=
+  Requirements.prepareWith_error_iff provider keys construct missing
 
 example (provider : Provider Context Key Value) (keys : List Key)
     (factories : Requirements.Factories Context Value keys)
@@ -133,4 +185,18 @@ private def renamedCase : Bool :=
 #print axioms Requirements.prepare_missing_head
 #print axioms Requirements.prepare_congr
 #print axioms Requirements.prepare_rename
+#print axioms Factory.map_identity
+#print axioms Factory.map_compose
+#print axioms Factory.bind_assoc
+#print axioms Provider.compose_assoc
+#print axioms Requirements.prepareWith_ready
+#print axioms Requirements.prepareWith_error_iff
+#print axioms Factory.choose_true
+#print axioms Factory.choose_false
+#print axioms Factory.sequence_append
+#print axioms Factory.sequence_length
+#print axioms Factory.fold_sequence
+#print axioms Factory.fold_append
+#print axioms Factory.recover_ok
+#print axioms Factory.recover_error
 end LeanPoo.Tests.FunctionalRequirements

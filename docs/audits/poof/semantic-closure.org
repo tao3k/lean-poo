@@ -1,119 +1,275 @@
-#+TITLE: Fare POOF semantic closure obligations
+#+TITLE: Fare POOF semantic closure evidence
 
-[[file:README.org][Audit index]] · [[file:closure-v1.json][Reviewed typed construction map]] · [[file:../../contracts/fixed-point-semantics.org][Finite fix API]]
+[[file:README.org][Audit index]] · [[file:closure-v1.json][Reviewed construction map]] · [[file:../../contracts/recursive-objects.org][Recursive object APIs]]
 
-* Acceptance boundary
+* Declared semantics
 
-The paper gives executable Scheme/Scribble constructions and mathematical
-explanations, rather than a machine-checked small-step specification. A claim
-that the Lean library implements the whole paper needs an explicit relation
-between source observations and Lean observations, beyond matching named
-features or counting translated files. The current ~whole_paper_implemented~
-flag stays false until the relevant obligations below have actual evidence.
-The paper's explicit future proposals are separately classified; they are
-not silently promoted into specified executable behavior.
+The paper supplies executable Scheme/Scribble constructions and mathematical
+explanations. The Lean correspondence scope is explicit: typed composition,
+recursive interactions, C3 graph derivations, dynamic contract admission and
+specified state transitions. The ~whole_paper_implemented~ flag stays false:
+arbitrary Scheme programs, all unsafe execution and unrestricted automation
+are outside these theorems. The explicit future proposals remain research.
 
-* Obligations
+Lean platform verification is outside this construction audit and is not a
+missing requirement of the original paper. Existing platform controls below
+are supporting project evidence; this update adds concrete construction laws.
 
-| Area | Current evidence | Stronger closure evidence still needed |
-|------+------------------+----------------------------------------|
-| Minimal ~fix~ / ~mix~ | ~compose_assoc~; pure ~FiniteFix.iterate~ and ~unfold_compose~; certified finite stabilization; shared unsafe thunk | Relate source partial/diverging observations to shared Lean execution for a stated input language and evaluation strategy |
-| Records, wrappers and trees | Source expected-value cases; typed record and dictionary operations; AVL laws; exact all-depth checked relation for the x/y/z integral complex-coordinate fragment with checked final-self reads | Extend the declared observation relation to the remaining record, wrapper and tree operations and effects |
-| C3 and metadata | Paper graph, 640 independent finite comparisons, checked cache admission; all-candidate-list merge correspondence; arbitrary-graph cached and uncached singleton theorems; exact outcomes for empty roots, validation errors and two first-root errors; all root lists on validated graphs with any finite number of distinct leaf parents per node; recursive source-style graph traces and production cache invariants | Prove complete cached/uncached outcomes for general valid graphs with parent edges, then connect precedence to composition |
-| Descriptors and mutation | Typed catalogs, generated codec/updates, runtime linear reference checks | State which Scheme values and effects have Lean counterparts, then prove the selected admission/state transitions preserve observations |
-| Original executable source | Pinned Scribble SHA and all 24 source checks mapped to typed assertions | Run the original Racket evaluator and retain its exact source outcomes; compare only cases with a declared translation of values/errors |
-| Appendices and research proposals | Typed dispatch, method combination, lens and finite fix implementations; explicit boundaries | Prove the claimed correspondence for specified Appendix B constructs; keep Appendix C notation and future proposals in their stated research scope |
+* Implemented closure
 
-* First mechanized step
+| Area | Kernel or executable evidence | Scope |
+|------+-------------------------------+-------|
+| ~fix~ / ~mix~ | Recursive ~Evaluates~, ~solve_sound~, ~solve_complete~, ~diverges_iff_no_evaluation~, ~solve_relation~, fixed-observation refinement | Explicit self requests, heterogeneous inherited carriers, delayed values; every finite depth and unbounded return/error derivations |
+| Checked native shared execution | ~runs_iff_evaluates~, ~admit_iff_runs~, ~recordSolve_result~, ~Runtime.read_matches~, ~Knot.one_build~ | Declared Interaction compiler; complete finite traces and exact reported results, shared source constructor and sequential primitive-to-protocol refinement; C++/compiler/concurrency remain runtime boundaries |
+| C3 graph outcomes | ~linearizeMany_eq_uncached~, ~linearize_eq_uncached~ | Every finite graph and root list, including exact cycle, validation, missing and merge errors; sound warm caches at the production budget |
+| C3 object composition | ~SlotSyntax.resolveForward_eq~, ~C3.Plan.resolve_paper~, ~Recursive.Plan.read_derivation~ | Actual declarations and effective dynamic slots; every key/self or depth/key observation |
+| Parameterized methods | ~Callable.Plan.call_derivation~, ~call_fromFields~, ~solve_reindex~, ~Value.equalAt_correct~ and CheckedCall receipts | Actual C3 methods; every argument/depth, exact request sharing, checked immutable/mutable calls and retained snapshots |
+| Dynamic descriptors | ~accepts_sound~, ~Descriptor.call_sound~; recursive contract and reflection controls | Recursive dynamic values, current registered identities, named types and checked call boundaries |
+| BST/AVL dictionaries | Source fixed-point equations, ~avlNode_preserves~, ~avl_insert_complete~, ~insert_entries~, ~search_insert~, ~avl_fromList~, ~fold_inorder~ | Arbitrary valid trees/lists; explicit comparison laws, exact values/order/balance/heights and overwrite/frame observations |
+| Concrete representations | ~semanticSlot_related~, ~LayersRelated.compose~, key-list projection/exposure laws | Arbitrary delayed self/super bodies, related final selves/valid parents, missing slots and errors |
+| Checked meta preparation | ~order_unique~, ~program_selection~, ~parent_cache_sound~, frozen-field laws | Actual preparation retains source C3 derivations, registry function selection and immutable metadata |
+| Mutable slots | ~interpret_sound~, ~interpret_complete~, ~interpret_projection~, snapshot/linear laws and 616 IO controls | Common parent-first complete state/status semantics; partial writes retained on the first error, alias resume and success consumption |
+| Multiple dispatch | ~collect_reference~, ~select_reference~, ~call_correct~, cache preservation/invalidation | Complete lexicographic tuple and current predicate specification for every sound candidate cache |
+| Standard combination | ~effective_standard~, ~callChain_append~, ~runSides_append~ | Arbitrary monads/callbacks, ordered before/primary/reversed-after and nested around/next |
+| Original source | 76 exact code blocks and 24 canonical source/Lean comparisons | Pinned original expressions; executable Racket gate locally and in CI |
 
-[[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] supplies total finite unfoldings of the minimal nucleus.
-For any prototype, equality of adjacent unfoldings yields a kernel-checked
-fixed-point certificate and equality at every later finite depth.
-[[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a complete two-value-domain fixed point and a
-triangular result for every natural input at sufficient depth. Its comparison
-with the existing shared thunk covers 65 concrete inputs. This is a bounded
-observation, not a proof about arbitrary source programs or divergence.
+* Reusable evidence
 
-[[file:../../../LeanPoo/Prototype/RecordDispatch.lean][RecordDispatch]] makes the paper's error-reporting function-record
-boundary explicit. [[file:../../../Tests/PaperRecordDispatch.lean][PaperRecordDispatch]] proves that the paper-style x/y fragment and
-typed record have identical checked observations for every String key at
-every finite unfolding depth. The source fragment's final-self reads keep
-their error propagation; its reachable x/y reads are proved present. At
-depth two, the source dispatcher has a fixed-point certificate and the typed
-record's checked observations remain stable. This does not extend the
-correspondence to arbitrary Scheme values, effects or unrestricted recursion.
+[[file:../../../LeanPoo/Prototype/RecursiveSemantics.lean][RecursiveSemantics]] uses a finite derivation for each completed evaluation.
+The observer is sound and complete for that relation. Completed observations
+remain stable as depth increases; the semantic divergence predicate quantifies
+over every depth. [[file:../../../Tests/RecursiveSemantics.lean][RecursiveSemantics controls]] prove a diverging loop and
+all-depth Nat/Int factorial correspondence, and compare thirteen concrete
+inputs with the separate unsafe shared-thunk runtime.
 
-[[file:../../../Tests/PaperRecordComplexRelation.lean][PaperRecordComplexRelation]] follows the source's ~z<-xy~ construction more closely:
-~z~ holds the integral pair ~(x,y)~, and its source calculation reads ~x~ and
-~y~ through the checked final self. The relation includes successful reads
-as premises for the reusable ~toChecked_computeM~ transport theorem. It proves
-all-key checked equality at every finite depth, depth-two source stability,
-and persistent target observations. The integral pair is a typed adaptation
-of the paper's complex number, not a proof about Racket's numeric tower.
+[[file:../../../LeanPoo/Prototype/SharedThunk.lean][SharedThunk]] now compiles the declared calculus through the actual existing
+shared constructor and records demand traces during that execution. The safe
+checker recovers values/errors from the current program, follows those finite
+demands and compares the reported result. Demand executions are exactly safe
+~Evaluates~ derivations; admission succeeds exactly for their complete traces.
+Every finite derivation has an admitted recorded observation, and recorded
+results agree with ~solve~ at every depth. Safe successful ~Runtime.read~ returns
+an exact-program receipt and proves the actual executor's reported result was
+observed at some safe depth. Pending/cut traces supply no divergence proof.
 
-[[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the Appendix A merge selector and normalized step
-agree with the certified Lean merger for every candidate list. It constructs
-a paper-style trace from each certificate and proves any source trace yields
-that same order, with inherited orders preserved, exact name coverage and no
-duplicates. [[file:../../../LeanPoo/Prototype/C3.lean][C3]] also proves that one-root batched and scalar traversal are equal
-for every graph and error outcome. [[file:../../../LeanPoo/Prototype/C3GraphTrace.lean][C3GraphTrace]] constructs a recursive
-source-style derivation for every successful cache-free run: each node has a
-graph lookup, matching parent derivations, the paper's merge trace and a
-certified order trace. The actual direct-parent row is proved a sublist of the
-duplicate-free merged tail.
-The graph relation determines a unique result for the same graph and root,
-independent of successful recursion fuel; positional root batches are unique
-too. The fuel-independent relation below makes that uniqueness usable across
-memoized visits at different recursion depths.
-The fuel-independent ~GraphDerivation~ retains lookup, positional parent and
-paper merge premises across memo reuse. ~CacheDerivations.empty~ and ~insert~
-preserve proven entries; ~agrees~ compares any proven hit with an independent
-paper derivation. ~visit_sound~ proves the actual production parent loop
-preserves that invariant on success. ~linearizeMany_derivation~ gives every
-successful cached batch a paper derivation without running the reference.
-When cached and uncached executions both succeed, uniqueness proves their
-outputs equal; admission no longer compares result lists at runtime.
-The uncached batch now validates once before visiting roots, including an
-empty root list. The previous empty-root behavior accepted malformed graphs;
-~linearizeMany_nil_eq_uncached~ and
-~linearizeMany_eq_uncached_validation_error~ prove exact complete-result
-equality for arbitrary empty batches and all graph-validation failures.
-~linearizeUncachedMany_singleton~ proves its scalar/batch result and error
-identity on every graph.
-~linearizeMany_eq_uncached_missing_first~ and
-~linearizeMany_eq_uncached_self_parent_first~ additionally prove complete
-result equality for two nonempty error paths, with any remaining requested
-roots. Both first validate the graph; when validation succeeds, the first
-traversal fails with the same ~unknownNode~ or ~cycle~ value before cache reuse.
-~linearizeMany_eq_uncached_of_first_scalar_error~ generalizes the batch-tail
-step: any matching error from the two scalar calls remains the complete
-result after adding arbitrary later roots. It does not prove that the two
-scalar calls always fail or succeed together.
-~linearizeMany_eq_uncached_of_visit_coherence~ proves that exact one-root
-~Except~ equality on every derivation-backed cache lifts through the actual
-shared-cache batch loop to any root list. ~FlatGraph~ and
-~linearizeMany_eq_uncached_flat~ discharge that premise for every validated
-graph without parent edges, including repeated-root cache hits and a missing
-root after previous successes. ~UnaryLeafGraph~ and
-~linearizeMany_eq_uncached_unary_leaf~ now discharge it for every validated
-graph whose nodes are leaves or have one distinct leaf parent. Roots may share
-that parent, repeat, or precede a missing root. ~visit_leaf_at~ proves the
-parent's cache hit/miss order for any fresh path and positive fuel;
-~visit_one_leaf_parent_coherence~ proves the complete single-root outcome.
-~LeafParentGraph~ extends the batch result to any finite number of distinct
-leaf parents. ~visit_leaf_parents_coherence~ preserves the cache invariant
-through the whole parent loop; ~mergeCertified_leaf_parents~ certifies the
-declared order. The checked graph shares four leaves between roots in opposite
-orders. Graphs with deeper parent chains still need the one-root
-cache/path/fuel coherence proof.
-[[file:../../../LeanPoo/Prototype/C3GraphSemantics.lean][C3GraphSemantics]] also offers optional admission when callers need an exact
-proof that cached and uncached executable results coincide on supplied graph
-and roots. That check may recompute shared ancestry exponentially and is
-kept out of the ordinary path. General deeper parent-edge graph cached/uncached
-outcome equivalence and graph-to-composition simulation remain
-open; 640 finite graph comparisons remain observation evidence.
+[[file:../../../LeanPoo/Prototype/SharedThunkHeap.lean][SharedThunkHeap]] proves current-body identity and exactly one constructor
+start for every ready heap in the sequential private-cell protocol. Early self
+forcing, repeated construction and relinking have no completed transition.
+[[file:../../../LeanPoo/Object/SharedRecursive.lean][SharedRecursive]] connects checked native field/method reads to the current
+assembled C3 programs and every source graph derivation. These native closures
+share constructor work; request memoization belongs to the existing safe cache.
+[[file:../../../Tests/SharedThunk.lean][SharedThunk controls]] and [[file:../../../Tests/SharedRecursive.lean][C3 controls]] execute both paths, including
+exact errors, cold loops, changed arguments and changed-program executor refusal.
+[[file:../../../LeanPoo/Prototype/SharedCellRefinement.lean][SharedCellRefinement]] now interprets the same ~SharedCell.tie~ program used by
+~sharedFix~. Every completed primitive step/trace refines the protocol; current
+result identity, one build, publication ordering and at most one forwarding Ref
+read follow. Actual IO operation logs and candidate results are jointly checked.
+[[file:../../../Tests/SharedCellRefinement.lean][Operation controls]] check real Ref readbacks, cold/hot thunks and independent
+retained cells. The rules are pinned to the project's Lean runtime source.
+Verification of C++/reference counting/compiler/concurrent memory and arbitrary
+unchecked callbacks remains outside these theorems. Data receipts do not
+authenticate IO origins. No unsafe fixed-point axiom or opaque IO law is used.
 
-The local toolchain does not currently contain Racket. Installing or running
-that separate source evaluator is a future verification step; CI continues to
-use the pinned source identity and Lean-owned checks without making the
-reference checkout a build dependency.
+[[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] proves cached/reference equality by induction on production fuel,
+using ranks to rule out active-path cycles and preserved derivation-backed
+cache entries to justify hits. Its theorem includes complete ~Except~ results.
+[[file:../../../Tests/C3DAG.lean][C3DAG controls]] include deep shared ancestry, repeated
+roots, missing roots, missing parents and inconsistent orders.
+
+[[file:../../../LeanPoo/Prototype/C3CacheCoherence.lean][C3CacheCoherence]] now proves complete cached/reference scalar and batch
+~Except~ equality for every finite graph and root list. An edge below a successful
+derivation strictly decreases its unique order length, so a finite derived cache
+value cannot lie on an ancestry cycle. ~ActivePath~ retains declared, distinct
+ancestors and their actual nonempty walks to the current node. That invariant
+and the graph-size remaining budget prove reference completion at every sound
+hit. The parent loop preserves cache derivations and exact first errors, then
+the existing batch lifting theorem supplies arbitrary empty/repeated root lists.
+No DAG witness or successful-result premise is required by the public equality.
+
+[[file:../../../Tests/C3CacheCoherence.lean][New controls]] compare 4913 graphs, 34433 batches and 14739 warm reads to an
+independent scalar oracle, including 20795 cyclic batches and 2364 hot root hits.
+They retain missing/merge errors and validation priority. Forged cache entries,
+insufficient fuel and fabricated active paths discriminate the internal theorem's
+necessary hypotheses. The universal result concerns the actual production
+budget and sound current-graph caches; it asserts no arbitrary-cache or arbitrary-
+fuel equality and no unrestricted Scheme/Lean language equivalence.
+
+[[file:../../../LeanPoo/Object/Recursive.lean][Recursive objects]] assemble storage using the certified C3 order and read it
+through the same safe recursive semantics. [[file:../../../Tests/ObjectSemantics.lean][Object controls]] cover inheritance,
+override, inherited modification, final-self slot dependencies, errors,
+pending observations and mutable conversion. The typed C3 object API also
+connects to the same declaration semantics used by the C4 resolver.
+
+[[file:../../../LeanPoo/Prototype/DynamicDescriptorSemantics.lean][Dynamic admission]] proves positive membership and successful checked calls.
+Function membership recognizes registered callability; input/output behavior
+is checked at application. It is not a universal function-property decision.
+Mutable IO behavior is checked against the pure transition on representative
+compositions, including partial errors; there is no unrestricted kernel IO
+refinement theorem or machine-level cost guarantee.
+
+Earlier [[file:../../../LeanPoo/Prototype/FiniteFix.lean][finite fixed-point certificates]], [[file:../../../Tests/RecordDispatch.lean][checked x/y records]] and
+[[file:../../../Tests/RecordComplexRelation.lean][complex-coordinate records]] retain their narrower correspondence scopes.
+The new operational calculus supplies the general recursive proof surface.
+
+* Source execution
+
+~tools/poof_source_check.py~ verifies source identity and executes balanced
+Definitions/Examples/Checks blocks with the Racket reader. The checked fixture
+is an exact extraction from the original paper; code is not imported into the
+library. Fail-fast check macros retain canonical source outcomes.
+[[file:../../../Tests/SourceDifferential.lean][SourceDifferential]] computes every mapped Lean observation, and the comparator
+rejects mismatches, omissions and duplicate check identities. CI runs this
+comparison and requires its job to succeed. Local Racket 9.0 passed all
+24 comparisons. This example gate is distinct from whole-language equivalence.
+
+* Shared execution and generated dynamic tools
+
+RecursiveCache now memoizes values and source errors with kernel evaluation
+receipts for the exact immutable program. RecursiveInstance serializes aliases
+and leaves unread slots cold. Mutable writes clear cached computations and
+advance snapshot generations. Runtime cycle paths are separate diagnostics,
+not fabricated source-error derivations or a divergence claim from exhaustion.
+DynamicSchema supplies registered runtime dependent factories and field-owned
+defaults, inspection, updates and reconstructible catalogs. DynamicCodec admits
+text/bytes through nested current-registry identity checks and Accepted proofs.
+RecursiveValidation attaches the actual C3 field evaluations to those same
+schema/wire values. The declared shared Interaction compiler now has a checked
+correspondence interface. Arbitrary unchecked unsafe thunks and unrestricted
+native IO refinement remain separate proof questions.
+
+* Execution and admission completeness
+
+RecursiveCacheSemantics proves that every finite operational value/error
+derivation completes at some machine budget from any sound cache. Successful
+results and reported cycles are stable under larger budgets. A reported cycle
+therefore proves source divergence; exhaustion alone still proves neither
+divergence nor impossibility. readCertified and forceCertified return these
+proofs for the exact plan/request or retained mutable snapshot.
+
+DynamicDescriptorCompleteness proves membership iff recognition at some depth,
+and recognition at every sufficiently large depth. Union membership succeeds
+when either branch succeeds, even if the other exhausts its depth or refers to
+an unavailable descriptor. When neither succeeds, unresolved diagnostics remain
+errors rather than fabricated rejections.
+
+DynamicCodecSemantics proves structural JSON inversion for every Value when
+fuel reaches its computable wireDepth, including exact integers, Unicode and
+ordered duplicate entries. A descriptor-admitted value and its Accepted proof
+re-enter the same fixed registry gate. General JSON text-parser and UTF-8 inverse
+proofs and machine-level resource bounds are not supplied by this theorem.
+
+* Parameterized method execution
+
+CallableRecord stores method functions receiving an argument and explicit
+final-self requests; inherited methods remain delayed and can receive different
+arguments. Object.Callable composes them with the existing Proto operations in
+the certified C3 order. Calls use the existing RecursiveCache machine, keyed by
+the complete method name and argument. A repeating name with changing arguments
+is not an active cycle. Certified cycles retain the complete request path and
+the exact program's divergence proof.
+
+RecursiveReindex and Plan.call_fromFields preserve every value-only object
+observation when its field requests enter this protocol. DynamicValueEquality
+proves the computable argument comparator correct for every dynamic value at
+its structural depth; cache equality needs no registry, wire parser or hash.
+
+CallableValidation uses runtime FunctionOf descriptors and reflective slot
+catalogs as actual method calling conventions. Inputs validate before forcing;
+hot outputs still pass current-registry checks. CheckedCall retains the actual
+evaluation and both Accepted proofs. Mutable calls expose their immutable
+snapshot, and replacement clears every argument result. Controls include
+numeric self/super calls, C3 diamonds, argument forwarding, concurrent sharing,
+source errors, changing-argument recursion, and refusal after registry changes.
+Unrestricted IO refinement and arbitrary Scheme closure correspondence remain
+outside these stated theorems.
+
+* Explicit negative Functional assumptions
+
+[[file:../../../LeanPoo/Functional/Absence.lean][Absence]] proves complete admission/refusal for an arbitrary dependent
+provider/key family. Every refusal carries the first present factory and an
+exact absent prefix. [[file:../../../LeanPoo/Functional/GuardedExtension.lean][GuardedExtension]] proves acceptance exactly when the
+underlying pure transaction succeeds and its final assembled snapshot preserves
+all watched absences. Disjoint scopes retain the old proof by exact per-key
+selection preservation. Conflict factories have actual graph provenance.
+[[file:../../../Tests/FunctionalAbsence.lean][FunctionalAbsence]] checks 570 independent state cases and a divergent
+factory that must remain unforced. The first-missing preparation control shows
+why preserving one cached error cannot prove absence of every later key.
+
+[[file:functional.org][The question map]] distinguishes these explicit contracts, existing
+consumer machinery, local witness-transport extensions and broader unresolved
+questions. The provider-transaction policy retains a fixed graph/order;
+[[file:../../contracts/graph-migrations.org][Graph migration]] now admits arbitrary verified target topology/root changes
+and joins positive/negative contracts with cache revision. It retains the
+context/key/value family and explicit watched lists. The analyzed computation
+extension below also infers finite pure dependencies and guards. Arbitrary
+closure introspection and a universal cross-library conflict policy remain open.
+
+* Verified graph migration and constraint caches
+
+[[file:../../../LeanPoo/Functional/GraphMigration.lean][GraphMigration]] compiles the actual target graph/root, retains complete overlays
+for surviving names, installs new providers and completes all requested edits.
+Its acceptance theorem characterizes actual compilation and transaction success.
+The computed reuse decision proves exact preparation equality when first winning
+identities remain equal and target ancestry/key edit scopes are disjoint.
+No host function equality is tested.
+
+[[file:../../../LeanPoo/Functional/GraphConstraints.lean][GraphConstraints]] proves complete acceptance exactly for watched absences and
+available positive factories on the completed target. A negative refusal contains
+the actual first present factory; a positive refusal proves the exact missing
+error. Stable success retains arbitrary joint proof and the exact hot context
+slot. Fresh success requires new joint admission, starts an empty slot and uses
+the already prepared factories. Certified availability prevents publication of
+a missing positive requirement. These laws hold for arbitrary dependent families.
+The [[file:../../../Tests/FunctionalGraphMigration.lean][660 migration controls]] and [[file:../../../Tests/FunctionalGraphConstraints.lean][6300 constraint/cache controls]] include changed
+roots, deletion/fallback, new reachability, suffixes, retained overrides, repeated
+keys, chained migrations and nonterminating factories that must remain unforced.
+
+* Inferred pure dependencies and computed output caches
+
+[[file:../../../LeanPoo/Functional/DependencyAnalysis.lean][DependencyAnalysis]] automatically collects value/presence reads and required/forbidden
+guards from typed finite pure computations, including nested helpers and both
+conditional branches. Its congruence theorem proves actual value/error equality
+at every context under preserved observations. Satisfied inferred guards prove
+capability safety for known syntax; source errors retain their ordinary meaning.
+Provider-wide callbacks carry an unknown footprint, including within dead branches.
+
+[[file:../../../LeanPoo/Functional/AnalyzedMigration.lean][AnalyzedMigration]] expands the existing positive/negative graph gate with those
+inferred guards and proves complete acceptance for the conservative static policy.
+Its reuse decision compares exact selected value factories and final availability
+observations, then proves universal equality of actual computation. A reused
+[[file:../../../LeanPoo/Functional/AnalyzedCache.lean][computed cache]] retains its result proof, stored value/error and exact hit decision
+through the existing ContextSlot. Affected or unknown computations store no old
+slot and require fresh result admission. Raw capability preparation and computed
+results have independent lifetimes, preventing hidden optional reads from retaining
+a stale output after explicit positive selection remains stable.
+
+The [[file:../../contracts/dependency-analysis.org][API guide]] records fixed body/family indices, conservative conditional contracts
+and the unknown-callback boundary. The new clients check 1536 scalar observations,
+9616 stable-footprint comparisons, 28 cache reads and 1792 actual graph migrations
+(330 reused, 514 fresh, 948 refused), plus divergent-presence and branch-conflict
+controls. Arbitrary-language dependency/effect/termination inference remains open.
+
+* Automatic typed dictionary/class correspondence
+
+[[file:../../../LeanPoo/Deriving/DictionaryCompiler.lean][DictionaryCompiler]] generates dependent field carriers and both conversions
+from actual Type-valued Lean structure/class constructors. Every generated
+roundtrip proof is checked against those functions by the kernel. Inherited
+subobjects, dependent Type/Sort/data/proof fields, functions, instance parameters
+and universes remain intact. Nonstructures, Prop-valued classes, unsupported
+indexed constructors and collisions are refused without a partial schema.
+
+[[file:../../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] proves exact bidirectional conversion of existing typed
+self/super prototypes and delayed prototypes. Actual composition, every finite
+unfolding and fixed-point equations commute. Typed Descriptor validation,
+display/default and optional codecs preserve values and error/refusal outcomes.
+[[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport]] proves actual first-provider/C4 assembly and requirement
+preparation correspondence, including first missing keys. Existing joint proofs
+and ContextSlot data/hit decisions survive representation conversion.
+
+The [[file:../../contracts/dictionary-classes.org][guide]] links generic proof clients and native controls: nine constructor
+shapes, 1024 arithmetic dispatches, 33 polymorphic calls, 1280 self/super calls,
+2304 finite unfoldings, descriptor admissions/refusals, retained lazy terminal
+overrides and sixteen actual graph/constraint migrations. This closes typed
+Lean constructor correspondence. General Scheme compilation, dynamic closure
+reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and
+machine-level time/allocation bounds remain outside the declared theorem scope.

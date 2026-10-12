@@ -83,15 +83,17 @@ theorem callChain_cons {Receiver : Type} {M : Type → Type}
 
 /-- Around methods wrap before, primary, and after. Before methods run from
 most to least specific; after methods run in the reverse order. -/
+def runSides {Receiver : Type} {M : Type → Type} [Monad M]
+    (methods : List (SideMethod Receiver M)) (receiver : Receiver) : M Unit :=
+  methods.foldr (fun method rest => do method receiver; rest) (pure ())
+
 def effective {Receiver : Type} {M : Type → Type} {Result : Type}
     [Monad M] (methods : Methods Receiver M Result)
     (onMissing : Receiver → M Result) : Receiver → M Result :=
   callChain methods.around fun receiver => do
-    for before in methods.before do
-      before receiver
+    runSides methods.before receiver
     let result ← callChain methods.primary onMissing receiver
-    for after in methods.after.reverse do
-      after receiver
+    runSides methods.after.reverse receiver
     return result
 
 /-- A forwarding method may pass a new payload to the remaining method

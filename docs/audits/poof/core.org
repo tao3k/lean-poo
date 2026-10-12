@@ -6,10 +6,10 @@
 
 | Paper lines | Construction | Local evidence | Boundary |
 |-------------+--------------+----------------+----------|
-| 118–134, 172–231 | Open self/super, fix/mix, generators | [[file:../../../LeanPoo/Prototype/Compose.lean][Compose]], [[file:../../../LeanPoo/Prototype/Generator.lean][Generator]], [[file:../../../Examples/PrototypeCore.lean][PrototypeCore]] | Composition is typed; recursive instantiation is unsafe |
-| 245–321, 379–467 | Records as functions and slot generators | [[file:../../../LeanPoo/Prototype/Record.lean][Record]], [[file:../../../LeanPoo/Prototype/RecordDispatch.lean][RecordDispatch]], [[file:../../../Tests/PaperRecordDispatch.lean][PaperRecordDispatch]], [[file:../../../Examples/RecordPrototype.lean][RecordPrototype]] | All-depth checked correspondence covers the x/y fragment and its missing-key errors; no unrestricted Scheme messages |
+| 118–134, 172–231 | Open self/super, fix/mix, generators | [[file:../../../LeanPoo/Prototype/Compose.lean][Compose]], [[file:../../../LeanPoo/Prototype/Generator.lean][Generator]], [[file:../../../Examples/PrototypeCore.lean][PrototypeCore]] | Typed composition; safe recursive Interaction semantics and alternate unsafe thunks |
+| 245–321, 379–467 | Records as functions and slot generators | [[file:../../../LeanPoo/Prototype/Record.lean][Record]], [[file:../../../LeanPoo/Prototype/RecordDispatch.lean][RecordDispatch]], [[file:../../../Tests/RecordDispatch.lean][RecordDispatch]], [[file:../../../Examples/RecordPrototype.lean][RecordPrototype]] | All-depth checked correspondence covers the x/y fragment and its missing-key errors; no unrestricted Scheme messages |
 | 468–582, 633–673 | Ordered composition and single inheritance | [[file:../../../LeanPoo/Prototype/Compose.lean][Compose]], [[file:../../../Examples/FirstClassObject.lean][FirstClassObject]] | Heterogeneous typed chains; runtime instance may diverge |
-| 846–882 | Numeric functions and number thunks | [[file:../../../Examples/PrototypeFunctions.lean][PrototypeFunctions]], [[file:../../../Examples/DelayedNumbers.lean][DelayedNumbers]] | Both source numeric expected-value checks asserted in PaperPrototypeChecks |
+| 846–882 | Numeric functions and number thunks | [[file:../../../Examples/PrototypeFunctions.lean][PrototypeFunctions]], [[file:../../../Examples/DelayedNumbers.lean][DelayedNumbers]] | Both source numeric expected-value checks asserted in PrototypeChecks |
 | 883–942 | Delayed computations, use without subtyping | [[file:../../../LeanPoo/Prototype/Delayed.lean][Delayed]], [[file:../../../Examples/PrototypeCore.lean][PrototypeCore]] | Thunk self/super; explicit intermediate Lean types replace source notation |
 
 These implement bounded Lean forms of the constructive nucleus. They do not
@@ -18,15 +18,15 @@ safe composition laws also do not prove termination of unsafe instantiation.
 
 * Source checks and bottom boundary
 
-[[file:checks-v1.json][All 24 source checks]] map to typed assertions in PaperPrototypeChecks, PaperTrees
-and PaperC3. Complex source literals use integral coordinate pairs; dynamic
-homogeneous-list tests use a JSON boundary. No original Racket evaluator was run.
+[[file:checks-v1.json][All 24 source checks]] map to typed assertions in PrototypeChecks, Trees
+and C3. Complex source literals use integral coordinate pairs; dynamic
+homogeneous-list tests use a JSON boundary. The original 76 code blocks now execute in Racket and all 24 canonical outputs compare against computed Lean observations.
 The map establishes bounded source cases, not general cross-language equivalence.
 
 The Bottom discussion mixes missing-field errors, computations and divergence.
 Option/Except and unsafe fixed points implement separate Lean interfaces;
 CheckedFunction now supplies explicit bottom, default-base instantiation and
-constant-tail bypass. A universal source operational model remains open.
+constant-tail bypass. Recursive now gives separate return/error/pending observations with sound/complete unbounded evaluation for its explicit interaction calculus.
 
 * Implemented Order → BST → AVL case
 
@@ -36,8 +36,33 @@ constant-tail bypass. A universal source operational model remains open.
 | 737–799 | [[file:../../../LeanPoo/Prototype/BinaryTree.lean][BinaryTree]] node/singleton/acons/ref/afoldr | Exact skewed five-entry shape, overwrite, retained snapshots, fold and missing key |
 | 800–845 | [[file:../../../LeanPoo/Prototype/AVL.lean][AVL]] node-only extension | Exact balanced five-entry shape, all four rotations, heights and inherited-method equalities |
 
-[[file:../../../Tests/PaperTrees.lean][PaperTrees]] checks 720 insertion permutations and 64 duplicate-key traces,
+[[file:../../../Tests/Trees.lean][Trees]] checks 720 insertion permutations and 64 duplicate-key traces,
 6,368 updates with independent ordering/balance/height/size and query controls.
-Two kernel theorems prove exact retained methods and node substitution without
-axioms. They do not prove universal AVL correctness for arbitrary malformed
-cached trees. See the [[file:../../contracts/paper-dictionaries.org][API guide]] for construction and explicit errors.
+[[file:../../../LeanPoo/Prototype/AVLSemantics.lean][AVLSemantics]] proves content preservation for all successful rotations and
+balance/cache-height preservation for valid children. [[file:../../../LeanPoo/Prototype/BinaryTreeSemantics.lean][BinaryTreeSemantics]] proves the
+exact source prototype equations for structural BST/AVL dictionaries, general
+insertion ordering and lookup overwrite/frame laws, and in-order fold behavior.
+Every valid AVL insertion succeeds under a total comparator, preserves balance
+and exact cached heights, and increases height by zero or one. Arbitrary-list
+construction equals functional writes at every key under ~OrderOps.Laws~.
+Malformed cached trees retain the source error cases. See the [[file:../../contracts/dictionary-prototypes.org][API guide]] for construction and explicit errors.
+
+* Safe recursive API
+
+[[file:../../contracts/recursive-objects.org][Recursive objects]] documents function and delayed-value instantiation,
+heterogeneous inherited carriers and related-carrier observation transfer.
+~solve_sound~ and ~solve_complete~ connect finite observations to unbounded
+evaluation; divergence quantifies over all depths. This is the declared
+recursive calculus, rather than a claim about every Scheme program.
+
+* Actual parameterized object methods
+
+[[file:../../../LeanPoo/Object/Callable.lean][Callable]] connects method name/argument requests to actual C3 construction.
+Both final-self and delayed inherited methods can receive new arguments.
+[[file:../../../Tests/CallableObjects.lean][CallableObjects]] executes the paper's even/cube numeric layers, C3 diamond
+composition, argument forwarding, shared Fibonacci recursion and mutable
+replacement. The existing evaluator owns all execution and cache receipts.
+The generic argument carrier can be a Lean type or the recursive dynamic Value
+universe. A kernel theorem preserves every existing value-only object read
+when it enters this protocol. Runtime FunctionOf descriptors and catalogs
+validate actual calls, with current-registry checks on hot results.

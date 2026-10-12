@@ -58,16 +58,16 @@ of external effects. It does not imply an in-place allocation or speedup result.
 
 * Evidence and fixed-point choices
 
-[[file:../../Tests/PaperDescriptorReflection.lean][PaperDescriptorReflection]] guards 101 descriptor/codec contexts, generated
+[[file:../../Tests/DescriptorReflection.lean][DescriptorReflection]] guards 101 descriptor/codec contexts, generated
 schema/inspection, missing fields, nested self-description, object/meta catalogs,
 refinement rejection and an inherited base that remains unforced.
 Two exact reconstruction laws are kernel checked. Object reconstruction uses
 propext; descriptor reconstruction inherits propext/Classical.choice/Quot.sound
 from the existing Descriptor/JSON carrier. No axiom-free blanket claim is made.
 
-[[file:../../Tests/PaperLinearState.lean][PaperLinearState]] guards 64 scalar traces against an independent arithmetic
+[[file:../../Tests/LinearState.lean][LinearState]] guards 64 scalar traces against an independent arithmetic
 oracle and 32 races with exactly one successful consumer. Its composition law
-uses propext/Quot.sound. [[file:../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] guards 65 recursive inputs and observes
+uses propext/Quot.sound. [[file:../../Tests/FixedPoints.lean][FixedPoints]] guards 65 recursive inputs and observes
 one shared construction versus 32 rebuilding constructions, plus one delayed
 non-function construction. ~bottom_apply~ is axiom-free.
 

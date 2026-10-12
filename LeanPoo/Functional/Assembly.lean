@@ -14,6 +14,118 @@ abbrev Factory (Context : Type u) (Result : Context → Type v) :=
 
 namespace Factory
 
+/-- Transform a factory's result while keeping its exact context index. -/
+def map {Context : Type u} {Input : Context → Type v} {Output : Context → Type w}
+    (change : ∀ context, Input context → Output context) (factory : Factory Context Input) :
+    Factory Context Output := fun context => change context (factory context)
+
+@[simp] theorem map_apply {Context : Type u} {Input : Context → Type v} {Output : Context → Type w}
+    (change : ∀ context, Input context → Output context) (factory : Factory Context Input)
+    (context : Context) : map change factory context = change context (factory context) := rfl
+
+theorem map_identity {Context : Type u} {Input : Context → Type v} (factory : Factory Context Input) :
+    map (fun _ value => value) factory = factory := rfl
+
+theorem map_compose {Context : Type u} {Input : Context → Type v}
+    {Middle : Context → Type w} {Output : Context → Type x}
+    (first : ∀ context, Input context → Middle context)
+    (second : ∀ context, Middle context → Output context) (factory : Factory Context Input) :
+    map second (map first factory) = map (fun context value => second context (first context value)) factory := rfl
+
+/-- Choose the next factory from a result and invoke it at the same context.
+This composes explicit producers; it does not infer their requirements. -/
+def bind {Context : Type u} {Input : Context → Type v} {Output : Context → Type w}
+    (factory : Factory Context Input)
+    (next : ∀ context, Input context → Factory Context Output) : Factory Context Output :=
+  fun context => next context (factory context) context
+
+@[simp] theorem bind_apply {Context : Type u} {Input : Context → Type v} {Output : Context → Type w}
+    (factory : Factory Context Input) (next : ∀ context, Input context → Factory Context Output)
+    (context : Context) : bind factory next context = next context (factory context) context := rfl
+
+theorem bind_assoc {Context : Type u} {Input : Context → Type v}
+    {Middle : Context → Type w} {Output : Context → Type x}
+    (factory : Factory Context Input) (first : ∀ context, Input context → Factory Context Middle)
+    (second : ∀ context, Middle context → Factory Context Output) :
+    bind (bind factory first) second = bind factory (fun context value => bind (first context value) second) := rfl
+
+/-- Select a factory at application time using the supplied context. -/
+def choose {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result) :
+    Factory Context Result := fun context =>
+  if condition context then whenTrue context else whenFalse context
+
+theorem choose_true {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result)
+    (context : Context) (yes : condition context = true) :
+    choose condition whenTrue whenFalse context = whenTrue context := by
+  simp [choose, yes]
+
+theorem choose_false {Context : Type u} {Result : Context → Type v}
+    (condition : Context → Bool) (whenTrue whenFalse : Factory Context Result)
+    (context : Context) (no : condition context = false) :
+    choose condition whenTrue whenFalse context = whenFalse context := by
+  simp [choose, no]
+
+/-- Apply a list of retained factories at one context, preserving its order. -/
+def sequence {Context : Type u} {Result : Context → Type v}
+    (factories : List (Factory Context Result)) : Factory Context (fun context => List (Result context)) :=
+  fun context => factories.map (fun factory => factory context)
+
+@[simp] theorem sequence_append {Context : Type u} {Result : Context → Type v}
+    (left right : List (Factory Context Result)) (context : Context) :
+    sequence (left ++ right) context = sequence left context ++ sequence right context := by
+  simp [sequence]
+
+@[simp] theorem sequence_length {Context : Type u} {Result : Context → Type v}
+    (factories : List (Factory Context Result)) (context : Context) :
+    (sequence factories context).length = factories.length := by
+  simp [sequence]
+
+/-- Aggregate factory results in list order at the same context. Every listed
+factory is applied; error-valued results follow the supplied combine policy. -/
+def fold {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (factories : List (Factory Context Result)) : Factory Context Acc :=
+  fun context => factories.foldl (fun acc factory => combine context acc (factory context)) (initial context)
+
+theorem fold_sequence {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (factories : List (Factory Context Result)) (context : Context) :
+    fold combine initial factories context = (sequence factories context).foldl (combine context) (initial context) := by
+  simp [fold, sequence, List.foldl_map]
+
+theorem fold_append {Context : Type u} {Result : Context → Type v} {Acc : Context → Type w}
+    (combine : ∀ context, Acc context → Result context → Acc context)
+    (initial : Factory Context Acc) (left right : List (Factory Context Result)) :
+    fold combine initial (left ++ right) = fold combine (fold combine initial left) right := by
+  funext context
+  simp [fold, List.foldl_append]
+
+/-- Recover a context-dependent domain error. Successful results are retained
+exactly; the handler's result, including a second error, is returned unchanged. -/
+def recover {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context))) :
+    Factory Context (fun context => Except Error (Result context)) := fun context =>
+  match attempt context with
+  | .ok value => .ok value
+  | .error error => handler error context
+
+theorem recover_ok {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (value : Result context) (success : attempt context = .ok value) :
+    recover attempt handler context = .ok value := by
+  simp [recover, success]
+
+theorem recover_error {Context : Type u} {Result : Context → Type v} {Error : Type w}
+    (attempt : Factory Context (fun context => Except Error (Result context)))
+    (handler : Error → Factory Context (fun context => Except Error (Result context)))
+    (context : Context) (error : Error) (failed : attempt context = .error error) :
+    recover attempt handler context = handler error context := by
+  simp [recover, failed]
+
 /-- Preserve an existing context-indexed theorem as a proof-bearing factory.
 PLift changes its sort, not its proposition, data, or guards. -/
 def fromProof {Context : Type u} {Claim : Context → Prop}
@@ -46,6 +158,26 @@ abbrev Provider (Context : Type u) (Key : Type v) (Value : Context → Key → T
   (key : Key) → Option (Factory Context (fun context => Value context key))
 
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
+
+/-- Compose capability dictionaries: a provided child factory overrides its
+parent at that key; absent child capabilities fall through without invocation. -/
+def Provider.compose (child parent : Provider Context Key Value) : Provider Context Key Value :=
+  fun key => (child key).orElse (fun _ => parent key)
+
+theorem Provider.compose_provided (child parent : Provider Context Key Value) (key : Key)
+    (factory : Factory Context (fun context => Value context key))
+    (provided : child key = some factory) : compose child parent key = some factory := by
+  simp [compose, provided]
+
+theorem Provider.compose_inherited (child parent : Provider Context Key Value) (key : Key)
+    (absent : child key = none) : compose child parent key = parent key := by
+  simp [compose, absent]
+
+theorem Provider.compose_assoc (outer middle inner : Provider Context Key Value) :
+    compose (compose outer middle) inner = compose outer (compose middle inner) := by
+  funext key
+  unfold compose
+  cases outer key <;> cases middle key <;> rfl
 
 /-- Choose the first available factory in an already computed precedence.
 Factories are returned as functions and are not invoked during selection. -/

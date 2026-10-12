@@ -38,6 +38,36 @@ to a larger context; the result is ~Result (project outer)~, preserving its
 exact dependency. Supplying a fixed old witness where a new context requires
 a different witness is still rejected by Lean.
 
+~Factory.map change factory~ transforms one result with access to its context;
+the output remains indexed by that exact context. ~map_identity~ and
+~map_compose~ prove its identity and composition laws. ~Factory.bind factory next~
+uses the result to choose a follow-up factory, then invokes it at the same
+context. ~bind_apply~ and ~bind_assoc~ prove application and associativity for
+arbitrary dependent result families.
+
+~Provider.compose child parent~ builds a capability dictionary where a present
+child factory wins and an absent child key falls through to the parent.
+Composition selects functions without invoking them. ~compose_provided~,
+~compose_inherited~ and ~compose_assoc~ establish these lookup and ordering laws.
+Use ~Provider.patchKey~ from ~LeanPoo.Functional.RegistryPatch~ to provide,
+replace or remove one capability in a derived immutable dictionary.
+
+~Factory.choose condition whenTrue whenFalse~ selects at each supplied context;
+~choose_true~ and ~choose_false~ identify the exact branch result. This can
+select different policies while keeping one dependent output family.
+~Factory.sequence factories~ collects a homogeneous list of results in factory
+order at one context, preserving its length and append structure.
+~Factory.fold combine initial factories~ aggregates in that same order;
+~fold_sequence~ equates it to folding the collected results, and ~fold_append~
+retains the intermediate accumulator when joining two batches.
+
+~Factory.recover attempt handler~ retains successful data exactly. On an error
+it calls the handler at the same context and returns the handler's complete
+result, including any new error. Missing capability keys are reported during
+preparation; this function handles domain errors produced by a selected factory.
+[[file:../../Examples/ValidationWorkflow.lean][ValidationWorkflow]] uses dependent bounded readings, context-selected strict
+or clamping policies, and an ordered report of independent successes/errors.
+
 The [[file:../use-cases/navier-stokes-euler.org][Euler budget study]] identifies actual upstream factory call sites.
 [[file:../../Examples/ContextualFactories.lean][ContextualFactories]] shows the provider boundary with arbitrary
 context-indexed mathematical types, a residual-only override, and a
@@ -68,6 +98,15 @@ for any requested key. ~prepare_origin~ combines it with a verified C4 order
 and proves original-graph ancestry for every requested capability. These
 contracts are generic over arbitrary key and context/result types.
 
+For an ordinary consumer, ~Requirements.prepareWith provider keys construct~
+combines preparation, tuple building and ~Factory.map~. Match success once and
+retain the returned ~Factory~. ~prepareWith_ready~ proves it uses the exact
+selected tuple; ~prepareWith_error_iff~ preserves the first missing key exactly.
+The [[file:../../Examples/FunctionalPipeline.lean][FunctionalPipeline]] scenario constructs quotes for two baskets,
+overrides one price capability and reuses the original provider. Consumers that
+also need a joint result certificate use the existing ~Requirements.prepareConsumer~
+API in [[file:certified-consumers.org][Certified consumer construction]].
+
 [[file:../../Examples/ContextualFactories.lean][ContextualFactories.Prepared]] now uses this library tuple instead of a
 consumer-owned preparation record and repeated ~require~ statements. Changing
 the checklist changes its type as well; adapt the consumer's constructor to
@@ -93,6 +132,14 @@ existing requirement tuple and consumer proofs remain reusable.
 clients, checks 192 preparation cases with heterogeneous result types, and
 checks an aligned namespace prefix against independently compiled renamed
 C4 output. A deliberately unaligned dictionary fails preparation.
+
+[[file:../../Examples/PreparedViews.lean][PreparedViews]] prepares a heterogeneous family once and retains both a named
+source reader and a narrow monitoring consumer. The narrow consumer can also
+prepare independently and run when its unrequested source label is missing.
+[[file:../../Examples/CertifiedContextCache.lean][CertifiedContextCache]] admits a joint allocation bound and uses
+~ContextSlot.consumeAlong~ to share dependencies across requests with equal
+base budgets. Output construction uses the current request label on cache
+hits. A different base budget replaces the one retained context/data pair.
 
 * Reuse proofs after an unrelated change
 

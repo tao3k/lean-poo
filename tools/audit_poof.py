@@ -52,7 +52,7 @@ def construction_closure(config):
     closure = json.loads(CLOSURE.read_text())
     if closure['schema'] != 'lean-poo.poof-closure.v1' or closure['reviewed_constructive_path_closed'] is not True:
         raise ValueError('Expected reviewed typed construction closure v1')
-    ids = ['bottom', 'multiple-inheritance', 'simple-types', 'elaborate-types', 'pure-linearity', 'fixed-point-variants']
+    ids = ['bottom', 'binary-tree-case', 'avl-case', 'representations', 'multiple-inheritance', 'meta-prototype', 'simple-types', 'elaborate-types', 'typeclass-correspondence', 'pure-linearity', 'multiple-dispatch', 'method-combination', 'fixed-point-variants']
     if [entry['id'] for entry in closure['requirements']] != ids or not closure['scope']:
         raise ValueError('Construction closure coverage changed')
     rows = {row['id']: row for row in config['rows']}
@@ -156,7 +156,7 @@ def generate(paper):
         'limits': ['Statuses are manually reviewed, not inferred semantic proofs',
                    'Heading coverage means all outline entries are assigned, not all behaviors reproduced',
                    'Guard/eval lines are lexical markers, not execution receipts; printed values need expected-value assertions',
-                   'Original Scheme/Racket evaluation and cross-language differential checks not performed',
+                   'Original 24 checks have executable source/Lean differential gates; whole-language equivalence is not inferred',
                    'Local translation, formal correspondence, unsafe execution and paper proposals remain distinct',
                    'C4, proof reuse and OpenAI reference audits do not substitute for missing paper cases'],
     }

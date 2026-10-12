@@ -5,7 +5,7 @@
 * Appendix A: executable C3 and checks
 
 [[file:../../../LeanPoo/Prototype/C3.lean][C3.linearize]] implements the ordinary finite paper graph policy separately
-from the main C4 object policy. [[file:../../../Tests/PaperC3.lean][PaperC3]] asserts all four source orders,
+from the main C4 object policy. [[file:../../../Tests/C3.lean][C3]] asserts all four source orders,
 five refusal cases, both helper checks and 640 comparisons across 160 ordered
 parent DAGs against an independent recursive merge oracle.
 [[file:../../../LeanPoo/Prototype/C3Semantics.lean][C3Semantics]] proves the paper's leftmost eligible selection and normalized
@@ -33,12 +33,20 @@ equivalence to one-root coherence on every derivation-backed cache. That
 premise is proved for validated graphs without parent edges, yielding exact
 outcomes for arbitrary roots, repeated hits and later missing roots. It is
 also proved for validated graphs with any finite number of distinct leaf parents per node, including shared
-parents and opposite declarations across roots. Deeper parent-chain graph
-coherence remains open.
+parents and opposite declarations across roots. [[file:../../../LeanPoo/Prototype/C3DAG.lean][C3DAG]] now proves complete cached/reference outcomes for finite DAGs of
+arbitrary depth under bounded decreasing ranks, including missing parents and
+inconsistent merges. [[file:../../../LeanPoo/Object/C3.lean][Object.C3]] connects the certified order to actual slot
+composition, and [[file:../../../LeanPoo/Object/Recursive.lean][Object.Recursive]] supplies safe dynamic recursive reads.
+[[file:../../../LeanPoo/Prototype/C3CacheCoherence.lean][C3CacheCoherence]] extends complete scalar/batch outcome equality to every
+finite graph and root list, including cycles and validation failures. Successful
+derivations cannot contain a nonempty self walk. Actual active-path invariants
+and the finite declaration count justify each sound cache hit at the production
+budget. [[file:../../../Tests/C3CacheCoherence.lean][Coherence controls]] compare complete results to an independent scalar
+oracle, including concrete cycle names, first errors and warm ancestor reuse.
 Two successful executable traversals now provably agree, so admission omits a
 runtime order-comparison branch.
 
-The three extra checks are asserted in [[file:../../../Tests/PaperPrototypeChecks.lean][PaperPrototypeChecks]], with explicit
+The three extra checks are asserted in [[file:../../../Tests/PrototypeChecks.lean][PrototypeChecks]], with explicit
 typed JSON adaptation for mixed/improper-list rejection. [[file:checks-v1.json][The check map]] records
 all 24 original expressions. The three c3-extra-definitions helpers are implemented by Dictionary.fromList,
 toList and merge, with 594 scalar merge controls. Whole-policy C3/C4 equivalence
@@ -48,8 +56,22 @@ remains a separate claim.
 
 | Paper lines | Existing mechanism | Scope |
 |-------------+--------------------+-------|
-| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Typed registration, applicability, selection and context/cache controls |
-| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Ordered primary/before/after/around and user-defined combinations |
+| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Universal sparse/tuple order, current-argument filtering, cache soundness and invalidation laws |
+| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Universal standard order and nested next-chain correspondence; user-defined combinations |
+
+[[file:../../../LeanPoo/Object/MultimethodSemantics.lean][MultimethodSemantics]] proves sparse candidate traversal equals the complete
+lexicographic tuple product for arbitrary specialization lists. The actual
+selector equals current-argument ~filterMap~; the cache stores candidates and
+rechecks predicates on every invocation. Complete call outcomes agree with
+the uncached tuple/filter specification under the cache invariant. Lookup,
+touch and LRU eviction preserve it; registration, contribution and predicate
+registration invalidate old candidates.
+
+[[file:../../../LeanPoo/Object/MethodCombinationSemantics.lean][MethodCombinationSemantics]] proves the actual standard combination equals
+ordered before execution, nested primary calls, reversed after execution and
+nested around wrappers for arbitrary monads and method callbacks. It preserves
+callbacks that omit or repeat ~next~; append laws describe ordered fragments.
+
 | 2084–2154 | [[file:../../../LeanPoo/Prototype/Lens.lean][lensGen]], [[file:../../../LeanPoo/Prototype/SkewLens.lean][SkewLens]], [[file:../../../Examples/LensPrototype.lean][LensPrototype]], [[file:../../../Tests/SkewExtension.lean][SkewExtension]] | Actual getter/setter/wrapper constructor plus typed focus laws |
 
 The last row is implemented: the narrower Functional view/solver contract
@@ -57,6 +79,24 @@ guides do not mean the whole repository lacks prototype setters. Full
 generalized prototype treatment is explicitly future work in the paper.
 The existing constructor is not evidence that every conceivable generalized
 combination, dynamic MOP or cross-library conflict policy has been solved.
+
+[[file:functional.org][The Functional question map]] records how typed factories, explicit
+requirements, consumer proofs and immutable revisions address these questions.
+[[file:../../contracts/negative-capabilities.org][Negative capabilities]] now implement the paper's explicit absent-method
+assumption: the checker admits every watched absence or returns the first present
+factory with proof. A guarded registry transaction accepts exactly completed
+snapshots preserving the whole negative contract, including keys after an
+ordinary first missing error. [[file:../../contracts/graph-migrations.org][Graph migration]] checks changed roots/topologies and
+retains exact positive/negative proofs and hot data only under its reuse laws.
+[[file:../../contracts/dependency-analysis.org][Finite pure analysis]] infers nested/conditional guards and governs computed
+cache invalidation. Arbitrary host closure/effect inference remains open.
+
+[[file:../../contracts/dictionary-classes.org][Dictionary/class compilation]] now addresses the earlier typeclass correspondence
+discussion at lines 1434–1448. The command derives fields and exact inverse laws
+from actual typed Lean constructors. Existing prototype composition, delayed
+self/super, descriptor admission and Functional providers/caches use those
+conversions. General Scheme source compilation and dynamic closure serialization
+remain separate claims.
 
 * Appendices C, D and E
 
@@ -69,10 +109,10 @@ Appendix D (2256–2389) explains multiple ways to tie fixed points in eager and
 lazy languages. [[file:../../../LeanPoo/Prototype/FixedPoint.lean][sharedFix]] uses an unsafe private reference cell and one shared
 thunk. [[file:../../../Tests/DebugObject.lean][DebugObject]] and bounded diagnostics cover selected recursion failures.
 [[file:../../../LeanPoo/Prototype/CheckedFunction.lean][rebuildingFix]] supplies the source rebuild-per-call contrast;
-[[file:../../../Tests/PaperFixedPoints.lean][PaperFixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
+[[file:../../../Tests/FixedPoints.lean][FixedPoints]] checks 65 recursive inputs and one versus 32 constructions.
 [[file:../../../LeanPoo/Prototype/FiniteFix.lean][FiniteFix]] now defines pure finite unfoldings of ~fix~ and the one-step
 ~mix~ equation. Adjacent equality constructs a proof-bearing fixed point and
-implies stability at every later depth. [[file:../../../Tests/PaperFiniteFix.lean][PaperFiniteFix]] proves a two-step Boolean fixed point
+implies stability at every later depth. [[file:../../../Tests/FiniteFix.lean][FiniteFix]] proves a two-step Boolean fixed point
 over its entire input domain, proves the triangular result for every natural
 input at sufficient depth, and compares 65 observations with the shared thunk.
 Internal-define/letrec/lazy routes share the Lean knot; direct untyped self-application
@@ -80,6 +120,21 @@ is a language choice. There is no universal termination theorem or all-variants 
 equivalence. The paper permits divergence; such a theorem is not required to
 implement unrestricted executable recursion. Safe finite dependency schedules
 have a stronger, separate contract and do not certify every unsafe knot.
+
+[[file:../../contracts/shared-thunks.org][The shared-thunk guide]] now specifies the declared Interaction compiler and
+its safe admission boundary. The actual native knot produces demand traces;
+completed trace executions and safe evaluations are equivalent, and the safe
+checker compares actual reported values/errors against the exact current
+program. The sequential private-cell model proves installation/current-body
+and one-constructor invariants. Checked C3 field/method reads transfer to the
+existing source graph laws. [[file:../../../LeanPoo/Prototype/SharedCellRefinement.lean][SharedCellRefinement]] now interprets the single
+constructor program that ~sharedFix~ itself executes. Its sequential primitive
+rules refine every step/trace to the protocol and prove one result build and
+at most one forwarding Ref read. Observed IO operations and reported results
+are safely checked together, including publication ordering and pointer
+readbacks. The source pin specifies the rules; verification of C++/reference
+counting/compiler/concurrent memory and arbitrary unchecked callbacks remains
+outside this refinement. A valid data log does not authenticate IO origins.
 
 Appendix E (2390–2434) compares Scheme source sizes. The character/cons-cell
 figures are illustrative and do not impose Lean line-count requirements.

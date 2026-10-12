@@ -1,0 +1,103 @@
+#+TITLE: Automatic typed dictionary and class compilation
+
+[[file:../reusable-contracts.org][API index]] · [[file:../audits/poof/functional.org][Paper questions]] · [[file:../../Tests/DictionaryCompiler.lean][Compiler clients]] · [[file:../../Tests/DictionaryBridge.lean][Prototype/descriptor clients]] · [[file:../../Tests/DictionaryTransport.lean][Provider/cache clients]]
+
+* Generate a representation from the actual constructor
+
+[[file:../../LeanPoo/Deriving/DictionaryCompiler.lean][DictionaryCompiler]] reads a Lean structure/class constructor and generates
+its dependent field representation, both conversions and their kernel-checked
+inverse laws. No per-class handwritten field schema or conversion proof is
+required.
+
+#+begin_src lean
+import LeanPoo.Deriving.DictionaryCompiler
+universe u
+
+class Operation (α : Type u) where
+  run : α → α
+  law : ∀ value, run value = value
+derive_dictionary Operation
+
+example (dictionary : Operation α) :
+    Operation.fromFields (Operation.toFields dictionary) = dictionary :=
+  Operation.from_toFields dictionary
+
+example (fields : Operation.Fields (α := α)) :
+    Operation.toFields (Operation.fromFields fields) = fields :=
+  Operation.to_fromFields fields
+#+end_src
+
+The generated ~Fields~ uses dependent ~PSigma~ pairs and an outer ~PLift~.
+Type/Sort fields, functions, proof fields and inherited dictionary subobjects
+retain their exact types and values. Constructor parameters, implicit instance
+parameters and universe parameters remain parameters of the generated APIs.
+The carrier is Type-valued even when its fields contain arbitrary Sorts or only
+proofs. The two inverse theorems are checked against the generated functions.
+
+Generated declarations are ~Fields~, ~toFields~, ~fromFields~, ~from_toFields~,
+~to_fromFields~, ~dictionaryBridge~, ~fieldNames~ and ~fieldCount~ under the
+source name. ~derive_dictionary Operation as Alternate~ selects another
+namespace. Metadata names/counts describe the constructor's immediate fields,
+including inherited subobjects; they do not flatten parent classes.
+
+The command refuses nonstructures, Prop-valued classes, unsupported indexed
+constructors and any generated-name collision. A refusal restores the previous
+environment. It installs no global typeclass instance. Decode a dictionary and
+use ~letI~ when local class search is desired.
+
+* Actual prototypes and descriptors
+
+[[file:../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] carries both conversions and their exact inverse laws.
+~toPrototype~ and ~fromPrototype~ adapt existing ~Proto~ self, inherited and
+result carriers independently. Both directions are inverse; actual application,
+identity, constant and child/parent composition commute with conversion.
+Every finite ~FiniteFix.iterate~ observation commutes, and fixed-point equations
+are equivalent. These theorems apply to arbitrary supplied typed prototypes.
+
+~toDelayedPrototype~ and ~fromDelayedPrototype~ adapt existing ~DelayedProto~
+through lazy ~Thunk.map~. The inverse and composition laws preserve delayed
+self/super computations. Conversion does not force either thunk. Executable
+terminal-override controls include divergent self/super factories that remain
+unforced.
+
+~bridge.descriptor source~ transports an actual ~Descriptor~. It preserves the
+name, recognizer, display, default and optional codec. Validation and JSON
+encoding/decoding commute with conversion, including parser errors, absent
+codecs and runtime refinement refusals. Function fields are retained typed
+functions; this does not create a closure wire format.
+
+* Existing Functional providers and certified caches
+
+[[file:../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport.Family]] supplies one bridge for each context/key value
+type. ~provider~ wraps retained factory results without invoking them during
+selection. Actual first-provider selection and C4 ~assemble~ commute with
+conversion. ~prepare_provider~ preserves the complete requested tuple or the
+same first missing key, including empty/repeated heterogeneous requirements.
+
+~certified~ transports the existing joint proof by decoding the exposed tuple;
+~certified_build~ proves exact converted construction. ~slot~ uses the existing
+~ContextSlot.observe~. ~slot_read_value~ proves decoded data equals the old
+read, while ~slot_read_reused~ preserves its exact hit Boolean at every context.
+No extra cache policy is introduced. Converted providers can enter the existing
+[[file:graph-migrations.org][graph/constraint migration]] APIs, where selection changes still require
+fresh joint admission and watched absences still refuse conflicting targets.
+
+* Evidence and limits
+
+Compiler clients cover nine dictionary shapes, 1024 actual arithmetic dispatches,
+33 polymorphic-function controls and three command refusals. They include
+dependent carrier/proof fields, inherited dictionaries, Sort parameters,
+implicit instances and the library's actual ~Descriptor~. A malformed-law
+control cannot construct the generated representation.
+
+Prototype/descriptor clients check 1280 self/super calls, 2304 finite unfoldings,
+36 descriptor admissions, 44 refusals, eight codec errors and two divergent
+terminal overrides. Functional clients check ten missing preparations, 30 actual
+method observations, three certified cache reads and 16 actual graph migrations
+(one reused, two fresh, thirteen refused). All universal conversion/prototype/
+provider/cache laws are kernel theorems; native controls are additional evidence.
+
+This implements typed Lean constructor compilation and exact representation
+transport. General Scheme source compilation, arbitrary dynamic reflection,
+closure serialization, unrestricted unsafe fixed-point/IO equivalence and
+machine-level time/allocation bounds remain outside these contracts.

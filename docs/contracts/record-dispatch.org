@@ -34,7 +34,7 @@ round-trip equivalence therefore needs the canonical-error premise in the API.
 
 * Paper fragment proved
 
-[[file:../../Tests/PaperRecordDispatch.lean][PaperRecordDispatch]] defines a source-style function record whose ~x~ and
+[[file:../../Tests/RecordDispatch.lean][RecordDispatch]] defines a source-style function record whose ~x~ and
 ~y~ slots are 1 and 2, whose other keys return ~(unbound slot, key)~, and whose
 prototypes override ~x~, double the inherited ~x~, then compute ~sum~ from
 final self. It proves the checked source and typed record observations equal
@@ -45,7 +45,7 @@ calculation uses no fallback there. The source dispatcher stabilizes after
 depth two and has a fixed-point certificate; the typed record's checked
 observations stay equal at every later depth.
 
-[[file:../../Tests/PaperRecordComplexRelation.lean][PaperRecordComplexRelation]] uses the paper's ~x/y/z~ shape: ~z~ reads both
+[[file:../../Tests/RecordComplexRelation.lean][RecordComplexRelation]] uses the paper's ~x/y/z~ shape: ~z~ reads both
 coordinates from final self and stores the integral complex pair ~(x,y)~.
 The checked source calculation uses ~computeM~, so a missing ~x~ or ~y~
 propagates its original error. A strengthened relation proves the two reads

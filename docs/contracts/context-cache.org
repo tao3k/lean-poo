@@ -34,7 +34,9 @@ The slot's exact family index prevents accidental reuse for another family with
 the same Claim. ~slot.rebind other sameFactories~ changes only proof alignment;
 ~rebind_consume~ preserves outputs. Without exact factory equality, start a new
 empty slot. All varying inputs must be represented in context; captured inputs
-remain fixed by the family. No automatic analytic dependency invalidation occurs.
+remain fixed by the family. The separate [[file:dependency-analysis.org][analyzed computation API]] uses this slot
+to cache actual values/errors and automatically derive conservative dependency
+invalidation for finite pure computations.
 
 One retained pair per cache value is a structural bound; externally keeping old
 immutable slots retains their data too. Equality comparisons and whole-tuple

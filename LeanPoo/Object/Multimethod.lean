@@ -73,10 +73,8 @@ def collect (index : MethodIndex Method) (orders : List (List Specializer))
       values.foldl (fun current method => current.push method) found
   | .node _ children, order :: rest =>
       order.foldl (fun current name =>
-        match child? children name with
-        | some child => child.collect rest current
-        | none => current) found
-termination_by orders.length
+        (child? children name).elim current (fun child => child.collect rest current)) found
+termination_by structural orders
 
 end MethodIndex
 

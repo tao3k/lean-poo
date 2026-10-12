@@ -4,7 +4,7 @@ import LeanPoo.Functional.Assembly
 factories at many contexts. Result types retain the same keys and contexts. -/
 namespace LeanPoo.Functional.Requirements
 
-universe u v w
+universe u v w x
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
 
 /-- A heterogeneous tuple of retained functions, indexed by the requested keys. -/
@@ -35,6 +35,27 @@ def build : {keys : List Key} → Factories Context Value keys →
     Factory Context (fun context => Results Value context keys)
   | [], _, _ => PUnit.unit
   | _ :: _, (factory, tail), context => (factory context, build tail context)
+
+/-- Prepare a checklist and compile an ordinary typed consumer in one call.
+The returned function retains its factories for repeated context applications;
+a missing capability keeps the original first-key error. -/
+def prepareWith (provider : Provider Context Key Value) (keys : List Key)
+    {Output : Context → Type x} (construct : ∀ context, Results Value context keys → Output context) :
+    Except Key (Factory Context Output) :=
+  (prepare provider keys).map (fun factories => Factory.map construct (build factories))
+
+theorem prepareWith_ready (provider : Provider Context Key Value) (keys : List Key)
+    (factories : Factories Context Value keys) (ready : prepare provider keys = .ok factories)
+    {Output : Context → Type x} (construct : ∀ context, Results Value context keys → Output context) :
+    prepareWith provider keys construct = .ok (Factory.map construct (build factories)) := by
+  simp [prepareWith, ready, Except.map]
+
+theorem prepareWith_error_iff (provider : Provider Context Key Value) (keys : List Key)
+    {Output : Context → Type x} (construct : ∀ context, Results Value context keys → Output context)
+    (missing : Key) :
+    prepareWith provider keys construct = .error missing ↔ prepare provider keys = .error missing := by
+  unfold prepareWith
+  cases prepare provider keys <;> simp [Except.map]
 
 /-- Every retained function is exactly the one selected by the provider. -/
 def Selected (provider : Provider Context Key Value) :

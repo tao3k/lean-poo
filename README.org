@@ -6,7 +6,15 @@ described in [[https://github.com/metareflection/poof][POOF]] with Lean's types,
 linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
 The reviewed Lean-native constructive path is implemented and checked, including
-Order/BST/AVL, original checks, C3, representations and descriptor/meta operations.
+Order/BST/AVL, source/Lean differential checks, C3 object composition, runtime
+descriptors and mutable hash slots. [[file:docs/contracts/recursive-objects.org][Safe recursive objects]] have sound/complete
+operational evaluation and divergence theorems.
+[[file:docs/contracts/shared-thunks.org][Checked shared thunks]] connect native execution of explicit recursive interactions
+to exact-program evaluation receipts and the existing C3 field/method observers.
+The existing ~sharedFix~ and its primitive model execute one shared constructor
+program; checked operation logs refine the shared-cell protocol.
+[[file:docs/contracts/c3-graph.org][C3 cache coherence]] proves complete cached/reference results for every finite
+graph and root list, including exact cyclic and validation failures.
 The [[file:docs/audits/poof/README.org][whole-paper audit]] records the precise typed scope. Whole-paper operational
 correspondence and unrestricted dynamic automation are not established.
 
@@ -18,9 +26,11 @@ language or a domain-specific proof system.
 
 | Layer | Public capability |
 |-------+-------------------|
-| ~LeanPoo.Prototype~ | Open-recursive prototypes, ordered composition, delayed instances, first-class objects, and classes. |
-| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
+| ~LeanPoo.Prototype~ | Open-recursive prototypes, safe recursive observations, ordered composition, delayed instances, first-class descriptors, mutable slots and classes. |
+| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
 | ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
+| ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, verified graph migration, inferred pure dependencies, computed cache revisions and witness transformations. |
+| ~LeanPoo.Deriving~ | Automatic typed class/structure dictionary conversion with kernel inverse proofs and adapters for prototypes, descriptors and consumer caches. |
 | ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
 
 Lean's type system expresses slot families and composition boundaries. The
@@ -56,6 +66,12 @@ caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.le
 [[file:Examples/QualifiedCombination.lean][QualifiedCombination.lean]] defines a custom typed method combination over those dispatch
 shapes.
 [[file:Examples/BoundedDispatch.lean][BoundedDispatch.lean]] shows the eight-shape LRU cache under dynamic dispatch.
+[[file:Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and delayed self/super records.
+[[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
+[[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
+[[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
+[[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
+[[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
 [[file:Benchmarks/README.org][Benchmarks]].
 
@@ -64,12 +80,14 @@ Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and perfor
 - [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
 - [[file:docs/reusable-contracts.org][Reusable API contracts]] indexes capability modules for verified compilation,
   typed factories, proof reuse and retained consumer caches.
+- [[file:docs/contracts/dictionary-classes.org][Dictionary/class compilation]] generates dependent field representations and preserves prototype composition, validation and consumer proofs.
 - [[file:docs/use-cases/navier-stokes-euler.org][Euler budget factory study]] identifies actual upstream interfaces and
   the evidence required to establish code reduction.
 - [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the
   paper-model construction.
 - [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
 - [[file:docs/audits/poof/README.org][Whole-paper POOF audit]] records the original source pin, chapter coverage and concrete closure gaps.
+- [[file:docs/audits/poof/functional.org][Functional paper questions]] maps the paper's design problems to Functional APIs, kernel evidence and remaining research.
 - [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
 
 Documentation is maintained in Org. [[file:Examples/README.org][Examples]] contains user-facing usage scenarios;

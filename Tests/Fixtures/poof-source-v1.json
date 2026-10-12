@@ -1,0 +1,463 @@
+{
+  "schema": "lean-poo.poof-source-code.v1",
+  "paper_sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
+  "source_blocks": 76,
+  "blocks": [
+    {
+      "kind": "Definitions",
+      "line": 124,
+      "code": "\n(define (fix p b) (define f (p (lambda i (apply f i)) b)) f)\n(define (mix c p) (lambda (f b) (c f (p f b))))\n",
+      "sha256": "995f32a0e9233366c6be64e5089425b90e887fbc496000027356fe354559c3a8"
+    },
+    {
+      "kind": "Examples",
+      "line": 260,
+      "code": "\n(code:comment \"x1-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define (x1-y2 msg) (case msg ((x) 1)\n                              ((y) 2)\n                              (else (error \"unbound slot\" msg))))\n",
+      "sha256": "826a7dcc0731e2bd39ad4c5ebada5c9dedd17fab80ea77510ebdbd934c8e34d3"
+    },
+    {
+      "kind": "Checks",
+      "line": 271,
+      "code": "\n(eval:check (list (x1-y2 'x) (x1-y2 'y)) '(1 2))\n",
+      "sha256": "dcbf436228b3df141496289f2256c6e7accc2dacbab6c1ae0673c8c1ecac7a70"
+    },
+    {
+      "kind": "Examples",
+      "line": 290,
+      "code": "\n(code:comment \"$x3 : (Proto (Fun 'x -> Nat | A) A)\")\n(define ($x3 self super) (λ (msg) (if (eq? msg 'x) 3 (super msg))))\n",
+      "sha256": "a0fa427ee160d829c4888952b78c2dd56bbbaf816c87f485176ee70bceeee2a6"
+    },
+    {
+      "kind": "Examples",
+      "line": 299,
+      "code": "\n(code:comment \"$z<-xy : (Proto (Fun (Or 'x 'y) -> Real | 'z -> Complex | A)\")\n(code:comment \"                (Fun (Or 'x 'y) -> Real | A))\")\n(define ($z<-xy self super)\n  (λ (msg) (case msg\n             ((z) (+ (self 'x) (* 0+1i (self 'y))))\n             (else (super msg)))))\n",
+      "sha256": "523486aeb4371049135fd71c0c354862ed81159547440d77c56cb11480b38edd"
+    },
+    {
+      "kind": "Examples",
+      "line": 310,
+      "code": "\n(code:comment \"$double-x : (Proto (Fun 'x -> Number | A) (Fun 'x -> Number | A))\")\n(define ($double-x self super)\n  (λ (msg) (if (eq? msg 'x) (* 2 (super 'x)) (super msg))))\n",
+      "sha256": "a015ee2488990007a47ac6a5ec434abba774736f32b48664996afb3557011394"
+    },
+    {
+      "kind": "Checks",
+      "line": 325,
+      "code": "\n(code:comment \"x3-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define x3-y2 (fix $x3 x1-y2))\n(eval:check (list (x3-y2 'x) (x3-y2 'y)) '(3 2))\n\n(code:comment \"z1+2i : (Fun 'x -> Nat | 'y -> Nat | 'z -> Complex)\")\n(define z1+2i (fix $z<-xy x1-y2))\n(eval:check (list (z1+2i 'x) (z1+2i 'y) (z1+2i 'z)) '(1 2 1+2i))\n\n(code:comment \"x2-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define x2-y2 (fix $double-x x1-y2))\n(eval:check (list (x2-y2 'x) (x2-y2 'y)) '(2 2))\n",
+      "sha256": "18f092cd0aee861565e171b05c780d30f8bd855c9a308ffb1ba46a24de18e95f"
+    },
+    {
+      "kind": "Checks",
+      "line": 341,
+      "code": "\n(code:comment \"z6+2i : (Fun 'x -> Nat | 'y -> Nat | 'z -> Complex)\")\n(define z6+2i (fix (mix $z<-xy (mix $double-x $x3)) x1-y2))\n(eval:check (map z6+2i '(x y z)) '(6 2 6+2i))\n",
+      "sha256": "51b83ada631fb5bd27aa5bd86a7806acb4032b3ba6650fd1cef9312f94e47f47"
+    },
+    {
+      "kind": "Checks",
+      "line": 351,
+      "code": "\n(eval:check (list ((fix (mix $z<-xy (mix $double-x $x3)) x1-y2) 'z)\n                  ((fix (mix $double-x (mix $z<-xy $x3)) x1-y2) 'z)\n                  ((fix (mix $double-x (mix $x3 $z<-xy)) x1-y2) 'z))\n            '(6+2i 6+2i 6+2i))\n",
+      "sha256": "c3dc789ad587b76073df9317678ae3dfb250414135f9c7940b899275e9e2f24e"
+    },
+    {
+      "kind": "Checks",
+      "line": 361,
+      "code": "\n(eval:check (list ((fix (mix (mix $z<-xy $double-x) $x3) x1-y2) 'z)\n                  ((fix (mix (mix $double-x $z<-xy) $x3) x1-y2) 'z)\n                  ((fix (mix (mix $double-x $x3) $z<-xy) x1-y2) 'z))\n            '(6+2i 6+2i 6+2i))\n",
+      "sha256": "710d16aca10aa41e203adf4384920611adc4095f91cda94740cc922fcbb2dfa6"
+    },
+    {
+      "kind": "Checks",
+      "line": 371,
+      "code": "\n(code:comment \"x6-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define x6-y2 (fix (mix $double-x $x3) x1-y2))\n(code:comment \"x3-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define x3-y2 (fix (mix $x3 $double-x) x1-y2))\n(eval:check (list (x6-y2 'x) (x3-y2 'x)) '(6 3))\n",
+      "sha256": "cd770b85b532ed19b2f68b8ee0b417b3acb61e6f9baa586acb713e7b9c20dc41"
+    },
+    {
+      "kind": "Definitions",
+      "line": 383,
+      "code": "\n(code:comment \"$slot : (Fun k:Symbol V -> (Proto (Fun 'k -> V | A) A))\")\n(define ($slot k v) (code:comment \"k v: constant key and value for this defined slot\")\n  (λ (self super) (code:comment \"self super: usual prototype variables\")\n    (λ (msg) (code:comment \"msg: message received by the instance, a.k.a. method name.\")\n      (if (equal? msg k) v (code:comment \"if the message matches the key, return the value\")\n        (super msg))))) (code:comment \"otherwise, recurse to the super instance\")\n",
+      "sha256": "abe1787b8d21c9958a7b193b9ae48aff9ba0cfe68d06c43d8fbee0a0a006782d"
+    },
+    {
+      "kind": "Definitions",
+      "line": 394,
+      "code": "\n(code:comment \"$slot-modify : (Fun k:Symbol (Fun V -> W)\")\n(code:comment \"  -> (Proto (Fun 'k -> W | A) (Fun 'k -> V | A) A) st: (<: V W))\")\n(define ($slot-modify k modify) (code:comment \"modify: function from super-value to value\")\n  (λ (self super) (λ (msg)\n    (if (equal? msg k) (modify (super msg))\n      (super msg)))))\n",
+      "sha256": "001d57f1d75121bd4ef02e6585f83b4377fb78c6662d4439a484c2ebfe558502"
+    },
+    {
+      "kind": "Definitions",
+      "line": 405,
+      "code": "\n(code:comment \"$slot-compute : (Fun k:Symbol (Fun A -> V) -> (Proto (Fun 'k -> V | A) A))\")\n(define ($slot-compute k fun) (code:comment \"fun: function from self to value.\")\n  (λ (self super)\n    (λ (msg)\n      (if (equal? msg k) (fun self)\n        (super msg)))))\n",
+      "sha256": "3492ddf613a3ec0535a93e1f75d547d866cebfd3ecf98928c7930c0ee9e9058a"
+    },
+    {
+      "kind": "Definitions",
+      "line": 418,
+      "code": "\n(code:comment \"$slot-gen : (Fun k:Symbol (Fun A (Fun -> V) -> W)\")\n(code:comment \"  -> (Proto (Fun 'k -> W | A) (Fun 'k -> V | A) A) st: (<: V W))\")\n(define ($slot-gen k fun) (code:comment \"fun: from self and super-value thunk to value.\")\n  (λ (self super)\n    (λ (msg)\n      (define (inherit) (super msg))\n      (if (equal? msg k) (fun self inherit) (inherit)))))\n",
+      "sha256": "e3463902e6d9355c7053c2bcafc5f783a6fa3ae514408ba308e7b1ae593b45e1"
+    },
+    {
+      "kind": "Examples",
+      "line": 430,
+      "code": "\n(define ($slot k v) ($slot-gen k (λ (__self __inherit) v)))\n(define ($slot-modify k modify) ($slot-gen k (λ (__ inherit) (modify (inherit)))))\n(define ($slot-compute k fun) ($slot-gen k (λ (self __) (fun self))))\n",
+      "sha256": "7c72757f31324fa07dcf2fb6f3b56011e671d15172f79bccaa5c64cee16de695"
+    },
+    {
+      "kind": "Examples",
+      "line": 438,
+      "code": "\n(define $x3 ($slot 'x 3))\n(define $double-x ($slot-modify 'x (λ (x) (* 2 x))))\n(define $z<-xy ($slot-compute 'z (λ (self) (+ (self 'x) (* 0+1i (self 'y))))))\n",
+      "sha256": "95e6123923dd6725d4dc337801278e51e7f92fa09c9d3587f04512dce362079e"
+    },
+    {
+      "kind": "Definitions",
+      "line": 446,
+      "code": "\n(code:comment \"bottom-record : (Fun Symbol -> _)\")\n(define (bottom-record msg) (error \"unbound slot\" msg))\n",
+      "sha256": "4c7b9538bee28b15d57457bd2c8b07ad65af1ad78973af614f654a20bd1a71bb"
+    },
+    {
+      "kind": "Checks",
+      "line": 453,
+      "code": "\n(code:comment \"x3 : (Fun 'x -> Nat)\")\n(define x3 (fix $x3 bottom-record))\n(eval:check (x3 'x) 3)\n",
+      "sha256": "dcbdf9c6bb078eca30d67b70aaf4ea28ca0d5c0b59d3fa996d95420ce980bea1"
+    },
+    {
+      "kind": "Checks",
+      "line": 462,
+      "code": "\n(code:comment \"x1-y2 : (Fun 'x -> Nat | 'y -> Nat)\")\n(define x1-y2 (fix (mix ($slot 'x 1) ($slot 'y 2)) bottom-record))\n(eval:check (map x1-y2 '(x y)) '(1 2))\n",
+      "sha256": "703ccd986e6ee8182b7a975c4976402574d323a652605ba14c37a3c0f238bbb9"
+    },
+    {
+      "kind": "Definitions",
+      "line": 475,
+      "code": "\n(code:comment \"instantiate-prototype : (Fun (Proto Self Super) Super -> Self)\")\n(define (instantiate-prototype prototype base-super)\n  (define self (prototype (λ i (apply self i)) base-super))\n  self)\n",
+      "sha256": "c0a9464639ff1261a9670da7f40c4f5347917f1e8e047a0d228bfbd692b1c01f"
+    },
+    {
+      "kind": "Definitions",
+      "line": 485,
+      "code": "\n(code:comment \"compose-prototypes : (Fun (Proto Self Super) (Proto Super Super2)\")\n(code:comment \"  -> (Proto Self Super2) st: (<: Self Super Super2))\")\n(define (compose-prototypes child parent)\n  (λ (self super2) (child self (parent self super2))))\n",
+      "sha256": "8bf919e23135b86093251c01a453d24f68a1460a6fd5d14cb717c6e3527df242"
+    },
+    {
+      "kind": "Definitions",
+      "line": 528,
+      "code": "\n(code:comment \"identity-prototype : (Proto Instance Instance)\")\n(define (identity-prototype self super) super)\n",
+      "sha256": "a818e35ca60e7f680eb22cd2b803db85c240204f3de2376fa23480489003d686"
+    },
+    {
+      "kind": "Definitions",
+      "line": 537,
+      "code": "\n(code:comment \"compose-prototype-list : (Fun (IndexedList I (λ (i)\")\n(code:comment \"  (Proto (A_ i) (A_ (1+ i))))) -> (Proto (A_ 0) (A_ (Card I))))\")\n(define (compose-prototype-list prototype-list)\n  (foldr compose-prototypes identity-prototype prototype-list))\n(code:comment \"instantiate-prototype-list : (Fun (IndexedList I (λ (i)\")\n(code:comment \"  (Proto (A_ i) (A_ (1+ i))))) (A_ (Card I)) -> (A_ 0))\")\n(define (instantiate-prototype-list prototype-list base-super)\n  (instantiate-prototype (compose-prototype-list prototype-list) base-super))\n",
+      "sha256": "370b3c92562c093b789881dbe8ed2a63cb43a713fa80b8fc1c678bd280406ff3"
+    },
+    {
+      "kind": "Definitions",
+      "line": 548,
+      "code": "\n(code:comment \"compose-prototype-list : (Fun (IndexedList I (λ (i)\")\n(code:comment \"  (Proto (A_ i) (A_ (1+ i))))) -> (Proto (A_ 0) (A_ (Card I))))\")\n(define (compose-prototype-list l)\n  (cond\n   ((null? l) identity-prototype)\n   ((null? (cdr l)) (car l))\n   ((null? (cddr l)) (compose-prototypes (car l) (cadr l)))\n   (else (compose-prototypes (car l) (compose-prototype-list (cdr l))))))\n",
+      "sha256": "05abe199b4c6aa838182bd630b516eb308f79da3c5809862726f83bb39ec3ea4"
+    },
+    {
+      "kind": "Examples",
+      "line": 562,
+      "code": "\n(define (compose-prototype-list prototype-list)\n  (foldr compose-prototypes identity-prototype prototype-list))\n",
+      "sha256": "7985aad6039d70e982703ae2b17abcd726d714792c93724d2c995ed16fa4c332"
+    },
+    {
+      "kind": "Definitions",
+      "line": 569,
+      "code": "\n(code:comment \"instantiate-prototype-list : (Fun (IndexedList I (λ (i)\")\n(code:comment \"  (Proto (A_ i) (A_ (1+ i))))) (A_ (Card I)) -> (A_ 0))\")\n(define (instantiate-prototype-list prototype-list base-super)\n  (instantiate-prototype (compose-prototype-list prototype-list) base-super))\n",
+      "sha256": "a90bce91a2761a5379a94c4a7c555d4fe6eaaf1a82875d473b381bc8eaba1053"
+    },
+    {
+      "kind": "Definitions",
+      "line": 578,
+      "code": "\n(define ($compose . proto-list) (compose-prototype-list proto-list))\n",
+      "sha256": "f399b475de5dc3c0921533609079e1cd94e59dc2ca3335b0fae6c389d2313df5"
+    },
+    {
+      "kind": "Definitions",
+      "line": 589,
+      "code": "\n(code:comment \"bottom : (Fun I ... -> O ...)\")\n(define (bottom . args) (error \"bottom\" args))\n",
+      "sha256": "7858fb4ed0f96cc8468d87aab48a0d4be40dfb58ab6f0f7030e361f18fee9ab2"
+    },
+    {
+      "kind": "Definitions",
+      "line": 599,
+      "code": "\n(code:comment \"instance : (Fun (IndexedList I (λ (i) (Proto (A_ i) (A_ (1+ i)))))...\")\n(code:comment \"  -> (A_ 0)))\")\n(define (instance . prototype-list)\n  (instantiate-prototype-list prototype-list bottom))\n",
+      "sha256": "7c56558b60b3f0897a39268f95b907630f657ce02d6018b310783a8916a7ba09"
+    },
+    {
+      "kind": "Definitions",
+      "line": 610,
+      "code": "\n(code:comment \"$constant-prototype : (Fun A -> (Proto A _))\")\n(define ($constant-prototype base-super) (λ (__self __super) base-super))\n",
+      "sha256": "669c0cf99b4a37e51a7c063dc0238252683625a9ac9652f84ed320649be409fa"
+    },
+    {
+      "kind": "Definitions",
+      "line": 617,
+      "code": "\n(code:comment \"$const : (Fun A -> (Proto A _))\")\n(define ($const b) (λ _ b))\n",
+      "sha256": "e02c5f86090a526a0cf4ce0e64e268688153ae618637a91d9c190d87ca4007e0"
+    },
+    {
+      "kind": "Definitions",
+      "line": 645,
+      "code": "\n(code:comment \"(deftype (Generator A) (Fun A -> A))\")\n(code:comment \"fix-generator : (Fun (Generator A) -> A)\")\n(define (fix-generator g) (define f (g (λ i (apply f i)))) f)\n(code:comment \"proto->generator : (Fun (Proto A B) B -> (Generator A))\")\n(define (proto->generator p b) (λ (f) (p f b)))\n(code:comment \"(== (fix-generator (proto->generator p b)) (fix p b))\")\n(code:comment \"apply-proto : (Fun (Proto A B) (Generator B) -> (Generator A))\")\n(define (apply-proto p g) (λ (f) (p f (g f))))\n(code:comment \"(== (apply-proto p (proto->generator q b)) (proto->generator (mix p q) b))\")\n",
+      "sha256": "493db88605069d6e465913c16799905d366230d4941e676aadcc68bbbb31b6fe"
+    },
+    {
+      "kind": "Definitions",
+      "line": 684,
+      "code": "\n(define ($number-order self super)\n  (λ (msg) (case msg ((<) (λ (x y) (< x y)))\n                     ((=) (λ (x y) (= x y)))\n                     ((>) (λ (x y) (> x y)))\n                     (else (super msg)))))\n(define ($string-order self super)\n  (λ (msg) (case msg ((<) (λ (x y) (string<? x y)))\n                     ((=) (λ (x y) (string=? x y)))\n                     ((>) (λ (x y) (string>? x y)))\n                     (else (super msg)))))\n",
+      "sha256": "0c835f786257a0bcd920cd0d5d79f4796b6a0455ae99411438d6e9bbec403d55"
+    },
+    {
+      "kind": "Definitions",
+      "line": 704,
+      "code": "\n(define ($compare<-order self super)\n  (λ (msg) (case msg\n             ((compare) (λ (x y) (cond (((self '<) x y) '<)\n                                       (((self '>) x y) '>)\n                                       (((self '=) x y) '=)\n                                       (else (error \"incomparable\" x y)))))\n             (else (super msg)))))\n(define number-order (instance $number-order $compare<-order))\n(define string-order (instance $string-order $compare<-order))",
+      "sha256": "8b47bc3b33deeb3839c811eb4aef81231e03977a00b2c45f1ad2461a3c53ba59"
+    },
+    {
+      "kind": "Checks",
+      "line": 714,
+      "code": "\n(eval:check (list ((number-order '<) 23 42) ((number-order 'compare) 8 4)\n  ((string-order '<) \"Hello\" \"World\") ((string-order 'compare) \"Foo\" \"FOO\")\n  ((string-order 'compare) \"42\" \"42\"))\n  '(#t > #t > =))\n",
+      "sha256": "8a3fcd42bf8dd4d1fc470544018b34650412f92c9cdd5957fb420ce5245fa3c9"
+    },
+    {
+      "kind": "Definitions",
+      "line": 723,
+      "code": "\n(define ($symbol-order self super)\n  (λ (msg) (case msg\n             ((< = > compare)\n              (λ (x y) ((string-order msg) (symbol->string x) (symbol->string y))))\n             (else (super msg)))))\n(define symbol-order (instance $symbol-order))",
+      "sha256": "db4f0b82addb5bc2ec1c7559213c933b85b7949b5a275ed23e666bfa359bff9a"
+    },
+    {
+      "kind": "Checks",
+      "line": 730,
+      "code": "\n(eval:check (list ((symbol-order '<) 'aardvark 'aaron) ((symbol-order '=) 'zzz 'zzz)\n  ((symbol-order '>) 'aa 'a) ((symbol-order 'compare) 'alice 'bob)\n  ((symbol-order 'compare) 'b 'c) ((symbol-order 'compare) 'c 'a))\n  '(#t #t #t < < >))\n",
+      "sha256": "044a197606f2d0db0bc2a8bdec2bef5cb6f3f9970523f50e993a81c392629f76"
+    },
+    {
+      "kind": "Definitions",
+      "line": 744,
+      "code": "\n(define ($binary-tree-map self super)\n  (λ (msg)\n    (define (node l kv r) ((self 'node) l kv r))\n    (case msg\n      ((empty) '())\n      ((empty?) null?)\n      ((node) (λ (l kv r) (list l (list kv) r)))\n      ((singleton) (λ (k v) (node '() (cons k v) '())))\n      ((acons)\n       (λ (k v t)\n         (if ((self 'empty?) t) ((self 'singleton) k v)\n             (let* ((tl (car t)) (tkv (caadr t)) (tk (car tkv)) (tr (caddr t)))\n               (case (((self 'Key) 'compare) k tk)\n                 ((=) (node tl (cons k v) tr))\n                 ((<) (node ((self 'acons) k v tl) tkv tr))\n                 ((>) (node tl tkv ((self 'acons) k v tr))))))))\n      ((ref)\n       (λ (t k e)\n         (if ((self 'empty?) t) (e)\n             (let ((tl (car t)) (tk (caaadr t)) (tv (cdaadr t)) (tr (caddr t)))\n               (case (((self 'Key) 'compare) k tk)\n                 ((=) tv)\n                 ((<) ((self 'ref) tl k e))\n                 ((>) ((self 'ref) tr k e)))))))\n      ((afoldr)\n       (λ (acons empty t)\n         (if ((self 'empty?) t) empty\n           (let ((tl (car t)) (tk (caaadr t)) (tv (cdaadr t)) (tr (caddr t)))\n             ((self 'afoldr)\n              acons (acons tk tv ((self 'afoldr) acons empty tl)) tr)))))\n      (else (super msg)))))",
+      "sha256": "f8f2059ae93bc058a5b01a178b97f49892678f025ecb6de845cb8dd7ab5376a3"
+    },
+    {
+      "kind": "Definitions",
+      "line": 780,
+      "code": "\n(define symbol-tree-map (instance ($slot 'Key symbol-order) $binary-tree-map))\n",
+      "sha256": "83613b98de3fb5d37b7cfd8a22e75e19b9e827c7a2b8d9b4ea7eaa60523e5b77"
+    },
+    {
+      "kind": "Checks",
+      "line": 787,
+      "code": "\n(define my-binary-dict (code:comment \"heavily skewed right, height 5\")\n  (foldl (λ (kv t) ((symbol-tree-map 'acons) (car kv) (cdr kv) t))\n         (symbol-tree-map 'empty)\n         '((a . \"I\") (b . \"II\") (c . \"III\") (d . \"IV\") (e . \"V\"))))\n(eval:check my-binary-dict '(() ((a . \"I\")) (() ((b . \"II\")) (() ((c . \"III\")) (() ((d . \"IV\")) (() ((e . \"V\")) ()))))))",
+      "sha256": "ff3320ace125e0e4487028f06b69e75b3bda48844b7f68c79ac2c0a290f810d4"
+    },
+    {
+      "kind": "Checks",
+      "line": 796,
+      "code": "\n(eval:check (map (λ (k) ((symbol-tree-map 'ref) my-binary-dict k (λ () #f))) '(a b c d e z))\n            '(\"I\" \"II\" \"III\" \"IV\" \"V\" #f))",
+      "sha256": "1eefe4d9e71937e0044ce0e554dbabab90b38dc1d8323c4cccaa773eeedb4df3"
+    },
+    {
+      "kind": "Definitions",
+      "line": 805,
+      "code": "\n(define ($avl-tree-rebalance self super)\n  (λ (msg)\n    (define (left t) (car t))\n    (define (kv t) (caadr t))\n    (define (height t) (if (null? t) 0 (cdadr t)))\n    (define (right t) (caddr t))\n    (define (balance t) (if (null? t) 0 (- (height (right t)) (height (left t)))))\n    (define (mk l kv r)\n      (let ((lh (height l)) (rh (height r)))\n        (or (member (- rh lh) '(-1 0 1)) (error \"tree unbalanced!\"))\n        (list l (cons kv (+ 1 (max lh rh))) r)))\n    (define (node l ckv r)\n      (case (- (height r) (height l))\n        ((-1 0 1) (mk l ckv r))\n        ((-2) (case (balance l)\n                ((-1 0) (mk (left l) (kv l) (mk (right l) ckv r))) ;; LL rebalance\n                ((1) (mk (mk (left l) (kv l) (left (right l))) ;; LR rebalance\n                         (kv (right l)) (mk (right (right l)) ckv r)))))\n        ((2) (case (balance r)\n               ((-1) (mk (mk l ckv (left (left r))) ;; RL rebalance\n                         (kv (left r)) (mk (right (left r)) (kv r) (right r))))\n               ((0 1) (mk (mk l ckv (left r)) (kv r) (right r))))))) ;; RR rebalance\n    (case msg ((node) node) (else (super msg)))))\n(define Dict\n  (instance $avl-tree-rebalance $binary-tree-map ($slot 'Key symbol-order)))",
+      "sha256": "d3f44a1f79d7fcbb1ae8077c9d5cb924e18c3d5b3eb2773684f5e1580bea52e3"
+    },
+    {
+      "kind": "Checks",
+      "line": 834,
+      "code": "\n(define my-avl-dict\n  (foldl (λ (kv t) ((Dict 'acons) (car kv) (cdr kv) t))\n         (Dict 'empty)\n         '((a . \"I\") (b . \"II\") (c . \"III\") (d . \"IV\") (e . \"V\"))))\n(eval:check my-avl-dict\n                '((() ((a . \"I\") . 1) ()) ((b . \"II\") . 3)\n                  ((() ((c . \"III\") . 1) ()) ((d . \"IV\") . 2) (() ((e . \"V\") . 1) ()))))\n(eval:check (map (λ (k) ((Dict 'ref) my-avl-dict k (λ () #f))) '(a b c d e z))\n            '(\"I\" \"II\" \"III\" \"IV\" \"V\" #f))\n",
+      "sha256": "6a74f74f85cfef2eead42a819f2740fa7162e40a8edef622ae907a88261f61fd"
+    },
+    {
+      "kind": "Examples",
+      "line": 857,
+      "code": "\n(define ($even self super) (λ (x) (if (< x 0) (self (- x)) (super x))))\n",
+      "sha256": "3cf731b07733cbe31cb900690ae427f81a2cde1d43d5551e549d49a121bf2b75"
+    },
+    {
+      "kind": "Examples",
+      "line": 862,
+      "code": "\n(define ($cube self super) (λ (x) (let ((y (super x))) (* y y y))))\n",
+      "sha256": "ee7dc644229f1f30f5c09380bb467e48261c2e8185eab223395b8e819aa0c08f"
+    },
+    {
+      "kind": "Checks",
+      "line": 867,
+      "code": "\n(define absx3 (instance $even $cube ($constant-prototype (λ (x) x))))\n(eval:check (map absx3 '(3 -2 0 -1)) '(27 8 0 1))\n",
+      "sha256": "f4228f7d284c88939849857ce0134aac551a3d801fe5f38d27ec86121267e4b9"
+    },
+    {
+      "kind": "Checks",
+      "line": 875,
+      "code": "\n(define (p1+ __ b) (λ () (+ 1 (b))))\n(define (p2* __ b) (λ () (* 2 (b))))\n(eval:check (list ((fix (mix p1+ p2*) (λ () 30)))\n                  ((fix (mix p2* p1+) (λ () 30))))\n            '(61 62))\n",
+      "sha256": "81e96e53ba940c883b0c7ac182f65a700647721e921746e286b1c46d34c69fef"
+    },
+    {
+      "kind": "Definitions",
+      "line": 896,
+      "code": "\n(code:comment \"(deftype (δProto Self Super) (Fun (Delayed Self) (Delayed Super) -> Self))\")\n(code:comment \"δfix : (Fun (δProto Self Super) (Delayed Super) -> (Delayed Self))\")\n(define (δfix p b) (define f (delay (p f b))) f)\n(code:comment \"δmix : (Fun (δProto Self Mid) (δProto Mid Super) -> (δProto Self Super))\")\n(define (δmix c p) (λ (f b) (c f (delay (p f b)))))\n(code:comment \"δ$id : (δProto X X)\")\n(define (δ$id f b) (λ (__self super) (force super)))\n",
+      "sha256": "fa4bbc2044e414c5f1435371c01a0b8e7ac0520d170edb6aee063cf42be1f660"
+    },
+    {
+      "kind": "Definitions",
+      "line": 972,
+      "code": "\n(define ($slot-gen/keys k fun)\n  (λ (self super)\n    (λ (msg) (cond ((equal? msg k) (fun self (λ () (super msg))))\n                   ((equal? msg 'keys) (cons k (super 'keys)))\n                   (else (super msg))))))\n",
+      "sha256": "290cec7607dbc13a918ad57d1f9ae41becf70f454c3594d26d7acda8e917efd6"
+    },
+    {
+      "kind": "Definitions",
+      "line": 986,
+      "code": "\n(define ($slot-gen/dict k fun)\n  (λ (self super)\n    (define (inherit) ((Dict 'ref) (super) k bottom))\n    (λ () ((Dict 'acons) k (fun self inherit) (super)))))\n",
+      "sha256": "feed5655001cbebf94e97a7c4bcd0d20fa0b805fd6d796944c81b73540c9f4cb"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1003,
+      "code": "\n(define (δ$slot-gen/dict k fun)\n  (λ (self super)\n    (delay (let ((inherit ((Dict 'ref) (force super) k (λ () (delay (bottom))))))\n             ((Dict 'acons) k (delay (fun self inherit)) (force super))))))\n",
+      "sha256": "e045a9542ed1b4891f535b6cca62bd7819abe3ef790a143a5e0cc07211238364"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1017,
+      "code": "\n(define (mix/pk child parent)\n  (cons (mix (car child) (car parent))\n        (append (cdr child) (cdr parent))))\n(define (fix/pk proto base)\n  (fix (mix ($slot 'keys (cdr proto)) (car proto)) base))\n",
+      "sha256": "630307fd5eeb3861755b5a23a1eaf7c256becb86a694876e30a89c44b3d55700"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1093,
+      "code": "\n(define (make-object instance prototype) (cons instance prototype))\n(define (object-instance object) (car object))\n(define (object-prototype object) (cdr object))\n",
+      "sha256": "7032d7cbcb59552660f06e10895776cf3c6702743a06bc0af024406bfdb85e22"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1117,
+      "code": "\n(define (slot-ref object slot)\n  (force ((Dict 'ref) (force (object-instance object)) slot bottom)))\n(define ($slot/gen k fun)\n  (λ (self super)\n    (make-object ((Dict 'acons) k (fun self (delay (slot-ref super k)))\n                  (object-instance (force super)))\n                 (object-prototype (force super)))))\n(define ($slot/value k v) ($slot/gen k (λ (__self __inherit) (delay v))))\n(define ($slot/modify k modify)\n  ($slot/gen k (λ (__ inherit) (delay (modify (force inherit))))))\n(define ($slot/compute k fun) ($slot/gen k (λ (self __) (delay (fun self)))))\n",
+      "sha256": "cd9d43cd20e6f0cfa248e5b3c2e7d0448e68ccf382cd5a819e84d60a3e735621"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1133,
+      "code": "\n(define ($slot/values . kvs)\n  (if (null? kvs) identity-prototype\n    (compose-prototypes ($slot/value (car kvs) (cadr kvs))\n                        (apply $slot/values (cddr kvs)))))\n",
+      "sha256": "b259fe2777fc3689b5b8288facdc9085615a5d9a573b315873b2f0524b35c9f3"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1208,
+      "code": "\n(code:comment \"The (require srfi/1) below imports SRFI 1 list functions into Racket\")\n(code:comment \"YMMV if you use another Scheme implementation\")\n(require srfi/1)\n\n(code:comment \"not-null? : Any -> Bool\")\n(define (not-null? l) (not (null? l)))\n\n(code:comment \"remove-nulls : (List (List X)) -> (List (NonEmptyList X))\")\n(define (remove-nulls l) (filter not-null? l))\n\n(code:comment \"remove-next : X (List (NonEmptyList X)) -> (List (NonEmptyList X))\")\n(define (remove-next next tails)\n  (remove-nulls (map (λ (l) (if (equal? (car l) next) (cdr l) l)) tails)))\n\n(code:comment \"c3-compute-precedence-list : A (A -> (List A)) (A -> (NonEmptyList A))\")\n(code:comment \"  -> (NonEmptyList A)\")\n(define (c3-compute-precedence-list x get-supers get-precedence-list)\n  (define supers (get-supers x)) ;; : (List A)\n  (define super-precedence-lists (map get-precedence-list supers)) ;; : (List (NonEmptyList A))\n  (define (c3-select-next tails) ;; : (NonEmptyList (NonEmptyList A)) -> A\n    (define (candidate? c) (every (λ (tail) (not (member c (cdr tail)))) tails)) ;; : A -> Bool\n    (let loop ((ts tails))\n      (when (null? ts) (error \"Inconsistent precedence graph\"))\n      (define c (caar ts))\n      (if (candidate? c) c (loop (cdr ts)))))\n  (let loop ((rhead (list x)) ;; : (NonEmptyList X)\n             (tails (remove-nulls (append super-precedence-lists (list supers))))) ;; : (List (NonEmptyList X))\n    (cond ((null? tails) (reverse rhead))\n          ((null? (cdr tails)) (append-reverse rhead (car tails)))\n          (else (let ((next (c3-select-next tails)))\n                  (loop (cons next rhead) (remove-next next tails)))))))\n",
+      "sha256": "a6ea9a895b826692bd3fcb37bb8ab2c4b02dc9839807778826bfcde0fd91878c"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1242,
+      "code": "\n(define (alist->Dict alist)\n  (foldl (λ (kv a) ((Dict 'acons) (car kv) (cdr kv) a)) (Dict 'empty) alist))\n\n(define (Dict->alist dict)\n  ((Dict 'afoldr) (λ (k v a) (cons (cons k v) a)) '() dict))\n\n(define (Dict-merge override-dict base-dict)\n  ((Dict 'afoldr) (Dict 'acons) base-dict override-dict))\n",
+      "sha256": "de28cae0f5fc0587b44dbf0357824b3588780148b657afe33314b84a1705e9d4"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1284,
+      "code": "\n(define (Dict->Object dict) (make-object dict '()))\n(define (object-prototype-function object)\n  (define prototype (object-prototype object))\n  (if (null? prototype)\n    (λ (self super)\n      (make-object (Dict-merge (object-instance object) (object-instance super))\n                   (object-prototype super)))\n    (slot-ref prototype 'function)))\n(define (object-supers object)\n  (define prototype (object-prototype object))\n  (if (null? prototype) '() (slot-ref prototype 'supers)))\n(define (object-precedence-list object)\n  (define prototype (object-prototype object))\n  (if (null? prototype) '() (slot-ref prototype 'precedence-list)))\n(define (compute-precedence-list object)\n  (c3-compute-precedence-list object object-supers object-precedence-list))\n(define base-dict (Dict 'empty))\n(define (instantiate supers function)\n  (define proto\n    (Dict->Object ((Dict 'acons) 'function (delay function)\n                   ((Dict 'acons) 'supers (delay supers)\n                    ((Dict 'acons) 'precedence-list (delay precedence-list)\n                     (Dict 'empty))))))\n  (define base (make-object base-dict proto))\n  (define precedence-list (compute-precedence-list base))\n  (define prototype-functions (map object-prototype-function precedence-list))\n  (instantiate-prototype-list prototype-functions (delay base)))\n(define (object function . supers) (instantiate supers function))\n",
+      "sha256": "13a65cc685ca96aaa1dfa38e74497ab0a32336ab414b0772e7017977554cbfce"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1404,
+      "code": "\n(define Number (object ($slot/values 'is? number? '->sexp identity\n                          '+ + '- - 'zero 0 'one 1)))\n",
+      "sha256": "54b9675e29be3611fa1c899aefe2f67ad28e2b55c16c1456418b12de6229e51e"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1414,
+      "code": "\n(define (list-of? t x) (or (null? x)\n  (and (pair? x) ((slot-ref t 'is?) (car x)) (list-of? t (cdr x)))))\n(define (ListOf t) (object ($slot/value 'is? (λ (x) (list-of? t x)))))\n",
+      "sha256": "fd59804e43691954deb9391edc3e8646183961f3f0694997a3479522d372cd6c"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1517,
+      "code": "\n(define (fix! p b) (define f (hash-copy b)) (p f) f)\n(define (mix! p q) (λ (f) (q f) (p f)))\n(define ($slot-gen! k fun)\n  (λ (self) (define inherit (hash-ref self k (delay (bottom))))\n            (hash-set! self k (fun self inherit))))\n",
+      "sha256": "8d279585b1dd4b0613eb8739cfb9459ada98c88a4136f161f15a2eac6c53e8c5"
+    },
+    {
+      "kind": "Definitions",
+      "line": 1607,
+      "code": "\n(define (operate instance selector . args) (apply (instance selector) args))\n",
+      "sha256": "83c49d0478eabac3b7a7e083b685fd50042e6170fe216cebc510530e88bf16ce"
+    },
+    {
+      "kind": "Examples",
+      "line": 1883,
+      "code": "\n(define test-inheritance-dag-alist\n  '((O) (A O) (B O) (C O) (D O) (E O)\n    (K1 A B C) (K2 D B E) (K3 D A) (Z K1 K2 K3)))\n(define (test-get-supers x) (cdr (assoc x test-inheritance-dag-alist)))\n(define (test-compute-precedence-list x)\n  (c3-compute-precedence-list x test-get-supers test-compute-precedence-list))\n",
+      "sha256": "7bd8790abfdc90d863ec7b58d1392f0e65ed4c2bf62de1750c05db65c9a046e8"
+    },
+    {
+      "kind": "Checks",
+      "line": 1894,
+      "code": "\n(eval:check (map not-null? '(() (1) (a b c) nil)) '(#f #t #t #t))\n(eval:check (remove-nulls '((a b c) () (d e) () (f) () ())) '((a b c) (d e) (f)))\n(eval:check (map test-compute-precedence-list '(O A K1 Z))\n  '((O) (A O) (K1 A B C O) (Z K1 K2 K3 D A B C E O)))\n",
+      "sha256": "5959a1cabbd7499c63159a0a7597df53f3287bf95631525a45b49992643d1f9b"
+    },
+    {
+      "kind": "Examples",
+      "line": 1947,
+      "code": "\n(define test-instance\n  (alist->Dict `((a . ,(delay 1)) (b . ,(delay 2)) (c . ,(delay 3)))))\n(define test-prototype\n  (alist->Dict `((function . ,(delay (λ (self super)\n                                (Dict-merge (force test-instance) (force super)))))\n                 (supers . ,(delay '()))\n                 (precedence-list . ,(delay '())))))\n(define test-object (make-object test-instance test-prototype))\n(define test-p1 ($slot/value 'foo 1))\n",
+      "sha256": "842d136b22eda3645cc07c163ebc1415021c1d4658c4a9546113c51424e480e4"
+    },
+    {
+      "kind": "Checks",
+      "line": 1973,
+      "code": "\n(eval:check (map (λ (x) (slot-ref test-object x)) '(a b c)) '(1 2 3))\n(eval:check (slot-ref (instantiate '() test-p1) 'foo) 1)\n(eval:check (map (slot-ref (ListOf Number) 'is?) '(() (1 2 3) (1 a 2) (1 . 2)))\n  '(#t #t #f #f))\n",
+      "sha256": "f3533cdb8eacaf3c5af6e75c712824d333bf16f006e7d4ca0dcae238fe45c717"
+    },
+    {
+      "kind": "Definitions",
+      "line": 2129,
+      "code": "\n(define ($lens-gen setter getter wrapper method)\n  (λ (cooked-self raw-super)\n    (setter ((wrapper method) cooked-self (delay (getter raw-super)))\n            raw-super)))\n",
+      "sha256": "f79b56a5ba8a8af4d7b33cb88e16daababef28f959cbb23526d3b069787b5b1c"
+    },
+    {
+      "kind": "Definitions",
+      "line": 2138,
+      "code": "\n(code:comment \"(deftype (ObjectWrapper Raw Cooked)\")\n(code:comment \"  (Forall (Object) (Fun (Raw Object) -> (Cooked Object))))\")\n(code:comment \"(deftype (CookedProto Cooked)\")\n(code:comment \"  (Forall (ObjectSuper ObjectSelf MethodSuper MethodSelf) ; s t a b\")\n(code:comment \"    (Fun (Cooked ObjectSelf) (Delayed MethodSuper) -> MethodSelf)))\")\n(code:comment \"(deftype (MethodSetter Raw)\")\n(code:comment \"  (Forall (ObjectSuper ObjectSelf MethodSelf) ; s t b\")\n(code:comment \"    (Fun MethodSelf (Raw ObjectSuper) -> (Raw ObjectSelf))))\")\n(code:comment \"(deftype (MethodGetter Raw)\")\n(code:comment \"  (Forall (Object Method) ; s a\")\n(code:comment \"    (Fun (Raw Object) -> Method)))\")\n(code:comment \"(deftype (MethodWrapper Cooked RawProto)\")\n(code:comment \"  (Fun (RawProto Cooked) -> (CookedProto Cooked)))\")\n",
+      "sha256": "66065d5925e4d5bfbd3281147d2028fe567ae369d8e0151faaad62749d1eaa2d"
+    },
+    {
+      "kind": "Examples",
+      "line": 2278,
+      "code": "\n(define (overly-simple-fix p b)\n  (define f (p f b))\n  f)\n",
+      "sha256": "3a2be9e3ed525c3d963f5981fa451a974c31888ca07016f4164bf040a92759ee"
+    },
+    {
+      "kind": "Examples",
+      "line": 2309,
+      "code": "\n(define (delayed-fix p b)\n  (define f (delay (p f b)))\n  f)\n",
+      "sha256": "7f5495db984c8cf390ab2f4860e47375e0be982789eecf96b870f3f4a1025fd8"
+    },
+    {
+      "kind": "Examples",
+      "line": 2329,
+      "code": "\n(define (fix--0 p b)\n  (define (f . i) (apply (p f b) i))\n  f)\n",
+      "sha256": "f4f31aaab3e4adcffcbfc66f9c05efb4f481243022069fae3cf9d31e0bc12ab4"
+    },
+    {
+      "kind": "Examples",
+      "line": 2357,
+      "code": "\n(define (fix--1 p b)\n  (define f (p (λ i (apply f i)) b))\n  f)\n",
+      "sha256": "5a3be86382900b17d40a26d133a29e868715ce94dd032ad857e98bfd7fab1ec3"
+    },
+    {
+      "kind": "Examples",
+      "line": 2372,
+      "code": "\n(define (fix--2 p b)\n  (letrec ((f (p (λ i (apply f i)) b)))\n    f))\n",
+      "sha256": "f8eb84e78e795f8fff2ae43668287ceeabaf65b2a7cee13333afbb4985526351"
+    },
+    {
+      "kind": "Examples",
+      "line": 2380,
+      "code": "\n(define (fix--3 p b)\n  ((λ (yf) (yf yf)) (λ (yf) (p (λ i (apply (yf yf) i)) b))))\n",
+      "sha256": "c0c6e530714f51053906ddb5b42cc16608e72b720370636a56ea077f6e0d88b9"
+    },
+    {
+      "kind": "Examples",
+      "line": 2399,
+      "code": "\n(define ((mix p q) f b) (p f (q f b)))\n",
+      "sha256": "8d905bfaa8cd8b7c102e1b25909dedf66cada0b1a9db60204aaac5bf6b97f5c9"
+    }
+  ]
+}
