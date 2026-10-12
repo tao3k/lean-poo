@@ -11,6 +11,10 @@ specified state transitions. The ~whole_paper_implemented~ flag stays false:
 arbitrary Scheme programs, all unsafe execution and unrestricted automation
 are outside these theorems. The explicit future proposals remain research.
 
+Lean platform verification is outside this construction audit and is not a
+missing requirement of the original paper. Existing platform controls below
+are supporting project evidence; this update adds concrete construction laws.
+
 * Implemented closure
 
 | Area | Kernel or executable evidence | Scope |
@@ -21,7 +25,12 @@ are outside these theorems. The explicit future proposals remain research.
 | C3 object composition | ~SlotSyntax.resolveForward_eq~, ~C3.Plan.resolve_paper~, ~Recursive.Plan.read_derivation~ | Actual declarations and effective dynamic slots; every key/self or depth/key observation |
 | Parameterized methods | ~Callable.Plan.call_derivation~, ~call_fromFields~, ~solve_reindex~, ~Value.equalAt_correct~ and CheckedCall receipts | Actual C3 methods; every argument/depth, exact request sharing, checked immutable/mutable calls and retained snapshots |
 | Dynamic descriptors | ~accepts_sound~, ~Descriptor.call_sound~; recursive contract and reflection controls | Recursive dynamic values, current registered identities, named types and checked call boundaries |
-| Mutable slots | Pure slot/compose laws and IO observation controls | One mutable hash identity, parent-first writes, captured inherited syntax, alias visibility, persistent snapshots and consuming-state conversion |
+| BST/AVL dictionaries | Source fixed-point equations, ~avlNode_preserves~, ~avl_insert_complete~, ~insert_entries~, ~search_insert~, ~avl_fromList~, ~fold_inorder~ | Arbitrary valid trees/lists; explicit comparison laws, exact values/order/balance/heights and overwrite/frame observations |
+| Concrete representations | ~semanticSlot_related~, ~LayersRelated.compose~, key-list projection/exposure laws | Arbitrary delayed self/super bodies, related final selves/valid parents, missing slots and errors |
+| Checked meta preparation | ~order_unique~, ~program_selection~, ~parent_cache_sound~, frozen-field laws | Actual preparation retains source C3 derivations, registry function selection and immutable metadata |
+| Mutable slots | ~interpret_sound~, ~interpret_complete~, ~interpret_projection~, snapshot/linear laws and 616 IO controls | Common parent-first complete state/status semantics; partial writes retained on the first error, alias resume and success consumption |
+| Multiple dispatch | ~collect_reference~, ~select_reference~, ~call_correct~, cache preservation/invalidation | Complete lexicographic tuple and current predicate specification for every sound candidate cache |
+| Standard combination | ~effective_standard~, ~callChain_append~, ~runSides_append~ | Arbitrary monads/callbacks, ordered before/primary/reversed-after and nested around/next |
 | Original source | 76 exact code blocks and 24 canonical source/Lean comparisons | Pinned original expressions; executable Racket gate locally and in CI |
 
 * Reusable evidence

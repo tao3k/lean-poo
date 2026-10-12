@@ -4,7 +4,7 @@ import LeanPoo.Prototype.BinaryTree
 namespace LeanPoo.Prototype
 variable {Key Value Acc : Type}
 
-private def avlMake (left : Tree Key Value) (key : Key) (value : Value)
+def avlMake (left : Tree Key Value) (key : Key) (value : Value)
     (right : Tree Key Value) : Except String (Tree Key Value) := do
   let lh ← left.cachedHeight
   let rh ← right.cachedHeight

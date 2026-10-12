@@ -266,6 +266,8 @@ _check-contracts:
     {{lean}} Tests/DynamicCodecSemantics.lean
     {{lean}} Tests/DynamicValueEquality.lean
     {{lean}} Tests/MutableRecord.lean
+    {{lean}} Tests/MutableRecordSemantics.lean
+    {{lean}} Tests/ConstructionSemantics.lean
     {{lean}} Tests/RecordDispatch.lean
     {{lean}} Tests/RecordComplexRelation.lean
     {{lean}} Tests/Trees.lean

@@ -52,7 +52,7 @@ def construction_closure(config):
     closure = json.loads(CLOSURE.read_text())
     if closure['schema'] != 'lean-poo.poof-closure.v1' or closure['reviewed_constructive_path_closed'] is not True:
         raise ValueError('Expected reviewed typed construction closure v1')
-    ids = ['bottom', 'multiple-inheritance', 'simple-types', 'elaborate-types', 'typeclass-correspondence', 'pure-linearity', 'fixed-point-variants']
+    ids = ['bottom', 'binary-tree-case', 'avl-case', 'representations', 'multiple-inheritance', 'meta-prototype', 'simple-types', 'elaborate-types', 'typeclass-correspondence', 'pure-linearity', 'multiple-dispatch', 'method-combination', 'fixed-point-variants']
     if [entry['id'] for entry in closure['requirements']] != ids or not closure['scope']:
         raise ValueError('Construction closure coverage changed')
     rows = {row['id']: row for row in config['rows']}

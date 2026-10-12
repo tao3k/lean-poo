@@ -70,14 +70,23 @@ syntax, receives explicit final self, and performs one table insertion;
 subsequent self reads see the current storage. An override can skip inherited
 errors. Failure retains earlier writes and skips subsequent mutations.
 
-~Specification.transition~ declares the pure state semantics. ~write_pureSlot~
-and ~compose_assoc~ are kernel laws. ~snapshot~, ~create~, ~fromValues~ and
-~applyLinear~ expose persistent, mutable and consuming-state conversions.
-Mutable failure retains partial writes; linear failure preserves the old
-reference. [[file:../../Tests/MutableRecord.lean][MutableRecord controls]] exercise both policies, alias visibility,
-snapshot isolation, fresh identity, inherited laziness and mutual recursion.
-An IO refinement theorem and machine-level constant-time allocation bounds
-are not supplied.
+~Specification.interpret~ is the shared parent-first interpreter; ~transition~
+and ~snapshotTransition~ specialize its state writes. [[file:../../LeanPoo/Prototype/MutableRecordSemantics.lean][MutableRecordSemantics]] proves
+soundness, completeness and uniqueness against an independent ~Executes~
+relation. Representation projection retains the complete state and status;
+snapshot and linear observations agree at every key and depth.
+
+All three carriers retain writes before the first error and skip later writes.
+A failed linear operation keeps the old aliases valid with that partial state;
+it can resume. Success consumes the old aliases and returns a fresh reference.
+The paper does not specify rollback; this is the common repository convention.
+~snapshot~, ~create~, ~fromValues~ and ~applyLinear~ expose the conversions.
+Mutable application commits the complete specification under its existing
+mutex, advances the generation per write and invalidates memo entries after
+any write, including writes before an error. A no-write failure retains the
+snapshot and memo. [[file:../../Tests/MutableRecordSemantics.lean][616 protocol scenarios]] include 376 failures, four selected
+keys and four depths, alias visibility, retained snapshots and failure resume.
+These concrete IO controls accompany the kernel interpreter/projection laws.
 
 * Source qualification
 

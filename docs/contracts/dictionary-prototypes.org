@@ -9,11 +9,28 @@
 | Supply an order | ~OrderOps.predicates~, ~compareMixin~, ~number~, ~string~, ~symbol~, ~instantiate~ | compare reads final-self predicates; incomparable pairs return an error |
 | Reuse dictionary algorithms | ~Dictionary.binaryTree~, ~withOrder~, ~instantiate~, ~fromList~, ~toList~, ~merge~; node/singleton/acons/ref/afoldr | Recursion dispatches through final self; overwrite is persistent, missing lookup is Option |
 | Add AVL balance | ~Dictionary.avlRebalance~, ~avlNode~ | Overrides only node; cached heights and four rotation cases; malformed input can be refused |
-| Reuse inheritance proofs | ~avlRebalance_inherits~, ~avlRebalance_node~ | Exact field equalities, no axioms; not a universal insertion preservation theorem |
+| Reuse inheritance proofs | ~avlRebalance_inherits~, ~avlRebalance_node~ | Exact inherited fields plus universal valid insertion, content/order/height and lookup laws |
 | Use ordinary paper C3 | ~C3.linearize~, ~notNull~, ~removeNulls~, ~removeNext~ | Finite graph with explicit cycle/duplicate/inconsistency errors; main object C4 policy is separate |
 | Store lazy slots in AVL | ~DictionaryRecord.fromOrder~, ~slotGen~, ~slot~, ~compute~, ~modify~, ~lookup~, ~get~, ~instantiate~ | Homogeneous typed values; only requested value is forced; explicit construction/lookup errors |
 | Retain prototype keys | ~KeyedPrototype.slot~, ~compose~, ~instantiate~ | Child key lists append before parent lists; duplicate keys retained; explicit keys-slot override policy |
 | Extend meta slots | ~MetaPrototype.make~, ~fromRecord~, ~function~, ~supers~, ~precedence~, ~instantiate~ | First-class metadata Object uses the same slot constructors; string registry identifies supers |
+
+* Universal dictionary and representation laws
+
+[[file:../../LeanPoo/Prototype/BinaryTreeSemantics.lean][BinaryTreeSemantics]] supplies ~Dictionary.bst~ and ~Dictionary.avl~ as structural
+solutions of the actual open-prototype equations. ~OrderOps.Laws~ states the
+comparison assumptions; ~OrderOps.integer_laws~ proves them for the numeric
+source mixin. Insertion preserves sorted contents and overwrites exactly one
+lookup. Every valid AVL insertion succeeds, retains all balance/cache-height
+invariants and grows height by zero or one. ~avl_fromList~ proves validity,
+ordering and every lookup for arbitrary input lists. ~fold_inorder~ and
+~merge_inorder~ connect the exact source fold and helper accumulation order.
+
+[[file:../../LeanPoo/Prototype/RecordRepresentations.lean][RecordRepresentations]] proves function/AVL observation correspondence for
+arbitrary delayed slot bodies and composed layers with related self/parents.
+Errors and missing keys stay distinct. Key-list projection and metadata
+exposure/override policies are kernel laws. [[file:../../Tests/ConstructionSemantics.lean][ConstructionSemantics]] supplies
+generic clients and concrete source/structural and self/super/error controls.
 
 * Construct an AVL dictionary
 
@@ -62,7 +79,10 @@ Use ~metadata.extend (Object.recordSlotGen .function ...)~ or the corresponding
 closes the composed functions. Parent caches are observable, overridable caller
 metadata; they do not carry C4 ancestry certificates. Unknown cached names,
 missing slots, duplicate identities and a retained cycle back to the new root
-are refused. General arbitrary cache consistency is a caller contract.
+are refused. The raw API retains a caller cache contract. ~prepareChecked~
+returns a prepared plan carrying root and parent C3 derivations, registry
+function selection and frozen function/supers/precedence proofs. Repeated
+instantiation uses exactly that certified program and metadata.
 
 The ~fromRecord~ special base has empty supers/cache and merges constant slots
 over inherited slots. This avoids an infinite tower of metadata constructors.

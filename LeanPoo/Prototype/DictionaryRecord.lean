@@ -1,4 +1,4 @@
-import LeanPoo.Prototype.AVL
+import LeanPoo.Prototype.BinaryTreeSemantics
 
 /-! POOF's alternate dictionary-backed record representation. Entries retain
 delayed slot computations; prototypes reuse the AVL node-only extension. -/
@@ -45,9 +45,8 @@ def DictionaryRecord.modify (key : Key) (change : Value → Value) :
     let some value ← inherited.get | throw "unbound inherited slot"
     return change value)
 
-unsafe def DictionaryRecord.fromOrder (order : OrderOps Key) : DictionaryRecord Key Value :=
-  { dictionary := Dictionary.instantiate order
-      (DelayedProto.compose Dictionary.avlRebalance Dictionary.binaryTree)
+def DictionaryRecord.fromOrder (order : OrderOps Key) : DictionaryRecord Key Value :=
+  { dictionary := Dictionary.avl order
     entries := .ok .empty }
 
 unsafe def DictionaryRecord.instantiate

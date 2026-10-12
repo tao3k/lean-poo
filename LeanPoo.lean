@@ -106,6 +106,7 @@ import LeanPoo.Prototype.SharedCellRefinement
 import LeanPoo.Object.SharedRecursive
 import LeanPoo.Prototype.DynamicDescriptorSemantics
 import LeanPoo.Prototype.MutableRecord
+import LeanPoo.Prototype.MutableRecordSemantics
 import LeanPoo.Prototype.RecordDispatch
 import LeanPoo.Prototype.LinearState
 import LeanPoo.Prototype.NumberDescriptor
@@ -175,3 +176,7 @@ import LeanPoo.Functional.SolverTransport
 import LeanPoo.Functional.FiniteDiagnostics
 import LeanPoo.Functional.TransformationProfiles
 import LeanPoo.Functional.TransformationResources
+import LeanPoo.Prototype.BinaryTreeSemantics
+import LeanPoo.Prototype.RecordRepresentations
+import LeanPoo.Object.MultimethodSemantics
+import LeanPoo.Object.MethodCombinationSemantics

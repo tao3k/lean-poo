@@ -56,8 +56,22 @@ remains a separate claim.
 
 | Paper lines | Existing mechanism | Scope |
 |-------------+--------------------+-------|
-| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Typed registration, applicability, selection and context/cache controls |
-| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Ordered primary/before/after/around and user-defined combinations |
+| 1980–2059 | [[file:../../../LeanPoo/Object/Multimethod.lean][Multimethod]], [[file:../../../LeanPoo/Object/Subjective.lean][Subjective]], [[file:../../../Tests/MultipleDispatch.lean][MultipleDispatch]] | Universal sparse/tuple order, current-argument filtering, cache soundness and invalidation laws |
+| 2060–2083 | [[file:../../../LeanPoo/Object/MethodCombination.lean][MethodCombination]], [[file:../../../LeanPoo/Object/QualifiedMethods.lean][QualifiedMethods]], [[file:../../../Tests/QualifiedMethodCombination.lean][qualified controls]] | Universal standard order and nested next-chain correspondence; user-defined combinations |
+
+[[file:../../../LeanPoo/Object/MultimethodSemantics.lean][MultimethodSemantics]] proves sparse candidate traversal equals the complete
+lexicographic tuple product for arbitrary specialization lists. The actual
+selector equals current-argument ~filterMap~; the cache stores candidates and
+rechecks predicates on every invocation. Complete call outcomes agree with
+the uncached tuple/filter specification under the cache invariant. Lookup,
+touch and LRU eviction preserve it; registration, contribution and predicate
+registration invalidate old candidates.
+
+[[file:../../../LeanPoo/Object/MethodCombinationSemantics.lean][MethodCombinationSemantics]] proves the actual standard combination equals
+ordered before execution, nested primary calls, reversed after execution and
+nested around wrappers for arbitrary monads and method callbacks. It preserves
+callbacks that omit or repeat ~next~; append laws describe ordered fragments.
+
 | 2084–2154 | [[file:../../../LeanPoo/Prototype/Lens.lean][lensGen]], [[file:../../../LeanPoo/Prototype/SkewLens.lean][SkewLens]], [[file:../../../Examples/LensPrototype.lean][LensPrototype]], [[file:../../../Tests/SkewExtension.lean][SkewExtension]] | Actual getter/setter/wrapper constructor plus typed focus laws |
 
 The last row is implemented: the narrower Functional view/solver contract

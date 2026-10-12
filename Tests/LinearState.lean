@@ -7,11 +7,11 @@ private def checkState : IO Unit := do
     let initial ← LinearState.create base
     let snapshot ← IO.ofExcept (← initial.read)
     let alias := initial
-    let next ← IO.ofExcept (← initial.step (fun value => .ok (value+1)))
-    unless (← alias.read).toOption == none && !(← alias.step (fun value => .ok value)).isOk &&
+    let next ← IO.ofExcept (← initial.step (fun value => (value+1, .ok ())))
+    unless (← alias.read).toOption == none && !(← alias.step (fun value => (value, .ok ()))).isOk &&
         (← next.read).toOption == some (base+1) && snapshot == base do
       throw (IO.userError "old reference not consumed or snapshot changed")
-    let refused ← next.step (fun _ => .error "refused")
+    let refused ← next.step (fun value => (value, .error "refused"))
     unless !refused.isOk && (← next.read).toOption == some (base+1) do
       throw (IO.userError "rejected transition consumed state")
     let updates : List (Nat → Except String Nat) := [fun x => .ok (x+2),fun x => .ok (x*3),fun x => .ok (x-1)]
@@ -22,8 +22,8 @@ private def checkState : IO Unit := do
   let mut races := 0
   for _ in List.range 32 do
     let state ← LinearState.create (0 : Nat)
-    let one ← IO.asTask (state.step (fun x => .ok (x+1))) .dedicated
-    let two ← IO.asTask (state.step (fun x => .ok (x+2))) .dedicated
+    let one ← IO.asTask (state.step (fun x => (x+1, .ok ()))) .dedicated
+    let two ← IO.asTask (state.step (fun x => (x+2, .ok ()))) .dedicated
     let a ← IO.ofExcept one.get
     let b ← IO.ofExcept two.get
     unless ([a.isOk,b.isOk].filter id).length == 1 do throw (IO.userError "competing consumers both won or both lost")

@@ -1,4 +1,4 @@
-import LeanPoo.Object.Multimethod
+import LeanPoo.Object.MultimethodSemantics
 import LeanPoo.Object.MethodCombination
 import LeanPoo.Object.Memo
 
@@ -111,3 +111,10 @@ def exercise : Except String
   | _ => false
 
 end LeanPoo.Tests.MultipleDispatch
+
+#print axioms LeanPoo.Object.MethodIndex.collect_reference
+#print axioms LeanPoo.Object.MethodCandidate.select_reference
+#print axioms LeanPoo.Object.Multimethod.call_correct
+#print axioms LeanPoo.Object.Multimethod.resolve_preserves
+#print axioms LeanPoo.Object.Multimethod.register_sound
+#print axioms LeanPoo.Object.Multimethod.registerWhen_sound

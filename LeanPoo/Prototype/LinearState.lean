@@ -18,18 +18,29 @@ def LinearState.read (state : LinearState α) : IO (Except String α) :=
     | none => return .error "consumed state reference"
     | some value => return .ok value
 
-/-- A successful transition consumes every alias of the old reference and
-returns a new reference. Rejection retains the old reference. The mutex
-serializes competing consumers; the callback is a pure checked transition. -/
-def LinearState.step (state : LinearState α) (update : α → Except String α) :
+/-- Value semantics of a consuming reference. Failure retains the updated
+state in the old reference; success consumes it and returns the new value. -/
+def LinearState.stepValue (state : Option α) (update : α → α × Except String Unit) :
+    Option α × Except String α :=
+  match state with
+  | none => (none, .error "consumed state reference")
+  | some value =>
+    let (next, status) := update value
+    match status with
+    | .error error => (some next, .error error)
+    | .ok _ => (none, .ok next)
+
+/-- Success consumes all old aliases. Failure keeps the old reference with
+every completed write, so the caller can observe and continue partial state. -/
+def LinearState.step (state : LinearState α) (update : α → α × Except String Unit) :
     IO (Except String (LinearState α)) :=
   state.cell.atomically do
-    let some value ← get | return .error "consumed state reference"
-    match update value with
+    let (retained, status) := stepValue (← get) update
+    set retained
+    match status with
     | .error error => return .error error
     | .ok next =>
       let fresh ← LinearState.create next
-      set (none : Option α)
       return .ok fresh
 
 /-- Checked parent-before-child state composition. -/
@@ -50,7 +61,9 @@ def LinearState.run (updates : List (α → Except String α)) (base : α) :
     IO (Except String (LinearState α)) := do
   let mut state ← LinearState.create base
   for update in updates do
-    match ← state.step update with
+    match ← state.step (fun value => match update value with
+        | .error error => (value, .error error)
+        | .ok next => (next, .ok ())) with
     | .error error => return .error error
     | .ok next => state := next
   return .ok state

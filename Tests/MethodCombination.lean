@@ -1,4 +1,4 @@
-import LeanPoo.Object.MethodCombination
+import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Object.Class
 import LeanPoo.Object.Memo
 
@@ -85,3 +85,6 @@ def result : Except C4.Error (List String × Except String (Nat × List String))
   | _ => false
 
 end LeanPoo.Tests.MethodCombination
+
+#print axioms LeanPoo.Object.MethodCombination.effective_standard
+#print axioms LeanPoo.Object.MethodCombination.callChain_append

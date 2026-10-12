@@ -15,7 +15,7 @@ these guides explain reusable library contracts.
 | Admit native shared recursive results with exact-program proofs | [[file:contracts/shared-thunks.org][Checked shared-thunk execution]] |
 | Prepare record JSON codecs and validate reusable C3 metadata plans | [[file:contracts/checked-preparation.org][Checked preparation APIs]] |
 | Describe descriptors/objects, generate field tools and consume state references | [[file:contracts/descriptor-reflection.org][Descriptor reflection and state consumption]] |
-| Compose paper BST/AVL dictionaries, lazy records and metadata objects | [[file:contracts/paper-dictionaries.org][Paper dictionary and meta APIs]] |
+| Compose paper BST/AVL dictionaries, lazy records and metadata objects | [[file:contracts/dictionary-prototypes.org][Paper dictionary and meta APIs]] |
 | Choose a compiler, audit execution or retain rejection evidence | [[file:contracts/compilation.org][Compilation and audit receipts]] |
 | Query ancestry/precedence or transfer verified names | [[file:contracts/verified-orders.org][Verified order queries]] |
 | Declare typed requirements, read factories and reuse proofs | [[file:contracts/capability-families.org][Capability families and proof reuse]] |

@@ -45,21 +45,28 @@
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 181 local evidence files and 393 Lean source filenames; reject drift.
+- [X] Bind 194 local evidence files and 404 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.
 
-* Stronger claims outside the declared completion scope
+* Concrete construction correspondence
 
-- [ ] Whole-language Scheme/Lean operational equivalence.
-- [ ] Unchecked arbitrary unsafe shared-thunk equivalence; verification of C++ primitives, reference counting, compiler and concurrent memory behavior beyond the shared constructor's declared sequential rules and checked operation/result interfaces.
-- [ ] Unrestricted kernel IO refinement and machine-level time/allocation bounds.
-- [ ] Universal callable-property decisions, closure serialization and unspecified dynamic automation.
-- [ ] Arbitrary-language discovery of hidden closure/effect dependencies and language-wide invalidation.
-- [ ] General Scheme source compiler transformations and unrestricted dynamic class reflection beyond typed constructor compilation.
+- [X] BST/AVL structural solutions satisfy the actual open-prototype equations.
+- [X] Arbitrary valid AVL insertion succeeds and retains ordering, content, balance and exact cached heights; height grows by zero or one.
+- [X] Lookup overwrite/frame and fold/list construction correspondence are universal under explicit comparison laws.
+- [X] Function/AVL records correspond for arbitrary delayed self/super slot bodies and composed layers; key-list projection and metadata policies are proved.
+- [X] Checked metadata preparation carries root/parent C3 derivations, exact registry function selection and frozen-field proofs.
+- [X] Pure/mutable/linear interpreters share complete success/failure state semantics, with soundness/completeness and universal observation projections.
+- [X] Sparse multimethod enumeration, dynamic applicability, cached/reference call outcomes and cache invalidation have kernel proofs.
+- [X] Standard method combination agrees with ordered before/primary/reversed-after execution and nested around/next chains.
 
-The reviewed construction flag is true. The stronger whole-paper semantic flag
-remains false. A pending finite budget does not prove divergence; the divergence
-theorem quantifies over every finite depth. Source-case differential success
-does not discharge the stronger claims above.
+* Scope of this checklist
+
+The checklist follows the original paper's concrete typed constructions.
+The explicit cache/effect inference and unspecified automation proposals remain
+research boundaries. Whole-language equivalence and verification of Lean's
+C++ primitives, runtime or compiler are outside this task and are not paper
+implementation gaps. Existing platform controls are supporting project evidence.
+The ~whole_paper_implemented~ flag retains its stronger legacy meaning and stays
+false; it does not mark the concrete construction list above as incomplete.

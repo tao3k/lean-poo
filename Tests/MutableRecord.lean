@@ -1,4 +1,4 @@
-import LeanPoo.Prototype.MutableRecord
+import LeanPoo.Prototype.MutableRecordSemantics
 
 open LeanPoo.Prototype
 open LeanPoo.Prototype.Recursive
@@ -59,6 +59,17 @@ private def run : IO Unit := do
   unless compare linearSnapshot pureStorage ["x", "y", "z", "missing"] &&
       (← linear.read).toOption.isNone do
     throw (IO.userError "linear conversion or reference consumption")
+  let failedState ← LinearState.create base
+  let partialAlias := failedState
+  let refused ← failed.applyLinear failedState
+  let retained ← IO.ofExcept (← partialAlias.read)
+  unless !refused.isOk && readPure retained 1 "written" == .value (.boolean true) &&
+      readPure retained 1 "never" == .error "missing slot: never" do
+    throw (IO.userError "failed linear conversion lost partial writes")
+  let resumed ← IO.ofExcept (← x3.applyLinear failedState)
+  unless !(← partialAlias.read).isOk &&
+      readPure (← IO.ofExcept (← resumed.read)) 1 "written" == .value (.boolean true) do
+    throw (IO.userError "linear continuation after partial failure")
   -- Mutual references remain explicit pending observations at a finite budget.
   object.slot "a" (compute fun self => self "b")
   object.slot "b" (compute fun self => self "a")
@@ -69,4 +80,9 @@ private def run : IO Unit := do
 #print axioms Specification.compose_assoc
 #print axioms write_pureSlot
 #print axioms read_returns_iff
+#print axioms interpret_sound
+#print axioms interpret_complete
+#print axioms interpret_projection
+#print axioms snapshot_projection
+#print axioms linear_failure_observation
 end LeanPoo.Tests.MutableRecord

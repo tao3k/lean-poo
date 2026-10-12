@@ -43,17 +43,22 @@ inductive Specification where
   | compose (child parent : Specification)
   | error (message : String)
 
-/-- Pure state threading includes the state retained when an effect fails.
-This is the value semantics of the mutable protocol, including partial writes. -/
-def Specification.transition : Specification → Storage → Storage × Except String Unit
-  | .identity, storage => (storage, .ok ())
-  | .slot key layer, storage => (write storage key layer, .ok ())
-  | .error message, storage => (storage, .error message)
-  | .compose child parent, storage =>
-    let (inherited, status) := parent.transition storage
+/-- Interpret the paper's parent-first operations over a state carrier.
+The state is returned on both success and failure. -/
+def Specification.interpret (put : State → String → SlotLayer → State) :
+    Specification → State → State × Except String Unit
+  | .identity, state => (state, .ok ())
+  | .slot key layer, state => (put state key layer, .ok ())
+  | .error message, state => (state, .error message)
+  | .compose child parent, state =>
+    let (inherited, status) := parent.interpret put state
     match status with
     | .error message => (inherited, .error message)
-    | .ok _ => child.transition inherited
+    | .ok _ => child.interpret put inherited
+
+/-- Pure state threading preserves partial writes on failure. -/
+def Specification.transition (specification : Specification) (storage : Storage) :
+    Storage × Except String Unit := specification.interpret write storage
 
 def Specification.composeAll (layers : List Specification) : Specification :=
   layers.foldr Specification.compose .identity
@@ -61,18 +66,24 @@ def Specification.composeAll (layers : List Specification) : Specification :=
 theorem Specification.compose_assoc (outer middle inner : Specification) (storage : Storage) :
     (Specification.compose (Specification.compose outer middle) inner).transition storage =
       (Specification.compose outer (Specification.compose middle inner)).transition storage := by
-  simp only [Specification.transition]
-  cases first : inner.transition storage with
+  simp only [Specification.transition, Specification.interpret]
+  cases first : inner.interpret write storage with
   | mk inherited status =>
     cases status with
     | error message => rfl
     | ok value =>
-      cases second : middle.transition inherited with
+      cases second : middle.interpret write inherited with
       | mk inheritedAgain status => cases status <;> rfl
 
 structure Snapshot where
   storage : Storage
   generation : Nat := 0
+
+def Snapshot.write (snapshot : Snapshot) (key : String) (layer : SlotLayer) : Snapshot :=
+  ⟨MutableRecord.write snapshot.storage key layer, snapshot.generation + 1⟩
+
+def Specification.snapshotTransition (specification : Specification) (snapshot : Snapshot) :
+    Snapshot × Except String Unit := specification.interpret Snapshot.write snapshot
 
 private structure MutableState where
   snapshot : Snapshot
@@ -100,8 +111,7 @@ the same cell as final-self identity. Self requests resolve on each later read. 
 def Mutable.slot (object : Mutable) (key : String) (layer : SlotLayer) : IO Unit :=
   object.cell.atomically do
     let state ← get
-    let snapshot : Snapshot :=
-      ⟨write state.snapshot.storage key layer, state.snapshot.generation + 1⟩
+    let snapshot := state.snapshot.write key layer
     set (⟨snapshot, {}⟩ : MutableState)
 
 /-- Each successful force carries an evaluation proof for the exact immutable
@@ -130,16 +140,15 @@ def Mutable.cachedKeys (object : Mutable) : IO (List String) :=
 def Mutable.statistics (object : Mutable) : IO Cached.Statistics :=
   object.cell.atomically do return (← get).memo.statistics
 
-def Specification.apply : Specification → Mutable → IO (Except String Unit)
-  | .identity, _ => pure (.ok ())
-  | .slot key layer, object => do
-    object.slot key layer
-    return .ok ()
-  | .error message, _ => pure (.error message)
-  | .compose child parent, object => do
-    match ← parent.apply object with
-    | .error message => return .error message
-    | .ok _ => child.apply object
+/-- Execute the same state program on the existing identity. The complete
+parent-first operation is serialized, including partial state on failure. -/
+def Specification.apply (specification : Specification) (object : Mutable) : IO (Except String Unit) :=
+  object.cell.atomically do
+    let state ← get
+    let (snapshot, status) := specification.snapshotTransition state.snapshot
+    if snapshot.generation != state.snapshot.generation then
+      set (⟨snapshot, {}⟩ : MutableState)
+    return status
 
 /-- POOF `fix!`: allocate one fresh identity, apply all mutations, return it. -/
 def instantiate (prototype : Specification) (base : Storage) : IO (Except String Mutable) := do
@@ -148,13 +157,11 @@ def instantiate (prototype : Specification) (base : Storage) : IO (Except String
   | .error message => return .error message
   | .ok _ => return .ok object
 
-/-- The same pure transition is available through consume-old state references.
-On failure the old linear reference remains valid, following LinearState's policy. -/
+/-- Consume the old reference on success. On failure it retains the same
+partial writes as the pure and mutable interpretations. -/
 def Specification.applyLinear (specification : Specification) (state : LinearState Storage) :
     IO (Except String (LinearState Storage)) :=
-  state.step fun storage =>
-    let (next, status) := specification.transition storage
-    status.map (fun _ => next)
+  state.step specification.transition
 
 def constant (value : Value) : SlotLayer := fun _ _ => .value value
 

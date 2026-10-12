@@ -38,9 +38,14 @@ constant-tail bypass. Recursive now gives separate return/error/pending observat
 
 [[file:../../../Tests/Trees.lean][Trees]] checks 720 insertion permutations and 64 duplicate-key traces,
 6,368 updates with independent ordering/balance/height/size and query controls.
-Two kernel theorems prove exact retained methods and node substitution without
-axioms. They do not prove universal AVL correctness for arbitrary malformed
-cached trees. See the [[file:../../contracts/paper-dictionaries.org][API guide]] for construction and explicit errors.
+[[file:../../../LeanPoo/Prototype/AVLSemantics.lean][AVLSemantics]] proves content preservation for all successful rotations and
+balance/cache-height preservation for valid children. [[file:../../../LeanPoo/Prototype/BinaryTreeSemantics.lean][BinaryTreeSemantics]] proves the
+exact source prototype equations for structural BST/AVL dictionaries, general
+insertion ordering and lookup overwrite/frame laws, and in-order fold behavior.
+Every valid AVL insertion succeeds under a total comparator, preserves balance
+and exact cached heights, and increases height by zero or one. Arbitrary-list
+construction equals functional writes at every key under ~OrderOps.Laws~.
+Malformed cached trees retain the source error cases. See the [[file:../../contracts/dictionary-prototypes.org][API guide]] for construction and explicit errors.
 
 * Safe recursive API
 

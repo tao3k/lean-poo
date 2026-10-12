@@ -54,3 +54,8 @@ private unsafe def run : IO Unit := do
   IO.println "POOF-CHECKED-META-OK contexts=33 cacheRefusals=6 graphRefusals=5 prepareUnforced=true sharedPlan=true frozenMetadata=true"
 #eval run
 end LeanPoo.Tests.CheckedMeta
+
+#print axioms LeanPoo.Prototype.MetaPrototype.Prepared.order_unique
+#print axioms LeanPoo.Prototype.MetaPrototype.Prepared.program_selection
+#print axioms LeanPoo.Prototype.MetaPrototype.Prepared.parent_cache_sound
+#print axioms LeanPoo.Prototype.MetaPrototype.Prepared.frozen_order

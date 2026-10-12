@@ -23,13 +23,32 @@ def Tree.inorder : Tree Key Value → List (Key × Value)
   | .empty => []
   | .node left key value _ right => left.inorder ++ [(key,value)] ++ right.inorder
 
+def Tree.height : Tree Key Value → Nat
+  | .empty => 0
+  | .node left _ _ _ right => 1 + max left.height right.height
+
+/-- The AVL invariant includes the meaning of every cached height. -/
+def Tree.ValidAVL : Tree Key Value → Prop
+  | .empty => True
+  | .node left _ _ cached right =>
+    left.ValidAVL ∧ right.ValidAVL ∧ cached = some (1 + max left.height right.height) ∧
+      left.height ≤ right.height+1 ∧ right.height ≤ left.height+1
+
 /-- Ordinary BST nodes have no height annotation; AVL nodes carry one. -/
 def Tree.cachedHeight : Tree Key Value → Except String Nat
   | .empty => .ok 0
   | .node _ _ _ (some height) _ => .ok height
   | .node _ _ _ none _ => .error "AVL node requires annotated children"
 
-structure Dictionary (Key Value Acc : Type) where
+theorem Tree.cachedHeight_valid (tree : Tree Key Value) (valid : tree.ValidAVL) :
+    tree.cachedHeight = .ok tree.height := by
+  cases tree with
+  | empty => rfl
+  | node left key value cached right =>
+    simp only [ValidAVL] at valid
+    simp [valid.2.2.1, cachedHeight, height]
+
+@[ext] structure Dictionary (Key Value Acc : Type) where
   keyOrder : OrderOps Key
   empty : Tree Key Value := .empty
   node : Tree Key Value → Key → Value → Tree Key Value → Except String (Tree Key Value)
@@ -50,34 +69,44 @@ def Dictionary.withOrder (order : OrderOps Key) :
     DelayedProto (Dictionary Key Value Acc) (Dictionary Key Value Acc) (Dictionary Key Value Acc) :=
   fun _ inherited => { inherited.get with keyOrder := order }
 
+/-- One unfolding of the source insertion algorithm, with final-self calls. -/
+def Dictionary.insertStep (self : Dictionary Key Value Acc)
+    (key : Key) (value : Value) (tree : Tree Key Value) : Except String (Tree Key Value) := do
+  match tree with
+  | .empty => self.singleton key value
+  | .node left oldKey oldValue _ right =>
+    match ← self.keyOrder.compare key oldKey with
+    | .eq => self.node left key value right
+    | .lt => self.node (← self.acons key value left) oldKey oldValue right
+    | .gt => self.node left oldKey oldValue (← self.acons key value right)
+
+def Dictionary.refStep (self : Dictionary Key Value Acc)
+    (tree : Tree Key Value) (key : Key) : Except String (Option Value) := do
+  match tree with
+  | .empty => return none
+  | .node left oldKey value _ right =>
+    match ← self.keyOrder.compare key oldKey with
+    | .eq => return some value
+    | .lt => self.ref left key
+    | .gt => self.ref right key
+
+def Dictionary.foldStep (self : Dictionary Key Value Acc)
+    (combine : Key → Value → Acc → Acc) (initial : Acc) (tree : Tree Key Value) : Acc :=
+  match tree with
+  | .empty => initial
+  | .node left key value _ right =>
+    self.afoldr combine (combine key value (self.afoldr combine initial left)) right
+
 /-- The source algorithms call self.node, self.acons, self.ref and self.afoldr. -/
 def Dictionary.binaryTree :
     DelayedProto (Dictionary Key Value Acc) (Dictionary Key Value Acc) (Dictionary Key Value Acc) :=
   fun self inherited => { inherited.get with
     node := fun left key value right => .ok (.node left key value none right)
     singleton := fun key value => self.get.node .empty key value .empty
-    acons := fun key value tree => do
-      match tree with
-      | .empty => self.get.singleton key value
-      | .node left oldKey oldValue _ right =>
-        match ← self.get.keyOrder.compare key oldKey with
-        | .eq => self.get.node left key value right
-        | .lt => self.get.node (← self.get.acons key value left) oldKey oldValue right
-        | .gt => self.get.node left oldKey oldValue (← self.get.acons key value right)
-    ref := fun tree key => do
-      match tree with
-      | .empty => return none
-      | .node left oldKey value _ right =>
-        match ← self.get.keyOrder.compare key oldKey with
-        | .eq => return some value
-        | .lt => self.get.ref left key
-        | .gt => self.get.ref right key
+    acons := fun key value tree => self.get.insertStep key value tree
+    ref := fun tree key => self.get.refStep tree key
     -- Match the paper's afoldr accumulation order (left, root, then right).
-    afoldr := fun combine initial tree =>
-      match tree with
-      | .empty => initial
-      | .node left key value _ right =>
-        self.get.afoldr combine (combine key value (self.get.afoldr combine initial left)) right }
+    afoldr := fun combine initial tree => self.get.foldStep combine initial tree }
 
 unsafe def Dictionary.instantiate (order : OrderOps Key)
     (prototype : DelayedProto (Dictionary Key Value Acc) (Dictionary Key Value Acc) (Dictionary Key Value Acc)) :
