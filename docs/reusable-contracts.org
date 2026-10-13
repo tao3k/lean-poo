@@ -27,6 +27,7 @@ these guides explain reusable library contracts.
 | Migrate runtime record schemas and publish admitted field groups atomically | [[file:contracts/record-evolution.org][Record migration and staged publication]] |
 | Compose certified source AVL dictionaries, routing factories and multi-key proposals | [[file:contracts/ordered-dictionaries.org][Ordered dictionaries and checked multi-key transitions]] |
 | Automatically close checked C3 factories from proved finite dependencies | [[file:contracts/closed-metadata.org][Automatic metadata closure]] |
+| Re-admit completed recursive receipts at current descriptor boundaries | [[file:contracts/receipt-admission.org][Receipt admission]] |
 | Call safe recursive programs from stateful multi-argument methods | [[file:contracts/recursive-dispatch.org][Recursive dispatch]] |
 | Run alternative combinations with ordered effects and exact failures | [[file:contracts/alternative-combinations.org][Alternative method combinations]] |
 | Publish closed factories and protected generic edits as one version | [[file:contracts/joint-publication.org][Joint publication]] |

@@ -652,3 +652,5 @@ publication. The corresponding guides describe universal proof boundaries.
 * Recursive dispatch adapter controls
 
 [[file:RecursiveDispatch.lean][RecursiveDispatch]] checks 240 complete workflow summaries against independent pricing, phase, trace and memo-size controls. Cold/warm dispatch and recursive reads are separate; current output admission and public ceilings remain fresh. Universal adapter success/failure/packing/state/ledger and actual receipt admission/observation laws are kernel theorems.
+
+[[file:ReceiptAdmission.lean][ReceiptAdmission]] compares 1080 admission/result/state summaries with direct price and first-error controls across current catalog removal, wrong signatures, missing named types, input bounds, output ceilings and validation fuel. Complete retained-state preservation, value/request identity, source observation, success completeness and four failure phases have kernel proofs.

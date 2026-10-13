@@ -68,3 +68,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 * Recursive requests in dispatch workflows
 
 [[file:RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] joins the existing C3 billing program with audited mode/channel dispatch, source recovery, hot current descriptor admission, public output refusal, batches and certified budget/cycle continuation. [[file:../docs/contracts/recursive-dispatch.org][API and proof boundaries]].
+
+[[file:ReceiptWorkflow.lean][ReceiptWorkflow]] uses a proof-bearing recursive result in an around shortcut with an empty recipient memo and zero evaluation budget; current input/output refusal, changed requests and failed batch prefixes remain explicit. [[file:../docs/contracts/receipt-admission.org][Contracts]].

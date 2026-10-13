@@ -323,3 +323,8 @@ claim that all paper questions have been resolved.
 * Recursive requests inside multiple dispatch
 
 [[file:../../../Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] composes the existing safe C3 billing program, guarded multi-argument methods, audit/recovery and current descriptor admission. [[file:../../contracts/recursive-dispatch.org][Recursive dispatch contracts]] preserve actual program-indexed receipts and complete states without adding an evaluator. Method selection and public acceptance remain explicit typed application policies.
+
+
+* Completed recursive results at current boundaries
+
+[[file:../../../Examples/ReceiptWorkflow.lean][ReceiptWorkflow]] composes existing checked recursive receipts, current FunctionOf descriptors and standard around methods. [[file:../../contracts/receipt-admission.org][Receipt admission]] rechecks current input/output boundaries and retains the immutable program, request and actual evaluation. An empty recipient memo and zero evaluation budget demonstrate a shortcut with no recursive read. The policy explicitly matches requests before omitting next; changed requests take the ordinary path. Independent controls cover 1080 admission/state summaries, including descriptor removal, bad signatures, named-type failures and finite validation fuel.
