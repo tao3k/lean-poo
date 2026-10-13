@@ -1,0 +1,85 @@
+#+TITLE: Checked requests and resumable validation
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:validation-batches.org][Descriptors and batches]] · [[file:context-cache.org][Context caches]]
+
+* Input admission before dependency reads
+
+[[file:../../LeanPoo/Functional/RequestHandling.lean][ContextSlot.call]] combines an input ~Codec~, an explicit projection to the
+cached family's base context, and a proof-aware callback. The callback receives
+the admitted input and a ~Snapshot~ at exactly that projected context. It can
+invoke existing methods, check business constraints and decode its producer
+output with an output descriptor before returning the public result.
+
+~RequestResult~ returns the complete value/error outcome, next cache and an
+optional dependency-hit marker. ~none~ means input admission refused before
+this API read the cache or invoked the callback. ~some false~ is an admitted
+input with a cache miss; ~some true~ is a dependency hit. The callback runs on
+hits too, so labels and other outer request fields remain current.
+
+~call_input_error~ proves exact input refusal with unchanged state and no read
+marker. ~call_input_ok~ proves the complete returned state and marker are those
+of one dependency read, even if execution or output validation refuses.
+~call_outcome~ proves equality with uncached proof-aware execution for every
+context, input and cache state. A callback can retain analytic joint proofs or
+produce a runtime-refined result; the API does not infer its output contract.
+
+* Ordered state and first failure
+
+[[file:../../LeanPoo/Functional/StatefulValidation.lean][Validation.traverseState]] threads the returned state through ordered steps.
+An error stops the suffix and returns the failing step's next state. Successful
+prefix outputs are not published as a partial successful batch. Empty batches
+return the original state.
+
+~traverseState_append~ proves splitting/concatenating batches preserves the
+complete outcome and state. ~traverseState_error_iff~ characterizes every error
+as a wholly successful prefix followed by the failing step, with final state
+exactly equal to that step's returned state. ~traverseState_stateless~ recovers
+existing ~Validation.traverse~; ~traverseState_map~ proves input adaptation.
+
+~ContextSlot.callBatch~ applies these laws to checked requests. Input refusals
+retain the prefix cache; callback/output refusals retain the failing call's
+dependency read. ~callBatch_error_iff~ proves the exact successful-prefix/error/
+final-cache characterization. Consumers can resume with that returned cache.
+
+~call_represent~ and ~callBatch_represent~ adapt existing ~Codec.represent~ to
+another input layout. Their kernel equalities preserve complete errors and
+returned states, plus the single-call optional read marker. The supplied wire
+inverse remains an explicit obligation.
+
+* Complete scenarios
+
+[[file:../../Examples/ValidatedOrders.lean][ValidatedOrders]] enriches a warm price cache with an independent stock
+certificate over identical factories. A nested request descriptor admits
+quantity and label constraints. A selected producer supplies a price/label
+reply; its output descriptor checks exact price and label before constructing
+a receipt with joint price/stock laws and an amount bound. Seven requests cover
+fresh labels on dependency hits, input refusal, insufficient stock, a defective
+producer output, continuation and returning to an earlier context.
+
+[[file:../../Examples/ResumableRequests.lean][ResumableRequests]] builds a parameterized nested job descriptor and applies a
+joint workload bound after the dependency read. Input and workload failures
+retain different exact contexts. The same pure batch transition updates an
+~IO.Ref~ and the existing ~LinearState.step~ adapter. Universal example laws
+prove its ~stepValue~ failure retains the partial cache and success consumes
+the old reference. Execution controls compare both refusals and successful
+continuation in all three carriers; old immutable snapshots remain available
+and successful linear aliases become consumed. These scenarios validate
+quotations/workloads and update their dependency caches.
+
+* Evidence and source correspondence
+
+[[file:../../Tests/FunctionalStatefulValidation.lean][State controls]] compare 168 cases to independent prefix sums and the first
+offending index, plus 483 batch splits. The failing step records its own state
+update. Two divergent suffix controls test stopping. [[file:../../Tests/FunctionalRequestHandling.lean][Request controls]] compare
+333 requests and 15 batches to independently specified prices, errors, cache
+contents and hit decisions across two layouts. Invalid requests and suffixes
+would force a divergent factory if the admission/stopping order were wrong.
+Both control files retain bounded execution commands.
+
+These convenience APIs combine the original I/O/parameterized descriptor
+construction (1359–1433), pure/linear state transformation (1449–1524) and
+explicit user cache option (1525 onward), mapped in the
+[[file:../audits/poof/functional.org][Functional audit]]. They use supplied typed decoders/callbacks, explicit
+analytic certificates and the existing state-reference protocol. The universal
+linear laws describe ~stepValue~; concrete adapters have execution controls.
+No automatic arbitrary-closure admission or new machine-level claim is added.

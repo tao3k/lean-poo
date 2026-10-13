@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "a4ef1eacbc96e9e8acb5783c2f8a7902a7dab7ac67381cec9a229ff007c0fe77",
+  "requirements_sha256": "27055022a345d8fba9ff73d7f0955ed266a19ca3538929fa6f12c2c81c35e0d2",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -410,7 +410,7 @@
           "Tests/MutableRecordSemantics.lean",
           "Examples/MutableState.lean"
         ],
-        "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
+        "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls."
       },
       {
         "id": "multiple-dispatch",
@@ -531,7 +531,7 @@
       }
     ]
   },
-  "closure_sha256": "d3267e85068c734ba2491dce3ceab4b5f71a09ae4ed7d61bafcc8606594c0812",
+  "closure_sha256": "d4adf7a140f2c52ffd128cc147aaf0e774d4700dacdcce12e52aeb9a810e6847",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -1289,7 +1289,9 @@
         "LeanPoo/Functional/CertifiedObservation.lean",
         "LeanPoo/Functional/ContractJoin.lean",
         "LeanPoo/Functional/Validation.lean",
-        "LeanPoo/Functional/Codec.lean"
+        "LeanPoo/Functional/Codec.lean",
+        "LeanPoo/Functional/RequestHandling.lean",
+        "LeanPoo/Functional/StatefulValidation.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1306,9 +1308,13 @@
         "Tests/FunctionalContractJoin.lean",
         "Tests/FunctionalValidation.lean",
         "Tests/FunctionalCodec.lean",
-        "Examples/ValidatedConfiguration.lean"
+        "Examples/ValidatedConfiguration.lean",
+        "Examples/ValidatedOrders.lean",
+        "Examples/ResumableRequests.lean",
+        "Tests/FunctionalRequestHandling.lean",
+        "Tests/FunctionalStatefulValidation.lean"
       ],
-      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories."
+      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories. Typed Functional requests compose existing Codec input/output admission and explicit cache reads: input refusal preserves the old cache before callback invocation; admitted-input execution/output refusals retain exactly the dependency read state. Universal outcome and complete input-representation laws are kernel checked. The callback supplies its output admission; arbitrary host effects are not inferred."
     },
     {
       "id": "simple-types",
@@ -1465,7 +1471,9 @@
         "LeanPoo/Functional/DependencyAnalysis.lean",
         "LeanPoo/Functional/AnalyzedCache.lean",
         "LeanPoo/Functional/AnalyzedMigration.lean",
-        "LeanPoo/Prototype/MutableRecordSemantics.lean"
+        "LeanPoo/Prototype/MutableRecordSemantics.lean",
+        "LeanPoo/Functional/StatefulValidation.lean",
+        "LeanPoo/Functional/RequestHandling.lean"
       ],
       "checks": [
         "Tests/LinearState.lean",
@@ -1486,9 +1494,12 @@
         "Tests/FunctionalAnalyzedCache.lean",
         "Tests/FunctionalAnalyzedMigration.lean",
         "Tests/MutableRecordSemantics.lean",
-        "Examples/MutableState.lean"
+        "Examples/MutableState.lean",
+        "Examples/ResumableRequests.lean",
+        "Tests/FunctionalStatefulValidation.lean",
+        "Tests/FunctionalRequestHandling.lean"
       ],
-      "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
+      "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls."
     },
     {
       "id": "mutable-protocol",
@@ -1545,7 +1556,8 @@
         "LeanPoo/Functional/AnalyzedMigration.lean",
         "LeanPoo/Functional/ComputationBatch.lean",
         "LeanPoo/Functional/SharedViews.lean",
-        "LeanPoo/Functional/ViewRetarget.lean"
+        "LeanPoo/Functional/ViewRetarget.lean",
+        "LeanPoo/Functional/RequestHandling.lean"
       ],
       "checks": [
         "Tests/IncrementalObject.lean",
@@ -1562,7 +1574,10 @@
         "Examples/IncrementalWorkflow.lean",
         "Tests/FunctionalSharedViews.lean",
         "Tests/FunctionalViewRetarget.lean",
-        "Examples/SharedReporting.lean"
+        "Examples/SharedReporting.lean",
+        "Examples/ValidatedOrders.lean",
+        "Examples/ResumableRequests.lean",
+        "Tests/FunctionalRequestHandling.lean"
       ],
       "boundary": "Dependency contracts, finite pure syntax analysis and proof reuse are local extensions; no language-wide purity/effect inference or arbitrary-body introspection. Functional preparation caches retain success/error outcomes under explicit ancestry/key scopes and context/family equality. Language-wide inference remains open. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open."
     },
@@ -2514,6 +2529,15 @@
         33
       ]
     },
+    "Examples/ResumableRequests.lean": {
+      "sha256": "c0bb4a1b7464b88db92d3a90a9f7bbc7b91030cb4ccb32b226f82cab871f32b7",
+      "physical_lines": 96,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        94
+      ]
+    },
     "Examples/SharedReporting.lean": {
       "sha256": "dd2234729038d0043b50ac8ac40eb96b2f4642db0cf28236354bc524add55421",
       "physical_lines": 122,
@@ -2536,6 +2560,15 @@
       ],
       "eval_lines": [
         64
+      ]
+    },
+    "Examples/ValidatedOrders.lean": {
+      "sha256": "e6fe1e2b3c0b353dde1e466b5c6f67b07f68ae2fe87750ab822038496926860c",
+      "physical_lines": 97,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        77
       ]
     },
     "Examples/ValidationWorkflow.lean": {
@@ -2727,6 +2760,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Functional/RequestHandling.lean": {
+      "sha256": "d12bb45e719d8179fdb0b7e3b2b27adaa1508ae9aa1b64e7414634726ccae7cd",
+      "physical_lines": 106,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Functional/Requirements.lean": {
       "sha256": "c52b9cba0d4291dc5c0d3563c1b547c088760ef04d6fee22576d19e230cae606",
       "physical_lines": 158,
@@ -2737,6 +2777,13 @@
     "LeanPoo/Functional/SharedViews.lean": {
       "sha256": "6be0d776a8fc1b12ee7dfceefe206b29b4ef09f8e4de7c07245307a425b17d26",
       "physical_lines": 81,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/StatefulValidation.lean": {
+      "sha256": "108ef9dc0f0cc5e9a35c6629a02b672ffcf4fd46168cf3ca8e60064c9de66b0d",
+      "physical_lines": 106,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3973,6 +4020,15 @@
         83
       ]
     },
+    "Tests/FunctionalRequestHandling.lean": {
+      "sha256": "52049423792a80a4e071597c8d228e5ce73f22cfcc76d9387b4262b4f99c584e",
+      "physical_lines": 95,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        49
+      ]
+    },
     "Tests/FunctionalRequirements.lean": {
       "sha256": "75e9811824a91938425bcaaf45dcc7935b456d26145968fcb742ab8b28965033",
       "physical_lines": 202,
@@ -3992,6 +4048,16 @@
       "guard_lines": [],
       "eval_lines": [
         31
+      ]
+    },
+    "Tests/FunctionalStatefulValidation.lean": {
+      "sha256": "848707a67e6a87f39a2ffb9740e6dea89da607337a3c1cfdc5ef2669ca221e5a",
+      "physical_lines": 66,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        26,
+        55
       ]
     },
     "Tests/FunctionalValidation.lean": {
@@ -4378,7 +4444,7 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "d3267e85068c734ba2491dce3ceab4b5f71a09ae4ed7d61bafcc8606594c0812",
+      "sha256": "d4adf7a140f2c52ffd128cc147aaf0e774d4700dacdcce12e52aeb9a810e6847",
       "physical_lines": 521,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
@@ -4430,6 +4496,7 @@
     "Examples/QuiescentUpgrade.lean",
     "Examples/RecordPrototype.lean",
     "Examples/Renaming.lean",
+    "Examples/ResumableRequests.lean",
     "Examples/SharedFamily.lean",
     "Examples/SharedFieldAccess.lean",
     "Examples/SharedReporting.lean",
@@ -4438,6 +4505,7 @@
     "Examples/StaticMethodSelection.lean",
     "Examples/TargetAndWrapping.lean",
     "Examples/ValidatedConfiguration.lean",
+    "Examples/ValidatedOrders.lean",
     "Examples/ValidationWorkflow.lean",
     "LeanPoo/C4/AuditedResolver.lean",
     "LeanPoo/C4/CertificateExpansion.lean",
@@ -4514,6 +4582,7 @@
     "LeanPoo/Functional/RegistryTransaction.lean",
     "LeanPoo/Functional/Reindex.lean",
     "LeanPoo/Functional/Relabeling.lean",
+    "LeanPoo/Functional/RequestHandling.lean",
     "LeanPoo/Functional/Requirements.lean",
     "LeanPoo/Functional/ResultIndex.lean",
     "LeanPoo/Functional/ResultView.lean",
@@ -4521,6 +4590,7 @@
     "LeanPoo/Functional/SharedRegistry.lean",
     "LeanPoo/Functional/SharedViews.lean",
     "LeanPoo/Functional/SolverTransport.lean",
+    "LeanPoo/Functional/StatefulValidation.lean",
     "LeanPoo/Functional/TransactionCheck.lean",
     "LeanPoo/Functional/Transformation.lean",
     "LeanPoo/Functional/TransformationProfiles.lean",
@@ -4739,6 +4809,7 @@
     "Tests/FunctionalRegistryPatch.lean",
     "Tests/FunctionalRegistryTransaction.lean",
     "Tests/FunctionalReindex.lean",
+    "Tests/FunctionalRequestHandling.lean",
     "Tests/FunctionalRequirements.lean",
     "Tests/FunctionalResultIndex.lean",
     "Tests/FunctionalResultView.lean",
@@ -4746,6 +4817,7 @@
     "Tests/FunctionalSharedRegistry.lean",
     "Tests/FunctionalSharedViews.lean",
     "Tests/FunctionalSolverTransport.lean",
+    "Tests/FunctionalStatefulValidation.lean",
     "Tests/FunctionalTransactionCheck.lean",
     "Tests/FunctionalTransformation.lean",
     "Tests/FunctionalTransformationProfiles.lean",

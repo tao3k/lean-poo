@@ -82,6 +82,30 @@ the selected priority method can turn a cached refusal into success.
 [[file:../../../Tests/FunctionalComputationBatch.lean][Batch controls]] compare independent values/errors and both cache states.
 The [[file:../../contracts/validation-batches.org][scenario contracts]] record the exact function and proof boundaries.
 
+* Checked requests and retained failure state
+
+[[file:../../contracts/checked-requests.org][Checked request contracts]] combine the F03 concrete input/output and
+parameterized descriptor constructions with the paper's pure/linear state
+transformation and explicit-cache option. [[file:../../../LeanPoo/Functional/RequestHandling.lean][RequestHandling]] admits input
+before its dependency read, invokes the proof-aware callback on hits too, and
+returns the precise next cache even after callback/output refusal. Kernel laws
+preserve every uncached outcome, the exact input-error state and read markers.
+Complete input-layout adaptation preserves values/errors and returned state.
+
+[[file:../../../LeanPoo/Functional/StatefulValidation.lean][StatefulValidation]] joins ordered admission with explicit returned state.
+Its append, stateless-specialization and first-error laws retain the failing
+step's exact state and skip the remaining suffix. ~ContextSlot.callBatch~
+specializes those laws to the admitted request workflow.
+[[file:../../../Examples/ValidatedOrders.lean][ValidatedOrders]] joins independent price/stock certificates, fresh request
+labels, input/execution/output refusals and continuation. [[file:../../../Examples/ResumableRequests.lean][ResumableRequests]]
+combines nested job descriptors with actual pure, mutable and linear uses of
+the same batch transition. Example kernel laws specialize the existing linear
+reference value semantics; actual adapters are checked by execution controls.
+[[file:../../../Tests/FunctionalRequestHandling.lean][Request controls]] check 333 single calls and 15 batches in two layouts;
+[[file:../../../Tests/FunctionalStatefulValidation.lean][state controls]] check 168 independent cases and 483 batch splits, with
+divergent factory/suffix guards. These are convenience APIs for composing the
+source constructions; the source does not prescribe a request-batch API.
+
 * Shared consumers and different production representations
 
 F07 separates production representations from consumer interfaces; F08 connects

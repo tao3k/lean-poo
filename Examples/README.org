@@ -39,6 +39,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:IncrementalWorkflow.lean][IncrementalWorkflow]] | Validate a workload through optional/required/absent capabilities; migrate hot successes/errors through graph extensions, refusals, fresh admission and a second revision. |
 | [[file:SharedReporting.lean][SharedReporting]] | Bill and monitor from one shared snapshot, then replace the billing representation while preserving its joint proof and warm public cache. |
 | [[file:DictionaryConsumers.lean][DictionaryConsumers]] | Compose price-policy prototypes, derive inherited class fields, convert a warm cache and invoke actual typeclass methods in a quota-proved quote. |
+| [[file:ValidatedOrders.lean][ValidatedOrders]] | Join price/stock proofs, admit input before reading dependencies, check producer outputs and resume after input/execution/output refusals. |
+| [[file:ResumableRequests.lean][ResumableRequests]] | Thread a nested workload batch through pure, mutable and linear cache states; retain the first failure's cache and continue with the same reference protocol. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 

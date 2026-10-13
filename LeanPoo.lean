@@ -37,6 +37,8 @@ import LeanPoo.Functional.AnalyzedMigration
 import LeanPoo.Functional.DictionaryTransport
 import LeanPoo.Functional.SharedViews
 import LeanPoo.Functional.ViewRetarget
+import LeanPoo.Functional.StatefulValidation
+import LeanPoo.Functional.RequestHandling
 import LeanPoo.Deriving.DictionaryCompiler
 import LeanPoo.Functional.CertifiedRequirements
 import LeanPoo.Functional.CachedPreparation

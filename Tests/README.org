@@ -63,6 +63,8 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 - [[file:FunctionalComputationBatch.lean][FunctionalComputationBatch]] checks finite analyzed batch execution/footprints, pure validation errors, 72 independent observations, cold/hot success/error caches and an unreachable suffix.
 - [[file:FunctionalSharedViews.lean][FunctionalSharedViews]] checks twelve shared reads, four hits, dependent/request-specific outputs, reordered/repeated keys, hidden broad-data retention, an unrequested divergent observer and wrong-context rejection.
 - [[file:FunctionalViewRetarget.lean][FunctionalViewRetarget]] checks 54 representation replacements across cold/warm states, requested contexts and empty/reordered/repeated views; it rejects incompatible public observations and never forces private divergent candidate functions.
+- [[file:FunctionalStatefulValidation.lean][FunctionalStatefulValidation]] compares 168 cases with independent prefix-sum/first-index controls and 483 batch splits, retaining the failing step's own update and skipping two divergent suffixes.
+- [[file:FunctionalRequestHandling.lean][FunctionalRequestHandling]] checks 333 requests and 15 batches across two layouts, exact input/execution/output errors, optional read/hit markers, retained cache contents and wrong-context rejection. Invalid inputs and stopped suffixes protect an otherwise divergent factory.
 
 - [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
 
