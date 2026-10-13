@@ -56,6 +56,24 @@ public results/errors for every input. [[file:../../../Tests/FunctionalCodec.lea
 [[file:../../../LeanPoo/Functional/Validation.lean][Validation]] adds all-or-error context-dependent batches and a universal
 first-failure characterization, with [[file:../../../Tests/FunctionalValidation.lean][stopping and order controls]].
 
+* Ordered dictionary compositions
+
+The concrete Order/BST/AVL construction (676–845) combines with function/dictionary
+representations (953–1038) and F01/F03/F04 through [[file:../../../LeanPoo/Functional/OrderedDictionary.lean][OrderedDictionary]].
+Its certified snapshots execute the existing structural source dictionary.
+Universal laws connect actual ordered acons and merge to complete lookup views,
+retain AVL/sorted invariants, preserve complete factory preparation and project
+all batch outcomes/final state to functional reference execution.
+[[file:../../../Examples/LayeredRouting.lean][LayeredRouting]] combines base/regional/emergency layers, repeated overwrites,
+prepared context-indexed factories, joint allowance proofs and context caching.
+[[file:../../../Examples/KeyedRebalance.lean][KeyedRebalance]] admits addressed transfers, conserves their quantities, frames
+every other key and resumes from the exact prefix snapshot after refusal.
+[[file:../../../Tests/FunctionalOrderedDictionary.lean][Independent controls]] cover reverse-history write/merge models, factory selection
+and a resource-vector transfer/batch model. The [[file:../../contracts/ordered-dictionaries.org][contract guide]] records the exact
+assumptions: pure supplied proposals, homogeneous key values, explicit ordering
+laws and joint proofs. The compositions do not infer callback effects or add
+a concurrent/durable transaction protocol.
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and

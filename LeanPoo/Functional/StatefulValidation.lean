@@ -153,4 +153,30 @@ theorem traverseState_project (check : State → Input → Except Error Output �
             rcases same with ⟨rfl, rfl⟩
             simp only [List.map_cons, preserves state item output next first, ih next values remaining]
 
+/-- A commuting state projection preserves the complete batch outcome and
+returned observation, including the exact first failing transition. -/
+theorem traverseState_transport {Other : Type y}
+    (check : State → Input → Except Error Output × State)
+    (reference : Other → Input → Except Error Output × Other) (project : State → Other)
+    (commutes : ∀ state input,
+      ( (check state input).1, project (check state input).2 ) = reference (project state) input)
+    (state : State) (items : List Input) :
+    ((traverseState check state items).1, project (traverseState check state items).2) =
+      traverseState reference (project state) items := by
+  induction items generalizing state with
+  | nil => rfl
+  | cons item rest ih =>
+    have step := commutes state item
+    cases first : check state item with
+    | mk outcome next =>
+      simp only [first] at step
+      cases outcome with
+      | error error => simp [traverseState, first, ← step]
+      | ok output =>
+        have tail := ih next
+        cases remaining : traverseState check next rest with
+        | mk result final =>
+          simp only [remaining] at tail
+          simp only [traverseState, first, ← step, ← tail, remaining]
+
 end LeanPoo.Functional.Validation

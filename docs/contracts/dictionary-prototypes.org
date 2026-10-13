@@ -32,6 +32,13 @@ Errors and missing keys stay distinct. Key-list projection and metadata
 exposure/override policies are kernel laws. [[file:../../Tests/ConstructionSemantics.lean][ConstructionSemantics]] supplies
 generic clients and concrete source/structural and self/super/error controls.
 
+* Functional composition clients
+
+[[file:ordered-dictionaries.org][Ordered dictionaries and checked multi-key transitions]] retain comparator laws,
+sorted contents and AVL invariants while reusing these source methods. The
+layered-routing and keyed-resource examples combine ordered overwrites/merge
+with prepared factories, joint proofs, pure state and resumable validation.
+
 * Construct an AVL dictionary
 
 #+begin_src lean

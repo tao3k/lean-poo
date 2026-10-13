@@ -49,6 +49,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:RecursiveCatalog.lean][RecursiveCatalog]] | Revalidate memoized recursive configurations and nested function identities in the current reflective catalog, then serialize the proof-bound result. |
 | [[file:ConfigurationUpgrade.lean][ConfigurationUpgrade]] | Migrate reflective runtime configurations with explicit renaming, defaults, retired fields and target-catalog nested identity admission. |
 | [[file:AtomicConfiguration.lean][AtomicConfiguration]] | Stage writable-field groups, retain completed groups after refusal, or publish the whole batch atomically; resume from the returned configuration. |
+| [[file:LayeredRouting.lean][LayeredRouting]] | Combine base/regional/emergency AVL dictionaries, ordered duplicate writes, prepared factories, joint allowance proofs and exact-context dependency caching. |
+| [[file:KeyedRebalance.lean][KeyedRebalance]] | Transfer resources between runtime keys with joint debit/credit, conservation and untouched-key proofs, exact refused snapshots and resumable batches. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 

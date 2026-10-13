@@ -495,6 +495,19 @@ actual descriptor membership, final admission of constructors/setters/patches,
 ordered projection provenance and both publication invariants. [[file:../docs/contracts/record-evolution.org][The contract guide]]
 connects these laws to the two complete configuration examples.
 
+* Functional ordered dictionaries
+
+[[file:FunctionalOrderedDictionary.lean][FunctionalOrderedDictionary]] compares 303 ordered writes, split batches and
+source merges with independent reverse-history lookups and sorted exports.
+A separate traversal checks every AVL balance and cached height. Fifty-six
+factory preparations check complete tuples, repeated keys, exact first errors
+and unforced divergent bodies. A four-resource vector compares 2,160 transfers,
+2,160 batches and 2,160 continuations, including conservation, all-key frames,
+retained prefix states and unchanged originals. Three divergent callback suffixes
+must remain uncalled. Printed laws cover source lookup/insertion/merge, complete
+preparation, full batch observation and first-failure characterization. The
+[[file:../docs/contracts/ordered-dictionaries.org][contract guide]] connects these controls to layered routing and keyed rebalancing.
+
 * Functional focused production updates
 
 [[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,
