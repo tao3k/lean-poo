@@ -80,6 +80,8 @@ shapes.
 [[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
 [[file:Examples/DispatchWorkflow.lean][DispatchWorkflow.lean]] combines checked logistics dispatch, method phases, warm guarded candidates and retained ledger state.
 [[file:Examples/RecoverableDispatch.lean][RecoverableDispatch.lean]] runs fallback methods on actual failed progress and continues after checked refusal.
+[[file:Examples/RecursiveBilling.lean][RecursiveBilling.lean]] shares C3 recursive pricing subrequests and resumes retained completed results under current descriptors.
+[[file:Examples/RecursiveCatalog.lean][RecursiveCatalog.lean]] revalidates recursive configuration schemas and nested function identities before publishing a shared result.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in

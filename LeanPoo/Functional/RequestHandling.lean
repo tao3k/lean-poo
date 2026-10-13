@@ -10,7 +10,7 @@ universe u v w x y z q r
 structure RequestResult (State : Type u) (Output : Type v) (Error : Type w) where
   outcome : Except Error Output
   next : State
-  /-- None means input admission refused before any dependency read. -/
+  /-- None means execution was refused before attempting a cache read. -/
   reused : Option Bool
 
 def RequestResult.transition (result : RequestResult State Output Error) : Except Error Output × State :=

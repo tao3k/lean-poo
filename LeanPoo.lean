@@ -41,6 +41,7 @@ import LeanPoo.Functional.StatefulValidation
 import LeanPoo.Functional.RequestHandling
 import LeanPoo.Functional.FocusedUpdate
 import LeanPoo.Functional.DispatchHandling
+import LeanPoo.Functional.RecursiveHandling
 import LeanPoo.Deriving.DictionaryCompiler
 import LeanPoo.Functional.CertifiedRequirements
 import LeanPoo.Functional.CachedPreparation

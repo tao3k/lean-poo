@@ -467,6 +467,20 @@ a failing recovery handler retains its own state. [[file:../docs/contracts/dispa
 kernel admission, complete cache/reference observation, failure-state and batch
 invariant laws to the logistics and conversion examples.
 
+* Functional checked recursive method batches
+
+[[file:FunctionalRecursiveHandling.lean][FunctionalRecursiveHandling]] compares 1,344 cold/warm C3 calls with independent
+price formulas and a domain dependency/cache schedule. Rates, fees, method
+names, inputs, output bounds and budgets vary; complete value/error phases,
+ordered memo keys, hit/miss counts and read markers must match. Fifty-six
+batches and continuations compare successful output order, first refusal and
+the exact completed memo. Cycles and exhaustion retain the previous cache;
+completed source errors and output refusals retain the updated cache.
+Bounded guards check input/catalog/signature refusal before divergent method
+bodies, skipped suffixes, and separate input/output fuel refusal on a hot memo.
+Printed laws cover actual-source observations, current catalog identities,
+ordered request witnesses, batch concatenation/first errors and raw wire inversion.
+
 * Functional focused production updates
 
 [[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,

@@ -45,6 +45,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:FocusedAllocation.lean][FocusedAllocation]] | Focus a budget-indexed allocation with its proof, conserve CPU/IO totals and preserve ledger metadata through actual delayed construction. |
 | [[file:DispatchWorkflow.lean][DispatchWorkflow]] | Combine carrier/region dispatch, standard method phases, guarded warm candidates, checked receipts, retained ledger state and immutable plugin versions. |
 | [[file:RecoverableDispatch.lean][RecoverableDispatch]] | Recover a preferred method using its failed progress, retain fallback state on output refusal and stop a batch at its first error. |
+| [[file:RecursiveBilling.lean][RecursiveBilling]] | Compile C3 pricing layers, share recursive totals and subrequests, retain completed refusals and resume under a changed descriptor or immutable program version. |
+| [[file:RecursiveCatalog.lean][RecursiveCatalog]] | Revalidate memoized recursive configurations and nested function identities in the current reflective catalog, then serialize the proof-bound result. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 

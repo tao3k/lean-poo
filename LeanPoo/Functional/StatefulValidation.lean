@@ -124,4 +124,33 @@ theorem traverseState_invariant (check : State → Input → Except Error Output
         cases remaining : traverseState check retained rest with
         | mk output last => simpa [traverseState, first, remaining] using final
 
+/-- Every successful batch retains the per-step projection in the original
+input order, even when the output includes request or admission witnesses. -/
+theorem traverseState_project (check : State → Input → Except Error Output × State)
+    (project : Output → Input)
+    (preserves : ∀ state item output next, check state item = (.ok output, next) → project output = item)
+    (state final : State) (items : List Input) (outputs : List Output)
+    (success : traverseState check state items = (.ok outputs, final)) :
+    outputs.map project = items := by
+  induction items generalizing state outputs with
+  | nil =>
+    have same : outputs = [] := by simpa [traverseState] using (congrArg Prod.fst success).symm
+    subst outputs
+    rfl
+  | cons item rest ih =>
+    cases first : check state item with
+    | mk outcome next =>
+      cases outcome with
+      | error error => simp [traverseState, first] at success
+      | ok output =>
+        cases remaining : traverseState check next rest with
+        | mk outcome last =>
+          cases outcome with
+          | error error => simp [traverseState, first, remaining, Except.map] at success
+          | ok values =>
+            have same : output :: values = outputs ∧ last = final := by
+              simpa [traverseState, first, remaining, Except.map] using success
+            rcases same with ⟨rfl, rfl⟩
+            simp only [List.map_cons, preserves state item output next first, ih next values remaining]
+
 end LeanPoo.Functional.Validation
