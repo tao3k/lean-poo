@@ -1,0 +1,88 @@
+#+TITLE: Runtime record migration and staged publication
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]]
+
+* One slot catalog, several tools
+
+[[file:../../LeanPoo/Functional/RecordEvolution.lean][RecordEvolution]] composes the existing runtime
+~RecordSchema~ catalog with field projection, first-error validation and pure
+returned-state batches. Recognition, defaults, writable flags, generated
+inspection and text tools all use the existing schema operations.
+
+~CheckedRecord schema registry fuel~ retains the actual recognition equation.
+~admit~, ~construct~ and ~patch~ obtain that witness from the original gate,
+without adding a second recognition. Their ~*_outcome~ laws preserve every
+original value/error. In [[file:../../LeanPoo/Prototype/DynamicSchema.lean][DynamicSchema]], ~validate_value~ proves that recognition
+preserves the complete input, including order; ~validate_membership~ connects
+success to ~Accepted~ for the exact resolved descriptor. ~construct_validated~,
+~set_validated~ and ~patch_validated~ establish the complete final record's
+current-catalog admission, including an empty patch.
+
+~CheckedRecord.slotAccepted~ gives field consumers the exact descriptor's
+membership witness. Its structural ~decode_encode~ law reconstructs the same
+value at ~Value.wireDepth~. A changed registry or schema requires fresh
+admission; structural reconstruction alone does not supply that admission.
+
+* Explicit version migration
+
+~RecordMigration~ contains the source schema, target schema and ordered
+~FieldTransfer~ declarations. ~run~ recognizes the source first, reads only
+declared source fields and invokes the target's existing constructor. Target
+defaults are admitted exactly like supplied values; duplicate target names,
+missing mandatory defaults, sealed unknown fields and refinement/identity
+errors keep their existing semantics. Retired fields disappear only because
+the caller's transfer list omits them.
+
+~run_success_iff~ proves that the target was constructed from the explicit
+projection of this exact admitted source. ~transferFields_targets~ preserves
+ordered target names, including duplicates which target construction then
+rejects. ~run_source_error~ preserves the source refusal before any target
+error. ~checked~ retains target admission from that actual construction;
+~checked_outcome~ preserves every raw result. ~batch~ publishes a whole list
+only on success; ~batch_error_iff~ identifies its first failing record after a
+successful prefix, with no partial converted list on refusal.
+
+[[file:../../Examples/ConfigurationUpgrade.lean][ConfigurationUpgrade]] carries an owner, renames quota to budget, preserves
+nested routes and hooks, drops a legacy field and supplies a policy default.
+Runtime range/object/list factories build both catalogs. A removed callback or
+narrowed target range refuses the migration; reflection, inspection and wire
+tools use the same target schema. ~budget_bound~ transfers actual target
+field membership to the consumer's numeric bounds under explicit catalog
+binding premises.
+
+* Group rollback and whole-batch publication
+
+~update~ runs the existing ordered ~RecordSchema.patch~ as one group. A
+refusing group returns its complete input; successful edits earlier within
+that group do not escape. ~update_error~ and ~update_failure_state~ prove the
+exact retained value. ~updateBatch~ reuses ~Validation.traverseState~: it keeps
+completed groups, returns the refusing group's input and skips later groups.
+Its append and first-error laws support continuation; its invariant law keeps
+an initially admitted record admitted on every success/refusal path.
+
+~updateAtomic~ is an explicit publication policy over that same batch. On any
+refusal it returns the original batch input; on success it returns exactly the
+same outputs and final value as ~updateBatch~. The error, success and invariant
+laws are kernel theorems. Empty batches preserve their input and do not add
+admission; the invariant theorem therefore requires initial admission.
+
+[[file:../../Examples/AtomicConfiguration.lean][AtomicConfiguration]] stages a deployment, refuses an owner change after a
+writable edit, resumes from the last completed group and compares atomic
+publication with a mutable adapter installing the returned value. This pure
+policy does not roll back arbitrary external effects or establish concurrent
+publication semantics.
+
+* Independent controls and source scope
+
+[[file:../../Tests/FunctionalRecordEvolution.lean][Controls]] compare 2,016 migrations and 240 staged/atomic batches plus 240
+continuations with direct numeric/string models. Comparisons include complete
+values, exact error constructors, field order and both publication states.
+They cover default and nested-identity refusal, independent source/target
+budgets, target-name collisions, read-only frames and current-base admission.
+
+These are combinations of source slot introspection/representation constructs
+at 953–1038, descriptor defaults/recognition/parameterization at 1359–1433 and
+pure state transformations at 1451–1524. Field transfer maps and publication
+policies are explicit caller choices. General automatic migration inference,
+host callback effects and implementation-platform verification are outside
+these construction contracts.

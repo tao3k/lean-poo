@@ -45,6 +45,9 @@ inductive Computation (Context : Type u) (Key : Type v) (Value : Context → Key
   | deny (key : Key) (value : Factory Context Result) : Computation Context Key Value Result
   | map (child : Computation Context Key Value Input)
       (transform : ∀ c, Input c → Result c) : Computation Context Key Value Result
+  /-- Inspect only the child's value/context; refusals are source errors. -/
+  | validate (child : Computation Context Key Value Input)
+      (check : ∀ c, Input c → Except String (Result c)) : Computation Context Key Value Result
   | both (left : Computation Context Key Value Left) (right : Computation Context Key Value Right)
       (combine : ∀ c, Left c → Right c → Result c) : Computation Context Key Value Result
   | choose (guard : Computation Context Key Value Input) (condition : ∀ c, Input c → Bool)
@@ -63,6 +66,7 @@ def Computation.analyze : {Result : Context → Type w} →
   | _, .inspect key _ => {presences := [key]}
   | _, .deny key _ => {presences := [key], forbidden := [key]}
   | _, .map child _ => child.analyze
+  | _, .validate child _ => child.analyze
   | _, .both left right _ => left.analyze.merge right.analyze
   | _, .choose guard _ yes no => (guard.analyze.merge yes.analyze).merge no.analyze
   | _, .opaque _ => {unknown := true}
@@ -82,6 +86,10 @@ def Computation.evaluate : {Result : Context → Type w} →
   | _, .inspect key observe, provider, context => .ok (observe context (provider key).isSome)
   | _, .deny key value, provider, context => if (provider key).isSome then .error (.introduced key) else .ok (value context)
   | _, .map child transform, provider, context => (child.evaluate provider context).map (transform context)
+  | _, .validate child check, provider, context => (child.evaluate provider context).bind fun value =>
+    match check context value with
+    | .error message => .error (.source message)
+    | .ok result => .ok result
   | _, .both left right combine, provider, context => do
     let l ← left.evaluate provider context
     let r ← right.evaluate provider context
@@ -109,6 +117,7 @@ theorem Computation.evaluate_congr (code : Computation Context Key Value Result)
   | inspect key observe => simp only [evaluate, presences key (by simp [analyze])]
   | deny key value => simp only [evaluate, presences key (by simp [analyze])]
   | map child transform ih => exact congrArg (fun result => result.map (transform context)) (ih known values presences)
+  | validate child check ih => simp only [evaluate, ih known values presences]
   | both l r combine il ir =>
     have k : l.analyze.unknown = false ∧ r.analyze.unknown = false := by
       simpa [analyze, DependencyFootprint.merge, Bool.or_eq_false_iff] using known
@@ -165,6 +174,10 @@ theorem Computation.evaluate_capabilitySafe (code : Computation Context Key Valu
   | inspect key observe => trivial
   | deny key value => simp [evaluate, absent key (by simp [analyze]), CapabilitySafe]
   | map child transform ih => exact capabilitySafe_map _ (ih known available absent) _
+  | validate child check ih =>
+    apply capabilitySafe_bind _ (ih known available absent) _
+    intro value
+    cases check context value <;> trivial
   | both l r combine il ir =>
     have k : l.analyze.unknown = false ∧ r.analyze.unknown = false := by
       simpa [analyze, DependencyFootprint.merge, Bool.or_eq_false_iff] using known

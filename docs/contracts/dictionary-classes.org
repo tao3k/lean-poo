@@ -82,6 +82,14 @@ No extra cache policy is introduced. Converted providers can enter the existing
 [[file:graph-migrations.org][graph/constraint migration]] APIs, where selection changes still require
 fresh joint admission and watched absences still refuse conflicting targets.
 
+~snapshot~ decodes one aligned field snapshot, preserving the original joint
+proof. ~consumeSnapshot~ calls an original-dictionary consumer after one field
+cache read and returns the next cache in field representation. Universal value
+and state laws cover dependent consumers that install reconstructed dictionaries
+with ~letI~ and invoke their methods. [[file:shared-views.org][Shared snapshots]] documents these APIs;
+[[file:../../Examples/DictionaryConsumers.lean][DictionaryConsumers]] joins inherited tariff laws, noncommuting prototypes,
+C3 selection, quota admission and warm field-cache consumption.
+
 * Evidence and limits
 
 Compiler clients cover nine dictionary shapes, 1024 actual arithmetic dispatches,
@@ -93,7 +101,8 @@ control cannot construct the generated representation.
 Prototype/descriptor clients check 1280 self/super calls, 2304 finite unfoldings,
 36 descriptor admissions, 44 refusals, eight codec errors and two divergent
 terminal overrides. Functional clients check ten missing preparations, 30 actual
-method observations, three certified cache reads and 16 actual graph migrations
+method observations, three certified cache reads with three additional dependent
+method consumers and 16 actual graph migrations
 (one reused, two fresh, thirteen refused). All universal conversion/prototype/
 provider/cache laws are kernel theorems; native controls are additional evidence.
 

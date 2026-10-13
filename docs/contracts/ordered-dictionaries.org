@@ -1,0 +1,77 @@
+#+TITLE: Ordered dictionaries and checked multi-key transitions
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/functional.org][Source correspondence]]
+
+* Existing construction and retained assumptions
+
+[[file:../../LeanPoo/Functional/OrderedDictionary.lean][OrderedDictionary]] composes the original Order/BST/AVL construction
+(source lines 676–845), function/dictionary representations (953–1038), typed
+boundary checks (1359–1433) and explicit pure state (1451–1524). It runs
+~Dictionary.avl~: the structural solution of the existing final-self binary-tree
+prototype with its node-only AVL extension. It introduces no replacement tree
+algorithm. A snapshot retains ~OrderOps.Laws~, sorted contents and every AVL
+balance/cached-height invariant. ~OrderOps.integer_laws~ supplies the Int order.
+
+| Need | API | Kernel contract |
+|------+-----+-----------------|
+| Start a lawful dictionary | ~empty order lt laws~ | Empty, sorted, valid AVL |
+| Read a key | ~get~, ~get_source~, ~get_membership~ | Actual source lookup returns this Option; comparator errors are excluded by retained laws |
+| Apply ordered overwrites | ~writeMany~ | Actual source acons fold succeeds and retains all invariants |
+| Observe every key | ~get_writeMany~, ~get_writeMany_append~, ~get_writeMany_other~ | Equality with caller-order functional overwrites, sequential/concatenated batches, untouched-key frame |
+| Export or aggregate | ~fold~, ~fold_inorder~ | Existing afoldr equals left/root/right accumulation for any accumulator |
+| Merge a sparse layer | ~merge~, ~merge_source~, ~get_merge~ | Exact existing Dictionary.merge result; override entries are traversed in order through inherited acons |
+| Prepare retained factories | ~provider~, ~prepare_writeMany~ | Complete requirement tuple or exact first missing key agrees with the functional overwrite view |
+| Commit a multi-key proposal | ~transact~, ~transact_error~, ~transact_view~ | Error returns the identical snapshot; success applies the complete ordered write list; full result/every lookup equals functional state |
+| Run and resume proposals | ~transactBatch~, ~transactBatch_view~, ~transactBatch_error_iff~ | Complete batch observation equals the reference traversal, with exact successful prefix and failing step state |
+
+~provider~ supports homogeneous factory-valued dictionaries with a
+context-dependent result carrier. General heterogeneous requirements retain
+their existing API. Factory selection and dictionary merge store functions;
+they do not invoke their bodies. The caller supplies the joint proof.
+
+* Layered routing
+
+[[file:../../Examples/LayeredRouting.lean][LayeredRouting]] stores context-indexed route factories in actual AVL
+dictionaries. Base routes receive ordered regional edits, including a repeated
+key; a sparse emergency dictionary then overrides the primary route. A
+universal lookup law identifies the chosen provider for every Int key.
+Preparation retains the three exact functions and a joint allowance bound at
+every budget. A missing middle requirement preserves its first-key error.
+
+~ContextSlot.consumeAlong~ shares built dependency data at equal budgets.
+Every request still supplies its own label; changing the budget replaces the
+one-context slot. This is explicit layer precedence, using the existing source
+dictionary merge and Functional preparation/cache constructions.
+
+* Keyed resource rebalancing
+
+[[file:../../Examples/KeyedRebalance.lean][KeyedRebalance]] addresses two resources by runtime keys. A refined Codec
+rejects equal source/target keys before reads; lookup reports the exact first
+missing key. The pure callback reads both quantities, checks availability and
+proposes debit/credit together. An insufficient transfer publishes no debit.
+Success retains the actual AVL snapshot and universal proofs of addressed-total
+conservation and unchanged lookup at every other key.
+
+The batch keeps completed transfers before refusal and resumes from that exact
+snapshot. It returns complete writes/errors, rather than hiding a failed step
+behind a summary balance. ~Validation.traverseState_transport~ proves that any
+commuting state projection preserves the complete ordered batch outcome and
+projected final state; ~transactBatch_view~ specializes it to dictionary lookup.
+
+* Controls and scope
+
+[[file:../../Tests/FunctionalOrderedDictionary.lean][Controls]] compare 303 ordered-write/split/merge cases against a separate
+reverse-history model and canonical sorted export. Independent child traversal
+recomputes all cached heights and balances. Fifty-six preparations include
+repeated keys, exact first missing keys and divergent factory bodies that must
+remain unforced. An ordinary four-resource vector compares 2,160 single
+transfers, 2,160 batches and 2,160 continuations, including all-key observations,
+quantity conservation, original snapshots and exact refusal state. Three
+divergent callback suffixes must remain uncalled after a retained prefix.
+
+The test has the existing 30-second, 2-GiB and heartbeat limits. Printed axiom
+reports contain only the standard Lean logical axioms. Proposals are pure typed
+callbacks with caller-defined rules; no callback-effect inference, concurrent
+transaction isolation, durable publication or execution-cost claim follows.
+These are compositions of the paper's concrete constructions; they do not
+change the whole-paper completion flag.

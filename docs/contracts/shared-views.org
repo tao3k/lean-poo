@@ -1,0 +1,84 @@
+#+TITLE: Shared snapshots and representation replacement
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]] · [[file:interfaces.org][Consumer interfaces]]
+
+* Several consumers, one dependency read
+
+[[file:../../LeanPoo/Functional/SharedViews.lean][SharedViews]] lets a caller read a broad certified family once and construct
+several outputs from that same context-aligned ~Snapshot~. ~Snapshot.consume~
+passes existing values and their joint proof to a constructor.
+~Snapshot.consumeView~ projects requested keys before observing them, transfers
+the public proof, and constructs an output without another cache read.
+Requested order and duplicates follow the existing first-occurrence lookup.
+
+~ContextSlot.consumeSnapshot~ runs a composite consumer after one ~read~.
+~consumePair~ supplies the same snapshot to two consumers with different,
+possibly context-dependent output types. The returned next slot retains the
+broad dependencies. The constructors run on hits too, so request labels need
+not enter the dependency cache key.
+
+~consumeSnapshot_state~ and ~consumePair_state~ prove exact equality of the
+returned slot/hit pair with the one read. Their value laws identify every
+consumer output with construction from the canonical certified family, for
+every context and cache state. [[file:../../Tests/FunctionalSharedViews.lean][Controls]] cover twelve reads, four hits,
+independent sums and labels, reordered/repeated dependencies, broad hidden-data
+retention and wrong-context rejection. An observer outside both interfaces
+diverges if invoked; these checks run under a bounded command.
+
+* Replace only the declared public interface
+
+[[file:../../LeanPoo/Functional/ViewRetarget.lean][ViewRetarget]] accepts new factories in a different internal representation
+for only the requested keys. The caller proves pointwise equality of the two
+public observations at every context; hidden carriers and metadata may differ.
+~Certified.replaceView~ derives the candidate's public joint claim from the
+original proof. ~replaceView_public~ proves equality of the complete public
+certificates.
+
+~ContextSlot.retargetView~ transfers the old projected public cache to that
+candidate certificate. Future misses use its narrow factories. The result is a
+cache of public values; it does not reconstruct cached private candidate data.
+~retargetView_reused~ preserves the exact original hit decision, including
+cold slots and requests at a different context. ~retargetView_consume~ preserves
+every public consumer's output, including outputs that use the joint proof.
+
+[[file:../../Tests/FunctionalViewRetarget.lean][Controls]] cross three initial cache states, three requested contexts and six
+views: 54 cases, including empty/reordered/repeated interfaces and distinct
+duplicate source values. Repeated requests hit; a changed context misses.
+Private candidate functions diverge if forced. An incompatible public factory
+has a kernel proof of refusal to satisfy the compatibility obligation.
+
+[[file:../../Examples/SharedReporting.lean][SharedReporting]] combines billing and monitoring on one broad read, retains
+internal readings, then replaces the billing representation while keeping its
+quota proof and hot public cache. Five requests compare independent values,
+request-specific labels and cache decisions.
+
+* Generated dictionary fields in actual consumers
+
+[[file:../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport.snapshot]] decodes one generated-field snapshot into the
+original dictionary family, preserving its context alignment and full joint
+proof. ~consumeSnapshot~ reads the field cache once and supplies that decoded
+snapshot to an original-dictionary consumer. Its state law returns precisely
+the field cache's next slot/hit pair; its value law equates every dependent
+consumer with the original family construction.
+
+[[file:../../Examples/DictionaryConsumers.lean][DictionaryConsumers]] derives representations for a tariff and an inherited
+quote policy containing methods and dependent law fields. Noncommuting fee
+prototypes compose before C3 provider selection. The production conversion
+commutes with that composition. A warm dictionary cache is converted to fields;
+billing installs the reconstructed policy as a local typeclass instance and
+calls its method, while monitoring uses a narrow quota view. The quote carries
+a bound proved from the inherited method law and joint quota proof. Five
+requests check independent prices, labels and cache states, reversed prototype
+order and an unchanged base policy. Missing capabilities retain their error.
+[[file:../../Tests/DictionaryTransport.lean][Dictionary controls]] additionally invoke three dependent consumers from
+converted cache states alongside the existing preparation and migration checks.
+
+* Source correspondence and limits
+
+These APIs apply the concrete context-cache, representation/consumer and
+class-dictionary constructions mapped to F02, F07 and F08 in the
+[[file:../audits/poof/functional.org][Functional audit]]. The context and key families stay fixed. Public
+compatibility is supplied as an analytic proof; it is not inferred from arbitrary
+closures. The source's complete generalized prototype protocol remains a
+research proposal. These proofs cover typed construction and observations,
+with no timing or machine-level verification claim.

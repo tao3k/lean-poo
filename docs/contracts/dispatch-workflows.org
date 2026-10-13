@@ -1,0 +1,85 @@
+#+TITLE: Checked dispatch, method state and recovery
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]] · [[file:../audits/poof/functional.org][Source correspondence]]
+
+* Compose the existing selector and method combiner
+
+[[file:../../LeanPoo/Functional/DispatchHandling.lean][DispatchHandling]] supplies ~DispatchSession~, pairing the existing
+~Object.Multimethod~ with explicit method state. Its selected result is an
+~EStateM~ action. Callers can use existing standard, simple, forwarding or
+user-defined combiners; the session adds no selector or method evaluator.
+
+~call~ checks input through a ~Codec~ before dispatch. The generic resolves
+candidates and rechecks guards with current arguments. The effective method
+runs on the current state, then supplied output admission checks every
+successful method result, including an ~around~ shortcut that omits ~next~.
+The admitted output can carry dependent proofs.
+
+~DispatchFailure~ distinguishes input, shape, method and output errors with
+their original payloads. Input/shape refusal retains the original session and
+has no hit marker. Dispatched calls retain the exact updated generic and actual
+method state on success and failure, with the original candidate-hit marker.
+Hits reuse candidates; request labels, guards, method results and state remain
+current. ~call_input_error~, ~call_shape_error~ and ~call_dispatched~ expose
+the complete protocol; the two ~evaluate_*_error~ laws retain exact states.
+
+* Proofs, batches and method-level recovery
+
+~call_admitted~ proves that each successful public result passed actual input
+and output admission. Under the existing ~CacheSound~ invariant,
+~call_observation~ equates complete outcomes and final method state with the
+uncached ordered-tuple/current-argument specification. ~Multimethod.call_preserves~
+and ~call_cacheSound~ preserve that invariant.
+
+~callBatch~ uses existing ~Validation.traverseState~. Its complete first-error
+law retains the failing call's session after the successful prefix and skips
+the suffix. ~traverseState_invariant~ proves invariant preservation for every
+returned state, including errors; ~callBatch_cacheSound~ specializes it.
+~call_represent~ and ~callBatch_represent~ preserve complete results, both
+states and hit markers under an explicit input-layout inverse.
+
+~recoverMethod~ starts the method-level handler on the failed action's returned
+state. Success preserves the original result/state; handler refusal returns
+its own error/state. The helper does not undo prefix writes. An existing
+~around~ method can use it, while the outer output gate remains outside that
+handler. Its three universal recovery laws are kernel checked.
+
+* Logistics quotation and reservation
+
+[[file:../../Examples/DispatchWorkflow.lean][DispatchWorkflow]] compiles actual verified carrier/region C4 lineages and
+standard around/before/primary/after fragments. Weight guards are rechecked on
+a warm shape; traces check before specificity, nested primaries, reversed after
+order and current labels. Methods reserve stock and record charges in an
+explicit ledger. Refusal retains reached state, later calls resume, and an
+around shortcut still reaches output admission. Plugin contribution clears the
+new version's cache while the old version remains usable. ~call_bound~ proves
+every successful receipt's price bound and label at the original boundary.
+These reservation/refusal rules are the example's explicit pure transition;
+the source does not prescribe an application rollback or billing policy.
+
+[[file:../../Examples/RecoverableDispatch.lean][RecoverableDispatch]] compiles a preferred/base lineage. A failed preferred
+conversion increments attempts; fallback reads that actual progress. Failed
+primaries skip their after group, while successful chains retain standard phase
+order. Output refusal after recovery preserves attempt/fallback counts; the
+method handler cannot intercept that later gate. A failed batch retains its
+recovered prefix. A kernel law identifies the exact fallback starting state.
+
+* Independent controls and source boundary
+
+[[file:../../Tests/FunctionalDispatchHandling.lean][FunctionalDispatchHandling]] compares 2,880 calls in two layouts against
+direct price/state/trace formulas, including cold/warm candidates, current
+guards, bypasses, missing primaries, recovery and all four refusal stages.
+Twenty-one batches and continuations check retained state. Eleven calls span
+ten shapes and an evicted repeat through the existing eight-entry LRU.
+Bounded guards check omitted divergent inner/default bodies, input/shape refusal
+before predicates, a skipped batch suffix and a failing recovery handler.
+
+These APIs combine multiple dispatch/method fragments at source 1980–2083 with
+descriptor admission at 1359–1433 and explicit pure state/cache constructions.
+Method and admission rules are supplied typed callbacks. General cross-library
+conflict policy, arbitrary host effect inference and the complete generalized
+prototype protocol remain separate source proposals.
+
+* Calls to safe recursive programs
+
+[[file:recursive-dispatch.org][RecursiveDispatch]] supplies proof-bearing recursive actions for the existing method combinations. Source memo and candidate-cache lifetimes remain separate; current descriptor refusal, source recovery and outer admission retain the reached states.

@@ -43,11 +43,30 @@ check-merge: check-types
         LeanPoo.C4.Presentation \
         LeanPoo.C4.Relabeling \
         LeanPoo.Functional.Assembly \
+        LeanPoo.Functional.Validation \
+        LeanPoo.Functional.Codec \
+        LeanPoo.Functional.ComputationBatch \
         LeanPoo.Functional.Requirements \
         LeanPoo.Functional.GuardedExtension \
         LeanPoo.Functional.GraphConstraints \
         LeanPoo.Functional.AnalyzedMigration \
         LeanPoo.Functional.DictionaryTransport \
+        LeanPoo.Functional.SharedViews \
+        LeanPoo.Functional.ViewRetarget \
+        LeanPoo.Functional.StatefulValidation \
+        LeanPoo.Functional.RequestHandling \
+        LeanPoo.Functional.FocusedUpdate \
+        LeanPoo.Functional.DispatchHandling \
+        LeanPoo.Functional.RecursiveHandling \
+        LeanPoo.Functional.RecursiveDispatch \
+        LeanPoo.Functional.ReceiptAdmission \
+        LeanPoo.Functional.RecordEvolution \
+        LeanPoo.Functional.OrderedDictionary \
+        LeanPoo.Functional.MetadataFamily \
+        LeanPoo.Functional.MetadataClosure \
+        LeanPoo.Functional.FactoryDispatchPublication \
+        LeanPoo.Functional.DispatchExtension \
+        LeanPoo.Functional.EnumeratedRequirements \
         LeanPoo.Deriving.DictionaryCompiler \
         LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.CachedPreparation \
@@ -144,6 +163,8 @@ check-object: check-c4 check-generic
         LeanPoo.Object.Migration \
         LeanPoo.Object.Initialization \
         LeanPoo.Object.MethodCombination \
+        LeanPoo.Object.SimplePolicies \
+        LeanPoo.Object.SimpleCombinationSemantics \
         LeanPoo.Object.QualifiedMethods \
         LeanPoo.Object.ShapeCache \
         LeanPoo.Object.Multimethod \
@@ -217,6 +238,30 @@ _check-examples:
     {{lean}} Examples/MutableState.lean
     {{lean}} Examples/FunctionalPipeline.lean
     {{lean}} Examples/ValidationWorkflow.lean
+    {{lean}} Examples/ValidatedConfiguration.lean
+    {{lean}} Examples/IncrementalWorkflow.lean
+    {{lean}} Examples/SharedReporting.lean
+    {{lean}} Examples/DictionaryConsumers.lean
+    {{lean}} Examples/ValidatedOrders.lean
+    {{lean}} Examples/ResumableRequests.lean
+    {{lean}} Examples/FocusedPricing.lean
+    {{lean}} Examples/FocusedAllocation.lean
+    {{lean}} Examples/DispatchWorkflow.lean
+    {{lean}} Examples/RecoverableDispatch.lean
+    {{lean}} Examples/RecursiveBilling.lean
+    {{lean}} Examples/RecursiveDispatchWorkflow.lean
+    {{lean}} Examples/ReceiptWorkflow.lean
+    {{lean}} Examples/RecursiveCatalog.lean
+    {{lean}} Examples/ConfigurationUpgrade.lean
+    {{lean}} Examples/AtomicConfiguration.lean
+    {{lean}} Examples/LayeredRouting.lean
+    {{lean}} Examples/KeyedRebalance.lean
+    {{lean}} Examples/MetadataDeployment.lean
+    {{lean}} Examples/ClosedDeployment.lean
+    {{lean}} Examples/ProtectedDispatch.lean
+    {{lean}} Examples/PolicyDispatch.lean
+    {{lean}} Examples/JointPublication.lean
+    {{lean}} Examples/IntrospectiveExport.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
     {{lean}} Examples/DelayedNumbers.lean
@@ -314,6 +359,8 @@ _check-contracts:
     {{lean}} Tests/ClassInitialization.lean
     {{lean}} Tests/MethodCombination.lean
     {{lean}} Tests/SimpleMethodCombination.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/AlternativeCombination.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FactoryDispatchPublication.lean
     {{lean}} Tests/QualifiedMethodCombination.lean
     {{lean}} Tests/QualifiedCombination.lean
     {{lean}} Tests/ShapeCache.lean
@@ -372,11 +419,28 @@ _check-contracts:
     {{lean}} Tests/FunctionalGraphMigration.lean
     {{lean}} Tests/FunctionalGraphConstraints.lean
     {{lean}} Tests/FunctionalDependencyAnalysis.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalValidation.lean
+    {{lean}} Tests/FunctionalCodec.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalComputationBatch.lean
     {{lean}} Tests/FunctionalAnalyzedCache.lean
     {{lean}} Tests/FunctionalAnalyzedMigration.lean
     {{lean}} Tests/DictionaryCompiler.lean
     {{lean}} Tests/DictionaryBridge.lean
     {{lean}} Tests/DictionaryTransport.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalSharedViews.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalViewRetarget.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalStatefulValidation.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRequestHandling.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalFocusedUpdate.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalDispatchHandling.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecursiveHandling.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/RecursiveDispatch.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ReceiptAdmission.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecordEvolution.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalOrderedDictionary.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalReflectiveRequirements.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalMetadataClosure.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalDispatchExtension.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean

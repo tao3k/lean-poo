@@ -19,6 +19,20 @@ these guides explain reusable library contracts.
 | Choose a compiler, audit execution or retain rejection evidence | [[file:contracts/compilation.org][Compilation and audit receipts]] |
 | Query ancestry/precedence or transfer verified names | [[file:contracts/verified-orders.org][Verified order queries]] |
 | Declare typed requirements, read factories and reuse proofs | [[file:contracts/capability-families.org][Capability families and proof reuse]] |
+| Validate nested configurations and finite capability batches with first-error proofs | [[file:contracts/validation-batches.org][Validation, descriptors and incremental workflows]] |
+| Admit requests before cache reads and resume stateful validation after failure | [[file:contracts/checked-requests.org][Checked requests and resumable validation]] |
+| Compose nested method updates and retain admitted dependent parts | [[file:contracts/focused-updates.org][Nested focuses and admitted method fragments]] |
+| Combine checked multiple dispatch, ordered method phases and recovery state | [[file:contracts/dispatch-workflows.org][Checked dispatch workflows]] |
+| Share recursive method requests and revalidate current catalogs in resumable batches | [[file:contracts/recursive-requests.org][Checked recursive requests]] |
+| Migrate runtime record schemas and publish admitted field groups atomically | [[file:contracts/record-evolution.org][Record migration and staged publication]] |
+| Compose certified source AVL dictionaries, routing factories and multi-key proposals | [[file:contracts/ordered-dictionaries.org][Ordered dictionaries and checked multi-key transitions]] |
+| Automatically close checked C3 factories from proved finite dependencies | [[file:contracts/closed-metadata.org][Automatic metadata closure]] |
+| Re-admit completed recursive receipts at current descriptor boundaries | [[file:contracts/receipt-admission.org][Receipt admission]] |
+| Call safe recursive programs from stateful multi-argument methods | [[file:contracts/recursive-dispatch.org][Recursive dispatch]] |
+| Run alternative combinations with ordered effects and exact failures | [[file:contracts/alternative-combinations.org][Alternative method combinations]] |
+| Publish closed factories and protected generic edits as one version | [[file:contracts/joint-publication.org][Joint publication]] |
+| Protect multi-argument dispatch assumptions through extensions and calls | [[file:contracts/dispatch-extensions.org][Protected generic extensions]] |
+| Apply checked metadata programs and build typed records from runtime key declarations | [[file:contracts/reflective-requirements.org][Metadata families and enumerated requirements]] |
 | Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |
 | Change graph topology and migrate positive/negative proofs and cached data | [[file:contracts/graph-migrations.org][Graph migration and constraint caches]] |
 | Infer pure capability dependencies and migrate computed result caches | [[file:contracts/dependency-analysis.org][Dependency analysis and computed cache migration]] |
@@ -38,6 +52,7 @@ these guides explain reusable library contracts.
 | Flatten multi-stage named interfaces and reuse their proofs | [[file:contracts/view-composition.org][View composition laws]] |
 | Share broad cached dependencies across different public consumers | [[file:contracts/borrowed-view.org][Borrowed public views]] |
 | Expose only requested positions with one public proof | [[file:contracts/observed-view.org][Narrow public views]] |
+| Serve several consumers from one snapshot and replace an internal representation | [[file:contracts/shared-views.org][Shared snapshots and representation replacement]] |
 | Reuse built data across contexts, narrow/public views and rich requests | [[file:contracts/context-cache.org][Built data and context caches]] |
 
 * Verification and reference study

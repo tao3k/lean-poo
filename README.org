@@ -70,6 +70,29 @@ shapes.
 [[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
 [[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
 [[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
+[[file:Examples/ValidatedConfiguration.lean][ValidatedConfiguration.lean]] combines nested constraints and two proved wire layouts.
+[[file:Examples/IncrementalWorkflow.lean][IncrementalWorkflow.lean]] migrates validated workload caches through extensions and refusals.
+[[file:Examples/SharedReporting.lean][SharedReporting.lean]] bills and monitors one snapshot, then replaces its billing representation with a proved public cache transfer.
+[[file:Examples/DictionaryConsumers.lean][DictionaryConsumers.lean]] composes inherited price dictionaries and calls their methods from a converted cache with quota proofs.
+[[file:Examples/ValidatedOrders.lean][ValidatedOrders.lean]] joins price/stock certificates and checks request inputs and producer outputs around one dependency read.
+[[file:Examples/ResumableRequests.lean][ResumableRequests.lean]] resumes failed workload batches with matching pure, mutable and linear cache states.
+[[file:Examples/FocusedPricing.lean][FocusedPricing.lean]] composes nested pricing fragments and resumes admitted updates with complete supported-quantity bounds.
+[[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
+[[file:Examples/DispatchWorkflow.lean][DispatchWorkflow.lean]] combines checked logistics dispatch, method phases, warm guarded candidates and retained ledger state.
+[[file:Examples/RecoverableDispatch.lean][RecoverableDispatch.lean]] runs fallback methods on actual failed progress and continues after checked refusal.
+[[file:Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow.lean]] composes safe recursive billing with guarded multi-argument dispatch, current descriptor admission, recovery and retained method state.
+[[file:Examples/RecursiveBilling.lean][RecursiveBilling.lean]] shares C3 recursive pricing subrequests and resumes retained completed results under current descriptors.
+[[file:Examples/RecursiveCatalog.lean][RecursiveCatalog.lean]] revalidates recursive configuration schemas and nested function identities before publishing a shared result.
+[[file:Examples/ConfigurationUpgrade.lean][ConfigurationUpgrade.lean]] migrates reflective runtime configurations through explicit field maps and target defaults.
+[[file:Examples/AtomicConfiguration.lean][AtomicConfiguration.lean]] stages checked field updates with group rollback, atomic publication and continuation.
+[[file:Examples/LayeredRouting.lean][LayeredRouting.lean]] combines ordered AVL layers, prepared routing factories and a cached joint allowance proof.
+[[file:Examples/KeyedRebalance.lean][KeyedRebalance.lean]] transfers quantities across runtime keys with conservation, untouched-key and exact refusal-state proofs.
+[[file:Examples/ClosedDeployment.lean][ClosedDeployment.lean]] automatically closes checked C3 scheduling/reporting factories with final-self dependencies and retained context proofs.
+[[file:Examples/PolicyDispatch.lean][PolicyDispatch.lean]] combines pricing fragments with sums, ordered collection, extrema and short-circuit approval.
+[[file:Examples/JointPublication.lean][JointPublication.lean]] jointly publishes closed C3 factories and protected pricing extensions with exact-version admission and refusal retention.
+[[file:Examples/ProtectedDispatch.lean][ProtectedDispatch.lean]] protects multi-argument extension assumptions through stateful method combination, warm calls and refused publication.
+[[file:Examples/MetadataDeployment.lean][MetadataDeployment.lean]] applies checked C3 metadata to scheduling factories with noncommuting parent wrappers, typed bounds and a retained context cache.
+[[file:Examples/IntrospectiveExport.lean][IntrospectiveExport.lean]] prepares runtime heterogeneous declarations, builds a narrow record and generates inspection from the same key list.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
@@ -134,3 +157,5 @@ traces, retaining authorization at each state transition. These are generic
 proof interfaces: native consumers supply implementation refinement, measurements,
 authority and publication. The modules do not infer CPU complexity or permission
 from an unverified declaration.
+
+[[file:Examples/ReceiptWorkflow.lean][ReceiptWorkflow.lean]] re-admits completed recursive answers under current descriptors for around-method shortcuts, preserving their source proof without recursive reads.

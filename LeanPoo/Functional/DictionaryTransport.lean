@@ -1,12 +1,13 @@
 import LeanPoo.Prototype.DictionaryBridge
 import LeanPoo.Functional.ContextObservation
+import LeanPoo.Functional.SharedViews
 
 /-! Use generated dictionary representations in existing provider selection,
 joint requirement admission and one-context caches. Conversion preserves missing
 errors, functions, dependent data/proofs and exact hit decisions. -/
 namespace LeanPoo.Functional.DictionaryTransport
 open Requirements
-universe u v w x
+universe u v w x y
 variable {Context : Type u} {Key : Type v}
 variable {Value : Context → Key → Type w} {Fields : Context → Key → Type x}
 
@@ -112,5 +113,41 @@ theorem slot_read_reused [DecidableEq Context] (bridge : Family Value Fields)
     rcases pair with ⟨previous, data⟩
     by_cases same : previous = context <;>
       simp [slot, ContextSlot.observe, ContextSlot.read, stored, same]
+
+/-- Decode an aligned generated-field snapshot into the original dictionary
+family, including its complete joint proof. Conversion calls no factory. -/
+def snapshot (bridge : Family Value Fields) {ready : Certified keys Claim} {context : Context}
+    (data : Snapshot (certified bridge ready) context) : Snapshot ready context :=
+  ⟨observeResults (reveal bridge) data.val, by
+    constructor
+    · rw [data.property.1, ← Certified.build_val]
+      exact certified_build bridge ready context
+    · exact data.property.2⟩
+
+/-- Read the generated-field cache once, decode one snapshot and invoke an
+original-dictionary consumer. The next cache remains in field representation. -/
+def consumeSnapshot [DecidableEq Context] (bridge : Family Value Fields)
+    {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
+    {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
+    Output context × ContextSlot (certified bridge ready) × Bool :=
+  source.consumeSnapshot (fun c data => construct c (snapshot bridge data)) context
+
+theorem consumeSnapshot_state [DecidableEq Context] (bridge : Family Value Fields)
+    {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
+    {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
+    (consumeSnapshot bridge source construct context).2 = (source.read context).2 := rfl
+
+/-- Every dependent dictionary consumer agrees with the original uncached build,
+even when it invokes retained typeclass methods and their law fields. -/
+theorem consumeSnapshot_value [DecidableEq Context] (bridge : Family Value Fields)
+    {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
+    {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
+    (consumeSnapshot bridge source construct context).1 =
+      construct context ⟨build ready.factories context, rfl, ready.valid context⟩ := by
+  unfold consumeSnapshot
+  rw [ContextSlot.consumeSnapshot_value]
+  congr 1
+  apply Subtype.ext
+  exact certified_build bridge ready context
 
 end LeanPoo.Functional.DictionaryTransport

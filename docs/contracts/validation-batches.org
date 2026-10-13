@@ -1,0 +1,62 @@
+#+TITLE: Validated batches and incremental workflows
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]] · [[file:dependency-analysis.org][Dependency analysis]]
+
+* Ordered validation
+
+[[file:../../LeanPoo/Functional/Validation.lean][Validation.traverse]] returns a complete ordered batch or its first error.
+~traverse_error_iff~ characterizes that error by a successful prefix, the first
+failing item and an arbitrary suffix. ~traverse_append~ proves sequential
+composition. ~traverse_success~ proves successful values retain order and repeats.
+
+~Factory.traverseExcept~ and ~Factory.sequenceExcept~ apply that policy at one
+exact context. Values and errors may depend on the context. A refusal stops
+before applying later factories. [[file:../../Tests/FunctionalValidation.lean][Controls]] compare 36 batches with an independent
+first-invalid scan, reject a wrong-context result and exercise six unreachable
+suffixes under a bounded check command.
+
+* Descriptor composition
+
+[[file:../../LeanPoo/Functional/Codec.lean][Codec]] stores encode/decode operations and a decode-after-encode proof.
+~refine~ admits runtime predicate evidence; ~product~ and ~list~ compose nested
+values with the same first-error policy. ~transport~ changes the value carrier
+with an explicit inverse; ~represent~ changes the wire layout. Its decode law
+preserves every input outcome, including errors. Existing descriptor JSON codecs
+can enter through ~ofJson~ with their roundtrip proof; ~toJson~ supplies their
+operations to the existing ~Prototype.Descriptor~ API.
+
+[[file:../../Examples/ValidatedConfiguration.lean][ValidatedConfiguration]] builds a descriptor from an ordinary capacity parameter.
+Every weighted route is positive and bounded; the whole route list must fit the
+capacity. The public summary retains the joint proof. A second wire layout has
+universally equal public results and exact errors. The example uses typed wire
+trees. [[file:../../Tests/FunctionalCodec.lean][Controls]] compare 48 nested batches to independent element/total checks and
+verify left-component error priority and generic roundtrip composition.
+
+* Analyzed computation and migration
+
+~Computation.validate~ checks a successfully computed value using a pure callback
+that receives only that value and the context. It preserves the child's entire
+dependency footprint. Child errors propagate; callback refusals become source
+errors. The existing universal observation-congruence and capability-safety
+proofs cover this constructor.
+
+[[file:../../LeanPoo/Functional/ComputationBatch.lean][Computation.sequence/traverse]] build finite inspectable batches. Kernel laws
+identify their execution with ~Validation.traverse~, characterize the first error
+and retain the entire conservative footprint, including later callbacks.
+[[file:../../Tests/FunctionalComputationBatch.lean][Controls]] compare 72 observations to an independent scalar calculation and
+check cold/hot success and error caching. An unreachable suffix checks stopping.
+
+[[file:../../Examples/IncrementalWorkflow.lean][IncrementalWorkflow]] combines required capacity, optional priority, an assumed
+absent legacy method, per-job validation and a joint workload bound. Nine changes
+at two contexts cover unrelated edits, a priority plugin, a reduced limit,
+negative conflict, conflict preceding a missing key, adding then removing a
+method, a missing capability, an unknown provider and cyclic inheritance.
+Accepted revisions require joint/result admission, compare computed outputs
+with independent amounts, continue through a second migration and exercise
+context-slot replacement. Stable migrations retain hot successes and source
+errors; affected computations start cold and can turn an old error into success.
+
+These scenarios apply the source descriptor, extension and explicit-cache
+constructions mapped to F03–F06 in the [[file:../audits/poof/functional.org][Functional audit]]. Their admitted
+calculations are finite pure syntax with typed values and supplied analytic
+proofs. No performance measurements are claimed.

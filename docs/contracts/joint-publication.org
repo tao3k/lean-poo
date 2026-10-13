@@ -1,0 +1,52 @@
+#+TITLE: Joint publication of closed factories and generic extensions
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:closed-metadata.org][Factory closure]] · [[file:dispatch-extensions.org][Protected extensions]]
+
+* One immutable version
+
+~Functional.FactoryDispatchPublication.Snapshot~ holds a checked metadata
+construction, its generic function, the exact generic's negative certificate
+and an ~Approved construction generic~ payload. A payload may retain selected
+factories, dependent consumer bounds and actual dispatch receipts. It is indexed
+by both components; evidence from the old factories cannot simply be inserted
+into an unrelated new version.
+
+~stage~ runs a supplied factory-construction thunk, the existing extension
+~guard~, then supplied joint admission. Errors retain their phase and payload;
+dispatch conflicts and admission refusal retain the actual candidate evidence.
+Metadata errors precede dispatch errors, and dispatch errors precede admission.
+The construction thunk and admission are explicit typed callbacks; arbitrary
+host closures and hidden cross-library assumptions are not inferred.
+
+An accepted ~Revision~ carries exact equations for reconstruction, the complete
+dispatch patch, and joint admission of its snapshot. ~Snapshot.closed~ exposes
+closure of the actual captured factory program. ~Revision.cacheSound~ transfers
+the existing sound-cache invariant through the completed dispatch edits.
+
+~publish~ returns its complete stage result and one snapshot.
+~publish_accepted~ selects the accepted snapshot; ~publish_refused~ retains the
+entire old version, including its old factories, approvals and warm cache, on
+every error. No intermediate version is published. This is an explicit pure
+application publication policy; it is not concurrent commit, external IO
+rollback, or a new generalized meta-object protocol.
+
+* A coupled pricing upgrade
+
+[[file:../../Examples/JointPublication.lean][JointPublication]] changes the parent order of a shared C3 diamond whose
+doubling and extra-fee wrappers do not commute. It upgrades corresponding Card
+pricing fragments, protects structural Bank absences, and admits a consumer
+only when actual stateful dispatch agrees with its selected total factory and
+fits the selected capacity at budget 5. The stored approval certifies that
+request; it does not infer agreement for every budget. Refused mismatch,
+inherited Bank contribution and actual missing-parent construction all retain
+the old warm version; the old price remains 19 and the accepted version is 18.
+
+[[file:../../Tests/FactoryDispatchPublication.lean][FactoryDispatchPublication]] compares 512 complete publication outcomes
+against an independent arithmetic/phase oracle. It varies old/new rates,
+metadata refusal, bad arity, Bank conflicts, canceled extensions, joint mismatch,
+capacity refusal and cold/warm old caches, including simultaneous errors.
+
+This combines the existing concrete source constructions at 1254–1314
+(metadata), 1980–2059 (generic extension) and 2060–2083 (combination), with
+explicit consumer admission. The paper does not prescribe this application's
+atomic publication or error-priority policy.

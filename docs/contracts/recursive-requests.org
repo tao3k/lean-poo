@@ -1,0 +1,92 @@
+#+TITLE: Checked recursive requests and current catalogs
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]] · [[file:../audits/poof/functional.org][Source correspondence]]
+
+* Existing method programs, shared receipts and fresh admission
+
+[[file:../../LeanPoo/Functional/RecursiveHandling.lean][RecursiveHandling]] composes the existing safe recursive machine,
+[[file:../../LeanPoo/Object/CallableValidation.lean][CallableValidation]] and ordered stateful validation. ~RecursiveSession program~
+holds the existing proof-bearing memo. Its program index binds every memo
+entry's evaluation derivation to the actual method storage. This layer adds no
+evaluator, method assembly or mutable implementation.
+
+~call~ validates the argument before executing that request. A completed
+receipt enters the existing ~CheckedCall.fromReceipt~ output gate in the
+current registry, even on a warm hit. Successful calls retain actual
+~Evaluates~, ~inputAccepted~ and ~outputAccepted~ witnesses. A memoized method
+value can remain valid for the same program while a changed descriptor or
+function identity refuses its public admission.
+
+~callSlot~ resolves the current reflective catalog's descriptor identity and
+requires its actual FunctionOf contract. ~CatalogInvocation~ retains that
+lookup, the exact selected signature and the checked evaluation/boundary
+witnesses. ~method_name~ binds the executed method to the requested slot;
+~observed~ gives an actual source observation at some finite depth.
+~CatalogInvocation.encodeJson/decode_encode~ reconstruct that same evaluated
+value at its structural wire-depth bound. They concern structural JSON,
+including registered identity values, rather than closure serialization or
+general text/UTF-8 parser inversion.
+
+* Exact failure state and heterogeneous batches
+
+~RecursiveFailure.boundary~ retains the existing signature/schema/argument/
+result/source errors. ~evaluation~ retains the actual request and certified
+machine failure: a cycle carries its divergence proof, while budget exhaustion
+does not assert semantic impossibility.
+
+Catalog, signature and input refusal preserve the original session and have no
+read marker. Completed source errors and output refusal retain the exact
+completed memo, including reusable subrequests. An incomplete machine run
+retains the old session, matching the existing executor's publication policy.
+It has a marker recording whether the attempted top-level request was already
+present. ~call_input_error~, ~call_diagnostic~, ~call_completed~ and the two
+catalog refusal laws expose those complete results.
+
+~callRequest~ packs heterogeneous catalog requests with their actual checked
+answers. ~callBatch~ uses ~Validation.traverseState~: successful output order,
+batch concatenation and the complete successful-prefix/first-error/final-state
+contracts are kernel laws. ~traverseState_project~ proves that each successful
+batch preserves the supplied per-step projection; ~callBatch_requests~ binds
+every answer to the original ordered query. A refused batch publishes no
+partial output list but returns the refusing step's exact retained session.
+
+~value_agrees~ equates an admitted result with every completed finite source
+observation. ~admitted_values_agree~ proves equal values for the same method
+name/argument/program under different admitted signatures or registries.
+Finite-budget diagnostic outcomes need not coincide on cold and warm caches;
+the API does not claim they do.
+
+* Recursive pricing and nested configuration
+
+[[file:../../Examples/RecursiveBilling.lean][RecursiveBilling]] compiles a C3 diamond with inherited fee wrapping and
+final-self tariff lookup. A series recursively requests earlier totals and
+current quotes; repeated subrequests share their actual evaluation receipts.
+The example checks a total of 38, output refusal of a completed 55 followed by
+hot re-admission, shared source errors, certified cycles, budget exhaustion and
+continuation. An immutable tariff revision produces 48 while the old version
+still returns 38. Kernel laws bind admission to actual source observations
+and transfer a current named range's bounds to the evaluated price.
+
+[[file:../../Examples/RecursiveCatalog.lean][RecursiveCatalog]] compiles inherited head scaling and callback replacement.
+Recursive configuration values contain nested function references. Catalog
+reflection, current named recursive schemas, input bounds and function
+identities are checked even for hot values. Refusals preserve shared completion;
+restoring the registry permits re-admission. A failed output batch retains the
+completed second request. A kernel law joins exact structural reconstruction
+with an observation of the same actual C3 method result.
+
+[[file:../../Tests/FunctionalRecursiveHandling.lean][Independent controls]] compare 1,344 calls to direct price formulas and a
+separate domain dependency/cache schedule, then compare 56 batches and their
+continuations. They check ordered memo keys, hits/misses, read markers and
+every selected failure phase. Bounded guards leave divergent methods/suffixes
+unforced and distinguish input/output fuel refusal on an existing memo.
+
+These scenarios combine nested/recursive objects at source 1039–1089,
+descriptor admission at 1359–1433 and sharing at 2355–2389. They use the declared
+safe Interaction language and supplied typed method/descriptor rules. General
+host-language closure/effect inference and machine cost bounds remain outside
+these concrete construction contracts.
+
+* Dispatch integration
+
+[[file:recursive-dispatch.org][RecursiveDispatch]] lifts these existing checked calls into retained-state dispatch actions, with exact current-registry/request receipts and ledger-preserving complete-state laws.

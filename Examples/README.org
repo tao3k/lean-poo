@@ -35,8 +35,38 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:MutableState.lean][MutableState]] | The same partial writes after failure in pure, mutable and linear state; resume a failed linear alias and consume it on success. |
 | [[file:FunctionalPipeline.lean][FunctionalPipeline]] | Compose capability providers, prepare a consumer once, map its result and choose a follow-up factory at the same context. |
 | [[file:ValidationWorkflow.lean][ValidationWorkflow]] | Select strict or clamping validation per context, recover domain errors explicitly, and collect/aggregate independent readings in order. |
+| [[file:ValidatedConfiguration.lean][ValidatedConfiguration]] | Construct a capacity-dependent nested descriptor, enforce per-route and whole-list bounds, and prove two wire layouts feed the same public consumer. |
+| [[file:IncrementalWorkflow.lean][IncrementalWorkflow]] | Validate a workload through optional/required/absent capabilities; migrate hot successes/errors through graph extensions, refusals, fresh admission and a second revision. |
+| [[file:SharedReporting.lean][SharedReporting]] | Bill and monitor from one shared snapshot, then replace the billing representation while preserving its joint proof and warm public cache. |
+| [[file:DictionaryConsumers.lean][DictionaryConsumers]] | Compose price-policy prototypes, derive inherited class fields, convert a warm cache and invoke actual typeclass methods in a quota-proved quote. |
+| [[file:ValidatedOrders.lean][ValidatedOrders]] | Join price/stock proofs, admit input before reading dependencies, check producer outputs and resume after input/execution/output refusals. |
+| [[file:ResumableRequests.lean][ResumableRequests]] | Thread a nested workload batch through pure, mutable and linear cache states; retain the first failure's cache and continue with the same reference protocol. |
+| [[file:FocusedPricing.lean][FocusedPricing]] | Compose nested function-valued pricing fragments, certify every supported quantity, retain successful updates on refusal and continue. |
+| [[file:FocusedAllocation.lean][FocusedAllocation]] | Focus a budget-indexed allocation with its proof, conserve CPU/IO totals and preserve ledger metadata through actual delayed construction. |
+| [[file:DispatchWorkflow.lean][DispatchWorkflow]] | Combine carrier/region dispatch, standard method phases, guarded warm candidates, checked receipts, retained ledger state and immutable plugin versions. |
+| [[file:RecoverableDispatch.lean][RecoverableDispatch]] | Recover a preferred method using its failed progress, retain fallback state on output refusal and stop a batch at its first error. |
+| [[file:RecursiveBilling.lean][RecursiveBilling]] | Compile C3 pricing layers, share recursive totals and subrequests, retain completed refusals and resume under a changed descriptor or immutable program version. |
+| [[file:RecursiveCatalog.lean][RecursiveCatalog]] | Revalidate memoized recursive configurations and nested function identities in the current reflective catalog, then serialize the proof-bound result. |
+| [[file:ConfigurationUpgrade.lean][ConfigurationUpgrade]] | Migrate reflective runtime configurations with explicit renaming, defaults, retired fields and target-catalog nested identity admission. |
+| [[file:AtomicConfiguration.lean][AtomicConfiguration]] | Stage writable-field groups, retain completed groups after refusal, or publish the whole batch atomically; resume from the returned configuration. |
+| [[file:LayeredRouting.lean][LayeredRouting]] | Combine base/regional/emergency AVL dictionaries, ordered duplicate writes, prepared factories, joint allowance proofs and exact-context dependency caching. |
+| [[file:KeyedRebalance.lean][KeyedRebalance]] | Transfer resources between runtime keys with joint debit/credit, conservation and untouched-key proofs, exact refused snapshots and resumable batches. |
+| [[file:MetadataDeployment.lean][MetadataDeployment]] | Apply checked first-class C3 metadata to final-self scheduling factories, compare noncommuting wrappers and cache a joint capacity proof across request labels. |
+| [[file:IntrospectiveExport.lean][IntrospectiveExport]] | Compose heterogeneous factories, prepare the runtime key list including repeated declarations, narrow the built record and generate validated inspection; allow a prototype to intercept its public keys. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 
 The smaller files in this directory introduce one paper operation at a time.
 See [[file:../docs/usage.org][API usage]] for the corresponding library entry points.
+
+* Alternative combinations and joint publication
+
+[[file:PolicyDispatch.lean][PolicyDispatch]] uses eight reusable typed policies through ordered pricing and approval groups; current predicates, retained failure traces and skipped suffixes are explicit. [[file:../docs/contracts/alternative-combinations.org][Contracts and proof boundaries]].
+
+[[file:JointPublication.lean][JointPublication]] changes a noncommuting C3 factory diamond together with pricing plugins, protecting Bank absences and checking actual Card price/factory agreement before immutable publication. [[file:../docs/contracts/joint-publication.org][Contracts and proof boundaries]].
+
+* Recursive requests in dispatch workflows
+
+[[file:RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] joins the existing C3 billing program with audited mode/channel dispatch, source recovery, hot current descriptor admission, public output refusal, batches and certified budget/cycle continuation. [[file:../docs/contracts/recursive-dispatch.org][API and proof boundaries]].
+
+[[file:ReceiptWorkflow.lean][ReceiptWorkflow]] uses a proof-bearing recursive result in an around shortcut with an empty recipient memo and zero evaluation budget; current input/output refusal, changed requests and failed batch prefixes remain explicit. [[file:../docs/contracts/receipt-admission.org][Contracts]].

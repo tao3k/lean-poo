@@ -1,0 +1,59 @@
+#+TITLE: Automatic closure of checked metadata factories
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:reflective-requirements.org][Metadata and declared interfaces]]
+
+* Construct the actual family
+
+Import ~LeanPoo.Functional.MetadataClosure~. The source metadata construction
+(1254–1312) selects own and parent prototype functions in checked C3 order.
+~MetadataFamily.prepareClosed~ prepares that exact program, checks a finite
+dependency schedule, and returns a ~Construction base~. Its ~family~ contains
+automatically constructed context-indexed factories and their per-key closure
+equation. The caller supplies no final provider or fixed-point equation.
+
+Provide the root layer, direct supers, registry, base, supported key list and
+declared final-self reads. ~LayerLocal~ proves that each layer observes only
+those reads and its inherited slot. Identity, slot and composition laws let
+clients prove this locally. ~Parent.registry~ constructs ordinary three-slot
+metadata objects from annotated parent layers; ~registry_local~ transfers the
+annotations through actual function lookup.
+
+~prepareChecked_origin~ identifies the input registry and root function.
+~Prepared.program_property~ transfers compositional evidence through the
+captured parent selection. The original C3 derivation, retained parent-cache
+checks and frozen metadata remain in the returned ~plan~. No C3/C4 order
+equivalence is used: both representations share only the dependency scheduler
+and resolver-independent well-founded closure mechanism.
+
+* Proof and failure contracts
+
+| Operation | Guarantee |
+|-----------+-----------|
+| ~Dependencies.schedule~ | Checked decreasing rank on every declared dependency edge |
+| ~Scheduled.family~ | Closure equation for the actual captured program at every factory key |
+| ~Scheduled.unique~, ~Dependencies.close_unique~ | Every other closed provider for that program/base has equal factories, including absent slots |
+| ~family.prepare_source~ | Complete prepared tuples and first missing errors equal the captured production lookup |
+| ~family.frozen_order~ | The admitted order and metadata agree with the original source C3 derivation |
+
+Metadata errors precede dependency scheduling. Unknown dependencies report
+their reader and name in declaration order; blocked schedules retain the
+remaining keys. The scheduler verifies all edges before returning a ranked
+resolver. Keys outside the supported set may have no declared self reads.
+Conservative declarations can refuse a cyclic footprint even when a callback
+would avoid the cycle. Locality evidence is explicit; host closure inspection
+and arbitrary cyclic fixed-point construction are outside this API.
+
+* Deployment workload
+
+[[file:../../Examples/ClosedDeployment.lean][ClosedDeployment]] closes a shared-ancestor diamond with two noncommuting
+schedule wrappers. The report reads final-self schedule and owner; scheduling
+reads final-self capacity. Runtime parent order controls both the result and
+owner. Certified dependent bounds hold for every budget, and the context slot
+reuses built data across equal budgets while presenting each current request
+label. No manually predicted final provider is installed.
+
+[[file:../../Tests/FunctionalMetadataClosure.lean][FunctionalMetadataClosure]] compares 864 complete preparations with an
+independent arithmetic/list model across both parent orders, three wrapper
+scales, duplicate requests and missing slots. Unknown-source and cyclic
+footprints are refused. These executable controls are distinct from the
+universal closure, uniqueness and captured-program transfer theorems.

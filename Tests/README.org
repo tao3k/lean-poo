@@ -58,6 +58,14 @@ User-facing scenarios live in [[file:../Examples/README.org][Examples]].
 
 - [[file:FunctionalRequirements.lean][FunctionalRequirements]] checks arbitrary typed requirement provenance, consumer renaming contracts, 192 heterogeneous preparation cases, first missing keys, repeated/empty lists, and aligned/misaligned provider dictionaries. Generic clients also compile dependent factory composition/branch/aggregation/recovery laws, provider fallback, and exact prepareWith success/error contracts.
 
+- [[file:FunctionalValidation.lean][FunctionalValidation]] checks universal first-error/append/success laws, 36 independent ordered-batch controls, six unreachable suffixes and wrong-context rejection.
+- [[file:FunctionalCodec.lean][FunctionalCodec]] checks nested refinement and roundtrip composition, 48 independent bound controls and product error priority.
+- [[file:FunctionalComputationBatch.lean][FunctionalComputationBatch]] checks finite analyzed batch execution/footprints, pure validation errors, 72 independent observations, cold/hot success/error caches and an unreachable suffix.
+- [[file:FunctionalSharedViews.lean][FunctionalSharedViews]] checks twelve shared reads, four hits, dependent/request-specific outputs, reordered/repeated keys, hidden broad-data retention, an unrequested divergent observer and wrong-context rejection.
+- [[file:FunctionalViewRetarget.lean][FunctionalViewRetarget]] checks 54 representation replacements across cold/warm states, requested contexts and empty/reordered/repeated views; it rejects incompatible public observations and never forces private divergent candidate functions.
+- [[file:FunctionalStatefulValidation.lean][FunctionalStatefulValidation]] compares 168 cases with independent prefix-sum/first-index controls and 483 batch splits, retaining the failing step's own update and skipping two divergent suffixes.
+- [[file:FunctionalRequestHandling.lean][FunctionalRequestHandling]] checks 333 requests and 15 batches across two layouts, exact input/execution/output errors, optional read/hit markers, retained cache contents and wrong-context rejection. Invalid inputs and stopped suffixes protect an otherwise divergent factory.
+
 - [[file:FunctionalMaintenance.lean][FunctionalMaintenance]] proves exact five-capability manual/checklist client equivalence and compiles stable-checklist contracts; marked client sections support reproducible maintenance-code counts.
 
 - [[file:FunctionalAccess.lean][FunctionalAccess]] checks named access under successful checklist insertion/reordering/repetition, exact selected-provider provenance, positional type rejection, and proposition-valued proof adapters.
@@ -447,6 +455,69 @@ admissions and 19 supervisor controls; all schemas remain v1.
 - [[file:CallableValidation.lean][CallableValidation]] checks actual method invocation proofs, runtime FunctionOf/catalog reuse, input refusal before forcing, output refusals on memo hits, current-registry identity changes, wire values and checked mutable snapshots.
 - [[file:DynamicValueEquality.lean][DynamicValueEquality]] instantiates the universal request comparator theorem and exercises 128 nested levels, large exact integers, Unicode, ordered duplicate entries and distinct reference identities.
 
+* Functional checked dispatch workflows
+
+[[file:FunctionalDispatchHandling.lean][FunctionalDispatchHandling]] checks 2,880 calls in two layouts against direct
+price/state/trace formulas, crossing cold/warm candidates, dynamic guards,
+shortcuts, recovery and input/shape/method/output refusal. Twenty-one batches
+and continuations retain the actual state. Eleven calls check LRU eviction and
+fresh method invocation. Bounded divergent controls check omitted inner/default
+methods, input/shape refusal before predicates and stopped batch suffixes;
+a failing recovery handler retains its own state. [[file:../docs/contracts/dispatch-workflows.org][The contract guide]] connects
+kernel admission, complete cache/reference observation, failure-state and batch
+invariant laws to the logistics and conversion examples.
+
+* Functional checked recursive method batches
+
+[[file:FunctionalRecursiveHandling.lean][FunctionalRecursiveHandling]] compares 1,344 cold/warm C3 calls with independent
+price formulas and a domain dependency/cache schedule. Rates, fees, method
+names, inputs, output bounds and budgets vary; complete value/error phases,
+ordered memo keys, hit/miss counts and read markers must match. Fifty-six
+batches and continuations compare successful output order, first refusal and
+the exact completed memo. Cycles and exhaustion retain the previous cache;
+completed source errors and output refusals retain the updated cache.
+Bounded guards check input/catalog/signature refusal before divergent method
+bodies, skipped suffixes, and separate input/output fuel refusal on a hot memo.
+Printed laws cover actual-source observations, current catalog identities,
+ordered request witnesses, batch concatenation/first errors and raw wire inversion.
+
+* Functional runtime record evolution
+
+[[file:FunctionalRecordEvolution.lean][FunctionalRecordEvolution]] compares 2,016 migrations with independent numeric
+rules for both catalogs, transferred/default budgets, nested weights and function
+identities. Successful values preserve ordered fields and round-trip through the
+target schema's wire tools. Separate deployment models compare 240 staged/atomic
+batches and 240 continuations, including exact errors, group rollback, original
+publication state and read-only fields. Additional controls cover missing and
+duplicate transfers, sealed construction, mandatory defaults, source/target
+budget exhaustion and base admission before edits. Printed kernel laws cover
+actual descriptor membership, final admission of constructors/setters/patches,
+ordered projection provenance and both publication invariants. [[file:../docs/contracts/record-evolution.org][The contract guide]]
+connects these laws to the two complete configuration examples.
+
+* Functional ordered dictionaries
+
+[[file:FunctionalOrderedDictionary.lean][FunctionalOrderedDictionary]] compares 303 ordered writes, split batches and
+source merges with independent reverse-history lookups and sorted exports.
+A separate traversal checks every AVL balance and cached height. Fifty-six
+factory preparations check complete tuples, repeated keys, exact first errors
+and unforced divergent bodies. A four-resource vector compares 2,160 transfers,
+2,160 batches and 2,160 continuations, including conservation, all-key frames,
+retained prefix states and unchanged originals. Three divergent callback suffixes
+must remain uncalled. Printed laws cover source lookup/insertion/merge, complete
+preparation, full batch observation and first-failure characterization. The
+[[file:../docs/contracts/ordered-dictionaries.org][contract guide]] connects these controls to layered routing and keyed rebalancing.
+
+* Functional focused production updates
+
+[[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,
+reversed wrappers and independent inventory updates to affine controls. It
+checks 756 admitted batches and 756 continuations against a separate coefficient
+model, including exact refusal state, outside metadata and two divergent
+suffixes under bounded supervision. [[file:../docs/contracts/focused-updates.org][The contract guide]] links the generic
+composition, frame, installed-witness and dependent factory laws to the pricing
+and budget-allocation examples.
+
 * Functional negative assumptions
 
 [[file:FunctionalAbsence.lean][FunctionalAbsence]] checks complete negative admission, exact first-present
@@ -487,10 +558,28 @@ retention. New theorems use only standard Lean axioms.
 
 - [[file:DictionaryCompiler.lean][DictionaryCompiler]] compiles nine actual Lean constructor shapes, including inherited dictionaries, dependent carrier/proof fields, Sort parameters, implicit instances and the real Descriptor. It checks 1024 arithmetic dispatches, 33 polymorphic calls, three command refusals and rejection of erased/fabricated laws. Generated inverse clients compile against actual conversions.
 - [[file:DictionaryBridge.lean][DictionaryBridge]] checks 1280 actual self/super calls across converted/restored/native/delayed paths, 2304 finite unfoldings, 36 typed descriptor admissions, 44 refusals, eight codec errors and two terminal overrides retaining divergent thunks unforced. Generic composition/unfolding clients have kernel proofs.
-- [[file:DictionaryTransport.lean][DictionaryTransport]] checks ten missing preparations, 30 actual generated-dictionary method calls, three proof-retaining context-cache reads and 16 actual C4 constraint migrations (one reuse, two fresh admissions, thirteen refusals). A newly reachable divergent ghost factory is refused without invocation; first missing keys, joint proofs and selected-provider changes are checked.
+- [[file:DictionaryTransport.lean][DictionaryTransport]] checks ten missing preparations, 30 actual generated-dictionary method calls, three proof-retaining context-cache reads with three additional dependent method consumers and 16 actual C4 constraint migrations (one reuse, two fresh admissions, thirteen refusals). A newly reachable divergent ghost factory is refused without invocation; first missing keys, joint proofs and selected-provider changes are checked.
 
 [[file:../docs/contracts/dictionary-classes.org][The API guide]] records typed constructor support and the remaining general
 Scheme compiler, closure/IO equivalence and machine-cost boundaries.
+
+* Functional metadata and enumerated requirements
+
+[[file:FunctionalReflectiveRequirements.lean][FunctionalReflectiveRequirements]] compares 576 actual checked-metadata
+preparations with an independent arithmetic/list model, including reversed
+diamond order, final-self capacity, noncommuting wrappers, repeated requirements
+and exact first missing keys. Sixty-four heterogeneous key-list preparations
+check final-self report values, duplicate declarations, default/intercepted
+exposure and every declared/undeclared consumer slot. Thirteen further controls
+cover poisoned parent caches, invalid graphs, unforced production/factory bodies,
+absent declarations and a divergent lookup suffix after a missing key.
+
+Kernel clients report metadata closure, actual source selection, complete
+preparation/stability, declaration failure and built-value provenance laws.
+The two examples additionally report declared-program closure and generated
+descriptor acceptance. Only standard Lean axioms occur. The existing 30-second,
+2-GiB and heartbeat limits apply. [[file:../docs/contracts/reflective-requirements.org][The guide]] states the explicit-self and supplied
+closure-witness boundaries.
 
 * Complete C3 cache/reference outcomes including cycles
 
@@ -544,3 +633,24 @@ Kernel clients check step/trace refinement of the single production constructor,
 current reference/body identity and the universal forwarding read bound.
 Only standard Lean axioms occur; opaque IO/C++/compiler/memory correctness
 is not inferred from a source pin or from a valid data log.
+
+* Closed metadata and protected multi-argument extension
+
+[[file:FunctionalMetadataClosure.lean][FunctionalMetadataClosure]] compares 864 actual automatically closed C3
+preparations with an independent arithmetic/list oracle and refuses unknown
+dependencies and cyclic footprints. [[file:FunctionalDispatchExtension.lean][FunctionalDispatchExtension]] compares 576
+complete extension outcomes with an independent association-list/pair model,
+including predicates, wildcards, first conflicts, arity priority and cold/warm
+publication. The corresponding guides describe universal proof boundaries.
+
+* Alternative combinations and joint publication
+
+[[file:AlternativeCombination.lean][AlternativeCombination]] compares 3,400 complete policy outcomes and traces with independent loops, including empty groups, first failures and Boolean stopping. Bounded guards leave divergent suffixes and bypassed groups untouched. Universal lawful-monad and exact-state operational proofs are separate from these finite controls.
+
+[[file:FactoryDispatchPublication.lean][FactoryDispatchPublication]] compares 512 complete publication outcomes with an independent arithmetic/phase oracle, covering simultaneous metadata/arity/negative/admission errors, canceled edits and cold/warm retention.
+
+* Recursive dispatch adapter controls
+
+[[file:RecursiveDispatch.lean][RecursiveDispatch]] checks 240 complete workflow summaries against independent pricing, phase, trace and memo-size controls. Cold/warm dispatch and recursive reads are separate; current output admission and public ceilings remain fresh. Universal adapter success/failure/packing/state/ledger and actual receipt admission/observation laws are kernel theorems.
+
+[[file:ReceiptAdmission.lean][ReceiptAdmission]] compares 1080 admission/result/state summaries with direct price and first-error controls across current catalog removal, wrong signatures, missing named types, input bounds, output ceilings and validation fuel. Complete retained-state preservation, value/request identity, source observation, success completeness and four failure phases have kernel proofs.

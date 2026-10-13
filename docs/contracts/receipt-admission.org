@@ -1,0 +1,71 @@
+#+TITLE: Completed recursive receipt admission
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:recursive-dispatch.org][Recursive dispatch]]
+
+* Reuse a result with its evaluation proof
+
+~RecursiveDispatch.Answer.revalidate~ checks a completed ~Answer program~ against
+its original catalog slot in a supplied current registry. It resolves the
+current descriptor, selects its FunctionOf signature, validates the original
+argument, then validates the original result, in that order. Validation fuel
+bounds descriptor traversal. No evaluation budget or recursive session is an
+input to this function; it neither invokes the safe evaluator nor reads a memo.
+
+~ReAdmission original current~ retains a current catalog receipt and a proof
+that its checked value equals the original result. Its ~answer~ packages the
+current registry with the same request. The immutable program index and
+transported actual evaluation witness prevent claiming that this result came
+from a different program, method or argument. ~value~, ~request~, ~observed~ and
+~outputAccepted~ expose those guarantees. The new receipt has ~reused=none~,
+because this operation performs no recursive read.
+
+This is re-admission of the original computation, not recomputation of a method
+using a changed implementation. A changed recursive program needs a fresh
+answer indexed by that program. The stored proof does not establish current
+external-service data freshness or the validity of arbitrary host side effects.
+
+* Exact retained state and failure order
+
+~revalidate_complete~ proves passing all four current checks produces a receipt.
+~revalidate_schema_error~, ~revalidate_signature_error~,
+~revalidate_argument_error~ and ~revalidate_result_error~ prove exact first-error
+results, with the preceding checks as premises. Missing named types and exhausted
+validation fuel are reported at the input or output gate that encounters them.
+The result value is never replaced by a validator-generated candidate.
+
+~Answer.revalidateMethod~ lifts this admission into the existing dispatch method
+monad. Refusal uses ~Error.recursive (.boundary error)~; success returns the
+current answer. ~revalidateMethod_state~, ~revalidateMethod_ok~ and
+~revalidateMethod_error~ preserve the complete supplied state on both outcomes:
+memo entries and statistics, ledger and the previous recursive read marker.
+Around/audit methods can still write their own state before or after this
+operation. A failed shortcut retains those reached writes under existing
+method-combination and batch laws.
+
+* Around shortcuts and changed requests
+
+[[file:../../Examples/ReceiptWorkflow.lean][ReceiptWorkflow]] reuses the safe C3 billing construction and standard
+mode/channel dispatch. Its around policy matches a saved request, re-admits it
+under the current public registry and omits next. A recipient with an empty
+recursive memo and evaluation budget zero returns the certified value 38.
+The shortcut omits primary and after methods; its trace is enter/reuse/exit.
+Current input or output tightening refuses reuse. Restoring the descriptor
+admits the original receipt again. Changing the requested units executes next,
+producing 13 with enter/evaluate/after/exit. A batch retains its successful
+shortcut and the failed admission prefix, without evaluating its suffix.
+
+Request matching and omission of next are explicit application policies.
+Re-admission itself certifies the original request; it does not infer the
+identity of an arbitrary caller's public request.
+
+[[file:../../Tests/ReceiptAdmission.lean][ReceiptAdmission]] checks 1080 summaries against independent recursive-price
+formulas and ordered phase controls: two tariffs, four source requests, five
+catalog variants, three input bounds, three output ceilings and three validation
+fuel values. It checks actual result/request/read-marker identity and unchanged
+memo input lists/statistics/ledger/read marker. Universal full-state laws supply
+the stronger structural guarantee independently of these finite summaries.
+
+The source correspondence is concrete runtime descriptor I/O and FunctionOf
+construction (1359–1433), standard around methods (1980–2083), first-class
+recursive objects (1039–1089) and explicit sharing (2355–2389). This workflow
+adds no language-wide cache invalidation or arbitrary effect inference claim.
