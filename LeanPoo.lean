@@ -46,6 +46,7 @@ import LeanPoo.Functional.RecordEvolution
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Functional.MetadataFamily
 import LeanPoo.Functional.MetadataClosure
+import LeanPoo.Functional.FactoryDispatchPublication
 import LeanPoo.Functional.DispatchExtension
 import LeanPoo.Functional.EnumeratedRequirements
 import LeanPoo.Deriving.DictionaryCompiler
@@ -196,3 +197,5 @@ import LeanPoo.Prototype.BinaryTreeSemantics
 import LeanPoo.Prototype.RecordRepresentations
 import LeanPoo.Object.MultimethodSemantics
 import LeanPoo.Object.MethodCombinationSemantics
+import LeanPoo.Object.SimplePolicies
+import LeanPoo.Object.SimpleCombinationSemantics

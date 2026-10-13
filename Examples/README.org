@@ -58,3 +58,9 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 
 The smaller files in this directory introduce one paper operation at a time.
 See [[file:../docs/usage.org][API usage]] for the corresponding library entry points.
+
+* Alternative combinations and joint publication
+
+[[file:PolicyDispatch.lean][PolicyDispatch]] uses eight reusable typed policies through ordered pricing and approval groups; current predicates, retained failure traces and skipped suffixes are explicit. [[file:../docs/contracts/alternative-combinations.org][Contracts and proof boundaries]].
+
+[[file:JointPublication.lean][JointPublication]] changes a noncommuting C3 factory diamond together with pricing plugins, protecting Bank absences and checking actual Card price/factory agreement before immutable publication. [[file:../docs/contracts/joint-publication.org][Contracts and proof boundaries]].

@@ -1,0 +1,56 @@
+#+TITLE: Alternative method combinations
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/PolicyDispatch.lean][Pricing example]]
+
+* Policies on the existing ordered executor
+
+~Object.MethodCombination.SimplePolicy~ provides ~sum~, ~collect~, ~append~,
+~all~, ~any~, ~last~, ~maximum~ and ~minimum~. Use the existing
+~Multimethod.simple~ combiner or C4 ~simpleSpecifications~; no selector or
+inheritance algorithm is added. Candidate predicates remain current on warm
+dispatch calls. Items execute most-specific-first. Around callbacks retain
+control of whether and how often they invoke the group.
+
+Empty sum/list groups return zero/empty lists; empty Boolean groups return
+true for ~all~ and false for ~any~. Empty last/extremum groups return ~none~.
+Generic sum/max/min use the supplied typed operations; no algebraic or order
+laws are inferred for arbitrary instances. Persistent ~append~ preserves
+chunk and element order. It does not implement destructive CLOS ~nconc~ or
+Common Lisp's full dynamic value and empty-group conventions.
+
+* Universal semantic contracts
+
+~simpleEffective_reference~ equates the existing executor with independent
+ordered recursive execution and around wrapping for every lawful monad and
+arbitrary callbacks. ~runSimpleTail_iff~ gives soundness/completeness of the
+~SimpleRun~ relation for retained-state actions: every successful method feeds
+its actual returned state to the next; failure retains its exact error/state;
+short circuiting and failure execute no suffix. The first item always runs;
+~simpleEffective_first_error~ and ~simpleEffective_tail~ connect its outcome
+to the complete unwrapped group. Around behavior is governed by the complete
+reference equality, not an assumption that every wrapper invokes next once.
+
+~simpleEffective_pure~ connects pure item execution to value reduction.
+~sum_nat~, ~collect_order~, ~append_flatten~, ~all_values~, ~any_values~,
+~last_values~, ~maximum_values~ and ~minimum_values~ identify the policies with
+their ordered list operations. For every nonempty Nat group,
+~maximum_nat_bounds~ and ~minimum_nat_bounds~ bound every contribution by
+the computed maximum/minimum. Nonassociative sums retain the declared left
+fold order. No host-effect inference or termination guarantee is claimed.
+
+* Pricing, eligibility and failure
+
+[[file:../../Examples/PolicyDispatch.lean][PolicyDispatch]] prices member/card requests from the same ordered fragments
+using sums, collected components and extrema. Warm shapes admit a risk fee
+only for current high amounts. A failed base method retains the entire reached
+trace. Boolean policies wrap local/remote approval with audit methods: a local
+decision can omit the failing remote suffix; reached failures skip audit exit.
+
+[[file:../../Tests/AlternativeCombination.lean][AlternativeCombination]] compares 425 sequence/failure combinations for each
+of eight policies: 3,400 complete result/trace comparisons against independent
+loops. Empty groups, repeated values, every first-failure position and stopping
+before a failing suffix are covered. Bounded guards leave genuinely divergent
+items unexecuted through both around bypass and Boolean short circuiting.
+
+The source correspondence is Appendix B, lines 2060–2083. These are typed
+instances of the listed alternative combinations, not a full CLOS interpreter.

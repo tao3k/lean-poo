@@ -642,3 +642,9 @@ dependencies and cyclic footprints. [[file:FunctionalDispatchExtension.lean][Fun
 complete extension outcomes with an independent association-list/pair model,
 including predicates, wildcards, first conflicts, arity priority and cold/warm
 publication. The corresponding guides describe universal proof boundaries.
+
+* Alternative combinations and joint publication
+
+[[file:AlternativeCombination.lean][AlternativeCombination]] compares 3,400 complete policy outcomes and traces with independent loops, including empty groups, first failures and Boolean stopping. Bounded guards leave divergent suffixes and bypassed groups untouched. Universal lawful-monad and exact-state operational proofs are separate from these finite controls.
+
+[[file:FactoryDispatchPublication.lean][FactoryDispatchPublication]] compares 512 complete publication outcomes with an independent arithmetic/phase oracle, covering simultaneous metadata/arity/negative/admission errors, canceled edits and cold/warm retention.

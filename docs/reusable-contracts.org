@@ -27,6 +27,8 @@ these guides explain reusable library contracts.
 | Migrate runtime record schemas and publish admitted field groups atomically | [[file:contracts/record-evolution.org][Record migration and staged publication]] |
 | Compose certified source AVL dictionaries, routing factories and multi-key proposals | [[file:contracts/ordered-dictionaries.org][Ordered dictionaries and checked multi-key transitions]] |
 | Automatically close checked C3 factories from proved finite dependencies | [[file:contracts/closed-metadata.org][Automatic metadata closure]] |
+| Run alternative combinations with ordered effects and exact failures | [[file:contracts/alternative-combinations.org][Alternative method combinations]] |
+| Publish closed factories and protected generic edits as one version | [[file:contracts/joint-publication.org][Joint publication]] |
 | Protect multi-argument dispatch assumptions through extensions and calls | [[file:contracts/dispatch-extensions.org][Protected generic extensions]] |
 | Apply checked metadata programs and build typed records from runtime key declarations | [[file:contracts/reflective-requirements.org][Metadata families and enumerated requirements]] |
 | Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |

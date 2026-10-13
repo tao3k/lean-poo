@@ -315,3 +315,7 @@ traces. Consumers still supply implementation refinement and actual measurements
 The Functional correspondence is now explicit. It does not change the
 ~whole_paper_implemented=false~ flag or turn a local witness problem into a
 claim that all paper questions have been resolved.
+
+* Coupled factories and generic extensions
+
+[[file:../../../Examples/JointPublication.lean][JointPublication]] and [[file:../../contracts/joint-publication.org][its contract]] combine existing checked metadata closure, protected generic edits and exact-version consumer admission. The example checks one declared request; 512 independent controls vary complete accepted/refused versions. [[file:../../../Examples/PolicyDispatch.lean][PolicyDispatch]] exercises alternative method policies with their [[file:../../contracts/alternative-combinations.org][ordered execution contracts]].

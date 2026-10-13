@@ -87,6 +87,8 @@ shapes.
 [[file:Examples/LayeredRouting.lean][LayeredRouting.lean]] combines ordered AVL layers, prepared routing factories and a cached joint allowance proof.
 [[file:Examples/KeyedRebalance.lean][KeyedRebalance.lean]] transfers quantities across runtime keys with conservation, untouched-key and exact refusal-state proofs.
 [[file:Examples/ClosedDeployment.lean][ClosedDeployment.lean]] automatically closes checked C3 scheduling/reporting factories with final-self dependencies and retained context proofs.
+[[file:Examples/PolicyDispatch.lean][PolicyDispatch.lean]] combines pricing fragments with sums, ordered collection, extrema and short-circuit approval.
+[[file:Examples/JointPublication.lean][JointPublication.lean]] jointly publishes closed C3 factories and protected pricing extensions with exact-version admission and refusal retention.
 [[file:Examples/ProtectedDispatch.lean][ProtectedDispatch.lean]] protects multi-argument extension assumptions through stateful method combination, warm calls and refused publication.
 [[file:Examples/MetadataDeployment.lean][MetadataDeployment.lean]] applies checked C3 metadata to scheduling factories with noncommuting parent wrappers, typed bounds and a retained context cache.
 [[file:Examples/IntrospectiveExport.lean][IntrospectiveExport.lean]] prepares runtime heterogeneous declarations, builds a narrow record and generates inspection from the same key list.

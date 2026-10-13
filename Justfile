@@ -62,6 +62,7 @@ check-merge: check-types
         LeanPoo.Functional.OrderedDictionary \
         LeanPoo.Functional.MetadataFamily \
         LeanPoo.Functional.MetadataClosure \
+        LeanPoo.Functional.FactoryDispatchPublication \
         LeanPoo.Functional.DispatchExtension \
         LeanPoo.Functional.EnumeratedRequirements \
         LeanPoo.Deriving.DictionaryCompiler \
@@ -160,6 +161,8 @@ check-object: check-c4 check-generic
         LeanPoo.Object.Migration \
         LeanPoo.Object.Initialization \
         LeanPoo.Object.MethodCombination \
+        LeanPoo.Object.SimplePolicies \
+        LeanPoo.Object.SimpleCombinationSemantics \
         LeanPoo.Object.QualifiedMethods \
         LeanPoo.Object.ShapeCache \
         LeanPoo.Object.Multimethod \
@@ -252,6 +255,8 @@ _check-examples:
     {{lean}} Examples/MetadataDeployment.lean
     {{lean}} Examples/ClosedDeployment.lean
     {{lean}} Examples/ProtectedDispatch.lean
+    {{lean}} Examples/PolicyDispatch.lean
+    {{lean}} Examples/JointPublication.lean
     {{lean}} Examples/IntrospectiveExport.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
@@ -350,6 +355,8 @@ _check-contracts:
     {{lean}} Tests/ClassInitialization.lean
     {{lean}} Tests/MethodCombination.lean
     {{lean}} Tests/SimpleMethodCombination.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/AlternativeCombination.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FactoryDispatchPublication.lean
     {{lean}} Tests/QualifiedMethodCombination.lean
     {{lean}} Tests/QualifiedCombination.lean
     {{lean}} Tests/ShapeCache.lean

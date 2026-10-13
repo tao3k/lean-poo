@@ -156,3 +156,9 @@ evidence. [[file:../../contracts/dispatch-extensions.org][Protected generic exte
 strategy for structural shapes and current argument calls on actual multimethods.
 Both have universal contracts and independent complex workloads; neither infers
 arbitrary host closure properties or hidden cross-library assumptions.
+
+* Alternative combinations and coupled publication
+
+The [[file:../../contracts/alternative-combinations.org][alternative-combination contracts]] add eight reusable typed policies and universal ordered reference/failure-state proofs for source 2060–2083. Persistent append is not destructive nconc; empty extrema and last-result groups explicitly return none.
+
+The [[file:../../contracts/joint-publication.org][joint-publication contracts]] combine checked C3 factory closure and protected generic extension with an admission payload bound to both candidates. This is an explicit immutable application policy over existing constructions, rather than a new source-required generalized prototype protocol.

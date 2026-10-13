@@ -227,7 +227,7 @@ def simpleSpecifications {Self Receiver : Type} {M : Type → Type}
     some (contributions.foldr (fun item methods => methods.prepend item)
       ((inherited ()).getD {}))
 
-private def foldSimple {Receiver : Type} {M : Type → Type}
+def runSimpleTail {Receiver : Type} {M : Type → Type}
     {Item Acc Result : Type} [Monad M]
     (policy : SimplePolicy Item Acc Result) (receiver : Receiver) :
     Acc → List (Receiver → M Item) → M Acc
@@ -236,7 +236,7 @@ private def foldSimple {Receiver : Type} {M : Type → Type}
       if policy.stop acc then
         return acc
       let value ← method receiver
-      foldSimple policy receiver (policy.step value acc) rest
+      runSimpleTail policy receiver (policy.step value acc) rest
 
 /-- Run simple methods most-specific-first with explicit short-circuiting.
 An empty group returns `policy.finish policy.empty`. -/
@@ -249,7 +249,7 @@ def simpleEffective {Receiver : Type} {M : Type → Type}
     | [] => return policy.finish policy.empty
     | first :: rest =>
         let value ← first receiver
-        let acc ← foldSimple policy receiver (policy.first value) rest
+        let acc ← runSimpleTail policy receiver (policy.first value) rest
         return policy.finish acc
 
 end LeanPoo.Object.MethodCombination
