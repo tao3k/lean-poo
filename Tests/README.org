@@ -481,6 +481,20 @@ bodies, skipped suffixes, and separate input/output fuel refusal on a hot memo.
 Printed laws cover actual-source observations, current catalog identities,
 ordered request witnesses, batch concatenation/first errors and raw wire inversion.
 
+* Functional runtime record evolution
+
+[[file:FunctionalRecordEvolution.lean][FunctionalRecordEvolution]] compares 2,016 migrations with independent numeric
+rules for both catalogs, transferred/default budgets, nested weights and function
+identities. Successful values preserve ordered fields and round-trip through the
+target schema's wire tools. Separate deployment models compare 240 staged/atomic
+batches and 240 continuations, including exact errors, group rollback, original
+publication state and read-only fields. Additional controls cover missing and
+duplicate transfers, sealed construction, mandatory defaults, source/target
+budget exhaustion and base admission before edits. Printed kernel laws cover
+actual descriptor membership, final admission of constructors/setters/patches,
+ordered projection provenance and both publication invariants. [[file:../docs/contracts/record-evolution.org][The contract guide]]
+connects these laws to the two complete configuration examples.
+
 * Functional focused production updates
 
 [[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,

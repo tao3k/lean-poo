@@ -171,6 +171,51 @@ def RecordSchema.validate (schema : RecordSchema) (registry : Registry) (fuel : 
   let admitted ← (descriptor.validate registry fuel value).mapError SchemaError.wire
   return admitted.value
 
+/-- Recognition preserves the complete input value, including field order. -/
+theorem RecordSchema.validate_value (schema : RecordSchema) (registry : Registry) (fuel : Nat)
+    (value output : Value) (success : schema.validate registry fuel value = .ok output) :
+    output = value := by
+  unfold RecordSchema.validate at success
+  cases value with
+  | object fields =>
+    cases shape : schema.checkShape fields with
+    | error error => simp [shape, bind, Except.bind] at success
+    | ok unitValue =>
+      cases resolved : schema.descriptor registry with
+      | error error => simp [shape, resolved, bind, Except.bind] at success
+      | ok descriptor =>
+        cases admitted : descriptor.validate registry fuel (.object fields) with
+        | error error => simp [shape, resolved, admitted, Except.mapError, bind, Except.bind] at success
+        | ok checked =>
+          have same : checked.value = output := by
+            simpa [shape, resolved, admitted, Except.mapError, bind, Except.bind,
+              pure, Except.pure] using success
+          exact same.symm.trans (descriptor.validate_value registry fuel _ checked admitted)
+  | _ => simp at success
+
+/-- The exact current descriptor supplies semantic membership for a success. -/
+theorem RecordSchema.validate_membership (schema : RecordSchema) (registry : Registry) (fuel : Nat)
+    (value output : Value) (success : schema.validate registry fuel value = .ok output) :
+    ∃ descriptor, schema.descriptor registry = .ok descriptor ∧
+      Accepted registry descriptor.contract output := by
+  unfold RecordSchema.validate at success
+  cases value with
+  | object fields =>
+    cases shape : schema.checkShape fields with
+    | error error => simp [shape, bind, Except.bind] at success
+    | ok unitValue =>
+      cases resolved : schema.descriptor registry with
+      | error error => simp [shape, resolved, bind, Except.bind] at success
+      | ok descriptor =>
+        cases admitted : descriptor.validate registry fuel (.object fields) with
+        | error error => simp [shape, resolved, admitted, Except.mapError, bind, Except.bind] at success
+        | ok checked =>
+          have same : checked.value = output := by
+            simpa [shape, resolved, admitted, Except.mapError, bind, Except.bind,
+              pure, Except.pure] using success
+          exact ⟨descriptor, rfl, same ▸ checked.valid⟩
+  | _ => simp at success
+
 /-- Defaults and supplied values enter the same refinement gate. Unknown,
 duplicate, missing and invalid fields fail before an instance escapes. -/
 def RecordSchema.construct (schema : RecordSchema) (registry : Registry) (fuel : Nat)
@@ -184,6 +229,27 @@ def RecordSchema.construct (schema : RecordSchema) (registry : Registry) (fuel :
       return (slot.name, value)
   let extra := supplied.filter fun entry => !(schema.slots.any (fun slot => slot.name == entry.1))
   schema.validate registry fuel (.object (fields ++ extra))
+
+private theorem bind_success_property {Input Output Error : Type}
+    (first : Except Error Input) (next : Input → Except Error Output) (property : Output → Prop)
+    (preserves : ∀ input output, next input = .ok output → property output)
+    (output : Output) (success : first.bind next = .ok output) : property output := by
+  cases first with
+  | error error => simp [Except.bind] at success
+  | ok input => exact preserves input output success
+
+/-- Generated defaults and supplied fields leave through the same gate. -/
+theorem RecordSchema.construct_validated (schema : RecordSchema) (registry : Registry) (fuel : Nat)
+    (supplied : List (String × Value)) (output : Value)
+    (success : schema.construct registry fuel supplied = .ok output) :
+    schema.validate registry fuel output = .ok output := by
+  unfold RecordSchema.construct at success
+  apply bind_success_property _ _ _ ?_ _ success
+  intro _ output success
+  apply bind_success_property _ _ _ ?_ _ success
+  intro fields output success
+  have same := schema.validate_value registry fuel _ output success
+  simpa only [same] using success
 
 def RecordSchema.inspect (schema : RecordSchema) (registry : Registry) (fuel : Nat)
     (value : Value) : Except SchemaError Value := do
@@ -208,6 +274,53 @@ def RecordSchema.patch (schema : RecordSchema) (registry : Registry) (fuel : Nat
     (object : Value) (edits : List (String × Value)) : Except SchemaError Value := do
   let checked ← schema.validate registry fuel object
   edits.foldlM (fun current edit => schema.set registry fuel current edit.1 edit.2) checked
+
+/-- Every generated setter rechecks the entire record in the current catalog. -/
+theorem RecordSchema.set_validated (schema : RecordSchema) (registry : Registry) (fuel : Nat)
+    (object : Value) (name : String) (value output : Value)
+    (success : schema.set registry fuel object name value = .ok output) :
+    schema.validate registry fuel output = .ok output := by
+  unfold RecordSchema.set at success
+  apply bind_success_property _ _ _ ?_ _ success
+  intro checked output success
+  cases checked with
+  | object fields =>
+    simp only at success
+    split at success
+    · split at success
+      · have same := schema.validate_value registry fuel _ output success
+        simpa only [same] using success
+      · simp [bind, Except.bind] at success
+    · simp at success
+  | _ => simp at success
+
+/-- Empty patches still recheck admission; every nonempty successful patch
+retains the final setter's exact catalog witness. -/
+theorem RecordSchema.patch_validated (schema : RecordSchema) (registry : Registry) (fuel : Nat)
+    (object : Value) (edits : List (String × Value)) (output : Value)
+    (success : schema.patch registry fuel object edits = .ok output) :
+    schema.validate registry fuel output = .ok output := by
+  have fold : ∀ (edits : List (String × Value)) (current output : Value),
+      schema.validate registry fuel current = .ok current →
+      edits.foldlM (fun current edit => schema.set registry fuel current edit.1 edit.2) current =
+        .ok output → schema.validate registry fuel output = .ok output := by
+    intro edits
+    induction edits with
+    | nil => intro current output valid done; cases done; exact valid
+    | cons edit rest ih =>
+      intro current output valid done
+      cases step : schema.set registry fuel current edit.1 edit.2 with
+      | error error => simp [List.foldlM, step, bind, Except.bind] at done
+      | ok next =>
+        exact ih next output (schema.set_validated registry fuel current edit.1 edit.2 next step)
+          (by simpa [List.foldlM, step, bind, Except.bind] using done)
+  unfold RecordSchema.patch at success
+  cases first : schema.validate registry fuel object with
+  | error error => simp [first, bind, Except.bind] at success
+  | ok checked =>
+    have same := schema.validate_value registry fuel object checked first
+    exact fold edits checked output (by simpa only [same] using first)
+      (by simpa only [first, bind, Except.bind] using success)
 
 def RecordSchema.encodeText (schema : RecordSchema) (registry : Registry) (fuel : Nat)
     (object : Value) : Except SchemaError String := do

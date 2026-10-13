@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "dc7b596493eb5a7b47b93fb3713567651494965d373b797813d926ac5b6e34cc",
+  "requirements_sha256": "72e05495bb2944efcc97121f9ae5581cac5d2f4d01a8519bcccb3727d2623dbb",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -273,7 +273,9 @@
           "runtime descriptor factories with value-dependent parameters",
           "actual recursive object field validation",
           "parameterized safe object methods with complete request sharing and field observation preservation",
-          "actual immutable/mutable method boundary admission with snapshot-indexed evaluation proofs"
+          "actual immutable/mutable method boundary admission with snapshot-indexed evaluation proofs",
+          "current-catalog record admission and explicit source/target field migration",
+          "checked group rollback and atomic pure publication with admission invariants"
         ],
         "implementation": [
           "LeanPoo/Prototype/RecordDescription.lean",
@@ -294,7 +296,8 @@
           "LeanPoo/Prototype/DynamicValueEquality.lean",
           "LeanPoo/Object/Callable.lean",
           "LeanPoo/Object/CallableValidation.lean",
-          "LeanPoo/Functional/FocusedUpdate.lean"
+          "LeanPoo/Functional/FocusedUpdate.lean",
+          "LeanPoo/Functional/RecordEvolution.lean"
         ],
         "checks": [
           "Tests/DescriptorReflection.lean",
@@ -311,9 +314,12 @@
           "Tests/CallableValidation.lean",
           "Tests/FunctionalFocusedUpdate.lean",
           "Examples/FocusedPricing.lean",
-          "Examples/FocusedAllocation.lean"
+          "Examples/FocusedAllocation.lean",
+          "Tests/FunctionalRecordEvolution.lean",
+          "Examples/ConfigurationUpgrade.lean",
+          "Examples/AtomicConfiguration.lean"
         ],
-        "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures."
+        "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
       },
       {
         "id": "typeclass-correspondence",
@@ -368,7 +374,9 @@
           "conservative actual graph admission and certified computed output cache migration",
           "complete common success/failure state semantics",
           "failed aliases retain partial writes and can resume",
-          "all-key/all-depth snapshot and linear projection proofs"
+          "all-key/all-depth snapshot and linear projection proofs",
+          "current-catalog record admission and explicit source/target field migration",
+          "checked group rollback and atomic pure publication with admission invariants"
         ],
         "implementation": [
           "LeanPoo/Prototype/LinearState.lean",
@@ -391,7 +399,9 @@
           "LeanPoo/Functional/DependencyAnalysis.lean",
           "LeanPoo/Functional/AnalyzedCache.lean",
           "LeanPoo/Functional/AnalyzedMigration.lean",
-          "LeanPoo/Prototype/MutableRecordSemantics.lean"
+          "LeanPoo/Prototype/MutableRecordSemantics.lean",
+          "LeanPoo/Functional/RecordEvolution.lean",
+          "LeanPoo/Prototype/DynamicSchema.lean"
         ],
         "checks": [
           "Tests/LinearState.lean",
@@ -412,9 +422,12 @@
           "Tests/FunctionalAnalyzedCache.lean",
           "Tests/FunctionalAnalyzedMigration.lean",
           "Tests/MutableRecordSemantics.lean",
-          "Examples/MutableState.lean"
+          "Examples/MutableState.lean",
+          "Tests/FunctionalRecordEvolution.lean",
+          "Examples/ConfigurationUpgrade.lean",
+          "Examples/AtomicConfiguration.lean"
         ],
-        "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls."
+        "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
       },
       {
         "id": "multiple-dispatch",
@@ -547,7 +560,7 @@
       }
     ]
   },
-  "closure_sha256": "7fc99012187a616c0a7177ce1668c2bbda23fef55051e29d212067c8161fc535",
+  "closure_sha256": "c2af1b8acd73c276515d9ba0c044ff6a303cdceddf29210a769eacfcde9263d2",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -1102,7 +1115,8 @@
         "LeanPoo/Prototype/CallableRecord.lean",
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
-        "LeanPoo/Object/Callable.lean"
+        "LeanPoo/Object/Callable.lean",
+        "LeanPoo/Functional/RecordEvolution.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1112,9 +1126,12 @@
         "Tests/DynamicDescriptorCompleteness.lean",
         "Tests/DynamicCodecSemantics.lean",
         "Tests/CallableObjects.lean",
-        "Tests/DynamicValueEquality.lean"
+        "Tests/DynamicValueEquality.lean",
+        "Tests/FunctionalRecordEvolution.lean",
+        "Examples/ConfigurationUpgrade.lean",
+        "Examples/AtomicConfiguration.lean"
       ],
-      "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem."
+      "boundary": "Finite declared keys and enumeration; not arbitrary dynamic Scheme message discovery. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
     },
     {
       "id": "representations",
@@ -1314,7 +1331,8 @@
         "LeanPoo/Functional/StatefulValidation.lean",
         "LeanPoo/Functional/FocusedUpdate.lean",
         "LeanPoo/Functional/DispatchHandling.lean",
-        "LeanPoo/Functional/RecursiveHandling.lean"
+        "LeanPoo/Functional/RecursiveHandling.lean",
+        "LeanPoo/Functional/RecordEvolution.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1344,9 +1362,12 @@
         "Examples/RecoverableDispatch.lean",
         "Tests/FunctionalRecursiveHandling.lean",
         "Examples/RecursiveBilling.lean",
-        "Examples/RecursiveCatalog.lean"
+        "Examples/RecursiveCatalog.lean",
+        "Tests/FunctionalRecordEvolution.lean",
+        "Examples/ConfigurationUpgrade.lean",
+        "Examples/AtomicConfiguration.lean"
       ],
-      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories. Typed Functional requests compose existing Codec input/output admission and explicit cache reads: input refusal preserves the old cache before callback invocation; admitted-input execution/output refusals retain exactly the dependency read state. Universal outcome and complete input-representation laws are kernel checked. The callback supplies its output admission; arbitrary host effects are not inferred. Focused checkedWith retains explicit admission witnesses and installs only their exposed parts. Input/local-output refusal preserves the refusing step source; stateful batches retain earlier accepted updates and skip the suffix. The pricing descriptor certifies every quantity in a finite stock range and its bound transfers to the installed method. Checked multimethod sessions compose the existing selector/standard combiner with input and output admission. Output admission runs after the complete effective method, including terminal around bypasses. Successful public results retain actual decode/admission witnesses. Input/shape refusal preserves the whole original session; method/output refusal retains the updated candidate cache and exact returned method state. Admission rules are supplied typed callbacks. Pure recursive method sessions resolve current catalog descriptor identities and FunctionOf signatures before forcing, then recheck actual input/output membership on every call, including memo hits. Catalog invocations retain the exact current lookup/signature, program evaluation and boundary witnesses. Kernel laws bind each successful batch answer to its original ordered request, preserve exact first-refusal cache state and structurally reconstruct the same evaluated value at its wire-depth bound. Nested function identities and recursive named schemas are rechecked in the current registry; raw wire inversion does not itself re-admit a value in a changed registry."
+      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories. Typed Functional requests compose existing Codec input/output admission and explicit cache reads: input refusal preserves the old cache before callback invocation; admitted-input execution/output refusals retain exactly the dependency read state. Universal outcome and complete input-representation laws are kernel checked. The callback supplies its output admission; arbitrary host effects are not inferred. Focused checkedWith retains explicit admission witnesses and installs only their exposed parts. Input/local-output refusal preserves the refusing step source; stateful batches retain earlier accepted updates and skip the suffix. The pricing descriptor certifies every quantity in a finite stock range and its bound transfers to the installed method. Checked multimethod sessions compose the existing selector/standard combiner with input and output admission. Output admission runs after the complete effective method, including terminal around bypasses. Successful public results retain actual decode/admission witnesses. Input/shape refusal preserves the whole original session; method/output refusal retains the updated candidate cache and exact returned method state. Admission rules are supplied typed callbacks. Pure recursive method sessions resolve current catalog descriptor identities and FunctionOf signatures before forcing, then recheck actual input/output membership on every call, including memo hits. Catalog invocations retain the exact current lookup/signature, program evaluation and boundary witnesses. Kernel laws bind each successful batch answer to its original ordered request, preserve exact first-refusal cache state and structurally reconstruct the same evaluated value at its wire-depth bound. Nested function identities and recursive named schemas are rechecked in the current registry; raw wire inversion does not itself re-admit a value in a changed registry. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
     },
     {
       "id": "simple-types",
@@ -1396,7 +1417,8 @@
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
         "LeanPoo/Object/CallableValidation.lean",
-        "LeanPoo/Functional/Codec.lean"
+        "LeanPoo/Functional/Codec.lean",
+        "LeanPoo/Functional/RecordEvolution.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1409,9 +1431,12 @@
         "Tests/DynamicValueEquality.lean",
         "Tests/CallableValidation.lean",
         "Examples/ValidatedConfiguration.lean",
-        "Tests/FunctionalCodec.lean"
+        "Tests/FunctionalCodec.lean",
+        "Tests/FunctionalRecordEvolution.lean",
+        "Examples/ConfigurationUpgrade.lean",
+        "Examples/AtomicConfiguration.lean"
       ],
-      "boundary": "Runtime DescriptorFactory consumes dynamic descriptors or ordinary values and registers fresh descriptors with unique explicit identities. ListOf, DictionaryOf, FunctionOf, ObjectOf, range, union and intersection constructors execute. Duplicate identities and invalid/missing descriptor parameters are rejected. Arbitrary closure serialization and universal automation are excluded. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+      "boundary": "Runtime DescriptorFactory consumes dynamic descriptors or ordinary values and registers fresh descriptors with unique explicit identities. ListOf, DictionaryOf, FunctionOf, ObjectOf, range, union and intersection constructors execute. Duplicate identities and invalid/missing descriptor parameters are rejected. Arbitrary closure serialization and universal automation are excluded. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
     },
     {
       "id": "elaborate-types",
@@ -1437,7 +1462,8 @@
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
         "LeanPoo/Object/CallableValidation.lean",
-        "LeanPoo/Functional/FocusedUpdate.lean"
+        "LeanPoo/Functional/FocusedUpdate.lean",
+        "LeanPoo/Functional/RecordEvolution.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
@@ -1454,9 +1480,12 @@
         "Tests/CallableValidation.lean",
         "Tests/FunctionalFocusedUpdate.lean",
         "Examples/FocusedPricing.lean",
-        "Examples/FocusedAllocation.lean"
+        "Examples/FocusedAllocation.lean",
+        "Tests/FunctionalRecordEvolution.lean",
+        "Examples/ConfigurationUpgrade.lean",
+        "Examples/AtomicConfiguration.lean"
       ],
-      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
     },
     {
       "id": "typeclass-correspondence",
@@ -1509,7 +1538,9 @@
         "LeanPoo/Functional/AnalyzedMigration.lean",
         "LeanPoo/Prototype/MutableRecordSemantics.lean",
         "LeanPoo/Functional/StatefulValidation.lean",
-        "LeanPoo/Functional/RequestHandling.lean"
+        "LeanPoo/Functional/RequestHandling.lean",
+        "LeanPoo/Functional/RecordEvolution.lean",
+        "LeanPoo/Prototype/DynamicSchema.lean"
       ],
       "checks": [
         "Tests/LinearState.lean",
@@ -1533,9 +1564,12 @@
         "Examples/MutableState.lean",
         "Examples/ResumableRequests.lean",
         "Tests/FunctionalStatefulValidation.lean",
-        "Tests/FunctionalRequestHandling.lean"
+        "Tests/FunctionalRequestHandling.lean",
+        "Tests/FunctionalRecordEvolution.lean",
+        "Examples/ConfigurationUpgrade.lean",
+        "Examples/AtomicConfiguration.lean"
       ],
-      "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls."
+      "boundary": "Pure, mutable snapshot and linear state carriers execute the same parent-first interpreter. An independent Executes relation has soundness, completeness and uniqueness; representation projection preserves the complete final state and status for every specification. The first error stops later writes and retains earlier writes in all three carriers. Failed linear aliases retain the updated partial state; successful aliases are consumed. Snapshot/linear observations agree at every key and depth. The paper does not prescribe rollback on failure; this is the common explicit repository convention. Concrete mutex/alias adapters are exercised by 616 scenarios, including 376 failures, at four selected keys and depths. Mutable force results retain their exact immutable snapshot and kernel evaluation proof; each slot write clears memo entries and increments the generation under the same mutex. Every finite operational value/error derivation completes at some machine budget from any sound warm cache. Completed results and cycles are stable under increasing budgets; reported cycles prove divergence. Certified instance and mutable reads retain the exact request/snapshot divergence proof. Exhaustion alone remains inconclusive. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional registry transactions produce immutable snapshots and bind consumer revisions to them; they do not themselves implement the shared-identity IO protocol. Graph migration now compiles the actual target topology/root, retains complete surviving-name overlays, installs new names and finishes all target edits. All explicit negative and positive constraints are checked on that exact target. Same first winning identities plus disjoint target ancestry/key edit scopes prove complete preparation equality, retaining arbitrary joint proof and hot context data; changed selections require fresh admission and a cold slot. Complete capability acceptance and certified availability are kernel laws. The context/key/value family and computation stay fixed during migration; arbitrary-language hidden assumption inference and machine cost claims remain open. Finite pure Computation syntax now automatically infers value/presence reads and required/forbidden guards through nested helpers and both branches. Universal execution congruence and capability safety are kernel laws. Analyzed graph migration checks the expanded positive/negative policy on the actual completed target and proves complete acceptance. Stable known observations preserve computed values/errors, result proofs and exact context-hit decisions; hidden-read changes invalidate the computed slot even when explicit capability selection is stable. Presence-only observations need availability equality, not function equality. Affected or unknown callbacks require fresh result admission and an empty computed slot. Unknown callbacks receive no automatic capability-safety guarantee; conservative branch contracts may be unsatisfiable. Arbitrary-language closure/effect/termination inference and machine costs remain open. Ordered Functional validation threads explicit state through a successful prefix and retains exactly the failing step state. Append and first-error characterization are universal laws. Checked request batches instantiate these laws for ContextSlot; input failures preserve prefix cache and execution/output failures retain the failing read. The resumable workload example specializes existing LinearState.stepValue with universal failure/success laws, and compares pure, mutable and linear continuation by execution controls. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
     },
     {
       "id": "mutable-protocol",
@@ -2420,6 +2454,15 @@
     "lean_translation": 35
   },
   "local_evidence": {
+    "Examples/AtomicConfiguration.lean": {
+      "sha256": "6b7460b377eedcc5fb295f5ee2444d084a403975645bd2af9a21de1b349862cc",
+      "physical_lines": 68,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        63
+      ]
+    },
     "Examples/CertifiedContextCache.lean": {
       "sha256": "34ed31834957e1d613100a35b9b084e4ef19dd62640478968e8ad9c5219aaae9",
       "physical_lines": 68,
@@ -2429,6 +2472,15 @@
       ],
       "eval_lines": [
         66
+      ]
+    },
+    "Examples/ConfigurationUpgrade.lean": {
+      "sha256": "30e3386fa42f419649cf3960b2153bd1eae0bf6d919561ec55d83fdd06bacdf5",
+      "physical_lines": 95,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        90
       ]
     },
     "Examples/DelayedNumbers.lean": {
@@ -2869,6 +2921,13 @@
     "LeanPoo/Functional/ObservedView.lean": {
       "sha256": "c97b841d59d1fb3692d6291fc6438d0a45975ffbafb52364b241e3bc7b9f2d3f",
       "physical_lines": 105,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/RecordEvolution.lean": {
+      "sha256": "8abcece115dbad9ba0a52df0ae6960c494e4c991f1334dcaf895516d3cea8e0b",
+      "physical_lines": 326,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3317,8 +3376,8 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/DynamicSchema.lean": {
-      "sha256": "40b9db01f22a92ecc3ecc0f6465e7ec25c3c0bd71adbc56ff7593e981bef8446",
-      "physical_lines": 233,
+      "sha256": "0728177add958ab40275e73ec752c43fa3cb21f49d068cea22df977e0199abc0",
+      "physical_lines": 346,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4159,6 +4218,15 @@
         131
       ]
     },
+    "Tests/FunctionalRecordEvolution.lean": {
+      "sha256": "81408d8d39ba8f8c9a7b5938d49a554a45a25fcb97b888d924f8cd0ccc97abd6",
+      "physical_lines": 231,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        214
+      ]
+    },
     "Tests/FunctionalRecursiveHandling.lean": {
       "sha256": "cf22efd12bfbbc07c554ad9b355700ee7c6520de84fc4d74e0edb5edea1cdd61",
       "physical_lines": 204,
@@ -4602,8 +4670,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "7fc99012187a616c0a7177ce1668c2bbda23fef55051e29d212067c8161fc535",
-      "physical_lines": 537,
+      "sha256": "c2af1b8acd73c276515d9ba0c044ff6a303cdceddf29210a769eacfcde9263d2",
+      "physical_lines": 550,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4624,10 +4692,12 @@
     }
   },
   "source_file_inventory": [
+    "Examples/AtomicConfiguration.lean",
     "Examples/BoundedDispatch.lean",
     "Examples/CertifiedContextCache.lean",
     "Examples/CertifiedInvalidation.lean",
     "Examples/ClassMigration.lean",
+    "Examples/ConfigurationUpgrade.lean",
     "Examples/ContextualFactories.lean",
     "Examples/DebugTrace.lean",
     "Examples/DelayedNumbers.lean",
@@ -4742,6 +4812,7 @@
     "LeanPoo/Functional/ObservedView.lean",
     "LeanPoo/Functional/Overlay.lean",
     "LeanPoo/Functional/Presentation.lean",
+    "LeanPoo/Functional/RecordEvolution.lean",
     "LeanPoo/Functional/RecursiveHandling.lean",
     "LeanPoo/Functional/Registry.lean",
     "LeanPoo/Functional/RegistryBatch.lean",
@@ -4973,6 +5044,7 @@
     "Tests/FunctionalObservation.lean",
     "Tests/FunctionalObservedView.lean",
     "Tests/FunctionalOverlay.lean",
+    "Tests/FunctionalRecordEvolution.lean",
     "Tests/FunctionalRecursiveHandling.lean",
     "Tests/FunctionalRegistry.lean",
     "Tests/FunctionalRegistryBatch.lean",

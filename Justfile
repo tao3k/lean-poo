@@ -58,6 +58,7 @@ check-merge: check-types
         LeanPoo.Functional.FocusedUpdate \
         LeanPoo.Functional.DispatchHandling \
         LeanPoo.Functional.RecursiveHandling \
+        LeanPoo.Functional.RecordEvolution \
         LeanPoo.Deriving.DictionaryCompiler \
         LeanPoo.Functional.CertifiedRequirements \
         LeanPoo.Functional.CachedPreparation \
@@ -239,6 +240,8 @@ _check-examples:
     {{lean}} Examples/RecoverableDispatch.lean
     {{lean}} Examples/RecursiveBilling.lean
     {{lean}} Examples/RecursiveCatalog.lean
+    {{lean}} Examples/ConfigurationUpgrade.lean
+    {{lean}} Examples/AtomicConfiguration.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
     {{lean}} Examples/DelayedNumbers.lean
@@ -409,6 +412,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalFocusedUpdate.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalDispatchHandling.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecursiveHandling.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecordEvolution.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean

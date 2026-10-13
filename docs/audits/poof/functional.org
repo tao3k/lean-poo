@@ -85,6 +85,19 @@ The [[file:../../contracts/validation-batches.org][scenario contracts]] record t
 
 * Checked requests and retained failure state
 
+F03 also combines runtime defaults, introspection and parameterized descriptors
+with the existing pure record setter/patch construction. [[file:../../../LeanPoo/Functional/RecordEvolution.lean][RecordEvolution]]
+retains the exact current-catalog admission witness for generated construction,
+field updates and explicit version migrations. [[file:../../../Examples/ConfigurationUpgrade.lean][ConfigurationUpgrade]] carries
+nested routes and hooks, renames a bounded field, retires an old field and admits
+target defaults. [[file:../../../Examples/AtomicConfiguration.lean][AtomicConfiguration]] compares retained completed groups with
+whole-batch atomic publication and continuation. Universal laws preserve actual
+source projection, target membership and exact refusal state; [[file:../../../Tests/FunctionalRecordEvolution.lean][controls]] compare
+2,016 migrations and 240 batches/continuations with independent domain rules.
+The [[file:../../contracts/record-evolution.org][record evolution guide]] states explicit mapping and pure publication
+boundaries. Automatic migration inference and external-effect rollback remain
+outside these compositions.
+
 [[file:../../contracts/checked-requests.org][Checked request contracts]] combine the F03 concrete input/output and
 parameterized descriptor constructions with the paper's pure/linear state
 transformation and explicit-cache option. [[file:../../../LeanPoo/Functional/RequestHandling.lean][RequestHandling]] admits input

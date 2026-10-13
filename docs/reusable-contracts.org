@@ -24,6 +24,7 @@ these guides explain reusable library contracts.
 | Compose nested method updates and retain admitted dependent parts | [[file:contracts/focused-updates.org][Nested focuses and admitted method fragments]] |
 | Combine checked multiple dispatch, ordered method phases and recovery state | [[file:contracts/dispatch-workflows.org][Checked dispatch workflows]] |
 | Share recursive method requests and revalidate current catalogs in resumable batches | [[file:contracts/recursive-requests.org][Checked recursive requests]] |
+| Migrate runtime record schemas and publish admitted field groups atomically | [[file:contracts/record-evolution.org][Record migration and staged publication]] |
 | Retain absent-capability assumptions and reject conflicting extensions | [[file:contracts/negative-capabilities.org][Negative capabilities and guarded extension]] |
 | Change graph topology and migrate positive/negative proofs and cached data | [[file:contracts/graph-migrations.org][Graph migration and constraint caches]] |
 | Infer pure capability dependencies and migrate computed result caches | [[file:contracts/dependency-analysis.org][Dependency analysis and computed cache migration]] |
