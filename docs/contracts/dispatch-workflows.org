@@ -79,3 +79,7 @@ descriptor admission at 1359–1433 and explicit pure state/cache constructions.
 Method and admission rules are supplied typed callbacks. General cross-library
 conflict policy, arbitrary host effect inference and the complete generalized
 prototype protocol remain separate source proposals.
+
+* Calls to safe recursive programs
+
+[[file:recursive-dispatch.org][RecursiveDispatch]] supplies proof-bearing recursive actions for the existing method combinations. Source memo and candidate-cache lifetimes remain separate; current descriptor refusal, source recovery and outer admission retain the reached states.

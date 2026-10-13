@@ -1,0 +1,74 @@
+#+TITLE: Recursive requests inside dispatch workflows
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:recursive-requests.org][Recursive requests]] · [[file:dispatch-workflows.org][Dispatch workflows]]
+
+* Use the existing safe program
+
+~Functional.RecursiveDispatch.State program Ledger~ pairs a program-indexed
+~RecursiveSession~ with application ledger data and the latest recursive read
+marker. ~call~ adapts the existing ~callSlot~ to ~EStateM~; ~callPacked~ produces
+a heterogeneous ~Answer program~ for ordinary multi-argument dispatch methods.
+No evaluator, selector or method combiner is added.
+
+A ~Receipt program registry request~ retains the exact catalog invocation,
+current registry, requested name/argument, evaluation witness and admitted input
+and output. ~Answer~ packages these indices; ~Answer.value~, ~observed~ and
+~outputAccepted~ expose the evaluated value, finite source observation and
+descriptor proof. The immutable program index prevents reusing a memo as the
+memo of a different method program.
+
+Every adapter call uses its supplied registry, including on a warm source hit.
+Input/catalog refusal occurs before a recursive read. Completed source errors
+and output refusal retain the completed memo. Incomplete runs retain the old
+memo; a reported cycle keeps its divergence proof, while exhaustion does not
+assert divergence. All cases retain the method's current ledger; this helper
+adds no ledger writes. ~lastRead~ is the current call's marker, including ~none~
+for pre-read refusal. It is separate from the dispatch candidate-cache marker.
+
+* Universal contracts and explicit method policy
+
+~call_ok~, ~call_error~ and ~call_state~ preserve the complete original recursive
+transition. ~call_ledger~ exposes ledger preservation. ~callPacked_ok~,
+~callPacked_error~ and ~callPacked_state~ prove packing changes no successful or
+failed state. Receipt admission/observation theorems use the actual existing
+checked evaluation witnesses; they do not infer arbitrary callback semantics.
+
+Use existing standard, simple or qualified combinations. Their method errors,
+around recovery and ordered batches retain the reached state under the existing
+~DispatchSession~ laws. Dispatch cache soundness/reference equality remain under
+the existing ~CacheSound~ premise. Around callbacks can omit or repeat next;
+each adapter call still performs its current recursive admission.
+
+Methods explicitly choose their registry and source request. A packed answer
+certifies those retained indices; it does not automatically prove that every
+arbitrary callback uses a particular public request's registry or method name.
+A workflow must supply its own admission rules for allowed source selection,
+recovery, result bounds and shortcut outputs. No host closure/effect inference,
+global cache policy or external IO rollback is claimed.
+
+* Recursive quotation with audited dispatch
+
+[[file:../../Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] uses the existing safe C3 billing construction:
+inherited fee wrapping, final-self tariff reads and recursive prefix totals.
+Two-argument mode/channel dispatch selects single or bulk quotation and checks
+current amount guards on warm shapes. Audit around/after fragments update the
+ledger. A supplier error can recover using the actual checked single quote;
+the returned receipt identifies that fallback request rather than the failed
+bulk request.
+
+Cold bulk pricing yields 38. Warm source results still refuse a narrower current
+descriptor, retain completed work and admit again after restoration. A distinct
+public ceiling gate refuses after methods finish. A batch retains its completed
+prefix and failing state, skips its suffix, preserves the certified cycle
+payload, and can resume after incomplete budget exhaustion to produce 75.
+
+[[file:../../Tests/RecursiveDispatch.lean][RecursiveDispatch]] compares 240 whole workflow summaries with independent
+price formulas, memo-cardinality and phase/trace controls. It varies tariff,
+single/bulk requests, input refusals, current descriptor ceilings, public limits
+and both warm caches. Universal complete-state adapter laws are separate from
+these finite result/memo-size/marker/ledger controls.
+
+This composes source first-class recursive objects (1039–1089), descriptor
+admission (1359–1433), dispatch/combination (1980–2083) and explicit sharing
+(2355–2389). The application audit, recovery and ceiling rules are supplied
+typed policies over those constructions.

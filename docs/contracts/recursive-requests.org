@@ -86,3 +86,7 @@ descriptor admission at 1359–1433 and sharing at 2355–2389. They use the dec
 safe Interaction language and supplied typed method/descriptor rules. General
 host-language closure/effect inference and machine cost bounds remain outside
 these concrete construction contracts.
+
+* Dispatch integration
+
+[[file:recursive-dispatch.org][RecursiveDispatch]] lifts these existing checked calls into retained-state dispatch actions, with exact current-registry/request receipts and ledger-preserving complete-state laws.

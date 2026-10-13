@@ -48,7 +48,7 @@
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 266 local evidence files and 469 Lean source filenames; reject drift.
+- [X] Bind 269 local evidence files and 472 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.
@@ -66,6 +66,8 @@
 
 - [X] Eight typed alternative method policies have ordered value reductions, lawful-monad reference correspondence and exact failure-state operational proofs.
 - [X] Joint factory/generic publication binds reconstruction, dispatch edits and admission to one immutable version and retains the complete old version on refusal.
+
+- [X] Safe recursive requests enter retained-state multi-argument workflows with exact current admission/evaluation receipts and universal adapter transition laws.
 
 * Scope of this checklist
 

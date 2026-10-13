@@ -58,6 +58,7 @@ check-merge: check-types
         LeanPoo.Functional.FocusedUpdate \
         LeanPoo.Functional.DispatchHandling \
         LeanPoo.Functional.RecursiveHandling \
+        LeanPoo.Functional.RecursiveDispatch \
         LeanPoo.Functional.RecordEvolution \
         LeanPoo.Functional.OrderedDictionary \
         LeanPoo.Functional.MetadataFamily \
@@ -247,6 +248,7 @@ _check-examples:
     {{lean}} Examples/DispatchWorkflow.lean
     {{lean}} Examples/RecoverableDispatch.lean
     {{lean}} Examples/RecursiveBilling.lean
+    {{lean}} Examples/RecursiveDispatchWorkflow.lean
     {{lean}} Examples/RecursiveCatalog.lean
     {{lean}} Examples/ConfigurationUpgrade.lean
     {{lean}} Examples/AtomicConfiguration.lean
@@ -430,6 +432,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalFocusedUpdate.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalDispatchHandling.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecursiveHandling.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/RecursiveDispatch.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecordEvolution.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalOrderedDictionary.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalReflectiveRequirements.lean

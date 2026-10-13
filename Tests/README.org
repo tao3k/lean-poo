@@ -648,3 +648,7 @@ publication. The corresponding guides describe universal proof boundaries.
 [[file:AlternativeCombination.lean][AlternativeCombination]] compares 3,400 complete policy outcomes and traces with independent loops, including empty groups, first failures and Boolean stopping. Bounded guards leave divergent suffixes and bypassed groups untouched. Universal lawful-monad and exact-state operational proofs are separate from these finite controls.
 
 [[file:FactoryDispatchPublication.lean][FactoryDispatchPublication]] compares 512 complete publication outcomes with an independent arithmetic/phase oracle, covering simultaneous metadata/arity/negative/admission errors, canceled edits and cold/warm retention.
+
+* Recursive dispatch adapter controls
+
+[[file:RecursiveDispatch.lean][RecursiveDispatch]] checks 240 complete workflow summaries against independent pricing, phase, trace and memo-size controls. Cold/warm dispatch and recursive reads are separate; current output admission and public ceilings remain fresh. Universal adapter success/failure/packing/state/ledger and actual receipt admission/observation laws are kernel theorems.

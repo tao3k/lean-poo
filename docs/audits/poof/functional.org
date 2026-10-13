@@ -319,3 +319,7 @@ claim that all paper questions have been resolved.
 * Coupled factories and generic extensions
 
 [[file:../../../Examples/JointPublication.lean][JointPublication]] and [[file:../../contracts/joint-publication.org][its contract]] combine existing checked metadata closure, protected generic edits and exact-version consumer admission. The example checks one declared request; 512 independent controls vary complete accepted/refused versions. [[file:../../../Examples/PolicyDispatch.lean][PolicyDispatch]] exercises alternative method policies with their [[file:../../contracts/alternative-combinations.org][ordered execution contracts]].
+
+* Recursive requests inside multiple dispatch
+
+[[file:../../../Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] composes the existing safe C3 billing program, guarded multi-argument methods, audit/recovery and current descriptor admission. [[file:../../contracts/recursive-dispatch.org][Recursive dispatch contracts]] preserve actual program-indexed receipts and complete states without adding an evaluator. Method selection and public acceptance remain explicit typed application policies.

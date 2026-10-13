@@ -80,6 +80,7 @@ shapes.
 [[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
 [[file:Examples/DispatchWorkflow.lean][DispatchWorkflow.lean]] combines checked logistics dispatch, method phases, warm guarded candidates and retained ledger state.
 [[file:Examples/RecoverableDispatch.lean][RecoverableDispatch.lean]] runs fallback methods on actual failed progress and continues after checked refusal.
+[[file:Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow.lean]] composes safe recursive billing with guarded multi-argument dispatch, current descriptor admission, recovery and retained method state.
 [[file:Examples/RecursiveBilling.lean][RecursiveBilling.lean]] shares C3 recursive pricing subrequests and resumes retained completed results under current descriptors.
 [[file:Examples/RecursiveCatalog.lean][RecursiveCatalog.lean]] revalidates recursive configuration schemas and nested function identities before publishing a shared result.
 [[file:Examples/ConfigurationUpgrade.lean][ConfigurationUpgrade.lean]] migrates reflective runtime configurations through explicit field maps and target defaults.

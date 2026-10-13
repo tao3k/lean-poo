@@ -64,3 +64,7 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:PolicyDispatch.lean][PolicyDispatch]] uses eight reusable typed policies through ordered pricing and approval groups; current predicates, retained failure traces and skipped suffixes are explicit. [[file:../docs/contracts/alternative-combinations.org][Contracts and proof boundaries]].
 
 [[file:JointPublication.lean][JointPublication]] changes a noncommuting C3 factory diamond together with pricing plugins, protecting Bank absences and checking actual Card price/factory agreement before immutable publication. [[file:../docs/contracts/joint-publication.org][Contracts and proof boundaries]].
+
+* Recursive requests in dispatch workflows
+
+[[file:RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] joins the existing C3 billing program with audited mode/channel dispatch, source recovery, hot current descriptor admission, public output refusal, batches and certified budget/cycle continuation. [[file:../docs/contracts/recursive-dispatch.org][API and proof boundaries]].

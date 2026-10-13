@@ -42,6 +42,7 @@ import LeanPoo.Functional.RequestHandling
 import LeanPoo.Functional.FocusedUpdate
 import LeanPoo.Functional.DispatchHandling
 import LeanPoo.Functional.RecursiveHandling
+import LeanPoo.Functional.RecursiveDispatch
 import LeanPoo.Functional.RecordEvolution
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Functional.MetadataFamily
