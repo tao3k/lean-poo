@@ -59,3 +59,11 @@ required and forbidden keys from finite pure computations, joins them with these
 contracts, and refuses conflicts before any computed body runs. Arbitrary closure
 introspection, a universal cross-library conflict policy and host function-body
 equality remain outside these contracts.
+
+* Protect actual multi-argument generic functions
+
+[[file:dispatch-extensions.org][Protected generic extensions]] applies explicit negative assumptions to the
+existing multimethod index, including inheritance, wildcard specialization and
+current-argument guards. Structural watches and sampled calls have separate
+contracts. Whole transactions, refused warm publication and certificate transfer
+through normal calls are proved and demonstrated by ProtectedDispatch.

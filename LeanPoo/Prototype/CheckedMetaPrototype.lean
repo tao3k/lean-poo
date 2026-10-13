@@ -8,6 +8,15 @@ inductive Aligned (relation : A → B → Prop) : List A → List B → Prop whe
   | cons : relation left right → Aligned relation lefts rights →
       Aligned relation (left :: lefts) (right :: rights)
 
+theorem Aligned.functional (relation : A → B → Prop)
+    (single : ∀ a b c, relation a b → relation a c → b = c)
+    (left : Aligned relation names first) (right : Aligned relation names second) : first = second := by
+  induction left generalizing second with
+  | nil => cases right; rfl
+  | cons head tail ih =>
+    cases right with
+    | cons next rest => rw [single _ _ _ head next, ih rest]
+
 /-- A captured parent function belongs to the exact registry snapshot. -/
 def lookupFunction (registry : Registry α) (name : String) : Except String (Layer α) := do
   let some entry := registry.find? (fun entry => entry.1 == name) | throw s!"unknown super: {name}"
@@ -121,9 +130,59 @@ def Prepared.frozenMetadata (prepared : Prepared α) : MetaRecord α :=
     | .supers => some prepared.parents
     | .precedence => some prepared.order }
 
+/-- Identify the captured program without evaluating an unchecked knot.
+The function and each parent layer must come from this exact preparation. -/
+theorem Prepared.program_eq (prepared : Prepared α) (own : Layer α) (layers : List (Layer α))
+    (ownSelected : prepared.frozenMetadata.lookup .function = some own)
+    (parentsSelected : Aligned (fun name layer => lookupFunction prepared.registry name = .ok layer)
+      prepared.order.tail layers) : prepared.program = DelayedProto.composeAll (own :: layers) := by
+  have sameOwn : prepared.own = own := Option.some.inj ownSelected
+  have sameParents := Aligned.functional _
+    (fun _ _ _ first second => Except.ok.inj (first.symm.trans second)) prepared.selection parentsSelected
+  simp only [program, sameOwn, sameParents]
+
 theorem Prepared.frozen_function (prepared : Prepared α) :
     prepared.frozenMetadata.lookup .function = prepared.metadata.value.lookup .function :=
   prepared.capturedFunction.symm
+
+/-- Successful preparation retains the exact input registry and own function. -/
+theorem prepareChecked_origin (name : String) (metadata : Meta α) (registry : Registry α)
+    (prepared : Prepared α) (ready : prepareChecked name metadata registry = .ok prepared) :
+    prepared.registry = registry ∧ prepared.frozenMetadata.lookup .function = metadata.value.lookup .function := by
+  unfold prepareChecked at ready
+  simp only [bind, Except.bind] at ready
+  repeat' first | contradiction | split at ready
+  all_goals cases ready; exact ⟨rfl, Prepared.frozen_function _⟩
+
+/-- Lift compositional layer evidence through the actual captured selection. -/
+theorem Prepared.program_property (prepared : Prepared α) (property : Layer α → Prop)
+    (identity : property DelayedProto.identity)
+    (compose : ∀ child parent, property child → property parent → property (DelayedProto.compose child parent))
+    (own : ∀ layer, prepared.frozenMetadata.lookup .function = some layer → property layer)
+    (parents : ∀ name layer, lookupFunction prepared.registry name = .ok layer → property layer) :
+    property prepared.program := by
+  have inherited : ∀ layer ∈ prepared.inherited, property layer := by
+    have all {names layers} (selected : Aligned (fun name layer => lookupFunction prepared.registry name = .ok layer) names layers) :
+        ∀ layer ∈ layers, property layer := by
+      induction selected with
+      | nil => simp
+      | cons head tail ih =>
+        intro layer member
+        rcases List.mem_cons.mp member with equal | member
+        · subst layer; exact parents _ _ head
+        · exact ih layer member
+    exact all prepared.selection
+  have chain (layers : List (Layer α)) (all : ∀ layer ∈ layers, property layer) :
+      property (DelayedProto.composeAll layers) := by
+    induction layers with
+    | nil => exact identity
+    | cons layer rest ih =>
+      exact compose layer _ (all layer (by simp)) (ih (fun item member => all item (by simp [member])))
+  exact chain (prepared.own :: prepared.inherited) (by
+    intro layer member
+    rcases List.mem_cons.mp member with equal | member
+    · subst layer; exact own _ rfl
+    · exact inherited layer member)
 
 theorem Prepared.frozen_supers (prepared : Prepared α) :
     prepared.frozenMetadata.lookup .supers = prepared.metadata.value.lookup .supers :=

@@ -1,0 +1,63 @@
+#+TITLE: Protected extensions of multi-argument generic functions
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:negative-capabilities.org][Provider absence assumptions]] · [[file:dispatch-workflows.org][Checked dispatch sessions]]
+
+* Watch actual dispatch
+
+Import ~LeanPoo.Functional.DispatchExtension~. The original source discusses
+independent libraries extending existing generic functions and protecting
+previous absence assumptions (2009–2047). This API implements an explicit
+watched policy on the existing sparse multimethod index.
+
+~Watch.shape precedence~ forbids every candidate for a complete tuple of
+argument precedence lists, including guarded candidates whose predicate is
+currently false. ~Watch.call args~ forbids applicable methods for those exact
+arguments and rechecks current predicates. Both require correct arity.
+~shape_covers_call~ proves structural absence covers every call with the same
+shape. A sampled call watch provides no guarantee for other argument values.
+
+~check~ returns a snapshot-indexed ~Certificate~ or the first ~Conflict~ in
+watch order. The conflict retains an absent prefix, remaining watches and
+either an arity mismatch or the actual first observed method.
+~observed_reference~ relates observations to complete ordered tuple lookup
+and current-argument filtering; ~Violation.firstMethod_origin~ proves that a
+reported method belongs to that specification. No method body or combination
+function executes during negative checking; applicability predicates do run.
+
+* Guard a completed transaction
+
+~Edit~ supports replacement registration, retained contribution, predicate
+registration and erasure of one exact specialization tuple. ~patch~ applies
+edits in caller order. ~guard generic watches previous edits~ validates the
+completed candidate against the original watched policy. An accepted
+~Revision~ retains the exact transaction equation and a fresh certificate.
+
+Registration arity errors take priority over negative conflicts. Refused
+conflicts retain the completed candidate and first conflict as evidence.
+An add-then-erase transaction can succeed; intermediate snapshots are never
+published. Successful edits clear candidate caches; ~Revision.cacheSound~
+preserves the existing cache invariant for arbitrary sound old caches.
+
+~publish~ returns the old generic, including its warm cache, on every refusal;
+~publish_refused~ proves this complete retention. ~Certificate.invoke~ performs
+an ordinary call and transfers the negative certificate through lookup,
+cache touch and eviction without rerunning the negative checks. It retains
+the exact call equation. Current predicates and method execution still follow
+the existing dispatch protocol.
+
+* Independent extension workload
+
+[[file:../../Examples/ProtectedDispatch.lean][ProtectedDispatch]] combines document/payment specializations, defaults,
+stateful primary/around methods, a guarded risk fee and a sound warm generic.
+A high-amount conflict after an absent low-amount watch is refused; protecting
+only the low-amount call permits a high-amount method and demonstrates dynamic
+filtering on a warm candidate cache. Inherited third-library methods,
+structural watches, canceled edits and registration error priority are also
+exercised. Refused publication keeps the earlier generic usable.
+
+[[file:../../Tests/FunctionalDispatchExtension.lean][FunctionalDispatchExtension]] compares 576 complete admission/refusal
+outcomes against an independent association-list/pair-enumeration model,
+including wildcards, replacement, contributions, predicates, watch order,
+duplicates, cold/warm sources and cache retention. The policy is explicitly
+watched and finite; it supplies no automatic discovery of hidden assumptions
+or universal cross-library conflict policy.

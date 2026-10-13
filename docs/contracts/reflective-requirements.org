@@ -92,3 +92,11 @@ All final-self records, descriptor rules and joint bounds are explicit typed
 inputs. The compositions add no automatic property inference for arbitrary
 host functions and do not implement the proposed unrestricted meta-object
 protocol. They leave the whole-source completion flag unchanged.
+
+* Automatic closed construction
+
+[[file:closed-metadata.org][Automatic metadata closure]] additionally constructs the final factories and
+closure equation of the actual checked program from finite dependency and
+compositional locality evidence. It retains all checked C3 metadata; callers
+supply no predicted final provider. [[file:../../Examples/ClosedDeployment.lean][ClosedDeployment]] demonstrates a report /
+schedule / capacity dependency chain and noncommuting parents.

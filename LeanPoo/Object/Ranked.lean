@@ -1,4 +1,5 @@
 import LeanPoo.Object.Instance
+import LeanPoo.Prototype.RankedResolver
 
 /-!
 An explicitly ranked dependency discipline supplies a total fixed point for
@@ -19,33 +20,12 @@ structure Ranked (Key : Type u) (Value : Key → Type v)
       left dependency = right dependency) →
     plan.resolve key left = plan.resolve key right
 
-private def Ranked.eval {Key : Type u} {Value : Key → Type v}
-    {plan : Plan Key Value} (ranked : Ranked Key Value plan)
-    (key : Key) : Option (Value key) :=
-  plan.resolve key (fun dependency =>
-    if _smaller : ranked.rank dependency < ranked.rank key then
-      ranked.eval dependency
-    else none)
-termination_by ranked.rank key
-decreasing_by exact _smaller
-
 /-- Instantiate an open-recursive plan by well-founded slot evaluation. -/
 def Ranked.instantiate {Key : Type u} {Value : Key → Type v}
     {plan : Plan Key Value} (ranked : Ranked Key Value plan) :
     Instance Key Value plan :=
-  { state := ranked.eval
-    agrees := by
-      intro key
-      have same := ranked.dependsOnLower key ranked.eval
-        (fun dependency =>
-          if smaller : ranked.rank dependency < ranked.rank key then
-            ranked.eval dependency
-          else none)
-        (by
-          intro dependency smaller
-          simp [smaller])
-      rw [same]
-      exact (Ranked.eval.eq_1 ranked key).symm }
+  let resolver : Prototype.RankedResolver plan.resolve := ⟨ranked.rank, ranked.dependsOnLower⟩
+  { state := resolver.close, agrees := resolver.closed }
 
 /-- Explicit self-dependency claims with finite support. The locality
 proof makes the declaration authoritative even though Lean functions are
@@ -77,7 +57,7 @@ structure Scheduled {Key : Type u} {Value : Key → Type v}
 
 /-- A bounded dependency-first scheduler. A blocked remainder contains a
 cycle or a dependency absent from the supplied finite key list. -/
-private def Dependencies.schedule [BEq Key] [LawfulBEq Key] [Hashable Key]
+private def scheduleDependencies [BEq Key] [LawfulBEq Key] [Hashable Key]
     (keys : List Key) (reads : Key → List Key) :
     Except (DependencyError Key) (List Key) :=
   go keys [] {} keys.length
@@ -97,6 +77,16 @@ where
               go (remaining.filter (fun candidate => candidate != key))
                 (key :: done) (doneSet.insert key) fuel
 
+/-- Share the finite scheduler across actual C4 plans and checked C3 metadata.
+Unknown dependencies are reported in declaration order before cycle checks. -/
+def dependencyOrder {Key : Type u} [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (keys : List Key) (reads : Key → List Key) : Except (DependencyError Key) (List Key) := do
+  for key in keys do
+    for dependency in reads key do
+      unless keys.contains dependency do
+        throw (.unknownDependency key dependency)
+  scheduleDependencies keys reads
+
 /-- Infer a rank from declared dependencies, then check every edge before
 producing a proof-bearing ranked plan. An absent source identifies its reader;
 after that check, a blocked remainder contains a dependency cycle. -/
@@ -104,11 +94,7 @@ def Dependencies.scheduleRanked {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     {plan : Plan Key Value} (spec : Dependencies Key Value plan) :
     Except (DependencyError Key) (Scheduled spec) := do
-  for key in spec.keys do
-    for dependency in spec.reads key do
-      unless spec.keys.contains dependency do
-        throw (.unknownDependency key dependency)
-  let order ← Dependencies.schedule spec.keys spec.reads
+  let order ← dependencyOrder spec.keys spec.reads
   let rank := fun key => order.idxOf key
   if checked : spec.keys.all (fun key =>
       (spec.reads key).all (fun dependency =>

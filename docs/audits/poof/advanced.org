@@ -147,3 +147,12 @@ generalized prototypes, meta-level type/logical constraints and staging/cache
 research. Those proposals must not be counted as completed formal results.
 Conversely, their open status alone does not invalidate the existing core
 executable construction. The audit preserves both distinctions.
+
+* Composed metadata and multi-argument extension policies
+
+[[file:../../contracts/closed-metadata.org][Automatic metadata closure]] connects the checked source C3 program to unique
+closed context-indexed factories using supported finite dependency/locality
+evidence. [[file:../../contracts/dispatch-extensions.org][Protected generic extensions]] implements the explicit negative-cache
+strategy for structural shapes and current argument calls on actual multimethods.
+Both have universal contracts and independent complex workloads; neither infers
+arbitrary host closure properties or hidden cross-library assumptions.

@@ -633,3 +633,12 @@ Kernel clients check step/trace refinement of the single production constructor,
 current reference/body identity and the universal forwarding read bound.
 Only standard Lean axioms occur; opaque IO/C++/compiler/memory correctness
 is not inferred from a source pin or from a valid data log.
+
+* Closed metadata and protected multi-argument extension
+
+[[file:FunctionalMetadataClosure.lean][FunctionalMetadataClosure]] compares 864 actual automatically closed C3
+preparations with an independent arithmetic/list oracle and refuses unknown
+dependencies and cyclic footprints. [[file:FunctionalDispatchExtension.lean][FunctionalDispatchExtension]] compares 576
+complete extension outcomes with an independent association-list/pair model,
+including predicates, wildcards, first conflicts, arity priority and cold/warm
+publication. The corresponding guides describe universal proof boundaries.

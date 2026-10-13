@@ -61,6 +61,8 @@ check-merge: check-types
         LeanPoo.Functional.RecordEvolution \
         LeanPoo.Functional.OrderedDictionary \
         LeanPoo.Functional.MetadataFamily \
+        LeanPoo.Functional.MetadataClosure \
+        LeanPoo.Functional.DispatchExtension \
         LeanPoo.Functional.EnumeratedRequirements \
         LeanPoo.Deriving.DictionaryCompiler \
         LeanPoo.Functional.CertifiedRequirements \
@@ -248,6 +250,8 @@ _check-examples:
     {{lean}} Examples/LayeredRouting.lean
     {{lean}} Examples/KeyedRebalance.lean
     {{lean}} Examples/MetadataDeployment.lean
+    {{lean}} Examples/ClosedDeployment.lean
+    {{lean}} Examples/ProtectedDispatch.lean
     {{lean}} Examples/IntrospectiveExport.lean
     {{lean}} Examples/PreparedViews.lean
     {{lean}} Examples/CertifiedContextCache.lean
@@ -422,6 +426,8 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalRecordEvolution.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalOrderedDictionary.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalReflectiveRequirements.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalMetadataClosure.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/FunctionalDispatchExtension.lean
     {{lean}} Tests/FunctionalCertifiedRequirements.lean
     {{lean}} Tests/FunctionalCachedPreparation.lean
     {{lean}} Tests/FunctionalConsumerRevision.lean

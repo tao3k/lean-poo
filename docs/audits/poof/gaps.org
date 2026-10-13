@@ -42,10 +42,13 @@
 - [X] Finite pure computation analysis infers nested/conditional value and presence dependencies plus required/forbidden guards; actual graph migration preserves proved computed values/errors/hits or requires fresh result admission, with unknown callbacks always fresh.
 - [X] Actual Lean structure/class constructors compile automatically into dependent field dictionaries with kernel inverse laws; prototype/descriptor/provider conversions preserve composition, admission, joint proofs and cache hits.
 
+- [X] Checked metadata programs automatically construct unique closed factory families under proved finite dependency locality, preserving source C3 selection.
+- [X] Actual multi-argument dispatch extensions protect structural and current-argument negative assumptions, retain ordered conflict evidence and preserve certificates through warm calls.
+
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 249 local evidence files and 455 Lean source filenames; reject drift.
+- [X] Bind 259 local evidence files and 462 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.

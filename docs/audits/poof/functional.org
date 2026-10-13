@@ -97,6 +97,28 @@ controls and generic caller-supplied closure premise. Explicit typed carrier
 bounds and introspection do not infer arbitrary host callback properties or
 close the proposed complete generalized protocol.
 
+* Automatic closure and protected generic extensions
+
+[[file:../../../LeanPoo/Functional/MetadataClosure.lean][MetadataClosure]] closes the actual checked C3 program from finite dependencies
+and compositional layer-locality proofs. Captured input/parent evidence transfers
+the declarations, and the shared scheduler checks all decreasing edges before
+constructing the unique final factory provider. [[file:../../../Examples/ClosedDeployment.lean][ClosedDeployment]] combines a
+shared diamond, noncommuting schedule wrappers, final-self report dependencies,
+dependent bounds and retained context data. The [[file:../../contracts/closed-metadata.org][closure guide]] describes metadata,
+unknown-dependency and cyclic-footprint refusal. Its independent model checks
+864 complete preparations; no predicted final provider or closure witness is
+supplied by the example.
+
+[[file:../../../LeanPoo/Functional/DispatchExtension.lean][DispatchExtension]] protects actual multi-argument generic functions using
+structural-shape and current-argument watches. Whole registration transactions
+retain first conflicts and exact completed candidates; refused publication keeps
+the original warm generic. Accepted edits preserve cache soundness and ordinary
+calls transfer negative certificates without rechecking. [[file:../../../Examples/ProtectedDispatch.lean][ProtectedDispatch]] joins
+independent document/payment extensions, stateful method combination, dynamic
+predicates, defaults and warm publication. The [[file:../../contracts/dispatch-extensions.org][extension guide]] distinguishes
+shape-wide protection from sampled calls. Independent controls compare 576
+complete outcomes, including wildcard/inherited conflicts and arity priority.
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and
