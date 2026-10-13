@@ -74,6 +74,29 @@ assumptions: pure supplied proposals, homogeneous key values, explicit ordering
 laws and joint proofs. The compositions do not infer callback effects or add
 a concurrent/durable transaction protocol.
 
+* Checked metadata and runtime declared interfaces
+
+The concrete first-class metadata construction (1254–1307) and key-list
+representation (1009–1029) combine with F01/F02/F03 through
+[[file:../../../LeanPoo/Functional/MetadataFamily.lean][MetadataFamily]] and [[file:../../../LeanPoo/Functional/EnumeratedRequirements.lean][EnumeratedRequirements]]. Checked C3 plans supply
+actual context-indexed factory programs; explicit final-self application
+retains the selected functions. An optional closed-family interface requires
+its caller's per-key closure witness. Exact source preparation and stable
+requested-factory laws retain that premise.
+
+Runtime declarations retain ordered heterogeneous tuples, duplicates and
+first missing errors. Built consumer records exclude undeclared slots and
+prove each included value's factory provenance. [[file:../../../Examples/MetadataDeployment.lean][MetadataDeployment]] combines
+noncommuting parent wrappers, final capacity, typed joint scheduling bounds
+and equal-budget dependency caching. [[file:../../../Examples/IntrospectiveExport.lean][IntrospectiveExport]] combines key interception,
+final-self report construction and generated descriptor inspection.
+[[file:../../../Tests/FunctionalReflectiveRequirements.lean][Controls]] compare 576 metadata cases and 64 heterogeneous exports with
+independent domain models; 13 stopping/refusal controls remain bounded.
+[[file:../../contracts/reflective-requirements.org][The guide]] distinguishes the declared-program closure proof, checked execution
+controls and generic caller-supplied closure premise. Explicit typed carrier
+bounds and introspection do not infer arbitrary host callback properties or
+close the proposed complete generalized protocol.
+
 * Changed graph and cache contracts
 
 [[file:../../contracts/graph-migrations.org][Graph migration]] now supports changed declarations, parent orders, roots and

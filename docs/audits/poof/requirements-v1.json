@@ -391,15 +391,20 @@
       "implementation": [
         "LeanPoo/Prototype/Compose.lean",
         "LeanPoo/Prototype/Delayed.lean",
-        "LeanPoo/Functional/OrderedDictionary.lean"
+        "LeanPoo/Functional/OrderedDictionary.lean",
+        "LeanPoo/Functional/MetadataFamily.lean",
+        "LeanPoo/Functional/EnumeratedRequirements.lean"
       ],
       "checks": [
         "Examples/PrototypeCore.lean",
         "Tests/FunctionalOrderedDictionary.lean",
         "Examples/LayeredRouting.lean",
-        "Examples/KeyedRebalance.lean"
+        "Examples/KeyedRebalance.lean",
+        "Tests/FunctionalReflectiveRequirements.lean",
+        "Examples/MetadataDeployment.lean",
+        "Examples/IntrospectiveExport.lean"
       ],
-      "boundary": "Explicit Lean intermediate types replace paper subtyping notation. Homogeneous context-indexed factories stored in certified source AVL dictionaries compose ordered base/regional/emergency overrides with existing requirement preparation. A complete prepared tuple or first missing key agrees with functional overwrites; preparation selects functions without invoking them. Joint bounds are supplied explicitly and retained through exact-context dependency caching."
+      "boundary": "Explicit Lean intermediate types replace paper subtyping notation. Homogeneous context-indexed factories stored in certified source AVL dictionaries compose ordered base/regional/emergency overrides with existing requirement preparation. A complete prepared tuple or first missing key agrees with functional overwrites; preparation selects functions without invoking them. Joint bounds are supplied explicitly and retained through exact-context dependency caching. Checked metadata programs also supply heterogeneous context-indexed factories through explicit final-self application. Successful runtime key-list preparation retains an exact Selected witness; built records expose only declared keys and retain each factory source. Concrete carriers and joint scheduling bounds are supplied explicitly."
     },
     {
       "id": "introspection",
@@ -449,16 +454,19 @@
         "LeanPoo/Prototype/DictionaryRecord.lean",
         "LeanPoo/Prototype/KeyedPrototype.lean",
         "LeanPoo/Prototype/RecordRepresentations.lean",
-        "LeanPoo/Prototype/BinaryTreeSemantics.lean"
+        "LeanPoo/Prototype/BinaryTreeSemantics.lean",
+        "LeanPoo/Functional/EnumeratedRequirements.lean"
       ],
       "checks": [
         "Tests/ObjectDefinition.lean",
         "Tests/DictionaryRecord.lean",
         "Tests/Representations.lean",
         "Tests/ConstructionSemantics.lean",
-        "Examples/DictionaryRecords.lean"
+        "Examples/DictionaryRecords.lean",
+        "Tests/FunctionalReflectiveRequirements.lean",
+        "Examples/IntrospectiveExport.lean"
       ],
-      "boundary": "Universal observational simulation connects function records and certified AVL dictionary records for arbitrary corresponding delayed slot bodies and composed layers. It retains related final-self and lazy inherited observations, missing slots, user errors and every untouched key; dictionary parents must be valid and sorted under OrderOps.Laws. DictionaryRecord.fromOrder uses the structural source solution. Key-list projection, child-before-parent lists including duplicates, metadata exposure and both override policies are kernel laws. The relation is on the concrete typed carriers."
+      "boundary": "Universal observational simulation connects function records and certified AVL dictionary records for arbitrary corresponding delayed slot bodies and composed layers. It retains related final-self and lazy inherited observations, missing slots, user errors and every untouched key; dictionary parents must be valid and sorted under OrderOps.Laws. DictionaryRecord.fromOrder uses the structural source solution. Key-list projection, child-before-parent lists including duplicates, metadata exposure and both override policies are kernel laws. The relation is on the concrete typed carriers. EnumeratedRequirements reads the final keys slot before preparing heterogeneous factories. Exact erased tuples and first missing errors agree with that declared source list; repeated declarations stay ordered. Constructed records exclude undeclared slots and retain factory provenance. Generated schema arrays retain duplicate declarations, while JSON object inspection follows the existing field-name representation."
     },
     {
       "id": "first-class",
@@ -554,13 +562,16 @@
       "implementation": [
         "LeanPoo/Prototype/MetaPrototype.lean",
         "LeanPoo/Prototype/CheckedMetaPrototype.lean",
-        "LeanPoo/Prototype/C3GraphSemantics.lean"
+        "LeanPoo/Prototype/C3GraphSemantics.lean",
+        "LeanPoo/Functional/MetadataFamily.lean"
       ],
       "checks": [
         "Tests/MetaPrototype.lean",
-        "Tests/CheckedMeta.lean"
+        "Tests/CheckedMeta.lean",
+        "Tests/FunctionalReflectiveRequirements.lean",
+        "Examples/MetadataDeployment.lean"
       ],
-      "boundary": "Checked preparation carries source C3 derivations for the root and every admitted non-base parent cache, exact registry function selection in precedence order, and frozen function/supers/precedence fields from one immutable preparation. Repeated instantiation uses that certified program and metadata. The raw overridable metadata API retains its caller cache contract; string registry names represent object identities."
+      "boundary": "Checked preparation carries source C3 derivations for the root and every admitted non-base parent cache, exact registry function selection in precedence order, and frozen function/supers/precedence fields from one immutable preparation. Repeated instantiation uses that certified program and metadata. The raw overridable metadata API retains its caller cache contract; string registry names represent object identities. MetadataFamily composes the same constant three-slot metadata layers around an explicitly closed record. Functional preparation applies the captured program to explicit final-self/base records and retains actual factory selection. Its optional closed-family interface requires a supplied per-key closure witness, and source preparation/stability laws preserve that boundary. The deployment example proves the declared layer composition and typed joint bounds; actual checked graph execution and parent-cache refusal have separate bounded controls. No fixed-point equation for arbitrary unsafe knots is added."
     },
     {
       "id": "further-features",
@@ -770,7 +781,8 @@
         "LeanPoo/Object/Callable.lean",
         "LeanPoo/Object/CallableValidation.lean",
         "LeanPoo/Functional/FocusedUpdate.lean",
-        "LeanPoo/Functional/RecordEvolution.lean"
+        "LeanPoo/Functional/RecordEvolution.lean",
+        "LeanPoo/Functional/EnumeratedRequirements.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
@@ -790,9 +802,11 @@
         "Examples/FocusedAllocation.lean",
         "Tests/FunctionalRecordEvolution.lean",
         "Examples/ConfigurationUpgrade.lean",
-        "Examples/AtomicConfiguration.lean"
+        "Examples/AtomicConfiguration.lean",
+        "Tests/FunctionalReflectiveRequirements.lean",
+        "Examples/IntrospectiveExport.lean"
       ],
-      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures. Runtime record evolution composes existing schema catalogs, ordered field transfer and pure patch groups. Successful recognition preserves the complete source value; generated construction, setters and patches retain exact current-catalog admission. Explicit migration recognizes the source before projection and target defaults/refinements; CheckedRecord retains the actual resolved descriptor membership. Staged batches retain completed groups and the refusing group input, while an explicit atomic publication policy restores the initial value on any refusal and equals the staged result on success. First-error, projection provenance, field membership and admission invariants are kernel laws. Mapping/default policy is caller-supplied; automatic migration inference, arbitrary callback effects and external-effect/concurrent rollback are outside this construction. A typed reflective export now combines source keyed prototypes, heterogeneous runtime declarations, narrow built records and generated RecordDescription inspection. Ordinary factory observations and descriptor acceptance of every built field are kernel proved. Public key interception changes exposure while retaining the source factory slots. This is an explicit typed construction, without inferred arbitrary host function properties."
     },
     {
       "id": "typeclass-correspondence",

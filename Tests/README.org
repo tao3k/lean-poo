@@ -563,6 +563,24 @@ retention. New theorems use only standard Lean axioms.
 [[file:../docs/contracts/dictionary-classes.org][The API guide]] records typed constructor support and the remaining general
 Scheme compiler, closure/IO equivalence and machine-cost boundaries.
 
+* Functional metadata and enumerated requirements
+
+[[file:FunctionalReflectiveRequirements.lean][FunctionalReflectiveRequirements]] compares 576 actual checked-metadata
+preparations with an independent arithmetic/list model, including reversed
+diamond order, final-self capacity, noncommuting wrappers, repeated requirements
+and exact first missing keys. Sixty-four heterogeneous key-list preparations
+check final-self report values, duplicate declarations, default/intercepted
+exposure and every declared/undeclared consumer slot. Thirteen further controls
+cover poisoned parent caches, invalid graphs, unforced production/factory bodies,
+absent declarations and a divergent lookup suffix after a missing key.
+
+Kernel clients report metadata closure, actual source selection, complete
+preparation/stability, declaration failure and built-value provenance laws.
+The two examples additionally report declared-program closure and generated
+descriptor acceptance. Only standard Lean axioms occur. The existing 30-second,
+2-GiB and heartbeat limits apply. [[file:../docs/contracts/reflective-requirements.org][The guide]] states the explicit-self and supplied
+closure-witness boundaries.
+
 * Complete C3 cache/reference outcomes including cycles
 
 [[file:C3CacheCoherence.lean][C3CacheCoherence]] compiles generic scalar/batch/warm-cache equality clients

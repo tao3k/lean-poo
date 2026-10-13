@@ -1,0 +1,94 @@
+#+TITLE: Metadata families and enumerated requirements
+
+[[file:../reusable-contracts.org][Reusable API index]] · [[file:../audits/poof/functional.org][Source correspondence]]
+
+* Concrete source constructions
+
+The original source represents prototypes as objects with function, direct
+supers and precedence fields (1254–1307). Its alternate keyed representation
+publishes child-before-parent key lists, including duplicates, and optionally
+lets the prototype intercept that list (1009–1029). These two constructions
+combine with first-class context-indexed functions, heterogeneous requirements
+and typed field descriptors.
+
+[[file:../../LeanPoo/Functional/MetadataFamily.lean][MetadataFamily]] consumes the existing checked metadata/C3 plan.
+~constantMetadata~ composes the same three constant metadata slots and keeps an
+explicit closed record with a kernel closure equation. ~apply~ evaluates the
+captured program with caller-supplied final-self and base records;
+~prepareOpen~ selects its actual factory values. Parent caches are validated by
+the existing checked metadata API before any production application.
+
+The optional ~MetadataFamily plan base~ record requires a per-key closure
+witness for that exact program, self and base. Its preparation laws use that
+witness. It supplies no equation for an arbitrary recursive knot. Context,
+key and result carrier families remain fixed through a metadata revision.
+
+| Operation | Kernel guarantee |
+|-----------+------------------|
+| ~constantMetadata_closed~ | The explicit three-slot metadata value is produced by its own layer |
+| ~prepareOpen_selected~ | Successful preparation selects exactly the actual captured program's lookup |
+| ~production_lookup~, ~prepare_source~, ~selected_source~ | A supplied closed family has the same complete factory tuples and first missing errors as its production |
+| ~prepare_stable~ | Equal requested factories across independently checked plans preserve complete preparation |
+| ~frozen_order~ | Supplied source C3 derivations identify both admitted order and frozen precedence metadata |
+
+* Runtime heterogeneous declarations
+
+[[file:../../LeanPoo/Functional/EnumeratedRequirements.lean][EnumeratedRequirements]] reads the final keys slot, prepares in that exact
+order and stores both the declaration equality and factory selection witness.
+~missingKeys~ distinguishes an absent declaration from a successful empty
+list. ~missing key~ retains the first missing ordinary factory, without reading
+the suffix. Selection retains functions without applying their bodies.
+
+~Prepared.buildRecord context~ builds the retained heterogeneous values and
+exposes only declared keys. The source catalog can have additional slots;
+those slots are absent from this consumer record. ~producer~ identifies the
+exact source factory for every included value. ~project_ready~ reorders or
+repeats retained requirements under an explicit inclusion proof.
+
+| Operation | Kernel guarantee |
+|-----------+------------------|
+| ~prepare_source~ | Erased successful tuples and exact errors equal reading the final keys slot followed by ordinary preparation |
+| ~prepare_missingKeys_iff~, ~prepare_missing_iff~ | Precise declaration/first-missing failure characterization |
+| ~buildRecord_present~, ~buildRecord_absent~ | Included values come from retained factories; every undeclared slot is absent |
+| ~producer~ | Each included built value has actual catalog provenance |
+| ~project_ready~ | Projected factories are the same ones that a fresh source preparation selects |
+| ~withKeys_source~ | Default source exposure publishes the declared key list and preserves the actual layer's ordinary factory slots |
+
+Prepared tuples and schema arrays preserve order and duplicate declarations.
+Named record lookup returns one value per key, using the existing first-member
+access law. Generated JSON object inspection follows the existing field-name
+representation and does not preserve duplicate object fields.
+
+* Deployment and introspective export
+
+[[file:../../Examples/MetadataDeployment.lean][MetadataDeployment]] checks a shared-ancestor C3 diamond, overrides final
+capacity and wraps inherited scheduling through two noncommuting parents.
+The declared layer composition has a universal slotwise closure law. Actual
+checked-plan application uses explicit final self, then certified requirements
+prove scheduling stays within the selected capacity through the typed result
+bounds. ~ContextSlot.consumeAlong~ retains dependency values and their joint
+proof across equal budgets while using each request's current label.
+The declared-program law establishes closure for the stated layer order.
+Checked-plan controls separately confirm metadata selection and applied values.
+
+[[file:../../Examples/IntrospectiveExport.lean][IntrospectiveExport]] composes parent/child quota and endpoint factories,
+with a report factory reading final self. Default introspection retains the
+repeated quota declaration; an interceptor exposes only report and quota.
+Ordinary source factory observations are universally equal in both policies.
+The resulting narrow record satisfies its generated ~RecordDescription~ at
+every budget, and inspection uses the same runtime declarations.
+
+* Controls and evidence boundary
+
+[[file:../../Tests/FunctionalReflectiveRequirements.lean][Independent controls]] compare 576 metadata preparations with direct
+arithmetic and ordered list recursion, and 64 heterogeneous exports with domain
+formulas and declared-interface observations. Thirteen further controls cover
+poisoned parent caches, invalid root graphs, unforced production/factory bodies,
+missing declarations and a divergent suffix after the first missing key.
+Existing 30-second, 2-GiB and heartbeat limits apply. Printed theorem reports
+contain only standard Lean logical axioms.
+
+All final-self records, descriptor rules and joint bounds are explicit typed
+inputs. The compositions add no automatic property inference for arbitrary
+host functions and do not implement the proposed unrestricted meta-object
+protocol. They leave the whole-source completion flag unchanged.

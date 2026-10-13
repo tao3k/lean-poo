@@ -51,6 +51,8 @@ behavioral assertions belong in [[file:../Tests/README.org][Tests]].
 | [[file:AtomicConfiguration.lean][AtomicConfiguration]] | Stage writable-field groups, retain completed groups after refusal, or publish the whole batch atomically; resume from the returned configuration. |
 | [[file:LayeredRouting.lean][LayeredRouting]] | Combine base/regional/emergency AVL dictionaries, ordered duplicate writes, prepared factories, joint allowance proofs and exact-context dependency caching. |
 | [[file:KeyedRebalance.lean][KeyedRebalance]] | Transfer resources between runtime keys with joint debit/credit, conservation and untouched-key proofs, exact refused snapshots and resumable batches. |
+| [[file:MetadataDeployment.lean][MetadataDeployment]] | Apply checked first-class C3 metadata to final-self scheduling factories, compare noncommuting wrappers and cache a joint capacity proof across request labels. |
+| [[file:IntrospectiveExport.lean][IntrospectiveExport]] | Compose heterogeneous factories, prepare the runtime key list including repeated declarations, narrow the built record and generate validated inspection; allow a prototype to intercept its public keys. |
 | [[file:PreparedViews.lean][PreparedViews]] | Share one prepared heterogeneous family across named readers and narrow consumers; a missing unrequested label leaves monitoring available. |
 | [[file:CertifiedContextCache.lean][CertifiedContextCache]] | Prepare a joint allocation proof, share dependency data at equal base budgets, and construct fresh outputs for each request label. |
 

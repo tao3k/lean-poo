@@ -44,6 +44,8 @@ import LeanPoo.Functional.DispatchHandling
 import LeanPoo.Functional.RecursiveHandling
 import LeanPoo.Functional.RecordEvolution
 import LeanPoo.Functional.OrderedDictionary
+import LeanPoo.Functional.MetadataFamily
+import LeanPoo.Functional.EnumeratedRequirements
 import LeanPoo.Deriving.DictionaryCompiler
 import LeanPoo.Functional.CertifiedRequirements
 import LeanPoo.Functional.CachedPreparation
