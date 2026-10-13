@@ -455,6 +455,18 @@ admissions and 19 supervisor controls; all schemas remain v1.
 - [[file:CallableValidation.lean][CallableValidation]] checks actual method invocation proofs, runtime FunctionOf/catalog reuse, input refusal before forcing, output refusals on memo hits, current-registry identity changes, wire values and checked mutable snapshots.
 - [[file:DynamicValueEquality.lean][DynamicValueEquality]] instantiates the universal request comparator theorem and exercises 128 nested levels, large exact integers, Unicode, ordered duplicate entries and distinct reference identities.
 
+* Functional checked dispatch workflows
+
+[[file:FunctionalDispatchHandling.lean][FunctionalDispatchHandling]] checks 2,880 calls in two layouts against direct
+price/state/trace formulas, crossing cold/warm candidates, dynamic guards,
+shortcuts, recovery and input/shape/method/output refusal. Twenty-one batches
+and continuations retain the actual state. Eleven calls check LRU eviction and
+fresh method invocation. Bounded divergent controls check omitted inner/default
+methods, input/shape refusal before predicates and stopped batch suffixes;
+a failing recovery handler retains its own state. [[file:../docs/contracts/dispatch-workflows.org][The contract guide]] connects
+kernel admission, complete cache/reference observation, failure-state and batch
+invariant laws to the logistics and conversion examples.
+
 * Functional focused production updates
 
 [[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,

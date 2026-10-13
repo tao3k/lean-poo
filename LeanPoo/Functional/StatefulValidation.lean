@@ -103,4 +103,25 @@ theorem traverseState_map {Other : Type y}
     cases check state (adapt item) with
     | mk outcome next => cases outcome <;> simp [ih]
 
+/-- A step invariant survives the complete batch, including a refusing step's
+returned state. The invariant is independent of the output/error carrier. -/
+theorem traverseState_invariant (check : State → Input → Except Error Output × State)
+    (invariant : State → Prop)
+    (preserves : ∀ state item, invariant state → invariant (check state item).2)
+    (state : State) (valid : invariant state) (items : List Input) :
+    invariant (traverseState check state items).2 := by
+  induction items generalizing state with
+  | nil => exact valid
+  | cons item rest ih =>
+    have next := preserves state item valid
+    cases first : check state item with
+    | mk outcome retained =>
+      rw [first] at next
+      cases outcome with
+      | error error => simpa [traverseState, first] using next
+      | ok value =>
+        have final := ih retained next
+        cases remaining : traverseState check retained rest with
+        | mk output last => simpa [traverseState, first, remaining] using final
+
 end LeanPoo.Functional.Validation

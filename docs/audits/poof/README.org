@@ -44,9 +44,9 @@ to succeed. The reference checkout is not a library or CI dependency.
 | Manually reviewed units | 45: 35 translations, 7 discussions, 3 future proposals |
 | Original headings | 90, each assigned to a reviewed interval |
 | Source check map | 24 declared value adaptations |
-| Bound local evidence files | 228 |
-| Lean source inventory | 434 |
-| Canonical Lean check atoms | 215; diagnostics and native admissions are separate |
+| Bound local evidence files | 232 |
+| Lean source inventory | 438 |
+| Canonical Lean check atoms | 218; diagnostics and native admissions are separate |
 
 Counts bind review coverage and identities. Execution receipts, kernel
 proofs and a CI result at a particular head are distinct evidence.

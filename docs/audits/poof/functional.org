@@ -6,7 +6,7 @@
 
 This map uses the same pinned ~poof.scrbl~ and source intervals as the
 [[file:requirements-v1.json][requirements receipt]]. The paper presents prose questions and design
-problems; F01–F08 are local audit identifiers. Each row distinguishes the
+problems; F01–F09 are local audit identifiers. Each row distinguishes the
 implemented typed contract from the broader question it addresses.
 
 The ~LeanPoo.Functional~ namespace supplies reusable context-indexed capability
@@ -27,6 +27,7 @@ those semantics for arbitrary host callbacks.
 | F06, 2009–2047 | How should extensions interact with previously assumed method absence? | [[file:../../../LeanPoo/Functional/Absence.lean][Absence]] admits all watched absences or returns the first present factory with proof. [[file:../../../LeanPoo/Functional/GuardedExtension.lean][GuardedExtension]] accepts exactly successful final transactions preserving those absences. [[file:../../../Tests/FunctionalAbsence.lean][570 extension controls]] include later conflicts hidden by a first missing key. | [[file:../../contracts/graph-migrations.org][Graph migration]] joins all watched positive and negative contracts on the compiled/patched target, with 660 migration and 6300 constraint/cache controls. [[file:../../contracts/dependency-analysis.org][Finite pure analysis]] infers negative guards and joins them with actual target admission. Arbitrary closure assumptions and a universal cross-library conflict policy remain open. |
 | F07, 2084–2154 | How can generalized getters/setters and wrappers compose different representations? | [[file:../../../LeanPoo/Functional/ViewComposition.lean][ViewComposition]], [[file:../../../LeanPoo/Functional/BorrowedView.lean][BorrowedView]] and [[file:../../../LeanPoo/Functional/ObservedView.lean][ObservedView]] compose/narrow named consumer interfaces while retaining public proofs; [[file:../../../Tests/FunctionalViewComposition.lean][view controls]] check flattened composition. [[file:../../../LeanPoo/Functional/FocusedUpdate.lean][FocusedUpdate]] composes lawful production focuses and actual delayed method fragments; [[file:../../../Tests/FunctionalFocusedUpdate.lean][focused controls]] check ordered admission and continuation. | Consumer projections and concrete production lenses retain separate laws. FocusedUpdate uses Prototype.lensGen with explicit self and supplied lens/admission rules; a complete dynamic meta-object protocol remains a research proposal. |
 | F08, 1434–1448 | Can descriptor objects and typeclass dictionaries be transformed automatically? | [[file:../../../LeanPoo/Deriving/DictionaryCompiler.lean][derive_dictionary]] reads actual Lean structure/class constructors and generates dependent fields, both conversions and kernel inverse proofs. [[file:../../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] transports actual self/super prototypes, delayed composition, finite unfoldings and typed descriptors; [[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport]] preserves C4 provider selection, first errors, joint proofs and exact context-cache hits. [[file:../../contracts/dictionary-classes.org][Compiled clients and API guide]] cover dependent data/proofs, inherited dictionaries and actual migrations. | Typed Lean constructor compilation is implemented for Type-valued structures/classes, including Sort-valued fields and parameters. Prop-valued classes and unsupported indexed constructors are refused. General Scheme source compilation, closure serialization and unrestricted IO/cost equivalence remain open. |
+| F09, 1980–2083 | How do multiple dispatch and ordered method fragments compose with admission and partial state? | [[file:../../../LeanPoo/Functional/DispatchHandling.lean][DispatchHandling]] joins the existing selector/combiner with input/output codecs, explicit method state and retained-state recovery. [[file:../../../Tests/FunctionalDispatchHandling.lean][Dispatch controls]] check warm guards, exact traces and all refusal phases; kernel laws preserve complete cache/reference observations, actual admission and batch cache invariants. | Explicit typed callbacks define method and validation rules. Candidate hits rerun current predicates/methods; failed calls retain actual state. General cross-library conflict policy and arbitrary effect inference remain separate. |
 
 * Small composition APIs
 
@@ -161,6 +162,31 @@ exact budget index and ledger metadata. Conservation and feasibility are kernel
 laws; 960 movement cases use an independent target-share control.
 [[file:../../contracts/focused-updates.org][The contract guide]] states the full API and evidence boundary. These explicit
 typed applications do not close the proposed complete generalized protocol.
+
+* Multiple dispatch, method fragments and checked continuation
+
+F09 joins concrete selection/combination with F03 admission and explicit method
+state. [[file:../../../LeanPoo/Functional/DispatchHandling.lean][DispatchHandling]] pairs the existing generic with an ~EStateM~ state,
+checks input before selection and checks output after the whole effective
+method, including terminal around shortcuts. Its four failure constructors
+retain exact errors. Dispatched method/output refusal retains actual state and
+updated candidates; input/shape refusal preserves the original session.
+
+Universal kernel laws equate complete outcome/state observations with the
+uncached ordered-tuple/current-argument specification under ~CacheSound~;
+successful calls retain explicit admission witnesses. Batch first-error and
+invariant laws keep the failed step's exact session and skip the suffix.
+Retained-state recovery starts its handler on actual failed progress, and input
+representation changes preserve both returned states and hit markers.
+
+[[file:../../../Examples/DispatchWorkflow.lean][DispatchWorkflow]] compiles actual carrier/region C4 lineages, combines
+standard phases, guarded prices and joint output bounds, continues after method
+or output refusal, and uses independent immutable plugin versions.
+[[file:../../../Examples/RecoverableDispatch.lean][RecoverableDispatch]] retains preferred-conversion attempts through fallback
+and later output refusal. [[file:../../../Tests/FunctionalDispatchHandling.lean][Controls]] compare 2,880 calls in two layouts,
+21 batches/continuations and existing LRU eviction with independent price/state/
+trace formulas and bounded divergent guards. [[file:../../contracts/dispatch-workflows.org][The contract guide]] states exact
+scope. No selector, method evaluator or general conflict protocol is added.
 
 * The local Problem API
 

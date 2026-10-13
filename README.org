@@ -78,6 +78,8 @@ shapes.
 [[file:Examples/ResumableRequests.lean][ResumableRequests.lean]] resumes failed workload batches with matching pure, mutable and linear cache states.
 [[file:Examples/FocusedPricing.lean][FocusedPricing.lean]] composes nested pricing fragments and resumes admitted updates with complete supported-quantity bounds.
 [[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
+[[file:Examples/DispatchWorkflow.lean][DispatchWorkflow.lean]] combines checked logistics dispatch, method phases, warm guarded candidates and retained ledger state.
+[[file:Examples/RecoverableDispatch.lean][RecoverableDispatch.lean]] runs fallback methods on actual failed progress and continues after checked refusal.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in

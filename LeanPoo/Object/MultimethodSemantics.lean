@@ -213,6 +213,26 @@ theorem Multimethod.resolve_preserves (generic : Multimethod Args Method Result)
       exact ShapeCache.sound_touch _ _ sound _
   · simp [resolve, arity, bind, Except.bind, throw, Except.error] at success
 
+/-- Successful dispatch retains the candidate-cache invariant. -/
+theorem Multimethod.call_preserves (generic : Multimethod Args Method Result)
+    (sound : generic.CacheSound) (args : Args) (result : Result)
+    (updated : Multimethod Args Method Result) (success : generic.call args = .ok (result, updated)) :
+    updated.CacheSound := by
+  cases resolved : generic.resolve args with
+  | error error =>
+    unfold call at success
+    rw [resolved] at success
+    change Except.error error = Except.ok (result, updated) at success
+    cases success
+  | ok pair =>
+    unfold call at success
+    rw [resolved] at success
+    change Except.ok (generic.combine (MethodCandidate.select pair.1 args) args, pair.2) =
+      Except.ok (result, updated) at success
+    have same : pair.2 = updated := congrArg Prod.snd (Except.ok.inj success)
+    rw [← same]
+    exact generic.resolve_preserves sound args pair.1 pair.2 resolved
+
 /-- The semantic call uses ordered tuple enumeration without a cache. -/
 def Multimethod.referenceCall (generic : Multimethod Args Method Result) (args : Args) :
     Except MultimethodError Result :=
