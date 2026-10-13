@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "27055022a345d8fba9ff73d7f0955ed266a19ca3538929fa6f12c2c81c35e0d2",
+  "requirements_sha256": "a3b9dfec97ba68f2ac0cf3fd52459867a2d5116a020996f05fb924ce674817c1",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -293,7 +293,8 @@
           "LeanPoo/Prototype/RecursiveReindex.lean",
           "LeanPoo/Prototype/DynamicValueEquality.lean",
           "LeanPoo/Object/Callable.lean",
-          "LeanPoo/Object/CallableValidation.lean"
+          "LeanPoo/Object/CallableValidation.lean",
+          "LeanPoo/Functional/FocusedUpdate.lean"
         ],
         "checks": [
           "Tests/DescriptorReflection.lean",
@@ -307,9 +308,12 @@
           "Tests/DynamicCodecSemantics.lean",
           "Tests/CallableObjects.lean",
           "Tests/DynamicValueEquality.lean",
-          "Tests/CallableValidation.lean"
+          "Tests/CallableValidation.lean",
+          "Tests/FunctionalFocusedUpdate.lean",
+          "Examples/FocusedPricing.lean",
+          "Examples/FocusedAllocation.lean"
         ],
-        "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+        "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures."
       },
       {
         "id": "typeclass-correspondence",
@@ -531,7 +535,7 @@
       }
     ]
   },
-  "closure_sha256": "d4adf7a140f2c52ffd128cc147aaf0e774d4700dacdcce12e52aeb9a810e6847",
+  "closure_sha256": "a96c0d2e32b30ded51425975bd7d6689fe10b7dabbb8e910c2b9b6e082251785",
   "source_checks": {
     "schema": "lean-poo.poof-checks.v1",
     "paper_checks": [
@@ -1291,7 +1295,8 @@
         "LeanPoo/Functional/Validation.lean",
         "LeanPoo/Functional/Codec.lean",
         "LeanPoo/Functional/RequestHandling.lean",
-        "LeanPoo/Functional/StatefulValidation.lean"
+        "LeanPoo/Functional/StatefulValidation.lean",
+        "LeanPoo/Functional/FocusedUpdate.lean"
       ],
       "checks": [
         "Tests/IntegratedPrototype.lean",
@@ -1312,9 +1317,12 @@
         "Examples/ValidatedOrders.lean",
         "Examples/ResumableRequests.lean",
         "Tests/FunctionalRequestHandling.lean",
-        "Tests/FunctionalStatefulValidation.lean"
+        "Tests/FunctionalStatefulValidation.lean",
+        "Tests/FunctionalFocusedUpdate.lean",
+        "Examples/FocusedPricing.lean",
+        "Examples/FocusedAllocation.lean"
       ],
-      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories. Typed Functional requests compose existing Codec input/output admission and explicit cache reads: input refusal preserves the old cache before callback invocation; admitted-input execution/output refusals retain exactly the dependency read state. Universal outcome and complete input-representation laws are kernel checked. The callback supplies its output admission; arbitrary host effects are not inferred."
+      "boundary": "JSON/text/byte and slot refinement controls; Lean wire format, not Scheme binary compatibility. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Functional certified consumers and observations retain static dependent joint/public claims. They do not infer dynamic admission for arbitrary host factories. Typed Functional requests compose existing Codec input/output admission and explicit cache reads: input refusal preserves the old cache before callback invocation; admitted-input execution/output refusals retain exactly the dependency read state. Universal outcome and complete input-representation laws are kernel checked. The callback supplies its output admission; arbitrary host effects are not inferred. Focused checkedWith retains explicit admission witnesses and installs only their exposed parts. Input/local-output refusal preserves the refusing step source; stateful batches retain earlier accepted updates and skip the suffix. The pricing descriptor certifies every quantity in a finite stock range and its bound transfers to the installed method."
     },
     {
       "id": "simple-types",
@@ -1404,7 +1412,8 @@
         "LeanPoo/Prototype/RecursiveReindex.lean",
         "LeanPoo/Prototype/DynamicValueEquality.lean",
         "LeanPoo/Object/Callable.lean",
-        "LeanPoo/Object/CallableValidation.lean"
+        "LeanPoo/Object/CallableValidation.lean",
+        "LeanPoo/Functional/FocusedUpdate.lean"
       ],
       "checks": [
         "Tests/DescriptorReflection.lean",
@@ -1418,9 +1427,12 @@
         "Tests/DynamicCodecSemantics.lean",
         "Tests/CallableObjects.lean",
         "Tests/DynamicValueEquality.lean",
-        "Tests/CallableValidation.lean"
+        "Tests/CallableValidation.lean",
+        "Tests/FunctionalFocusedUpdate.lean",
+        "Examples/FocusedPricing.lean",
+        "Examples/FocusedAllocation.lean"
       ],
-      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate."
+      "boundary": "Runtime descriptors expose contract constructors/arguments and open metadata in the same dynamic value universe. Functions/descriptors use explicit registry identities. Function calls check input and output refinements, with kernel admission soundness; function membership checks callability, not universal behavioral properties. Existing finite catalogs/codecs/generated updates retain their stated scope; closure serialization and unspecified universal automation are not claimed. Dynamic slot/schema catalogs now generate defaults, inspection, ordered updates and structural text/byte codecs. Catalogs describe and reconstruct themselves. Wire admission checks every nested function/descriptor identity in the current registry and returns a kernel Accepted proof. Actual lazy C3 object fields retain evaluation receipts and enter the same descriptor/wire gate. Text/byte round trips are execution controls; structural JSON inversion is now kernel proved. Every finite Accepted derivation is recognized at every sufficiently large depth. A union succeeds if either branch succeeds, including an unresolved alternative; diagnostics persist if neither succeeds. Structural JSON has a universal kernel inverse at the computable Value.wireDepth, preserving the same descriptor admission proof and fixed registry. General text-parser/UTF-8 inversion and cost bounds remain separate. Actual safe C3 methods now accept parameters and preserve final-self and delayed inherited calls, including argument forwarding. The existing recursive machine shares the complete method name/argument request, reports parameterized cycles with divergence proofs, and distinguishes changing-argument recursion from a repeated request. Dynamic argument equality is computable and kernel justified. Existing value-only object observations are preserved at every depth by the request reindexing theorem. Runtime FunctionOf descriptors and reflective slot catalogs now govern actual safe object methods. Input validation precedes forcing; output and nested-reference validation run on every invocation, including memo hits in a changed registry. Successful calls retain the actual program evaluation and input/output Accepted proofs. Checked mutable calls expose their exact retained snapshot; method replacement invalidates every argument result and advances its generation. General Scheme closures and unrestricted IO refinement remain separate. Explicit budget-indexed allocation carriers retain their proof through lawful focused factory updates and concrete delayed lens construction. Runtime joint admission supplies that dependent value; conservative CPU/IO transfer has kernel total-preservation laws. These typed functions supply their own rules and do not infer constraints from host closures."
     },
     {
       "id": "typeclass-correspondence",
@@ -1745,7 +1757,8 @@
         "LeanPoo/Functional/BorrowedView.lean",
         "LeanPoo/Functional/ObservedView.lean",
         "LeanPoo/Functional/SharedViews.lean",
-        "LeanPoo/Functional/ViewRetarget.lean"
+        "LeanPoo/Functional/ViewRetarget.lean",
+        "LeanPoo/Functional/FocusedUpdate.lean"
       ],
       "checks": [
         "Examples/LensPrototype.lean",
@@ -1755,9 +1768,12 @@
         "Tests/FunctionalObservedView.lean",
         "Tests/FunctionalSharedViews.lean",
         "Tests/FunctionalViewRetarget.lean",
-        "Examples/SharedReporting.lean"
+        "Examples/SharedReporting.lean",
+        "Tests/FunctionalFocusedUpdate.lean",
+        "Examples/FocusedPricing.lean",
+        "Examples/FocusedAllocation.lean"
       ],
-      "boundary": "lensGen implements getter/setter/wrapper and skew-focus laws exist. The paper itself calls full generalized prototypes future work; no claim that all such semantics are closed. Functional view composition and narrowing preserve consumer observations and proofs; these projections complement the prototype lens construction and do not implement a universal dynamic MOP. Shared snapshot consumers return exactly one broad cache transition. Narrow representation replacement retains arbitrary public joint proofs, every dependent consumer output and exact context-hit decisions under supplied pointwise public observation equality. Hidden candidate data is not reconstructed from public cached values; the context/key family stays fixed."
+      "boundary": "lensGen implements getter/setter/wrapper and skew-focus laws exist. The paper itself calls full generalized prototypes future work; no claim that all such semantics are closed. Functional view composition and narrowing preserve consumer observations and proofs; these projections complement the prototype lens construction and do not implement a universal dynamic MOP. Shared snapshot consumers return exactly one broad cache transition. Narrow representation replacement retains arbitrary public joint proofs, every dependent consumer output and exact context-hit decisions under supplied pointwise public observation equality. Hidden candidate data is not reconstructed from public cached values; the context/key family stays fixed. Lawful nested Functional focuses now use the actual lensGen constructor for open self/super fragments. Kernel laws preserve nested updates, parent-then-child delayed wrapping, exact admitted installation and declared frame observations; different focused changes commute only under explicit read/set independence. Pricing and budget-indexed allocation examples compose those concrete operations with descriptor admission and dependent proofs. No unrestricted recursive fixed-point equation is assumed."
     },
     {
       "id": "type-notation",
@@ -2430,6 +2446,24 @@
         33
       ]
     },
+    "Examples/FocusedAllocation.lean": {
+      "sha256": "4df7eadecdfdabf0e112af05cca06a18ff0bfd46de636f9a11ca96bd3800cf65",
+      "physical_lines": 118,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        112
+      ]
+    },
+    "Examples/FocusedPricing.lean": {
+      "sha256": "e7f3df227404664068fdfa81160f97e5cd7fd6cd8de37b84698bcdc9f8f357ec",
+      "physical_lines": 198,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        175
+      ]
+    },
     "Examples/FunctionalPipeline.lean": {
       "sha256": "0a8944c9935428bd1d49350610643a7afa6c7966c38c9d29c220dc2d1f1e23b7",
       "physical_lines": 60,
@@ -2714,6 +2748,13 @@
     "LeanPoo/Functional/DictionaryTransport.lean": {
       "sha256": "9984dfa5508b17470b027503e7aca1918a1988aa7c132ebca34f4ae468ae67f8",
       "physical_lines": 153,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/FocusedUpdate.lean": {
+      "sha256": "bb9f651547307c7d10486ce80a04554f6265e5e4e59bf1cbf3d5100c122481ff",
+      "physical_lines": 175,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3973,6 +4014,17 @@
         80
       ]
     },
+    "Tests/FunctionalFocusedUpdate.lean": {
+      "sha256": "ceeadb07a86699eeef575e9c5981e40b01a36eb7696d3579f7f2667f16996c34",
+      "physical_lines": 124,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        20,
+        76,
+        106
+      ]
+    },
     "Tests/FunctionalGraphConstraints.lean": {
       "sha256": "c499ed52c885197291a9e62a7440cdfc3de900d082fcd73a15929104e570d5c5",
       "physical_lines": 217,
@@ -4444,8 +4496,8 @@
       "eval_lines": []
     },
     "docs/audits/poof/closure-v1.json": {
-      "sha256": "d4adf7a140f2c52ffd128cc147aaf0e774d4700dacdcce12e52aeb9a810e6847",
-      "physical_lines": 521,
+      "sha256": "a96c0d2e32b30ded51425975bd7d6689fe10b7dabbb8e910c2b9b6e082251785",
+      "physical_lines": 525,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4479,6 +4531,8 @@
     "Examples/ExtensibleDispatch.lean",
     "Examples/FirstClassObject.lean",
     "Examples/FirstClassRecord.lean",
+    "Examples/FocusedAllocation.lean",
+    "Examples/FocusedPricing.lean",
     "Examples/FunctionalPipeline.lean",
     "Examples/IncrementalWorkflow.lean",
     "Examples/LayeredObject.lean",
@@ -4565,6 +4619,7 @@
     "LeanPoo/Functional/DictionaryTransport.lean",
     "LeanPoo/Functional/FiniteDiagnostics.lean",
     "LeanPoo/Functional/FiniteTransformation.lean",
+    "LeanPoo/Functional/FocusedUpdate.lean",
     "LeanPoo/Functional/GraphConstraints.lean",
     "LeanPoo/Functional/GraphMigration.lean",
     "LeanPoo/Functional/GuardedExtension.lean",
@@ -4794,6 +4849,7 @@
     "Tests/FunctionalContractJoin.lean",
     "Tests/FunctionalDependencyAnalysis.lean",
     "Tests/FunctionalFiniteDiagnostics.lean",
+    "Tests/FunctionalFocusedUpdate.lean",
     "Tests/FunctionalGraphConstraints.lean",
     "Tests/FunctionalGraphMigration.lean",
     "Tests/FunctionalIndexedOverlay.lean",

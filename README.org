@@ -76,6 +76,8 @@ shapes.
 [[file:Examples/DictionaryConsumers.lean][DictionaryConsumers.lean]] composes inherited price dictionaries and calls their methods from a converted cache with quota proofs.
 [[file:Examples/ValidatedOrders.lean][ValidatedOrders.lean]] joins price/stock certificates and checks request inputs and producer outputs around one dependency read.
 [[file:Examples/ResumableRequests.lean][ResumableRequests.lean]] resumes failed workload batches with matching pure, mutable and linear cache states.
+[[file:Examples/FocusedPricing.lean][FocusedPricing.lean]] composes nested pricing fragments and resumes admitted updates with complete supported-quantity bounds.
+[[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
 [[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
 [[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in

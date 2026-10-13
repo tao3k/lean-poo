@@ -25,7 +25,7 @@ those semantics for arbitrary host callbacks.
 | F04, 1451–1524 | What does pure functional structure offer mutable/linear computation and initialization? | Functional registries, overlays and transactions produce immutable snapshots; [[file:../../../LeanPoo/Functional/RegistryTransaction.lean][RegistryTransaction]] preserves the original snapshot on refusal; [[file:../../../LeanPoo/Functional/ConsumerRevision.lean][ConsumerRevision]] binds new caches to the actual revision; [[file:../../../LeanPoo/Functional/GraphMigration.lean][GraphMigration]] compiles and retains the actual next topology/root. [[file:../../../Tests/FunctionalRegistryTransaction.lean][Transaction controls]] exercise first errors. | Actual shared identity, linear consumption and lazy self initialization are separate Object/Prototype implementations. No unrestricted IO refinement or machine-level in-place bound is derived by Functional. |
 | F05, 1525–1559, 1824–1828 | What can be safely retained after mutation or staged preparation? | [[file:../../../LeanPoo/Functional/KeyIndex.lean][KeyIndex]], CachedPreparation and ConsumerRevision prove scope-based reuse; ContextSlot proves exact built-data alignment. [[file:../../../LeanPoo/Functional/GraphConstraints.lean][GraphConstraints]] retains hot data only when the new order selects the same exact factories and target edit scopes are disjoint. [[file:../../../Tests/FunctionalCachedPreparation.lean][Cache controls]] and [[file:../../../Tests/FunctionalConsumerRevision.lean][revision controls]] preserve data/errors and require fresh admission on affected contracts. | [[file:../../../LeanPoo/Functional/AnalyzedMigration.lean][AnalyzedMigration]] derives nested/conditional pure dependencies, preserves computed values/errors and hit decisions under a proved reuse test, and requires fresh admission for unknown callbacks. [[file:../../../Tests/FunctionalAnalyzedMigration.lean][1792 migration controls]] compare actual results and reuse to an independent model. Arbitrary-language effect tracking and CPU/allocation bounds remain open. |
 | F06, 2009–2047 | How should extensions interact with previously assumed method absence? | [[file:../../../LeanPoo/Functional/Absence.lean][Absence]] admits all watched absences or returns the first present factory with proof. [[file:../../../LeanPoo/Functional/GuardedExtension.lean][GuardedExtension]] accepts exactly successful final transactions preserving those absences. [[file:../../../Tests/FunctionalAbsence.lean][570 extension controls]] include later conflicts hidden by a first missing key. | [[file:../../contracts/graph-migrations.org][Graph migration]] joins all watched positive and negative contracts on the compiled/patched target, with 660 migration and 6300 constraint/cache controls. [[file:../../contracts/dependency-analysis.org][Finite pure analysis]] infers negative guards and joins them with actual target admission. Arbitrary closure assumptions and a universal cross-library conflict policy remain open. |
-| F07, 2084–2154 | How can generalized getters/setters and wrappers compose different representations? | [[file:../../../LeanPoo/Functional/ViewComposition.lean][ViewComposition]], [[file:../../../LeanPoo/Functional/BorrowedView.lean][BorrowedView]] and [[file:../../../LeanPoo/Functional/ObservedView.lean][ObservedView]] compose/narrow named consumer interfaces while retaining public proofs; [[file:../../../Tests/FunctionalViewComposition.lean][view controls]] check flattened composition. | These are consumer projections. The paper's prototype lens constructor is Prototype.lensGen; a complete dynamic meta-object protocol remains a research proposal. |
+| F07, 2084–2154 | How can generalized getters/setters and wrappers compose different representations? | [[file:../../../LeanPoo/Functional/ViewComposition.lean][ViewComposition]], [[file:../../../LeanPoo/Functional/BorrowedView.lean][BorrowedView]] and [[file:../../../LeanPoo/Functional/ObservedView.lean][ObservedView]] compose/narrow named consumer interfaces while retaining public proofs; [[file:../../../Tests/FunctionalViewComposition.lean][view controls]] check flattened composition. [[file:../../../LeanPoo/Functional/FocusedUpdate.lean][FocusedUpdate]] composes lawful production focuses and actual delayed method fragments; [[file:../../../Tests/FunctionalFocusedUpdate.lean][focused controls]] check ordered admission and continuation. | Consumer projections and concrete production lenses retain separate laws. FocusedUpdate uses Prototype.lensGen with explicit self and supplied lens/admission rules; a complete dynamic meta-object protocol remains a research proposal. |
 | F08, 1434–1448 | Can descriptor objects and typeclass dictionaries be transformed automatically? | [[file:../../../LeanPoo/Deriving/DictionaryCompiler.lean][derive_dictionary]] reads actual Lean structure/class constructors and generates dependent fields, both conversions and kernel inverse proofs. [[file:../../../LeanPoo/Prototype/DictionaryBridge.lean][DictionaryBridge]] transports actual self/super prototypes, delayed composition, finite unfoldings and typed descriptors; [[file:../../../LeanPoo/Functional/DictionaryTransport.lean][DictionaryTransport]] preserves C4 provider selection, first errors, joint proofs and exact context-cache hits. [[file:../../contracts/dictionary-classes.org][Compiled clients and API guide]] cover dependent data/proofs, inherited dictionaries and actual migrations. | Typed Lean constructor compilation is implemented for Type-valued structures/classes, including Sort-valued fields and parameters. Prop-valued classes and unsupported indexed constructors are refused. General Scheme source compilation, closure serialization and unrestricted IO/cost equivalence remain open. |
 
 * Small composition APIs
@@ -136,6 +136,31 @@ controls]] cover hot and cold contexts alongside actual graph migrations.
 These are typed applications of the concrete representation and dictionary
 constructions. They do not close the source's proposed complete generalized
 prototype protocol or infer equivalence of arbitrary host callbacks.
+
+* Nested production updates and admitted dependent parts
+
+F07 also has a concrete production constructor, ~$lens-gen~, separate from the
+consumer projections above. [[file:../../../LeanPoo/Functional/FocusedUpdate.lean][FocusedUpdate]] adds total getter/setter laws,
+nested composition and context-indexed factory lifting. Its ~prototype~ uses
+the existing constructor; universal kernel laws preserve actual delayed
+parent/child wrapping, same-part order and declared outside observations.
+Independent updates commute only with explicit getter/setter independence.
+
+[[file:../../../Examples/FocusedPricing.lean][FocusedPricing]] combines that construction with F03 input/output descriptors
+and ordered stateful validation. A nested function-valued method uses cooked
+self and inherited prices; its output certificate checks every supported
+quantity. Exact installation transfers the certificate's bound to the actual
+method. Refused updates retain the successful prefix, preserve stock/owner and
+permit continuation. [[file:../../../Tests/FunctionalFocusedUpdate.lean][Controls]] compare 540 compositions and 756 batches/756
+continuations against separate affine models, including unforced suffixes.
+
+[[file:../../../Examples/FocusedAllocation.lean][FocusedAllocation]] focuses a budget-indexed allocation together with its
+dependent proof. A joint descriptor admits CPU/IO values, actual delayed
+construction installs a conservative transfer, and ~Factory.focus~ retains the
+exact budget index and ledger metadata. Conservation and feasibility are kernel
+laws; 960 movement cases use an independent target-share control.
+[[file:../../contracts/focused-updates.org][The contract guide]] states the full API and evidence boundary. These explicit
+typed applications do not close the proposed complete generalized protocol.
 
 * The local Problem API
 

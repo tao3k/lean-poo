@@ -455,6 +455,16 @@ admissions and 19 supervisor controls; all schemas remain v1.
 - [[file:CallableValidation.lean][CallableValidation]] checks actual method invocation proofs, runtime FunctionOf/catalog reuse, input refusal before forcing, output refusals on memo hits, current-registry identity changes, wire values and checked mutable snapshots.
 - [[file:DynamicValueEquality.lean][DynamicValueEquality]] instantiates the universal request comparator theorem and exercises 128 nested levels, large exact integers, Unicode, ordered duplicate entries and distinct reference identities.
 
+* Functional focused production updates
+
+[[file:FunctionalFocusedUpdate.lean][FunctionalFocusedUpdate]] compares 540 nested delayed method compositions,
+reversed wrappers and independent inventory updates to affine controls. It
+checks 756 admitted batches and 756 continuations against a separate coefficient
+model, including exact refusal state, outside metadata and two divergent
+suffixes under bounded supervision. [[file:../docs/contracts/focused-updates.org][The contract guide]] links the generic
+composition, frame, installed-witness and dependent factory laws to the pricing
+and budget-allocation examples.
+
 * Functional negative assumptions
 
 [[file:FunctionalAbsence.lean][FunctionalAbsence]] checks complete negative admission, exact first-present

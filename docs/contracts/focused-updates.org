@@ -1,0 +1,91 @@
+#+TITLE: Nested focused updates and admitted method fragments
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../../Examples/README.org][Examples]] · [[file:../audits/poof/functional.org][Source correspondence]]
+
+* Focus a concrete part of a production value
+
+[[file:../../LeanPoo/Functional/FocusedUpdate.lean][FocusedUpdate]] supplies ~Focus~: an ordinary getter and setter with explicit
+get-after-set, set-current and last-set laws. ~compose~ retains those laws for
+nested parts. ~modify~ accumulates changes on the current value;
+~compose_modify~ identifies a nested update with successive focusing and
+~modify_modify~ preserves the exact order of updates on one part.
+~toMonoLens~ connects to the existing skew/monomorphic lens implementation.
+~Factory.focus~ lifts the update through a context-indexed factory, including
+dependent part/whole families; ~focus_get~ identifies the installed local value.
+Its identity and composition laws retain the complete dependent factory.
+
+~Focus.prototype~ uses the existing ~Prototype.lensGen~ getter/setter/wrapper
+constructor with explicit cooked self and inherited method. ~prototype_apply~
+agrees with the pure focused update on supplied values. ~prototype_compose~
+proves that actual ~DelayedProto.compose~ matches parent-then-child local
+wrapping for every supplied self/inherited thunk. These are open construction
+laws; they do not assume an equation for unrestricted recursive fixed points.
+
+~modify_frame~ preserves any observation proved insensitive to the setter.
+~Independent~ requires both getters to ignore the other setter and requires
+the setters to commute. Only with those explicit obligations does
+~modify_commute~ commute different focused changes. Changes using a fixed self
+fit this law; callbacks that read a changing whole need additional reasoning.
+
+* Keep the admission witness and exact refusal state
+
+~checkedWith~ runs local admission before installing an exposed part, retaining
+the proof-bearing admission result as its output. ~checkedWith_ok~ and
+~checkedWith_installed~ identify the exact installed value; ~checkedWith_frame~
+preserves declared outside observations on success and failure.
+~checkedWith_outcome~ retains the admission callback's complete outcome.
+~checkedWith_error~ returns the original whole unchanged. ~checked~ is the
+same-part specialization.
+
+Composing this step with ~Validation.traverseState~ retains earlier successful
+updates, leaves the refusing step's source intact, and skips the suffix. This
+is the existing explicit returned-state convention: no successful prefix is
+undone. The library does not infer an admission predicate for arbitrary methods.
+
+* Nested pricing methods and continuation
+
+[[file:../../Examples/FocusedPricing.lean][FocusedPricing]] focuses a function-valued pricing method inside a shop's
+policy. Context-dependent handling and scaling fragments use cooked self and
+inherited prices. The actual delayed chain equals the factory construction for
+every context, and the stock and owner remain unchanged. Reversing the two
+wrappers changes the endpoint quote from 22 to 19.
+
+Input descriptors admit positive bounded fragment parameters. The output
+descriptor checks every quantity from zero through the current stock, returning
+a ~Certificate~. ~Certificate.bound~ proves the ceiling for every supported
+quantity; ~step_installed~ and ~step_bound~ transfer that proof to the actual
+installed pricing method at its returned stock and current context ceiling.
+~admit_contract~ binds certificate metadata to the admission context.
+The example retains quote 22 after refusing a new
+strategy, resumes to 25, and keeps the original quote 8 readable. Frame and
+complete batch first-error/final-state laws are kernel checked.
+
+[[file:../../Tests/FunctionalFocusedUpdate.lean][Focused-update controls]] compare 540 actual nested/reversed method compositions
+with independent affine coefficients, including outside fields and separate
+inventory updates. Another 756 checked batches and 756 continuations compare
+outputs and all sampled returned methods with a separate coefficient/intercept
+model. Input/output refusals retain the last successful function; two divergent
+suffix controls run under the existing bounded supervision contract.
+
+* Budget-indexed allocation with proofs inside the focused part
+
+[[file:../../Examples/FocusedAllocation.lean][FocusedAllocation]] uses ~Allocation budget~ as the focused part of
+~Ledger budget~. Moving CPU/IO units conserves the total and carries the budget
+proof through the update. ~Factory.focus~ selects a move at the exact budget
+index while preserving tenant and revision metadata. A joint pair descriptor
+admits runtime allocations; the actual delayed lens installs the proof-bearing
+move result. Kernel laws prove conservation, factory feasibility and exact
+admitted installation.
+
+960 movement controls use an independent target-share model, with eight
+over-budget refusals and eight dependent factory applications. This scenario
+demonstrates explicit dependent proofs rather than discovering resource rules
+from arbitrary callbacks.
+
+* Source scope
+
+These convenience APIs combine the concrete ~$lens-gen~ formula at source
+2084–2154 with the descriptor and parameterized-type constructions at
+1359–1433. Failure continuation uses the existing pure returned-state API.
+The complete generalized prototype protocol remains the source's stated future
+work. No additional evaluator or underlying runtime/compiler proof is involved.
