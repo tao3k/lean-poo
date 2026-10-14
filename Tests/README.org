@@ -658,3 +658,5 @@ publication. The corresponding guides describe universal proof boundaries.
 * Generalized protocol research controls
 
 [[file:GeneralizedPrototype.lean][GeneralizedPrototype]] compares 360 parameter combinations / 1080 executions with independent complete value/error/trace controls across original, raw-converted and raw/public-converted representations. It checks C3 refusal forwarding and an inherited method body left uncalled; universal assembly, view, frame, representation and witnessed-closure laws are kernel checked. This is research extension evidence, not a new original-source closure claim.
+
+[[file:GeneralizedComponents.lean][GeneralizedComponents]] checks 120 parameter combinations / 480 complete checkout observations across original/grouped/raw/public representations, 120 right revisions and retained billing traces. It discriminates changed local primary order and proves that an overlapping focus cannot satisfy independence. Universal mounting, partition, component closure/projection, frame and retained-interface laws are kernel checked.

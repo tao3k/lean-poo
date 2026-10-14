@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "496d9de704c214a40960053059516001e03c9db1af94949c648d0d4afeb796d9",
+  "requirements_sha256": "f03ad9e103327d540e1b3c2ea5923f0c9cfcae4e3caa570063a4a5b7340918c8",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1794,14 +1794,17 @@
       "title": "Future research",
       "implementation": [
         "LeanPoo/Prototype/GeneralizedPrototype.lean",
-        "LeanPoo/Prototype/GeneralizedInheritance.lean"
+        "LeanPoo/Prototype/GeneralizedInheritance.lean",
+        "LeanPoo/Prototype/GeneralizedComponents.lean"
       ],
       "checks": [
         "Examples/GeneralizedService.lean",
         "Examples/GeneralizedCheckout.lean",
-        "Tests/GeneralizedPrototype.lean"
+        "Tests/GeneralizedPrototype.lean",
+        "Examples/ComponentCheckout.lean",
+        "Tests/GeneralizedComponents.lean"
       ],
-      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged."
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises."
     },
     {
       "id": "code-library",
@@ -2651,6 +2654,15 @@
       ],
       "eval_lines": [
         167
+      ]
+    },
+    "Examples/ComponentCheckout.lean": {
+      "sha256": "062045d0dcae8e3c706ebc91d28f59c74b38398bb719c5ced0621a58a2f266b3",
+      "physical_lines": 154,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        148
       ]
     },
     "Examples/ConfigurationUpgrade.lean": {
@@ -3791,6 +3803,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/GeneralizedComponents.lean": {
+      "sha256": "1edb575fd00ccb6250af2758f2e1e34c8e44af9a42864f4b36a5678e21ee250f",
+      "physical_lines": 286,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/GeneralizedInheritance.lean": {
       "sha256": "9eb2f8fb132df45238c906857475cf757f916c85486ca15c5d23cb19a8eb2bd9",
       "physical_lines": 90,
@@ -3799,7 +3818,7 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/GeneralizedPrototype.lean": {
-      "sha256": "853c7e739a314c0fc444abfc5b0336f3409aa6bf0807c9de4b59e151eed12baa",
+      "sha256": "2f7026665dc9ae2800d0ff3f8bfa6a8207f60d56b6f376ded87c6f6d3cf3c47d",
       "physical_lines": 232,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
@@ -4795,6 +4814,15 @@
         53
       ]
     },
+    "Tests/GeneralizedComponents.lean": {
+      "sha256": "b9fef4ce9a305af2b0d0831a37d070b6e5c694f58fd528e2316539b7561d9397",
+      "physical_lines": 192,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        174
+      ]
+    },
     "Tests/GeneralizedPrototype.lean": {
       "sha256": "e538847a2f072588d6348517e7105882a41a2dba8192bb06aa0fe30e1beb9239",
       "physical_lines": 187,
@@ -5209,6 +5237,7 @@
     "Examples/CertifiedInvalidation.lean",
     "Examples/ClassMigration.lean",
     "Examples/ClosedDeployment.lean",
+    "Examples/ComponentCheckout.lean",
     "Examples/ConfigurationUpgrade.lean",
     "Examples/ContextualFactories.lean",
     "Examples/DebugTrace.lean",
@@ -5460,6 +5489,7 @@
     "LeanPoo/Prototype/DynamicValueEquality.lean",
     "LeanPoo/Prototype/FiniteFix.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
+    "LeanPoo/Prototype/GeneralizedComponents.lean",
     "LeanPoo/Prototype/GeneralizedInheritance.lean",
     "LeanPoo/Prototype/GeneralizedPrototype.lean",
     "LeanPoo/Prototype/Generator.lean",
@@ -5610,6 +5640,7 @@
     "Tests/FunctionalView.lean",
     "Tests/FunctionalViewComposition.lean",
     "Tests/FunctionalViewRetarget.lean",
+    "Tests/GeneralizedComponents.lean",
     "Tests/GeneralizedPrototype.lean",
     "Tests/GraphCertificate.lean",
     "Tests/GraphComputeInvariant.lean",

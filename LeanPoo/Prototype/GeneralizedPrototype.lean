@@ -162,7 +162,7 @@ theorem Closed.assembly {protocol : Protocol Raw Cooked Fragment} {fragments : L
     protocol.assemble fragments (Thunk.mk fun _ => closed.interface) (Thunk.mk fun _ => base) = closed.raw :=
   closed.fixed
 
-/-- Transport raw storage and the cooked interface interface independently. -/
+/-- Transport raw storage and the cooked interface independently. -/
 def Protocol.transport (protocol : Protocol Raw Cooked Fragment)
     (raw : DictionaryBridge Raw NewRaw) (interface : DictionaryBridge Cooked NewCooked) :
     Protocol NewRaw NewCooked Fragment where

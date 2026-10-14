@@ -1013,14 +1013,17 @@
       "title": "Future research",
       "implementation": [
         "LeanPoo/Prototype/GeneralizedPrototype.lean",
-        "LeanPoo/Prototype/GeneralizedInheritance.lean"
+        "LeanPoo/Prototype/GeneralizedInheritance.lean",
+        "LeanPoo/Prototype/GeneralizedComponents.lean"
       ],
       "checks": [
         "Examples/GeneralizedService.lean",
         "Examples/GeneralizedCheckout.lean",
-        "Tests/GeneralizedPrototype.lean"
+        "Tests/GeneralizedPrototype.lean",
+        "Examples/ComponentCheckout.lean",
+        "Tests/GeneralizedComponents.lean"
       ],
-      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged."
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises."
     },
     {
       "id": "code-library",

@@ -72,3 +72,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 * Research extension
 
 [[file:contracts/generalized-prototypes.org][Generalized prototype protocol]] separates raw storage, cooked self and fragments, with explicit inheritance, lens, representation and closure contracts.
+
+[[file:contracts/generalized-components.org][Mounted generalized components]] joins local closure witnesses, preserves local fragment orders and retains the left public interface under certified right replacement.

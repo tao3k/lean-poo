@@ -19,7 +19,7 @@ class CheckAtomsTests(unittest.TestCase):
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
         bounded = [a for a in atoms if a['command'][0] == 'timeout']
-        self.assertEqual(len(bounded), 22)
+        self.assertEqual(len(bounded), 23)
         for atom in bounded:
             self.assertIn('30s', atom['command'])
             self.assertIn('2048', atom['command'])

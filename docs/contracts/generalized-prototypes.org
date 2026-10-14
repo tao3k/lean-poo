@@ -106,3 +106,7 @@ The protocol makes raw/cooked/lens/fragment choices explicit. It does not infer
 arbitrary host effects, synthesize lawful focuses, decide all cross-library
 extension conflicts, or provide a complete reflective language/MOP. Automatic
 dependency analysis, type inference and staging remain separate research work.
+
+* Mounted component protocols
+
+[[file:generalized-components.org][Independent component composition]] adds lawful mounting, grouping and closure reuse for separate protocols. Its premises distinguish construction independence from public method execution order.

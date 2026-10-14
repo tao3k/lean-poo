@@ -74,3 +74,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 * Research extension: generalized protocols
 
 [[file:GeneralizedService.lean][GeneralizedService]] joins C3 diamond inheritance, nested focuses, standard combinations, cooked-self tariffs and raw/public dictionary conversion. [[file:GeneralizedCheckout.lean][GeneralizedCheckout]] composes independent all/sum groups with retained-state short-circuiting. Both advance the paper's future work; [[file:../docs/contracts/generalized-prototypes.org][scope and proof contracts]].
+
+[[file:ComponentCheckout.lean][ComponentCheckout]] joins separately closed protocols in one inherited service. It covers shipping failure after completed billing, independent construction grouping, whole-service representation transport and right-only replacement with the old billing witness. [[file:../docs/contracts/generalized-components.org][Research scope and contracts]].
