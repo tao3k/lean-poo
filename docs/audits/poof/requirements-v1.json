@@ -1011,9 +1011,16 @@
       "start_line": 1801,
       "status": "future_proposal",
       "title": "Future research",
-      "implementation": [],
-      "checks": [],
-      "boundary": "Generalized MOP, full dependent formal treatment and staging/cache proposals remain research, not already-closed paper semantics."
+      "implementation": [
+        "LeanPoo/Prototype/GeneralizedPrototype.lean",
+        "LeanPoo/Prototype/GeneralizedInheritance.lean"
+      ],
+      "checks": [
+        "Examples/GeneralizedService.lean",
+        "Examples/GeneralizedCheckout.lean",
+        "Tests/GeneralizedPrototype.lean"
+      ],
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged."
     },
     {
       "id": "code-library",

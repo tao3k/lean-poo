@@ -98,6 +98,15 @@ shapes.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
 [[file:Benchmarks/README.org][Benchmarks]].
 
+* Research extension: generalized prototypes
+
+[[file:docs/contracts/generalized-prototypes.org][The generalized protocol]] advances the paper's future work by separating raw
+construction, cooked self and fragment compilation. It reuses C3, nested lenses,
+method combinations and exact representation bridges, with finite-observation
+and witnessed-closure laws. [[file:Examples/GeneralizedService.lean][GeneralizedService]] and [[file:Examples/GeneralizedCheckout.lean][GeneralizedCheckout]]
+exercise those compositions. This is an initial typed protocol, not completion
+of the paper's full MOP research proposal.
+
 * Documentation
 
 - [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.

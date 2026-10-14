@@ -162,3 +162,7 @@ arbitrary host closure properties or hidden cross-library assumptions.
 The [[file:../../contracts/alternative-combinations.org][alternative-combination contracts]] add eight reusable typed policies and universal ordered reference/failure-state proofs for source 2060–2083. Persistent append is not destructive nconc; empty extrema and last-result groups explicitly return none.
 
 The [[file:../../contracts/joint-publication.org][joint-publication contracts]] combine checked C3 factory closure and protected generic extension with an admission payload bound to both candidates. This is an explicit immutable application policy over existing constructions, rather than a new source-required generalized prototype protocol.
+
+* Research extension: initial unified protocol
+
+[[file:../../contracts/generalized-prototypes.org][Generalized protocols]] and its two complex clients advance the explicit future-work proposal at 1807–1827 and 2084–2154. Existing delayed inheritance, nested lenses, C3, standard/simple method groups and dictionary bridges now share one raw/cooked/fragment protocol. Assembly, frame, self-view, finite representation and witnessed-closure laws are proved. This remains a typed research extension: full reflective MOPs, arbitrary host effects, automatic type inference and staging are not claimed. The future-work review unit remains ~future_proposal~ and the original construction closure is unchanged.

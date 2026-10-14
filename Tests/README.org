@@ -654,3 +654,7 @@ publication. The corresponding guides describe universal proof boundaries.
 [[file:RecursiveDispatch.lean][RecursiveDispatch]] checks 240 complete workflow summaries against independent pricing, phase, trace and memo-size controls. Cold/warm dispatch and recursive reads are separate; current output admission and public ceilings remain fresh. Universal adapter success/failure/packing/state/ledger and actual receipt admission/observation laws are kernel theorems.
 
 [[file:ReceiptAdmission.lean][ReceiptAdmission]] compares 1080 admission/result/state summaries with direct price and first-error controls across current catalog removal, wrong signatures, missing named types, input bounds, output ceilings and validation fuel. Complete retained-state preservation, value/request identity, source observation, success completeness and four failure phases have kernel proofs.
+
+* Generalized protocol research controls
+
+[[file:GeneralizedPrototype.lean][GeneralizedPrototype]] compares 360 parameter combinations / 1080 executions with independent complete value/error/trace controls across original, raw-converted and raw/public-converted representations. It checks C3 refusal forwarding and an inherited method body left uncalled; universal assembly, view, frame, representation and witnessed-closure laws are kernel checked. This is research extension evidence, not a new original-source closure claim.

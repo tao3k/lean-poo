@@ -68,3 +68,7 @@ these guides explain reusable library contracts.
 Add API guidance and usage to the matching capability module. A new capability
 area gets its own module and a navigation row here. Keep executable scenarios
 in Examples and source-bound evidence in the reference study and receipts.
+
+* Research extension
+
+[[file:contracts/generalized-prototypes.org][Generalized prototype protocol]] separates raw storage, cooked self and fragments, with explicit inheritance, lens, representation and closure contracts.

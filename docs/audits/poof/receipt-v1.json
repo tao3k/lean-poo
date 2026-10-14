@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "ff10db55875aef60627ab518680b7d2dd3e7de08b59e2dd013f33b36d63058be",
+  "requirements_sha256": "496d9de704c214a40960053059516001e03c9db1af94949c648d0d4afeb796d9",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1792,9 +1792,16 @@
       "start_line": 1801,
       "status": "future_proposal",
       "title": "Future research",
-      "implementation": [],
-      "checks": [],
-      "boundary": "Generalized MOP, full dependent formal treatment and staging/cache proposals remain research, not already-closed paper semantics."
+      "implementation": [
+        "LeanPoo/Prototype/GeneralizedPrototype.lean",
+        "LeanPoo/Prototype/GeneralizedInheritance.lean"
+      ],
+      "checks": [
+        "Examples/GeneralizedService.lean",
+        "Examples/GeneralizedCheckout.lean",
+        "Tests/GeneralizedPrototype.lean"
+      ],
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged."
     },
     {
       "id": "code-library",
@@ -2744,6 +2751,24 @@
       ],
       "eval_lines": [
         59
+      ]
+    },
+    "Examples/GeneralizedCheckout.lean": {
+      "sha256": "7690f9ddc0d5756fcaf48402759b658d460b106c6e8ff1873f29f58cad0f95d7",
+      "physical_lines": 71,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        68
+      ]
+    },
+    "Examples/GeneralizedService.lean": {
+      "sha256": "c6b081fafb6700824fd752c1a8858412f1b874fd90b885c1a7352da471e2e716",
+      "physical_lines": 155,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        148
       ]
     },
     "Examples/IncrementalWorkflow.lean": {
@@ -3766,6 +3791,20 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Prototype/GeneralizedInheritance.lean": {
+      "sha256": "9eb2f8fb132df45238c906857475cf757f916c85486ca15c5d23cb19a8eb2bd9",
+      "physical_lines": 90,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/GeneralizedPrototype.lean": {
+      "sha256": "853c7e739a314c0fc444abfc5b0336f3409aa6bf0807c9de4b59e151eed12baa",
+      "physical_lines": 232,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Prototype/Generator.lean": {
       "sha256": "33f67ecfb72f10150606b3201540447afdc16d20e052280d10b58178c24fa7eb",
       "physical_lines": 41,
@@ -4756,6 +4795,17 @@
         53
       ]
     },
+    "Tests/GeneralizedPrototype.lean": {
+      "sha256": "e538847a2f072588d6348517e7105882a41a2dba8192bb06aa0fe30e1beb9239",
+      "physical_lines": 187,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [
+        175
+      ],
+      "eval_lines": [
+        162
+      ]
+    },
     "Tests/IncrementalObject.lean": {
       "sha256": "dfa63fdf66f80db8a86f855a26999557f567a2ec9fccd036af6887e0c4e8b45a",
       "physical_lines": 313,
@@ -5173,6 +5223,8 @@
     "Examples/FocusedAllocation.lean",
     "Examples/FocusedPricing.lean",
     "Examples/FunctionalPipeline.lean",
+    "Examples/GeneralizedCheckout.lean",
+    "Examples/GeneralizedService.lean",
     "Examples/IncrementalWorkflow.lean",
     "Examples/IntrospectiveExport.lean",
     "Examples/JointPublication.lean",
@@ -5408,6 +5460,8 @@
     "LeanPoo/Prototype/DynamicValueEquality.lean",
     "LeanPoo/Prototype/FiniteFix.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
+    "LeanPoo/Prototype/GeneralizedInheritance.lean",
+    "LeanPoo/Prototype/GeneralizedPrototype.lean",
     "LeanPoo/Prototype/Generator.lean",
     "LeanPoo/Prototype/KeyedPrototype.lean",
     "LeanPoo/Prototype/Lens.lean",
@@ -5556,6 +5610,7 @@
     "Tests/FunctionalView.lean",
     "Tests/FunctionalViewComposition.lean",
     "Tests/FunctionalViewRetarget.lean",
+    "Tests/GeneralizedPrototype.lean",
     "Tests/GraphCertificate.lean",
     "Tests/GraphComputeInvariant.lean",
     "Tests/IncrementalObject.lean",

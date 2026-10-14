@@ -201,3 +201,5 @@ import LeanPoo.Object.MultimethodSemantics
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Object.SimplePolicies
 import LeanPoo.Object.SimpleCombinationSemantics
+import LeanPoo.Prototype.GeneralizedPrototype
+import LeanPoo.Prototype.GeneralizedInheritance
