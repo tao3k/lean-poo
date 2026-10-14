@@ -1014,16 +1014,19 @@
       "implementation": [
         "LeanPoo/Prototype/GeneralizedPrototype.lean",
         "LeanPoo/Prototype/GeneralizedInheritance.lean",
-        "LeanPoo/Prototype/GeneralizedComponents.lean"
+        "LeanPoo/Prototype/GeneralizedComponents.lean",
+        "LeanPoo/Prototype/GeneralizedDependencies.lean"
       ],
       "checks": [
         "Examples/GeneralizedService.lean",
         "Examples/GeneralizedCheckout.lean",
         "Tests/GeneralizedPrototype.lean",
         "Examples/ComponentCheckout.lean",
-        "Tests/GeneralizedComponents.lean"
+        "Tests/GeneralizedComponents.lean",
+        "Examples/DependentCheckout.lean",
+        "Tests/GeneralizedDependencies.lean"
       ],
-      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises."
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises. Directional dependencies now use a downstream protocol family indexed by an explicit selected upstream view. Storage partition is factored into Mounting and reused by independent/dependent protocols. Closure joins an upstream witness with a downstream witness at exactly that selected dependency. Finite recurrence retains previous-approximation dependency timing; equal-view reuse carries raw/interface proofs and changed views require new closure evidence. Controls cover 128 parameter combinations, 512 closed observations, 512 finite observations and 512 revisions; a client theorem rejects a stale fixed point after a tier change. Cyclic/general dependency inference and arbitrary callback effects remain outside scope."
     },
     {
       "id": "code-library",

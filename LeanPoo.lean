@@ -204,3 +204,4 @@ import LeanPoo.Object.SimpleCombinationSemantics
 import LeanPoo.Prototype.GeneralizedPrototype
 import LeanPoo.Prototype.GeneralizedInheritance
 import LeanPoo.Prototype.GeneralizedComponents
+import LeanPoo.Prototype.GeneralizedDependencies

@@ -170,3 +170,5 @@ from an unverified declaration.
 [[file:Examples/ReceiptWorkflow.lean][ReceiptWorkflow.lean]] re-admits completed recursive answers under current descriptors for around-method shortcuts, preserving their source proof without recursive reads.
 
 [[file:Examples/ComponentCheckout.lean][ComponentCheckout]] mounts separately closed billing/shipping protocols, regroups independent construction and replaces shipping while preserving the complete billing interface. [[file:docs/contracts/generalized-components.org][Component contracts]].
+
+[[file:Examples/DependentCheckout.lean][DependentCheckout]] adds directional pricing-to-shipping dependencies: downstream closure follows the selected upstream tier, with proved reuse or fresh evidence on revision. [[file:docs/contracts/generalized-dependencies.org][Dependent component contracts]].

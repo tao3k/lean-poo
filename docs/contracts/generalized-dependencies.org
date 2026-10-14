@@ -1,0 +1,111 @@
+#+TITLE: Directional generalized dependencies — research extension
+
+[[file:generalized-prototypes.org][Generalized protocol]] · [[file:generalized-components.org][Mounted components]]
+
+* Storage independence and semantic dependency are separate
+
+This advances the generalized-prototype/MOP future proposal (1807–1827 and
+2084–2154). The earlier independent ~Components~ protocol required each cooked
+view to depend only on its own raw component. Here a downstream protocol family
+is selected by an explicit upstream view. The original independent API retains
+its stronger premises.
+
+~Mounting~ factors out existing lawful Focus storage independence, cooked view
+projection and fragment assembly. Its partition proof is shared by both APIs;
+no inherited ordering algorithm, lens implementation or evaluator is copied.
+~familyCompiler~ selects a local downstream protocol from the dependency in its
+cooked final self. ~family_assemble~ proves this equals the selected protocol's
+ordinary complete assembly when that dependency is fixed.
+
+~DependentComponents upstream downstream Whole Global~ supplies:
+
+- Lawful independent raw storage focuses, as before.
+- Upstream public cooking compatibility, excluding a back edge from downstream.
+- ~select : UpstreamCooked → Dependency~, exposing exactly the declared dependency.
+- A family ~downstream : Dependency → Protocol~ and downstream compatibility at
+  that selected view.
+- Global cooking, including any explicitly defined public orchestration.
+
+The dependency can be a typed value, function or dictionary. Equality is an
+explicit proof for ~reuseDependency~; the optional automatic branch in
+~refreshDependency~ requires a supplied ~DecidableEq~ instance. No arbitrary
+function equality or callback dependency analysis is inferred. The existing
+finite Computation analyzer continues to mark opaque provider callbacks unknown;
+this protocol does not silently assign those callbacks a known footprint.
+
+* Exact recurrence and staged closure
+
+~step_partition~ keeps the source whole final-self approximation while building
+both local results. Downstream uses the dependency selected from that same
+previous approximation. It does not silently use the newly constructed upstream
+value in a synchronous step. ~approximate_upstream~ projects every finite depth;
+~downstream_succ~ states the exact downstream recurrence.
+
+~advance_downstream~ proves a useful staged law: once the selected dependency
+is proved constant from a given depth, later downstream projections are exactly
+the ordinary local finite iteration, seeded by the actual projection at that
+depth. The stability premise is supplied, not inferred from a successful fuel run.
+
+~close~ first takes an upstream ~Closed~ witness, then requires downstream
+~Closed~ at precisely ~select upstreamClosed.interface~. Installing the two raw
+values yields an actual whole fixed-point proof. ~close_upstream~ and
+~close_downstream~ expose the exact complete local interfaces, including their
+methods. ~frame~ preserves declared outside fields. ~regroup~ preserves a closed
+interface under storage grouping with the same final self; it does not turn
+assembly grouping into an effect execution schedule.
+
+* Reuse, reconstruction and refusal
+
+~Closed.reindexFragments~ retains a witness only under equality of its complete
+ordered fragment list. ~reuseDependency~ additionally requires equality between
+the new and old selected dependency. The downstream raw value is unchanged;
+~reuseDependency_interface~ preserves its entire interface.
+
+~refreshDependency~ uses that equality branch or calls a supplied reconstructor
+at the exact new dependency. Its ~DependencyRefresh~ receipt retains a valid
+new closure, a reuse marker, and proofs that a true marker implies both unchanged
+dependency and unchanged raw value. ~interface_same~ then preserves all methods.
+~refreshDependency_reuses~ proves equal dependencies take the reuse path;
+~refreshDependency_same~ proves the choice of reconstructor cannot affect that
+path. ~refreshDependency_error~ forwards a changed-dependency reconstruction
+refusal exactly, producing no new publication. Existing immutable publications
+remain available to the caller; no external effect rollback is claimed.
+
+A changed dependency needs new closure evidence. Reconstruction may provide
+that evidence analytically or by an existing certified construction; it need not
+mean running an arbitrary evaluator. Cyclic dependencies, automatic invalidation
+of arbitrary host computations and unrestricted termination remain outside scope.
+
+* Inherited pricing and tier-dependent fulfillment
+
+[[file:../../Examples/DependentCheckout.lean][DependentCheckout]] uses one C3 diamond and existing standard method groups.
+Pricing is closed first. Its public tariff selects a shipping tier; shipping
+construction combines that tier with a local flat tariff, so retaining an old
+shipping closure under a changed tier is observably wrong.
+
+The initial checkout is 27. A tariff change with the same tier yields 33 while
+retaining shipping. A tier change needs fresh shipping closure and yields 45.
+A subsequent same-tier revision yields 48 even when the supplied reconstructor
+would refuse that tier: the equality branch bypasses it. Refused changed-tier
+construction leaves the earlier service usable. Capacity refusal during public
+checkout retains the completed pricing ledger and shipping guard. Whole raw/
+public dictionary conversion and storage grouping preserve these behaviors.
+~publication_reuses_shipping~ proves complete shipping value/error/state equality
+for every quantity and initial ledger when publishing with an equal dependency.
+
+The example's local closure recipe checks a leading tariff fragment and uses
+its structural two-step stability proof. It is not a closure solver for arbitrary
+fragments. Revisions specify ordered fragment lists; graph/root changes still
+require the existing C3 preparation gate.
+
+[[file:../../Tests/GeneralizedDependencies.lean][GeneralizedDependencies]] compares 128 parameter combinations: 512 complete
+closed observations across original/grouped/raw/public representations, 512
+finite observations at depths zero through three, and 512 revisions. Independent
+price, error, complete-ledger and tier/refusal controls cover both sides of a
+tier boundary. Finite controls discriminate the old-dependency timing offset;
+a kernel theorem ~stale_not_fixed~ proves an old shipping raw value cannot
+satisfy the changed-tier fixed-point equation for this construction.
+
+The audit status remains ~future_proposal~. This is an explicit triangular
+component protocol that can serve as a building block for larger compositions,
+not a complete MOP or general graph dependency solver.

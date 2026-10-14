@@ -110,3 +110,5 @@ dependency analysis, type inference and staging remain separate research work.
 * Mounted component protocols
 
 [[file:generalized-components.org][Independent component composition]] adds lawful mounting, grouping and closure reuse for separate protocols. Its premises distinguish construction independence from public method execution order.
+
+[[file:generalized-dependencies.org][Directional cooked dependencies]] extends mounted components with explicitly indexed downstream families, staged closure and proof-bearing equal-view reuse.

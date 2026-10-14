@@ -74,3 +74,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-prototypes.org][Generalized prototype protocol]] separates raw storage, cooked self and fragments, with explicit inheritance, lens, representation and closure contracts.
 
 [[file:contracts/generalized-components.org][Mounted generalized components]] joins local closure witnesses, preserves local fragment orders and retains the left public interface under certified right replacement.
+
+[[file:contracts/generalized-dependencies.org][Directional generalized dependencies]] indexes downstream closure by an explicit upstream view and admits reuse only with equality evidence for that dependency.

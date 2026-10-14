@@ -63,6 +63,7 @@ check-merge: check-types
         LeanPoo.Prototype.GeneralizedPrototype \
         LeanPoo.Prototype.GeneralizedInheritance \
         LeanPoo.Prototype.GeneralizedComponents \
+        LeanPoo.Prototype.GeneralizedDependencies \
         LeanPoo.Functional.RecordEvolution \
         LeanPoo.Functional.OrderedDictionary \
         LeanPoo.Functional.MetadataFamily \
@@ -274,6 +275,7 @@ _check-examples:
     {{lean}} Examples/GeneralizedService.lean
     {{lean}} Examples/GeneralizedCheckout.lean
     {{lean}} Examples/ComponentCheckout.lean
+    {{lean}} Examples/DependentCheckout.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -482,6 +484,7 @@ _check-contracts:
     {{lean}} Tests/SkewExtension.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedPrototype.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedComponents.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedDependencies.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean

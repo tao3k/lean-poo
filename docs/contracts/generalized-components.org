@@ -94,3 +94,10 @@ focus independence. Universal API laws supply the stronger generic guarantees.
 The future-work audit status remains ~future_proposal~. This is a scoped
 component composition protocol, not a complete reflective MOP, automatic effect
 analysis, cross-library conflict solver or arbitrary termination checker.
+
+* Components with an upstream dependency
+
+The independent ~Components~ compatibility laws remain unchanged. Use the
+[[file:generalized-dependencies.org][directional dependency protocol]] when downstream construction depends on a selected
+upstream interface view. It reuses the same storage partition without claiming
+semantic independence or reordering public method effects.

@@ -31,6 +31,16 @@ theorem Protocol.assemble_mount (protocol : Protocol Part Local Fragment) (focus
     simp only [focus.get_set, focus.set_set]
     rfl
 
+/-- Storage independence alone suffices for assembly partition. Cooked views
+may depend on other components; closure needs separate compatibility laws. -/
+structure Mounting (left : Compiler L LC LF) (right : Compiler R RC RF) (Whole Global : Type) where
+  leftFocus : Focus Whole L
+  rightFocus : Focus Whole R
+  independent : Focus.Independent leftFocus rightFocus
+  leftView : Global → LC
+  rightView : Global → RC
+  cook : Whole → Global
+
 /-- Both interfaces must be views of local cooking; unrelated focuses must
 carry explicit read independence and setter commutation proofs. -/
 structure Components (left : Protocol L LC LF) (right : Protocol R RC RF) (Whole Global : Type) where
@@ -81,18 +91,24 @@ def rightFragments : List (Sum LF RF) → List RF
 def groupedFragments (fragments : List (Sum LF RF)) : List (Sum LF RF) :=
   (leftFragments fragments).map Sum.inl ++ (rightFragments fragments).map Sum.inr
 
-def Components.protocol (components : Components left right Whole Global) : Protocol Whole Global (Sum LF RF) :=
-  ⟨components.cook,sumCompiler (left.compile.mount components.leftFocus components.leftView)
-    (right.compile.mount components.rightFocus components.rightView)⟩
+def Compiler.assemble (compiler : Compiler Raw Cooked Fragment) (fragments : List Fragment) :
+    DelayedProto Cooked Raw Raw := DelayedProto.composeAll (fragments.map compiler)
 
-/-- Interleaving independent components preserves each local fragment order. -/
-theorem Components.assemble_partition (components : Components left right Whole Global)
+variable {leftCompiler : Compiler L LC LF} {rightCompiler : Compiler R RC RF}
+
+def Mounting.protocol (mounting : Mounting leftCompiler rightCompiler Whole Global) :
+    Protocol Whole Global (Sum LF RF) :=
+  ⟨mounting.cook,sumCompiler (leftCompiler.mount mounting.leftFocus mounting.leftView)
+    (rightCompiler.mount mounting.rightFocus mounting.rightView)⟩
+
+theorem Mounting.assemble_partition
+    (components : Mounting leftCompiler rightCompiler Whole Global)
     (fragments : List (Sum LF RF)) (self : Thunk Global) (parent : Thunk Whole) :
     components.protocol.assemble fragments self parent =
       components.rightFocus.set
-        (right.assemble (rightFragments fragments) (self.map components.rightView) (parent.map components.rightFocus.get))
+        (rightCompiler.assemble (rightFragments fragments) (self.map components.rightView) (parent.map components.rightFocus.get))
         (components.leftFocus.set
-          (left.assemble (leftFragments fragments) (self.map components.leftView) (parent.map components.leftFocus.get)) parent.get) := by
+          (leftCompiler.assemble (leftFragments fragments) (self.map components.leftView) (parent.map components.leftFocus.get)) parent.get) := by
   induction fragments with
   | nil =>
     change parent.get = components.rightFocus.set (components.rightFocus.get parent.get)
@@ -102,7 +118,7 @@ theorem Components.assemble_partition (components : Components left right Whole 
     cases fragment with
     | inl fragment =>
       change components.leftFocus.set
-        (left.compile fragment (self.map components.leftView)
+        (leftCompiler fragment (self.map components.leftView)
           (Thunk.mk fun _ => components.leftFocus.get (components.protocol.assemble rest self parent)))
         (components.protocol.assemble rest self parent) = _
       rw [ih]
@@ -111,12 +127,38 @@ theorem Components.assemble_partition (components : Components left right Whole 
       rfl
     | inr fragment =>
       change components.rightFocus.set
-        (right.compile fragment (self.map components.rightView)
+        (rightCompiler fragment (self.map components.rightView)
           (Thunk.mk fun _ => components.rightFocus.get (components.protocol.assemble rest self parent)))
         (components.protocol.assemble rest self parent) = _
       rw [ih]
       simp only [components.rightFocus.get_set, components.rightFocus.set_set]
       rfl
+
+
+theorem Mounting.assemble_grouped (mounting : Mounting leftCompiler rightCompiler Whole Global)
+    (fragments : List (Sum LF RF)) (self : Thunk Global) (parent : Thunk Whole) :
+    mounting.protocol.assemble (groupedFragments fragments) self parent =
+      mounting.protocol.assemble fragments self parent := by
+  rw [mounting.assemble_partition,mounting.assemble_partition]
+  simp only [groupedFragments,leftFragments_append,rightFragments_append,
+    leftFragments_map_left,leftFragments_map_right,rightFragments_map_left,rightFragments_map_right,List.append_nil,List.nil_append]
+
+def Components.mounting (components : Components left right Whole Global) :
+    Mounting left.compile right.compile Whole Global :=
+  ⟨components.leftFocus,components.rightFocus,components.independent,
+    components.leftView,components.rightView,components.cook⟩
+
+def Components.protocol (components : Components left right Whole Global) : Protocol Whole Global (Sum LF RF) :=
+  components.mounting.protocol
+
+theorem Components.assemble_partition (components : Components left right Whole Global)
+    (fragments : List (Sum LF RF)) (self : Thunk Global) (parent : Thunk Whole) :
+    components.protocol.assemble fragments self parent =
+      components.rightFocus.set
+        (right.assemble (rightFragments fragments) (self.map components.rightView) (parent.map components.rightFocus.get))
+        (components.leftFocus.set
+          (left.assemble (leftFragments fragments) (self.map components.leftView) (parent.map components.leftFocus.get)) parent.get) :=
+  components.mounting.assemble_partition fragments self parent
 
 theorem Components.assemble_equiv (components : Components left right Whole Global)
     (first second : List (Sum LF RF))

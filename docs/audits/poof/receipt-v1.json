@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "f03ad9e103327d540e1b3c2ea5923f0c9cfcae4e3caa570063a4a5b7340918c8",
+  "requirements_sha256": "afb59d4f36fe26400ed49d36ea007ce53f843679489f41148ba2861435a07349",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1795,16 +1795,19 @@
       "implementation": [
         "LeanPoo/Prototype/GeneralizedPrototype.lean",
         "LeanPoo/Prototype/GeneralizedInheritance.lean",
-        "LeanPoo/Prototype/GeneralizedComponents.lean"
+        "LeanPoo/Prototype/GeneralizedComponents.lean",
+        "LeanPoo/Prototype/GeneralizedDependencies.lean"
       ],
       "checks": [
         "Examples/GeneralizedService.lean",
         "Examples/GeneralizedCheckout.lean",
         "Tests/GeneralizedPrototype.lean",
         "Examples/ComponentCheckout.lean",
-        "Tests/GeneralizedComponents.lean"
+        "Tests/GeneralizedComponents.lean",
+        "Examples/DependentCheckout.lean",
+        "Tests/GeneralizedDependencies.lean"
       ],
-      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises."
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises. Directional dependencies now use a downstream protocol family indexed by an explicit selected upstream view. Storage partition is factored into Mounting and reused by independent/dependent protocols. Closure joins an upstream witness with a downstream witness at exactly that selected dependency. Finite recurrence retains previous-approximation dependency timing; equal-view reuse carries raw/interface proofs and changed views require new closure evidence. Controls cover 128 parameter combinations, 512 closed observations, 512 finite observations and 512 revisions; a client theorem rejects a stale fixed point after a tier change. Cyclic/general dependency inference and arbitrary callback effects remain outside scope."
     },
     {
       "id": "code-library",
@@ -2684,6 +2687,15 @@
       "guard_lines": [],
       "eval_lines": [
         22
+      ]
+    },
+    "Examples/DependentCheckout.lean": {
+      "sha256": "3f704d867d6d0267731d4e3b0c197d56d76ca42c154bc84035d7c76a90d5c878",
+      "physical_lines": 179,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        173
       ]
     },
     "Examples/DictionaryConsumers.lean": {
@@ -3804,8 +3816,15 @@
       "eval_lines": []
     },
     "LeanPoo/Prototype/GeneralizedComponents.lean": {
-      "sha256": "1edb575fd00ccb6250af2758f2e1e34c8e44af9a42864f4b36a5678e21ee250f",
-      "physical_lines": 286,
+      "sha256": "d70c4d6226b7336d0752d89f77a6df84cb339a633b6b73dbe89e0c6de34476a9",
+      "physical_lines": 328,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Prototype/GeneralizedDependencies.lean": {
+      "sha256": "aba6a66c84375e3136a7de234c0b7d92af56d7b20f0e556239d55f9e528bf2cc",
+      "physical_lines": 253,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4823,6 +4842,15 @@
         174
       ]
     },
+    "Tests/GeneralizedDependencies.lean": {
+      "sha256": "bbdb0d2c9f75f2f975655f89c7a385d91a81afd04e692ee95a2cc4cb85bdd0d4",
+      "physical_lines": 230,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        203
+      ]
+    },
     "Tests/GeneralizedPrototype.lean": {
       "sha256": "e538847a2f072588d6348517e7105882a41a2dba8192bb06aa0fe30e1beb9239",
       "physical_lines": 187,
@@ -5242,6 +5270,7 @@
     "Examples/ContextualFactories.lean",
     "Examples/DebugTrace.lean",
     "Examples/DelayedNumbers.lean",
+    "Examples/DependentCheckout.lean",
     "Examples/DictionaryConsumers.lean",
     "Examples/DictionaryRecords.lean",
     "Examples/DispatchWorkflow.lean",
@@ -5490,6 +5519,7 @@
     "LeanPoo/Prototype/FiniteFix.lean",
     "LeanPoo/Prototype/FixedPoint.lean",
     "LeanPoo/Prototype/GeneralizedComponents.lean",
+    "LeanPoo/Prototype/GeneralizedDependencies.lean",
     "LeanPoo/Prototype/GeneralizedInheritance.lean",
     "LeanPoo/Prototype/GeneralizedPrototype.lean",
     "LeanPoo/Prototype/Generator.lean",
@@ -5641,6 +5671,7 @@
     "Tests/FunctionalViewComposition.lean",
     "Tests/FunctionalViewRetarget.lean",
     "Tests/GeneralizedComponents.lean",
+    "Tests/GeneralizedDependencies.lean",
     "Tests/GeneralizedPrototype.lean",
     "Tests/GraphCertificate.lean",
     "Tests/GraphComputeInvariant.lean",
