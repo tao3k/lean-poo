@@ -80,3 +80,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-chain.org][Multi-level generalized dependencies]] sequences typed closure admission and selected-view refresh along finite heterogeneous chains, with whole closure obtained by nested existing dependent mounting.
 
 [[file:contracts/generalized-fork.org][Shared upstream and exact joins]] reuses independent component closure and selected dependency refresh for explicitly declared fork/join shapes, with exact paired join indices and full-interface preservation.
+
+[[file:contracts/generalized-context.org][Shared context through multiple joins]] composes fork input projections and admits contextual joins using the complete new context/branch key, with a reusable seven-component Functional workflow.

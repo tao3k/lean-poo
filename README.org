@@ -176,3 +176,5 @@ from an unverified declaration.
 [[file:Examples/ChainedCheckout.lean][ChainedCheckout]] extends this research to four-level dependencies, typed suffix refresh and nested whole closure. [[file:docs/contracts/generalized-chain.org][Multi-level dependency contracts]].
 
 [[file:Examples/ForkedCheckout.lean][ForkedCheckout]] adds a shared-pricing diamond: independent branch refresh, exact paired join admission and proved whole closure. [[file:docs/contracts/generalized-fork.org][Fork/join contracts]].
+
+[[file:Examples/SharedSettlement.lean][SharedSettlement]] composes two fork/join levels while retaining explicit shared pricing dependencies. [[file:docs/contracts/generalized-context.org][Contextual join contracts]].

@@ -105,3 +105,5 @@ and Int dependencies with Nat and String storage and Unit and Bool fragments.
 Finally, a kernel negative theorem shows that swapping distinct equal-sum join
 metadata cannot preserve the old fixed point for this ordered construction.
 Checking only the sum would lose a dependency that this construction uses.
+
+[[file:generalized-context.org][Shared context across multiple joins]] adds explicit context to join selection when later components retain direct dependencies on earlier shared inputs.

@@ -66,6 +66,8 @@ check-merge: check-types
         LeanPoo.Prototype.GeneralizedDependencies \
         LeanPoo.Prototype.GeneralizedChain \
         LeanPoo.Prototype.GeneralizedFork \
+        LeanPoo.Prototype.GeneralizedContext \
+        LeanPoo.Functional.SharedSettlement \
         LeanPoo.Prototype.GeneralizedTariff \
         LeanPoo.Functional.RecordEvolution \
         LeanPoo.Functional.OrderedDictionary \
@@ -281,6 +283,7 @@ _check-examples:
     {{lean}} Examples/DependentCheckout.lean
     {{lean}} Examples/ChainedCheckout.lean
     {{lean}} Examples/ForkedCheckout.lean
+    {{lean}} Examples/SharedSettlement.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -492,6 +495,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedDependencies.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedChain.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedFork.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/SharedSettlement.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean

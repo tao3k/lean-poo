@@ -1,0 +1,111 @@
+#+TITLE: Shared context across multiple fork/join levels — research extension
+
+[[file:generalized-fork.org][Fork/join components]] · [[file:generalized-chain.org][Multi-level chains]]
+
+* Future-work scope
+
+This advances the generalized-prototype / MOP future proposal at source lines
+1807–1827 and 2098–2154: explicit logical metadata, staging and cache invalidation.
+The audit retains ~future_proposal~ and ~whole_paper_implemented=false~; the
+original concrete construction closure is unchanged.
+
+* A retained join does not hide a shared dependency
+
+A later component may depend on an earlier shared component as well as on an
+intermediate join. Retaining that join does not establish that the later
+component's complete declared dependency key is unchanged. Similarly, retaining
+both branches does not establish equality of a join key that also reads context.
+
+~DependencyFork.contramap~ reuses a fork under an explicit projection of a wider
+input. Identity and composition laws make nested projections exact.
+~Publication.pullback~ carries existing branch witnesses to that projected input;
+its theorem preserves the complete cooked pair. These operations reuse existing
+focus/product mounting and do not discover arbitrary callback dependencies.
+
+~Refresh.joinWith~ selects metadata from ~(revisedInput, refreshedBranchPair)~.
+The original closure must be indexed by the corresponding old input/pair key;
+the returned receipt is indexed by the actual new complete key. Only selected
+metadata requires decidable equality, so input/context can contain methods.
+~joinWith_branches~ proves the earlier branch-only ~join~ is exactly the special
+case whose selector ignores context.
+
+~joinWith_reuses~ requires equality of the complete selected key.
+~joinWith_same_view~ proves that equality bypasses either constructor, including
+a refusing constructor. ~joinWith_error~ forwards changed-key reconstruction
+refusal exactly. There is intentionally no theorem deriving key equality from
+only the two reuse markers. The existing branch-only theorem keeps its original,
+stronger restriction on what the selector may read.
+
+During refresh the declared families, projections, fragments, bases and topology
+are fixed. New evidence or explicit equality is required after configuration
+changes. The API supplies no arbitrary graph inference, cyclic solver, hidden
+host-effect analysis or external-effect rollback.
+
+* Reusable seven-component workflow
+
+[[file:../../LeanPoo/Functional/SharedSettlement.lean][Functional.SharedSettlement]] composes existing constructs into pricing →
+shipping/insurance → reserve → tax/risk → settlement. Pricing and reserve each
+occupy one raw storage position. Their cooked views are shared by later stages
+through explicit projections of the retained prefix.
+
+| Component  | Declared dependency metadata                                  |
+|------------+---------------------------------------------------------------|
+| Pricing    | External adjustment                                           |
+| Shipping   | Pricing tariff / 5                                            |
+| Insurance  | Pricing tariff / 7                                            |
+| Reserve    | Ordered shipping / 3 and insurance / 3                         |
+| Tax        | Ordered pricing / 4 and reserve / 5                            |
+| Risk       | Pricing tariff / 6                                            |
+| Settlement | Ordered pricing / 9, reserve / 7, tax / 4 and risk / 4         |
+
+The arithmetic policies are executable examples of declared dependencies.
+Construction reuses the shared tariff compiler, standard method groups, existing
+local closure witnesses, independent fork admission and nested dependent
+~closePair~. ~Early.closed~ and ~assemble~ provide actual prefix and whole
+fixed-point evidence. The interface theorem exposes all seven exact interfaces.
+~retained_risk~ and ~retained_final~ preserve complete actions for every quantity
+and initial ledger when their respective receipts establish reuse.
+
+[[file:../../Examples/SharedSettlement.lean][SharedSettlement]] demonstrates these distinct revision paths:
+
+| Revision | Reuse: pricing, shipping, insurance, reserve, tax, risk, settlement |
+|----------+------------------------------------------------------------------|
+| 0 → 1    | false, true, false, true, true, true, true                        |
+| 0 → 2    | false, true, false, true, false, true, false                      |
+| 2 → 3    | false, true, true, true, true, true, false                        |
+
+In 0 → 1, refusing constructors for the retained suffix are bypassed. In 0 → 2,
+tax must refresh even though reserve is retained, because it directly depends on
+shared pricing. In 2 → 3, both later branches are retained but settlement's direct
+pricing band changes: its tariff changes from 162 to 1162. A refusing settlement
+constructor must then reject the revision. Failure returns no new publication;
+the original immutable service remains usable.
+
+Application execution follows the declared seven-method order, separately from
+construction. Shipping, tax and settlement refusals retain different executed
+ledger prefixes. No general effect rollback or construction transaction against
+an external service is claimed.
+
+* Independent controls and proofs
+
+[[file:../../Tests/SharedSettlement.lean][SharedSettlement controls]] check all 25 pairs from five adjustments and all
+128 refusal masks: 3200 revisions, comprising 872 accepted and 2328 refused.
+Independent arithmetic and control-flow functions calculate complete dependency
+keys, reuse markers, exact first refusal and old-publication behavior.
+
+There are 20928 complete value/error/ledger comparisons across six quantities,
+two initial ledgers and original/reassociated raw and public representations.
+Full traces check pricing and reserve execute once, and distinguish shipping,
+tax and final settlement failure prefixes.
+
+Another 420 observations inspect depths zero through six. Each declared edge
+uses the preceding whole raw approximation, including direct shared edges that
+bypass intermediate joins. Methods capture the preceding local rate. These
+controls distinguish the actual synchronous recurrence from eager upstream
+substitution or accidentally replacing direct shared dependencies by only an
+intermediate join. Fixed-point evidence comes from the kernel closure proofs.
+
+A universal negative theorem holds the remaining final metadata fixed and proves
+that changing the selected shared-root band invalidates the original final raw
+fixed point. This qualifies the concrete contextual-join counterexample without
+claiming that every changed dependency necessarily changes every protocol.
