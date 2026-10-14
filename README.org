@@ -172,3 +172,5 @@ from an unverified declaration.
 [[file:Examples/ComponentCheckout.lean][ComponentCheckout]] mounts separately closed billing/shipping protocols, regroups independent construction and replaces shipping while preserving the complete billing interface. [[file:docs/contracts/generalized-components.org][Component contracts]].
 
 [[file:Examples/DependentCheckout.lean][DependentCheckout]] adds directional pricing-to-shipping dependencies: downstream closure follows the selected upstream tier, with proved reuse or fresh evidence on revision. [[file:docs/contracts/generalized-dependencies.org][Dependent component contracts]].
+
+[[file:Examples/ChainedCheckout.lean][ChainedCheckout]] extends this research to four-level dependencies, typed suffix refresh and nested whole closure. [[file:docs/contracts/generalized-chain.org][Multi-level dependency contracts]].

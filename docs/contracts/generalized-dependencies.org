@@ -109,3 +109,5 @@ satisfy the changed-tier fixed-point equation for this construction.
 The audit status remains ~future_proposal~. This is an explicit triangular
 component protocol that can serve as a building block for larger compositions,
 not a complete MOP or general graph dependency solver.
+
+[[file:generalized-chain.org][Multi-level chains]] reuse these exact local refresh receipts and nest dependent product mounting to obtain whole closure, with first-refusal and suffix preservation proofs.

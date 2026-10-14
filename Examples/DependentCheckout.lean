@@ -1,44 +1,12 @@
-import LeanPoo.Prototype.GeneralizedDependencies
+import LeanPoo.Prototype.GeneralizedTariff
 import LeanPoo.Deriving.DictionaryCompiler
 
 /-! Future-work client: fulfillment construction depends on the selected public
 pricing tier. Equal tiers retain closure; changed tiers need fresh evidence. -/
 namespace LeanPoo.Examples.DependentCheckout
 open Prototype Prototype.Generalized Functional Object.MethodCombination
-abbrev Action := EStateM String (List String)
-abbrev Methods := Object.MethodCombination.Methods Int Action Int
-structure Account where
-  rate : Int
-  methods : Methods := {}
-structure Local where
-  rate : Int
-  price : Int → Action Int
-abbrev Method := Thunk Int → Contribution Int Action Int
-abbrev Fragment := Sum Int Method
-
-def rateFocus : MonoLens Account Int := MonoLens.ofGetSet (·.rate) (fun value raw => {raw with rate := value})
-def methodsFocus : MonoLens Account Methods := MonoLens.ofGetSet (·.methods) (fun value raw => {raw with methods := value})
-def narrow (dependency : Int) : Protocol Account Int Fragment :=
-  ⟨Account.rate,sumCompiler (lensCompiler rateFocus (fun rate _ _ => rate+dependency)) (standardCompiler methodsFocus)⟩
-def localCook (raw : Account) : Local := ⟨raw.rate,effective raw.methods (fun _ => throw "missing")⟩
-def family (dependency : Int) : Protocol Account Local Fragment := (narrow dependency).reindexSelf Local.rate localCook
-abbrev upstreamProtocol := family 0
-
-theorem family_step (dependency : Int) (fragments : List Fragment) :
-    (family dependency).step fragments = (narrow dependency).step fragments :=
-  (narrow dependency).step_reindexSelf Local.rate localCook (fun _ => rfl) fragments
-
-theorem rate_stable (dependency rate : Int) (rest : List Fragment) (base : Account) :
-    (family dependency).approximate (.inl rate :: rest) base base 3 =
-      (family dependency).approximate (.inl rate :: rest) base base 2 := by
-  simp only [Protocol.approximate,family_step]
-  exact (narrow dependency).stable_two _ base base (rate+dependency) (fun _ => rfl)
-
-def closeLocal (dependency : Int) (fragments : List Fragment) (base : Account) :
-    Except String (Closed (family dependency) fragments base) :=
-  match fragments with
-  | .inl rate :: rest => .ok ((family dependency).closeAt (.inl rate :: rest) base base 2 (rate_stable dependency rate rest base))
-  | _ => .error "leading rate witness required"
+export Prototype.Generalized.TariffComponent (Action Methods Account Local Method Fragment
+  rateFocus methodsFocus narrow localCook family upstreamProtocol family_step rate_stable closeLocal mark summary)
 
 structure Storage where
   accounts : Account × Account
@@ -76,7 +44,6 @@ def components : DependentComponents upstreamProtocol family Storage Interface w
   upstreamCompatible := fun _ => rfl
   downstreamCompatible := fun _ => rfl
 
-def mark (event : String) : Action Unit := modify (· ++ [event])
 def method (body : Method) : Fragment := .inr body
 def graph : Prototype.C3.Graph :=
   [("Checkout",["Pricing","Shipping"]),("Pricing",["Base"]),("Shipping",["Base"]),("Base",[])]
@@ -124,9 +91,6 @@ def revise {fragments} (old : Published fragments) (rate : Int) (refuse : Bool :
     else closeLocal dependency (rightFragments revised) (components.downstreamFocus.get base))
   return ⟨revised,⟨pricing,refreshed.closed⟩,refreshed.reused⟩
 
-def summary : EStateM.Result String (List String) Int → Option Int × Option String × List String
-  | .ok value state => (some value,none,state)
-  | .error error state => (none,some error,state)
 
 theorem retained_shipping {old : Int} {fragments : List Fragment} {parent : Account}
     {original : Closed (family old) fragments parent} {revised : Int}

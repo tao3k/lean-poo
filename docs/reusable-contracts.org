@@ -76,3 +76,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-components.org][Mounted generalized components]] joins local closure witnesses, preserves local fragment orders and retains the left public interface under certified right replacement.
 
 [[file:contracts/generalized-dependencies.org][Directional generalized dependencies]] indexes downstream closure by an explicit upstream view and admits reuse only with equality evidence for that dependency.
+
+[[file:contracts/generalized-chain.org][Multi-level generalized dependencies]] sequences typed closure admission and selected-view refresh along finite heterogeneous chains, with whole closure obtained by nested existing dependent mounting.
