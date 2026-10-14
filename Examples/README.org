@@ -80,3 +80,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:DependentCheckout.lean][DependentCheckout]] combines inherited pricing and tier-dependent shipping, staged closure, unchanged-view reuse, changed-view reconstruction, refused publication and retained method-error prefixes. This advances the generalized-prototype future proposal; [[file:../docs/contracts/generalized-dependencies.org][explicit dependency contracts]].
 
 [[file:ChainedCheckout.lean][ChainedCheckout]] joins pricing, shipping, insurance and settlement permit through existing dependent mounting. Rebuilt prefixes can retain unchanged suffixes, and construction refusal leaves the original publication usable. This advances the future proposal; [[file:../docs/contracts/generalized-chain.org][chain contracts]].
+
+[[file:ForkedCheckout.lean][ForkedCheckout]] shares one pricing component across shipping and insurance, then admits settlement from the exact refreshed interface pair. Independent branch reuse, retained joins, first refusal and whole closure advance the future proposal; [[file:../docs/contracts/generalized-fork.org][fork/join contracts]].

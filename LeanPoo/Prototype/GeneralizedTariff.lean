@@ -41,6 +41,20 @@ def closeLocal (dependency : Int) (fragments : List Fragment) (base : Account) :
 
 def mark (event : String) : Action Unit := modify (· ++ [event])
 
+def stageFragments (rate : Int) (name : String) (limit : Option Int := none) : List Fragment := [
+  .inl rate,
+  .inr (fun _ => .around (fun next units => do
+    mark (name ++ ".enter")
+    if units < 0 then throw "units"
+    match limit with
+    | some bound => if units > bound then throw (name ++ ".limit")
+    | none => pure ()
+    let result ← next ()
+    mark (name ++ ".exit")
+    return result)),
+  .inr (fun self => .primary (fun _ units => do mark name; return units * self.get))]
+
+
 def summary : EStateM.Result String (List String) Int → Option Int × Option String × List String
   | .ok value state => (some value,none,state)
   | .error error state => (none,some error,state)

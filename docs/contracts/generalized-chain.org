@@ -99,3 +99,5 @@ rate. This distinguishes synchronous propagation from immediately substituting
 a newly computed upstream result. Those finite runs are controls; the ~Closed~
 witness supplies the fixed-point proof. The stale-edge theorem rejects any old
 tariff fixed point at a changed dependency, independently of its captured methods.
+
+[[file:generalized-fork.org][Shared-upstream forks and exact joins]] extends the same closure/refresh machinery to independent branches that reconverge.

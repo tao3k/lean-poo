@@ -8,18 +8,7 @@ namespace LeanPoo.Examples.ChainedCheckout
 open Prototype Prototype.Generalized
 open TariffComponent (Account Local Fragment Action family closeLocal mark summary)
 
-def stageFragments (rate : Int) (name : String) (limit : Option Int := none) : List Fragment := [
-  .inl rate,
-  .inr (fun _ => .around (fun next units => do
-    mark (name ++ ".enter")
-    if units < 0 then throw "units"
-    match limit with
-    | some bound => if units > bound then throw (name ++ ".limit")
-    | none => pure ()
-    let result ← next ()
-    mark (name ++ ".exit")
-    return result)),
-  .inr (fun self => .primary (fun _ units => do mark name; return units * self.get))]
+export TariffComponent (stageFragments)
 
 def pricing := stageFragments 6 "pricing"
 def shipping := stageFragments 2 "shipping" (some 8)

@@ -174,3 +174,5 @@ from an unverified declaration.
 [[file:Examples/DependentCheckout.lean][DependentCheckout]] adds directional pricing-to-shipping dependencies: downstream closure follows the selected upstream tier, with proved reuse or fresh evidence on revision. [[file:docs/contracts/generalized-dependencies.org][Dependent component contracts]].
 
 [[file:Examples/ChainedCheckout.lean][ChainedCheckout]] extends this research to four-level dependencies, typed suffix refresh and nested whole closure. [[file:docs/contracts/generalized-chain.org][Multi-level dependency contracts]].
+
+[[file:Examples/ForkedCheckout.lean][ForkedCheckout]] adds a shared-pricing diamond: independent branch refresh, exact paired join admission and proved whole closure. [[file:docs/contracts/generalized-fork.org][Fork/join contracts]].

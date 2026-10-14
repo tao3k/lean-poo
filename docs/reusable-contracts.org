@@ -78,3 +78,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-dependencies.org][Directional generalized dependencies]] indexes downstream closure by an explicit upstream view and admits reuse only with equality evidence for that dependency.
 
 [[file:contracts/generalized-chain.org][Multi-level generalized dependencies]] sequences typed closure admission and selected-view refresh along finite heterogeneous chains, with whole closure obtained by nested existing dependent mounting.
+
+[[file:contracts/generalized-fork.org][Shared upstream and exact joins]] reuses independent component closure and selected dependency refresh for explicitly declared fork/join shapes, with exact paired join indices and full-interface preservation.

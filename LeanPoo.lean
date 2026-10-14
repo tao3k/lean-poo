@@ -207,3 +207,4 @@ import LeanPoo.Prototype.GeneralizedComponents
 import LeanPoo.Prototype.GeneralizedDependencies
 import LeanPoo.Prototype.GeneralizedChain
 import LeanPoo.Prototype.GeneralizedTariff
+import LeanPoo.Prototype.GeneralizedFork
