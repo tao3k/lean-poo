@@ -216,3 +216,7 @@ import LeanPoo.Functional.PolicyPublication
 import LeanPoo.Functional.GeneralizedGraph
 import LeanPoo.Functional.GeneralizedMOP
 import LeanPoo.Functional.ConstructionWorkflow
+
+import LeanPoo.Functional.GeneralizedFragments
+import LeanPoo.Functional.InheritedMOP
+import LeanPoo.Functional.InheritedSettlement

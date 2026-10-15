@@ -1,0 +1,115 @@
+#+TITLE: Inherited generalized fragments and MOP audit — future work
+
+[[file:generalized-mop.org][Automatic graph/MOP contracts]] · [[file:generalized-prototypes.org][Generalized protocol]]
+
+* Source-grounded audit
+
+The pinned source's future work at 1807–1827 proposes generalized prototypes
+for dispatch and combination, attached type/logical metadata and staging/cache
+invalidation. The generalized constructor at 2098–2154 specifically combines a
+lens, raw-to-cooked setter and a wrapper over cooked self plus delayed raw super.
+It explicitly leaves a full treatment for future work.
+
+At the preceding PR head, ~GeneralizedGraph~ automatically closed one computation
+per key. ~GeneralizedInheritance~ could prepare C3 fragment order, but its clients
+supplied closure witnesses. ~GeneralizedMOP~ reconstructed graph and dispatch
+from a complete request. Those pieces did not yet provide one checked path from
+source inheritance through multiple analyzed super fragments to automatic closure
+and joint publication. This extension connects that path.
+
+This remains advancement of the future proposal. It changes neither the original
+concrete-construction closure map nor ~whole_paper_implemented=false~.
+
+* Ordered, analyzed inherited fragments
+
+[[file:../../LeanPoo/Functional/GeneralizedFragments.lean][GeneralizedFragments]] adds three finite typed fragment forms over existing
+~Computation~: replacement, modifier followed by inherited computation, and
+conditional replacement with inherited fallback. Bindings retain dependent slot
+types; selection preserves class-local order and concatenation order.
+
+~compile~ elaborates these forms into existing ~Computation~ constructors.
+The existing analyzer, locality proof, scheduler and ranked resolver therefore
+remain authoritative. There is no second dependency or fixed-point evaluator.
+
+~compiler~ uses existing ~lensGen~ on one slot's raw evaluation result.
+~compile_inheritance~ proves equality with actual delayed composition for every
+ordered list, final self, base and failure, without additional axioms. A modifier
+is evaluated before inherited code, then applied to its result. The outer
+computation error and inner component error stay separate until the existing
+graph installer flattens them. Modifier evaluation failure precedes parent
+failure. These are declared pure fragment semantics, not arbitrary host effects.
+
+Replacement does not evaluate inherited code. ~replace_prunes~ also removes its
+static footprint: overridden opaque, cyclic or failing parents do not block an
+otherwise valid construction. A conditional replacement retains both possible
+branches in analysis. A currently true condition cannot conceal an opaque parent.
+
+* Checked source inheritance and publication
+
+[[file:../../LeanPoo/Functional/InheritedMOP.lean][InheritedMOP.Source]] declares the actual C3 graph/root, class-local dependent
+bindings, support, base and policy. Existing ~C3.linearize~ determines precedence;
+ordered bindings are elaborated into a ~GeneralizedMOP.Request~ and passed to the
+existing closure/dispatch/negative-watch/admission pipeline.
+
+A source snapshot retains:
+
+| Evidence | Binds |
+|----------+-------|
+| C3 validity and graph derivation | Exact source graph, root and precedence |
+| Compiled request equality | Actual constructed graph/policy and ordered source fragments |
+| Automatic graph closure | Actual completed raw dictionary at every key |
+| Existing MOP origin | Actual dispatch definition and cooked construction |
+| Negative certificate and approval | Completed candidate's watched absences and consumer obligation |
+
+~Snapshot.request_reference~ accepts any independent C3 graph derivation and
+proves the same compiled request. ~Snapshot.resolves~ proves the source-elaborated
+graph's fixed-point equation. Inspection returns root, order, class-local
+key/fragment-kind metadata and effective component footprints. It does not pretend
+to inspect arbitrary callback bodies.
+
+~stage_inheritance_error~ forwards exact C3 failure before graph/dispatch/admission.
+~publish_refused~ returns the entire old source snapshot, order, graph, approval
+and warm cache by equality. ~publish_accepted~ identifies the new complete version.
+Ordinary invocation retains source correspondence via the existing request-frame
+theorem and admits any approval that depends on the actual warmed version.
+No arbitrary approval is assumed invariant under cache changes.
+
+* Complex inherited settlement service
+
+[[file:../../LeanPoo/Functional/InheritedSettlement.lean][InheritedSettlement]] reuses ~ConstructionWorkflow~'s whole multi-level graph,
+actual sum/peak multimethods, negative watches and dependent business approval.
+A C3 diamond adds Regional and Scale invoice modifiers over one shared Base and
+Legacy. Reversing parents changes ~(base * scale) + surcharge~ to
+~(base + surcharge) * scale~. ~invoice_wrappers~ proves the actual compiled result
+for every provider with a successful inherited computation; ~order_difference~
+proves their arithmetic difference.
+
+A root modifier reads the final shared risk result and adds it to the inherited
+total. An optional root override selects a new invoice when discount is present;
+an unconditional override can replace the entire inherited chain. Base's normal
+invoice replacement shields a legacy opaque/cyclic/failing body. Removing that
+replacement exposes the appropriate graph or business failure.
+
+[[file:../../Examples/InheritedSettlement.lean][The example]] migrates C3 parent order, input, optional capability, root fragment
+and aggregation policy together. Its dispatch changes from 199 to 387. A rejected
+forbidden-method publication keeps the original source order and warm cache.
+
+[[file:../../Tests/InheritedSettlement.lean][Independent controls]] cover 96 settings and policy combinations, 4608 complete
+call observations, 96 accepted joint migrations and 576 matrix refusals. Independent
+arithmetic/order/matching expectations check every constructed numerical component.
+Additional controls cover five exact C3 errors, all three shielded legacy hazards,
+a conditional opaque refusal, two different within-class orders, and first-modifier
+failure. The existing 30-second/2-GiB test limit remains unchanged.
+
+* Large remaining research gaps
+
+| Priority | Remaining capability | Existing reusable foundation and boundary |
+|----------+----------------------+-------------------------------------------|
+| 1 | Actual selective staged construction | ~Scheduled.invalidates/unaffected~ proves reuse conditions; current MOP migrations still rebuild the entire candidate. A future materialized result cache must retain exact-source certificates and distinguish metadata reuse from skipped execution. |
+| 2 | Atomic families of heterogeneous generic functions | ~Object.DispatchTable~ and single-generic negative/publication receipts exist. One MOP snapshot does not yet jointly version quote/reserve/cancel generics with cross-generic obligations. |
+| 3 | Declarative method/type/constraint metadata | Computation footprints and exact-candidate ~Approved~ proofs exist. Policy/cooking/method hooks remain explicit Lean functions; no general metadata language or automatic hook/type/effect inference is claimed. |
+| 4 | Lossy public cooking and automatic carrier-changing migration | The general protocol accepts arbitrary cooking and explicit dictionary bridges. This automatic MOP still requires a compatible view reconstructing its raw state and keeps one typed raw carrier during request changes. |
+| 5 | Automatically closing cyclic component equations | Ranked closure intentionally rejects cycles. Safe recursive interaction programs have their own operational evidence; they are not an automatic solver for arbitrary cyclic MOP graphs. |
+
+These are future-work integration or expressiveness boundaries. The source does
+not specify a complete universal MOP whose implementation can be declared closed.

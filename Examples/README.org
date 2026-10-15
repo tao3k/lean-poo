@@ -88,3 +88,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:PolicyPublication.lean][PolicyPublication]] reuses the seven-component workflow and adds invoice/audit/release. Actual fee policy changes require fresh interface admission even with equal tariff metadata; unrelated policies and upstream construction remain reusable. [[file:../docs/contracts/generalized-revision.org][Future-work revision contracts]].
 
 [[file:ConstructionWorkflow.lean][ConstructionWorkflow]] demonstrates automatic generalized closure, heterogeneous slots, inspected policies and a joint topology/source/base/layout/dispatch upgrade with warm-version refusal. [[file:../docs/contracts/generalized-mop.org][Future-work MOP contracts]].
+
+[[file:InheritedSettlement.lean][InheritedSettlement]] composes shared C3 ancestors, noncommuting invoice wrappers, conditional replacement, final-self risk and atomic source/policy publication. [[file:../docs/contracts/inherited-mop.org][Future-work scope and audit]].

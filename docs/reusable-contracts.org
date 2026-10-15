@@ -86,3 +86,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-revision.org][Scoped policy revision]] pairs actual configuration with dependency metadata, reuses compatible raw closure while recooking public methods, and composes a ten-component Functional publication.
 
 [[file:contracts/generalized-mop.org][Automatic generalized construction and checked MOP]] closes finite declarations using inferred locality and existing ranked resolution, exposes actual policy metadata, proves transitive invalidation/reuse conditions and publishes complete checked graph/dispatch migrations. Future-work extension.
+
+[[file:contracts/inherited-mop.org][Inherited generalized fragments and MOP]] compiles ordered typed replacement/extension/conditional fragments into analyzed computations, proves delayed-inheritance correspondence, and publishes source C3/closure/dispatch/approval as one checked version. Includes a prioritized future-work gap audit.
