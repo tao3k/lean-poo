@@ -165,4 +165,86 @@ theorem publish_refused [∀ key, DecidableEq (source.Context key)] (old : Snaps
   simp only [publish] at refused ⊢
   rw [refused]
 
+
+/-- Closed shared preparation, followed by heterogeneous per-key projections.
+The expensive prepare function cannot observe the ambient policy or snapshot. -/
+structure SharedProjection (Key Policy Cooked Shared Prepared : Type) (Context : Key → Type) where
+  input : Policy → Cooked → Shared
+  prepare : Shared → Prepared
+  project : (key : Key) → Prepared → Context key
+
+namespace SharedProjection
+omit [BEq Key] [LawfulBEq Key] [Hashable Key]
+variable {Shared Prepared : Type} {Context : Key → Type}
+variable (projection : SharedProjection Key Policy Cooked Shared Prepared Context)
+
+structure Cache (input : Shared) where
+  value : Prepared
+  origin : value = projection.prepare input
+
+def refresh [DecidableEq Shared] (input : Shared)
+    (old : Option (Σ prior, Cache projection prior)) : Cache projection input × Nat :=
+  match old with
+  | some ⟨prior, cached⟩ =>
+    if same : prior = input then (⟨cached.value, by simpa [same] using cached.origin⟩, 0)
+    else (⟨projection.prepare input, rfl⟩, 1)
+  | none => (⟨projection.prepare input, rfl⟩, 1)
+
+/-- Every cached heterogeneous input equals fresh closed preparation. -/
+theorem refresh_project [DecidableEq Shared] (input : Shared)
+    (old : Option (Σ prior, Cache projection prior)) (key : Key) :
+    projection.project key (refresh projection input old).1.value =
+      projection.project key (projection.prepare input) :=
+  congrArg (projection.project key) (refresh projection input old).1.origin
+
+/-- Same-context revision retains the actual prepared value and invokes no prepare. -/
+theorem refresh_retained [DecidableEq Shared] (input : Shared) (old : Cache projection input) :
+    (refresh projection input (some ⟨input,old⟩)).1.value = old.value ∧
+    (refresh projection input (some ⟨input,old⟩)).2 = 0 := by
+  simp [refresh]
+
+/-- Preparation is bounded independently of the number of heterogeneous contracts.
+This counts calls to prepare, not wall time, allocation or Scheme execution. -/
+theorem refresh_cost [DecidableEq Shared] (input : Shared)
+    (old : Option (Σ prior, Cache projection prior)) :
+    (refresh projection input old).2 ≤ 1 := by
+  cases old with
+  | none => simp [refresh]
+  | some cached => rcases cached with ⟨prior,cached⟩; simp only [refresh]; split <;> simp
+
+/-- Reuse the existing contract family construction, binding and atomic publisher. -/
+def toSource (keys : Policy → Cooked → List Key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key))) :
+    Source Key Policy Cooked Atom Args Result BuildError where
+  Context := Context
+  keys := keys
+  project := fun key policy cooked => projection.project key (projection.prepare (projection.input policy cooked))
+  construct := construct
+
+/-- The native cached lookup is an implementation of the existing source projection,
+so contract construction, binding and publication laws apply without weaker inputs. -/
+theorem cached_source_project [DecidableEq Shared] (keys : Policy → Cooked → List Key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key)))
+    (policy : Policy) (cooked : Cooked) (old : Option (Σ prior, Cache projection prior)) (key : Key) :
+    projection.project key (refresh projection (projection.input policy cooked) old).1.value =
+      (toSource projection keys construct).project key policy cooked :=
+  refresh_project projection (projection.input policy cooked) old key
+
+theorem same_context (oldPolicy policy : Policy) (oldCooked cooked : Cooked)
+    (same : projection.input oldPolicy oldCooked = projection.input policy cooked) (key : Key) :
+    projection.project key (projection.prepare (projection.input oldPolicy oldCooked)) =
+    projection.project key (projection.prepare (projection.input policy cooked)) := by rw [same]
+
+/-- A changed shared context can still leave a specific contract input unchanged;
+Cell.retain then preserves both its descriptor and late-bound invocation wrapper. -/
+theorem retain_origin (keys : Policy → Cooked → List Key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key)))
+    (old : Cell (toSource projection keys construct) execute oldPolicy oldCooked key)
+    (same : projection.project key (projection.prepare (projection.input oldPolicy oldCooked)) =
+      projection.project key (projection.prepare (projection.input policy cooked))) :
+    construct key (projection.project key (projection.prepare (projection.input policy cooked))) = .ok old.contract := by
+  rw [← same]
+  exact old.origin
+end SharedProjection
+
 end LeanPoo.Functional.ContractFamily

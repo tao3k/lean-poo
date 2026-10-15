@@ -55,6 +55,36 @@ def withFamily {runner : (key : Service) → Current → Args key → Except Str
     (next : Family source runner selected current → Except String Unit) : Except String Unit :=
   match outcome with | .error error => .error (reprStr error) | .ok family => next family
 
+/-- One closed shared pair feeds the existing heterogeneous source. -/
+def shared : SharedProjection Service (List Service) Current (Int × String) (Int × String) Inputs where
+  input := fun _ current => (current.capacity,current.invoice)
+  prepare := id
+  project := fun key prepared => match key with
+    | .reserve => prepared.1
+    | .cancel => prepared.2
+    | .quote => ()
+
+def sharedSource := shared.toSource source.keys source.construct
+
+/-- Invoice changes invalidate common preparation but not reservation semantics. -/
+theorem shared_reserve_unchanged (capacity : Int) (invoice₁ invoice₂ : String) :
+    sharedSource.project .reserve [] ⟨capacity,invoice₁,1⟩ =
+      sharedSource.project .reserve [] ⟨capacity,invoice₂,2⟩ := rfl
+
+theorem shared_cancellation_current (capacity : Int) (invoice : String) :
+    sharedSource.project .cancel [] ⟨capacity,invoice,2⟩ = invoice := rfl
+
+#eval do
+  let input : Int × String := (10,"invoice:1")
+  let cold := shared.refresh input none
+  let retained := shared.refresh input (some ⟨input,cold.1⟩)
+  let revised := shared.refresh (10,"invoice:2") (some ⟨input,retained.1⟩)
+  unless cold.2 == 1 && retained.2 == 0 && revised.2 == 1 do
+    throw (IO.userError "shared preparation count")
+  unless shared.project .reserve revised.1.value == 10 && shared.project .cancel revised.1.value == "invoice:2" do
+    throw (IO.userError "shared heterogeneous inputs")
+  IO.println "SHARED-CONTRACTS-OK cold=1 retained=0 joint=1 heterogeneous-current"
+
 def check : Except String Unit :=
   let initial : Current := ⟨10,"invoice:1",1⟩
   let revised : Current := ⟨10,"invoice:2",2⟩
@@ -100,5 +130,10 @@ def check : Except String Unit :=
 #print axioms Functional.ContractFamily.Cell.retain_bound
 #print axioms Functional.ContractFamily.Cell.rebind_contract
 #print axioms Functional.ContractFamily.Family.step_missing
+#print axioms Functional.ContractFamily.SharedProjection.refresh_project
+#print axioms Functional.ContractFamily.SharedProjection.refresh_retained
+#print axioms Functional.ContractFamily.SharedProjection.cached_source_project
+#print axioms Functional.ContractFamily.SharedProjection.refresh_cost
+#print axioms Functional.ContractFamily.SharedProjection.retain_origin
 #print axioms Functional.ContractFamily.publish_refused
 end LeanPoo.Examples.ContractFamily

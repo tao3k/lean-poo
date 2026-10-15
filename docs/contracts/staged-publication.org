@@ -254,3 +254,33 @@ across a changed generic. Such a generic still forces its business probe; the
 existing admission-provenance/service/contract gates decide whether a probe can
 be skipped. Overridden legacy contract callbacks conservatively prepare normally.
 Complete benchmark rows and binaries remain ignored outputs; no archive is stored.
+
+* Shared heterogeneous contract preparation
+
+~ContractFamily.SharedProjection~ factors closed shared input, expensive preparation,
+and dependent per-key projection. ~Cache.origin / refresh_project~ establish that
+cached prepared values yield the same inputs as fresh preparation for every key.
+~cached_source_project~ connects that result to the existing ~Source~; construction,
+late binding and joint publication therefore keep their existing semantic premises.
+~refresh_retained~ preserves the actual prepared value and records zero preparation
+calls; ~refresh_cost~ bounds preparation calls by one, independently of family size.
+Changed shared context may leave a particular key unchanged (~retain_origin~).
+These are operation-count laws for pure immutable sources, not Scheme time proofs.
+
+Scheme implements ~methods.inputs<-shared~ as a native derived mixin in the existing
+~Source.~ protocol. Source identity gates the private prepared lookup, and complete
+current support/duplicate validation precedes shared preparation. Each key still
+checks its own input for descriptor reuse and executor identity for wrapper reuse.
+The shared-contracts example combines reserve/cancel metadata with the existing
+projected generic family and staged joint approval. Price-only revision reuses both
+business probes; changing capacity/invoice rebuilds affected metadata atomically;
+invoice-only revision retains reservation's wrapper. Failure during common input
+preparation or admission returns the exact old version. Dynamic ceilings, release
+and cache budgets remain checked; arbitrary opaque callbacks are not memoized.
+
+Matched native controls use identical constructors, generic work and checked results,
+comparing a prepared shared lookup against independent per-key preparation. All 448
+rows passed source-bound semantic validation. Stable-input preparation improved in
+this local sample, while joint changed-input publication regressed about 2.9 percent
+under natural GC. This bounds the performance claim; the model does not prescribe
+shared preparation for every family. Raw data, binaries and failure logs stay ignored.
