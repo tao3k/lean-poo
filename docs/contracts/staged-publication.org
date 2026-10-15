@@ -159,3 +159,39 @@ of opaque callback bodies is inferred. Families are finite and statically typed;
 [[file:declarative-metadata.org][finite typed method/type/logic metadata]] now extend that path.
 Automatic arbitrary schema conversion and cyclic equation solving remain research. Publication is immutable and pure; external effects are
 outside this construction cache's execution model.
+
+* Preparation reuse and factored admission
+
+This remains generalized-prototype future work. ~Scheduled.rebase~ retains a
+checked order and rank after equality of the complete read footprint and known
+locality are established. It permits new resolver bodies/base values and does
+not certify value reuse. ~Cache.retain~ handles the stronger same-declaration
+case: it shares the closed state, evaluates no builders and resets the work trace.
+~Tests/ConstructionCache.lean~ checks the shared root revision (11 evaluated,
+4 retained) using rebased ranks, alongside all-node retention.
+
+~GenericFamily.Family.invoke_definition~ preserves every dispatch definition;
+~invoke_observations~ preserves cache-free observations at every signature and
+argument, including guards and method combination. Existing ~call_correct~
+connects these observations to actual certified calls. A predicate depending
+only on these definitions can retain its proof via ~invoke_stable~.
+~Snapshot.invokeRetaining~ requires a preservation proof for the actual successful
+family transition, retains stable evidence and checks dynamic approval on the
+actual successor. ~invokeRetaining_refused~ proves dynamic refusal returns no
+snapshot. Fresh construction still passes exact-candidate admission through
+~finish~; stable evidence is not transported across revisions automatically.
+
+The independent Scheme implementation uses native ~.readmit~ on the existing
+~StagedPublication.Model~. Its default delegates to full ~admit~. ServiceBundle
+specializes it to the actual successor cache budget: business probes execute at
+every publication, with pure immutable methods/contracts/view retained during
+calls. Custom effectful callbacks or predicates depending on cache state cannot
+be treated as stable. Source identity is required for constant-work whole-cache
+retention; changed sources still capture and scan finite support. Equality of
+read footprints skips DFS and its tables but does not skip invalidation.
+
+These are source-level work/evidence laws, not a verified Scheme compiler,
+allocator or runtime, nor a universal performance bound. Native matched controls
+measure schedule checking versus footprint reuse, recapture versus same-source
+retention, and full versus factored joint approval. Complete native observations
+remain ignored build outputs; concise summaries record tested identities.

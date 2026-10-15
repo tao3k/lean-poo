@@ -40,6 +40,43 @@ def checkCache : Except String Unit :=
           throw "other generic changed"
     pure ()
 
+/-- All service observations, at all arguments, are stable across cache warming.
+The one-entry joint budget is deliberately dynamic. -/
+def stableFamily (baseline : Version 100) (request : Request) (candidate : Candidate request) : Prop :=
+  ∀ key args, (candidate.family.table.get? key).map (fun generic => generic.referenceCall args) =
+    (baseline.candidate.family.table.get? key).map (fun generic => generic.referenceCall args)
+
+def budgetApproval (request : Request) (candidate : Candidate request) : Except String (PLift (cacheCount candidate ≤ 1)) :=
+  if safe : cacheCount candidate ≤ 1 then .ok ⟨safe⟩ else .error "cache-budget"
+
+abbrev Factored (baseline : Version 100) := StagedPublication.Snapshot model
+  (fun request candidate => PLift (stableFamily baseline request candidate) × PLift (cacheCount candidate ≤ 1))
+
+def factoredInvoke (baseline : Version 100) (old : Factored baseline) (key : Service) (args : Args key) :=
+  old.invokeRetaining model key args (by
+    intro result family called approved query probe
+    exact (GenericFamily.Family.invoke_observations model.generics old.request.policy
+      old.candidate.interface old.candidate.family key args result family called query probe).trans
+        (approved query probe)) budgetApproval
+
+def checkFactored : Except String Unit :=
+  match ServiceMetadata.start {input := 30} {} 1000 100 with
+  | .error error => .error (failureTag error)
+  | .ok baseline => do
+    let dynamic ← budgetApproval baseline.request baseline.candidate
+    let old : Factored baseline := ⟨baseline.request,baseline.candidate,⟨⟨by intro key args; rfl⟩,dynamic⟩⟩
+    match factoredInvoke baseline old .quote ⟨"Delivery","US",1⟩ with
+    | .error _ => throw "factored first call"
+    | .ok (_,warm) =>
+      unless cacheCount warm.candidate == 1 do throw "factored cold cache"
+      match factoredInvoke baseline warm .quote ⟨"Delivery","US",1⟩ with
+      | .error _ => throw "factored hit"
+      | .ok (_,hit) =>
+        match factoredInvoke baseline hit .reserve 2 with
+        | .error (.inr "cache-budget") => pure ()
+        | _ => throw "factored successor budget bypass"
+      unless cacheCount warm.candidate == 1 do throw "factored refusal changed prior"
+
 def check : Except String Unit :=
   match ServiceMetadata.start {input := 30} {} 1000 100 with
   | .error error => .error (failureTag error)
@@ -79,6 +116,7 @@ def check : Except String Unit :=
             prepared.candidate.cache.reused.length == 15 && quoteProbe prepared.candidate == some 52 do
           throw "policy-only declaration refresh"
     checkCache
+    checkFactored
 
 #eval match check with
   | .error error => throw (IO.userError error)
@@ -91,4 +129,6 @@ def check : Except String Unit :=
 #print axioms ServiceMetadata.declared_origin
 #print axioms DeclarativeMetadata.Contract.invoke_logic
 #print axioms ServiceMetadata.release_quote_bound
+#print axioms GenericFamily.Family.invoke_observations
+#print axioms StagedPublication.Snapshot.invokeRetaining_refused
 end LeanPoo.Examples.ServiceMetadata

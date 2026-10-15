@@ -13,6 +13,17 @@ structure Cache (spec : Declaration Key Value) where
   evaluated : List Key
   reused : List Key
 
+/-- Same immutable declaration: share the entire closed state and reset only
+work accounting. No builder, scheduler, slot copy or resolver is invoked. -/
+def Cache.retain {spec : Declaration Key Value} (cache : Cache spec) (order : List Key) : Cache spec :=
+  ⟨cache.closed, [], order⟩
+
+theorem Cache.retain_closed {spec : Declaration Key Value} (cache : Cache spec) (order : List Key) :
+    (cache.retain order).closed = cache.closed := rfl
+
+theorem Cache.retain_work {spec : Declaration Key Value} (cache : Cache spec) (order : List Key) :
+    (cache.retain order).evaluated = [] ∧ (cache.retain order).reused = order := ⟨rfl,rfl⟩
+
 /-- Builders may refuse work, but successful work must execute this resolver.
 The guarded builder lets clients test that retained nodes really are skipped. -/
 structure Builder (spec : Declaration Key Value) (BuildError : Type) where

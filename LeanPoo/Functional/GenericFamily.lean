@@ -129,6 +129,56 @@ theorem Family.invoke_other (family : Family model policy cooked) (key : G) (arg
       simp [Partial.install,DispatchTable.get?,DispatchTable.install,Std.DHashMap.get?_insert,
         different]
 
+/-- Every signature keeps its complete dispatch definition during invocation,
+including the called signature. This supports stable joint business checks. -/
+theorem Family.invoke_definition (family : Family model policy cooked) (key : G) (args : Args key)
+    (result : Result key) (next : Family model policy cooked)
+    (called : family.invoke model policy cooked key args = .ok (result,next)) (query : G) :
+    (next.table.get? query).map GeneralizedMOP.definition =
+      (family.table.get? query).map GeneralizedMOP.definition := by
+  by_cases same : key = query
+  · subst query
+    unfold Family.invoke at called
+    split at called
+    · contradiction
+    · rename_i generic found
+      split at called
+      · contradiction
+      · rename_i value updated worked
+        cases called
+        simp only [Partial.install, DispatchTable.get?, DispatchTable.install,
+          Std.DHashMap.get?_insert_self, Option.map_some]
+        rw [GeneralizedMOP.call_definition generic updated args result worked]
+        simpa [DispatchTable.get?] using congrArg (Option.map GeneralizedMOP.definition) found.symm
+  · rw [Family.invoke_other model policy cooked family key args result next called query same]
+
+/-- Cache-free observations of every service are unchanged, including guards
+and method combination. Certified `call_correct` connects these to actual calls. -/
+theorem Family.invoke_observations (family : Family model policy cooked) (key : G) (args : Args key)
+    (result : Result key) (next : Family model policy cooked)
+    (called : family.invoke model policy cooked key args = .ok (result,next))
+    (query : G) (probe : Args query) :
+    (next.table.get? query).map (fun generic => generic.referenceCall probe) =
+      (family.table.get? query).map (fun generic => generic.referenceCall probe) := by
+  have same := congrArg (fun entry => entry.map (fun generic => generic.referenceCall probe))
+    (family.invoke_definition model policy cooked key args result next called query)
+  have forget : ∀ generic : Multimethod (Args query) (Method query) (Result query),
+      (GeneralizedMOP.definition generic).referenceCall probe = generic.referenceCall probe := by
+    intro generic; rfl
+  simpa only [Option.map_map, Function.comp_def, forget] using same
+
+/-- A predicate of dispatch definitions can retain its proof across a warm call.
+Cache-dependent predicates deliberately do not meet this premise. -/
+theorem Family.invoke_stable (property : Family model policy cooked → Prop)
+    (stable : ∀ left right : Family model policy cooked,
+      (∀ query, (right.table.get? query).map GeneralizedMOP.definition =
+        (left.table.get? query).map GeneralizedMOP.definition) → property left → property right)
+    (family : Family model policy cooked) (key : G) (args : Args key)
+    (result : Result key) (next : Family model policy cooked)
+    (called : family.invoke model policy cooked key args = .ok (result,next))
+    (approved : property family) : property next :=
+  stable family next (family.invoke_definition model policy cooked key args result next called) approved
+
 omit [DecidableEq G] in
 theorem Family.call_correct (family : Family model policy cooked) (key : G)
     (generic : Multimethod (Args key) (Method key) (Result key))

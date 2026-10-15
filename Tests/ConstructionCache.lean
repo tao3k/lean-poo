@@ -54,11 +54,38 @@ def outcomes : Except String Unit := do
   let missing := {scheduled with order := []}
   unless (start missing (Builder.guarded spec (fun _ => true))).toOption.isNone do throw "incomplete materialization accepted"
 
+/-- A root revision keeps the complete footprint and checked ranks while the
+materializer rebuilds its shared downstream cone. -/
+def preparation : Except String Unit := do
+  let spec := ConstructionWorkflow.graph {input := 30}
+  let prior ← spec.schedule.mapError (fun _ => "preparation schedule")
+  let old ← (start prior (Builder.guarded spec (fun _ => true))).mapError (fun _ => "preparation cold")
+  let retained := old.retain prior.order
+  unless retained.evaluated.isEmpty && retained.reused.length == 15 do throw "retain accounting"
+  let next := spec.setBase "input" (some (.ok 60))
+  let reused := prior.rebase (spec := next)
+    (by intro key; rfl) (by intro key; exact prior.known key)
+  unless reused.order == prior.order do throw "schedule copied differently"
+  let hot ← (refresh reused old (fun key => key == "input") (by
+    intro key clean self
+    have different : "input" ≠ key := by
+      intro same
+      subst key
+      simp only [beq_self_eq_true] at clean
+      contradiction
+    exact spec.setBase_resolve_frame "input" key _ different self)
+    (Builder.guarded next (["input","freight","cover","reserve","tax","risk","settlement","invoice","audit","release","total"].contains ·))).mapError (fun _ => "retained schedule construction")
+  unless hot.evaluated.length == 11 && hot.reused.length == 4 &&
+      (hot.closed.raw "total").bind Except.toOption == some 58 do throw "shared root result"
+
 def run : IO Unit := do
   let _ ← IO.ofExcept typed
   let _ ← IO.ofExcept outcomes
+  let _ ← IO.ofExcept preparation
   IO.println "CONSTRUCTION-CACHE-CONTROLS-OK dependent-values duplicate-visit-skipping cold-refusal stable-errors real-absence incomplete-order-refusal"
 #eval run
 #print axioms Functional.ConstructionCache.Partial.step_done
 #print axioms Functional.ConstructionCache.Cache.reference
+#print axioms Functional.GeneralizedGraph.Scheduled.rebase
+#print axioms Functional.ConstructionCache.Cache.retain_closed
 end LeanPoo.Tests.ConstructionCache

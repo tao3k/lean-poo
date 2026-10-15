@@ -147,6 +147,27 @@ structure Scheduled (spec : Declaration Key Value) where
   edgeLower : ∀ key dep, dep ∈ spec.reads key → resolver.rank dep < resolver.rank key
   known : ∀ key, (spec.footprint key).unknown = false
 
+/-- Transfer a checked schedule across a revision with the same complete read
+footprint. Resolver bodies and base values may change; their closure is rebuilt
+at the retained ranks. This does not reuse resolved values. -/
+def Scheduled.rebase {old spec : Declaration Key Value} (prior : Scheduled old)
+    (reads : ∀ key, spec.reads key = old.reads key)
+    (known : ∀ key, (spec.footprint key).unknown = false) : Scheduled spec where
+  order := prior.order
+  resolver := ⟨prior.resolver.rank, by
+    intro key left right lower
+    apply spec.locality key (known key)
+    intro dep member
+    exact lower dep (prior.edgeLower key dep (by simpa [reads key] using member))⟩
+  edgeLower := by intro key dep member; exact prior.edgeLower key dep (by simpa [reads key] using member)
+  known := known
+
+theorem Scheduled.rebase_order {old spec : Declaration Key Value} (prior : Scheduled old)
+    (reads known) : (prior.rebase (spec := spec) reads known).order = prior.order := rfl
+
+theorem Scheduled.rebase_rank {old spec : Declaration Key Value} (prior : Scheduled old)
+    (reads known) : (prior.rebase (spec := spec) reads known).resolver.rank = prior.resolver.rank := rfl
+
 variable [BEq Key] [LawfulBEq Key] [Hashable Key]
 
 def Declaration.schedule (spec : Declaration Key Value) : Except (Error Key) (Scheduled spec) := do

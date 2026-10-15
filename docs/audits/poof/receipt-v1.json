@@ -3272,12 +3272,12 @@
       ]
     },
     "Examples/ServiceMetadata.lean": {
-      "sha256": "0e83347400f7f611fd39583a9e6ce759caa8a422e0430403f9c4eb41995b9867",
-      "physical_lines": 94,
+      "sha256": "73214cd423ea8d90668a2abba33ef48842d8bc26dc890ee0a12dece1e709c2c6",
+      "physical_lines": 134,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        83
+        121
       ]
     },
     "Examples/SharedReporting.lean": {
@@ -3484,8 +3484,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/ConstructionCache.lean": {
-      "sha256": "da0f0f30450da0b9fc5807cb18c70b7626421daa1bc376eca40776fb957a5769",
-      "physical_lines": 198,
+      "sha256": "3a91d75fd1aefdbccd3794a92650763de4d41650568b4c9a88d2abf2709de5a8",
+      "physical_lines": 209,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3603,8 +3603,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/GeneralizedGraph.lean": {
-      "sha256": "95de06891a0283c33b5ec8d54639fc7b300793e1a5e8f219c4c6d892a7f1f763",
-      "physical_lines": 286,
+      "sha256": "3c7c9087dcc9d2be62a691435c22f3bba46b1d7150fb8f07f99e66a3d9d2d956",
+      "physical_lines": 307,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3617,8 +3617,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/GenericFamily.lean": {
-      "sha256": "b1d8dcd7a1f75ef13e177c8da5167ecccfd6ef6ba03c72226c7f7ffdc06232e2",
-      "physical_lines": 139,
+      "sha256": "7efaff88954178694b0023eb692f8efaa263ad4cd375cef23702f38d505cae77",
+      "physical_lines": 189,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3813,8 +3813,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/StagedPublication.lean": {
-      "sha256": "f2e97ac9a91aa473bb7e53d18922ad481c097a67876422ca5cdbc7c95a3dfa6f",
-      "physical_lines": 198,
+      "sha256": "326cec417888db06f0fc7226a6d2f52b5b17f9d1bbc32bacb73c29a99c7a29ae",
+      "physical_lines": 251,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4823,12 +4823,12 @@
       ]
     },
     "Tests/ConstructionCache.lean": {
-      "sha256": "0070d5b1247415f0b213c7afd8efce6535a05548d71b5d8abc23d1f3bb632b58",
-      "physical_lines": 64,
+      "sha256": "947243b8f9f04818d408b906f72eabaf229707f3fca4cfedb2778061175455b8",
+      "physical_lines": 91,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        61
+        86
       ]
     },
     "Tests/ConstructionSemantics.lean": {

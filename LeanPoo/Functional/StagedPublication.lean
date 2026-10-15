@@ -195,4 +195,57 @@ theorem Snapshot.invoke_other (old : Snapshot model Approved) (key : G) (args : 
       exact GenericFamily.Family.invoke_other model.generics old.request.policy
         old.candidate.interface old.candidate.family key args _ _ familyCalled other different
 
+/-- Factored joint approval: retain the stable proof only when every successful
+cache-only family transition preserves it. Dynamic approval is still evaluated
+on the actual successor, including cache hits. The preservation proof erases. -/
+def Snapshot.invokeRetaining
+    {Stable : (request : Request Key Value Policy) → Candidate model request → Prop}
+    {Dynamic : (request : Request Key Value Policy) → Candidate model request → Type}
+    (old : Snapshot model (fun request candidate => PLift (Stable request candidate) × Dynamic request candidate))
+    (key : G) (args : Args key)
+    (preserves : ∀ result family,
+      old.candidate.family.invoke model.generics old.request.policy old.candidate.interface key args =
+        .ok (result,family) → Stable old.request old.candidate → Stable old.request ⟨old.candidate.cache,family⟩)
+    (check : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Dynamic request candidate)) :
+    Except (Sum (Object.DispatchTableError G) AdmissionError)
+      (Result key × Snapshot model (fun request candidate => PLift (Stable request candidate) × Dynamic request candidate)) :=
+  match called : old.candidate.family.invoke model.generics old.request.policy old.candidate.interface key args with
+  | .error error => .error (.inl error)
+  | .ok (result,family) =>
+    let candidate : Candidate model old.request := ⟨old.candidate.cache,family⟩
+    match check old.request candidate with
+    | .error error => .error (.inr error)
+    | .ok approval => .ok (result,⟨old.request,candidate,⟨⟨preserves result family called old.approval.1.down⟩,approval⟩⟩)
+
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
+/-- Factoring never suppresses a dynamic refusal or returns the tentative state. -/
+theorem Snapshot.invokeRetaining_refused
+    {Stable : (request : Request Key Value Policy) → Candidate model request → Prop}
+    {Dynamic : (request : Request Key Value Policy) → Candidate model request → Type}
+    (old : Snapshot model (fun request candidate => PLift (Stable request candidate) × Dynamic request candidate))
+    (key : G) (args : Args key) (preserves check)
+    (result : Result key)
+    (family : GenericFamily.Family model.generics old.request.policy old.candidate.interface)
+    (called : old.candidate.family.invoke model.generics old.request.policy old.candidate.interface key args =
+      .ok (result,family)) (issue : AdmissionError)
+    (refused : check old.request ⟨old.candidate.cache,family⟩ = .error issue) :
+    old.invokeRetaining model key args preserves check = .error (.inr issue) := by
+  unfold Snapshot.invokeRetaining
+  split
+  · rename_i error failed
+    rw [called] at failed
+    contradiction
+  · rename_i value next succeeded
+    rw [called] at succeeded
+    cases succeeded
+    simp only [refused]
+
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq G] in
+/-- A retained scheduling/caching policy cannot grant stable business approval
+for a fresh publication: `finish` still requires approval for its exact candidate. -/
+theorem Prepared.approved {request : Request Key Value Policy} {admit}
+    (prepared : Prepared (Approved := Approved) (AdmissionError := AdmissionError) model request admit) :
+    admit request prepared.candidate = .ok prepared.approval := prepared.admitted
+
 end LeanPoo.Functional.StagedPublication
