@@ -77,6 +77,7 @@ check-merge: check-types
         LeanPoo.Functional.StagedPublication \
         LeanPoo.Functional.ServiceBundle \
         LeanPoo.Functional.DeclarativeMetadata \
+        LeanPoo.Functional.ContractFamily \
         LeanPoo.Functional.ServiceMetadata \
         LeanPoo.Functional.ProjectedSelf \
         LeanPoo.Functional.CarrierMigration \
@@ -319,6 +320,7 @@ _check-examples:
     {{lean}} Examples/InheritedSettlement.lean
     {{lean}} Examples/ServiceBundle.lean
     {{lean}} Examples/ServiceMetadata.lean
+    {{lean}} Examples/ContractFamily.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

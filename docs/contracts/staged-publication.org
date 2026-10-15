@@ -222,4 +222,35 @@ constructors, with direct-constructor comparisons over 36 view settings.
 Generic model identity prevents reusing receipts after arbitrary code changes.
 Stable business checks transfer only from matching admission provenance and
 matching actual service/contract identity; all dynamic release/ceiling/budget
-checks remain. Reservation contract preparation is deliberately conservative.
+checks remain. ContractFamily now also retains projected descriptors and bindings.
+
+* Projected contract descriptors and late-bound wrappers
+
+[[file:../../LeanPoo/Functional/ContractFamily.lean][ContractFamily]] constructs descriptors only from closed per-key context values.
+Each cell certifies exact construction origin and equality of its bound function
+to the existing metadata invocation semantics. A retained cell shares both
+contract and bound function; ~Family.step_retained~ proves zero new construction
+and binding trace entries. Changed executors use ~Cell.rebind~, retaining the
+descriptor and binding to the new executor. ~bind_current~ states that the actual
+current state is passed at each call. Input/output/logic/source failure semantics
+are inherited from DeclarativeMetadata.Contract.invoke, including unchanged
+business-error values inside the result carrier.
+
+Finite refresh validates duplicate keys and current service availability before
+construction, starts from empty support so deleted entries disappear, and records
+constructed/bound/reused keys. ~Family.step_missing~ refuses an orphan even when
+its old contract was valid. ~publish~ runs joint admission on the prepared family;
+~publish_refused~ returns the exact old snapshot after preparation/admission error.
+The [[file:../../Examples/ContractFamily.lean][heterogeneous example]] selectively rebuilds cancellation for an invoice
+revision, retains reservation, checks current-state return and conservation,
+rebinds a changed executor, removes contracts and refuses joint/duplicate/orphan
+cases. These proof-carrying construction laws do not verify the Scheme compiler.
+
+Scheme uses native Source/derived methods and private hash tables with independent
+copy-on-write for descriptors/invokers. Source equality gates descriptor reuse;
+executor equality additionally gates wrapper reuse. The publication executor
+looks up the service in the current version, so wrapper identity can persist
+across a changed generic. Such a generic still forces its business probe; the
+existing admission-provenance/service/contract gates decide whether a probe can
+be skipped. Overridden legacy contract callbacks conservatively prepare normally.
+Complete benchmark rows and binaries remain ignored outputs; no archive is stored.

@@ -226,6 +226,7 @@ import LeanPoo.Functional.GenericFamily
 import LeanPoo.Functional.StagedPublication
 import LeanPoo.Functional.ServiceBundle
 import LeanPoo.Functional.DeclarativeMetadata
+import LeanPoo.Functional.ContractFamily
 import LeanPoo.Functional.ServiceMetadata
 import LeanPoo.Functional.ProjectedSelf
 import LeanPoo.Functional.CarrierMigration
