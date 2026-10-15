@@ -1,4 +1,4 @@
-import LeanPoo.Functional.IncrementalClosure
+import LeanPoo.Functional.ChunkedClosure
 import LeanPoo.Functional.CarrierMigration
 
 /-! Least positive cyclic closure followed by existing heterogeneous family
@@ -27,7 +27,7 @@ def prepareWithPlan (equations : Equations n) (policy : Policy) (plan : Incremen
       (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate)) :
     Except (StagedPublication.Failure (BuildError := Unit) (AdmissionError := AdmissionIssue) model)
       (Version (Approved := Approved) model) :=
-  let builtState := IncrementalClosure.assemble equations plan source
+  let builtState := ChunkedClosure.assemble equations plan source
   match built : StagedPublication.finish model ⟨declaration equations,policy⟩ builtState.1 admit with
   | .error error => .error error
   | .ok prepared => .ok {
@@ -35,13 +35,13 @@ def prepareWithPlan (equations : Equations n) (policy : Policy) (plan : Incremen
       plan
       planSource := source
       counts := builtState.2
-      popBound := IncrementalClosure.assemble_pop_bound _ _ _
+      popBound := ChunkedClosure.assemble_pop_bound _ _ _
       snapshot := prepared.snapshot model
       origin := rfl
       canonical := by
         change prepared.candidate.cache.closed.raw = _
         rw [StagedPublication.finish_cache model _ _ admit prepared built]
-        exact IncrementalClosure.assemble_canonical _ _ _ }
+        exact ChunkedClosure.assemble_canonical _ _ _ }
 
 def prepare (equations : Equations n) (policy : Policy) (admit :
     (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →

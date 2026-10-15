@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "scheme_peak_bound_checks": 144,
+  "observations": 96,
+  "fields": [
+    "pops",
+    "evals",
+    "nodes",
+    "writes",
+    "pushes",
+    "edges",
+    "queue_pairs"
+  ],
+  "assertions": 672,
+  "lean_receipt_sha256": "85407f47cfbaedb69694906f3c1dc4415887c10755f68a8c9163af8e9405d3a7",
+  "scheme_receipt_sha256": "7625228d644d6a344bb91dbf445502ce95e4af95f5df4b32b24322472140eb78",
+  "scheme_source_sha256": {
+    "closure.ss": "fe97ebbde955a69db8659cae42676fe93214203228d719c5052b15e71f721315",
+    "t/closure-scale-benchmark.ss": "b17b0bbdb60cf277bed1310aafbaff878993fe786760874acd47e85284b4d0af",
+    "tools/benchmark_closure.py": "219608cf83c3f7d6e9510f8b453464512b6de9ca627e91108d84130570a8b651"
+  },
+  "status": "pass",
+  "boundary": "Finite executable controls; no formal Scheme translation or compiler correctness claim."
+}

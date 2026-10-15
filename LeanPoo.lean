@@ -235,3 +235,8 @@ import LeanPoo.Functional.PositiveEquations
 import LeanPoo.Functional.CyclicPublication
 import LeanPoo.Functional.CyclicAccess
 import LeanPoo.Functional.IncrementalClosure
+
+import LeanPoo.Functional.ChunkedClosure
+import LeanPoo.Functional.ClosureCosts
+import LeanPoo.Functional.ClosureScenarios
+import LeanPoo.Functional.ClosurePolicy

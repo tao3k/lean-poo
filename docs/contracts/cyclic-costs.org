@@ -96,3 +96,10 @@ Timed-out reference cells have no finite median. Index reuse is excluded here.
 | quorum / 64 | 3/3 timeout (20 s each) | 0.055667 |
 | chain / 256 | 533.123791 | 0.048584 |
 | chain / 1024 | 3/3 timeout (20 s each) | 0.162292 |
+
+* Representation and allocation refinement
+
+[[file:closure-layouts.org][Representation and allocation contracts]] now supply the concrete byte/write
+and chunked-queue refinement, allocation/peak bounds and finite cost-policy
+selection. The original flat worklist and its receipt remain as the measured
+reference for this next refinement.
