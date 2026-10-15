@@ -36,3 +36,7 @@ root = "Benchmarks.CyclicClosureScale"
 [[lean_exe]]
 name = "closureLayoutScale"
 root = "Benchmarks.ClosureLayoutScale"
+
+[[lean_exe]]
+name = "hybridClosureScale"
+root = "Benchmarks.HybridClosureScale"

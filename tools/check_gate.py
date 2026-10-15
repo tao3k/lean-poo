@@ -117,7 +117,7 @@ def main():
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale']),
+        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('types', ['lean', 'LeanPoo/C4/Types.lean']),
          ('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),

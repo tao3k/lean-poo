@@ -237,6 +237,7 @@ import LeanPoo.Functional.CyclicAccess
 import LeanPoo.Functional.IncrementalClosure
 
 import LeanPoo.Functional.ChunkedClosure
+import LeanPoo.Functional.HybridClosure
 import LeanPoo.Functional.ClosureCosts
 import LeanPoo.Functional.ClosureScenarios
 import LeanPoo.Functional.ClosurePolicy

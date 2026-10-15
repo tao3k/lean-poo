@@ -686,3 +686,7 @@ publication. The corresponding guides describe universal proof boundaries.
 - [[file:IncrementalClosure.lean][IncrementalClosure]] checks 72 array/worklist scenarios through 1024 facts, independent scalar results, primitive bounds, exact chain counts, retained dependency indices and least cyclic revocation.
 
 [[file:../docs/contracts/closure-layouts.org][Representation and allocation contracts]] add byte/write and chunked-queue refinements, operational frame/peak bounds, explicit layout/copy/primitive ledgers, finite policy selection, complex workloads and a separate Gerbil implementation with count-parity evidence.
+
+- [[file:HybridClosure.lean][HybridClosure]] checks 80 scenarios with four backend price profiles,
+  exact original work counters, scalar oracles, copying/frame fee ceilings,
+  requested pair bounds and singleton fast paths.

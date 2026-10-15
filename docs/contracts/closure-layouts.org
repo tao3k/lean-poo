@@ -25,7 +25,8 @@ When a fact becomes true, it shares the plan's immutable watcher list and
 suspends one tail. It does not append/copy every outgoing edge into the queue.
 ~next_queue~ relates this representation to the ordinary flattened worklist;
 ~execute_refines~ proves exact final array AND existing work-counter equality.
-Production cyclic publication now consumes its actual materialization.
+This was the initial production materialization; the current default refines it
+with [[file:hybrid-queues.org][per-write scheduling]].
 
 Ghost ~frameAllocations~ follows exactly the same executed branches.
 ~frameAllocations_writes~ proves its allocation count equals actual writes;
@@ -81,8 +82,8 @@ and chunked queues. ~selected_bound~ bounds the executed selected solver by eith
 candidate's ceiling. ~minimumAllocation_optimal~ proves the allocation-only
 specialization: append if E ≤ V, otherwise chunk. This finite optimum concerns
 the two declared worst-case bounds, not optimal machine time or all algorithms.
-The Gerbil default implements this allocation-only choice; callers can select
-an explicit queue/state policy for latency or comparison.
+Gerbil retains this as the explicit ~minimum-allocation~ policy. Its current
+default uses [[file:hybrid-queues.org][per-write hybrid scheduling]] with declared copy/frame prices.
 
 * Executable evidence and boundaries
 
@@ -96,7 +97,7 @@ retained dependencies for source revocation.
 
 Build ~lake build closureLayoutScale~ and run
 ~python3 tools/benchmark_closure_layout.py --kind lean --binary .lake/build/bin/closureLayoutScale --output /tmp/layout.json~.
-The [[file:../performance/closure-layout-v1.json][96-run Lean receipt]] records three independent processes per variant/case,
+The historical [[file:../performance/closure-layout-v1.json][96-run Lean receipt]] records three independent processes per variant/case,
 20-second deadlines, source/binary identities and every failure/timeout row.
 The [[https://github.com/tao3k/gerbil-poo/pull/13][separate Gerbil PR #13]] (source ~14706fc~) has 144 matched scenario/variant runs and real POO slot
 workflow controls. [[file:../performance/closure-parity-v1.json][Cross-runtime evidence]] checks 672 primitive/queue-count

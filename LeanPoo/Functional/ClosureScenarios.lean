@@ -16,6 +16,12 @@ def equations (family : String) (n width : Nat) (seed : Bool) : Equations n := f
     if join : index.val % 3 = 0 then
       .both (.read ⟨index.val-1,by omega⟩) (.read ⟨index.val-2,by omega⟩)
     else .read ⟨index.val-index.val%3,by have : 0 < index.val % 3 := Nat.pos_of_ne_zero join; omega⟩
+  else if family == "hubchain" then
+    if index.val % 16 == 0 then .either (.read ⟨0,by omega⟩) (.read ⟨index.val-1,by omega⟩)
+    else .read ⟨index.val-1,by omega⟩
+  else if family == "bursts" then
+    if hub : index.val % 32 = 0 then .read ⟨index.val-1,by omega⟩
+    else .read ⟨index.val-index.val%32,by have positive := Nat.pos_of_ne_zero hub; omega⟩
   else if family == "skewed" then
     (List.range width).foldl (fun expression _ => .either expression (.read ⟨index.val-1,by omega⟩)) (.literal false)
   else if family == "gated" then .both (.read ⟨0,by omega⟩) (.literal (index.val%2 == 0))

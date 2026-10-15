@@ -1,0 +1,104 @@
+#+TITLE: Per-write closure scheduling — generalized protocol future work
+
+* Executed strategy and proof boundary
+
+[[file:../../LeanPoo/Functional/HybridClosure.lean][HybridClosure]] reuses the existing positive-equation compiler, immutable
+watcher lists, chunk cursor, bounded worklist and least-solution result. Production
+[[file:../../LeanPoo/Functional/CyclicPublication.lean][cyclic publication]] now executes this hybrid solver. This advances the
+paper's future generalized protocol, within finite positive Boolean equations.
+It does not add a missing original concrete construction.
+
+A global E/V allocation comparison cannot account for empty watcher lists,
+singleton chains and the work of suspending and resuming a frame. On each write:
+
+1. Empty watchers leave the cursor untouched.
+2. An empty current tail permits sharing watchers directly, even with suspended
+   older tails; no new suspension or copied watcher cell is needed.
+3. Otherwise copy the watcher spine when degree * copy ≤ suspend + resume;
+   suspend one tail and share the watchers otherwise. Ties favor copying.
+
+Prices are explicit nonnegative natural numbers; zero prices are supported.
+The default reference profile is (copy=1, suspend=4, resume=4). These are declared
+relative prices, not hardware calibration. Every frame is eventually restored
+because the refined execution exhausts the same queue. Scheme caches degrees;
+Lean computes each scheduled degree once and reuses it for both choice and stats.
+Scheme specializes the three queue engines with macros and dispatches once per
+solve, keeping queue-mode selection outside the propagation loop.
+
+~schedule_queue~ proves exact flattened work order. ~execute_refines~ proves the
+same final store AND all original work counters, for arbitrary prices, initial
+counters and initial hybrid cursor. ~canonical~ therefore gives the existing
+least fixed point, and publication retains its revocation and atomic refusal laws.
+
+Let C be copied watcher cells, F new suspension cells, P actual scheduled read
+occurrences, W actual writes, E all read occurrences and V declared facts.
+The cumulative executed proofs give:
+
+| Contract | Kernel theorem |
+|----------+----------------|
+| copy*C + (suspend+resume)*F ≤ copy*P and ≤ (suspend+resume)*W | ~measured_bounds~ |
+| C+F ≤ P ≤ E | ~measured_bounds~, ~allocation_bound~ |
+| F ≤ W ≤ V | ~execute_frames~, ~frame_bound~ |
+| Default C+F ≤ min(E,8V) | ~balanced_allocation~ |
+| Selected fee ≤ min(copy*E,(suspend+resume)*V) | ~fee_bound~ |
+
+The explicit layout ledger ~solveWords~ also prices these queue cells and the
+optional private publication snapshot; ~balanced_words~ lifts the default bound
+through arbitrary declared pair-word/header/byte-rounding layouts.
+The initial V queue cells are additional: requested queue pairs are V+C+F.
+The fee compares scheduling primitives and includes each frame's eventual resume.
+It excludes common dispatch, price testing, instrumentation, AST evaluation and
+backend-specific allocator/GC overhead. It is not a theorem of minimum elapsed
+CPU time, global allocation optimality or compiler correctness. The previous
+[[file:closure-layouts.org][representation/layout and copying contracts]] still state their own backend premises.
+
+* Complex clients and executable evidence
+
+[[file:../../Examples/AdaptiveAccess.lean][AdaptiveAccess]] combines cyclic access revocation, exact retained metadata,
+old snapshot preservation, shared burst fan-out and different backend prices.
+[[file:../../Tests/HybridClosure.lean][80 scenarios with four price profiles]] check exact reference counters,
+independent scalar solutions, zero-price/tie boundaries and both cumulative fee
+ceilings. Workloads include existing diamonds, dense sharing, rings, skewed
+syntax, partial gates and quorum chains, plus hub chains and successive bursts.
+The Gerbil workflow tests continue to exercise actual POO slots and revocation.
+
+[[file:../../Benchmarks/HybridClosureScale.lean][HybridClosureScale]] and the companion Scheme benchmark use ten size/shape
+settings, both seeds, cold/warm scopes, three queue engines and three processes:
+360 observations per runtime. Cold iterations number five; warm solves number
+400 and retain only compiled immutable metadata. Every solve starts from bottom.
+Lean uses IO references inside the loop to prevent pure call hoisting. The final
+solution is forced inside the clock and checked against an independent oracle.
+
+The runner, median reporter and cross-runtime checker are Scheme programs in
+[[https://github.com/tao3k/gerbil-poo/pull/13][Gerbil PR #13]] (~t/closure-suite.ss~, ~t/closure-report.ss~,
+~t/closure-parity.ss~). No Python dependency is needed for this benchmark workflow.
+The runner uses Gerbil process/JSON/SHA libraries and the benchmark uses Gambit's
+CPU timer; the existing external timeout enforces a 20-second child deadline.
+Scheme children retain the 1 GiB heap limit. Lean children use that same deadline
+without asserting a configured native heap limit. Failed launches, failed checks
+and timeout rows are retained and make the suite fail. Each row checkpoints the
+receipt; source, driver, binary, toolchain and platform identities are recorded.
+
+From the Gerbil PR checkout, after building the Lean target:
+
+#+begin_src sh
+just benchmark-closure
+gxi t/closure-suite.ss /absolute/lean-poo/.lake/build/bin/hybridClosureScale \
+  /absolute/timeout /tmp/lean-hybrid.json lean /absolute/lean-poo
+gxi t/closure-report.ss .build/closure/receipt.json
+gxi t/closure-parity.ss /tmp/lean-hybrid.json .build/closure/receipt.json \
+  /tmp/parity.json /absolute/lean-poo
+#+end_src
+
+The [[file:../performance/closure-hybrid-v2.json][Lean raw receipt]] and [[file:../performance/closure-hybrid-parity-v2.json][native Scheme count comparison]] bind 360 matching
+observations and 4680 count assertions. The companion PR retains its own raw
+receipt. The checker rejects duplicate keys, incomplete matrices, nonpassing
+rows, mismatched counters and changed local source hashes when given the source
+root. The v1 receipts remain historical observations of their recorded sources;
+newer sources must use the v2 receipts.
+
+Compare timing only within one runtime and scope. Lean records monotonic elapsed
+nanoseconds; Scheme records CPU seconds. Lean cold setup includes source creation,
+while Scheme creates input ASTs before its clock. Timing still includes
+instrumentation and may regress despite a lower declared fee. Raw observations
+retain those regressions; no cross-runtime speed ratio is supported.

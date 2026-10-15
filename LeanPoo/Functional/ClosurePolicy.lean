@@ -46,7 +46,7 @@ theorem selected_bound (plan : Plan n) (prices : ClosureCosts.Prices) (layout : 
   rw [solve_stats]
   exact Nat.le_trans (backend_bound plan prices layout _) (choose_minimum plan prices layout candidate)
 
-/-- Allocation-only specialization used by the Scheme default. Equal bounds
+/-- Explicit allocation-only comparison policy. Equal bounds
 prefer append. This is a least upper bound choice, not a latency prediction. -/
 def minimumAllocation (plan : Plan n) : Queue := if plan.edgeCount ≤ n then .append else .chunked
 
