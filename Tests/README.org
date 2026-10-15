@@ -690,3 +690,6 @@ publication. The corresponding guides describe universal proof boundaries.
 - [[file:HybridClosure.lean][HybridClosure]] checks 80 scenarios with four backend price profiles,
   exact original work counters, scalar oracles, copying/frame fee ceilings,
   requested pair bounds and singleton fast paths.
+
+- [[file:QueueSelection.lean][QueueSelection]] checks 96 scenarios across four cost profiles, exact reference
+  counters, both candidate ceilings, scalar oracles and topology-based engines.

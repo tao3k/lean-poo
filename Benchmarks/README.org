@@ -495,3 +495,7 @@ is established. Historical receipts remain unchanged.
 and retained-plan warm solves. The companion Scheme-native driver records
 360 observations per runtime and checks exact counters; [[file:../docs/contracts/hybrid-queues.org][scope and reproduction]]
 separate declared scheduling fees from elapsed machine time.
+
+The latest [[file:HybridClosureScale.lean][closure benchmark]] adds cached automatic selection. The Scheme-native
+runner rotates four variants through four positions; the v3 contract records
+640 independent-process observations and separate same-process controls.

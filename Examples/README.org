@@ -106,3 +106,6 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:AdaptiveAccess.lean][AdaptiveAccess]] combines per-write queue prices, shared bursts, retained
 cyclic dependency metadata and least-solution revocation. It advances generalized
 protocol future work; [[file:../docs/contracts/hybrid-queues.org][the hybrid contract]] states the proved cost boundary.
+
+[[file:SelectedAccess.lean][SelectedAccess]] adds certified cached queue selection to retained-index cyclic
+revocation and shared bursts; [[file:../docs/contracts/queue-selection.org][the contract]] includes decision costs and bounded claims.

@@ -457,6 +457,24 @@ def Stats.add (left right : Stats) : Stats :=
   ⟨left.pops+right.pops,left.evaluations+right.evaluations,left.nodes+right.nodes,
     left.writes+right.writes,left.pushes+right.pushes⟩
 
+/-- Narrow watcher spines avoid the generic append loop while preserving exactly
+its immutable result and requested copied-cell count. -/
+def appendWatchers (watchers tail : List α) : List α :=
+  match watchers with
+  | [] => tail
+  | [first] => first :: tail
+  | [first,second] => first :: second :: tail
+  | _ => watchers ++ tail
+
+@[simp] theorem appendWatchers_eq (watchers tail : List α) :
+    appendWatchers watchers tail = watchers ++ tail := by
+  cases watchers with
+  | nil => rfl
+  | cons first rest =>
+    cases rest with
+    | nil => rfl
+    | cons second rest => cases rest <;> rfl
+
 /-- Tail-recursive executable loop. Fuel is derived from the proved V+E
 potential, not supplied by clients. The theorem below rules out early exhaustion. -/
 def execute (fuel : Nat) (plan : Plan n) (store : Store n) (queue : List (Fin n)) (stats : Stats) : Store n × Stats :=
@@ -468,7 +486,7 @@ def execute (fuel : Nat) (plan : Plan n) (store : Store n) (queue : List (Fin n)
       let evaluated := evalCost store plan.equations[index.val]
       let stats := {stats with evaluations := stats.evaluations+1,nodes := stats.nodes+evaluated.2}
       if evaluated.1 then
-        execute fuel plan (store.set index.val true index.isLt) (plan.watches[index.val] ++ rest)
+        execute fuel plan (store.set index.val true index.isLt) (appendWatchers plan.watches[index.val] rest)
           {stats with writes := stats.writes+1,pushes := stats.pushes+plan.degree index}
       else execute fuel plan store rest stats
 
@@ -500,7 +518,7 @@ private theorem execute_refines (fuel : Nat) (plan : Plan n) (store : Store n) (
       · have absent : values store index = false := by cases found : values store index <;> simp_all
         rw [execute,ite_eq_right known]
         by_cases enabled : (evalCost store plan.equations[index.val]).1 = true
-        · rw [ite_eq_left enabled]
+        · rw [ite_eq_left enabled,appendWatchers_eq]
           have nextBound : potential plan (store.set index.val true index.isLt) (plan.watches[index.val] ++ rest) ≤ fuel := by
             have credit := credit_set plan.degree (values store) index absent
             rw [← values_set] at credit

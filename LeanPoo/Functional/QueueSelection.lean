@@ -1,0 +1,192 @@
+import LeanPoo.Functional.HybridClosure
+
+/-! Compile-time queue ceilings include the hybrid decision overhead. Choosing a
+smaller proved ceiling does not predict the fastest machine execution. -/
+namespace LeanPoo.Functional.QueueSelection
+open PositiveEquations IncrementalClosure
+
+inductive Queue where | append | hybrid
+  deriving BEq, DecidableEq, Repr
+
+structure Profile where
+  prices : HybridClosure.Prices
+  decision : Nat
+
+/-- Reference relative charges, not hardware calibration. Scaling the existing
+hybrid prices by four retains the same per-write degree threshold of eight. -/
+def reference : Profile := ⟨⟨4,16,16⟩,1⟩
+
+/-- The existing nonnegative compiler admission dominates both the cached
+reference ceiling arithmetic and the old copy-price=1 range check. -/
+theorem reference_capacity (n edges maximum limit : Nat)
+    (admitted : 16*(1+n+edges+(n+edges)*maximum) ≤ limit) :
+    edges ≤ limit ∧ n+4*edges ≤ limit := by omega
+
+theorem reference_threshold (degree : Nat) :
+    HybridClosure.useCopy reference.prices degree = HybridClosure.useCopy HybridClosure.balanced degree := by
+  have relation : degree*4 ≤ 32 ↔ degree ≤ 8 := by omega
+  simp [HybridClosure.useCopy,reference,HybridClosure.balanced,relation]
+
+theorem reference_nodeFee (degree : Nat) :
+    HybridClosure.nodeFee reference.prices reference.decision degree = 1+4*min degree 8 := by
+  simp only [HybridClosure.nodeFee,reference]
+  omega
+
+structure Prepared (profile : Profile) (plan : Plan n) where
+  appendCeiling : Nat
+  hybridCeiling : Nat
+  append_eq : appendCeiling = profile.prices.copy*plan.edgeCount
+  hybrid_eq : hybridCeiling = (List.ofFn (fun index => HybridClosure.nodeFee profile.prices profile.decision (plan.degree index))).sum
+
+variable {n : Nat} {profile : Profile} {plan : Plan n}
+
+def prepare (profile : Profile) (plan : Plan n) : Prepared profile plan :=
+  ⟨profile.prices.copy*plan.edgeCount,
+    (List.ofFn (fun index => HybridClosure.nodeFee profile.prices profile.decision (plan.degree index))).sum,rfl,rfl⟩
+
+def Prepared.choose (prepared : Prepared profile plan) : Queue :=
+  if prepared.appendCeiling ≤ prepared.hybridCeiling then .append else .hybrid
+
+def Prepared.ceiling (prepared : Prepared profile plan) : Queue → Nat
+  | .append => prepared.appendCeiling
+  | .hybrid => prepared.hybridCeiling
+
+theorem choose_minimum (prepared : Prepared profile plan) (candidate : Queue) :
+    prepared.ceiling prepared.choose ≤ prepared.ceiling candidate := by
+  unfold Prepared.choose
+  split <;> cases candidate <;> simp_all [Prepared.ceiling] <;> omega
+
+private theorem bounded_sum (degrees : Fin n → Nat) (small : ∀ index, degrees index ≤ 8) :
+    total (fun index => HybridClosure.nodeFee reference.prices reference.decision (degrees index)) =
+      n+4*total degrees := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    rw [total,reference_nodeFee,Nat.min_eq_left (small 0),ih _ (fun index => small index.succ)]
+    simp only [total]
+    omega
+
+/-- All narrow topologies avoid per-write hybrid decisions. This applies by
+cached metadata alone, independently of source literals or workload names. -/
+theorem small_degrees_append (prepared : Prepared reference plan) (small : ∀ index, plan.degree index ≤ 8) :
+    prepared.choose = .append := by
+  have hybrid : prepared.hybridCeiling = n+4*plan.edgeCount := by
+    rw [prepared.hybrid_eq,← total_eq_list,bounded_sum _ small,← plan.edgeCount_eq]
+  unfold Prepared.choose
+  rw [prepared.append_eq,hybrid]
+  simp only [reference]
+  simp
+
+def Prepared.run (prepared : Prepared profile plan) : HybridClosure.Run n :=
+  match prepared.choose with
+  | .append => let result := fastClose plan
+               ⟨result.store,result.stats,{copied := result.stats.pushes}⟩
+  | .hybrid => HybridClosure.measured profile.prices plan
+
+def Prepared.charge (prepared : Prepared profile plan) : Nat :=
+  prepared.run.work.fee profile.prices +
+    if prepared.choose == .hybrid then profile.decision*prepared.run.stats.writes else 0
+
+theorem run_core (prepared : Prepared profile plan) :
+    prepared.run.core = ((fastClose plan).store,(fastClose plan).stats) := by
+  unfold Prepared.run
+  split
+  · rfl
+  · exact HybridClosure.measured_core _ _
+
+theorem actual_bound (prepared : Prepared profile plan) :
+    prepared.charge ≤ prepared.ceiling prepared.choose := by
+  unfold Prepared.charge Prepared.run
+  cases chosen : prepared.choose with
+  | append =>
+    simp only [chosen,BEq.rfl,Bool.false_eq_true,ite_false,Nat.add_zero,HybridClosure.Work.fee,Nat.mul_zero]
+    change profile.prices.copy*(fastClose plan).stats.pushes ≤ prepared.appendCeiling
+    rw [prepared.append_eq]
+    have caps := ClosureCosts.actual_ceiling plan
+    rw [ChunkedClosure.close_stats] at caps
+    exact Nat.mul_le_mul_left _ caps.pushes
+  | hybrid =>
+    simp only [chosen,BEq.rfl,ite_true]
+    change _ ≤ prepared.hybridCeiling
+    rw [prepared.hybrid_eq]
+    exact HybridClosure.measured_credit _ _ _
+
+/-- The actual selected differential charge is bounded by both candidates'
+ceilings, including per-write hybrid decisions. It need not beat actual costs
+of a candidate on an unseeded/partially active source. -/
+theorem selected_bound (prepared : Prepared profile plan) (candidate : Queue) :
+    prepared.charge ≤ prepared.ceiling candidate :=
+  Nat.le_trans (actual_bound prepared) (choose_minimum prepared candidate)
+
+theorem allocation_bound (prepared : Prepared profile plan) :
+    prepared.run.work.copied+prepared.run.work.frames ≤ plan.edgeCount := by
+  unfold Prepared.run
+  split
+  · have caps := ClosureCosts.actual_ceiling plan
+    rw [ChunkedClosure.close_stats] at caps
+    simpa [ClosureCosts.ceiling] using caps.pushes
+  · exact HybridClosure.allocation_bound _ _
+
+theorem requested_words (prepared : Prepared profile plan) (layout : ClosureCosts.Layout) (snapshot : Bool) :
+    HybridClosure.solveWords layout snapshot n prepared.run.work ≤
+      layout.pairWords*(n+plan.edgeCount) + (if snapshot then layout.bytesHeader+layout.byteWords n else 0) := by
+  apply Nat.add_le_add_right
+  apply Nat.mul_le_mul_left
+  have bound := allocation_bound prepared
+  omega
+
+/-- Common preparation charges are explicit and added to every candidate. A
+backend must justify the cost of visiting degrees (and any list scans) itself. -/
+theorem selected_with_setup (prepared : Prepared profile plan) (setup : Nat) (candidate : Queue) :
+    setup+prepared.charge ≤ setup+prepared.ceiling candidate :=
+  Nat.add_le_add_left (selected_bound prepared candidate) setup
+
+def Prepared.solve (prepared : Prepared profile plan) : Result plan (Vector.replicate n false) (List.ofFn id) :=
+  match prepared.choose with
+  | .append => fastClose plan
+  | .hybrid => HybridClosure.close profile.prices plan
+
+theorem solve_core (prepared : Prepared profile plan) :
+    ((prepared.solve).store,(prepared.solve).stats) = prepared.run.core := by
+  unfold Prepared.solve Prepared.run
+  split <;> rfl
+
+theorem canonical (prepared : Prepared profile plan) :
+    values prepared.solve.store = (PositiveEquations.close plan.source).value := by
+  have same := congrArg Prod.fst ((solve_core prepared).trans (run_core prepared))
+  change prepared.solve.store = (fastClose plan).store at same
+  rw [same]; exact fast_canonical plan
+
+/-- Literal-only revision transports both cached ceilings without another
+traversal of watcher lists. Changed dependencies need fresh preparation. -/
+def Prepared.reconfigure (prepared : Prepared profile plan) (equations : Equations n)
+    (same : ∀ index, dependencies (equations index) = dependencies (plan.source index)) :
+    Prepared profile (IncrementalClosure.reconfigure plan equations same) :=
+  ⟨prepared.appendCeiling,prepared.hybridCeiling,prepared.append_eq,prepared.hybrid_eq⟩
+
+theorem reconfigure_choice (prepared : Prepared profile plan) (equations : Equations n) (same) :
+    (prepared.reconfigure equations same).choose = prepared.choose := rfl
+
+def assemble (equations : Equations n) (plan : Plan n) (source : plan.source = equations) :
+    ConstructionCache.Cache (declaration equations) × Stats :=
+  let result := (prepare reference plan).solve
+  ({closed := ⟨raw (values result.store),by
+      rw [GeneralizedGraph.Declaration.step_eq]
+      funext index
+      rw [PositiveEquations.resolve]
+      have fixed : step equations (values result.store) = values result.store := by rw [← source]; exact result.fixed
+      exact congrArg (fun value : Bool => some (Except.ok (ε := ComputationError (Fin n)) value)) (congrFun fixed index)⟩
+    evaluated := [],reused := []},result.stats)
+
+theorem assemble_canonical (equations : Equations n) (plan : Plan n) (source : plan.source = equations) :
+    (assemble equations plan source).1.closed.raw = raw (PositiveEquations.close equations).value := by
+  change raw (values (prepare reference plan).solve.store) = _
+  rw [canonical,source]
+
+theorem assemble_pop_bound (equations : Equations n) (plan : Plan n) (source : plan.source = equations) :
+    (assemble equations plan source).2.pops ≤ n+total plan.degree := by
+  have same := congrArg Prod.snd ((solve_core (prepare reference plan)).trans (run_core (prepare reference plan)))
+  change (prepare reference plan).solve.stats = (fastClose plan).stats at same
+  change (prepare reference plan).solve.stats.pops ≤ _
+  rw [same]; exact fast_pop_bound plan
+end LeanPoo.Functional.QueueSelection

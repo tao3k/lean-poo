@@ -61,7 +61,7 @@ theorem execute_refines (fuel : Nat) (plan : Plan n) (store : Store n) (cursor :
       rcases entry with ⟨index,tail⟩
       simp only [found] at queue
       change cursor.queue = index :: tail.queue at queue
-      simp only [execute,found,queue,IncrementalClosure.execute]
+      simp only [execute,found,queue,IncrementalClosure.execute,appendWatchers_eq]
       split
       · exact ih _ _ _
       · split

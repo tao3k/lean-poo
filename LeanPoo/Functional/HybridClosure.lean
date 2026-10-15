@@ -106,7 +106,7 @@ theorem execute_refines (fuel : Nat) (prices : Prices) (plan : Plan n) (store : 
       rcases entry with ⟨index,tail⟩
       simp only [found] at queue
       change cursor.queue = index :: tail.queue at queue
-      simp only [execute,found,queue,IncrementalClosure.execute]
+      simp only [execute,found,queue,IncrementalClosure.execute,appendWatchers_eq]
       split
       · exact ih _ _ _ _
       · split
@@ -212,6 +212,58 @@ theorem measured_bounds (prices : Prices) (plan : Plan n) :
   simpa [measured,Work.fee] using
     execute_bounds (n+plan.edgeCount) prices plan (Vector.replicate n false) ⟨List.ofFn id,[]⟩ {} {}
 
+
+/-- Each false fact carries its own possible scheduling fee, including a
+per-write decision charge. Credit is consumed once when that fact becomes true. -/
+def nodeFee (prices : Prices) (decision degree : Nat) :=
+  decision + min (degree*prices.copy) (prices.suspend+prices.resume)
+
+theorem execute_credit (fuel : Nat) (prices : Prices) (decision : Nat) (plan : Plan n)
+    (store : Store n) (cursor : Cursor n) (stats : Stats) (work : Work) :
+    let result := execute fuel prices plan store cursor stats work
+    result.work.fee prices + decision*result.stats.writes ≤
+      work.fee prices+decision*stats.writes+credit (fun index => nodeFee prices decision (plan.degree index)) (values store) := by
+  induction fuel generalizing store cursor stats work with
+  | zero => simp [execute]
+  | succ fuel ih =>
+    cases found : next cursor.current cursor.suspended with
+    | none => simp [execute,found]
+    | some entry =>
+      rcases entry with ⟨index,tail⟩
+      simp only [execute,found]
+      split
+      · exact ih store tail {stats with pops := stats.pops+1} work
+      · rename_i absent
+        have absent' : values store index = false := by cases h : values store index <;> simp_all
+        split
+        · have bound := ih (store.set index.val true index.isLt)
+            (schedule prices plan.watches[index.val] tail).1
+            {stats with
+              pops := stats.pops+1
+              evaluations := stats.evaluations+1
+              nodes := stats.nodes+(evalCost store plan.equations[index.val]).2
+              writes := stats.writes+1
+              pushes := stats.pushes+plan.degree index}
+            (work.add (schedule prices plan.watches[index.val] tail).2)
+          have selected := local_minimum prices plan.watches[index.val] tail
+          have spent := credit_set (fun index => nodeFee prices decision (plan.degree index)) (values store) index absent'
+          rw [← values_set] at spent
+          dsimp only at bound ⊢
+          simp only [Work.fee,Work.add,Nat.mul_add,Nat.mul_succ] at bound selected ⊢
+          simp only [nodeFee,Plan.degree] at spent
+          simp only [schedule,Plan.degree] at bound selected ⊢
+          simp only [nodeFee,Nat.mul_comm] at bound selected spent ⊢
+          omega
+        · exact ih store tail {stats with
+            pops := stats.pops+1
+            evaluations := stats.evaluations+1
+            nodes := stats.nodes+(evalCost store plan.equations[index.val]).2} work
+
+theorem measured_credit (prices : Prices) (decision : Nat) (plan : Plan n) :
+    (measured prices plan).work.fee prices + decision*(measured prices plan).stats.writes ≤
+      (List.ofFn (fun index => nodeFee prices decision (plan.degree index))).sum := by
+  have bound := execute_credit (n+plan.edgeCount) prices decision plan (Vector.replicate n false) ⟨List.ofFn id,[]⟩ {} {}
+  simpa [measured,Work.fee,credit,values,total_eq_list] using bound
 
 theorem measured_core (prices : Prices) (plan : Plan n) :
     (measured prices plan).core = ((fastClose plan).store,(fastClose plan).stats) := by

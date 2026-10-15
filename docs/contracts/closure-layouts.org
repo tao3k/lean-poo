@@ -83,7 +83,8 @@ candidate's ceiling. ~minimumAllocation_optimal~ proves the allocation-only
 specialization: append if E ≤ V, otherwise chunk. This finite optimum concerns
 the two declared worst-case bounds, not optimal machine time or all algorithms.
 Gerbil retains this as the explicit ~minimum-allocation~ policy. Its current
-default uses [[file:hybrid-queues.org][per-write hybrid scheduling]] with declared copy/frame prices.
+default uses [[file:queue-selection.org][cached append/hybrid selection]] including a decision charge;
+[[file:hybrid-queues.org][per-write hybrid scheduling]] remains one candidate.
 
 * Executable evidence and boundaries
 

@@ -1,0 +1,133 @@
+#+TITLE: Cached topology-based queue selection — generalized protocol future work
+
+* Why local fee minimization is insufficient
+
+[[file:hybrid-queues.org][Hybrid scheduling]] compares copying with suspension at each successful write.
+Its fee bound excludes deciding which branch to take. Narrow watcher spines can
+therefore run faster through a fixed append engine, even when a local hybrid
+choice minimizes the declared copying/frame fee. One large hub among many
+singletons differs from many successive fan-out bursts; E/V alone loses that
+information. No workload name or source literal participates in the new choice.
+
+[[file:../../LeanPoo/Functional/QueueSelection.lean][QueueSelection]] reuses both existing solvers and prepares two scalar ceilings:
+
+- A = copy * E for fixed append.
+- H = sum over facts of (decision + min(copy * degree, suspend + resume)).
+
+It chooses append when A ≤ H, hybrid otherwise. ~HybridClosure.execute_credit~
+proves the executed hybrid fee plus decision * actual writes is bounded by H.
+Each false fact carries its own fee credit; setting it true consumes that credit
+once. The proof covers arbitrary fuel, initial stores/counters and nonnegative
+prices, and does not assume all facts will become true. ~selected_bound~ bounds
+the actual selected charge by BOTH candidate ceilings. ~selected_with_setup~
+adds explicit common preparation charges; no cold setup cost is silently erased.
+This is a minimum among declared ceilings, not a minimum of actual alternate
+execution costs or machine time.
+
+The reference profile is copy=4, suspend=16, resume=16, decision=1. The
+~reference_threshold~ theorem preserves the previous degree-eight hybrid
+threshold; ~reference_nodeFee~ yields H = V + 4*sum(min(degree,8)). These are
+relative reference charges, not hardware calibration. Enough shared fan-out must
+save more than the decision budget before hybrid is selected.
+~small_degrees_append~ proves that every topology whose degrees are all ≤8 uses
+append, independently of literals. A sparse large hub is assessed by the full
+sum, rather than only maximum degree. Applications may prepare another explicit
+Lean profile; the Scheme ~auto~ API currently admits the reference profile only.
+Explicit ~hybrid~ continues to accept arbitrary validated Scheme prices.
+
+* Executed fast paths, cache and publication
+
+~IncrementalClosure.appendWatchers~ directly constructs zero-, one- and two-cell
+spines; ~appendWatchers_eq~ proves the exact original append result. The actual
+Lean append runner uses it, and the chunk/hybrid refinement proofs transport the
+change. Scheme uses cached degrees to take the corresponding zero/one/two
+branches and loads each successful write's degree once for both stats and queue
+scheduling. Wider spines retain generic append. The declared number of requested
+cells is unchanged. No theorem equates a generic call with a machine cycle.
+
+Scheme compiles H and the chosen engine once, and ~reconfigure-closure~ retains
+them only with unchanged tag/read topology. Default ~solve-closure~ uses ~auto~
+and directly dispatches the immutable admitted reference policy without repeating
+its generic price-range multiplication. ~reference_capacity~ proves that the existing compiler admission dominates the
+skipped reference copy-range check and cached ceiling arithmetic.
+Custom reference objects are checked;
+other profiles require an explicit queue. No degree traversal or per-write engine
+selection is introduced on a warm solve. Existing private byte ownership,
+zero-based solving, copied publication and refusal isolation remain in force.
+
+Lean ~Prepared~ stores certified ceilings. ~Prepared.reconfigure~ transports them
+without recomputation under the existing dependency-equality proof;
+~reconfigure_choice~ preserves the choice. The benchmark retains this prepared
+object in warm runs. Cyclic publication now executes the selected solver; its
+existing factory prepares ceilings when constructing a version. Calls on that
+version reuse its already closed snapshot. Selection preparation is included in
+cold measurements. Scheme traverses V cached degrees; the Lean implementation
+also traverses watcher lengths, so its preparation can cost V+E. These are
+separate implementations; no formal Scheme translation is asserted.
+
+~run_core~ and ~canonical~ preserve the five core counters (pops, evaluations,
+AST nodes, writes and pushes) and the exact least solution. Frame/allocation/
+decision instrumentation varies with the selected engine. ~allocation_bound~ gives copied cells + frames ≤ E and
+~requested_words~ lifts V+E queue pairs through the existing layout and copied
+snapshot ledger. Selecting append can allocate more than the previous 2V chunk
+bound or pure hybrid's V+min(E,8V); CPU/decision prices and allocation minima are
+different policies. No lower RSS, peak heap or universally fastest engine follows.
+
+[[file:../../Examples/SelectedAccess.lean][SelectedAccess]] composes cached ceilings, retained dependency metadata, cyclic
+revocation and shared bursts. [[file:../../Tests/QueueSelection.lean][96 scenarios with four profiles]] cover empty/narrow/
+large graphs, both seeds, exact counters, scalar oracles, both selected ceilings
+and topology-based choices, including zero prices and ties. The Scheme 512-system
+truth-table controls include automatic dispatch and compare all counters with the
+explicit selected engine. Existing actual POO slot/revocation workflows use the
+new default. These remain finite positive-equation generalized-MOP future work;
+the original concrete construction closure and completeness flag are unchanged.
+
+* Native performance controls
+
+The Scheme-native runner now rotates four variants through all four positions
+across four independent processes per size/seed/scope. Ten size/shape settings,
+both seeds, cold/warm scopes and four queues yield 640 rows in each runtime.
+The reporter uses the middle-pair median of four. This controls persistent order
+bias without extending the existing 20-second deadlines or Scheme 1 GiB heaps.
+
+The [[file:../performance/closure-selection-v3.json][Lean raw receipt]] and [[file:../performance/closure-selection-parity-v3.json][source-checked native parity]] cover 640 matching
+observations and 10880 field assertions, including the chosen engine and both
+ceilings. Original v1/v2 receipts remain historical. The
+[[file:../performance/closure-selection-initial-v3.json][initial development diagnostic]] retains the earlier rotated Scheme run where
+hub-chain auto regressed. Its recorded source hashes precede the final fast
+paths; it is not evidence for current source identities or a current-head pass.
+
+[[file:../performance/closure-selection-paired-v3.json][Additional paired controls]] run five targeted workloads in the same Scheme
+process on the same compiled plan, eight rotations of all four engines. Every
+engine receives 200 fresh-bottom solves per rotation; 160 raw observations are
+retained. Their reports use means over eight rounds, not the independent-process
+median. Allocation/GC and instrumentation remain in the timed interval; each
+candidate receives one untimed warm-up. The native supervisor retains failed
+launches, checks and timeouts and fails overall if any case fails.
+
+From the Gerbil PR checkout, ~just benchmark-closure~ reproduces the main matrix;
+~just benchmark-closure-paired~ reproduces the matched controls. The existing
+~t/closure-suite.ss~ also drives the built Lean ~hybridClosureScale~ binary with
+runtime ~lean~; ~t/closure-parity.ss~ checks both raw files with the Lean root as
+its final argument. All benchmark tooling is Scheme; no Python was added.
+
+Compare only within one runtime and one measurement scope. Lean records elapsed
+nanoseconds, Scheme CPU seconds, with differing cold source-construction scopes.
+An unchanged selected engine can still have timing variance. Negative and mixed
+results remain in receipts; declared costs do not prove compiler, GC, hardware
+latency or calibration correctness.
+
+The current matched same-process Scheme means (CPU ms/solve) are:
+
+| Shape | Fixed hybrid | Automatic | Selected engine |
+|-------+--------------+-----------+-----------------|
+| diamond / 1024 | 0.10313 | 0.09167 | append |
+| hub-chain / 1024 | 0.07756 | 0.06622 | append |
+| ring / 1024 | 0.07907 | 0.06831 | append |
+| bursts / 1024 | 0.04946 | 0.04919 | hybrid |
+| dense / 256 | 0.74428 | 0.76070 | hybrid |
+
+The three targeted reductions are approximately 11%, 15% and 14% relative to
+fixed hybrid in these local matched means. Dense retains a regression. Independent
+cold controls also retain regressions, including hub-chain and dense. These
+results qualify this executable/workload and do not prove stable hardware speed.

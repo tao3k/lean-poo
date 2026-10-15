@@ -4,7 +4,8 @@
 
 [[file:../../LeanPoo/Functional/HybridClosure.lean][HybridClosure]] reuses the existing positive-equation compiler, immutable
 watcher lists, chunk cursor, bounded worklist and least-solution result. Production
-[[file:../../LeanPoo/Functional/CyclicPublication.lean][cyclic publication]] now executes this hybrid solver. This advances the
+[[file:../../LeanPoo/Functional/CyclicPublication.lean][cyclic publication]] now executes [[file:queue-selection.org][cached append/hybrid selection]]; this module
+provides its hybrid candidate. This advances the
 paper's future generalized protocol, within finite positive Boolean equations.
 It does not add a missing original concrete construction.
 
