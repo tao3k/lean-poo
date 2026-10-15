@@ -227,3 +227,6 @@ import LeanPoo.Functional.StagedPublication
 import LeanPoo.Functional.ServiceBundle
 import LeanPoo.Functional.DeclarativeMetadata
 import LeanPoo.Functional.ServiceMetadata
+import LeanPoo.Functional.ProjectedSelf
+import LeanPoo.Functional.CarrierMigration
+import LeanPoo.Functional.AccountMigration

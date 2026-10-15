@@ -78,6 +78,9 @@ check-merge: check-types
         LeanPoo.Functional.ServiceBundle \
         LeanPoo.Functional.DeclarativeMetadata \
         LeanPoo.Functional.ServiceMetadata \
+        LeanPoo.Functional.ProjectedSelf \
+        LeanPoo.Functional.CarrierMigration \
+        LeanPoo.Functional.AccountMigration \
         LeanPoo.Functional.InheritedSettlement \
         LeanPoo.Functional.ConstructionWorkflow \
         LeanPoo.Functional.PolicyPublication \
@@ -303,6 +306,7 @@ _check-examples:
     {{lean}} Examples/InheritedSettlement.lean
     {{lean}} Examples/ServiceBundle.lean
     {{lean}} Examples/ServiceMetadata.lean
+    {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -521,6 +525,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ConstructionCache.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ServiceBundle.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/DeclarativeMetadata.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/AccountMigration.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean

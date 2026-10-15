@@ -80,4 +80,5 @@ bodies are supplied typed programs; decisions must be explicit. There is no
 arbitrary theorem prover, inferred host effect model or unrestricted reflective
 MOP. Existing descriptor/codec construction remains available separately; this
 extension does not automatically synthesize descriptors or change carriers.
-No external-effect rollback, lossy cooking or cyclic equation solver is claimed.
+[[file:lossy-migration.org][Lossy cooking and explicit typed carrier migration]] extend this path separately.
+No external-effect rollback or cyclic equation solver is claimed.

@@ -8,8 +8,6 @@ open GeneralizedGraph GeneralizedMOP
 
 structure Model (Key : Type) (Value : Key → Type) (G Policy Cooked : Type) (Args Method Result : G → Type) where
   cook : Policy → State Key Value → Cooked
-  view : Policy → Cooked → State Key Value
-  compatible : ∀ policy raw, view policy (cook policy raw) = raw
   generics : GenericFamily.Model G Policy Cooked Args Method Result
 
 variable {Key : Type} {Value : Key → Type} {G Policy Cooked : Type} {Args Method Result : G → Type}
@@ -24,14 +22,12 @@ structure Candidate (request : Request Key Value Policy) where
 def Candidate.interface {request : Request Key Value Policy} (candidate : Candidate model request) : Cooked :=
   model.cook request.policy candidate.cache.closed.raw
 
-/-- The public representation is cooked from materialized values, never by
-re-evaluating the ranked reference construction. -/
+/-- Raw closure belongs to materialized construction. Public cooking may discard
+information and needs no inverse. Cooked-self closure, when needed, requires
+separate evidence that the graph's actual reads survive that projection. -/
 def Candidate.closed {request : Request Key Value Policy} (candidate : Candidate model request) :
-    Prototype.Generalized.Closed (request.graph.protocol.reindexSelf (model.view request.policy)
-      (model.cook request.policy)) request.graph.keys request.graph.base :=
-  ⟨candidate.cache.closed.raw,by
-    rw [Prototype.Generalized.Protocol.step_reindexSelf _ _ _ (model.compatible request.policy)]
-    exact candidate.cache.closed.fixed⟩
+    Prototype.Generalized.Closed request.graph.protocol request.graph.keys request.graph.base :=
+  candidate.cache.closed
 
 variable {Approved : (request : Request Key Value Policy) → Candidate model request → Type}
 variable {BuildError AdmissionError : Type}

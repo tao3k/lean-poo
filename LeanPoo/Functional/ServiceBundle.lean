@@ -83,8 +83,6 @@ def watches : (key : Service) → List (DispatchExtension.Watch (Args key))
 
 def model : StagedPublication.Model String Values Service Policy Interface Args Method Result where
   cook := fun policy raw => ConstructionWorkflow.model.cook policy.pricing raw
-  view := fun policy cooked => ConstructionWorkflow.model.view policy.pricing cooked
-  compatible := fun _ _ => rfl
   generics := {
     keys := [.quote,.reserve,.cancel]
     seed

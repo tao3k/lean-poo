@@ -76,8 +76,9 @@ negative certificates and soundness through existing single-generic laws.
 * Joint staged publication
 
 [[file:../../LeanPoo/Functional/StagedPublication.lean][StagedPublication]] binds a request, its materialized cache, actual cooked
-interface and complete heterogeneous family. ~Candidate.closed~ transfers the
-stored raw fixed point through the existing compatible public view. Its cooking
+interface and complete heterogeneous family. ~Candidate.closed~ retains the actual
+stored raw fixed point independently of public cooking. [[file:lossy-migration.org][Read-covered projections]]
+add cooked-self closure when required, without a full inverse. Public cooking
 uses stored raw values, never the ranked reference evaluator.
 
 The transaction order is:
@@ -154,7 +155,7 @@ this staged path supplies the new explicit cache/family operation. Graph edits
 have automatic frame certificates. Arbitrary C3/source callback changes still need
 explicit resolver equality evidence or conservative reconstruction. No equality
 of opaque callback bodies is inferred. Families are finite and statically typed;
-raw carrier changes and lossy public cooking retain the earlier boundaries.
-General declarative method/type/constraint metadata and automatic cyclic equation
-solving remain research. Publication is immutable and pure; external effects are
+[[file:lossy-migration.org][Lossy cooked self and explicit carrier migration]] and
+[[file:declarative-metadata.org][finite typed method/type/logic metadata]] now extend that path.
+Automatic arbitrary schema conversion and cyclic equation solving remain research. Publication is immutable and pure; external effects are
 outside this construction cache's execution model.
