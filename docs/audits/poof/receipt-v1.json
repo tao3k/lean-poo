@@ -3133,14 +3133,18 @@
       ]
     },
     "Examples/ProtectedDispatch.lean": {
-      "sha256": "4911e168c3bde09dfdc3f66e9b368412476ef71353e8c1276ecbe43fece35c58",
-      "physical_lines": 91,
+      "sha256": "f4dcebaf7f237d577c6073b6896280a3c0e89aa26f328bf4f528cf2804a955c6",
+      "physical_lines": 122,
       "unsafe_declaration_lines": [],
       "guard_lines": [
-        78
+        79,
+        107,
+        108,
+        109,
+        110
       ],
       "eval_lines": [
-        86
+        117
       ]
     },
     "Examples/PrototypeCore.lean": {
@@ -3557,8 +3561,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/DispatchExtension.lean": {
-      "sha256": "46708f5193b040016e03f1e1188c6cb3adb2ec18bf3bd1ffb2d76a21025f9a8f",
-      "physical_lines": 285,
+      "sha256": "66b0ff12a11630907cdf04c0ef0f7db22b5ba25dd906fc0dedea83d24369200c",
+      "physical_lines": 368,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -5200,11 +5204,15 @@
       ]
     },
     "Tests/FunctionalDispatchExtension.lean": {
-      "sha256": "3423dbd7b972376c01bceed0f7bc9ca598521214d9b2cc68b977a33fa6f98f07",
-      "physical_lines": 113,
+      "sha256": "97cd505c826cd1cc91bf7787741cdb60af2b8df40720832e06c0b4bfea9a3165",
+      "physical_lines": 122,
       "unsafe_declaration_lines": [],
       "guard_lines": [
-        107
+        107,
+        111,
+        112,
+        113,
+        116
       ],
       "eval_lines": [
         106

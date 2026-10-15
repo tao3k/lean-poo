@@ -190,3 +190,32 @@ The [[file:../../contracts/generalized-components.org][component extension]] adv
 [[file:../../contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
 
 [[file:../../contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+* Runtime alignment: typed multi-dispatch and explicit negative watches
+
+This remains the generalized-prototype future-work construction, not a new
+claim of implementing the whole paper. The Scheme counterpart uses the existing
+POO MOP Type/validate boundary and C4 hierarchy, sparse tuple lookup, immutable
+candidate caches, shape/call watches and completed-edit publication. Its owners
+are Multimethod, DispatchExtension, CyclicPublication and ProtectedDispatch,
+matching the existing Lean definitions. Procedure callbacks are not inferred to
+be typed generics. Scheme remains independently buildable; no Lean checkout is
+required by its tests or native benchmark.
+
+[[file:../../../LeanPoo/Functional/DispatchExtension.lean][DispatchExtension]] now proves counted selection equals the ordered reference,
+one selection visit per candidate on warm/cold paths, zero value selection for
+shape watches, and the bounded association-cache lookup cost. Recency truncation
+bounds later lookup by eight shape comparisons. Structural shape equality,
+validators, C4/name lookup, method/guard/combination callbacks, index construction
+and snapshot allocation retain their own costs. These counts are not a total
+runtime or machine allocation bound. The Scheme representation uses a bounded
+persistent association list rather than Lean's hash map.
+
+[[file:../../../Examples/ProtectedDispatch.lean][ProtectedDispatch]] reuses the existing metadata-contract input/output refusal
+laws: rejected input precedes execution, and rejected output exposes no tentative
+cache. Runtime transport requires stable types/C4 graphs, immutable watched
+payloads and pure guards/validators/precedence. The private checked Scheme receipt
+is not a kernel proof; unrestricted mutation/effects and compiler correctness are
+outside the correspondence. Existing exact-refusal and family-frame theorems,
+576 independent extension controls, and additional counted/cache checks preserve
+the previously reviewed scope and status.

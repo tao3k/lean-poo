@@ -60,3 +60,33 @@ matrix separately completed 960 observations; its reader refused six controls
 (truncated, duplicate, invalid runtime, failed row, extra datum, stale source).
 No cross-runtime timing comparison or additional implementation/proof coverage
 is inferred from these orchestration checks.
+
+## Typed dispatch and negative extension costs
+
+In the Scheme package, `just benchmark-dispatch` builds and measures independently
+of this checkout. `gxi t/dispatch-report.ss <study>` validates its native Scheme
+data and reports CPU/allocation medians. It separates signature/index creation,
+cold/warm generic calls, negative checking, accepted/refused/canceled patches,
+changing guarded values, and heterogeneous family preparation/cold/warm calls.
+Source/binary identities and dimension declarations occur once. No new JSON
+format or version series is introduced. Use the Scheme PR's fixed
+`doc/performance/dispatch-benchmarks.scm` for the recorded observations.
+
+`DispatchExtension.selectCounted_cached` and `observedCounted_result` prove
+selection/reference parity and the retained per-candidate work. Recency truncation
+and `remembered_comparisons` bound the Scheme association cache to eight shape
+comparisons per lookup; equality cost and cache maintenance are separate costs.
+Type validation, graph/name resolution, index construction and publication-copy
+costs remain visible in the native phases. No constant-time end-to-end dispatch,
+zero-allocation call, or compiler/runtime refinement is claimed.
+
+The dispatch report also qualifies allocation-counter admission. A 264-row run
+passed semantic checks but produced two negative allocation deltas and was
+refused by the reader; its signed native data is preserved in Scheme's
+`doc/performance/dispatch-rejected.scm`. The installed runtime's counter was
+observed to decrease across GC. Current dispatch rows retain the raw delta and
+mark allocation unavailable for every GC-crossing interval or negative delta;
+no clamping or selective positive-GC sampling is used. Allocation medians require
+all rows in their group to be admitted. CPU/GC observations remain distinct.
+Earlier GC-crossing allocation receipts are not retroactively qualified by the
+new guard, and no compiler/runtime repair or correctness claim is made.
