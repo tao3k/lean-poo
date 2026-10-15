@@ -12,7 +12,7 @@
     "queue_pairs"
   ],
   "assertions": 672,
-  "lean_receipt_sha256": "85407f47cfbaedb69694906f3c1dc4415887c10755f68a8c9163af8e9405d3a7",
+  "lean_receipt_sha256": "1edef1564542ff3c4bdf1794487f88ff660496b06d011c1fedf2ccaa66b5c567",
   "scheme_receipt_sha256": "7625228d644d6a344bb91dbf445502ce95e4af95f5df4b32b24322472140eb78",
   "scheme_source_sha256": {
     "closure.ss": "fe97ebbde955a69db8659cae42676fe93214203228d719c5052b15e71f721315",

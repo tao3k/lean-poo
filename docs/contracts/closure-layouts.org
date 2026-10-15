@@ -63,7 +63,10 @@ requests are bounded by 2V pair cells plus the chosen snapshot's bytevector size
 This excludes any claim about RSS, GC scheduling or allocator residency.
 
 The primitive ledger separately charges representation reads, writes, branches
-and requested allocation words. Coefficients conservatively price queue walking,
+and requested allocation words. ~copyBytes~ separately charges old-state and
+publication copying as byte reads/writes and copy-loop branches; scratch
+initialization adds V byte writes. Copy work is not hidden inside allocation
+prices. Coefficients conservatively price queue walking,
 AST accesses, cached or scanned degree metadata and frame normalization. This is
 a declared abstract target instruction contract, not a mechanically extracted
 instruction trace of the Scheme source. ~backend_bound~ proves its weighted

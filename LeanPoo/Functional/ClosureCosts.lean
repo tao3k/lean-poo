@@ -136,6 +136,19 @@ theorem owned_chunked_allocation (plan : Plan n) (layout : Layout) (snapshot : B
       layout.pairWords*(n+n) + (if snapshot then layout.bytesHeader+layout.byteWords n else 0) := by
   simpa [solveWords,queueCells,ceiling] using allocation_bound plan layout ⟨true,true,true,snapshot⟩
 
+/-- Data movement is charged independently of allocation: copying an old state
+and publishing a copied snapshot both read/write their complete byte payload. -/
+def copyBytes (representation : Representation) (n : Nat) (stats : Stats) :=
+  (if representation.owned then 0 else n*stats.writes) + (if representation.snapshot then n else 0)
+
+theorem copyBytes_mono (representation : Representation) (n : Nat) (bound : Dominates small large) :
+    copyBytes representation n small ≤ copyBytes representation n large := by
+  unfold copyBytes
+  apply Nat.add_le_add_right
+  cases representation.owned <;> simp only [Bool.false_eq_true,ite_false,ite_true]
+  · exact Nat.mul_le_mul_left n bound.writes
+  · exact Nat.le_refl _
+
 /-- Conservative primitive counts include representation access, queue scanning,
 frame normalization and length traversals; they are not CPU instructions. -/
 structure Primitives where
@@ -145,9 +158,9 @@ structure Primitives where
   pairs : Nat
 
 def primitives (representation : Representation) (n : Nat) (stats : Stats) : Primitives :=
-  ⟨3*stats.pops+3*stats.evaluations+4*stats.nodes+stats.pushes+6*stats.writes+1,
-   stats.writes,
-   3*stats.pops+stats.nodes+stats.writes+1,
+  ⟨3*stats.pops+3*stats.evaluations+4*stats.nodes+stats.pushes+6*stats.writes+1+copyBytes representation n stats,
+   stats.writes+copyBytes representation n stats+n,
+   3*stats.pops+stats.nodes+stats.writes+1+copyBytes representation n stats,
    queueCells representation n stats⟩
 
 structure Prices where
@@ -167,6 +180,10 @@ theorem charge_mono (prices : Prices) (layout : Layout) (representation : Repres
   have visited := bound.nodes
   have scheduled := bound.pushes
   have written := bound.writes
+  have copied := copyBytes_mono representation n bound
+  have writes : (primitives representation n small).writes ≤ (primitives representation n large).writes := by
+    dsimp only [primitives]
+    omega
   have reads : (primitives representation n small).reads ≤ (primitives representation n large).reads := by
     dsimp only [primitives]
     have := Nat.mul_le_mul_left 3 bound.pops
@@ -179,7 +196,7 @@ theorem charge_mono (prices : Prices) (layout : Layout) (representation : Repres
     have := Nat.mul_le_mul_left 3 bound.pops
     omega
   exact Nat.add_le_add (Nat.add_le_add (Nat.add_le_add (Nat.mul_le_mul_left _ reads)
-    (Nat.mul_le_mul_left _ bound.writes)) (Nat.mul_le_mul_left _ branches))
+    (Nat.mul_le_mul_left _ writes)) (Nat.mul_le_mul_left _ branches))
     (Nat.mul_le_mul_left _ (solveWords_mono layout representation bound))
 
 theorem backend_bound (plan : Plan n) (prices : Prices) (layout : Layout) (representation : Representation) :

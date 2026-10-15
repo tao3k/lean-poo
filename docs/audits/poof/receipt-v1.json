@@ -3357,8 +3357,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/ClosureCosts.lean": {
-      "sha256": "3518ec77aff740f700d46c4f764e0adfd69da32a799d796431808005ce4e2df0",
-      "physical_lines": 188,
+      "sha256": "edb9b5a1b200d8a19dd09632031e0b52669d35b82de2e7c41dcf8b80e8ca05f4",
+      "physical_lines": 205,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -5764,8 +5764,8 @@
       "eval_lines": []
     },
     "docs/contracts/closure-layouts.org": {
-      "sha256": "f2eb20ee36f9b75da253bf1343a39b24498ab970f84a798b0f843562227b76c2",
-      "physical_lines": 111,
+      "sha256": "0d9131810087bcbd4cd623ab1524969034361e6f6a0591165bb3081a75ab79b6",
+      "physical_lines": 114,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -5806,14 +5806,14 @@
       "eval_lines": []
     },
     "docs/performance/closure-layout-v1.json": {
-      "sha256": "85407f47cfbaedb69694906f3c1dc4415887c10755f68a8c9163af8e9405d3a7",
+      "sha256": "1edef1564542ff3c4bdf1794487f88ff660496b06d011c1fedf2ccaa66b5c567",
       "physical_lines": 2517,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
     },
     "docs/performance/closure-parity-v1.json": {
-      "sha256": "b06ed4646072603407792303c4ae321951f13689c09f5fca021766eac2c692b3",
+      "sha256": "2c1d1199d7586308f0140ccde22096e80652ad0d276f7fcf21395bb2bd998d53",
       "physical_lines": 24,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
