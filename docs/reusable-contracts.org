@@ -84,3 +84,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-context.org][Shared context through multiple joins]] composes fork input projections and admits contextual joins using the complete new context/branch key, with a reusable seven-component Functional workflow.
 
 [[file:contracts/generalized-revision.org][Scoped policy revision]] pairs actual configuration with dependency metadata, reuses compatible raw closure while recooking public methods, and composes a ten-component Functional publication.
+
+[[file:contracts/generalized-mop.org][Automatic generalized construction and checked MOP]] closes finite declarations using inferred locality and existing ranked resolution, exposes actual policy metadata, proves transitive invalidation/reuse conditions and publishes complete checked graph/dispatch migrations. Future-work extension.

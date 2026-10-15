@@ -212,3 +212,7 @@ import LeanPoo.Prototype.GeneralizedContext
 import LeanPoo.Functional.SharedSettlement
 import LeanPoo.Prototype.GeneralizedRevision
 import LeanPoo.Functional.PolicyPublication
+
+import LeanPoo.Functional.GeneralizedGraph
+import LeanPoo.Functional.GeneralizedMOP
+import LeanPoo.Functional.ConstructionWorkflow

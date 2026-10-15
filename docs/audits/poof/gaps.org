@@ -48,7 +48,7 @@
 * Evidence discipline
 
 - [X] Pin the paper commit, content hash and all 90 headings across 45 review units.
-- [X] Bind 298 local evidence files and 501 Lean source filenames; reject drift.
+- [X] Bind 303 local evidence files and 506 Lean source filenames; reject drift.
 - [X] Use role-based module and test filenames, with synchronized imports and audit links.
 - [X] Distinguish kernel theorems, bounded observations, original-source execution and exact-head CI.
 - [X] Classify explicit future proposals separately from executable requirements.

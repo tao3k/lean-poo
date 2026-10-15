@@ -180,3 +180,5 @@ from an unverified declaration.
 [[file:Examples/SharedSettlement.lean][SharedSettlement]] composes two fork/join levels while retaining explicit shared pricing dependencies. [[file:docs/contracts/generalized-context.org][Contextual join contracts]].
 
 [[file:Examples/PolicyPublication.lean][PolicyPublication]] adds scoped invoice/audit/release policy upgrades to that shared workflow, with configuration-aware admission and proved raw-closure recooking. [[file:docs/contracts/generalized-revision.org][Policy revision contracts]].
+
+[[file:Examples/ConstructionWorkflow.lean][ConstructionWorkflow]] automatically closes finite declared component graphs, infers dependencies and transitive invalidation, inspects actual MOP policies, and atomically migrates topology/source/base/layout/dispatch. [[file:docs/contracts/generalized-mop.org][Checked MOP contracts]]; this advances future work.
