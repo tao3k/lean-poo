@@ -105,6 +105,28 @@ def stage (old : Snapshot model Approved) (edits : List (Redefinition Key Value 
     | .error error => .error (.construction error)
     | .ok cache => finish model request cache admit
 
+/-- Graph materialization followed by service-specific source projection. A clean
+service retains its exact generic (including cache); admission still sees the
+actual retained/rebuilt family and can reject a tighter joint cache budget. -/
+def stageRefresh (projection : GenericFamily.Projection model.generics)
+    [∀ key, DecidableEq (projection.Context key)]
+    (old : Snapshot model Approved) (edits : List (Redefinition Key Value Policy))
+    (builder : ConstructionCache.Builder (redefine old.request edits).graph BuildError)
+    (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Approved request candidate)) :
+    Except (Failure (BuildError := BuildError) (AdmissionError := AdmissionError) model)
+      (Prepared model (redefine old.request edits) admit) := do
+  let request := redefine old.request edits
+  let scheduled ← request.graph.schedule.mapError Failure.schedule
+  let cache ← (ConstructionCache.refresh scheduled old.candidate.cache
+    (ConstructionCache.changed edits) (ConstructionCache.redefine_unchanged old.request edits) builder).mapError Failure.construction
+  let family ← (GenericFamily.refresh model.generics request.policy (model.cook request.policy cache.closed.raw)
+    projection old.candidate.family).mapError Failure.generic
+  let candidate : Candidate model request := ⟨cache,family⟩
+  match accepted : admit request candidate with
+  | .error error => .error (.admission request candidate error)
+  | .ok approval => .ok ⟨candidate,approval,accepted⟩
+
 def Prepared.snapshot {request : Request Key Value Policy} {admit}
     (prepared : Prepared (Approved := Approved) (AdmissionError := AdmissionError) model request admit) :
     Snapshot model Approved := ⟨request,prepared.candidate,prepared.approval⟩
@@ -115,6 +137,23 @@ def publish (old : Snapshot model Approved) (edits : List (Redefinition Key Valu
       Except AdmissionError (Approved request candidate)) :=
   let outcome := stage model old edits builder admit
   (outcome,match outcome with | .error _ => old | .ok prepared => prepared.snapshot model)
+
+def publishRefresh (projection : GenericFamily.Projection model.generics)
+    [∀ key, DecidableEq (projection.Context key)]
+    (old : Snapshot model Approved) (edits : List (Redefinition Key Value Policy))
+    (builder : ConstructionCache.Builder (redefine old.request edits).graph BuildError)
+    (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Approved request candidate)) :=
+  let outcome := stageRefresh model projection old edits builder admit
+  (outcome,match outcome with | .error _ => old | .ok prepared => prepared.snapshot model)
+
+theorem publishRefresh_refused (projection : GenericFamily.Projection model.generics)
+    [∀ key, DecidableEq (projection.Context key)]
+    (old : Snapshot model Approved) (edits builder admit)
+    (error : Failure (BuildError := BuildError) (AdmissionError := AdmissionError) model)
+    (refused : stageRefresh model projection old edits builder admit = .error error) :
+    (publishRefresh model projection old edits builder admit).2 = old := by
+  simp [publishRefresh, refused]
 
 theorem publish_refused (old : Snapshot model Approved) (edits builder admit)
     (error : Failure (BuildError := BuildError) (AdmissionError := AdmissionError) model)

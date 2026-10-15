@@ -3262,13 +3262,14 @@
       ]
     },
     "Examples/ServiceBundle.lean": {
-      "sha256": "5c72c0544e4f67f0c63430d0b11cc85860616ee792291a29ec5c4c26a114c46f",
-      "physical_lines": 94,
+      "sha256": "1213b75a3a947a1e0c05c20677573ee950b7d0dfbfe906737753cbb31e3eb327",
+      "physical_lines": 198,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        79,
-        83
+        176,
+        183,
+        187
       ]
     },
     "Examples/ServiceMetadata.lean": {
@@ -3617,8 +3618,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/GenericFamily.lean": {
-      "sha256": "7efaff88954178694b0023eb692f8efaa263ad4cd375cef23702f38d505cae77",
-      "physical_lines": 189,
+      "sha256": "84fa3c6da7c2e6eaf6a9d50267a239dd19924c9ac4153be436fee56040605c54",
+      "physical_lines": 283,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3813,8 +3814,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/StagedPublication.lean": {
-      "sha256": "326cec417888db06f0fc7226a6d2f52b5b17f9d1bbc32bacb73c29a99c7a29ae",
-      "physical_lines": 251,
+      "sha256": "6a844994be8bfa158747ec280b81bda046159fa29938bd147901710448fd98b4",
+      "physical_lines": 290,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []

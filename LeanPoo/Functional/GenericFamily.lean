@@ -76,6 +76,100 @@ def build : Except (Failure model) (Family model policy cooked) :=
       | .ok next => go next rest
   go (Partial.empty model policy cooked) model.keys
 
+/-- Executable service-specific inputs, with exact source congruence. Equal
+outputs or user-supplied clean-key flags cannot replace these obligations. -/
+structure Projection where
+  Context : G → Type
+  project : (key : G) → Policy → Cooked → Context key
+  seed_eq : ∀ key first before second after,
+    project key first before = project key second after → model.seed key first before = model.seed key second after
+  methods_eq : ∀ key first before second after,
+    project key first before = project key second after → model.methods key first before = model.methods key second after
+
+/-- Closed construction environments make projection congruence structural.
+Builders receive only their service's projected context. -/
+structure Source where
+  Context : G → Type
+  project : (key : G) → Policy → Cooked → Context key
+  seed : (key : G) → Context key → Multimethod (Args key) (Method key) (Result key)
+  seedEmpty : ∀ key context, (seed key context).cache = {}
+  methods : (key : G) → Context key → List (Edit (Args key) (Method key))
+  keys : List G
+  watches : (key : G) → List (Watch (Args key))
+
+def Source.asModel (source : Source (G := G) (Policy := Policy) (Cooked := Cooked)
+    (Args := Args) (Method := Method) (Result := Result)) : Model G Policy Cooked Args Method Result where
+  keys := source.keys
+  seed := fun key policy cooked => source.seed key (source.project key policy cooked)
+  seedEmpty := fun key policy cooked => source.seedEmpty key (source.project key policy cooked)
+  methods := fun key policy cooked => source.methods key (source.project key policy cooked)
+  watches := source.watches
+
+def Source.projection (source : Source (G := G) (Policy := Policy) (Cooked := Cooked)
+    (Args := Args) (Method := Method) (Result := Result)) : Projection source.asModel where
+  Context := source.Context
+  project := source.project
+  seed_eq := by intro key first before second after same; exact congrArg (source.seed key) same
+  methods_eq := by intro key first before second after same; exact congrArg (source.methods key) same
+
+variable {oldPolicy : Policy} {oldCooked : Cooked}
+
+def Certified.transport (projection : Projection model) (key : G)
+    (generic : Multimethod (Args key) (Method key) (Result key))
+    (receipt : Certified model oldPolicy oldCooked key generic)
+    (same : projection.project key oldPolicy oldCooked = projection.project key policy cooked) :
+    Certified model policy cooked key generic where
+  origin := by
+    obtain ⟨cold,generated,definition⟩ := receipt.origin
+    exact ⟨cold, by rw [← projection.seed_eq key oldPolicy oldCooked policy cooked same,
+      ← projection.methods_eq key oldPolicy oldCooked policy cooked same]; exact generated, definition⟩
+  negative := receipt.negative
+  sound := receipt.sound
+
+/-- A clean branch installs the exact warm generic and transports its source,
+negative-watch and cache-soundness receipts; no constructor/checker executes. -/
+def Partial.refresh (projection : Projection model) [∀ key, DecidableEq (projection.Context key)]
+    (old : Family model oldPolicy oldCooked) (prior : Partial model policy cooked) (key : G) :
+    Except (Failure model) (Partial model policy cooked) :=
+  if (prior.table.get? key).isSome then .ok prior else
+  match found : old.table.get? key with
+  | none => prior.build model policy cooked key
+  | some generic =>
+    if same : projection.project key oldPolicy oldCooked = projection.project key policy cooked then
+      .ok (prior.install model policy cooked key generic
+        (Certified.transport model policy cooked projection key generic (old.certified key generic found) same))
+    else prior.build model policy cooked key
+
+def refresh (projection : Projection model) [∀ key, DecidableEq (projection.Context key)]
+    (old : Family model oldPolicy oldCooked) : Except (Failure model) (Family model policy cooked) :=
+  let rec go (prior : Partial model policy cooked) : List G → Except (Failure model) (Family model policy cooked)
+    | [] => if complete : model.keys.all (fun key => (prior.table.get? key).isSome) = true then
+        .ok ⟨prior,by intro key member; exact List.all_eq_true.mp complete key member⟩
+      else .error .incomplete
+    | key :: rest => match prior.refresh model policy cooked projection old key with
+      | .error error => .error error
+      | .ok next => go next rest
+  go (Partial.empty model policy cooked) model.keys
+
+theorem Partial.refresh_retained (projection : Projection model) [∀ key, DecidableEq (projection.Context key)]
+    (old : Family model oldPolicy oldCooked) (prior : Partial model policy cooked) (key : G)
+    (generic : Multimethod (Args key) (Method key) (Result key))
+    (pending : prior.table.get? key = none) (found : old.table.get? key = some generic)
+    (same : projection.project key oldPolicy oldCooked = projection.project key policy cooked) :
+    (prior.refresh model policy cooked projection old key).map (fun next => next.table.get? key) = .ok (some generic) := by
+  unfold Partial.refresh
+  split
+  · rename_i occupied
+    simp [pending] at occupied
+  · split
+    · rename_i missing
+      rw [found] at missing
+      contradiction
+    · rename_i actual present
+      have equal : actual = generic := Option.some.inj (present.symm.trans found)
+      subst actual
+      simp [Partial.install, DispatchTable.get?, DispatchTable.install, Except.map]
+
 /-- A call warms one actual table entry. All receipts remain tied to the same
 policy/cooked construction; other signatures retain their exact generic. -/
 def Family.invoke (family : Family model policy cooked) (key : G) (args : Args key) :

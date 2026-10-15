@@ -195,3 +195,31 @@ allocator or runtime, nor a universal performance bound. Native matched controls
 measure schedule checking versus footprint reuse, recapture versus same-source
 retention, and full versus factored joint approval. Complete native observations
 remain ignored build outputs; concise summaries record tested identities.
+
+* Selective generic construction
+
+~GenericFamily.Projection~ requires exact seed and method-source congruence for
+service-specific inputs. ~Source.asModel~ builds the executable model directly
+from closed contexts; ~Source.projection~ discharges congruence structurally.
+~Certified.transport~ moves origin/negative/cache-soundness receipts to the new
+policy/interface while retaining the exact generic. ~Partial.refresh_retained~
+proves the clean branch installs that generic, including its warm cache, without
+running seed, patch or negative checking. Changed inputs use the existing builder
+and completed-candidate negative checks. Missing entries construct normally.
+
+~stageRefresh / publishRefresh~ compose materialized graph refresh, projected
+service refresh and exact-candidate admission. ~publishRefresh_refused~ retains
+the exact old snapshot. Approval is still required for the actual new candidate;
+a new tighter cache budget may reject retained warm caches. The source factory
+and preservation proofs do not assert arbitrary opaque callback congruence.
+
+The ServiceBundle example closes source contexts over the actual service inputs,
+warms all three signatures, then changes quotation policy while retaining warm
+reservation and cancellation. It exercises changed quote observations, joint
+cache-budget refusal and a changed third-service negative assumption. The Scheme
+implementation uses native Projection/derived methods and the existing source
+constructors, with direct-constructor comparisons over 36 view settings.
+Generic model identity prevents reusing receipts after arbitrary code changes.
+Stable business checks transfer only from matching admission provenance and
+matching actual service/contract identity; all dynamic release/ceiling/budget
+checks remain. Reservation contract preparation is deliberately conservative.
