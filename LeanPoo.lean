@@ -230,3 +230,7 @@ import LeanPoo.Functional.ServiceMetadata
 import LeanPoo.Functional.ProjectedSelf
 import LeanPoo.Functional.CarrierMigration
 import LeanPoo.Functional.AccountMigration
+import LeanPoo.Prototype.FiniteClosure
+import LeanPoo.Functional.PositiveEquations
+import LeanPoo.Functional.CyclicPublication
+import LeanPoo.Functional.CyclicAccess

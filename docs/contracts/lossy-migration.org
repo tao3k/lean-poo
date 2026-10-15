@@ -113,5 +113,6 @@ the existing certified selective reuse; a carrier-changing migration performs a
 fresh target build. Lossy cooked-self correspondence requires equality on every
 inferred read, so genuinely discarded observations cannot subsequently be read
 without changing the projection. Opaque effects, external-effect rollback,
-arbitrary dependent type inference and automatic cyclic equation closure remain
-outside this finite pure construction.
+arbitrary dependent type inference remain outside this finite pure construction.
+[[file:cyclic-closure.org][Finite positive cyclic closure]] supplies a separate proved monotone class;
+arbitrary cyclic equations remain unsupported.

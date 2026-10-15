@@ -62,6 +62,23 @@ def finish (request : Request Key Value Policy) (cache : ConstructionCache.Cache
     | .error error => .error (.admission request candidate error)
     | .ok approval => .ok ⟨candidate,approval,admitted⟩
 
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
+/-- Family construction/admission never changes the supplied materialized
+construction. Alternative certified closure algorithms may reuse this boundary. -/
+theorem finish_cache (request : Request Key Value Policy) (cache : ConstructionCache.Cache request.graph)
+    (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Approved request candidate))
+    (prepared : Prepared model request admit)
+    (accepted : finish (BuildError := BuildError) model request cache admit = .ok prepared) :
+    prepared.candidate.cache = cache := by
+  unfold finish at accepted
+  split at accepted
+  · contradiction
+  · dsimp only at accepted
+    split at accepted
+    · contradiction
+    · cases accepted; rfl
+
 def start (request : Request Key Value Policy) (builder : ConstructionCache.Builder request.graph BuildError)
     (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
       Except AdmissionError (Approved request candidate)) :

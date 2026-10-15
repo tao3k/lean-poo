@@ -109,12 +109,12 @@ failure. The existing 30-second/2-GiB test limit remains unchanged.
 | 2 | Atomic families of heterogeneous generic functions | Implemented for finite typed families by [[file:staged-publication.org][staged publication]], reusing ~Object.DispatchTable~, per-generic receipts and exact-candidate joint admission. |
 | 3 | Declarative method/type/constraint metadata | Implemented for finite typed declarations, refinement contracts and decidable formulas by [[file:declarative-metadata.org][declarative metadata]]. Existing combination bodies and staged admission remain authoritative. Automatic dependent type/effect inference and unrestricted reflective metadata remain open. |
 | 4 | Lossy public cooking and automatic carrier-changing migration | Implemented for read-covered lossy cooked self and explicit typed field-transfer migration by [[file:lossy-migration.org][lossy migration]]. Target graphs and families are freshly constructed; inferred arbitrary schema conversions and cross-carrier cache reuse remain open. |
-| 5 | Automatically closing cyclic component equations | Ranked closure intentionally rejects cycles. Safe recursive interaction programs have their own operational evidence; they are not an automatic solver for arbitrary cyclic MOP graphs. |
+| 5 | Automatically closing cyclic component equations | Implemented for finite positive Boolean equations by [[file:cyclic-closure.org][automatic least closure]], reusing finite unfoldings, lens compilation and safe recursive input receipts. General numerical/nonmonotone/opaque cyclic equations and incremental cyclic reuse remain outside scope. |
 
-The first four priorities now have the bounded implementations linked above.
+The first five priorities now have the bounded implementations linked above.
 The remaining rows are future-work integration or expressiveness boundaries. The source does
 not specify a complete universal MOP whose implementation can be declared closed.
 
 * Declarative metadata progress
 
-[[file:declarative-metadata.org][Executable declarations and typed logic]] now connect named actual method bodies, typed input/output refinements and interpreted logical formulas to staged publication. This addresses the finite typed part of priority three. Automatic dependent type inference, descriptor synthesis and general reflective metadata remain open; [[file:lossy-migration.org][Lossy cooking and typed carrier migration]] now provide a finite explicit path; automatic cyclic equation closure remains open.
+[[file:declarative-metadata.org][Executable declarations and typed logic]] now connect named actual method bodies, typed input/output refinements and interpreted logical formulas to staged publication. This addresses the finite typed part of priority three. Automatic dependent type inference, descriptor synthesis and general reflective metadata remain open; [[file:lossy-migration.org][Lossy cooking and typed carrier migration]] now provide a finite explicit path; [[file:cyclic-closure.org][finite positive cyclic closure]] now covers a precisely typed monotone class; arbitrary cyclic equations remain open.
