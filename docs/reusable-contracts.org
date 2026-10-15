@@ -82,3 +82,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/generalized-fork.org][Shared upstream and exact joins]] reuses independent component closure and selected dependency refresh for explicitly declared fork/join shapes, with exact paired join indices and full-interface preservation.
 
 [[file:contracts/generalized-context.org][Shared context through multiple joins]] composes fork input projections and admits contextual joins using the complete new context/branch key, with a reusable seven-component Functional workflow.
+
+[[file:contracts/generalized-revision.org][Scoped policy revision]] pairs actual configuration with dependency metadata, reuses compatible raw closure while recooking public methods, and composes a ten-component Functional publication.

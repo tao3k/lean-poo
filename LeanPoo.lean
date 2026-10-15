@@ -210,3 +210,5 @@ import LeanPoo.Prototype.GeneralizedTariff
 import LeanPoo.Prototype.GeneralizedFork
 import LeanPoo.Prototype.GeneralizedContext
 import LeanPoo.Functional.SharedSettlement
+import LeanPoo.Prototype.GeneralizedRevision
+import LeanPoo.Functional.PolicyPublication

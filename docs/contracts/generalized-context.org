@@ -109,3 +109,5 @@ A universal negative theorem holds the remaining final metadata fixed and proves
 that changing the selected shared-root band invalidates the original final raw
 fixed point. This qualifies the concrete contextual-join counterexample without
 claiming that every changed dependency necessarily changes every protocol.
+
+[[file:generalized-revision.org][Scoped policy revision]] additionally distinguishes equal numerical metadata from unchanged component configuration and public method semantics.

@@ -84,3 +84,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:ForkedCheckout.lean][ForkedCheckout]] shares one pricing component across shipping and insurance, then admits settlement from the exact refreshed interface pair. Independent branch reuse, retained joins, first refusal and whole closure advance the future proposal; [[file:../docs/contracts/generalized-fork.org][fork/join contracts]].
 
 [[file:SharedSettlement.lean][SharedSettlement]] demonstrates a reusable seven-component workflow with two fork/join levels. Shared pricing survives a retained reserve join; a contextual final join can change even when both later branches are retained. [[file:../docs/contracts/generalized-context.org][Future-work contracts and proofs]].
+
+[[file:PolicyPublication.lean][PolicyPublication]] reuses the seven-component workflow and adds invoice/audit/release. Actual fee policy changes require fresh interface admission even with equal tariff metadata; unrelated policies and upstream construction remain reusable. [[file:../docs/contracts/generalized-revision.org][Future-work revision contracts]].
