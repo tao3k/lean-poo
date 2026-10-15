@@ -107,10 +107,14 @@ failure. The existing 30-second/2-GiB test limit remains unchanged.
 |----------+----------------------+-------------------------------------------|
 | 1 | Actual selective staged construction | Implemented for certified typed graph edits by [[file:staged-publication.org][materialized construction]]. The older inherited API still fully rebuilds; arbitrary source callbacks require equality evidence or conservative reconstruction. |
 | 2 | Atomic families of heterogeneous generic functions | Implemented for finite typed families by [[file:staged-publication.org][staged publication]], reusing ~Object.DispatchTable~, per-generic receipts and exact-candidate joint admission. |
-| 3 | Declarative method/type/constraint metadata | Computation footprints and exact-candidate ~Approved~ proofs exist. Policy/cooking/method hooks remain explicit Lean functions; no general metadata language or automatic hook/type/effect inference is claimed. |
+| 3 | Declarative method/type/constraint metadata | Implemented for finite typed declarations, refinement contracts and decidable formulas by [[file:declarative-metadata.org][declarative metadata]]. Existing combination bodies and staged admission remain authoritative. Automatic dependent type/effect inference and unrestricted reflective metadata remain open. |
 | 4 | Lossy public cooking and automatic carrier-changing migration | The general protocol accepts arbitrary cooking and explicit dictionary bridges. This automatic MOP still requires a compatible view reconstructing its raw state and keeps one typed raw carrier during request changes. |
 | 5 | Automatically closing cyclic component equations | Ranked closure intentionally rejects cycles. Safe recursive interaction programs have their own operational evidence; they are not an automatic solver for arbitrary cyclic MOP graphs. |
 
-The first two priorities now have the bounded implementations linked above.
+The first three priorities now have the bounded implementations linked above.
 The remaining rows are future-work integration or expressiveness boundaries. The source does
 not specify a complete universal MOP whose implementation can be declared closed.
+
+* Declarative metadata progress
+
+[[file:declarative-metadata.org][Executable declarations and typed logic]] now connect named actual method bodies, typed input/output refinements and interpreted logical formulas to staged publication. This addresses the finite typed part of priority three. Automatic dependent type inference, descriptor synthesis and general reflective metadata remain open; lossy/carrier-changing cooking and cyclic equation closure retain their existing boundaries.

@@ -1,4 +1,5 @@
 import LeanPoo.Functional.StagedPublication
+import LeanPoo.Functional.DeclarativeMetadata
 import LeanPoo.Functional.ConstructionWorkflow
 
 /-! A materialized settlement graph feeds a typed quote/reserve/cancel family.
@@ -50,17 +51,30 @@ def seed : (key : Service) → Policy → Interface → Object.Multimethod (Args
         | none => .error "missing:cancel"
         | some method => method args }
 
-def methods : (key : Service) → Policy → Interface → List (DispatchExtension.Edit (Args key) (Method key))
-  | .quote, policy, cooked => ConstructionWorkflow.model.methods policy.pricing cooked
-  | .reserve, policy, cooked => [.register [.prototype "Reserve"] (fun units => do
+/-- Method metadata is executable source: qualifiers stay in the existing typed
+contribution bodies and guards compile to the existing dispatch operation. -/
+def declarations : (key : Service) → Policy → Interface →
+    List (DeclarativeMetadata.Declaration (Args key) (Method key))
+  | .quote, policy, cooked => DeclarativeMetadata.named "quote"
+      (ConstructionWorkflow.model.methods policy.pricing cooked)
+  | .reserve, policy, cooked => [.replace "reserve.capacity" [.prototype "Reserve"] (fun units => do
       let capacity ← ConstructionWorkflow.selected cooked.state "total"
       let capacity := capacity+policy.reserveShift
       return (capacity-units,decide ((units : Int) ≤ capacity)))]
-  | .cancel, policy, cooked => [.register [.prototype "Cancel"] (fun args =>
+  | .cancel, policy, cooked => [.replace "cancel.invoice" [.prototype "Cancel"] (fun args =>
       if !args.2 then .error "cancel.guard" else do
         let invoice ← ConstructionWorkflow.selected cooked.state "invoice"
         return [args.1,"invoice:" ++ toString (invoice+policy.cancelShift)])] ++
-      if policy.forbiddenCancel then [.register [.prototype "Forbidden"] (fun _ => .ok ["forbidden"])] else []
+      if policy.forbiddenCancel then
+        [.replace "cancel.forbidden" [.prototype "Forbidden"] (fun _ => .ok ["forbidden"])] else []
+
+def methods (key : Service) (policy : Policy) (cooked : Interface) :
+    List (DispatchExtension.Edit (Args key) (Method key)) :=
+  (declarations key policy cooked).map DeclarativeMetadata.Declaration.compile
+
+@[simp] theorem quote_declarations (policy : Policy) (cooked : Interface) :
+    methods .quote policy cooked = ConstructionWorkflow.model.methods policy.pricing cooked :=
+  DeclarativeMetadata.compile_named _ _
 
 def watches : (key : Service) → List (DispatchExtension.Watch (Args key))
   | .quote => ConstructionWorkflow.watches

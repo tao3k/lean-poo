@@ -1,0 +1,83 @@
+#+TITLE: Declarative method, type and logic metadata — future work
+
+* Scope and source
+
+The pinned source at lines 1807–1827 proposes method-combination metadata,
+type information and logical constraints as future work. This extension advances
+that proposal. The original thirteen concrete construction families and
+~whole_paper_implemented=false~ stay unchanged.
+
+[[file:../../LeanPoo/Functional/DeclarativeMetadata.lean][DeclarativeMetadata]] reuses dispatch edits, heterogeneous generic families and
+existing invocation operations. [[file:../../LeanPoo/Functional/ServiceMetadata.lean][ServiceMetadata]] composes these with materialized
+graph construction, cooking and exact-candidate staged publication.
+
+* Executable declarations
+
+~Declaration~ contains a name, actual specializer path and actual typed method
+body. Replacement, contribution, guarded registration and removal compile directly
+to existing ~DispatchExtension.Edit~ operations. Combination qualifiers remain in
+the existing typed method bodies, including quote's simple contributions and
+around wrappers; there is no separate qualifier label to diverge from execution.
+~install_append~ proves ordered batch composition including first failures.
+~compile_named~ proves exact parity for adapters of existing method builders.
+~family~ supplies declaration-driven edits to the existing family constructor.
+
+~ServiceBundle~ now obtains its actual edits from declarations. Quote reuses its
+existing policy-specific builder; reservation and cancellation have directly
+named declarations. The existing seed/combination/cooking/negative-watch behavior
+is retained. ~declared_origin~ binds every published or warmed generic to that
+exact declaration list, policy and cooked construction.
+
+* Typed contracts and logical formulas
+
+Input and output carriers are actual Lean types. ~Predicate~ contains a named
+refinement proposition and executable decision procedure. ~Contract~ adds input
+and output refinements, typed relational atoms and a finite formula. Formulas
+support truth, atoms, conjunction, disjunction, implication and negation.
+~Formula.check_ok_iff~ proves soundness and completeness for the supplied decidable
+atom meanings. An ~Evidence~ value contains a kernel proof of the interpreted
+formula, indexed by those exact meanings.
+
+~Contract.invoke~ calls the supplied existing operation and retains its exact
+result/state equality with proofs of input, output and relational obligations.
+The invocation order is input check, underlying call, output check, logical check.
+Universal acceptance/completeness and input/source/output/logic refusal laws cover
+all such operations. No tentative state is returned on rejection. An inner
+~Except~ result remains distinct from outer dispatch/admission errors; the chosen
+output refinement may reject it without misidentifying it as an outer error.
+
+* Combined service scenario
+
+A release combines existing business approval with a formula over the actual
+candidate's quote ceiling, reservation/capacity relation, cancellation/invoice
+relation and distinct method names. The same ~StagedPublication~ operation admits
+or refuses the whole graph/interface/family. This is a stricter quote-level rule
+than the existing graph budget. ~release_quote_bound~ and
+~release_reserve_linked~ project the actual interpreted proofs.
+
+~reserve~ checks a positive-unit contract around actual staged invocation, including
+refreshing all candidate-bound approvals after warming the family. Accepted
+receipts retain the new approved snapshot. ~reservation_conservation~ applies to
+every accepted checked call, while ~reserve_construction~ proves that request,
+materialized raw values and evaluated/reused construction traces stay unchanged.
+Release probe equalities alone do not establish arbitrary-call contracts.
+
+[[file:../../Examples/ServiceMetadata.lean][Example]] combines a three-node invoice revision with twelve retained builders,
+reservation contracts, quote-ceiling refusal and policy recooking with fifteen
+retained nodes and a builder which refuses all work. [[file:../../Tests/DeclarativeMetadata.lean][Independent controls]] check
+56 truth-table cases, mixed contribution/guard/removal/arity operations, exact
+contract rejection order, and 1296 typed reservation attempts across sixteen
+input/policy settings. Independent arithmetic predicts capacity and results;
+accepted calls are repeated on actual approved warm snapshots. Additional controls
+exercise ceiling refusals, zero-work policy changes, third-generic negative-watch
+refusals and retention of a previously warmed reservation cache.
+
+* Boundaries
+
+This is finite typed declaration elaboration and decidable refinement checking,
+not dependent type inference for an untyped language. Atom predicates and method
+bodies are supplied typed programs; decisions must be explicit. There is no
+arbitrary theorem prover, inferred host effect model or unrestricted reflective
+MOP. Existing descriptor/codec construction remains available separately; this
+extension does not automatically synthesize descriptors or change carriers.
+No external-effect rollback, lossy cooking or cyclic equation solver is claimed.

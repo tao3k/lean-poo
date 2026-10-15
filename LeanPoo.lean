@@ -225,3 +225,5 @@ import LeanPoo.Functional.ConstructionCache
 import LeanPoo.Functional.GenericFamily
 import LeanPoo.Functional.StagedPublication
 import LeanPoo.Functional.ServiceBundle
+import LeanPoo.Functional.DeclarativeMetadata
+import LeanPoo.Functional.ServiceMetadata

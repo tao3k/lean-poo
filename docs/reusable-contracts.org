@@ -90,3 +90,5 @@ in Examples and source-bound evidence in the reference study and receipts.
 [[file:contracts/inherited-mop.org][Inherited generalized fragments and MOP]] compiles ordered typed replacement/extension/conditional fragments into analyzed computations, proves delayed-inheritance correspondence, and publishes source C3/closure/dispatch/approval as one checked version. Includes a prioritized future-work gap audit.
 
 [[file:contracts/staged-publication.org][Materialized construction and heterogeneous family publication]] executes cached graph refresh with exact-source certificates, bypasses clean builders, and jointly admits dependent DispatchTable signatures. Universal fixed-point/reference, skip, call-frame and atomic-refusal laws qualify the future-work path.
+
+[[file:contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
