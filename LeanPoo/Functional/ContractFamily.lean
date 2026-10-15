@@ -245,6 +245,116 @@ theorem retain_origin (keys : Policy → Cooked → List Key)
     construct key (projection.project key (projection.prepare (projection.input policy cooked))) = .ok old.contract := by
   rw [← same]
   exact old.origin
+/-- A direct projection must implement the same closed prepared semantics. -/
+def directSource (keys : Policy → Cooked → List Key)
+    (direct : (key : Key) → Shared → Context key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key))) :
+    Source Key Policy Cooked Atom Args Result BuildError where
+  Context := Context
+  keys := keys
+  project := fun key policy cooked => direct key (projection.input policy cooked)
+  construct := construct
+
+theorem direct_source_project (keys : Policy → Cooked → List Key)
+    (direct : (key : Key) → Shared → Context key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key)))
+    (coherent : ∀ key input, direct key input = projection.project key (projection.prepare input))
+    (key : Key) (policy : Policy) (cooked : Cooked) :
+    (projection.directSource keys direct construct).project key policy cooked =
+      (projection.toSource keys construct).project key policy cooked := coherent key _
+
+/-- Equal projection implementations give exactly the same source semantics,
+including construction errors and all downstream contract/binding laws. -/
+theorem direct_source_eq (keys : Policy → Cooked → List Key)
+    (direct : (key : Key) → Shared → Context key)
+    (construct : (key : Key) → Context key → Except BuildError (Contract (Atom key) (Args key) (Result key)))
+    (coherent : ∀ key input, direct key input = projection.project key (projection.prepare input)) :
+    projection.directSource keys direct construct = projection.toSource keys construct := by
+  unfold directSource toSource
+  congr 1
+  funext key policy cooked
+  exact coherent key _
+
 end SharedProjection
+
+/-- Explicit operation weights, never a wall-clock or allocator axiom. -/
+structure PreparationCosts where
+  prepareCost : Nat
+  sharedCost : Nat
+  directCost : Nat
+  selectionCost : Nat
+  deriving Repr
+
+namespace PreparationCosts
+inductive Strategy where | shared | direct deriving BEq, DecidableEq, Repr
+
+def shared (costs : PreparationCosts) (keys : Nat) := costs.prepareCost + keys * costs.sharedCost
+def direct (costs : PreparationCosts) (keys : Nat) := keys * costs.directCost
+
+/-- Choose direct only when its modeled saving covers the selector itself. -/
+def choose (costs : PreparationCosts) (keys : Nat) : Strategy :=
+  if costs.selectionCost + costs.direct keys < costs.shared keys then .direct else .shared
+
+def selected (costs : PreparationCosts) (keys : Nat) :=
+  costs.selectionCost + match costs.choose keys with
+    | .shared => costs.shared keys
+    | .direct => costs.direct keys
+
+theorem direct_covered (costs : PreparationCosts) (keys : Nat)
+    (chosen : costs.choose keys = .direct) : costs.selected keys ≤ costs.shared keys := by
+  unfold choose at chosen
+  split at chosen
+  · rename_i saving
+    simp only [selected, choose, ite_eq_left saving]
+    exact Nat.le_of_lt saving
+  · contradiction
+
+/-- The fallback still pays for selection: no free-selector claim. -/
+theorem selected_bound (costs : PreparationCosts) (keys : Nat) :
+    costs.selected keys ≤ costs.selectionCost + costs.shared keys := by
+  by_cases saving : costs.selectionCost + costs.direct keys < costs.shared keys
+  · simp [selected, choose, saving]
+    omega
+  · simp [selected, choose, saving]
+
+/-- Actual stage counts are supplied by native traces and semantic admission.
+A changed generic/contract is never approved by a cheaper projection policy alone. -/
+structure PublicationCosts where
+  capture : Nat
+  construct : Nat
+  bind : Nat
+  generic : Nat
+  approve : Nat
+  deriving Repr
+
+def PublicationCosts.total (prices : PublicationCosts) (preparation built bound generics probes : Nat) :=
+  prices.capture + preparation + built * prices.construct + bound * prices.bind +
+    generics * prices.generic + probes * prices.approve
+
+theorem publication_direct_bound (costs : PreparationCosts) (keys : Nat)
+    (chosen : costs.choose keys = .direct) (prices : PublicationCosts) (built bound generics probes : Nat) :
+    prices.total (costs.selected keys) built bound generics probes ≤
+      prices.total (costs.shared keys) built bound generics probes := by
+  unfold PublicationCosts.total
+  have h := costs.direct_covered keys chosen
+  omega
+/-- Include once-only template validation before amortizing specialization. -/
+structure TemplateCosts where
+  setup : Nat
+  specialize : Nat
+  rebuild : Nat
+  deriving Repr
+
+theorem template_amortized (costs : TemplateCosts) (revisions : Nat)
+    (cheaper : costs.specialize ≤ costs.rebuild)
+    (paid : costs.setup ≤ revisions * (costs.rebuild - costs.specialize)) :
+    costs.setup + revisions * costs.specialize ≤ revisions * costs.rebuild := by
+  calc
+    costs.setup + revisions * costs.specialize ≤
+        revisions * (costs.rebuild - costs.specialize) + revisions * costs.specialize := Nat.add_le_add_right paid _
+    _ = revisions * ((costs.rebuild - costs.specialize) + costs.specialize) := (Nat.mul_add _ _ _).symm
+    _ = revisions * costs.rebuild := by rw [Nat.sub_add_cancel cheaper]
+
+end PreparationCosts
 
 end LeanPoo.Functional.ContractFamily

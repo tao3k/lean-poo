@@ -3541,8 +3541,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/DeclarativeMetadata.lean": {
-      "sha256": "da02d23ead4b536304cbe965edb203043544ba53dff7f012fca0b93a8ae8d1c2",
-      "physical_lines": 284,
+      "sha256": "ce7d1ca49b1fc77130caa135386e5e8d791eaef013d0a174366c9c42de9336c8",
+      "physical_lines": 303,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []

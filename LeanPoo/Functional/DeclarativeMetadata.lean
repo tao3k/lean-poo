@@ -133,6 +133,25 @@ structure Contract (Atom Args Result : Type) where
   decide : ∀ atom args result, Decidable (meaning atom args result)
   rule : Formula Atom
 
+/-- Specialize dependent meaning while sharing invariant native predicate/formula
+structure. This models deriving a contract prototype through its meaning slot. -/
+def Contract.withMeaning (template : Contract Atom Args Result)
+    (meaning : Atom → Args → Result → Prop)
+    (decision : ∀ atom args result, Decidable (meaning atom args result)) : Contract Atom Args Result :=
+  { template with meaning := meaning, decide := decision }
+
+theorem Contract.withMeaning_input (template : Contract Atom Args Result) (meaning decision) :
+    (template.withMeaning meaning decision).input = template.input := rfl
+
+theorem Contract.withMeaning_output (template : Contract Atom Args Result) (meaning decision) :
+    (template.withMeaning meaning decision).output = template.output := rfl
+
+theorem Contract.withMeaning_rule (template : Contract Atom Args Result) (meaning decision) :
+    (template.withMeaning meaning decision).rule = template.rule := rfl
+
+theorem Contract.withMeaning_self (template : Contract Atom Args Result) :
+    template.withMeaning template.meaning template.decide = template := by cases template; rfl
+
 inductive Failure (Error : Type) where
   | input (name : String)
   | source (error : Error)

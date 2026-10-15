@@ -284,3 +284,49 @@ rows passed source-bound semantic validation. Stable-input preparation improved 
 this local sample, while joint changed-input publication regressed about 2.9 percent
 under natural GC. This bounds the performance claim; the model does not prescribe
 shared preparation for every family. Raw data, binaries and failure logs stay ignored.
+
+* Changed-input strategy and invariant contract prototypes
+
+Native stage isolation measures closed shared preparation, complete family refresh,
+constructor bodies, invocation-wrapper creation, generic refresh, cooking and real
+joint admission separately. These batches have their own allocation/collection
+histories and must not be summed into a total-time identity. The earlier 2.9 percent
+shared/independent joint difference narrowed to about 0.3 percent in the pre-change
+profile; it is not a stable causal estimate. Descriptor construction dominated
+binding. The optimization therefore specializes existing native contract prototypes:
+input/output Type refinements and Formula are validated once; only dependent
+meaning is rebound per revision. Normal invocation checks still run.
+
+~DeclarativeMetadata.Contract.withMeaning~ models this native derivation, preserving
+input/output/rule by definition. The heterogeneous example proves specialized reserve
+and cancel contracts equal their original definitions for every capacity/invoice.
+~SharedProjection.direct_source_eq~ proves that a coherent direct projection gives
+exactly the same Source as shared preparation, including errors and downstream
+binding/publication semantics. Native callbacks still require the existing pure,
+immutable-source premise; no Scheme dependency on Lean is introduced.
+
+~PreparationCosts~ includes shared preparation, per-key shared/direct projection and
+selection prices. Direct is selected only when its saving covers selection itself;
+~direct_covered / publication_direct_bound~ transport that bound through unchanged
+construction, binding, generic and approval counts. ~selected_bound~ explicitly
+charges the selector on fallback. ~TemplateCosts.template_amortized~ includes initial
+invariant validation and requires enough revisions to pay it back. Prices are
+explicit operation weights, not universal hardware timing or allocation axioms.
+
+The Scheme selected workflow reuses the 15-node settlement construction cache,
+rebuilds invoice/release/total (retaining 12 nodes), revises both heterogeneous
+contracts and three generics, and runs joint admission atomically. Subsequent price
+revision retains both descriptors/wrappers and warm reservation cache. A tightened
+budget still rejects that exact warm successor and returns the old version.
+Native matched controls include the original unfactored constructors with identical
+invocation results and input refusals. Full rows, diagnostics and binary/source
+snapshots remain ignored; only the concise source-bound summary is committed.
+
+The final matched settlement pair improves about 24 percent in both GC regimes.
+The optional dynamic selector still regresses against independent preparation:
+about 15 percent raw natural CPU, about 0.4 percent collected. Natural per-round
+collection histories differ materially (one selected batch collects 21 times while
+its independent counterpart collects zero times). Consequently the total-CPU gap
+cannot be identified with arithmetic selection overhead. The selector is not made
+the default; cost laws remain conditional operation-price bounds. Invariant
+specialization is the principal demonstrated gain. All negative receipts remain.

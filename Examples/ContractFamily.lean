@@ -21,6 +21,20 @@ def cancellation (invoice : String) : Contract Unit (String × Bool) (Constructi
   decide := by intro atom args result; cases result <;> exact inferInstance
   rule := .atom ()
 
+/-- Prototype specialization preserves exactly the original metadata semantics. -/
+def specializedReservation (capacity : Int) :=
+  (ServiceMetadata.reservation 0).withMeaning (ServiceMetadata.reservation capacity).meaning
+    (ServiceMetadata.reservation capacity).decide
+
+theorem specialized_reservation_eq (capacity : Int) :
+    specializedReservation capacity = ServiceMetadata.reservation capacity := rfl
+
+def specializedCancellation (invoice : String) :=
+  (cancellation "").withMeaning (cancellation invoice).meaning (cancellation invoice).decide
+
+theorem specialized_cancellation_eq (invoice : String) :
+    specializedCancellation invoice = cancellation invoice := rfl
+
 def source : Source Service (List Service) Current Atoms Args Result String where
   Context := Inputs
   keys := fun selected _ => selected
@@ -85,6 +99,25 @@ theorem shared_cancellation_current (capacity : Int) (invoice : String) :
     throw (IO.userError "shared heterogeneous inputs")
   IO.println "SHARED-CONTRACTS-OK cold=1 retained=0 joint=1 heterogeneous-current"
 
+theorem direct_shared_coherent (key : Service) (input : Int × String) :
+    (match key with | .reserve => input.1 | .cancel => input.2 | .quote => ()) =
+      shared.project key (shared.prepare input) := by cases key <;> rfl
+
+#eval do
+  let cheap : PreparationCosts := ⟨3,1,1,1⟩
+  let indexed : PreparationCosts := ⟨3,1,20,1⟩
+  let guarded : PreparationCosts := ⟨3,1,1,3⟩
+  unless cheap.choose 2 == PreparationCosts.Strategy.direct && indexed.choose 2 == PreparationCosts.Strategy.shared && guarded.choose 2 == PreparationCosts.Strategy.shared do
+    throw (IO.userError "preparation strategy or selector accounting")
+  let prices : PreparationCosts.PublicationCosts := ⟨8,12,1,20,4⟩
+  unless prices.total (cheap.selected 2) 2 2 3 3 ≤ prices.total (cheap.shared 2) 2 2 3 3 do
+    throw (IO.userError "publication stage cost")
+  let templates : PreparationCosts.TemplateCosts := ⟨24,2,20⟩
+  unless templates.setup + templates.specialize > templates.rebuild &&
+      templates.setup + 2 * templates.specialize ≤ 2 * templates.rebuild do
+    throw (IO.userError "one-time template setup must be amortized")
+  IO.println "CONTRACT-STRATEGY-OK direct/shared/selector-budget invariant-template setup-amortization"
+
 def check : Except String Unit :=
   let initial : Current := ⟨10,"invoice:1",1⟩
   let revised : Current := ⟨10,"invoice:2",2⟩
@@ -135,5 +168,15 @@ def check : Except String Unit :=
 #print axioms Functional.ContractFamily.SharedProjection.cached_source_project
 #print axioms Functional.ContractFamily.SharedProjection.refresh_cost
 #print axioms Functional.ContractFamily.SharedProjection.retain_origin
+#print axioms specialized_reservation_eq
+#print axioms specialized_cancellation_eq
+#print axioms Functional.DeclarativeMetadata.Contract.withMeaning_input
+#print axioms Functional.DeclarativeMetadata.Contract.withMeaning_rule
+#print axioms Functional.ContractFamily.SharedProjection.direct_source_project
+#print axioms Functional.ContractFamily.SharedProjection.direct_source_eq
+#print axioms Functional.ContractFamily.PreparationCosts.direct_covered
+#print axioms Functional.ContractFamily.PreparationCosts.selected_bound
+#print axioms Functional.ContractFamily.PreparationCosts.publication_direct_bound
+#print axioms Functional.ContractFamily.PreparationCosts.template_amortized
 #print axioms Functional.ContractFamily.publish_refused
 end LeanPoo.Examples.ContractFamily
