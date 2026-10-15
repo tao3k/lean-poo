@@ -142,6 +142,26 @@ def check : Except String Nat := do
     for peak in [false,true] do calls := calls + (← scenario input peak)
   return truth+calls
 
+-- Binding and composing contracts uses the existing Except state carrier.
+example (capacity : Int) (execute : Nat → Except String (Action × Nat)) (units : Nat)
+    (input : (reservation capacity).input.holds units)
+    (called : execute units = .error "upstream") :
+    (reservation capacity).wrap execute units = .error (.source "upstream") :=
+  (reservation capacity).wrap_source execute units "upstream" input called
+
+example (capacity : Int) (execute : Nat → Except String (Action × Nat)) (old units : Nat)
+    (failure : Failure String)
+    (rejected : (reservation capacity).wrap execute units = .error failure) :
+    (reservation capacity).publish old execute units = (.error failure, old) :=
+  (reservation capacity).publish_refuses old execute units failure rejected
+
+example (outer inner : Contract Atom Nat Action)
+    (execute : Nat → Except String (Action × Nat)) (units : Nat)
+    (input : outer.input.holds units) (failure : Failure String)
+    (rejected : inner.wrap execute units = .error failure) :
+    outer.wrap (inner.wrap execute) units = .error (.source failure) :=
+  outer.wrap_source (inner.wrap execute) units failure input rejected
+
 def run : IO Unit := match check with
   | .error error => throw (IO.userError error)
   | .ok count => IO.println s!"DECLARATIVE-METADATA-OK {count} observations; typed calls, truth tables, method edits and atomic refusals"

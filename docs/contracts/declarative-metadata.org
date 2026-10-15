@@ -82,3 +82,24 @@ MOP. Existing descriptor/codec construction remains available separately; this
 extension does not automatically synthesize descriptors or change carriers.
 [[file:lossy-migration.org][Lossy cooking and explicit typed carrier migration]] extend this path separately.
 No external-effect rollback or cyclic equation solver is claimed.
+
+* Native Scheme expression protocol and wrapper laws
+
+The companion Scheme implementation uses existing POO prototypes and generic
+methods, following its ~fun.ss~ and ~io.ss~. Declaration compilation remains
+DispatchExtension compilation; Predicate inherits the native Type protocol;
+Formula composes short-circuit decisions; Contract binds existing invocations
+through ~.wrap~. CyclicPublication binds wrappers once per cooked candidate and
+shares them across cache-only successors. Revisions rebuild captures from the
+new cooked view. Runtime checks are not dependent kernel evidence.
+
+~Contract.wrap~ erases an accepted receipt into the existing result/state carrier.
+~wrap_accepts~ preserves the exact result and state for every accepted call;
+~wrap_source~ preserves inner rejection as an outer source error. The publication
+adapter's ~publish_refuses~ retains the exact previous state for every failure.
+These laws model pure invocation/value publication. They do not verify Scheme
+code generation, arbitrary mutable callbacks or the runtime.
+
+Scheme's ServiceMetadata example uses its existing ten-node Boolean graph and
+heterogeneous quote/reserve/cancel declarations. Lean's fifteen-node selective
+construction and proof-bearing cache admission remain a distinct boundary.

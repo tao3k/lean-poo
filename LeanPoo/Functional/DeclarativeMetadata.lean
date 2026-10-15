@@ -242,4 +242,43 @@ theorem Contract.invoke_logic (contract : Contract Atom Args Result)
     cases same
     simp [output, invalid]
 
+/-- A bound contract is an ordinary invocation transformer. Wrappers can be
+composed without introducing another result carrier or state protocol. -/
+def Contract.wrap (contract : Contract Atom Args Result)
+    (execute : Args → Except Error (Result × State)) :
+    Args → Except (Failure Error) (Result × State) :=
+  fun args => (contract.invoke execute args).map fun receipt => (receipt.result, receipt.state)
+
+/-- The publication adapter exposes no tentative state on any rejection. -/
+def Contract.publish (contract : Contract Atom Args Result) (old : State)
+    (execute : Args → Except Error (Result × State)) (args : Args) :
+    Except (Failure Error) Result × State :=
+  match contract.wrap execute args with
+  | .ok (result, next) => (.ok result, next)
+  | .error failure => (.error failure, old)
+
+theorem Contract.wrap_accepts (contract : Contract Atom Args Result)
+    (execute : Args → Except Error (Result × State)) (args : Args) (result : Result) (state : State)
+    (input : contract.input.holds args) (called : execute args = .ok (result,state))
+    (output : contract.output.holds result)
+    (logic : contract.rule.Holds (fun atom => contract.meaning atom args result)) :
+    contract.wrap execute args = .ok (result,state) := by
+  obtain ⟨receipt, accepted, sameResult, sameState⟩ :=
+    contract.invoke_accepts execute args result state input called output logic
+  simp [Contract.wrap, accepted, sameResult, sameState, Except.map]
+
+theorem Contract.publish_refuses (contract : Contract Atom Args Result) (old : State)
+    (execute : Args → Except Error (Result × State)) (args : Args) (failure : Failure Error)
+    (rejected : contract.wrap execute args = .error failure) :
+    contract.publish old execute args = (.error failure, old) := by
+  simp [Contract.publish, rejected]
+
+/-- Nested wrappers preserve the first inner refusal as an outer source failure;
+outer output and logic checks cannot relabel an already rejected invocation. -/
+theorem Contract.wrap_source (contract : Contract Atom Args Result)
+    (execute : Args → Except Error (Result × State)) (args : Args) (error : Error)
+    (input : contract.input.holds args) (called : execute args = .error error) :
+    contract.wrap execute args = .error (.source error) := by
+  simp [Contract.wrap, contract.invoke_source execute args error input called, Except.map]
+
 end LeanPoo.Functional.DeclarativeMetadata

@@ -3540,8 +3540,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/DeclarativeMetadata.lean": {
-      "sha256": "c007728c957cd1bc9bd512fadf0c4808ace77acd2b9a6498e7da6f7bd845cc38",
-      "physical_lines": 245,
+      "sha256": "da02d23ead4b536304cbe965edb203043544ba53dff7f012fca0b93a8ae8d1c2",
+      "physical_lines": 284,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4859,12 +4859,12 @@
       ]
     },
     "Tests/DeclarativeMetadata.lean": {
-      "sha256": "34d65f97949e0b2b72237ecce797acca9af51328f0dc1ab5a493a22085b63320",
-      "physical_lines": 149,
+      "sha256": "ac8e05112d0947d55c0725efd50b4e0cdb8771be4105ad2097371cc39502900c",
+      "physical_lines": 169,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        148
+        168
       ]
     },
     "Tests/DescriptorClass.lean": {
@@ -5945,8 +5945,8 @@
       "eval_lines": []
     },
     "docs/contracts/declarative-metadata.org": {
-      "sha256": "f13fb08deeb0c336f25243d342333946de8a651827a0a88deb2b803f5f6c2f35",
-      "physical_lines": 84,
+      "sha256": "d19efee0b63701d3d3a04efc9404be178c7d1366c4f236fdbc8a3fe8c540f260",
+      "physical_lines": 105,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
