@@ -5,7 +5,7 @@ smaller proved ceiling does not predict the fastest machine execution. -/
 namespace LeanPoo.Functional.QueueSelection
 open PositiveEquations IncrementalClosure
 
-inductive Queue where | append | hybrid
+inductive Queue where | append | chunked | hybrid
   deriving BEq, DecidableEq, Repr
 
 structure Profile where
@@ -44,17 +44,21 @@ def prepare (profile : Profile) (plan : Plan n) : Prepared profile plan :=
   ⟨profile.prices.copy*plan.edgeCount,
     (List.ofFn (fun index => HybridClosure.nodeFee profile.prices profile.decision (plan.degree index))).sum,rfl,rfl⟩
 
+def chunkCeiling (profile : Profile) (n : Nat) := (profile.prices.suspend+profile.prices.resume)*n
+
 def Prepared.choose (prepared : Prepared profile plan) : Queue :=
-  if prepared.appendCeiling ≤ prepared.hybridCeiling then .append else .hybrid
+  if prepared.appendCeiling ≤ chunkCeiling profile n ∧ prepared.appendCeiling ≤ prepared.hybridCeiling then .append
+  else if chunkCeiling profile n ≤ prepared.hybridCeiling then .chunked else .hybrid
 
 def Prepared.ceiling (prepared : Prepared profile plan) : Queue → Nat
   | .append => prepared.appendCeiling
+  | .chunked => chunkCeiling profile n
   | .hybrid => prepared.hybridCeiling
 
 theorem choose_minimum (prepared : Prepared profile plan) (candidate : Queue) :
     prepared.ceiling prepared.choose ≤ prepared.ceiling candidate := by
   unfold Prepared.choose
-  split <;> cases candidate <;> simp_all [Prepared.ceiling] <;> omega
+  split <;> (try split) <;> cases candidate <;> simp_all [Prepared.ceiling] <;> omega
 
 private theorem bounded_sum (degrees : Fin n → Nat) (small : ∀ index, degrees index ≤ 8) :
     total (fun index => HybridClosure.nodeFee reference.prices reference.decision (degrees index)) =
@@ -66,21 +70,36 @@ private theorem bounded_sum (degrees : Fin n → Nat) (small : ∀ index, degree
     simp only [total]
     omega
 
+private theorem bounded_degrees (degrees : Fin n → Nat) (small : ∀ index, degrees index ≤ 8) :
+    total degrees ≤ 8*n := by
+  induction n with
+  | zero => exact Nat.le_refl _
+  | succ n ih =>
+    have head := small 0
+    have tail := ih (fun index => degrees index.succ) (fun index => small index.succ)
+    simp only [total]
+    omega
+
 /-- All narrow topologies avoid per-write hybrid decisions. This applies by
 cached metadata alone, independently of source literals or workload names. -/
 theorem small_degrees_append (prepared : Prepared reference plan) (small : ∀ index, plan.degree index ≤ 8) :
     prepared.choose = .append := by
   have hybrid : prepared.hybridCeiling = n+4*plan.edgeCount := by
     rw [prepared.hybrid_eq,← total_eq_list,bounded_sum _ small,← plan.edgeCount_eq]
+  have density := bounded_degrees plan.degree small
+  rw [← plan.edgeCount_eq] at density
   unfold Prepared.choose
   rw [prepared.append_eq,hybrid]
-  simp only [reference]
-  simp
+  simp only [reference,chunkCeiling]
+  have left : 4*plan.edgeCount ≤ (16+16)*n := by omega
+  simp [left]
 
 def Prepared.run (prepared : Prepared profile plan) : HybridClosure.Run n :=
   match prepared.choose with
   | .append => let result := fastClose plan
                ⟨result.store,result.stats,{copied := result.stats.pushes}⟩
+  | .chunked => let result := ChunkedClosure.close plan
+                ⟨result.store,result.stats,{frames := result.stats.writes}⟩
   | .hybrid => HybridClosure.measured profile.prices plan
 
 def Prepared.charge (prepared : Prepared profile plan) : Nat :=
@@ -92,6 +111,7 @@ theorem run_core (prepared : Prepared profile plan) :
   unfold Prepared.run
   split
   · rfl
+  · exact Prod.ext (ChunkedClosure.close_store plan) (ChunkedClosure.close_stats plan)
   · exact HybridClosure.measured_core _ _
 
 theorem actual_bound (prepared : Prepared profile plan) :
@@ -105,6 +125,11 @@ theorem actual_bound (prepared : Prepared profile plan) :
     have caps := ClosureCosts.actual_ceiling plan
     rw [ChunkedClosure.close_stats] at caps
     exact Nat.mul_le_mul_left _ caps.pushes
+  | chunked =>
+    simp only [chosen,(show (Queue.chunked == Queue.hybrid) = false from rfl),Bool.false_eq_true,ite_false,HybridClosure.Work.fee,Nat.mul_zero,Nat.zero_add]
+    change (profile.prices.suspend+profile.prices.resume)*(ChunkedClosure.close plan).stats.writes+0 ≤ chunkCeiling profile n
+    have caps := ClosureCosts.actual_ceiling plan
+    simpa [chunkCeiling,ClosureCosts.ceiling] using Nat.mul_le_mul_left (profile.prices.suspend+profile.prices.resume) caps.writes
   | hybrid =>
     simp only [chosen,BEq.rfl,ite_true]
     change _ ≤ prepared.hybridCeiling
@@ -119,17 +144,19 @@ theorem selected_bound (prepared : Prepared profile plan) (candidate : Queue) :
   Nat.le_trans (actual_bound prepared) (choose_minimum prepared candidate)
 
 theorem allocation_bound (prepared : Prepared profile plan) :
-    prepared.run.work.copied+prepared.run.work.frames ≤ plan.edgeCount := by
+    prepared.run.work.copied+prepared.run.work.frames ≤ max plan.edgeCount n := by
   unfold Prepared.run
   split
   · have caps := ClosureCosts.actual_ceiling plan
     rw [ChunkedClosure.close_stats] at caps
-    simpa [ClosureCosts.ceiling] using caps.pushes
-  · exact HybridClosure.allocation_bound _ _
+    exact Nat.le_trans (by simpa [ClosureCosts.ceiling] using caps.pushes) (Nat.le_max_left _ _)
+  · have caps := ClosureCosts.actual_ceiling plan
+    exact Nat.le_trans (by simpa [ClosureCosts.ceiling] using caps.writes) (Nat.le_max_right _ _)
+  · exact Nat.le_trans (HybridClosure.allocation_bound _ _) (Nat.le_max_left _ _)
 
 theorem requested_words (prepared : Prepared profile plan) (layout : ClosureCosts.Layout) (snapshot : Bool) :
     HybridClosure.solveWords layout snapshot n prepared.run.work ≤
-      layout.pairWords*(n+plan.edgeCount) + (if snapshot then layout.bytesHeader+layout.byteWords n else 0) := by
+      layout.pairWords*(n+max plan.edgeCount n) + (if snapshot then layout.bytesHeader+layout.byteWords n else 0) := by
   apply Nat.add_le_add_right
   apply Nat.mul_le_mul_left
   have bound := allocation_bound prepared
@@ -144,6 +171,7 @@ theorem selected_with_setup (prepared : Prepared profile plan) (setup : Nat) (ca
 def Prepared.solve (prepared : Prepared profile plan) : Result plan (Vector.replicate n false) (List.ofFn id) :=
   match prepared.choose with
   | .append => fastClose plan
+  | .chunked => ChunkedClosure.close plan
   | .hybrid => HybridClosure.close profile.prices plan
 
 theorem solve_core (prepared : Prepared profile plan) :

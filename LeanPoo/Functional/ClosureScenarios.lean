@@ -31,3 +31,13 @@ def equations (family : String) (n width : Nat) (seed : Bool) : Equations n := f
 
 def oracle (family : String) (seed : Bool) (index : Nat) := seed && (family != "gated" || index%2 == 0)
 end LeanPoo.Functional.ClosureScenarios
+
+namespace LeanPoo.Functional.ClosureScenarios
+open PositiveEquations IncrementalClosure
+theorem dependencies_seed (family : String) (n width : Nat) (left right : Bool) (index : Fin n) :
+    dependencies (equations family n width left index) = dependencies (equations family n width right index) := by
+  unfold equations
+  split
+  · split <;> rfl
+  · rfl
+end LeanPoo.Functional.ClosureScenarios

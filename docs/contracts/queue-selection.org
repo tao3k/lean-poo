@@ -1,5 +1,12 @@
 #+TITLE: Cached topology-based queue selection — generalized protocol future work
 
+* Current lifecycle extension
+
+[[file:closure-lifecycle.org][Closure lifecycle]] adds a third fixed chunked candidate, cached edge budgets,
+explicit cold construction and delayed preparation. The v3 two-candidate native
+receipts below are historical controls; current QueueSelection selects among
+three ceilings and ClosureLifecycle accounts for preparation separately.
+
 * Why local fee minimization is insufficient
 
 [[file:hybrid-queues.org][Hybrid scheduling]] compares copying with suspension at each successful write.

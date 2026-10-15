@@ -238,6 +238,7 @@ import LeanPoo.Functional.IncrementalClosure
 
 import LeanPoo.Functional.ChunkedClosure
 import LeanPoo.Functional.QueueSelection
+import LeanPoo.Functional.ClosureLifecycle
 import LeanPoo.Functional.HybridClosure
 import LeanPoo.Functional.ClosureCosts
 import LeanPoo.Functional.ClosureScenarios

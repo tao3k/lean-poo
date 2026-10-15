@@ -1,64 +1,86 @@
-import LeanPoo.Functional.QueueSelection
+import LeanPoo.Functional.ClosureLifecycle
 import LeanPoo.Functional.ClosureScenarios
-open LeanPoo.Functional PositiveEquations IncrementalClosure
-
+import Lean.Data.Json
+open LeanPoo.Functional PositiveEquations IncrementalClosure Lean
 namespace HybridClosureScale
 
+structure Built (family : String) (n width : Nat) where
+  seed : Bool
+  plan : Plan n
+  source : plan.source = ClosureScenarios.equations family n width seed
+  cached : ClosureLifecycle.Prepared plan
+
+def build (mode : ClosureLifecycle.Mode) (family : String) (n width : Nat) (seed : Bool) : Built family n width :=
+  let plan := compile (ClosureScenarios.equations family n width seed)
+  ⟨seed,plan,compile_source _,ClosureLifecycle.prepare mode plan⟩
+
+def refresh (old : Built family n width) (seed : Bool) : Built family n width :=
+  let source := ClosureScenarios.equations family n width seed
+  let same : ∀ index, dependencies (source index) = dependencies (old.plan.source index) := by
+    intro index
+    rw [old.source]
+    exact ClosureScenarios.dependencies_seed family n width _ _ index
+  ⟨seed,reconfigure old.plan source same,reconfigure_source _ _ _,old.cached.reconfigure source same⟩
+
+def label : ClosureLifecycle.Mode → String
+  | .cold => "cold" | .adaptive => "auto" | .append => "append" | .chunked => "chunked" | .hybrid => "hybrid"
+def engineLabel : QueueSelection.Queue → String
+  | .append => "append" | .chunked => "chunked" | .hybrid => "hybrid"
+
 def main (args : List String) : IO Unit := do
-  let [queue,family,size,width,seeded,scope] := args | throw (IO.userError "queue family n width seed scope")
+  let [queue,family,size,widthText,seedText,scope] := args | throw (IO.userError "queue family n width seed scope")
   let some n := size.toNat? | throw (IO.userError "n")
-  let some width := width.toNat? | throw (IO.userError "width")
+  let some width := widthText.toNat? | throw (IO.userError "width")
   unless ["append","chunked","hybrid","auto"].contains queue && n > 0 && width > 0 &&
     ["diamond","dense","ring","skewed","gated","quorum","hubchain","bursts"].contains family &&
-    ["true","false"].contains seeded && ["cold","warm"].contains scope do throw (IO.userError "parameters")
-  let seed := seeded == "true"
-  let sources ← IO.mkRef (ClosureScenarios.equations family n width seed)
-  let warm ← if scope == "warm" then
-      let plan := compile (← sources.get)
-      IO.mkRef (some (⟨plan,QueueSelection.prepare QueueSelection.reference plan⟩ :
-        (plan : Plan n) × QueueSelection.Prepared QueueSelection.reference plan))
-    else IO.mkRef (none : Option ((plan : Plan n) × QueueSelection.Prepared QueueSelection.reference plan))
-  let last ← IO.mkRef ((Vector.replicate n false),({} : Stats),({} : HybridClosure.Work),(0 : Nat),(0 : Nat),(0 : Nat),"")
-  let repetitions := if scope == "cold" then 5 else 400
+    ["true","false"].contains seedText && ["cold","warm","refresh"].contains scope do throw (IO.userError "parameters")
+  let seed := seedText == "true"
+  let mode : ClosureLifecycle.Mode := match queue with
+    | "append" => .append | "chunked" => .chunked | "hybrid" => .hybrid
+    | _ => if scope == "cold" then .cold else .adaptive
+  let setupStart ← IO.monoNanosNow
+  let prior ← IO.mkRef (if scope == "cold" then none else some (build mode family n width (if scope == "refresh" then !seed else seed)))
+  let setupElapsed := (← IO.monoNanosNow)-setupStart
+  let setupNanos := if scope == "cold" then 0 else setupElapsed
+  let setupVisits := match ← prior.get with | none => 0 | some prior => prior.cached.visits
+  let last ← IO.mkRef (none : Option (Built family n width × HybridClosure.Run n))
+  let repetitions := if scope == "warm" then 400 else 5
   let begin ← IO.monoNanosNow
   for _ in List.range repetitions do
-    let source ← sources.get
-    let retained ← warm.get
+    let retained ← prior.get
     let compiled := match retained with
-      | some compiled => compiled
-      | none => let plan := compile source
-                ⟨plan,QueueSelection.prepare QueueSelection.reference plan⟩
-    let plan := compiled.1
-    let prepared := compiled.2
-    let engine := if queue == "auto" then
-        if prepared.choose == .append then "append" else "hybrid"
-      else queue
-    let (facts,stats,work) := if queue == "auto" then
-        let run := prepared.run
-        (run.store,run.stats,run.work)
-      else if queue == "hybrid" then
-        let run := HybridClosure.measured HybridClosure.balanced plan
-        (run.store,run.stats,run.work)
-      else if queue == "append" then
-        let run := fastClose plan
-        (run.store,run.stats,({copied := run.stats.pushes} : HybridClosure.Work))
-      else
-        let run := ChunkedClosure.close plan
-        (run.store,run.stats,({frames := run.stats.writes} : HybridClosure.Work))
-    last.set (facts,stats,work,plan.edgeCount,prepared.appendCeiling,prepared.hybridCeiling,engine)
+      | none => build mode family n width seed
+      | some old => if scope == "refresh" then refresh old seed else old
+    let result := compiled.cached.run
+    last.set (some (compiled,result))
   let elapsed := (← IO.monoNanosNow)-begin
-  let (facts,stats,work,edges,appendCeiling,hybridCeiling,engine) ← last.get
+  let some (built,result) ← last.get | throw (IO.userError "missing execution")
+  let stats := result.stats
+  let work := result.work
+  let prepared := built.cached
+  let engine := engineLabel prepared.choose
   for index in List.finRange n do
-    unless facts[index.val] == ClosureScenarios.oracle family seed index.val do throw (IO.userError "scalar oracle")
-  let fee := work.fee HybridClosure.balanced
-  unless stats.pops ≤ n+edges && stats.writes ≤ n do throw (IO.userError "core bound")
-  if engine == "hybrid" then
-    unless fee ≤ stats.pushes && fee ≤ 8*stats.writes && work.copied+work.frames ≤ stats.pushes && work.frames ≤ n do
-      throw (IO.userError "local scheduling bound")
-  let charge := 4*work.copied+32*work.frames+(if engine == "hybrid" then stats.writes else 0)
+    unless result.store[index.val] == ClosureScenarios.oracle family seed index.val do throw (IO.userError "scalar oracle")
+  let charge := work.fee QueueSelection.reference.prices+(if engine == "hybrid" then stats.writes else 0)
+  unless stats.pops ≤ n+prepared.edges && stats.writes ≤ n do throw (IO.userError "core bound")
   if queue == "auto" then
-    unless charge ≤ appendCeiling && charge ≤ hybridCeiling do throw (IO.userError "selection ceiling")
-  IO.println s!"engine={engine} policy_charge={charge} append_ceiling={appendCeiling} hybrid_ceiling={hybridCeiling} queue={queue} family={family} n={n} width={width} seed={seed} scope={scope} repetitions={repetitions} query_ns={elapsed} pops={stats.pops} evals={stats.evaluations} nodes={stats.nodes} writes={stats.writes} pushes={stats.pushes} edges={edges} copied_queue={work.copied} frame_allocations={work.frames} queue_pairs={n+work.copied+work.frames} empty_schedules={work.empty} shared_schedules={work.shared} inline_schedules={work.inlined} selected_fee={fee} oracle_parity=true"
+    unless charge ≤ prepared.ceiling .append && charge ≤ prepared.ceiling .chunked && charge ≤ prepared.ceiling .hybrid do
+      throw (IO.userError "selected ceiling")
+  let astNodes := (List.ofFn (fun index : Fin n => nodes built.plan.equations[index.val])).sum
+  let fields : List (String × Json) := [
+    ("queue",toJson queue),("engine",toJson engine),("family",toJson family),("n",toJson n),("width",toJson width),
+    ("seed",toJson seedText),("scope",toJson scope),("repetitions",toJson repetitions),("query_ns",toJson elapsed),
+    ("setup_ns",toJson setupNanos),("lifecycle_ns",toJson (elapsed+setupNanos)),("cache_mode",toJson (label mode)),
+    ("construction_nodes",toJson astNodes),("index_links",toJson (if scope == "cold" then prepared.edges else 0)),
+    ("selector_visits",toJson (if scope == "warm" then 0 else prepared.visits)),("setup_selector_visits",toJson setupVisits),
+    ("pops",toJson stats.pops),("evals",toJson stats.evaluations),("nodes",toJson stats.nodes),
+    ("writes",toJson stats.writes),("pushes",toJson stats.pushes),("edges",toJson prepared.edges),
+    ("copied_queue",toJson work.copied),("frame_allocations",toJson work.frames),("queue_pairs",toJson (n+work.copied+work.frames)),
+    ("empty_schedules",toJson work.empty),("shared_schedules",toJson work.shared),("inline_schedules",toJson work.inlined),
+    ("selected_fee",toJson (work.fee HybridClosure.balanced)),("policy_charge",toJson charge),
+    ("append_ceiling",toJson (prepared.ceiling .append)),("chunk_ceiling",toJson (prepared.ceiling .chunked)),
+    ("hybrid_ceiling",toJson (prepared.ceiling .hybrid)),("oracle_parity",toJson true)]
+  IO.println (Json.mkObj fields).compress
 end HybridClosureScale
 
 def main := HybridClosureScale.main

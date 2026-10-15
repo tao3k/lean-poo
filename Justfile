@@ -88,6 +88,7 @@ check-merge: check-types
         LeanPoo.Functional.IncrementalClosure \
         LeanPoo.Functional.ChunkedClosure \
         LeanPoo.Functional.QueueSelection \
+        LeanPoo.Functional.ClosureLifecycle \
         LeanPoo.Functional.HybridClosure \
         LeanPoo.Functional.ClosureCosts \
         LeanPoo.Functional.ClosureScenarios \
@@ -322,6 +323,7 @@ _check-examples:
     {{lean}} Examples/ClosureLayouts.lean
     {{lean}} Examples/AdaptiveAccess.lean
     {{lean}} Examples/SelectedAccess.lean
+    {{lean}} Examples/LifecycleAccess.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -547,6 +549,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ClosureCosts.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/HybridClosure.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QueueSelection.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ClosureLifecycle.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean
