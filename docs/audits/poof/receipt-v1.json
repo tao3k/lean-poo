@@ -3272,12 +3272,12 @@
       ]
     },
     "Examples/ServiceMetadata.lean": {
-      "sha256": "681f6d4f78f9150ded28131e67a603c535f7c54c2b81ab9e3230f74cccf9bf56",
-      "physical_lines": 59,
+      "sha256": "0e83347400f7f611fd39583a9e6ce759caa8a422e0430403f9c4eb41995b9867",
+      "physical_lines": 94,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        50
+        83
       ]
     },
     "Examples/SharedReporting.lean": {
@@ -3792,8 +3792,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/ServiceMetadata.lean": {
-      "sha256": "e943f7aa0b25c4ef3bb1e7fe7def95241b91e1dba6447c2703fba5a5db227bdf",
-      "physical_lines": 140,
+      "sha256": "02bc5efdfab50273f8fbb7fdb29356ca8f17eb676d3fc08f78eb52ca92046c8c",
+      "physical_lines": 159,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3813,8 +3813,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/StagedPublication.lean": {
-      "sha256": "10ba3d240b451f84eed0a0743181f214f1f0b1b9351214a3245744cb46b5d6f5",
-      "physical_lines": 163,
+      "sha256": "f2e97ac9a91aa473bb7e53d18922ad481c097a67876422ca5cdbc7c95a3dfa6f",
+      "physical_lines": 198,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -5945,8 +5945,8 @@
       "eval_lines": []
     },
     "docs/contracts/declarative-metadata.org": {
-      "sha256": "d19efee0b63701d3d3a04efc9404be178c7d1366c4f236fdbc8a3fe8c540f260",
-      "physical_lines": 105,
+      "sha256": "9b8fab0a77d361f95c37c80c9d3dc5570f4b89a7c1228d681eee7525614f870f",
+      "physical_lines": 127,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []

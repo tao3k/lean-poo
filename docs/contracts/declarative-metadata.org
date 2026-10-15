@@ -103,3 +103,25 @@ code generation, arbitrary mutable callbacks or the runtime.
 Scheme's ServiceMetadata example uses its existing ten-node Boolean graph and
 heterogeneous quote/reserve/cancel declarations. Lean's fifteen-node selective
 construction and proof-bearing cache admission remain a distinct boundary.
+
+* Composition through joint post-invocation admission
+
+The Scheme GenericFamily.Model and StagedPublication.Model protocols now bind
+native declaration elaboration, cold-seed construction, completed-candidate
+negative checks, contracts and exact-successor joint admission. Only result-only
+probes are used inside admission; their tentative caches do not escape.
+This is the finite positive specialization; selective graph construction is not
+implied by this runtime protocol.
+
+~Snapshot.invoke_refused~ proves that even a successful generic invocation returns
+no snapshot when admission rejects its actual successor. ~Snapshot.invoke_other~
+proves exact preservation of every other heterogeneous generic after successful
+admission. ~ServiceMetadata.reserve_other~ transports this law through the outer
+reservation contract; ~reserve_negative~ proves absence on every actual returned
+generic after contract and joint approval, with its current definition.
+
+The executable ServiceMetadata example now admits the first quote cache, refuses
+a successful reservation at a joint budget of one, then admits the same request
+at a budget of two while preserving the quote cache. This models the Scheme
+ServiceBundle scenario with Lean's existing selectively built graph; the graph
+representations and quote combination policies are not claimed identical.

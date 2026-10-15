@@ -137,4 +137,23 @@ theorem declared_origin (version : Version ceiling) (key : Service)
       GeneralizedMOP.definition generic = GeneralizedMOP.definition cold :=
   (version.candidate.family.certified key generic found).origin
 
+/-- Checked reservation, candidate-bound logical approval and heterogeneous
+cache isolation compose through the existing snapshot invocation. -/
+theorem reserve_other (version : Version ceiling) (units : Nat)
+    (receipt : Invocation (reservation version.approval.business.total)
+      (fun args => version.invoke model .reserve args (admit version.approval.business.limit ceiling)) units)
+    (other : Service) (different : .reserve ≠ other) :
+    receipt.state.candidate.family.table.get? other = version.candidate.family.table.get? other :=
+  StagedPublication.Snapshot.invoke_other model version .reserve units _ _ _ receipt.called other different
+
+/-- Negative assumptions refer to the actual returned generic, after metadata
+and joint admission. A pre-call certificate is never used for a changed definition. -/
+theorem reserve_negative (version : Version ceiling) (units : Nat)
+    (receipt : Invocation (reservation version.approval.business.total)
+      (fun args => version.invoke model .reserve args (admit version.approval.business.limit ceiling)) units)
+    (key : Service) (generic : Object.Multimethod (Args key) (Method key) (Result key))
+    (found : receipt.state.candidate.family.table.get? key = some generic) :
+    DispatchExtension.AllAbsent generic (watches key) :=
+  (receipt.state.candidate.family.certified key generic found).negative.absent
+
 end LeanPoo.Functional.ServiceMetadata

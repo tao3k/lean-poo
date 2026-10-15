@@ -160,4 +160,39 @@ theorem Snapshot.invoke_construction (old : Snapshot model Approved) (key : G) (
     · cases called
       exact ⟨rfl,rfl,rfl,rfl⟩
 
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
+/-- Joint admission runs on the actual invoked family. A successful generic
+call can still be refused; no candidate snapshot is returned in that case. -/
+theorem Snapshot.invoke_refused (old : Snapshot model Approved) (key : G) (args : Args key)
+    (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Approved request candidate))
+    (result : Result key)
+    (family : GenericFamily.Family model.generics old.request.policy old.candidate.interface)
+    (called : old.candidate.family.invoke model.generics old.request.policy old.candidate.interface key args =
+      .ok (result,family)) (issue : AdmissionError)
+    (refused : admit old.request ⟨old.candidate.cache,family⟩ = .error issue) :
+    old.invoke model key args admit = .error (.inr issue) := by
+  simp [Snapshot.invoke, called, refused]
+
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
+/-- After metadata admission, warming one service retains every other generic
+exactly, including its cache and its declaration/negative-watch certificates. -/
+theorem Snapshot.invoke_other (old : Snapshot model Approved) (key : G) (args : Args key)
+    (admit : (request : Request Key Value Policy) → (candidate : Candidate model request) →
+      Except AdmissionError (Approved request candidate))
+    (result : Result key) (next : Snapshot model Approved)
+    (called : old.invoke model key args admit = .ok (result,next))
+    (other : G) (different : key ≠ other) :
+    next.candidate.family.table.get? other = old.candidate.family.table.get? other := by
+  unfold Snapshot.invoke at called
+  split at called
+  · contradiction
+  · rename_i value family familyCalled
+    dsimp only at called
+    split at called
+    · contradiction
+    · cases called
+      exact GenericFamily.Family.invoke_other model.generics old.request.policy
+        old.candidate.interface old.candidate.family key args _ _ familyCalled other different
+
 end LeanPoo.Functional.StagedPublication
