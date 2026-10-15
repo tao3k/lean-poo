@@ -58,8 +58,10 @@ Boolean state and does not infer convergence for arbitrary error-valued states.
 ~materialize~ adapts that proved closure to the existing construction/publication
 boundary. It does not invoke the ordinary graph ~Builder~ API, so its builder
 execution/reuse traces are empty. This does not claim zero solving work. The
-solver's strict-state depth is separate metadata, with no individual execution
-or cache-hit cost claim. No incremental cyclic construction reuse is implemented.
+reference solver's strict-state depth is separate metadata. Production uses the
+proved array/worklist runner described in [[file:cyclic-costs.org][cyclic costs]], retaining actual
+primitive counters. Dependency-index reuse requires exact dependency equality;
+each revised solution still starts from bottom.
 
 [[file:../../LeanPoo/Functional/CyclicPublication.lean][CyclicPublication]] passes the materialized closure to existing
 ~StagedPublication.finish~, heterogeneous generic construction and exact-candidate
@@ -136,7 +138,7 @@ test limits remain 30 seconds / 2 GiB.
 Positive finite facts are the automatically solved class. General cyclic type,
 logical or numerical equations still need separate convergence/ordering evidence
 or remain unsupported. This work supplies neither arbitrary monotonicity inference
-nor a general cycle solver. It does not compute SCC schedules, perform cyclic
-worklist optimization, retain cyclic nodes across revisions, equate graph cycles
+nor a general cycle solver. It does not compute SCC schedules, retain cyclic
+values across revisions, equate graph cycles
 with recursive operational divergence, or roll back external effects. Original
 concrete closure and the future-proposal audit status remain unchanged.

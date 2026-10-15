@@ -44,6 +44,13 @@ def equations (config : Config) (attested : Bool) : Equations 10 := fun index =>
   | 8 => .both (.read 2) (.literal config.compliance)
   | _ => .either (.read 7) (.read 5)
 
+/-- All literal configurations of this workflow share the exact read topology. -/
+theorem equation_dependencies (left right : Config) (first second : Bool) (index : Fin 10) :
+    IncrementalClosure.dependencies (equations left first index) =
+      IncrementalClosure.dependencies (equations right second index) := by
+  unfold equations
+  split <;> rfl
+
 /-- An unseeded positive cycle cannot manufacture release authority, even though
 nonleast fixed points may contain it. This holds for every configuration. -/
 theorem unseeded_release (config : Config) : (close (equations config false)).value 7 = false := by
@@ -156,20 +163,29 @@ inductive Failure (program : Generator Input Bool) where
 
 variable {Input : Type} [DecidableEq Input] (program : Generator Input Bool)
 
-def prepare (memo : Cached.Cache program) (input : Input) (budget : Nat) (config : Config) (policy : Policy) :
+def prepare (memo : Cached.Cache program) (input : Input) (budget : Nat) (config : Config) (policy : Policy)
+    (prior : Option (Version program) := none) :
     Except (Failure program) (Version program) :=
   match Cached.runCertified program input budget memo with
   | .error error => .error (.recursive input error)
   | .ok (receipt,next) => match observed : receipt.result with
     | .error message => .error (.source message)
-    | .value enabled => match prepared : CyclicPublication.prepare model (equations config enabled) policy admit with
+    | .value enabled =>
+      let chosen : {plan : IncrementalClosure.Plan 10 // plan.source = equations config enabled} := match prior with
+        | none => ⟨IncrementalClosure.compile _,IncrementalClosure.compile_source _⟩
+        | some old => ⟨IncrementalClosure.reconfigure old.closure.plan (equations config enabled) (by
+            intro index
+            rw [old.closure.planSource,old.source]
+            exact equation_dependencies _ _ _ _ _),IncrementalClosure.reconfigure_source _ _ _⟩
+      match prepared : CyclicPublication.prepareWithPlan model (equations config enabled) policy chosen.val chosen.property admit with
       | .error error => .error (.publication error)
-      | .ok closure => .ok ⟨input,enabled,receipt,observed,next,config,closure,CyclicPublication.prepare_equations model _ policy admit closure prepared⟩
+      | .ok closure => .ok ⟨input,enabled,receipt,observed,next,config,closure,
+          CyclicPublication.prepareWithPlan_equations model _ policy _ _ admit closure prepared⟩
 
 def start (input : Input) (budget : Nat) (config : Config) (policy : Policy) := prepare program {} input budget config policy
 
 def revise (old : Version program) (input : Input) (budget : Nat) (config : Config) (policy : Policy) :=
-  CarrierMigration.publish old (fun version => prepare program version.memo input budget config policy)
+  CarrierMigration.publish old (fun version => prepare program version.memo input budget config policy (some version))
 
 def invoke (old : Version program) (key : Service) (args : Args key) :
     Except (Sum (Object.DispatchTableError Service) String) (Result key × Version program) :=

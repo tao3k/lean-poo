@@ -25,7 +25,7 @@ jobs:
           lint: false
       - name: Build public library and proofs
         run: |
-          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale
+          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale
           lake env lean LeanPoo/C4/Types.lean
           python3 -m unittest discover -s tools/tests -p 'test_*.py'
       - name: Package this run's build

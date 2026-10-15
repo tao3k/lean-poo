@@ -28,3 +28,7 @@ root = "Benchmarks.ContextSlotScale"
 [[lean_exe]]
 name = "resultIndexScale"
 root = "Benchmarks.ResultIndexScale"
+
+[[lean_exe]]
+name = "cyclicClosureScale"
+root = "Benchmarks.CyclicClosureScale"

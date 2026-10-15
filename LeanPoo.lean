@@ -234,3 +234,4 @@ import LeanPoo.Prototype.FiniteClosure
 import LeanPoo.Functional.PositiveEquations
 import LeanPoo.Functional.CyclicPublication
 import LeanPoo.Functional.CyclicAccess
+import LeanPoo.Functional.IncrementalClosure

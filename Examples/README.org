@@ -98,3 +98,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:../docs/contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
 
 [[file:../docs/contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+[[file:../docs/contracts/cyclic-costs.org][Costed cyclic construction]] connects the CyclicAccess workflow to the proved worklist runner and dependency-index reuse; paired measurements and backend primitive cost bounds are recorded separately.

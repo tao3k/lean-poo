@@ -85,6 +85,7 @@ check-merge: check-types
         LeanPoo.Functional.PositiveEquations \
         LeanPoo.Functional.CyclicPublication \
         LeanPoo.Functional.CyclicAccess \
+        LeanPoo.Functional.IncrementalClosure \
         LeanPoo.Functional.InheritedSettlement \
         LeanPoo.Functional.ConstructionWorkflow \
         LeanPoo.Functional.PolicyPublication \
@@ -533,6 +534,7 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/AccountMigration.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/PositiveEquations.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/CyclicAccess.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/IncrementalClosure.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean
