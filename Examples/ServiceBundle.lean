@@ -29,6 +29,20 @@ def check : Except String Unit :=
       | .ok selected =>
         unless selected.candidate.cache.evaluated.isEmpty && selected.candidate.cache.reused.length == 15 &&
             quoteProbe selected.candidate == some 52 do throw "policy-only reconstruction ran a refusing builder"
+      -- Both shared branches and their joins are rebuilt exactly once. The
+      -- rejecting guard excludes every constructor outside the invalidation cone.
+      let rootDirty := ["input","freight","cover","reserve","tax","risk",
+        "settlement","invoice","audit","release","total"]
+      let rootChanged := revise version [.setBase "input" (some (.ok 60))] rootDirty.contains 1000
+      match rootChanged.1 with
+      | .error error => throw (failureTag error)
+      | .ok prepared =>
+        unless prepared.candidate.cache.evaluated.length == 11 &&
+            prepared.candidate.cache.reused.length == 4 &&
+            quoteProbe prepared.candidate == some 134 &&
+            reserveProbe prepared.candidate == some (65,true) &&
+            cancelProbe prepared.candidate == some ["customer","invoice:51"] do
+          throw "shared invalidation/cross-service stale capture"
       -- The third generic refuses after the first two have been reconstructed.
       let refused := revise version [.policy {forbiddenCancel := true}] (fun _ => false) 1000
       match refused.1 with

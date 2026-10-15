@@ -142,6 +142,19 @@ theorem Partial.step_reused (builder : Builder spec BuildError) (reuse : Reuse s
       .ok (prior.install scheduled key active cached.val cached.property true) := by
   simp [Partial.step, active, pending, hit]
 
+/-- A clean materialized slot is independent of every builder implementation,
+including one that refuses this node. This is source-level work skipping. -/
+theorem Partial.step_reused_builder_independent
+    (first : Builder spec FirstError) (second : Builder spec SecondError) (reuse : Reuse scheduled)
+    (prior : Partial scheduled) (key : Key) (active : key ∈ spec.keys) (pending : key ∉ prior.done)
+    (cached : {value : Option (Outcome Key Value key) // value = scheduled.closed.raw key})
+    (hit : reuse key = some cached) :
+    (prior.step scheduled first reuse key).toOption =
+      (prior.step scheduled second reuse key).toOption := by
+  rw [Partial.step_reused scheduled first reuse prior key active pending cached hit,
+      Partial.step_reused scheduled second reuse prior key active pending cached hit]
+  rfl
+
 theorem Partial.step_done (builder : Builder spec BuildError) (reuse : Reuse scheduled)
     (prior : Partial scheduled) (key : Key) (done : key ∈ prior.done) :
     prior.step scheduled builder reuse key = .ok prior := by

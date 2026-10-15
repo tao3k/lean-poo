@@ -125,3 +125,26 @@ a successful reservation at a joint budget of one, then admits the same request
 at a budget of two while preserving the quote cache. This models the Scheme
 ServiceBundle scenario with Lean's existing selectively built graph; the graph
 representations and quote combination policies are not claimed identical.
+
+* Selective Scheme construction and measured scope
+
+The companion implementation now supplies native Computation/Declaration/Builder
+protocols for finite inspectable DAGs and specializes the same staged model through
+~.construct / .refresh~ hooks. Source snapshots compare exact program/base identities;
+changed support/order is conservative, and dependency-ordered invalidation covers
+presence observations and every branch. Clean slots, including error/absence, are
+retained without invoking builders. Program/base objects and callbacks must remain
+pure and stable; this is not a proof of arbitrary Scheme callbacks or code generation.
+
+~ConstructionCache.Partial.step_reused_builder_independent~ formalizes that clean
+work is independent even of a refusing builder. ~GeneralizedGraph.Scheduled.invalidates_reader~
+propagates a shared dependency's invalidation to each reader. The ServiceBundle
+example adds shared input 60 after the invoice adjustment: 11 rebuilt, 4 retained,
+quote 134, reservation (65,true), invoice 51, under a guarded builder.
+
+Scheme's shared settlement example matches the component arithmetic and skip
+controls while reusing its existing C4 quote combination. Its source/scheduling and
+cache preparation costs are measured alongside full family/metadata reconstruction;
+per-service method reconstruction is not claimed selective. New raw benchmark data
+stays under ignored build output, with historical receipts preserved losslessly in
+one compressed archive and concise evidence summaries in repository documentation.

@@ -239,6 +239,17 @@ theorem Scheduled.invalidates_eq {spec : Declaration Key Value} (scheduled : Sch
     exact ⟨dep, member, by simpa [scheduled.edgeLower key dep member] using value⟩
 
 omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
+/-- Invalidation reaches each actual reader of a shared value or presence,
+including reads inferred from an unselected conditional branch. -/
+theorem Scheduled.invalidates_reader {spec : Declaration Key Value} (scheduled : Scheduled spec)
+    (changed : Key → Bool) (reader dependency : Key) (reads : dependency ∈ spec.reads reader)
+    (dirty : scheduled.invalidates changed dependency = true) :
+    scheduled.invalidates changed reader = true := by
+  rw [scheduled.invalidates_eq]
+  apply Bool.or_eq_true_iff.mpr
+  exact .inr (List.any_eq_true.mpr ⟨dependency,reads,dirty⟩)
+
+omit [BEq Key] [LawfulBEq Key] [Hashable Key] in
 /-- Invalidation is sufficient for reuse only when unchanged source resolvers
 are actually equal. A version label is never an equality certificate. -/
 theorem Scheduled.unaffected {spec next : Declaration Key Value} (scheduled : Scheduled spec)

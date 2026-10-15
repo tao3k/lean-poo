@@ -3262,13 +3262,13 @@
       ]
     },
     "Examples/ServiceBundle.lean": {
-      "sha256": "3241c67d93ffea183286bc87ced362ab997146d3ff6d5962b3137bb28991b819",
-      "physical_lines": 80,
+      "sha256": "5c72c0544e4f67f0c63430d0b11cc85860616ee792291a29ec5c4c26a114c46f",
+      "physical_lines": 94,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        65,
-        69
+        79,
+        83
       ]
     },
     "Examples/ServiceMetadata.lean": {
@@ -3484,8 +3484,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/ConstructionCache.lean": {
-      "sha256": "5f7b691b6104ab53bc293ccd833df48b0eb8215afa0ddbc323fc60f2a1eddfbc",
-      "physical_lines": 185,
+      "sha256": "da0f0f30450da0b9fc5807cb18c70b7626421daa1bc376eca40776fb957a5769",
+      "physical_lines": 198,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3603,8 +3603,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/GeneralizedGraph.lean": {
-      "sha256": "1280eff20f631ad6e99c28ea0ef67fca192b52791bd92325e9469462bbf669de",
-      "physical_lines": 275,
+      "sha256": "95de06891a0283c33b5ec8d54639fc7b300793e1a5e8f219c4c6d892a7f1f763",
+      "physical_lines": 286,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -5945,8 +5945,8 @@
       "eval_lines": []
     },
     "docs/contracts/declarative-metadata.org": {
-      "sha256": "9b8fab0a77d361f95c37c80c9d3dc5570f4b89a7c1228d681eee7525614f870f",
-      "physical_lines": 127,
+      "sha256": "053b80fc4420e45522615584cfa062ae29d409af998338c9619a398a3e1c5757",
+      "physical_lines": 150,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
