@@ -1,5 +1,11 @@
 #+TITLE: Closure lifecycle costs — generalized protocol future work
 
+* Current construction extension
+
+[[file:closure-construction.org][Fused construction and publication]] adds direct visitor specialization, idempotent
+preparation, dependency-equal reshaping and a fixed native Scheme data format.
+The v4 observations below remain historical; no new JSON/version series is added.
+
 * Scope and construction modes
 
 This extends the paper's future generalized protocol work for the existing finite

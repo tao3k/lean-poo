@@ -1,6 +1,5 @@
-import LeanPoo.Functional.ClosureLifecycle
+import LeanPoo.Functional.ClosureConstruction
 import LeanPoo.Functional.ClosureScenarios
-import Lean.Data.Json
 open LeanPoo.Functional PositiveEquations IncrementalClosure Lean
 namespace HybridClosureScale
 
@@ -11,8 +10,8 @@ structure Built (family : String) (n width : Nat) where
   cached : ClosureLifecycle.Prepared plan
 
 def build (mode : ClosureLifecycle.Mode) (family : String) (n width : Nat) (seed : Bool) : Built family n width :=
-  let plan := compile (ClosureScenarios.equations family n width seed)
-  ⟨seed,plan,compile_source _,ClosureLifecycle.prepare mode plan⟩
+  let plan := ClosureConstruction.compile (ClosureScenarios.equations family n width seed)
+  ⟨seed,plan,ClosureConstruction.compile_source _,ClosureLifecycle.prepare mode plan⟩
 
 def refresh (old : Built family n width) (seed : Bool) : Built family n width :=
   let source := ClosureScenarios.equations family n width seed
@@ -67,20 +66,17 @@ def main (args : List String) : IO Unit := do
     unless charge ≤ prepared.ceiling .append && charge ≤ prepared.ceiling .chunked && charge ≤ prepared.ceiling .hybrid do
       throw (IO.userError "selected ceiling")
   let astNodes := (List.ofFn (fun index : Fin n => nodes built.plan.equations[index.val])).sum
-  let fields : List (String × Json) := [
-    ("queue",toJson queue),("engine",toJson engine),("family",toJson family),("n",toJson n),("width",toJson width),
-    ("seed",toJson seedText),("scope",toJson scope),("repetitions",toJson repetitions),("query_ns",toJson elapsed),
-    ("setup_ns",toJson setupNanos),("lifecycle_ns",toJson (elapsed+setupNanos)),("cache_mode",toJson (label mode)),
-    ("construction_nodes",toJson astNodes),("index_links",toJson (if scope == "cold" then prepared.edges else 0)),
-    ("selector_visits",toJson (if scope == "warm" then 0 else prepared.visits)),("setup_selector_visits",toJson setupVisits),
-    ("pops",toJson stats.pops),("evals",toJson stats.evaluations),("nodes",toJson stats.nodes),
-    ("writes",toJson stats.writes),("pushes",toJson stats.pushes),("edges",toJson prepared.edges),
-    ("copied_queue",toJson work.copied),("frame_allocations",toJson work.frames),("queue_pairs",toJson (n+work.copied+work.frames)),
-    ("empty_schedules",toJson work.empty),("shared_schedules",toJson work.shared),("inline_schedules",toJson work.inlined),
-    ("selected_fee",toJson (work.fee HybridClosure.balanced)),("policy_charge",toJson charge),
-    ("append_ceiling",toJson (prepared.ceiling .append)),("chunk_ceiling",toJson (prepared.ceiling .chunked)),
-    ("hybrid_ceiling",toJson (prepared.ceiling .hybrid)),("oracle_parity",toJson true)]
-  IO.println (Json.mkObj fields).compress
+  let fields : List String := [toString stats.pops,toString stats.evaluations,toString stats.nodes,
+    toString stats.writes,toString stats.pushes,toString prepared.edges,toString work.copied,toString work.frames,
+    toString (n+work.copied+work.frames),toString work.empty,toString work.shared,toString work.inlined,
+    toString (work.fee HybridClosure.balanced),engine,toString charge,toString (prepared.ceiling .append),
+    toString (prepared.ceiling .chunked),toString (prepared.ceiling .hybrid),label mode,toString astNodes,
+    toString (if scope == "cold" then prepared.edges else 0),toString (if scope == "warm" then 0 else prepared.visits),
+    toString setupVisits]
+  -- All labels are validated finite symbols. Scheme's reader owns data parsing.
+  let wall := toString (elapsed.toFloat/1000000000)
+  let setup := toString (setupNanos.toFloat/1000000000)
+  IO.println s!"#(#({String.intercalate " " fields}) {repetitions} #(#f {wall} #f #f #f) #(#f {setup} #f #f #f))"
 end HybridClosureScale
 
 def main := HybridClosureScale.main

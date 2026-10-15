@@ -1,4 +1,4 @@
-import LeanPoo.Functional.ClosureLifecycle
+import LeanPoo.Functional.ClosureConstruction
 import LeanPoo.Functional.CarrierMigration
 
 /-! Least positive cyclic closure followed by existing heterogeneous family
@@ -46,7 +46,18 @@ def prepareWithPlan (equations : Equations n) (policy : Policy) (plan : Incremen
 def prepare (equations : Equations n) (policy : Policy) (admit :
     (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
     (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate)) :=
-  prepareWithPlan model equations policy (IncrementalClosure.compile equations) (IncrementalClosure.compile_source equations) admit
+  prepareWithPlan model equations policy (ClosureConstruction.compile equations) (ClosureConstruction.compile_source equations) admit
+
+theorem prepareWithPlan_plan (equations : Equations n) (policy : Policy) (plan : IncrementalClosure.Plan n) (source)
+    (admit : (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
+      (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate))
+    (version : Version (Approved := Approved) model)
+    (prepared : prepareWithPlan model equations policy plan source admit = .ok version) : version.plan = plan := by
+  unfold prepareWithPlan at prepared
+  dsimp only at prepared
+  split at prepared
+  · contradiction
+  · cases prepared; rfl
 
 theorem prepareWithPlan_equations (equations : Equations n) (policy : Policy) (plan : IncrementalClosure.Plan n) (source)
     (admit : (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
@@ -72,6 +83,32 @@ def publish (old : Version (Approved := Approved) model) (equations : Equations 
     (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) → (candidate : StagedPublication.Candidate model current) →
       Except AdmissionIssue (Approved current candidate)) :=
   CarrierMigration.publish old (fun _ => prepare model equations policy admit)
+
+/-- A dependency-equal reshape shares the exact old index; canonical closure,
+cooking, the heterogeneous family and candidate admission are staged together. -/
+def publishRetained (old : Version (Approved := Approved) model) (equations : Equations n) (policy : Policy)
+    (same : ∀ index, IncrementalClosure.dependencies (equations index) = IncrementalClosure.dependencies (old.plan.source index))
+    (admit : (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
+      (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate)) :=
+  CarrierMigration.publish old (fun _ => prepareWithPlan model equations policy
+    (IncrementalClosure.reconfigure old.plan equations same) (IncrementalClosure.reconfigure_source _ _ _) admit)
+
+theorem publishRetained_index (old : Version (Approved := Approved) model) (equations : Equations n) (policy : Policy) (same)
+    (admit : (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
+      (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate))
+    (next : Version (Approved := Approved) model)
+    (accepted : (publishRetained model old equations policy same admit).1 = .ok next) :
+    next.plan.watches = old.plan.watches := by
+  have chosen := prepareWithPlan_plan model equations policy _ _ admit next accepted
+  rw [chosen]
+  rfl
+
+theorem publishRetained_refused (old : Version (Approved := Approved) model) (equations : Equations n) (policy : Policy) (same)
+    (admit : (current : GeneralizedMOP.Request (Fin n) (fun _ => Bool) Policy) →
+      (candidate : StagedPublication.Candidate model current) → Except AdmissionIssue (Approved current candidate))
+    (issue) (refused : (publishRetained model old equations policy same admit).1 = .error issue) :
+    (publishRetained model old equations policy same admit).2 = .inl old :=
+  CarrierMigration.publish_refused old _ issue refused
 
 /-- Calls refresh existing candidate-bound approvals and retain the exact least
 cyclic solution and source equation declarations through cache warming. -/
