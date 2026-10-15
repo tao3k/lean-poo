@@ -330,3 +330,10 @@ its independent counterpart collects zero times). Consequently the total-CPU gap
 cannot be identified with arithmetic selection overhead. The selector is not made
 the default; cost laws remain conditional operation-price bounds. Invariant
 specialization is the principal demonstrated gain. All negative receipts remain.
+
+~withCollections / publication_collection_bound~ add explicit collection charges:
+the core direct bound implies the total modeled bound only with a collection-count
+budget. ~collection_budget_bound~ permits a larger count only if the core saving
+pays it. The executable example shows that one extra collection can reverse a
+smaller core cost. Actual GC counts/prices are external premises, not properties
+of projection semantics or verified claims about the Scheme collector.

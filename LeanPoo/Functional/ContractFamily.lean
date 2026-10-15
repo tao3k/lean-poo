@@ -338,6 +338,28 @@ theorem publication_direct_bound (costs : PreparationCosts) (keys : Nat)
   unfold PublicationCosts.total
   have h := costs.direct_covered keys chosen
   omega
+/-- A separate collection charge prevents projecting a primitive-cost bound onto
+measured total CPU when the two executions have different collection histories. -/
+def withCollections (core collectionPrice collections : Nat) := core + collectionPrice * collections
+
+theorem publication_collection_bound (costs : PreparationCosts) (keys : Nat)
+    (chosen : costs.choose keys = .direct) (prices : PublicationCosts) (built bound generics probes : Nat)
+    (collectionPrice selectedCollections sharedCollections : Nat)
+    (within : selectedCollections ≤ sharedCollections) :
+    withCollections (prices.total (costs.selected keys) built bound generics probes) collectionPrice selectedCollections ≤
+    withCollections (prices.total (costs.shared keys) built bound generics probes) collectionPrice sharedCollections :=
+  Nat.add_le_add (costs.publication_direct_bound keys chosen prices built bound generics probes)
+    (Nat.mul_le_mul_left collectionPrice within)
+
+/-- More generally, a core saving can pay a collection excess, but this is an
+additional budget premise rather than a consequence of choosing direct. -/
+theorem collection_budget_bound (selected shared collectionPrice selectedCollections sharedCollections : Nat)
+    (core : selected ≤ shared)
+    (paid : collectionPrice * selectedCollections - collectionPrice * sharedCollections ≤ shared - selected) :
+    withCollections selected collectionPrice selectedCollections ≤ withCollections shared collectionPrice sharedCollections := by
+  unfold withCollections
+  omega
+
 /-- Include once-only template validation before amortizing specialization. -/
 structure TemplateCosts where
   setup : Nat

@@ -116,6 +116,8 @@ theorem direct_shared_coherent (key : Service) (input : Int × String) :
   unless templates.setup + templates.specialize > templates.rebuild &&
       templates.setup + 2 * templates.specialize ≤ 2 * templates.rebuild do
     throw (IO.userError "one-time template setup must be amortized")
+  unless PreparationCosts.withCollections 5 2 1 > PreparationCosts.withCollections 6 2 0 do
+    throw (IO.userError "collection excess can reverse primitive saving")
   IO.println "CONTRACT-STRATEGY-OK direct/shared/selector-budget invariant-template setup-amortization"
 
 def check : Except String Unit :=
@@ -178,5 +180,7 @@ def check : Except String Unit :=
 #print axioms Functional.ContractFamily.PreparationCosts.selected_bound
 #print axioms Functional.ContractFamily.PreparationCosts.publication_direct_bound
 #print axioms Functional.ContractFamily.PreparationCosts.template_amortized
+#print axioms Functional.ContractFamily.PreparationCosts.publication_collection_bound
+#print axioms Functional.ContractFamily.PreparationCosts.collection_budget_bound
 #print axioms Functional.ContractFamily.publish_refused
 end LeanPoo.Examples.ContractFamily
