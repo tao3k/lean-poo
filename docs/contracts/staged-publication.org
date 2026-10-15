@@ -1,0 +1,160 @@
+#+TITLE: Materialized construction and heterogeneous generic publication — future work
+
+[[file:generalized-mop.org][Generalized MOP]] · [[file:inherited-mop.org][Inherited fragments and research audit]]
+
+* Scope and source proposal
+
+This advances the original source's future proposal at 1807–1827: generalized
+prototypes for multiple dispatch/combination, attached logical metadata and staged
+computation/cache invalidation. Earlier APIs proved invalidation/reuse conditions
+but reconstructed complete candidate graphs and published one generic.
+
+The new path materializes finite graph results, actually bypasses builders for
+certified clean nodes, and publishes a family of differently typed generic
+functions with one exact-candidate consumer approval. The original concrete
+construction closure and ~whole_paper_implemented=false~ remain unchanged.
+
+* Materialized values and actual skipping
+
+[[file:../../LeanPoo/Functional/ConstructionCache.lean][ConstructionCache]] consumes existing ~GeneralizedGraph.Scheduled~ metadata.
+A checked traversal stores completed optional outcomes in a persistent dictionary.
+Each fresh resolver reads only already materialized dependencies. The traversal
+refuses unready dependencies and incomplete schedules. Processed keys are tracked
+separately from values, so absent providers and present failures are completed
+nodes too. Duplicate visits return the existing partial state.
+
+~Cache.closed~ is an actual generalized fixed-point witness. ~Cache.reference~
+uses existing ranked uniqueness to prove complete dictionary equality with the
+full construction for every key. The ranked reference occurs in proofs; runtime
+values come from the explicit builder or a stored slot. There is no full-reference
+reconstruction hidden behind a cache lookup or final cooking.
+
+Refresh reuses existing transitive ~Scheduled.invalidates~ and ~unaffected~.
+Every retained slot carries equality to the new reference under actual unchanged
+resolver equality. That equality is mandatory; version strings are insufficient.
+Typed request edits derive it from the existing define/remove/setBase frame laws.
+Dependency analysis and scheduling still run for each revision.
+Policy edits leave the graph clean. Support-list edits conservatively invalidate
+all nodes. Adding a declared node can invalidate only that node and its affected
+consumers, using the new graph's inferred dependencies.
+
+~Partial.step_reused~ proves the reuse branch is independent of the builder and
+new resolver; ~Partial.step_done~ proves already processed keys bypass work.
+~Builder.guarded~ refuses specified construction attempts while certifying every
+successful result against the actual resolver. Controls set every claimed retained
+node's builder to refusal: successful refresh therefore discriminates skipped work
+from merely reporting a hit after reevaluation.
+
+| Outcome | Cache semantics |
+|---------+-----------------|
+| No provider | Store ~none~ and mark completed |
+| Successful component | Store ~some (.ok value)~ |
+| Business/source/capability failure | Store ~some (.error error)~ with full error identity |
+| Builder refusal | Return construction failure; no new publication |
+
+This cache certifies construction semantics. Application admission separately
+chooses whether a completed component failure is acceptable.
+
+* Heterogeneous generic family
+
+[[file:../../LeanPoo/Functional/GenericFamily.lean][GenericFamily]] reuses the existing dependent ~Object.DispatchTable~.
+Each key fixes its own Args, Method and Result. The model supplies finite keys,
+existing multimethod constructors, declarations and negative watches per key.
+
+Every installed generic retains:
+
+- Complete cache-erased definition equality with its actual policy/cooked source.
+- Its existing negative-assumption certificate.
+- Candidate-cache soundness, transferred from empty seeds through existing edits.
+
+Family completion checks every requested signature. ~Family.invoke_table~ proves
+that invocation is exactly the existing table call. ~Family.invoke_other~ retains
+all other generics by equality, and ~Family.call_correct~ supplies the existing
+ordered reference-call law for every typed argument. Warm calls preserve origin,
+negative certificates and soundness through existing single-generic laws.
+
+* Joint staged publication
+
+[[file:../../LeanPoo/Functional/StagedPublication.lean][StagedPublication]] binds a request, its materialized cache, actual cooked
+interface and complete heterogeneous family. ~Candidate.closed~ transfers the
+stored raw fixed point through the existing compatible public view. Its cooking
+uses stored raw values, never the ranked reference evaluator.
+
+The transaction order is:
+
+| Stage | Checked work |
+|-------+--------------|
+| Schedule | Infer/check the target graph and reject unknown/opaque/cyclic dependencies |
+| Materialize | Retain clean completed slots; build fresh nodes from stored dependencies |
+| Family | Build all requested signatures, checking registration and negative watches |
+| Joint admission | Check the completed graph/family as one candidate |
+| Publish | Install the whole accepted version |
+
+~publish_refused~ returns the exact old snapshot, including constructed values,
+approval and every generic's warm cache. ~publish_accepted~ identifies the whole
+new version. An earlier generic successfully built before a later refusal is
+never separately published. Successful generic definitions are rebuilt in this
+path; selective construction reuse does not imply selective generic rebuilding.
+
+~Snapshot.invoke_construction~ proves that ordinary invocation retains the request,
+materialized raw values and construction traces. Arbitrary approval is rechecked
+for the actual warmed family instead of assuming it is invariant under cache edits.
+
+* Complex quote/reserve/cancel workflow
+
+[[file:../../LeanPoo/Functional/ServiceBundle.lean][ServiceBundle]] reuses the complete multi-level settlement graph and existing
+sum/peak quote combination from ~ConstructionWorkflow~. One materialized graph
+feeds three distinct signatures:
+
+| Generic | Arguments | Result |
+|---------+-----------+--------|
+| Quote | Service, region, signed quantity | Fallible monetary amount |
+| Reserve | Natural credit amount | Fallible remaining credits and acceptance flag |
+| Cancel | Customer and guard flag | Fallible cancellation event list with current invoice tag |
+
+The dependent approval records current input/invoice/total values, a numerical
+limit, and equality of the three actual generic observations to the shared values.
+Its three anchor calls are quote at one unit, reserve at two credits and guarded
+customer cancellation. Universal call/reference equivalence is a separate generic
+law. A reserve offset or stale cancellation tag fails joint admission even when
+all registrations and negative checks succeed.
+
+[[file:../../Examples/ServiceBundle.lean][Examples]] rebuild only invoice/release/total while twelve other builders refuse;
+a policy-only upgrade retains all fifteen nodes with every builder refusing.
+A third-generic negative conflict rejects the whole candidate. A second example
+starts from the existing C3 diamond/super-fragment settlement construction and
+changes policy across all three signatures with zero graph rebuilding, retaining
+the exact compiled source graph.
+
+* Independent controls and evidence
+
+[[file:../../Tests/ConstructionCache.lean][Cache controls]] check dependent Nat/String values, duplicate visits, a refusing
+cold builder, stable cached source errors and true absences. Reversed/incomplete
+schedules refuse rather than yielding a partial closed dictionary.
+
+[[file:../../Tests/ServiceBundle.lean][Bundle controls]] cover 24 data/policy settings, 240 accepted migrations,
+288 refusals and 7920 complete typed call observations. Ten accepted plans include
+no change, policy change, invoice replacement, shared-input and optional-capability
+changes, source removal, support reordering, changed dependency shape and a newly
+introduced coupon component. Independent arithmetic/matching and explicit dirty
+sets check materialized results and actual constructor selection.
+
+Accepted revisions execute 1320 resolvers and retain 2304 slots. These counts
+exclude cold construction and refused work. Every retained builder refuses; all
+three old generics are warm before refusal checks. Failures cover a second-generic
+registration error, third-generic negative conflict, joint reserve/cancel mismatch,
+component failure, constructor refusal, cycles, absent support and budget rejection.
+Old values, family observations and all cache recency lists remain unchanged.
+The existing 30-second/2-GiB bounds remain unchanged.
+
+* Remaining boundaries
+
+The older single-generic/inherited publication APIs still rebuild their candidates;
+this staged path supplies the new explicit cache/family operation. Graph edits
+have automatic frame certificates. Arbitrary C3/source callback changes still need
+explicit resolver equality evidence or conservative reconstruction. No equality
+of opaque callback bodies is inferred. Families are finite and statically typed;
+raw carrier changes and lossy public cooking retain the earlier boundaries.
+General declarative method/type/constraint metadata and automatic cyclic equation
+solving remain research. Publication is immutable and pure; external effects are
+outside this construction cache's execution model.

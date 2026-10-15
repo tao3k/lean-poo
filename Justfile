@@ -72,6 +72,10 @@ check-merge: check-types
         LeanPoo.Functional.GeneralizedMOP \
         LeanPoo.Functional.GeneralizedFragments \
         LeanPoo.Functional.InheritedMOP \
+        LeanPoo.Functional.ConstructionCache \
+        LeanPoo.Functional.GenericFamily \
+        LeanPoo.Functional.StagedPublication \
+        LeanPoo.Functional.ServiceBundle \
         LeanPoo.Functional.InheritedSettlement \
         LeanPoo.Functional.ConstructionWorkflow \
         LeanPoo.Functional.PolicyPublication \
@@ -295,6 +299,7 @@ _check-examples:
     {{lean}} Examples/PolicyPublication.lean
     {{lean}} Examples/ConstructionWorkflow.lean
     {{lean}} Examples/InheritedSettlement.lean
+    {{lean}} Examples/ServiceBundle.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -510,6 +515,8 @@ _check-contracts:
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/PolicyPublication.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ConstructionWorkflow.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/InheritedSettlement.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ConstructionCache.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ServiceBundle.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean

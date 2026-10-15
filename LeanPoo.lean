@@ -220,3 +220,8 @@ import LeanPoo.Functional.ConstructionWorkflow
 import LeanPoo.Functional.GeneralizedFragments
 import LeanPoo.Functional.InheritedMOP
 import LeanPoo.Functional.InheritedSettlement
+
+import LeanPoo.Functional.ConstructionCache
+import LeanPoo.Functional.GenericFamily
+import LeanPoo.Functional.StagedPublication
+import LeanPoo.Functional.ServiceBundle

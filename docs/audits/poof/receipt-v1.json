@@ -8,7 +8,7 @@
     "sha256": "ede30f1d6c5d0809aae1dcd8556b32e5ef913e5c48d2fd0c40acb2e2ad03ba17",
     "physical_lines": 2434
   },
-  "requirements_sha256": "7e0e39d193d5d149c45ea5cde3e05e3124b12a2f7105c66454fe62058b6756a0",
+  "requirements_sha256": "7bf860b0c5ba02ee21c846fb737461c8f1d169eab5ac397729d1d2f50b9c37d1",
   "audit_tool_sha256": "d7140e27087b77a2a088aea588d38fe7ebb3ac55f11c27242518dd6d32f8eae9",
   "construction_closure": {
     "schema": "lean-poo.poof-closure.v1",
@@ -1809,7 +1809,11 @@
         "LeanPoo/Functional/ConstructionWorkflow.lean",
         "LeanPoo/Functional/GeneralizedFragments.lean",
         "LeanPoo/Functional/InheritedMOP.lean",
-        "LeanPoo/Functional/InheritedSettlement.lean"
+        "LeanPoo/Functional/InheritedSettlement.lean",
+        "LeanPoo/Functional/ConstructionCache.lean",
+        "LeanPoo/Functional/GenericFamily.lean",
+        "LeanPoo/Functional/StagedPublication.lean",
+        "LeanPoo/Functional/ServiceBundle.lean"
       ],
       "checks": [
         "Examples/GeneralizedService.lean",
@@ -1830,9 +1834,12 @@
         "Examples/ConstructionWorkflow.lean",
         "Tests/ConstructionWorkflow.lean",
         "Examples/InheritedSettlement.lean",
-        "Tests/InheritedSettlement.lean"
+        "Tests/InheritedSettlement.lean",
+        "Examples/ServiceBundle.lean",
+        "Tests/ConstructionCache.lean",
+        "Tests/ServiceBundle.lean"
       ],
-      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises. Directional dependencies now use a downstream protocol family indexed by an explicit selected upstream view. Storage partition is factored into Mounting and reused by independent/dependent protocols. Closure joins an upstream witness with a downstream witness at exactly that selected dependency. Finite recurrence retains previous-approximation dependency timing; equal-view reuse carries raw/interface proofs and changed views require new closure evidence. Controls cover 128 parameter combinations, 512 closed observations, 512 finite observations and 512 revisions; a client theorem rejects a stale fixed point after a tier change. Cyclic/general dependency inference and arbitrary callback effects remain outside scope. Finite heterogeneous dependency chains now sequence existing closure admission and equal-view refresh. Every suffix is indexed by the actual preceding cooked view; refused construction returns no partial publication. Nested product mounting reuses DependentComponents.close to obtain an actual four-level fixed point. Shared tariff construction retains the existing method compiler and two-step closure proof. Controls cover 576 revisions (160 accepted, 416 refused), 4800 complete value/error/ledger observations across original/grouped/reassociated representations, and 420 finite observations through depth six, plus heterogeneous storage and dependency types. Generic and client proofs preserve full reused suffix interfaces and arbitrary-input method outcomes, propagate first refusal and reject stale closure at a changed edge. Ordered fragments, bases and chain shape are fixed during refresh; dependency selection is declared, not inferred. This continues the future proposal rather than adding an original-construction gap. Explicit fork/join composition now selects independent sibling dependencies from one shared upstream cooked interface, reusing Components product mounting and existing dependency refresh. Both branch witnesses assemble through the existing independent close proof; joins select ordered metadata from the complete refreshed pair. Nested dependent closure proves the whole diamond fixed point with one upstream raw component. Kernel laws preserve reused branch interfaces and arbitrary-input shipping/settlement outcomes, bypass join reconstruction under equal selected views, and forward left/right refusal. A negative client rejects swapped equal-sum metadata for the ordered join construction. Controls cover 784 revisions (208 accepted, 576 refused), 4160 complete value/error/ledger observations, 420 finite observations, 140 genuine interleaving/grouping observations and heterogeneous branch types. Only declared finite fork/join shapes and immutable publication are covered; arbitrary dependency graphs and external-effect rollback are not inferred. Shared-context fork reindexing now composes explicit input views and pulls back existing closure witnesses. Contextual join refresh compares metadata selected from both revised shared context and the complete revised branch pair; retaining both branches alone is not enough. The earlier branch-only join is proved a special case, and full-key equality bypasses reconstruction while changed-key refusal is forwarded exactly. A reusable seven-component workflow composes two fork/join levels through existing product/dependent closure, retaining one shared pricing and reserve component. Kernel clients prove whole closure, arbitrary-input risk/final method preservation, exact pullback interfaces and stale-final rejection when shared context changes with the remaining metadata fixed. Independent controls cover 3200 revisions (872 accepted, 2328 refused), all 128 constructor-refusal masks, 20928 complete value/error/ledger comparisons and 420 finite observations. Controls discriminate a retained first join with changed later shared dependencies and a changed final join despite both later branches being reused. This remains explicit future-work composition, with no inferred arbitrary graph dependencies or external-effect rollback. Scoped policy revision now includes actual configuration and selected data dependency in construction keys, reusing existing dependency refresh. A compatible-self recooking operation preserves raw fixed-point evidence and its projected interface without claiming unchanged richer method behavior. An existing seven-component shared workflow is reused as the upstream of invoice/audit branches and a contextual release join, yielding a witnessed ten-component fixed point. Fee policies change successful public actions while tariff metadata can remain equal; generic/client proofs retain exact error-state prefixes, preserve retained audit/release outcomes and distinguish old/new successful policy observations. Controls cover 7168 revisions across seven scenarios and all 1024 constructor-refusal masks (2697 accepted, 4471 refused), 21688 complete value/error/ledger comparisons and 576 finite observations through depth eight, including the complete propagation depth. Policies are actual family inputs, not unchecked source-version labels. Fragments, bases, graph structure and compiler-family code remain fixed; arbitrary source/configuration drift still needs new construction or explicit equality evidence. This remains an advancement of future work rather than an original-construction gap. Automatic finite generalized graphs now infer computation footprints, check dependency schedules and construct unique actual protocol fixed points. Transitive value/presence invalidation has a kernel unaffected-result theorem requiring unchanged resolver equality. A typed MOP binds cooking, compatible views and actual dispatch definitions to selected policies and exposes checked metadata. Whole request edits may change code, support/order, bases and policy; graph closure, dispatch construction, negative watches and exact-candidate admission precede atomic immutable publication. Warm invocation retains graph/interface/provenance and cache soundness; any refusal returns the exact old snapshot. Independent controls cover 96 configurations, 4608 call outcomes, 96 accepted migrations, 1152 refusals and 468 finite node observations. Opaque declarations, unknown support and cycles refuse construction; policy hooks are explicit, candidate graphs are fully rebuilt, the raw carrier stays fixed and arbitrary host effects/type inference remain outside scope. This advances future work; original construction closure and whole_paper_implemented remain unchanged. Ordered inherited generalized fragments now elaborate replace/extend/conditional forms into existing analyzed computations. Compilation is proved equal to actual delayed lens inheritance for every final self/base/error. Unconditional replacement prunes dead parent execution and metadata; conditional analysis retains both branches. Source C3 graph/order derivations and class-local binding order are tied by request equality to the actual closed MOP and its protected dispatch/approval. Whole-source migration preserves the exact old snapshot on any refusal, including inheritance errors before later checks and warm invocation provenance. A shared-ancestor inherited settlement client proves actual noncommuting wrapper arithmetic and exercises final-self reads, conditional overrides and legacy shielding. Independent controls cover 96 settings, 4608 calls, 96 accepted migrations and 576 matrix refusals plus exact C3 and fragment-order failures. Actual staged execution reuse, heterogeneous generic-family atomicity, general declarative metadata and lossy/carrier-changing automatic cooking remain future research; original concrete closure and whole_paper_implemented remain unchanged."
+      "boundary": "Research extension: an initial typed generalized protocol separates raw storage, cooked self and fragment compilation, reusing delayed composition, nested lenses, C3 preparation, standard/simple method groups and exact dictionary bridges. Kernel laws cover ordered assembly, self-view reindexing, explicit frames, every finite representation observation and witnessed closure. Complex clients and 1080 executions qualify declared policies. This advances the future proposal; unrestricted reflective MOPs, automatic effect/type inference and staging remain research. The original concrete construction closure and whole_paper_implemented flag are unchanged. Independent component mounting now uses existing lawful Focus getters/setters and explicit read/set independence. Partition/grouping preserves each local fragment order and the same cooked self; closed local witnesses compose and project, while certified right replacement preserves the complete left interface. Complete method effects retain application execution order. 120 parameter combinations compare 480 checkout observations across grouped/original/raw/public representations plus 120 right revisions. Overlapping focuses and changed local order are not admitted by these premises. Directional dependencies now use a downstream protocol family indexed by an explicit selected upstream view. Storage partition is factored into Mounting and reused by independent/dependent protocols. Closure joins an upstream witness with a downstream witness at exactly that selected dependency. Finite recurrence retains previous-approximation dependency timing; equal-view reuse carries raw/interface proofs and changed views require new closure evidence. Controls cover 128 parameter combinations, 512 closed observations, 512 finite observations and 512 revisions; a client theorem rejects a stale fixed point after a tier change. Cyclic/general dependency inference and arbitrary callback effects remain outside scope. Finite heterogeneous dependency chains now sequence existing closure admission and equal-view refresh. Every suffix is indexed by the actual preceding cooked view; refused construction returns no partial publication. Nested product mounting reuses DependentComponents.close to obtain an actual four-level fixed point. Shared tariff construction retains the existing method compiler and two-step closure proof. Controls cover 576 revisions (160 accepted, 416 refused), 4800 complete value/error/ledger observations across original/grouped/reassociated representations, and 420 finite observations through depth six, plus heterogeneous storage and dependency types. Generic and client proofs preserve full reused suffix interfaces and arbitrary-input method outcomes, propagate first refusal and reject stale closure at a changed edge. Ordered fragments, bases and chain shape are fixed during refresh; dependency selection is declared, not inferred. This continues the future proposal rather than adding an original-construction gap. Explicit fork/join composition now selects independent sibling dependencies from one shared upstream cooked interface, reusing Components product mounting and existing dependency refresh. Both branch witnesses assemble through the existing independent close proof; joins select ordered metadata from the complete refreshed pair. Nested dependent closure proves the whole diamond fixed point with one upstream raw component. Kernel laws preserve reused branch interfaces and arbitrary-input shipping/settlement outcomes, bypass join reconstruction under equal selected views, and forward left/right refusal. A negative client rejects swapped equal-sum metadata for the ordered join construction. Controls cover 784 revisions (208 accepted, 576 refused), 4160 complete value/error/ledger observations, 420 finite observations, 140 genuine interleaving/grouping observations and heterogeneous branch types. Only declared finite fork/join shapes and immutable publication are covered; arbitrary dependency graphs and external-effect rollback are not inferred. Shared-context fork reindexing now composes explicit input views and pulls back existing closure witnesses. Contextual join refresh compares metadata selected from both revised shared context and the complete revised branch pair; retaining both branches alone is not enough. The earlier branch-only join is proved a special case, and full-key equality bypasses reconstruction while changed-key refusal is forwarded exactly. A reusable seven-component workflow composes two fork/join levels through existing product/dependent closure, retaining one shared pricing and reserve component. Kernel clients prove whole closure, arbitrary-input risk/final method preservation, exact pullback interfaces and stale-final rejection when shared context changes with the remaining metadata fixed. Independent controls cover 3200 revisions (872 accepted, 2328 refused), all 128 constructor-refusal masks, 20928 complete value/error/ledger comparisons and 420 finite observations. Controls discriminate a retained first join with changed later shared dependencies and a changed final join despite both later branches being reused. This remains explicit future-work composition, with no inferred arbitrary graph dependencies or external-effect rollback. Scoped policy revision now includes actual configuration and selected data dependency in construction keys, reusing existing dependency refresh. A compatible-self recooking operation preserves raw fixed-point evidence and its projected interface without claiming unchanged richer method behavior. An existing seven-component shared workflow is reused as the upstream of invoice/audit branches and a contextual release join, yielding a witnessed ten-component fixed point. Fee policies change successful public actions while tariff metadata can remain equal; generic/client proofs retain exact error-state prefixes, preserve retained audit/release outcomes and distinguish old/new successful policy observations. Controls cover 7168 revisions across seven scenarios and all 1024 constructor-refusal masks (2697 accepted, 4471 refused), 21688 complete value/error/ledger comparisons and 576 finite observations through depth eight, including the complete propagation depth. Policies are actual family inputs, not unchecked source-version labels. Fragments, bases, graph structure and compiler-family code remain fixed; arbitrary source/configuration drift still needs new construction or explicit equality evidence. This remains an advancement of future work rather than an original-construction gap. Automatic finite generalized graphs now infer computation footprints, check dependency schedules and construct unique actual protocol fixed points. Transitive value/presence invalidation has a kernel unaffected-result theorem requiring unchanged resolver equality. A typed MOP binds cooking, compatible views and actual dispatch definitions to selected policies and exposes checked metadata. Whole request edits may change code, support/order, bases and policy; graph closure, dispatch construction, negative watches and exact-candidate admission precede atomic immutable publication. Warm invocation retains graph/interface/provenance and cache soundness; any refusal returns the exact old snapshot. Independent controls cover 96 configurations, 4608 call outcomes, 96 accepted migrations, 1152 refusals and 468 finite node observations. Opaque declarations, unknown support and cycles refuse construction; policy hooks are explicit, candidate graphs are fully rebuilt, the raw carrier stays fixed and arbitrary host effects/type inference remain outside scope. This advances future work; original construction closure and whole_paper_implemented remain unchanged. Ordered inherited generalized fragments now elaborate replace/extend/conditional forms into existing analyzed computations. Compilation is proved equal to actual delayed lens inheritance for every final self/base/error. Unconditional replacement prunes dead parent execution and metadata; conditional analysis retains both branches. Source C3 graph/order derivations and class-local binding order are tied by request equality to the actual closed MOP and its protected dispatch/approval. Whole-source migration preserves the exact old snapshot on any refusal, including inheritance errors before later checks and warm invocation provenance. A shared-ancestor inherited settlement client proves actual noncommuting wrapper arithmetic and exercises final-self reads, conditional overrides and legacy shielding. Independent controls cover 96 settings, 4608 calls, 96 accepted migrations and 576 matrix refusals plus exact C3 and fragment-order failures. Actual staged execution reuse, heterogeneous generic-family atomicity, general declarative metadata and lossy/carrier-changing automatic cooking remain future research; original concrete closure and whole_paper_implemented remain unchanged. Materialized graph construction now stores successful, failed and absent outcomes and bypasses certified unaffected builders. Existing invalidation/unaffected and typed edit frame laws provide exact-source reuse; ranked uniqueness proves whole fixed-point/reference equality without running the reference evaluator. Ready-dependency and completion checks reject partial materialization, and duplicate visits bypass work. Heterogeneous generic families reuse DispatchTable and existing per-generic origin, negative-certificate and cache laws. Joint staged publication binds the materialized graph, cooked interface, every signature and actual consumer approval, preserving the exact old warm version on any refusal. Quote/reserve/cancel controls cover 24 settings, 240 accepted migrations, 288 refusals, 7920 typed calls and 1320 rebuilt/2304 retained nodes across accepted revisions; all retained builders refuse work. Dependent cache failures/absence, added components, source edits and C3/super graph policy reuse are covered. Existing inherited/single-generic APIs retain full reconstruction; arbitrary callback equality still requires evidence, support edits invalidate conservatively, and general type/effect inference or cyclic closure remain future research. Original concrete closure and whole_paper_implemented remain unchanged."
     },
     {
       "id": "code-library",
@@ -3098,6 +3105,16 @@
         94
       ]
     },
+    "Examples/ServiceBundle.lean": {
+      "sha256": "3241c67d93ffea183286bc87ced362ab997146d3ff6d5962b3137bb28991b819",
+      "physical_lines": 80,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        65,
+        69
+      ]
+    },
     "Examples/SharedReporting.lean": {
       "sha256": "dd2234729038d0043b50ac8ac40eb96b2f4642db0cf28236354bc524add55421",
       "physical_lines": 122,
@@ -3245,6 +3262,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Functional/ConstructionCache.lean": {
+      "sha256": "5f7b691b6104ab53bc293ccd833df48b0eb8215afa0ddbc323fc60f2a1eddfbc",
+      "physical_lines": 185,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Functional/ConstructionWorkflow.lean": {
       "sha256": "0eb44a2fc92979a9edbf0a77d15374be473e4a5d13fbd0e6ec496e9eae12b940",
       "physical_lines": 200,
@@ -3346,6 +3370,13 @@
     "LeanPoo/Functional/GeneralizedMOP.lean": {
       "sha256": "82f6dfb599466a1af8566fc7b1d5948b0cf882133fcbecbb79402044dffb6692",
       "physical_lines": 219,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/GenericFamily.lean": {
+      "sha256": "b1d8dcd7a1f75ef13e177c8da5167ecccfd6ef6ba03c72226c7f7ffdc06232e2",
+      "physical_lines": 139,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -3476,6 +3507,13 @@
       "guard_lines": [],
       "eval_lines": []
     },
+    "LeanPoo/Functional/ServiceBundle.lean": {
+      "sha256": "8872702260932354ddf32c79662f7be7d23aef50e87005b89fc883e850bedb13",
+      "physical_lines": 161,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
     "LeanPoo/Functional/SharedSettlement.lean": {
       "sha256": "88f0d82ebd9f6811ca33a129c97f4144459caab8f91dd1b358860d47f6b333a7",
       "physical_lines": 150,
@@ -3486,6 +3524,13 @@
     "LeanPoo/Functional/SharedViews.lean": {
       "sha256": "6be0d776a8fc1b12ee7dfceefe206b29b4ef09f8e4de7c07245307a425b17d26",
       "physical_lines": 81,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": []
+    },
+    "LeanPoo/Functional/StagedPublication.lean": {
+      "sha256": "705b91e84cec12d407b7994ac4e7f6caa144ec836afd8bac7af8274458ce5daa",
+      "physical_lines": 150,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -4450,6 +4495,15 @@
         55
       ]
     },
+    "Tests/ConstructionCache.lean": {
+      "sha256": "0070d5b1247415f0b213c7afd8efce6535a05548d71b5d8abc23d1f3bb632b58",
+      "physical_lines": 64,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        61
+      ]
+    },
     "Tests/ConstructionSemantics.lean": {
       "sha256": "3ff6e192beeaff643fbf7697379d12752cdb5b83468f5217e5a1b4e0c35ea2d9",
       "physical_lines": 88,
@@ -5349,6 +5403,15 @@
         42
       ]
     },
+    "Tests/ServiceBundle.lean": {
+      "sha256": "15263c4079bdf3816170c1c5abc6160a2e7086b3de92468375af91095c4209ab",
+      "physical_lines": 200,
+      "unsafe_declaration_lines": [],
+      "guard_lines": [],
+      "eval_lines": [
+        199
+      ]
+    },
     "Tests/SharedCellRefinement.lean": {
       "sha256": "5043c42ca23391c80c3de2346a2dc5f3af489e9a96dffa1c39d348450b522ec3",
       "physical_lines": 191,
@@ -5542,6 +5605,7 @@
     "Examples/RecursiveDispatchWorkflow.lean",
     "Examples/Renaming.lean",
     "Examples/ResumableRequests.lean",
+    "Examples/ServiceBundle.lean",
     "Examples/SharedFamily.lean",
     "Examples/SharedFieldAccess.lean",
     "Examples/SharedReporting.lean",
@@ -5600,6 +5664,7 @@
     "LeanPoo/Functional/CertifiedView.lean",
     "LeanPoo/Functional/Codec.lean",
     "LeanPoo/Functional/ComputationBatch.lean",
+    "LeanPoo/Functional/ConstructionCache.lean",
     "LeanPoo/Functional/ConstructionWorkflow.lean",
     "LeanPoo/Functional/ConsumerRevision.lean",
     "LeanPoo/Functional/ContextObservation.lean",
@@ -5620,6 +5685,7 @@
     "LeanPoo/Functional/GeneralizedFragments.lean",
     "LeanPoo/Functional/GeneralizedGraph.lean",
     "LeanPoo/Functional/GeneralizedMOP.lean",
+    "LeanPoo/Functional/GenericFamily.lean",
     "LeanPoo/Functional/GraphConstraints.lean",
     "LeanPoo/Functional/GraphMigration.lean",
     "LeanPoo/Functional/GuardedExtension.lean",
@@ -5652,10 +5718,12 @@
     "LeanPoo/Functional/ResultIndex.lean",
     "LeanPoo/Functional/ResultView.lean",
     "LeanPoo/Functional/ScopedTransaction.lean",
+    "LeanPoo/Functional/ServiceBundle.lean",
     "LeanPoo/Functional/SharedRegistry.lean",
     "LeanPoo/Functional/SharedSettlement.lean",
     "LeanPoo/Functional/SharedViews.lean",
     "LeanPoo/Functional/SolverTransport.lean",
+    "LeanPoo/Functional/StagedPublication.lean",
     "LeanPoo/Functional/StatefulValidation.lean",
     "LeanPoo/Functional/TransactionCheck.lean",
     "LeanPoo/Functional/Transformation.lean",
@@ -5829,6 +5897,7 @@
     "Tests/CompiledMemo.lean",
     "Tests/ComputeInvariant.lean",
     "Tests/ComputedDefault.lean",
+    "Tests/ConstructionCache.lean",
     "Tests/ConstructionSemantics.lean",
     "Tests/ConstructionWorkflow.lean",
     "Tests/DebugObject.lean",
@@ -5972,6 +6041,7 @@
     "Tests/ResolverInvariant.lean",
     "Tests/ReusableContracts.lean",
     "Tests/SelectionInvariant.lean",
+    "Tests/ServiceBundle.lean",
     "Tests/ShapeCache.lean",
     "Tests/SharedCellRefinement.lean",
     "Tests/SharedFamily.lean",

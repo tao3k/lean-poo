@@ -184,3 +184,5 @@ from an unverified declaration.
 [[file:Examples/ConstructionWorkflow.lean][ConstructionWorkflow]] automatically closes finite declared component graphs, infers dependencies and transitive invalidation, inspects actual MOP policies, and atomically migrates topology/source/base/layout/dispatch. [[file:docs/contracts/generalized-mop.org][Checked MOP contracts]]; this advances future work.
 
 [[file:Examples/InheritedSettlement.lean][InheritedSettlement]] connects C3 diamonds and ordered analyzed super wrappers to automatic generalized closure and protected source/policy publication. [[file:docs/contracts/inherited-mop.org][Inherited MOP contracts and remaining research gaps]].
+
+[[file:Examples/ServiceBundle.lean][ServiceBundle]] materializes component results, skips certified clean builders and atomically publishes heterogeneous quote/reserve/cancel generics with joint approval. [[file:docs/contracts/staged-publication.org][Staged construction and family publication contracts]]. Future-work extension.

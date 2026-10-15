@@ -101,15 +101,16 @@ Additional controls cover five exact C3 errors, all three shielded legacy hazard
 a conditional opaque refusal, two different within-class orders, and first-modifier
 failure. The existing 30-second/2-GiB test limit remains unchanged.
 
-* Large remaining research gaps
+* Research priorities after the inherited-fragment extension
 
 | Priority | Remaining capability | Existing reusable foundation and boundary |
 |----------+----------------------+-------------------------------------------|
-| 1 | Actual selective staged construction | ~Scheduled.invalidates/unaffected~ proves reuse conditions; current MOP migrations still rebuild the entire candidate. A future materialized result cache must retain exact-source certificates and distinguish metadata reuse from skipped execution. |
-| 2 | Atomic families of heterogeneous generic functions | ~Object.DispatchTable~ and single-generic negative/publication receipts exist. One MOP snapshot does not yet jointly version quote/reserve/cancel generics with cross-generic obligations. |
+| 1 | Actual selective staged construction | Implemented for certified typed graph edits by [[file:staged-publication.org][materialized construction]]. The older inherited API still fully rebuilds; arbitrary source callbacks require equality evidence or conservative reconstruction. |
+| 2 | Atomic families of heterogeneous generic functions | Implemented for finite typed families by [[file:staged-publication.org][staged publication]], reusing ~Object.DispatchTable~, per-generic receipts and exact-candidate joint admission. |
 | 3 | Declarative method/type/constraint metadata | Computation footprints and exact-candidate ~Approved~ proofs exist. Policy/cooking/method hooks remain explicit Lean functions; no general metadata language or automatic hook/type/effect inference is claimed. |
 | 4 | Lossy public cooking and automatic carrier-changing migration | The general protocol accepts arbitrary cooking and explicit dictionary bridges. This automatic MOP still requires a compatible view reconstructing its raw state and keeps one typed raw carrier during request changes. |
 | 5 | Automatically closing cyclic component equations | Ranked closure intentionally rejects cycles. Safe recursive interaction programs have their own operational evidence; they are not an automatic solver for arbitrary cyclic MOP graphs. |
 
-These are future-work integration or expressiveness boundaries. The source does
+The first two priorities now have the bounded implementations linked above.
+The remaining rows are future-work integration or expressiveness boundaries. The source does
 not specify a complete universal MOP whose implementation can be declared closed.

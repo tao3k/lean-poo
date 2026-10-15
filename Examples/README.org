@@ -90,3 +90,5 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:ConstructionWorkflow.lean][ConstructionWorkflow]] demonstrates automatic generalized closure, heterogeneous slots, inspected policies and a joint topology/source/base/layout/dispatch upgrade with warm-version refusal. [[file:../docs/contracts/generalized-mop.org][Future-work MOP contracts]].
 
 [[file:InheritedSettlement.lean][InheritedSettlement]] composes shared C3 ancestors, noncommuting invoice wrappers, conditional replacement, final-self risk and atomic source/policy publication. [[file:../docs/contracts/inherited-mop.org][Future-work scope and audit]].
+
+[[file:ServiceBundle.lean][ServiceBundle]] demonstrates three-node reconstruction with twelve refusing retained builders, zero-work policy upgrades, C3/super graph reuse and a third-generic publication refusal. [[file:../docs/contracts/staged-publication.org][Future-work cache/family contracts]].
