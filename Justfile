@@ -323,6 +323,7 @@ _check-examples:
     {{lean}} Examples/ContractFamily.lean
     {{lean}} Examples/AlignedServices.lean
     {{lean}} Examples/InheritedHooks.lean
+    {{lean}} Examples/MetaBootstrap.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

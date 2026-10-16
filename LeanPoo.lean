@@ -248,3 +248,5 @@ import LeanPoo.Functional.ClosurePolicy
 import LeanPoo.Functional.InheritanceHooks
 import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.SlotReflection
+import LeanPoo.Prototype.MetaBootstrap
+import LeanPoo.Functional.NonlocalDeclarations
