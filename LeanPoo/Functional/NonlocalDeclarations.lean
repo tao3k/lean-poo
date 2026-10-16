@@ -1,16 +1,19 @@
 import LeanPoo.Functional.DeclarativeMetadata
 import LeanPoo.Object.SlotReflection
 
-/-! Reader-style nonlocal declaration expansion, then one checked publication.
-Fragment callbacks can emit several existing Slot descriptors; catalogs are
-metadata observations, not demands on private instance values. Future work. -/
+/-! Shared Reader-style nonlocal expansion, followed here by record publication.
+Expansion is generic in its entry type; record callbacks emit Slot descriptors.
+Catalogs observe metadata without demanding private instance values. Future work. -/
 namespace LeanPoo.Functional.DeclarativeMetadata
+universe u v
 open Prototype.DescriptorReflection
 /-- One callback may contribute multiple slots using the same immutable context. -/
 abbrev Expansion (Context α : Type) := Context → Except String (List (String × SlotDeclaration α))
-/-- Elaborate in source order. The first failure prevents all later callbacks. -/
-def expandForms (forms : List (Expansion Context α)) (context : Context) :
-    Except String (List (String × SlotDeclaration α)) :=
+/-- Common Reader expansion for record AND non-record entries. Elaborate in
+source order; the first failure prevents all later callbacks. -/
+def expandForms {Context : Type u} {Entry : Type v}
+    (forms : List (Context → Except String (List Entry))) (context : Context) :
+    Except String (List Entry) :=
   match forms with
   | [] => .ok []
   | first :: rest => do
@@ -18,15 +21,18 @@ def expandForms (forms : List (Expansion Context α)) (context : Context) :
     let back ← expandForms rest context
     return front ++ back
 /-- Suffix expansion is selected only after the first successful fragment. -/
-theorem expandForms_cons (first : Expansion Context α) (rest) (context : Context) :
+theorem expandForms_cons {Context : Type u} {Entry : Type v}
+    (first : Context → Except String (List Entry)) (rest) (context : Context) :
     expandForms (first :: rest) context = (first context).bind (fun front =>
       (expandForms rest context).map (fun back => front ++ back)) := rfl
 /-- Unknown/failed declarations cannot be repaired by a later side-effecting form. -/
-theorem expandForms_refused (first : Expansion Context α) (rest) (context : Context) (message : String)
+theorem expandForms_refused {Context : Type u} {Entry : Type v}
+    (first : Context → Except String (List Entry)) (rest) (context : Context) (message : String)
     (failed : first context = .error message) :
     expandForms (first :: rest) context = .error message := by simp [expandForms, failed, bind, Except.bind]
 /-- Incremental fragment composition is ordinary ordered declaration composition. -/
-theorem expandForms_append (first second : List (Expansion Context α)) (context : Context) :
+theorem expandForms_append {Context : Type u} {Entry : Type v}
+    (first second : List (Context → Except String (List Entry))) (context : Context) :
     expandForms (first ++ second) context = (expandForms first context).bind (fun front =>
       (expandForms second context).map (fun back => front ++ back)) := by
   induction first with

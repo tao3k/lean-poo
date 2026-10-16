@@ -252,4 +252,5 @@ import LeanPoo.Prototype.MetaBootstrap
 import LeanPoo.Prototype.RecursiveMetaprotocol
 import LeanPoo.Functional.RecursiveDeclarations
 import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Prototype.GeneralizedDeclaration
 import LeanPoo.Functional.NonlocalDeclarations
