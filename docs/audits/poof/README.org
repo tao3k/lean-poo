@@ -63,7 +63,7 @@ proofs and a CI result at a particular head are distinct evidence.
 | [[file:semantic-closure.org][Semantic evidence]] | Exact theorem and source-execution scopes |
 | [[file:requirements-v1.json][Requirements]] | Reviewed intervals, rationale and local references |
 | [[file:closure-v1.json][Construction map]] | Thirteen construction families and their explicit correspondence scopes |
-| [[file:receipt-v1.json][Audit receipt]] | Pinned source, hashes, heading map and Lean inventory |
+| [[file:receipt.toml][Audit receipt]] | Pinned source, hashes, heading map and Lean inventory |
 
 * Reproduce
 
@@ -79,3 +79,19 @@ check, also part of ~check-docs~, validates reviewed scope, local hashes and
 inventory. The source checker uses the versioned fixture by default; ~--paper~
 verifies and executes the original local source instead. After source changes,
 review the affected requirement before regenerating the audit receipt.
+
+* Functional module reorganization
+
+The existing receipt is now losslessly encoded as standard TOML. Original paper
+identity, 45 reviewed units, 90 headings, all 24 checks and their source evidence
+remain unchanged; the source inventory is explicitly refreshed for semantic
+module splits. No completeness status is promoted by this reorganization.
+
+~MultimethodCombination~ retains dispatch constructors; prepared-cache laws move
+to ~Object/PreparedMultimethod~, finite hooks to ~Prototype/PreparedHooks~, and
+explicit lifecycle boundaries to ~Object/Instantiation~. ~ContractFamily~ becomes
+the public import boundary for ~ContractConstruction~, ~ContractPreparation~ and
+~GenericFamilyRevision~. All original declaration names and namespaces remain.
+The complete library and standalone examples must still pass the ordinary gate.
+New inherited-hook, invalidation and slot-reflection companions advance future
+work, with their explicit native correspondence and semantic limits.

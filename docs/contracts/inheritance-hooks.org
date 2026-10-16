@@ -1,0 +1,47 @@
+#+TITLE: Inherited hooks and declared source revisions
+
+* Functional scope
+
+This advances the paper's future generalized MOP. Native inherited protocols
+intercept existing C3 and effective-slot construction. Order hooks may wrap or
+refuse, but acceptance preserves canonical C3; custom slot transformations need
+their own laws. ~InheritedMOP.checkedOrder_sound~ proves accepted order identity,
+~checkedOrder_error~ source-error precedence and ~composeHooks_assoc~ compositional
+wrapper grouping. Callback effects are not identified with pure functions.
+
+* Source ownership
+
+~Object.invalidateCaches~ reuses ~Proof.invalidatedNodes~, including its finite
+reverse-reachability theorems. ~invalidateCaches_descendant~ clears every bounded
+registered descendant, ~invalidateCaches_once~ increments one revision per owner,
+and ~invalidateCaches_frame~ retains unaffected owners. Native source edges include
+parents, protocol objects, declaration descriptors and their types. Weak reverse
+keys and visited owners implement the native traversal; the kernel model is not
+a proof of the native hash-table runtime or GC. Missing external dependencies
+must be registered explicitly. Supported writes are sequential, preflight active
+owners and support optional sealing; raw struct setters are trusted escape hatches.
+
+* Declaration admission
+
+~Prototype.DescriptorReflection~ reuses ~Descriptor.validate~ for public slot
+writes and checks visibility before selecting a read/write callback. Invalid
+writes do not select mutation. Native Slot metadata compiles through its existing
+~.slot.define~ / ~.slot.check~ methods and is recompiled after descriptor/type edits.
+The Class bridge captures the effective-slot catalog at construction; whole-class
+constraints still require explicit admission after edits. No global access-control
+or automatic dependency-discovery claim is inferred.
+
+* Examples and module boundaries
+
+[[file:../../Examples/InheritedHooks.lean][Inherited hooks examples]] cover shared metadata, protocol changes, a diamond
+join, unaffected caches, refused order hooks, hidden reads, invalid writes and
+recovery. The matching Gerbil services use the native Reader/FUN chain. Native
+regression results are separate from these proofs; no new speed claim is made.
+
+~MultimethodCombination~ now contains dispatch constructors; ~PreparedMultimethod~
+owns prepared-cache laws and nested cache transport; ~PreparedHooks~ owns finite
+hook preparation; ~Instantiation~ owns explicit lifecycle boundaries.
+~ContractConstruction~, ~ContractPreparation~ and ~GenericFamilyRevision~ split
+construction, supplied work budgets and heterogeneous revisions. Public namespace
+and declaration names remain unchanged. The existing audit receipt is losslessly
+migrated to TOML; reviewed source, coverage states and evidence remain unchanged.

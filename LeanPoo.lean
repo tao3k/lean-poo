@@ -245,3 +245,6 @@ import LeanPoo.Functional.HybridClosure
 import LeanPoo.Functional.ClosureCosts
 import LeanPoo.Functional.ClosureScenarios
 import LeanPoo.Functional.ClosurePolicy
+import LeanPoo.Functional.InheritanceHooks
+import LeanPoo.Object.CacheInvalidation
+import LeanPoo.Object.SlotReflection
