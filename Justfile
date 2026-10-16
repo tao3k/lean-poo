@@ -339,6 +339,7 @@ _check-examples:
     {{lean}} Examples/ComponentRequests.lean
     {{lean}} Examples/ApprovalRevision.lean
     {{lean}} Examples/SharedApprovals.lean
+    {{lean}} Examples/JointComponentPublication.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

@@ -83,3 +83,7 @@ reads, faithful builders and immutable/extensional component metadata. General
 convergence/leastness, hidden dependencies and cycle-interior skipping remain open.
 No compiler/runtime verification or performance claim. No new versioned JSON,
 full benchmark data or archives are committed.
+
+[joint-publication.md](joint-publication.md) adds a distinct authoritative bundle
+interface for atomic policy replacements and consistent multi-endpoint publication.
+The independent-head API described above keeps its original semantics.
