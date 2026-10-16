@@ -331,6 +331,7 @@ _check-examples:
     {{lean}} Examples/FeedbackServices.lean
     {{lean}} Examples/SharedFeedback.lean
     {{lean}} Examples/CachedFeedback.lean
+    {{lean}} Examples/ComponentServices.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

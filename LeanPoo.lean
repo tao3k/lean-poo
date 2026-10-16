@@ -261,3 +261,5 @@ import LeanPoo.Prototype.FeedbackRevision
 import LeanPoo.Prototype.CappedFeedback
 import LeanPoo.Functional.FeedbackCache
 import LeanPoo.Functional.NonlocalDeclarations
+
+import LeanPoo.Functional.StrongComponents
