@@ -6,14 +6,19 @@ Generalized-prototype future work; wrapper state is always the actual caller sta
 namespace LeanPoo.Examples.ContractFamily
 open Functional Functional.ServiceBundle Functional.ContractFamily Functional.DeclarativeMetadata
 
+/-- Invocation-time service state; revision makes accidental capture of an old snapshot observable. -/
 structure Current where
   capacity : Int
   invoice : String
   revision : Nat
 
+/-- Reserve uses its existing logical atoms; other example services need only a unit atom. -/
 abbrev Atoms : Service → Type | .reserve => ServiceMetadata.Atom | _ => Unit
+/-- Closed heterogeneous constructor inputs: capacity for reserve, invoice for cancel, unit for quote. -/
 abbrev Inputs : Service → Type | .reserve => Int | .cancel => String | .quote => Unit
 
+/-- Require consent and a successful cancellation containing this invoice.
+Specialization changes invoice meaning, not the input/output predicates or logical rule. -/
 def cancellation (invoice : String) : Contract Unit (String × Bool) (ConstructionWorkflow.Action (List String)) where
   input := ⟨"consent",fun args => args.2 = true,fun _ => inferInstance⟩
   output := ⟨"successful-cancellation",fun result => result.isOk = true,fun _ => inferInstance⟩
@@ -26,15 +31,21 @@ def specializedReservation (capacity : Int) :=
   (ServiceMetadata.reservation 0).withMeaning (ServiceMetadata.reservation capacity).meaning
     (ServiceMetadata.reservation capacity).decide
 
+/-- Specializing the reservation template has exactly the fresh descriptor semantics. -/
 theorem specialized_reservation_eq (capacity : Int) :
     specializedReservation capacity = ServiceMetadata.reservation capacity := rfl
 
+/-- Reuse the invariant cancellation template and replace only invoice-specific meaning.
+The equality theorem below checks correspondence with a fresh descriptor. -/
 def specializedCancellation (invoice : String) :=
   (cancellation "").withMeaning (cancellation invoice).meaning (cancellation invoice).decide
 
+/-- Specializing the cancellation template has exactly the fresh descriptor semantics. -/
 theorem specialized_cancellation_eq (invoice : String) :
     specializedCancellation invoice = cancellation invoice := rfl
 
+/-- Build contracts from closed per-service inputs, with policy selecting current support.
+Quote deliberately fails construction so the example can expose unsupported metadata. -/
 def source : Source Service (List Service) Current Atoms Args Result String where
   Context := Inputs
   keys := fun selected _ => selected
@@ -47,22 +58,29 @@ def source : Source Service (List Service) Current Atoms Args Result String wher
     | .cancel => .ok (cancellation inputs)
     | .quote => .error "no quote contract"
 
+/-- Closed constructor contexts admit equality so reuse is decided per service. -/
 instance : (key : Service) → DecidableEq (source.Context key) := fun key => match key with
   | .quote => inferInstanceAs (DecidableEq Unit)
   | .reserve => inferInstanceAs (DecidableEq Int)
   | .cancel => inferInstanceAs (DecidableEq String)
 
+/-- Execute against the passed current state and advance revision on reserve/cancel.
+Cancellation without consent is a service-level failure result, then contract-checked. -/
 def execute : (key : Service) → Current → Args key → Except String (Result key × Current)
   | .reserve, current, units => .ok (.ok (current.capacity-units,decide ((units : Int) ≤ current.capacity)), {current with revision := current.revision+1})
   | .cancel, current, args => .ok ((if args.2 then .ok [args.1,current.invoice] else .error "consent"), {current with revision := current.revision+1})
   | .quote, current, _ => .ok (.ok current.capacity,current)
 
+/-- Deliberately violate reserve conservation to demonstrate rejection by a rebound wrapper. -/
 def badExecute : (key : Service) → Current → Args key → Except String (Result key × Current)
   | .reserve, current, _ => .ok (.ok (99,true),current)
   | key, current, args => execute key current args
 
+/-- A family tied to this executor, selected support and current policy/cooked indices. -/
 abbrev Prepared (selected : List Service) (current : Current) := Family source execute selected current
 
+/-- Continue only on successful preparation; stringify typed build errors for executable checks.
+This adapter does not approve failed candidates or alter family semantics. -/
 def withFamily {runner : (key : Service) → Current → Args key → Except String (Result key × Current)}
     {selected : List Service} {current : Current}
     (outcome : Except (PreparationError Service String) (Family source runner selected current))
@@ -78,6 +96,7 @@ def shared : SharedProjection Service (List Service) Current (Int × String) (In
     | .cancel => prepared.2
     | .quote => ()
 
+/-- Adapt the closed shared pair to the same key and constructor protocol as source. -/
 def sharedSource := shared.toSource source.keys source.construct
 
 /-- Invoice changes invalidate common preparation but not reservation semantics. -/
@@ -85,9 +104,11 @@ theorem shared_reserve_unchanged (capacity : Int) (invoice₁ invoice₂ : Strin
     sharedSource.project .reserve [] ⟨capacity,invoice₁,1⟩ =
       sharedSource.project .reserve [] ⟨capacity,invoice₂,2⟩ := rfl
 
+/-- The cancellation projection always sees the supplied current invoice. -/
 theorem shared_cancellation_current (capacity : Int) (invoice : String) :
     sharedSource.project .cancel [] ⟨capacity,invoice,2⟩ = invoice := rfl
 
+-- Check cold/miss preparation and warm reuse counts with a current invoice.
 #eval do
   let input : Int × String := (10,"invoice:1")
   let cold := shared.refresh input none
@@ -99,10 +120,12 @@ theorem shared_cancellation_current (capacity : Int) (invoice : String) :
     throw (IO.userError "shared heterogeneous inputs")
   IO.println "SHARED-CONTRACTS-OK cold=1 retained=0 joint=1 heterogeneous-current"
 
+/-- For every service, direct access equals projection from the closed prepared pair. -/
 theorem direct_shared_coherent (key : Service) (input : Int × String) :
     (match key with | .reserve => input.1 | .cancel => input.2 | .quote => ()) =
       shared.project key (shared.prepare input) := by cases key <;> rfl
 
+-- Compare direct/shared choice including selector, template setup and GC charges.
 #eval do
   let cheap : PreparationCosts := ⟨3,1,1,1⟩
   let indexed : PreparationCosts := ⟨3,1,20,1⟩
@@ -120,6 +143,7 @@ theorem direct_shared_coherent (key : Service) (input : Int × String) :
     throw (IO.userError "collection excess can reverse primitive saving")
   IO.println "CONTRACT-STRATEGY-OK direct/shared/selector-budget invariant-template setup-amortization"
 
+-- Check stable selection reuse, changed-arity fallback and positive guard amortization.
 #eval do
   let prices : PreparationCosts := ⟨3,1,1,1⟩
   let prepared := prices.cacheSelection 2
@@ -138,6 +162,9 @@ theorem direct_shared_coherent (key : Service) (input : Int × String) :
     throw (IO.userError "cache setup and support guard must be paid")
   IO.println "SELECTION-CACHE-OK stable=one-choice changed-arity=fallback"
 
+/-- Exercise cold/warm construction, invoice-only rebuild, current-state invocation,
+executor rebinding, removal, duplicate/missing support and atomic admission refusal.
+Returns the first diagnostic failure; success requires every semantic observation. -/
 def check : Except String Unit :=
   let initial : Current := ⟨10,"invoice:1",1⟩
   let revised : Current := ⟨10,"invoice:2",2⟩
