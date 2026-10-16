@@ -74,3 +74,6 @@ immutable metadata and faithful pure locally total builders. No arbitrary-effect
 rollback, hidden-dependency inference, convergence/leastness, interior-SCC skipping,
 crash durability, compiler/runtime correctness or performance claim. No new
 versioned JSON, full benchmark data or archives are committed.
+
+[joint-topology.md](joint-topology.md) composes different endpoint lifecycle phases,
+shared total-budget replacement and simultaneous supported SCC split/merge.

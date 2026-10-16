@@ -3,9 +3,10 @@ import LeanPoo.Functional.ComponentPublication
 /-! One authoritative bundle carries heterogeneous endpoint heads and approvals.
 Atomicity is modeled by selecting the whole bundle, not updating projections. -/
 namespace LeanPoo.Functional.JointPublication
-variable {Id Endpoint Policy : Type} {Head : Endpoint → Type} {Metadata : Policy → Type} [DecidableEq Id]
+universe u v
+variable {Id Endpoint Policy : Type} {Head : Endpoint → Type u} {Metadata : Policy → Type v} [DecidableEq Id]
 /-- Dependent fields permit different endpoint contracts and policy types. -/
-structure Bundle (Id Endpoint Policy : Type) (Head : Endpoint → Type) (Metadata : Policy → Type) where
+structure Bundle (Id Endpoint Policy : Type) (Head : Endpoint → Type u) (Metadata : Policy → Type v) where
   id : Id
   heads : (key : Endpoint) → Head key
   approvals : (key : Policy) → Metadata key
@@ -49,7 +50,7 @@ theorem stale_batch (expected : Id) (current : Bundle Id Endpoint Policy Head Me
     simp only [List.foldl_cons, stale expected current request.1 request.2 different]
     exact ih current different
 /-- One explicit prepared request, including its expected whole-snapshot identity. -/
-structure Request (Id Endpoint Policy : Type) (Head : Endpoint → Type) (Metadata : Policy → Type) where
+structure Request (Id Endpoint Policy : Type) (Head : Endpoint → Type u) (Metadata : Policy → Type v) where
   expected : Id
   candidate : Bundle Id Endpoint Policy Head Metadata
   approved : Bool

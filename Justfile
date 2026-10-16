@@ -341,6 +341,7 @@ _check-examples:
     {{lean}} Examples/SharedApprovals.lean
     {{lean}} Examples/JointComponentPublication.lean
     {{lean}} Examples/JointRounds.lean
+    {{lean}} Examples/JointTopology.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
