@@ -1,5 +1,6 @@
 import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Functional.ContractFamily
+import LeanPoo.Functional.CyclicAccess
 import LeanPoo.Functional.ServiceBundle
 import LeanPoo.Object.SimplePolicies
 import LeanPoo.Object.MethodCombinationSemantics
@@ -650,4 +651,37 @@ def emptyStoragePrices : ContractFamily.PreparationCosts.EmptyStorageCosts := �
 #print axioms GenericFamily.Partial.rebuild_lookup_eq
 #print axioms GenericFamily.Partial.rebuild_empty_reference
 #print axioms ContractFamily.PreparationCosts.EmptyStorageCosts.covered
+end LeanPoo.Examples.AlignedServices
+
+
+namespace LeanPoo.Examples.AlignedServices
+open Functional Prototype.Recursive
+/-- Execute the existing shared attestation rather than accepting an external
+Boolean seed. Four duplicated child requests become genuine memo hits. -/
+def recursiveAttestationCheck : Bool :=
+  match Cached.runCertified CyclicAccess.attestation (4,"active") 200 with
+  | .error _ => false
+  | .ok (receipt,memo) => receipt.result == .value true && memo.entries.length == 5 &&
+      memo.statistics.misses == 5 && memo.statistics.hits == 4 &&
+      match Cached.runCertified CyclicAccess.attestation (4,"active") 1 memo with
+      | .error _ => false
+      | .ok (next,after) => next.result == .value true && after.statistics.hits == 5 &&
+          after.statistics.steps == memo.statistics.steps
+#guard recursiveAttestationCheck
+/-- Revocation is a completed false proof, not exhaustion or a cycle diagnostic. -/
+def recursiveRevocationCheck : Bool :=
+  match CyclicAccess.start CyclicAccess.attestation (4,"revoked") 200 {} {} with
+  | .error _ => false
+  | .ok version => !version.enabled && !version.closure.snapshot.candidate.interface.release
+#guard recursiveRevocationCheck
+/-- Supplied example prices: a raw hit still pays current admission. -/
+def recursiveMemoPrices : ContractFamily.PreparationCosts.RecursiveMemoCosts := ⟨20,3,30,7,50⟩
+#guard recursiveMemoPrices.setup + 1 * recursiveMemoPrices.hit > 1 * recursiveMemoPrices.fresh
+#guard recursiveMemoPrices.setup + 8 * recursiveMemoPrices.hit ≤ 8 * recursiveMemoPrices.fresh
+#guard recursiveMemoPrices.setup + 8 * recursiveMemoPrices.hit + 3 * recursiveMemoPrices.collection >
+  8 * recursiveMemoPrices.fresh
+#print axioms Cached.runCertified_hit
+#print axioms Cached.runCertified_zero
+#print axioms RecursiveSession.call_warm_current
+#print axioms ContractFamily.PreparationCosts.RecursiveMemoCosts.covered
 end LeanPoo.Examples.AlignedServices

@@ -445,3 +445,49 @@ with residual CPU -5.430/-3.922 after recorded GC. It still loses +0.531/+1.797
 against staged. Natural first-revision CPU loses +23.695 us against staged;
 A/A drift cannot erase that observation. Therefore the native strategy stays
 explicit, with no universal cold/startup/timing claim and no pooling of old runs.
+
+
+### Explicit recursive requests, owned memo and current admission
+
+Gerbil now mirrors the existing `Recursive.Interaction` / `Cached` evaluator:
+explicit final-self requests, values/source errors, pending source observations,
+machine budget/cycle diagnostics and completed source-bound memo. It composes
+through FUN and existing prototype inheritance, Type descriptors, typed dispatch
+and cyclic publication. A private copy-on-write table publishes only completed
+receipts; machine diagnostics return the exact old memo. Completed source errors
+and output refusals retain actual completed memo in request sessions; atomic
+attested publication refuses the entire proposed public version and its memo.
+
+`Cached.runCertified_hit` proves exact receipt/entry/miss/step preservation and
+one extra hit at positive budget. `runCertified_zero` still refuses a warm root.
+`RecursiveSession.call_warm_current` retains current input/output registry
+admission even on a one-step hit. Existing evaluation, cycle, batch-state and
+CyclicAccess observed_source/revoked laws supply the semantic foundation.
+`RecursiveMemoCosts.covered` charges common current admission on both sides and
+requires saved source work to pay setup and excess GC. Native counters/timing,
+private runtime provenance and kernel evaluation proofs remain separate evidence.
+
+The Racket fix--1 sharing construction and commented memo sketch are references,
+not assertions that the paper specified this bounded certified machine. Native
+keys/results/programs must be immutable and extensional under equality; callbacks
+must be pure and locally terminating. Fuel bounds machine depth, not total work,
+memory or arbitrary host callback execution. Native catalogs use existing Types;
+the full dependent Dynamic registry/wire codec is outside this addition. No Lean
+checkout, embedded proof output or benchmark constants are required by Scheme.
+
+The standalone six-scenario native recursive study completed 288 fresh children.
+The initial study (before source-list completion) reports typed catalog CPU
+13.523/13.906 us lower and complete attested revisions 14.406/9.828 us lower (natural/collected), with both comparisons
+4/4 faster in each regime. Source-error gains are mixed (2/4 and 3/4), and A/A
+publication drift reaches +5.219 us collected. Only collected attestation/error
+pairs admit allocation savings (10656/832 bytes); other direct allocation deltas
+are unavailable across GC. Setup lies outside phase timing and remains priced.
+Native summary preserves the stale-AOT startup failure and exact source/binary
+identities; no generated complete data or archive is committed.
+
+The final source-complete study independently admits 288 children: current catalog
+CPU is 11.523/11.074 us lower and complete attested revision CPU 8.359/6.141 us
+lower, each 4/4 faster pairs per regime. Natural source-error CPU regresses +0.184
+us despite residual CPU -0.297 and recorded GC +0.480; the adverse result remains.
+The two studies are separate identities and are not pooled. Final native summary
+includes A/A ranges and the unchanged byte-admission limits.

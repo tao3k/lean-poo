@@ -1224,3 +1224,23 @@ theorem EmptyStorageCosts.covered (costs : EmptyStorageCosts) (tables collection
     base + costs.interfaceSetup + tables * costs.emptyFactory + collections * costs.collection ≤
       base + tables * costs.keyword + costs.staging + costs.pruning := by omega
 end LeanPoo.Functional.ContractFamily.PreparationCosts
+
+
+namespace LeanPoo.Functional.ContractFamily.PreparationCosts
+/-- Supplied recursive source costs distinguish memo lookup/hits, cold machine
+steps, private storage preparation and CURRENT boundary validation. -/
+structure RecursiveMemoCosts where
+  fresh : Nat
+  hit : Nat
+  setup : Nat
+  admission : Nat
+  collection : Nat
+  deriving Repr
+/-- Raw memo savings justify reuse only if they cover setup and excess GC over
+all calls. The same current-input/output admission cost is charged on BOTH sides;
+no result cache permits dropping Type or catalog checks. -/
+theorem RecursiveMemoCosts.covered (costs : RecursiveMemoCosts) (calls extraCollections base : Nat)
+    (paid : costs.setup + calls * costs.hit + extraCollections * costs.collection ≤ calls * costs.fresh) :
+    base + calls * costs.admission + costs.setup + calls * costs.hit + extraCollections * costs.collection ≤
+      base + calls * costs.admission + calls * costs.fresh := by omega
+end LeanPoo.Functional.ContractFamily.PreparationCosts

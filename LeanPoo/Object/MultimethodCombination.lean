@@ -1,3 +1,4 @@
+import LeanPoo.Functional.RecursiveHandling
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Object.Multimethod
 import LeanPoo.Object.MultimethodSemantics
@@ -885,3 +886,48 @@ theorem NestedMultimethod.callChecked_context_change [DecidableEq C]
   apply owner.callChecked_refused next args _ result invoked
   simp [changed]
 end LeanPoo.Object
+
+
+/-! Recursive evaluation companion for retained-state method workflows. These
+laws reuse the existing evaluator; native receipts carry provenance, not proofs. -/
+namespace LeanPoo.Prototype.Recursive.Cached
+/-- A positive-budget warm request returns its exact receipt, entries and source
+work counters; only the hit count changes. No body or continuation is re-evaluated. -/
+theorem runCertified_hit [DecidableEq Input] (program : Generator Input Output)
+    (cache : Cache program) (input : Input) (receipt : Receipt program (program input))
+    (found : cache.lookup input = some receipt) (budget : Nat) :
+    runCertified program input (budget + 1) cache = .ok (receipt,
+      {cache with statistics := {cache.statistics with hits := cache.statistics.hits + 1}}) := by
+  have executed : run program input (budget + 1) cache = .ok (receipt,
+      {cache with statistics := {cache.statistics with hits := cache.statistics.hits + 1}}) := by
+    simp only [run, resolve]
+    rw [found]
+  unfold runCertified
+  split <;> simp_all
+/-- Budget zero remains a diagnostic even when the root request is already warm. -/
+theorem runCertified_zero [DecidableEq Input] (program : Generator Input Output)
+    (cache : Cache program) (input : Input) :
+    runCertified program input 0 cache = .error .budgetExhausted := rfl
+end LeanPoo.Prototype.Recursive.Cached
+
+namespace LeanPoo.Functional.RecursiveSession
+open Prototype Prototype.Recursive Prototype.CallableRecord Object.Callable
+/-- Raw memo reuse never reuses descriptor admission. The current registry's
+fromReceipt checks run even on a one-step warm request; completed memo survives
+an output refusal while input refusal remains handled before this theorem. -/
+theorem call_warm_current (session : RecursiveSession program) (registry : Dynamic.Registry)
+    (signature : Signature) (argument : Dynamic.Value) (budget fuel : Nat)
+    (admitted : Dynamic.Admitted registry signature.input)
+    (valid : signature.argumentType.validate registry fuel argument = .ok admitted)
+    (receipt : Cached.Receipt program (program ⟨signature.name, argument⟩))
+    (found : session.memo.lookup ⟨signature.name, argument⟩ = some receipt) :
+    session.call registry signature argument (budget + 1) fuel =
+      ⟨(CheckedCall.fromReceipt registry signature argument fuel
+          ((signature.argumentType.validate_value registry fuel argument admitted valid) ▸ admitted.valid)
+          receipt).mapError RecursiveFailure.boundary,
+        ⟨{session.memo with statistics := {session.memo.statistics with hits := session.memo.statistics.hits + 1}}⟩,
+        some true⟩ := by
+  have completed := call_completed session registry signature argument (budget + 1) fuel admitted valid
+    receipt _ (Cached.runCertified_hit program session.memo _ receipt found budget)
+  simpa [found] using completed
+end LeanPoo.Functional.RecursiveSession
