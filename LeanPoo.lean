@@ -276,3 +276,5 @@ import LeanPoo.Examples.ComponentRounds
 import LeanPoo.Functional.SharedPublication
 import LeanPoo.Functional.JointPublication
 import LeanPoo.Functional.JointRevision
+import LeanPoo.Functional.JointAdmission
+import LeanPoo.Examples.JointTopology

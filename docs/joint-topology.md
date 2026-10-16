@@ -1,5 +1,8 @@
 # Atomic asymmetric topology and shared budget revisions
 
+See [joint-admission.md](joint-admission.md) for competing locally admitted but
+jointly refused requests, refusal-prefix laws and fresh restaging after SCC changes.
+
 This advances the generalized-prototype future work from original Racket Appendix B
 `$lens-gen` (source pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines
 2108–2133). It reuses existing component graph revisions, supported SCC discovery,
