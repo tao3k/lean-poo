@@ -48,6 +48,29 @@ theorem Protocol.approximate_shift (protocol : Protocol Raw Cooked Part) (parts 
   induction depth with
   | zero => rfl
   | succ more ih => exact congrArg (fun raw => protocol.step parts raw base) ih
+/-- Conditional completeness: if the actual seed reaches a fixed point after d
+advances, bounded search succeeds within d+1 calls, including equality verification.
+No premise about eventual convergence is inferred from a finite budget. -/
+theorem closeWithin_complete [DecidableEq Raw] (protocol : Protocol Raw Cooked Part) (parts : List Part)
+    (base seed : Raw) (depth : Nat)
+    (stable : protocol.step parts (protocol.approximate parts base seed depth) base =
+      protocol.approximate parts base seed depth) :
+    ∃ result, closeWithin protocol parts base seed (depth+1) = .ok result := by
+  induction depth generalizing seed with
+  | zero =>
+    exact ⟨⟨⟨seed,stable⟩,1⟩, by simp [closeWithin, show protocol.step parts seed base = seed from stable]⟩
+  | succ depth ih =>
+    by_cases current : protocol.step parts seed base = seed
+    · exact ⟨⟨⟨seed,current⟩,1⟩, by simp [closeWithin,current]⟩
+    · have shifted : protocol.step parts
+          (protocol.approximate parts base (protocol.step parts seed base) depth) base =
+          protocol.approximate parts base (protocol.step parts seed base) depth := by
+        rw [← Protocol.approximate_shift]
+        exact stable
+      obtain ⟨result,found⟩ := ih _ shifted
+      exact ⟨{result with steps := result.steps+1}, by
+        rw [closeWithin]
+        simp only [dite_eq_right current,found,Except.map]⟩
 /-- A successful closure comes from the ORIGINAL seed's unfolding, not an arbitrary
 other fixed point. The final transition counted by steps verifies adjacent equality. -/
 theorem closeWithin_reached [DecidableEq Raw] (protocol : Protocol Raw Cooked Part) (parts : List Part)

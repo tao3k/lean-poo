@@ -63,3 +63,29 @@ publication; compatible overlap may pass. A heterogeneous service/scalar example
 uses different raw/cooked/focus types under the same final admission. No arbitrary dependency scheduler,
 mutual-recursion solver, unrestricted procedure equality or effect rollback follows.
 The construction advances the generalized-prototype future work.
+
+* Controlled cyclic component equations
+
+~FeedbackClosure~ reuses the same generalized lens compiler and bounded wider-raw
+search. Every accepted feedback preparation satisfies BOTH the assembled fixed
+equation and each COMPLETE component equation against the same cooked global self
+and original base. This excludes cancelling overlapping method contributions;
+ordinary incremental inheritance remains a separate existing interpretation.
+
+~closeWithin_complete~ proves success within d+1 raw calls when actual convergence
+at depth d is supplied. ~closeFeedback_complete~ additionally requires component
+residual validity. Soundness, seed provenance, later stability and frame/budget
+laws reuse existing fixed-point proofs. No automatic convergence or leastness is
+inferred for arbitrary equations.
+
+[[file:../../Examples/FeedbackServices.lean][Feedback service examples]] prove a capped three-service ring plus joint
+approval closes within five calls from ANY typed seed at cap=3, with universal
+custom lens laws and preserved audit. Existing primary/around methods consume
+the final approved state. Native ~feedback-closure.ss~ / ~examples/feedback-services.ss~
+reuse FUN Reader, complete-source declaration finalization and finite lens checks.
+All sources stay guarded through search/cooking/residual admission. Search counts
+whole-raw calls; residual checking adds one component compiler call per descriptor.
+Staged cooking precedes residual admission and reuses its cooked self; failed
+admission retains old publication but cannot roll back arbitrary external effects.
+This is generalized-prototype future work, not a Scheme runtime verification or
+performance claim. Unrestricted recursive knots and function equality remain open.
