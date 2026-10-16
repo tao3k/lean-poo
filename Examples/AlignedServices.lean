@@ -61,6 +61,13 @@ theorem complete_budget (base : Nat) (budget : SelectionBudget) :
     base + selectorPrices.selectedBudget 4 budget ≤ base + selectorPrices.dynamicBudget 4 budget :=
   selectorPrices.workflow_bound 4 base budget
 
+/-- A nonzero policy-configuration cost is admissible only when explicitly
+covered by the stable selector saving; it is not hidden in a warm template. -/
+theorem configured_stable (base : Nat) :
+    base + 5 + selectorPrices.selectedBudget 4 (horizon 64) ≤
+      base + selectorPrices.dynamicBudget 4 (horizon 64) :=
+  selectorPrices.configuration_covered 4 5 base (horizon 64) (by decide)
+
 /-- Specializing a reusable invariant check record changes only current meaning;
 the exact contract identity law transfers every existing invocation failure law. -/
 theorem shared_checks (source : Contract Atom Args Result) (checks : source.Checks)
@@ -72,5 +79,6 @@ theorem shared_checks (source : Contract Atom Args Result) (checks : source.Chec
 #print axioms reservation_equivalent
 #print axioms reservation_refused
 #print axioms complete_budget
+#print axioms configured_stable
 #print axioms shared_checks
 end LeanPoo.Examples.AlignedServices

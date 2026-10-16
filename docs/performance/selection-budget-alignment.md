@@ -51,12 +51,16 @@ made free by selector reuse. `no_calls` proves retained-context revisions cannot
 justify selector setup. The examples show cold, stable, fallback and GC-budget
 choices. Counts and prices are supplied premises, not predictions of future GC
 or elapsed time. Native `SelectionCacheCosts.` rejects malformed/negative counts
-and uses the same arithmetic. The conservative example uses illustrative
+and uses the same arithmetic. Native `choose-source` compiles the fixed mode once
+at configuration and returns the exact source on dynamic fallback. Source/price
+changes require reconfiguration. `configuration_covered` separately charges that
+setup and requires enough selector saving to amortize it; no-call/dynamic cases
+do not make configuration free. The conservative example uses illustrative
 operation weights, not copied benchmark timings.
 
 ## Native evidence and remaining coverage
 
-The native matrix includes cold-family preparation, cold invariant compilation,
+The native matrix includes one-time policy configuration, repeated cold-family preparation, cold invariant compilation,
 construction, binding, rebinding, generic refresh, approval, complete joint
 publication, a 15-node shared DAG workflow and qualified standard/simple service
 publication. Each direct pair uses independent fresh processes, fixed all-control
@@ -71,3 +75,12 @@ methods, general safe-recursive attestation/memo and arbitrary cross-type lens
 migration remain explicit native alignment gaps. Dependent Lean proofs are not
 missing runtime wrappers. The existing original-source audit retains its
 completeness flags; this increment does not claim the whole paper is implemented.
+
+The companion native summary is
+[qualified selection results](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/performance/qualified-selection-summary.org).
+Its final 1,920 children passed admission. Configured dynamic versus forced
+selection caching had joint CPU deltas -7.031us natural / +0.609us collected,
+and shared-DAG deltas -3.609us / -3.246us. One-time configuration itself cost
++19.141us / +17.332us in its direct comparison. Cold invariant-check compilation
+still regressed; qualified workflows remained mixed. These native observations
+neither instantiate every abstract cost premise nor prove universal acceleration.

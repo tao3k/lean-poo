@@ -639,6 +639,18 @@ theorem SelectionCacheCosts.workflow_bound (costs : SelectionCacheCosts) (select
     (budget : SelectionBudget) : base + costs.selectedBudget selectionCost budget ≤
       base + costs.dynamicBudget selectionCost budget := Nat.add_le_add_left (costs.selected_bound selectionCost budget) base
 
+/-- Compiling a policy into a source is a real one-time configuration cost.
+Its amortization must be paid from the selector saving; dynamic fallback alone
+cannot prove a cost-free factory. Native configuration and repeated cold source
+construction therefore have distinct benchmark scenarios. -/
+theorem SelectionCacheCosts.configuration_covered (costs : SelectionCacheCosts)
+    (selectionCost configurationCost base : Nat) (budget : SelectionBudget)
+    (paid : configurationCost ≤ costs.dynamicBudget selectionCost budget - costs.selectedBudget selectionCost budget) :
+    base + configurationCost + costs.selectedBudget selectionCost budget ≤
+      base + costs.dynamicBudget selectionCost budget := by
+  have selected := costs.selected_bound selectionCost budget
+  omega
+
 /-- No preparation miss implies dynamic mode, even if all supplied weights are zero. -/
 theorem SelectionCacheCosts.no_calls (costs : SelectionCacheCosts) (selectionCost : Nat)
     (budget : SelectionBudget) (empty : budget.calls = 0) : costs.choose selectionCost budget = .dynamic := by
