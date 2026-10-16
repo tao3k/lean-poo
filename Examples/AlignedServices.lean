@@ -244,3 +244,85 @@ theorem validation_sites (uses : Nat) (nonempty : 1 ≤ uses) :
 #print axioms sustained_modes
 #print axioms cold_configuration_unpaid
 end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+open Object Object.MethodCombination Functional.ContractFamily.PreparationCosts
+
+/-- Typed child cache owned by the reserve workflow; method results remain effects. -/
+abbrev PreflightCache := PreparedMultimethod Int (SimulaBody Int (EStateM String (List String)))
+  (Int → EStateM String (List String) Unit) (EStateM String (List String) Unit)
+
+/-- Prepared Simula request validator, reusing the exact prefix/suffix bodies of
+preflight. The finite example keeps the same explicit Reserve/Object C4 shape. -/
+def preparedPreflight (view : View) :=
+  let seed := Multimethod.preparedSimula (M := EStateM String (List String)) 1
+    (fun (_ : Int) => [["Reserve", "Object"]])
+  (preflight view).reverse.foldl (fun current body =>
+    (current.contribute [.any] body).toOption.getD current) seed
+
+/-- Nested leaf exposes the prepared child action's success/failure explicitly;
+only a successful preflight returns its immutable cache successor to reserve. -/
+def invokePreflight (units : Int) (child : PreflightCache) : Except String (List String × PreflightCache) := do
+  let (action, next) ← (child.call units).mapError (fun _ => "dispatch")
+  match action [] with
+  | .ok _ trace => return (trace, next)
+  | .error error _ => .error error
+
+/-- Reserve owns a preflight cache rather than capturing a value-only child in
+its method body. The outer arity/signature is independent of the child state. -/
+def nestedPreflight (view : View) :=
+  let child := preparedPreflight view
+  let outer := PreparedMultimethod.create 1 (fun (_ : Int) => [["Reserve", "Object"]])
+    (fun (methods : Array (Int → PreflightCache → Except String (List String × PreflightCache))) =>
+      (methods[0]?).getD (fun _ _ => .error "missing"))
+    (fun method units => method units)
+  ({ outer := (outer.register [.any] invokePreflight).toOption.getD outer, child } :
+    NestedMultimethod Int _ _ _ String (List String))
+
+/-- Two requests use the returned owner; the second request carries fresh
+arguments through an already prepared outer AND child cache. -/
+def nestedRequests (view : View) (first second : Int) : Except String (List String) := do
+  let (_, warm) ← ((nestedPreflight view).call first).mapError (Sum.elim (fun _ => "dispatch") id)
+  let (trace, _) ← (warm.call second).mapError (Sum.elim (fun _ => "dispatch") id)
+  return trace
+
+/- Concrete accepted/rejected requests exercise actual sparse resolution,
+preparation, nested successor transport and Simula prefixes/suffixes together. -/
+#guard (nestedRequests ⟨10,"invoice:1",true⟩ 2 3).toOption ==
+  some ["positive","capacity","invoice","release"]
+
+/- A failed second prefix returns no nested owner; it cannot expose the tentative
+prepared outer cache. Native tests additionally retain the exact old publisher. -/
+#guard match nestedRequests ⟨10,"invoice:1",true⟩ 2 20 with
+  | .error "refused" => true
+  | _ => false
+
+/-- Illustrative primitive prices keep cold construction and nested transport
+visible; empirical Scheme CPU/GC is independently measured by paired children. -/
+def effectivePrices : EffectiveCosts := ⟨9,5,2,3,1,4,10⟩
+
+/-- Only a supported repeated horizon amortizes the combined cache setup.
+Guard-heavy or excess-GC schedules can reverse the decision. -/
+theorem effective_modes : (effectivePrices.prices ⟨1,1,1,0,0⟩).choose 1 = .fresh ∧
+    (effectivePrices.prices ⟨32,1,1,0,0⟩).choose 32 = .shared ∧
+    (effectivePrices.prices ⟨32,1,1,0,100⟩).choose 32 = .fresh := by decide
+
+/-- Cold effective caching alone does not amortize setup; a complete publisher
+can nevertheless save enough carrier construction to justify the prepared path.
+These supplied counts illustrate the unequal-base rule, not measured CPU. -/
+theorem cold_publication_mode :
+    (effectivePrices.prices ⟨1,1,1,0,0⟩).choose 1 = .fresh ∧
+    effectivePrices.chooseWorkflow ⟨1,1,1,0,0⟩ 50 30 = .shared := by decide
+
+#print axioms Object.PreparedMultimethod.call_correct
+#print axioms Object.PreparedMultimethod.call_preserves
+#print axioms Object.NestedMultimethod.call_success
+#print axioms Object.NestedMultimethod.call_child_failure
+#print axioms Object.NestedMultimethod.callChecked_admitted
+#print axioms Object.NestedMultimethod.callChecked_refused
+#print axioms EffectiveCosts.workflow_bound
+#print axioms EffectiveCosts.cold
+#print axioms EffectiveCosts.selected_workflow_bound
+#print axioms cold_publication_mode
+#print axioms effective_modes
+end LeanPoo.Examples.AlignedServices

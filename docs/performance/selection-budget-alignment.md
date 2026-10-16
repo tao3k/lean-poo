@@ -136,3 +136,62 @@ checks versus shared have CPU delta -5.195us / -0.074us with residual deltas
 results remain mixed, including Simula regressions and nonzero A/A deltas from
 identical sources. Those controls and historical cold-policy regressions are
 retained; these observations do not prove optimal native strategy choices.
+
+## Prepared effective methods and nested owners
+
+The reference's ordered-fragment/effective-method separation and the companion
+book's eight-entry cache exercise guide this step. Unified generalized MOP remains
+future work. `MultimethodCombination` adds prepared forwarding, simple, inner and
+Simula constructors and equality laws to their existing combinations.
+`PreparedMultimethod.EffectiveSound` requires cached arity and preparation agreement
+for every current argument of the shape. `call_correct` and `call_preserves`, fresh
+creation and all three registration laws establish the complete cache invariant;
+guarded candidates still reselect and prepare each time. No cached result is used.
+
+`NestedMultimethod.call` returns outer and child successors together. Its success,
+dispatch-failure and child-failure laws cover arbitrary nesting. `callChecked`
+additionally admits a concrete child-provenance predicate and proves it for every
+published successor; the native implementation checks private index AND invoker
+callback identity. Native pointer equality is not a proof of arbitrary Lean
+function equality. `AlignedServices` composes the existing Simula prefix/suffix
+preflight with an actual prepared child/outer owner and checks accepted/rejected
+successive requests. General cache/effect laws are proofs; closed requests are
+executable checks.
+
+`EffectiveCosts.prices` reuses `TemplateCosts`: cold sparse resolution, unconditional
+misses, EVERY guarded compilation, allocation and excess-GC budgets precede per-call
+shape lookup, invocation and transport. `workflow_bound` retains construction,
+binding and admission in a genuinely common base. For different wrapper/invoker
+carriers, `chooseWorkflow` and `selected_workflow_bound` instead charge distinct
+fresh/prepared construction, binding and approval bases. The cold publication
+example shows why reduced carrier construction can justify a prepared workflow
+even when effective caching alone cannot amortize. `cold` and `configuration_covered`
+explicitly prevent unpaid first setup/strategy fees. Miss counters include edits
+and eviction; supplied operation weights are not measured Scheme times.
+
+Standalone Gerbil implements five `prepared-*` constructors on the existing typed
+sparse index, an eight-entry fused resolution/effective LRU, explicit multi-level
+`nested` cache ownership and complete forwarding/Simula joint revisions. Shared
+native invoker descriptors specialize once to compact private runtime state;
+cache successors do not reconstruct lazy POO descriptors. It needs no Lean checkout.
+
+The current 960-child source/binary-bound native study separates child construction,
+first complete publication, warm checked calls, joint revision+one call and joint
+revision+eight calls, with natural/collected regimes, ABBA and two A/A controls.
+Final reference/prepared warm CPU deltas are forwarding -2.892/-2.508us and Simula
+-1.848/-1.719us (4/4 faster in each regime). Full workflows remain mixed:
+forwarding natural single revision +4.727us, Simula natural cold +31.398us and
+Simula collected single revision +26.570us (0/4 faster). Simula eight-call medians
+are -17.477/-17.328us, while its natural prepared/prepared A/A median is +40.266us
+with a +140.828us adverse pair. The prior compact-source study was more favorable
+but is historical; it is not substituted for the exact-final-source result.
+The ordinary reference stays the default and optimized models are explicit choices.
+All final paired prefix counters match; that is not heap identity. Allocation
+bytes are unavailable across GC, and these data cannot causally attribute all
+full-workflow variation. No universal speedup or compiler-correctness claim follows.
+
+The earlier descriptor-per-successor experiment and its regressions remain local
+historical diagnostics. They are not a paired before/after causal comparison.
+See the companion package's `doc/performance/prepared-invocation-summary.org` for
+the concise tables, adverse controls, source boundaries and local receipt hashes.
+Full measurements, binaries and archives are not committed.

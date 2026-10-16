@@ -705,6 +705,102 @@ theorem SelectionCacheCosts.no_calls (costs : SelectionCacheCosts) (selectionCos
     (budget : SelectionBudget) (empty : budget.calls = 0) : costs.choose selectionCost budget = .dynamic := by
   simp [choose, dynamicBudget, empty]
 
+/-- Supplied primitive work for effective-method construction and cache transport.
+resolve is additional cold sparse lookup; hit includes per-call shape/cache work.
+These weights are not native timings, and extra GC is charged explicitly. -/
+structure EffectiveCosts where
+  prepare : Nat
+  resolve : Nat
+  hit : Nat
+  invoke : Nat
+  transport : Nat
+  allocation : Nat
+  collectionPrice : Nat
+  deriving Repr
+
+/-- Actual nested invocation horizon. Cold resolutions include guarded cold
+shapes; compilation events are unguarded misses plus EVERY guarded call. Edits
+and eviction enter the miss counts instead of being assumed away. -/
+structure EffectiveBudget where
+  calls : Nat
+  coldResolutions : Nat
+  unguardedMisses : Nat
+  guardedCalls : Nat
+  extraCollections : Nat
+  deriving Repr
+
+/-- Reuse the existing template decision: include allocation, cold sparse lookup,
+all compilation events and excess GC before charging each hit/invoke/transport.
+The fresh reference discards nested successors and repeats resolution/preparation. -/
+def EffectiveCosts.prices (costs : EffectiveCosts) (budget : EffectiveBudget) : TemplateCosts :=
+  ⟨costs.allocation + budget.coldResolutions * costs.resolve +
+    (budget.unguardedMisses + budget.guardedCalls) * costs.prepare +
+    budget.extraCollections * costs.collectionPrice,
+   costs.hit + costs.invoke + costs.transport,
+   costs.hit + costs.resolve + costs.prepare + costs.invoke⟩
+
+/-- Guards are not hidden in a warm-hit estimate. Every guarded call pays one
+compilation even when candidate lookup hits, as proved by call_guarded. -/
+def EffectiveBudget.compilations (budget : EffectiveBudget) := budget.unguardedMisses + budget.guardedCalls
+
+/-- Disjoint guarded calls and unconditional misses bound compilation work by
+actual calls. No such premise is inferred from a C4 shape or old measurement. -/
+theorem EffectiveBudget.compilations_bound (budget : EffectiveBudget)
+    (accounted : budget.unguardedMisses + budget.guardedCalls ≤ budget.calls) :
+    budget.compilations ≤ budget.calls := accounted
+
+/-- Joint construction, binding, contract checks and approval stay in base.
+The chosen operation budget includes first compilation and transport, and is
+bounded by the value-only nested reference under the supplied counters/weights. -/
+theorem EffectiveCosts.workflow_bound (costs : EffectiveCosts) (budget : EffectiveBudget) (base : Nat) :
+    base + (costs.prices budget).selectedTotal budget.calls ≤
+      base + (costs.prices budget).freshTotal budget.calls :=
+  Nat.add_le_add_left ((costs.prices budget).selected_bound budget.calls) base
+
+/-- One cold unconditional invocation cannot repay cache allocation/transport;
+its setup already includes the same sparse resolution and compilation. -/
+theorem EffectiveCosts.cold (costs : EffectiveCosts) :
+    (costs.prices ⟨1,1,1,0,0⟩).choose 1 = .fresh := by
+  apply TemplateCosts.cold
+  simp only [prices, Nat.one_mul, Nat.zero_mul, Nat.add_zero]
+  omega
+
+/-- Hoisting/configuring the strategy has a separate charge; choosing reuse does
+not erase that fee from a complete publication bound. -/
+theorem EffectiveCosts.configuration_covered (costs : EffectiveCosts) (budget : EffectiveBudget)
+    (fee base : Nat) (paid : fee ≤ (costs.prices budget).freshTotal budget.calls -
+      (costs.prices budget).selectedTotal budget.calls) :
+    base + fee + (costs.prices budget).selectedTotal budget.calls ≤
+      base + (costs.prices budget).freshTotal budget.calls :=
+  (costs.prices budget).configuration_covered budget.calls fee base paid
+
+/-- Full publication may construct different native carriers (qualified wrapper
+versus nested invoker), so its fresh/prepared bases need not be equal. Include
+actual strategy-specific construction, binding and admission costs explicitly. -/
+def EffectiveCosts.chooseWorkflow (costs : EffectiveCosts) (budget : EffectiveBudget)
+    (freshBase preparedBase : Nat) : CheckMode :=
+  if preparedBase + (costs.prices budget).sharedTotal budget.calls <
+      freshBase + (costs.prices budget).freshTotal budget.calls then .shared else .fresh
+
+/-- Complete selected workflow cost, including the separately supplied bases.
+The selection/configuration fee must be added independently at its actual horizon. -/
+def EffectiveCosts.selectedWorkflow (costs : EffectiveCosts) (budget : EffectiveBudget)
+    (freshBase preparedBase : Nat) : Nat :=
+  match costs.chooseWorkflow budget freshBase preparedBase with
+  | .fresh => freshBase + (costs.prices budget).freshTotal budget.calls
+  | .shared => preparedBase + (costs.prices budget).sharedTotal budget.calls
+
+/-- Unequal carrier-construction/binding/approval work cannot disappear through
+cancellation of a supposedly common base. Ties keep the ordinary reference. -/
+theorem EffectiveCosts.selected_workflow_bound (costs : EffectiveCosts) (budget : EffectiveBudget)
+    (freshBase preparedBase : Nat) :
+    costs.selectedWorkflow budget freshBase preparedBase ≤
+      freshBase + (costs.prices budget).freshTotal budget.calls := by
+  by_cases cheap : preparedBase + (costs.prices budget).sharedTotal budget.calls <
+      freshBase + (costs.prices budget).freshTotal budget.calls
+  · simpa [selectedWorkflow, chooseWorkflow, cheap] using Nat.le_of_lt cheap
+  · simp [selectedWorkflow, chooseWorkflow, cheap]
+
 end PreparationCosts
 
 end LeanPoo.Functional.ContractFamily
