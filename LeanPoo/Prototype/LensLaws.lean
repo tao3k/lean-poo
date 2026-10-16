@@ -11,6 +11,20 @@ structure LensLaws {S : Type u} {A : Type v} (get : S → A) (put : A → S → 
   put_put : ∀ source first second, put second (put first source) = put second source
 /-- Identity getter/setter is lawful for every carrier, including procedures. -/
 theorem LensLaws.identity {S : Type u} : LensLaws (id : S → S) (fun value _ => value) := ⟨fun _ => rfl,fun _ _ => rfl,fun _ _ _ => rfl⟩
+/-- Persistent first-component replacement is lawful on arbitrary product carriers. -/
+theorem LensLaws.productFirst {A : Type u} {B : Type v} :
+    LensLaws (Prod.fst : A × B → A) (fun value source => (value,source.2)) := by
+  constructor
+  · intro source; cases source; rfl
+  · intro source value; rfl
+  · intro source first second; rfl
+/-- Persistent second-component replacement provides the other reusable product focus. -/
+theorem LensLaws.productSecond {A : Type u} {B : Type v} :
+    LensLaws (Prod.snd : A × B → B) (fun value source => (source.1,value)) := by
+  constructor
+  · intro source; cases source; rfl
+  · intro source value; rfl
+  · intro source first second; rfl
 /-- Custom lawful getters/setters compose in the SAME order as native Lens.compose. -/
 theorem LensLaws.compose {S : Type u} {A : Type v} {B : Type w} {getOuter : S → A} {putOuter : A → S → S}
     {getInner : A → B} {putInner : B → A → A}

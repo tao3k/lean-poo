@@ -257,4 +257,5 @@ import LeanPoo.Prototype.LensLaws
 import LeanPoo.Prototype.GeneralizedClosure
 import LeanPoo.Prototype.FocusedClosure
 import LeanPoo.Prototype.FeedbackClosure
+import LeanPoo.Prototype.FeedbackRevision
 import LeanPoo.Functional.NonlocalDeclarations

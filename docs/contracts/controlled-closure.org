@@ -89,3 +89,27 @@ Staged cooking precedes residual admission and reuses its cooked self; failed
 admission retains old publication but cannot roll back arbitrary external effects.
 This is generalized-prototype future work, not a Scheme runtime verification or
 performance claim. Unrestricted recursive knots and function equality remain open.
+
+* Shared dependency and cross-service revision
+
+~FeedbackRevision~ treats previous raw only as a new search seed, then requires
+current joint approval on the exact revised closed raw. It proves fresh component
+equations, previous-seed provenance, approval and raw transition bounds by reusing
+the controlled feedback model. No prior proof or approval is copied across sources.
+
+[[file:../../Examples/SharedFeedback.lean][Shared feedback examples]] align one quota node, two nested service branches in
+a four-node feedback ring, joint readiness, existing primary/around methods and
+current cross-service budget/permission checks. Cold, growing, decreasing,
+overcommitted, unchanged-but-denied and insufficient-budget examples use the actual
+closure search. ~admitted_joint~ proves permission, readiness, coherent quota and
+joint commitment for ANY accepted example revision. Custom nested lens laws use
+the reusable product laws/composition; explicit frame laws preserve the audit.
+
+Native ~feedback-revision.ss~ retains all preparation/check source guards through
+the current approval callback, using FUN Reader ~.map~. Any refusal retains the
+exact old publication; example source preparation is inside that boundary too.
+Runtime source writes, malformed/non-Boolean metadata and callback failures have
+native controls. Pure raw-predicate proofs do not verify arbitrary receipt-aware
+native callbacks or the runtime/compiler. Source registration, purity/immutability
+and typed domains remain premises. No selective cyclic reuse or speedup follows.
+This advances the generalized-prototype future work; functionality precedes tuning.
