@@ -330,6 +330,7 @@ _check-examples:
     {{lean}} Examples/ClosedPrototypes.lean
     {{lean}} Examples/FeedbackServices.lean
     {{lean}} Examples/SharedFeedback.lean
+    {{lean}} Examples/CachedFeedback.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

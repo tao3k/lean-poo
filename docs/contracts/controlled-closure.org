@@ -113,3 +113,29 @@ native controls. Pure raw-predicate proofs do not verify arbitrary receipt-aware
 native callbacks or the runtime/compiler. Source registration, purity/immutability
 and typed domains remain premises. No selective cyclic reuse or speedup follows.
 This advances the generalized-prototype future work; functionality precedes tuning.
+
+* Selective reconstruction of whole feedback groups
+
+~Functional.FeedbackCache~ packages actual bounded closures and every component
+residual as cache values, then reuses existing ranked ~ConstructionCache~ proofs.
+~retained_slot~ requires actual unchanged resolver equality and clean declared
+dependencies. ~shared_invalidates~ reaches both readers of a shared input;
+~Partial.step_reused_builder_independent~ proves retained construction skips every
+builder implementation. Current approval remains mandatory for the exact candidate.
+
+[[file:../../Examples/CachedFeedback.lean][Cached feedback examples]] execute shared input → two feedback groups plus a
+cross-group edge and an independent group. A refusing independent builder still
+permits the selective revision; actual observations equal a fresh reconstruction.
+Joint budget and permission refusals remain active after reuse. The original capped
+ring is extracted into ~Prototype.Generalized.CappedFeedback~ and reused by both
+old and new examples, preserving earlier convergence/lens/method proofs.
+
+Native ~feedback-cache.ss~ uses the same DAG cache, explicit required group keys,
+whole-group closure and FUN Reader. Retained and rebuilt preparation/lens sources
+stay guarded through fresh joint approval. Stale groups refuse until explicit
+source revision; missing/error groups and failed candidates cannot be published.
+Cycles must be enclosed in groups; the inter-group graph remains a checked DAG.
+No automatic SCC grouping, cycle-interior skipping or general convergence follows.
+Immutable/extensional metadata and declared sources remain premises. Builder skip
+controls establish a source execution property, not time/allocation/GC performance
+or compiler/runtime correctness. This advances generalized-prototype future work.
