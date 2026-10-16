@@ -1007,3 +1007,80 @@ theorem Protocol.observe_withCook (protocol : Protocol Raw Cooked Fragment)
   rw [equal]
   rfl
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Laws required to fuse local inheritance into one surrounding write. Native
+object carriers require an extensional abstraction; ancestry/identity is excluded. -/
+structure FocusLaws (get : Outer → Inner) (set : Inner → Outer → Outer) : Prop where
+  get_set : ∀ value raw, get (set value raw) = value
+  set_get : ∀ raw, set (get raw) raw = raw
+  set_set : ∀ next previous raw, set next (set previous raw) = set next raw
+/-- Focus a complete local delayed program through one raw getter/setter boundary. -/
+def focusDelayed (get : Outer → Inner) (set : Inner → Outer → Outer)
+    (view : Other → Cooked) (program : DelayedProto Cooked Inner Inner) :
+    DelayedProto Other Outer Outer :=
+  fun self parent => set (program (self.map view) (parent.map get)) parent.get
+/-- Focus fusion needs actual lens laws, not merely two callbacks of the right shape. -/
+theorem focusDelayed_compose (get : Outer → Inner) (set : Inner → Outer → Outer)
+    (laws : FocusLaws get set) (view : Other → Cooked)
+    (first rest : DelayedProto Cooked Inner Inner) :
+    focusDelayed get set view (DelayedProto.compose first rest) =
+      DelayedProto.compose (focusDelayed get set view first) (focusDelayed get set view rest) := by
+  funext self parent
+  simp only [focusDelayed, DelayedProto.compose, Thunk.map, Thunk.get]
+  simp only [laws.get_set, laws.set_set]
+/-- Per-fragment focused assembly agrees with one focused local assembly. -/
+theorem focusDelayed_assemble (get : Outer → Inner) (set : Inner → Outer → Outer)
+    (laws : FocusLaws get set) (view : Other → Cooked)
+    (compiler : Compiler Inner Cooked Fragment) (fragments : List Fragment) :
+    DelayedProto.composeAll (fragments.map (fun fragment => focusDelayed get set view (compiler fragment))) =
+      focusDelayed get set view (DelayedProto.composeAll (fragments.map compiler)) := by
+  induction fragments with
+  | nil =>
+    funext self parent
+    exact (laws.set_get parent.get).symm
+  | cons first rest ih =>
+    change DelayedProto.compose (focusDelayed get set view (compiler first))
+        (DelayedProto.composeAll (rest.map (fun fragment => focusDelayed get set view (compiler fragment)))) =
+      focusDelayed get set view
+        (DelayedProto.compose (compiler first) (DelayedProto.composeAll (rest.map compiler)))
+    rw [ih, focusDelayed_compose get set laws view]
+/-- Reference protocol lifts every fragment independently into surrounding storage. -/
+def Protocol.focusRaw (protocol : Protocol Inner Cooked Fragment)
+    (get : Outer → Inner) (set : Inner → Outer → Outer)
+    (view : Other → Cooked) (cook : Outer → Other) : Protocol Outer Other Fragment :=
+  ⟨cook, fun fragment => focusDelayed get set view (protocol.compile fragment)⟩
+/-- Compile locally and write the surrounding focus once. The snapshot's assembly
+certificate uses the supplied lens laws; empty assembly bypasses the lens entirely. -/
+def Protocol.prepareFocused (protocol : Protocol Inner Cooked Fragment)
+    (get : Outer → Inner) (set : Inner → Outer → Outer) (laws : FocusLaws get set)
+    (view : Other → Cooked) (cook : Outer → Other) (fragments : List Fragment) :
+    PreparedHooks (protocol.focusRaw get set view cook) fragments :=
+  match fragments with
+  | [] => (protocol.focusRaw get set view cook).prepareHooks []
+  | first :: rest =>
+    ⟨focusDelayed get set view (protocol.assemble (first :: rest)),
+      (focusDelayed_assemble get set laws view protocol.compile (first :: rest)).symm⟩
+/-- Focus fusion preserves every finite observation, with arbitrary base and seed. -/
+theorem Protocol.prepareFocused_observe (protocol : Protocol Inner Cooked Fragment)
+    (get : Outer → Inner) (set : Inner → Outer → Outer) (laws : FocusLaws get set)
+    (view : Other → Cooked) (cook : Outer → Other) (fragments : List Fragment)
+    (base seed : Outer) (depth : Nat) :
+    (protocol.prepareFocused get set laws view cook fragments).bindObserver base depth seed =
+      (protocol.focusRaw get set view cook).observe fragments base seed depth :=
+  PreparedHooks.bindObserver_eq _ _ _ _
+end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Bridging law for the existing nested getter/setter method constructor: lifting
+one local lensGen equals composing its getters/setters in the surrounding carrier. -/
+theorem focusDelayed_lensGen (get : Outer → Inner) (set : Inner → Outer → Outer)
+    (methodGet : Inner → Inherited) (methodSet : Result → Inner → Inner)
+    (view : Other → Cooked)
+    (wrapper : Fragment → Thunk Cooked → Thunk Inherited → Result) (fragment : Fragment) :
+    focusDelayed get set view (lensGen methodGet methodSet wrapper fragment) =
+      lensGen (fun raw => methodGet (get raw))
+        (fun value raw => set (methodSet value (get raw)) raw)
+        (fun item self parent => wrapper item (self.map view) parent) fragment := by
+  rfl
+end LeanPoo.Prototype.Generalized

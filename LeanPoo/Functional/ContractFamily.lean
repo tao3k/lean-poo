@@ -1296,3 +1296,17 @@ theorem ObservationWork.cost_mono (prices : ObservationWork)
     (Nat.add_le_add (Nat.mul_le_mul_right _ bindingBound) (Nat.mul_le_mul_right _ cookBound))
     (Nat.mul_le_mul_right _ fieldBound)) _
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Logical surrounding writes: general construction writes once per fragment
+per stage; focused assembly writes once per nonempty stage. No allocator price. -/
+def focusedWrites (fragments stages : Nat) : Nat := stages * min 1 fragments
+/-- The outer write-count bound decreases without changing local fragment count.
+Extra preparation/projection costs must still be priced separately by callers. -/
+theorem focusedWrites_le (fragments stages : Nat) : focusedWrites fragments stages ≤ stages * fragments :=
+  Nat.mul_le_mul_left stages (Nat.min_le_right _ _)
+/-- Nonempty focused assembly has precisely one logical outer write per stage. -/
+theorem focusedWrites_nonempty (fragments stages : Nat) (nonempty : 1 ≤ fragments) :
+    focusedWrites fragments stages = stages := by
+  simp [focusedWrites, Nat.min_eq_left nonempty]
+end LeanPoo.Prototype.Generalized

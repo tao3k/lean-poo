@@ -745,3 +745,74 @@ example : (checkout.prepareHooks [true, false]).bindObserver (0, 0, "audit") 1 (
 #print axioms Protocol.observe_withCook
 #print axioms ObservationWork.cost_mono
 end LeanPoo.Examples.GeneralizedHooks
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Prototype Prototype.Generalized
+/-- Pair storage gives concrete get-put/put-get/put-put laws, independent of any
+Scheme object identity, slot cache or inheritance ancestry representation. -/
+theorem serviceFocusLaws : FocusLaws (fun raw : (Nat × Nat × String) × String => raw.1)
+    (fun value raw => (value, raw.2)) where
+  get_set := fun _ _ => rfl
+  set_get := fun _ => rfl
+  set_set := fun _ _ _ => rfl
+/-- Local billing captures three final-self rebate demands, with unchanged audit. -/
+def localBilling : Protocol (Nat × Nat × String) (Nat × Nat) Bool where
+  cook := fun raw => (raw.1, raw.2.1)
+  compile := fun price self parent => if price then
+    (30 + self.get.2 + self.get.2 + self.get.2, parent.get.2)
+    else (parent.get.1, 3, parent.get.2.2)
+/-- Fused local assembly retains surrounding service metadata in every observation. -/
+def focusedBilling := localBilling.prepareFocused
+  (fun raw : (Nat × Nat × String) × String => raw.1) (fun value raw => (value, raw.2))
+  serviceFocusLaws Prod.fst (fun raw => ((raw.1.1, raw.1.2.1), raw.2)) [true, false]
+/-- One focused raw write per stage computes the same 39/3/billing interface. -/
+example : focusedBilling.bindObserver ((0, 0, "audit"), "billing") 2
+    ((0, 0, "seed"), "different-seed") = ((39, 3), "billing") := rfl
+/-- An independently revised metadata frame remains current; no old view is reused. -/
+example : focusedBilling.bindObserver ((0, 0, "audit"), "revised-billing") 2
+    ((0, 0, "seed"), "old") = ((39, 3), "revised-billing") := rfl
+/-- The logical four-fragment/two-stage write count drops from eight to two;
+this is an operation model, not a claim about native bytes or collection time. -/
+example : focusedWrites 4 2 = 2 ∧ 2 * 4 = 8 := by decide
+#print axioms focusDelayed_compose
+#print axioms focusDelayed_assemble
+#print axioms Protocol.prepareFocused_observe
+#print axioms focusedWrites_le
+end LeanPoo.Examples.GeneralizedHooks
+
+#print axioms LeanPoo.Prototype.Generalized.focusDelayed_lensGen
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Prototype Prototype.Generalized
+/-- Envelope metadata is independent of the local checkout carrier; the native
+example represents these same observations through two nested POO slot lenses. -/
+theorem envelopeFocusLaws : FocusLaws
+    (fun raw : (Nat × Nat × String) × (Bool × String × String) => raw.1)
+    (fun value raw => (value, raw.2)) where
+  get_set := fun _ _ => rfl
+  set_get := fun _ => rfl
+  set_set := fun _ _ _ => rfl
+/-- Aggregate the two inherited rebate-dependent contributions (three plus two).
+This abstracts method grouping, not native call/allocation counts. -/
+def localEnvelope : Protocol (Nat × Nat × String) (Nat × Nat) Bool where
+  cook := fun raw => (raw.1, raw.2.1)
+  compile := fun price self parent => if price then
+    (30 + 5 * self.get.2, parent.get.2) else (parent.get.1, 3, parent.get.2.2)
+/-- The entire local program is focused into current approval/tenant/service context. -/
+def focusedEnvelope := localEnvelope.prepareFocused
+  (fun raw : (Nat × Nat × String) × (Bool × String × String) => raw.1)
+  (fun value raw => (value, raw.2)) envelopeFocusLaws Prod.fst
+  (fun raw => ((raw.1.1, raw.1.2.1), raw.2)) [true, false]
+/-- Current approval controls the observable result; the old seed's metadata is
+not an admission. This models result/error observations, not host effect timing. -/
+def envelopeResult (view : (Nat × Nat) × (Bool × String × String)) :
+    Except String (Nat × Nat × String × String × Bool) :=
+  if view.2.1 then .ok (view.1.1, view.1.2, view.2.2.2, view.2.2.1, true)
+    else .error "billing approval refused"
+/-- A current tenant revision is reflected in the successful public result. -/
+example : envelopeResult (focusedEnvelope.bindObserver ((0, 0, "audit"), true, "us", "billing") 2
+    ((0, 0, "seed"), true, "eu", "billing")) = .ok (45, 3, "billing", "us", true) := rfl
+/-- A stale approved seed cannot override the current refused context. -/
+example : envelopeResult (focusedEnvelope.bindObserver ((0, 0, "audit"), false, "us", "billing") 2
+    ((0, 0, "seed"), true, "eu", "billing")) = .error "billing approval refused" := rfl
+end LeanPoo.Examples.GeneralizedHooks

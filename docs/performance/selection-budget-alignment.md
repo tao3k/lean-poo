@@ -555,3 +555,33 @@ and +35.953 residual, alongside large A/A excursions. Two fixed repeats improve
 but do not erase that adverse run or prove its cause. Isolated binding/sharing
 and raw-hook paths retain adverse results; no universal performance claim is made.
 The committed summary preserves all identities and bounded evidence separately.
+
+
+### Focused local assembly and nested construction
+
+`FocusLaws` supplies get-set/set-get/set-set laws. `focusDelayed_compose` and
+`focusDelayed_assemble` justify one surrounding write after local assembly;
+`prepareFocused_observe` covers every finite depth/base/seed, and
+`focusDelayed_lensGen` connects the existing composed getter/setter constructor.
+`focusedWrites_le` bounds logical outer writes (four fragments/two stages: 8→2),
+without inferring allocator prices, GC behavior or Scheme callback termination.
+Native POO correspondence is under immutable extensional selector observations;
+physical identity, `.cc` ancestry inspection and arbitrary effects are excluded.
+
+Scheme now has explicit `focus-protocol`, `prepare-focused` and checked-C3
+`prepare-focused-inheritance`, reusing local methods, existing lenses and FUN.
+Nested approval/tenant revision and two audit frames have native examples; the
+typed pair carrier supplies actual focus laws and matching finite observations.
+This advances the paper's explicitly deferred future work and implements a
+concrete TODO path for local component assembly. All local fragments still run;
+arbitrary projection elimination, introspective MOP and auto law checks remain.
+
+Three fixed current-source native studies admit 576 children EACH. Full nested
+natural deltas are -56.828/-52.734/-57.676us; fixed-history natural deltas
+-51.133/-51.559/-53.684. GC CPU and residual are separately reported. One-operation
+GC-free full/raw-construction controls both admit -113824 bytes; the two-level
+envelope -307712. Cooking's identical-control deltas stay near zero; collected
+binding remains adverse, including +16.105us with large A/A variation. The old
++73.313us is retained as historical: its slower side collected fewer times, and
+matching prefix counters do not identify its cause or imply equal heaps. No
+pooling, causal GC percentage or universal native stability claim is made.
