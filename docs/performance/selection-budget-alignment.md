@@ -406,3 +406,42 @@ burst improves three natural-GC pairs and all four collected pairs. These
 results support explicit horizon-aware choices, not an automatic universal default.
 The native summary retains A/A drift, prefix-counter differences, rejected backend
 trials and independent source/binary identities. No full data is committed.
+
+### Standard empty-storage construction
+
+The next representation strategy uses Gerbil's existing `HashTable.new` interface
+with an explicit positional capacity. A private empty eq-table descriptor is
+initialized once, then supplies independent empty context/service tables. The
+native first-owner path no longer copies old entries, stages pending pairs or
+prunes old support. It still runs the same ordered projection, method registration
+and negative checking. Later same-owner service changes retain ordinary COW and
+exact unchanged siblings. Initial descriptor construction is not a free operation.
+
+`GenericFamily.Partial.rebuild` composes the original certified `Partial.build`.
+`build_lookup_eq`, `rebuild_lookup_eq` and `rebuild_empty_reference` prove pointwise
+lookup equivalence and the first exact typed refusal for arbitrary ordered key
+lists, including duplicates. These are operational constructor observations, not
+just lookup laws over already successful cells. The actual native factory's
+emptiness, immutability and compiler implementation are separate correspondence
+premises. `EmptyStorageCosts.covered` requires the removed keyword dispatch,
+staging/pruning work to pay interface setup and supplied excess collections;
+construction, binding and joint approval stay in the common base.
+
+AlignedServices reconstructs real heterogeneous reserve/cancel/quote services,
+including duplicate reserve, zero/large capacity, revised reservation/invoice and
+late forbidden cancellation. Illustrative cost cases reject short or GC-heavy
+horizons even with cheaper table creation. Native controls isolate first/later
+family construction, typed child binding and contract binding, alongside complete
+publication and post-owner hot calls. Precomputed phase inputs forbid adding their
+medians into an asserted full-workflow decomposition.
+
+The source-bound 1248-child empty-storage study reports first-owner allocation
+-2544 bytes versus prior bound and -1776 versus pure compiled context, eliminating
+the preceding +768-byte difference in this trace. Later revisions save 1952 bytes
+versus prior bound; isolated typed binding still costs 320 bytes versus a shared
+unbound template, and isolated contract binding is unchanged. Later complete
+revision CPU improves -5.188/-6.227 us versus prior bound (natural/collected),
+with residual CPU -5.430/-3.922 after recorded GC. It still loses +0.531/+1.797
+against staged. Natural first-revision CPU loses +23.695 us against staged;
+A/A drift cannot erase that observation. Therefore the native strategy stays
+explicit, with no universal cold/startup/timing claim and no pooling of old runs.

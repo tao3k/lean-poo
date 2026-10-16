@@ -1135,3 +1135,92 @@ def rebuiltLookup_certified
   rw [← rebuiltLookup_reference old cells key]
   exact found
 end LeanPoo.Functional.GenericFamily
+
+namespace LeanPoo.Functional.GenericFamily
+open Object DispatchExtension
+variable {G Policy Cooked : Type} {Args Method Result : G → Type}
+variable [DecidableEq G] [BEq G] [LawfulBEq G] [Hashable G]
+variable (model : Model G Policy Cooked Args Method Result) (policy : Policy) (cooked : Cooked)
+/-- Run the existing checked constructor in order over private empty storage.
+Registration and negative failures abort immediately; no partial table is published. -/
+def Partial.rebuild (prior : Partial model policy cooked) : List G → Except (Failure model) (Partial model policy cooked)
+  | [] => .ok prior
+  | key :: rest => do
+    let next ← prior.build model policy cooked key
+    next.rebuild rest
+/-- Equivalent lookups give the same constructor branch, negative refusal and
+installed observations. Capacity and empty-storage factory identity are unobserved. -/
+theorem Partial.build_lookup_eq (first second : Partial model policy cooked)
+    (same : ∀ query, first.table.get? query = second.table.get? query) (key query : G) :
+    (first.build model policy cooked key).map (fun next => next.table.get? query) =
+      (second.build model policy cooked key).map (fun next => next.table.get? query) := by
+  have entriesSame : first.table.entries.get? query = second.table.entries.get? query := same query
+  unfold Partial.build
+  rw [same key]
+  split
+  · simp [Except.map, same query]
+  · split
+    · rfl
+    · split
+      · rfl
+      · simp [Except.map, Partial.install, DispatchTable.get?, DispatchTable.install,
+          Std.DHashMap.get?_insert, entriesSame]
+/-- Arbitrary ordered reconstruction retains the first exact typed failure and
+all successful lookup observations, including duplicate-key first installation. -/
+theorem Partial.rebuild_lookup_eq (keys : List G) (first second : Partial model policy cooked)
+    (same : ∀ query, first.table.get? query = second.table.get? query) (query : G) :
+    (first.rebuild model policy cooked keys).map (fun next => next.table.get? query) =
+      (second.rebuild model policy cooked keys).map (fun next => next.table.get? query) := by
+  induction keys generalizing first second with
+  | nil => simp [rebuild, Except.map, same query]
+  | cons key rest ih =>
+    have step := Partial.build_lookup_eq model policy cooked first second same key key
+    cases left : first.build model policy cooked key with
+    | error error =>
+      cases right : second.build model policy cooked key with
+      | error other =>
+        simp [left, right, Except.map] at step
+        simp [rebuild, left, right, step, Except.map, bind, Except.bind, pure, Except.pure]
+      | ok next => simp [left, right, Except.map] at step
+    | ok next =>
+      cases right : second.build model policy cooked key with
+      | error error => simp [left, right, Except.map] at step
+      | ok after =>
+        have related : ∀ q, next.table.get? q = after.table.get? q := by
+          intro q
+          have observation := Partial.build_lookup_eq model policy cooked first second same key q
+          simpa [left, right, Except.map] using observation
+        simpa [rebuild, left, right, Except.map, bind, Except.bind, pure, Except.pure] using ih next after related
+/-- A native same-kind EMPTY factory is modeled by emptyWithCapacity. Its fresh
+checked reconstruction agrees with the existing empty reference for every key;
+no certificate can come from the factory's source descriptor or old family. -/
+theorem Partial.rebuild_empty_reference (capacity : Nat) (keys : List G) (query : G) :
+    ((Partial.emptyWithCapacity model policy cooked capacity).rebuild model policy cooked keys).map
+        (fun next => next.table.get? query) =
+      ((Partial.empty model policy cooked).rebuild model policy cooked keys).map
+        (fun next => next.table.get? query) := by
+  apply Partial.rebuild_lookup_eq
+  intro key
+  simp [Partial.emptyWithCapacity, Partial.empty, DispatchTable.get?, DispatchTable.empty]
+end LeanPoo.Functional.GenericFamily
+
+namespace LeanPoo.Functional.ContractFamily.PreparationCosts
+/-- Supplied storage preparation prices separate constructor dispatch, temporary
+staging and pruning from the binding/approval work common to both strategies. -/
+structure EmptyStorageCosts where
+  keyword : Nat
+  emptyFactory : Nat
+  staging : Nat
+  pruning : Nat
+  interfaceSetup : Nat
+  collection : Nat
+  deriving Repr
+/-- Select same-kind empty storage only when all removed preparation work pays
+its one-time interface setup AND supplied excess GC over the complete horizon.
+The common base still includes current construction, binding and joint approval. -/
+theorem EmptyStorageCosts.covered (costs : EmptyStorageCosts) (tables collections base : Nat)
+    (paid : costs.interfaceSetup + tables * costs.emptyFactory + collections * costs.collection ≤
+      tables * costs.keyword + costs.staging + costs.pruning) :
+    base + costs.interfaceSetup + tables * costs.emptyFactory + collections * costs.collection ≤
+      base + tables * costs.keyword + costs.staging + costs.pruning := by omega
+end LeanPoo.Functional.ContractFamily.PreparationCosts

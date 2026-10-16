@@ -1,5 +1,6 @@
 import LeanPoo.Object.MultimethodCombination
 import LeanPoo.Functional.ContractFamily
+import LeanPoo.Functional.ServiceBundle
 import LeanPoo.Object.SimplePolicies
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Object.SimpleCombinationSemantics
@@ -611,3 +612,42 @@ end LeanPoo.Examples.AlignedServices
 
 #print axioms LeanPoo.Functional.GenericFamily.rebuiltLookup_reference
 #print axioms LeanPoo.Functional.GenericFamily.rebuiltLookup_certified
+
+
+namespace LeanPoo.Examples.AlignedServices
+open Functional
+/-- Reconstruct real heterogeneous reserve/cancel/quote services through independent
+empty storage. Duplicate reserve is installed once; calls use the reconstructed view. -/
+def emptyStorageServices (capacity : Nat) (policy : ServiceBundle.Policy) := do
+  let view : ConstructionWorkflow.Interface := ⟨"storage", fun name =>
+    if name == "total" then some (.ok 40) else if name == "invoice" then some (.ok 12) else none⟩
+  let family ← ((GenericFamily.Partial.emptyWithCapacity ServiceBundle.model.generics policy view capacity).rebuild
+    ServiceBundle.model.generics policy view [.reserve,.reserve,.cancel,.quote]).mapError (fun _ => "construction")
+  let (reserve, _) ← (family.table.call .reserve 15).mapError (fun _ => "reserve dispatch")
+  let (cancel, _) ← (family.table.call .cancel ("customer",true)).mapError (fun _ => "cancel dispatch")
+  return (reserve, cancel)
+
+#guard match emptyStorageServices 0 {} with
+  | .ok (.ok (remaining,allowed),.ok events) => remaining == 25 && allowed && events == ["customer","invoice:12"]
+  | _ => false
+#guard match emptyStorageServices 64 {reserveShift := 10, cancelShift := 5} with
+  | .ok (.ok (remaining,allowed),.ok events) => remaining == 35 && allowed && events == ["customer","invoice:17"]
+  | _ => false
+#guard match emptyStorageServices 64 {forbiddenCancel := true} with
+  | .error "construction" => true
+  | _ => false
+
+/-- Example prices expose fixed interface setup and extra collections explicitly;
+small or GC-heavy horizons must not be admitted from table-byte savings alone. -/
+def emptyStoragePrices : ContractFamily.PreparationCosts.EmptyStorageCosts := ⟨12,4,2,2,20,30⟩
+#guard emptyStoragePrices.interfaceSetup + 1 * emptyStoragePrices.emptyFactory >
+  1 * emptyStoragePrices.keyword + emptyStoragePrices.staging + emptyStoragePrices.pruning
+#guard emptyStoragePrices.interfaceSetup + 8 * emptyStoragePrices.emptyFactory ≤
+  8 * emptyStoragePrices.keyword + emptyStoragePrices.staging + emptyStoragePrices.pruning
+#guard emptyStoragePrices.interfaceSetup + 8 * emptyStoragePrices.emptyFactory + 3 * emptyStoragePrices.collection >
+  8 * emptyStoragePrices.keyword + emptyStoragePrices.staging + emptyStoragePrices.pruning
+#print axioms GenericFamily.Partial.build_lookup_eq
+#print axioms GenericFamily.Partial.rebuild_lookup_eq
+#print axioms GenericFamily.Partial.rebuild_empty_reference
+#print axioms ContractFamily.PreparationCosts.EmptyStorageCosts.covered
+end LeanPoo.Examples.AlignedServices
