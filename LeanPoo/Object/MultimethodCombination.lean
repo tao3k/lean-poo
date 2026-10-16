@@ -341,6 +341,57 @@ theorem unconditional_select (candidates : Array (MethodCandidate A Method))
   | cons item rest ih =>
     cases item <;> simp_all [MethodCandidate.unconditional, MethodCandidate.selected, MethodCandidate.applies]
 
+/-- A declared unconditional shape can compile its method data without inventing
+an Args value or evaluating a guard. Every later selection yields this same array. -/
+theorem unconditional_select_map (candidates : Array (MethodCandidate A Method))
+    (unconditional : candidates.all MethodCandidate.unconditional = true) (args : A) :
+    MethodCandidate.select candidates args = candidates.map MethodCandidate.method := by
+  apply Array.toList_inj.mp
+  rw [MethodCandidate.select_reference, Array.toList_map]
+  have all : candidates.toList.all MethodCandidate.unconditional = true := by
+    simpa only [Array.all_toList] using unconditional
+  generalize candidates.toList = items at all ⊢
+  induction items with
+  | nil => rfl
+  | cons item rest ih =>
+    cases item <;> simp_all [MethodCandidate.unconditional, MethodCandidate.selected,
+      MethodCandidate.applies, MethodCandidate.method]
+
+/-- Compile a declared C4 shape at construction, before admission probes discard
+invocation successors. No argument, body, guard or invocation result is evaluated.
+Only unconditional shapes are admitted; current calls retain their ordinary C4,
+arity and guarded-selection semantics. Entries count against actual cache budgets. -/
+def prepareShape (prepared : PreparedMultimethod A Method Effective R) (shape : DispatchShape) :
+    Except MultimethodError (PreparedMultimethod A Method Effective R) := do
+  if shape.length != prepared.generic.arity then throw (.arity prepared.generic.arity shape.length)
+  match prepared.effectiveCache.get? shape with
+  | some _ => return { prepared with
+      generic := { prepared.generic with cache := prepared.generic.cache.touch shape }
+      effectiveCache := prepared.effectiveCache.touch shape }
+  | none =>
+    let candidates := prepared.generic.candidatesFor shape
+    if candidates.all MethodCandidate.unconditional then
+      return { prepared with
+        generic := { prepared.generic with cache := prepared.generic.cache.remember shape candidates }
+        effectiveCache := prepared.effectiveCache.remember shape
+          (prepared.prepare (candidates.map MethodCandidate.method)) }
+    else return prepared
+
+/-- Guarded declared shapes remain unchanged; in particular no guard is sampled
+with made-up values to justify preparing an effective method. -/
+theorem prepareShape_guarded (prepared : PreparedMultimethod A Method Effective R) (shape : DispatchShape)
+    (arity : shape.length = prepared.generic.arity) (miss : prepared.effectiveCache.get? shape = none)
+    (guarded : (prepared.generic.candidatesFor shape).all MethodCandidate.unconditional = false) :
+    prepared.prepareShape shape = .ok prepared := by
+  simp [prepareShape, arity, miss, guarded, pure, Except.pure]
+
+/-- Construction-time shape declarations cannot bypass dispatch arity. -/
+theorem prepareShape_arity (prepared : PreparedMultimethod A Method Effective R) (shape : DispatchShape)
+    (invalid : shape.length ≠ prepared.generic.arity) :
+    prepared.prepareShape shape = .error (.arity prepared.generic.arity shape.length) := by
+  simp [prepareShape, invalid, throw, throwThe, bind, Except.bind]
+  rfl
+
 /-- The uncached mathematical control still reselects current arguments and
 performs the same arity check as the sparse candidate resolver. -/
 def referenceCall (prepared : PreparedMultimethod A Method Effective R) (args : A) :
@@ -399,6 +450,118 @@ theorem call_correct (prepared : PreparedMultimethod A Method Effective R)
           simp [call, hit, resolved, referenceCall, arity, same, guarded, bind, Except.bind, pure, Except.pure, Except.map]
     · simp [call, hit, Multimethod.resolve, referenceCall, arity, bind, Except.bind, Except.map, throw, throwThe, pure, Except.pure]
       rfl
+
+/-- Explicit preparation preserves both cache invariants. Its newly compiled
+entry agrees with every future argument of that shape, and never freezes a guard. -/
+theorem prepareShape_preserves (prepared updated : PreparedMultimethod A Method Effective R)
+    (candidatesSound : prepared.generic.CacheSound) (effectiveSound : prepared.EffectiveSound)
+    (shape : DispatchShape) (success : prepared.prepareShape shape = .ok updated) :
+    updated.generic.CacheSound ∧ updated.EffectiveSound := by
+  by_cases arity : shape.length = prepared.generic.arity
+  · cases hit : prepared.effectiveCache.get? shape with
+    | some effective =>
+      simp [prepareShape, arity, hit, pure, Except.pure] at success
+      cases success
+      exact ⟨ShapeCache.sound_touch _ _ candidatesSound _, ShapeCache.holds_touch _ _ effectiveSound _⟩
+    | none =>
+      cases unconditional : (prepared.generic.candidatesFor shape).all MethodCandidate.unconditional with
+      | false =>
+        simp [prepareShape, arity, hit, unconditional, pure, Except.pure] at success
+        cases success
+        exact ⟨candidatesSound, effectiveSound⟩
+      | true =>
+        simp [prepareShape, arity, hit, unconditional, pure, Except.pure] at success
+        cases success
+        refine ⟨ShapeCache.sound_remember _ _ candidatesSound _ _ rfl, ?_⟩
+        apply ShapeCache.holds_remember
+        · exact effectiveSound
+        · refine ⟨arity, ?_⟩
+          intro args _same
+          exact congrArg prepared.prepare (unconditional_select_map _ unconditional args).symm
+  · simp [prepareShape, arity, throw, throwThe, bind, Except.bind] at success
+
+/-- Preparing a cache changes neither the method definition nor its uncached
+reference semantics, including missing methods, prefix failure and side effects. -/
+theorem prepareShape_reference (prepared updated : PreparedMultimethod A Method Effective R)
+    (shape : DispatchShape) (success : prepared.prepareShape shape = .ok updated) (args : A) :
+    updated.referenceCall args = prepared.referenceCall args := by
+  by_cases arity : shape.length = prepared.generic.arity
+  · cases hit : prepared.effectiveCache.get? shape with
+    | some effective =>
+      simp [prepareShape, arity, hit, pure, Except.pure] at success
+      cases success
+      rfl
+    | none =>
+      cases unconditional : (prepared.generic.candidatesFor shape).all MethodCandidate.unconditional <;>
+        simp [prepareShape, arity, hit, unconditional, pure, Except.pure] at success <;> cases success <;> rfl
+  · simp [prepareShape, arity, throw, throwThe, bind, Except.bind] at success
+
+/-- Prepared construction retains the exact dispatch definition and invoker.
+Only caches change, which is the premise for transporting completed negative
+watches rather than running probes/guards a second time during preparation. -/
+theorem prepareShape_definition (prepared updated : PreparedMultimethod A Method Effective R)
+    (shape : DispatchShape) (success : prepared.prepareShape shape = .ok updated) :
+    updated.generic.index = prepared.generic.index ∧ updated.generic.arity = prepared.generic.arity ∧
+    updated.generic.precedence = prepared.generic.precedence ∧ updated.prepare = prepared.prepare ∧
+    updated.invoke = prepared.invoke := by
+  by_cases arity : shape.length = prepared.generic.arity
+  · cases hit : prepared.effectiveCache.get? shape with
+    | some effective =>
+      simp [prepareShape, arity, hit, pure, Except.pure] at success
+      cases success
+      exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+    | none =>
+      cases unconditional : (prepared.generic.candidatesFor shape).all MethodCandidate.unconditional <;>
+        simp [prepareShape, arity, hit, unconditional, pure, Except.pure] at success <;>
+        cases success <;> exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+  · simp [prepareShape, arity, throw, throwThe, bind, Except.bind] at success
+
+/-- Preparing a frontmost admitted shape needs no new cache owner and no repeat
+compilation. Native fused resolution/effective entries implement the same law. -/
+theorem prepareShape_recent (prepared : PreparedMultimethod A Method Effective R)
+    (shape : DispatchShape) (effective : Effective)
+    (arity : shape.length = prepared.generic.arity) (hit : prepared.effectiveCache.get? shape = some effective)
+    (candidateRecent : prepared.generic.cache.recent.head? = some shape)
+    (effectiveRecent : prepared.effectiveCache.recent.head? = some shape) :
+    prepared.prepareShape shape = .ok prepared := by
+  simp [prepareShape, arity, hit, ShapeCache.touch, candidateRecent, effectiveRecent, pure, Except.pure]
+
+/-- Actual current-argument invocation on a frontmost compiled shape returns its
+existing owner. The method still executes; only reconstruction is absent. -/
+theorem call_recent (prepared : PreparedMultimethod A Method Effective R) (args : A) (effective : Effective)
+    (hit : prepared.effectiveCache.get? (prepared.generic.precedence args) = some effective)
+    (recent : prepared.effectiveCache.recent.head? = some (prepared.generic.precedence args)) :
+    prepared.call args = .ok (prepared.invoke effective args, prepared) := by
+  rw [call_hit prepared args effective hit]
+  simp [ShapeCache.touch, recent]
+
+/-- All actual calls after construction-time preparation agree with the original
+uncached definition. The prepared entry never substitutes for current arguments. -/
+theorem prepareShape_call_correct (prepared updated : PreparedMultimethod A Method Effective R)
+    (candidatesSound : prepared.generic.CacheSound) (effectiveSound : prepared.EffectiveSound)
+    (shape : DispatchShape) (success : prepared.prepareShape shape = .ok updated) (args : A) :
+    (updated.call args).map Prod.fst = prepared.referenceCall args := by
+  have preserved := prepared.prepareShape_preserves updated candidatesSound effectiveSound shape success
+  rw [updated.call_correct preserved.1 preserved.2, prepared.prepareShape_reference updated shape success]
+
+/-- Admission-style probes retain results and discard cache successors. Every
+probe still dispatches using current arguments; no result is memoized here. -/
+def probes (prepared : PreparedMultimethod A Method Effective R) (arguments : List A) :
+    Except MultimethodError (List R) :=
+  arguments.mapM (fun args => (prepared.call args).map Prod.fst)
+
+/-- A whole sequence of discarded-successor probes agrees with current-definition
+invocation after explicit preparation. This preserves method actions as well as
+results, so later monadic execution cannot omit a prefix/guard/body check. -/
+theorem prepareShape_probes (prepared updated : PreparedMultimethod A Method Effective R)
+    (candidatesSound : prepared.generic.CacheSound) (effectiveSound : prepared.EffectiveSound)
+    (shape : DispatchShape) (success : prepared.prepareShape shape = .ok updated) (arguments : List A) :
+    updated.probes arguments = arguments.mapM prepared.referenceCall := by
+  have same : (fun args => (updated.call args).map Prod.fst) = prepared.referenceCall := by
+    funext args
+    exact prepared.prepareShape_call_correct updated candidatesSound effectiveSound shape success args
+  unfold probes
+  rw [same]
 
 /-- Both cache invariants are preserved by actual successful calls. A cold
 unconditional shape admits an effective method for every argument of that shape;
@@ -554,6 +717,16 @@ theorem call_dispatch_failure (owner : NestedMultimethod A Method Effective Chil
     (error : MultimethodError) (refused : owner.outer.call args = .error error) :
     owner.call args = .error (.inl error) := by
   simp [call, refused, Except.mapError, bind, Except.bind]
+
+/-- A prepared outer hit and unchanged child successor retain the complete
+nested owner, while still executing the current selected child computation.
+This removes temporary owner construction in discarded admission probes. -/
+theorem call_retains (owner : NestedMultimethod A Method Effective Child Error R) (args : A)
+    (invoke : Child → Except Error (R × Child)) (result : R)
+    (dispatched : owner.outer.call args = .ok (invoke, owner.outer))
+    (invoked : invoke owner.child = .ok (result, owner.child)) :
+    owner.call args = .ok (result, owner) := by
+  rw [call_success owner args invoke owner.outer result owner.child dispatched invoked]
 
 /-- Optional concrete child-provenance admission, corresponding to the native
 index/invoker identity check. Its correctness as a definition test is a caller

@@ -297,6 +297,81 @@ prepared outer cache. Native tests additionally retain the exact old publisher. 
   | .error "refused" => true
   | _ => false
 
+/-- Declare the same C4 shape at both existing cache levels. The child and outer
+methods are complete before preparation; neither body runs during this phase. -/
+def prepareNestedPreflight (view : View) := do
+  let owner := nestedPreflight view
+  let child ← owner.child.prepareShape [["Reserve", "Object"]]
+  let outer ← owner.outer.prepareShape [["Reserve", "Object"]]
+  return { owner with child, outer }
+
+/-- Admission-style probes discard returned owners. Precompiled definitions can
+be reused by these probes without sharing results or skipping current checks. -/
+def preparedProbes (view : View) (first second : Int) : Except String (List String × List String) := do
+  let owner ← (prepareNestedPreflight view).mapError (fun _ => "prepare")
+  let (firstTrace, _) ← (owner.call first).mapError (Sum.elim (fun _ => "dispatch") id)
+  let (secondTrace, _) ← (owner.call second).mapError (Sum.elim (fun _ => "dispatch") id)
+  return (firstTrace, secondTrace)
+
+/- These execute actual prepared nested calls, including rejection on fresh
+arguments and changed source context. Generic cache/provenance laws are proofs. -/
+#guard (preparedProbes ⟨10,"invoice:1",true⟩ 2 3).toOption == some
+  (["positive","capacity","invoice","release"], ["positive","capacity","invoice","release"])
+#guard match preparedProbes ⟨10,"invoice:1",true⟩ 2 20 with
+  | .error "refused" => true
+  | _ => false
+#guard match preparedProbes ⟨20,"invoice:2",false⟩ 2 3 with
+  | .error "refused" => true
+  | _ => false
+
+/-- View-independent Simula method definition. The complete current view travels
+in the typed argument row, so cached code contains no previous capacity/invoice
+or release value. Native Object argument validation is an additional runtime cost. -/
+def contextPreflight : List (SimulaBody (Int × View) (EStateM String (List String))) :=
+  [⟨fun args => stage "capacity" (decide (args.1 ≤ args.2.capacity)), fun _ => stage "invoice" true⟩,
+   ⟨fun args => stage "positive" (decide (0 < args.1)), fun args => stage "release" args.2.released⟩]
+
+/-- Passing the current view explicitly reproduces the original view-specialized
+prefix/suffix computation, for every argument and every success/failure trace. -/
+theorem contextPreflight_equivalent (view : View) (units : Int) :
+    simulaEffective contextPreflight (units, view) = simulaEffective (preflight view) units := rfl
+
+/-- The cached context-independent program checks the CURRENT context, including
+revocation. No earlier successful view can authorize a later revoked request. -/
+theorem contextPreflight_revoked (view : View) (units : Int) (trace : List String)
+    (revoked : view.released = false) (positive : 0 < units) (fits : units ≤ view.capacity) :
+    simulaEffective contextPreflight (units, view) trace =
+      .error "refused" (trace ++ ["positive","capacity","invoice","release"]) := by
+  rw [contextPreflight_equivalent]
+  exact preflight_revoked view units trace revoked positive fits
+
+/-- One immutable prepared child definition can serve arbitrary typed current
+views. It shares executable method data and negative applicability, not results. -/
+def contextPreflightGeneric :=
+  let seed := Multimethod.preparedSimula (M := EStateM String (List String)) 1
+    (fun (_ : Int × View) => [["Reserve", "Object"]])
+  let defined := contextPreflight.reverse.foldl (fun current body =>
+    (current.contribute [.any] body).toOption.getD current) seed
+  defined.prepareShape [["Reserve", "Object"]]
+
+/-- Exercise actual sparse prepared dispatch against a newly passed view. -/
+def contextPreflightRequest (view : View) (units : Int) : Except String (List String) := do
+  let generic ← contextPreflightGeneric.mapError (fun _ => "prepare")
+  let (action, _) ← (generic.call (units, view)).mapError (fun _ => "dispatch")
+  match action [] with
+  | .ok _ trace => .ok trace
+  | .error error _ => .error error
+
+/- Closed controls complement the universal view-conversion/cache invariants. -/
+#guard (contextPreflightRequest ⟨20,"invoice:2",true⟩ 15).toOption ==
+  some ["positive","capacity","invoice","release"]
+#guard match contextPreflightRequest ⟨10,"invoice:1",true⟩ 15 with
+  | .error "refused" => true
+  | _ => false
+#guard match contextPreflightRequest ⟨20,"invoice:3",false⟩ 2 with
+  | .error "refused" => true
+  | _ => false
+
 /-- Illustrative primitive prices keep cold construction and nested transport
 visible; empirical Scheme CPU/GC is independently measured by paired children. -/
 def effectivePrices : EffectiveCosts := ⟨9,5,2,3,1,4,10⟩
@@ -314,6 +389,41 @@ theorem cold_publication_mode :
     (effectivePrices.prices ⟨1,1,1,0,0⟩).choose 1 = .fresh ∧
     effectivePrices.chooseWorkflow ⟨1,1,1,0,0⟩ 50 30 = .shared := by decide
 
+/-- With one discarded admission miss and one real first entry, construction
+can compile once instead of twice. Without probes or with unused declarations,
+setup is not automatically paid; excess GC can also reverse the choice. -/
+theorem shape_preparation_modes :
+    (⟨1,1,1,2,0⟩ : ShapePreparationBudget).choose effectivePrices 0 0 1 = .shared ∧
+    (⟨1,0,1,1,0⟩ : ShapePreparationBudget).choose effectivePrices 0 0 1 = .fresh ∧
+    (⟨8,1,1,2,0⟩ : ShapePreparationBudget).choose effectivePrices 0 0 1 = .fresh ∧
+    (⟨1,1,1,2,100⟩ : ShapePreparationBudget).choose effectivePrices 0 0 1 = .fresh := by decide
+
+/-- Illustrative context program prices count first construction, per-view
+binding, two current-argument uses per revision, and optional collector excess. -/
+def contextPrices : TemplateCosts := ⟨20,3,12⟩
+
+/-- A cold factory cannot amortize this setup; shared steady revisions can, while
+many calls with expensive extra argument checks or GC can reverse that choice. -/
+theorem context_preparation_modes :
+    ((⟨1,2,0⟩ : ContextPreparationBudget).prices contextPrices 1 10).choose 1 = .fresh ∧
+    ((⟨32,64,0⟩ : ContextPreparationBudget).prices contextPrices 1 10).choose 32 = .shared ∧
+    ((⟨32,6400,0⟩ : ContextPreparationBudget).prices contextPrices 1 10).choose 32 = .fresh ∧
+    ((⟨32,64,100⟩ : ContextPreparationBudget).prices contextPrices 1 10).choose 32 = .fresh := by decide
+
+#print axioms ContextPreparationBudget.selected_bound
+#print axioms ContextPreparationBudget.sharing_covered
+#print axioms context_preparation_modes
+#print axioms contextPreflight_equivalent
+#print axioms contextPreflight_revoked
+#print axioms ShapePreparationBudget.preparation_covered
+#print axioms ShapePreparationBudget.selected_bound
+#print axioms Object.PreparedMultimethod.prepareShape_probes
+#print axioms shape_preparation_modes
+#print axioms Object.PreparedMultimethod.prepareShape_call_correct
+#print axioms Object.PreparedMultimethod.prepareShape_preserves
+#print axioms Object.PreparedMultimethod.prepareShape_definition
+#print axioms Object.PreparedMultimethod.prepareShape_recent
+#print axioms Object.NestedMultimethod.call_retains
 #print axioms Object.PreparedMultimethod.call_correct
 #print axioms Object.PreparedMultimethod.call_preserves
 #print axioms Object.NestedMultimethod.call_success

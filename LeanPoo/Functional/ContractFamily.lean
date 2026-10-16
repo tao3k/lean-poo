@@ -801,6 +801,116 @@ theorem EffectiveCosts.selected_workflow_bound (costs : EffectiveCosts) (budget 
   · simpa [selectedWorkflow, chooseWorkflow, cheap] using Nat.le_of_lt cheap
   · simp [selectedWorkflow, chooseWorkflow, cheap]
 
+/-- One unconditional cache layer during joint construction/admission. Probes
+that discard successors and real first entries each repeat cold work without
+explicit preparation. invocations includes probes AND real calls; no body or
+contract validation is removed. Unguarded declared shapes are counted up front,
+including unused shapes. Guarded preparation falls back by prepareShape_guarded. -/
+structure ShapePreparationBudget where
+  declaredShapes : Nat
+  discardedMisses : Nat
+  entryMisses : Nat
+  invocations : Nat
+  extraCollections : Nat
+  deriving Repr
+
+/-- Actual repeated cold resolution/assembly/cache-owner construction events.
+These counts are supplied for the chosen workflow, not inferred from old timing. -/
+def ShapePreparationBudget.runtimeEvents (budget : ShapePreparationBudget) :=
+  budget.discardedMisses + budget.entryMisses
+
+/-- Reuse primitive effective-method prices; allocation includes cache-owner work
+at that layer. Child and outer layers may use different prices, summed by callers. -/
+def EffectiveCosts.preparationEvent (costs : EffectiveCosts) := costs.resolve + costs.prepare + costs.allocation
+
+/-- Current argument checks, method effects, contract validation and publication
+remain in the appropriate supplied base; every invocation still pays its dispatch,
+invocation and transport work. This does not predict native collector behavior. -/
+def ShapePreparationBudget.runtimeTotal (budget : ShapePreparationBudget) (costs : EffectiveCosts) (base : Nat) :=
+  base + budget.runtimeEvents * costs.preparationEvent +
+    budget.invocations * (costs.hit + costs.invoke + costs.transport)
+
+/-- Charge declaration/configuration, all prepared cache entries, and explicitly
+budgeted excess GC. Prepared/fresh carrier construction bases need not be equal. -/
+def ShapePreparationBudget.declaredTotal (budget : ShapePreparationBudget) (costs : EffectiveCosts)
+    (base setup : Nat) :=
+  base + setup + budget.declaredShapes * costs.preparationEvent +
+    budget.extraCollections * costs.collectionPrice +
+    budget.invocations * (costs.hit + costs.invoke + costs.transport)
+
+/-- A real operation saving must cover construction differences, configuration
+AND excess-GC work before declaration-time preparation is justified. -/
+theorem ShapePreparationBudget.preparation_covered (budget : ShapePreparationBudget) (costs : EffectiveCosts)
+    (runtimeBase preparedBase setup : Nat) (supported : budget.declaredShapes ≤ budget.runtimeEvents)
+    (paid : preparedBase + setup + budget.extraCollections * costs.collectionPrice ≤
+      runtimeBase + (budget.runtimeEvents - budget.declaredShapes) * costs.preparationEvent) :
+    budget.declaredTotal costs preparedBase setup ≤ budget.runtimeTotal costs runtimeBase := by
+  have events : (budget.runtimeEvents - budget.declaredShapes) * costs.preparationEvent +
+      budget.declaredShapes * costs.preparationEvent = budget.runtimeEvents * costs.preparationEvent := by
+    rw [← Nat.add_mul, Nat.sub_add_cancel supported]
+  unfold declaredTotal runtimeTotal
+  omega
+
+/-- Choose the explicit preparation mode only when its COMPLETE supplied budget
+is smaller. Ties and unpaid cold/GC cases keep ordinary invocation-time preparation. -/
+def ShapePreparationBudget.choose (budget : ShapePreparationBudget) (costs : EffectiveCosts)
+    (runtimeBase preparedBase setup : Nat) : CheckMode :=
+  if budget.declaredTotal costs preparedBase setup < budget.runtimeTotal costs runtimeBase then .shared else .fresh
+
+/-- Full selected operation budget; this is not a wall-clock selector or an
+embedded empirical frequency. Native models expose the choice explicitly. -/
+def ShapePreparationBudget.selectedTotal (budget : ShapePreparationBudget) (costs : EffectiveCosts)
+    (runtimeBase preparedBase setup : Nat) :=
+  match budget.choose costs runtimeBase preparedBase setup with
+  | .shared => budget.declaredTotal costs preparedBase setup
+  | .fresh => budget.runtimeTotal costs runtimeBase
+
+/-- The supplied choice cannot exceed the unprepared reference budget, including
+cold declarations, owner construction, unequal bases and excess collections. -/
+theorem ShapePreparationBudget.selected_bound (budget : ShapePreparationBudget) (costs : EffectiveCosts)
+    (runtimeBase preparedBase setup : Nat) :
+    budget.selectedTotal costs runtimeBase preparedBase setup ≤ budget.runtimeTotal costs runtimeBase := by
+  by_cases cheap : budget.declaredTotal costs preparedBase setup < budget.runtimeTotal costs runtimeBase
+  · simpa [selectedTotal, choose, cheap] using Nat.le_of_lt cheap
+  · simp [selectedTotal, choose, cheap]
+
+/-- Sharing one context-independent definition amortizes construction over changed
+views, but every probe/call adds current-view argument validation and representation
+work. All those invocations, plus excess GC, must be included in the horizon. -/
+structure ContextPreparationBudget where
+  revisions : Nat
+  invocations : Nat
+  extraCollections : Nat
+  deriving Repr
+
+/-- Reuse TemplateCosts rather than introduce another runtime selector. setup
+includes first definition/negative-check/preparation/model binding; specialize is
+per-view outer binding, rebuild is per-view captured child reconstruction. The
+explicit context argument's extra Type/representation work is NOT free. -/
+def ContextPreparationBudget.prices (budget : ContextPreparationBudget) (costs : TemplateCosts)
+    (contextArgument collectionPrice : Nat) : TemplateCosts :=
+  { costs with setup := costs.setup + budget.invocations * contextArgument + budget.extraCollections * collectionPrice }
+
+/-- The shared-definition choice charges cold construction, every current-view
+argument, per-view binding and supplied GC. Common body/contract/admission work
+stays in base only when actually equal for the two representations. -/
+theorem ContextPreparationBudget.selected_bound (budget : ContextPreparationBudget) (costs : TemplateCosts)
+    (contextArgument collectionPrice base : Nat) :
+    base + (budget.prices costs contextArgument collectionPrice).selectedTotal budget.revisions ≤
+      base + costs.freshTotal budget.revisions :=
+  Nat.add_le_add_left ((budget.prices costs contextArgument collectionPrice).selected_bound budget.revisions) base
+
+/-- An explicit amortization condition covers the additional argument and excess
+collector work before concluding a sharing bound. These prices/counts are supplied,
+not imported from Lean output or inferred from a favorable native sample. -/
+theorem ContextPreparationBudget.sharing_covered (budget : ContextPreparationBudget) (costs : TemplateCosts)
+    (contextArgument collectionPrice : Nat) (cheaper : costs.specialize ≤ costs.rebuild)
+    (paid : costs.setup + budget.invocations * contextArgument + budget.extraCollections * collectionPrice ≤
+      budget.revisions * (costs.rebuild - costs.specialize)) :
+    (budget.prices costs contextArgument collectionPrice).sharedTotal budget.revisions ≤
+      costs.freshTotal budget.revisions :=
+  template_amortized (budget.prices costs contextArgument collectionPrice) budget.revisions cheaper paid
+
 end PreparationCosts
 
 end LeanPoo.Functional.ContractFamily

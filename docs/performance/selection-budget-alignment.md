@@ -195,3 +195,85 @@ historical diagnostics. They are not a paired before/after causal comparison.
 See the companion package's `doc/performance/prepared-invocation-summary.org` for
 the concise tables, adverse controls, source boundaries and local receipt hashes.
 Full measurements, binaries and archives are not committed.
+
+
+## Declared Simula shapes before joint approval
+
+The next increment advances generalized-MOP future work using the reference's
+sorted-fragment/effective-method split and explicit caching direction. The actual
+native joint approver discards `probe` cache successors, causing repeated cold
+lookup/assembly before the first real request. Construction-time `prepareShape`
+admits only unconditional declared shapes, after checking arity. It requires no
+sample argument and evaluates no method body or value-sensitive guard. Calls
+still validate current arguments and derive their own C4 shape.
+
+`prepareShape_preserves`, `prepareShape_definition`, `prepareShape_reference` and
+`prepareShape_call_correct` establish both cache invariants, definition/invoker
+preservation and current-definition dispatch semantics. `prepareShape_probes`
+extends agreement to a whole sequence of discarded-successor probes; no action
+or result is memoized. `prepareShape_recent`, `call_recent` and nested
+`call_retains` account for returning the existing prepared owner, while method
+and contract actions still run. Closed examples exercise successful probes,
+changed arguments and revoked source context.
+
+`ShapePreparationBudget` reuses `EffectiveCosts` and counts declared entries,
+discarded cold misses, real first entries and ALL invocations. The per-layer
+`preparation_covered` law includes setup, owner allocation, unequal construction
+bases and supplied excess-GC cost. `selected_bound` retains the ordinary mode
+when that total cannot be paid, including unused declarations. Child and outer
+layers can use distinct weights. These are conditional operation budgets.
+
+Standalone Gerbil uses the existing resolver, protected certificates, POO
+projection constructor chain and joint publisher. Child-only and both-level
+Simula models expose the tradeoff explicitly. Preallocated cache entries count
+against resource admission, so zero-budget initial publication can refuse earlier;
+only method-reference semantics are claimed unchanged, not every budget decision.
+The native suite preserves exact old versions on failed publication. Scheme has
+no Lean checkout dependency.
+
+The paired study isolates protected child construction, changed generic
+construction, admission-style discarded probes, first successor transfer,
+complete staging, cold/steady calls and complete joint revisions. A separate
+fixed one-operation allocation control admits byte observations only when BOTH
+sides avoid GC and retain nonnegative counters. CPU, GC and residual paired deltas
+remain separate. Phase medians are not added; A/A spread and adverse runs remain
+visible. See the companion package's `doc/performance/simula-publication-summary.org`
+for current evidence. Earlier prepared-transport numbers above are historical.
+
+
+### Sharing the Simula definition instead of capturing each view
+
+The phase study showed that eliminating repeated effective assembly alone left
+cold generic construction and joint publication regressions. The next native
+representation supplies current view as a real typed argument to one immutable
+protected child definition. `contextPreflight_equivalent` proves its entire
+prefix/suffix computation equals the view-capturing implementation for every
+typed view and argument; revoked traces follow from the existing failure law.
+Native tests additionally cover Object/input validation and exact shared child
+identity across capacity/invoice revisions. Current outer bindings and contracts
+remain dependent on the new view.
+
+`ContextPreparationBudget.prices` reuses TemplateCosts: first child definition,
+negative checks, shape preparation and model binding enter setup; each changed
+view still pays outer binding; EVERY probe/call pays its added context argument
+Type/representation work. `sharing_covered` and `selected_bound` charge supplied
+excess GC and show when the representation is affordable. Cold, unused, call-heavy
+or collector-heavy horizons can retain ordinary captured-view construction.
+
+The native cold control constructs a fresh shared child and its model binding;
+steady revisions reuse the immutable child source. These are controlled phase
+measurements after a common initialization prefix, not OS process-startup timings.
+Complete native data remain local, with two A/A pairs and strict source identity.
+
+Current native matched study (960 children): shared context versus previous
+prepared transport saves 38.375/38.852 us per complete joint revision under
+natural/collected GC, 4/4 faster pairs each. Recorded CPU-minus-GC differences
+are -23.266/-21.766 us; the separately computed medians are not additive causal
+components. GC-free one-operation controls admit 91,504 fewer allocated bytes
+in all four pairs per regime, with zero bytes difference in context/context A/A.
+Fresh child-plus-model factory cold publication instead costs +43.180/+53.852 us,
+and warm invocation +0.197/+0.154 us. Explicit alternatives remain available.
+Natural repeated A/A drift (-8.875 us) and collected outliers remain in the
+native concise summary; no universal speedup, heap identity or retained-space
+claim follows. Earlier shape preparation alone left full stage publication
+slower (+4.727/+9.961 us). Both studies are retained as distinct local evidence.
