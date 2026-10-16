@@ -491,3 +491,26 @@ lower, each 4/4 faster pairs per regime. Natural source-error CPU regresses +0.1
 us despite residual CPU -0.297 and recorded GC +0.480; the adverse result remains.
 The two studies are separate identities and are not pooled. Final native summary
 includes A/A ranges and the unchanged byte-admission limits.
+
+
+## Prepared generalized hooks: future-work bridge
+
+Racket `poof.scrbl` 2098–2134 explicitly defers generalized prototypes. Gerbil's
+`generalized-prototype.ss` now combines native checked C3 local declarations,
+lens wrapping, raw/cooked self, compiler sums and public-self adaptation.
+`PreparedHooks.step_eq` and `iterate_eq` prove the exact finite observation laws
+for a snapshot carrying its assembly equation. `approximate_reindexSelf` requires
+`view (cook raw) = oldCook raw`; arbitrary hooks do not supply this premise.
+The Scheme correspondence assumes immutable declarations/callbacks and the
+specified delayed calling convention, rather than verifying Gerbil compilation.
+
+`HookCosts.shared_le_repeated` proves the positive-demand additive work bound
+with supplied preparation/observation prices. It does not include speculative
+zero-demand amortization or imply elapsed-time, allocation or GC bounds. Those
+require separate native measurements. The Scheme study separates fresh snapshot
+preparation, repeated finite observations and already-cooked calls; graph/module
+setup remains outside the measurement. No hardcoded measured prices enter Lean.
+The shared diamond/triangular checkout checks price 30 then 33 and the audit
+frame. Arbitrary callback closure, reflection, hook-law inference and migration
+remain future work. Native paired results live in the Gerbil concise summary;
+complete measurements remain ignored.

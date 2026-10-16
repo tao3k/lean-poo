@@ -1,3 +1,4 @@
+import LeanPoo.Prototype.GeneralizedInheritance
 import LeanPoo.Functional.RecursiveHandling
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Object.Multimethod
@@ -931,3 +932,41 @@ theorem call_warm_current (session : RecursiveSession program) (registry : Dynam
     receipt _ (Cached.runCertified_hit program session.memo _ receipt found budget)
   simpa [found] using completed
 end LeanPoo.Functional.RecursiveSession
+
+/-! Prepared generalized hooks advance the generalized-prototype future work.
+Compilation is shared across finite observations, without asserting a Scheme knot
+or callback termination. Native preparation must preserve this assembly equation. -/
+namespace LeanPoo.Prototype.Generalized
+/-- A compiled hook snapshot retains the exact ordered assembly it represents. -/
+structure PreparedHooks (protocol : Protocol Raw Cooked Fragment) (fragments : List Fragment) where
+  program : DelayedProto Cooked Raw Raw
+  correct : program = protocol.assemble fragments
+/-- Capture assembly once; the kernel equation is independent of runtime caching. -/
+def Protocol.prepareHooks (protocol : Protocol Raw Cooked Fragment) (fragments : List Fragment) :
+    PreparedHooks protocol fragments := ⟨protocol.assemble fragments, rfl⟩
+/-- A prepared step cooks only the self boundary and retains delayed raw inheritance. -/
+def PreparedHooks.step {protocol : Protocol Raw Cooked Fragment} {fragments : List Fragment}
+    (snapshot : PreparedHooks protocol fragments) : Proto Raw Raw Raw :=
+  fun final base => snapshot.program (Thunk.mk fun _ => protocol.cook final) (Thunk.mk fun _ => base)
+/-- Hoisting compilation preserves each step, including the exact inherited base. -/
+theorem PreparedHooks.step_eq {protocol : Protocol Raw Cooked Fragment} {fragments : List Fragment}
+    (snapshot : PreparedHooks protocol fragments) : snapshot.step = protocol.step fragments := by
+  unfold PreparedHooks.step Protocol.step
+  rw [snapshot.correct]
+/-- One shared compiled program preserves every finite-depth raw observation. -/
+theorem PreparedHooks.iterate_eq {protocol : Protocol Raw Cooked Fragment} {fragments : List Fragment}
+    (snapshot : PreparedHooks protocol fragments) (base seed : Raw) (depth : Nat) :
+    FiniteFix.iterate snapshot.step base seed depth = protocol.approximate fragments base seed depth := by
+  rw [snapshot.step_eq]
+  rfl
+/-- Compatible public-interface adaptation preserves finite raw construction at
+all depths; compatibility is a premise, not an inferred law of arbitrary hooks. -/
+theorem Protocol.approximate_reindexSelf (protocol : Protocol Raw Cooked Fragment)
+    (view : Other → Cooked) (cook : Raw → Other)
+    (compatible : ∀ raw, view (cook raw) = protocol.cook raw)
+    (fragments : List Fragment) (base seed : Raw) (depth : Nat) :
+    (protocol.reindexSelf view cook).approximate fragments base seed depth =
+      protocol.approximate fragments base seed depth := by
+  unfold Protocol.approximate
+  rw [protocol.step_reindexSelf view cook compatible]
+end LeanPoo.Prototype.Generalized

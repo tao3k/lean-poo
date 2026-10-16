@@ -685,3 +685,27 @@ def recursiveMemoPrices : ContractFamily.PreparationCosts.RecursiveMemoCosts := 
 #print axioms RecursiveSession.call_warm_current
 #print axioms ContractFamily.PreparationCosts.RecursiveMemoCosts.covered
 end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Prototype Prototype.Generalized
+/-- A triangular checkout: price observes final rebate, rebate resets to three;
+the second raw field models an audit frame untouched by either hook. -/
+def checkout : Protocol (Nat × Nat × String) (Nat × Nat) Bool where
+  cook := fun raw => (raw.1, raw.2.1)
+  compile := fun price self parent =>
+    if price then (30 + self.get.2, parent.get.2)
+    else (parent.get.1, 3, parent.get.2.2)
+/-- Finite depth one sees the seed rebate; depth two sees the final shared rebate. -/
+example : checkout.approximate [true, false] (0, 0, "audit") (0, 0, "seed") 1 =
+    (30, 3, "audit") := rfl
+/-- Two-stage dependency and the unchanged audit frame have concrete kernel checks. -/
+example : checkout.approximate [true, false] (0, 0, "audit") (0, 0, "seed") 2 =
+    (33, 3, "audit") := rfl
+/-- The prepared snapshot computes exactly the same finite two-stage construction. -/
+example : FiniteFix.iterate (checkout.prepareHooks [true, false]).step
+    (0, 0, "audit") (0, 0, "seed") 2 = (33, 3, "audit") := rfl
+#print axioms Prototype.Generalized.PreparedHooks.step_eq
+#print axioms Prototype.Generalized.PreparedHooks.iterate_eq
+#print axioms Prototype.Generalized.Protocol.approximate_reindexSelf
+end LeanPoo.Examples.GeneralizedHooks
+#print axioms LeanPoo.Prototype.Generalized.HookCosts.shared_le_repeated

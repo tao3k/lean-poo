@@ -1244,3 +1244,30 @@ theorem RecursiveMemoCosts.covered (costs : RecursiveMemoCosts) (calls extraColl
     base + calls * costs.admission + costs.setup + calls * costs.hit + extraCollections * costs.collection ≤
       base + calls * costs.admission + calls * costs.fresh := by omega
 end LeanPoo.Functional.ContractFamily.PreparationCosts
+
+namespace LeanPoo.Prototype.Generalized
+/-- Supplied logical work prices for finite hook observations. Preparation covers
+C3/declaration capture and compilation; observation includes cook/lens/bind work.
+These are explicit bounds, not measured Scheme allocation or elapsed-time facts. -/
+structure HookCosts where
+  preparation : Nat
+  observation : Nat
+/-- Shared preparation pays once; every requested observation still pays its bound. -/
+def HookCosts.shared (cost : HookCosts) (observations : Nat) : Nat :=
+  cost.preparation + observations * cost.observation
+/-- Rebuilding before each observation repeats the full preparation bound. -/
+def HookCosts.repeated (cost : HookCosts) (observations : Nat) : Nat :=
+  observations * (cost.preparation + cost.observation)
+/-- Hoisting cannot increase this additive work bound when at least one observation
+is demanded. Zero-demand preparation has no amortization guarantee. -/
+theorem HookCosts.shared_le_repeated (cost : HookCosts) (observations : Nat)
+    (demanded : 1 ≤ observations) : cost.shared observations ≤ cost.repeated observations := by
+  have preparation := Nat.mul_le_mul_right cost.preparation demanded
+  simp only [Nat.one_mul] at preparation
+  calc
+    cost.preparation + observations * cost.observation ≤
+        observations * cost.preparation + observations * cost.observation :=
+      Nat.add_le_add_right preparation _
+    _ = observations * (cost.preparation + cost.observation) :=
+      (Nat.mul_add observations cost.preparation cost.observation).symm
+end LeanPoo.Prototype.Generalized
