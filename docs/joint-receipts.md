@@ -1,5 +1,8 @@
 # Multiple approved receipts across topology rounds
 
+See [joint-concurrency.md](joint-concurrency.md) for real bounded worker threads,
+shared-policy drift before release, competing winners and formal lock-order laws.
+
 This advances generalized-prototype future work from original Racket Appendix B
 `$lens-gen` (pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133).
 The paper supplies composable lens-based construction, not this multi-service

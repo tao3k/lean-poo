@@ -1,17 +1,9 @@
-import LeanPoo.Examples.JointTopology
-import LeanPoo.Functional.JointReceipts
+import LeanPoo.Examples.JointReceipts
 
 /-! Multiple admitted receipts, shared revision drift and six topology rounds.
 Actual sources and closure equations stay inside every candidate head. -/
 namespace LeanPoo.Examples.JointReceipts
 open Functional.GeneralizedGraph LeanPoo.Examples.ComponentRounds LeanPoo.Examples.JointTopology
-/-- Receipt validity means the actual local and whole-family checks succeeded. -/
-abbrev Receipt := Functional.JointPublication.Approved (Revision := Nat) (fun state : State => approved state = true)
-/-- Each installation supplies the guard revision observed for that receipt. -/
-abbrev Attempt := Functional.JointPublication.Installation (Revision := Nat) (fun state : State => approved state = true)
-/-- Mint only an actually admitted candidate, retaining a proof of that check. -/
-def certify (expected : Nat) (state : State) (revision : Nat) : Except String Receipt :=
-  if checked : approved state = true then .ok ⟨expected,state,revision,checked⟩ else .error "joint admission refused"
 /-- Two receipts share an obsolete revision while an independent approved sibling
 stays current. All older rounds are replayed after that sibling wins. -/
 def round (state : State × List Attempt) (row : Nat × Head × Nat × Nat) : Except String (State × List Attempt) := do
