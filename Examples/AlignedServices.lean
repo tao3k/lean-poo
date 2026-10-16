@@ -436,3 +436,80 @@ theorem context_preparation_modes :
 #print axioms cold_publication_mode
 #print axioms effective_modes
 end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+/-- Reusable Simula service retains automatic inner ordering under compilation,
+including repeated current arguments and rejection before any suffix. -/
+def compiledContextRequest (view : View) (units : Int) :=
+  Object.MethodCombination.compileSimula contextPreflight (units, view)
+
+/-- Compiled code checks the same CURRENT view and yields identical state/error
+traces as the captured-view reference, for every input, not only examples. -/
+theorem compiledContext_equivalent (view : View) (units : Int) :
+    compiledContextRequest view units =
+      Object.MethodCombination.simulaEffective (preflight view) units := by
+  rw [compiledContextRequest, Object.MethodCombination.compileSimula_correct,
+    contextPreflight_equivalent]
+
+/- The same immutable compiled function receives distinct revisions, including
+revoked release and a capacity refusal. No result or old argument is retained. -/
+#guard match compiledContextRequest ⟨20,"invoice:2",true⟩ 15 [] with
+  | .ok _ trace => trace == ["positive","capacity","invoice","release"]
+  | _ => false
+#guard match compiledContextRequest ⟨10,"invoice:1",true⟩ 15 [] with
+  | .error "refused" trace => trace == ["positive","capacity"]
+  | _ => false
+#guard match compiledContextRequest ⟨20,"invoice:3",false⟩ 2 [] with
+  | .error "refused" trace => trace == ["positive","capacity","invoice","release"]
+  | _ => false
+#print axioms Object.MethodCombination.compileSimula_correct
+#print axioms compiledContext_equivalent
+end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+open Functional.ContractFamily.PreparationCosts
+/-- Illustrative supplied operation prices charge the complete wrapper setup;
+these are not Scheme timings and never cross the native checkout boundary. -/
+def simulaFactoryPrices : SimulaFactoryCosts := ⟨20,12,3,10,2,8,3,10⟩
+/-- One cold factory keeps reference; repeated calls or bindings amortize setup.
+Excess GC can reverse the decision even on the same application horizon. -/
+theorem simula_factory_modes :
+    (⟨1,1,2,0⟩ : SimulaFactoryBudget).choose simulaFactoryPrices = .fresh ∧
+    (⟨1,32,2,0⟩ : SimulaFactoryBudget).choose simulaFactoryPrices = .shared ∧
+    (⟨1,1,2,0⟩ : SimulaFactoryBudget).choose {simulaFactoryPrices with wrapperSetup := 0} = .shared ∧
+    (⟨32,32,2,0⟩ : SimulaFactoryBudget).choose simulaFactoryPrices = .shared ∧
+    (⟨32,32,2,100⟩ : SimulaFactoryBudget).choose simulaFactoryPrices = .fresh := by decide
+#print axioms SimulaFactoryBudget.selected_bound
+#print axioms SimulaFactoryBudget.compilation_covered
+#print axioms simula_factory_modes
+end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+open Object.MethodCombination
+/-- The native staged Model uses the captured view initially and the compiled
+shared definition after a changed revision. Warm calls never run a selector. -/
+def stagedPreflight (revised : Bool) (view : View) (units : Int) :=
+  if revised then compileSimula contextPreflight (units, view)
+  else simulaEffective (preflight view) units
+
+/-- Both lifecycle representations check the actual current view and preserve
+all success/error traces, so switching on revision adds no semantic assumption. -/
+theorem stagedPreflight_equivalent (revised : Bool) (view : View) (units : Int) :
+    stagedPreflight revised view units = simulaEffective (preflight view) units := by
+  cases revised with
+  | false => rfl
+  | true => exact compiledContext_equivalent view units
+
+/-- An arbitrary multi-revision request stream retains each request's current
+argument and view. This compares computations, not only successful results. -/
+theorem stagedPreflight_stream (requests : List (Bool × View × Int)) :
+    requests.map (fun request => stagedPreflight request.1 request.2.1 request.2.2) =
+      requests.map (fun request => simulaEffective (preflight request.2.1) request.2.2) := by
+  apply List.map_congr_left
+  intro request _
+  exact stagedPreflight_equivalent request.1 request.2.1 request.2.2
+#print axioms stagedPreflight_equivalent
+#print axioms stagedPreflight_stream
+end LeanPoo.Examples.AlignedServices
+
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ContextPreparationBudget.staged_bound

@@ -911,6 +911,80 @@ theorem ContextPreparationBudget.sharing_covered (budget : ContextPreparationBud
       costs.freshTotal budget.revisions :=
   template_amortized (budget.prices costs contextArgument collectionPrice) budget.revisions cheaper paid
 
+/-- Count actual factory creations, calls and Simula callbacks. A reused wrapper
+skeleton is still charged once, including the very first factory in a process. -/
+structure SimulaFactoryBudget where
+  factories : Nat
+  invocations : Nat
+  methods : Nat
+  extraCollections : Nat
+  deriving Repr
+
+/-- Supplied operation prices: common child definition/check work; reference
+binding plus traversal setup; shared wrapper setup/binding; compiled per-method
+closures; and complete per-call traversal/compiled costs. GC is an extra price.
+No measured times or assumed zero-cost argument validation are embedded here. -/
+structure SimulaFactoryCosts where
+  wrapperSetup : Nat
+  rebuild : Nat
+  bind : Nat
+  child : Nat
+  chain : Nat
+  traversal : Nat
+  invoke : Nat
+  collection : Nat
+  deriving Repr
+
+/-- Reference factories reconstruct their wrappers; all current calls execute. -/
+def SimulaFactoryBudget.referenceTotal (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts) : Nat :=
+  budget.factories * (costs.child + costs.rebuild) + budget.invocations * costs.traversal
+
+/-- Complete compiled budget includes once-only wrapper preparation, every fresh
+child and binding, every callback closure, current calls and supplied excess GC. -/
+def SimulaFactoryBudget.compiledTotal (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts) : Nat :=
+  costs.wrapperSetup + budget.factories * (costs.child + costs.bind + budget.methods * costs.chain) +
+    budget.invocations * costs.invoke + budget.extraCollections * costs.collection
+
+/-- Strictly cheaper complete budgets select compilation; ties keep reference. -/
+def SimulaFactoryBudget.choose (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts) : CheckMode :=
+  if budget.compiledTotal costs < budget.referenceTotal costs then .shared else .fresh
+
+/-- Charge the selected factory/call representation including its cold setup. -/
+def SimulaFactoryBudget.selectedTotal (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts) : Nat :=
+  match budget.choose costs with
+  | .fresh => budget.referenceTotal costs
+  | .shared => budget.compiledTotal costs
+
+/-- Conditional total-work bound retains cold and call-heavy fallback without
+assuming callback compilation, current checks or shared setup are free. -/
+theorem SimulaFactoryBudget.selected_bound (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts) (base : Nat) :
+    base + budget.selectedTotal costs ≤ base + budget.referenceTotal costs := by
+  by_cases cheap : budget.compiledTotal costs < budget.referenceTotal costs
+  · simpa [selectedTotal, choose, cheap] using Nat.add_le_add_left (Nat.le_of_lt cheap) base
+  · simp [selectedTotal, choose, cheap]
+
+/-- Paying the shared wrapper/callback setup is a necessary admission condition
+before asserting this compiled budget is no larger than the complete reference. -/
+theorem SimulaFactoryBudget.compilation_covered (budget : SimulaFactoryBudget) (costs : SimulaFactoryCosts)
+    (paid : costs.wrapperSetup + budget.factories * (costs.bind + budget.methods * costs.chain) +
+      budget.invocations * costs.invoke + budget.extraCollections * costs.collection ≤
+      budget.factories * costs.rebuild + budget.invocations * costs.traversal) :
+    budget.compiledTotal costs ≤ budget.referenceTotal costs := by
+  simp only [compiledTotal, referenceTotal, Nat.mul_add] at *
+  omega
+
+/-- Compose a captured-view cold phase with a later checked shared-definition
+handoff. Base includes its real initial calls; setup includes all first owner
+handoff rebuild/check work. The workflow wrapper's extra construction is admitted
+only when the later selected saving covers it; it is never silently free. -/
+theorem ContextPreparationBudget.staged_bound (budget : ContextPreparationBudget) (costs : TemplateCosts)
+    (contextArgument collectionPrice workflowBinding base : Nat)
+    (paid : workflowBinding ≤ (budget.prices costs contextArgument collectionPrice).freshTotal budget.revisions -
+      (budget.prices costs contextArgument collectionPrice).selectedTotal budget.revisions) :
+    base + workflowBinding + (budget.prices costs contextArgument collectionPrice).selectedTotal budget.revisions ≤
+      base + costs.freshTotal budget.revisions :=
+  (budget.prices costs contextArgument collectionPrice).configuration_covered budget.revisions workflowBinding base paid
+
 end PreparationCosts
 
 end LeanPoo.Functional.ContractFamily

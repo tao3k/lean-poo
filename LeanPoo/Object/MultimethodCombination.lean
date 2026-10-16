@@ -185,6 +185,35 @@ theorem simulaEffective_prefix_failure {A State Error : Type}
   rw [simulaEffective_pair]
   simp [bind, EStateM.bind, first, second]
 
+/-- Compile ordered side callbacks once; the continuation receives current arguments. -/
+def compileParts {A B : Type} {M : Type → Type} [Monad M]
+    (part : B → A → M Unit) (methods : List B) (terminal : A → M Unit) : A → M Unit :=
+  methods.foldr (fun body next args => do part body args; next args) terminal
+/-- Compilation preserves sequencing for arbitrary lawful effects and a suffix. -/
+theorem compileParts_correct {A B : Type} {M : Type → Type} [Monad M] [LawfulMonad M]
+    (part : B → A → M Unit) (methods : List B) (terminal : A → M Unit) (args : A) :
+    compileParts part methods terminal args = (do
+      for body in methods do part body args
+      terminal args) := by
+  induction methods with
+  | nil => simp [compileParts]
+  | cons body rest ih => simp_all [compileParts]
+/-- Build general-first prefix and specific-first suffix closures at preparation. -/
+def compileSimula {A : Type} {M : Type → Type} [Monad M]
+    (methods : List (SimulaBody A M)) : A → M Unit :=
+  let suffix := compileParts SimulaBody.suffixPart methods (fun _ => pure ())
+  methods.foldl (fun next body args => do body.prefixPart args; next args) suffix
+/-- Both folds preserve the original Simula effect/failure order on every call. -/
+theorem compileSimula_correct {A : Type} {M : Type → Type} [Monad M] [LawfulMonad M]
+    (methods : List (SimulaBody A M)) (args : A) :
+    compileSimula methods args = simulaEffective methods args := by
+  unfold compileSimula
+  rw [List.foldl_eq_foldr_reverse]
+  change compileParts SimulaBody.prefixPart methods.reverse
+    (compileParts SimulaBody.suffixPart methods (fun _ => pure ())) args = _
+  rw [compileParts_correct, compileParts_correct]
+  simp [simulaEffective]
+
 end LeanPoo.Object.MethodCombination
 
 /-! Prepared invokers and explicit nested state advance the generalized protocol's

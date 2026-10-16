@@ -277,3 +277,62 @@ Natural repeated A/A drift (-8.875 us) and collected outliers remain in the
 native concise summary; no universal speedup, heap identity or retained-space
 claim follows. Earlier shape preparation alone left full stage publication
 slower (+4.727/+9.961 us). Both studies are retained as distinct local evidence.
+
+## Compiled Simula callbacks and fused cold factories
+
+The Racket fragment/effective-method split also permits compiling the complete
+ordered side-method chain rather than building traversal closures per call.
+`MethodCombination.compileParts` constructs a reusable monadic continuation;
+`compileSimula` right-folds specific-first suffixes and left-folds general-first
+prefixes. `compileSimula_correct` proves equality with `simulaEffective` for
+arbitrary callback lists and lawful effects. Current arguments and failure order
+are preserved. `compiledContext_equivalent` transfers the existing current-view
+Simula equivalence, with accepted, capacity-refused and revoked examples.
+
+The standalone native `compile-simula` uses standard folds and extracts each POO
+callback only during preparation. Its existing typed sparse dispatcher, negative
+certificate and FUN/IO publication/contract chain remain in control. A fused cold
+`context-simula-template program` constructs the generic with seed, declarations
+and projection in one prototype extension. The explicit reusable-template binding
+path changes only the child seed; native tests assert projection/contract/admission
+identity and independently supplied child identity, and exercise joint revisions
+plus old-version refusal. No mutable global dispatch state is introduced.
+
+`SimulaFactoryBudget` / `SimulaFactoryCosts` include once-only wrapper preparation,
+every child/check/binding, callback construction, every current call and excess
+GC. `selected_bound` and `compilation_covered` give supplied-operation bounds.
+Direct cold construction uses its actual binding price and no unused shared
+skeleton; a reused skeleton must still be paid once across its whole horizon.
+Native cold and bind phases are separate controls. These proofs do not establish
+compiler correctness, elapsed-time acceleration, heap identity or predicted GC.
+
+The staged lifecycle composes these representations using the native Model's
+`.prepare` override: initial publication uses the existing captured-view program;
+`.publish` performs a checked handoff to the shared compiled definition. Every
+warm call simply invokes its current version. Importantly, the family owner
+changes at the first handoff, so the existing owner check rebuilds/rechecks the
+complete family even for equal contexts. No certificate is retagged to hide that
+cost. Later unchanged contexts use normal reuse. `stagedPreflight_equivalent`
+and `stagedPreflight_stream` prove phase choice preserves current-view computation
+and arbitrary request streams; the native tests separately check owner handoff,
+subsequent exact reuse, current versus old capacity, shared subsequent children
+and atomic negative-watch refusal. Module initialization is outside phase timings
+and remains explicit setup in whole-horizon cost reasoning.
+
+`ContextPreparationBudget.staged_bound` requires the later selected saving to
+cover the workflow wrapper's extra binding. Its setup must charge the complete
+first owner handoff; common initial captured-view work stays in explicit base.
+This separates phase composition from a claim of free setup or unchanged
+resource-admission timing. Native study details: simula-factory-summary.org.
+
+The final 1056-child study compares staged versus previous context-prepared:
+cold factory/publication/first call -35.773/-26.781 us, initial warm call
+-0.171/-0.310 us (natural/collected; 4/4 faster each). Recorded CPU-minus-GC
+cold differences -24.219/-15.586 us retain non-GC work separately. These phase
+controls exclude module initialization. First owner handoff adds 2,192 allocated
+bytes in all GC-free pairs versus previous context; stage/revision changes remain
+mixed, including natural revision +6.133 us. Against original captured prepared
+transport, cold -48.836/+18.242 us and initial warm +0.174/-0.053 us remain mixed.
+No claim of universal speedup or eliminated post-handoff hot argument costs.
+The first two pure-context studies failed to reliably remove cold/hot regression;
+their adverse results and A/A drift/outliers remain in the native summary.
