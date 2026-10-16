@@ -336,3 +336,73 @@ transport, cold -48.836/+18.242 us and initial warm +0.174/-0.053 us remain mixe
 No claim of universal speedup or eliminated post-handoff hot argument costs.
 The first two pure-context studies failed to reliably remove cold/hot regression;
 their adverse results and A/A drift/outliers remain in the native summary.
+
+## Owner storage and post-handoff context binding
+
+The standalone family keys are validated symbols. The opt-in sized-projection
+mixin uses Gerbil's original native eq table with a support-length capacity hint for
+new private tables; it still constructs/checks all generics at owner handoff.
+The Lean `GenericFamily.Partial.emptyWithCapacity` companion (in the cost-model
+owner) certifies no entries for arbitrary reserved capacity, preserving the existing
+source model. No capacity hint supplies a method-origin or negative certificate.
+The native tests cover duplicate/empty/invalid support and new-owner negative
+refusal while keeping the old family usable.
+
+`MethodCombination.bindSimula` specializes one context at reconstruction. Native
+`bind-simula` directly calls each two-argument prefix/suffix with fresh units and
+the bound view, avoiding an extra per-call context row and Object validation.
+The bound child still validates current units and Unit output using the existing
+sparse generic; the constructor validates the reconstructed Object once. Closed
+projection immutability and pure Type callbacks are premises, not discovered from
+successful samples. New views reconstruct new children; old versions retain their
+own views. Arbitrary mutable context reuse or cached successful results is not
+admitted by these claims.
+
+`compileParts_contramap` and `bindSimula_correct` prove the transformation for
+arbitrary callback lists and lawful effects. The concrete bound view laws and
+examples retain capacity/release failures and state traces. `SimulaBindingBudget`
+prices all binding/setup/call/GC work; `binding_covered` requires repeated-call
+saving to cover reconstruction, and `tables_covered` combines independently
+supplied table prices only when their inequality actually holds. Revision-heavy
+horizons can keep shared context. These are conditional supplied-work bounds,
+not proofs of elapsed time, native hash tables, compiler behavior or collector cost.
+Current native study: simula-owner-summary.org, with separate post-handoff calls,
+first and later revisions, unchanged reuse and GC-free allocation controls.
+
+The final native binding shares the complete prepared program. Its
+`prepared-context` invoker stores a private typed context, while `bind-context`
+retains exact method/index/precedence/prepare/invoke/cache data and updates only
+validated context owners. `PreparedContextMultimethod` models this using a prepared
+result of type `Context → Result`; `bindContext_program`, `bindContext_sound`,
+`call_correct`, `call_retains` and `call_context` prove the current-data/cache
+boundary. Context is not an input to dispatch or guard selection; context-sensitive
+applicability must stay in Args. `NestedMultimethod.callChecked_context_change`
+formalizes rejection of a context change in a cache-only successor. Native tests
+also attempt that replacement and retain the old child. The native eq capacity hint follows the Gerbil expander pattern. The earlier
+symbolic-table trials, with and without shared program binding, were adverse and
+remain separate evidence; their supplied price inequality does not admit them.
+
+Isolated allocation controls located the remaining owner difference in generic
+construction, with zero contract-binding byte difference for this trace. The final
+owner path stages every fresh checked cell first, then privately copies comparable
+service storage, prunes old-only keys and overwrites ALL current values. Changed
+owners cannot retain old generic certificates. `overwriteStorage_current` and
+`rebuiltLookup_reference` prove the resulting masked lookup is independent of prior
+storage; `rebuiltLookup_certified` obtains authority only from the fully fresh
+certified reference. Support contraction/expansion takes fresh sized storage. Pending
+cells/copying/pruning are included in actual native allocation and supplied prices.
+The native tests exercise same-cardinality key replacement as well as empty/subset
+supports and a negative failure midway through the first owner handoff.
+
+The fixed 13-scenario native study admits 1248 fresh children, with four ABBA
+pairs per comparison and GC regime. Against pure compiled context the first-owner
+allocation excess is 768 bytes, reduced from the preceding 2192-byte report;
+against staged it saves 1424 bytes. Switched-owner hot calls save 96 bytes.
+Isolated generic construction saves 1232 bytes against staged, while the isolated
+contract-binding delta is zero; precomputed phase inputs forbid summing these
+medians as a full allocation decomposition. Full first/later publication still
+has CPU regressions, and eight-request publication is mixed. The fixed 256-request
+burst improves three natural-GC pairs and all four collected pairs. These
+results support explicit horizon-aware choices, not an automatic universal default.
+The native summary retains A/A drift, prefix-counter differences, rejected backend
+trials and independent source/binary identities. No full data is committed.

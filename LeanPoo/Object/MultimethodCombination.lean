@@ -214,6 +214,40 @@ theorem compileSimula_correct {A : Type} {M : Type → Type} [Monad M] [LawfulMo
   rw [compileParts_correct, compileParts_correct]
   simp [simulaEffective]
 
+/-- Binding the immutable context during construction commutes with callback
+compilation. Every call still supplies its own current unbound argument. -/
+theorem compileParts_contramap {A B C : Type} {M : Type → Type} [Monad M]
+    (part : B → A → M Unit) (methods : List B) (terminal : A → M Unit)
+    (input : C → A) (args : C) :
+    compileParts (fun body current => part body (input current)) methods
+      (fun current => terminal (input current)) args = compileParts part methods terminal (input args) := by
+  induction methods with
+  | nil => rfl
+  | cons body rest ih => simp_all [compileParts]
+/-- Specialize fixed context without allocating another argument representation
+at invocation. Native code directly calls the two-argument prefix/suffix callbacks. -/
+def bindSimula {A C : Type} {M : Type → Type} [Monad M]
+    (methods : List (SimulaBody (A × C) M)) (context : C) : A → M Unit :=
+  let suffix := compileParts (fun body args => body.suffixPart (args, context)) methods (fun _ => pure ())
+  methods.foldl (fun next body args => do body.prefixPart (args, context); next args) suffix
+/-- For arbitrary lawful effects, context specialization retains every callback,
+argument and failure position. No successful result or previous argument is reused. -/
+theorem bindSimula_correct {A C : Type} {M : Type → Type} [Monad M] [LawfulMonad M]
+    (methods : List (SimulaBody (A × C) M)) (context : C) (args : A) :
+    bindSimula methods context args = simulaEffective methods (args, context) := by
+  unfold bindSimula
+  rw [List.foldl_eq_foldr_reverse]
+  have suffix : compileParts (fun (body : SimulaBody (A × C) M) current => body.suffixPart (current, context))
+      methods (fun _ => pure ()) =
+      (fun current => compileParts SimulaBody.suffixPart methods (fun _ => pure ()) (current, context)) := by
+    funext current
+    exact compileParts_contramap SimulaBody.suffixPart methods (fun _ => pure ()) (fun current => (current, context)) current
+  rw [suffix]
+  change compileParts (fun body current => body.prefixPart (current, context)) methods.reverse
+    (fun current => compileParts SimulaBody.suffixPart methods (fun _ => pure ()) (current, context)) args = _
+  rw [compileParts_contramap, compileParts_correct, compileParts_correct]
+  simp [simulaEffective]
+
 end LeanPoo.Object.MethodCombination
 
 /-! Prepared invokers and explicit nested state advance the generalized protocol's
@@ -788,4 +822,66 @@ theorem callChecked_refused (owner next : NestedMultimethod A Method Effective C
   simp [callChecked, invoked, invalid, Except.mapError, bind, Except.bind]
 
 end NestedMultimethod
+end LeanPoo.Object
+
+namespace LeanPoo.Object
+/-- Prepared code computes a context-parameterized result. Context is invocation
+DATA, never an input to candidate selection, guards or effective preparation. -/
+structure PreparedContextMultimethod (A Method Effective Context R : Type) where
+  program : PreparedMultimethod A Method Effective (Context → R)
+  context : Context
+namespace PreparedContextMultimethod
+/-- A typed context update preserves the entire prepared definition and caches. -/
+def bindContext (owner : PreparedContextMultimethod A Method Effective C R) (context : C) :=
+  { owner with context }
+/-- Applicability and effective code are identical, so their negative/positive
+properties need no new construction or retagging after a typed data binding. -/
+theorem bindContext_program (owner : PreparedContextMultimethod A Method Effective C R) (context : C) :
+    (owner.bindContext context).program = owner.program := rfl
+/-- All arguments still pass through the existing sparse prepared dispatcher. -/
+def call (owner : PreparedContextMultimethod A Method Effective C R) (args : A) :
+    Except MultimethodError (R × PreparedContextMultimethod A Method Effective C R) := do
+  let (invoke, program) ← owner.program.call args
+  return (invoke owner.context, { owner with program })
+/-- Warm code never memoizes an invocation result; it evaluates the current
+argument against the owner's newly bound context on EVERY call. -/
+theorem call_correct (owner : PreparedContextMultimethod A Method Effective C R)
+    (candidates : owner.program.generic.CacheSound) (effective : owner.program.EffectiveSound) (args : A) :
+    (owner.call args).map Prod.fst =
+      (owner.program.referenceCall args).map (fun invoke => invoke owner.context) := by
+  rw [← owner.program.call_correct candidates effective args]
+  cases dispatched : owner.program.call args <;>
+    simp [call, dispatched, Except.map, bind, Except.bind, pure, Except.pure]
+/-- Rebinding retains both cache invariants because neither cached code nor its
+argument-only guards depend on the data stored in this owner. -/
+theorem bindContext_sound (owner : PreparedContextMultimethod A Method Effective C R)
+    (context : C) (candidates : owner.program.generic.CacheSound) (effective : owner.program.EffectiveSound) :
+    (owner.bindContext context).program.generic.CacheSound ∧ (owner.bindContext context).program.EffectiveSound :=
+  ⟨candidates, effective⟩
+/-- A real warm call executes its computation while retaining the exact owner. -/
+theorem call_retains (owner : PreparedContextMultimethod A Method Effective C R)
+    (args : A) (invoke : C → R) (hit : owner.program.call args = .ok (invoke, owner.program)) :
+    owner.call args = .ok (invoke owner.context, owner) := by
+  simp [call, hit, bind, Except.bind, pure, Except.pure]
+
+/-- Cache evolution changes neither the bound context nor its typed owner data. -/
+theorem call_context (owner next : PreparedContextMultimethod A Method Effective C R)
+    (args : A) (result : R) (success : owner.call args = .ok (result, next)) : next.context = owner.context := by
+  cases dispatched : owner.program.call args with
+  | error error => simp [call, dispatched, bind, Except.bind] at success
+  | ok pair =>
+    simp [call, dispatched, bind, Except.bind, pure, Except.pure] at success
+    rcases success with ⟨rfl, rfl⟩
+    rfl
+end PreparedContextMultimethod
+
+/-- A nested cache transport cannot smuggle a context change into a business
+call. Data changes require the separate checked reconstruction/publication path. -/
+theorem NestedMultimethod.callChecked_context_change [DecidableEq C]
+    (owner next : NestedMultimethod A Method Effective (PreparedContextMultimethod B BM BE C S) Error R)
+    (args : A) (result : R) (invoked : owner.call args = .ok (result, next))
+    (changed : owner.child.context ≠ next.child.context) :
+    owner.callChecked args (fun before after => decide (before.context = after.context)) = .error (.inr ()) := by
+  apply owner.callChecked_refused next args _ result invoked
+  simp [changed]
 end LeanPoo.Object

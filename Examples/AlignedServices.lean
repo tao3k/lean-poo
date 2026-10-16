@@ -513,3 +513,101 @@ theorem stagedPreflight_stream (requests : List (Bool × View × Int)) :
 end LeanPoo.Examples.AlignedServices
 
 #print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ContextPreparationBudget.staged_bound
+
+namespace LeanPoo.Examples.AlignedServices
+open Object.MethodCombination
+/-- The bound unary child checks the reconstructed immutable view on every
+method step while accepting fresh units through its ordinary typed signature. -/
+def boundPreflight (view : View) := bindSimula contextPreflight view
+
+/-- Moving context validation/binding to reconstruction preserves all Simula
+results and failure traces at the current immutable view. Native Type validation
+and projection immutability are separate premises, enforced by the constructor. -/
+theorem boundPreflight_equivalent (view : View) (units : Int) :
+    boundPreflight view units = simulaEffective (preflight view) units := by
+  rw [boundPreflight, bindSimula_correct, contextPreflight_equivalent]
+
+/-- Even a successful earlier request cannot authorize a later failing argument
+or a new revoked view. Computation equality retains prefix/suffix state traces. -/
+theorem boundPreflight_revoked (view : View) (units : Int) (trace : List String)
+    (revoked : view.released = false) (positive : 0 < units) (fits : units ≤ view.capacity) :
+    boundPreflight view units trace =
+      .error "refused" (trace ++ ["positive","capacity","invoice","release"]) := by
+  rw [boundPreflight_equivalent]
+  exact preflight_revoked view units trace revoked positive fits
+
+/- Three successive independent contexts include a capacity failure and revocation;
+each child retains its own bound view rather than the latest successful result. -/
+#guard match boundPreflight ⟨20,"invoice:2",true⟩ 15 [] with
+  | .ok _ trace => trace == ["positive","capacity","invoice","release"]
+  | _ => false
+#guard match boundPreflight ⟨10,"invoice:1",true⟩ 15 [] with
+  | .error "refused" trace => trace == ["positive","capacity"]
+  | _ => false
+#guard match boundPreflight ⟨30,"invoice:3",false⟩ 25 [] with
+  | .error "refused" trace => trace == ["positive","capacity","invoice","release"]
+  | _ => false
+#print axioms Object.MethodCombination.bindSimula_correct
+#print axioms boundPreflight_equivalent
+#print axioms boundPreflight_revoked
+end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+open Functional.ContractFamily.PreparationCosts
+/-- Illustrative operation prices keep per-view binding and setup visible. -/
+def simulaBindingPrices : SimulaBindingCosts := ⟨10,10,8,5,2,20⟩
+/-- A call-heavy current view amortizes binding; frequent reconstruction and GC
+can reverse the choice. Native benchmarks supply their own independent evidence. -/
+theorem simula_binding_modes :
+    (⟨1,1,0⟩ : SimulaBindingBudget).choose simulaBindingPrices = .fresh ∧
+    (⟨1,32,0⟩ : SimulaBindingBudget).choose simulaBindingPrices = .shared ∧
+    (⟨32,32,0⟩ : SimulaBindingBudget).choose simulaBindingPrices = .fresh ∧
+    (⟨1,32,10⟩ : SimulaBindingBudget).choose simulaBindingPrices = .fresh := by decide
+#print axioms SimulaBindingBudget.selected_bound
+#print axioms SimulaBindingBudget.binding_covered
+#print axioms SimulaBindingBudget.tables_covered
+#print axioms Functional.GenericFamily.Partial.emptyWithCapacity_lookup
+end LeanPoo.Examples.AlignedServices
+
+namespace LeanPoo.Examples.AlignedServices
+open Object Object.MethodCombination
+/-- One immutable sparse program returns context-parameterized computations;
+method installation and unconditional shape preparation precede any binding. -/
+def preparedContextProgram :=
+  let seed := PreparedMultimethod.create 1 (fun (_ : Int) => [["Reserve", "Object"]])
+    (fun (methods : Array (SimulaBody (Int × View) (EStateM String (List String)))) =>
+      fun view units => bindSimula methods.toList view units)
+    (fun effective units view => effective view units)
+  let defined := contextPreflight.reverse.foldl (fun current body =>
+    (current.contribute [.any] body).toOption.getD current) seed
+  defined.prepareShape [["Reserve", "Object"]]
+
+/-- Bind a new typed view without reinstalling methods or discarding prepared code. -/
+def preparedContextRequest (view : View) (units : Int) : Except String (List String) := do
+  let program ← preparedContextProgram.mapError (fun _ => "prepare")
+  let owner : PreparedContextMultimethod Int _ _ View _ := ⟨program, ⟨0,"",false⟩⟩
+  let (action, _) ← ((owner.bindContext view).call units).mapError (fun _ => "dispatch")
+  match action [] with
+  | .ok _ trace => .ok trace
+  | .error error _ => .error error
+
+/- Reuse one compiled program with successively changed actual contexts. -/
+#guard (preparedContextRequest ⟨20,"invoice:2",true⟩ 15).toOption ==
+  some ["positive","capacity","invoice","release"]
+#guard match preparedContextRequest ⟨10,"invoice:1",true⟩ 15 with
+  | .error "refused" => true
+  | _ => false
+#guard match preparedContextRequest ⟨30,"invoice:3",false⟩ 25 with
+  | .error "refused" => true
+  | _ => false
+#print axioms PreparedContextMultimethod.bindContext_program
+#print axioms PreparedContextMultimethod.bindContext_sound
+#print axioms PreparedContextMultimethod.call_correct
+#print axioms PreparedContextMultimethod.call_retains
+end LeanPoo.Examples.AlignedServices
+
+#print axioms LeanPoo.Object.PreparedContextMultimethod.call_context
+#print axioms LeanPoo.Object.NestedMultimethod.callChecked_context_change
+
+#print axioms LeanPoo.Functional.GenericFamily.rebuiltLookup_reference
+#print axioms LeanPoo.Functional.GenericFamily.rebuiltLookup_certified
