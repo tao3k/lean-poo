@@ -273,3 +273,4 @@ import LeanPoo.Functional.ComponentRevision
 import LeanPoo.Functional.ComponentExecution
 import LeanPoo.Functional.ComponentPublication
 import LeanPoo.Examples.ComponentRounds
+import LeanPoo.Functional.SharedPublication

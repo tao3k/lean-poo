@@ -93,3 +93,7 @@ versioned JSON, full benchmark corpus or archives are committed.
 
 [approval-revision.md](approval-revision.md) extends this workflow with several
 paused requests, policy change-back invalidation and explicit fresh restaging.
+
+The [shared-approvals.md](shared-approvals.md) extension permits several endpoints
+to share an explicit approval domain, retaining independent heads and dependency-
+selective guard invalidation. Foreign-domain/raw writes remain outside the protocol.

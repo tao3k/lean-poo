@@ -86,3 +86,7 @@ combined rounds/requests run also timed out (exit 124), so both prior scenarios
 remain separate mandatory checks rather than reducing coverage. All three retain
 the original 30-second per-check bound; no failed run was converted into a pass by extending
 its timeout. Fixture extraction does not change source equations or gate coverage.
+
+The [shared-approvals.md](shared-approvals.md) extension permits several endpoints
+to share an explicit approval domain, retaining independent heads and dependency-
+selective guard invalidation. Foreign-domain/raw writes remain outside the protocol.
