@@ -57,3 +57,7 @@ proved to expose the original computed relation, retaining reachable_sound and
 all accepted-certificate guarantees. The expanded example passes the unchanged
 30-second check bound after this change; the initial unshared run timed out and
 remains a failed diagnostic, rather than a relaxed gate or a native speed claim.
+
+See [component-migration.md](component-migration.md) for checked multi-service
+contributions that replace endpoints in several SCCs and migrate shared inputs
+within one final-source publication.

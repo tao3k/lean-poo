@@ -269,3 +269,4 @@ import LeanPoo.Prototype.ComponentClosure
 
 import LeanPoo.Functional.SupportRevision
 import LeanPoo.Functional.SupportedComponents
+import LeanPoo.Functional.ComponentRevision
