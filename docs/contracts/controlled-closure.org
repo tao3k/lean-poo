@@ -1,0 +1,37 @@
+#+TITLE: Controlled non-record closure and custom lens laws
+
+* Bounded raw stabilization
+
+~Generalized.closeWithin~ reuses the existing fragment protocol and actual raw
+equality. Every success has a ~Generalized.Closed~ equation, a transition count
+within budget, provenance from the ORIGINAL seed and stable later unfoldings.
+The final adjacent equality verification counts as one transition. Exhaustion
+is inconclusive about divergence; the budget does not bound arbitrary callback
+time, law-domain checking or allocation.
+
+Native ~generalized-closure.ss~ follows the same first-order comparable-carrier
+construction under purity/immutability premises. It never accepts sampled
+procedure outputs as raw equality. Its owner/base-bound receipts publish only
+after successful cooking; budget, law and source refusal retain the old version.
+Opaque native callback exceptions and runtime equality implementation are native
+controls, not a universal compiler/runtime proof.
+
+* Universal laws and finite controls
+
+~Prototype.LensLaws~ states get-put, put-get and put-put for arbitrary custom
+getter/setter functions, proves composition and retains the existing MonoLens
+view/no-op semantics. Native ~lens-laws.ss~ checks the corresponding equations
+on supplied states/values, holding registered dependencies stable through the
+whole closure. A finite passed check is not a universal law certificate.
+Impure mutation and unregistered/concurrent sources remain outside the protocol.
+
+* Paired example
+
+[[file:../../Examples/ClosedPrototypes.lean][Closed prototype examples]] prove nested custom lens laws, a lossy-lens
+counterexample and actual closure of a three-component product dependency chain
+after four raw evaluations including verification. Native nested vectors close
+the same data chain, then cook existing standard method policy into a callable
+interface. The example proves a genuine raw equation for this representation;
+it does not claim equivalence to older intermediate function-closure layouts.
+This advances generalized-prototype future work. No performance result or new
+benchmark data format accompanies the functional implementation.

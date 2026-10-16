@@ -253,4 +253,6 @@ import LeanPoo.Prototype.RecursiveMetaprotocol
 import LeanPoo.Functional.RecursiveDeclarations
 import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Prototype.GeneralizedDeclaration
+import LeanPoo.Prototype.LensLaws
+import LeanPoo.Prototype.GeneralizedClosure
 import LeanPoo.Functional.NonlocalDeclarations
