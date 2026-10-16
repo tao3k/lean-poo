@@ -1084,3 +1084,32 @@ theorem focusDelayed_lensGen (get : Outer → Inner) (set : Inner → Outer → 
         (fun item self parent => wrapper item (self.map view) parent) fragment := by
   rfl
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Retain immutable compiled hooks while selecting both raw inputs from each
+current context. This shares code, never a cooked value or an approval decision. -/
+def PreparedHooks.bindContextObserver {protocol : Protocol Raw Cooked Fragment}
+    {fragments : List Fragment} (snapshot : PreparedHooks protocol fragments)
+    (depth : Nat) (base seed : Context → Raw) : Context → Cooked :=
+  fun context => snapshot.bindObserver (base context) depth (seed context)
+/-- Every context is interpreted with its own base and seed. Reuse requires the
+same protocol and fragment list; changing either requires a new certificate. -/
+theorem PreparedHooks.bindContextObserver_eq {protocol : Protocol Raw Cooked Fragment}
+    {fragments : List Fragment} (snapshot : PreparedHooks protocol fragments)
+    (depth : Nat) (base seed : Context → Raw) (context : Context) :
+    snapshot.bindContextObserver depth base seed context =
+      protocol.observe fragments (base context) (seed context) depth :=
+  snapshot.bindObserver_eq _ _ _
+/-- Reader mapping is ordinary function composition. The older bind/pure form
+has the same pure value semantics; host allocation and exceptions need controls. -/
+theorem readerMap_eq_bindPure (action : Context → Value) (transform : Value → Result) :
+    transform ∘ action = (fun context => (fun value => fun _ : Context => transform value) (action context) context) := rfl
+/-- Projecting a reusable context observer preserves the current observation,
+including any modeled refusal carried by the result type. -/
+theorem PreparedHooks.mapContextObserver_eq {protocol : Protocol Raw Cooked Fragment}
+    {fragments : List Fragment} (snapshot : PreparedHooks protocol fragments)
+    (depth : Nat) (base seed : Context → Raw) (project : Cooked → Result) (context : Context) :
+    (project ∘ snapshot.bindContextObserver depth base seed) context =
+      project (protocol.observe fragments (base context) (seed context) depth) := by
+  simp only [Function.comp_apply, PreparedHooks.bindContextObserver_eq]
+end LeanPoo.Prototype.Generalized

@@ -816,3 +816,25 @@ example : envelopeResult (focusedEnvelope.bindObserver ((0, 0, "audit"), true, "
 example : envelopeResult (focusedEnvelope.bindObserver ((0, 0, "audit"), false, "us", "billing") 2
     ((0, 0, "seed"), true, "eu", "billing")) = .error "billing approval refused" := rfl
 end LeanPoo.Examples.GeneralizedHooks
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Prototype Prototype.Generalized
+/-- One compiled report handles current tenant/approval revisions. The second
+context component deliberately supplies a stale seed to test input separation. -/
+def contextEnvelopeReport := envelopeResult ∘ focusedEnvelope.bindContextObserver 2 Prod.fst Prod.snd
+/-- Successful contexts, a refusal, and recovery share code but no approval cache. -/
+example : [contextEnvelopeReport (((0, 0, "audit"), true, "eu", "billing"),
+      ((0, 0, "seed"), true, "eu", "billing")),
+    contextEnvelopeReport (((0, 0, "audit"), true, "us", "billing"),
+      ((0, 0, "seed"), true, "eu", "billing")),
+    contextEnvelopeReport (((0, 0, "audit"), false, "us", "billing"),
+      ((0, 0, "seed"), true, "eu", "billing")),
+    contextEnvelopeReport (((0, 0, "audit"), true, "eu", "billing"),
+      ((0, 0, "seed"), false, "us", "billing"))] =
+    [.ok (45, 3, "billing", "eu", true), .ok (45, 3, "billing", "us", true),
+     .error "billing approval refused", .ok (45, 3, "billing", "eu", true)] := rfl
+#print axioms PreparedHooks.bindContextObserver_eq
+#print axioms PreparedHooks.mapContextObserver_eq
+#print axioms readerMap_eq_bindPure
+#print axioms contextReuseWork_le
+end LeanPoo.Examples.GeneralizedHooks

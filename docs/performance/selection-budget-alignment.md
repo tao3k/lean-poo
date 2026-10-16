@@ -597,3 +597,40 @@ results remain distinct; no standalone binder speed or universal GC claim follow
 Current final receipts are re-admitted after commit; initial source data remain
 historical and are not pooled. The Bool check aligns native truthiness with the
 typed example's premise; no compiler/runtime proof is inferred.
+
+## Immutable code, current context and Reader composition
+
+This advances Appendix B's generalized-prototype **future work**. The Racket
+reference at the pin above, `poof.scrbl`'s
+`generalized_prototype_combination` / `$lens-gen`, separates raw construction,
+cooked self and wrapper composition; it does not specify a context cache or
+native allocation theorem. The existing Gerbil FUN and standard `compose` supply
+the Reader projection layer; existing native paired I/O supplies measurement.
+
+`PreparedHooks.bindContextObserver` retains a certified program while selecting
+both base and seed from each current context. `bindContextObserver_eq` proves the
+finite observation equation for every context; `mapContextObserver_eq` transports
+that equation through a public projection. `readerMap_eq_bindPure` proves the
+pure Reader map equation used to replace per-call bind/pure with composition.
+The native direct `observe` path uses the same interpreter without first making
+an immediately invoked binder. Native errors and allocation require tests.
+
+`contextReuseWork_le` amortizes supplied preparation/binding work over a nonempty
+batch while retaining every observation charge. It requires fixed declarations
+and callbacks. It proves neither a runtime price nor a GC/time bound; compiler
+closure elimination can invalidate a proposed native closure-count explanation.
+The reusable envelope example covers eu/us, refused current approval with a
+stale approved seed, then successful recovery with a stale refused seed.
+
+The Scheme entry points are `bind-context-observer`, native `Observation..map`
+and `bind-envelope-report`. They reuse code only, never a previous cooked value
+or policy decision. Existing `bind-observer` intentionally retains a fixed base;
+revising only its seed cannot revise that base. A changed graph or compiler/cook
+callback requires a new prepared snapshot and binding. Identity-sensitive or
+impure selectors are outside these pure extensional laws.
+
+Current native evidence and remaining adverse full-workflow phases are recorded
+in Gerbil's `doc/performance/context-binding-summary.org`. Earlier focused and
+observation-reuse receipts have their original source identities and are not
+re-admitted as this revision. General reflective MOP bootstrapping, automatic
+law discovery and arbitrary migration remain open.

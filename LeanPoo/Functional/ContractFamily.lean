@@ -1310,3 +1310,18 @@ theorem focusedWrites_nonempty (fragments stages : Nat) (nonempty : 1 ≤ fragme
     focusedWrites fragments stages = stages := by
   simp [focusedWrites, Nat.min_eq_left nonempty]
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Reusing one immutable declaration graph pays its preparation/binding once.
+Fresh current observations remain charged on every call. Prices are supplied
+logical work bounds, not measured bytes, execution time or a GC model. -/
+def contextReuseWork (prepare bind observe calls : Nat) : Nat := prepare + bind + calls * observe
+/-- A nonempty batch can amortize preparation and binding without omitting any
+observation. Native closure elimination and heap history are separate questions. -/
+theorem contextReuseWork_le (prepare bind observe calls : Nat) (nonempty : 1 ≤ calls) :
+    contextReuseWork prepare bind observe calls ≤ calls * (prepare + bind + observe) := by
+  unfold contextReuseWork
+  have fixed : prepare + bind ≤ calls * (prepare + bind) := by
+    simpa using Nat.mul_le_mul_right (prepare + bind) nonempty
+  simpa [Nat.mul_add] using Nat.add_le_add_right fixed (calls * observe)
+end LeanPoo.Prototype.Generalized
