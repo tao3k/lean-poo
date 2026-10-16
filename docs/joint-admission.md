@@ -1,5 +1,8 @@
 # Competing requests with local and joint admission
 
+See [joint-installation.md](joint-installation.md) for opaque post-approval receipts,
+installation races, registered shared-policy drift and fresh staging after refusal.
+
 This extends generalized-prototype future work, reusing original Racket Appendix B
 `$lens-gen` (source `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133),
 existing declared graph revisions, lawful lenses, whole-SCC closure and FUN actions.
