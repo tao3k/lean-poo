@@ -592,6 +592,58 @@ theorem SelectionCache.total_amortized (prepared : SelectionCache costs) (prices
   rw [prepared.stable_total]
   exact template_amortized ⟨prices.setup + costs.selectionCost, prices.guard, costs.selectionCost⟩ revisions cheaper paid
 
+/-- Count actual changed-context selector entries, not every publication. Extra
+collections are a conservative budget above the dynamic reference. These are
+conditional cost inputs, not predictions certified by a model label. -/
+structure SelectionBudget where
+  calls : Nat
+  fallbacks : Nat
+  collectionPrice : Nat
+  extraCollections : Nat
+  deriving Repr
+
+/-- Selector implementation choice; projection meaning and metadata do not change. -/
+inductive SelectionMode where | dynamic | cached deriving BEq, DecidableEq, Repr
+
+/-- Reference selector cost at the actual preparation-miss count. -/
+def SelectionCacheCosts.dynamicBudget (_costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) := budget.calls * selectionCost
+
+/-- Charge setup, cold/fallback selections, every support guard and extra GC. -/
+def SelectionCacheCosts.cachedBudget (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) := costs.setup + (1 + budget.fallbacks) * selectionCost +
+      budget.calls * costs.guard + budget.collectionPrice * budget.extraCollections
+
+/-- Reuse selection only if the complete supported budget strictly improves.
+Ties keep ordinary selection and do not allocate/force an unused cache. -/
+def SelectionCacheCosts.choose (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) : SelectionMode :=
+  if costs.cachedBudget selectionCost budget < costs.dynamicBudget selectionCost budget then .cached else .dynamic
+
+/-- Total selector budget for the selected mode; other pipeline stages stay explicit. -/
+def SelectionCacheCosts.selectedBudget (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) := match costs.choose selectionCost budget with
+  | .dynamic => costs.dynamicBudget selectionCost budget
+  | .cached => costs.cachedBudget selectionCost budget
+
+/-- Budgeted choice cannot exceed ordinary selection under the supplied premises. -/
+theorem SelectionCacheCosts.selected_bound (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) : costs.selectedBudget selectionCost budget ≤ costs.dynamicBudget selectionCost budget := by
+  by_cases cheaper : costs.cachedBudget selectionCost budget < costs.dynamicBudget selectionCost budget
+  · simpa [selectedBudget, choose, cheaper] using Nat.le_of_lt cheaper
+  · simp [selectedBudget, choose, cheaper]
+
+/-- Descriptor construction, binding, generic expansion and joint approval are
+preserved in base. Shared expansion alone does not justify a zero-GC selector price. -/
+theorem SelectionCacheCosts.workflow_bound (costs : SelectionCacheCosts) (selectionCost base : Nat)
+    (budget : SelectionBudget) : base + costs.selectedBudget selectionCost budget ≤
+      base + costs.dynamicBudget selectionCost budget := Nat.add_le_add_left (costs.selected_bound selectionCost budget) base
+
+/-- No preparation miss implies dynamic mode, even if all supplied weights are zero. -/
+theorem SelectionCacheCosts.no_calls (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) (empty : budget.calls = 0) : costs.choose selectionCost budget = .dynamic := by
+  simp [choose, dynamicBudget, empty]
+
 end PreparationCosts
 
 end LeanPoo.Functional.ContractFamily

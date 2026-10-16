@@ -321,6 +321,7 @@ _check-examples:
     {{lean}} Examples/ServiceBundle.lean
     {{lean}} Examples/ServiceMetadata.lean
     {{lean}} Examples/ContractFamily.lean
+    {{lean}} Examples/AlignedServices.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

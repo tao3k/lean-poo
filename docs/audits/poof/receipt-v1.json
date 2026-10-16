@@ -3541,8 +3541,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/DeclarativeMetadata.lean": {
-      "sha256": "ce7d1ca49b1fc77130caa135386e5e8d791eaef013d0a174366c9c42de9336c8",
-      "physical_lines": 303,
+      "sha256": "a3a88c8ff8e84e28bc36be8236b81653d140acac85fc367422507a6783470433",
+      "physical_lines": 337,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []
@@ -6138,6 +6138,7 @@
   "source_file_inventory": [
     "Examples/AccountMigration.lean",
     "Examples/AdaptiveAccess.lean",
+    "Examples/AlignedServices.lean",
     "Examples/AtomicConfiguration.lean",
     "Examples/BoundedDispatch.lean",
     "Examples/CertifiedContextCache.lean",

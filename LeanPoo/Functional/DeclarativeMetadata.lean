@@ -152,6 +152,40 @@ theorem Contract.withMeaning_rule (template : Contract Atom Args Result) (meanin
 theorem Contract.withMeaning_self (template : Contract Atom Args Result) :
     template.withMeaning template.meaning template.decide = template := by cases template; rfl
 
+/-- Reusable invariant callbacks carry their exact source predicates and formula.
+The equality witnesses are the semantic premise discharged by native identity
+stamps under immutable descriptors. They certify neither pointer identity nor GC. -/
+structure Contract.Checks (source : Contract Atom Args Result) where
+  input : Predicate Args
+  output : Predicate Result
+  rule : Formula Atom
+  sameInput : input = source.input
+  sameOutput : output = source.output
+  sameRule : rule = source.rule
+
+/-- Capture only invariant metadata; executors, results and dependent meaning
+are deliberately absent so a later service snapshot cannot reuse stale state. -/
+def Contract.checks (source : Contract Atom Args Result) : source.Checks :=
+  ⟨source.input, source.output, source.rule, rfl, rfl, rfl⟩
+
+/-- Rebind current dependent meaning to certified shared invariant checks.
+Changed source metadata requires new witnesses (or fresh compilation natively). -/
+def Contract.Checks.specialize {source : Contract Atom Args Result} (checks : source.Checks)
+    (meaning : Atom → Args → Result → Prop)
+    (decision : ∀ atom args result, Decidable (meaning atom args result)) : Contract Atom Args Result :=
+  ⟨checks.input, checks.output, meaning, decision, checks.rule⟩
+
+/-- Shared checks reconstruct exactly ordinary withMeaning specialization.
+Consequently all existing input/source/output/logic refusal and exact-state laws
+apply unchanged; no semantic result is memoized by this optimization. -/
+theorem Contract.Checks.specialize_eq {source : Contract Atom Args Result} (checks : source.Checks)
+    (meaning : Atom → Args → Result → Prop)
+    (decision : ∀ atom args result, Decidable (meaning atom args result)) :
+    checks.specialize meaning decision = source.withMeaning meaning decision := by
+  rcases checks with ⟨input, output, rule, hi, ho, hr⟩
+  subst input; subst output; subst rule
+  rfl
+
 inductive Failure (Error : Type) where
   | input (name : String)
   | source (error : Error)
