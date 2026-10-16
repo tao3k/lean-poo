@@ -337,3 +337,39 @@ budget. ~collection_budget_bound~ permits a larger count only if the core saving
 pays it. The executable example shows that one extra collection can reverse a
 smaller core cost. Actual GC counts/prices are external premises, not properties
 of projection semantics or verified claims about the Scheme collector.
+
+* Prepared decisions and history-controlled measurements
+
+~PreparationCosts.Plan~ stores a certified strategy for its support size.
+~Plan.select_eq~ proves every cached/fallback result equals the original selector;
+~Plan.hit / miss~ count zero/one selector executions, and ~stable_selections~
+charges the initial call once. ~PlanCosts / total_amortized~ additionally charge
+allocation/setup and each support guard: repeated reuse has a break-even premise,
+not a free cold start. Arity changes still select normally. Projection and
+publication semantics keep their existing coherence/support/admission premises.
+
+Native ~PreparationPlan.~ caches the corresponding immutable decision, takes a
+constant-time pointer hit for the canonical support, checks length for another
+list, and falls back on changed arity. ~methods.inputs<-plan~ derives the shared
+protocol; dynamic selection captures its immutable choose function with standard
+~compose1~, and planned selection reuses that bound function directly. No service,
+contract, negative assumption or cache approval is inferred from a plan. Tests
+check actual selection calls, removal/reintroduction, cold support refusal,
+current invoice interpretation, multi-level DAG revisions and warm-budget refusal.
+
+The old 75-phase single-process study does not control incoming heap history.
+The new native paired protocol uses one fresh process per sample, identical
+initialization of every control and four fixed warmup passes, then measures only
+one side. Adjacent pairs have ABBA side order, both natural/pre-collected regimes,
+unchanged 20-second/1-GiB child limits and a separate 90-second aggregate bound.
+It records total CPU, reported GC CPU/counts and incoming counters; differing
+prefixes/histories are visible, not discarded. Equal GC counts are not a proof
+of identical heaps. CPU-minus-GC remains diagnostic of all non-GC work, not just
+selection. The selector-only case separates function execution from publication.
+
+~Observation.decompose / paired_delta~ justify decomposition for each valid pair;
+there is no law adding medians of independently ordered phase batches.
+~balanced_order~ explains additive position balance only, not arbitrary process
+drift. Cost and GC budget laws remain conditional model laws rather than proofs
+of hardware timings or of the Scheme compiler/collector. The native study and
+all full receipts remain Scheme-local ignored outputs, with concise summaries.

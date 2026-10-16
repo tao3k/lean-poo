@@ -317,6 +317,43 @@ theorem selected_bound (costs : PreparationCosts) (keys : Nat) :
     omega
   · simp [selected, choose, saving]
 
+/-- A pure prepared decision for stable support; arity changes still select anew. -/
+structure Plan (costs : PreparationCosts) where
+  keys : Nat
+  strategy : Strategy
+  origin : strategy = costs.choose keys
+
+def plan (costs : PreparationCosts) (keys : Nat) : Plan costs := ⟨keys,costs.choose keys,rfl⟩
+
+def Plan.select (prepared : Plan costs) (keys : Nat) : Strategy × Nat :=
+  if keys = prepared.keys then (prepared.strategy,0) else (costs.choose keys,1)
+
+theorem Plan.select_eq (prepared : Plan costs) (keys : Nat) :
+    (prepared.select keys).1 = costs.choose keys := by
+  by_cases same : keys = prepared.keys
+  · simp [Plan.select, same, prepared.origin]
+  · simp [Plan.select, same]
+
+theorem Plan.hit (prepared : Plan costs) :
+    prepared.select prepared.keys = (prepared.strategy,0) := by simp [Plan.select]
+
+theorem Plan.miss (prepared : Plan costs) (keys : Nat) (different : keys ≠ prepared.keys) :
+    prepared.select keys = (costs.choose keys,1) := by simp [Plan.select,different]
+
+/-- Compare selector execution only: same projections and publication remain required.
+One planning call plus all fallback selections are charged across the revision list. -/
+def Plan.selections (prepared : Plan costs) (sizes : List Nat) : Nat :=
+  1 + (sizes.map fun keys => (prepared.select keys).2).sum
+
+theorem Plan.stable_selections (prepared : Plan costs) (revisions : Nat) :
+    prepared.selections (List.replicate revisions prepared.keys) = 1 := by
+  simp [Plan.selections, Plan.select]
+
+theorem Plan.amortized (prepared : Plan costs) (revisions : Nat) (nonempty : 1 ≤ revisions) :
+    prepared.selections (List.replicate revisions prepared.keys) * costs.selectionCost ≤ revisions * costs.selectionCost := by
+  rw [prepared.stable_selections]
+  simpa using Nat.mul_le_mul_right costs.selectionCost nonempty
+
 /-- Actual stage counts are supplied by native traces and semantic admission.
 A changed generic/contract is never approved by a cheaper projection policy alone. -/
 structure PublicationCosts where
@@ -360,6 +397,33 @@ theorem collection_budget_bound (selected shared collectionPrice selectedCollect
   unfold withCollections
   omega
 
+/-- Observed CPU and GC charges have explicit validity before subtraction.
+These model observations, not an implementation of the collector or a heap reset. -/
+structure Observation where
+  cpu : Nat
+  gc : Nat
+  within : gc ≤ cpu
+
+def Observation.core (observation : Observation) := observation.cpu - observation.gc
+
+theorem Observation.decompose (observation : Observation) :
+    observation.cpu = observation.core + observation.gc := (Nat.sub_add_cancel observation.within).symm
+
+/-- Decompose EACH pair. Medians of independently ordered phases do not inherit
+this identity; the native driver reports paired deltas before taking a median. -/
+theorem paired_delta (baseline selected : Observation) :
+    (selected.cpu : Int) - baseline.cpu =
+      ((selected.core : Int) - baseline.core) + ((selected.gc : Int) - baseline.gc) := by
+  have hb := baseline.decompose
+  have hs := selected.decompose
+  omega
+
+/-- ABBA balances an additive first/second-position term; real process drift need
+not be additive, so order balance is a protocol control, not timing equivalence. -/
+theorem balanced_order (difference order : Int) :
+    (difference + order) + (difference - order) +
+      (difference - order) + (difference + order) = 4 * difference := by omega
+
 /-- Include once-only template validation before amortizing specialization. -/
 structure TemplateCosts where
   setup : Nat
@@ -376,6 +440,28 @@ theorem template_amortized (costs : TemplateCosts) (revisions : Nat)
         revisions * (costs.rebuild - costs.specialize) + revisions * costs.specialize := Nat.add_le_add_right paid _
     _ = revisions * ((costs.rebuild - costs.specialize) + costs.specialize) := (Nat.mul_add _ _ _).symm
     _ = revisions * costs.rebuild := by rw [Nat.sub_add_cancel cheaper]
+
+/-- Plan allocation/setup and each support guard are charged in addition to the
+one cold selector call. Stable selector reuse alone does not make planning free. -/
+structure PlanCosts where
+  setup : Nat
+  guard : Nat
+  deriving Repr
+
+def Plan.totalCost (prepared : Plan costs) (prices : PlanCosts) (sizes : List Nat) :=
+  prices.setup + prepared.selections sizes * costs.selectionCost + sizes.length * prices.guard
+
+theorem Plan.stable_total (prepared : Plan costs) (prices : PlanCosts) (revisions : Nat) :
+    prepared.totalCost prices (List.replicate revisions prepared.keys) =
+      prices.setup + costs.selectionCost + revisions * prices.guard := by
+  simp [Plan.totalCost, prepared.stable_selections]
+
+theorem Plan.total_amortized (prepared : Plan costs) (prices : PlanCosts) (revisions : Nat)
+    (cheaper : prices.guard ≤ costs.selectionCost)
+    (paid : prices.setup + costs.selectionCost ≤ revisions * (costs.selectionCost - prices.guard)) :
+    prepared.totalCost prices (List.replicate revisions prepared.keys) ≤ revisions * costs.selectionCost := by
+  rw [prepared.stable_total]
+  exact template_amortized ⟨prices.setup + costs.selectionCost, prices.guard, costs.selectionCost⟩ revisions cheaper paid
 
 end PreparationCosts
 

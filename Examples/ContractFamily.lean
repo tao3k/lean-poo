@@ -120,6 +120,24 @@ theorem direct_shared_coherent (key : Service) (input : Int × String) :
     throw (IO.userError "collection excess can reverse primitive saving")
   IO.println "CONTRACT-STRATEGY-OK direct/shared/selector-budget invariant-template setup-amortization"
 
+#eval do
+  let prices : PreparationCosts := ⟨3,1,1,1⟩
+  let prepared := prices.plan 2
+  unless prepared.select 2 == (PreparationCosts.Strategy.direct,0) &&
+      prepared.select 1 == (prices.choose 1,1) &&
+      prepared.selections [2,2,2,2] == 1 && prepared.selections [2,1,2] == 2 do
+    throw (IO.userError "prepared plan hit/fallback/accounting")
+  let indexed := (⟨3,1,20,1⟩ : PreparationCosts).plan 2
+  unless indexed.strategy == PreparationCosts.Strategy.shared do
+    throw (IO.userError "prepared indexed plan")
+  let budget : PreparationCosts := ⟨10,1,1,4⟩
+  let charged := budget.plan 2
+  let overhead : PreparationCosts.PlanCosts := ⟨2,1⟩
+  unless charged.totalCost overhead [2] > budget.selectionCost &&
+      charged.totalCost overhead [2,2,2,2] ≤ 4 * budget.selectionCost do
+    throw (IO.userError "plan setup and support guard must be paid")
+  IO.println "PREPARATION-PLAN-OK stable=one-plan changed-arity=fallback"
+
 def check : Except String Unit :=
   let initial : Current := ⟨10,"invoice:1",1⟩
   let revised : Current := ⟨10,"invoice:2",2⟩
@@ -182,5 +200,11 @@ def check : Except String Unit :=
 #print axioms Functional.ContractFamily.PreparationCosts.template_amortized
 #print axioms Functional.ContractFamily.PreparationCosts.publication_collection_bound
 #print axioms Functional.ContractFamily.PreparationCosts.collection_budget_bound
+#print axioms Functional.ContractFamily.PreparationCosts.Plan.select_eq
+#print axioms Functional.ContractFamily.PreparationCosts.Plan.hit
+#print axioms Functional.ContractFamily.PreparationCosts.Plan.amortized
+#print axioms Functional.ContractFamily.PreparationCosts.Plan.total_amortized
+#print axioms Functional.ContractFamily.PreparationCosts.paired_delta
+#print axioms Functional.ContractFamily.PreparationCosts.balanced_order
 #print axioms Functional.ContractFamily.publish_refused
 end LeanPoo.Examples.ContractFamily
