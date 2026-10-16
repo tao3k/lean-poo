@@ -251,4 +251,5 @@ import LeanPoo.Object.SlotReflection
 import LeanPoo.Prototype.MetaBootstrap
 import LeanPoo.Prototype.RecursiveMetaprotocol
 import LeanPoo.Functional.RecursiveDeclarations
+import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Functional.NonlocalDeclarations

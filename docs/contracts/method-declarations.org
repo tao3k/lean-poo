@@ -1,0 +1,33 @@
+#+TITLE: Declaration fragments and combined receiver generics
+
+* Source correspondence
+
+Racket's method-fragment section specifies standard qualifier order, and its
+generalized-prototype section proposes a common fragment construction beyond
+records. Native ~MethodDeclaration.~ advances that future work: existing ~.declare~
+accepts both record metadata and method contributions, then ordinary Slot/C3
+assembly supplies ~.defgeneric~ with its raw group.
+
+* Pure laws
+
+~Object.MethodCombination.collectFragments_append/coalesce~ preserves the exact
+source stream for each selected method. ~fragmentSpecification_append~ connects
+fragment blocks to delayed inherited SlotSpec assembly; ~declaredGeneric_standard~
+and ~declaredGeneric_fragments~ preserve established qualifier semantics and the
+original complete receiver/argument row. Typed qualifiers and a valid supplied
+owner order are model premises; native grouping/linearization is tested separately.
+
+[[file:../../Examples/DeclaredMethods.lean][Declared method examples]] prove the full two-branch standard trace, current
+receiver data, around short-circuiting, failure-before-after and missing primary.
+Native controls execute all five adapters, real C3 sharing, recursive declaration
+roots, source edits, conflicts and the actual generic macro.
+
+* Native limits
+
+Only compatible local methods coalesce. Supported source edits invalidate the
+registered metadata and receiver graph; raw writes and concurrent mutation remain
+outside it. Generic defaults and empty inherited groups catch only their own
+receiver/slot absence. Compilation does not run method bodies; invocation sequences
+effects without rolling them back. Custom policies require their own laws.
+No new argument-based dispatch, arbitrary-carrier fragment macro, optional-formal
+grammar, compiler/runtime proof or performance claim is supplied by this bridge.

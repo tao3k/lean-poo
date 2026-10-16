@@ -325,6 +325,7 @@ _check-examples:
     {{lean}} Examples/InheritedHooks.lean
     {{lean}} Examples/MetaBootstrap.lean
     {{lean}} Examples/RecursiveMetaprotocol.lean
+    {{lean}} Examples/DeclaredMethods.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
