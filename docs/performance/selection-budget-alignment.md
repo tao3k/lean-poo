@@ -576,7 +576,7 @@ This advances the paper's explicitly deferred future work and implements a
 concrete TODO path for local component assembly. All local fragments still run;
 arbitrary projection elimination, introspective MOP and auto law checks remain.
 
-Three fixed current-source native studies admit 576 children EACH. Full nested
+Three initial fixed-source native studies at Scheme bce6656 admit 576 children EACH. Full nested
 natural deltas are -56.828/-52.734/-57.676us; fixed-history natural deltas
 -51.133/-51.559/-53.684. GC CPU and residual are separately reported. One-operation
 GC-free full/raw-construction controls both admit -113824 bytes; the two-level
@@ -585,3 +585,15 @@ binding remains adverse, including +16.105us with large A/A variation. The old
 +73.313us is retained as historical: its slower side collected fewer times, and
 matching prefix counters do not identify its cause or imply equal heaps. No
 pooling, causal GC percentage or universal native stability claim is made.
+
+
+The final Scheme source additionally enforces the envelope's Bool approval domain
+(0/strings are refused). Three FRESH final-source 576-child studies retain separate
+identities: nested natural CPU deltas -54.344/-60.785/-54.664us; collected
+-48.891/-53.695/-51.219. Fixed-history nested also improves in every direct pair.
+One-operation nested/construction -113824 and envelope -307712 bytes remain
+GC-free controls. Cooking's identical implementation and binding's adverse/mixed
+results remain distinct; no standalone binder speed or universal GC claim follows.
+Current final receipts are re-admitted after commit; initial source data remain
+historical and are not pooled. The Bool check aligns native truthiness with the
+typed example's premise; no compiler/runtime proof is inferred.
