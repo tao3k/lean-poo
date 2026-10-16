@@ -203,6 +203,18 @@ def check : Except String Unit :=
         | .error (.missing .reserve) => pure ()
         | _ => throw "orphan retained contract accepted"
 
+-- Charge real changed-key expansion calls/adapters while keeping all other stages.
+#eval do
+  let prices : PreparationCosts.ExpansionCosts := ⟨8,2,1⟩
+  unless prices.shared 0 == 0 && prices.separate 0 == 0 &&
+      prices.shared 1 == 9 && prices.separate 1 == 20 &&
+      prices.shared 3 == 27 && prices.separate 3 == 60 do
+    throw (IO.userError "shared expansion changed-key charges")
+  unless PreparationCosts.withCollections (100 + prices.shared 3) 40 1 >
+      PreparationCosts.withCollections (100 + prices.separate 3) 40 0 do
+    throw (IO.userError "GC can reverse expansion savings")
+  IO.println "SHARED-EXPANSION-COST-OK changed=0/1/3 setup/selector/bind/approval-stay-separate"
+
 #eval match check with
   | .ok () => IO.println "CONTRACT-FAMILY-OK retained-wrapper current-state selective-invoice executor-rebind removal duplicate missing-service joint-refusal"
   | .error error => throw (IO.userError error)
@@ -235,3 +247,8 @@ def check : Except String Unit :=
 #print axioms Functional.ContractFamily.PreparationCosts.balanced_order
 #print axioms Functional.ContractFamily.publish_refused
 end LeanPoo.Examples.ContractFamily
+
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.saving
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.publication_bound
+
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.collection_bound

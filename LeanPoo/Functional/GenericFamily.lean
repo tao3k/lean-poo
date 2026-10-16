@@ -7,6 +7,8 @@ existing construction, negative watches, invocation and cache laws. Future work.
 namespace LeanPoo.Functional.GenericFamily
 open Object DispatchExtension
 
+/-- Pure heterogeneous constructor protocol: current support, empty-cache seeds,
+method edits and negative watches. Policy/cooked inputs remain explicit. -/
 structure Model (G Policy Cooked : Type) (Args Method Result : G → Type) where
   keys : List G
   seed : (key : G) → Policy → Cooked → Multimethod (Args key) (Method key) (Result key)
@@ -18,12 +20,15 @@ variable {G Policy Cooked : Type} {Args Method Result : G → Type}
 variable [DecidableEq G] [BEq G] [LawfulBEq G] [Hashable G]
 variable (model : Model G Policy Cooked Args Method Result) (policy : Policy) (cooked : Cooked)
 
+/-- Bind a generic to its actual source construction, negative-watch certificate
+and sound warm cache under this model/policy/cooked triple. -/
 structure Certified (key : G) (generic : Multimethod (Args key) (Method key) (Result key)) where
   origin : ∃ cold, patch (model.seed key policy cooked) (model.methods key policy cooked) = .ok cold ∧
     GeneralizedMOP.definition generic = GeneralizedMOP.definition cold
   negative : Certificate generic (model.watches key)
   sound : generic.CacheSound
 
+/-- Privately staged heterogeneous table with a construction receipt for every installed entry. -/
 structure Partial where
   table : DispatchTable G Args Method Result
   certified : ∀ key generic, table.get? key = some generic → Certified model policy cooked key generic
@@ -32,15 +37,19 @@ structure Partial where
 structure Family extends Partial model policy cooked where
   complete : ∀ key ∈ model.keys, (table.get? key).isSome = true
 
+/-- Typed registration/negative-watch refusal or incomplete requested support.
+The publisher must retain its old version when preparation fails. -/
 inductive Failure where
   | registration (key : G) (error : MultimethodError)
   | negative (key : G) (generic : Multimethod (Args key) (Method key) (Result key))
       (conflict : Conflict generic (model.watches key))
   | incomplete
 
+/-- Begin staging with an empty table and vacuous per-entry certificates. -/
 def Partial.empty : Partial model policy cooked :=
   ⟨DispatchTable.empty,by intro key generic found; simp [DispatchTable.get?,DispatchTable.empty] at found⟩
 
+/-- Install one already certified generic, preserving all other keys and receipts. -/
 def Partial.install (prior : Partial model policy cooked) (key : G)
     (generic : Multimethod (Args key) (Method key) (Result key)) (receipt : Certified model policy cooked key generic) :
     Partial model policy cooked where
@@ -55,6 +64,8 @@ def Partial.install (prior : Partial model policy cooked) (key : G)
     · apply prior.certified query next
       simpa [DispatchTable.get?,DispatchTable.install,Std.DHashMap.get?_insert,same,Ne.symm same] using found
 
+/-- Skip an already installed key; otherwise patch an empty-cache seed and check
+negative watches before installing it. Return the exact typed refusal on failure. -/
 def Partial.build (prior : Partial model policy cooked) (key : G) :
     Except (Failure model) (Partial model policy cooked) :=
   if (prior.table.get? key).isSome then .ok prior else
@@ -66,6 +77,8 @@ def Partial.build (prior : Partial model policy cooked) (key : G) :
         ⟨⟨generic,applied,rfl⟩,negative,patch_sound _ _ _
           ((model.seed key policy cooked).cacheSound_of_empty (model.seedEmpty key policy cooked)) applied⟩)
 
+/-- Construct requested keys in order and certify completeness. Repeated keys
+keep their first installation; registration/watch failure aborts the partial build. -/
 def build : Except (Failure model) (Family model policy cooked) :=
   let rec go (prior : Partial model policy cooked) : List G → Except (Failure model) (Family model policy cooked)
     | [] => if complete : model.keys.all (fun key => (prior.table.get? key).isSome) = true then
@@ -86,6 +99,52 @@ structure Projection where
   methods_eq : ∀ key first before second after,
     project key first before = project key second after → model.methods key first before = model.methods key second after
 
+section sharedExpansion
+omit [DecidableEq G] [BEq G] [LawfulBEq G] [Hashable G]
+
+/-- Pure closed expansion shared by the seed and method constructors of one key.
+The native mixin is opt-in: immutable value observations are modeled here, not
+mutation or pointer identity of freshly allocated reconstruction objects. -/
+structure SharedExpansion (Context Environment : G → Type) where
+  expand : (key : G) → Context key → Environment key
+  seed : (key : G) → Environment key → Multimethod (Args key) (Method key) (Result key)
+  methods : (key : G) → Environment key → List (Edit (Args key) (Method key))
+
+/-- Expand the same closed input separately for seed and method construction.
+This reference expression exposes two expansion calls in the native protocol. -/
+def SharedExpansion.separate (expansion : SharedExpansion (Args := Args) (Method := Method) (Result := Result) Context Environment)
+    (key : G) (context : Context key) :=
+  (expansion.seed key (expansion.expand key context), expansion.methods key (expansion.expand key context))
+
+/-- Share one pure reconstructed environment between the existing constructors.
+No method registration, negative check or later admission is removed. -/
+def SharedExpansion.shared (expansion : SharedExpansion (Args := Args) (Method := Method) (Result := Result) Context Environment)
+    (key : G) (context : Context key) :=
+  let environment := expansion.expand key context
+  (expansion.seed key environment, expansion.methods key environment)
+
+/-- Pure sharing preserves both complete constructor inputs, not only sample outputs. -/
+theorem SharedExpansion.shared_eq (expansion : SharedExpansion (Args := Args) (Method := Method) (Result := Result) Context Environment)
+    (key : G) (context : Context key) : expansion.shared key context = expansion.separate key context := rfl
+
+/-- Actual method patching has the same success or registration failure after sharing. -/
+theorem SharedExpansion.patch_eq (expansion : SharedExpansion (Args := Args) (Method := Method) (Result := Result) Context Environment)
+    (key : G) (context : Context key) :
+    patch (expansion.shared key context).1 (expansion.shared key context).2 =
+      patch (expansion.separate key context).1 (expansion.separate key context).2 := rfl
+
+/-- Both paths patch the identical generic before checking identical negative watches.
+This exposes the same success/refusal decision; patch_eq also preserves the
+complete generic on which dependent certificates and conflict payloads rely. -/
+theorem SharedExpansion.negative_eq (expansion : SharedExpansion (Args := Args) (Method := Method) (Result := Result) Context Environment)
+    (key : G) (context : Context key) (watches : List (Watch (Args key))) :
+    (patch (expansion.shared key context).1 (expansion.shared key context).2).map
+      (fun generic => (check generic watches).toOption.isSome) =
+    (patch (expansion.separate key context).1 (expansion.separate key context).2).map
+      (fun generic => (check generic watches).toOption.isSome) := rfl
+
+end sharedExpansion
+
 /-- Closed construction environments make projection congruence structural.
 Builders receive only their service's projected context. -/
 structure Source where
@@ -97,6 +156,8 @@ structure Source where
   keys : List G
   watches : (key : G) → List (Watch (Args key))
 
+/-- Adapt closed per-key builders to the existing generic model; only project
+feeds constructors, giving structural congruence rather than a clean-key hint. -/
 def Source.asModel (source : Source (G := G) (Policy := Policy) (Cooked := Cooked)
     (Args := Args) (Method := Method) (Result := Result)) : Model G Policy Cooked Args Method Result where
   keys := source.keys
@@ -105,6 +166,7 @@ def Source.asModel (source : Source (G := G) (Policy := Policy) (Cooked := Cooke
   methods := fun key policy cooked => source.methods key (source.project key policy cooked)
   watches := source.watches
 
+/-- Derive exact seed/method congruence from equality of the closed projected inputs. -/
 def Source.projection (source : Source (G := G) (Policy := Policy) (Cooked := Cooked)
     (Args := Args) (Method := Method) (Result := Result)) : Projection source.asModel where
   Context := source.Context
@@ -114,6 +176,8 @@ def Source.projection (source : Source (G := G) (Policy := Policy) (Cooked := Co
 
 variable {oldPolicy : Policy} {oldCooked : Cooked}
 
+/-- Transport source provenance across equal projected inputs; retain the same
+generic, warm-cache soundness and negative certificate without rebuilding. -/
 def Certified.transport (projection : Projection model) (key : G)
     (generic : Multimethod (Args key) (Method key) (Result key))
     (receipt : Certified model oldPolicy oldCooked key generic)
@@ -140,6 +204,8 @@ def Partial.refresh (projection : Projection model) [∀ key, DecidableEq (proje
         (Certified.transport model policy cooked projection key generic (old.certified key generic found) same))
     else prior.build model policy cooked key
 
+/-- Refresh the complete requested family. Reuse equal projected inputs with
+existing certificates; rebuild changed entries and propagate the first refusal. -/
 def refresh (projection : Projection model) [∀ key, DecidableEq (projection.Context key)]
     (old : Family model oldPolicy oldCooked) : Except (Failure model) (Family model policy cooked) :=
   let rec go (prior : Partial model policy cooked) : List G → Except (Failure model) (Family model policy cooked)

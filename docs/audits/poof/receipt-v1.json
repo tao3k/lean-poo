@@ -3262,14 +3262,14 @@
       ]
     },
     "Examples/ServiceBundle.lean": {
-      "sha256": "1213b75a3a947a1e0c05c20677573ee950b7d0dfbfe906737753cbb31e3eb327",
-      "physical_lines": 198,
+      "sha256": "648997fc3aa93f4f8745ecc74875972c2e3c9bb9709d8ae657b8ae8c473f16fa",
+      "physical_lines": 245,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": [
-        176,
-        183,
-        187
+        216,
+        223,
+        227
       ]
     },
     "Examples/ServiceMetadata.lean": {
@@ -3618,8 +3618,8 @@
       "eval_lines": []
     },
     "LeanPoo/Functional/GenericFamily.lean": {
-      "sha256": "84fa3c6da7c2e6eaf6a9d50267a239dd19924c9ac4153be436fee56040605c54",
-      "physical_lines": 283,
+      "sha256": "195082dd41393bd6cfa37f02247fbe6542b28db620e318d399ae631b9a508dd9",
+      "physical_lines": 349,
       "unsafe_declaration_lines": [],
       "guard_lines": [],
       "eval_lines": []

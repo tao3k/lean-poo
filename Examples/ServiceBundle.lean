@@ -6,6 +6,8 @@ The generalized-prototype protocol here remains explicit future work. -/
 namespace LeanPoo.Examples.ServiceBundle
 open Functional Functional.ServiceBundle
 
+/-- Check multi-level invoice revision, retained dependencies and atomic approval.
+Reports the first semantic mismatch or staging failure as a diagnostic string. -/
 def check : Except String Unit :=
   match start {input := 30} {} 1000 with
   | .error error => .error (failureTag error)
@@ -89,6 +91,7 @@ structure QuoteInputs where
   permit : Bool
   deriving DecidableEq
 
+/-- Closed heterogeneous constructor environments; each key receives only its dependencies. -/
 abbrev Inputs : Service → Type
   | .quote => QuoteInputs
   | .reserve => Bool × Int × Slot
@@ -96,6 +99,8 @@ abbrev Inputs : Service → Type
 
 instance (key : Service) : DecidableEq (Inputs key) := by cases key <;> dsimp [Inputs, Slot] <;> infer_instance
 
+/-- Reconstruct immutable policy/interface values from one key's closed inputs.
+No ambient state is read; seed and method constructors may share this result. -/
 def scope : (key : Service) → Inputs key → Policy × ConstructionWorkflow.Interface
   | .quote, ⟨pricing,input,total,permit⟩ =>
     (⟨pricing,0,0,false,false⟩,⟨"projected",fun name =>
@@ -106,6 +111,8 @@ def scope : (key : Service) → Inputs key → Policy × ConstructionWorkflow.In
   | .cancel, (shift,forbidden,invoice) =>
     (⟨.aggregate,0,shift,false,forbidden⟩,⟨"projected",fun name => if name == "invoice" then invoice else none⟩)
 
+/-- Reference generic source preserving original constructors, guards and watches.
+Projection equality justifies warm reuse; sharedExpansion proves equivalent reconstruction. -/
 def source : GenericFamily.Source (G := Service) (Policy := Policy) (Cooked := ConstructionWorkflow.Interface)
     (Args := Args) (Method := Method) (Result := Result) where
   Context := Inputs
@@ -119,23 +126,56 @@ def source : GenericFamily.Source (G := Service) (Policy := Policy) (Cooked := C
   keys := [.quote,.reserve,.cancel]
   watches := watches
 
+/-- Reconstruct the existing heterogeneous scope once for both constructors.
+The policy/interface pair is pure and immutable; native pointer identity is outside
+this model. The original source and its negative watches remain the reference. -/
+def sharedExpansion : GenericFamily.SharedExpansion (G := Service)
+    (Args := Args) (Method := Method) (Result := Result) Inputs
+    (fun _ => Policy × ConstructionWorkflow.Interface) where
+  expand := scope
+  seed := fun key environment => seed key environment.1 environment.2
+  methods := fun key environment => methods key environment.1 environment.2
+
+/-- Sharing reconstructs exactly the original heterogeneous seed at every input. -/
+theorem shared_seed_eq (key : Service) (inputs : Inputs key) :
+    (sharedExpansion.shared key inputs).1 = source.seed key inputs := rfl
+
+/-- All method edits, qualifiers and guards survive shared reconstruction unchanged. -/
+theorem shared_methods_eq (key : Service) (inputs : Inputs key) :
+    (sharedExpansion.shared key inputs).2 = source.methods key inputs := rfl
+
+/-- Exact method registration success/failure agrees with the original closed source. -/
+theorem shared_patch_eq (key : Service) (inputs : Inputs key) :
+    Functional.DispatchExtension.patch (sharedExpansion.shared key inputs).1 (sharedExpansion.shared key inputs).2 =
+      Functional.DispatchExtension.patch (source.seed key inputs) (source.methods key inputs) := rfl
+
 instance : (key : Service) → DecidableEq (source.projection.Context key) := fun key =>
   inferInstanceAs (DecidableEq (Inputs key))
 
+/-- Use the closed source in the existing staged DAG publisher without changing cooking or approval. -/
 def projectedModel : StagedPublication.Model String ConstructionWorkflow.Values Service Policy
     ConstructionWorkflow.Interface Args Method Result := {model with generics := source.asModel}
 
+/-- A published projected-model version; this executable example uses unit approval evidence. -/
 abbrev ProjectedVersion := StagedPublication.Snapshot projectedModel (fun _ _ => Unit)
+/-- Trivial approval for projection correspondence examples only; production joint
+release constraints are exercised separately by check and native bundle admission. -/
 def admitted (current : Request) (_ : StagedPublication.Candidate projectedModel current) : Except String Unit := .ok ()
+/-- Invoke one typed service on the actual published version and return its cache successor.
+Missing service or dispatch failures remain typed errors; no stale view is supplied. -/
 def invokeProjected (old : ProjectedVersion) (key : Service) (args : Args key) :
     Except (Sum (Object.DispatchTableError Service) String) (Result key × ProjectedVersion) :=
   old.invoke projectedModel key args admitted
 
+/-- Continue an executable check only after a successful projected call; retain
+its actual successor version and report dispatch failures as a diagnostic error. -/
 def onCall {key : Service}
     (outcome : Except (Sum (Object.DispatchTableError Service) String) (Result key × ProjectedVersion))
     (next : Result key → ProjectedVersion → Except String Unit) : Except String Unit :=
   match outcome with | .error _ => .error "projected call" | .ok (value,version) => next value version
 
+/-- Exercise warm heterogeneous calls, per-key revision reuse and negative-watch
+refusal using the existing staged publisher; success requires every observation. -/
 def projectedCheck : Except String Unit :=
   let request := request {input := 30} {}
   match StagedPublication.start projectedModel request
@@ -196,3 +236,10 @@ def projectedCheck : Except String Unit :=
 #print axioms StagedPublication.Snapshot.invoke_construction
 #print axioms Functional.ServiceBundle.coherent
 end LeanPoo.Examples.ServiceBundle
+
+#print axioms LeanPoo.Functional.GenericFamily.SharedExpansion.shared_eq
+#print axioms LeanPoo.Functional.GenericFamily.SharedExpansion.patch_eq
+#print axioms LeanPoo.Functional.GenericFamily.SharedExpansion.negative_eq
+#print axioms LeanPoo.Examples.ServiceBundle.shared_seed_eq
+#print axioms LeanPoo.Examples.ServiceBundle.shared_methods_eq
+#print axioms LeanPoo.Examples.ServiceBundle.shared_patch_eq

@@ -446,6 +446,40 @@ theorem publication_direct_bound (costs : PreparationCosts) (keys : Nat)
   unfold PublicationCosts.total
   have h := costs.direct_covered keys chosen
   omega
+/-- Native shared expansion removes one reconstruction and two per-key adapters.
+The weights include reconstructed representation allocation; binding/registration
+and approval remain in the unchanged publication base. guard charges the extra
+registration-provenance callback and any added protocol lookup per changed key. -/
+structure ExpansionCosts where
+  expand : Nat
+  adapter : Nat
+  guard : Nat
+  deriving Repr
+
+/-- Reference expansion charge for actual changed keys; retained keys cost zero. -/
+def ExpansionCosts.separate (prices : ExpansionCosts) (changed : Nat) :=
+  changed * (2 * prices.expand + 2 * prices.adapter)
+
+/-- Shared expansion charge for the same changed keys, including the extra guard; no constructor adapters. -/
+def ExpansionCosts.shared (prices : ExpansionCosts) (changed : Nat) := changed * (prices.expand + prices.guard)
+
+/-- Exact modeled saving is conditional on these native call/allocation weights. -/
+theorem ExpansionCosts.saving (prices : ExpansionCosts) (changed : Nat) :
+    prices.separate changed + changed * prices.guard =
+      prices.shared changed + changed * (prices.expand + 2 * prices.adapter) := by
+  simp only [ExpansionCosts.separate, ExpansionCosts.shared, Nat.mul_add,
+    Nat.mul_left_comm changed 2 prices.expand, Nat.mul_left_comm changed 2 prices.adapter]
+  omega
+
+/-- Binding, method registration and joint approval are not removed from the base.
+Only the expansion term changes; no unconditional wall-time improvement follows. -/
+theorem ExpansionCosts.publication_bound (prices : ExpansionCosts) (changed base : Nat)
+    (covered : prices.guard ≤ prices.expand + 2 * prices.adapter) :
+    base + prices.shared changed ≤ base + prices.separate changed := by
+  have paid := Nat.mul_le_mul_left changed covered
+  have saving := prices.saving changed
+  omega
+
 /-- A separate collection charge prevents projecting a primitive-cost bound onto
 measured total CPU when the two executions have different collection histories. -/
 def withCollections (core collectionPrice collections : Nat) := core + collectionPrice * collections
@@ -469,6 +503,20 @@ theorem collection_budget_bound (selected shared collectionPrice selectedCollect
     withCollections selected collectionPrice selectedCollections ≤ withCollections shared collectionPrice sharedCollections := by
   unfold withCollections
   omega
+
+/-- An expansion saving pays GC excess only under an explicit measured budget.
+Neither pure sharing nor fewer adapter allocations establishes collector behavior. -/
+theorem ExpansionCosts.collection_bound (prices : ExpansionCosts) (changed base : Nat)
+    (covered : prices.guard ≤ prices.expand + 2 * prices.adapter)
+    (collectionPrice selectedCollections referenceCollections : Nat)
+    (paid : collectionPrice * selectedCollections - collectionPrice * referenceCollections ≤
+      prices.separate changed - prices.shared changed) :
+    withCollections (base + prices.shared changed) collectionPrice selectedCollections ≤
+      withCollections (base + prices.separate changed) collectionPrice referenceCollections := by
+  have core := prices.publication_bound changed base covered
+  have budget : collectionPrice * selectedCollections - collectionPrice * referenceCollections ≤
+      (base + prices.separate changed) - (base + prices.shared changed) := by omega
+  exact collection_budget_bound _ _ _ _ _ core budget
 
 /-- Observed CPU and GC charges have explicit validity before subtraction.
 These model observations, not an implementation of the collector or a heap reset. -/

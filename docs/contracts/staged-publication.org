@@ -378,3 +378,33 @@ all full receipts remain Scheme-local ignored outputs, with concise summaries.
 not terminology attributed to the original text: its DAG is the inheritance
 dependency graph (C3 linearization), while Future Work and Appendix B describe
 generalized prototype combination and MOP. This cache has no dependency edges.
+
+* Shared closed expansion of heterogeneous generics
+
+~GenericFamily.SharedExpansion~ combines the existing closed environment
+reconstruction with the original seed and method constructors. ~shared_eq~
+preserves both constructor inputs; ~patch_eq~ preserves registration success
+and failure. ~negative_eq~ checks the same patched generic against the same
+negative watches. Existing source congruence, warm-cache transport and atomic
+publication remain the independent semantic requirements.
+
+Native ~Projection.~ retains separate expansion by default. The optional
+~methods.instantiate<-shared-expansion~ reconstructs once for both constructors
+and removes their two adapter closures. Its additional registration-provenance
+callback is charged as ~ExpansionCosts.guard~. A common owner-bound instantiation
+callback is captured once per refresh, rather than looked up per changed key.
+The shared path requires pure immutable reconstructed inputs and constructors
+that permit sharing; mutation/fresh pointer identity are outside the proof.
+
+~ExpansionCosts.publication_bound~ requires the added guard to fit the saved
+expansion plus adapters. Construction, binding and approval remain in the base;
+retained keys have no expansion charge. ~collection_bound~ additionally requires
+an explicit budget for any collection excess. Neither lower allocation nor pure
+sharing establishes a collector or compiler performance theorem.
+
+Native fresh-process controls isolate inputs, descriptor construction, binding,
+executor-only rebinding, generics and approval, alongside complete joint/DAG
+publication. Stage microbenchmarks include their own oracles and cannot be
+summed into an end-to-end CPU breakdown. Pair ranges, adverse directions, GC
+excess and allocation availability supplement CPU/GC/residual medians. Identical
+stage pairs provide an A/A noise reference; they are not optimization wins.
