@@ -41,12 +41,17 @@ structure Checked {n : Nat} (edge : Fin n → Fin n → Bool) where
 
 /-- Discover with a finite simple-path budget, then check closure. Failure never
 returns a partial partition. Universal acceptance for every finite input is not
-claimed here; exactness of every accepted result is proved below. -/
+claimed here; exactness of every accepted result is proved below. The finite
+relation is materialized once in standard immutable vectors so certification
+reuses the same computed entries, including on larger cyclic component families. -/
 def discover {n : Nat} (edge : Fin n → Fin n → Bool) : Option (Checked edge) :=
-  let rel := reachable edge n
+  let table : Vector (Vector Bool n) n := Vector.ofFn (fun a => Vector.ofFn (fun b => reachable edge n a b))
+  let rel := fun a b => (table.get a).get b
   letI : Decidable (Laws edge rel) := by unfold Laws; infer_instance
   if valid : Laws edge rel then
-    some ⟨rel, valid, reachable_sound edge n⟩
+    some ⟨rel, valid, fun a b found => reachable_sound edge n a b (by
+      change table[a.val][b.val] = true at found
+      simpa only [table, Vector.getElem_ofFn] using found)⟩
   else none
 
 /-- Certification removes the search bound from the meaning of accepted results. -/

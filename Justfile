@@ -333,6 +333,7 @@ _check-examples:
     {{lean}} Examples/CachedFeedback.lean
     {{lean}} Examples/ComponentServices.lean
     {{lean}} Examples/ServiceRevisions.lean
+    {{lean}} Examples/ComponentMembership.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

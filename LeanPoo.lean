@@ -266,3 +266,6 @@ import LeanPoo.Functional.StrongComponents
 
 import LeanPoo.Functional.GraphRevision
 import LeanPoo.Prototype.ComponentClosure
+
+import LeanPoo.Functional.SupportRevision
+import LeanPoo.Functional.SupportedComponents
