@@ -24,8 +24,8 @@ owners and support optional sealing; raw struct setters are trusted escape hatch
 * Declaration admission
 
 ~Prototype.DescriptorReflection~ reuses ~Descriptor.validate~ for public slot
-writes and checks visibility before selecting a read/write callback. Invalid
-writes do not select mutation. Native Slot metadata compiles through its existing
+writes and checks visibility before selecting a read/write callback. ~readSlot_valid~ ensures cached/default/hook results meet current descriptors,
+without caching approval. Invalid writes do not select mutation. Native Slot metadata compiles through its existing
 ~.slot.define~ / ~.slot.check~ methods and is recompiled after descriptor/type edits.
 The Class bridge captures the effective-slot catalog at construction; whole-class
 constraints still require explicit admission after edits. No global access-control

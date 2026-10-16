@@ -62,7 +62,10 @@ example : publishEdit (10 : Nat) (guardedEdit true false 10 (fun _ => 20)) = 10 
 #print axioms invalidateCaches_frame
 #print axioms publishEdit_sealed
 #print axioms publicSlots_visible
+/-- A raw cached/default/hook value cannot bypass its current descriptor. -/
+example : readSlot amount (fun _ => .ok 40) = .error "value rejected by SmallAmount" := rfl
 #print axioms readSlot_hidden
+#print axioms readSlot_valid
 #print axioms writeSlot_rejected
 #print axioms writeSlot_admitted
 end LeanPoo.Examples.InheritedHooks
