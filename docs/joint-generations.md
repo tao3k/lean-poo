@@ -1,5 +1,8 @@
 # Mixed-generation concurrent installation
 
+See [joint-restaging.md](joint-restaging.md) for a continuing scoped worker group:
+later source revisions are prepared while older installation workers still wait.
+
 This advances generalized-prototype future work from original Racket Appendix B
 `$lens-gen` (pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133).
 The paper supplies lens-based composition, not this multi-service transaction
