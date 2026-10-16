@@ -670,3 +670,21 @@ The old +84.156us / +60.563us residual is retained under its original source
 identity, never treated as current-source proof or wholly explained by GC.
 This advances generalized-prototype future work and a concrete user-selected
 storage strategy; arbitrary reflection/storage-law discovery remains open.
+
+## Functional TODO closure before further tuning
+
+The native TODO ledger now explicitly separates implemented concrete features
+from partial/open generalized MOP and language/library directions. New explicit
+class admission, compositional lens paths, lazy fallback and cycle diagnostics
+advance the paper's future work. `LeanPoo.Object.instantiateChecked_valid` proves
+successful output admission and `instantiateChecked_rejected` proves refusal
+before hook selection. `fallbackTo` distinguishes absence from stored values;
+`guardSlot` specifies repeated active receiver/key refusal. Executable lifecycle
+examples cover invalid replacements, refusal/recovery and independent receivers.
+
+These are pure functional statements, not Scheme callback-effect, compiler or
+runtime proofs. Native lifecycle tests separately exercise actual hook order,
+per-receiver sharing, failure retry and dynamic exception unwinding. No new
+performance result is claimed: core construction/lookup changed, so previous
+source-bound timing receipts cannot qualify this revision. Functional completion
+of a concrete workflow precedes renewed construction/cache/GC measurement.

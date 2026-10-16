@@ -863,3 +863,41 @@ example : [simpleEffective (SimplePolicy.sum Nat) { items := envelopeItems true 
 #print axioms Protocol.observe_related
 #print axioms itemWork_le
 end LeanPoo.Examples.GeneralizedHooks
+
+namespace LeanPoo.Examples.Lifecycle
+open Object
+/-- Account admission checks typed natural fields and the current cross-field bound. -/
+def accountValid (account : Nat × Nat) : Bool := decide (account.2 ≤ account.1)
+/-- A persistent revision must be admitted before a caller selects its delegate. -/
+def reviseAccount (capacity : Nat) (account : Nat × Nat) : Except String (Nat × Nat) :=
+  instantiateChecked accountValid none (capacity, account.2)
+/-- Invalid input prevents even a hook that would repair it from running. -/
+example : instantiateChecked accountValid (some (fun _ => .ok (10, 0))) (2, 4) =
+    .error "invalid instance" := rfl
+/-- A hook cannot smuggle an invalid replacement through initial admission. -/
+example : instantiateChecked accountValid (some (fun _ => .ok (2, 4))) (10, 4) =
+    .error "invalid instance" := rfl
+/-- Native callbacks may refuse; the pure model preserves that error unchanged. -/
+example : instantiateChecked accountValid (some (fun _ => .error "approval refused")) (10, 4) =
+    .error "approval refused" := rfl
+/-- Refusal and recovery share the old immutable value rather than caching refusal. -/
+example : [reviseAccount 3 (10, 4), reviseAccount 20 (10, 4), reviseAccount 30 (10, 4)] =
+    [.error "invalid instance", .ok (20, 4), .ok (30, 4)] := rfl
+/-- A stored false value bypasses a delegate that would return true. -/
+example : fallbackTo (fun (_ : String) => some false) (fun _ _ => some true) "approved" =
+    some false := rfl
+/-- Keys include receiver identity: equal slot names in separate receivers are independent. -/
+example : guardSlot [(1, "quota")] (2, "quota") (fun _ => .ok (7 : Nat)) = .ok 7 := rfl
+/-- An actual receiver/slot cycle refuses before selecting a new source computation. -/
+example : guardSlot [(1, "b"), (1, "a")] (1, "a") (fun _ => .ok (7 : Nat)) =
+    .error "cyclic slot" := rfl
+/-- A fresh source error remains visible instead of becoming an absent slot. -/
+example : guardSlot [(1, "a")] (1, "b") (fun _ => .error "source refused" :
+    List (Nat × String) → Except String Nat) = .error "source refused" := rfl
+#print axioms instantiateChecked_rejected
+#print axioms instantiateChecked_valid
+#print axioms fallbackTo_present
+#print axioms fallbackTo_missing
+#print axioms guardSlot_cycle
+#print axioms guardSlot_fresh
+end LeanPoo.Examples.Lifecycle
