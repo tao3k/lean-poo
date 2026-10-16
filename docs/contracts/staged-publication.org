@@ -340,20 +340,20 @@ of projection semantics or verified claims about the Scheme collector.
 
 * Prepared decisions and history-controlled measurements
 
-~PreparationCosts.Plan~ stores a certified strategy for its support size.
-~Plan.select_eq~ proves every cached/fallback result equals the original selector;
-~Plan.hit / miss~ count zero/one selector executions, and ~stable_selections~
-charges the initial call once. ~PlanCosts / total_amortized~ additionally charge
+~PreparationCosts.SelectionCache~ stores a certified strategy for its support size.
+~SelectionCache.select_eq~ proves every cached/fallback result equals the original selector;
+~SelectionCache.hit / miss~ count zero/one selector executions, and ~stable_selections~
+charges the initial call once. ~SelectionCacheCosts / total_amortized~ additionally charge
 allocation/setup and each support guard: repeated reuse has a break-even premise,
 not a free cold start. Arity changes still select normally. Projection and
 publication semantics keep their existing coherence/support/admission premises.
 
-Native ~PreparationPlan.~ caches the corresponding immutable decision, takes a
+Native ~SelectionCache.~ caches the corresponding immutable decision, takes a
 constant-time pointer hit for the canonical support, checks length for another
-list, and falls back on changed arity. ~methods.inputs<-plan~ derives the shared
+list, and falls back on changed arity. ~methods.inputs<-cached-selection~ derives the shared
 protocol; dynamic selection captures its immutable choose function with standard
-~compose1~, and planned selection reuses that bound function directly. No service,
-contract, negative assumption or cache approval is inferred from a plan. Tests
+~compose1~, and cached selection reuses that bound function directly. No service,
+contract, negative assumption or cache approval is inferred from a cache. Tests
 check actual selection calls, removal/reintroduction, cold support refusal,
 current invoice interpretation, multi-level DAG revisions and warm-budget refusal.
 
@@ -373,3 +373,8 @@ there is no law adding medians of independently ordered phase batches.
 drift. Cost and GC budget laws remain conditional model laws rather than proofs
 of hardware timings or of the Scheme compiler/collector. The native study and
 all full receipts remain Scheme-local ignored outputs, with concise summaries.
+
+~SelectionCache~ names an implementation cache of preparation choices. It is
+not terminology attributed to the original text: its DAG is the inheritance
+dependency graph (C3 linearization), while Future Work and Appendix B describe
+generalized prototype combination and MOP. This cache has no dependency edges.
