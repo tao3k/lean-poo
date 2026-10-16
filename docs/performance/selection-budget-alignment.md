@@ -70,7 +70,7 @@ full publication time. Complete results stay in ignored native build outputs;
 only a concise measured summary belongs in the PR.
 
 The unified generalized protocol is future work in the original reference.
-Forwarding payloads, inner/Simula helpers, precompiled unconditional qualified
+Precompiled unconditional qualified
 methods, general safe-recursive attestation/memo and arbitrary cross-type lens
 migration remain explicit native alignment gaps. Dependent Lean proofs are not
 missing runtime wrappers. The existing original-source audit retains its
@@ -84,3 +84,55 @@ and shared-DAG deltas -3.609us / -3.246us. One-time configuration itself cost
 +19.141us / +17.332us in its direct comparison. Cold invariant-check compilation
 still regressed; qualified workflows remained mixed. These native observations
 neither instantiate every abstract cost premise nor prove universal acceleration.
+
+
+## Forwarding and superclass-controlled services
+
+The current increment places general operational laws beside the existing
+constructors in `Object.MultimethodCombination` and complex examples in
+`Examples.AlignedServices`. It adds no source modules or JSON inventory changes.
+`callForwardChain_reference` and `append` expose fixed-dispatch composition;
+`innerChain_append` and `stop` prove inherited control and omitted descendants;
+`simulaEffective_pair` and `prefix_failure` give exact ordering and retained
+failure-state laws. Examples prove invoice enrichment, phase-local payload scope,
+current reservation arithmetic and revoked preflight traces.
+
+These three controls follow the existing Lean extensions of the reference's
+open combination direction. Appendix B's Racket construction admits sorted
+labelled fragments and a wrapper/getter/setter interface; it is not a verbatim
+Racket implementation of these three complete APIs. Native tests separately
+validate optional payload typing, warm guards without redispatch, omitted inner,
+Simula effect order/failure, invoice-only dependency invalidation and negative
+cross-service refusal. The native example helpers retain functional nested generic
+ownership; complete timings include their cold nested resolution. General prepared
+methods and nested warm-cache transport remain separate optimization work.
+
+Check preparation now has an independent `TemplateCosts.choose` horizon. One
+fresh parent keeps ordinary rebuilding; repeated service templates can amortize
+stamped shared checks. `selected_bound` preserves the operation budget, while
+`configuration_covered` separately requires the choice fee to be paid. The example
+`cold_configuration_unpaid` proves a nonzero decision fee cannot be covered by a
+single-use fresh mode: clients already knowing that case can use the ordinary
+source directly. It is not a free first configuration.
+
+`SelectionCacheCosts.compiled_eq` proves hoisting immutable fixed arithmetic
+preserves every choice. `validation_sites` bounds six invariant domain checks and
+the fallback relation, hoisted once, plus one argument check per entry against
+rechecking every site on every entry. These are validation-site counts rather
+than total instructions, allocation totals, cycles or GC predictions. The native
+callback follows the same split; repeated configuration can reuse its validated
+immutable policy. Descriptor and selector reuse have separate budgets: the
+illustrative sustained service shares checks but retains dynamic selection.
+
+The updated native observations, including cold-policy regressions and matched
+A/A controls, are in
+[control combination results](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/performance/control-combination-summary.org).
+
+The current admitted native study contains 1,728 fresh-process children, 18
+scenarios, 10 fixed controls and six direct comparisons. Reusing a validated
+policy saves 18.516us natural / 17.797us collected in configuration; cold fresh
+checks versus shared have CPU delta -5.195us / -0.074us with residual deltas
+-1.484us / -1.375us. First configuration still costs work. Complete-publication
+results remain mixed, including Simula regressions and nonzero A/A deltas from
+identical sources. Those controls and historical cold-policy regressions are
+retained; these observations do not prove optimal native strategy choices.

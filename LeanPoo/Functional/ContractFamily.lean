@@ -555,6 +555,42 @@ structure TemplateCosts where
   rebuild : Nat
   deriving Repr
 
+/-- Cold/shared specialization mode; a fresh path allocates no shared check record. -/
+inductive CheckMode where | fresh | shared deriving BEq, DecidableEq, Repr
+
+/-- Include first compilation/setup before deciding to share immutable checks. -/
+def TemplateCosts.sharedTotal (costs : TemplateCosts) (revisions : Nat) := costs.setup + revisions * costs.specialize
+
+/-- Ordinary fresh rebuilding remains the reference, including zero revisions. -/
+def TemplateCosts.freshTotal (costs : TemplateCosts) (revisions : Nat) := revisions * costs.rebuild
+
+/-- Compile the check strategy once for a supplied horizon; ties keep fresh. -/
+def TemplateCosts.choose (costs : TemplateCosts) (revisions : Nat) : CheckMode :=
+  if costs.sharedTotal revisions < costs.freshTotal revisions then .shared else .fresh
+
+/-- Cost of the configured mode excludes neither first compilation nor guard work. -/
+def TemplateCosts.selectedTotal (costs : TemplateCosts) (revisions : Nat) :=
+  match costs.choose revisions with | .fresh => costs.freshTotal revisions | .shared => costs.sharedTotal revisions
+
+/-- Conditional operation-budget guarantee; this does not assert native elapsed time. -/
+theorem TemplateCosts.selected_bound (costs : TemplateCosts) (revisions : Nat) :
+    costs.selectedTotal revisions ≤ costs.freshTotal revisions := by
+  by_cases cheap : costs.sharedTotal revisions < costs.freshTotal revisions
+  · simpa [selectedTotal, choose, cheap] using Nat.le_of_lt cheap
+  · simp [selectedTotal, choose, cheap]
+
+/-- Choosing a check mode has its own configuration cost, independent of the
+shared-record setup. Admit that fee only when actual modeled saving covers it. -/
+theorem TemplateCosts.configuration_covered (costs : TemplateCosts) (uses configurationCost base : Nat)
+    (paid : configurationCost ≤ costs.freshTotal uses - costs.selectedTotal uses) :
+    base + configurationCost + costs.selectedTotal uses ≤ base + costs.freshTotal uses := by
+  have selected := costs.selected_bound uses
+  omega
+
+/-- A single cold use cannot amortize a setup at least as large as its saving. -/
+theorem TemplateCosts.cold (costs : TemplateCosts) (unpaid : costs.rebuild ≤ costs.setup + costs.specialize) :
+    costs.choose 1 = .fresh := by simp [choose, sharedTotal, freshTotal, Nat.not_lt.mpr unpaid]
+
 theorem template_amortized (costs : TemplateCosts) (revisions : Nat)
     (cheaper : costs.specialize ≤ costs.rebuild)
     (paid : costs.setup ≤ revisions * (costs.rebuild - costs.specialize)) :
@@ -619,6 +655,19 @@ Ties keep ordinary selection and do not allocate/force an unused cache. -/
 def SelectionCacheCosts.choose (costs : SelectionCacheCosts) (selectionCost : Nat)
     (budget : SelectionBudget) : SelectionMode :=
   if costs.cachedBudget selectionCost budget < costs.dynamicBudget selectionCost budget then .cached else .dynamic
+
+/-- Native callback captures the immutable fixed term once, validating only the
+selection-cost argument on each call. Reassociation changes no chosen mode. -/
+def SelectionCacheCosts.compiledChoice (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) : SelectionMode :=
+  let fixed := costs.setup + budget.calls * costs.guard + budget.collectionPrice * budget.extraCollections
+  if fixed + (1 + budget.fallbacks) * selectionCost < budget.calls * selectionCost then .cached else .dynamic
+
+/-- Hoisted fixed arithmetic is exactly the original conditional choice, for all
+supported costs and horizons; no empirical constants enter this identity. -/
+theorem SelectionCacheCosts.compiled_eq (costs : SelectionCacheCosts) (selectionCost : Nat)
+    (budget : SelectionBudget) : costs.compiledChoice selectionCost budget = costs.choose selectionCost budget := by
+  simp [compiledChoice, choose, cachedBudget, dynamicBudget, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
 
 /-- Total selector budget for the selected mode; other pipeline stages stay explicit. -/
 def SelectionCacheCosts.selectedBudget (costs : SelectionCacheCosts) (selectionCost : Nat)
