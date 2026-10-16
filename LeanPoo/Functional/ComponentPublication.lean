@@ -36,4 +36,45 @@ no rival has advanced it. Approval changes alone do not install an old candidate
 theorem retry (expected candidate : Snapshot) :
     install expected (install expected expected candidate false).head candidate true = ⟨candidate,true⟩ := by
   simp [install]
+/-- Revalidate approval revision identity at the serialized installation point.
+Native uses existing object revisions for all registered guards; the abstract
+revision type may describe several heterogeneous services together. -/
+def installChecked {Revision : Type} [DecidableEq Revision]
+    (expected current candidate : Snapshot) (staged live : Revision) (approved : Bool) : Result Snapshot :=
+  install expected current candidate (approved && decide (staged = live))
+/-- Approval metadata drift refuses even when the publication head is unchanged
+and the earlier candidate passed every approval predicate. -/
+theorem metadata_stale {Revision : Type} [DecidableEq Revision]
+    (expected current candidate : Snapshot) (staged live : Revision) (approved : Bool) (drift : staged ≠ live) :
+    installChecked expected current candidate staged live approved = ⟨current,false⟩ := by
+  simp [installChecked,drift,refused]
+/-- Successful installation requires BOTH current head and the exact registered
+approval revision, as well as the original candidate's true joint approval. -/
+theorem checked_accepted {Revision : Type} [DecidableEq Revision]
+    (expected current candidate : Snapshot) (staged live : Revision) (approved : Bool)
+    (success : (installChecked expected current candidate staged live approved).accepted = true) :
+    (installChecked expected current candidate staged live approved).head = candidate ∧
+      current = expected ∧ approved = true ∧ staged = live := by
+  have valid := accepted expected current candidate _ success
+  simpa only [installChecked,Bool.and_eq_true,decide_eq_true_eq, and_assoc] using valid
+/-- A fresh metadata capture can retry on an unchanged publication. A request
+captured before the update remains refused; approval is never silently refreshed. -/
+theorem metadata_retry {Revision : Type} [DecidableEq Revision]
+    (expected candidate : Snapshot) (old live : Revision) (drift : old ≠ live) :
+    installChecked expected
+      (installChecked expected expected candidate old live true).head candidate live live true = ⟨candidate,true⟩ := by
+  rw [metadata_stale expected expected candidate old live true drift]
+  simp [installChecked,install]
+/-- Any number of candidates captured at an obsolete approval revision leaves
+current publication unchanged, irrespective of their candidate values or order. -/
+theorem metadata_batch {Revision : Type} [DecidableEq Revision]
+    (expected current : Snapshot) (staged live : Revision) (approved : Bool)
+    (candidates : List Snapshot) (drift : staged ≠ live) :
+    candidates.foldl (fun head candidate =>
+      (installChecked expected head candidate staged live approved).head) current = current := by
+  induction candidates generalizing current with
+  | nil => rfl
+  | cons candidate rest ih =>
+    simp only [List.foldl_cons, metadata_stale expected current candidate staged live approved drift]
+    exact ih current
 end LeanPoo.Functional.ComponentPublication

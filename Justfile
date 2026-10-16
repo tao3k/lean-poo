@@ -336,6 +336,8 @@ _check-examples:
     {{lean}} Examples/ComponentMembership.lean
     {{lean}} Examples/ComponentMigration.lean
     {{lean}} Examples/ComponentRounds.lean
+    {{lean}} Examples/ComponentRequests.lean
+    {{lean}} Examples/ApprovalRevision.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

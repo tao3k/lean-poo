@@ -17,7 +17,8 @@ existing construction/approval chain outside the lock, then checks expected/head
 identity again under the short installation lock. Only that boundary installs a
 candidate. Native `with-lock` is reused rather than introducing synchronization
 primitives. The locked installer runs no user callback. Explicit registered guards
-are rechecked through the final installation boundary.
+are rechecked inside the final installation lock. Coordinated concurrent approval
+writes use `revise-approval!` under that SAME lock; see [approval-revision.md](approval-revision.md).
 
 A sibling may advance the head while a request builds or approves. The old
 candidate then refuses installation even if its own construction and approval
@@ -89,3 +90,6 @@ skipping and unrestricted knots remain open. Formal head-selection laws, native
 pointer/thread controls, full local gates and exact-head CI are separate evidence.
 No compiler/runtime correctness or performance improvement is claimed. No new
 versioned JSON, full benchmark corpus or archives are committed.
+
+[approval-revision.md](approval-revision.md) extends this workflow with several
+paused requests, policy change-back invalidation and explicit fresh restaging.
