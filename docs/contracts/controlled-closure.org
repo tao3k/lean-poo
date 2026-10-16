@@ -35,3 +35,31 @@ interface. The example proves a genuine raw equation for this representation;
 it does not claim equivalence to older intermediate function-closure layouts.
 This advances generalized-prototype future work. No performance result or new
 benchmark data format accompanies the functional implementation.
+
+* Focused component closure and final family admission
+
+~Generalized.closeFocused~ reuses bounded closure from the actual viewed seed,
+then replaces that component in a wider raw carrier. Given ~LensLaws~, success
+exposes the same local fixed point. Independent audit/frame preservation needs
+an explicit setter frame law; it is not implied by the three lens laws alone.
+~closeFocused_reached~ proves the replacement comes from the actual viewed seed's
+finite unfolding before budget exhaustion.
+~LensIndependent~ states cross-view preservation and commuting writes, and
+~LensLaws.pair~ proves lawful product assembly under these additional premises.
+
+Native ~focused-closure.ss~ assembles ordered stages using standard ~foldr~ and
+the existing FUN Reader ~.map~. All registered sources stay guarded across ALL
+stages, final raw-equation validation and whole-family cooking. Actual old/new
+child values extend finite outer-lens checks. Final validation checks EVERY
+local raw equation again, since individually lawful lenses can overlap.
+Each final validation performs one extra raw transition beyond its search budget.
+~validateFocused_sound~ proves the corresponding pure admission equation.
+
+The paired example closes two services inside a shared audited product/vector,
+retaining existing child method combinations. It proves outer custom lens laws,
+their independence, frame preservation and actual two-service results. Conflicting
+updates through the same lawful lens fail final admission and retain the old
+publication; compatible overlap may pass. A heterogeneous service/scalar example
+uses different raw/cooked/focus types under the same final admission. No arbitrary dependency scheduler,
+mutual-recursion solver, unrestricted procedure equality or effect rollback follows.
+The construction advances the generalized-prototype future work.

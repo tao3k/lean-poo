@@ -1,4 +1,4 @@
-import LeanPoo.Prototype.GeneralizedClosure
+import LeanPoo.Prototype.FocusedClosure
 import LeanPoo.Object.MethodCombination
 
 /-! Controlled non-record closure and universal custom product-lens laws. Native
@@ -60,10 +60,12 @@ theorem reserveLaws : LensLaws reserveGet reservePut := by
   · intro source value; rfl
   · intro source first second; rfl
 /-- Three explicit dependencies reuse the already-proved generalized lens compiler. -/
-def parts : List (Generalized.Fragment Raw View) :=
-  [⟨Nat,Nat,MonoLens.ofGetSet rateGet ratePut,fun value _ _ => value,10⟩,
+def partsAt (rate : Nat) : List (Generalized.Fragment Raw View) :=
+  [⟨Nat,Nat,MonoLens.ofGetSet rateGet ratePut,fun value _ _ => value,rate⟩,
    ⟨Nat,Nat,MonoLens.ofGetSet feeGet feePut,fun value self _ => value + self.get.rate,3⟩,
    ⟨Nat,Nat,MonoLens.ofGetSet reserveGet reservePut,fun value self _ => value + self.get.fee,2⟩]
+/-- The original local service retains its ten-unit rate policy. -/
+def parts := partsAt 10
 /-- Raw base has no methods or synthesized function identities. -/
 def base : Raw := ((0,0,0),"audit")
 /-- Three advances settle the chain from ANY seed; audit comes from the base. -/
@@ -85,6 +87,81 @@ example : ¬ LensLaws (fun source : Int × String => source.1)
   intro laws
   have impossible := laws.put_get (0,"audit") (-1)
   contradiction
+/-- Two non-record service carriers share an independent outer tenant/audit frame. -/
+abbrev Family := Raw × Raw × String
+/-- Focus the left recursively closed service. -/
+def leftGet (whole : Family) : Raw := whole.1
+/-- Persistent left replacement preserves the sibling and shared frame. -/
+def leftPut (value : Raw) (whole : Family) : Family := (value,whole.2)
+/-- Focus the second service through the other product branch. -/
+def rightGet (whole : Family) : Raw := whole.2.1
+/-- Persistent right replacement preserves the first service and shared frame. -/
+def rightPut (value : Raw) (whole : Family) : Family := (whole.1,value,whole.2.2)
+/-- The left custom lens is universally lawful. -/
+theorem leftLaws : LensLaws leftGet leftPut := firstLaws
+/-- The right custom lens is universally lawful. -/
+theorem rightLaws : LensLaws rightGet rightPut := by
+  constructor
+  · intro source; rcases source with ⟨left,right,audit⟩; rfl
+  · intro source value; rfl
+  · intro source first second; rfl
+/-- Independence needs an explicit proof, beyond the separate lens laws. -/
+theorem servicesIndependent : LensIndependent leftGet leftPut rightGet rightPut :=
+  ⟨fun _ _ => rfl,fun _ _ => rfl,fun _ _ _ => rfl⟩
+/-- A combined view/replacement for both services also obeys all three laws. -/
+example : LensLaws (fun whole => (leftGet whole,rightGet whole))
+    (fun pair whole => rightPut pair.2 (leftPut pair.1 whole)) :=
+  leftLaws.pair rightLaws servicesIndependent
+/-- Sequential local closures are revalidated against ONE final wider raw carrier. -/
+def closeFamily (seed : Family) (rightBudget : Nat := 4) : Except String Family := do
+  let left ← closeFocused (fragmentProtocol cook) parts leftGet leftPut base seed 4
+  let whole ← closeFocused (fragmentProtocol cook) (partsAt 20) rightGet rightPut base left rightBudget
+  validateFocused (fragmentProtocol cook) parts leftGet base whole
+  validateFocused (fragmentProtocol cook) (partsAt 20) rightGet base whole
+  return whole
+/-- Cooking retains both actual standard effective methods and a shared audit. -/
+def reportFamily (whole : Family) (units : Nat) : Except String (Nat × Nat × Nat × String) := do
+  let left ← (cook whole.1).charge units
+  let right ← (cook whole.2.1).charge units
+  return (left,right,left+right,whole.2.2)
+/-- The complex family closes and cooks the same outputs as the native vectors. -/
+example : ((closeFamily (base,base,"tenant audit")).bind (fun whole => reportFamily whole 2)) =
+    .ok (96,176,272,"tenant audit") := rfl
+/-- The second refusal cannot publish the already-completed first component. -/
+example (old : Family) : publishClosed old (closeFamily (base,base,"tenant audit") 0) = old := rfl
+/-- ANY accepted left closure preserves both sibling and shared frame. -/
+example (seed result : Family) (accepted : closeFocused (fragmentProtocol cook) parts
+    leftGet leftPut base seed 4 = .ok result) : result.2 = seed.2 :=
+  closeFocused_frame (fragmentProtocol cook) parts leftGet leftPut Prod.snd
+    (fun _ _ => rfl) base seed result 4 accepted
+/-- Later right replacement preserves a proved left equation for EVERY value. -/
+example (whole : Family) (value : Raw)
+    (fixed : (fragmentProtocol cook).step parts (leftGet whole) base = leftGet whole) :
+    (fragmentProtocol cook).step parts (leftGet (rightPut value whole)) base = leftGet (rightPut value whole) :=
+  fixed_preserved _ _ _ _ servicesIndependent.left_view _ _ _ fixed
+/-- Two individually lawful identity lenses overlap and are NOT independent. -/
+example : ¬ LensIndependent (id : Nat → Nat) (fun value _ => value)
+    id (fun value _ => value) := by
+  intro h
+  have impossible := h.left_view 0 1
+  contradiction
+/-- A later conflicting closure through the SAME lawful lens fails final admission. -/
+example : (do
+    let first ← closeFocused (fragmentProtocol cook) parts leftGet leftPut base (base,base,"audit") 4
+    let second ← closeFocused (fragmentProtocol cook) (partsAt 20) leftGet leftPut base first 4
+    validateFocused (fragmentProtocol cook) parts leftGet base second) =
+    .error "later focused update invalidated an earlier raw closure" := rfl
+/-- A scalar prototype uses the SAME generalized protocol alongside a vector-like service. -/
+def scalarProtocol : Protocol Nat Nat Nat := ⟨id,fun value _ _ => value⟩
+/-- Distinct raw/focus types need no shared representation tag or erased interpreter. -/
+example : (do
+    let first ← closeFocused (fragmentProtocol cook) parts (fun raw : Raw × Nat × String => raw.1)
+      (fun value raw => (value,raw.2)) base (base,0,"audit") 4
+    let whole ← closeFocused scalarProtocol [7] (fun raw : Raw × Nat × String => raw.2.1)
+      (fun value raw => (raw.1,value,raw.2.2)) 0 first 2
+    validateFocused (fragmentProtocol cook) parts Prod.fst base whole
+    validateFocused scalarProtocol [7] (fun raw : Raw × Nat × String => raw.2.1) 0 whole
+    return whole) = .ok (((10,13,15),"audit"),7,"audit") := rfl
 #print axioms LensLaws.compose
 #print axioms rateLaws
 #print axioms feeLaws
@@ -94,4 +171,11 @@ example : ¬ LensLaws (fun source : Int × String => source.1)
 #print axioms closeWithin_reached
 #print axioms closeWithin_forever
 #print axioms BoundedClosed.stable
+#print axioms LensLaws.pair
+#print axioms servicesIndependent
+#print axioms closeFocused_fixed
+#print axioms closeFocused_reached
+#print axioms closeFocused_frame
+#print axioms validateFocused_sound
+#print axioms fixed_preserved
 end LeanPoo.Examples.ClosedPrototypes

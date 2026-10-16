@@ -473,6 +473,7 @@
   "LeanPoo/Prototype/FiniteClosure.lean",
   "LeanPoo/Prototype/FiniteFix.lean",
   "LeanPoo/Prototype/FixedPoint.lean",
+  "LeanPoo/Prototype/FocusedClosure.lean",
   "LeanPoo/Prototype/GeneralizedChain.lean",
   "LeanPoo/Prototype/GeneralizedClosure.lean",
   "LeanPoo/Prototype/GeneralizedComponents.lean",
