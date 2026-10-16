@@ -536,9 +536,22 @@ its caller must account for promise allocation/forcing, not assign it zero cost.
 
 Untimed native counters keep compilation/hooks at 4/8 while reducing flat
 method-group preparation 4→2, nested preparation 8→2 and nested cooking 4→2.
-The current matched study admits 480 children: repeated observation CPU changes
+The initial matched study admits 480 children: repeated observation CPU changes
 -26.676/-25.449 us (natural/collected), with GC CPU and residual separately
 recorded. One-operation GC-free observation controls admit -56832 bytes. Binding
 alone and collected raw-hook controls remain adverse; no isolated sharing/binder
 speed claim follows from the full path. These are source-bound local phase
 measurements, not Lean runtime or universal end-to-end performance theorems.
+
+
+The final native source additionally compares reuse versus re-preparation in the
+SAME demand-cooking implementation. Three complete fixed-source 528-child runs
+retain separate identities/records. Reuse paired CPU medians (natural/collected)
+are -5.457/-4.605, -3.605/-3.258 and -5.008/-2.727 us; repeat one still has
+positive individual pairs. Full new/old observation medians are negative in all
+three runs, with 4/4 faster pairs per regime/run. Natural nested observation has
+an unresolved +73.313us regression in the first run, including +37.359 GC CPU
+and +35.953 residual, alongside large A/A excursions. Two fixed repeats improve
+but do not erase that adverse run or prove its cause. Isolated binding/sharing
+and raw-hook paths retain adverse results; no universal performance claim is made.
+The committed summary preserves all identities and bounded evidence separately.
