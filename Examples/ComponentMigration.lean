@@ -1,6 +1,6 @@
 import LeanPoo.Functional.ComponentRevision
 import LeanPoo.Functional.SupportedComponents
-import LeanPoo.Prototype.ComponentClosure
+import LeanPoo.Functional.ComponentExecution
 
 /-! Joint replacement of two services and their shared dependency. Future-work
 closure uses actual dependent source resolvers, not a separately supplied equation. -/
@@ -50,63 +50,9 @@ def contributions : List (RevisionFragment Key Values) :=
    ⟨[],[],[⟨10,some (program true 10)⟩],[]⟩]
 /-- Graph discovery reads footprints from the actual submitted typed source. -/
 def edge (spec : Declaration Key Values) (key dep : Key) : Bool := decide (dep ∈ spec.reads key)
-/-- Persistent lenses keep unrelated raw carrier positions intact. -/
-def focus (key : Key) : MonoLens Raw Nat :=
-  MonoLens.ofGetSet (fun raw => raw.get key) (fun value raw => raw.set key.val value key.isLt)
-/-- All storage laws hold universally; native sample checks have narrower scope. -/
-theorem focus_laws (key : Key) :
-    LensLaws (fun raw : Raw => raw.get key) (fun value raw => raw.set key.val value key.isLt) := by
-  constructor
-  · intro raw; simp [Vector.get]
-  · intro raw value
-    change (raw.set key.val value key.isLt)[key.val] = value
-    exact Vector.getElem_set_self key.isLt
-  · intro raw first second; simp
-/-- A numeric candidate supplies successful predecessor outcomes to the real source. -/
-def state (read : Key → Nat) : State Key Values := fun key => some (.ok (read key))
-/-- Totalize only bounded numeric search. Failure defaults cannot approve: the
-separate final residual check requires EVERY actual resolver to succeed exactly. -/
-def observe (spec : Declaration Key Values) (key : Key) (read : Key → Nat) : Nat :=
-  match spec.resolve key (state read) with
-  | some (.ok value) => value
-  | _ => 0
-/-- Check actual typed source outcomes, so numeric search cannot hide missing inputs
-or source errors behind its temporary totalization default. -/
-def resolved (spec : Declaration Key Values) (raw : Raw) : Bool :=
-  spec.keys.all fun key => match spec.resolve key (state raw.get) with
-    | some (.ok value) => value == raw.get key
-    | _ => false
-/-- Final residual acceptance implies successful real source resolution for every
-active component. This law is independent of the concrete equations and numbers. -/
-theorem resolved_correct (spec : Declaration Key Values) (raw : Raw) (accepted : resolved spec raw = true)
-    (key : Key) (member : key ∈ spec.keys) : spec.resolve key (state raw.get) = some (.ok (raw.get key)) := by
-  have checked := List.all_eq_true.mp accepted key member
-  cases found : spec.resolve key (state raw.get) with
-  | none => simp [found] at checked
-  | some outcome =>
-    cases outcome with
-    | error message => simp [found] at checked
-    | ok value =>
-      simp only [found, beq_iff_eq] at checked
-      simp only [checked]
-/-- Existing component fragments close the actual source, with one cooked self
-inside each SCC and already closed predecessors outside it. -/
-def parts (spec : Declaration Key Values) (external : Raw) :=
-  componentParts focus (observe spec) (fun key (raw : Raw) => raw.get key) external.get
-/-- Fixture source order is dependency-first for these groups. Native uses its
-checked condensation scheduler; every raw group and final source residual is checked. -/
-def build (spec : Declaration Key Values) (graph : Supported (edge spec)) : Except String Raw := do
-  let mut raw := Vector.replicate 12 0
-  let mut done : List Key := []
-  for key in graph.keys do
-    if key ∉ done then
-      let members := graph.members key
-      let group ← Functional.FeedbackCache.closeGroup (parts spec raw) id (Vector.replicate 12 0)
-        members (Vector.replicate 12 0) 32
-      raw := members.foldl (fun current node => current.set node.val (group.result.closed.raw.get node) node.isLt) raw
-      done := done ++ members
-  unless resolved spec raw do throw "actual component resolver residual failed"
-  return raw
+/-- Reuse the shared source-driven reference runner, including final real residuals. -/
+def build (spec : Declaration Key Values) (graph : Supported (edge spec)) : Except String Raw :=
+  (Functional.ComponentExecution.build spec graph (Vector.replicate 12 0) 32).map (·.raw)
 /-- Joint policy requires every replacement endpoint and the unchanged monitor. -/
 def approved (allowed : Bool) (limit : Nat) (raw : Raw) : Bool :=
   allowed && ([3,5,7,8,9] : List Key).all (fun key => decide (raw.get key = raw.get 2)) &&
@@ -167,6 +113,7 @@ def check : Except String Unit := do
 #print axioms SupportRevision.join_unique
 #print axioms SupportRevision.join_fresh
 #print axioms SupportRevision.join_erased
-#print axioms resolved_correct
+#print axioms Functional.ComponentExecution.resolved_correct
+#print axioms Functional.ComponentExecution.focus_laws
 #print axioms componentGroup_equation
 end LeanPoo.Examples.ComponentMigration

@@ -335,6 +335,7 @@ _check-examples:
     {{lean}} Examples/ServiceRevisions.lean
     {{lean}} Examples/ComponentMembership.lean
     {{lean}} Examples/ComponentMigration.lean
+    {{lean}} Examples/ComponentRounds.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

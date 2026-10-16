@@ -79,3 +79,6 @@ dependency-first order for these sources; native uses its checked DAG scheduler.
 Functionality precedes optimization: no runtime speed/allocation claims or new
 benchmark corpus are included. Gerbil runs independently of the Lean checkout;
 no proof constants, versioned JSON, full run data or archives are stored here.
+
+See [component-rounds.md](component-rounds.md) for repeated component recreation,
+interleaved merge/split, current cross-service approval and snapshot-bound staging.

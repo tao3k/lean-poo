@@ -36,6 +36,36 @@ def SupportRevision.join (spec : Declaration Key Value) (parts : List (RevisionF
       (parts.flatMap RevisionFragment.codes) (parts.flatMap RevisionFragment.bases)
   else .error "conflicting or stale component membership contributions"
 
+/-- Anchor staged edits to an abstract publication identity. Native uses the
+exact live graph-cache object; identities are not inferred from support or values. -/
+def SupportRevision.joinAt {Snapshot : Type} [DecidableEq Snapshot] (expected current : Snapshot)
+    (spec : Declaration Key Value) (parts : List (RevisionFragment Key Value)) :
+    Except String (SupportRevision spec) :=
+  if current = expected then join spec parts else .error "stale component revision snapshot"
+
+/-- A staged action cannot run on another publication, including an equal-valued
+round trip. This does not assume that support differences detect all revisions. -/
+theorem SupportRevision.joinAt_stale {Snapshot : Type} [DecidableEq Snapshot] (expected current : Snapshot)
+    (spec : Declaration Key Value) (parts : List (RevisionFragment Key Value)) (stale : current ≠ expected) :
+    joinAt expected current spec parts = .error "stale component revision snapshot" := by
+  simp [joinAt, stale]
+
+/-- On the exact expected publication, all existing joint-revision laws apply. -/
+theorem SupportRevision.joinAt_current {Snapshot : Type} [DecidableEq Snapshot] (current : Snapshot)
+    (spec : Declaration Key Value) (parts : List (RevisionFragment Key Value)) :
+    joinAt current current spec parts = join spec parts := by simp [joinAt]
+
+/-- Any successful anchored batch has the requested publication identity and
+ordinary checked joint edits. Snapshot freshness remains an implementation premise. -/
+theorem SupportRevision.joinAt_accepted {Snapshot : Type} [DecidableEq Snapshot] (expected current : Snapshot)
+    (spec : Declaration Key Value) (parts : List (RevisionFragment Key Value)) (revision : SupportRevision spec)
+    (accepted : joinAt expected current spec parts = .ok revision) :
+    current = expected ∧ join spec parts = .ok revision := by
+  unfold joinAt at accepted
+  split at accepted
+  · exact ⟨by assumption,accepted⟩
+  · contradiction
+
 /-- Joint acceptance certifies membership edits against the SAME old snapshot. -/
 theorem SupportRevision.join_valid (spec : Declaration Key Value) (parts : List (RevisionFragment Key Value))
     (revision : SupportRevision spec) (accepted : SupportRevision.join spec parts = .ok revision) :
