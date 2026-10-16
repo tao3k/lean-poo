@@ -249,4 +249,6 @@ import LeanPoo.Functional.InheritanceHooks
 import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.SlotReflection
 import LeanPoo.Prototype.MetaBootstrap
+import LeanPoo.Prototype.RecursiveMetaprotocol
+import LeanPoo.Functional.RecursiveDeclarations
 import LeanPoo.Functional.NonlocalDeclarations
