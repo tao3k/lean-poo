@@ -1,5 +1,8 @@
 # Native concurrent installation of approved joint receipts
 
+See [joint-generations.md](joint-generations.md) for old/current receipts in the
+SAME release wave, per-receipt provenance and entire-wave refusal/fresh restaging.
+
 This advances generalized-prototype future work from original Racket Appendix B
 `$lens-gen` (pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133).
 The paper supplies composable lens-based construction, not this transaction or

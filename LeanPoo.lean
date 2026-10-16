@@ -280,5 +280,6 @@ import LeanPoo.Functional.JointAdmission
 import LeanPoo.Functional.JointInstallation
 import LeanPoo.Functional.JointReceipts
 import LeanPoo.Functional.JointCompetition
+import LeanPoo.Functional.JointGenerations
 import LeanPoo.Examples.JointReceipts
 import LeanPoo.Examples.JointTopology

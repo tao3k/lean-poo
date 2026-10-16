@@ -346,6 +346,7 @@ _check-examples:
     {{lean}} Examples/JointInstallation.lean
     {{lean}} Examples/JointReceipts.lean
     {{lean}} Examples/JointCompetition.lean
+    {{lean}} Examples/JointGenerations.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
