@@ -1100,6 +1100,12 @@ theorem PreparedHooks.bindContextObserver_eq {protocol : Protocol Raw Cooked Fra
     snapshot.bindContextObserver depth base seed context =
       protocol.observe fragments (base context) (seed context) depth :=
   snapshot.bindObserver_eq _ _ _
+/-- Native standard-identity specialization can omit both selector captures and
+calls. Arbitrary selector equality/effects are not assumed by this pure law. -/
+theorem PreparedHooks.bindContextObserver_identity {protocol : Protocol Raw Cooked Fragment}
+    {fragments : List Fragment} (snapshot : PreparedHooks protocol fragments) (depth : Nat) :
+    snapshot.bindContextObserver depth id id =
+      (fun raw => snapshot.bindObserver raw depth raw) := rfl
 /-- Reader mapping is ordinary function composition. The older bind/pure form
 has the same pure value semantics; host allocation and exceptions need controls. -/
 theorem readerMap_eq_bindPure (action : Context → Value) (transform : Value → Result) :

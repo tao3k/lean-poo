@@ -834,6 +834,7 @@ example : [contextEnvelopeReport (((0, 0, "audit"), true, "eu", "billing"),
     [.ok (45, 3, "billing", "eu", true), .ok (45, 3, "billing", "us", true),
      .error "billing approval refused", .ok (45, 3, "billing", "eu", true)] := rfl
 #print axioms PreparedHooks.bindContextObserver_eq
+#print axioms PreparedHooks.bindContextObserver_identity
 #print axioms PreparedHooks.mapContextObserver_eq
 #print axioms readerMap_eq_bindPure
 #print axioms contextReuseWork_le

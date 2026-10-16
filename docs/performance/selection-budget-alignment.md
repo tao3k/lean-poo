@@ -612,7 +612,8 @@ both base and seed from each current context. `bindContextObserver_eq` proves th
 finite observation equation for every context; `mapContextObserver_eq` transports
 that equation through a public projection. `readerMap_eq_bindPure` proves the
 pure Reader map equation used to replace per-call bind/pure with composition.
-The native direct `observe` path uses the same interpreter without first making
+`bindContextObserver_identity` justifies omitting standard-identity selectors
+when both inputs are the current raw value. The native direct `observe` path uses the same interpreter without first making
 an immediately invoked binder. Native errors and allocation require tests.
 
 `contextReuseWork_le` amortizes supplied preparation/binding work over a nonempty
