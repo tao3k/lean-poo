@@ -87,3 +87,6 @@ callbacks and faithful builders. General convergence/leastness, hidden dependenc
 discovery, cycle-interior skipping and unrestricted knots remain TODOs. No runtime,
 compiler, speed, allocation or GC theorem follows. Functionality precedes performance
 work. No new versioned JSON, full benchmark data or archives are committed.
+
+See [component-publication.md](component-publication.md) for authoritative head
+arbitration between competing staged requests and retry after joint refusal.

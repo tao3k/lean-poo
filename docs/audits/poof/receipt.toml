@@ -299,6 +299,7 @@
   "LeanPoo/Functional/ClosureScenarios.lean",
   "LeanPoo/Functional/Codec.lean",
   "LeanPoo/Functional/ComponentExecution.lean",
+  "LeanPoo/Functional/ComponentPublication.lean",
   "LeanPoo/Functional/ComponentRevision.lean",
   "LeanPoo/Functional/ComputationBatch.lean",
   "LeanPoo/Functional/ConstructionCache.lean",
