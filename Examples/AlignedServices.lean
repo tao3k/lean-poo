@@ -839,3 +839,27 @@ example : [contextEnvelopeReport (((0, 0, "audit"), true, "eu", "billing"),
 #print axioms readerMap_eq_bindPure
 #print axioms contextReuseWork_le
 end LeanPoo.Examples.GeneralizedHooks
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Object.MethodCombination Prototype.Generalized
+/-- Four item bodies reuse shared rebate and the current approval in most-specific
+order. The first refusal prevents every later body, as in the native envelope. -/
+def envelopeItems (approved : Bool) (rebate : Nat) : List (Unit → Except String Nat) :=
+  [fun _ => if approved then .ok (2 * rebate) else .error "billing approval refused",
+   fun _ => .ok (3 * rebate), fun _ => .ok 10, fun _ => .ok 20]
+/-- Compact item functions and qualified declarations agree for all approval and
+rebate inputs, not just the successful benchmark fixture. -/
+theorem envelopeItems_aligned (approved : Bool) (rebate : Nat) :
+    simpleEffective (SimplePolicy.sum Nat) (SimpleMethods.ofItems (envelopeItems approved rebate)) () =
+      simpleEffective (SimplePolicy.sum Nat) { items := envelopeItems approved rebate } () := by
+  rw [simpleEffective_ofItems]
+/-- Successful current metadata, refusal and recovery use the same compiled policy. -/
+example : [simpleEffective (SimplePolicy.sum Nat) { items := envelopeItems true 3 } (),
+    simpleEffective (SimplePolicy.sum Nat) { items := envelopeItems false 3 } (),
+    simpleEffective (SimplePolicy.sum Nat) { items := envelopeItems true 7 } ()] =
+    [.ok 45, .error "billing approval refused", .ok 65] := rfl
+#print axioms SimpleMethods.ofItems_eq
+#print axioms simpleEffective_ofItems
+#print axioms Protocol.observe_related
+#print axioms itemWork_le
+end LeanPoo.Examples.GeneralizedHooks

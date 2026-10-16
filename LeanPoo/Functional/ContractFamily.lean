@@ -1325,3 +1325,17 @@ theorem contextReuseWork_le (prepare bind observe calls : Nat) (nonempty : 1 ≤
     simpa using Nat.mul_le_mul_right (prepare + bind) nonempty
   simpa [Nat.mul_add] using Nat.add_le_add_right fixed (calls * observe)
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Supplied prices distinguish common work from qualified descriptor creation,
+first-slot-cache preparation and item grouping. Compact methods retain the same
+body/closure work, which must be included in common. No native byte/time price. -/
+def qualifiedItemWork (common descriptors caches grouping : Nat) : Nat :=
+  common + descriptors + caches + grouping
+/-- Known item-only representation removes the supplied redundant work. This
+bound says nothing about allocator/GC history or unconditional wall-clock speed. -/
+theorem itemWork_le (common descriptors caches grouping : Nat) :
+    common ≤ qualifiedItemWork common descriptors caches grouping := by
+  unfold qualifiedItemWork
+  omega
+end LeanPoo.Prototype.Generalized

@@ -1119,3 +1119,46 @@ theorem PreparedHooks.mapContextObserver_eq {protocol : Protocol Raw Cooked Frag
       project (protocol.observe fragments (base context) (seed context) depth) := by
   simp only [Function.comp_apply, PreparedHooks.bindContextObserver_eq]
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Object.MethodCombination
+variable {Item Acc Result Receiver : Type}
+/-- Resolve a statically homogeneous item family through the original qualifier
+constructor. General/mixed contributions must still retain their qualifiers. -/
+def SimpleMethods.ofItems (items : List (Receiver → M Item)) : SimpleMethods Receiver M Item Result :=
+  (items.map SimpleContribution.item).foldr (fun contribution methods => methods.prepend contribution) {}
+/-- A known item-only family needs no qualifier objects or grouping pass. This
+is a typed representation law, independent of effects performed by the bodies. -/
+theorem SimpleMethods.ofItems_eq (items : List (Receiver → M Item)) :
+    (SimpleMethods.ofItems items : SimpleMethods Receiver M Item Result) = { items := items } := by
+  induction items with
+  | nil => rfl
+  | cons first rest ih =>
+    change SimpleMethods.prepend (SimpleMethods.ofItems rest) (.item first) = _
+    rw [ih]
+    rfl
+/-- Removing redundant item qualifiers preserves around-free simple combination
+for every monad, including the first error and unexecuted short-circuit suffix. -/
+theorem simpleEffective_ofItems {M : Type → Type} [Monad M]
+    (policy : SimplePolicy Item Acc Result) (items : List (Receiver → M Item)) :
+    simpleEffective policy (SimpleMethods.ofItems items) =
+      simpleEffective policy { items := items } := by
+  rw [SimpleMethods.ofItems_eq]
+end LeanPoo.Object.MethodCombination
+
+namespace LeanPoo.Prototype.Generalized
+/-- Transport finite observations across a raw representation relation. The step
+and cooking premises must be established for the specific representation; they
+are not automatically inferred for arbitrary native callbacks or object identity. -/
+theorem Protocol.observe_related (source : Protocol Raw Cooked Fragment)
+    (target : Protocol OtherRaw Cooked OtherFragment) (fragments : List Fragment)
+    (otherFragments : List OtherFragment) (related : Raw → OtherRaw → Prop)
+    (base : Raw) (otherBase : OtherRaw) (seed : Raw) (otherSeed : OtherRaw)
+    (seedRelated : related seed otherSeed)
+    (stepRelated : ∀ first second, related first second →
+      related (source.step fragments first base) (target.step otherFragments second otherBase))
+    (cookRelated : ∀ first second, related first second → source.cook first = target.cook second)
+    (depth : Nat) : source.observe fragments base seed depth =
+      target.observe otherFragments otherBase otherSeed depth :=
+  cookRelated _ _ (FiniteFix.iterate_relation _ _ related base otherBase seed otherSeed
+    seedRelated stepRelated depth)
+end LeanPoo.Prototype.Generalized

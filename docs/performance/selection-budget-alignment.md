@@ -635,3 +635,38 @@ in Gerbil's `doc/performance/context-binding-summary.org`. Earlier focused and
 observation-reuse receipts have their original source identities and are not
 re-admitted as this revision. General reflective MOP bootstrapping, automatic
 law discovery and arbitrary migration remain open.
+
+## Homogeneous item representation and first-cache work
+
+Appendix B's raw/cooked distinction permits a representation specialized to a
+known method family. Lean `SimpleMethods.items` already stores resolved methods
+as functions; `SimpleMethods.ofItems_eq` proves that wrapping only `.item`
+contributions and regrouping produces precisely that family. Consequently
+`simpleEffective_ofItems` preserves the original policy for every monad, including
+failure and short-circuit suffix behavior. Mixed/around groups retain their
+qualifiers and their existing preparation path.
+
+Gerbil `prepare-simple-items` factors the SAME policy reducer out of
+`prepare-simple`. The general path still resolves qualifiers and wraps around;
+its empty result remains delayed. The explicit `prepare-envelope-items` /
+`bind-envelope-items-report` path uses raw method functions for this statically
+item-only family, avoiding redundant extensible Contribution carriers and their
+first slot-cache preparation. General `prepare-envelope` and its raw contribution
+representation remain available. No mixed graph is automatically specialized.
+
+`Protocol.observe_related` reuses `FiniteFix.iterate_relation` to transport every
+finite observation between raw representations, given actual step and cooked-view
+relations. Those are caller obligations, not an inferred native compiler theorem.
+`itemWork_le` bounds supplied descriptor/cache/grouping work separately from
+common body/closure/lens costs; it does not price native allocation, GC or time.
+The envelope example composes shared rebate, current approval, ordered items,
+refusal and recovery. Native tests separately verify layouts and original audit,
+service and tenant observations across both raw representations.
+
+The native factory study in `doc/performance/item-factory-summary.org` separates
+construction, snapshot preparation, binding, warm dependency cooking and cold
+versus warm item-body lookup, with ABBA, exact A/A and fixed heap-history controls.
+The old +84.156us / +60.563us residual is retained under its original source
+identity, never treated as current-source proof or wholly explained by GC.
+This advances generalized-prototype future work and a concrete user-selected
+storage strategy; arbitrary reflection/storage-law discovery remains open.
