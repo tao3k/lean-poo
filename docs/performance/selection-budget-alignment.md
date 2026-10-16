@@ -514,3 +514,31 @@ The shared diamond/triangular checkout checks price 30 then 33 and the audit
 frame. Arbitrary callback closure, reflection, hook-law inference and migration
 remain future work. Native paired results live in the Gerbil concise summary;
 complete measurements remain ignored.
+
+
+### Demand cooking and prepared reader binding
+
+The next bridge uses existing native Lens composition (including a repaired
+`.get` call), `lens-of-get-set`/`focus-compiler`, named demand-cooked fields and
+shared delayed cooked self. The nested checkout/service example checks three
+rebate demands, price 39, service metadata and two independent audit frames.
+This advances the paper's future work and partially closes the TODO's direct
+subcomponent computation: unused effective-method groups are not prepared;
+full raw assembly and automatic accessor syntax remain separate open work.
+
+`PreparedHooks.bindObserver_eq` quantifies over arbitrary seeds/depths, rather
+than authorizing stale observed-result reuse. `Protocol.stepShared_eq` is the
+pure shared-self equation; `observe_withCook` requires pointwise equality of the
+cooked interface for all raw values. Native field-demand exception timing and
+arbitrary effects are not proven equivalent to eager callback execution.
+`ObservationWork.cost_mono` separates supplied binding/cook/field/hook counts;
+its caller must account for promise allocation/forcing, not assign it zero cost.
+
+Untimed native counters keep compilation/hooks at 4/8 while reducing flat
+method-group preparation 4→2, nested preparation 8→2 and nested cooking 4→2.
+The current matched study admits 480 children: repeated observation CPU changes
+-26.676/-25.449 us (natural/collected), with GC CPU and residual separately
+recorded. One-operation GC-free observation controls admit -56832 bytes. Binding
+alone and collected raw-hook controls remain adverse; no isolated sharing/binder
+speed claim follows from the full path. These are source-bound local phase
+measurements, not Lean runtime or universal end-to-end performance theorems.

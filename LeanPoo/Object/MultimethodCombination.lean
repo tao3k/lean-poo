@@ -970,3 +970,40 @@ theorem Protocol.approximate_reindexSelf (protocol : Protocol Raw Cooked Fragmen
   unfold Protocol.approximate
   rw [protocol.step_reindexSelf view cook compatible]
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Bind the exact compiled snapshot/base/depth, retaining a fresh raw seed for
+EACH call. This is reader composition, not a cache of previously observed values. -/
+def PreparedHooks.bindObserver {protocol : Protocol Raw Cooked Fragment} {fragments : List Fragment}
+    (snapshot : PreparedHooks protocol fragments) (base : Raw) (depth : Nat) : Raw → Cooked :=
+  fun seed => protocol.cook (FiniteFix.iterate snapshot.step base seed depth)
+/-- Reusing the binding is valid for every seed, without a seed-equality premise. -/
+theorem PreparedHooks.bindObserver_eq {protocol : Protocol Raw Cooked Fragment} {fragments : List Fragment}
+    (snapshot : PreparedHooks protocol fragments) (base seed : Raw) (depth : Nat) :
+    snapshot.bindObserver base depth seed = protocol.observe fragments base seed depth := by
+  unfold PreparedHooks.bindObserver Protocol.observe
+  rw [snapshot.iterate_eq]
+/-- One shared cooked-self thunk models native delay/force. Lean's total functions
+make sharing extensional; arbitrary Scheme callback effects are outside this law. -/
+def Protocol.stepShared (protocol : Protocol Raw Cooked Fragment) (fragments : List Fragment) : Proto Raw Raw Raw :=
+  fun final base =>
+    let shared := Thunk.mk fun _ => protocol.cook final
+    protocol.assemble fragments shared (Thunk.mk fun _ => base)
+/-- Sharing the pure cooked self retains the original delayed construction equation. -/
+theorem Protocol.stepShared_eq (protocol : Protocol Raw Cooked Fragment) (fragments : List Fragment) :
+    protocol.stepShared fragments = protocol.step fragments := rfl
+/-- Replace only the raw-to-public cooking strategy. Demand-driven native cooking
+must satisfy the supplied extensional law on the public interface. -/
+def Protocol.withCook (protocol : Protocol Raw Cooked Fragment) (cook : Raw → Cooked) :
+    Protocol Raw Cooked Fragment := ⟨cook, protocol.compile⟩
+/-- Pointwise-equivalent cooking preserves ALL finite observations, including
+cooked self read by earlier dependent stages, not merely the final projection. -/
+theorem Protocol.observe_withCook (protocol : Protocol Raw Cooked Fragment)
+    (cook : Raw → Cooked) (same : ∀ raw, cook raw = protocol.cook raw)
+    (fragments : List Fragment) (base seed : Raw) (depth : Nat) :
+    (protocol.withCook cook).observe fragments base seed depth =
+      protocol.observe fragments base seed depth := by
+  have equal : cook = protocol.cook := funext same
+  rw [equal]
+  rfl
+end LeanPoo.Prototype.Generalized

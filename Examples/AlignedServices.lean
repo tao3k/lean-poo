@@ -709,3 +709,39 @@ example : FiniteFix.iterate (checkout.prepareHooks [true, false]).step
 #print axioms Prototype.Generalized.Protocol.approximate_reindexSelf
 end LeanPoo.Examples.GeneralizedHooks
 #print axioms LeanPoo.Prototype.Generalized.HookCosts.shared_le_repeated
+
+namespace LeanPoo.Examples.GeneralizedHooks
+open Prototype Prototype.Generalized
+/-- Service-level focus preserves metadata while updating the nested checkout. -/
+def serviceFocus : MonoLens ((Nat × Nat × String) × String) (Nat × Nat × String) :=
+  MonoLens.ofGetSet Prod.fst (fun value old => (value, old.2))
+/-- Checkout-local price focus preserves rebate and inner audit. -/
+def priceFocus : MonoLens (Nat × Nat × String) Nat :=
+  MonoLens.ofGetSet Prod.fst (fun value old => (value, old.2))
+/-- Checkout-local rebate focus preserves price and inner audit. -/
+def rebateFocus : MonoLens (Nat × Nat × String) Nat :=
+  MonoLens.ofGetSet (fun raw => raw.2.1) (fun value old => (old.1, value, old.2.2))
+/-- Nested focus uses the existing skew-lens composition (outer carrier, inner method). -/
+def serviceRebate := serviceFocus.compose rebateFocus
+/-- Persistent nested updates retain both distinct audit frames. -/
+example : MonoLens.modify serviceRebate (· + 1) ((30, 3, "audit"), "billing") =
+    ((30, 4, "audit"), "billing") := rfl
+/-- Dependent service construction reads the same cooked rebate three times; the
+lens compilers preserve both audits across finite stages. -/
+def nestedCheckout : Protocol ((Nat × Nat × String) × String) ((Nat × Nat) × String) Bool where
+  cook := fun raw => ((raw.1.1, raw.1.2.1), raw.2)
+  compile := fun price => if price then
+    lensCompiler (serviceFocus.compose priceFocus)
+      (fun (_ : Unit) self _ => 30 + self.get.1.2 + self.get.1.2 + self.get.1.2) ()
+    else lensCompiler serviceRebate (fun (_ : Unit) _ _ => 3) ()
+/-- Native nested-report's 39/3/billing has a matching finite typed construction. -/
+example : nestedCheckout.approximate [true, false] ((0, 0, "audit"), "billing")
+    ((0, 0, "seed"), "seed-service") 2 = ((39, 3, "audit"), "billing") := rfl
+/-- One compiled binder accepts different seeds, rather than reusing their answers. -/
+example : (checkout.prepareHooks [true, false]).bindObserver (0, 0, "audit") 1 (0, 7, "seed") =
+    (37, 3) := rfl
+#print axioms PreparedHooks.bindObserver_eq
+#print axioms Protocol.stepShared_eq
+#print axioms Protocol.observe_withCook
+#print axioms ObservationWork.cost_mono
+end LeanPoo.Examples.GeneralizedHooks

@@ -1271,3 +1271,28 @@ theorem HookCosts.shared_le_repeated (cost : HookCosts) (observations : Nat)
     _ = observations * (cost.preparation + cost.observation) :=
       (Nat.mul_add observations cost.preparation cost.observation).symm
 end LeanPoo.Prototype.Generalized
+
+namespace LeanPoo.Prototype.Generalized
+/-- Supplied work units distinguish binding, actual self demands, cooking frames,
+field preparation and hook calls. Native GC/allocator costs require separate data. -/
+structure ObservationWork where
+  binding : Nat
+  cookFrame : Nat
+  field : Nat
+  hook : Nat
+/-- Separate fixed hook work from variable binding/cooking/field construction. -/
+def ObservationWork.cost (prices : ObservationWork) (bindings cooks fields hooks : Nat) : Nat :=
+  bindings * prices.binding + cooks * prices.cookFrame + fields * prices.field + hooks * prices.hook
+/-- Demand cooking and shared binding reduce a supplied additive work bound only
+under explicit operation-count inequalities. Promise allocation is not free: its
+price must be included in the caller's frame/binding bounds. -/
+theorem ObservationWork.cost_mono (prices : ObservationWork)
+    (bindings cooks fields hooks oldBindings oldCooks oldFields : Nat)
+    (bindingBound : bindings ≤ oldBindings) (cookBound : cooks ≤ oldCooks)
+    (fieldBound : fields ≤ oldFields) :
+    prices.cost bindings cooks fields hooks ≤ prices.cost oldBindings oldCooks oldFields hooks := by
+  unfold ObservationWork.cost
+  exact Nat.add_le_add_right (Nat.add_le_add
+    (Nat.add_le_add (Nat.mul_le_mul_right _ bindingBound) (Nat.mul_le_mul_right _ cookBound))
+    (Nat.mul_le_mul_right _ fieldBound)) _
+end LeanPoo.Prototype.Generalized
