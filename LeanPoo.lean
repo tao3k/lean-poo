@@ -278,4 +278,5 @@ import LeanPoo.Functional.JointPublication
 import LeanPoo.Functional.JointRevision
 import LeanPoo.Functional.JointAdmission
 import LeanPoo.Functional.JointInstallation
+import LeanPoo.Functional.JointReceipts
 import LeanPoo.Examples.JointTopology

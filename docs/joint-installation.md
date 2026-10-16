@@ -1,5 +1,8 @@
 # Installation after joint approval
 
+See [joint-receipts.md](joint-receipts.md) for ordered attempts by multiple approved
+receipts, shared proposed-policy invalidation and six SCC lifecycle rounds.
+
 This advances generalized-prototype future work, reusing original Racket Appendix B
 `$lens-gen` (pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133).
 The paper provides lens-based composition, not these multi-service transactions.
