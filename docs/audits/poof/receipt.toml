@@ -200,6 +200,7 @@
   "Examples/IntrospectiveExport.lean",
   "Examples/JointComponentPublication.lean",
   "Examples/JointPublication.lean",
+  "Examples/JointRounds.lean",
   "Examples/KeyedRebalance.lean",
   "Examples/LayeredObject.lean",
   "Examples/LayeredRouting.lean",

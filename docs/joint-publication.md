@@ -90,3 +90,6 @@ Scope remains accepted finite graphs, correct declared dependencies, fixed lawfu
 lenses, faithful builders and pure locally total callbacks. No arbitrary-effect
 rollback, general convergence/leastness, interior-SCC skipping, runtime/compiler
 verification, speed or GC claim. No new versioned JSON, full data or archives.
+
+[joint-rounds.md](joint-rounds.md) adds explicit expected-bundle preparation,
+multiple competing complete requests, cross-round stale batches and fresh restaging.
