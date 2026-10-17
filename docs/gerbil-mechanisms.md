@@ -1,4 +1,4 @@
-# Gerbil mechanisms and POO adaptation
+# Gerbil mechanisms and POO protocols
 
 ## Scope and source basis
 
@@ -8,7 +8,8 @@ functional definitions in the 91 root/support Scheme modules (including `build.s
 baseline, then inspects the mechanism boundaries listed below. It is not a
 line-by-line proof of all modules or an audit of every Gerbil library. Source
 paths below are relative to the Gerbil source tree, not checkout dependencies.
-The added adapter increases that module inventory to 92.
+The independent contract module has been removed; the inventory remains 91.
+The small refusal-policy function lives in the existing `support/base.ss`.
 
 The Racket document's section 5 derives classes as type descriptors; appendix B
 separates lens, object-setter/cooking and method-wrapper. It calls the full
@@ -19,7 +20,7 @@ future work; it does not turn those sketches into a proved host implementation.
 
 | Mechanism | Gerbil facility / inspected source | POO decision |
 | --- | --- | --- |
-| Predicate contracts | `gerbil/core/contract.ss`: `using`, `list-of?`, `one-of`, `in-range-inclusive?` | Replaced repeated checks in Function admission, diagnostics, refinement, metadata evidence binding, finite type admission and generator configuration. One refusal adapter preserves the published error policy. |
+| Predicate contracts | `gerbil/core/contract.ss`: `using`, `list-of?`, `one-of`, `in-range-inclusive?` | Replaced repeated checks in Function admission, diagnostics, refinement, metadata evidence binding, finite type admission and generator configuration. The existing support module preserves the published refusal policy. |
 | Classes and interfaces | Core class-aware `using`, generated accessors; `std/interface.ss`, `std/instance.ss` | Use generated host structures for private state, and direct class-aware `using` in `examples/contract-interop.ss`. Dynamic prototype rows, descriptor validation and checked Function results remain POO operations. A host class assertion cannot recursively wrap an object graph. |
 | Inheritance | `gerbil/runtime/c3.ss`: `c4-linearize` | Already reused by `object.ss`; there is no additional C4 implementation in this Scheme layer. POO still supplies lazy prototype computation, mutation guards and metadata. |
 | Method dispatch | Core `defmethod` / class method machinery | Use it for host classes. `multimethod.ss` retains typed tuple dispatch, persistent revisions, negative applicability guards and selectable combinations; these are not replaced by a single host method lookup. |
@@ -34,16 +35,20 @@ future work; it does not turn those sketches into a proved host implementation.
 | Testing and generation | `std/test.ss`, host SRFI-27 random sources | Already used for assertions, isolated seeded randomness and the single-process harness. Descriptor-specific finite generation, strict shrinking and stale replay retain POO policy. Not a replacement test framework or a second PRNG. |
 | Build and resources | `std/build-script`, `std/make`; bounded test runner | Existing dependency scheduler, generated test inventory, heap and wall-clock limits are retained. The new suite is one additional atomic contracts test and also runs in the complete single-process check. |
 
-## Thin contract adapter
+## Standard contracts and POO refusal policy
 
-the companion Scheme `contract-adapter.ss` exports one function, `check-contract`, and no syntax,
-registry or descriptor type. The user predicate is evaluated exactly once,
-**outside** exception translation. Gerbil `using` receives its result and owns
-the truthiness guard. Its body only returns the original value. Only a
-`ContractViolation` created by this local guard is translated through the
-caller's original refusal callback. Predicate, normalizer, Function body and
-consumer exceptions—including their own `ContractViolation` objects—propagate
-unchanged. A broad handler around the whole workflow would be incorrect.
+Gerbil core `using` / ContractRules and `std/error` `check-argument` remain the
+contract mechanisms. There is no POO contract namespace, facade or alternate
+contract syntax. `support/base.ss` contains `require-value` only for existing POO
+boundaries whose refusal policies differ from the standard error family.
+
+The predicate is evaluated exactly once, outside the local failure handler.
+`using` owns the truthiness guard; its body only returns the original value.
+Only that local guard's `ContractViolation` is translated by the supplied refusal
+callback. Predicate, normalizer, Function body and consumer exceptions propagate
+unchanged, including their own `ContractViolation` objects. Standard
+`check-argument` is not shadowed or redefined. New host-specific code uses the
+standard contracts directly.
 
 POO `TypeError`, controlled `TypeRefusal`, legacy messages and irritants remain
 boundary policy. This is why public POO parameters do not simply change their
@@ -79,11 +84,11 @@ containers, shared revisions, refinements and evidence independently.
 
 ## Lean boundary
 
-`Functional.ContractAdaptation` proves delegated/direct guard equivalence for
+The existing `Functional.Validation` namespace proves delegated/direct guard equivalence for
 all supplied predicate outcomes and ordered finite batches. Workflow laws prove
 refusal before normalization, delivery of checked values, and preservation of
 predicate and normalization errors. Consumer errors follow the same whole
-workflow equivalence. `Examples/ContractAdaptation.lean` supplies checked method,
+workflow equivalence. `Examples/ContractChecks.lean` supplies checked method,
 state/multiple-result and host-error controls.
 
 The premise is the observed core guard behavior and supplied callback semantics.
@@ -91,3 +96,66 @@ These are not compiler, runtime, arbitrary callback termination, continuation
 or concurrency proofs. Scheme tests exercise the real macro and effects.
 A later optimization must separately measure successful calls and refusal paths;
 this refactor makes no speedup claim.
+
+## Class/interface, container and cache audit
+
+The follow-up source inspection covers `std/instance.ss`, `std/interface.ss`,
+`std/iter/{api,interface,iterators}.ss`, `std/vector/vector.ss`,
+`std/list/list-builder.ss`, `std/hash/misc.ss`, runtime HashTable and
+`std/cache.ss`, against POO class validation, table iteration, shape layouts and
+construction/recursive/feedback caches.
+
+Confirmed repetitions removed:
+
+- `construction-cache.ss` now uses standard `hash-ref/default` for all three
+  source/lookup fallbacks instead of a key-exists probe followed by another
+  lookup. The standard HashTable interface owns the lookup. Stored `#f` is a
+  hit; only missing keys invoke the fallback. Unknown-source callbacks, original
+  exceptions, same-owner retention and source-bound selective rebuild remain.
+- `slot-layout.ss` uses `hash-ensure-ref` for canonical shapes. Shape creation
+  and insertion use the standard missing-key operation; the table retains its
+  weak values. Class-aware `using` handles generated accessors and field writes
+  for the access-site record. Owner/revision/layout/index guards and per-receiver
+  cells remain POO policy. Index zero and cell value false remain valid.
+- List/Tuple shape diagnostics use `with-list-builder`, avoiding a temporary
+  list of child lists and a final flattening pass. Proper finite diagnostic
+  lists are the callback premise. Ordered traversal uses `for` and
+  `vector-for-each/index`; values, paths and issue multiplicity are unchanged.
+- `validate-class` and `validate-container` use explicit binding after the shape
+  gate so no child normalizer can run before structural refusal.
+
+Retained after source comparison:
+
+- Gerbil's iterator API in this runtime has no exported mapping combinator.
+  `table.ss` already implements its small mapper with the standard `Iterator`
+  interface. Keep it rather than inventing an `in-map` import or adding eager
+  collection/coroutine state. `examples/service-collection.ss` reuses it and
+  registers a generated host class with standard `std.instance` / `Iterable`.
+  Each pull uses the existing checked FUN action; no second iterator engine.
+- `vector-map/index` explicitly leaves callback order unspecified and currently
+  maps from right to left. It cannot replace ordered validators. The regression
+  observes callback order as well as final container contents.
+- `rationaldict` already delegates persistent storage and folds to standard
+  RBTree; its option, lower-bound iteration and supplied value equality are POO
+  table semantics. Replacing it with mutable HashTable or structural tree equality
+  would change persistence or comparator behavior.
+- `std/cache` supplies `CacheOps` size/flush and object allocation pools. Neither
+  operation certifies source stamps, guarded recursion, SCC reuse or approvals.
+  Construction/feedback/recursive caches keep these policies over standard
+  tables. Published immutable state is not repurposed as a mutable pool object.
+
+The integrated collection example observes inherited Record methods through a
+standard Iterable, then observes new raw rows from a selectively revised source
+cache. Failed new admission leaves the old snapshot usable. It does not cache
+normalized approvals or roll back prior consumer effects. Regressions also check
+lazy iterator construction, exact error identity, shape guards and stored absence.
+
+Lean `Functional.CacheLookup` adds laws in the existing `ConstructionCache`
+namespace: lazy present/missing selection, stored absence, ensure-hit retention,
+failed-build retention, frame preservation and no reconstruction after insertion.
+`Validation.gatherIssues_eq_flatMap` proves ordered issue collection equivalence.
+The small law modules avoid loading the full generalized MOP merely to check
+lookup laws. `Examples/ServiceCollection.lean` composes these laws with existing
+ordered validation. Host hash equality, standard interface dispatch/iteration,
+weak-reference reachability and callback behavior remain premises, not kernel
+proofs of Gerbil or GC. Resource guards and complete checks remain unchanged.

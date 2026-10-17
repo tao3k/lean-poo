@@ -28,7 +28,7 @@ import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
 import LeanPoo.Functional.Validation
-import LeanPoo.Functional.ContractAdaptation
+import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.FunctionSignature
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.RecursiveGeneration

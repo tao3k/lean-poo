@@ -1,10 +1,10 @@
-import LeanPoo.Functional.ContractAdaptation
+import LeanPoo.Functional.Validation
 
 /-! Host predicate delegation composed with checked wrappers and typed observations.
 This model assumes the host guard law; Scheme tests exercise the actual using macro.
 -/
-namespace Examples.ContractAdaptation
-open LeanPoo.Functional.ContractAdaptation
+namespace Examples.ContractChecks
+open LeanPoo.Functional.Validation
 
 /-- User errors and the local host family can coexist without broad exception translation. -/
 inductive Failure where
@@ -32,20 +32,20 @@ def normalize (raw : Raw) : Except Failure Checked :=
 def observe (argument : Int) (count : Nat) (checked : Checked) : Except Failure (Int × Nat) :=
   (checked.method argument).map (fun result => (result, count + 1))
 
-example : run shape Failure.legacy normalize (observe 4 0) ⟨(· + 3), true⟩ = .ok (7, 1) := rfl
-example : run shape Failure.legacy normalize (observe (-1) 0) ⟨(· + 3), true⟩ = .error .legacy := rfl
-example : run shape Failure.legacy normalize (observe 4 0) ⟨(· + 3), false⟩ = .error .legacy := rfl
+example : checkThen shape Failure.legacy normalize (observe 4 0) ⟨(· + 3), true⟩ = .ok (7, 1) := rfl
+example : checkThen shape Failure.legacy normalize (observe (-1) 0) ⟨(· + 3), true⟩ = .error .legacy := rfl
+example : checkThen shape Failure.legacy normalize (observe 4 0) ⟨(· + 3), false⟩ = .error .legacy := rfl
 
 /-- Predicate host errors pass through even though local guard failures are translated. -/
-example : adapt (fun (_ : Nat) => Except.error Failure.hostContract) Failure.legacy 4 =
+example : checkArgument (fun (_ : Nat) => Except.error Failure.hostContract) Failure.legacy 4 =
     .error .hostContract := rfl
 
 /-- A recursive exhaustion refusal is preserved by normalization, not relabeled. -/
-example : run (fun (_ : Nat) => .ok true) Failure.legacy
+example : checkThen (fun (_ : Nat) => .ok true) Failure.legacy
     (fun _ => Except.error Failure.exhausted) (fun (n : Nat) => .ok (n + 1)) 4 =
     .error .exhausted := rfl
 
 /-- A consumer's host contract error remains original, including after successful wrapping. -/
-example : run shape Failure.legacy normalize (fun _ => Except.error Failure.hostContract : Checked → Except Failure Nat)
+example : checkThen shape Failure.legacy normalize (fun _ => Except.error Failure.hostContract : Checked → Except Failure Nat)
     ⟨(· + 3), true⟩ = .error .hostContract := rfl
-end Examples.ContractAdaptation
+end Examples.ContractChecks
