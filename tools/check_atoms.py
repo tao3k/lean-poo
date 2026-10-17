@@ -2,6 +2,7 @@
 """Run independent Lean files from the canonical Justfile recipes."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -151,12 +152,32 @@ def stop_children(signum, frame):
     os._exit(128 + signum)
 
 
-def execute(atoms, jobs):
+def execution_lanes(atoms, jobs):
+    """Keep explicit deadline stress tests from saturating the whole worker pool.
+    This changes scheduling only: every original command/deadline is retained.
+    Waiting happens before process launch, never inside its timeout interval.
+    """
     if jobs < 1:
         raise ValueError('Jobs must be positive')
+    bounded = [a for a in atoms if a['command'][0] == 'timeout']
+    ordinary = [a for a in atoms if a['command'][0] != 'timeout']
+    if jobs == 1 or not bounded:
+        return [(jobs, atoms)]
+    limit = min(2, jobs - 1) if ordinary else min(2, jobs)
+    lanes = [(limit, bounded)]
+    if ordinary:
+        lanes.append((jobs - limit, ordinary))
+    return lanes
+
+
+def execute(atoms, jobs):
     results = []
-    with ThreadPoolExecutor(max_workers=jobs) as pool:
-        pending = {pool.submit(run_atom, atom): atom for atom in atoms}
+    with ExitStack() as stack:
+        pending = {}
+        for workers, lane in execution_lanes(atoms, jobs):
+            pool = stack.enter_context(ThreadPoolExecutor(max_workers=workers))
+            for atom in lane:
+                pending[pool.submit(run_atom, atom)] = atom
         for task in as_completed(pending):
             atom = pending[task]
             try:

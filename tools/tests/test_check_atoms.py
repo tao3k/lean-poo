@@ -7,11 +7,51 @@ import subprocess
 import tempfile
 import time
 import unittest
+import threading
+from unittest.mock import patch
 
-from tools.check_atoms import configure_limits, configure_threads, execute, load_atoms, select_atoms
+from tools.check_atoms import configure_limits, configure_threads, execute, execution_lanes, load_atoms, select_atoms
 
 
 class CheckAtomsTests(unittest.TestCase):
+    def test_deadline_lane_preserves_every_command_and_total_worker_ceiling(self):
+        atoms = load_atoms()
+        for jobs in (1, 2, 4, 14):
+            lanes = execution_lanes(atoms, jobs)
+            self.assertLessEqual(sum(workers for workers, _ in lanes), jobs)
+            assigned = [atom for _, lane in lanes for atom in lane]
+            self.assertCountEqual(assigned, atoms)
+            if jobs > 1:
+                self.assertLessEqual(lanes[0][0], 2)
+                self.assertTrue(all(a['command'][0] == 'timeout' for a in lanes[0][1]))
+
+    def test_deadline_jobs_actually_overlap_without_crowding_all_workers(self):
+        atoms = [dict(file=f'bounded-{i}', command=['timeout', '30s']) for i in range(8)]
+        atoms += [dict(file=f'ordinary-{i}', command=['lean']) for i in range(8)]
+        lock = threading.Lock()
+        active = [0, 0]
+        peak = [0, 0]
+
+        def fixture(atom):
+            bounded = atom['command'][0] == 'timeout'
+            with lock:
+                active[0] += 1
+                active[1] += int(bounded)
+                peak[0] = max(peak[0], active[0])
+                peak[1] = max(peak[1], active[1])
+            time.sleep(0.02)
+            with lock:
+                active[0] -= 1
+                active[1] -= int(bounded)
+            return dict(file=atom['file'], returncode=0)
+
+        with patch('tools.check_atoms.run_atom', fixture):
+            results = execute(atoms, 4)
+        self.assertEqual(peak[1], 2)
+        self.assertLessEqual(peak[0], 4)
+        self.assertCountEqual([r['file'] for r in results], [a['file'] for a in atoms])
+        self.assertEqual(active, [0, 0])
+
     def test_every_inventory_file_runs_in_exactly_one_nonempty_shard(self):
         atoms = load_atoms()
         partitions = [select_atoms(atoms, index, 12) for index in range(12)]

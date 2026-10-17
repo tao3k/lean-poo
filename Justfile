@@ -318,6 +318,7 @@ _check-examples:
     {{lean}} Examples/SharedSettlement.lean
     {{lean}} Examples/PolicyPublication.lean
     {{lean}} Examples/ConstructionWorkflow.lean
+    {{lean}} Examples/BuildCache.lean
     {{lean}} Examples/InheritedSettlement.lean
     {{lean}} Examples/ServiceBundle.lean
     {{lean}} Examples/ServiceMetadata.lean
