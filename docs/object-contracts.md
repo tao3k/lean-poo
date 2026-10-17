@@ -345,3 +345,30 @@ are not globally revoked by a later source edit; use immutable sources and a
 fresh closure/publication after revision. Raw structural getters still execute
 before wrapping. Constants retain strict equality; wrapper canonicalization is
 separate work. Scheme has no runtime dependency on the Lean checkout.
+
+## Recursive graph revision
+
+`Functional.RecursiveRevision` combines existing certified consumer-to-dependency
+reachability and all-or-error `RecursiveValidation.close`. New laws establish
+clean dependency closure, shared invalidation, callback selection, local generation
+preservation/advancement, rejection of earlier target generations, all-node final
+admission, pure failure-state retention and current canonical-root evidence.
+
+`Examples/RecursiveRevisions.lean` uses five nodes: a shared provider, two cyclic
+services, a computed report and an independent cached node. A shared edit rebuilds
+four nodes (report 23); the following peer replacement rebuilds three while retaining
+provider/idle (report 30). Actual checked Function calls, Boolean argument refusal,
+whole-value refinement, clean-node final refusal, old subject/context rejection and
+current evidence retry are executable controls. Gerbil's matching recipes also
+exercise source/descriptor watches, old-Type injection, removal and reentrant
+competition. `revision-action` composes with FUN; the existing publication action
+owns exact subject/descriptor/context `bind-evidence`.
+
+This advances generalized MOP future work beyond the paper's Racket final-self and
+Type descriptor constructions. Complete declared reads (including computed captures
+and obligations), unchanged source/descriptor correspondence, consistent finite
+indexing, canonical host identities and sequential installation are explicit
+premises. Host membership/index relowering, concurrent mutation, arbitrary retained
+Function revocation, callback termination, external-effect rollback and Scheme
+compiler/runtime/GC behavior are outside these proofs. Scheme builds independently
+of a Lean checkout. No timing or allocation improvement is claimed from these laws.

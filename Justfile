@@ -356,6 +356,7 @@ _check-examples:
     {{lean}} Examples/ClassContracts.lean
     {{lean}} Examples/ComputedContracts.lean
     {{lean}} Examples/RecursiveContracts.lean
+    {{lean}} Examples/RecursiveRevisions.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
