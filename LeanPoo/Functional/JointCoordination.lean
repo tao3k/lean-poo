@@ -39,4 +39,47 @@ theorem restageAfter_refused {Valid : Bundle Id Endpoint Policy Head Metadata �
     rw [installSequence_append,installSequence_inert _ denied refused]
   exact congrArg (fun observed =>
     (⟨observed.id,(prepare observed).val,revision,(prepare observed).property⟩ : Approved (Revision := Revision) Valid)) same
+/-- A lifecycle event either reaches the existing installation boundary or stops
+one coordinator without a publication. Earlier successful writes stay in the trace.
+Stopping is NOT modelled as rolling back or accepting that coordinator's receipts. -/
+inductive CoordinatorEvent (Coordinator : Type)
+    (Valid : Bundle Id Endpoint Policy Head Metadata → Prop) where
+  | attempt : Installation (Revision := Revision) Valid → CoordinatorEvent Coordinator Valid
+  | stopped : Coordinator → CoordinatorEvent Coordinator Valid
+/-- Project the actual serialized installations; failed preparation and normal exit
+have no owner write. Cleanup must establish this premise in the native program. -/
+def coordinatorAttempts {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) : List (Installation (Revision := Revision) Valid) :=
+  events.filterMap fun event => match event with
+    | .attempt attempt => some attempt
+    | .stopped _ => none
+/-- Execute surviving installation attempts using the same checked owner protocol. -/
+def installCoordinated {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) :=
+  installSequence current (coordinatorAttempts events)
+/-- A local stop interleaved anywhere neither rolls back earlier winners nor
+cancels the remaining coordinators' later installation attempts. -/
+theorem installCoordinated_stopped {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (before after : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (who : Coordinator) :
+    installCoordinated current (before ++ .stopped who :: after) =
+      installCoordinated current (before ++ after) := by
+  simp [installCoordinated,coordinatorAttempts,List.filterMap_append]
+/-- Survivors explicitly prepare from the complete current winner, including all
+successful installs before a coordinator stopped. No abandoned receipt is revived. -/
+theorem restageAfter_coordinator_stopped {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (before after : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (who : Coordinator)
+    (prepare : (state : Bundle Id Endpoint Policy Head Metadata) → {candidate // Valid candidate}) (revision : Revision) :
+    restageAfter current (coordinatorAttempts (before ++ .stopped who :: after)) prepare revision =
+      restageAfter current (coordinatorAttempts (before ++ after)) prepare revision := by
+  simp [coordinatorAttempts,List.filterMap_append]
+/-- Validity is preserved through arbitrary finite local exits and surviving
+attempts, including revision refusals and competing or stale receipts. -/
+theorem installCoordinated_valid {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (old : Valid current) :
+    Valid (installCoordinated current events) :=
+  installSequence_valid current (coordinatorAttempts events) old
 end LeanPoo.Functional.JointPublication

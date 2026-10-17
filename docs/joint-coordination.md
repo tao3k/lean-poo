@@ -16,7 +16,8 @@ own separate `call-with-installations` scopes/counters/channels while sharing th
 same authoritative publication owner.
 
 Standard `:std/sync/channel` implements messages; `:std/sync/threads` supplies a
-detached thread group, exception-preserving joins and recursive group cleanup.
+detached root group, per-coordinator child groups, exception-preserving joins and
+recursive group cleanup.
 The group owns coordinator threads and their nested installation workers. Five-
 second bounds cover receives and normal joins. Original operation exceptions are
 transported through event/result thunks, so ignoring an error event cannot make a
@@ -83,3 +84,7 @@ covers successful valid factories; it does not promise arbitrary factories succe
 Native threads/groups and formal lock-order laws are separate evidence. No arbitrary
 internal writes, recursive convergence, distributed/durable atomicity, runtime
 implementation proof, scheduler fairness, multi-core throughput or speed claim.
+
+Local coordinator failure isolation and continuing survivors now compose through
+an explicit `on-exit:` handler; see [coordinator-recovery.md](coordinator-recovery.md)
+for the outcome protocol, six-round four-coordinator scenario and lifecycle laws.

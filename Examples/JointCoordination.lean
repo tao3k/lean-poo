@@ -25,6 +25,14 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
   unless left.id == current.id+1 && left.approvals 0 == (ceiling,budget) &&
       right.id == current.id+1 && right.approvals 0 == (ceiling,budget+2) do
     throw "coordinator order produced mixed candidate or old winner"
+  -- Lifecycle exits carry no installation; survivors still select the full
+  -- fresh winner after guard refusals, and exits after publication cannot undo it.
+  let events : List (Functional.JointPublication.CoordinatorEvent (Revision := Nat) String (fun state : State => approved state = true)) :=
+    [.attempt ⟨shared,1⟩,.stopped "failed",.attempt ⟨shared,1⟩,.stopped "returned",
+     .attempt ia,.stopped "after-publication",.attempt ib] ++ history.map .attempt
+  let recovered := Functional.JointPublication.installCoordinated current events
+  unless recovered.id == left.id && recovered.approvals 0 == left.approvals 0 do
+    throw "local exit cancelled survivors or rolled back publication"
   let late := Functional.JointPublication.installChecked b.expected left b.candidate (2:Nat) 2 true
   unless late.id == left.id && late.approvals 0 == left.approvals 0 do throw "superseded coordinator overwrote winner"
   pure (left,history ++ denied ++ [ia,ib])
@@ -52,4 +60,7 @@ def check : Except String Unit := do
 #print axioms Functional.JointPublication.restageAfter_competing
 #print axioms Functional.JointPublication.restageAfter_superseded
 #print axioms Functional.JointPublication.restageAfter_refused
+#print axioms Functional.JointPublication.installCoordinated_stopped
+#print axioms Functional.JointPublication.restageAfter_coordinator_stopped
+#print axioms Functional.JointPublication.installCoordinated_valid
 end LeanPoo.Examples.JointCoordination
