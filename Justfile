@@ -374,6 +374,7 @@ _check-examples:
     {{lean}} Examples/RecursiveGenerators.lean
     {{lean}} Examples/PrototypeTypes.lean
     {{lean}} Examples/RowTypes.lean
+    {{lean}} Examples/ContractAdaptation.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
