@@ -711,3 +711,15 @@ historical request/reference rejection and current refine/bind-evidence retry.
 Nine Lean lifecycle laws and matching finite graph examples cover this serialized
 generalized MOP future work. See [recursive-recovery.md](recursive-recovery.md) for
 the scope, host controls and remaining concurrency/interruption boundaries.
+
+
+## Named coordinator incarnation isolation
+
+`recursive-coordination` now composes the existing scoped queue and publication
+protocol with per-name incarnation fences. Closed requests refuse even at the same
+head and approval versions; recovery explicitly stages a fresh incarnation, and
+old cleanup cannot close its replacement. The integrated eight-round workflow has
+49 exits and 1112 attempts, with repeated approval drift, actual SCC/provider/
+computed revision, dirty-reference rejection and current refine/bind-evidence
+retry. Twelve Lean laws and focused host controls cover the declared serialized
+protocol. See [recursive-coordination.md](recursive-coordination.md) for scope and remaining feature boundaries.
