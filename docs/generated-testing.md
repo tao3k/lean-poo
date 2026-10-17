@@ -32,10 +32,12 @@ keyword defaults, recursive Function wrapping, descriptor-driven call generation
 and Reader/FUN consumption. Both repositories retain their complete checks and
 resource limits. No Scheme runtime or test imports a Lean checkout.
 
-Generators derive Bool, Integer, UInt, String, List, Tuple and Pair. Other Types,
+Generators derive Bool, Integer, UInt, String, Exactly/Enum and bounded recursive
+List, Tuple, Pair, Union, Maybe and OrFalse graphs. Other opaque Types,
 refined Types and Function *values* supply an explicit `.generator`; the example
 supplies a semantically chosen identity callback. Arbitrary closure synthesis,
-inference, subtyping and automatic recursive generator search remain open.
+inference and subtyping remain open. Automatic guarded recursive data generation
+is now implemented; see [recursive-generators.md](recursive-generators.md).
 Function call shrinking currently preserves the supplied shape and shrinks its
 values. It does not promise deletion of optional parameters or global minimality.
 
