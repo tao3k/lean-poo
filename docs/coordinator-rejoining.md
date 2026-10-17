@@ -84,3 +84,7 @@ cleanup excluding cancelled pending attempts. Waiting children are the native
 cancellation control; interruption inside a critical section is not qualified.
 No runtime proof, fairness, arbitrary convergence, distributed/durable atomicity
 or performance improvement is claimed.
+
+Named recovery callbacks now compose multiple interleaved failed coordinators; see
+[coordinator-interleaving.md](coordinator-interleaving.md) for five recoveries, delayed
+rejoining, mixed historical refusals and formal lifecycle-wave preservation.

@@ -283,5 +283,6 @@ import LeanPoo.Functional.JointCompetition
 import LeanPoo.Functional.JointGenerations
 import LeanPoo.Functional.JointRestaging
 import LeanPoo.Functional.JointCoordination
+import LeanPoo.Functional.CoordinatorRejoining
 import LeanPoo.Examples.JointReceipts
 import LeanPoo.Examples.JointTopology

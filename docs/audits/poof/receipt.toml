@@ -330,6 +330,7 @@
   "LeanPoo/Functional/ContractFamily.lean",
   "LeanPoo/Functional/ContractJoin.lean",
   "LeanPoo/Functional/ContractPreparation.lean",
+  "LeanPoo/Functional/CoordinatorRejoining.lean",
   "LeanPoo/Functional/CyclicAccess.lean",
   "LeanPoo/Functional/CyclicPublication.lean",
   "LeanPoo/Functional/DeclarativeMetadata.lean",

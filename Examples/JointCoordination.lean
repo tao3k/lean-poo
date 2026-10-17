@@ -1,18 +1,20 @@
 import LeanPoo.Examples.JointReceipts
-import LeanPoo.Functional.JointCoordination
+import LeanPoo.Functional.CoordinatorRejoining
 
-/-! Two independent preparation factories share an observed head, reject shared
+/-! Independent preparation factories share an observed head, reject shared
 guard drift, then compete. Actual component heads cover six source/SCC phases. -/
 namespace LeanPoo.Examples.JointCoordination
 open Functional.GeneralizedGraph LeanPoo.Examples.ComponentRounds LeanPoo.Examples.JointTopology
 open LeanPoo.Examples.JointReceipts
-/-- Both factories reobserve the unchanged head after shared metadata refusals;
+/-- Independent factories reobserve the unchanged head after shared metadata refusals;
 either valid candidate may win, but the superseded competitor must stay stale. -/
 def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except String (State × List Attempt) := do
   let (current,history) := prior
   let (head,ceiling,budget) := row
   let ta ← certify current.id ⟨0,fun _ => head,fun _ => (ceiling,budget)⟩ 1
   let tb ← certify current.id ⟨0,fun _ => head,fun _ => (ceiling,budget+2)⟩ 2
+  let tc ← certify current.id ⟨0,fun _ => head,fun _ => (ceiling,budget+4)⟩ 3
+  let td ← certify current.id ⟨0,fun _ => head,fun _ => (ceiling,budget+6)⟩ 4
   let shared : Receipt := ⟨current.id,ta.candidate,0,ta.valid⟩
   let denied : List Attempt := [⟨shared,1⟩,⟨shared,1⟩]
   let recovering : List (Functional.JointPublication.CoordinatorEvent (Revision := Nat) String
@@ -44,9 +46,32 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
   unless oldHead.id == left.id && oldHead.approvals 0 == left.approvals 0 &&
       oldGuard.id == current.id && oldGuard.approvals 0 == current.approvals 0 do
     throw "rejoining revived superseded head or expired shared guard"
+  -- Multiple names recover in different lifecycle orders. Archived receipts
+  -- mix previous head generations with current-head shared-guard refusal.
+  let waves : List (List (Functional.JointPublication.CoordinatorEvent (Revision := Nat) String
+      (fun state : State => approved state = true))) :=
+    [[.stopped "c",.stopped "d",.rejoined "c",.rejoined "d"],
+     [.stopped "d",.rejoined "d",.stopped "c",.rejoined "c"]]
+  let oldAttempts := denied ++ history
+  let c := Functional.JointPublication.restageAfter current oldAttempts (freshCandidate tc) 3
+  let d := Functional.JointPublication.restageAfter current oldAttempts (freshCandidate td) 4
+  let ic : Attempt := ⟨c,3⟩
+  let id : Attempt := ⟨d,4⟩
+  let competitors := [ia,ib,ic,id]
+  for wave in waves do
+    let replayEvents := wave ++ oldAttempts.map .attempt
+    let observed := Functional.JointPublication.installCoordinated current replayEvents
+    unless observed.id == current.id && observed.approvals 0 == current.approvals 0 do
+      throw "interleaved recovery revived a historical receipt"
+    for first in List.range 4 do
+      let order := competitors.drop first ++ competitors.take first
+      let winner := Functional.JointPublication.installCoordinated current
+        (replayEvents ++ order.map .attempt ++ wave ++ oldAttempts.map .attempt)
+      unless winner.id == current.id+1 && winner.approvals 0 == (ceiling,budget+2*first) do
+        throw "four-way recovery competition mixed a winner or lost fresh preparation"
   let late := Functional.JointPublication.installChecked b.expected left b.candidate (2:Nat) 2 true
   unless late.id == left.id && late.approvals 0 == left.approvals 0 do throw "superseded coordinator overwrote winner"
-  pure (left,history ++ denied ++ [ia,ib])
+  pure (left,history ++ denied ++ [ia,ib,ic,id])
 /-- Fresh per-round factories use certified merge/delete/split/restore sources. -/
 def check : Except String Unit := do
   let .ok compact := close source | throw "compact closure refused"
@@ -77,4 +102,8 @@ def check : Except String Unit := do
 #print axioms Functional.JointPublication.installCoordinated_rejoined
 #print axioms Functional.JointPublication.restageAfter_rejoined_expected
 #print axioms Functional.JointPublication.rejoined_receipt_refused
+#print axioms Functional.JointPublication.coordinatorAttempts_lifecycle
+#print axioms Functional.JointPublication.installCoordinated_recoveryWave
+#print axioms Functional.JointPublication.recoveryWave_refused
+#print axioms Functional.JointPublication.restageAfter_recoveryWave
 end LeanPoo.Examples.JointCoordination
