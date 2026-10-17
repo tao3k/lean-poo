@@ -372,3 +372,31 @@ premises. Host membership/index relowering, concurrent mutation, arbitrary retai
 Function revocation, callback termination, external-effect rollback and Scheme
 compiler/runtime/GC behavior are outside these proofs. Scheme builds independently
 of a Lean checkout. No timing or allocation improvement is claimed from these laws.
+
+## Named recursive catalog migration
+
+`Functional.RecursiveMigration` extends the fixed-index model with checked finite
+names and actual index lookup/lowering. Ordered edges retain duplicate shared
+aliases. Clean names preserve canonical identity when component removal shifts
+rows; removed names refuse and their logical epoch tombstones prevent same-name
+revival after readdition. Additions normalize even if an old total cache has a
+latent outside-support value. Named footprint/new/body seeds reuse the existing
+positive Boolean least closure, with fixed-equation, leastness, finite height,
+reader propagation and clean dependency laws. Complete current admission composes
+with exact bound-root evidence.
+
+`Examples/RecursiveMigrations.lean` executes the matching Gerbil six-round workflow:
+19→35→35→19→27→33, including peer SCC/provider migration, deletion/readdition,
+index movement, late refusal/retry, computed-only rebuilding, checked Function
+refusal, root refinement and stale subject/context evidence refusal. Gerbil's
+`reconfigure-validation`/`reconfiguration-action` reject ambiguous edits before
+builders and reuse the same canonical closure engine. Equal-output computed
+reader replacement is also a Scheme control.
+
+This advances generalized MOP future work. Mathematical named/index lowering is
+proved here; Scheme host/source identity correspondence, complete declared reads,
+custom Type laws, terminating callbacks and sequential mutation are premises.
+Gerbil uses fresh identities and permanent old-reference revocation to implement
+the logical epoch boundary. This does not certify runtime/compiler/GC behavior,
+arbitrary eager computed fixed points, automatic dependency discovery or atomic
+transactions combining graph commit with external FUN effects.

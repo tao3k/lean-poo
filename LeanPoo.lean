@@ -299,3 +299,4 @@ import LeanPoo.Functional.ClassValidation
 import LeanPoo.Functional.ValidationRebinding
 import LeanPoo.Functional.RecursiveValidation
 import LeanPoo.Functional.RecursiveRevision
+import LeanPoo.Functional.RecursiveMigration
