@@ -530,3 +530,51 @@ complete watched-version correspondence, explicit dependency footprints, pure
 locally terminating preparation/closure and sequential attempts remain premises.
 The list theorem describes serialized observations; it proves neither concurrent
 host installation nor atomic graph/effect rollback or arbitrary callback effects.
+
+
+## Multiple entry points sharing one recursive graph
+
+`recursive-publication.publication` creates one sequential handle for a checked
+recursive graph. All entry points use `current` and `stage-with` on that handle;
+there is one authoritative installed graph, rather than private per-entry heads.
+`stage-with` accepts the existing FUN restaging Reader. `submit!` invokes its guarded
+request and records a successful new graph before calling the entry observer.
+Graph rejection leaves the head untouched and never invokes the observer.
+
+`observe!` runs a fresh observer over the current graph without reconstructing it.
+An entry's refinement, evidence or policy refusal therefore cannot resurrect the
+retired graph; it can retry observation against the installed graph with its own
+unchanged context. Exceptions also release the operation guard and keep any graph
+already installed. The guard rejects nested preparation/publication before user
+callbacks run. Access must be serialized by the caller: the guard is not a thread
+lock, and each revision family must use one handle. Graph requests must be existing
+guarded staging actions. Callbacks must return locally and leave graph metadata
+immutable outside supported operations.
+
+`examples/recursive-publication.ss` composes existing service `refine` and exact
+`bind-evidence` observers with per-entry contexts. Three entry points rotate across
+eight actual revisions: simultaneous SCC merges/splits, shared provider migration,
+provider removal/reintroduction, computed-reader changes and a local SCC body edit.
+Fresh requests are prepared while historical generations remain pending. Late
+closure refusal is followed by explicit restaging; after installation, policy
+refusal is followed by an effect-only retry. Requests from all other entries and
+prior rounds refuse; old dirty References never revive. Foreign entry contexts
+refuse at the exact evidence gate; independent-node identity is retained. Separate
+controls cover real refinement exceptions, observer exceptions and reentrant calls.
+
+Lean `Functional.RecursivePublication` proves eight laws: observation preserves the
+shared graph; observation refusal preserves the whole world; other entry contexts
+are preserved by observation and submission; graph rejection prevents effects;
+late effect refusal retains the new graph; successful reclosure remains installed;
+and all sibling requests expire regardless of the winning entry's effect outcome.
+`Examples/RecursivePublication.lean` runs the same eight actual selective closures
+with distinct entry contexts, current refinement, evidence transplant rejection
+and effect-only retry. The shared contexts are explicit caller state, not stored
+inside the Scheme handle.
+
+This advances the original generalized-prototype **future work**. Complete declared
+reads/watches, exact graph identity/version correspondence, immutable metadata,
+trusted terminating callbacks and sequential installation remain premises. There
+is no claim of concurrent CAS, arbitrary callback-effect rollback, or atomic graph
+and external-effect publication. The finite model does not verify Scheme runtime
+or compiler internals.
