@@ -112,6 +112,14 @@ theorem servicesIndependent : LensIndependent leftGet leftPut rightGet rightPut 
 example : LensLaws (fun whole => (leftGet whole,rightGet whole))
     (fun pair whole => rightPut pair.2 (leftPut pair.1 whole)) :=
   leftLaws.pair rightLaws servicesIndependent
+/-- Name the settled raw carrier so nested workflows do not repeatedly unfold
+proof-carrying closure searches during kernel conversion. -/
+def settled (rate : Nat) : Raw := ((rate,3+rate,2+(3+rate)),"audit")
+/-- Each local certificate retains the same actual fixed equation and four steps. -/
+def certificate (rate : Nat) : BoundedClosed (fragmentProtocol cook) (partsAt rate) base :=
+  ⟨⟨settled rate,by rfl⟩,4⟩
+/-- Check the shared left search once; later family proofs reuse an opaque theorem. -/
+theorem close10 : closeWithin (fragmentProtocol cook) parts base base 4 = .ok (certificate 10) := rfl
 /-- Sequential local closures are revalidated against ONE final wider raw carrier. -/
 def closeFamily (seed : Family) (rightBudget : Nat := 4) : Except String Family := do
   let left ← closeFocused (fragmentProtocol cook) parts leftGet leftPut base seed 4
@@ -124,11 +132,22 @@ def reportFamily (whole : Family) (units : Nat) : Except String (Nat × Nat × N
   let left ← (cook whole.1).charge units
   let right ← (cook whole.2.1).charge units
   return (left,right,left+right,whole.2.2)
+/-- Compose the checked local searches before checking the two final equations.
+This prevents a nested rfl from expanding both proof-carrying searches repeatedly. -/
+theorem familyResult : closeFamily (base,base,"tenant audit") =
+    .ok (settled 10,settled 20,"tenant audit") := by
+  simp only [closeFamily,closeFocused,leftGet,rightGet,leftPut,rightPut,close10,Except.map]
+  rfl
+/-- A budget refusal remains a refusal after the successful first local closure. -/
+theorem familyRefused : closeFamily (base,base,"tenant audit") 0 =
+    .error "closure budget exhausted" := by
+  simp only [closeFamily,closeFocused,leftGet,rightGet,leftPut,rightPut,close10,Except.map]
+  rfl
 /-- The complex family closes and cooks the same outputs as the native vectors. -/
 example : ((closeFamily (base,base,"tenant audit")).bind (fun whole => reportFamily whole 2)) =
-    .ok (96,176,272,"tenant audit") := rfl
+    .ok (96,176,272,"tenant audit") := by rw [familyResult]; rfl
 /-- The second refusal cannot publish the already-completed first component. -/
-example (old : Family) : publishClosed old (closeFamily (base,base,"tenant audit") 0) = old := rfl
+example (old : Family) : publishClosed old (closeFamily (base,base,"tenant audit") 0) = old := by rw [familyRefused]; rfl
 /-- ANY accepted left closure preserves both sibling and shared frame. -/
 example (seed result : Family) (accepted : closeFocused (fragmentProtocol cook) parts
     leftGet leftPut base seed 4 = .ok result) : result.2 = seed.2 :=
@@ -150,7 +169,9 @@ example : (do
     let first ← closeFocused (fragmentProtocol cook) parts leftGet leftPut base (base,base,"audit") 4
     let second ← closeFocused (fragmentProtocol cook) (partsAt 20) leftGet leftPut base first 4
     validateFocused (fragmentProtocol cook) parts leftGet base second) =
-    .error "later focused update invalidated an earlier raw closure" := rfl
+    .error "later focused update invalidated an earlier raw closure" := by
+  simp only [closeFocused,leftGet,leftPut,close10,Except.map]
+  rfl
 /-- A scalar prototype uses the SAME generalized protocol alongside a vector-like service. -/
 def scalarProtocol : Protocol Nat Nat Nat := ⟨id,fun value _ _ => value⟩
 /-- Distinct raw/focus types need no shared representation tag or erased interpreter. -/
@@ -161,7 +182,9 @@ example : (do
       (fun value raw => (raw.1,value,raw.2.2)) 0 first 2
     validateFocused (fragmentProtocol cook) parts Prod.fst base whole
     validateFocused scalarProtocol [7] (fun raw : Raw × Nat × String => raw.2.1) 0 whole
-    return whole) = .ok (((10,13,15),"audit"),7,"audit") := rfl
+    return whole) = .ok (((10,13,15),"audit"),7,"audit") := by
+  simp only [closeFocused,Except.map]
+  rfl
 #print axioms LensLaws.compose
 #print axioms rateLaws
 #print axioms feeLaws

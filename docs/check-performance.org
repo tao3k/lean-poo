@@ -630,3 +630,10 @@ Lake's =weakLeanArgs= caps module compiler threads/memory without forcing every
 cached artifact to rebuild merely because worker sizing changed. This policy
 covers this repository's maintained entry points. Ad-hoc commands in another
 checkout are not protected by this gate.
+
+The first CI run under compiler memory limits rejected the nested =rfl= family
+checks in =Examples/ClosedPrototypes.lean=. The same failure was reproduced locally
+at 1536 MiB. Named local closure certificates and composed family/refusal proofs
+avoid repeating proof-carrying closure normalization. The unchanged propositions
+now pass at the same 1536 MiB limit; the maintained 2048 MiB limit was not raised.
+The original failed CI/local logs remain diagnostic evidence, not successful checks.
