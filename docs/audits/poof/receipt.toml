@@ -489,6 +489,7 @@
   "LeanPoo/Object/CallableValidation.lean",
   "LeanPoo/Object/Class.lean",
   "LeanPoo/Object/Debug.lean",
+  "LeanPoo/Object/DeclarationOrder.lean",
   "LeanPoo/Object/Definition.lean",
   "LeanPoo/Object/DispatchTable.lean",
   "LeanPoo/Object/Generic.lean",

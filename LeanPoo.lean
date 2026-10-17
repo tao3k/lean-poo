@@ -315,5 +315,6 @@ import LeanPoo.Functional.RecursiveSubmissions
 import LeanPoo.Functional.RecursiveRecovery
 import LeanPoo.Functional.RecursiveCoordination
 import LeanPoo.Functional.Parameters
+import LeanPoo.Object.DeclarationOrder
 
 import LeanPoo.Prototype.Representation

@@ -137,6 +137,7 @@ def run_atom(atom, seconds=120):
 
 
 def stop_children(signum, frame):
+    """Reclaim owned groups, then exit without joining blocked progress writers."""
     STOPPING.set()
     with PROCESS_LOCK:
         for process in ACTIVE:
@@ -144,7 +145,10 @@ def stop_children(signum, frame):
                 kill_group(process)
             except ProcessLookupError:
                 pass
-    raise SystemExit(128 + signum)
+    # All owned process groups have been stopped. Bypass executor/atexit joins:
+    # a worker can be blocked writing progress after its parent reader exits.
+    # Cancellation is always a nonzero status, never a successful check receipt.
+    os._exit(128 + signum)
 
 
 def execute(atoms, jobs):

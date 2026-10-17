@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import subprocess
 import tempfile
+import time
 import unittest
 
 from tools.check_atoms import configure_limits, configure_threads, execute, load_atoms, select_atoms
@@ -76,6 +77,36 @@ class CheckAtomsTests(unittest.TestCase):
                 if 'wall_seconds' in result:
                     self.assertGreaterEqual(result['cpu_seconds'], 0)
                     self.assertLess(result['cpu_seconds'], result['wall_seconds'] + 0.1)
+
+    def test_interruption_exits_with_a_worker_blocked_on_progress_output(self):
+        # A closed/undrained parent log must not make executor shutdown join forever.
+        with tempfile.TemporaryDirectory() as temporary:
+            ready = Path(temporary) / 'writer-ready'
+            program = (
+                'import signal,threading; from pathlib import Path; '
+                'from concurrent.futures import ThreadPoolExecutor; '
+                'from tools.check_atoms import emit,stop_children; '
+                'signal.signal(signal.SIGTERM,stop_children); '
+                f'ready=Path({str(ready)!r}); '
+                'pool=ThreadPoolExecutor(max_workers=1); '
+                'pool.submit(lambda: (ready.write_text("ready"),emit("x"*1048576))); '
+                'signal.pause()'
+            )
+            child = subprocess.Popen([sys.executable, '-u', '-c', program],
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            try:
+                deadline = time.monotonic() + 3
+                while not ready.exists() and time.monotonic() < deadline and child.poll() is None:
+                    time.sleep(0.01)
+                self.assertTrue(ready.exists(), 'Progress writer did not start')
+                # Leave stdout unread so its worker cannot finish the 1 MiB write.
+                child.terminate()
+                self.assertEqual(child.wait(timeout=2), 143)
+            finally:
+                if child.poll() is None:
+                    child.kill()
+                    child.wait(timeout=2)
+                child.stdout.close()
 
     def test_interruption_stops_children_and_prevents_queued_launches(self):
         with tempfile.TemporaryDirectory() as temporary:

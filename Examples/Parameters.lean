@@ -1,4 +1,5 @@
 import LeanPoo.Functional.Parameters
+import LeanPoo.Object.DeclarationOrder
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
 The executable Gerbil fixture additionally tests actual C3, macro hygiene, generic
@@ -81,4 +82,23 @@ def test : Except String Unit := do
 #eval match test with
   | .ok () => IO.println "PARAMETERS-OK"
   | .error cause => throw (IO.userError cause)
+/-- The source C4 order is child/left/right/base; field inventory is ancestor-first. -/
+example : inheritedNames [[3], [1], [2], [0]] = [0, 2, 1, 3] := rfl
+/-- Repeated local declarations do not move the first inherited field position. -/
+example : inheritedNames [[3, 0], [1, 0], [2, 0], [0]] = [0, 2, 1, 3] := by decide
+
+/-- Equal printed names may have different lexical binding identities. -/
+def scopedIdentifiers : List (String × Nat) := [("value",1),("value",2),("value",1)]
+example : uniqueBindings Prod.snd [] scopedIdentifiers = [("value",1),("value",2)] := by decide
+
+/-- Current child visibility suppresses the older public label; methods remain public. -/
+def declarations : List (String × Bool × Nat) :=
+  [("label",true,11),(".summary",false,2),("label",false,7),(".charge",false,3)]
+example : Prototype.DescriptorReflection.publicDeclaration "label" declarations = none := by decide
+example : Prototype.DescriptorReflection.publicDeclaration ".summary" declarations = some 2 := by decide
+example : Prototype.DescriptorReflection.publicDeclaration "label"
+    (uniqueBindings Prod.fst [] declarations) = none := by decide
+
+#print axioms Functional.Parameters.find_uniqueBindings
+#print axioms Prototype.DescriptorReflection.publicDeclaration_unique
 end LeanPoo.Examples.Parameters

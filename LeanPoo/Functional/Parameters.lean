@@ -133,4 +133,60 @@ theorem optional_supplied (value : Value) (default : Unit → Value) : optional 
 /-- Absent arguments use exactly their declaration's default result. -/
 theorem optional_absent (default : Unit → Value) : optional none default = default () := rfl
 
+/-- Stable first-occurrence selection over exact keys. For syntax, keys stand for
+lexical binding identities, not printed names; the host comparator must agree. -/
+def uniqueBindings [DecidableEq Key] (key : Entry → Key) (seen : List Key) : List Entry → List Entry
+  | [] => []
+  | entry :: rest =>
+    if key entry ∈ seen then uniqueBindings key seen rest
+    else entry :: uniqueBindings key (key entry :: seen) rest
+
+/-- An unseen first representative is retained unchanged, including its payload. -/
+theorem uniqueBindings_first [DecidableEq Key] (key : Entry → Key) (seen : List Key)
+    (entry : Entry) (rest : List Entry) (fresh : key entry ∉ seen) :
+    uniqueBindings key seen (entry :: rest) = entry :: uniqueBindings key (key entry :: seen) rest := by
+  simp [uniqueBindings, fresh]
+
+/-- A previously selected key never gets another representative. -/
+theorem uniqueBindings_skip [DecidableEq Key] (key : Entry → Key) (seen : List Key)
+    (entry : Entry) (rest : List Entry) (present : key entry ∈ seen) :
+    uniqueBindings key seen (entry :: rest) = uniqueBindings key seen rest := by
+  simp [uniqueBindings, present]
+
+/-- Deduplication preserves first-key lookup. Already selected keys are absent,
+so a filtered private override cannot reveal a later public representative. -/
+theorem find_uniqueBindings [DecidableEq Key] (key : Entry → Key) (seen : List Key)
+    (entries : List Entry) (name : Key) :
+    (uniqueBindings key seen entries).find? (fun entry => decide (key entry = name)) =
+      if name ∈ seen then none else entries.find? (fun entry => decide (key entry = name)) := by
+  induction entries generalizing seen with
+  | nil => simp [uniqueBindings]
+  | cons entry rest ih =>
+    by_cases present : key entry ∈ seen
+    · simp only [uniqueBindings, present, ite_true]
+      rw [ih]
+      by_cases selected : name ∈ seen
+      · simp [selected]
+      · have different : key entry ≠ name := by intro same; apply selected; simpa [← same] using present
+        simp [selected, different]
+    · simp only [uniqueBindings, present, ite_false, List.find?_cons]
+      by_cases same : key entry = name
+      · subst name; simp [present]
+      · rw [ih]
+        simp [same, Ne.symm same]
+
+/-- With a fresh set, current lookup is exactly the first original declaration. -/
+theorem find_freshBindings [DecidableEq Key] (key : Entry → Key) (entries : List Entry) (name : Key) :
+    (uniqueBindings key [] entries).find? (fun entry => decide (key entry = name)) =
+      entries.find? (fun entry => decide (key entry = name)) := by
+  simpa using find_uniqueBindings key [] entries name
+
+/-- Ancestor-first slot inventory is a distinct order from most-specific metadata.
+Each ancestor's local order is retained while repeated symbolic keys disappear. -/
+def inheritedNames [DecidableEq Key] (groups : List (List Key)) : List Key :=
+  uniqueBindings id [] groups.reverse.flatten
+
+/-- Empty inheritance has no invented field names. -/
+theorem inheritedNames_empty [DecidableEq Key] : inheritedNames (Key := Key) [] = [] := rfl
+
 end LeanPoo.Functional.Parameters

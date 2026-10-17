@@ -159,3 +159,89 @@ lookup laws. `Examples/ServiceCollection.lean` composes these laws with existing
 ordered validation. Host hash equality, standard interface dispatch/iteration,
 weak-reference reachability and callback behavior remain premises, not kernel
 proofs of Gerbil or GC. Resource guards and complete checks remain unchanged.
+
+## Inheritance, dispatch, syntax and reflection audit
+
+This follow-up inspects runtime `c3.ss` (`c4-linearize`, `c4-linearize*`,
+`c4-compute-class-slots`), expander `stx.ss` (`identifier-list?`), core
+`mop.ss` / `contract.ss`, and standard list deduplication against `object.ss`,
+`reflection.ss`, `.defgeneric`, method combination and sparse multi-dispatch.
+
+Confirmed repetitions removed:
+
+- `compute-precedence-list!` calls core `c4-linearize*` directly. The previous
+  core `c4-linearize` compatibility wrapper only reversed the singleton head and
+  wrapped the parents in one list. Those exact arguments now go to the primary
+  API. The POO active-path guard, checked inherited hooks, diagnostic naming and
+  revision invalidation remain unchanged. Tests compare both actual core APIs
+  and the public POO result on a shared diamond.
+- `merge-super-slots` uses ordered standard `append` and
+  `delete-duplicates/hash`, with the same symbolic-identity table and explicit
+  `from-end?: #t`. Ancestor-first inventory order and most-specific method order
+  remain distinct. Same-printed uninterned symbols retain distinct identities.
+  A regression rejected this release's `append-map` for this path because its
+  actual order differs; the original order expectation is retained.
+- `reflect-slots` uses standard first-key deduplication instead of a handwritten
+  seen/filter loop. It still resolves the most-specific declaration **before**
+  visibility filtering, so a private child cannot reveal a public ancestor.
+  Hidden metadata getter order is retained by the existing outer fold. Instance
+  values remain unforced during reflection; metadata revision uses the current
+  descriptors and invalidates registered receivers normally.
+- Lexical slot binding deduplication uses the same standard deduplicator with
+  `bound-identifier=?` and an explicit constant hash. A printed-datum hash would
+  be invalid for binding identity. This preserves first representatives and the
+  original quadratic worst case; no compile-time speedup is asserted. A real
+  macro control distinguishes same-spelled identifiers from different scopes.
+- Object `bind:` admission delegates to core `identifier-list?`. The reserved
+  option-prefix grammar, source errors and local-slot binding rules remain POO
+  syntax. Dotted/nonidentifier lists refuse during actual expansion.
+- Contribution/forwarding/Simula constructors, simple-policy Boolean checks and
+  guarded multi-dispatch reuse the existing support refusal policy over core
+  `using`. The actual predicate or method body is outside local translation;
+  legacy errors, original exceptions and strict Boolean decisions are retained.
+
+Retained after comparison:
+
+- Core class methods do not supply this library's runtime prototype tuples,
+  persistent generic revisions, qualifier policies, current-call guards,
+  negative watches, receiver-dependent computed slots or nested cache transport.
+  Sparse multi-dispatch and the POO `.defgeneric` operation remain. No class
+  method cache is treated as a current negative-assumption certificate.
+- Standard host class slots are fixed metadata; `c4-compute-class-slots` also
+  inserts a class field and has its own layout order. It cannot replace the POO
+  symbolic inventory or public/private declaration catalogs.
+- Core lambda expansion owns legal host arguments and default evaluation.
+  `support/syntax.ss` retains the small forwarder for the currently supported
+  ordinary required/optional/keyword/rest grammar. No public standard routine
+  with that exact forwarding/failure policy was identified; private compiler
+  signature helpers are not imported as a substitute. Arbitrary annotated host
+  signatures and universal macro-expander equivalence are not claimed.
+- Method qualifier grouping and `next` chains retain their existing fold and
+  callback order. A generic filter/map rewrite would need a separate effect-order
+  argument; no body/default/guard is speculatively evaluated for reflection.
+
+`examples/declared-methods.ss` extends its existing shared inheritance family
+with a private label override and an optional/keyword/rest summary method. The
+existing FUN Reader returns both charge and summary from fresh receiver data;
+method effects stay ordered and current context is not cached. Nine additional
+cases in `t/library-reuse-test.ss` cover core C4 equivalence, symbolic and lexical
+identity, hidden override revision, actual syntax rejection, legacy constructor
+refusals, per-call guards/negative assumptions and the integrated multi-value
+observation. No new Scheme module or namespace is introduced.
+
+Lean adds five stable-selection/inventory laws in existing
+`Functional.Parameters`, and three public-selection laws in existing
+`Prototype.DescriptorReflection` (`Object/DeclarationOrder.lean`). Examples stay
+in root `Examples/Parameters.lean` and its existing namespace. The standard
+hash comparator and C4/expander behavior are host premises checked by Scheme
+controls; these laws prove the finite semantic policy, not Gerbil compilation,
+GC, arbitrary effects or concurrency. Existing method-combination and hook laws
+remain the corresponding continuation/order proofs. Resource limits and the
+complete local/CI check sets remain mandatory.
+
+Cancellation verification also covers a blocked progress pipe: after stopping
+owned child groups, the atom supervisor exits with status 143 without joining
+executor threads that can no longer drain output. A subprocess regression fails
+on the previous implementation with a bounded timeout and passes after the fix.
+Existing queued-launch cancellation, process-group and complete-check tests remain;
+heap, time, heartbeat and concurrency budgets are not widened.
