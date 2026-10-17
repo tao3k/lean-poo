@@ -155,3 +155,32 @@ pure callbacks, vectors as tagged rows and immutable identities as supplied IDs.
 The fixture's named inventory is fixed by its Lean record type. Host representation,
 parsing/runtime correctness, arbitrary external adapters, cyclic closure, wrapper
 deduplication and higher-order blame remain outside these claims.
+
+## Pair, Map, Sum and Union
+
+The companion `variant-validation` now integrates the four existing Type
+constructors with shared structural traversal. Pair validates both positions;
+Map normalizes keys and values without changing the source, preserves the host
+hash policy through `hash-new`, and refuses normalized-key collisions; Sum checks
+tag before payload and installs the returned wrapped payload while inheriting its
+source. Union recognition remains existential, while normalization commits to the
+first structural branch and checks its own returned value. Selected errors cannot
+fall through to a more permissive alternative. JSON dispatch is unchanged.
+
+`LeanPoo/Functional/VariantValidation.lean` adds sixteen laws for components,
+normalized map positions/length/collision checks, Sum tag/payload preservation,
+ordered structural selection, unmatched branches and committed Union errors.
+Final refinement and exact-reference publication reuse the existing object laws.
+`Examples/VariantContracts.lean` composes Pair → map snapshot → Sum → Union →
+refined Function schema and an approval callback. It covers active/data variants,
+invalid tag, collision, Union fallback refusal, wrong output, root relation and
+raw/stale evidence rejection followed by retry. The Scheme example uses existing
+JSON/FUN and named route execution, without relying on host map traversal order.
+
+The finite model requires table-key equivalence to agree with actual host hashing,
+valid Type declarations, total pure callbacks and immutable reference mapping.
+It does not prove Scheme identity/allocation, the hash implementation, JSON parser,
+compiler/runtime or external effect rollback. Ordered committed Union validation
+is not equivalent to existential membership. These are explicit future-work
+extensions of the section 5 descriptor constructs, not a claim of whole-paper
+completion. Other Type families, cyclic closure and wrapper deduplication remain.
