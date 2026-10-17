@@ -23,11 +23,25 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
+      - uses: actions/cache/restore@v4
+        id: library-cache
+        with:
+          path: .lake/build
+          key: lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
       - name: Build public library and proofs
-        run: |
-          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
-          lake env lean LeanPoo/C4/Types.lean
-          python3 -m unittest discover -s tools/tests -p 'test_*.py'
+        run: lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
+      - name: Check standalone C4 types
+        run: lake env lean LeanPoo/C4/Types.lean
+      - name: Check validation supervisors
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'
+      - uses: actions/cache/save@v4
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        with:
+          path: .lake/build
+          key: ${{ steps.library-cache.outputs.cache-primary-key }}
       - name: Package this run's build
         run: tar -czf lean-build.tar.gz .lake/build
       - uses: actions/upload-artifact@v4
@@ -36,6 +50,7 @@ jobs:
           path: lean-build.tar.gz
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   lean-checks:
     name: lean shard ${{ matrix.shard }}
@@ -55,6 +70,7 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: taiki-e/install-action@just
       - uses: actions/download-artifact@v4
         with:
@@ -76,6 +92,7 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: taiki-e/install-action@just
       - uses: actions/download-artifact@v4
         with:
@@ -108,6 +125,7 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: actions/download-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
