@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from tools.check_atoms import configure_threads, execute, load_atoms, select_atoms
+from tools.check_atoms import configure_limits, configure_threads, execute, load_atoms, select_atoms
 
 
 class CheckAtomsTests(unittest.TestCase):
@@ -38,6 +38,13 @@ class CheckAtomsTests(unittest.TestCase):
         self.assertIs(configure_threads(atoms, None), atoms)
         with self.assertRaises(ValueError):
             configure_threads(atoms, 0)
+
+    def test_every_atom_has_a_memory_and_allocation_budget(self):
+        for atom in configure_limits(load_atoms()):
+            self.assertTrue(any(arg.startswith('-M') for arg in atom['command']))
+            self.assertTrue(any(arg.startswith('-T') for arg in atom['command']))
+        bounded = dict(file='fixture',command=['lean','-M','512','-T','100','fixture'])
+        self.assertEqual(configure_limits([bounded]), [bounded])
 
     def test_bad_or_empty_shard_and_unknown_file_fail(self):
         atoms = load_atoms()

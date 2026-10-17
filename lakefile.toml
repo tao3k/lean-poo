@@ -1,6 +1,7 @@
 name = "LeanPoo"
 version = "0.1.1"
 defaultTargets = ["LeanPoo"]
+weakLeanArgs = ["-j2", "-M2048"]
 
 [[lean_lib]]
 name = "LeanPoo"

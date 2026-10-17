@@ -736,3 +736,7 @@ admission, preserving returned multiple values. Thirteen normalized semantic law
 and executable syntax/refusal controls cover the declared boundary. See
 [parameters.md](parameters.md); general type inference and typed optional Fun
 signatures remain separate work.
+
+Representation and cache coherence are now specified separately in
+[representation.md](representation.md): a cached index never substitutes for
+ObjectContract/refine admission. The checked service composes existing FUN bind.

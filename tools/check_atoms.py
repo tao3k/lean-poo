@@ -12,6 +12,11 @@ import subprocess
 import threading
 import time
 
+try:
+    from .process_guard import collect, kill_group
+except ImportError:
+    from process_guard import collect, kill_group
+
 ROOT = Path(__file__).resolve().parents[1]
 RECIPES = ('_check-examples', '_check-contracts')
 PRINT_LOCK = threading.Lock()
@@ -87,7 +92,23 @@ def configure_threads(atoms, threads):
     return configured
 
 
-def run_atom(atom):
+def configure_limits(atoms):
+    """Bound every compiler, retaining stricter source-owned resource arguments."""
+    result = []
+    for atom in atoms:
+        command = list(atom['command'])
+        position = command.index('lean') + 1
+        options = []
+        if not any(arg == '-M' or arg.startswith('-M') for arg in command):
+            options.append('-M2048')
+        if not any(arg == '-T' or arg.startswith('-T') for arg in command):
+            options.append('-T10000000')
+        command[position:position] = options
+        result.append(dict(atom, command=command))
+    return result
+
+
+def run_atom(atom, seconds=120):
     file = atom['file']
     emit(f'CHECK-ATOM-START {file}')
     started = time.monotonic()
@@ -99,18 +120,13 @@ def run_atom(atom):
                                    stderr=subprocess.STDOUT, start_new_session=True)
         ACTIVE.add(process)
     try:
-        for line in iter(process.stdout.readline, b''):
+        def output(line):
             digest.update(line)
             emit(f'[{file}] {line.decode(errors="replace").rstrip()}')
-        _, status, usage = os.wait4(process.pid, 0)
-        code = os.waitstatus_to_exitcode(status)
-        process.returncode = code
+        code, usage = collect(process, output, seconds)
         cpu = usage.ru_utime + usage.ru_stime
     finally:
-        if process.poll() is None:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.wait()
-        process.stdout.close()
+        kill_group(process)
         with PROCESS_LOCK:
             ACTIVE.discard(process)
     elapsed = time.monotonic() - started
@@ -125,7 +141,7 @@ def stop_children(signum, frame):
     with PROCESS_LOCK:
         for process in ACTIVE:
             try:
-                os.killpg(process.pid, signal.SIGTERM)
+                kill_group(process)
             except ProcessLookupError:
                 pass
     raise SystemExit(128 + signum)
@@ -151,7 +167,7 @@ def execute(atoms, jobs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jobs', type=int, default=4)
-    parser.add_argument('--lean-threads', type=int)
+    parser.add_argument('--lean-threads', type=int, default=2)
     parser.add_argument('--shard', type=int, default=0)
     parser.add_argument('--shards', type=int, default=1)
     parser.add_argument('--files', nargs='+')
@@ -160,7 +176,7 @@ def main():
     args = parser.parse_args()
     try:
         inventory = load_atoms()
-        atoms = configure_threads(select_atoms(inventory, args.shard, args.shards, args.files), args.lean_threads)
+        atoms = configure_limits(configure_threads(select_atoms(inventory, args.shard, args.shards, args.files), args.lean_threads))
         if args.jobs < 1:
             raise ValueError('Jobs must be positive')
     except (ValueError, subprocess.SubprocessError) as error:
