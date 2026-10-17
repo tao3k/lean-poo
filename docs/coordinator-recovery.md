@@ -81,3 +81,7 @@ guards, fresh identities, lawful lenses, correct dependencies and valid total
 factories. This finite trace proof does not prove the thread runtime, scheduling
 fairness, arbitrary recursive convergence or distributed/durable transactions.
 Functionality is the scope of this change; no performance improvement is claimed.
+
+Explicit replacement operations can now rejoin the live scope after cleanup/join
+and outcome handling; see [coordinator-rejoining.md](coordinator-rejoining.md) for
+three recoveries during the continuing six-phase workflow and old-receipt laws.

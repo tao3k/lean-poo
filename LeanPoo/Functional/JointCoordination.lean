@@ -39,13 +39,14 @@ theorem restageAfter_refused {Valid : Bundle Id Endpoint Policy Head Metadata �
     rw [installSequence_append,installSequence_inert _ denied refused]
   exact congrArg (fun observed =>
     (⟨observed.id,(prepare observed).val,revision,(prepare observed).property⟩ : Approved (Revision := Revision) Valid)) same
-/-- A lifecycle event either reaches the existing installation boundary or stops
-one coordinator without a publication. Earlier successful writes stay in the trace.
+/-- A lifecycle event reaches the existing installation boundary or records a
+coordinator stopping/rejoining without publication. Earlier successful writes stay in the trace.
 Stopping is NOT modelled as rolling back or accepting that coordinator's receipts. -/
 inductive CoordinatorEvent (Coordinator : Type)
     (Valid : Bundle Id Endpoint Policy Head Metadata → Prop) where
   | attempt : Installation (Revision := Revision) Valid → CoordinatorEvent Coordinator Valid
   | stopped : Coordinator → CoordinatorEvent Coordinator Valid
+  | rejoined : Coordinator → CoordinatorEvent Coordinator Valid
 /-- Project the actual serialized installations; failed preparation and normal exit
 have no owner write. Cleanup must establish this premise in the native program. -/
 def coordinatorAttempts {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
@@ -53,6 +54,7 @@ def coordinatorAttempts {Coordinator : Type} {Valid : Bundle Id Endpoint Policy 
   events.filterMap fun event => match event with
     | .attempt attempt => some attempt
     | .stopped _ => none
+    | .rejoined _ => none
 /-- Execute surviving installation attempts using the same checked owner protocol. -/
 def installCoordinated {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
     (current : Bundle Id Endpoint Policy Head Metadata)
@@ -82,4 +84,38 @@ theorem installCoordinated_valid {Coordinator : Type} {Valid : Bundle Id Endpoin
     (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (old : Valid current) :
     Valid (installCoordinated current events) :=
   installSequence_valid current (coordinatorAttempts events) old
+/-- Rejoining itself has no publication authority: earlier installed winners
+and surviving competing attempts are unaffected by the lifecycle notification. -/
+theorem installCoordinated_rejoined {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (before after : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (who : Coordinator) :
+    installCoordinated current (before ++ .rejoined who :: after) =
+      installCoordinated current (before ++ after) := by
+  simp [installCoordinated,coordinatorAttempts,List.filterMap_append]
+/-- Explicit fresh preparation after recovery captures the actual prefix winner,
+including publications by other coordinators while the failed operation was absent. -/
+theorem restageAfter_rejoined_expected {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (who : Coordinator)
+    (prepare : (state : Bundle Id Endpoint Policy Head Metadata) → {candidate // Valid candidate}) (revision : Revision) :
+    (restageAfter current (coordinatorAttempts (events ++ [.rejoined who])) prepare revision).expected =
+      (installCoordinated current events).id := by
+  simp [restageAfter,coordinatorAttempts,List.filterMap_append,installCoordinated]
+/-- A recovered operation cannot revive an old receipt when the head advanced OR
+its registered approval revision drifted. Restart alone does not revoke a receipt
+whose captured head and registered guards are still current. -/
+theorem rejoined_receipt_refused {Coordinator : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (events : List (CoordinatorEvent (Revision := Revision) Coordinator Valid)) (who : Coordinator)
+    (old : Approved (Revision := Revision) Valid) (live : Revision)
+    (obsolete : (installCoordinated current events).id ≠ old.expected ∨ old.staged ≠ live) :
+    installCoordinated current (events ++ [.rejoined who,.attempt ⟨old,live⟩]) =
+      installCoordinated current events := by
+  simp only [installCoordinated,coordinatorAttempts,List.filterMap_append,List.filterMap_cons,List.filterMap_nil]
+  rw [installSequence_append]
+  change installChecked old.expected (installSequence current (coordinatorAttempts events)) old.candidate
+    old.staged live true = _
+  rcases obsolete with head | drift
+  · exact checked_stale _ _ _ _ _ _ head
+  · exact metadata_stale _ _ _ _ _ _ drift
 end LeanPoo.Functional.JointPublication

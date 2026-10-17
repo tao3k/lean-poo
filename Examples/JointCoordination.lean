@@ -15,7 +15,11 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
   let tb ← certify current.id ⟨0,fun _ => head,fun _ => (ceiling,budget+2)⟩ 2
   let shared : Receipt := ⟨current.id,ta.candidate,0,ta.valid⟩
   let denied : List Attempt := [⟨shared,1⟩,⟨shared,1⟩]
-  let a := Functional.JointPublication.restageAfter current denied (freshCandidate ta) 1
+  let recovering : List (Functional.JointPublication.CoordinatorEvent (Revision := Nat) String
+      (fun state : State => approved state = true)) :=
+    [.attempt ⟨shared,1⟩,.stopped "failed",.attempt ⟨shared,1⟩,.rejoined "failed"]
+  let a := Functional.JointPublication.restageAfter current
+    (Functional.JointPublication.coordinatorAttempts recovering) (freshCandidate ta) 1
   let b := Functional.JointPublication.restageAfter current denied (freshCandidate tb) 2
   unless a.expected == current.id && b.expected == current.id do throw "refusal moved coordinator source"
   let ia : Attempt := ⟨a,1⟩
@@ -28,11 +32,18 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
   -- Lifecycle exits carry no installation; survivors still select the full
   -- fresh winner after guard refusals, and exits after publication cannot undo it.
   let events : List (Functional.JointPublication.CoordinatorEvent (Revision := Nat) String (fun state : State => approved state = true)) :=
-    [.attempt ⟨shared,1⟩,.stopped "failed",.attempt ⟨shared,1⟩,.stopped "returned",
+    [.attempt ⟨shared,1⟩,.stopped "failed",.attempt ⟨shared,1⟩,.rejoined "failed",.stopped "returned",
      .attempt ia,.stopped "after-publication",.attempt ib] ++ history.map .attempt
   let recovered := Functional.JointPublication.installCoordinated current events
   unless recovered.id == left.id && recovered.approvals 0 == left.approvals 0 do
     throw "local exit cancelled survivors or rolled back publication"
+  let oldHead := Functional.JointPublication.installCoordinated left
+    [.rejoined "failed",.attempt ib]
+  let oldGuard := Functional.JointPublication.installCoordinated current
+    [.rejoined "failed",.attempt (⟨shared,1⟩ : Attempt)]
+  unless oldHead.id == left.id && oldHead.approvals 0 == left.approvals 0 &&
+      oldGuard.id == current.id && oldGuard.approvals 0 == current.approvals 0 do
+    throw "rejoining revived superseded head or expired shared guard"
   let late := Functional.JointPublication.installChecked b.expected left b.candidate (2:Nat) 2 true
   unless late.id == left.id && late.approvals 0 == left.approvals 0 do throw "superseded coordinator overwrote winner"
   pure (left,history ++ denied ++ [ia,ib])
@@ -63,4 +74,7 @@ def check : Except String Unit := do
 #print axioms Functional.JointPublication.installCoordinated_stopped
 #print axioms Functional.JointPublication.restageAfter_coordinator_stopped
 #print axioms Functional.JointPublication.installCoordinated_valid
+#print axioms Functional.JointPublication.installCoordinated_rejoined
+#print axioms Functional.JointPublication.restageAfter_rejoined_expected
+#print axioms Functional.JointPublication.rejoined_receipt_refused
 end LeanPoo.Examples.JointCoordination
