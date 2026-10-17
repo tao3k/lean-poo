@@ -31,6 +31,7 @@ import LeanPoo.Functional.Validation
 import LeanPoo.Functional.FunctionSignature
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.RecursiveGeneration
+import LeanPoo.Functional.PrototypeTypes
 import LeanPoo.Functional.Codec
 import LeanPoo.Functional.ComputationBatch
 import LeanPoo.Functional.Requirements

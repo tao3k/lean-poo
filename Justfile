@@ -372,6 +372,7 @@ _check-examples:
     {{lean}} Examples/Representation.lean
     {{lean}} Examples/GeneratedCalls.lean
     {{lean}} Examples/RecursiveGenerators.lean
+    {{lean}} Examples/PrototypeTypes.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
