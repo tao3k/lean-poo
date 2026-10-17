@@ -11,10 +11,6 @@ structure Step where
   head : Head
   ceiling : Nat
   budget : Nat
-/-- A successful checked factory retains actual heads/policy and allocates an
-identity from the observed head. Admission does not depend on snapshot identity. -/
-def prepare (template : Receipt) (state : State) : {candidate : State // approved candidate = true} :=
-  ⟨⟨state.id+1,template.candidate.heads,template.candidate.approvals⟩,template.valid⟩
 /-- Advance one source phase, reject changed metadata, then explicitly prepare
 the next phase while an old candidate remains absent from the observed prefix. -/
 def pair (prior : State × List Attempt) (steps : Step × Step) : Except String (State × List Attempt) := do
@@ -27,7 +23,7 @@ def pair (prior : State × List Attempt) (steps : Step × Step) : Except String 
   let template ← certify observed.id ⟨0,fun _ => next.head,fun _ => (next.ceiling,next.budget)⟩ 1
   let bad : Attempt := ⟨⟨observed.id,template.candidate,0,template.valid⟩,1⟩
   let checkedPrefix := prefixAttempts ++ [bad] ++ history
-  let receipt := Functional.JointPublication.restageAfter current checkedPrefix (prepare template) 1
+  let receipt := Functional.JointPublication.restageAfter current checkedPrefix (freshCandidate template) 1
   unless receipt.expected == observed.id do throw "restaging captured an old source head"
   let fresh : Attempt := ⟨receipt,1⟩
   let old : Attempt := ⟨held,1⟩

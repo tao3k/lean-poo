@@ -1,5 +1,8 @@
 # Restaging while older installation workers remain pending
 
+See [joint-coordination.md](joint-coordination.md) for independent coordinators
+concurrently constructing, retrying and publishing through shared owner state.
+
 This advances generalized-prototype future work from original Racket Appendix B
 `$lens-gen` (pin `9affa8fbbb4f12cbd98cb97f8b8b84474fc39429`, lines 2108–2133).
 The paper supplies composable lens-based construction, not this installation
