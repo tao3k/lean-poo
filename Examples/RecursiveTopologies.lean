@@ -79,7 +79,9 @@ def payload (source : Source) (node : Node) : Payload :=
     else if node = 9 then (if active source node then 8 else 0)
     else if node = 10 then serviceValue source (selected source)
     else if node = 12 then 99 else reportTotal source
-  ⟨FunctionValidation.wrap Except.ok Except.ok (fun value => .ok (value+total-1)),total⟩
+  -- Providers store their increment; services store the result of input 1.
+  let offset := if node = 8 ∨ node = 9 then total else total-1
+  ⟨FunctionValidation.wrap Except.ok Except.ok (fun value => .ok (value+offset)),total⟩
 
 abbrev Graph := RecursiveValidation.Graph 14 (Node × Nat) Payload
 
@@ -141,7 +143,13 @@ computed-only selection and one-pair body revision match the Scheme fixture. -/
 def test : Except String Unit := do
   let s0 ← initial
   unless (s0.graph.payload 11).total == 82 && members s0.source 0 == some [0,1] do throw "initial SCC"
+  let firstProvider ← (s0.graph.payload 8).call 1
+  let firstService ← (s0.graph.payload 0).call 1
+  unless firstProvider == 4 && firstService == 6 do throw "initial callable mapping"
   let s1 ← step s0 ⟨1,false⟩
+  let nextProvider ← (s1.graph.payload 9).call 1
+  let nextService ← (s1.graph.payload 0).call 1
+  unless nextProvider == 9 && nextService == 11 do throw "migrated callable mapping"
   unless (s1.graph.payload 11).total == 108 && members s1.source 0 == some [0,1,2,3] &&
     members s1.source 4 == some [4,5,6,7] do throw "two merges"
   let s2 ← step s1 ⟨2,false⟩
@@ -159,6 +167,9 @@ def test : Except String Unit := do
   let s5 ← step s4 ⟨5,false⟩
   unless s5.evaluated == [10,11,13] && (s5.graph.payload 11).total == 134 do throw "computed replay"
   let s6 ← step s5 ⟨6,false⟩
+  let revisedService ← (s6.graph.payload 0).call 1
+  let retainedService ← (s6.graph.payload 7).call 1
+  unless revisedService == 12 && retainedService == 18 do throw "retained callable mapping"
   unless s6.evaluated == [0,1,11,13] && (s6.graph.payload 13).total == 135 do throw "independent SCC rebuilt"
   unless s6.graph.canonical 7 == s4.graph.canonical 7 && s6.graph.canonical 12 == s0.graph.canonical 12 do throw "clean reference"
   unless !(RecursiveMigration.recognizes (names s6.source) s6.epochs 8 (s0.graph.canonical 8)) do throw "removed provider"
