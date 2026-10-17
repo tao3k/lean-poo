@@ -297,3 +297,4 @@ import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.OptionalValidation
 import LeanPoo.Functional.ClassValidation
 import LeanPoo.Functional.ValidationRebinding
+import LeanPoo.Functional.RecursiveValidation

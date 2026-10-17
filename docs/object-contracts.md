@@ -153,7 +153,7 @@ The Racket `ListOf` in section 5 provides recursive membership; the new wrapping
 composition advances future generalized-prototype work. Proofs interpret finite
 pure callbacks, vectors as tagged rows and immutable identities as supplied IDs.
 The fixture's named inventory is fixed by its Lean record type. Host representation,
-parsing/runtime correctness, arbitrary external adapters, cyclic closure, wrapper
+parsing/runtime correctness, arbitrary external adapters, unannotated cyclic closure, wrapper
 deduplication and higher-order blame remain outside these claims.
 
 ## Pair, Map, Sum and Union
@@ -183,7 +183,7 @@ It does not prove Scheme identity/allocation, the hash implementation, JSON pars
 compiler/runtime or external effect rollback. Ordered committed Union validation
 is not equivalent to existential membership. These are explicit future-work
 extensions of the section 5 descriptor constructs, not a claim of whole-paper
-completion. Other Type families, cyclic closure and wrapper deduplication remain.
+completion. Other Type families, unannotated cyclic closure and wrapper deduplication remain.
 
 ## Sentinel optionals and TypeValuePair
 
@@ -207,7 +207,7 @@ The typed fixture fixes its record/container grammar, uses descriptor/reference
 tokens and supplies a pure host correspondence. It does not certify dynamic
 parsing, host identity/allocation, compiler/runtime correctness or effect rollback.
 This advances section 5 descriptor/generalized-prototype future work. External
-schema adapters, cyclic closure and wrapper deduplication remain open; the I/O formats and executable-value serialization limitations are unchanged.
+schema adapters, unannotated cyclic closure and wrapper deduplication remain open; the I/O formats and executable-value serialization limitations are unchanged.
 
 
 ## Record and Class initialization through effective Slots
@@ -243,7 +243,7 @@ MOP future work, rather than closing all future work. Inherited metadata resolut
 prototype defaults and host identity are supplied interfaces. Computed functions
 in the original fixture capture unchanged scalar state; the computed-dependency
 extension below adds final-self rebinding. Lexical snapshots outside that protocol,
-cyclic closure, arbitrary callback termination and effect rollback are not proved.
+unannotated cyclic closure, arbitrary callback termination and effect rollback are not proved.
 Constant equality remains strict: wrapping that changes a constant's equality is
 rejected, including such Function constants. Wrapper canonicalization/deduplication
 and optional/keyword Function arities remain open. No validation cache is added.
@@ -292,3 +292,56 @@ lexical captures cannot be rebound, constant equality is not weakened, and cycli
 object closure, wrapper canonicalization and post-admission mutable freshness are
 not proved. Revalidate after revision; this is not an accepted-value cache or a
 runtime/GC/performance proof.
+
+
+## Controlled recursive objects and computed cycles
+
+`recursive-validation.ss` closes a finite, explicitly named catalog of
+`(name descriptor source)` declarations. A builder receives the current graph's
+Reference-Type constructor. Source fields may contain real object backedges;
+Reference Types recognize only the named source/canonical receiver and cut
+structural recursion. Every named target is independently checked, including
+unobserved nodes. There is no rule accepting an active node as already valid.
+
+The phases are whole-catalog shape admission, allocation of all canonical
+receivers, receiver-bound field normalization, then whole-graph admission.
+Class and ObjectContract share `.validation-fields`, `prepare-rebinding` and
+`force-rebinding`. Their nested whole-value obligations are deferred within this
+closure attempt until all node batches finish; failures discard the pending queue.
+Ordinary validation still checks immediately. A nested graph attempt owns its own
+queue and owner. Cross-owner Reference descriptors cannot silently join graphs.
+
+`closed-ref` and `closed-type` expose only a completed graph. Canonical nodes and
+Reference Types are sealed through supported APIs. Registered source, descriptor,
+Reference-Type and canonical-node revision stamps gate graph access and Reference
+validation; explicit later Reference validation rechecks graph admission while
+retaining canonical identity. Fresh attempts build fresh owner-scoped descriptors.
+The node-count limit bounds catalog size, not arbitrary callback execution time.
+
+`examples/recursive-validation.ss` composes a two-node object cycle with computed
+peer-handler capture, Function argument wrappers, the existing positive least
+closure (`left = true OR right`, `right = left`), safe decreasing recursive
+requests and shared memo, Reader/FUN, root `refine` and `bind-evidence`. The workflow
+returns 10 + 8 = 18 and proves neither arbitrary eager fixed points nor implicit
+termination of cyclic method calls. Immediate computed getter cycles still reject
+with `CyclicSlot`; recursive machine budget/cycle diagnostics are not values.
+
+`Functional.RecursiveValidation` proves eleven finite catalog/graph laws: named-catalog preflight, successful
+collection at every position, finite completion, three phase-failure laws, complete
+shape/payload/final obligations, canonical edges/sharing/distinctness and bound
+root evidence. `Examples/RecursiveContracts.lean` adds a concrete two-hop backedge
+law and executes matching positive closure, memo/Function guard, refusal and
+fresh-owner publication controls. Existing final-self, certified recursive memo,
+positive least-closure, refinement and binding proofs are reused.
+
+This advances generalized MOP future work. The finite catalog interpretation,
+canonical host identities, receiver preparation, deferred callbacks, sealing and
+revision-stamp correspondence remain supplied interfaces/local Scheme controls.
+There is no universal coinductive Type checker, automatic graph discovery,
+unrestricted recursive container validation, arbitrary lexical capture rewrite,
+implicit invocation of construction hooks, proof of host callback termination,
+concurrent mutation, or external-effect rollback. Retained arbitrary Functions
+are not globally revoked by a later source edit; use immutable sources and a
+fresh closure/publication after revision. Raw structural getters still execute
+before wrapping. Constants retain strict equality; wrapper canonicalization is
+separate work. Scheme has no runtime dependency on the Lean checkout.
