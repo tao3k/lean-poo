@@ -289,3 +289,61 @@ The deeper dispatch/syntax/reflection pass retains the following POO policies:
 No additional namespace, contract DSL, host dispatcher or performance claim is
 introduced. This audit closes the confirmed traversal duplication; it does not
 mark unrelated TODO items complete.
+
+### Standard association protocols and keyword application rows
+
+This pass replaces complete structural operations through public Gerbil modules:
+
+* `std/list/plist`: `plist?` checks the alternating generic-option structure and
+  `alist->plist` serializes keyword bindings for Function wrappers and generic
+  forwarding. No local map/flatten serializer remains.
+* `std/list/alist`: `plist->alist` parses generic option pairs. The existing
+  `.defgeneric` transformer interprets only POO names, duplicate/alias policy and
+  lexical bindings; core lambda still owns signature validity and defaults.
+* `aremq` replaces the method-declaration accumulator's keyed removal; `arem`
+  replaces keyed removal in the private dispatch-shape cache. Both accumulators
+  start empty and maintain distinct keys. First removal equals remove-all only
+  under that invariant: a duplicate-key negative control is deliberately retained.
+  Source order, exact payloads, shape-key copies, MRU identity and capacity remain
+  in the existing POO protocol. No ordinary host method lookup substitutes for
+  typed dispatch, current guards, negative assumptions or qualifiers.
+
+The forwarding audit also found a real escaped-keyword defect. Core lambda
+correctly admitted keyword-valued positional/rest data, but the old generic
+forwarder assembled a new call without protecting those values. The target could
+interpret a payload keyword again. The forwarder now keeps only bound identifiers,
+uses standard alist serialization for keyword bindings, and emits the core
+`#!rest` boundary before every positional value. This includes the receiver
+forwarded by `from: type`. Default expressions are neither copied nor reevaluated.
+Keyword-bearing `combination:` callbacks receive a canonical Gerbil application
+row (keywords, `#!rest`, positions), which they forward with `apply`; they must
+not mistake the encoded row for an untagged list of positional values. Generics
+without keyword formals retain their original argument row.
+
+`checked-summary-action` extends the existing declaration/diamond example:
+a Function wrapper, type-provided generic, simple method combination and FUN
+observation carry an escaped keyword and explicit false through both forwarding
+boundaries. Actual macro tests cover malformed/duplicate options, both default
+alias orders, optional defaults, keyword-valued fixed/rest positions and dangling
+keyword data. Dispatch tests repeatedly promote and evict shapes while checking
+old owners, MRU identity, the capacity bound and the independent reference call.
+Existing reflection controls check private overrides, declaration revisions and
+method catalogs through these standard association operations.
+
+Lean's existing `Functional.FunctionSignature` namespace adds five pure laws for
+encoding equivalence, source-order concatenation, token cardinality, exact
+alternating-list round trips and dangling-key refusal. `AssociationBindings.lean`
+uses the existing `Functional.Parameters` namespace to prove removal equivalence
+under unique keys and preservation of uniqueness/capacity by promotion/eviction.
+These are list and call-model laws, not proofs of the host expander or runtime.
+The generalized declaration/MOP integration continues the article's future work.
+
+Core `keyword-dispatch` is deliberately not used as the descriptor decoder: the
+inspected implementation mutates the positional argument spine and stores keys
+in an unordered symbolic table. Descriptor checking preserves supplied-key
+validation order and replay input ownership; broad error catching would also risk
+translating user errors. Core dispatch remains authoritative when invoking the
+actual target. Host class reflection still cannot replace dynamic computed Slot
+metadata, visibility-before-read policy or source-dependent invalidation.
+No independent namespace, parser framework, cache library or speedup claim is
+introduced, and no unrelated TODO is marked complete.

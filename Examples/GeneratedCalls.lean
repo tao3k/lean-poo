@@ -37,4 +37,14 @@ about the distribution or cross-version identity of the host pseudo-random sourc
 def draw (seed : Nat) (size : Nat) : Nat × Nat := (seed % (size + 1), seed + 17)
 example : samples draw 4 3 8 = [3, 2, 1, 0] := by decide
 example : samples draw 4 3 8 = samples draw 4 3 8 := rfl
+/-- Explicit false is a payload, not an absent binding or omitted default. -/
+def keywordBindings : List (String × Bool) := [("label", false), ("approved", true)]
+example : decodeKeywords (encodeKeywords keywordBindings) = some keywordBindings := by decide
+example : (encodeKeywords keywordBindings).length = 4 := by decide
+example : decodeKeywords (Value := Bool) [.inl "dangling"] = none := rfl
+#print axioms encodeKeywords_flatMap
+#print axioms encodeKeywords_append
+#print axioms encodeKeywords_length
+#print axioms decode_encodeKeywords
+#print axioms decodeKeywords_dangling
 end Examples.GeneratedCalls

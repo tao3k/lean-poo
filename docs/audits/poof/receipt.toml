@@ -328,6 +328,7 @@
   "LeanPoo/Functional/AnalyzedCache.lean",
   "LeanPoo/Functional/AnalyzedMigration.lean",
   "LeanPoo/Functional/Assembly.lean",
+  "LeanPoo/Functional/AssociationBindings.lean",
   "LeanPoo/Functional/BorrowedView.lean",
   "LeanPoo/Functional/CacheLookup.lean",
   "LeanPoo/Functional/CachedPreparation.lean",

@@ -93,4 +93,53 @@ theorem supplied_length (check : Value → Except Error Value) (values checked :
         subst checked
         simp [ih rest t]
 
+/-- Typed token view of the standard alist-to-plist conversion. Left tokens
+are declared keys; right tokens retain values, including false or keyword data.
+The host's untyped representation and escape dispatcher need separate controls. -/
+def encodeKeywords (entries : List (Key × Value)) : List (Sum Key Value) :=
+  entries.foldr (fun entry rest => .inl entry.1 :: .inr entry.2 :: rest) []
+
+/-- Delegation preserves the former map-and-flatten result exactly. -/
+theorem encodeKeywords_flatMap (entries : List (Key × Value)) :
+    encodeKeywords entries = entries.flatMap (fun entry => [.inl entry.1, .inr entry.2]) := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih =>
+      simp only [encodeKeywords] at ih
+      simpa [encodeKeywords] using ih
+
+/-- Concatenating keyword bindings preserves their source order. -/
+theorem encodeKeywords_append (first second : List (Key × Value)) :
+    encodeKeywords (first ++ second) = encodeKeywords first ++ encodeKeywords second := by
+  simp [encodeKeywords_flatMap, List.flatMap_append]
+
+/-- One binding contributes exactly two tokens; omitted bindings stay omitted. -/
+theorem encodeKeywords_length (entries : List (Key × Value)) :
+    (encodeKeywords entries).length = 2 * entries.length := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih =>
+      simp only [encodeKeywords] at ih
+      simp [encodeKeywords]
+      omega
+
+/-- Recognize the alternating structural grammar before interpreting key policy. -/
+def decodeKeywords : List (Sum Key Value) → Option (List (Key × Value))
+  | [] => some []
+  | .inl key :: .inr value :: rest => (decodeKeywords rest).map ((key, value) :: ·)
+  | _ => none
+
+/-- Standard structural conversion returns the same keys and exact payloads. -/
+theorem decode_encodeKeywords (entries : List (Key × Value)) :
+    decodeKeywords (encodeKeywords entries) = some entries := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih =>
+      simp only [encodeKeywords] at ih
+      simpa [encodeKeywords, decodeKeywords] using ih
+
+/-- A dangling key refuses before any domain-specific option interpretation. -/
+theorem decodeKeywords_dangling (key : Key) :
+    decodeKeywords (Value := Value) [.inl key] = none := rfl
+
 end LeanPoo.Functional.FunctionSignature

@@ -1,4 +1,5 @@
 import LeanPoo.Functional.Parameters
+import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
@@ -101,4 +102,18 @@ example : Prototype.DescriptorReflection.publicDeclaration "label"
 
 #print axioms Functional.Parameters.find_uniqueBindings
 #print axioms Prototype.DescriptorReflection.publicDeclaration_unique
+/-- A promoted dispatch shape has one retained payload; unrelated bindings keep
+source order, and suffix eviction retains the existing capacity bound. -/
+def shapeBindings : List (String × Bool) := [("billing", false), ("risk", true), ("shared", false)]
+example : promoteBinding Prod.fst ("risk", false) shapeBindings =
+    [("risk", false), ("billing", false), ("shared", false)] := by decide
+example : ((promoteBinding Prod.fst ("risk", false) shapeBindings).take 2) =
+    [("risk", false), ("billing", false)] := by decide
+/-- First removal differs from remove-all for malformed duplicate-key tables. -/
+example : eraseBinding Prod.fst "risk" [("risk", false), ("risk", true)] = [("risk", true)] := by decide
+example : ([("risk", false), ("risk", true)].filter (fun entry => entry.1 != "risk")) = [] := by decide
+#print axioms eraseBinding_filter
+#print axioms promoteBinding_distinct
+#print axioms boundedPromotion_distinct
+#print axioms boundedPromotion_length
 end LeanPoo.Examples.Parameters
