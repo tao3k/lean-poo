@@ -723,3 +723,16 @@ old cleanup cannot close its replacement. The integrated eight-round workflow ha
 computed revision, dirty-reference rejection and current refine/bind-evidence
 retry. Twelve Lean laws and focused host controls cover the declared serialized
 protocol. See [recursive-coordination.md](recursive-coordination.md) for scope and remaining feature boundaries.
+
+
+## Parameterized construction and current admission
+
+`parameters.specialize` now provides persistent `.parameters` prefix closure. The
+keyword construction grammar, selected lexical bindings and delayed inherited
+aliases share the existing slot engine; generic optional/keyword/rest forwarding
+uses the existing Gerbil formal parser. The C3 diamond service example specializes
+independent receivers then gates current refinement/FUN effects on actual Type
+admission, preserving returned multiple values. Thirteen normalized semantic laws
+and executable syntax/refusal controls cover the declared boundary. See
+[parameters.md](parameters.md); general type inference and typed optional Fun
+signatures remain separate work.

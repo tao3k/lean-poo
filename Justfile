@@ -368,6 +368,7 @@ _check-examples:
     {{lean}} Examples/RecursiveSubmissions.lean
     {{lean}} Examples/RecursiveRecovery.lean
     {{lean}} Examples/RecursiveCoordination.lean
+    {{lean}} Examples/Parameters.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
