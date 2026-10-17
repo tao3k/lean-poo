@@ -465,6 +465,7 @@
   "LeanPoo/Functional/SharedRegistry.lean",
   "LeanPoo/Functional/SharedSettlement.lean",
   "LeanPoo/Functional/SharedViews.lean",
+  "LeanPoo/Functional/SlotScope.lean",
   "LeanPoo/Functional/SolverTransport.lean",
   "LeanPoo/Functional/StagedPublication.lean",
   "LeanPoo/Functional/StatefulValidation.lean",

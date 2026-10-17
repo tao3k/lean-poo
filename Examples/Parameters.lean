@@ -1,4 +1,5 @@
 import LeanPoo.Functional.Parameters
+import LeanPoo.Functional.SlotScope
 import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
 
@@ -116,4 +117,21 @@ example : ([("risk", false), ("risk", true)].filter (fun entry => entry.1 != "ri
 #print axioms promoteBinding_distinct
 #print axioms boundedPromotion_distinct
 #print axioms boundedPromotion_length
+/-- Separate outer/copy/local owners make accidental receiver capture visible. -/
+def scopedLookup (owner : Nat) (name : String) : Int :=
+  if name = "rate" then if owner = 1 then 10 else if owner = 2 then 20 else 7 else 0
+example : withSlotScope scopedLookup 1 (fun outer =>
+    withSlotScope scopedLookup 3 (fun inner => (outer "rate", inner "rate"))) = (10, 7) := by decide
+example : withSlotScope scopedLookup 2 (fun outer =>
+    withSlotScope scopedLookup 3 (fun inner => (outer "rate", inner "rate"))) = (20, 7) := by decide
+example : withSlotScope scopedLookup 1 (fun fields => fun (_ : Nat) => fields "rate") 2 = 10 := by decide
+/-- Revision is explicit in this pure model; host mutable lookup has separate tests. -/
+example : withSlotScope (fun owner name revision => scopedLookup owner name + revision) 1
+    (fun fields => (fields "rate" 0, fields "rate" 20)) = (10, 30) := by decide
+#print axioms withSlotScope_read
+#print axioms withSlotScope_call
+#print axioms withSlotScope_nested
+#print axioms withSlotScope_capture
+#print axioms withSlotScope_congr
+#print axioms withSlotScope_revision
 end LeanPoo.Examples.Parameters

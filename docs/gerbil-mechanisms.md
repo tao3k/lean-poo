@@ -347,3 +347,55 @@ actual target. Host class reflection still cannot replace dynamic computed Slot
 metadata, visibility-before-read policy or source-dependent invalidation.
 No independent namespace, parser framework, cache library or speedup claim is
 introduced, and no unrelated TODO is marked complete.
+
+### Shared slot expansion delegates the complete binding mechanism
+
+The shared slot compiler previously constructed its own receiver syntax parameter,
+returned a custom identifier/application transformer for every field, and walked
+the body with `stx-substitute` to replace the receiver placeholder. This entire
+path now uses public `std/stxparam` `defsyntax-parameter*` / `syntax-parameterize`
+and core `identifier-rules`. The two `%make-object-slot-*` factories and their
+phase exports have been removed; there is no replacement POO macro-object class,
+expander factory, receiver-parameter implementation or syntax-tree walk.
+
+Core expansion now owns receiver binding, missing-scope errors, hygienic field
+identifiers and application expansion. A small template supplies POO's `.ref`
+lookup and a read-only assignment rule. The existing compiler still chooses the
+fields, captures lexical shorthand before field bindings, and builds the same
+constant/self/inherited SlotSpecs. Final-self lookup, next-method thunks, revision
+invalidation and `.putslot!` remain POO semantics; bare field assignment is not
+a mutation API. The ordinary per-method `syntax-parameterize` boundary supplies
+the current receiver. No user namespace or alternate binding protocol is added.
+
+The existing declared-methods example now builds nested service accounts with
+local `rate` shadowing, retained outer readers and an inherited C3 method family.
+FUN actions preserve all three results while before/primary/after/around callbacks
+retain their order and private metadata stays inaccessible. Regression controls
+keep old nested readers alive across clones/source revisions, revise the inner
+receiver independently, reject unbound scopes and assignments during real macro
+expansion, and exercise a user field named `receiver` against accidental capture.
+The existing lexical-identity, nested-object, generic forwarding and reflection
+suites remain part of the complete check.
+
+`Functional/SlotScope.lean` uses the existing `Functional.Parameters` namespace
+to model the same receiver-indexed lookup. Six pure laws establish read/call
+equivalence, separate inner/outer scopes, closure ownership, lookup congruence
+and explicit revision inputs. They do not prove Gerbil hygiene, mutable storage,
+callback effects or the compiler; actual expansion and runtime controls cover
+those host observations separately. The generalized MOP/declaration integration
+continues the article's future work.
+
+The complete-method-combination and reflection audits retain their existing
+POO mechanisms for semantic reasons. Core class `defmethod` exposes `@next-method`, but its runtime
+`call-next-method` starts from a host class type and searches `class-of` precedence;
+it cannot consume the current POO fragment sequence or persistent generic revision.
+There is no corresponding standard qualifier/forwarding/inner/Simula interpreter
+for these dynamic prototype fragments. `std/func` composition feeds preceding return values into the next
+function; it does not provide original-row `next` thunks that may be skipped or
+repeated, nor before/after and forwarded-payload policy. Core class slot metadata
+also describes fixed host storage, not receiver-dependent computed Slot metadata
+with current visibility, checked reads and dependency invalidation. Substituting
+those host mechanisms wholesale would change the declared POO protocol.
+This pass therefore replaces the confirmed complete binding mechanism and leaves
+these distinct semantics in place. No speedup or unrelated TODO completion is
+claimed.

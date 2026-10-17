@@ -316,6 +316,7 @@ import LeanPoo.Functional.RecursiveSubmissions
 import LeanPoo.Functional.RecursiveRecovery
 import LeanPoo.Functional.RecursiveCoordination
 import LeanPoo.Functional.Parameters
+import LeanPoo.Functional.SlotScope
 import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
 
