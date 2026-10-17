@@ -84,4 +84,53 @@ theorem restageAfter_recoveryWave {Valid : Bundle Id Endpoint Policy Head Metada
   have same := recoveryWave_refused current events wave historical only obsolete
   exact congrArg (fun observed =>
     (⟨observed.id,(prepare observed).val,revision,(prepare observed).property⟩ : Approved (Revision := Revision) Valid)) same
+/-- Recovery preparation may fail. Only an actual successful valid factory result
+can mint a receipt, capturing the explicitly supplied current whole snapshot. -/
+def prepareRejoining {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (prepare : (state : Bundle Id Endpoint Policy Head Metadata) → Except Error {candidate // Valid candidate})
+    (revision : Revision) : Except Error (Approved (Revision := Revision) Valid) :=
+  (prepare current).map fun candidate => ⟨current.id,candidate.val,revision,candidate.property⟩
+omit [DecidableEq Id] [DecidableEq Revision] in
+/-- A failed factory preserves its exact error and never returns an approval. -/
+theorem prepareRejoining_failed {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (prepare : (state : Bundle Id Endpoint Policy Head Metadata) → Except Error {candidate // Valid candidate})
+    (revision : Revision) (failure : Error) (failed : prepare current = .error failure) :
+    prepareRejoining current prepare revision = .error failure := by
+  simp [prepareRejoining,failed,Except.map]
+omit [DecidableEq Id] [DecidableEq Revision] in
+/-- Success retains the checked candidate and its proof, capturing THIS snapshot;
+a retry does not rebind a historical receipt or manufacture a validity witness. -/
+theorem prepareRejoining_success {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (prepare : (state : Bundle Id Endpoint Policy Head Metadata) → Except Error {candidate // Valid candidate})
+    (revision : Revision) (candidate : {candidate // Valid candidate}) (ready : prepare current = .ok candidate) :
+    prepareRejoining current prepare revision = .ok ⟨current.id,candidate.val,revision,candidate.property⟩ := by
+  simp [prepareRejoining,ready,Except.map]
+/-- Project only successfully prepared installation requests. Original Except
+results retain their errors; projection is not exception swallowing or rollback. -/
+def rejoiningAttempts {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (results : List (Except Error (Installation (Revision := Revision) Valid))) : List (Installation (Revision := Revision) Valid) :=
+  results.filterMap fun result => match result with
+    | .error _ => none
+    | .ok attempt => some attempt
+/-- Serialized installation of completed requests reuses all existing owner checks. -/
+def installRejoining {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (results : List (Except Error (Installation (Revision := Revision) Valid))) :=
+  installSequence current (rejoiningAttempts results)
+/-- A preparation failure interleaved anywhere neither rolls back an installed
+prefix nor cancels other coordinators' remaining successful requests. -/
+theorem installRejoining_failed {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (before after : List (Except Error (Installation (Revision := Revision) Valid))) (failure : Error) :
+    installRejoining current (before ++ .error failure :: after) = installRejoining current (before ++ after) := by
+  simp [installRejoining,rejoiningAttempts,List.filterMap_append]
+/-- Validity survives arbitrarily many failed preparations and successful checked
+requests. This is a finite trace property, not guaranteed eventual recovery. -/
+theorem installRejoining_valid {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (results : List (Except Error (Installation (Revision := Revision) Valid))) (old : Valid current) :
+    Valid (installRejoining current results) := installSequence_valid _ _ old
 end LeanPoo.Functional.JointPublication

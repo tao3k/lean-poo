@@ -81,3 +81,7 @@ guards, immutable installed policies, fresh owner identities and lock-linearizat
 premises. No asynchronous critical-section interruption, thread-runtime proof,
 fairness, arbitrary convergence, durable/distributed atomicity or performance
 improvement is claimed. Scope and local wait/harness bounds remain unchanged.
+
+Recovery preparation can now fail before the service continuation, then retry
+through the same supervisor. See [coordinator-retry.md](coordinator-retry.md) for
+four preparation failures interleaved with persistent publication and formal errors.

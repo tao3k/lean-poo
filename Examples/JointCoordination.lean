@@ -69,6 +69,33 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
         (replayEvents ++ order.map .attempt ++ wave ++ oldAttempts.map .attempt)
       unless winner.id == current.id+1 && winner.approvals 0 == (ceiling,budget+2*first) do
         throw "four-way recovery competition mixed a winner or lost fresh preparation"
+  -- Recovery can fail before a receipt exists, repeatedly and across names.
+  -- Only explicit success creates a current checked candidate for installation.
+  let failedC := Functional.JointPublication.prepareRejoining (Error := String) current
+    (fun _ => .error "c preparation failed") 3
+  let failedD := Functional.JointPublication.prepareRejoining (Error := String) current
+    (fun _ => .error "d preparation failed") 4
+  let readyC := Functional.JointPublication.prepareRejoining (Error := String) current
+    (fun state => .ok (freshCandidate tc state)) 3
+  let readyD := Functional.JointPublication.prepareRejoining (Error := String) current
+    (fun state => .ok (freshCandidate td state)) 4
+  let errors : List (Except String Attempt) :=
+    [failedC.map (fun receipt => ⟨receipt,3⟩),failedD.map (fun receipt => ⟨receipt,4⟩),
+     failedC.map (fun receipt => ⟨receipt,3⟩),failedD.map (fun receipt => ⟨receipt,4⟩)]
+  let .error messageC := failedC | throw "failed preparation minted a receipt"
+  let .error messageD := failedD | throw "failed preparation minted a receipt"
+  unless messageC == "c preparation failed" && messageD == "d preparation failed" do
+    throw "preparation changed the original error"
+  let stagedC : Except String Attempt := readyC.map (fun receipt => ⟨receipt,3⟩)
+  let stagedD : Except String Attempt := readyD.map (fun receipt => ⟨receipt,4⟩)
+  let oldResults : List (Except String Attempt) := oldAttempts.map .ok
+  let retriedC := Functional.JointPublication.installRejoining current
+    (errors ++ oldResults ++ [stagedC,stagedD] ++ errors)
+  let retriedD := Functional.JointPublication.installRejoining current
+    (errors.reverse ++ oldResults.reverse ++ [stagedD,stagedC] ++ errors)
+  unless retriedC.id == current.id+1 && retriedC.approvals 0 == (ceiling,budget+4) &&
+      retriedD.id == current.id+1 && retriedD.approvals 0 == (ceiling,budget+6) do
+    throw "failed recovery rolled back a winner or cancelled a fresh peer"
   let late := Functional.JointPublication.installChecked b.expected left b.candidate (2:Nat) 2 true
   unless late.id == left.id && late.approvals 0 == left.approvals 0 do throw "superseded coordinator overwrote winner"
   pure (left,history ++ denied ++ [ia,ib,ic,id])
@@ -106,4 +133,8 @@ def check : Except String Unit := do
 #print axioms Functional.JointPublication.installCoordinated_recoveryWave
 #print axioms Functional.JointPublication.recoveryWave_refused
 #print axioms Functional.JointPublication.restageAfter_recoveryWave
+#print axioms Functional.JointPublication.prepareRejoining_failed
+#print axioms Functional.JointPublication.prepareRejoining_success
+#print axioms Functional.JointPublication.installRejoining_failed
+#print axioms Functional.JointPublication.installRejoining_valid
 end LeanPoo.Examples.JointCoordination
