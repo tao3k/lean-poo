@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: lean-poo-check
         name: LeanPoo Lean and Org checks
-        entry: just check
+        entry: python3 tools/check_hook.py
         language: system
         pass_filenames: false
         always_run: true
