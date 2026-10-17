@@ -300,3 +300,4 @@ import LeanPoo.Functional.ValidationRebinding
 import LeanPoo.Functional.RecursiveValidation
 import LeanPoo.Functional.RecursiveRevision
 import LeanPoo.Functional.RecursiveMigration
+import LeanPoo.Functional.RecursiveTopology

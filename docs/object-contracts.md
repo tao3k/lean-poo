@@ -400,3 +400,29 @@ Gerbil uses fresh identities and permanent old-reference revocation to implement
 the logical epoch boundary. This does not certify runtime/compiler/GC behavior,
 arbitrary eager computed fixed points, automatic dependency discovery or atomic
 transactions combining graph commit with external FUN effects.
+
+## Interleaved recursive SCC topology
+
+`Functional.RecursiveTopology` adds fourteen laws to the existing least dependency
+invalidation: deleted edges seed their consumer, so invalidation also follows every
+old path; both old SCCs after splits and new SCCs after merges remain atomic. Clean
+nodes preserve reads, old/new paths and exact checked membership. Changed SCC
+membership thus implies dirtiness without computing SCCs on the construction path.
+
+`Examples/RecursiveTopologies.lean` matches eight Gerbil services through seven
+rounds: two simultaneous merges, two splits, crossed merge refusal/retry, original
+group restoration, computed-only selection, then one-pair body revision. Totals
+82→108→128→132→127→134→135 accompany exact SCC checks, persistent old-reference
+refusal, root refinement and current bound evidence. Independent pairs, provider,
+computed reader and idle retain identities whenever their declared closure is clean.
+Gerbil's `closed-reads` and `recursive-topology` module provide optional checked
+partition receipts; membership comparison treats groups as sets and never grants
+cache authority or skips final approval.
+
+This advances generalized MOP future work. Proofs use a common finite name
+embedding; named membership/index changes reuse `RecursiveMigration`. The example
+reserves inactive provider vertices for old/new comparison and guards exposure by
+current membership, so it makes no host allocation/cost claim. Complete declared
+reads, immutable metadata, host source/identity correspondence and sequential
+mutation remain premises. Arbitrary eager computed fixed points, concurrent
+installation and atomic external-effect transactions are outside this result.
