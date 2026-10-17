@@ -206,6 +206,43 @@ present/absent paths, wrong carried interfaces, output refusal and current retry
 The typed fixture fixes its record/container grammar, uses descriptor/reference
 tokens and supplies a pure host correspondence. It does not certify dynamic
 parsing, host identity/allocation, compiler/runtime correctness or effect rollback.
-This advances section 5 descriptor/generalized-prototype future work. Class-specific
-policies, external schema adapters, cyclic closure and wrapper deduplication remain
-open; the I/O formats and executable-value serialization limitations are unchanged.
+This advances section 5 descriptor/generalized-prototype future work. External
+schema adapters, cyclic closure and wrapper deduplication remain open; the I/O formats and executable-value serialization limitations are unchanged.
+
+
+## Record and Class initialization through effective Slots
+
+Scheme `class-validation` applies the same global structure → child normalization
+→ final membership sequence to Class instances. Current effective Slot metadata
+selects each inherited child Type. Present fields dispatch through `.slot.validate`;
+optional absent fields bypass it. A complete successful batch installs one
+persistent derived object that preserves source ancestry. Final `.element?`
+retains custom Slot checking and sealed/constant policies. The dependency-neutral
+`value-diagnostics` module lets Class and containers share recursive diagnostics.
+
+Existing `instance` / `.new` remain lazy construction. `make-instance` and
+`.new/checked` validate defaults/overrides, pass the checked instance to the
+initialization hook, then revalidate its replacement even when the hook returns
+the same object. Bootstrap Type descriptor validation preserves exact identity.
+Record's existing C3 metadata composition provides single/multiple inheritance;
+new controls force parent prototypes first and exercise overrides and diamonds.
+This is structural field inheritance, with no new nominal ancestry claim.
+
+`examples/class-publication.ss` composes two inherited Record interfaces, optional
+nested Function lists, a computed audit, checked initialization, JSON/FUN,
+root refinement and exact `bind-evidence`. Controls cover bad argument/result
+rows, custom Slot normalization/checking, hook mutation/replacement, raw/stale
+evidence, source failure and independent retry. `ClassValidation.lean` proves
+15 pure laws for optional/required presence, constants, child errors, selected
+metadata, initialization order, final membership and inherited refinement.
+`Examples/ClassContracts.lean` executes a corresponding finite service workflow;
+existing normalization/refinement/binding laws supply the publication boundary.
+
+This advances the paper's section 5 type-descriptor construction and generalized
+MOP future work, rather than closing all future work. Inherited metadata resolution,
+prototype defaults and host identity are supplied interfaces. Computed functions
+in the fixture capture unchanged scalar state; general computed rebinding,
+cyclic closure, arbitrary callback termination and effect rollback are not proved.
+Constant equality remains strict: wrapping that changes a constant's equality is
+rejected, including such Function constants. Wrapper canonicalization/deduplication
+and optional/keyword Function arities remain open. No validation cache is added.

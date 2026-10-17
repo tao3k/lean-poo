@@ -295,3 +295,4 @@ import LeanPoo.Functional.ObjectContractValidation
 import LeanPoo.Functional.ContainerValidation
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.OptionalValidation
+import LeanPoo.Functional.ClassValidation
