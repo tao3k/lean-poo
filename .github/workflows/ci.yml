@@ -43,11 +43,11 @@ jobs:
           path: .lake/build
           key: ${{ steps.library-cache.outputs.cache-primary-key }}
       - name: Package this run's build
-        run: tar -czf lean-build.tar.gz .lake/build
+        run: tar -I 'zstd -T0 -3' -cf lean-build.tar.zst .lake/build
       - uses: actions/upload-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
-          path: lean-build.tar.gz
+          path: lean-build.tar.zst
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
@@ -76,7 +76,7 @@ jobs:
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Check independent file shard
         run: lake env python3 tools/check_atoms.py --shard ${{ matrix.shard }} --shards 12 --jobs 1
 
@@ -98,7 +98,7 @@ jobs:
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Check bounded diagnostics
         run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context _check-native-result-index
 
@@ -130,7 +130,7 @@ jobs:
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Install the source evaluator
         run: sudo apt-get update && sudo apt-get install -y racket
       - name: Compare all original checks against Lean
