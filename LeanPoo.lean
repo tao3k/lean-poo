@@ -288,3 +288,5 @@ import LeanPoo.Examples.JointReceipts
 import LeanPoo.Examples.JointTopology
 
 import LeanPoo.Functional.ObjectContract
+import LeanPoo.Functional.ObjectContractRefinement
+import LeanPoo.Functional.EvidenceBinding

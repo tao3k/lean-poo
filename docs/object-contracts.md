@@ -68,3 +68,36 @@ resource performance, external authorization or automatic dependency discovery.
 Descriptor declarations are immutable during use; normal source/revision discipline
 is still required when a consumer introduces mutation. Callback external effects
 are not rolled back by refusal.
+
+## Explicit strengthening and invocation association
+
+`Functional.ObjectContractRefinement` adds `refine`: shape and existing constraints
+stay effective, and an additional diagnostic phase runs only after the full
+original contract accepts. General laws characterize acceptance as conjunction,
+preserve the exact original refusal report, and prove associative regrouping.
+Gerbil uses its existing `=>` inherited computation, so this phase is rebound to
+the effective descriptor even after preparing a parent. This is not an inference
+that ordinary descriptor inheritance is subtyping. Custom MOP overrides must
+still honor the structural protocol.
+
+`Functional.EvidenceBinding` models the companion's existing `bind-evidence`.
+It relabels the original formula into an `Option` atom space and appends a fresh
+binding atom, preserving all original connectives and input/output policies.
+Acceptance retains the original rule and exact subject/descriptor/context
+associations. Under admitted input/output and a returned candidate, mismatch
+refuses in the logic phase and publication retains exactly the old state.
+
+The identity carriers must model reference identity; equality of serialized
+records is insufficient. The model assumes a total pure projection. Actual Scheme
+`eq?`, receiver preparation, projection exceptions and retry behavior have
+separate executable controls. Matching freely constructed fields is not authority
+or freshness. Bind from the original invocation template for a new context;
+nesting bindings retains the earlier obligations, including obsolete ones.
+
+The finite publication scenario is in `Examples/ObjectContracts.lean`; the Scheme
+counterpart is `examples/contract-publication.ss`. It uses checked FUN admission
+before state production, then the existing invocation publication protocol. The
+original paper's section 5 supplies recognizers, type descriptors and I/O; these
+explicit strengthening/binding operations advance Appendix B's future work and
+the user's structural contract design. They are not claimed as original Racket
+APIs, an authenticated receipt system or a proof of effect rollback.

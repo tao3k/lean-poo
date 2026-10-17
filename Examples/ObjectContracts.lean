@@ -1,4 +1,6 @@
 import LeanPoo.Functional.ObjectContract
+import LeanPoo.Functional.ObjectContractRefinement
+import LeanPoo.Functional.EvidenceBinding
 
 /-! Executable structural checks: field inventory, type distinction, obligations,
 prototype refusal, diagnostic paths and existing invocation admission. -/
@@ -109,3 +111,81 @@ def check : Except String Unit := do
 #print axioms checkedAction_refused
 #print axioms checkedAction_accepted
 end LeanPoo.Examples.ObjectContracts
+
+/-! Finite scenarios: structural strengthening, reference association, stale
+context, original policy refusal and rebinding from the current template. -/
+namespace LeanPoo.Examples.ContractPublication
+open Functional.ObjectContract Functional.DeclarativeMetadata
+open ObjectContracts
+
+/-- Strengthen the same five-field service with a bounded capacity policy. -/
+def bounded := refine service (fun value path =>
+  match value.slots.lookup "capacity" with
+  | some (.number total) => if total ≤ 100 then [] else [.rejected (path ++ ["capacity"]) "capacity limit"]
+  | _ => [.rejected path "capacity shape"])
+
+/-- Ordinary result data carries reference identifiers, not authority. The
+consumer owns the correspondence between these IDs and immutable Scheme refs. -/
+structure Result where
+  subject : Nat
+  descriptor : Nat
+  context : Nat
+  deriving DecidableEq, Repr
+
+/-- Expose only the associations already recorded by the application's producer. -/
+def view (result : Result) : Nat × Nat × Nat :=
+  (result.subject,result.descriptor,result.context)
+
+/-- Existing input/output predicates and logical permission remain in force. -/
+def invocation (allowed : Bool) : Contract Unit Nat Result where
+  input := ⟨"subject",fun subject => subject = 1,inferInstance⟩
+  output := ⟨"result",fun _ => True,fun _ => isTrue True.intro⟩
+  meaning := fun _ _ _ => allowed = true
+  decide := fun _ _ _ => inferInstance
+  rule := .atom ()
+
+/-- The finite control covers refusals before and after state production. -/
+def check : Except String Unit := do
+  unless diagnose bounded good [] == [] do throw "valid strengthening refused"
+  let over : Input := {good with slots := [("host",.text "api"),("port",.number 443),
+    ("capacity",.number 101),("used",.number 5),("secure",.flag true)]}
+  unless diagnose service over [] == [] do throw "fixture does not isolate extra obligation"
+  unless diagnose bounded over [] == [.rejected ["capacity"] "capacity limit"] do
+    throw "extra obligation bypassed"
+  let current := (invocation true).bindEvidence 1 7 2 view
+  let stale (_ : Nat) : Except String (Result × Nat) := .ok (⟨1,7,1⟩,3)
+  match current.publish 2 stale 1 with
+  | (.error .logic,2) => pure ()
+  | _ => throw "stale context escaped or changed old state"
+  let execute (_ : Nat) : Except String (Result × Nat) := .ok (⟨1,7,2⟩,3)
+  match current.publish 2 execute 1 with
+  | (.ok result,3) => unless result == ⟨1,7,2⟩ do throw "result changed"
+  | _ => throw "current rebound invocation refused"
+  let denied := (invocation false).bindEvidence 1 7 2 view
+  match denied.publish 2 execute 1 with
+  | (.error .logic,2) => pure ()
+  | _ => throw "matching references bypassed original permission"
+  let retained := current.bindEvidence 1 7 3 view
+  let revised (_ : Nat) : Except String (Result × Nat) := .ok (⟨1,7,3⟩,4)
+  match retained.publish 3 revised 1 with
+  | (.error .logic,3) => pure ()
+  | _ => throw "nested binding silently weakened original context"
+  match ((invocation true).bindEvidence 1 7 3 view).publish 3 revised 1 with
+  | (.ok _,4) => pure ()
+  | _ => throw "fresh current-template retry refused"
+
+#eval match check with
+  | .ok () => IO.println "CONTRACT-PUBLICATION-OK"
+  | .error message => throw (IO.userError message)
+#print axioms refine_accepts_iff
+#print axioms refine_preserves_rejection
+#print axioms diagnose_refine
+#print axioms refine_fields
+#print axioms refine_assoc
+#print axioms Formula.holds_relabel
+#print axioms Contract.bindEvidence_logic_iff
+#print axioms Contract.bindEvidence_input
+#print axioms Contract.bindEvidence_output
+#print axioms Contract.bindEvidence_accepted
+#print axioms Contract.bindEvidence_publish_mismatch
+end LeanPoo.Examples.ContractPublication
