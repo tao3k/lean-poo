@@ -89,12 +89,14 @@ def run (task : Task) : Except String Int := do
   | [.dispatch dispatch, .transforms transforms] =>
     let row ← dispatch [.integer 2]
     match row with
-    | [.integer units, .flag true] =>
-      let result : List Scalar ← transforms.foldlM
-        (fun (value : List Scalar) (transform : Call) => transform value) [.integer units]
-      match result with
-      | [.integer total] => pure total
-      | _ => throw "transform result"
+    | [.integer units, .flag ready] =>
+      if ready then
+        let result : List Scalar ← transforms.foldlM
+          (fun (value : List Scalar) (transform : Call) => transform value) [.integer units]
+        match result with
+        | [.integer total] => pure total
+        | _ => throw "transform result"
+      else pure units
     | _ => throw "dispatch result"
   | _ => throw "unchecked task"
 
@@ -147,6 +149,12 @@ def check : Except String Unit := do
   match run broken with
   | .error "dispatch row" => pure ()
   | _ => throw "output wrapper bypassed"
+  let deferred ← normalizeTask {raw with handlers :=
+    [.dispatch (fun _ => .ok [.integer 2, .flag false]),
+     .transforms [fun _ => .error "unready transform ran"]]}
+  match run deferred with
+  | .ok 2 => pure ()
+  | _ => throw "unready dispatch did not preserve units"
   let bound := invocation.bindEvidence 2 7 5 view
   let produce (subject context : Nat) (_ : Nat) : Except String (Result × Nat) :=
     .ok (⟨subject,7,context,totals⟩,6)
