@@ -106,15 +106,15 @@ APIs, an authenticated receipt system or a proof of effect rollback.
 
 The companion `object-contract-validation` now distinguishes structural recognition
 from explicit validation. It recursively validates declared ObjectContract fields,
-reuses existing Function wrappers, batches changed fields into a persistent object
-inheriting its source, then checks full diagnostics and refinement on the checked
-root. No change retains exact identity; Function wrapping changes the candidate.
+reuses existing Function wrappers and receiver-bound inherited specifications on a
+fresh object, then checks full diagnostics and refinement on the checked root. No change retains exact identity; Function wrapping changes the candidate.
 `checked-action` and `bind-evidence` use that actual returned root.
 
 `FunctionValidation.lean` proves input/source/output gating and successful output
 normalization, including function-valued output without decidable function equality.
-`ObjectContractValidation.lean` reuses ordered `Validation.traverse`: failed batches
-cannot reach commit; successful batches retain their supplied representation laws.
+`ObjectContractValidation.lean` supplies the finite ordered-batch backend laws;
+`ValidationRebinding.lean` below models the receiver-bound dependency backend.
+Both must finish before final refinement; representation laws remain explicit.
 It proves final refinement on the normalized root and combines admission with the
 existing binding theorem on application-supplied reference identifiers.
 `Examples/ObjectContracts.lean` adds dynamic argument/result rows, higher-order
@@ -215,8 +215,8 @@ schema adapters, cyclic closure and wrapper deduplication remain open; the I/O f
 Scheme `class-validation` applies the same global structure → child normalization
 → final membership sequence to Class instances. Current effective Slot metadata
 selects each inherited child Type. Present fields dispatch through `.slot.validate`;
-optional absent fields bypass it. A complete successful batch installs one
-persistent derived object that preserves source ancestry. Final `.element?`
+optional absent fields bypass it. A receiver-bound batch forces every selected
+field on one persistent derived object that preserves source ancestry. Final `.element?`
 retains custom Slot checking and sealed/constant policies. The dependency-neutral
 `value-diagnostics` module lets Class and containers share recursive diagnostics.
 
@@ -241,8 +241,54 @@ existing normalization/refinement/binding laws supply the publication boundary.
 This advances the paper's section 5 type-descriptor construction and generalized
 MOP future work, rather than closing all future work. Inherited metadata resolution,
 prototype defaults and host identity are supplied interfaces. Computed functions
-in the fixture capture unchanged scalar state; general computed rebinding,
+in the original fixture capture unchanged scalar state; the computed-dependency
+extension below adds final-self rebinding. Lexical snapshots outside that protocol,
 cyclic closure, arbitrary callback termination and effect rollback are not proved.
 Constant equality remains strict: wrapping that changes a constant's equality is
 rejected, including such Function constants. Wrapper canonicalization/deduplication
 and optional/keyword Function arities remain open. No validation cache is added.
+
+
+## Receiver-bound computed dependencies
+
+The paper's final-self rule (section 2) gives parent and child the same complete
+receiver; section 5 supplies recursive recognition and callable/typed-slot Type
+descriptors. `validation-rebinding.ss` now uses ordinary `$computed-slot-spec`
+composition to normalize inherited results on that same checked receiver. Both
+Class and ObjectContract use it. Computed fields capture checked dependencies
+instead of freezing getter results from the old source. Existing receiver caches
+share repeated reads, and existing `CyclicSlot` detects active cycles.
+
+Global source structure is still checked before wrapping. A fresh private receiver
+then preserves explicit instance assignments (without copying computed caches),
+forces every selected field, and reaches final membership/refinement only after
+success. Dependencies may force a later field first; declaration order is not a
+promise for side-effectful validators. Slot `.slot.validate` now receives the
+inherited raw value and final receiver explicitly, avoiding an implicit recursive
+read of its own active field. If all selected values retain identity, the source
+is returned. The normal publication chain binds only the actual returned root.
+
+`examples/computed-publication.ss` combines Record metadata inheritance with an
+explicit inherited instance prototype/super computation, a hook replacing backend
+and bias, captured callable dependencies, computed Function lists, higher-order
+results, root refinement and exact evidence. It does not add implicit super
+semantics to Record Slot metadata. Tests cover parent pre-observation, repeated
+admission, instance assignment/hook mutation, custom Slot dependency reads, cycles,
+callback failure, raw/stale evidence and current retry.
+
+`ValidationRebinding.lean` reuses `Prototype.Recursive` interactions and certified
+memo receipts. Eleven laws cover bind/step semantics, checked aliases, dependency
+and source errors, direct values, inheritance composition, memo agreement and
+failed-batch refusal. The executable `Examples/ComputedContracts.lean` adds a
+concrete checked-alias theorem and the same 46/8 service results, nested input
+refusal, shared certified memo, initialized refinement and evidence controls.
+Existing Class/refinement/binding laws remain part of the composition.
+
+This advances generalized MOP future work. Correspondence of getter specifications,
+assignment snapshots, memo caches and identity tokens to Scheme remains supplied.
+Structural getters still run on the raw source during the first pass; arbitrary
+getter/validator effects and callback termination are not certified. Explicit
+lexical captures cannot be rebound, constant equality is not weakened, and cyclic
+object closure, wrapper canonicalization and post-admission mutable freshness are
+not proved. Revalidate after revision; this is not an accepted-value cache or a
+runtime/GC/performance proof.
