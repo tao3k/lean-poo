@@ -370,6 +370,7 @@ _check-examples:
     {{lean}} Examples/RecursiveCoordination.lean
     {{lean}} Examples/Parameters.lean
     {{lean}} Examples/Representation.lean
+    {{lean}} Examples/GeneratedCalls.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
