@@ -424,6 +424,7 @@
   "LeanPoo/Functional/Presentation.lean",
   "LeanPoo/Functional/ProjectedSelf.lean",
   "LeanPoo/Functional/PropertyTesting.lean",
+  "LeanPoo/Functional/ProtocolSelection.lean",
   "LeanPoo/Functional/PrototypeTypes.lean",
   "LeanPoo/Functional/QueueSelection.lean",
   "LeanPoo/Functional/ReceiptAdmission.lean",

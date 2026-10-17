@@ -245,3 +245,47 @@ executor threads that can no longer drain output. A subprocess regression fails
 on the previous implementation with a bounded timeout and passes after the fix.
 Existing queued-launch cancellation, process-group and complete-check tests remain;
 heap, time, heartbeat and concurrency budgets are not widened.
+
+### Whole-protocol selection through core `ormap`
+
+The active Gerbil runtime's public `ormap` (`gerbil/runtime/util.ss`) returns
+the exact first non-false callback result, visiting the input from left to right
+and stopping immediately on success or exception. `object-protocol` now uses it
+directly instead of duplicating that traversal. The input remains the existing
+checked C3 precedence list; no linearization, dependency edge, invalidation rule
+or hook dispatcher is replaced.
+
+Selection chooses **one complete protocol object**. An empty protocol on the
+first branch shadows a later branch's hooks; missing hooks use the existing
+engine continuation. Removing that branch's protocol permits the current suffix
+to supply one. Parent reordering and protocol replacement go through existing
+checked mutation operations and invalidate the join. The inherited-services
+example adds `protocol-action`, composing that mutation and public observations
+through the existing FUN Reader operation.
+
+Regression controls exercise actual callback order and suffix non-evaluation,
+exception identity, whole-object shadowing, removal/reordering, shared-join
+invalidation, private-field non-demand and sealed-source refusal. Lean's
+`Functional/ProtocolSelection.lean` uses `List.findSome?` in the existing
+`Functional.InheritedMOP` namespace: first selection, absent-source delegation,
+all-absent characterization and selected-prefix stability are proved. These
+are pure lookup laws; runtime effects, host pointer identity, C3 correctness and
+GC are not inferred from them. The generalized MOP remains an extension of the
+article's stated future work.
+
+The deeper dispatch/syntax/reflection pass retains the following POO policies:
+
+* `.defgeneric` resolves a missing-slot fallback only for the original receiver
+  and slot. Core lambda owns optional/keyword/default admission; the small
+  forwarding helper passes the resulting bindings without rerunning defaults.
+  Compiler-private signature utilities are not a public replacement.
+* Effective-method caches retain source identity and current applicability
+  guards. An ordinary host method cache does not supply negative-assumption
+  revalidation, qualifier interpretation or nested cache transport.
+* Reflection selects current first metadata before visibility checks, and its
+  complete catalog traversal preserves descriptor errors and getter order.
+  An early-exit lookup would silently skip these observations.
+
+No additional namespace, contract DSL, host dispatcher or performance claim is
+introduced. This audit closes the confirmed traversal duplication; it does not
+mark unrelated TODO items complete.

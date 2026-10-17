@@ -1,4 +1,5 @@
 import LeanPoo.Functional.InheritanceHooks
+import LeanPoo.Functional.ProtocolSelection
 import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.SlotReflection
 
@@ -68,4 +69,16 @@ example : readSlot amount (fun _ => .ok 40) = .error "value rejected by SmallAmo
 #print axioms readSlot_valid
 #print axioms writeSlot_rejected
 #print axioms writeSlot_admitted
+/-- An empty selected protocol blocks a later branch's hook; hook absence is
+not protocol absence. Reordering/removing protocols is a fresh source lookup. -/
+def protocolSources (name : String) : Option (List String) :=
+  if name = "billing" then some [] else if name = "risk" then some ["compute-slot"] else none
+example : selectProtocol protocolSources ["join", "billing", "risk", "root"] = some [] := by decide
+example : selectProtocol protocolSources ["join", "risk", "billing", "root"] = some ["compute-slot"] := by decide
+example : selectProtocol (fun name => if name = "billing" then none else protocolSources name)
+    ["join", "billing", "risk", "root"] = some ["compute-slot"] := by decide
+#print axioms selectProtocol_first
+#print axioms selectProtocol_absent
+#print axioms selectProtocol_none
+#print axioms selectProtocol_prefix
 end LeanPoo.Examples.InheritedHooks

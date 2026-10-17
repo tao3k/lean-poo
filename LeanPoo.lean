@@ -253,6 +253,7 @@ import LeanPoo.Functional.ClosureCosts
 import LeanPoo.Functional.ClosureScenarios
 import LeanPoo.Functional.ClosurePolicy
 import LeanPoo.Functional.InheritanceHooks
+import LeanPoo.Functional.ProtocolSelection
 import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.SlotReflection
 import LeanPoo.Prototype.MetaBootstrap
