@@ -1,5 +1,7 @@
 # Bounded prototype polymorphism, subtyping and inference
 
+For the Object/row and guarded Mu extensions, see [row-types.md](row-types.md).
+
 This implements a decidable part of the original type-system **future work**.
 The Racket discussion in “Prototypes are Useful Even Without Subtyping”, “Type
 Descriptors” and Appendix C/D motivates explicit universal Self/Super parameters,
@@ -90,8 +92,8 @@ Type definitions during each sequential request remain premises. There is no ato
 concurrent mutation claim. Previously returned instances never grant fresh evidence
 for a different descriptor/context identity.
 
-Rank-two/higher polymorphism, recursive type equations, unrestricted recursive
-carriers, row polymorphism, dependent/effect inference, user-defined predicate
+Rank-two/higher polymorphism, unrestricted recursive type equations/carriers,
+unbounded row inference, dependent/effect inference, user-defined predicate
 implication and optional/keyword/rest/CaseFunction **subtyping** remain outside this
 algebra. Those existing executable Function forms still work through their own
 validators; this judgment refuses unsupported syntax. Runtime values are always
