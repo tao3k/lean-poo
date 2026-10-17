@@ -466,3 +466,31 @@ This advances the original text's generalized-prototype future work. Complete
 reads/watches, immutable metadata, trusted terminating callbacks and sequential
 mutation remain required. No automatic read discovery, concurrent CAS, side-effect
 rollback or atomic graph-plus-effect transaction is claimed.
+
+
+## Class full-suite resource diagnosis
+
+The Scheme single-process failure was reproduced with the unchanged 1G heap.
+All-module source import retained about 927 MB of latest-GC live data before the
+first test. Failures moved between Class multiple inheritance/diamond and dense
+closure; the Class-only all-import control and 1,000 independent repetitions in
+both natural and controlled GC regimes passed. The dominant avoidable load is the
+release expander retaining all source-module expansion contexts, not evidence of
+leaked Class admission state. Loading the compiled interfaces observed about
+117 MB initially and at most 154 MB at module boundaries in the diagnostic run;
+these are local latest-GC observations, not peak RSS or a performance proof.
+
+Gerbil now compiles the checked test inventory and its helper dependencies with
+standard `std/make`, then passes the compiled interfaces to the original `gxtest`
+harness. All cases, fixtures, order, the 1G heap and existing deadlines remain.
+The runner does not insert GC or alter interpreter state. Existing test cases now
+snapshot mutable traces/counters in explicit lexical sequence; no expectations
+are relaxed. New Class controls exercise warmed diamond metadata, failed cyclic
+admission and fresh checked-Function retries in both GC regimes. Independent CI
+jobs remain, and an additional job executes the full suite in one process from
+the same exact-source compiled artifact.
+
+This repairs test loading and test observation ordering. The supplied Class,
+recursive-validation and inheritance proof interpretations remain unchanged; this
+is not a new compiler/GC verification obligation for the original paper. See the
+companion `doc/test-execution.md` for the controls and evidence boundaries.
