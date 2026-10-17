@@ -361,6 +361,7 @@ _check-examples:
     {{lean}} Examples/RecursiveMigrations.lean
     {{lean}} Examples/RecursiveTopologies.lean
     {{lean}} Examples/RecursiveStaging.lean
+    {{lean}} Examples/RecursiveRestaging.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

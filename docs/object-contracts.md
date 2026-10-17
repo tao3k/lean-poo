@@ -494,3 +494,39 @@ This repairs test loading and test observation ordering. The supplied Class,
 recursive-validation and inheritance proof interpretations remain unchanged; this
 is not a new compiler/GC verification obligation for the original paper. See the
 companion `doc/test-execution.md` for the controls and evidence boundaries.
+
+
+## Explicit preparation with older requests still pending
+
+`recursive-staging.restaging-action` lifts a FUN Reader of three edit lists
+(additions, removals, replacements) into a Reader of guarded requests. Each
+explicit invocation computes edits against the actual current catalog, then uses
+`stage-reconfiguration` to capture that graph identity and all proposed watches.
+Preparation does not build a graph, reserve publication or rewrite old requests.
+Preparation exceptions produce no request; closure refusal preserves the current
+graph. Retry consists of running preparation again, then publishing the new
+request through the existing guard. Preparation must terminate locally and leave
+the installed graph and metadata immutable.
+
+`examples/recursive-restaging.ss` derives provider additions/removals from current
+membership using standard map/filter, retaining the existing service, checked
+Function, computed summary and publication recipes. Eight rounds merge/split SCCs,
+migrate shared dependencies, restore primary-only membership, reintroduce the same
+secondary recipe, and change computed readers/local bodies. Each round prepares new
+requests while historical requests remain pending, attempts historical work,
+refuses late admission, explicitly prepares again, and publishes through the
+existing whole-value `refine` and exact `bind-evidence` FUN chain. Old requests are
+attempted again after installation. Historical graph/reference capabilities never
+revive when old names and groups return; an independent node retains identity.
+
+Lean `Functional.RecursiveRestaging` proves preparation failure, exact new request
+capture, successful prepared publication, refusal followed by retry, preservation
+under any finite list of obsolete attempts, and successful fresh publication
+interleaved with old attempts on both sides. `Examples/RecursiveRestaging.lean`
+runs the same eight actual selective closures and checks old-reference rejection,
+current refinement and wrong-context refusal followed by exact-evidence retry.
+These extend the generalized-prototype **future work**. Exact graph identity and
+complete watched-version correspondence, explicit dependency footprints, pure
+locally terminating preparation/closure and sequential attempts remain premises.
+The list theorem describes serialized observations; it proves neither concurrent
+host installation nor atomic graph/effect rollback or arbitrary callback effects.
