@@ -578,3 +578,56 @@ trusted terminating callbacks and sequential installation remain premises. There
 is no claim of concurrent CAS, arbitrary callback-effect rollback, or atomic graph
 and external-effect publication. The finite model does not verify Scheme runtime
 or compiler internals.
+
+
+## Shared approval metadata and graph revisions
+
+`recursive-publication.snapshot` now captures the graph and metadata together.
+`publication(graph, metadata:)` initializes this pair; existing graph-only readers
+and operations retain their API and preserve installed metadata. New read-only
+`snapshot-graph` / `snapshot-metadata` projections, `stage-joint-with`,
+`submit-joint!` and `observe-joint!` operate on one captured pair. Installation is
+one private snapshot-pointer replacement, before later entry effects. Access stays
+caller-serialized; the busy guard rejects reentrant writes.
+
+`recursive-approvals.stage-with` prepares against that exact whole snapshot and
+captures existing lens revision guards for installed and proposed approval POO
+objects. These guards reject changed versions even when values change back, and
+prevent supported metadata writes during preparation, closure and admission.
+Untracked interior mutations and hidden callback dependencies remain unsupported.
+`submit!` installs the admitted pair before the entry observer; `observe!` retries
+only refinement/evidence over a consistent current pair under the same metadata
+write discipline. Observer refusal keeps the pair and the old entry context.
+
+The existing recursive closure accepts `admit:` at its revision/reconfiguration
+and staging boundaries. The callback receives a complete locally normalized and
+admitted candidate, with canonical nodes sealed. It must return exactly `#t`.
+Joint refusal occurs BEFORE predecessor retirement or dirty Reference revocation.
+The attempt moves to its existing failed phase: leaked candidate graph access and
+new Reference capabilities refuse, while reused clean predecessor capabilities
+remain valid. This reuses selective closure and its dependency propagation, rather
+than building an independent graph engine or undoing a committed graph afterward.
+
+`examples/recursive-approvals.ss` uses per-entry ceilings, a stricter joint budget,
+existing computed-shape refinement and checked Function recipes. Three entries
+rotate through eight SCC/provider/computed rounds. Every round checks local success
+with joint refusal, preserved old pair/references, rejected failed-candidate
+capabilities, separate installed/proposed metadata ABA drift, explicit restaging,
+late effect refusal and exact bind-evidence retry. Historical requests remain
+pending across rounds. A ninth approval-only revision reconstructs no nodes and
+retains canonical References, but still expires old whole-snapshot requests.
+Supported approval writes from an admission callback refuse before mutation.
+A final captured-version recheck also rejects a callback that changed a proposed
+recipe watch before retirement; the external write persists, while the old graph
+remains usable and fresh staging can retry. Callback effects are not rolled back.
+
+Lean `Functional.RecursiveApprovals` proves eight composition laws: construction
+refusal, joint refusal, exact successful pair, whole-state preservation, one-step
+pair publication, metadata guard refusal, cross-round sibling invalidation and
+late effect refusal retaining both installed projections. Its executable example
+uses the same nine actual finite graph/approval states and per-entry contexts.
+This extends the original generalized-prototype **future work**, under complete
+registered versions/dependencies, exact host identity correspondence, lawful guard
+operations, immutable-in-use metadata, locally terminating callbacks and serialized
+access. It does not establish concurrent CAS, arbitrary effect rollback, or atomic
+graph-plus-external-effect publication, and does not verify runtime/compiler code.

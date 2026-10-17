@@ -363,6 +363,7 @@ _check-examples:
     {{lean}} Examples/RecursiveStaging.lean
     {{lean}} Examples/RecursiveRestaging.lean
     {{lean}} Examples/RecursivePublication.lean
+    {{lean}} Examples/RecursiveApprovals.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
