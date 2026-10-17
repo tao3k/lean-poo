@@ -286,3 +286,5 @@ import LeanPoo.Functional.JointCoordination
 import LeanPoo.Functional.CoordinatorRejoining
 import LeanPoo.Examples.JointReceipts
 import LeanPoo.Examples.JointTopology
+
+import LeanPoo.Functional.ObjectContract

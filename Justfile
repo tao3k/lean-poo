@@ -349,6 +349,7 @@ _check-examples:
     {{lean}} Examples/JointGenerations.lean
     {{lean}} Examples/JointRestaging.lean
     {{lean}} Examples/JointCoordination.lean
+    {{lean}} Examples/ObjectContracts.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
