@@ -350,6 +350,7 @@ _check-examples:
     {{lean}} Examples/JointRestaging.lean
     {{lean}} Examples/JointCoordination.lean
     {{lean}} Examples/ObjectContracts.lean
+    {{lean}} Examples/ContainerContracts.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

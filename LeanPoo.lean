@@ -292,3 +292,4 @@ import LeanPoo.Functional.ObjectContractRefinement
 import LeanPoo.Functional.EvidenceBinding
 import LeanPoo.Functional.FunctionValidation
 import LeanPoo.Functional.ObjectContractValidation
+import LeanPoo.Functional.ContainerValidation

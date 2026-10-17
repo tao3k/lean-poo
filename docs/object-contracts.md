@@ -124,6 +124,34 @@ Proofs cover total pure callbacks and finite declared batches. Representation la
 reference/identity correspondence and immutability remain premises. Scheme tests
 exercise actual wrappers and exception identity; neither layer proves the parser,
 compiler/runtime, arbitrary cyclic object termination or rollback of effects.
-General container wrapping, optional/keyword arities, wrapper deduplication and
-higher-order blame remain open. This extends the paper's future generalized
+Other container families, external schema adapters, optional/keyword arities,
+wrapper deduplication and higher-order blame remain open. This extends the paper's future generalized
 prototype work; section 5 supplies the Type descriptor recognition/validation basis.
+
+## Container recursion and finite schemas
+
+The existing Scheme List/Tuple Types now recursively call child validation and
+return complete wrapped containers. A shared structural traversal checks proper
+lists and exact tuple arity before normalization, follows nested ObjectContract
+schemas without prematurely running their refinement, and records zero-based
+indices in diagnostics. No source list/vector is mutated; unchanged containers
+retain host identity. Named-field schemas are existing ObjectContract descriptors,
+without a new schema DSL. Arbitrary external Schema Types need explicit adapters.
+
+`LeanPoo/Functional/ContainerValidation.lean` reuses ordered traversal and the
+object validation pipeline. Its nine laws cover successful position-wise
+normalization/length, unchanged values, tuple arity and positions, final checked
+acceptance, original child errors and schema refinement. The previously proved
+`validated_binding` law applies to the exact final container reference.
+`Examples/ContainerContracts.lean` composes a task list, finite schema, heterogeneous
+tuple and Function list, including two returned values, sequential transforms,
+refinement failure, malformed tuple, callback output rejection and raw/stale
+reference refusal followed by current retry. Scheme exercises the corresponding
+actual wrappers through JSON/FUN and bound publication.
+
+The Racket `ListOf` in section 5 provides recursive membership; the new wrapping
+composition advances future generalized-prototype work. Proofs interpret finite
+pure callbacks, vectors as tagged rows and immutable identities as supplied IDs.
+The fixture's named inventory is fixed by its Lean record type. Host representation,
+parsing/runtime correctness, arbitrary external adapters, cyclic closure, wrapper
+deduplication and higher-order blame remain outside these claims.
