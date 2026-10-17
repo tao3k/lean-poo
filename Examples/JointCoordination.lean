@@ -86,6 +86,28 @@ def round (prior : State × List Attempt) (row : Head × Nat × Nat) : Except St
   let .error messageD := failedD | throw "failed preparation minted a receipt"
   unless messageC == "c preparation failed" && messageD == "d preparation failed" do
     throw "preparation changed the original error"
+  -- Preparation succeeds before a peer installs. Both original snapshots must
+  -- refuse; same-head approval revision changes must refuse independently.
+  let .ok preparedC := readyC | throw "c recovery preparation refused"
+  let .ok preparedD := readyD | throw "d recovery preparation refused"
+  for receipt in [preparedC,preparedD] do
+    unless (Functional.JointPublication.checkRejoining left receipt receipt.staged).isNone do
+      throw "successful preparation survived a competing publication"
+    unless (Functional.JointPublication.checkRejoining current receipt (receipt.staged+1)).isNone do
+      throw "successful preparation survived shared approval invalidation"
+    unless (Functional.JointPublication.checkRejoining current receipt receipt.staged).isSome do
+      throw "fresh recovery preparation refused"
+  -- Explicit retries capture the actual new winner. A check never reserves it:
+  -- another peer can win before installation and the final gate must refuse.
+  let .ok retried := Functional.JointPublication.prepareRejoining (Error := String) left
+    (fun state => .ok (freshCandidate tc state)) 7 | throw "fresh retry refused"
+  unless retried.expected == left.id &&
+      (Functional.JointPublication.checkRejoining left retried 7).isSome do
+    throw "retry did not capture the current winner"
+  let competitor := Functional.JointPublication.installSequence left [⟨retried,7⟩]
+  let rejected := Functional.JointPublication.installSequence competitor [⟨retried,7⟩]
+  unless rejected.id == competitor.id && rejected.approvals 0 == competitor.approvals 0 do
+    throw "rejoining observation bypassed final installation checking"
   let stagedC : Except String Attempt := readyC.map (fun receipt => ⟨receipt,3⟩)
   let stagedD : Except String Attempt := readyD.map (fun receipt => ⟨receipt,4⟩)
   let oldResults : List (Except String Attempt) := oldAttempts.map .ok
@@ -137,4 +159,8 @@ def check : Except String Unit := do
 #print axioms Functional.JointPublication.prepareRejoining_success
 #print axioms Functional.JointPublication.installRejoining_failed
 #print axioms Functional.JointPublication.installRejoining_valid
+#print axioms Functional.JointPublication.checkRejoining_stale
+#print axioms Functional.JointPublication.resumeRejoining_stale
+#print axioms Functional.JointPublication.checkRejoining_fresh
+#print axioms Functional.JointPublication.checkRejoining_install_stale
 end LeanPoo.Examples.JointCoordination

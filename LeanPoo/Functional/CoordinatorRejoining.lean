@@ -108,6 +108,58 @@ theorem prepareRejoining_success {Error : Type} {Valid : Bundle Id Endpoint Poli
     (revision : Revision) (candidate : {candidate // Valid candidate}) (ready : prepare current = .ok candidate) :
     prepareRejoining current prepare revision = .ok ⟨current.id,candidate.val,revision,candidate.property⟩ := by
   simp [prepareRejoining,ready,Except.map]
+/-- Rejoining observes the prepared receipt's original head and registered guard
+revision. It grants no reservation: installation must check them again. -/
+def checkRejoining {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (live : Revision) : Option (Approved (Revision := Revision) Valid) :=
+  if current.id = receipt.expected ∧ receipt.staged = live then some receipt else none
+/-- A competing publication or registered metadata change rejects successful
+preparation without invoking any service continuation or minting a new receipt. -/
+theorem checkRejoining_stale {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (live : Revision)
+    (stale : current.id ≠ receipt.expected ∨ receipt.staged ≠ live) :
+    checkRejoining current receipt live = none := by
+  rcases stale with head | guard
+  · simp [checkRejoining, head]
+  · simp [checkRejoining, guard]
+/-- Compose the service continuation only after the successful observation.
+This pure stage grants no installation authority and never retries implicitly. -/
+def resumeRejoining {Result : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (live : Revision)
+    (proceed : Approved (Revision := Revision) Valid → Result) : Option Result :=
+  (checkRejoining current receipt live).map proceed
+/-- Stale successful preparation cannot enter a continuation, for ANY pure
+continuation and result type. The owner's state is not an output of this gate. -/
+theorem resumeRejoining_stale {Result : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (live : Revision)
+    (proceed : Approved (Revision := Revision) Valid → Result)
+    (stale : current.id ≠ receipt.expected ∨ receipt.staged ≠ live) :
+    resumeRejoining current receipt live proceed = none := by
+  simp [resumeRejoining, checkRejoining_stale current receipt live stale]
+/-- A fresh observation preserves the exact receipt; no historical rebase occurs. -/
+theorem checkRejoining_fresh {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (live : Revision)
+    (head : current.id = receipt.expected) (guard : receipt.staged = live) :
+    checkRejoining current receipt live = some receipt := by
+  simp [checkRejoining, head, guard]
+/-- Even after successful rejoining observation, a later competing installation
+or guard change still refuses at installation and retains the actual winner. -/
+theorem checkRejoining_install_stale {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}
+    (current later : Bundle Id Endpoint Policy Head Metadata)
+    (receipt : Approved (Revision := Revision) Valid) (observed live : Revision)
+    (_checked : checkRejoining current receipt observed = some receipt)
+    (stale : later.id ≠ receipt.expected ∨ receipt.staged ≠ live) :
+    installSequence later [⟨receipt,live⟩] = later := by
+  apply installSequence_inert
+  intro attempt member
+  simp only [List.mem_singleton] at member
+  subst attempt
+  exact stale
 /-- Project only successfully prepared installation requests. Original Except
 results retain their errors; projection is not exception swallowing or rollback. -/
 def rejoiningAttempts {Error : Type} {Valid : Bundle Id Endpoint Policy Head Metadata → Prop}

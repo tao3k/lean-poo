@@ -87,3 +87,7 @@ pending attempts. Arbitrary preparation side effects are not rolled back. Old
 receipt refusal still requires stale head or guard revision. No critical-section
 interruption, thread-runtime proof, fairness, eventual recovery, arbitrary
 convergence, durable/distributed atomicity or performance improvement is claimed.
+
+Successful preparation followed by competing publication is covered separately by
+[prepared recovery](coordinator-prepared.md), including the independent check at
+rejoining and mandatory final installation revalidation.
