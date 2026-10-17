@@ -184,3 +184,28 @@ compiler/runtime or external effect rollback. Ordered committed Union validation
 is not equivalent to existential membership. These are explicit future-work
 extensions of the section 5 descriptor constructs, not a claim of whole-paper
 completion. Other Type families, cyclic closure and wrapper deduplication remain.
+
+## Sentinel optionals and TypeValuePair
+
+The companion `optional-validation` extends Maybe, OrFalse and TypeValuePair through
+existing Type/structural methods. Void and #f keep distinct representations; absent
+branches do not even demand their child Type. Present validation locks the selected
+child: a wrong Function result cannot become outer absence to evade checking.
+Sentinel results remain legal when the child Type explicitly accepts them.
+TypeValuePair now checks the carried Type, validates the payload rather than the
+whole pair, and retains that exact Type alongside the actual normalized cdr.
+
+`LeanPoo/Functional/OptionalValidation.lean` adds ten laws for sentinel identity,
+shape/child errors, selected membership, complete acceptance, invalid descriptors,
+descriptor retention and dependent payload success/failure. Existing ObjectContract
+refinement and binding proofs provide the final composition. The worked Scheme
+pipeline uses optional typed plugin rows and optional fallback through JSON/FUN,
+refinement and exact binding. `Examples/OptionalContracts.lean` executes matching
+present/absent paths, wrong carried interfaces, output refusal and current retry.
+
+The typed fixture fixes its record/container grammar, uses descriptor/reference
+tokens and supplies a pure host correspondence. It does not certify dynamic
+parsing, host identity/allocation, compiler/runtime correctness or effect rollback.
+This advances section 5 descriptor/generalized-prototype future work. Class-specific
+policies, external schema adapters, cyclic closure and wrapper deduplication remain
+open; the I/O formats and executable-value serialization limitations are unchanged.

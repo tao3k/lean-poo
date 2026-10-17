@@ -352,6 +352,7 @@ _check-examples:
     {{lean}} Examples/ObjectContracts.lean
     {{lean}} Examples/ContainerContracts.lean
     {{lean}} Examples/VariantContracts.lean
+    {{lean}} Examples/OptionalContracts.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
