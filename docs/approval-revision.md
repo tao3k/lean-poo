@@ -79,7 +79,7 @@ rollback, general convergence/leastness, hidden dependency inference, speed or G
 claim. No new versioned JSON, full benchmark data or archives are committed.
 
 The initial aggregated example exceeded its unchanged 30-second check (exit 124).
-Shared source/recipe definitions now live in `LeanPoo.Examples.ComponentRounds`,
+Shared source/recipe definitions now live in `Examples/Support/ComponentRounds.lean`,
 and the executable controls are split by scenario into `Examples/ComponentRounds`,
 `Examples/ComponentRequests` and `Examples/ApprovalRevision`. The intermediate
 combined rounds/requests run also timed out (exit 124), so both prior scenarios

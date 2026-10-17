@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointReceipts
+import Examples.Support.JointReceipts
 import LeanPoo.Functional.JointGenerations
 
 /-! Mixed historical expected heads share one installation order with current

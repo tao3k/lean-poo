@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointReceipts
+import Examples.Support.JointReceipts
 import LeanPoo.Functional.CoordinatorRejoining
 
 /-! Independent preparation factories share an observed head, reject shared

@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 
 /-! Current approval revisions and competing candidates share actual component
 closure. Local revision identities model serial decisions, not native counters. -/

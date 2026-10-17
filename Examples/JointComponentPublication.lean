@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 import LeanPoo.Functional.JointPublication
 
 /-! Actual source closure feeds a whole metadata/head installation. No projection

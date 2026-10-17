@@ -32,7 +32,7 @@ jobs:
           restore-keys: |
             lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
       - name: Build public library and proofs
-        run: lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
+        run: lake build LeanPoo Examples indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
       - name: Check standalone C4 types
         run: lake env lean LeanPoo/C4/Types.lean
       - name: Check validation supervisors

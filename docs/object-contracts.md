@@ -426,3 +426,43 @@ current membership, so it makes no host allocation/cost claim. Complete declared
 reads, immutable metadata, host source/identity correspondence and sequential
 mutation remain premises. Arbitrary eager computed fixed points, concurrent
 installation and atomic external-effect transactions are outside this result.
+
+
+## Deferred recursive revision requests
+
+`recursive-staging.stage-reconfiguration` captures edit list spines, the exact
+current graph and the versions of proposed recipe watches. It returns a FUN Reader
+action. Staging runs no builders, normalizers, computed getters or admission
+callbacks, and allocates no candidate graph. Graph identity and complete input
+versions are checked before the action invokes existing `reconfigure-validation`.
+A sibling commit invalidates all requests from the old snapshot even if every
+node Reference remains valid. A proposed watched input can invalidate a request
+without any intervening graph commit. Stage again from the actual current graph
+and input versions; closure refusal leaves that graph and its References current.
+The request can be retried after refusal only while its exact checkpoint remains
+current; it grants no reservation or reusable approval of later states.
+
+Gerbil `examples/recursive-staging.ss` composes guarded revision, whole-value `refine` and
+existing `bind-evidence` through `Observation.` bind. Tests interleave multiple
+requests across seven actual graph states: simultaneous SCC merges/splits, shared
+provider addition/removal/migration, crossed merge refusal/re-staging, restored
+SCCs, computed-only edits and local-pair reclosure. Obsolete requests refuse across
+all later rounds; dirty old References do not revive when groups return. Extra
+controls cover proposed-watch drift before any builder, copied edit list spines,
+and a no-rebuild commit that retains all nodes but still expires sibling requests.
+The combined publication action returns the installed graph separately from effect
+success/refusal. A later effect-policy refusal preserves the old effect context;
+it does not undo the completed graph revision. Fresh evidence can then retry on
+that installed graph.
+
+Lean `Functional.RecursiveStaging` proves eight laws: revision/stamp refusal,
+closure failure preservation, fresh re-staging success, exact revision advance,
+all-refusal preservation, sibling invalidation and permanent old-round rejection.
+`Examples/RecursiveStaging.lean` uses actual selective reclosure, epochs, checked
+Functions, SCC inspection and the existing refinement/evidence models. A logical
+monotone revision corresponds to exact Scheme graph identity, and logical stamps
+to complete watched input versions; those correspondences are explicit premises.
+This advances the original text's generalized-prototype future work. Complete
+reads/watches, immutable metadata, trusted terminating callbacks and sequential
+mutation remain required. No automatic read discovery, concurrent CAS, side-effect
+rollback or atomic graph-plus-effect transaction is claimed.

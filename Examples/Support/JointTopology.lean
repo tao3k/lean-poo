@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 import LeanPoo.Functional.JointRevision
 import LeanPoo.Functional.JointAdmission
 

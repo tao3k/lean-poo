@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 import LeanPoo.Functional.JointPublication
 
 /-! Finite interleavings of whole joint bundles share actual component closure.

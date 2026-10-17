@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointTopology
+import Examples.Support.JointTopology
 import LeanPoo.Functional.JointReceipts
 
 /-! Shared certified receipt construction for actual component topology controls. -/

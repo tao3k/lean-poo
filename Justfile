@@ -269,6 +269,7 @@ check-proof-reuse:
 
 # Elaborate user-facing usage examples.
 check-example: check-compose
+    lake build Examples
     just --set lean "{{lean}}" _check-examples
 
 [private]
@@ -359,6 +360,7 @@ _check-examples:
     {{lean}} Examples/RecursiveRevisions.lean
     {{lean}} Examples/RecursiveMigrations.lean
     {{lean}} Examples/RecursiveTopologies.lean
+    {{lean}} Examples/RecursiveStaging.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 
 /-! Executable controls use the shared finite component workflow fixture. -/
 namespace LeanPoo.Examples.ComponentRounds

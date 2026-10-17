@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointReceipts
+import Examples.Support.JointReceipts
 import LeanPoo.Functional.JointCompetition
 
 /-! All six lock orders for two valid alternatives and one drifted receipt use

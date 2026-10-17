@@ -272,7 +272,6 @@ import LeanPoo.Functional.SupportedComponents
 import LeanPoo.Functional.ComponentRevision
 import LeanPoo.Functional.ComponentExecution
 import LeanPoo.Functional.ComponentPublication
-import LeanPoo.Examples.ComponentRounds
 import LeanPoo.Functional.SharedPublication
 import LeanPoo.Functional.JointPublication
 import LeanPoo.Functional.JointRevision
@@ -284,8 +283,6 @@ import LeanPoo.Functional.JointGenerations
 import LeanPoo.Functional.JointRestaging
 import LeanPoo.Functional.JointCoordination
 import LeanPoo.Functional.CoordinatorRejoining
-import LeanPoo.Examples.JointReceipts
-import LeanPoo.Examples.JointTopology
 
 import LeanPoo.Functional.ObjectContract
 import LeanPoo.Functional.ObjectContractRefinement
@@ -301,3 +298,4 @@ import LeanPoo.Functional.RecursiveValidation
 import LeanPoo.Functional.RecursiveRevision
 import LeanPoo.Functional.RecursiveMigration
 import LeanPoo.Functional.RecursiveTopology
+import LeanPoo.Functional.RecursiveStaging

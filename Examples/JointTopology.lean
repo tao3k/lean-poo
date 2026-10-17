@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointTopology
+import Examples.Support.JointTopology
 
 /-! Different active component supports/SCCs coexist in one atomic shared-budget
 bundle. Every example head retains its actual source and successful equations. -/

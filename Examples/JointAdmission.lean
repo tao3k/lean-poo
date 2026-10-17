@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointTopology
+import Examples.Support.JointTopology
 
 /-! Locally accepted but jointly refused requests preserve sibling freshness.
 All carriers below retain actual sources, discovered SCCs and closure equations. -/

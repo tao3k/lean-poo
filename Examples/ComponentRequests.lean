@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 
 /-! Competing requests reuse the shared actual-source component workflow fixture. -/
 namespace LeanPoo.Examples.ComponentRounds

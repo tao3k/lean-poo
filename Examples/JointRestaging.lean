@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointReceipts
+import Examples.Support.JointReceipts
 import LeanPoo.Functional.JointRestaging
 
 /-! Successful preparation observes a newer head while old attempts are pending.

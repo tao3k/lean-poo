@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointTopology
+import Examples.Support.JointTopology
 import LeanPoo.Functional.JointInstallation
 
 /-! Actual certified topology carriers survive post-admission installation races.

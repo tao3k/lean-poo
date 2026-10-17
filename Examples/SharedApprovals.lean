@@ -1,4 +1,4 @@
-import LeanPoo.Examples.ComponentRounds
+import Examples.Support.ComponentRounds
 import LeanPoo.Functional.SharedPublication
 
 /-! Shared and local approval dependencies across independent component endpoints.

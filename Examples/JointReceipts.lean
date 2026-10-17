@@ -1,4 +1,4 @@
-import LeanPoo.Examples.JointReceipts
+import Examples.Support.JointReceipts
 
 /-! Multiple admitted receipts, shared revision drift and six topology rounds.
 Actual sources and closure equations stay inside every candidate head. -/

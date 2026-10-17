@@ -61,7 +61,7 @@ actual source declarations, discovered support/SCC graphs and successful compone
 resolver equations. Its first two refusals explicitly assert every local check
 true and joint check false, then run competing request lists, source round trips,
 stale replays and fresh restaging. The native third-round 27/28 control extends the
-same generic law. Shared fixture code lives in `LeanPoo/Examples/JointTopology`;
+same generic law. Shared fixture code lives in `Examples/Support/JointTopology`;
 focused executable controls remain separate under their original 30-second limit.
 
 ## Scope

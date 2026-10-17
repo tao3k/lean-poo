@@ -5,6 +5,10 @@ defaultTargets = ["LeanPoo"]
 [[lean_lib]]
 name = "LeanPoo"
 
+[[lean_lib]]
+name = "Examples"
+roots = ["Examples.Support.ComponentRounds", "Examples.Support.JointTopology", "Examples.Support.JointReceipts", "Examples.Support.RecursiveTopology"]
+
 [[lean_exe]]
 name = "indexedRegistryScale"
 root = "Benchmarks.IndexedRegistryScale"
