@@ -327,6 +327,7 @@ _check-examples:
     {{lean}} Examples/MetaBootstrap.lean
     {{lean}} Examples/RecursiveMetaprotocol.lean
     {{lean}} Examples/DeclaredMethods.lean
+    {{lean}} Examples/MethodCompilation.lean
     {{lean}} Examples/DeclaredPrototypes.lean
     {{lean}} Examples/ClosedPrototypes.lean
     {{lean}} Examples/FeedbackServices.lean

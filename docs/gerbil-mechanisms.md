@@ -385,8 +385,8 @@ callback effects or the compiler; actual expansion and runtime controls cover
 those host observations separately. The generalized MOP/declaration integration
 continues the article's future work.
 
-The complete-method-combination and reflection audits retain their existing
-POO mechanisms for semantic reasons. Core class `defmethod` exposes `@next-method`, but its runtime
+The preceding complete-method-combination and reflection audit retained the
+POO mechanisms for the following semantic reasons. Core class `defmethod` exposes `@next-method`, but its runtime
 `call-next-method` starts from a host class type and searches `class-of` precedence;
 it cannot consume the current POO fragment sequence or persistent generic revision.
 There is no corresponding standard qualifier/forwarding/inner/Simula interpreter
@@ -396,6 +396,68 @@ repeated, nor before/after and forwarded-payload policy. Core class slot metadat
 also describes fixed host storage, not receiver-dependent computed Slot metadata
 with current visibility, checked reads and dependency invalidation. Substituting
 those host mechanisms wholesale would change the declared POO protocol.
-This pass therefore replaces the confirmed complete binding mechanism and leaves
-these distinct semantics in place. No speedup or unrelated TODO completion is
+That pass replaced the confirmed complete binding mechanism and retained
+these distinct semantics. The continuation-lifting study below evaluates
+standard composition without substituting host callback-result semantics. No speedup or unrelated TODO completion is
 claimed.
+
+### Complete continuation preparation and live reflection audit
+
+The complete prepared method-chain audit evaluated lifting each method stage to
+a unary **continuation endomorphism**, then assembling the entire program with
+public `std/func compose1`. Direct callback-result composition has the mismatch
+described above; composition of continuation builders preserves original-row
+next thunks. The candidate covers standard/simple around wrappers, primary,
+inner, forwarding and compiled/explicit-view Simula. Gerbil already owns the
+production list traversal through standard folds; POO supplies qualifier order,
+optional payload validation, next control and callback admission.
+
+The algebraic candidate is correct, but it is **not adopted in production**.
+It adds temporary builder lists and composition closures during preparation.
+In the final 192-child paired study, eight-layer inner construction plus call
+regressed by 2.383 us under natural GC (0.590 us excluding reported GC); eight-body
+explicit-view Simula regressed by 5.209 us (1.627 us excluding GC). Collected
+controls also regressed by 2.700/5.825 us; hot calls showed no stable gain against A/A variation.
+These are local, fixed-size observations, not universal cost bounds. The evaluated
+production substitution was withdrawn. `just benchmark-combination` retains the
+same candidate privately in the benchmark and compares it with the actual public
+prepared APIs, rather than introducing another runtime strategy or namespace.
+
+The existing strict paired infrastructure supplies fixed warmup, fresh processes,
+natural/collected GC, ABBA order, exact A/A controls, source identity and
+GC-qualified signed allocation admission. Construction-plus-call and retained
+hot calls are separate. Raw output stays ignored. Throughput batches with GC do
+not supply admitted allocation savings. Reproduce results locally rather than
+reusing measurements whose recorded source identity no longer matches.
+
+Metadata capture order is observable: compiled Simula captures suffix getters
+right-to-left, then prefix getters left-to-right. Invocation runs general-first
+prefixes and specific-first suffixes. The independent prepared transport retains
+its own historical capture order. New regression controls distinguish getters
+from bodies, reject capture failure at the original point and preserve
+repeated/skipped next and exception identity.
+
+Dynamic prototype reflection cannot be replaced by host class reflection:
+`class-of` and fixed class storage do not represent receiver-dependent Slot
+metadata, computed values or registered descriptor-source invalidation. The
+existing reflection API already delegates catalog deduplication to standard
+hash/list mechanisms and metadata/value admission to Slot. Its complete public
+catalog evaluation must remain before a read; stopping at the first matching
+name would skip other observable metadata effects. This audit retains that
+protocol rather than implementing another one.
+
+`examples/inherited-services.ss` composes one retained Simula program with the
+existing FUN Observation action across a shared-source diamond and independent
+service families. Every callback uses current `read-slot`, not cached admission.
+Tests edit shared defaults, visibility and Type; refusal prevents settlement,
+and restoring metadata permits retry with the same code. Private bodies remain
+unforced. Earlier emitted callback effects are not rolled back.
+
+`Object/MethodCompilation.lean` adds fold, grouping, next, forwarding, ordered-side
+and complete Simula equivalence laws in the existing MethodCombination namespace.
+The top-level MethodCompilation example shows repeated/skipped next and current
+callback refusal through retained code. These are pure algebraic laws over supplied
+callbacks/monads; existing SlotReflection laws specify current admission separately.
+They do not prove host mutation, macro/compiler correctness, GC costs or capability
+security. Generalized MOP integration continues the article's future work. The
+open TODO type/library/interpreter projects remain open.

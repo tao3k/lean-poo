@@ -206,6 +206,7 @@ import LeanPoo.Prototype.BinaryTreeSemantics
 import LeanPoo.Prototype.RecordRepresentations
 import LeanPoo.Object.MultimethodSemantics
 import LeanPoo.Object.MethodCombinationSemantics
+import LeanPoo.Object.MethodCompilation
 import LeanPoo.Object.SimplePolicies
 import LeanPoo.Object.SimpleCombinationSemantics
 import LeanPoo.Prototype.GeneralizedPrototype
