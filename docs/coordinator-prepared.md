@@ -20,7 +20,7 @@ preparation and then raise the refusal returned by `check-approved`.
 A successful observation does **not** reserve the head. `install!` must check again;
 `checkRejoining_install_stale` proves that a later competitor or metadata change
 retains the actual winner. Head identities must not be recycled; the model's
-revision values represent the registered native lens guards. Hidden callback
+revision values represent the registered Gerbil lens guards. Hidden callback
 state, arbitrary asynchronous interruption inside installation, process crashes,
 fairness, eventual recovery and a Scheme memory-model proof remain outside these
 finite serialized-trace theorems.
