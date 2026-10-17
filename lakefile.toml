@@ -7,7 +7,7 @@ name = "LeanPoo"
 
 [[lean_lib]]
 name = "Examples"
-roots = ["Examples.Support.ComponentRounds", "Examples.Support.JointTopology", "Examples.Support.JointReceipts", "Examples.Support.RecursiveTopology"]
+roots = ["Examples.Support.ComponentRounds", "Examples.Support.JointTopology", "Examples.Support.JointReceipts", "Examples.Support.RecursiveTopology", "Examples.Support.RecursiveApprovals"]
 
 [[lean_exe]]
 name = "indexedRegistryScale"

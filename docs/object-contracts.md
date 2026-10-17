@@ -631,3 +631,56 @@ registered versions/dependencies, exact host identity correspondence, lawful gua
 operations, immutable-in-use metadata, locally terminating callbacks and serialized
 access. It does not establish concurrent CAS, arbitrary effect rollback, or atomic
 graph-plus-external-effect publication, and does not verify runtime/compiler code.
+
+
+## Interleaved joint requests and repeated approval invalidation
+
+`recursive-approvals.submit-sequence!` accepts an ordered list of `(request . observer)`
+procedures. It preflights and copies every row before the first publication, then
+uses standard `foldl` to invoke the existing guarded `submit!` once per row. It
+continues after exceptions and preserves every attempt in input order. There is no
+automatic restaging, reapproval or transaction across the sequence.
+
+Read-only attempt selectors expose the original request, that attempt's actual
+post-attempt snapshot, all returned observer values, an explicit `attempt-failed?`
+flag and the original exception payload. The flag distinguishes a raised `#f` from
+normal `#f` or zero return values. A normally returned metadata/effect refusal stays
+in the returned values; it is not relabelled as an exception or accepted effect.
+An observer exception after successful graph installation records the installed
+pair, and later rows still attempt against that pair. Historical snapshot references
+are observations, not renewed approvals or frozen copies of mutable metadata.
+
+`examples/recursive-competition.ss` reuses current/future policy objects and the
+existing joint-approval/service observers. Eight actual SCC/provider/computed
+rounds retain a losing future proposal for explicit preparation in the next round.
+Within each round, two requests share a proposed policy; proposed-policy ABA first
+invalidates both. Freshly staged current/future requests then expire AGAIN after
+installed-policy ABA. Explicitly prepared fresh requests compete only after these
+two windows. Local success/joint refusal leaves the predecessor usable; a winner
+installs despite later effect refusal, and the future challenger plus a replayed
+winner refuse as stale. Historical requests remain interleaved on both sides.
+Fresh `refine` / exact `bind-evidence` observation retries against the installed
+pair, preserving the other entries' contexts and rejecting dirty old References.
+
+Controls also retain an installed head after observer exceptions, continue to the
+next stale request, reject a malformed queue before any publication, prevent an
+observer rewriting the original queue from replacing later copied requests, and
+distinguish false exceptions from normal false/zero values.
+
+Lean `Functional.RecursiveCompetition` proves eight sequence laws: one receipt per
+attempt, graph-refusal continuation, late-effect-refusal continuation with the
+installed graph, exact preservation under an obsolete batch, single-step and
+finite-sequence revision monotonicity, permanent historical request rejection and
+invalidation of all same-or-earlier-round challengers after a winner. Each formal
+submission carries its own observed stamp and entry effect. The executable example
+uses the same eight actual graph revisions and competing future intentions, reusing
+`Examples/Support/RecursiveApprovals.lean` for the existing checked service fixture.
+That fixture is shared with the preceding joint-revision example; executable checks
+remain in top-level `Examples/`.
+
+These extend generalized-prototype **future work**. Native snapshot/guard identity
+correspondence, complete registered reads and versions, immutable-in-use metadata,
+caller-serialized attempts and pure locally terminating formal effects remain
+premises. Host exception and queue-alias controls are separate Scheme evidence.
+No concurrent CAS, arbitrary callback rollback, runtime/compiler verification or
+whole-sequence atomicity is claimed.

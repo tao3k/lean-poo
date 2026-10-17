@@ -302,3 +302,4 @@ import LeanPoo.Functional.RecursiveStaging
 import LeanPoo.Functional.RecursiveRestaging
 import LeanPoo.Functional.RecursivePublication
 import LeanPoo.Functional.RecursiveApprovals
+import LeanPoo.Functional.RecursiveCompetition

@@ -364,6 +364,7 @@ _check-examples:
     {{lean}} Examples/RecursiveRestaging.lean
     {{lean}} Examples/RecursivePublication.lean
     {{lean}} Examples/RecursiveApprovals.lean
+    {{lean}} Examples/RecursiveCompetition.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
