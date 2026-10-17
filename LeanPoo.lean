@@ -28,6 +28,13 @@ import LeanPoo.C4.AuditedResolver
 import LeanPoo.C4.Diagnostics
 import LeanPoo.Functional.Assembly
 import LeanPoo.Functional.Validation
+import LeanPoo.Functional.CacheLookup
+import LeanPoo.Functional.FunctionSignature
+import LeanPoo.Functional.PropertyTesting
+import LeanPoo.Functional.RecursiveGeneration
+import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.RowTypes
+import LeanPoo.Functional.RecursiveTypes
 import LeanPoo.Functional.Codec
 import LeanPoo.Functional.ComputationBatch
 import LeanPoo.Functional.Requirements
@@ -199,5 +206,121 @@ import LeanPoo.Prototype.BinaryTreeSemantics
 import LeanPoo.Prototype.RecordRepresentations
 import LeanPoo.Object.MultimethodSemantics
 import LeanPoo.Object.MethodCombinationSemantics
+import LeanPoo.Object.MethodCompilation
 import LeanPoo.Object.SimplePolicies
 import LeanPoo.Object.SimpleCombinationSemantics
+import LeanPoo.Prototype.GeneralizedPrototype
+import LeanPoo.Prototype.GeneralizedInheritance
+import LeanPoo.Prototype.GeneralizedComponents
+import LeanPoo.Prototype.GeneralizedDependencies
+import LeanPoo.Prototype.GeneralizedChain
+import LeanPoo.Prototype.GeneralizedTariff
+import LeanPoo.Prototype.GeneralizedFork
+import LeanPoo.Prototype.GeneralizedContext
+import LeanPoo.Functional.SharedSettlement
+import LeanPoo.Prototype.GeneralizedRevision
+import LeanPoo.Functional.PolicyPublication
+
+import LeanPoo.Functional.GeneralizedGraph
+import LeanPoo.Functional.GeneralizedMOP
+import LeanPoo.Functional.ConstructionWorkflow
+
+import LeanPoo.Functional.GeneralizedFragments
+import LeanPoo.Functional.InheritedMOP
+import LeanPoo.Functional.InheritedSettlement
+
+import LeanPoo.Functional.ConstructionCache
+import LeanPoo.Functional.GenericFamily
+import LeanPoo.Functional.StagedPublication
+import LeanPoo.Functional.ServiceBundle
+import LeanPoo.Functional.DeclarativeMetadata
+import LeanPoo.Functional.ContractFamily
+import LeanPoo.Functional.ServiceMetadata
+import LeanPoo.Functional.ProjectedSelf
+import LeanPoo.Functional.CarrierMigration
+import LeanPoo.Functional.AccountMigration
+import LeanPoo.Prototype.FiniteClosure
+import LeanPoo.Functional.PositiveEquations
+import LeanPoo.Functional.CyclicPublication
+import LeanPoo.Functional.CyclicAccess
+import LeanPoo.Functional.IncrementalClosure
+
+import LeanPoo.Functional.ChunkedClosure
+import LeanPoo.Functional.QueueSelection
+import LeanPoo.Functional.ClosureLifecycle
+import LeanPoo.Functional.ClosureConstruction
+import LeanPoo.Functional.HybridClosure
+import LeanPoo.Functional.ClosureCosts
+import LeanPoo.Functional.ClosureScenarios
+import LeanPoo.Functional.ClosurePolicy
+import LeanPoo.Functional.InheritanceHooks
+import LeanPoo.Functional.ProtocolSelection
+import LeanPoo.Object.CacheInvalidation
+import LeanPoo.Object.SlotReflection
+import LeanPoo.Prototype.MetaBootstrap
+import LeanPoo.Prototype.RecursiveMetaprotocol
+import LeanPoo.Functional.RecursiveDeclarations
+import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Prototype.GeneralizedDeclaration
+import LeanPoo.Prototype.LensLaws
+import LeanPoo.Prototype.GeneralizedClosure
+import LeanPoo.Prototype.FocusedClosure
+import LeanPoo.Prototype.FeedbackClosure
+import LeanPoo.Prototype.FeedbackRevision
+import LeanPoo.Prototype.CappedFeedback
+import LeanPoo.Functional.FeedbackCache
+import LeanPoo.Functional.NonlocalDeclarations
+
+import LeanPoo.Functional.StrongComponents
+
+import LeanPoo.Functional.GraphRevision
+import LeanPoo.Prototype.ComponentClosure
+
+import LeanPoo.Functional.SupportRevision
+import LeanPoo.Functional.SupportedComponents
+import LeanPoo.Functional.ComponentRevision
+import LeanPoo.Functional.ComponentExecution
+import LeanPoo.Functional.ComponentPublication
+import LeanPoo.Functional.SharedPublication
+import LeanPoo.Functional.JointPublication
+import LeanPoo.Functional.JointRevision
+import LeanPoo.Functional.JointAdmission
+import LeanPoo.Functional.JointInstallation
+import LeanPoo.Functional.JointReceipts
+import LeanPoo.Functional.JointCompetition
+import LeanPoo.Functional.JointGenerations
+import LeanPoo.Functional.JointRestaging
+import LeanPoo.Functional.JointCoordination
+import LeanPoo.Functional.CoordinatorRejoining
+
+import LeanPoo.Functional.ObjectContract
+import LeanPoo.Functional.ObjectContractRefinement
+import LeanPoo.Functional.EvidenceBinding
+import LeanPoo.Functional.FunctionValidation
+import LeanPoo.Functional.ObjectContractValidation
+import LeanPoo.Functional.ContainerValidation
+import LeanPoo.Functional.VariantValidation
+import LeanPoo.Functional.OptionalValidation
+import LeanPoo.Functional.ClassValidation
+import LeanPoo.Functional.ValidationRebinding
+import LeanPoo.Functional.RecursiveValidation
+import LeanPoo.Functional.RecursiveRevision
+import LeanPoo.Functional.RecursiveMigration
+import LeanPoo.Functional.RecursiveTopology
+import LeanPoo.Functional.RecursiveStaging
+import LeanPoo.Functional.RecursiveRestaging
+import LeanPoo.Functional.RecursivePublication
+import LeanPoo.Functional.RecursiveApprovals
+import LeanPoo.Functional.RecursiveCompetition
+
+import LeanPoo.Functional.RecursiveSubmissions
+import LeanPoo.Functional.RecursiveRecovery
+import LeanPoo.Functional.RecursiveCoordination
+import LeanPoo.Functional.Parameters
+import LeanPoo.Functional.SlotScope
+import LeanPoo.Functional.AssociationBindings
+import LeanPoo.Object.DeclarationOrder
+
+import LeanPoo.Prototype.Representation
+
+import LeanPoo.Functional.BuildCache

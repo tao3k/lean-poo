@@ -607,3 +607,33 @@ plus four diagnostics and 48 native admissions. The supervisor suite now has
 14 tests, including three audit drift/refusal controls. ~check-docs~ additionally
 checks the saved paper-outline/config/tool identity and local evidence hashes.
 It does not download reference repositories or execute their evaluators.
+
+* Process resource containment
+
+The source-level recursion guards do not supervise a host compiler process.
+The complete gate retains automatic file-level parallelism. Each atom now uses
+at most two Lean worker threads, a 2048 MiB compiler limit and the existing
+allocation budget (adding it where previously absent). The 42 source-owned
+30-second checks retain their original stricter limits. Every atom also has an
+independent 120-second wall deadline; preparation/check phases have 300 seconds.
+These deadlines are failure boundaries, never evidence that a proof passed.
+
+=tools/process_guard.py= streams real output with selectors rather than spawning
+reader/timer threads. It kills the owned process group and reaps its direct child
+on timeout, failed output processing, interruption, or leader exit. Descendants
+that keep stdout open cannot strand a reader after the group leader exits.
+Deliberately detached new sessions require their own supervisor. Regression tests
+exercise a TERM-ignoring busy loop, retained descendant pipe and failing output
+sink; no generated performance data is committed.
+
+Lake's =weakLeanArgs= caps module compiler threads/memory without forcing every
+cached artifact to rebuild merely because worker sizing changed. This policy
+covers this repository's maintained entry points. Ad-hoc commands in another
+checkout are not protected by this gate.
+
+The first CI run under compiler memory limits rejected the nested =rfl= family
+checks in =Examples/ClosedPrototypes.lean=. The same failure was reproduced locally
+at 1536 MiB. Named local closure certificates and composed family/refusal proofs
+avoid repeating proof-carrying closure normalization. The unchanged propositions
+now pass at the same 1536 MiB limit; the maintained 2048 MiB limit was not raised.
+The original failed CI/local logs remain diagnostic evidence, not successful checks.

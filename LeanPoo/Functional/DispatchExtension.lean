@@ -282,4 +282,87 @@ theorem publish_refused (generic : Multimethod Args Method Result) (watches : Li
     (refused : guard generic watches previous edits = .error failure) :
     publish generic watches previous edits = (.error failure, generic) := by simp [publish, refused]
 
+/-- Selection work counts one candidate visit, including unconditional entries.
+Callbacks are opaque: these units do not bound a user predicate's running time. -/
+def selectCounted (args : Args) : List (MethodCandidate Args Method) → List Method × Nat
+  | [] => ([], 0)
+  | candidate :: rest =>
+    let tail := selectCounted args rest
+    (if candidate.applies args then candidate.method :: tail.1 else tail.1, tail.2 + 1)
+
+theorem selectCounted_result (args : Args) (candidates : List (MethodCandidate Args Method)) :
+    (selectCounted args candidates).1 = candidates.filterMap (MethodCandidate.selected args) := by
+  induction candidates with
+  | nil => rfl
+  | cons candidate rest ih =>
+    simp only [selectCounted, List.filterMap_cons, MethodCandidate.selected]
+    split <;> simp_all
+
+theorem selectCounted_visits (args : Args) (candidates : List (MethodCandidate Args Method)) :
+    (selectCounted args candidates).2 = candidates.length := by
+  induction candidates with
+  | nil => rfl
+  | cons candidate rest ih =>
+    simp [selectCounted, ih]
+
+/-- Cache reuse never eliminates value-sensitive selection. The counted selector
+returns the same methods on both warm and cold paths. -/
+theorem selectCounted_cached (args : Args) (candidates : Array (MethodCandidate Args Method)) :
+    (selectCounted args candidates.toList).1 = (MethodCandidate.select candidates args).toList ∧
+    (selectCounted args candidates.toList).2 = candidates.size := by
+  exact ⟨(selectCounted_result args _).trans (MethodCandidate.select_reference _ _).symm,
+    by simpa using selectCounted_visits args candidates.toList⟩
+
+/-- Costed negative observation separates candidate lookup from selection:
+shape watches need no value-sensitive selection, call watches visit every candidate. -/
+def observedCounted (generic : Multimethod Args Method Result) : Watch Args → List Method × Nat
+  | .shape shape => ((generic.candidatesFor shape).toList.map MethodCandidate.method, 0)
+  | .call args => selectCounted args (generic.candidatesFor (generic.precedence args)).toList
+
+theorem observedCounted_result (generic : Multimethod Args Method Result) (watch : Watch Args) :
+    (observedCounted generic watch).1 = reference generic watch := by
+  rw [← observed_reference]
+  cases watch with
+  | shape shape => simp [observedCounted, observed]
+  | call args => exact (selectCounted_cached args _).1
+
+theorem observedCounted_shape (generic : Multimethod Args Method Result) (shape : DispatchShape) :
+    (observedCounted generic (.shape shape)).2 = 0 := rfl
+
+theorem observedCounted_call (generic : Multimethod Args Method Result) (args : Args) :
+    (observedCounted generic (.call args)).2 = (generic.candidatesFor (generic.precedence args)).size := by
+  exact (selectCounted_cached args _).2
+
+/-- The runtime recency list is persistent and truncates after eight entries;
+no hash table clone is required by this representation. -/
+def rememberRecent (recent : List DispatchShape) (shape : DispatchShape) : List DispatchShape :=
+  (shape :: recent.filter (· != shape)).take ShapeCache.capacity
+
+theorem rememberRecent_capacity (recent : List DispatchShape) (shape : DispatchShape) :
+    (rememberRecent recent shape).length ≤ ShapeCache.capacity := by
+  simp only [rememberRecent, List.length_take]
+  omega
+
+/-- Scheme's small persistent association cache charges at most eight shape
+comparisons per lookup. This is a count of comparisons, not their cost in time. -/
+def cacheComparisons (recent : List DispatchShape) (query : DispatchShape) : Nat :=
+  match recent with
+  | [] => 0
+  | head :: rest => if head == query then 1 else 1 + cacheComparisons rest query
+
+theorem cacheComparisons_bound (recent : List DispatchShape) (query : DispatchShape) :
+    cacheComparisons recent query ≤ recent.length := by
+  induction recent with
+  | nil => simp [cacheComparisons]
+  | cons head rest ih => simp only [cacheComparisons]; split <;> simp_all; omega
+
+theorem cacheComparisons_capacity (recent : List DispatchShape) (query : DispatchShape)
+    (bounded : recent.length ≤ ShapeCache.capacity) : cacheComparisons recent query ≤ 8 := by
+  have bound := Nat.le_trans (cacheComparisons_bound recent query) bounded
+  simpa [ShapeCache.capacity] using bound
+
+theorem remembered_comparisons (recent : List DispatchShape) (shape query : DispatchShape) :
+    cacheComparisons (rememberRecent recent shape) query ≤ 8 :=
+  cacheComparisons_capacity _ _ (rememberRecent_capacity recent shape)
+
 end LeanPoo.Functional.DispatchExtension

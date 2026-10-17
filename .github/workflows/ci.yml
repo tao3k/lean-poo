@@ -23,19 +23,34 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
+      - uses: actions/cache/restore@v4
+        id: library-cache
+        with:
+          path: .lake/build
+          key: lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
       - name: Build public library and proofs
-        run: |
-          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale
-          lake env lean LeanPoo/C4/Types.lean
-          python3 -m unittest discover -s tools/tests -p 'test_*.py'
+        run: lake build LeanPoo Examples indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
+      - name: Check standalone C4 types
+        run: lake env lean LeanPoo/C4/Types.lean
+      - name: Check validation supervisors
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'
+      - uses: actions/cache/save@v4
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        with:
+          path: .lake/build
+          key: ${{ steps.library-cache.outputs.cache-primary-key }}
       - name: Package this run's build
-        run: tar -czf lean-build.tar.gz .lake/build
+        run: tar -I 'zstd -T0 -3' -cf lean-build.tar.zst .lake/build
       - uses: actions/upload-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
-          path: lean-build.tar.gz
+          path: lean-build.tar.zst
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   lean-checks:
     name: lean shard ${{ matrix.shard }}
@@ -55,12 +70,13 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: taiki-e/install-action@just
       - uses: actions/download-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Check independent file shard
         run: lake env python3 tools/check_atoms.py --shard ${{ matrix.shard }} --shards 12 --jobs 1
 
@@ -76,12 +92,13 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: taiki-e/install-action@just
       - uses: actions/download-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Check bounded diagnostics
         run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context _check-native-result-index
 
@@ -108,11 +125,12 @@ jobs:
           build: false
           test: false
           lint: false
+          use-github-cache: false
       - uses: actions/download-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
       - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+        run: tar --zstd -xf lean-build.tar.zst
       - name: Install the source evaluator
         run: sudo apt-get update && sudo apt-get install -y racket
       - name: Compare all original checks against Lean

@@ -12,6 +12,11 @@ import subprocess
 import threading
 import time
 
+try:
+    from .process_guard import kill_group
+except ImportError:
+    from process_guard import kill_group
+
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = threading.RLock()
 ACTIVE = set()
@@ -43,7 +48,7 @@ def emit(message):
         print(message, flush=True)
 
 
-def run_phase(name, command):
+def run_phase(name, command, seconds=300):
     emit(f'CHECK-PHASE-START {name}')
     started = time.monotonic()
     process = None
@@ -53,7 +58,17 @@ def run_phase(name, command):
                 raise RuntimeError('Gate interrupted before phase launch')
             process = subprocess.Popen(command, cwd=ROOT, start_new_session=True)
             ACTIVE.add(process)
-        code = process.wait()
+        try:
+            code = process.wait(timeout=seconds)
+        except subprocess.TimeoutExpired:
+            # Let nested atom supervisors kill their separately owned groups.
+            os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                kill_group(process)
+                process.wait()
+            code = 124
         result = dict(name=name, command=command, returncode=code,
                       wall_seconds=time.monotonic() - started)
     except (OSError, RuntimeError) as error:
@@ -61,13 +76,9 @@ def run_phase(name, command):
                       wall_seconds=time.monotonic() - started, error=str(error))
     finally:
         if process is not None:
-            if process.poll() is None:
-                os.killpg(process.pid, signal.SIGTERM)
-                try:
-                    process.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGKILL)
-                    process.wait()
+            # Always clean the group, including children of an exited leader.
+            kill_group(process)
+            process.wait()
             with LOCK:
                 ACTIVE.discard(process)
     emit('CHECK-PHASE-END ' + json.dumps(result))
@@ -117,9 +128,9 @@ def main():
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale']),
+        [('library', ['lake', 'build', 'LeanPoo', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
-        [('types', ['lean', 'LeanPoo/C4/Types.lean']),
+        [('types', ['lean', '-j', '2', 'LeanPoo/C4/Types.lean']),
          ('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
          ('docs', ['just', 'check-docs']),

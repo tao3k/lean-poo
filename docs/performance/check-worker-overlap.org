@@ -63,6 +63,34 @@ internal thread setting is unchanged. New public Lean capability/API count: zero
 
 * Reproduce
 
+The local commit hook uses =tools/check_hook.py= to run the same complete
+=just check= gate. Leave =LEAN_POO_CHECK_JOBS= unset (or set it to =auto=)
+for capacity-based file concurrency. An explicit numeric value remains available
+for constrained hosts; it is not the normal development setting.
+
+Hook runners capture command output. When a controlling terminal exists, the
+wrapper displays actual phase starts/completions and every 25 completed files
+there while retaining all diagnostics for failure reporting. Detached runs keep
+ordinary stdout. It does not skip checks, reuse a prior successful gate, alter
+Lean's internal worker policy, or turn an interrupted check into success.
+For a full phase timing receipt outside Git, set
+=LEAN_POO_CHECK_RECEIPT=/tmp/lean-poo-check.json= on the commit/check invocation.
+The library is prepared once before independent checks, using Lake's normal
+incremental build; every canonical standalone file is still checked.
+
+CI restores an OS/architecture/toolchain/configuration-scoped build cache before
+the ordinary =lake build= and saves it only after successful build and supervisor
+checks. Lake still checks current source/dependency traces; cache restore does not
+admit a proof by itself. Shards consume the current run's artifact and do not
+restore an unrelated library cache during setup. Library compilation, standalone
+C4 checking and supervisor checks have separate timing steps.
+
+The full build artifact uses zstd with upload recompression disabled. All build
+files and downstream checks are retained; archive conversion is transport only.
+Raw per-run logs and timing observations belong in temporary files/PR receipts,
+not a versioned benchmark matrix. Cold builds and warm cache verification are
+separate observations and must not be described as equivalent workloads.
+
 #+begin_src sh
 lake env python3 Benchmarks/CheckGateStudy.py --baseline-ref c15f95bb3396d4328f74ac94574d1a76a737508b --baseline-jobs 12 --current-jobs 14 --output /private/tmp/check-gate-workers.json
 lake env python3 tools/check_atoms.py --jobs 14 --receipt /private/tmp/check-atom-cpu.json

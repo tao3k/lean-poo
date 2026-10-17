@@ -98,6 +98,15 @@ shapes.
 Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
 [[file:Benchmarks/README.org][Benchmarks]].
 
+* Research extension: generalized prototypes
+
+[[file:docs/contracts/generalized-prototypes.org][The generalized protocol]] advances the paper's future work by separating raw
+construction, cooked self and fragment compilation. It reuses C3, nested lenses,
+method combinations and exact representation bridges, with finite-observation
+and witnessed-closure laws. [[file:Examples/GeneralizedService.lean][GeneralizedService]] and [[file:Examples/GeneralizedCheckout.lean][GeneralizedCheckout]]
+exercise those compositions. This is an initial typed protocol, not completion
+of the paper's full MOP research proposal.
+
 * Documentation
 
 - [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
@@ -159,3 +168,31 @@ authority and publication. The modules do not infer CPU complexity or permission
 from an unverified declaration.
 
 [[file:Examples/ReceiptWorkflow.lean][ReceiptWorkflow.lean]] re-admits completed recursive answers under current descriptors for around-method shortcuts, preserving their source proof without recursive reads.
+
+[[file:Examples/ComponentCheckout.lean][ComponentCheckout]] mounts separately closed billing/shipping protocols, regroups independent construction and replaces shipping while preserving the complete billing interface. [[file:docs/contracts/generalized-components.org][Component contracts]].
+
+[[file:Examples/DependentCheckout.lean][DependentCheckout]] adds directional pricing-to-shipping dependencies: downstream closure follows the selected upstream tier, with proved reuse or fresh evidence on revision. [[file:docs/contracts/generalized-dependencies.org][Dependent component contracts]].
+
+[[file:Examples/ChainedCheckout.lean][ChainedCheckout]] extends this research to four-level dependencies, typed suffix refresh and nested whole closure. [[file:docs/contracts/generalized-chain.org][Multi-level dependency contracts]].
+
+[[file:Examples/ForkedCheckout.lean][ForkedCheckout]] adds a shared-pricing diamond: independent branch refresh, exact paired join admission and proved whole closure. [[file:docs/contracts/generalized-fork.org][Fork/join contracts]].
+
+[[file:Examples/SharedSettlement.lean][SharedSettlement]] composes two fork/join levels while retaining explicit shared pricing dependencies. [[file:docs/contracts/generalized-context.org][Contextual join contracts]].
+
+[[file:Examples/PolicyPublication.lean][PolicyPublication]] adds scoped invoice/audit/release policy upgrades to that shared workflow, with configuration-aware admission and proved raw-closure recooking. [[file:docs/contracts/generalized-revision.org][Policy revision contracts]].
+
+[[file:Examples/ConstructionWorkflow.lean][ConstructionWorkflow]] automatically closes finite declared component graphs, infers dependencies and transitive invalidation, inspects actual MOP policies, and atomically migrates topology/source/base/layout/dispatch. [[file:docs/contracts/generalized-mop.org][Checked MOP contracts]]; this advances future work.
+
+[[file:Examples/InheritedSettlement.lean][InheritedSettlement]] connects C3 diamonds and ordered analyzed super wrappers to automatic generalized closure and protected source/policy publication. [[file:docs/contracts/inherited-mop.org][Inherited MOP contracts and remaining research gaps]].
+
+[[file:Examples/ServiceBundle.lean][ServiceBundle]] materializes component results, skips certified clean builders and atomically publishes heterogeneous quote/reserve/cancel generics with joint approval. [[file:docs/contracts/staged-publication.org][Staged construction and family publication contracts]]. Future-work extension.
+
+[[file:docs/contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
+
+[[file:docs/contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
+
+[[file:docs/contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+[[file:docs/contracts/cyclic-costs.org][Costed cyclic closure]] adds a proved array/worklist refinement, V+E queue budget, backend-parameterized primitive prices, exact dependency-index reuse and paired complete-path measurements.
+
+[[file:docs/contracts/closure-layouts.org][Representation and allocation contracts]] add byte/write and chunked-queue refinements, operational frame/peak bounds, explicit layout/copy/primitive ledgers, finite policy selection, complex workloads and a separate Gerbil implementation with count-parity evidence.

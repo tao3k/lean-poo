@@ -1,0 +1,155 @@
+import LeanPoo.Prototype.GeneralizedInheritance
+import LeanPoo.Deriving.DictionaryCompiler
+import LeanPoo.Object.MethodCombinationSemantics
+
+/-! Research example: one protocol owns raw assembly and cooked final self.
+C3, nested lenses, standard method execution and exact dictionary bridges remain
+existing mechanisms. Finite depth is explicit and is not a termination claim. -/
+namespace LeanPoo.Examples.GeneralizedService
+open Prototype Prototype.Generalized Object.MethodCombination
+abbrev Action := EStateM String (List String)
+abbrev Methods := Object.MethodCombination.Methods Int Action Int
+structure Billing where
+  rate : Int
+  methods : Methods := {}
+structure Storage where
+  billing : Billing
+  identity : String
+structure Interface where
+  rate : Int
+  quote : Int → Action Int
+
+derive_dictionary Storage
+derive_dictionary Interface
+
+def billingFocus : MonoLens Storage Billing := MonoLens.ofGetSet (·.billing) (fun value raw => {raw with billing := value})
+def rateFocus : MonoLens Billing Int := MonoLens.ofGetSet (·.rate) (fun value raw => {raw with rate := value})
+def methodsFocus : MonoLens Billing Methods := MonoLens.ofGetSet (·.methods) (fun value raw => {raw with methods := value})
+abbrev MethodFragment := Thunk Int → Contribution Int Action Int
+abbrev Fragment := Sum Int MethodFragment
+
+def fragmentsProtocol : Protocol Storage Int Fragment where
+  cook := fun raw => raw.billing.rate
+  compile := sumCompiler
+    (lensCompiler (billingFocus.compose rateFocus) (fun value _ _ => value))
+    (standardCompiler (billingFocus.compose methodsFocus))
+
+def protocol : Protocol Storage Interface Fragment := fragmentsProtocol.reindexSelf (·.rate)
+  (fun raw => ⟨raw.billing.rate, effective raw.billing.methods (fun _ => throw "missing")⟩)
+
+def graph : Prototype.C3.Graph :=
+  [("Service",["Audit","Discount"]),("Audit",["Base"]),("Discount",["Base"]),("Base",[])]
+def mark (event : String) : Action Unit := modify (· ++ [event])
+def method (body : MethodFragment) : Fragment := .inr body
+def declarations (rate fee discount limit : Int) (name : String) : List Fragment :=
+  if name == "Service" then [
+    .inl rate,
+    method (fun _ => .around (fun next units => do
+      mark "guard"
+      if units < 0 || units > limit then throw "units" else next ())),
+    method (fun _ => .primary (fun next _ => do mark "fee"; return (← next ()) + fee))]
+  else if name == "Audit" then [
+    method (fun _ => .around (fun next _ => do mark "enter"; let result ← next (); mark "exit"; return result)),
+    method (fun _ => .before (fun _ => mark "audit.before")),
+    method (fun _ => .after (fun _ => mark "audit.after"))]
+  else if name == "Discount" then [
+    method (fun _ => .primary (fun next _ => do mark "discount"; return (← next ()) - discount))]
+  else if name == "Base" then [
+    .inl 1,
+    method (fun self => .primary (fun _ units => do mark "base"; return units * self.get)),
+    method (fun _ => .before (fun _ => mark "base.before")),
+    method (fun _ => .after (fun _ => mark "base.after"))]
+  else []
+
+def base : Storage := ⟨⟨1,{}⟩,"tenant-A"⟩
+def summary : EStateM.Result String (List String) Int → Option Int × Option String × List String
+  | .ok value ledger => (some value,none,ledger)
+  | .error error ledger => (none,some error,ledger)
+
+theorem identity_frame (fragment : Fragment) (self : Thunk Interface) (parent : Thunk Storage) :
+    (protocol.compile fragment self parent).identity = parent.get.identity := by
+  cases fragment <;> rfl
+
+theorem assembly_identity (fragments : List Fragment) (seed : Storage) (depth : Nat) :
+    (protocol.approximate fragments base seed (depth+1)).identity = base.identity :=
+  protocol.approximate_frame fragments (·.identity) identity_frame base seed depth
+
+def ordered (rate fee discount limit : Int) : List Fragment :=
+  ["Service","Audit","Discount","Base"].flatMap (declarations rate fee discount limit)
+
+theorem protocol_step (fragments : List Fragment) :
+    protocol.step fragments = fragmentsProtocol.step fragments :=
+  fragmentsProtocol.step_reindexSelf (fun self : Interface => self.rate)
+    (fun raw => ⟨raw.billing.rate, effective raw.billing.methods (fun _ => throw "missing")⟩) (fun _ => rfl) fragments
+
+theorem service_stable (rate fee discount limit : Int) :
+    protocol.approximate (ordered rate fee discount limit) base base 3 =
+      protocol.approximate (ordered rate fee discount limit) base base 2 := by
+  simp only [Protocol.approximate, protocol_step]
+  exact fragmentsProtocol.stable_two _ base base rate (fun _ => rfl)
+
+theorem service_derivation : Prototype.C3.GraphDerivation graph "Service" ["Service","Audit","Discount","Base"] := by
+  have leaf : LeanPoo.C4.Precedence.Trace [[]] [] := .done rfl
+  have baseDerived : Prototype.C3.GraphDerivation graph "Base" ["Base"] :=
+    .node (entry := ("Base",[])) (by decide) .nil (.ofCertified leaf) leaf
+  have parentTrace : LeanPoo.C4.Precedence.Trace [["Base"],["Base"]] ["Base"] :=
+    .step (by decide) (.done (by decide))
+  have audit : Prototype.C3.GraphDerivation graph "Audit" ["Audit","Base"] :=
+    .node (entry := ("Audit",["Base"])) (by decide) (.cons baseDerived .nil) (.ofCertified parentTrace) parentTrace
+  have discount : Prototype.C3.GraphDerivation graph "Discount" ["Discount","Base"] :=
+    .node (entry := ("Discount",["Base"])) (by decide) (.cons baseDerived .nil) (.ofCertified parentTrace) parentTrace
+  have merged : LeanPoo.C4.Precedence.Trace
+      [["Audit","Base"],["Discount","Base"],["Audit","Discount"]] ["Audit","Discount","Base"] :=
+    .step (by decide) (.step (by decide) (.step (by decide) (.done (by decide))))
+  exact .node (entry := ("Service",["Audit","Discount"])) (by decide)
+    (.cons audit (.cons discount .nil)) (.ofCertified merged) merged
+
+theorem plan_stable (rate fee discount limit : Int)
+    (plan : Plan protocol graph (declarations rate fee discount limit) "Service") :
+    protocol.approximate plan.fragments base base 3 = protocol.approximate plan.fragments base base 2 := by
+  rw [plan.fragments_reference _ service_derivation]
+  exact service_stable rate fee discount limit
+
+theorem quote_all_depth (rate fee discount limit : Int)
+    (plan : Plan protocol graph (declarations rate fee discount limit) "Service")
+    (units : Int) (ledger : List String) (extra : Nat) :
+    (((plan.observe base base (2 + extra)).quote units).run ledger) =
+      (((protocol.closeAt plan.fragments base base 2 (plan_stable rate fee discount limit plan)).interface.quote units).run ledger) := by
+  have stable := protocol.stable plan.fragments base base 2 (plan_stable rate fee discount limit plan).symm extra
+  unfold Plan.observe Protocol.observe
+  rw [stable]
+  rfl
+
+def run : IO Unit := do
+  let plan ← IO.ofExcept ((protocol.prepare graph (declarations 5 2 1 6) "Service").mapError reprStr)
+  unless plan.precedence == ["Service","Audit","Discount","Base"] do throw (IO.userError "C3 order")
+  let shallow := plan.observe base base 1
+  let closed := protocol.closeAt plan.fragments base base 2 (plan_stable 5 2 1 6 plan)
+  let deep := closed.interface
+  unless summary ((shallow.quote 4).run ["prefix"]) ==
+      (some 5,none,["prefix","guard","enter","audit.before","base.before","fee","discount","base","base.after","audit.after","exit"]) do
+    throw (IO.userError "finite final-self seed")
+  unless (summary ((deep.quote 4).run [])).1 == some 21 do throw (IO.userError "cooked final-self tariff")
+  unless summary ((deep.quote 7).run ["prefix"]) == (none,some "units",["prefix","guard"]) do
+    throw (IO.userError "retained refusal state")
+  let transported := plan.transport Storage.dictionaryBridge Interface.dictionaryBridge
+  let fields := transported.observe (Storage.toFields base) (Storage.toFields base) 2
+  let restored := Interface.fromFields fields
+  let closedFields := closed.transport Storage.dictionaryBridge Interface.dictionaryBridge
+  let restoredClosed := Interface.fromFields closedFields.interface
+  unless summary ((restored.quote 4).run []) == summary ((deep.quote 4).run []) do
+    throw (IO.userError "raw/cooked representation transfer")
+  unless summary ((restoredClosed.quote 4).run []) == summary ((deep.quote 4).run []) do
+    throw (IO.userError "closed representation transfer")
+  let changed ← IO.ofExcept ((protocol.prepare graph (declarations 3 2 1 6) "Service").mapError reprStr)
+  unless (summary (((changed.observe base base 2).quote 4).run [])).1 == some 13 &&
+      (summary ((deep.quote 4).run [])).1 == some 21 do throw (IO.userError "immutable version retention")
+  IO.println "GENERALIZED-SERVICE-OK C3-diamond nested-focus final-self=21 shallow=5 changed=13 retained-refusal raw/cooked-bridges"
+#eval run
+#print axioms quote_all_depth
+#print axioms plan_stable
+#print axioms assembly_identity
+#print axioms Protocol.assemble_append
+#print axioms Plan.transport_observe
+#print axioms Object.MethodCombination.effective_standard
+end LeanPoo.Examples.GeneralizedService

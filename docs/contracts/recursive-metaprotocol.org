@@ -1,0 +1,42 @@
+#+TITLE: Recursive metalevel closure and nonlocal fragments
+
+* Source and scope
+
+Racket's ordinary prototype metadata with a special terminating base supplies the
+construction principle. The generalized MOP and nonlocal fragment protocols are
+future work. This step closes finite positive Boolean metalevel equations and
+explicit safe recursive fragment requests, not arbitrary cyclic procedures.
+
+* Metalevel fixed points
+
+~MetaPrototype.closePositive~ reuses the finite-height least solver. Its fixedness
+and leastness laws exclude unsupported self-sustaining cyclic metadata; the cook
+law binds the hook kernel to the SAME closed facts, followed by ordinary constant
+base reflection. The strict-advance bound is at most the number of Boolean facts.
+Native ~close-protocol~ follows least closure → cook → checked sealed bootstrap.
+No assertion about callback termination, allocation or runtime primitives follows.
+
+* Complete recursive declarations
+
+~DeclarativeMetadata.collectRecursive~ uses existing source-indexed memo receipts.
+~Resolved.sources~ relates every root, in order, to a finite source evaluation.
+~elaborateRecursive_source~ connects complete recursive source chunks to whole
+finalization at the current context; catalog validity and refusal retention reuse
+existing laws. Machine diagnostics and explicit source refusals remain distinct.
+
+Native ~recursive-declaration.ss~ inherits ordinary expansion and composes roots
+with FUN Reader bind/map. Safe explicit requests support forward references and
+shared dependencies. Memo belongs to one invocation/program/context, and source
+revisions/protected writes cover supported sequential edits. Local termination,
+pure callbacks, immutable source lists/keys and registered external dependencies
+are premises. A recursion-depth budget is not a host-time or total-work quota.
+
+* Controls
+
+[[file:../../Examples/RecursiveMetaprotocol.lean][Recursive metaprotocol examples]] prove source unfolding, seed grounding/revocation,
+hook behavior, cycle refusal and generic complete-finalization provenance. Native
+services additionally execute shared requests, public totals/private annotations,
+current approval refusal/recovery, descriptor revisions and mutation rejection.
+Raw writes, concurrent mutation, I/O rollback, unrestricted lexical rewriting and
+compiler/runtime verification remain outside this functional contract.
+No performance result is claimed; no new benchmark data format is introduced.

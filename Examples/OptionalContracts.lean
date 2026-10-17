@@ -1,0 +1,212 @@
+import LeanPoo.Functional.OptionalValidation
+
+/-! Finite alignment: Maybe List of Tuple/TypeValuePair plugins, optional fallback,
+root refinement and normalized-reference binding. The host supplies identities;
+JSON/configuration parsing and the record inventory are outside this fixture. -/
+namespace LeanPoo.Examples.OptionalContracts
+open Functional Functional.ObjectContract Functional.DeclarativeMetadata
+
+/-- Dynamic function rows distinguish integers from Boolean arguments/results. -/
+inductive Scalar where
+  | integer : Int → Scalar
+  | flag : Bool → Scalar
+  deriving BEq, Repr
+
+abbrev Call := List Scalar → Except String (List Scalar)
+
+/-- Each transform uses exactly one Integer input and output. -/
+def row : List Scalar → Except String (List Scalar)
+  | [.integer n] => .ok [.integer n]
+  | _ => .error "integer row"
+
+/-- Distinct physical sentinels model void and #f; procedures remain opaque values. -/
+inductive Value where
+  | missing | falseValue
+  | function : Call → Value
+  | integer : Int → Value
+
+/-- Dynamic descriptors are reference tokens, including an unrelated valid Type. -/
+inductive Descriptor where
+  | transform | other | invalid
+  deriving BEq, DecidableEq
+
+/-- Maybe's void predicate is independent of OrFalse's #f predicate. -/
+def missing : Value → Bool | .missing => true | _ => false
+
+/-- Only #f is absent for the outer OrFalse fallback. -/
+def falseValue : Value → Bool | .falseValue => true | _ => false
+
+/-- Carried Type validity is checked before its payload. -/
+def valid : Descriptor → Bool | .invalid => false | _ => true
+
+/-- Function membership recognizes a procedure, without promising future calls. -/
+def member : Descriptor → Value → Bool
+  | .transform, .function _ => true
+  | .other, _ => true
+  | _, _ => false
+
+/-- A finite structural checker precedes actual Function wrapping. -/
+def shape (descriptor : Descriptor) (value : Value) : Except String Unit :=
+  if member descriptor value then .ok () else .error "payload shape"
+
+/-- Transform descriptors install the existing checked Function wrapper. -/
+def checkValue : Descriptor → Value → Except String Value
+  | .transform, .function source => .ok (.function (FunctionValidation.wrap row row source))
+  | .other, value => .ok value
+  | _, _ => .error "payload validation"
+
+/-- The exact carried Type is retained alongside its normalized payload. -/
+def typed := OptionalValidation.typed valid shape member checkValue "invalid Type" "invalid result"
+
+abbrev Plugin := String × (Descriptor × Value)
+
+/-- Structural list/tuple shape is fixed by the typed fixture; dynamic descriptor
+validity and each raw payload still require explicit checks before normalization. -/
+def pluginsShape (plugins : Option (List Plugin)) : Except String Unit := do
+  match plugins with
+  | none => pure ()
+  | some values =>
+    let _ ← Validation.traverse (fun entry =>
+      if valid entry.2.1 then shape entry.2.1 entry.2.2 else .error "invalid Type") values
+    pure ()
+
+/-- The selected List child accepts complete typed rows, not outer void. -/
+def pluginsMember : Option (List Plugin) → Bool
+  | none => false
+  | some values => values.all (fun entry => valid entry.2.1 && member entry.2.1 entry.2.2)
+
+/-- Reuse the same optional normalizer and ordered child traversal as Scheme. -/
+def normalizePlugins := OptionalValidation.normalize Option.isNone pluginsMember pluginsShape
+  (fun source => match source with
+    | none => .error "present List missing"
+    | some values => (Validation.traverse (fun entry => (typed entry.2).map (entry.1, ·)) values).map some)
+  "invalid List result"
+
+/-- Inner Maybe accepts void; present values still belong to the Transform Type. -/
+def fallbackMember (value : Value) : Bool := missing value || member .transform value
+
+/-- Both sentinel branches avoid their corresponding child operation. -/
+def fallbackShape (value : Value) : Except String Unit :=
+  if falseValue value || missing value then .ok () else shape .transform value
+
+/-- Outer OrFalse and inner Maybe share one carrier while keeping distinct guards. -/
+def normalizeFallback := OptionalValidation.normalize falseValue fallbackMember fallbackShape
+  (OptionalValidation.normalize missing (member .transform) (shape .transform) (checkValue .transform) "invalid transform")
+  "invalid Maybe result"
+
+/-- Named fields and references are explicit; no equality on functions is required. -/
+structure Input where
+  reference : Nat
+  plugins : Option (List Plugin)
+  fallback : Value
+
+/-- The fixed api consumer owns which otherwise valid carried Types it can execute. -/
+def schema : ObjectContract.Contract Input String Unit String :=
+  refine
+    {view := ⟨fun _ => true, fun _ => true, fun _ => [], fun _ _ => none⟩
+     fields := [], strict := true, constraints := [], validInventory := Or.inl rfl
+     obligations := fun _ _ => []}
+    (fun source path => if source.plugins.toList.all (fun values => values.all
+      (fun entry => entry.1 == "api" && entry.2.1 == .transform)) then []
+      else [.rejected path "plugin interface"])
+
+/-- Known Function normalizers change references; absent/unchanged fields keep
+original reference IDs in this fixture. The host correspondence is a premise. -/
+def changes (source : Input) : Bool :=
+  source.plugins.toList.any (fun values => values.any (fun entry => match entry.2 with
+    | (.transform, .function _) => true | _ => false)) ||
+  match source.fallback with | .function _ => true | _ => false
+
+/-- Complete admission normalizes all fields before actual root refinement. -/
+def normalize (source : Input) : Except String Input :=
+  validateObject
+    (fun value => do pluginsShape value.plugins; fallbackShape value.fallback)
+    (fun value => do
+      let plugins ← normalizePlugins value.plugins
+      let fallback ← normalizeFallback value.fallback
+      pure ⟨if changes value then 2 else value.reference, plugins, fallback⟩)
+    (fun value => if (diagnose schema value []).isEmpty then .ok () else .error "plugin interface") source
+
+/-- Apply one checked Function and retain its normalized single result. -/
+def applyValue (value : Value) (n : Int) : Except String Int := do
+  let .function callback := value | throw "non-callable"
+  let result ← callback [.integer n]
+  match result with | [.integer total] => pure total | _ => throw "transform result"
+
+/-- The pipeline matches Scheme: missing list skips plugins, #f/void skip fallback. -/
+def run (source : Input) : Except String Int := do
+  let total ← (source.plugins.getD []).foldlM (fun n entry => applyValue entry.2.2 n) 2
+  match source.fallback with
+  | .falseValue | .missing => pure total
+  | other => applyValue other total
+
+/-- Application result associations remain data rather than producer authentication. -/
+structure Result where
+  subject : Nat
+  descriptor : Nat
+  context : Nat
+  total : Int
+  deriving Repr, DecidableEq
+
+/-- Project only existing identity/context fields for the binding rule. -/
+def view (value : Result) : Nat × Nat × Nat := (value.subject,value.descriptor,value.context)
+
+/-- Application admission remains effective independently of exact binding. -/
+def invocation : Contract Unit Nat Result where
+  input := ⟨"pipeline",fun _ => True,fun _ => isTrue True.intro⟩
+  output := ⟨"total",fun _ => True,fun _ => isTrue True.intro⟩
+  meaning := fun _ _ _ => True
+  decide := fun _ _ _ => isTrue True.intro
+  rule := .atom ()
+
+/-- Execute sentinel distinctions, selected-child refusal, dependent Type retention,
+full pipeline/refinement, callback failure and raw/stale binding refusal/retry. -/
+def test : Except String Unit := do
+  let increment : Call := fun values => match values with
+    | [.integer n] => .ok [.integer (n+1)] | _ => .error "source argument"
+  let double : Call := fun values => match values with
+    | [.integer n] => .ok [.integer (n*2)] | _ => .error "source argument"
+  let source : Input := ⟨1, some [("api",(.transform,.function increment)),
+    ("api",(.transform,.function double))], .function increment⟩
+  let checked ← normalize source
+  unless (← run checked) == 7 do throw "pipeline changed"
+  for sentinel in [Value.missing, Value.falseValue] do
+    let empty ← normalize ⟨1,none,sentinel⟩
+    unless (← run empty) == 2 && empty.reference == 1 do throw "absence changed"
+  let carried ← typed (.transform, .function increment)
+  unless carried.1 == .transform do throw "carried Type changed"
+  match OptionalValidation.normalize falseValue (member .transform) (shape .transform)
+      (fun _ => .ok .falseValue) "invalid selected result" (.function increment) with
+  | .error "invalid selected result" => pure () | _ => throw "sentinel erased invalid result"
+  match typed (.invalid, .function increment) with
+  | .error "invalid Type" => pure () | _ => throw "invalid carried Type accepted"
+  match normalize {source with plugins := some [("api",(.other,.function increment))]} with
+  | .error "plugin interface" => pure () | _ => throw "consumer interface bypassed"
+  let broken ← normalize {source with plugins := some [("api",(.transform,.function (fun _ => .ok [.flag false])))]}
+  match run broken with
+  | .error "integer row" => pure () | _ => throw "callback result bypassed"
+  let bound := invocation.bindEvidence checked.reference 7 5 view
+  let produce (subject context : Nat) (_ : Nat) : Except String (Result × Nat) := .ok (⟨subject,7,context,7⟩,6)
+  match bound.publish 5 (produce 1 5) checked.reference with
+  | (.error .logic,5) => pure () | _ => throw "raw evidence accepted"
+  match bound.publish 5 (produce checked.reference 4) checked.reference with
+  | (.error .logic,5) => pure () | _ => throw "stale evidence accepted"
+  match bound.publish 5 (produce checked.reference 5) checked.reference with
+  | (.ok _,6) => pure () | _ => throw "current retry refused"
+
+#eval match test with
+  | .ok () => IO.println "OPTIONAL-CONTRACTS-OK"
+  | .error message => throw (IO.userError message)
+#print axioms OptionalValidation.absent
+#print axioms OptionalValidation.shape_error
+#print axioms OptionalValidation.child_error
+#print axioms OptionalValidation.selected
+#print axioms OptionalValidation.success
+#print axioms OptionalValidation.invalid_type
+#print axioms OptionalValidation.descriptor_preserved
+#print axioms OptionalValidation.typed_requirements
+#print axioms OptionalValidation.typed_selected
+#print axioms OptionalValidation.typed_error
+#print axioms validateObject_refine
+#print axioms validated_binding
+end LeanPoo.Examples.OptionalContracts

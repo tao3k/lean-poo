@@ -70,3 +70,42 @@ See [[file:../docs/usage.org][API usage]] for the corresponding library entry po
 [[file:RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow]] joins the existing C3 billing program with audited mode/channel dispatch, source recovery, hot current descriptor admission, public output refusal, batches and certified budget/cycle continuation. [[file:../docs/contracts/recursive-dispatch.org][API and proof boundaries]].
 
 [[file:ReceiptWorkflow.lean][ReceiptWorkflow]] uses a proof-bearing recursive result in an around shortcut with an empty recipient memo and zero evaluation budget; current input/output refusal, changed requests and failed batch prefixes remain explicit. [[file:../docs/contracts/receipt-admission.org][Contracts]].
+
+* Research extension: generalized protocols
+
+[[file:GeneralizedService.lean][GeneralizedService]] joins C3 diamond inheritance, nested focuses, standard combinations, cooked-self tariffs and raw/public dictionary conversion. [[file:GeneralizedCheckout.lean][GeneralizedCheckout]] composes independent all/sum groups with retained-state short-circuiting. Both advance the paper's future work; [[file:../docs/contracts/generalized-prototypes.org][scope and proof contracts]].
+
+[[file:ComponentCheckout.lean][ComponentCheckout]] joins separately closed protocols in one inherited service. It covers shipping failure after completed billing, independent construction grouping, whole-service representation transport and right-only replacement with the old billing witness. [[file:../docs/contracts/generalized-components.org][Research scope and contracts]].
+
+[[file:DependentCheckout.lean][DependentCheckout]] combines inherited pricing and tier-dependent shipping, staged closure, unchanged-view reuse, changed-view reconstruction, refused publication and retained method-error prefixes. This advances the generalized-prototype future proposal; [[file:../docs/contracts/generalized-dependencies.org][explicit dependency contracts]].
+
+[[file:ChainedCheckout.lean][ChainedCheckout]] joins pricing, shipping, insurance and settlement permit through existing dependent mounting. Rebuilt prefixes can retain unchanged suffixes, and construction refusal leaves the original publication usable. This advances the future proposal; [[file:../docs/contracts/generalized-chain.org][chain contracts]].
+
+[[file:ForkedCheckout.lean][ForkedCheckout]] shares one pricing component across shipping and insurance, then admits settlement from the exact refreshed interface pair. Independent branch reuse, retained joins, first refusal and whole closure advance the future proposal; [[file:../docs/contracts/generalized-fork.org][fork/join contracts]].
+
+[[file:SharedSettlement.lean][SharedSettlement]] demonstrates a reusable seven-component workflow with two fork/join levels. Shared pricing survives a retained reserve join; a contextual final join can change even when both later branches are retained. [[file:../docs/contracts/generalized-context.org][Future-work contracts and proofs]].
+
+[[file:PolicyPublication.lean][PolicyPublication]] reuses the seven-component workflow and adds invoice/audit/release. Actual fee policy changes require fresh interface admission even with equal tariff metadata; unrelated policies and upstream construction remain reusable. [[file:../docs/contracts/generalized-revision.org][Future-work revision contracts]].
+
+[[file:ConstructionWorkflow.lean][ConstructionWorkflow]] demonstrates automatic generalized closure, heterogeneous slots, inspected policies and a joint topology/source/base/layout/dispatch upgrade with warm-version refusal. [[file:../docs/contracts/generalized-mop.org][Future-work MOP contracts]].
+
+[[file:InheritedSettlement.lean][InheritedSettlement]] composes shared C3 ancestors, noncommuting invoice wrappers, conditional replacement, final-self risk and atomic source/policy publication. [[file:../docs/contracts/inherited-mop.org][Future-work scope and audit]].
+
+[[file:ServiceBundle.lean][ServiceBundle]] demonstrates three-node reconstruction with twelve refusing retained builders, zero-work policy upgrades, C3/super graph reuse and a third-generic publication refusal. [[file:../docs/contracts/staged-publication.org][Future-work cache/family contracts]].
+
+[[file:../docs/contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
+
+[[file:../docs/contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
+
+[[file:../docs/contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+[[file:../docs/contracts/cyclic-costs.org][Costed cyclic construction]] connects the CyclicAccess workflow to the proved worklist runner and dependency-index reuse; paired measurements and backend primitive cost bounds are recorded separately.
+
+[[file:../docs/contracts/closure-layouts.org][Representation and allocation contracts]] add byte/write and chunked-queue refinements, operational frame/peak bounds, explicit layout/copy/primitive ledgers, finite policy selection, complex workloads and a separate Gerbil implementation with count-parity evidence.
+
+[[file:AdaptiveAccess.lean][AdaptiveAccess]] combines per-write queue prices, shared bursts, retained
+cyclic dependency metadata and least-solution revocation. It advances generalized
+protocol future work; [[file:../docs/contracts/hybrid-queues.org][the hybrid contract]] states the proved cost boundary.
+
+[[file:SelectedAccess.lean][SelectedAccess]] adds certified cached queue selection to retained-index cyclic
+revocation and shared bursts; [[file:../docs/contracts/queue-selection.org][the contract]] includes decision costs and bounded claims.
