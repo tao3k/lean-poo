@@ -101,3 +101,29 @@ original paper's section 5 supplies recognizers, type descriptors and I/O; these
 explicit strengthening/binding operations advance Appendix B's future work and
 the user's structural contract design. They are not claimed as original Racket
 APIs, an authenticated receipt system or a proof of effect rollback.
+
+## Nested Function validation and bound publication
+
+The companion `object-contract-validation` now distinguishes structural recognition
+from explicit validation. It recursively validates declared ObjectContract fields,
+reuses existing Function wrappers, batches changed fields into a persistent object
+inheriting its source, then checks full diagnostics and refinement on the checked
+root. No change retains exact identity; Function wrapping changes the candidate.
+`checked-action` and `bind-evidence` use that actual returned root.
+
+`FunctionValidation.lean` proves input/source/output gating and successful output
+normalization, including function-valued output without decidable function equality.
+`ObjectContractValidation.lean` reuses ordered `Validation.traverse`: failed batches
+cannot reach commit; successful batches retain their supplied representation laws.
+It proves final refinement on the normalized root and combines admission with the
+existing binding theorem on application-supplied reference identifiers.
+`Examples/ObjectContracts.lean` adds dynamic argument/result rows, higher-order
+callbacks, normalized reference binding, raw/stale refusal and current retry.
+
+Proofs cover total pure callbacks and finite declared batches. Representation laws,
+reference/identity correspondence and immutability remain premises. Scheme tests
+exercise actual wrappers and exception identity; neither layer proves the parser,
+compiler/runtime, arbitrary cyclic object termination or rollback of effects.
+General container wrapping, optional/keyword arities, wrapper deduplication and
+higher-order blame remain open. This extends the paper's future generalized
+prototype work; section 5 supplies the Type descriptor recognition/validation basis.

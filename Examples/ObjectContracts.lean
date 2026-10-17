@@ -1,3 +1,5 @@
+import LeanPoo.Functional.FunctionValidation
+import LeanPoo.Functional.ObjectContractValidation
 import LeanPoo.Functional.ObjectContract
 import LeanPoo.Functional.ObjectContractRefinement
 import LeanPoo.Functional.EvidenceBinding
@@ -189,3 +191,134 @@ def check : Except String Unit := do
 #print axioms Contract.bindEvidence_accepted
 #print axioms Contract.bindEvidence_publish_mismatch
 end LeanPoo.Examples.ContractPublication
+
+namespace LeanPoo.Examples.FunctionPublication
+open Functional Functional.ObjectContract Functional.DeclarativeMetadata
+
+/-- Dynamic scalar rows model fixed-arity input and multiple returned values. -/
+inductive Scalar where
+  | integer : Int → Scalar
+  | flag : Bool → Scalar
+  | text : String → Scalar
+  deriving BEq, Repr
+
+/-- The source receives only the normalized, single Integer argument. -/
+def input : List Scalar → Except String Int
+  | [.integer n] => .ok n
+  | _ => .error "input row"
+
+/-- Returned values retain their order and exact Int/Bool shape. -/
+def output : List Scalar → Except String (Int × Bool)
+  | [.integer n, .flag ready] => .ok (n, ready)
+  | _ => .error "output row"
+
+/-- A finite nested engine owns both an ordinary callback and a callback factory. -/
+structure Engine where
+  convert : Int → Except String (List Scalar)
+  policy : Int → Except String (List Scalar → Except String Bool)
+
+/-- The checked root exposes wrappers, with an explicit immutable reference. -/
+structure Checked where
+  reference : Nat
+  tenant : String
+  convert : List Scalar → Except String (Int × Bool)
+  policy : List Scalar → Except String (List Scalar → Except String Bool)
+
+/-- Higher-order output normalization installs argument checks on each returned
+callback. Function bodies run only when the returned wrapper is invoked. -/
+def checkedEngine (engine : Engine) : Checked :=
+  ⟨2, "api", FunctionValidation.wrap input output engine.convert,
+    FunctionValidation.wrap input
+      (fun predicate => .ok (FunctionValidation.wrap input Except.ok
+        (fun n => predicate [.integer n]))) engine.policy⟩
+
+/-- Explicit normalized-reference data binding keeps the existing publication API. -/
+structure Result where
+  subject : Nat
+  descriptor : Nat
+  context : Nat
+  deriving DecidableEq, BEq, Repr
+
+/-- Application result projection is data, not authentication. -/
+def view (result : Result) : Nat × Nat × Nat :=
+  (result.subject, result.descriptor, result.context)
+
+/-- Keep input/output admission independent of exact binding. -/
+def invocation : Contract Unit Nat Result where
+  input := ⟨"request", fun _ => True, fun _ => isTrue True.intro⟩
+  output := ⟨"result", fun _ => True, fun _ => isTrue True.intro⟩
+  meaning := fun _ _ _ => True
+  decide := fun _ _ _ => isTrue True.intro
+  rule := .atom ()
+
+/-- A typed root has no dynamic inventory in this fixture. Parent tenant policy
+is strengthened with a normalized-reference requirement through actual refine. -/
+def workflow : ObjectContract.Contract Checked String Unit String :=
+  refine
+    {view := ⟨fun _ => true, fun _ => true, fun _ => [], fun _ _ => none⟩
+     fields := [], strict := true, constraints := [], validInventory := Or.inl rfl
+     obligations := fun value path =>
+       if value.tenant = "api" then [] else [.rejected path "tenant mismatch"]}
+    (fun value path => if value.reference = 2 then [] else [.rejected path "raw subject"])
+
+/-- Complex finite control: normalize nested procedures, check both row boundaries,
+wrap a returned callback, reject raw/stale receipts, and retry from current context. -/
+def check : Except String Unit := do
+  let engine : Engine := ⟨fun n => .ok [.integer (n+1), .flag true],
+    fun limit => .ok (fun row => do let n ← input row; pure (n ≤ limit))⟩
+  let checked := checkedEngine engine
+  match checked.convert [.integer 2] with
+  | .ok (3,true) => pure ()
+  | _ => throw "multiple values changed"
+  match checked.convert [.flag true] with
+  | .error "input row" => pure ()
+  | _ => throw "input bypass"
+  let bad := checkedEngine {engine with convert := fun _ => .ok [.integer 3]}
+  match bad.convert [.integer 2] with
+  | .error "output row" => pure ()
+  | _ => throw "arity bypass"
+  let predicate ← checked.policy [.integer 10]
+  match predicate [.text "bad"] with
+  | .error "input row" => pure ()
+  | _ => throw "returned callback bypass"
+  match predicate [.integer 3] with
+  | .ok true => pure ()
+  | _ => throw "returned callback changed"
+  let raw := {checked with reference := 1}
+  unless diagnose workflow raw [] == [.rejected [] "raw subject"] do
+    throw "raw root unexpectedly refined"
+  let shape (_ : Checked) : Except (List (Issue String String)) Unit := .ok ()
+  let fields (_ : Checked) : Except (List (Issue String String)) Checked := .ok checked
+  -- Actual refinement runs only after normalization, on a function-valued root.
+  let normalized ← match validateObject shape fields (reportGate (fun value => diagnose workflow value [])) raw with
+    | .ok value => pure value
+    | .error _ => throw "normalized refinement refused"
+  let bound := invocation.bindEvidence normalized.reference 7 5 view
+  let raw (_ : Nat) : Except String (Result × Nat) := .ok (⟨1,7,5⟩,6)
+  match bound.publish 5 raw normalized.reference with
+  | (.error .logic,5) => pure ()
+  | _ => throw "raw reference admitted"
+  let stale (_ : Nat) : Except String (Result × Nat) := .ok (⟨2,7,4⟩,6)
+  match bound.publish 5 stale normalized.reference with
+  | (.error .logic,5) => pure ()
+  | _ => throw "stale context admitted"
+  let current (_ : Nat) : Except String (Result × Nat) := .ok (⟨2,7,5⟩,6)
+  match bound.publish 5 current normalized.reference with
+  | (.ok _,6) => pure ()
+  | _ => throw "current retry rejected"
+
+#eval match check with
+  | .ok () => IO.println "FUNCTION-PUBLICATION-OK"
+  | .error message => throw (IO.userError message)
+#print axioms FunctionValidation.input_error
+#print axioms FunctionValidation.source_error
+#print axioms FunctionValidation.returned
+#print axioms FunctionValidation.success
+#print axioms validateFields_commit
+#print axioms validateFields_error
+#print axioms validateFields_lookup
+#print axioms validateObject_shape_error
+#print axioms validateObject_success
+#print axioms validateObject_refine
+#print axioms validated_binding
+end LeanPoo.Examples.FunctionPublication
