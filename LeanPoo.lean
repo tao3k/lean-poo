@@ -305,3 +305,4 @@ import LeanPoo.Functional.RecursiveApprovals
 import LeanPoo.Functional.RecursiveCompetition
 
 import LeanPoo.Functional.RecursiveSubmissions
+import LeanPoo.Functional.RecursiveRecovery

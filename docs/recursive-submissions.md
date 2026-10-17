@@ -42,3 +42,7 @@ This advances the generalized prototype/MOP future work described in the Racket
 essay's Future Work and Appendix B; the essay does not specify this publication
 queue or prove distributed coordination. Scheme builds and tests independently
 of any Lean checkout. No speed, allocation or GC improvement is claimed.
+
+An optional `on-exit:` policy now receives the original outcome thunk after
+cleanup; its default propagates that outcome. Explicit recovery and survivor
+progress are documented in [recursive-recovery.md](recursive-recovery.md).

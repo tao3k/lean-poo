@@ -697,3 +697,17 @@ Scope controls reject reentrancy, escaped operations and unconsumed normal exit;
 exceptions retain installed prefixes. Eight Lean FIFO/monotonicity/staleness laws
 and the matching finite fixture cover this serialized generalized MOP future work.
 See [recursive-submissions.md](recursive-submissions.md) for API and proof limits.
+
+
+## Coordinator exit and explicit recovery
+
+`recursive-approvals.call-with-submissions` now accepts the existing coordinator
+`on-exit:` outcome-thunk convention, after scope cleanup. A handler can open a fresh
+scope and explicitly prepare against survivor progress; it cannot reopen the old
+queue. Errors and multiple values retain their original meaning, and policy errors
+propagate once. Eight actual SCC/provider/computed rounds alternate survivor and
+recovered installers, with 256 attempts, repeated approval ABA, joint refusal,
+historical request/reference rejection and current refine/bind-evidence retry.
+Nine Lean lifecycle laws and matching finite graph examples cover this serialized
+generalized MOP future work. See [recursive-recovery.md](recursive-recovery.md) for
+the scope, host controls and remaining concurrency/interruption boundaries.
