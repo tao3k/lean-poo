@@ -1,5 +1,7 @@
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Functional.DeclarativeMetadata
+import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.Parameters
 
 /-! Record and qualified method declarations share one fragment stream. This
 models source-order collection, inherited assembly and receiver-generic invocation;
@@ -209,4 +211,119 @@ theorem declaredPublication_refused (seed : Multimethod Args Method Result) (wat
     (refused : assembleDeclared seed watches certified front inherited = .error failure) :
     publish seed watches certified ((inherited ++ front).map Declaration.compile) = (.error failure, seed) :=
   publish_refused seed watches certified _ failure refused
+
+/-- Only a unique COMPLETE bounded search can call the supplied declaration
+builder. Search and builder failures remain distinct, with no partial artifact. -/
+def inferDeclared (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (PrototypeTypes.Inference Assignment × Option Artifact) :=
+  match PrototypeTypes.inferBounded budget valid candidates with
+  | .error cause => .error (.inl cause)
+  | .ok (.unique assignment) =>
+    match build assignment with
+    | .error cause => .error (.inr cause)
+    | .ok artifact => .ok (.unique assignment, some artifact)
+  | .ok report => .ok (report, none)
+
+/-- Exhaustion never calls the declaration builder or exposes an accepted prefix. -/
+theorem inferDeclared_exhausted (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact) (incomplete : budget < candidates.length) :
+    inferDeclared budget valid candidates build = .error (.inl .exhausted) := by
+  simp [inferDeclared, PrototypeTypes.incomplete_refuses budget valid candidates incomplete]
+
+/-- Ambiguity is preserved as data without mapping an effectful builder over candidates. -/
+theorem inferDeclared_ambiguous (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok (.ambiguous assignments)) :
+    inferDeclared budget valid candidates build = .ok (.ambiguous assignments, none) := by
+  simp [inferDeclared, completed]
+
+/-- Complete no-solution classification also constructs no declaration artifact. -/
+theorem inferDeclared_none (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok .none) :
+    inferDeclared budget valid candidates build = .ok (.none, none) := by
+  simp [inferDeclared, completed]
+
+/-- A builder refusal retains its actual cause rather than becoming no-solution. -/
+theorem inferDeclared_build_error (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok (.unique assignment))
+    (failed : build assignment = .error cause) :
+    inferDeclared budget valid candidates build = .error (.inr cause) := by
+  simp [inferDeclared, completed, failed]
+
+/-- Returned artifacts have both an actual uniquely admitted assignment and a
+successful builder run. Combining this with assembleDeclared_ok_iff gives the
+completed-candidate negative assumptions; no new dispatch semantics is assumed. -/
+theorem inferDeclared_unique (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (accepted : inferDeclared budget valid candidates build = .ok (.unique assignment, some artifact)) :
+    assignment ∈ candidates ∧ valid assignment = true ∧ build assignment = .ok artifact := by
+  unfold inferDeclared at accepted
+  cases completed : PrototypeTypes.inferBounded budget valid candidates with
+  | error cause => simp [completed] at accepted
+  | ok report =>
+    cases report with
+    | none => simp [completed] at accepted
+    | ambiguous assignments => simp [completed] at accepted
+    | unique selected =>
+      cases built : build selected with
+      | error cause => simp [completed, built] at accepted
+      | ok result =>
+        have same : selected = assignment ∧ result = artifact := by simpa [completed, built] using accepted
+        rcases same with ⟨rfl, rfl⟩
+        exact ⟨(PrototypeTypes.bounded_unique _ _ _ completed).1,
+          (PrototypeTypes.bounded_unique _ _ _ completed).2, built⟩
+
+/-- Positional binding uses the existing validated-name protocol before the
+builder. Receiver fields and remaining names follow checkedSpecialize exactly. -/
+def specializeDeclared [DecidableEq Name] (reserved : Name) (source : Parameters.Template Name Value)
+    (values : List Value) (build : Parameters.Template Name Value → Except Error Artifact) :
+    Except (Sum Parameters.Failure Error) Artifact :=
+  match Parameters.checkedSpecialize reserved source values with
+  | .error cause => .error (.inl cause)
+  | .ok bound => (build bound).mapError Sum.inr
+
+/-- Malformed parameter metadata refuses even for an empty prefix, before build. -/
+theorem specializeDeclared_invalid [DecidableEq Name] (reserved : Name)
+    (source : Parameters.Template Name Value) (values : List Value)
+    (build : Parameters.Template Name Value → Except Error Artifact)
+    (invalid : Parameters.validNames reserved source.remaining = false) :
+    specializeDeclared reserved source values build = .error (.inl .declaration) := by
+  simp [specializeDeclared, Parameters.checkedSpecialize, invalid]
+
+/-- Reusing checked positional binding keeps the exact remaining-name frame. -/
+theorem specializeDeclared_remaining [DecidableEq Name] (reserved : Name)
+    (source bound : Parameters.Template Name Value) (values : List Value)
+    (accepted : Parameters.checkedSpecialize reserved source values = .ok bound) :
+    bound.remaining = source.remaining.drop values.length := by
+  unfold Parameters.checkedSpecialize at accepted
+  split at accepted
+  · unfold Parameters.specialize at accepted
+    split at accepted
+    · cases accepted; rfl
+    · contradiction
+  · contradiction
+
+/-- Final source admission is separate from successful inference/installation.
+A revised descriptor cannot borrow an earlier bound-parameter snapshot. -/
+def admitDeclaredBindings [DecidableEq Descriptor] (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if Parameters.bindingsCurrent bindings fields revision then .ok artifact else .error .bounds
+
+/-- A returned artifact still has every bound descriptor identity and direct revision. -/
+theorem admitDeclaredBindings_stable [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact result : Artifact)
+    (accepted : admitDeclaredBindings bindings fields revision artifact = .ok result)
+    (binding : Parameters.BoundParameter Name Descriptor) (member : binding ∈ bindings) :
+    fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision := by
+  unfold admitDeclaredBindings at accepted
+  split at accepted
+  · rename_i current
+    exact Parameters.bindingsCurrent_sound bindings fields revision current binding member
+  · contradiction
+
 end LeanPoo.Functional.DeclarativeMetadata

@@ -214,6 +214,31 @@ theorem bounded_unique (budget : Nat) (valid : Assignment → Bool) (candidates 
   · exact infer_unique valid candidates (Except.ok.inj accepted)
   · contradiction
 
+/-- Prefix binding fixes the first parameters and renumbers only the residual
+variables. This is the semantic environment of capture-free residual syntax. -/
+def prefixEnvironment (fixed : List Ty) (tail : Nat → Ty) (name : Nat) : Ty :=
+  if present : name < fixed.length then fixed[name] else tail (name - fixed.length)
+
+/-- A later inference assignment cannot overwrite an already bound ground prefix. -/
+theorem prefixEnvironment_fixed (fixed : List Ty) (tail : Nat → Ty) (name : Nat)
+    (present : name < fixed.length) : prefixEnvironment fixed tail name = fixed[name] := by
+  simp [prefixEnvironment, present]
+
+/-- The first unbound variable is exactly the first residual parameter. -/
+theorem prefixEnvironment_tail (fixed : List Ty) (tail : Nat → Ty) (name : Nat) :
+    prefixEnvironment fixed tail (fixed.length + name) = tail name := by
+  have absent : ¬ fixed.length + name < fixed.length := by omega
+  simp [prefixEnvironment, absent]
+
+/-- Unique complete residual inference establishes every ORIGINAL substituted
+bound/query under the combined environment, not just the unbound suffix alone. -/
+theorem inferred_prefix_constraints (fuel budget : Nat) (fixed : List Ty)
+    (constraints : List (Expr × Expr)) (candidates : List (Nat → Ty))
+    (accepted : inferBounded budget (fun tail => satisfies fuel constraints (prefixEnvironment fixed tail))
+      candidates = .ok (.unique tail)) (bound : (a,b) ∈ constraints) :
+    Subtype (substitute (prefixEnvironment fixed tail) a) (substitute (prefixEnvironment fixed tail) b) := by
+  exact satisfies_sound _ _ _ (bounded_unique _ _ _ accepted).2 bound
+
 /-- Direct mathematical arrow replacement: accepting a broader input and
 returning a narrower output suffices, assuming the original behavior is valid. -/
 theorem function_replacement (sourceIn targetIn sourceOut targetOut : Value → Prop)

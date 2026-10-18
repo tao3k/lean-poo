@@ -189,4 +189,40 @@ def inheritedNames [DecidableEq Key] (groups : List (List Key)) : List Key :=
 /-- Empty inheritance has no invented field names. -/
 theorem inheritedNames_empty [DecidableEq Key] : inheritedNames (Key := Key) [] = [] := rfl
 
+
+/-- A bound parameter retains descriptor identity and its direct source revision.
+Transitive Type/callback semantics remain separate stability premises. -/
+structure BoundParameter (Name Descriptor : Type) where
+  name : Name
+  descriptor : Descriptor
+  revision : Nat
+
+/-- The finite source check used before residual inference and after elaboration. -/
+def bindingsCurrent [DecidableEq Descriptor] (bindings : List (BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) : Bool :=
+  bindings.all fun binding => decide
+    (fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision)
+
+/-- Every accepted bound name keeps both its descriptor and direct revision. -/
+theorem bindingsCurrent_sound [DecidableEq Descriptor] (bindings : List (BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat)
+    (accepted : bindingsCurrent bindings fields revision = true)
+    (binding : BoundParameter Name Descriptor) (member : binding ∈ bindings) :
+    fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision := by
+  exact of_decide_eq_true ((List.all_eq_true.mp accepted) binding member)
+
+/-- Either an overridden field or an in-place revision change rejects the snapshot. -/
+theorem bindingsCurrent_refuses [DecidableEq Descriptor] (bindings : List (BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat)
+    (binding : BoundParameter Name Descriptor) (member : binding ∈ bindings)
+    (changed : fields binding.name ≠ some binding.descriptor ∨ revision binding.descriptor ≠ binding.revision) :
+    bindingsCurrent bindings fields revision = false := by
+  cases current : bindingsCurrent bindings fields revision with
+  | false => rfl
+  | true =>
+    have same := bindingsCurrent_sound bindings fields revision current binding member
+    rcases changed with different | different
+    · exact False.elim (different same.1)
+    · exact False.elim (different same.2)
+
 end LeanPoo.Functional.Parameters
