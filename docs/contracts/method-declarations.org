@@ -31,3 +31,22 @@ receiver/slot absence. Compilation does not run method bodies; invocation sequen
 effects without rolling them back. Custom policies require their own laws.
 No new argument-based dispatch, arbitrary-carrier fragment macro, optional-formal
 grammar, compiler/runtime proof or performance claim is supplied by this bridge.
+
+* Shared macro binding and complete current reflection
+
+Gerbil's brace frontend now delegates its entire expression/match binding to
+core ~defalias~ and the existing ~.o~ match macro. The explicit host-method
+escape remains core syntax. Actual binding identity, renamed imports, nested
+receiver capture and matching are host regression obligations, not Lean theorems.
+
+~Object.CatalogReflection~ in the existing ~DescriptorReflection~ namespace
+models the complete right-fold metadata inspection before name selection and
+read. Its six laws retain ordered output, suffix failure, refusal before read,
+selected-entry/error identity, absence refusal and whole-call congruence.
+[[file:../../Examples/CatalogReflection.lean][Catalog examples]] connect current metadata to the retained method continuation
+program. An unrelated metadata failure must still prevent a front-slot read;
+early-exit reflection would change this observation. Effective declarations and
+stable supplied callbacks are explicit premises. Source invalidation, real macro
+expansion and retry execute in the Scheme FUN example and regression suite.
+This integration advances the article's future MOP work; it is not a runtime or
+compiler proof, and does not close the other TODO workstreams.

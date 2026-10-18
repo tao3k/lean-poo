@@ -20,7 +20,8 @@ def progress_line(line, completed):
         result = json.loads(line.removeprefix('CHECK-GATE-END '))
         return (f"Complete gate: {result['wall_seconds']:.3f}s, "
                 f"workers={result['jobs']}, failures={result['failures']}"), completed
-    elif line.startswith(('CHECK-GATE-START ', 'CHECK-PHASE-START ', 'CHECK-ATOMS-START ')):
+    elif line.startswith(('CHECK-GATE-START ', 'CHECK-PHASE-START ', 'CHECK-ATOMS-START ',
+                          'CHECK-ATOMS-PHASE ')):
         return line.rstrip(), completed
     return None, completed
 

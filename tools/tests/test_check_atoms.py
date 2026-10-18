@@ -14,29 +14,33 @@ from tools.check_atoms import configure_limits, configure_threads, execute, exec
 
 
 class CheckAtomsTests(unittest.TestCase):
-    def test_deadline_lane_preserves_every_command_and_total_worker_ceiling(self):
+    def test_deadline_phases_preserve_every_command_and_worker_ceiling(self):
         atoms = load_atoms()
         for jobs in (1, 2, 4, 14):
             lanes = execution_lanes(atoms, jobs)
-            self.assertLessEqual(sum(workers for workers, _ in lanes), jobs)
+            self.assertLessEqual(max(workers for workers, _ in lanes), jobs)
             assigned = [atom for _, lane in lanes for atom in lane]
             self.assertCountEqual(assigned, atoms)
-            if jobs > 1:
-                self.assertLessEqual(lanes[0][0], 2)
-                self.assertTrue(all(a['command'][0] == 'timeout' for a in lanes[0][1]))
+            self.assertEqual(lanes[0][0], jobs)
+            self.assertTrue(all(a['command'][0] != 'timeout' for a in lanes[0][1]))
+            self.assertEqual(lanes[1][0], 1)
+            self.assertTrue(all(a['command'][0] == 'timeout' for a in lanes[1][1]))
 
-    def test_deadline_jobs_actually_overlap_without_crowding_all_workers(self):
+    def test_ordinary_jobs_overlap_but_stress_jobs_are_exclusive(self):
         atoms = [dict(file=f'bounded-{i}', command=['timeout', '30s']) for i in range(8)]
         atoms += [dict(file=f'ordinary-{i}', command=['lean']) for i in range(8)]
         lock = threading.Lock()
         active = [0, 0]
         peak = [0, 0]
+        mixed = []
 
         def fixture(atom):
             bounded = atom['command'][0] == 'timeout'
             with lock:
                 active[0] += 1
                 active[1] += int(bounded)
+                if active[1] and active[0] != active[1]:
+                    mixed.append(tuple(active))
                 peak[0] = max(peak[0], active[0])
                 peak[1] = max(peak[1], active[1])
             time.sleep(0.02)
@@ -47,10 +51,28 @@ class CheckAtomsTests(unittest.TestCase):
 
         with patch('tools.check_atoms.run_atom', fixture):
             results = execute(atoms, 4)
-        self.assertEqual(peak[1], 2)
-        self.assertLessEqual(peak[0], 4)
+        self.assertEqual(peak[1], 1)
+        self.assertEqual(peak[0], 4)
+        self.assertEqual(mixed, [])
         self.assertCountEqual([r['file'] for r in results], [a['file'] for a in atoms])
         self.assertEqual(active, [0, 0])
+
+    def test_ordinary_failure_does_not_skip_the_stress_phase(self):
+        atoms = [dict(file='ordinary', command=['lean']),
+                 dict(file='bounded', command=['timeout', '30s'])]
+        visited = []
+
+        def fixture(atom):
+            visited.append(atom['file'])
+            if atom['file'] == 'ordinary':
+                raise OSError('fixture launch refusal')
+            return dict(file=atom['file'], returncode=0)
+
+        with patch('tools.check_atoms.run_atom', fixture):
+            results = execute(atoms, 4)
+        self.assertEqual(visited, ['ordinary', 'bounded'])
+        self.assertEqual({r['file']: r['returncode'] for r in results},
+                         {'ordinary': 1, 'bounded': 0})
 
     def test_every_inventory_file_runs_in_exactly_one_nonempty_shard(self):
         atoms = load_atoms()

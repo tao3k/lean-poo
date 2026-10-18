@@ -2,7 +2,6 @@
 """Run independent Lean files from the canonical Justfile recipes."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -153,7 +152,7 @@ def stop_children(signum, frame):
 
 
 def execution_lanes(atoms, jobs):
-    """Keep explicit deadline stress tests from saturating the whole worker pool.
+    """Separate ordinary work from explicit-deadline stress work in phases.
     This changes scheduling only: every original command/deadline is retained.
     Waiting happens before process launch, never inside its timeout interval.
     """
@@ -161,31 +160,32 @@ def execution_lanes(atoms, jobs):
         raise ValueError('Jobs must be positive')
     bounded = [a for a in atoms if a['command'][0] == 'timeout']
     ordinary = [a for a in atoms if a['command'][0] != 'timeout']
-    if jobs == 1 or not bounded:
-        return [(jobs, atoms)]
-    limit = min(2, jobs - 1) if ordinary else min(2, jobs)
-    lanes = [(limit, bounded)]
+    lanes = []
     if ordinary:
-        lanes.append((jobs - limit, ordinary))
+        lanes.append((jobs, ordinary))
+    if bounded:
+        # These allocation-heavy evaluations must not compete with each other
+        # inside their fixed wall-clock windows. Ordinary proofs still use jobs.
+        lanes.append((1, bounded))
     return lanes
 
 
 def execute(atoms, jobs):
     results = []
-    with ExitStack() as stack:
-        pending = {}
-        for workers, lane in execution_lanes(atoms, jobs):
-            pool = stack.enter_context(ThreadPoolExecutor(max_workers=workers))
-            for atom in lane:
-                pending[pool.submit(run_atom, atom)] = atom
-        for task in as_completed(pending):
-            atom = pending[task]
-            try:
-                results.append(task.result())
-            except Exception as error:
-                # Launch/read failures are failed atoms, never missing successes.
-                emit(f'CHECK-ATOM-ERROR {atom["file"]}: {error}')
-                results.append(dict(file=atom['file'], returncode=1, error=str(error)))
+    for index, (workers, lane) in enumerate(execution_lanes(atoms, jobs)):
+        emit(f'CHECK-ATOMS-PHASE index={index} files={len(lane)} workers={workers}')
+        # Join the previous phase before launching this one. Merely capping the
+        # stress pool still lets ordinary elaboration consume its CPU/memory.
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            pending = {pool.submit(run_atom, atom): atom for atom in lane}
+            for task in as_completed(pending):
+                atom = pending[task]
+                try:
+                    results.append(task.result())
+                except Exception as error:
+                    # Failed preparation does not suppress the following phase.
+                    emit(f'CHECK-ATOM-ERROR {atom["file"]}: {error}')
+                    results.append(dict(file=atom['file'], returncode=1, error=str(error)))
     return sorted(results, key=lambda item: item['file'])
 
 

@@ -52,7 +52,13 @@ bound compares the same supplied task costs, not a claim of equal CPU work
 between the monolithic and distributed implementations.
 
 The Lean gate retains automatic worker selection and every source-owned deadline.
-Explicitly deadline-bound stress atoms have at most two concurrent workers, with
-the rest reserved for ordinary atoms. All commands remain in the same complete
-inventory; no deadline is extended and failure/cancellation status is preserved.
-This avoids bunching stress cases into an oversubscribed tail of the file list.
+Ordinary atoms run with the automatically selected worker count. After that pool
+joins, the 42 explicitly deadline-bound stress atoms run exclusively in a separate
+phase. Both a shared pool and a two-worker isolated stress pool produced deadline
+failures on the local host, while the original isolated QueueSelection control
+passed. Ordinary proofs retain automatic concurrency; stress tests cannot compete
+with ordinary elaboration or with one another. The phase boundary occurs
+before launch and does not consume a test's timeout. All commands remain in the
+same complete inventory, including after an earlier phase's failure; deadlines,
+failure status and process-group cancellation are unchanged. Actual phase starts
+report their inventory and worker count in the progress stream.
