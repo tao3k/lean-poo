@@ -224,14 +224,13 @@ as one shared obligation. This reuses the finite search rather than a field solv
 example (candidates : List (Nat → PrototypeTypes.Ty)) (target : ClassValidation.RecordType Nat PrototypeTypes.Ty)
     (accepted : PrototypeTypes.infer (fun env => ClassValidation.recordCheck (PrototypeTypes.check 8)
         (inferredRecord (env 0) (env 1)) target) candidates = .unique env) :
-    (target.closed = true → (inferredRecord (env 0) (env 1)).closed = true) ∧
-      ClassValidation.RecordFieldsReplace PrototypeTypes.Subtype
-        (inferredRecord (env 0) (env 1)).fields target.fields := by
+    RowTypes.RecordReplaces PrototypeTypes.Subtype
+      (inferredRecord (env 0) (env 1)) target := by
   exact ClassValidation.recordCheck_sound _ _ (PrototypeTypes.check_sound 8) _ _
     (PrototypeTypes.infer_unique _ _ accepted).2
 /-- Optional absence remains absence, and cannot satisfy a required target. -/
 example : ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () true none := rfl
-example : ¬ ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () false none := by simp [ClassValidation.slotAdmits]
+example : ¬ ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () false none := by simp [ClassValidation.slotAdmits, RowTypes.slotAdmits]
 #print axioms ClassValidation.recordFieldsCheck_sound
 #print axioms ClassValidation.recordCheck_sound
 #print axioms ClassValidation.record_field_replacement

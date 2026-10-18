@@ -1,5 +1,6 @@
 import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Functional.RawArguments
+import LeanPoo.Functional.ClassValidation
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -760,5 +761,51 @@ theorem inferredCorrelatedCallback_sound (badTail artifact)
 #print axioms rawGraphCheck_sound
 #print axioms rawGraph_empty
 #print axioms inferredCorrelatedCallback_sound
+
+/-- Same inherited service fields as the Scheme factory. Self is prefix-bound
+UInt, while the finite choice determines Super in the nested callback input. -/
+def recordReadLayout (choice : Bool) :
+    Functional.ClassValidation.RecordType String Ty :=
+  ⟨[("run", ⟨.function [.atom .uint] [selectedType choice], false⟩),
+    ("limit", ⟨.atom .uint, false⟩), ("bias", ⟨.atom .uint, false⟩),
+    ("extra", ⟨.function [.atom .uint] [selectedType choice], true⟩)], false⟩
+/-- The public read view reorders fields and hides internal limits/optional hooks. -/
+def recordReadView : Functional.ClassValidation.RecordType String Ty :=
+  ⟨[("bias", ⟨.atom .integer, true⟩),
+    ("run", ⟨.function [.atom .uint] [.atom .integer], false⟩)], false⟩
+/-- One complete shared search precedes the original specialization/declaration builder. -/
+def inferredRecordView := inferDeclared 2
+  (fun choice => Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+    (recordReadLayout choice) recordReadView) [true, false] buildSelected
+#guard match inferredRecordView with
+  | .ok (.unique false, some 36) => true
+  | _ => false
+-- A missing optional field is safe only when no hidden source value can exist.
+#guard Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+  (⟨[], true⟩ : Functional.ClassValidation.RecordType String Ty)
+  ⟨[("missing", ⟨.atom .bool, true⟩)], true⟩
+#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+  (⟨[], false⟩ : Functional.ClassValidation.RecordType String Ty)
+  ⟨[("missing", ⟨.atom .bool, true⟩)], false⟩)
+-- Optional source metadata cannot satisfy a required target, even with equal Types.
+#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+  (⟨[("n", ⟨.atom .uint, true⟩)], true⟩ : Functional.ClassValidation.RecordType String Ty)
+  ⟨[("n", ⟨.atom .uint, false⟩)], false⟩)
+/-- Publication implies every source observation admits the reordered read view,
+conditional on the existing scalar/container/Function interpretation laws. This
+says nothing about validator effect order, mutation or Gerbil code generation. -/
+theorem inferredRecordView_sound (choice artifact)
+    (published : inferredRecordView = .ok (.unique choice, some artifact))
+    (model : Interpretation Value) (observe : String → Option Value)
+    (valid : Functional.RowTypes.RecordAdmits model.accepts (recordReadLayout choice) observe) :
+    Functional.RowTypes.RecordAdmits model.accepts recordReadView observe := by
+  obtain ⟨_, accepted, _⟩ := inferDeclared_unique 2 _ [true, false] _ published
+  exact Functional.RowTypes.recordCheck_sound (Functional.PrototypeTypes.check 8) model.accepts
+    (fun a b checked => Functional.PrototypeTypes.replacement model (check_sound 8 a b checked))
+    _ _ accepted observe valid
+#print axioms Functional.RowTypes.recordCheck_sound
+#print axioms Functional.RowTypes.recordFieldCheck_missing
+#print axioms Functional.RowTypes.inferred_record_sound
+#print axioms inferredRecordView_sound
 
 end LeanPoo.Examples.TypedMethodDeclarations

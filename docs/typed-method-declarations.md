@@ -189,14 +189,14 @@ Record data callbacks remain distinct from certified method groups: a root Recor
 is explicitly refused as a method catalog before its builder can run. Object
 catalog paths remain the declaration protocol.
 
-`Functional.ClassValidation.RecordType` models exact ordered fields, optional
-presence and sealedness. `recordFieldsCheck_sound`, `recordCheck_sound` and
-`record_field_replacement` establish the finite relation and conditional replacement
-of one observed snapshot. Required may replace optional; optional cannot replace
-required; open cannot replace closed. No mutable write, nominal subtype, arbitrary
-width/permutation inclusion or host callback semantics follows. The existing
-checked-initialization proof separately requires validation before and after a
-hook; it is not inferred by observing that a record has a default.
+`Functional.ClassValidation.RecordType` now shares RowTypes' named-row representation
+with the original `(key, Type, optional)` metadata. Its `recordCheck` delegates to
+the shared closed-key/presence/read judgment; `recordCheck_sound` derives the named
+relation, including width and reordering. `record_field_replacement` retains the
+distinct positional law for applying the same ordered observed value list to two
+field lists. Both use one `slotAdmits`/`slot_replacement` law. Class initialization
+still proves validation before and after a hook separately; no mutable write,
+nominal subtype or arbitrary callback behavior follows from a default value.
 
 `Examples/ClassContracts.lean` and Scheme's `RecordServiceType` share the same four
 fields, optional callback, fixed Self prefix, original bound, Integer argument and
@@ -420,3 +420,23 @@ memoization. `rawRegionCovers_ext` proves that changing live-set order or duplic
 representation while preserving membership cannot change the certificate judgment.
 Traversal termination, producer completeness and concrete hash behavior remain
 separate runtime obligations; quota exhaustion is still a refusal.
+
+### Named Record views through the existing declaration driver
+
+`Functional/RowTypes.lean` now reuses its closed-key shape rule for required/optional
+Record fields. `recordCheck_sound` proves all source observations satisfy the
+target view, assuming the supplied child comparison preserves observations.
+Required targets require required source fields; missing optional fields require a
+closed source. Open targets permit width and field reordering; closed targets
+reject open sources and all extra declared keys. Construction order is unchanged.
+
+`Examples/TypedMethodDeclarations.lean`'s `inferredRecordView` binds Self=UInt,
+selects Super=Integer through a reordered nested callback view, and uses the
+original `buildSelected` specialization/declaration builder.
+`inferredRecordView_sound` transports the existing Type interpretation into the
+record observation law after successful publication. The Gerbil example uses its
+original inherited Record factory and FUN/refine/bind-evidence action. Independent
+Class-validator controls include nine layouts, sixteen observations, optional
+absence, hidden incompatible values, Function variance, Map key invariance and
+refusal before consumption. This advances the type protocol future work from
+Appendices C/D, not arbitrary Class subtyping, effect equality or mutable writes.

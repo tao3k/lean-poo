@@ -1,4 +1,5 @@
 import LeanPoo.Functional.ObjectContractValidation
+import LeanPoo.Functional.RowTypes
 
 /-! Finite effective Slot validation and checked Class initialization. Resolution
 of inherited metadata and provision of prototype defaults are supplied by the
@@ -155,15 +156,12 @@ theorem initialized_refinement [DecidableEq Key]
   exact (ObjectContract.refine_accepts_iff contract additional result path).mp empty
 
 
-/-- Finite record Types describe presence separately from the child Type.
-The schema is explicit: defaults, computed fields, hooks and C3 are host policies. -/
-structure RecordType (Key Field : Type) where
-  fields : List (Key × Field × Bool)
-  closed : Bool
-  deriving Repr
+/-- Class and structural inference share the original (key, Type, optional)
+metadata through the existing named Row representation, without another schema. -/
+abbrev RecordType (Key Field : Type) := RowTypes.Row Key (Field × Bool)
 
-/-- Exact ordered field matching is deliberately conservative. Required source
-fields may replace optional targets; optional sources cannot promise presence. -/
+/-- Ordered value snapshots retain position count and pairing; unlike named
+read views, this rule applies the same observed value list to both field lists. -/
 def recordFieldsCheck [DecidableEq Key] (test : Field → Field → Bool) :
     List (Key × Field × Bool) → List (Key × Field × Bool) → Bool
   | [], [] => true
@@ -171,10 +169,9 @@ def recordFieldsCheck [DecidableEq Key] (test : Field → Field → Bool) :
       decide (key = key') && (!optional || optional') && test type type' && recordFieldsCheck test rest rest'
   | _, _ => false
 
-/-- Sealed targets require a sealed source. This does not grant mutable writes. -/
-def recordCheck [DecidableEq Key] (test : Field → Field → Bool)
-    (source target : RecordType Key Field) : Bool :=
-  (!target.closed || source.closed) && recordFieldsCheck test source.fields target.fields
+/-- Class read replacement uses the shared named shape/presence protocol. -/
+abbrev recordCheck [DecidableEq Key] (test : Field → Field → Bool)
+    (source target : RecordType Key Field) : Bool := RowTypes.recordCheck test source target
 
 /-- The declarative relation retains exact names and presence obligations. -/
 def RecordFieldsReplace (relation : Field → Field → Prop) :
@@ -208,29 +205,24 @@ theorem recordFieldsCheck_sound [DecidableEq Key] (test : Field → Field → Bo
       change optional = true at absent
       simpa [absent] using parts.1.1.2
 
-/-- Success simultaneously preserves sealedness and all field laws. -/
+/-- One field derivation now serves Class, inferred named views and Object
+shape laws; ordered value snapshots below retain their distinct positional law. -/
 theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool)
     (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
     (source target : RecordType Key Field) (accepted : recordCheck test source target = true) :
-    (target.closed = true → source.closed = true) ∧ RecordFieldsReplace relation source.fields target.fields := by
-  have both : (!target.closed || source.closed) = true ∧ recordFieldsCheck test source.fields target.fields = true := by
-    simpa only [recordCheck, Bool.and_eq_true] using accepted
-  exact ⟨fun closed => by simpa [closed] using both.1,
-    recordFieldsCheck_sound test relation sound _ _ both.2⟩
+    RowTypes.RecordReplaces relation source target :=
+  RowTypes.recordCheck_derives test relation sound source target accepted
 
-/-- Optional absence is an observation, never a request to invent a default. -/
-def slotAdmits (accepts : Field → Value → Prop) (type : Field) (optional : Bool) : Option Value → Prop
-  | none => optional = true
-  | some value => accepts type value
+/-- Class snapshots and named record views share one optional observation law. -/
+abbrev slotAdmits (accepts : Field → Value → Prop) (type : Field) (optional : Bool) : Option Value → Prop :=
+  RowTypes.slotAdmits accepts type optional
 
-/-- Read replacement composes field behavior with required/optional presence. -/
+/-- Reuse the same per-Slot presence/behavior composition as named read views. -/
 theorem slot_replacement (accepts : Field → Value → Prop) (source target : Field)
     (optional optional' : Bool) (presence : optional = true → optional' = true)
     (included : ∀ value, accepts source value → accepts target value) (observe : Option Value)
-    (valid : slotAdmits accepts source optional observe) : slotAdmits accepts target optional' observe := by
-  cases observe with
-  | none => exact presence valid
-  | some value => exact included value valid
+    (valid : slotAdmits accepts source optional observe) : slotAdmits accepts target optional' observe :=
+  RowTypes.slot_replacement accepts source target optional optional' presence included observe valid
 
 /-- A finite normalized field snapshot retains exact position count. These are
 observed values, not an initialization algorithm or an inferred default source. -/
