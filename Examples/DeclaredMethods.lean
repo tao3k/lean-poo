@@ -268,6 +268,53 @@ example : rowAssemblyCharge 7 1 8 2 false < rowAssemblyCharge 7 1 8 2 true ∧
        100 + rowAssemblyCharge 7 1 8 2 true + 0) ∧
     ¬ (120 + rowAssemblyCharge 7 1 8 2 false + 0 ≤
        100 + rowAssemblyCharge 7 1 8 2 true + 0) := by decide
+/-- Fused Reader completion uses current admission, then the same complete
+summary/charge program and a post-success review. Review may itself run another
+request; the receiver and result of the outer request remain lexically local. -/
+def reviewedSummary (rate : Nat) (visible : Bool) (review : Nat → Run Unit) :
+    Run (Nat × Call String CallValue) :=
+  fusedObservation
+    (fun current => if visible then pure current else throw "slot is hidden or undeclared")
+    (fun current => do
+      let result ← forwardedSummary current (some 2) true
+      review result.1
+      pure result) rate
+
+/-- A bounded nested review models a forecast at another rate. This is two
+ordinary requests, without general recursion or a termination assumption. -/
+def forecastReview (amount : Nat) : Run Unit := do
+  record "review"
+  if amount = 46 then
+    let _ ← reviewedSummary 20 true (fun _ => record "nested-review")
+    pure ()
+
+/-- Nested completion keeps the outer result and both full qualifier traces. -/
+example : ((reviewedSummary 10 true forecastReview).run []).map (fun result =>
+    (result.1.1, result.2)) = .ok (46,
+    ["summary", "around-enter", "billing-before", "risk-before", "billing-primary", "base",
+     "risk-after", "billing-after", "around-exit", "review",
+     "summary", "around-enter", "billing-before", "risk-before", "billing-primary", "base",
+     "risk-after", "billing-after", "around-exit", "nested-review"]) := rfl
+
+/-- Failed admission suppresses review; a new current context can be retried. -/
+example : [((reviewedSummary 30 false forecastReview).run []).map (fun result => result.1.1),
+    ((reviewedSummary 30 true forecastReview).run []).map (fun result => result.1.1)] =
+    [.error "slot is hidden or undeclared", .ok 126] := rfl
+
+/-- A failing review preserves the exact failure rather than returning the
+already computed amount. External mutation rollback is not part of this model. -/
+example : (reviewedSummary 40 true (fun _ => throw "review-refused")).run [] =
+    .error "review-refused" := rfl
+
+/-- Even a cheaper continuation can lose when independently supplied collector
+history increases. The units here illustrate the theorem, not measured time. -/
+example : observationCharge 1 100 10 2 0 < observationCharge 1 100 10 5 0 ∧
+    ¬ observationCharge 1 100 10 2 400 ≤ observationCharge 1 100 10 5 0 := by decide
+
+#print axioms observation_fusion
+#print axioms fusedObservation_refused
+#print axioms fusedObservation_current
+#print axioms observationCharge_threshold
 #print axioms assembleRow_eq
 #print axioms combineDirect_assembled
 #print axioms rowAssemblyCharge_difference

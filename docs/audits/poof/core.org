@@ -98,3 +98,14 @@ resolved argument row and changes no method-combination policy. Lean proves
 value equality and arbitrary-monad substitution; mutable spine ownership and
 measured CPU costs remain Gerbil obligations. The generalized Reader/reflection
 integration continues future work. No completeness flag is changed.
+
+* Reader completion review
+
+Standard FUN Reader fusion removes environment-independent continuation
+materialization while retaining the article's same-self method combination and
+current reflected declarations. The model proves arbitrary-monad equality and a
+conditional complete-budget threshold. Its scope assumes standard Observation
+operations; arbitrary FUN overrides, host multiple values, mutable receiver
+identity and GC require Gerbil controls. The nested forecast/review integration
+advances the generalized-prototype future work; original completeness flags and
+source-check coverage are unchanged.

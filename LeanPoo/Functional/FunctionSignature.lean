@@ -351,4 +351,56 @@ theorem rowAssemblyCharge_workflow (width cell applyCall copyRest
   simp only [rowAssemblyCharge, Bool.false_eq_true, ↓reduceIte]
   omega
 
+/-- Standard effectful Reader bind with an environment-independent continuation.
+The continuation constructs a Reader on every invocation, then runs it at the
+same context. This models the old summary workflow, not arbitrary FUN overrides. -/
+def nestedObservation [Monad M] (source : Context → M Value)
+    (finish : Value → M Result) : Context → M Result :=
+  fun context => source context >>= fun value => (fun (_ : Context) => finish value) context
+
+/-- The standard Reader map/Kleisli composition needs no intermediate Reader.
+Effects inside finish include reflection, generic calls and post-success review. -/
+def fusedObservation [Monad M] (source : Context → M Value)
+    (finish : Value → M Result) : Context → M Result :=
+  fun context => source context >>= finish
+
+/-- Fusion is extensional equality for arbitrary source/continuation effects.
+Environment independence is explicit in finish's type; a continuation that reads
+the context again, or a modified FUN implementation, is outside this rewrite. -/
+theorem observation_fusion [Monad M] (source : Context → M Value)
+    (finish : Value → M Result) :
+    nestedObservation source finish = fusedObservation source finish := rfl
+
+/-- Source refusal prevents every reflection/generic/review effect in finish. -/
+theorem fusedObservation_refused (source : Context → Except Error Value)
+    (finish : Value → Except Error Result) (context : Context) (error : Error)
+    (refused : source context = .error error) :
+    fusedObservation source finish context = .error error := by
+  simp [fusedObservation, refused, bind, Except.bind]
+
+/-- Current source values flow into the complete continuation on every retry;
+neither a prior receiver nor a successful result is retained by fusion. -/
+theorem fusedObservation_current (source : Context → Except Error Value)
+    (finish : Value → Except Error Result) (context : Context) (value : Value)
+    (ready : source context = .ok value) :
+    fusedObservation source finish context = finish value := by
+  simp [fusedObservation, ready, bind, Except.bind]
+
+/-- Finite supplied prices distinguish dynamic map construction from new
+completion work; setup and collector history are independent complete-run terms.
+These are source budgets, not Gambit allocation or wall-clock predictions. -/
+def observationCharge (setup calls common completion gc : Nat) : Nat :=
+  setup + calls * (common + completion) + gc
+
+/-- Fusion wins the complete supplied budget exactly under this threshold.
+A deleted intermediate Reader alone cannot justify an end-to-end speed claim. -/
+theorem observationCharge_threshold (oldSetup newSetup calls common dynamicMap
+    fusedCompletion oldGC newGC : Nat) :
+    observationCharge newSetup calls common fusedCompletion newGC ≤
+      observationCharge oldSetup calls common dynamicMap oldGC ↔
+    newSetup + calls * fusedCompletion + newGC ≤
+      oldSetup + calls * dynamicMap + oldGC := by
+  simp only [observationCharge, Nat.mul_add]
+  omega
+
 end LeanPoo.Functional.FunctionSignature
