@@ -320,4 +320,33 @@ example : observationCharge 1 100 10 2 0 < observationCharge 1 100 10 5 0 ∧
 #print axioms rowAssemblyCharge_difference
 #print axioms rowAssemblyCharge_threshold
 #print axioms rowAssemblyCharge_workflow
+/-- Revision evidence cannot revive after body/qualifier edits or a Type edit.
+A rejected request can retry with fresh constructor evidence at its new revision. -/
+example :
+    admitRegistered (some ⟨3, 7, 0⟩) 4 7 (fun tag => tag == 0) (fun _ => false) = false ∧
+    admitRegistered (some ⟨3, 7, 0⟩) 3 8 (fun tag => tag == 0) (fun _ => false) = false ∧
+    admitRegistered (some ⟨4, 8, 0⟩) 4 8 (fun tag => tag == 0) (fun _ => true) = true := by decide
+
+/-- Registration does not contain or select a callback. A before method can
+replace the body chosen later by the ordinary interpreter; its new result wins. -/
+def revisedPrimary : Run Nat := do
+  record "before-revision"
+  let currentBody : Nat → Run Nat := fun value => do record "new-primary"; pure (value + 10)
+  currentBody 3
+
+/-- The current body trace and exact result remain observable after admission. -/
+example : revisedPrimary.run [] = .ok (13, ["before-revision", "new-primary"]) := rfl
+
+/-- Supplied cost prices allow both cold regression and hot amortization.
+This is a threshold illustration, not a measured runtime or GC theorem. -/
+example :
+    ¬ contributionCharge 20 1 2 0 0 ≤ contributionCharge 0 1 0 10 0 ∧
+    contributionCharge 20 100 2 0 0 ≤ contributionCharge 0 100 0 10 0 ∧
+    ¬ contributionCharge 20 100 2 0 1000 ≤ contributionCharge 0 100 0 10 0 := by decide
+
+#print axioms admitRegistered_eq
+#print axioms admitRegistered_execution
+#print axioms admitRegistered_stale
+#print axioms registered_admissions_eq
+#print axioms contributionCharge_threshold
 end LeanPoo.Examples.DeclaredMethods

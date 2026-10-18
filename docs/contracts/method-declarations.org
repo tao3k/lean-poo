@@ -198,3 +198,27 @@ workflow pairs hold the current generic/contract/row lowering fixed on both side
 transport/hot scopes retain their separately labelled apply/list control. Account
 construction has its own identical-action measurement; independent phase medians
 must not be subtracted to manufacture an exact workflow cost decomposition.
+
+* Revision-checked contribution admission
+
+The qualifier interpreter from the article remains unchanged. The default Gerbil
+~contribution~ constructor now records immutable qualifier/revision evidence in a
+standard weak-key table. A matching object and Type revision can reuse that
+admission; current descriptor validation handles every miss. Registration is
+restricted to the original constructor/Type protocol and finite known symbols.
+Evidence contains neither a receiver nor a callback. Supported mutation must
+advance the existing transitive revision discipline; direct unsafe record mutation
+is outside this premise. Restoring old field values does not restore old revisions.
+
+~admitRegistered_eq~, ~admitRegistered_stale~ and ~admitRegistered_execution~ prove
+admission substitution and unchanged subsequent effects under explicit constructor
+admission and revision-stability assumptions. ~registered_admissions_eq~ preserves
+source order. These laws do not prove Gerbil object mutation, weak-table GC, macro
+expansion or runtime speed. Scheme regression controls execute current Type edits,
+body/qualifier edits, before-to-primary mutation, and shared-C3 FUN refusal/retry.
+
+~contributionCharge_threshold~ counts registration, repeated guards/checks and
+supplied GC history separately. Cold setup or extra collection can outweigh saved
+validation. Fair workflow controls use the same current FUN/generic implementation;
+only descriptor registration evidence differs. This is an implementation strategy
+for the generalized-prototype future work, not an additional article construction.

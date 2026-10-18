@@ -2,7 +2,7 @@ import LeanPoo.Object.MethodCombinationSemantics
 
 /-! Record and qualified method declarations share one fragment stream. This
 models source-order collection, inherited assembly and receiver-generic invocation;
-native syntax expansion, policy admission and mutable invalidation have controls. -/
+Gerbil syntax expansion, policy admission and mutable invalidation have controls. -/
 namespace LeanPoo.Object.MethodCombination
 /-- One extensible declaration stream can contribute data and qualified methods. -/
 inductive Fragment (Data Receiver : Type) (M : Type → Type) (Result : Type) where
@@ -43,7 +43,7 @@ theorem fragmentSpecification_append (key : String) (first second : List (Fragme
         (fun _ => (fragmentSpecification key second).eval self inherited) := by
   simp [fragmentSpecification, specifications, Prototype.SlotSpec.eval, collectFragments_append, List.foldr_append]
 /-- Record fragments never become method contributions, even if names coincide.
-Native publication separately rejects such collisions rather than silently hiding data. -/
+Declaration publication separately rejects such collisions rather than silently hiding data. -/
 theorem collectFragments_slot (key name : String) (value : Data) (rest : List (Fragment Data Receiver M Result)) :
     collectFragments key (.slot name value :: rest) = collectFragments key rest := rfl
 /-- A type-selected generic resolves metadata from the class while invoking with
@@ -69,4 +69,85 @@ theorem declaredGeneric_fragments [Monad M] (key : String)
       effective (((fragmentSpecification key first).eval self
         (fun _ => (fragmentSpecification key second).eval self inherited)).getD {}) onMissing receiver := by
   rw [fragmentSpecification_append]
+/-- Admission evidence contains immutable qualifier data and both revisions. It
+contains neither a receiver nor a callback, matching the weak-table payload. -/
+structure ContributionStamp where
+  revision : Nat
+  typeRevision : Nat
+  qualifier : Nat
+  deriving DecidableEq, Repr
+
+/-- A finite qualifier policy reuses evidence only at both current revisions.
+A miss executes the current checker; its result is never inserted here. -/
+def admitRegistered (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool) : Bool :=
+  match stamp with
+  | none => check ()
+  | some evidence =>
+    if evidence.revision = revision ∧ evidence.typeRevision = typeRevision
+    then policy evidence.qualifier else check ()
+
+/-- Soundness requires constructor admission and revision discipline: a matching
+stamp's qualifier agrees with the current descriptor/Type protocol. This does not
+assert that arbitrary effectful Type predicates can be cached. -/
+theorem admitRegistered_eq (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool)
+    (stable : ∀ evidence, stamp = some evidence →
+      evidence.revision = revision → evidence.typeRevision = typeRevision →
+      policy evidence.qualifier = check ()) :
+    admitRegistered stamp revision typeRevision policy check = check () := by
+  cases stamp with
+  | none => rfl
+  | some evidence =>
+    simp only [admitRegistered]
+    split
+    · rename_i current
+      exact stable evidence rfl current.1 current.2
+    · rfl
+
+/-- Admission substitution preserves an arbitrary subsequent effectful program,
+including its refusal and multiple-result carrier. No callback is stored in a stamp. -/
+theorem admitRegistered_execution {M : Type → Type} {Result : Type} (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool) (invoke refuse : M Result)
+    (stable : ∀ evidence, stamp = some evidence →
+      evidence.revision = revision → evidence.typeRevision = typeRevision →
+      policy evidence.qualifier = check ()) :
+    (if admitRegistered stamp revision typeRevision policy check then invoke else refuse) =
+      (if check () then invoke else refuse) := by
+  rw [admitRegistered_eq stamp revision typeRevision policy check stable]
+
+/-- Changing either receiver or Type revision forces current validation, even
+if a later edit restores an earlier qualifier or function body. -/
+theorem admitRegistered_stale (evidence : ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool)
+    (changed : evidence.revision ≠ revision ∨ evidence.typeRevision ≠ typeRevision) :
+    admitRegistered (some evidence) revision typeRevision policy check = check () := by
+  simp only [admitRegistered]
+  split
+  · rename_i current
+    rcases changed with h | h
+    · exact False.elim (h current.1)
+    · exact False.elim (h current.2)
+  · rfl
+
+/-- List admission preserves source order and every current-check result under
+per-element stability. Grouping and callback execution remain separate. -/
+theorem registered_admissions_eq (parts : List α) (cached current : α → Bool)
+    (sound : ∀ part ∈ parts, cached part = current part) :
+    parts.map cached = parts.map current := by
+  apply List.map_congr_left
+  exact sound
+
+/-- Full request accounting includes registration, guard/check work and supplied
+collector history. Prices are external inputs, not claims about machine time. -/
+def contributionCharge (setup calls guard check gc : Nat) : Nat :=
+  setup + calls * (guard + check) + gc
+
+/-- Reuse amortizes only when saved validation covers setup, guards and additional
+GC. The theorem deliberately permits a negative cold or complete-workflow result. -/
+theorem contributionCharge_threshold (setup calls guard check cachedGC checkedGC : Nat) :
+    contributionCharge setup calls guard 0 cachedGC ≤ contributionCharge 0 calls 0 check checkedGC ↔
+    setup + calls * guard + cachedGC ≤ calls * check + checkedGC := by
+  simp [contributionCharge]
+
 end LeanPoo.Object.MethodCombination
