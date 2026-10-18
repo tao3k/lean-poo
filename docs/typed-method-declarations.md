@@ -291,15 +291,9 @@ Fixed/optional prefixes and several ordered cases may jointly cover a bounded
 raw language without unbounded Any rest. Defaults are never supplied artificially.
 
 `decode_direct` proves a no-key minimum row equals its original token sequence.
-Its non-tail regions reuse ordinary input contravariance, so a UInt fixed case
-can safely handle the one-token direct call. Other regions check Any only at
-supplied source positions; unused optional fields impose no obligation.
-`replacesKeywordTarget_sound` proves actual source first selection, exact-count
-output covariance, and either direct row/input agreement or Any at **every** raw
-position, for all successful target spellings, all keyword orders and unbounded
-rest arities. Two decoded target cases may share one source raw arity; all selected
-result obligations still apply. Type/result refusal cannot fall through to a
-later source case. `replacesKeywordTarget_modes` certifies the global interpretation.
+The earlier `rawAnyPositions` theorem remains an explicit sufficient special case;
+it is not a fallback policy in the Scheme checker. The value-sensitive rule below
+retains each data Type and each protocol marker instead.
 
 `replacesPositionalTarget` reuses `replacesLanguage`, adding finite stable supplied
 input checks. `inputAt_representative` lifts these to all rest positions.
@@ -319,8 +313,9 @@ inference enters the existing two-generic builder.
 Gerbil extends its existing `covers-signatures?` traversal and Type relation,
 reusing the decoder, normalizer, standard key deduplication and streaming masks.
 It never changes a caller's argument row to establish subtyping. The raw-region
-rule is sufficient, not maximal mixed-wire semantic inclusion: non-direct
-value-sensitive raw-prefix relations remain outside this finite decision. Unsupported syntax
+rule is sufficient, not maximal mixed-wire semantic inclusion. Bounded non-direct
+rows use the value-sensitive origin traversal described below; unbounded stationary
+tails require a complete per-slot origin envelope. Unsupported syntax
 and quota exhaustion keep existing typed refusals; false rejects a candidate;
 complete no-solution/ambiguity/exhaustion cannot execute the declaration builder.
 The Scheme examples continue through FUN/refine/bind-evidence with actual keyword
@@ -333,3 +328,46 @@ is type-protocol future work. Host procedure arity/totality, default/recognizer
 effects, compiler execution, arbitrary predicates and general mixed-wire inclusion
 remain outside the proof/decision boundary. No performance claim follows from
 these coverage proofs.
+
+
+### Value-sensitive non-minimum raw rows
+
+`Functional/RawArguments.lean` keeps `Functional.FunctionSignature`. `RawSpelling`
+retains positional Types, individual key payload Types, key order and both escapes.
+Its lower/upper raw bounds are proved independently of examples. `rawCovers` checks
+all feasible grammar transitions at each raw offset; every recursive transition
+consumes data/key state and tokens. Feasible fuel exhaustion refuses. The Scheme
+implementation uses a request-local standard hash table for completed states and
+its existing shared admission quota; no persistent memo certificate is introduced.
+
+`rawCovers_sound` is universal over payload Types, all key permutations and all
+RawSpelling derivations. Each supplied origin retains its own slot-admission law;
+`rawSlots_sound` lifts that law to all supplied positions. `enumMarker_sound` and
+`keywordMarker_sound` retain literal membership and the distinction between keys
+and escapes. `stationaryRaw_sound` proves the conservative tail envelope rule under
+its explicit complete-origin premise, without introducing top/Any. The model does
+not prove host memo allocation costs, actual Gerbil compiler execution, or automatic
+assignment of decoded runtime values to their Type origins. That correspondence
+and validator interpretation remain explicit premises plus runtime regression gates.
+
+The existing top-level `Examples/TypedMethodDeclarations.lean` adds an Any-free
+five-token endpoint: finite marker slots, two Integer payload slots and an exact
+final rest escape. A Bool payload candidate refuses. Original prefix substitution,
+complete unique inference and `buildCheckedShared` publish the chosen declaration;
+`inferredValueCallback_sound` connects that publication to the universal raw-origin
+law for every bounded spelling, and `valueEndpoint_payload` proves real subtype
+inclusion for the endpoint's numeric payload. No new namespace is introduced.
+
+Gerbil compiles existing `Keyword`, `Exactly` and `Enum` descriptors from checked
+immutable literal syntax. Only raw-origin admission compares identity-preserving flat Union alternatives
+extensionally; public Union bounds remain invariant, including flat Unions.
+Wrapper-bearing Union never uses this raw-only inclusion.
+`KeywordValueCallback` and its inference service enter the original unified
+method-declaration/FUN/refine/bind-evidence chain. The 9331-row independent runtime
+oracle and negative/nested-Function/stationary/budget controls reside in
+`t/keyword-values-test.ss`. No recognizer is sampled to establish subtyping, no
+incoming row is rewritten, and no missing evidence is repaired with Any.
+
+This remains Appendix C/D future work. Literal-sensitive exclusion of ordinary
+protocol-valued data, more precise tail correlations, arbitrary predicate inclusion,
+default effects and unrestricted inference remain outside the decidable boundary.

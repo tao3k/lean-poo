@@ -32,6 +32,7 @@ import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.FunctionSignature
 import LeanPoo.Functional.FunctionCoverage
 import LeanPoo.Functional.KeywordCoverage
+import LeanPoo.Functional.RawArguments
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.RecursiveGeneration
 import LeanPoo.Functional.PrototypeTypes

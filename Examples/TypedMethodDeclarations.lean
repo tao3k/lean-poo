@@ -1,5 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
-import LeanPoo.Functional.KeywordCoverage
+import LeanPoo.Functional.RawArguments
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -625,5 +625,80 @@ theorem inferredPrefixCallback_sound (badResult artifact)
 #print axioms rawAnyPositions_sound
 #print axioms replacesKeywordTarget_cell
 #print axioms inferredPrefixCallback_sound
+
+/-- The five-token endpoint's two payload slots remain Integer. Marker slots
+reuse finite Enum/Exactly membership; changing a payload to Bool refuses. -/
+def valueEndpoint (badPayload : Bool) : Nat → ArgumentToken String Ty → Bool
+  | 0, .keyword "scale" | 0, .keyEscape | 2, .keyword "scale" | 2, .keyEscape => true
+  | 1, .value ty => check 8 ty (if badPayload then .atom .bool else
+      substitute (selectedEnvironment false) (.var 1))
+  | 3, .value ty => check 8 ty (.atom .integer)
+  | 4, .restEscape => true
+  | _, _ => false
+/-- First-selected length-one and length-five cases precede the optional 2..4
+case. Its flat numeric/finite-marker Union validates without changing values. -/
+def valueRawAdmission (badPayload : Bool) (size index : Nat) (origin : ArgumentToken String Ty) : Bool :=
+  if size = 1 then match index, origin with
+    | 0, .value ty => check 8 ty (.atom .uint)
+    | _, _ => false
+  else if size = 5 then valueEndpoint badPayload index origin
+  else match origin with
+    | .value ty => check 8 ty (.atom .integer)
+    | .keyword key => decide (key = "scale")
+    | .keyEscape | .restEscape => true
+/-- All lengths and supplied-key masks of the bounded callback are checked,
+including each non-minimum raw row, not just a chosen canonical encoding. -/
+def valueCoverage (badPayload : Bool) : Bool :=
+  ([[], [("scale", Ty.atom .uint)]] : List (List (String × Ty))).all (fun keys =>
+    (List.range 6).all (fun size => rawCovers (valueRawAdmission badPayload size) 3
+      [.atom .uint] keys 0 size))
+/-- The admitted callback reuses the original specialized two-generic builder;
+no artifact is constructed until complete unique finite inference succeeds. -/
+def inferredValueCallback := inferDeclared 2 valueCoverage [true, false]
+  (fun badPayload => do
+    let artifact ← buildCheckedShared (selectedEnvironment false)
+    return (badPayload, artifact))
+#guard valueCoverage false
+#guard !valueCoverage true
+#guard match inferredValueCallback with
+  | .ok (.unique false, some (false, (36, 136))) => true
+  | _ => false
+-- Escapes cannot be replaced by Keyword alone, and Enum cannot invent a label.
+#guard !keywordMarker (ArgumentToken.keyEscape : ArgumentToken String Ty)
+#guard !enumMarker [.keyword "scale", .keyEscape] (.keyword "other")
+#guard enumMarker [.restEscape] (ArgumentToken.restEscape : ArgumentToken String Unit)
+-- Actual ordered shape dispatch selects the precise five-token endpoint.
+#guard select ([{ required := 1 }, { required := 5 }, { required := 2, optional := 2 }] : List (Signature String))
+  (shapeRow 5 []) == some { required := 5 }
+-- A bounded admission budget never turns an unfinished traversal into success.
+#guard !rawCovers (valueRawAdmission false 5) 0 [.atom .uint] [("scale", .atom .uint)] 0 5
+#guard match inferDeclared 1 valueCoverage [true, false] (fun _ => (Except.ok () : Except String Unit)) with
+  | .error (.inl .exhausted) => true
+  | _ => false
+/-- Publication carries the origin-specific law for every successful spelling in
+this entire bounded language. The trace is the explicit decoder-origin premise;
+rawCovers_sound is independent of these particular examples and payload Types. -/
+theorem inferredValueCallback_sound (badPayload artifact)
+    (published : inferredValueCallback = .ok (.unique badPayload, some artifact))
+    (keys : List (String × Ty)) (inside : keys ∈ [[], [("scale", .atom .uint)]])
+    (tokens : List (ArgumentToken String Ty)) (bound : tokens.length < 6)
+    (trace : RawSpelling [.atom .uint] keys tokens) :
+    rawSlots (valueRawAdmission badPayload tokens.length) 0 tokens = true := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique 2 valueCoverage [true, false] _ published
+  have region := List.all_eq_true.mp (List.all_eq_true.mp valid keys inside) tokens.length
+    (List.mem_range.mpr bound)
+  exact rawCovers_sound _ 3 trace region
+/-- The integer payload inclusion used by the endpoint is semantic derivability,
+not the mere fact that some sample callback accepted a number. -/
+theorem valueEndpoint_payload (ty : Ty)
+    (accepted : valueEndpoint false 1 (.value ty) = true) : Subtype ty (.atom .integer) := by
+  simp only [valueEndpoint, substitute, selectedEnvironment, prefixEnvironment, selectedType] at accepted
+  simp at accepted
+  exact check_sound 8 ty (.atom .integer) accepted
+#print axioms rawCovers_sound
+#print axioms rawSlots_sound
+#print axioms stationaryRaw_sound
+#print axioms inferredValueCallback_sound
+#print axioms valueEndpoint_payload
 
 end LeanPoo.Examples.TypedMethodDeclarations

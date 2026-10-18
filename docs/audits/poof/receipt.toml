@@ -436,6 +436,7 @@
   "LeanPoo/Functional/ProtocolSelection.lean",
   "LeanPoo/Functional/PrototypeTypes.lean",
   "LeanPoo/Functional/QueueSelection.lean",
+  "LeanPoo/Functional/RawArguments.lean",
   "LeanPoo/Functional/ReceiptAdmission.lean",
   "LeanPoo/Functional/RecordEvolution.lean",
   "LeanPoo/Functional/RecursiveApprovals.lean",
