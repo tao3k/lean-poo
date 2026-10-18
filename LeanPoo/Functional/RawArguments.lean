@@ -300,6 +300,16 @@ def rawRegionCovers [DecidableEq State] (edges : List (RawTransition State Origi
     (admit : State → Origin → Bool) : Bool :=
   rawGraphCertificate edges endings live admit && (!(decide (initial ∈ live)) || hasSource)
 
+/-- Closure producers may use hash tables, lists, duplicate predecessor arrows or
+any traversal order. Equal live-state membership leaves the independently checked
+region judgment unchanged; this does not assume producer termination/completeness. -/
+theorem rawRegionCovers_ext [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings left right : List State) (initial : State) (hasSource : Bool)
+    (admit : State → Origin → Bool) (same : ∀ state, state ∈ left ↔ state ∈ right) :
+    rawRegionCovers edges endings left initial hasSource admit =
+      rawRegionCovers edges endings right initial hasSource admit := by
+  simp only [rawRegionCovers, rawGraphCertificate, same]
+
 /-- Every actual successful trace forces a selected source and preserves the
 per-position origin law. A dead arity region cannot hide a live bad output case. -/
 theorem rawRegionCovers_sound [DecidableEq State] (edges : List (RawTransition State Origin))

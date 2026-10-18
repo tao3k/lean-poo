@@ -411,3 +411,12 @@ decoder's typed-origin traces, and host validators must satisfy their interpreta
 The proofs establish universal certificate/counter/literal laws, not Gerbil compiler
 correctness or unrestricted predicate inclusion. This advances the article's hypothetical
 type protocol; arbitrary effects and opaque ordinary refinements remain future work.
+
+### Closure representation and traversal reuse
+
+Gerbil now shares one private arrow/target traversal between reachable product
+construction and predecessor closure, and uses standard completed-result hash
+memoization. `rawRegionCovers_ext` proves that changing live-set order or duplicate
+representation while preserving membership cannot change the certificate judgment.
+Traversal termination, producer completeness and concrete hash behavior remain
+separate runtime obligations; quota exhaustion is still a refusal.
