@@ -199,4 +199,41 @@ example : [
 #print axioms Prototype.composeReduced_append
 #print axioms Prototype.compose_captured_suffix
 #print axioms Prototype.composeReduced_apply_cons
+/-- Current combiner selection, raw lookup and procedure admission precede the
+same Reader/forwarding/C3 body. These Boolean admissions model supplied outcomes;
+Gerbil separately checks actual public metadata and procedure identity. -/
+def configuredSummary (selected lookupValid admitted : Bool) (context : SummaryContext) :
+    Run (Nat × Call String CallValue) :=
+  combineDirect
+    (do
+      record "select-combiner"
+      unless selected do throw "combiner lookup refused"
+      pure (fun (_ : Unit) (current : SummaryContext) =>
+        forwardedSummary current.1 (some 2) current.2))
+    (do record "lookup-fragments"; unless lookupValid do throw "fragment lookup refused"; pure ())
+    (fun _ => do record "admit-combiner"; unless admitted do throw "combiner is not a procedure") context
+/-- Direct transport retains both results, complete row and exact qualified trace. -/
+example : (configuredSummary true true true (10, true)).run [] = .ok ((46,
+    ⟨[.inr (some 10), .inr (some 2), .inr (some 2), .inl "payload", .inr none],
+     [("label", .inr none)]⟩),
+    ["select-combiner", "lookup-fragments", "admit-combiner", "summary",
+     "around-enter", "billing-before", "risk-before", "billing-primary", "base",
+     "risk-after", "billing-after", "around-exit"]) := rfl
+/-- Each boundary retains its own refusal; none falls through to another method. -/
+example : [((configuredSummary false false false (10,true)).run []).map (fun _ => ()),
+    ((configuredSummary true false false (10,true)).run []).map (fun _ => ()),
+    ((configuredSummary true true false (10,true)).run []).map (fun _ => ()),
+    ((configuredSummary true true true (10,false)).run []).map (fun _ => ())] =
+    [.error "combiner lookup refused", .error "fragment lookup refused",
+     .error "combiner is not a procedure", .error "slot is hidden or undeclared"] := rfl
+/-- A repaired current admission uses fresh data through the same direct workflow. -/
+example : ((configuredSummary true true true (20,true)).run []).map (fun result => result.1.1) =
+    .ok 86 := rfl
+/-- Illustrative source-operation prices preserve row cost and remove relay cost.
+These numbers are not measured Gerbil bytes or execution times. -/
+example : (capturedWork 7).charge 1 3 2 = (directWork 7).charge 1 3 2 + 5 := rfl
+#print axioms combineDirect_eq
+#print axioms combineDirect_lookup_error
+#print axioms combination_charge_difference
+#print axioms combination_charge_le
 end LeanPoo.Examples.DeclaredMethods

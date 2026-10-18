@@ -206,4 +206,84 @@ theorem forwardResolved_compose (outer inner : List Value) (call : Call Key Valu
     forwardResolved outer (forwardResolved inner call innerRest) outerRest =
       forwardResolved (outer ++ inner) call (innerRest ++ outerRest) := by
   simp [forwardResolved, List.append_assoc]
+variable {M : Type → Type} {Fragments Row Result Error : Type}
+
+/-- Historical variadic transport only captures fragments and relays the row.
+The host's rest-list construction is a separate implementation obligation. -/
+def captureCombination (combine : Fragments → Row → M Result) (fragments : Fragments) : Row → M Result :=
+  fun row => combine fragments row
+
+/-- Direct generic lowering selects the combiner, then demands the raw fragments,
+then checks the combiner before invoking it on the complete resolved row. -/
+def combineDirect [Monad M] (selection : M (Fragments → Row → M Result))
+    (lookup : M Fragments) (admit : (Fragments → Row → M Result) → M Unit) (row : Row) : M Result := do
+  let combine ← selection
+  let fragments ← lookup
+  admit combine
+  combine fragments row
+
+/-- The preceding lowering has the same ordered stages plus an ephemeral relay. -/
+def combineCaptured [Monad M] (selection : M (Fragments → Row → M Result))
+    (lookup : M Fragments) (admit : (Fragments → Row → M Result) → M Unit) (row : Row) : M Result := do
+  let combine ← selection
+  let fragments ← lookup
+  admit combine
+  captureCombination combine fragments row
+
+/-- Relay elimination preserves monadic effects, complete rows and result carriers.
+No associativity rewrite or reordering of selection, lookup or admission is used. -/
+theorem combineDirect_eq [Monad M] (selection : M (Fragments → Row → M Result))
+    (lookup : M Fragments) (admit) (row : Row) :
+    combineDirect selection lookup admit row = combineCaptured selection lookup admit row := rfl
+
+/-- Combiner-selection errors prevent raw lookup and preserve the exact error. -/
+theorem combineDirect_selection_error (error : Error) (lookup : Except Error Fragments)
+    (admit) (row : Row) :
+    combineDirect (.error error : Except Error (Fragments → Row → Except Error Result)) lookup admit row =
+      .error error := rfl
+
+/-- Lookup errors precede procedure admission, even when that admission refuses. -/
+theorem combineDirect_lookup_error (combine : Fragments → Row → Except Error Result)
+    (error : Error) (admit) (row : Row) :
+    combineDirect (.ok combine : Except Error (Fragments → Row → Except Error Result)) (.error error) admit row = .error error := rfl
+
+/-- Procedure admission errors cannot execute a method or trigger another clause. -/
+theorem combineDirect_admission_error (combine : Fragments → Row → Except Error Result)
+    (fragments : Fragments) (error : Error) (row : Row) :
+    combineDirect (.ok combine : Except Error (Fragments → Row → Except Error Result)) (.ok fragments) (fun _ => .error error) row = .error error := rfl
+
+/-- Successful transport preserves arbitrary multiple-result representations. -/
+theorem combineDirect_success (combine : Fragments → Row → Except Error Result)
+    (fragments : Fragments) (row : Row) :
+    combineDirect (.ok combine : Except Error (Fragments → Row → Except Error Result)) (.ok fragments) (fun _ => .ok ()) row = combine fragments row := rfl
+
+/-- Explicit source-level transport counts, excluding shared lookup, admission,
+combiner work and the runtime representation of the supplied row cells. These
+are a model, not a claim about allocations after either compiler optimizes. -/
+structure CombinationWork where
+  rowCells : Nat
+  relayClosures : Nat
+  relayCalls : Nat
+  deriving Repr, DecidableEq
+
+/-- The historical bridge transports the same row through one temporary relay. -/
+def capturedWork (width : Nat) : CombinationWork := ⟨width, 1, 1⟩
+/-- Core list/apply lowering transports the row without that temporary relay. -/
+def directWork (width : Nat) : CombinationWork := ⟨width, 0, 0⟩
+/-- Any nonnegative source-operation prices can be supplied by an implementation. -/
+def CombinationWork.charge (work : CombinationWork) (cell closure call : Nat) : Nat :=
+  work.rowCells * cell + work.relayClosures * closure + work.relayCalls * call
+/-- The model charges the old bridge exactly one closure and relay call more. -/
+theorem combination_charge_difference (width cell closure call : Nat) :
+    (capturedWork width).charge cell closure call =
+      (directWork width).charge cell closure call + closure + call := by
+  simp [capturedWork, directWork, CombinationWork.charge]
+/-- Eliminating the relay never increases this model's weighted transport cost. -/
+theorem combination_charge_le (width cell closure call : Nat) :
+    (directWork width).charge cell closure call ≤ (capturedWork width).charge cell closure call := by
+  rw [combination_charge_difference]
+  omega
+/-- The number of encoded row cells is unchanged for every width, including zero. -/
+theorem combination_row_cells (width : Nat) :
+    (directWork width).rowCells = (capturedWork width).rowCells := rfl
 end LeanPoo.Functional.FunctionSignature

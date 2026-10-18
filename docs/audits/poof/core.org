@@ -78,3 +78,14 @@ The generalized Reader/method integration advances future work; host mutable-cel
 capture and standard list contracts are separate Scheme regression obligations.
 The existing receipt is rebound to the reviewed Compose source only; no original
 requirement, completeness flag or source-check expectation is promoted.
+
+* Direct combined-generic transport review
+
+The original discussion at ~poof.scrbl~ lines 2063--2089 separates sorted labelled
+fragments from their representation-dependent mixing function. Directly passing
+that function its resolved row does not change qualifier semantics. New
+~FunctionSignature~ laws remove only an identity relay, retaining monadic
+selection, fragment lookup and admission order. The source-operation cost model
+has explicit prices; host compilation, actual allocations and GC remain separate
+Scheme measurement obligations. Existing original checks and completeness flags
+are unchanged; generalized declaration/MOP integration remains future work.

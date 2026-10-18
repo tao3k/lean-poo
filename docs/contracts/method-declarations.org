@@ -124,3 +124,24 @@ keyword payloads, metadata/type refusal priority and retry.  Supplied argument a
 metadata admission, host syntax identity and numeric domains are premises.  These
 are not proofs of core parsing, macro hygiene, predicates or fixnum ranges.  This
 continues generalized-prototype/MOP and type-metadata future work.
+
+* Direct combined-generic forwarding
+
+The generic compiler delegates resolved-row construction to the same core
+signature projection and standard ~list~ / ~apply~ lowering used by ordinary
+calls. It selects the current combination expression, demands the raw inherited
+fragment slot, checks that the combiner is a procedure, then directly supplies
+both fragments and the complete row. The previous temporary variadic forwarding
+procedure is removed. Defaults, predicate contracts and keyword escape semantics
+remain owned by Gerbil. Selection/lookup failures retain precedence and identity;
+no successful metadata admission is cached across calls.
+
+~FunctionSignature.combineDirect_eq~ proves this relay elimination for arbitrary
+monadic effects. The refusal laws and matching top-level examples preserve the
+selection/lookup/admission boundaries and the full Reader/qualified-method trace.
+The explicit ~CombinationWork~ source-operation model keeps row cells unchanged
+and removes one relay closure/call at nonnegative supplied prices. This is not a
+compiler allocation theorem: the standard paired Scheme study separately tests
+single-operation allocation, hot calls and full Reader/reflection/C3 workflows.
+This supports the original article's user-defined method-combination and future
+MOP work; it does not replace its method-combination semantics.
