@@ -287,6 +287,7 @@
   "Examples/Support/RecursiveApprovals.lean",
   "Examples/Support/RecursiveTopology.lean",
   "Examples/TargetAndWrapping.lean",
+  "Examples/TypedMethodDeclarations.lean",
   "Examples/ValidatedConfiguration.lean",
   "Examples/ValidatedOrders.lean",
   "Examples/ValidationWorkflow.lean",

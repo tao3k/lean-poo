@@ -1,9 +1,11 @@
 import LeanPoo.Object.MethodCombinationSemantics
+import LeanPoo.Functional.DeclarativeMetadata
 
 /-! Record and qualified method declarations share one fragment stream. This
 models source-order collection, inherited assembly and receiver-generic invocation;
 Gerbil syntax expansion, policy admission and mutable invalidation have controls. -/
 namespace LeanPoo.Object.MethodCombination
+variable {Self : Type}
 /-- One extensible declaration stream can contribute data and qualified methods. -/
 inductive Fragment (Data Receiver : Type) (M : Type → Type) (Result : Type) where
   | slot (name : String) (value : Data)
@@ -151,3 +153,60 @@ theorem contributionCharge_threshold (setup calls guard check cachedGC checkedGC
   simp [contributionCharge]
 
 end LeanPoo.Object.MethodCombination
+
+/-! Certified typed declarations reuse the existing edit and negative-watch
+semantics. Args is the admitted argument carrier; Gerbil core formal binding,
+runtime Type normalization and metadata identity are checked by Scheme tests. -/
+namespace LeanPoo.Functional.DeclarativeMetadata
+open Object DispatchExtension
+variable {Args Method Result : Type}
+variable {seed : Multimethod Args Method Result} {watches : List (Watch Args)}
+variable {edits : List (Edit Args Method)}
+
+/-- Local and inherited fragments compile once into the existing transaction.
+The caller supplies one common certified signature; mismatched signatures never
+reach this typed operation. Ancestor edits precede local edits; each batch retains existing edit semantics. -/
+def assembleDeclared (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method)) :=
+  guard seed watches certified ((inherited ++ front).map Declaration.compile)
+
+/-- Acceptance requires both complete registration and every negative assumption
+on that exact completed candidate, rather than separate approvals of fragments. -/
+theorem assembleDeclared_ok_iff (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method)) :
+    (∃ revision, assembleDeclared seed watches certified front inherited = .ok revision) ↔
+      ∃ candidate, install seed (inherited ++ front) = .ok candidate ∧ AllAbsent candidate watches :=
+  guard_ok_iff seed watches certified _
+
+/-- Coalescing local blocks preserves the installed candidate and registration
+errors, while keeping ancestor edits ahead of both local blocks. -/
+theorem assembleDeclared_coalesce (seed : Multimethod Args Method Result)
+    (first second inherited : List (Declaration Args Method)) :
+    install seed (inherited ++ (first ++ second)) = install seed ((inherited ++ first) ++ second) := by
+  rw [List.append_assoc]
+
+/-- The compiled owner has a sound candidate cache whenever its seed does. -/
+theorem assembleDeclared_cacheSound (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (sound : seed.CacheSound) (revision : Revision seed watches edits) :
+    revision.snapshot.CacheSound := revision.cacheSound sound
+
+/-- Invocation uses the actual compiled snapshot and returns its complete cache
+successor with the transported absence proof. No declaration is reinstalled here. -/
+def invokeDeclared (revision : Revision seed watches edits) (args : Args) :=
+  revision.certificate.invoke args
+
+/-- A returned successor certifies every original watch at its own snapshot. -/
+theorem invokeDeclared_absent (revision : Revision seed watches edits) (args : Args)
+    (invocation : DispatchExtension.Invocation revision.snapshot watches args)
+    (_called : invokeDeclared revision args = .ok invocation) :
+    AllAbsent invocation.snapshot watches := invocation.certificate.absent
+
+/-- Refused declaration publication leaves the original generic/cache accessible.
+This is immutable state preservation, not rollback of arbitrary external effects. -/
+theorem declaredPublication_refused (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method))
+    (failure : DispatchExtension.Failure seed watches ((inherited ++ front).map Declaration.compile))
+    (refused : assembleDeclared seed watches certified front inherited = .error failure) :
+    publish seed watches certified ((inherited ++ front).map Declaration.compile) = (.error failure, seed) :=
+  publish_refused seed watches certified _ failure refused
+end LeanPoo.Functional.DeclarativeMetadata
