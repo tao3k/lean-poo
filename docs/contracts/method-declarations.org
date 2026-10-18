@@ -71,3 +71,20 @@ refusal/retry values. Finite immutable lists and supplied callback semantics are
 model premises. Gerbil tests separately exercise mutable spine ownership, actual
 macro expansion and registered source guards. No runtime/compiler or performance
 proof follows from the list laws.
+
+** Prefixed bindings through current method reflection
+
+Gerbil's existing prefixed field syntax now lowers complete binding groups through
+core lexical binding and definition sequences.  The declared-methods example
+retains an initial snapshot, reads current receiver fields, gates through FUN
+approval, then checks current public metadata before combined invocation.  Retry
+retains the original snapshot while observing revised fields and visibility.
+
+=Functional.Parameters.withSlotBindings= uses the standard right fold over already
+resolved alias/key pairs.  Its six laws prove recursive-nesting equivalence,
+composition, duplicate shadowing and unused/empty behavior.  Four snapshot laws
+add sequential binding, recursive equivalence and refusal.  =Examples/Parameters.lean=
+checks delayed revision reads versus snapshots and nested ownership.  Host syntax
+identity/hygiene, mutable storage, failed definition installation and nonlocal
+control are separate Gerbil obligations.  This is generalized-prototype/MOP future
+work, not compiler verification or completion of every original TODO.

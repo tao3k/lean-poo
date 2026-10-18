@@ -134,4 +134,51 @@ example : withSlotScope (fun owner name revision => scopedLookup owner name + re
 #print axioms withSlotScope_capture
 #print axioms withSlotScope_congr
 #print axioms withSlotScope_revision
+/-- Alias identity is already resolved here. The host expander must additionally
+preserve lexical identity; source revisions remain explicit reader inputs. -/
+def prefixedFields (key : String) (revision : Int) : Except String Int :=
+  if key = "rate" then .ok (10 + revision) else .error "missing field"
+/-- A retained field reader follows revisions; the initial snapshot stays fixed. -/
+example : withSlotBindings prefixedFields [("account-rate", "rate")]
+    (fun _ _ => .error "unbound") (fun fields =>
+      let initial := fields "account-rate" 0
+      (initial, fields "account-rate" 10)) = (.ok 10, .ok 20) := rfl
+/-- Nested aliases shadow locally without changing a captured outer lookup. -/
+example : withSlotBindings (fun key => if key = "rate" then (10 : Int) else 7)
+    [("rate", "rate")] (fun _ => 0) (fun outer =>
+      withSlotBindings (fun _ => (7 : Int)) [("rate", "rate")] outer
+        (fun inner => (outer "rate", inner "rate"))) = (10, 7) := by decide
+/-- Repeated names retain inner binding semantics; removing them indiscriminately
+would instead select the first key and is not an equivalent lowering. -/
+example : withSlotBindings (fun key => if key = "old" then (10 : Int) else 20)
+    [("field", "old"), ("field", "new")] (fun _ => 0) (fun fields => fields "field") = 20 := by decide
+/-- An unused missing field remains unselected, whereas actual use refuses. -/
+example : withSlotBindings prefixedFields [("unused", "missing")]
+    (fun _ _ => .error "unbound") (fun _ => (Except.ok 7 : Except String Int)) = .ok 7 := rfl
+example : withSlotBindings prefixedFields [("used", "missing")]
+    (fun _ _ => .error "unbound") (fun fields => fields "used" 0) = .error "missing field" := rfl
+#print axioms withSlotBindings_nil
+#print axioms withSlotBindings_cons
+#print axioms withSlotBindings_recursive
+#print axioms withSlotBindings_append
+#print axioms withSlotBindings_shadow
+#print axioms withSlotBindings_unused
+/-- Prefix effects survive snapshot refusal; neither the suffix nor body runs. -/
+example : ((snapshotSlotBindings
+    (fun (_ : String → Int) key => do
+      modify (· ++ [key])
+      if key = "refused" then throw "snapshot refused" else pure 10)
+    [("first", "rate"), ("second", "refused"), ("last", "unreachable")]
+    (fun _ => 0) (fun fields => do modify (· ++ ["body"]); pure (fields "first"))) :
+    ExceptT String (StateM (List String)) Int).run.run [] =
+    (.error "snapshot refused", ["rate", "refused"]) := rfl
+/-- A later snapshot may use an earlier binding; the body sees both snapshots. -/
+example : snapshotSlotBindings
+    (fun (fields : String → Int) key => (Except.ok (fields key + 1) : Except String Int))
+    [("first", "rate"), ("second", "first")] (fun _ => 10)
+    (fun fields => .ok (fields "first", fields "second")) = .ok (11, 12) := rfl
+#print axioms snapshotSlotBindings_nil
+#print axioms snapshotSlotBindings_cons
+#print axioms snapshotSlotBindings_recursive
+#print axioms snapshotSlotBindings_refused
 end LeanPoo.Examples.Parameters
