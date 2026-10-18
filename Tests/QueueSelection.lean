@@ -13,11 +13,14 @@ open Functional PositiveEquations IncrementalClosure
         for profile in ([QueueSelection.reference,⟨⟨0,0,0⟩,0⟩,⟨⟨1,4,4⟩,0⟩,⟨⟨1,4,4⟩,1000⟩] : List QueueSelection.Profile) do
           let prepared := QueueSelection.prepare profile plan
           let result := prepared.run
+          -- chargeRun_eq preserves the same two ceiling checks while sharing
+          -- this actual run. Reading charge twice used to execute more solvers.
+          let charge := prepared.chargeRun result
           unless result.store == old.store &&
               (result.stats.pops,result.stats.evaluations,result.stats.nodes,result.stats.writes,result.stats.pushes) ==
               (old.stats.pops,old.stats.evaluations,old.stats.nodes,old.stats.writes,old.stats.pushes) do
             throw (IO.userError "selected exact core")
-          unless prepared.charge ≤ prepared.appendCeiling && prepared.charge ≤ prepared.hybridCeiling &&
+          unless charge ≤ prepared.appendCeiling && charge ≤ prepared.hybridCeiling &&
               result.work.copied+result.work.frames ≤ plan.edgeCount do throw (IO.userError "selected cost")
           for index in List.finRange n do
             unless result.store[index.val] == ClosureScenarios.oracle family seed index.val do throw (IO.userError "scalar oracle")
@@ -33,6 +36,7 @@ open Functional PositiveEquations IncrementalClosure
 #print axioms QueueSelection.reference_capacity
 #print axioms IncrementalClosure.appendWatchers_eq
 #print axioms QueueSelection.selected_bound
+#print axioms QueueSelection.Prepared.chargeRun_eq
 #print axioms QueueSelection.small_degrees_append
 #print axioms QueueSelection.canonical
 #print axioms QueueSelection.requested_words

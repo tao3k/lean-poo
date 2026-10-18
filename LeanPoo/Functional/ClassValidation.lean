@@ -154,4 +154,115 @@ theorem initialized_refinement [DecidableEq Key]
       simp_all [ObjectContract.reportGate]
   exact (ObjectContract.refine_accepts_iff contract additional result path).mp empty
 
+
+/-- Finite record Types describe presence separately from the child Type.
+The schema is explicit: defaults, computed fields, hooks and C3 are host policies. -/
+structure RecordType (Key Field : Type) where
+  fields : List (Key × Field × Bool)
+  closed : Bool
+  deriving Repr
+
+/-- Exact ordered field matching is deliberately conservative. Required source
+fields may replace optional targets; optional sources cannot promise presence. -/
+def recordFieldsCheck [DecidableEq Key] (test : Field → Field → Bool) :
+    List (Key × Field × Bool) → List (Key × Field × Bool) → Bool
+  | [], [] => true
+  | (key, type, optional) :: rest, (key', type', optional') :: rest' =>
+      decide (key = key') && (!optional || optional') && test type type' && recordFieldsCheck test rest rest'
+  | _, _ => false
+
+/-- Sealed targets require a sealed source. This does not grant mutable writes. -/
+def recordCheck [DecidableEq Key] (test : Field → Field → Bool)
+    (source target : RecordType Key Field) : Bool :=
+  (!target.closed || source.closed) && recordFieldsCheck test source.fields target.fields
+
+/-- The declarative relation retains exact names and presence obligations. -/
+def RecordFieldsReplace (relation : Field → Field → Prop) :
+    List (Key × Field × Bool) → List (Key × Field × Bool) → Prop
+  | [], [] => True
+  | source :: rest, target :: rest' => source.1 = target.1 ∧
+      (source.2.2 = true → target.2.2 = true) ∧ relation source.2.1 target.2.1 ∧
+      RecordFieldsReplace relation rest rest'
+  | _, _ => False
+
+/-- Every finite field comparison has the stated declarative derivation. -/
+theorem recordFieldsCheck_sound [DecidableEq Key] (test : Field → Field → Bool)
+    (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
+    (source target : List (Key × Field × Bool))
+    (accepted : recordFieldsCheck test source target = true) : RecordFieldsReplace relation source target := by
+  induction source generalizing target with
+  | nil => cases target with
+    | nil => trivial
+    | cons head rest => simp [recordFieldsCheck] at accepted
+  | cons head rest ih =>
+    cases target with
+    | nil => simp [recordFieldsCheck] at accepted
+    | cons head' rest' =>
+      rcases head with ⟨key, type, optional⟩
+      rcases head' with ⟨key', type', optional'⟩
+      have parts : ((key = key' ∧ (!optional || optional') = true) ∧ test type type' = true) ∧
+          recordFieldsCheck test rest rest' = true := by
+        simpa only [recordFieldsCheck, Bool.and_eq_true, decide_eq_true_eq] using accepted
+      refine ⟨parts.1.1.1, ?_, sound _ _ parts.1.2, ih rest' parts.2⟩
+      intro absent
+      change optional = true at absent
+      simpa [absent] using parts.1.1.2
+
+/-- Success simultaneously preserves sealedness and all field laws. -/
+theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool)
+    (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
+    (source target : RecordType Key Field) (accepted : recordCheck test source target = true) :
+    (target.closed = true → source.closed = true) ∧ RecordFieldsReplace relation source.fields target.fields := by
+  have both : (!target.closed || source.closed) = true ∧ recordFieldsCheck test source.fields target.fields = true := by
+    simpa only [recordCheck, Bool.and_eq_true] using accepted
+  exact ⟨fun closed => by simpa [closed] using both.1,
+    recordFieldsCheck_sound test relation sound _ _ both.2⟩
+
+/-- Optional absence is an observation, never a request to invent a default. -/
+def slotAdmits (accepts : Field → Value → Prop) (type : Field) (optional : Bool) : Option Value → Prop
+  | none => optional = true
+  | some value => accepts type value
+
+/-- Read replacement composes field behavior with required/optional presence. -/
+theorem slot_replacement (accepts : Field → Value → Prop) (source target : Field)
+    (optional optional' : Bool) (presence : optional = true → optional' = true)
+    (included : ∀ value, accepts source value → accepts target value) (observe : Option Value)
+    (valid : slotAdmits accepts source optional observe) : slotAdmits accepts target optional' observe := by
+  cases observe with
+  | none => exact presence valid
+  | some value => exact included value valid
+
+/-- A finite normalized field snapshot retains exact position count. These are
+observed values, not an initialization algorithm or an inferred default source. -/
+def recordValuesAdmit (accepts : Field → Value → Prop) :
+    List (Key × Field × Bool) → List (Option Value) → Prop
+  | [], [] => True
+  | field :: rest, value :: values => slotAdmits accepts field.2.1 field.2.2 value ∧
+      recordValuesAdmit accepts rest values
+  | _, _ => False
+
+/-- Accepted record fields reuse the SAME observed snapshot, including absence.
+Behavioral inclusion is a supplied Type interpretation premise. The source and
+result are not claimed to share mutable identity or arbitrary host callbacks. -/
+theorem record_field_replacement [DecidableEq Key] (test : Field → Field → Bool)
+    (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
+    (accepts : Field → Value → Prop)
+    (behavior : ∀ a b, relation a b → ∀ value, accepts a value → accepts b value)
+    (source target : List (Key × Field × Bool)) (accepted : recordFieldsCheck test source target = true)
+    (observed : List (Option Value)) (valid : recordValuesAdmit accepts source observed) :
+    recordValuesAdmit accepts target observed := by
+  have derived := recordFieldsCheck_sound test relation sound source target accepted
+  clear accepted
+  induction source generalizing target observed with
+  | nil => cases target <;> cases observed <;> simp_all [recordValuesAdmit, RecordFieldsReplace]
+  | cons head rest ih =>
+    cases target with
+    | nil => simp [RecordFieldsReplace] at derived
+    | cons head' rest' =>
+      cases observed with
+      | nil => simp [recordValuesAdmit] at valid
+      | cons value values =>
+        exact ⟨slot_replacement accepts _ _ _ _ derived.2.1 (behavior _ _ derived.2.2.1) value valid.1,
+          ih rest' values valid.2 derived.2.2.2⟩
+
 end LeanPoo.Functional.ClassValidation

@@ -176,3 +176,41 @@ wrapping, refine/FUN/evidence publication and failed-request retry. Surface kind
 unique Sum tags, stable descriptor callbacks and faithful host projections remain
 explicit premises; proofs do not establish GC timing, compiler correctness or
 permission to mutate covariant containers.
+
+
+## Explicit Record results and Class initialization
+
+Finite `(Record ((name Type required/optional) ...) open/closed)` expressions now
+flow through the same prefix specialization, call-derived inference and typed
+declaration builder as other Function arguments/results. The Scheme compiler
+reuses Class. and RecordSlot; actual multiple inheritance, computed overrides,
+defaults and initialization hooks retain their existing checked execution.
+Record data callbacks remain distinct from certified method groups: a root Record
+is explicitly refused as a method catalog before its builder can run. Object
+catalog paths remain the declaration protocol.
+
+`Functional.ClassValidation.RecordType` models exact ordered fields, optional
+presence and sealedness. `recordFieldsCheck_sound`, `recordCheck_sound` and
+`record_field_replacement` establish the finite relation and conditional replacement
+of one observed snapshot. Required may replace optional; optional cannot replace
+required; open cannot replace closed. No mutable write, nominal subtype, arbitrary
+width/permutation inclusion or host callback semantics follows. The existing
+checked-initialization proof separately requires validation before and after a
+hook; it is not inferred by observing that a record has a default.
+
+`Examples/ClassContracts.lean` and Scheme's `RecordServiceType` share the same four
+fields, optional callback, fixed Self prefix, original bound, Integer argument and
+expected Record constraint. Complete finite search selects Super = Integer before
+installing a generic. The Scheme example combines prepared qualifiers,
+`.defgeneric`, multiple inheritance, a computed override, checked hook, FUN,
+refinement, evidence binding and IO, including failure/retry controls.
+This advances the paper's type-system future work using its distinction between a
+class prototype and an instantiated runtime Type descriptor. Implicit inference
+from arbitrary Class/Slot callbacks and candidate-dependent layouts remains open.
+
+The complete local gate also exposed redundant solving in the existing queue
+selection stress test. `Prepared.chargeRun` computes a charge from a retained run;
+`chargeRun_eq` proves exact equality to `Prepared.charge` when that result is the
+actual selected run. The stress test retains every scenario/profile/oracle/ceiling
+assertion while sharing that result. No timeout, heap limit, checked workload or
+cost conclusion is weakened, and this is not a Scheme wall-time speed claim.

@@ -102,9 +102,24 @@ def Prepared.run (prepared : Prepared profile plan) : HybridClosure.Run n :=
                 ⟨result.store,result.stats,{frames := result.stats.writes}⟩
   | .hybrid => HybridClosure.measured profile.prices plan
 
+/-- Compute the differential charge of a supplied run without executing the
+solver again. The caller must retain the actual selected run; arbitrary supplied
+statistics do not inherit the selected-bound theorem. -/
+def Prepared.chargeRun (prepared : Prepared profile plan) (result : HybridClosure.Run n) : Nat :=
+  result.work.fee profile.prices +
+    if prepared.choose == .hybrid then profile.decision*result.stats.writes else 0
+
+/-- The ordinary cost observation executes the selected solver once. Consumers
+that already hold its result can use chargeRun under chargeRun_eq. -/
 def Prepared.charge (prepared : Prepared profile plan) : Nat :=
-  prepared.run.work.fee profile.prices +
-    if prepared.choose == .hybrid then profile.decision*prepared.run.stats.writes else 0
+  prepared.chargeRun prepared.run
+
+/-- Reusing the actual selected run preserves the exact original cost judgment;
+it is not a claim that arbitrary externally supplied statistics are trustworthy. -/
+theorem Prepared.chargeRun_eq (prepared : Prepared profile plan) (result : HybridClosure.Run n)
+    (actual : result = prepared.run) : prepared.chargeRun result = prepared.charge := by
+  subst result
+  rfl
 
 theorem run_core (prepared : Prepared profile plan) :
     prepared.run.core = ((fastClose plan).store,(fastClose plan).stats) := by
@@ -116,22 +131,21 @@ theorem run_core (prepared : Prepared profile plan) :
 
 theorem actual_bound (prepared : Prepared profile plan) :
     prepared.charge ≤ prepared.ceiling prepared.choose := by
-  unfold Prepared.charge Prepared.run
+  unfold Prepared.charge Prepared.chargeRun Prepared.run
   cases chosen : prepared.choose with
   | append =>
-    simp only [chosen,BEq.rfl,Bool.false_eq_true,ite_false,Nat.add_zero,HybridClosure.Work.fee,Nat.mul_zero]
+    simp only [Nat.add_zero,HybridClosure.Work.fee,Nat.mul_zero]
     change profile.prices.copy*(fastClose plan).stats.pushes ≤ prepared.appendCeiling
     rw [prepared.append_eq]
     have caps := ClosureCosts.actual_ceiling plan
     rw [ChunkedClosure.close_stats] at caps
     exact Nat.mul_le_mul_left _ caps.pushes
   | chunked =>
-    simp only [chosen,(show (Queue.chunked == Queue.hybrid) = false from rfl),Bool.false_eq_true,ite_false,HybridClosure.Work.fee,Nat.mul_zero,Nat.zero_add]
+    simp only [(show (Queue.chunked == Queue.hybrid) = false from rfl),Bool.false_eq_true,ite_false,HybridClosure.Work.fee,Nat.mul_zero,Nat.zero_add]
     change (profile.prices.suspend+profile.prices.resume)*(ChunkedClosure.close plan).stats.writes+0 ≤ chunkCeiling profile n
     have caps := ClosureCosts.actual_ceiling plan
     simpa [chunkCeiling,ClosureCosts.ceiling] using Nat.mul_le_mul_left (profile.prices.suspend+profile.prices.resume) caps.writes
   | hybrid =>
-    simp only [chosen,BEq.rfl,ite_true]
     change _ ≤ prepared.hybridCeiling
     rw [prepared.hybrid_eq]
     exact HybridClosure.measured_credit _ _ _

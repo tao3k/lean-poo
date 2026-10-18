@@ -1,5 +1,6 @@
 import LeanPoo.Functional.ClassValidation
 import LeanPoo.Functional.FunctionValidation
+import LeanPoo.Functional.PrototypeTypes
 
 /-! Finite counterpart of the inherited service Record: selected defaults,
 computed audit, checked initialization, nested plugins, refinement and binding.
@@ -192,4 +193,46 @@ def test : Except String Unit := do
 #print axioms ClassValidation.initialized_refinement
 #print axioms validateObject_refine
 #print axioms validated_binding
+/-- The same explicit required/optional record signature used by the Gerbil
+factory after the ground Self prefix is fixed. Field labels are finite IDs. -/
+def inferredRecord (self super : PrototypeTypes.Ty) : ClassValidation.RecordType Nat PrototypeTypes.Ty :=
+  ⟨[(0, .function [self] [super], false), (1, .atom .uint, false),
+    (2, .atom .uint, false), (3, .function [self] [super], true)], false⟩
+example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+    (inferredRecord (.atom .uint) (.atom .integer))
+    (inferredRecord (.atom .integer) (.atom .uint)) = true := by decide
+example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+    (⟨[(0, .atom .uint, true)], true⟩ : ClassValidation.RecordType Nat PrototypeTypes.Ty)
+    ⟨[(0, .atom .integer, false)], false⟩ = false := by decide
+example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+    (⟨[(0, .atom .uint, false)], false⟩ : ClassValidation.RecordType Nat PrototypeTypes.Ty)
+    ⟨[(0, .atom .uint, false)], true⟩ = false := by decide
+/-- The prefix fixes Self to UInt; the argument and callback variance together
+force the same Super = Integer as the executable Gerbil call observation. -/
+def recordCandidateValid (super : PrototypeTypes.Ty) : Bool :=
+  PrototypeTypes.check 8 (.atom .uint) super &&
+  PrototypeTypes.check 8 (.atom .integer) super &&
+  ClassValidation.recordCheck (PrototypeTypes.check 8)
+    (inferredRecord (.atom .uint) super) (inferredRecord (.atom .uint) (.atom .integer))
+example : PrototypeTypes.infer recordCandidateValid [.atom .uint, .atom .integer] =
+    .unique (.atom .integer) := by
+  have bad : recordCandidateValid (.atom .uint) = false := by decide
+  have good : recordCandidateValid (.atom .integer) = true := by decide
+  simp [PrototypeTypes.infer, bad, good]
+/-- A selected complete inference assignment derives the entire record signature
+as one shared obligation. This reuses the finite search rather than a field solver. -/
+example (candidates : List (Nat → PrototypeTypes.Ty)) (target : ClassValidation.RecordType Nat PrototypeTypes.Ty)
+    (accepted : PrototypeTypes.infer (fun env => ClassValidation.recordCheck (PrototypeTypes.check 8)
+        (inferredRecord (env 0) (env 1)) target) candidates = .unique env) :
+    (target.closed = true → (inferredRecord (env 0) (env 1)).closed = true) ∧
+      ClassValidation.RecordFieldsReplace PrototypeTypes.Subtype
+        (inferredRecord (env 0) (env 1)).fields target.fields := by
+  exact ClassValidation.recordCheck_sound _ _ (PrototypeTypes.check_sound 8) _ _
+    (PrototypeTypes.infer_unique _ _ accepted).2
+/-- Optional absence remains absence, and cannot satisfy a required target. -/
+example : ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () true none := rfl
+example : ¬ ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () false none := by simp [ClassValidation.slotAdmits]
+#print axioms ClassValidation.recordFieldsCheck_sound
+#print axioms ClassValidation.recordCheck_sound
+#print axioms ClassValidation.record_field_replacement
 end LeanPoo.Examples.ClassContracts
