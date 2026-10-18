@@ -127,4 +127,76 @@ example : restoreKeywords ["mode", "label"]
 #print axioms forwardResolved_positional
 #print axioms forwardResolved_length
 #print axioms forwardResolved_compose
+/-- One Reader invocation carries fresh data and approval into the same family. -/
+abbrev SummaryContext := Nat × Bool
+/-- Present false is a tag value; a missing tag declaration is represented outside
+this result, by the supplied metadata lookup's outer Option. -/
+abbrev TaggedSummary := Option String × (Nat × Call String CallValue)
+/-- The existing logged interpreter is the carrier of each prototype layer. -/
+abbrev SummaryAction := SummaryContext → Run TaggedSummary
+/-- Homogeneous Reader extensions reuse the existing first-class Proto carrier. -/
+abbrev SummaryPrototype := Prototype.Proto Unit SummaryAction SummaryAction
+/-- Current approval precedes the inherited Reader action. -/
+def approvalPrototype : SummaryPrototype :=
+  fun _ inherited context => do
+      unless context.2 do throw "current approval refused"
+      record "approval"
+      inherited context
+/-- Supplied current policy changes the context before any generic invocation. -/
+def offsetPrototype (offset : Option Nat) : SummaryPrototype :=
+  fun _ inherited context => do
+      record "offset"
+      let amount ← match offset with
+        | none => throw "slot is hidden or undeclared"
+        | some amount => pure amount
+      inherited (context.1 + amount, context.2)
+/-- Observation follows successful completion of the inherited action. -/
+def observationPrototype : SummaryPrototype :=
+  fun _ inherited context => do
+      let result ← inherited context
+      record "observed"
+      pure result
+/-- Tag lookup follows method effects; present false differs from missing metadata. -/
+def tagPrototype (tag : Option (Option String)) : SummaryPrototype :=
+  fun _ inherited context => do
+      let result ← inherited context
+      record "tag"
+      let value ← match tag with
+        | none => throw "slot is hidden or undeclared"
+        | some value => pure value
+      pure (value, result.2)
+/-- Four ordinary extensions build the same Reader chain as Gerbil. Current
+metadata is supplied; host mutation/capture and prior refusal effects are tested there. -/
+def summaryPrototypeLayers (offset : Option Nat) (tag : Option (Option String)) :
+    List SummaryPrototype :=
+  [approvalPrototype, offsetPrototype offset, observationPrototype, tagPrototype tag]
+/-- Standard reduction assembles the existing typed forwarding workflow without
+using the unsafe unrestricted fixed point. No body runs during pure assembly. -/
+def prototypeSummary (offset : Option Nat) (tag : Option (Option String))
+    (units : Option Nat) (visible : Bool) : SummaryAction :=
+  Prototype.composeReduced (summaryPrototypeLayers offset tag) () (fun context => do
+    let result ← forwardedSummary context.1 units visible
+    pure (none, result))
+/-- Prototype layers retain the complete generic frame and qualified-method order. -/
+example : (prototypeSummary (some 1) (some none) (some 2) true (10, true)).run [] =
+    .ok ((none, (50, ⟨[.inr (some 11), .inr (some 2), .inr (some 2),
+      .inl "payload", .inr none], [("label", .inr none)]⟩)),
+      ["approval", "offset", "summary", "around-enter", "billing-before", "risk-before",
+       "billing-primary", "base", "risk-after", "billing-after", "around-exit", "tag", "observed"]) := rfl
+/-- Fresh policy/context input drives retry through the same prototype program. -/
+example : ((prototypeSummary (some 3) (some none) (some 2) true (20, true)).run []).map
+    (fun result => result.1.2.1) = .ok 98 := rfl
+/-- Approval, policy lookup, method visibility and post-result tag refusal remain
+distinct boundary failures. This Except carrier does not assert rollback of effects. -/
+example : [
+    ((prototypeSummary (some 1) (some none) (some 2) true (10, false)).run []).map (fun _ => ()),
+    ((prototypeSummary none (some none) (some 2) true (10, true)).run []).map (fun _ => ()),
+    ((prototypeSummary (some 1) (some none) (some 2) false (10, true)).run []).map (fun _ => ()),
+    ((prototypeSummary (some 1) none (some 2) true (10, true)).run []).map (fun _ => ())] =
+    [.error "current approval refused", .error "slot is hidden or undeclared",
+     .error "slot is hidden or undeclared", .error "slot is hidden or undeclared"] := rfl
+#print axioms Prototype.composeReduced_eq
+#print axioms Prototype.composeReduced_append
+#print axioms Prototype.compose_captured_suffix
+#print axioms Prototype.composeReduced_apply_cons
 end LeanPoo.Examples.DeclaredMethods

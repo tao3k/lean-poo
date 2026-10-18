@@ -66,3 +66,15 @@ The generic argument carrier can be a Lean type or the recursive dynamic Value
 universe. A kernel theorem preserves every existing value-only object read
 when it enters this protocol. Runtime FunctionOf descriptors and catalogs
 validate actual calls, with current-registry checks on hot results.
+
+* Standard finite prototype reduction review
+
+The original ~poof.scrbl~ composition at lines 486--545 uses the same final self,
+associative ~mix~ and identity-based right fold. Adding finite ~reducePrototypes~
+and ~composeReduced~ laws leaves ~identity~, ~compose~, typed ~Chain~, ~composeAll~
+and all fixed-point constructors unchanged. The new reduction is proved equal to
+that existing interpreter, with explicit singleton and current-suffix laws.
+The generalized Reader/method integration advances future work; host mutable-cell
+capture and standard list contracts are separate Scheme regression obligations.
+The existing receipt is rebound to the reviewed Compose source only; no original
+requirement, completeness flag or source-check expectation is promoted.

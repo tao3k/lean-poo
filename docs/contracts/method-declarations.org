@@ -1,5 +1,25 @@
 #+TITLE: Declaration fragments and combined receiver generics
 
+* First-class prototype recipe reduction
+
+The Racket inheritance construction composes first-class modular extensions;
+its method section also folds continuation programs. Gerbil's ~compose-proto*~
+now delegates complete long-suffix reduction to standard ~reduce-right~, retaining
+the small-chain identities and captured-head/current-suffix boundary. The Reader
+recipe in ~examples/declared-methods.ss~ combines approval, current policy reflection,
+typed/default/keyword/rest forwarding, simple collection and standard C3 methods.
+Refusal/retry, source-spine capture and prior effects are exercised in Scheme.
+
+Ten laws in ~LeanPoo.Prototype.Compose~ prove finite optional-right-fold equivalence
+to the existing ~composeAll~, singleton/cons/append behavior and same-self application.
+~compose_captured_suffix~ takes the current finite suffix explicitly; it does not
+prove host pointer mutation or capture timing. Top-level ~Examples/DeclaredMethods.lean~
+uses ordinary Proto layers and the existing forwarded method trace to check current
+policy retry, present-false tag data and approval/metadata refusals. Its Except carrier
+does not assert effect rollback. Core list contracts, macro/ABI behavior and unrestricted
+fixed-point termination remain outside these pure laws. This integrated MOP use
+advances the article's future work; no new namespace or performance claim is introduced.
+
 * Source correspondence
 
 Racket's method-fragment section specifies standard qualifier order, and its
