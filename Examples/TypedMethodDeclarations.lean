@@ -1,4 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.FunctionSignature
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -135,4 +136,72 @@ def boundFields (name : String) : Option Nat := if name = "Self" then some 1 els
 #print axioms bindingsCurrent_sound
 #print axioms bindingsCurrent_refuses
 #print axioms admitDeclaredBindings_stable
+
+open Functional.FunctionSignature
+/-- The companion service schema has optional/rest/keyword Types and a returned
+Function. All Type-bearing positions use the existing explicit environment. -/
+def reportSchema : TypedSignature String Expr :=
+  { outputs := [.var 0, .function [.var 0] [.var 1]]
+    inputs := [.var 1]
+    optional := [.var 1]
+    keywords := [("scale", .ground (.atom .uint))]
+    rest := some (.var 1) }
+/-- Complete finite inference substitutes the original prefix and residual choice
+before producing the descriptor used by declaration construction. -/
+def buildReport (choice : Bool) : Except String (TypedSignature String Ty) :=
+  .ok (reportSchema.mapTypes (substitute (selectedEnvironment choice)))
+/-- The same complete bounded search now returns the richer declared signature. -/
+def inferredReport := inferDeclared 2 eligible [true, false] buildReport
+-- Check every input category and both outputs, including the nested callback.
+#guard match inferredReport with
+  | .ok (.unique false, some signature) =>
+    signature.inputs.length == 1 && signature.optional.length == 1 &&
+    signature.keywords.length == 1 && signature.rest.isSome && signature.outputs.length == 2
+  | _ => false
+/-- Rich artifacts retain the existing unique-build and original constraint law. -/
+theorem inferredReport_valid (accepted : inferredReport = .ok (.unique choice, some signature)) :
+    buildReport choice = .ok signature ∧ Subtype (.atom .uint) (selectedType choice) := by
+  obtain ⟨_, valid, built⟩ := inferDeclared_unique _ _ _ _ accepted
+  exact ⟨built, selected_subtype choice valid⟩
+/-- Ground binding cannot alter the host's first structural case selection. -/
+example (clauses : List (TypedSignature String Expr)) (choice : Bool) (call : Call String Nat) :
+    select ((clauses.map (TypedSignature.mapTypes (substitute (selectedEnvironment choice)))).map
+      TypedSignature.shape) call = select (clauses.map TypedSignature.shape) call :=
+  specialize_selection _ _ _
+/-- Equal structural shapes permit pointwise Function variance over every supplied
+position; the numeric example narrows both returned values and broadens all inputs. -/
+def reportSource : TypedSignature String Ty :=
+  { outputs := [.atom .uint, .atom .uint]
+    inputs := [.atom .integer], optional := [.atom .integer]
+    keywords := [("scale", .atom .integer)], rest := some (.atom .integer) }
+/-- Target has the exact same call language and less precise numeric outputs. -/
+def reportTarget : TypedSignature String Ty :=
+  { outputs := [.atom .integer, .atom .integer]
+    inputs := [.atom .uint], optional := [.atom .uint]
+    keywords := [("scale", .atom .uint)], rest := some (.atom .uint) }
+#guard replaces 8 reportSource reportTarget
+-- Reversing this replacement violates variance rather than widening call syntax.
+#guard !(replaces 8 reportTarget reportSource)
+/-- Output checks preserve every normalized value; owner is a distinct component. -/
+def outputCheck (_type : Nat) (value : Nat) : Except String Nat := .ok (value + 1)
+#guard match finishValues [1, 2] [4, 5] (7 : Nat) "arity" outputCheck with
+  | .ok ([5, 6], 7) => true
+  | _ => false
+#guard match finishValues [1, 2] [4] (7 : Nat) "arity" outputCheck with
+  | .error "arity" => true
+  | _ => false
+#guard match finishValues ([] : List Nat) [] (7 : Nat) "arity" outputCheck with
+  | .ok ([], 7) => true
+  | _ => false
+#print axioms TypedSignature.mapTypes_shape
+#print axioms TypedSignature.mapTypes_compose
+#print axioms specialize_selection
+#print axioms replaces_sound
+#print axioms finishValues_success
+#print axioms finishValues_wrong_count
+#print axioms invokeValues_type_error
+#print axioms invokeValues_body_error
+#print axioms invokeValues_wrong_count
+#print axioms inferredReport_valid
+
 end LeanPoo.Examples.TypedMethodDeclarations

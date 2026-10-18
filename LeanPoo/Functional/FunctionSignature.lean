@@ -1,4 +1,5 @@
 import LeanPoo.Functional.Validation
+import LeanPoo.Functional.PrototypeTypes
 
 /-! Finite declarative call signatures. These laws describe supplied arguments and
 ordered dispatch; host default evaluation and Gerbil procedure arity remain premises. -/
@@ -77,7 +78,7 @@ theorem invoke_type_error [DecidableEq Key] (signatures) (call : Call Key Value)
 
 /-- Ordered field checking preserves supplied cardinality, so it cannot insert or
 execute missing optional defaults. The host remains responsible for those defaults. -/
-theorem supplied_length (check : Value → Except Error Value) (values checked : List Value)
+theorem supplied_length (check : Input → Except Error Value) (values : List Input) (checked : List Value)
     (success : Validation.traverse check values = .ok checked) : checked.length = values.length := by
   induction values generalizing checked with
   | nil => simp [Validation.traverse] at success; subst checked; rfl
@@ -402,5 +403,147 @@ theorem observationCharge_threshold (oldSetup newSetup calls common dynamicMap
       oldSetup + calls * dynamicMap + oldGC := by
   simp only [observationCharge, Nat.mul_add]
   omega
+
+
+/-- Type-bearing slots of one ordinary Function descriptor. Required-key order is
+metadata; optional defaults and host callback behavior are deliberately absent. -/
+structure TypedSignature (Key Ty : Type) where
+  outputs : List Ty
+  inputs : List Ty
+  optional : List Ty := []
+  keywords : List (Key × Ty) := []
+  requiredKeywords : List Key := []
+  rest : Option Ty := none
+  deriving Repr
+
+/-- Project only the finite supplied-call language used before any validator. -/
+def TypedSignature.shape (signature : TypedSignature Key Ty) : Signature Key :=
+  ⟨signature.inputs.length, signature.optional.length, signature.rest.isSome,
+    signature.keywords.map Prod.fst, signature.requiredKeywords⟩
+
+/-- Specialization visits every Type slot, preserving literal keys and clause order. -/
+def TypedSignature.mapTypes (substitute : A → B) (signature : TypedSignature Key A) : TypedSignature Key B :=
+  ⟨signature.outputs.map substitute, signature.inputs.map substitute,
+    signature.optional.map substitute, signature.keywords.map (fun (key, ty) => (key, substitute ty)),
+    signature.requiredKeywords, signature.rest.map substitute⟩
+
+/-- Binding type parameters cannot change which supplied argument shapes match. -/
+@[simp] theorem TypedSignature.mapTypes_shape (substitute : A → B) (signature : TypedSignature Key A) :
+    (signature.mapTypes substitute).shape = signature.shape := by
+  cases signature with
+  | mk outputs inputs optional keywords required rest =>
+    cases rest <;> simp [TypedSignature.mapTypes, TypedSignature.shape, List.map_map, Function.comp_def]
+
+/-- Mapping a prefix and residual binding equals one composed Type substitution. -/
+theorem TypedSignature.mapTypes_compose (first : A → B) (second : B → C)
+    (signature : TypedSignature Key A) :
+    (signature.mapTypes first).mapTypes second = signature.mapTypes (second ∘ first) := by
+  cases signature
+  simp [TypedSignature.mapTypes, List.map_map, Option.map_map, Function.comp_def]
+
+/-- Case-lambda structural selection is unchanged after all Type substitutions.
+No value-directed fallback or case permutation is licensed by inference. -/
+theorem specialize_selection [DecidableEq Key] (clauses : List (TypedSignature Key A))
+    (substitute : A → B) (call : Call Key Value) :
+    select ((clauses.map (TypedSignature.mapTypes substitute)).map TypedSignature.shape) call =
+      select (clauses.map TypedSignature.shape) call := by
+  simp [List.map_map, Function.comp_def]
+
+/-- Flatten contravariant positions only, retaining required/optional/key/rest order. -/
+def TypedSignature.arguments (signature : TypedSignature Key Ty) : List Ty :=
+  signature.inputs ++ signature.optional ++ signature.keywords.map Prod.snd ++ signature.rest.toList
+
+/-- Decidable conservative replacement: equal call shape, covariant exact results,
+contravariant supplied argument Types. Arbitrary case-language coverage is absent. -/
+def replaces [DecidableEq Key] (fuel : Nat)
+    (source target : TypedSignature Key PrototypeTypes.Ty) : Bool :=
+  decide (source.shape = target.shape) &&
+  PrototypeTypes.all₂ (PrototypeTypes.check fuel) source.outputs target.outputs &&
+  PrototypeTypes.all₂ (PrototypeTypes.check fuel) target.arguments source.arguments
+
+/-- Every accepted rich replacement has genuine structural subtype derivations
+in each variance direction, including exact multiple-return cardinality. -/
+theorem replaces_sound [DecidableEq Key] (fuel : Nat)
+    (source target : TypedSignature Key PrototypeTypes.Ty) (accepted : replaces fuel source target = true) :
+    source.shape = target.shape ∧
+    PrototypeTypes.RelList PrototypeTypes.Subtype source.outputs target.outputs ∧
+    PrototypeTypes.RelList PrototypeTypes.Subtype target.arguments source.arguments := by
+  simp only [replaces, Bool.and_eq_true, decide_eq_true_eq] at accepted
+  exact ⟨accepted.1.1,
+    PrototypeTypes.all₂_sound _ (PrototypeTypes.check_sound fuel) _ _ accepted.1.2,
+    PrototypeTypes.all₂_sound _ (PrototypeTypes.check_sound fuel) _ _ accepted.2⟩
+
+/-- Check count BEFORE zipping Type/value rows; then retain every normalized value.
+A failed check returns no cache owner or partial output row. -/
+def finishValues (outputs : List Ty) (results : List Value) (owner : Owner)
+    (arityError : Error) (check : Ty → Value → Except Error Value) : Except Error (List Value × Owner) :=
+  if outputs.length = results.length then
+    (Validation.traverse (fun pair => check pair.1 pair.2) (outputs.zip results)).map (·, owner)
+  else .error arityError
+
+/-- Too many or too few user values cannot be mistaken for a cache successor. -/
+theorem finishValues_wrong_count (outputs : List Ty) (results : List Value) (owner : Owner)
+    (arityError : Error) (check) (different : outputs.length ≠ results.length) :
+    finishValues outputs results owner arityError check = .error arityError := by
+  simp [finishValues, different]
+
+/-- Zero user values still transport exactly one explicit owner, never a false user value. -/
+theorem finishValues_zero (owner : Owner) (arityError : Error) (check : Ty → Value → Except Error Value) :
+    finishValues [] [] owner arityError check = .ok ([], owner) := rfl
+
+/-- A successful result retains the exact successor and the declared output count.
+The theorem is conditional on injected validators, not a proof of host procedures. -/
+theorem finishValues_success (outputs : List Ty) (results checked : List Value)
+    (owner next : Owner) (arityError : Error) (check)
+    (success : finishValues outputs results owner arityError check = .ok (checked, next)) :
+    next = owner ∧ checked.length = outputs.length := by
+  by_cases same : outputs.length = results.length
+  · simp only [finishValues, same, ↓reduceIte] at success
+    cases run : Validation.traverse (fun pair => check pair.1 pair.2) (outputs.zip results) with
+    | error cause => simp [run, Except.map] at success
+    | ok row =>
+      simp [run, Except.map] at success
+      obtain ⟨rfl, rfl⟩ := success
+      exact ⟨rfl, by simpa [List.length_zip, same] using supplied_length _ _ _ run⟩
+  · simp [finishValues, same] at success
+
+
+/-- The complete declared call selects one ordered clause, normalizes supplied
+arguments, runs one body, and only then validates all results and transfers owner. -/
+def invokeValues [DecidableEq Key] (clauses : List (TypedSignature Key Ty))
+    (call : Call Key Value) (shapeError countError : Error)
+    (normalize : TypedSignature Key Ty → Call Key Value → Except Error (Call Key Value))
+    (body : Call Key Value → Except Error (List Value × Owner))
+    (check : Ty → Value → Except Error Value) : Except Error (List Value × Owner) :=
+  match clauses.find? (fun clause => accepts clause.shape call) with
+  | none => .error shapeError
+  | some signature => (normalize signature call).bind fun checked =>
+    (body checked).bind fun (results, owner) => finishValues signature.outputs results owner countError check
+
+/-- Refusing the selected input Types cannot enter the body or a later clause. -/
+theorem invokeValues_type_error [DecidableEq Key] (clauses : List (TypedSignature Key Ty))
+    (call : Call Key Value) (shapeError countError error : Error) (normalize) (body : Call Key Value → Except Error (List Value × Owner)) (check signature)
+    (selected : clauses.find? (fun clause => accepts clause.shape call) = some signature)
+    (refused : normalize signature call = .error error) :
+    invokeValues clauses call shapeError countError normalize body check = .error error := by
+  simp [invokeValues, selected, refused, Except.bind]
+
+/-- Body errors keep their original cause and cannot become output/overload errors. -/
+theorem invokeValues_body_error [DecidableEq Key] (clauses : List (TypedSignature Key Ty))
+    (call : Call Key Value) (shapeError countError error : Error) (normalize) (body : Call Key Value → Except Error (List Value × Owner)) (check signature checked)
+    (selected : clauses.find? (fun clause => accepts clause.shape call) = some signature)
+    (normalized : normalize signature call = .ok checked) (refused : body checked = .error error) :
+    invokeValues clauses call shapeError countError normalize body check = .error error := by
+  simp [invokeValues, selected, normalized, refused, Except.bind]
+
+/-- A selected body's wrong output count refuses without returning its successor,
+even when a later clause would accept that output count. External effects remain. -/
+theorem invokeValues_wrong_count [DecidableEq Key] (clauses : List (TypedSignature Key Ty))
+    (call : Call Key Value) (shapeError countError : Error) (normalize) (body : Call Key Value → Except Error (List Value × Owner)) (check signature checked results) (owner : Owner)
+    (selected : clauses.find? (fun clause => accepts clause.shape call) = some signature)
+    (normalized : normalize signature call = .ok checked) (returned : body checked = .ok (results, owner))
+    (different : signature.outputs.length ≠ results.length) :
+    invokeValues clauses call shapeError countError normalize body check = .error countError := by
+  simp [invokeValues, selected, normalized, returned, Except.bind, finishValues, different]
 
 end LeanPoo.Functional.FunctionSignature

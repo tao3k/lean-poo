@@ -44,12 +44,11 @@ higher-order declaration builder. Finalized forms use the existing expander,
 Slot inheritance, typed registration and negative-watch checks. All typed groups
 are prepared before return; ordinary computed fields remain lazy.
 
-The inferred signature's actual fixed input Types and one Result Type come from
-checked ground Function syntax. Alternative existing policy/carrier/preparer
-callbacks use the same dispatcher. Non-Function/multi-output outer syntax is
-explicitly unsupported by this one-Result/cache-owner bridge; arbitrary host
-keyword/rest/case-lambda signature inference remains outside this finite algebra.
-Nested higher-order Function wrappers retain existing normalization behavior.
+The inferred signature's Type positions now include required/optional/keyword/rest
+inputs, ordered CaseFunction clauses and exact multiple outputs. The existing
+sparse dispatcher retains its negative watches and cache owner; invoke-declared
+returns all user values followed by that owner. See the rich signature protocol
+below for supported variance, binding sites and failures.
 
 No-solution and ambiguity retain reports with no instance and no builder call.
 Exhaustion and malformed/unsupported syntax remain type refusals. Builder,
@@ -73,3 +72,40 @@ prefix, residual inference and signature requests each retain their own explicit
 quota. These are not a global CPU bound for arbitrary callbacks; full test heap
 and watchdog limits remain unchanged. The article's generalized-prototype and
 Self/Super type constraints motivate this future-work extension.
+
+
+## Rich signatures and result ownership
+
+`Functional.FunctionSignature.TypedSignature` projects the same finite call shape
+for required/optional/rest arguments and declared/required keywords. `mapTypes`
+visits inputs, optional values, keyword Types, rest Type and all outputs. Its
+shape/selection and composition laws connect complete finite substitution to the
+host's first-match case semantics. `replaces_sound` derives pointwise structural
+subtyping in both variance directions under equal shape metadata. The Scheme
+checker is conservative about keyword and clause order; it cannot prove arbitrary
+case coverage or principal host signature inference.
+
+`finishValues` checks exact output cardinality before ordered validation and pairs
+the fully checked row with its immutable successor. Its laws cover zero outputs,
+wrong counts, preservation of wrapped results and exact owner. `invokeValues`
+connects selection, argument normalization, body execution and output completion;
+selected type/body/count errors retain their cause and cannot try a later clause.
+`Examples/TypedMethodDeclarations.lean` combines the rich service schema, a returned
+Function, optional/keyword/rest Types, prefix/residual inference and original
+Self/Super bounds. It also exercises variance, exact counts and zero outputs.
+
+Gerbil reuses `function-signature.ss`, core formal binding/keyword forwarding,
+`call/values`, existing combination continuations and sparse dispatch. Its public
+`invoke-declared` returns all user values followed by one cache owner. A rich
+`multimethod.call` uses a result list plus owner internally for every declared
+Function, including single and zero outputs. Low-level `make` retains its
+separate scalar Result carrier in the same dispatcher. Standard/forwarding/inner chains
+preserve all results; simple reductions retain their one policy result and
+Simula retains Unit. No incompatible signature is filled with invented values.
+
+The proofs assume faithful descriptor projection, admitted Type validators,
+stable Type/callback semantics and host parameter decoding. They do not verify
+Gerbil macros, the compiler, arbitrary callback termination or runtime costs.
+This is generalized-prototype/type-system future work motivated by the article's
+Appendix B combinations and Appendix C constraints. The Scheme documentation and
+regression tests specify the implemented grammar and rejection boundaries.
