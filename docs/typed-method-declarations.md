@@ -281,14 +281,25 @@ dangling keys; key escape transports one positional value; rest escape ends toke
 interpretation. `decode_minimum` proves `positions + 2 * supplied-keys <= raw-length`
 for every successful spelling, including escapes and every keyword order.
 
-`replacesKeywordTarget` checks a positional source's **first** clause: all fixed
-and optional inputs are top/Any, rest is unbounded Any, keys are absent, and the
-minimum raw length of each target cell satisfies the source's required count.
-Exact-count output covariance uses the existing subtype checker.
-`replacesKeywordTarget_sound` proves actual first selection on every original raw
-row accepted by the target and preserves that selected target's output relation.
-Counting the canonical encoder's optional rest escape would be unsound; the
-zero/one mandatory-argument controls reject that shortcut.
+`Functional/KeywordCoverage.lean` retains `Functional.FunctionSignature` and uses
+both raw decoder bounds: `n+2k <= raw-length <= 2n+2k+1`. A trailing rest escape is
+part of the upper bound; the encoder's optional marker is not part of the lower.
+`replacesKeywordTarget` now derives global source/target modes and checks each
+raw-length region's **actual first** source case. Counts beyond the maximum fixed
+prefix share its stationary rest representative, proven by `rawCounts_complete`.
+Fixed/optional prefixes and several ordered cases may jointly cover a bounded
+raw language without unbounded Any rest. Defaults are never supplied artificially.
+
+`decode_direct` proves a no-key minimum row equals its original token sequence.
+Its non-tail regions reuse ordinary input contravariance, so a UInt fixed case
+can safely handle the one-token direct call. Other regions check Any only at
+supplied source positions; unused optional fields impose no obligation.
+`replacesKeywordTarget_sound` proves actual source first selection, exact-count
+output covariance, and either direct row/input agreement or Any at **every** raw
+position, for all successful target spellings, all keyword orders and unbounded
+rest arities. Two decoded target cases may share one source raw arity; all selected
+result obligations still apply. Type/result refusal cannot fall through to a
+later source case. `replacesKeywordTarget_modes` certifies the global interpretation.
 
 `replacesPositionalTarget` reuses `replacesLanguage`, adding finite stable supplied
 input checks. `inputAt_representative` lifts these to all rest positions.
@@ -300,17 +311,22 @@ vocabulary includes scalars, containers, functions and ordered Union; Scheme's
 additional admitted Maybe/Object/Record syntax uses its actual carrier guards.
 Top-level `Examples/TypedMethodDeclarations.lean` links both rules to original
 prefix specialization, complete unique inference and the existing whole builder;
-`inferredRawCallback_sound` makes the publication-to-universal-law link explicit.
+`inferredRawCallback_sound` and `inferredPrefixCallback_sound` make the
+publication-to-universal-law link explicit. The latter substitutes the existing
+Value prefix into a typed fixed case and an optional raw case before complete
+inference enters the existing two-generic builder.
 
 Gerbil extends its existing `covers-signatures?` traversal and Type relation,
 reusing the decoder, normalizer, standard key deduplication and streaming masks.
-It never changes a caller's argument row to establish subtyping. The raw transport
-rule is sufficient, not maximal mixed-wire semantic inclusion. Unsupported syntax
+It never changes a caller's argument row to establish subtyping. The raw-region
+rule is sufficient, not maximal mixed-wire semantic inclusion: non-direct
+value-sensitive raw-prefix relations remain outside this finite decision. Unsupported syntax
 and quota exhaustion keep existing typed refusals; false rejects a candidate;
 complete no-solution/ambiguity/exhaustion cannot execute the declaration builder.
 The Scheme examples continue through FUN/refine/bind-evidence with actual keyword
-defaults and exact raw argument identity. Independent direct-wrapper token-row
-controls and failure cases are in `t/keyword-coverage-test.ss`.
+defaults and exact raw token sequences. Independent direct-wrapper controls over
+1365 token rows, original upper/lower boundaries, fixed/optional/ordered cases and
+failure paths are in `t/keyword-coverage-test.ss` and `t/keyword-prefix-test.ss`.
 
 As the original text explicitly leaves Scheme's type system hypothetical, this
 is type-protocol future work. Host procedure arity/totality, default/recognizer

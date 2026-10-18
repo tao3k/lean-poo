@@ -89,68 +89,89 @@ theorem decode_minimum [DecidableEq Key] (tokens : List (ArgumentToken Key Value
 
 termination_by tokens.length
 
-/-- A source transport admits every raw token at each fixed/optional position
-and through an unbounded rest tail. The first clause is mandatory: target decoded
-arity must never select a more favorable later plain clause. -/
-def rawTransport (source : TypedSignature Key PrototypeTypes.Ty) : Bool :=
-  source.inputs.all isTop && source.optional.all isTop &&
-  (match source.rest with | some .top => true | _ => false) &&
-  source.keywords.isEmpty && source.requiredKeywords.isEmpty
-where
-  /-- This decidable syntactic witness makes no user recognizer calls. -/
-  isTop : PrototypeTypes.Ty → Bool | .top => true | _ => false
+/-- Escaping each positional value and appending rest escape is the longest
+possible raw spelling. The bound includes an empty trailing rest escape. -/
+theorem decode_maximum [DecidableEq Key] (tokens : List (ArgumentToken Key Value))
+    (row : Call Key (ArgumentToken Key Value)) (decoded : decodeKeyword tokens = some row) :
+    tokens.length ≤ 2 * row.positional.length + 2 * row.keywords.length + 1 := by
+  cases tokens with
+  | nil => simp [decodeKeyword] at decoded; subst row; simp
+  | cons head tail =>
+    cases head with
+    | restEscape => simp [decodeKeyword] at decoded; subst row; simp; omega
+    | value value =>
+      cases found : decodeKeyword tail with
+      | none => simp [decodeKeyword, found] at decoded
+      | some rest =>
+        simp [decodeKeyword, found] at decoded; subst row
+        have bound := decode_maximum tail rest found
+        simp only [List.length_cons]; omega
+    | keyEscape =>
+      cases tail with
+      | nil => simp [decodeKeyword] at decoded
+      | cons value rest =>
+        cases found : decodeKeyword rest with
+        | none => simp [decodeKeyword, found] at decoded
+        | some next =>
+          simp [decodeKeyword, found] at decoded; subst row
+          have bound := decode_maximum rest next found
+          simp only [List.length_cons]; omega
+    | keyword key =>
+      cases tail with
+      | nil => simp [decodeKeyword] at decoded
+      | cons value rest =>
+        cases found : decodeKeyword rest with
+        | none => simp [decodeKeyword, found] at decoded
+        | some next =>
+          by_cases duplicate : key ∈ next.keywords.map Prod.fst
+          · simp [decodeKeyword, found, duplicate] at decoded
+          · simp [decodeKeyword, found, duplicate] at decoded; subst row
+            have bound := decode_maximum rest next found
+            simp only [List.length_cons]; omega
 
-/-- Every supplied raw position receives Any, including optional and arbitrarily
-long rest positions. Protocol tokens therefore need no fabricated Type syntax. -/
-theorem rawTransport_inputAt (source : TypedSignature Key PrototypeTypes.Ty)
-    (checked : rawTransport source = true) (index : Nat) : source.inputAt index = some .top := by
-  simp only [rawTransport, Bool.and_eq_true] at checked
-  have tailTop : source.rest = some .top := by
-    cases h : source.rest with
-    | none => simp [h] at checked
-    | some term => cases term <;> simp_all
-  have fixedTop : ∀ ty ∈ source.inputs ++ source.optional, ty = PrototypeTypes.Ty.top := by
-    intro ty member
-    have bit : rawTransport.isTop ty = true := by
-      rcases List.mem_append.mp member with left | right
-      · exact List.all_eq_true.mp checked.1.1.1.1 ty left
-      · exact List.all_eq_true.mp checked.1.1.1.2 ty right
-    cases ty <;> simp_all [rawTransport.isTop]
-  cases found : (source.inputs ++ source.optional)[index]? with
-  | none => simp [TypedSignature.inputAt, found, tailTop]
-  | some ty => simp [TypedSignature.inputAt, found, fixedTop ty (List.mem_of_getElem? found)]
+termination_by tokens.length
 
-/-- A transport's first clause accepts the unchanged raw row above its minimum. -/
-theorem rawTransport_accepts [DecidableEq Key] (source : TypedSignature Key PrototypeTypes.Ty)
-    (checked : rawTransport source = true) (tokens : List (ArgumentToken Key Value))
-    (enough : source.inputs.length ≤ tokens.length) :
-    accepts source.shape (Call.mk tokens []) = true := by
-  simp only [rawTransport, Bool.and_eq_true] at checked
-  have rest : source.rest.isSome = true := by
-    cases h : source.rest with
-    | none => simp [h] at checked
-    | some term => cases term <;> simp_all
-  have noRequired : source.requiredKeywords = [] := List.isEmpty_iff.mp checked.2
-  simp [accepts, TypedSignature.shape, enough, rest, noRequired]
-
-/-- A finite cell checks the true minimum raw length and exact-count covariant
-results. Keyword/escape VALUES never enter the Type-expression comparator. -/
-def rawCellReplaces (fuel : Nat) (source target : TypedSignature Key PrototypeTypes.Ty)
-    (row : Call Key Unit) : Bool :=
-  decide (source.inputs.length ≤ row.positional.length + 2 * row.keywords.length) &&
-  PrototypeTypes.all₂ (PrototypeTypes.check fuel) source.outputs target.outputs
-
-/-- Target cells are reused unchanged. The plain source always contributes its
-first descriptor; the witness is sufficient, not maximal raw-language inclusion. -/
-def replacesKeywordTarget [DecidableEq Key] (fuel : Nat)
-    (source target : List (TypedSignature Key PrototypeTypes.Ty)) : Bool :=
-  match source with
-  | [] => false
-  | first :: _ => rawTransport first &&
-    (callCells (coverageCeiling (source ++ target)) (coverageKeys target)).all (fun row =>
-      match selectTyped target row with
-      | none => true
-      | some expected => rawCellReplaces fuel first expected row)
+/-- No-key rows at their minimum raw length contain no escape overhead. Their
+positional values are exactly the original token sequence, not a reencoding. -/
+theorem decode_direct [DecidableEq Key] (tokens : List (ArgumentToken Key Value))
+    (row : Call Key (ArgumentToken Key Value)) (decoded : decodeKeyword tokens = some row)
+    (noKeys : row.keywords = []) (sameLength : row.positional.length = tokens.length) :
+    row.positional = tokens := by
+  cases tokens with
+  | nil => simp [decodeKeyword] at decoded; subst row; rfl
+  | cons head tail =>
+    cases head with
+    | restEscape => simp [decodeKeyword] at decoded; subst row; simp at sameLength
+    | value value =>
+      cases found : decodeKeyword tail with
+      | none => simp [decodeKeyword, found] at decoded
+      | some rest =>
+        simp [decodeKeyword, found] at decoded; subst row
+        have lengths : rest.positional.length = tail.length := by simpa using sameLength
+        exact congrArg (ArgumentToken.value value :: ·) (decode_direct tail rest found noKeys lengths)
+    | keyEscape =>
+      cases tail with
+      | nil => simp [decodeKeyword] at decoded
+      | cons value rest =>
+        cases found : decodeKeyword rest with
+        | none => simp [decodeKeyword, found] at decoded
+        | some next =>
+          simp [decodeKeyword, found] at decoded; subst row
+          have minimum := decode_minimum rest next found
+          simp only [List.length_cons] at sameLength
+          omega
+    | keyword key =>
+      cases tail with
+      | nil => simp [decodeKeyword] at decoded
+      | cons value rest =>
+        cases found : decodeKeyword rest with
+        | none => simp [decodeKeyword, found] at decoded
+        | some next =>
+          by_cases duplicate : key ∈ next.keywords.map Prod.fst
+          · simp [decodeKeyword, found, duplicate] at decoded
+          · simp [decodeKeyword, found, duplicate] at decoded; subst row
+            simp at noKeys
+termination_by tokens.length
 
 /-- Canonical target cells preserve the actual first selected clause. -/
 theorem selectTyped_cell [DecidableEq Key] (target : List (TypedSignature Key Ty))
@@ -164,40 +185,6 @@ theorem selectTyped_cell [DecidableEq Key] (target : List (TypedSignature Key Ty
   intro clause member
   rw [accepts_representative _ _ _ _ (by simpa [TypedSignature.shape] using bounded clause member)]
   exact accepts_keys _ _ _ _ ((eraseDups_nodup _).filter _) unique (mask_membership _ _ inside)
-
-/-- Finite raw-transport checking covers every successfully decoded target row,
-all keyword orders and escape spellings, and arbitrarily long rest tails. -/
-theorem replacesKeywordTarget_sound [DecidableEq Key] (fuel : Nat)
-    (first : TypedSignature Key PrototypeTypes.Ty) (later target)
-    (checked : replacesKeywordTarget fuel (first :: later) target = true)
-    (tokens : List (ArgumentToken Key Value)) (row)
-    (decoded : decodeKeyword tokens = some row) (expected)
-    (selected : selectTyped target (shapeRow row.positional.length (row.keywords.map Prod.fst)) = some expected) :
-    selectTyped (first :: later) (Call.mk tokens ([] : List (Key × ArgumentToken Key Value))) = some first ∧
-    PrototypeTypes.RelList PrototypeTypes.Subtype first.outputs expected.outputs := by
-  simp only [replacesKeywordTarget, Bool.and_eq_true] at checked
-  let ceiling := coverageCeiling ((first :: later) ++ target)
-  let keys := row.keywords.map Prod.fst
-  obtain ⟨unique, inside⟩ := selected_keys _ _ _ _ selected
-  let mask := (coverageKeys target).filter (fun key => decide (key ∈ keys))
-  let cell := shapeRow (representative ceiling row.positional.length) mask
-  have found : selectTyped target cell = some expected :=
-    (selectTyped_cell target ceiling _ keys
-      (fun clause member => coverageCeiling_bound _ _ (List.mem_append_right _ member)) unique inside).trans selected
-  have valid := (List.all_eq_true.mp checked.2) cell (representative_mem ceiling _ _ keys)
-  simp only [found, rawCellReplaces, Bool.and_eq_true] at valid
-  have small : first.inputs.length ≤ cell.positional.length + 2 * cell.keywords.length := of_decide_eq_true valid.1
-  have maskLength : mask.length ≤ keys.length :=
-    List.Nodup.length_le_of_subset ((eraseDups_nodup _).filter _)
-      (fun _ member => (mask_membership _ _ inside _).mp member)
-  have minimum := decode_minimum tokens row decoded
-  have enough : first.inputs.length ≤ tokens.length := by
-    simp only [cell, shapeRow, List.length_replicate, List.length_map] at small
-    have rep : representative ceiling row.positional.length ≤ row.positional.length := Nat.min_le_left _ _
-    simp only [keys, List.length_map] at maskLength
-    omega
-  refine ⟨?_, PrototypeTypes.all₂_sound _ (PrototypeTypes.check_sound fuel) _ _ valid.2⟩
-  simp [selectTyped, rawTransport_accepts first checked.1 tokens enough]
 
 /-- Ground finite Types with a stable ordinary outer carrier. Union exposes its
 alternatives; top admits protocol tokens. Fuel exhaustion is conservative false. -/

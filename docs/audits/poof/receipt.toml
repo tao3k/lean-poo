@@ -413,6 +413,7 @@
   "LeanPoo/Functional/JointRevision.lean",
   "LeanPoo/Functional/KeyIndex.lean",
   "LeanPoo/Functional/KeywordArguments.lean",
+  "LeanPoo/Functional/KeywordCoverage.lean",
   "LeanPoo/Functional/MetadataClosure.lean",
   "LeanPoo/Functional/MetadataFamily.lean",
   "LeanPoo/Functional/MethodDeclarations.lean",

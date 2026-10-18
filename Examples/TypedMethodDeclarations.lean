@@ -1,5 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
-import LeanPoo.Functional.KeywordArguments
+import LeanPoo.Functional.KeywordCoverage
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -531,7 +531,12 @@ theorem inferredRawCallback_sound (tooMany artifact)
     selectTyped (rawCallback tooMany) (Call.mk tokens []) = (rawCallback tooMany).head? ∧
     RelList Subtype (.atom .uint :: []) expected.outputs := by
   obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ published
-  cases tooMany <;> exact replacesKeywordTarget_sound 8 _ _ scaledCallback valid tokens row decoded expected selected
+  obtain ⟨actual, found, outputs, _⟩ := replacesKeywordTarget_sound 8 (rawCallback tooMany) scaledCallback
+    valid tokens row decoded expected selected
+  have member := selectTyped_member (rawCallback tooMany) (Call.mk tokens []) actual found
+  simp only [rawCallback, List.mem_singleton] at member
+  subst actual
+  exact ⟨found, outputs⟩
 /-- Escaped positional keyword values and literal key markers remain exact data. -/
 def escapedRow : List (ArgumentToken String Int) :=
   [.keyEscape, .keyword "scale", .restEscape, .keyword "scale", .keyEscape]
@@ -543,15 +548,82 @@ def escapedRow : List (ArgumentToken String Int) :=
   [{ outputs := [.atom .integer], inputs := [], keywords := [("scale", .atom .uint)] }]
 #guard !replacesKeywordTarget 8
   [{ outputs := [.atom .uint], inputs := [], rest := some (.atom .uint) }] scaledCallback
--- Later Any rest cannot repair the first raw clause, nor can output count differ.
-#guard !replacesKeywordTarget 8
+-- The empty first case does not shadow nonempty raw rows; the later case is valid.
+#guard replacesKeywordTarget 8
   ({ outputs := [.atom .uint], inputs := [] } :: rawCallback false) scaledCallback
+-- A same-arity first case with an incompatible Type still cannot fall through.
+#guard !replacesKeywordTarget 8
+  ({ outputs := [.atom .uint], inputs := [.atom .bool] } :: rawCallback false) scaledCallback
 #guard !replacesKeywordTarget 8 [{ outputs := [], inputs := [], rest := some .top }] scaledCallback
-#print axioms rawTransport_inputAt
+#print axioms rawCounts_complete
+#print axioms decode_maximum
+#print axioms decode_direct
 #print axioms decode_minimum
 #print axioms replacesKeywordTarget_sound
 #print axioms replacesPositionalTarget_stable
 #print axioms replacesPositionalTarget_sound
 #print axioms inferredRawCallback_sound
+
+/-- Callback schema reuses the existing Value prefix: one typed fixed case and
+one optional raw case, with no unbounded Any rest in either descriptor. -/
+def prefixCallbackSchema (badResult : Bool) : List (TypedSignature String Expr) :=
+  [{ outputs := [if badResult then .ground (.atom .bool) else .var 0], inputs := [.var 0] },
+   { outputs := [.var 0], inputs := [.ground .top, .ground .top],
+     optional := [.ground .top, .ground .top, .ground .top] }]
+/-- Complete original prefix substitution precedes the shared coverage judgment. -/
+def prefixCallback (badResult : Bool) : List (TypedSignature String Ty) :=
+  (prefixCallbackSchema badResult).map (TypedSignature.mapTypes (substitute (selectedEnvironment false)))
+/-- Unique inference rejects the bad first result, then invokes the existing
+whole two-generic builder under the same original environment. -/
+def inferredPrefixCallback := inferDeclared 2
+  (fun badResult => replacesKeywordTarget 8 (prefixCallback badResult) scaledCallback)
+  [true, false] (fun badResult => do
+    let artifact ← buildCheckedShared (selectedEnvironment false)
+    return (prefixCallback badResult, artifact))
+#guard match inferredPrefixCallback with
+  | .ok (.unique false, some (catalog, (36, 136))) => catalog.length == 2
+  | _ => false
+/-- Every raw spelling accepted by the target uses its actual first source case,
+with direct input variance or Any at all supplied raw positions. -/
+theorem inferredPrefixCallback_sound (badResult artifact)
+    (published : inferredPrefixCallback = .ok (.unique badResult, some artifact))
+    (tokens : List (ArgumentToken String Int)) (row)
+    (decoded : decodeKeyword tokens = some row) (expected)
+    (selected : selectTyped scaledCallback
+      (shapeRow row.positional.length (row.keywords.map Prod.fst)) = some expected) :
+    ∃ actual, selectTyped (prefixCallback badResult) (Call.mk tokens []) = some actual ∧
+      RelList Subtype actual.outputs expected.outputs ∧
+      ((row.keywords = [] ∧ row.positional = tokens ∧
+        ∀ index < tokens.length, inputSubtype (expected.inputAt index) (actual.inputAt index)) ∨
+       (∀ index < tokens.length, actual.inputAt index = some .top)) := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ published
+  exact replacesKeywordTarget_sound 8 _ _ valid tokens row decoded expected selected
+-- Unused optional Types do not become supplied obligations.
+#guard replacesKeywordTarget 8
+  [{ outputs := [.atom .uint], inputs := [], optional := [.top, .top, .top, .top, .top, .atom .bool] }] scaledCallback
+#guard !replacesKeywordTarget 8
+  [{ outputs := [.atom .uint], inputs := [], optional := [.top, .atom .bool, .top, .top, .top] }] scaledCallback
+-- Five raw tokens are possible: key/value, escaped positional, trailing rest.
+#guard decodeKeyword ([.keyword "scale", .value 2, .keyEscape, .value 7, .restEscape] : List (ArgumentToken String Int)) ==
+  some ⟨[.value 7], [("scale", .value 2)]⟩
+#guard !replacesKeywordTarget 8
+  [{ outputs := [.atom .uint], inputs := [.top], optional := [.top, .top, .top] }] scaledCallback
+-- Several fixed cases can jointly cover all raw lengths, in their original order.
+#guard replacesKeywordTarget 8
+  ([1, 2, 3, 4, 5].map (fun count =>
+    ({ outputs := [.atom .uint], inputs := List.replicate count .top } : TypedSignature String Ty))) scaledCallback
+-- Source raw length two occurs in two target decoded regions; results must meet both.
+#guard !replacesKeywordTarget 8 [{ outputs := [.atom .uint], inputs := [], rest := some .top }]
+  [{ outputs := [.atom .uint], inputs := [.atom .uint], keywords := [("scale", .atom .uint)] },
+   { outputs := [.atom .bool], inputs := [.atom .uint, .atom .uint], keywords := [("scale", .atom .uint)] }]
+-- The representative tail must check protocol tokens, not assume a direct row.
+#guard !replacesKeywordTarget 8
+  [{ outputs := [.atom .uint], inputs := [.atom .uint], rest := some (.atom .uint) }]
+  [{ outputs := [.atom .integer], inputs := [.atom .uint], rest := some (.atom .uint),
+     keywords := [("scale", .atom .uint)] }]
+#print axioms replacesKeywordTarget_modes
+#print axioms rawAnyPositions_sound
+#print axioms replacesKeywordTarget_cell
+#print axioms inferredPrefixCallback_sound
 
 end LeanPoo.Examples.TypedMethodDeclarations
