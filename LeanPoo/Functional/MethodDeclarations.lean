@@ -326,4 +326,214 @@ theorem admitDeclaredBindings_stable [DecidableEq Descriptor]
     exact Parameters.bindingsCurrent_sound bindings fields revision current binding member
   · contradiction
 
+
+/-- A collected finite call batch enters the SAME inference/declaration driver.
+Collection failures keep their phase/cause; all siblings share one assignment and
+one complete builder result, never one independently inferred value per method. -/
+def inferDeclaredCalls (fuel budget : Nat) (bounds : List (PrototypeTypes.Expr × PrototypeTypes.Expr))
+    (collected : Except PrototypeTypes.Failure (List (PrototypeTypes.Expr × PrototypeTypes.Expr)))
+    (candidates : List (Nat → PrototypeTypes.Ty))
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (PrototypeTypes.Inference (Nat → PrototypeTypes.Ty) × Option Artifact) :=
+  match collected with
+  | .error cause => .error (.inl cause)
+  | .ok queries => inferDeclared budget (fun env => PrototypeTypes.satisfies fuel (bounds ++ queries) env) candidates build
+
+/-- No collection refusal can call the builder or expose a successful prefix. -/
+theorem inferDeclaredCalls_refused (fuel budget bounds candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (cause : PrototypeTypes.Failure) :
+    inferDeclaredCalls fuel budget bounds (.error cause) candidates build = .error (.inl cause) := rfl
+
+/-- Complete unique inference retains candidate and successful WHOLE builder provenance. -/
+theorem inferDeclaredCalls_provenance (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (env artifact)
+    (accepted : inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .ok (.unique env, some artifact)) :
+    env ∈ candidates ∧ build env = .ok artifact := by
+  obtain ⟨member, _, built⟩ := inferDeclared_unique _ _ _ _ accepted
+  exact ⟨member, built⟩
+
+/-- Every original bound and every call-derived input/output obligation holds
+under the SAME admitted environment, including variables on either side. -/
+theorem inferDeclaredCalls_constraints (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (env artifact)
+    (accepted : inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .ok (.unique env, some artifact))
+    (query : PrototypeTypes.Expr × PrototypeTypes.Expr) (member : query ∈ bounds ++ queries) :
+    PrototypeTypes.Subtype (PrototypeTypes.substitute env query.1) (PrototypeTypes.substitute env query.2) := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ accepted
+  exact PrototypeTypes.satisfies_sound fuel (bounds ++ queries) env valid member
+
+/-- A shared environment cannot satisfy contradictory sibling obligations. -/
+theorem inferDeclaredCalls_inconsistent (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact)
+    (refused : ∀ env ∈ candidates, PrototypeTypes.satisfies fuel (bounds ++ queries) env = false) :
+    inferDeclaredCalls fuel budget bounds (.ok queries) candidates build ≠ .ok (.unique selected, some artifact) := by
+  intro accepted
+  obtain ⟨member, valid, _⟩ := inferDeclared_unique _ _ _ _ accepted
+  have invalid := refused selected member
+  rw [invalid] at valid
+  contradiction
+
+/-- Even after collection succeeds, incomplete enumeration refuses all artifacts. -/
+theorem inferDeclaredCalls_exhausted (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (incomplete : budget < candidates.length) :
+    inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .error (.inl .exhausted) :=
+  inferDeclared_exhausted _ _ _ _ incomplete
+
+
+/-- Every named method requirement must resolve to a source stamp with the SAME
+path/expression, exact Function descriptor identity and direct revision. Reuse the
+existing bound-parameter snapshot predicate rather than a second revision engine. -/
+def catalogCurrent [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) : Bool :=
+  requirements.all fun required =>
+    match origin required.1 with
+    | none => false
+    | some source => decide (source.name = required) &&
+        Parameters.bindingsCurrent [source] (fun _ => actual required.1) revision
+
+/-- A completed named catalog has a matching, current source for EVERY required
+method, including siblings that supplied no inference observation. -/
+theorem catalogCurrent_sound [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat)
+    (accepted : catalogCurrent requirements origin actual revision = true)
+    (required : Path × Expression) (member : required ∈ requirements) :
+    ∃ source : Parameters.BoundParameter (Path × Expression) Descriptor,
+      origin required.1 = some source ∧ source.name = required ∧
+      actual required.1 = some source.descriptor ∧ revision source.descriptor = source.revision := by
+  have checked := List.all_eq_true.mp accepted required member
+  cases found : origin required.1 with
+  | none => simp [found] at checked
+  | some source =>
+    have both : source.name = required ∧
+        Parameters.bindingsCurrent [source] (fun _ => actual required.1) revision = true := by
+      simpa [found, Bool.and_eq_true] using checked
+    have stable := Parameters.bindingsCurrent_sound [source] (fun _ => actual required.1) revision
+      both.2 source (by simp)
+    exact ⟨source, rfl, both.1, stable⟩
+
+/-- Missing or mismatched provenance rejects the complete artifact, even if all
+observed calls were individually satisfiable. External effects are not undone. -/
+def admitDeclaredCatalog [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if catalogCurrent requirements origin actual revision then .ok artifact else .error .bounds
+
+/-- Returning an artifact requires complete named coverage, not a validated subset. -/
+theorem admitDeclaredCatalog_sound [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact result : Artifact)
+    (accepted : admitDeclaredCatalog requirements origin actual revision artifact = .ok result) :
+    catalogCurrent requirements origin actual revision = true := by
+  unfold admitDeclaredCatalog at accepted
+  split at accepted
+  · assumption
+  · contradiction
+
+/-- Capture and compare the declaration source separately from field revision
+checks. The host supplies finite AST/snapshot equality after bounded admission. -/
+def admitDeclaredSource [DecidableEq Source] (captured observed : Source) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if captured = observed then .ok artifact else .error .bounds
+
+/-- Callback-side source changes cannot silently redefine the inferred contract. -/
+theorem admitDeclaredSource_stable [DecidableEq Source] (captured observed : Source) (artifact result : Artifact)
+    (accepted : admitDeclaredSource captured observed artifact = .ok result) : captured = observed := by
+  unfold admitDeclaredSource at accepted
+  split at accepted
+  · assumption
+  · contradiction
+
+
+/-- Source preservation and full catalog coverage form one publication admission,
+with the same all-or-error boundary as the Scheme declaration constructor. -/
+def admitDeclaredInterface [DecidableEq Source] [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (captured observed : Source) (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  match admitDeclaredSource captured observed artifact with
+  | .error cause => .error cause
+  | .ok checked => admitDeclaredCatalog requirements origin actual revision checked
+
+/-- A returned interface has BOTH its original source and all current required
+signatures. Successful inference or one successfully checked sibling is insufficient. -/
+theorem admitDeclaredInterface_sound [DecidableEq Source] [DecidableEq Path]
+    [DecidableEq Expression] [DecidableEq Descriptor]
+    (captured observed : Source) (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat)
+    (artifact result : Artifact)
+    (accepted : admitDeclaredInterface captured observed requirements origin actual revision artifact = .ok result) :
+    captured = observed ∧ catalogCurrent requirements origin actual revision = true := by
+  unfold admitDeclaredInterface at accepted
+  cases stage : admitDeclaredSource captured observed artifact with
+  | error cause => simp [stage] at accepted
+  | ok checked =>
+    simp only [stage] at accepted
+    exact ⟨admitDeclaredSource_stable _ _ _ _ stage, admitDeclaredCatalog_sound _ _ _ _ _ _ accepted⟩
+
+
+/-- Factory-owned signatures compare their direct revision before any invocation
+and again after successful output/cache completion. A source exception keeps its
+cause; source effects and unsynchronized writes beyond these observations are not
+rolled back or globally linearized by this finite model. -/
+def invokeDeclaredSource (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) :
+    Except (Sum PrototypeTypes.Failure Error) (Result × Owner) :=
+  if captured = before then
+    match execute () with
+    | .error cause => .error (.inr cause)
+    | .ok (result, owner, after) =>
+      if captured = after then .ok (result, owner) else .error (.inl .bounds)
+  else .error (.inl .bounds)
+
+/-- A directly stale signature cannot enter the callback at all. -/
+theorem invokeDeclaredSource_stale (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (different : captured ≠ before) :
+    invokeDeclaredSource captured before execute = .error (.inl .bounds) := by
+  simp [invokeDeclaredSource, different]
+
+/-- Original callback/validator errors have priority and keep the exact cause. -/
+theorem invokeDeclaredSource_error (captured : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (cause : Error)
+    (failed : execute () = .error cause) :
+    invokeDeclaredSource captured captured execute = .error (.inr cause) := by
+  simp [invokeDeclaredSource, failed]
+
+/-- A revision observed after successful work discards ALL returned values/owner. -/
+theorem invokeDeclaredSource_changed (captured after : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (result owner)
+    (returned : execute () = .ok (result, owner, after)) (different : captured ≠ after) :
+    invokeDeclaredSource captured captured execute = .error (.inl .bounds) := by
+  simp [invokeDeclaredSource, returned, different]
+
+/-- A returned owner comes from actual successful work between matching revision
+observations. This is not a proof of atomic concurrent metadata revocation. -/
+theorem invokeDeclaredSource_sound (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (result owner)
+    (accepted : invokeDeclaredSource captured before execute = .ok (result, owner)) :
+    captured = before ∧ execute () = .ok (result, owner, captured) := by
+  unfold invokeDeclaredSource at accepted
+  split at accepted
+  · rename_i initial
+    cases run : execute () with
+    | error cause => simp [run] at accepted
+    | ok response =>
+      rcases response with ⟨value, next, after⟩
+      simp only [run] at accepted
+      split at accepted
+      · rename_i final
+        cases accepted
+        subst after
+        exact ⟨initial, rfl⟩
+      · contradiction
+  · contradiction
+
 end LeanPoo.Functional.DeclarativeMetadata

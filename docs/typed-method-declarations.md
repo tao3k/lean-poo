@@ -109,3 +109,47 @@ Gerbil macros, the compiler, arbitrary callback termination or runtime costs.
 This is generalized-prototype/type-system future work motivated by the article's
 Appendix B combinations and Appendix C constraints. The Scheme documentation and
 regression tests specify the implemented grammar and rejection boundaries.
+
+## Joint calls, catalog coverage and source discipline
+
+The companion implementation now collects supplied-call and expected-result
+constraints from an existing Function/Object signature expression, reusing Gerbil
+shape selection and normalization. All named observations and original bounds
+share one finite assignment, followed by one whole builder. Explicit Object
+Function leaves are required methods; a root Function needs a corresponding
+factory-derived group. Ordinary data contracts remain a separate validation step.
+
+`FunctionSignature.inputConstraints`, `outputConstraints`, `callConstraints` and
+`jointConstraints` prove complete supplied row cardinality, exact output counts,
+ordered clause commitment and all-or-error joint collection. Inputs produce
+`ground actual <: formal`; outputs produce `formal <: ground expected`. The
+model's field lookup represents checked explicit Object path projection; parser,
+keyword wire decoding and source/descriptor projection remain host premises.
+
+`DeclarativeMetadata.inferDeclaredCalls` reuses the existing bounded search and
+proves every original/call constraint under the SAME environment, complete unique
+builder provenance, contradictory sibling rejection and exhaustion refusal.
+`catalogCurrent` reuses `Parameters.bindingsCurrent` over path/expression keys and
+exact descriptor/revision stamps. `admitDeclaredInterface_sound` requires both the
+captured source and every required catalog member before returning an artifact.
+
+Factory groups retain a private source stamp, using ordinary extensible Type
+metadata rather than a registry. Declaration construction detects missing siblings,
+wrong fields, copied source data, direct descriptor revision and callback mutation
+of the captured syntax/binding frame. `invokeDeclaredSource` models direct revision
+observations before work and after successful result/cache completion: stale input
+cannot execute; changed output exposes no owner; original errors keep their cause.
+These observations are not atomic revocation of concurrent writes or verification
+of arbitrary transitive Type callbacks. Stable builtins/callback discipline and
+faithful host descriptor identity/revision observations remain premises.
+
+The top-level example combines the rich shared catalog, generated constraints,
+Self/Super prefix/residual inference, two actual certified generic installations
+and invocations, complete interface admission, source changes and revision controls.
+Symbolic source labels/descriptor IDs illustrate the generic source-equality laws;
+they are not compiler correspondence evidence. No new axioms or `sorry` are used.
+
+The concentrated TODO ledger retains OPEN candidate-dependent signature kinds,
+fields supplied only by unresolved rows, wider ordered-case replacement and
+implicit/principal/higher-rank/effect inference. This remains the article's stated
+generalized-prototype/type-system future work, with no runtime speed claim.

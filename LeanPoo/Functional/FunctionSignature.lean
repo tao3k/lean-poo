@@ -1,5 +1,6 @@
 import LeanPoo.Functional.Validation
 import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.RowTypes
 
 /-! Finite declarative call signatures. These laws describe supplied arguments and
 ordered dispatch; host default evaluation and Gerbil procedure arity remain premises. -/
@@ -545,5 +546,152 @@ theorem invokeValues_wrong_count [DecidableEq Key] (clauses : List (TypedSignatu
     (different : signature.outputs.length ≠ results.length) :
     invokeValues clauses call shapeError countError normalize body check = .error countError := by
   simp [invokeValues, selected, normalized, returned, Except.bind, finishValues, different]
+
+
+/-- Required/optional positions use their declared Type; later positions use rest.
+Defaults have no Type occurrence unless a value was actually supplied. -/
+def TypedSignature.positionType (signature : TypedSignature Key Ty) (index : Nat) : Option Ty :=
+  (signature.inputs ++ signature.optional)[index]?.or signature.rest
+
+/-- Successful standard mapM cannot silently discard a supplied argument. -/
+theorem optionMap_length (check : Input → Option Output) (inputs : List Input) (outputs : List Output)
+    (success : inputs.mapM check = some outputs) : outputs.length = inputs.length := by
+  induction inputs generalizing outputs with
+  | nil => simp at success; subst outputs; rfl
+  | cons input rest ih =>
+    simp only [List.mapM_cons] at success
+    cases head : check input with
+    | none => simp [head] at success
+    | some value =>
+      cases tail : rest.mapM check with
+      | none => simp [head, tail] at success
+      | some values =>
+        simp [head, tail] at success
+        subst outputs
+        simp [ih values tail]
+
+/-- Supplied argument constraints share the existing shape admission and literal
+key lookup. Actual Types are ground; formal Types may refer to scheme variables. -/
+def inputConstraints [DecidableEq Key] (signature : TypedSignature Key PrototypeTypes.Expr)
+    (call : Call Key PrototypeTypes.Ty) : Option (List (PrototypeTypes.Expr × PrototypeTypes.Expr)) :=
+  if accepts signature.shape call then do
+    let positionals ← call.positional.zipIdx.mapM fun (actual, index) =>
+      (signature.positionType index).map fun formal => (.ground actual, formal)
+    let keywords ← call.keywords.mapM fun (key, actual) =>
+      (RowTypes.lookup signature.keywords key).map fun formal => (.ground actual, formal)
+    return positionals ++ keywords
+  else none
+
+/-- A structurally invalid call cannot generate a misleading constraint prefix. -/
+theorem inputConstraints_shape_error [DecidableEq Key] (signature : TypedSignature Key PrototypeTypes.Expr)
+    (call : Call Key PrototypeTypes.Ty) (refused : accepts signature.shape call = false) :
+    inputConstraints signature call = none := by simp [inputConstraints, refused]
+
+/-- All supplied positional and keyword arguments produce one constraint each. -/
+theorem inputConstraints_length [DecidableEq Key] (signature : TypedSignature Key PrototypeTypes.Expr)
+    (call : Call Key PrototypeTypes.Ty) (queries)
+    (success : inputConstraints signature call = some queries) :
+    queries.length = call.positional.length + call.keywords.length := by
+  unfold inputConstraints at success
+  split at success
+  · rename_i shape
+    cases positions : call.positional.zipIdx.mapM (fun (actual, index) =>
+        (signature.positionType index).map fun formal => (PrototypeTypes.Expr.ground actual, formal)) with
+    | none => simp [positions] at success
+    | some ps =>
+      cases keys : call.keywords.mapM (fun (key, actual) =>
+          (RowTypes.lookup signature.keywords key).map fun formal => (PrototypeTypes.Expr.ground actual, formal)) with
+      | none => simp [positions, keys] at success
+      | some ks =>
+        simp [positions, keys] at success
+        subst queries
+        simp only [List.length_append, optionMap_length _ _ _ positions,
+          optionMap_length _ _ _ keys, List.length_zipIdx]
+  · simp at success
+
+/-- Expected results reverse the subtype direction. None makes no obligation;
+some [] requires exactly zero user values, independently of the cache owner. -/
+def outputConstraints (outputs : List PrototypeTypes.Expr) (expected : Option (List PrototypeTypes.Ty)) :
+    Option (List (PrototypeTypes.Expr × PrototypeTypes.Expr)) :=
+  match expected with
+  | none => some []
+  | some values => if outputs.length = values.length then
+      some (outputs.zip (values.map PrototypeTypes.Expr.ground)) else none
+
+/-- Zero requested results are not interchangeable with an omitted obligation. -/
+theorem outputConstraints_wrong_count (outputs : List PrototypeTypes.Expr) (expected : List PrototypeTypes.Ty)
+    (different : outputs.length ≠ expected.length) : outputConstraints outputs (some expected) = none := by
+  simp [outputConstraints, different]
+
+/-- Inference commits to the same first structural clause as invocation. Input
+or output failure cannot make a later clause participate in candidate selection. -/
+def callConstraints [DecidableEq Key] (clauses : List (TypedSignature Key PrototypeTypes.Expr))
+    (call : Call Key PrototypeTypes.Ty) (expected : Option (List PrototypeTypes.Ty)) :
+    Option (List (PrototypeTypes.Expr × PrototypeTypes.Expr)) := do
+  let signature ← clauses.find? (fun clause => accepts clause.shape call)
+  let inputs ← inputConstraints signature call
+  let outputs ← outputConstraints signature.outputs expected
+  pure (inputs ++ outputs)
+
+/-- The first matching case fixes BOTH input and output obligations. -/
+theorem callConstraints_first [DecidableEq Key] (head : TypedSignature Key PrototypeTypes.Expr) (tail)
+    (call : Call Key PrototypeTypes.Ty) (expected)
+    (selected : accepts head.shape call = true) :
+    callConstraints (head :: tail) call expected = (do
+      let inputs ← inputConstraints head call
+      let outputs ← outputConstraints head.outputs expected
+      pure (inputs ++ outputs)) := by simp [callConstraints, List.find?, selected]
+
+/-- Ordered named observations refer to one signature catalog and one assignment.
+Lookup is the existing finite row operation; Scheme projects explicit Object paths. -/
+def jointConstraints [DecidableEq Path] [DecidableEq Key]
+    (catalog : List (Path × List (TypedSignature Key PrototypeTypes.Expr))) :
+    List (Path × Call Key PrototypeTypes.Ty × Option (List PrototypeTypes.Ty)) →
+      Option (List (PrototypeTypes.Expr × PrototypeTypes.Expr))
+  | [] => some []
+  | (name, call, expected) :: rest => do
+      let clauses ← RowTypes.lookup catalog name
+      let queries ← callConstraints clauses call expected
+      let tail ← jointConstraints catalog rest
+      pure (queries ++ tail)
+
+/-- An absent named signature stops the whole collection before any accepted tail. -/
+theorem jointConstraints_missing [DecidableEq Path] [DecidableEq Key]
+    (catalog : List (Path × List (TypedSignature Key PrototypeTypes.Expr))) (name call expected rest)
+    (missing : RowTypes.lookup catalog name = none) :
+    jointConstraints catalog ((name, call, expected) :: rest) = none := by
+  simp [jointConstraints, missing]
+
+/-- Successfully collected sibling observations preserve the complete head and
+complete tail; no separately admissible observation can be silently omitted. -/
+theorem jointConstraints_cons [DecidableEq Path] [DecidableEq Key]
+    (catalog : List (Path × List (TypedSignature Key PrototypeTypes.Expr))) (name call expected rest clauses front tail)
+    (found : RowTypes.lookup catalog name = some clauses)
+    (head : callConstraints clauses call expected = some front)
+    (remaining : jointConstraints catalog rest = some tail) :
+    jointConstraints catalog ((name, call, expected) :: rest) = some (front ++ tail) := by
+  simp [jointConstraints, found, head, remaining]
+
+
+/-- A refused later observation discards the entire collected prefix. -/
+theorem jointConstraints_tail_error [DecidableEq Path] [DecidableEq Key]
+    (catalog : List (Path × List (TypedSignature Key PrototypeTypes.Expr))) (name call expected rest clauses)
+    (found : RowTypes.lookup catalog name = some clauses)
+    (refused : jointConstraints catalog rest = none) :
+    jointConstraints catalog ((name, call, expected) :: rest) = none := by
+  simp [jointConstraints, found, refused]
+
+/-- Each requested result produces exactly one reversed obligation; zip cannot
+truncate an expected row because count admission precedes construction. -/
+theorem outputConstraints_length (outputs : List PrototypeTypes.Expr) (expected : List PrototypeTypes.Ty)
+    (queries) (success : outputConstraints outputs (some expected) = some queries) :
+    queries.length = expected.length := by
+  by_cases same : outputs.length = expected.length
+  · have row : outputs.zip (expected.map PrototypeTypes.Expr.ground) = queries := by
+      simpa [outputConstraints, same] using success
+    subst queries
+    simp [List.length_zip, same]
+  · simp [outputConstraints, same] at success
+
 
 end LeanPoo.Functional.FunctionSignature
