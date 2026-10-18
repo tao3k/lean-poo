@@ -382,6 +382,7 @@
   "LeanPoo/Functional/FiniteDiagnostics.lean",
   "LeanPoo/Functional/FiniteTransformation.lean",
   "LeanPoo/Functional/FocusedUpdate.lean",
+  "LeanPoo/Functional/FunctionCoverage.lean",
   "LeanPoo/Functional/FunctionSignature.lean",
   "LeanPoo/Functional/FunctionValidation.lean",
   "LeanPoo/Functional/GeneralizedFragments.lean",

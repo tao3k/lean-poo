@@ -30,6 +30,7 @@ import LeanPoo.Functional.Assembly
 import LeanPoo.Functional.Validation
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.FunctionSignature
+import LeanPoo.Functional.FunctionCoverage
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.RecursiveGeneration
 import LeanPoo.Functional.PrototypeTypes

@@ -81,9 +81,9 @@ for required/optional/rest arguments and declared/required keywords. `mapTypes`
 visits inputs, optional values, keyword Types, rest Type and all outputs. Its
 shape/selection and composition laws connect complete finite substitution to the
 host's first-match case semantics. `replaces_sound` derives pointwise structural
-subtyping in both variance directions under equal shape metadata. The Scheme
-checker is conservative about keyword and clause order; it cannot prove arbitrary
-case coverage or principal host signature inference.
+subtyping in both variance directions under equal shape metadata. The extended `FunctionCoverage` model now proves complete finite partition
+coverage and typed replacement across unequal ordered call languages under a
+shared decoded wire interpretation; principal host inference remains outside scope.
 
 `finishValues` checks exact output cardinality before ordered validation and pairs
 the fully checked row with its immutable successor. Its laws cover zero outputs,
@@ -239,5 +239,34 @@ and bounds checking. The existing subtype and Function selection laws discharge
 the finite relations where modeled; these theorems do not verify Gerbil expansion,
 Type callbacks, parser implementations, GC or compiler execution. This advances
 the appendix's type-system/generalized-prototype future work. Arbitrary reflective
-Class/Slot discovery, unrestricted case-language inclusion and principal/effect
-inference remain outside the decidable finite scope.
+Class/Slot discovery, unrestricted recursive/semantic language inclusion and
+principal/effect inference remain outside the decidable finite scope.
+
+## Ordered case language coverage
+
+`Functional/FunctionCoverage.lean` keeps the existing `Functional.FunctionSignature`
+namespace and models the complete declared language, rather than sampled calls.
+It proves value erasure, arity clamping and first-selection preservation; complete
+keyword-mask membership and shape coverage; then typed first-selection, exact-count
+output covariance and all supplied input/key contravariance. `inputAt_representative`
+proves that checking the extra rest representative covers every further position.
+`replacesLanguage_sound` derives its ceiling and duplicate-free target key universe
+and quantifies over **all** target-accepted decoded calls.
+
+Gerbil reuses the existing `function-signature.ss` selector, keyword decoder and
+normalizer through a shared checked signature projection. Its key subsets stream
+under the caller's quota; malformed/unsupported/exhausted requests cannot expose
+partial coverage. Its Boolean replacement is conservative across different raw
+keyword wire modes. The formal theorem concerns the shared decoded domain;
+projection fidelity, common wire interpretation and subtype interpretation of
+opaque/runtime Type descriptors are premises. It does not verify host procedure
+arity, totality, defaults/recognizer effects, macro expansion, parsing or compilation.
+
+The existing top-level example checks unequal fixed/rest and keyword regions,
+overlap refusal, original prefix substitution, complete inference and the existing
+full declaration builder; `inferredCoverage_sound` links successful publication
+to the universal replacement theorem. Scheme's executable example additionally
+threads the inferred callback through recursive wrapping, FUN/refinement and exact
+evidence publication. Regression controls include a separate operational wrapper
+oracle on all small arities/key orders and quota exhaustion after an admitted cell.
+This continues the paper's hypothetical type-system future work.

@@ -1,5 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
-import LeanPoo.Functional.FunctionSignature
+import LeanPoo.Functional.FunctionCoverage
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -407,5 +407,76 @@ theorem candidateCatalog_constraints (entry artifact)
 #print axioms Functional.PrototypeTypes.collectCandidates_complete
 #print axioms inferDeclaredCandidates_sound
 #print axioms inferDeclaredCandidates_refused
+
+/-- A callback's finite schema preserves the already fixed Value parameter;
+source choice true uses one broad rest clause rather than two fixed clauses. -/
+def coveredCallbackSchema (wide : Bool) : List (TypedSignature String Expr) :=
+  if wide then [{ outputs := [.var 0], inputs := [.ground (.atom .integer)], rest := some (.ground (.atom .integer)) }]
+  else [{ outputs := [.var 0], inputs := [.var 0] }]
+/-- Reuse the original prefix environment and complete Type substitution. -/
+def coveredCallback (wide : Bool) : List (TypedSignature String Ty) :=
+  (coveredCallbackSchema wide).map (TypedSignature.mapTypes (substitute (selectedEnvironment false)))
+/-- Both one- and two-argument caller regions require exact UInt results. -/
+def requiredCallback : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .uint], inputs := [.atom .uint] },
+   { outputs := [.atom .uint], inputs := [.atom .uint, .atom .uint] }]
+/-- The builder retains the selected callback metadata beside the existing
+complete two-generic artifact. Type search itself cannot execute this builder. -/
+def buildCoveredCallback (wide : Bool) : Except String (List (TypedSignature String Ty) × (Nat × Nat)) := do
+  let artifact ← buildCheckedShared (selectedEnvironment false)
+  return (coveredCallback wide, artifact)
+/-- Complete inference chooses coverage under the same prefix used in publication. -/
+def inferredCoverage := inferDeclared 2
+  (fun wide => replacesLanguage 8 (coveredCallback wide) requiredCallback)
+  [false, true] buildCoveredCallback
+#guard match inferredCoverage with
+  | .ok (.unique true, some (catalog, (36, 136))) => catalog.length == 1
+  | _ => false
+-- Every caller row is covered by a selected descriptor with all variance laws.
+-- This is universal, not a claim derived from testing arities one and two.
+theorem inferredCoverage_sound (wide artifact)
+    (published : inferredCoverage = .ok (.unique wide, some artifact))
+    (count keys expected) (selected : selectTyped requiredCallback (shapeRow count keys) = some expected) :
+    ∃ actual, selectTyped (coveredCallback wide) (shapeRow count keys) = some actual ∧
+      RelList Subtype actual.outputs expected.outputs ∧
+      (∀ index < count, inputSubtype (expected.inputAt index) (actual.inputAt index)) ∧
+      (∀ key ∈ keys, inputSubtype (Functional.RowTypes.lookup expected.keywords key)
+        (Functional.RowTypes.lookup actual.keywords key)) := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ published
+  exact replacesLanguage_sound 8 _ _ valid count keys expected selected
+/-- Infinite target tail regions still have finite exact coverage certificates. -/
+def unboundedCallback : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .integer], inputs := [.atom .uint] },
+   { outputs := [.atom .integer], inputs := [.atom .uint, .atom .uint], rest := some (.atom .uint) }]
+#guard replacesLanguage 8 (coveredCallback true) unboundedCallback
+#guard !replacesLanguage 8 (coveredCallback false) unboundedCallback
+-- A shadowed later compatible clause cannot repair an earlier output mismatch.
+#guard !replacesLanguage 8
+  ({ outputs := [.atom .bool], inputs := [.atom .integer], rest := some (.atom .integer) } :: coveredCallback true)
+  unboundedCallback
+/-- Keyword presence selects different first clauses, including an optional key. -/
+def keywordCover : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .uint], inputs := [.atom .integer],
+      keywords := [("mode", .atom .integer)], requiredKeywords := ["mode"] },
+   { outputs := [.atom .uint], inputs := [.atom .integer],
+      keywords := [("mode", .atom .integer), ("extra", .atom .bool)] }]
+/-- The target permits mode omission; its supplied key Type is narrower. -/
+def keywordRequired : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .integer], inputs := [.atom .uint], keywords := [("mode", .atom .uint)] }]
+#guard replacesLanguage 8 keywordCover keywordRequired
+#guard !replacesLanguage 8 (keywordCover.take 1) keywordRequired
+-- Budget refusal precedes artifact construction even if a visited choice is valid.
+#guard match inferDeclared 1 (fun wide => replacesLanguage 8 (coveredCallback wide) requiredCallback)
+    [true, false] buildCoveredCallback with
+  | .error (.inl .exhausted) => true
+  | _ => false
+#print axioms accepts_shapeRow
+#print axioms select_representative
+#print axioms coversCalls_sound
+#print axioms coversCalls_complete
+#print axioms inputAt_representative
+#print axioms coversTypedCalls_sound
+#print axioms replacesLanguage_sound
+#print axioms inferredCoverage_sound
 
 end LeanPoo.Examples.TypedMethodDeclarations
