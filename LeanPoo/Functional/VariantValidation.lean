@@ -170,16 +170,17 @@ def table (snapshot : Carrier → Except Error (List (Key × Value)))
     (source : Carrier) : Except Error Carrier :=
   (snapshot source).bind fun entries => (Validation.traverse (pair key value) entries).bind rebuild
 
-/-- An accepted backend contains the exact normalized key/value pairs rather
-than original callbacks. Snapshot/rebuild fidelity is a backend law, not a claim
-about host RBTree, Patricia or hash implementations. -/
+/-- An accepted backend retains every normalized binding. Key changes can reorder
+an ordered tree, so fidelity is permutation rather than an identical snapshot.
+Logical normalization order still pairs each source entry with its own wrappers. -/
 theorem table_positions (snapshot : Carrier → Except Error (List (Key × Value)))
     (rebuild : List (Key × Value) → Except Error Carrier)
     (key : Key → Except Error Key) (value : Value → Except Error Value) (source result : Carrier)
-    (materializes : ∀ entries output, rebuild entries = .ok output → snapshot output = .ok entries)
+    (materializes : ∀ entries output, rebuild entries = .ok output →
+      ∃ observed, snapshot output = .ok observed ∧ observed.Perm entries)
     (accepted : table snapshot rebuild key value source = .ok result) :
-    ∃ before after, snapshot source = .ok before ∧ snapshot result = .ok after ∧
-      after.length = before.length ∧ ∀ entry ∈ before.zip after,
+    ∃ before checked observed, snapshot source = .ok before ∧ snapshot result = .ok observed ∧
+      observed.Perm checked ∧ observed.length = before.length ∧ ∀ entry ∈ before.zip checked,
         key entry.1.1 = .ok entry.2.1 ∧ value entry.1.2 = .ok entry.2.2 := by
   unfold table at accepted
   cases hs : snapshot source with
@@ -187,10 +188,12 @@ theorem table_positions (snapshot : Carrier → Except Error (List (Key × Value
   | ok before =>
     cases ht : Validation.traverse (pair key value) before with
     | error error => simp [hs, ht, Except.bind] at accepted
-    | ok after =>
-      have built : rebuild after = .ok result := by simpa [hs, ht, Except.bind] using accepted
-      have positions := ContainerValidation.list_positions (pair key value) before after ht
-      exact ⟨before, after, rfl, materializes after result built, positions.1,
+    | ok checked =>
+      have built : rebuild checked = .ok result := by simpa [hs, ht, Except.bind] using accepted
+      have positions := ContainerValidation.list_positions (pair key value) before checked ht
+      obtain ⟨observed, readBack, reordered⟩ := materializes checked result built
+      exact ⟨before, checked, observed, rfl, readBack, reordered,
+        reordered.length_eq.trans positions.1,
         fun entry member => (pair_success key value entry.1 entry.2).mp (positions.2 entry member)⟩
 
 /-- Carrier failure stops before normalization and private construction. -/

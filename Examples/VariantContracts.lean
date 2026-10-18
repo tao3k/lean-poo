@@ -229,6 +229,12 @@ example : VariantValidation.tableRevision
       (fun value => .ok (value + 1)) source)
     [(1, 10), (2, 20)] = (.error "key-refused", [(1, 10), (2, 20)]) := rfl
 
+/-- Rebuilding may reorder keys after normalization while retaining each checked
+value. Consumers must not pair old/new physical iteration positions by index. -/
+example : VariantValidation.table (Error := String) Except.ok (fun entries => .ok entries.reverse)
+    (fun (key : Int) => .ok (-key)) (fun (value : Nat) => .ok (value + 1))
+    [(1, 10), (3, 30)] = .ok [(-3, 31), (-1, 11)] := rfl
+
 #print axioms VariantValidation.tableMaterialize_sound
 #print axioms VariantValidation.table_shape_refused
 #print axioms VariantValidation.table_positions

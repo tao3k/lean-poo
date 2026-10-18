@@ -768,7 +768,9 @@ the source. Arbitrary cyclic/malformed host structures and nonterminating callba
 are not made safe by these finite snapshot laws.
 
 Lean `VariantValidation.table_positions` proves exact normalized binding retention
-and length preservation under an explicit snapshot/rebuild fidelity law.
+and length preservation under an explicit snapshot/rebuild fidelity law. The
+returned snapshot may permute checked entries: key normalization can change tree
+order, so logical source-to-wrapper positions are not physical result indices.
 `table_shape_refused`, `table_refused`, `table_rebuild_refused`,
 `table_consumer_refused`, `tableRevision_refused` and `tableMaterialize_sound`
 cover shape, child, reconstruction, consumer, retained source and final membership.
