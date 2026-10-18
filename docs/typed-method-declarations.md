@@ -153,3 +153,26 @@ The concentrated TODO ledger retains OPEN candidate-dependent signature kinds,
 fields supplied only by unresolved rows, wider ordered-case replacement and
 implicit/principal/higher-rank/effect inference. This remains the article's stated
 generalized-prototype/type-system future work, with no runtime speed claim.
+
+
+## Finite container inference integration
+
+Pair, Map, Sum and ordered Union now enter the same finite prototype expression,
+substitution and complete candidate inference used by typed method declarations.
+This advances the paper's type-system future work; it is not attributed to an
+existing Racket solver. Map arrows canonicalize before candidate deduplication.
+Pair components and Map values are observationally covariant; Map keys retain
+normalized syntax. Sum retains its exact ordered tag skeleton and compares payloads;
+Union retains exact ordered normalized branches, including duplicates. No mutable
+write law or arbitrary branch-language inclusion is inferred.
+
+`Functional.PrototypeTypes` proves checker soundness, exact key/tag/branch
+preservation, conditional semantic replacement and every inferred constraint for
+these constructors. `Examples/PrototypeTypes.lean` uses a shared routing signature
+with nested callback variance and composes the existing `VariantValidation`
+collision law. Scheme's `container-inference-test.ss` exercises actual prefix
+specialization, call-derived constraints, declared generic invocation, recursive
+wrapping, refine/FUN/evidence publication and failed-request retry. Surface kinds,
+unique Sum tags, stable descriptor callbacks and faithful host projections remain
+explicit premises; proofs do not establish GC timing, compiler correctness or
+permission to mutate covariant containers.

@@ -15,6 +15,8 @@ Function lists retain exact input and multiple-output counts. -/
 inductive Ty where
   | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
   | function (outputs inputs : List Ty)
+  | pair (left right : Ty) | map (key value : Ty)
+  | sum (tags : List Nat) (payloads : List Ty) | union (branches : List Ty)
   deriving Repr
 
 /-- A pointwise relation checks exact length; zip cannot silently drop arguments. -/
@@ -22,6 +24,55 @@ def all₂ (test : Ty → Ty → Bool) : List Ty → List Ty → Bool
   | [], [] => true
   | a :: as, b :: bs => test a b && all₂ test as bs
   | _, _ => false
+
+/-- Exact finite syntax identity is stricter than mutual derivability. It keeps
+Map key normalization and ordered Union selection fixed, including nested arrows. -/
+def same : Nat → Ty → Ty → Bool
+  | 0, _, _ => false
+  | fuel + 1, a, b => match a, b with
+    | .top, .top => true
+    | .atom a, .atom b => decide (a = b)
+    | .list a, .list b => same fuel a b
+    | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
+    | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
+    | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (same fuel) as bs
+    | .function outs ins, .function outs' ins' =>
+        all₂ (same fuel) outs outs' && all₂ (same fuel) ins ins'
+    | _, _ => false
+
+/-- Exact list identity cannot lose, reorder or merge a branch. -/
+theorem all₂_equal (test : Ty → Ty → Bool) (sound : ∀ a b, test a b = true → a = b)
+    (as bs : List Ty) (accepted : all₂ test as bs = true) : as = bs := by
+  induction as generalizing bs with
+  | nil => cases bs <;> simp_all [all₂]
+  | cons a as ih =>
+    cases bs with
+    | nil => simp [all₂] at accepted
+    | cons b bs =>
+      simp only [all₂, Bool.and_eq_true] at accepted
+      have both := accepted
+      exact congr (congrArg List.cons (sound a b both.1)) (ih bs both.2)
+
+/-- Successful identity checks imply propositional equality, not a sampled match. -/
+theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a = b := by
+  induction fuel generalizing a b with
+  | zero => simp [same] at accepted
+  | succ fuel ih =>
+    cases a <;> cases b <;> simp only [same] at accepted
+    all_goals try contradiction
+    all_goals try rfl
+    all_goals first
+      | exact congrArg Ty.atom (of_decide_eq_true accepted)
+      | exact congrArg Ty.list (ih _ _ accepted)
+      | exact congrArg Ty.tuple (all₂_equal _ ih _ _ accepted)
+      | exact congrArg Ty.union (all₂_equal _ ih _ _ accepted)
+      | simp only [Bool.and_eq_true] at accepted
+        have both := accepted
+        first
+        | exact congr (congrArg Ty.pair (ih _ _ both.1)) (ih _ _ both.2)
+        | exact congr (congrArg Ty.map (ih _ _ both.1)) (ih _ _ both.2)
+        | exact congr (congrArg Ty.function (all₂_equal _ ih _ _ both.1)) (all₂_equal _ ih _ _ both.2)
+        | exact congr (congrArg Ty.sum (of_decide_eq_true both.1)) (all₂_equal _ ih _ _ both.2)
 
 /-- Exact positional lifting of a relation, including empty argument lists. -/
 inductive RelList (relation : Ty → Ty → Prop) : List Ty → List Ty → Prop where
@@ -35,6 +86,9 @@ inductive Subtype : Ty → Ty → Prop where
   | uint : Subtype (.atom .uint) (.atom .integer)
   | list : Subtype a b → Subtype (.list a) (.list b)
   | tuple : RelList Subtype as bs → Subtype (.tuple as) (.tuple bs)
+  | pair : Subtype a c → Subtype b d → Subtype (.pair a b) (.pair c d)
+  | map : Subtype a b → Subtype (.map key a) (.map key b)
+  | sum : RelList Subtype as bs → Subtype (.sum tags as) (.sum tags bs)
   | function : RelList Subtype outs outs' → RelList Subtype ins' ins →
       Subtype (.function outs ins) (.function outs' ins')
 
@@ -48,6 +102,10 @@ def check : Nat → Ty → Ty → Bool
     | .atom a, .atom b => decide (a = b) || decide (a = .uint ∧ b = .integer)
     | .list a, .list b => check fuel a b
     | .tuple as, .tuple bs => all₂ (check fuel) as bs
+    | .pair a b, .pair c d => check fuel a c && check fuel b d
+    | .map k a, .map k' b => same fuel k k' && check fuel a b
+    | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (check fuel) as bs
+    | .union as, .union bs => all₂ (same fuel) as bs
     | .function outs ins, .function outs' ins' =>
         all₂ (check fuel) outs outs' && all₂ (check fuel) ins' ins
     | _, _ => false
@@ -78,6 +136,26 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     all_goals try { exact .top _ }
     all_goals try { exact .list (ih _ _ accepted) }
     all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
+    case pair.pair a b c d =>
+      simp only [Bool.and_eq_true] at accepted
+      have both := accepted
+      exact .pair (ih _ _ both.1) (ih _ _ both.2)
+    case map.map key a key' b =>
+      simp only [Bool.and_eq_true] at accepted
+      have both := accepted
+      have equal := same_sound _ _ _ both.1
+      subst key'
+      exact .map (ih _ _ both.2)
+    case sum.sum tags as tags' bs =>
+      simp only [Bool.and_eq_true] at accepted
+      have both := accepted
+      have equal : tags = tags' := of_decide_eq_true both.1
+      subst tags'
+      exact .sum (all₂_sound _ ih _ _ both.2)
+    case union.union as bs =>
+      have equal := all₂_equal _ (same_sound fuel) _ _ accepted
+      subst bs
+      exact .refl _
     case function.function outs ins outs' ins' =>
       have both : all₂ (check fuel) outs outs' = true ∧ all₂ (check fuel) ins' ins = true := by
         simpa only [Bool.and_eq_true] using accepted
@@ -85,6 +163,36 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     case atom.atom a b =>
       cases a <;> cases b <;> simp_all
       all_goals first | exact .refl _ | exact .uint
+
+/-- Admitted Map replacement cannot alter normalized key syntax. This is an
+observational rule; permission to mutate the map requires a separate write law. -/
+theorem map_key_invariant (fuel : Nat) (key key' value value' : Ty)
+    (accepted : check fuel (.map key value) (.map key' value') = true) : key = key' := by
+  cases fuel with
+  | zero => simp [check] at accepted
+  | succ fuel =>
+    have both : same fuel key key' = true ∧ check fuel value value' = true := by
+      simpa only [check, Bool.and_eq_true] using accepted
+    exact same_sound _ _ _ both.1
+
+/-- Ordered Union replacement fixes every branch, including duplicates and
+higher-order payloads. A later permissive branch cannot erase a selected failure. -/
+theorem union_branches_invariant (fuel : Nat) (as bs : List Ty)
+    (accepted : check fuel (.union as) (.union bs) = true) : as = bs := by
+  cases fuel with
+  | zero => simp [check] at accepted
+  | succ fuel => exact all₂_equal _ (same_sound fuel) _ _ accepted
+
+/-- A Sum's finite tag skeleton is retained exactly; parser admission additionally
+requires distinct tags and one payload for each tag before this algebra is built. -/
+theorem sum_tags_invariant (fuel : Nat) (tags tags' : List Nat) (as bs : List Ty)
+    (accepted : check fuel (.sum tags as) (.sum tags' bs) = true) : tags = tags' := by
+  cases fuel with
+  | zero => simp [check] at accepted
+  | succ fuel =>
+    have both : decide (tags = tags') = true ∧ all₂ (check fuel) as bs = true := by
+      simpa only [check, Bool.and_eq_true] using accepted
+    exact of_decide_eq_true both.1
 
 /-- Semantic replacement is an explicit model premise. A bare Scheme procedure?
 recognizer does not satisfy the arrow law; its behavioral interpretation must. -/
@@ -96,6 +204,12 @@ structure Interpretation (Value : Type) where
     ∀ v, accepts (.list a) v → accepts (.list b) v
   tuple : ∀ as bs, RelList (fun a b => ∀ v, accepts a v → accepts b v) as bs →
     ∀ v, accepts (.tuple as) v → accepts (.tuple bs) v
+  pair : ∀ a b c d, (∀ v, accepts a v → accepts c v) →
+    (∀ v, accepts b v → accepts d v) → ∀ v, accepts (.pair a b) v → accepts (.pair c d) v
+  map : ∀ key a b, (∀ v, accepts a v → accepts b v) →
+    ∀ v, accepts (.map key a) v → accepts (.map key b) v
+  sum : ∀ tags as bs, RelList (fun a b => ∀ v, accepts a v → accepts b v) as bs →
+    ∀ v, accepts (.sum tags as) v → accepts (.sum tags bs) v
   function : ∀ outs outs' ins ins',
     RelList (fun a b => ∀ v, accepts a v → accepts b v) outs outs' →
     RelList (fun a b => ∀ v, accepts a v → accepts b v) ins' ins →
@@ -111,6 +225,9 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (fun _ _ h => h) model.top model.uint
     (fun _ ih => model.list _ _ ih)
     (fun _ ih => model.tuple _ _ ih)
+    (fun _ _ ha hb => model.pair _ _ _ _ ha hb)
+    (fun _ ih => model.map _ _ _ ih)
+    (fun _ ih => model.sum _ _ _ ih)
     (fun _ _ ho hi => model.function _ _ _ _ ho hi)
     RelList.nil (fun _ _ head tail => RelList.cons head tail) derivation
 
@@ -120,6 +237,8 @@ inductive Expr where
   | ground (type : Ty) | var (name : Nat)
   | list (element : Expr) | tuple (fields : List Expr)
   | function (outputs inputs : List Expr)
+  | pair (left right : Expr) | map (key value : Expr)
+  | sum (tags : List Nat) (payloads : List Expr) | union (branches : List Expr)
   deriving Repr
 
 /-- Structural substitution is total in a supplied explicit environment. Admission
@@ -129,6 +248,10 @@ def substitute (env : Nat → Ty) : Expr → Ty
   | .var name => env name
   | .list e => .list (substitute env e)
   | .tuple es => .tuple (es.map (substitute env))
+  | .pair a b => .pair (substitute env a) (substitute env b)
+  | .map key value => .map (substitute env key) (substitute env value)
+  | .sum tags es => .sum tags (es.map (substitute env))
+  | .union es => .union (es.map (substitute env))
   | .function outs ins => .function (outs.map (substitute env)) (ins.map (substitute env))
 
 /-- Bounds and call-site inequalities are checked together for each assignment. -/
