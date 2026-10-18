@@ -8,10 +8,39 @@ import subprocess
 import tempfile
 import unittest
 
-from tools.check_gate import GIB, choose_jobs, execute
+from tools.check_gate import GIB, atom_checks, choose_jobs, execute
+from tools.check_atoms import load_atoms
 
 
 class CheckGateTests(unittest.TestCase):
+    def test_supervised_units_cover_the_complete_inventory_once(self):
+        inventory = load_atoms()
+        units = atom_checks(4, '/tmp/atom-receipt')
+        self.assertEqual([name for name, _ in units], ['atoms', 'stress'])
+        selected = []
+        receipts = []
+        for name, command in units:
+            selected.extend(command[command.index('--files') + 1:command.index('--receipt')])
+            receipts.append(command[command.index('--receipt') + 1])
+            self.assertEqual(command[command.index('--jobs') + 1], '1' if name == 'stress' else '4')
+        self.assertCountEqual(selected, [a['file'] for a in inventory])
+        self.assertEqual(len(selected), len(set(selected)))
+        self.assertEqual(len(set(receipts)), len(units))
+        stress = units[1][1]
+        self.assertEqual(set(stress[stress.index('--files') + 1:stress.index('--receipt')]),
+                         {a['file'] for a in inventory if a['command'][0] == 'timeout'})
+
+    def test_exclusive_checks_wait_and_still_run_after_a_check_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / 'ordinary-finished'
+            ordinary = f'from pathlib import Path; Path({str(marker)!r}).touch(); raise SystemExit(9)'
+            exclusive = f'from pathlib import Path; assert Path({str(marker)!r}).exists()'
+            with contextlib.redirect_stdout(io.StringIO()):
+                results = execute([], [('ordinary', [sys.executable, '-c', ordinary])],
+                                  [('stress', [sys.executable, '-c', exclusive])])
+            self.assertEqual([(r['name'], r['returncode']) for r in results],
+                             [('ordinary', 9), ('stress', 0)])
+
     def test_auto_workers_obey_cpu_and_memory_caps(self):
         self.assertEqual(choose_jobs(12, 32 * GIB), 14)
         self.assertEqual(choose_jobs(12, 24 * GIB), 10)
@@ -27,7 +56,8 @@ class CheckGateTests(unittest.TestCase):
             marker = Path(temporary) / 'launched'
             with contextlib.redirect_stdout(io.StringIO()):
                 results = execute([('failed-build', [sys.executable, '-c', 'raise SystemExit(7)'])],
-                                  [('must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])])
+                                  [('must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])],
+                                  [('deferred-must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])])
             self.assertEqual([r['returncode'] for r in results], [7])
             self.assertFalse(marker.exists())
 

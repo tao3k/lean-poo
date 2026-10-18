@@ -14,8 +14,10 @@ import time
 
 try:
     from .process_guard import kill_group
+    from .check_atoms import execution_lanes, load_atoms
 except ImportError:
     from process_guard import kill_group
+    from check_atoms import execution_lanes, load_atoms
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = threading.RLock()
@@ -96,7 +98,26 @@ def stop_children(signum, frame):
     raise SystemExit(128 + signum)
 
 
-def execute(preparation, checks):
+def atom_checks(jobs, receipt=None):
+    """Partition the complete canonical inventory into disjoint supervised units.
+
+    The second unit waits for all ordinary work. Each retains the existing phase
+    deadline, original atom deadlines and cancellation protocol. Separate receipt
+    paths prevent the two supervisors from overwriting each other's evidence.
+    """
+    checks = []
+    for workers, atoms in execution_lanes(load_atoms(), jobs):
+        name = 'stress' if atoms[0]['command'][0] == 'timeout' else 'atoms'
+        command = ['python3', 'tools/check_atoms.py', '--jobs', str(workers),
+                   '--files', *[atom['file'] for atom in atoms]]
+        if receipt:
+            command.extend(['--receipt', str(Path(str(receipt) + '.' + name + '.json'))])
+        checks.append((name, command))
+    return checks
+
+
+def execute(preparation, checks, deferred_checks=()):
+    """Run independent checks, then exclusive checks even after check failures."""
     results = []
     if preparation:
         # These phases are independent; library completion still gates atoms/native.
@@ -105,9 +126,12 @@ def execute(preparation, checks):
             results.extend(task.result() for task in futures)
         if any(result['returncode'] for result in results):
             return results
-    with ThreadPoolExecutor(max_workers=len(checks)) as pool:
-        futures = [pool.submit(run_phase, name, command) for name, command in checks]
-        results.extend(task.result() for task in futures)
+    if checks:
+        with ThreadPoolExecutor(max_workers=len(checks)) as pool:
+            futures = [pool.submit(run_phase, name, command) for name, command in checks]
+            results.extend(task.result() for task in futures)
+    for name, command in deferred_checks:
+        results.append(run_phase(name, command))
     return results
 
 
@@ -127,14 +151,16 @@ def main():
     started = time.monotonic()
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     emit(f'CHECK-GATE-START jobs={jobs}')
+    atoms = atom_checks(jobs, os.environ.get('LEAN_POO_ATOM_RECEIPT'))
     results = execute(
         [('library', ['lake', 'build', 'LeanPoo', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('types', ['lean', '-j', '2', 'LeanPoo/C4/Types.lean']),
-         ('atoms', ['python3', 'tools/check_atoms.py', '--jobs', str(jobs)]),
+         *[(name, command) for name, command in atoms if name == 'atoms'],
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
          ('docs', ['just', 'check-docs']),
-         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index'])])
+         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index'])],
+        [(name, command) for name, command in atoms if name == 'stress'])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     receipt = dict(schema='lean-poo.check-gate.v1', jobs=jobs, phases=results,
                    wall_seconds=time.monotonic() - started,

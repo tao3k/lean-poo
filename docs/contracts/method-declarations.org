@@ -50,3 +50,24 @@ stable supplied callbacks are explicit premises. Source invalidation, real macro
 expansion and retry execute in the Scheme FUN example and regression suite.
 This integration advances the article's future MOP work; it is not a runtime or
 compiler proof, and does not close the other TODO workstreams.
+
+* Ordered declaration traversal and complete finalization
+
+The Gerbil driver now uses standard ~map-in-order~ followed by ~foldr append []~
+inside the existing FUN Observation. Per-form proper-list checks precede the
+suffix; finalization receives the whole batch and current context. Preparation
+captures each form binding. Mutable chunk copying remains deferred until all
+callbacks complete, and source revisions retain their original rejection guards.
+The integrated Scheme example constructs tenant/private metadata and a complete
+qualifier group above the shared C3 family, then reflects and invokes it.
+
+~DeclarativeMetadata.collectForms~ delegates to Lean ~List.mapM~ and flattening.
+Six laws prove ordered same-context monadic sequencing, empty input, equivalence
+to the original ~expandForms~, refusal, batch concatenation and finalization.
+The monadic law assumes ~LawfulMonad~. ~Examples/MetaBootstrap.lean~ checks
+exception-over-state prefix effects and empty finalization; the expanded
+~Examples/DeclaredMethods.lean~ proves the complete approved qualifier trace and
+refusal/retry values. Finite immutable lists and supplied callback semantics are
+model premises. Gerbil tests separately exercise mutable spine ownership, actual
+macro expansion and registered source guards. No runtime/compiler or performance
+proof follows from the list laws.

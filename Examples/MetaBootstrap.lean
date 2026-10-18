@@ -52,6 +52,34 @@ def current : Expansion Nat Nat := fun revision =>
 /-- Reuse of the same action does not retain a previous admission. -/
 example : [expandForms [current] 3, expandForms [current] 2, expandForms [current] 3] =
     [.ok [("current",publicAmount)], .error "revision refused", .ok [("current",publicAmount)]] := rfl
+/-- Exception-over-state retains the observable prefix even when a form fails. -/
+abbrev ExpansionTrace := ExceptT String (StateM (List String))
+/-- A supplied effectful form records selection, then returns its current-context fragment. -/
+def tracedForm (name : String) (accepted : Bool) (value : Nat) : Nat → ExpansionTrace (List Nat) :=
+  fun context => do
+    modify (· ++ [name])
+    if accepted then pure [context + value] else throw "fragment refused"
+/-- Ordered standard traversal preserves both the successful stream and effects. -/
+example : (collectForms [tracedForm "first" true 1, tracedForm "last" true 2] 10).run.run [] =
+    (.ok [11,12], ["first","last"]) := rfl
+/-- A refusal keeps prior effects and cannot select the suffix or finalizer. -/
+example : ((do
+    let entries ← collectForms [tracedForm "first" true 1, tracedForm "stop" false 2,
+      tracedForm "unreachable" true 3] 10
+    modify (· ++ ["finalize"])
+    pure entries) : ExpansionTrace (List Nat)).run.run [] =
+    (.error "fragment refused", ["first","stop"]) := rfl
+/-- Empty input still invokes the one finalizer, rather than skipping approval. -/
+example : ((do
+    let entries ← collectForms ([] : List (Nat → ExpansionTrace (List Nat))) 10
+    modify (· ++ ["finalize"])
+    pure entries) : ExpansionTrace (List Nat)).run.run [] = (.ok [], ["finalize"]) := rfl
+#print axioms collectForms_cons
+#print axioms collectForms_nil
+#print axioms collectForms_eq_expandForms
+#print axioms collectForms_refused
+#print axioms collectForms_append
+#print axioms collectForms_finalize
 #print axioms bootstrapLookup_order
 #print axioms bootstrapLookup_slot
 #print axioms bootstrapLookup_field

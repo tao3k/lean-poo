@@ -1,6 +1,7 @@
 """Orchestration admission: partition coverage and real process failure status."""
 import contextlib
 import io
+import json
 from pathlib import Path
 import sys
 import subprocess
@@ -14,6 +15,17 @@ from tools.check_atoms import configure_limits, configure_threads, execute, exec
 
 
 class CheckAtomsTests(unittest.TestCase):
+    def test_public_inventory_defaults_to_one_lean_thread_per_file(self):
+        script = Path(__file__).resolve().parents[1] / 'check_atoms.py'
+        result = subprocess.run([sys.executable, str(script), '--list'],
+                                check=True, capture_output=True, text=True)
+        atoms = json.loads(result.stdout)
+        self.assertEqual(len(atoms), len(load_atoms()))
+        for atom in atoms:
+            command = atom['command']
+            self.assertEqual(command.count('-j'), 1)
+            self.assertEqual(command[command.index('-j') + 1], '1')
+
     def test_deadline_phases_preserve_every_command_and_worker_ceiling(self):
         atoms = load_atoms()
         for jobs in (1, 2, 4, 14):

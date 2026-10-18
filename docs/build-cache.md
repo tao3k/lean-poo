@@ -62,3 +62,22 @@ before launch and does not consume a test's timeout. All commands remain in the
 same complete inventory, including after an earlier phase's failure; deadlines,
 failure status and process-group cancellation are unchanged. Actual phase starts
 report their inventory and worker count in the progress stream.
+
+The atom runner defaults to one Lean thread per file; independent files retain
+automatic parallel workers. A local QueueSelection control completed with `-j1`
+in 11.595 s while the same isolated `-j2` command hit its original 30 s deadline.
+This is a host observation, not a universal runtime speedup claim. The original
+memory/allocation/deadline budgets and complete source inventory remain intact;
+`--lean-threads` still permits explicit controlled comparisons. The public
+inventory regression checks the default thread budget for every selected file.
+
+The complete local gate supervises ordinary atoms and exclusive stress atoms as
+separate units, each with the existing 300 s phase ceiling. The latter starts
+after the ordinary checks have joined, even if an ordinary check failed. This
+increases the aggregate time available compared with putting both sequential
+units under one 300 s clock; it does not extend any individual stress deadline.
+A regression verifies disjoint, complete coverage of the canonical inventory and
+failure propagation. When `LEAN_POO_ATOM_RECEIPT` is set, the gate writes separate
+`.atoms.json` and `.stress.json` receipts under that prefix; standalone atom-runner
+receipt behavior is unchanged. Phase progress and process-group cleanup remain
+active throughout both units.

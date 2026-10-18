@@ -5,7 +5,7 @@ import LeanPoo.Object.SlotReflection
 Expansion is generic in its entry type; record callbacks emit Slot descriptors.
 Catalogs observe metadata without demanding private instance values. Future work. -/
 namespace LeanPoo.Functional.DeclarativeMetadata
-universe u v
+universe u v w
 open Prototype.DescriptorReflection
 /-- One callback may contribute multiple slots using the same immutable context. -/
 abbrev Expansion (Context α : Type) := Context → Except String (List (String × SlotDeclaration α))
@@ -45,6 +45,64 @@ theorem expandForms_append {Context : Type u} {Entry : Type v}
       cases expandForms rest context <;> simp [bind, Except.bind, Except.map]
       case ok back =>
         cases expandForms second context <;> simp [Except.map, List.append_assoc]
+/-- Standard ordered monadic traversal followed by the same complete flattening.
+Native preparation captures each form before this traversal is invoked. Mutable
+list-spine ownership and host callback admission are separate runtime premises. -/
+def collectForms {m : Type v → Type w} [Monad m] {Context : Type u} {Entry : Type v}
+    (forms : List (Context → m (List Entry))) (context : Context) : m (List Entry) :=
+  List.flatten <$> forms.mapM (fun form => form context)
+
+/-- The standard traversal retains the original same-context Reader sequencing,
+including arbitrary effects and short-circuiting in a supplied lawful monad. -/
+theorem collectForms_cons {m : Type v → Type w} [Monad m] [LawfulMonad m]
+    {Context : Type u} {Entry : Type v} (first : Context → m (List Entry)) (rest) (context) :
+    collectForms (first :: rest) context = (do
+      let front ← first context
+      let back ← collectForms rest context
+      pure (front ++ back)) := by
+  simp [collectForms, List.mapM_cons]
+
+/-- Empty input still delivers an empty complete batch to its caller. -/
+theorem collectForms_nil {m : Type v → Type w} [Monad m] [LawfulMonad m]
+    {Context : Type u} {Entry : Type v} (context : Context) :
+    collectForms ([] : List (Context → m (List Entry))) context = pure [] := by
+  simp [collectForms]
+
+/-- Delegating traversal and flattening preserves the complete existing result
+and failure algebra, not only the list of successful names. -/
+theorem collectForms_eq_expandForms {Context : Type u} {Entry : Type v}
+    (forms : List (Context → Except String (List Entry))) (context : Context) :
+    collectForms forms context = expandForms forms context := by
+  induction forms with
+  | nil => rfl
+  | cons first rest ih =>
+    rw [collectForms_cons, ih]
+    rfl
+
+/-- A failed fragment prevents the suffix traversal from producing a result. -/
+theorem collectForms_refused {Context : Type u} {Entry : Type v}
+    (first : Context → Except String (List Entry)) (rest) (context) (message : String)
+    (failed : first context = .error message) :
+    collectForms (first :: rest) context = .error message := by
+  rw [collectForms_eq_expandForms]
+  exact expandForms_refused first rest context message failed
+
+/-- Static and spliced declaration batches share one ordered traversal protocol. -/
+theorem collectForms_append {Context : Type u} {Entry : Type v}
+    (first second : List (Context → Except String (List Entry))) (context) :
+    collectForms (first ++ second) context = (collectForms first context).bind (fun front =>
+      (collectForms second context).map (fun back => front ++ back)) := by
+  simp only [collectForms_eq_expandForms, expandForms_append]
+
+/-- Finalization consumes precisely the complete current batch; failures and
+arbitrary result representations remain those of the existing protocol. -/
+theorem collectForms_finalize {Context : Type u} {Entry : Type v} {Result : Type v}
+    (forms : List (Context → Except String (List Entry))) (context)
+    (finalize : Context → List Entry → Except String Result) :
+    (do let entries ← collectForms forms context; finalize context entries) =
+    (do let entries ← expandForms forms context; finalize context entries) := by
+  rw [collectForms_eq_expandForms]
+
 /-- Reserved catalog metadata cannot be shadowed by an expanded user declaration. -/
 def declarationNamesValid (entries : List (String × SlotDeclaration α)) : Prop :=
   (entries.map Prod.fst).Nodup ∧

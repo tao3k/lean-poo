@@ -192,7 +192,9 @@ def execute(atoms, jobs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jobs', type=int, default=4)
-    parser.add_argument('--lean-threads', type=int, default=2)
+    # Parallelism belongs to independent files. Extra workers inside each Lean
+    # process compete with that pool and can stall bounded #eval controls.
+    parser.add_argument('--lean-threads', type=int, default=1)
     parser.add_argument('--shard', type=int, default=0)
     parser.add_argument('--shards', type=int, default=1)
     parser.add_argument('--files', nargs='+')
