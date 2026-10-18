@@ -536,4 +536,49 @@ theorem invokeDeclaredSource_sound (captured before : Nat)
       · contradiction
   · contradiction
 
+variable {Layout : Type}
+
+/-- Complete candidate projection precedes the existing declaration publisher.
+The builder receives the selected assignment AND its own derived layout. No
+builder is reachable on projection errors, ambiguity or an incomplete scan. -/
+def inferDeclaredCandidates (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error)
+      (PrototypeTypes.Inference (Assignment × Layout) × Option Artifact) :=
+  match PrototypeTypes.collectCandidates derive valid budget candidates with
+  | .error cause => .error (.inl cause)
+  | .ok accepted => inferDeclared budget (fun _ => true) accepted build
+
+/-- Successful publication retains the exact candidate, projection, constraints
+and builder result. The projection must faithfully model the runtime normalized
+catalog; this theorem does not prove Gerbil macro expansion or arbitrary Types. -/
+theorem inferDeclaredCandidates_sound (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) (entry artifact)
+    (published : inferDeclaredCandidates budget derive valid candidates build =
+      .ok (.unique entry, some artifact)) :
+    entry.1 ∈ candidates ∧ derive entry.1 = .ok entry.2 ∧
+      valid entry.1 entry.2 = true ∧ build entry = .ok artifact := by
+  unfold inferDeclaredCandidates at published
+  cases collected : PrototypeTypes.collectCandidates derive valid budget candidates with
+  | error cause => simp [collected] at published
+  | ok accepted =>
+    simp only [collected] at published
+    obtain ⟨member, _, built⟩ := inferDeclared_unique _ _ _ _ published
+    obtain ⟨source, own, checked⟩ := PrototypeTypes.collectCandidates_sound _ _ _ _ _ collected entry member
+    exact ⟨source, own, checked, built⟩
+
+/-- Exhaustion, malformed syntax and unsupported projection escape before any
+artifact is constructed. A retry must start a new complete request. -/
+theorem inferDeclaredCandidates_refused (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) (cause)
+    (refused : PrototypeTypes.collectCandidates derive valid budget candidates = .error cause) :
+    inferDeclaredCandidates budget derive valid candidates build = .error (.inl cause) := by
+  simp [inferDeclaredCandidates, refused]
+
 end LeanPoo.Functional.DeclarativeMetadata

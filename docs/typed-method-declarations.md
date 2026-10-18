@@ -214,3 +214,30 @@ selection stress test. `Prepared.chargeRun` computes a charge from a retained ru
 actual selected run. The stress test retains every scenario/profile/oracle/ceiling
 assertion while sharing that result. No timeout, heap limit, checked workload or
 cost conclusion is weakened, and this is not a Scheme wall-time speed claim.
+
+## Candidate-dependent signature and field selection
+
+The Gerbil solver now substitutes each complete finite assignment before deciding
+its signature kind and Object field/row layout. All sibling call inequalities and
+original bounds are checked under that same assignment. Accepted alternatives keep
+their own normalized layout and queries. Existing declaration factories still
+require full named-method coverage and current source/descriptor revisions.
+
+`PrototypeTypes.collectCandidates` models complete bounded projection, with
+candidate-local `bounds` rejection and whole-request propagation of other failures.
+Its soundness and completeness theorems associate every retained layout with its
+actual assignment and validation; no admitted alternative can be silently omitted.
+`DeclarativeMetadata.inferDeclaredCandidates` composes this with the existing
+unique-only builder, proving candidate/projection/constraint/builder provenance
+and suppression of artifacts on projection errors. `Examples/TypedMethodDeclarations.lean`
+projects rich signatures from two candidate field layouts, collects the existing
+joint Function constraints, and exercises two-generic construction, ambiguity,
+unsupported syntax after an accepted prefix, exhaustion and no-solution.
+
+The projection and Boolean validation must faithfully represent Gerbil normalization
+and bounds checking. The existing subtype and Function selection laws discharge
+the finite relations where modeled; these theorems do not verify Gerbil expansion,
+Type callbacks, parser implementations, GC or compiler execution. This advances
+the appendix's type-system/generalized-prototype future work. Arbitrary reflective
+Class/Slot discovery, unrestricted case-language inclusion and principal/effect
+inference remain outside the decidable finite scope.

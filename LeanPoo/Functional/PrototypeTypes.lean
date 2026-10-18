@@ -337,6 +337,117 @@ theorem bounded_unique (budget : Nat) (valid : Assignment → Bool) (candidates 
   · exact infer_unique valid candidates (Except.ok.inj accepted)
   · contradiction
 
+/-- Candidate-dependent projection retains the layout/signature evidence beside
+its original assignment. Bounds/kind mismatch rejects only that candidate; other
+failures abort the whole search. Fuel is shared across the complete scan and no
+accepted prefix is returned on exhaustion. Expression-level work is separately
+metered by Scheme, so this scan bound is not a runtime cost certificate. -/
+def collectCandidates (derive : Assignment → Except Failure Evidence)
+    (valid : Assignment → Evidence → Bool) : Nat → List Assignment →
+    Except Failure (List (Assignment × Evidence))
+  | _, [] => .ok []
+  | 0, _ :: _ => .error .exhausted
+  | fuel + 1, candidate :: rest =>
+    match derive candidate with
+    | .error .bounds => collectCandidates derive valid fuel rest
+    | .error cause => .error cause
+    | .ok evidence =>
+      match collectCandidates derive valid fuel rest with
+      | .error cause => .error cause
+      | .ok accepted => .ok (if valid candidate evidence then (candidate, evidence) :: accepted else accepted)
+
+/-- Every retained layout belongs to its own candidate, and that same candidate
+satisfies all bounds and call inequalities derived from the layout. Sibling
+queries from different alternatives cannot be merged into a synthetic solution. -/
+theorem collectCandidates_sound (derive : Assignment → Except Failure Evidence)
+    (valid : Assignment → Evidence → Bool) (fuel candidates accepted)
+    (completed : collectCandidates derive valid fuel candidates = .ok accepted)
+    (entry : Assignment × Evidence) (member : entry ∈ accepted) :
+    entry.1 ∈ candidates ∧ derive entry.1 = .ok entry.2 ∧ valid entry.1 entry.2 = true := by
+  induction candidates generalizing fuel accepted with
+  | nil => simp [collectCandidates] at completed; subst accepted; simp at member
+  | cons candidate rest ih =>
+    cases fuel with
+    | zero => simp [collectCandidates] at completed
+    | succ fuel =>
+      cases projected : derive candidate with
+      | error cause =>
+        cases cause <;> simp only [collectCandidates, projected] at completed
+        all_goals try contradiction
+        obtain ⟨source, own, checked⟩ := ih fuel accepted completed member
+        exact ⟨List.mem_cons_of_mem _ source, own, checked⟩
+      | ok evidence =>
+        cases tail : collectCandidates derive valid fuel rest with
+        | error cause => simp [collectCandidates, projected, tail] at completed
+        | ok remaining =>
+          by_cases checked : valid candidate evidence = true
+          · simp [collectCandidates, projected, tail, checked] at completed
+            subst accepted
+            rcases List.mem_cons.mp member with equal | later
+            · subst entry; exact ⟨by simp, projected, checked⟩
+            · obtain ⟨source, own, good⟩ := ih fuel remaining tail later
+              exact ⟨List.mem_cons_of_mem _ source, own, good⟩
+          · simp [collectCandidates, projected, tail, checked] at completed
+            subst accepted
+            obtain ⟨source, own, good⟩ := ih fuel remaining tail member
+            exact ⟨List.mem_cons_of_mem _ source, own, good⟩
+
+/-- Complete successful scanning retains every admitted candidate. Thus a unique
+answer cannot hide another valid layout, and no-solution is relative to the whole
+explicit universe rather than to a visited prefix. -/
+theorem collectCandidates_complete (derive : Assignment → Except Failure Evidence)
+    (valid : Assignment → Evidence → Bool) (fuel candidates accepted)
+    (completed : collectCandidates derive valid fuel candidates = .ok accepted)
+    (candidate : Assignment) (evidence : Evidence) (source : candidate ∈ candidates)
+    (projected : derive candidate = .ok evidence) (checked : valid candidate evidence = true) :
+    (candidate, evidence) ∈ accepted := by
+  induction candidates generalizing fuel accepted with
+  | nil => simp at source
+  | cons head rest ih =>
+    cases fuel with
+    | zero => simp [collectCandidates] at completed
+    | succ fuel =>
+      cases first : derive head with
+      | error cause =>
+        cases cause <;> simp only [collectCandidates, first] at completed
+        all_goals try contradiction
+        rcases List.mem_cons.mp source with equal | later
+        · subst head; rw [projected] at first; contradiction
+        · exact ih fuel accepted completed later
+      | ok value =>
+        cases tail : collectCandidates derive valid fuel rest with
+        | error cause => simp [collectCandidates, first, tail] at completed
+        | ok remaining =>
+          rcases List.mem_cons.mp source with equal | later
+          · subst head
+            have same : value = evidence := by simpa [projected] using first.symm
+            subst value
+            simp [collectCandidates, first, tail, checked] at completed
+            subst accepted
+            exact List.mem_cons_self
+          · have retained := ih fuel remaining tail later
+            by_cases headValid : valid head value = true
+            · simp [collectCandidates, first, tail, headValid] at completed
+              subst accepted
+              exact List.mem_cons_of_mem _ retained
+            · simp [collectCandidates, first, tail, headValid] at completed
+              subst accepted
+              exact retained
+
+/-- Not even a valid first assignment can survive an incomplete scan. -/
+theorem collectCandidates_exhausted (derive : Assignment → Except Failure Evidence)
+    (valid : Assignment → Evidence → Bool) (candidate : Assignment) (rest : List Assignment) :
+    collectCandidates derive valid 0 (candidate :: rest) = .error .exhausted := rfl
+
+/-- A well-formed candidate with the wrong kind is an ordinary negative choice,
+not a whole-request syntax error and not an excuse to suppress later errors. -/
+theorem collectCandidates_bounds (derive : Assignment → Except Failure Evidence)
+    (valid : Assignment → Evidence → Bool) (fuel candidate rest)
+    (rejected : derive candidate = .error .bounds) :
+    collectCandidates derive valid (fuel + 1) (candidate :: rest) =
+      collectCandidates derive valid fuel rest := by
+  simp [collectCandidates, rejected]
+
 /-- Prefix binding fixes the first parameters and renumbers only the residual
 variables. This is the semantic environment of capture-free residual syntax. -/
 def prefixEnvironment (fixed : List Ty) (tail : Nat → Ty) (name : Nat) : Ty :=

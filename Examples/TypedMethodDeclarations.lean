@@ -351,4 +351,61 @@ def buildCheckedShared (env : Nat → Ty) : Except String (Nat × Nat) := do
 #print axioms invokeDeclaredSource_changed
 #print axioms invokeDeclaredSource_sound
 
+/-- The selected catalog retains named field layout and its own call queries.
+This is a finite projection of Object/Row normalization, not a host AST parser. -/
+structure CandidateCatalog where
+  fields : List (List String × List (TypedSignature String Expr))
+  queries : List (Expr × Expr)
+/-- Candidate zero has the wrong kind; two lacks a required sibling. Candidate
+one supplies both rich signatures after complete parameter substitution. -/
+def candidateCatalog (choice : Nat) : Except Functional.PrototypeTypes.Failure CandidateCatalog := do
+  if choice = 0 then .error .bounds else
+  if choice = 3 then .error .unsupported else
+  let fields := if choice = 1 ∨ choice = 4 then sharedCatalog else sharedCatalog.take 1
+  let ground := fields.map fun (path, clauses) =>
+    (path, clauses.map (TypedSignature.mapTypes (fun expr => .ground (substitute (selectedEnvironment false) expr))))
+  match jointConstraints ground sharedCalls with
+  | none => .error .bounds
+  | some queries => .ok ⟨ground, queries⟩
+/-- One assignment owns the entire projected layout and all sibling inequalities.
+The existing complete catalog/source admission remains in the final builder. -/
+def candidateCatalogValid (_choice : Nat) (catalog : CandidateCatalog) : Bool :=
+  satisfies 8 (originalBounds ++ catalog.queries) (selectedEnvironment false)
+/-- Reuse the actual two-generic builder; no partial method is published by search. -/
+def buildCandidateCatalog (_entry : Nat × CandidateCatalog) : Except String (Nat × Nat) :=
+  buildCheckedShared (selectedEnvironment false)
+#guard match inferDeclaredCandidates 3 candidateCatalog candidateCatalogValid [0, 1, 2] buildCandidateCatalog with
+  | .ok (.unique (1, layout), some (36, 136)) => layout.fields.length == 2 && layout.queries.length == 10
+  | _ => false
+-- Distinct admitted assignments cannot be hidden by the first successful one.
+#guard match inferDeclaredCandidates 2 candidateCatalog candidateCatalogValid [1, 4] buildCandidateCatalog with
+  | .ok (.ambiguous [_, _], none) => true
+  | _ => false
+-- Unsupported syntax AFTER a valid candidate aborts without returning its artifact.
+#guard match inferDeclaredCandidates 2 candidateCatalog candidateCatalogValid [1, 3] buildCandidateCatalog with
+  | .error (.inl .unsupported) => true
+  | _ => false
+-- A valid prefix cannot bypass exhaustion, while an empty successful scan is none.
+#guard match inferDeclaredCandidates 1 candidateCatalog candidateCatalogValid [1, 2] buildCandidateCatalog with
+  | .error (.inl .exhausted) => true
+  | _ => false
+#guard match inferDeclaredCandidates 2 candidateCatalog candidateCatalogValid [0, 2] buildCandidateCatalog with
+  | .ok (.none, none) => true
+  | _ => false
+/-- All original parameter bounds and candidate-derived sibling constraints have
+actual subtype derivations under the same prefixed environment as the builder. -/
+theorem candidateCatalog_constraints (entry artifact)
+    (published : inferDeclaredCandidates 3 candidateCatalog candidateCatalogValid [0, 1, 2]
+      buildCandidateCatalog = .ok (.unique entry, some artifact))
+    (query : Expr × Expr) (member : query ∈ originalBounds ++ entry.2.queries) :
+    Subtype (substitute (selectedEnvironment false) query.1)
+      (substitute (selectedEnvironment false) query.2) := by
+  obtain ⟨_, _, checked, _⟩ := inferDeclaredCandidates_sound _ _ _ _ _ _ _ published
+  exact satisfies_sound 8 _ _ checked member
+#print axioms candidateCatalog_constraints
+#print axioms Functional.PrototypeTypes.collectCandidates_sound
+#print axioms Functional.PrototypeTypes.collectCandidates_complete
+#print axioms inferDeclaredCandidates_sound
+#print axioms inferDeclaredCandidates_refused
+
 end LeanPoo.Examples.TypedMethodDeclarations
