@@ -440,3 +440,31 @@ Class-validator controls include nine layouts, sixteen observations, optional
 absence, hidden incompatible values, Function variance, Map key invariance and
 refusal before consumption. This advances the type protocol future work from
 Appendices C/D, not arbitrary Class subtyping, effect equality or mutable writes.
+
+
+### Effective Function metadata
+
+Function admission, negative-input traversal, inference views and descriptor
+construction now share `call-with-function-types`. It uses Gerbil's `agetq`;
+source-preserving substitution uses `map-in-order` and `alist->plist`, rather
+than another positional option protocol. The existing Function descriptor still
+owns argument/default/result checking and the existing FUN/refine/bind-evidence
+chain owns consumption and publication.
+
+Semantic candidate identity and subtype normalization use the same effective
+schema: option binding order and explicit empty defaults do not create distinct
+candidates. A rich signature has all four metadata bindings in descriptor order;
+an all-default signature has no metadata tail. Captured source expressions retain
+the original spelling. Case order, field construction order, keyword declaration
+order, required-key payload order, Map key invariance and ordered Union branches
+are preserved. Duplicate/unknown/malformed options and exhausted admission retain
+typed refusal before builder execution; normalization supplies no Any fallback.
+
+`t/function-options-test.ss` checks all 24 option orders, explicit defaults,
+prefix substitution, nested callbacks, invariant Map keys, ordered Union/cases,
+and a rich service callback through refinement and evidence binding. The Lean
+FunctionSignature model proves permutation invariance for unique option kinds,
+default elimination, normalization idempotence and substitution commutation.
+Its typed input premise excludes unknown raw syntax; Gerbil admission tests cover
+that boundary. These extend the article's type/MOP future work, not host compiler
+or effect semantics, arbitrary predicate equivalence or unrestricted inference.

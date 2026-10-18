@@ -415,7 +415,7 @@ structure TypedSignature (Key Ty : Type) where
   keywords : List (Key × Ty) := []
   requiredKeywords : List Key := []
   rest : Option Ty := none
-  deriving Repr
+  deriving Repr, DecidableEq
 
 /-- Project only the finite supplied-call language used before any validator. -/
 def TypedSignature.shape (signature : TypedSignature Key Ty) : Signature Key :=
@@ -427,6 +427,182 @@ def TypedSignature.mapTypes (substitute : A → B) (signature : TypedSignature K
   ⟨signature.outputs.map substitute, signature.inputs.map substitute,
     signature.optional.map substitute, signature.keywords.map (fun (key, ty) => (key, substitute ty)),
     signature.requiredKeywords, signature.rest.map substitute⟩
+
+/-- Literal option names are separate from Type parameters and keyword labels. -/
+inductive SignatureOptionKind where
+  | optional | keywords | requiredKeywords | rest
+  deriving Repr, DecidableEq
+/-- Admitted Function metadata contains Types, not host default expressions. -/
+inductive SignatureOption (Key Ty : Type) where
+  | optional (types : List Ty)
+  | keywords (entries : List (Key × Ty))
+  | requiredKeywords (keys : List Key)
+  | rest (type : Option Ty)
+  deriving Repr
+/-- Duplicate-name admission uses names alone, never Type recognizer equality. -/
+def signatureOptionKind : SignatureOption Key Ty → SignatureOptionKind
+  | .optional _ => .optional
+  | .keywords _ => .keywords
+  | .requiredKeywords _ => .requiredKeywords
+  | .rest _ => .rest
+/-- Bind one metadata field without visiting any supplied argument or default. -/
+def applySignatureOption (option : SignatureOption Key Ty) (signature : TypedSignature Key Ty) : TypedSignature Key Ty :=
+  match option with
+  | .optional types => {signature with optional := types}
+  | .keywords entries => {signature with keywords := entries}
+  | .requiredKeywords keys => {signature with requiredKeywords := keys}
+  | .rest type => {signature with rest := type}
+/-- Core association lookup projects one effective schema, starting with the
+constructor's literal empty/false defaults. Duplicate names are checked separately. -/
+def projectSignatureOptions (outputs inputs : List Ty) (options : List (SignatureOption Key Ty)) : TypedSignature Key Ty :=
+  options.foldr applySignatureOption ⟨outputs, inputs, [], [], [], none⟩
+/-- Options cannot bind outputs or required inputs; those are positional schema
+fields throughout projection, normalization and later Type specialization. -/
+theorem projectSignatureOptions_header (outputs inputs : List Ty) (options : List (SignatureOption Key Ty)) :
+    (projectSignatureOptions outputs inputs options).outputs = outputs ∧
+      (projectSignatureOptions outputs inputs options).inputs = inputs := by
+  induction options with
+  | nil => exact ⟨rfl, rfl⟩
+  | cons head tail ih =>
+    cases head <;> simpa only [projectSignatureOptions, List.foldr_cons, applySignatureOption] using ih
+
+/-- No duplicate metadata can be silently erased into an accepted signature. Raw
+unknown names and malformed payloads remain source-language admission obligations. -/
+def readSignatureOptions (outputs inputs : List Ty) (options : List (SignatureOption Key Ty)) : Option (TypedSignature Key Ty) :=
+  if (options.map signatureOptionKind).Nodup then some (projectSignatureOptions outputs inputs options) else none
+/-- Match Function's fixed metadata order and omission of the all-default tail.
+Keyword/case/field order within payloads is never sorted, merged or widened. -/
+def canonicalSignatureOptions (signature : TypedSignature Key Ty) : List (SignatureOption Key Ty) :=
+  if signature.optional.isEmpty && signature.keywords.isEmpty && signature.requiredKeywords.isEmpty && signature.rest.isNone then []
+  else [.optional signature.optional, .keywords signature.keywords, .requiredKeywords signature.requiredKeywords, .rest signature.rest]
+/-- Literal metadata aliases normalize through the same effective schema. -/
+def normalizeSignatureOptions (outputs inputs : List Ty) (options : List (SignatureOption Key Ty)) :=
+  canonicalSignatureOptions (projectSignatureOptions outputs inputs options)
+/-- Reordering two different options preserves every field, even with rest and
+multiple output Types. Duplicate assignments are intentionally excluded. -/
+theorem applySignatureOption_commute (first second : SignatureOption Key Ty) (signature : TypedSignature Key Ty)
+    (different : signatureOptionKind first ≠ signatureOptionKind second) :
+    applySignatureOption first (applySignatureOption second signature) =
+      applySignatureOption second (applySignatureOption first signature) := by
+  cases first <;> cases second <;> simp_all [signatureOptionKind, applySignatureOption]
+/-- Any admitted option permutation gives the same effective signature; no
+ordering premise is made about user validators inside its Type payloads. -/
+theorem signatureOptions_fold_perm (first second : List (SignatureOption Key Ty))
+    (permutation : first.Perm second) (signature : TypedSignature Key Ty)
+    (unique : (first.map signatureOptionKind).Nodup) :
+    first.foldr applySignatureOption signature = second.foldr applySignatureOption signature := by
+  induction permutation generalizing signature with
+  | nil => rfl
+  | cons head permutation ih =>
+    have tail := (List.nodup_cons.mp unique).2
+    simpa only [List.foldr_cons] using congrArg (applySignatureOption head) (ih signature tail)
+  | swap first second rest =>
+    have distinct : signatureOptionKind second ≠ signatureOptionKind first := by
+      have absent := (List.nodup_cons.mp unique).1
+      intro same
+      exact absent (List.mem_cons.mpr (.inl same))
+    exact applySignatureOption_commute second first _ distinct
+  | trans left right ihLeft ihRight =>
+    exact (ihLeft signature unique).trans
+      (ihRight signature ((left.map signatureOptionKind).nodup_iff.mp unique))
+/-- Duplicate checks and effective fields both ignore only admitted option order. -/
+theorem readSignatureOptions_perm (outputs inputs : List Ty) (first second : List (SignatureOption Key Ty))
+    (permutation : first.Perm second) :
+    readSignatureOptions outputs inputs first = readSignatureOptions outputs inputs second := by
+  have distinct := (permutation.map signatureOptionKind).nodup_iff
+  by_cases unique : (first.map signatureOptionKind).Nodup
+  · have right := distinct.mp unique
+    simp only [readSignatureOptions, unique, right, ↓reduceIte, projectSignatureOptions]
+    exact congrArg some (signatureOptions_fold_perm first second permutation ⟨outputs, inputs, [], [], [], none⟩ unique)
+  · have right : ¬(second.map signatureOptionKind).Nodup := fun h => unique (distinct.mpr h)
+    simp only [readSignatureOptions, unique, right, ↓reduceIte]
+
+/-- Constructor-default omission and explicit defaults are observationally equal. -/
+theorem projectSignatureOptions_canonical (signature : TypedSignature Key Ty) :
+    projectSignatureOptions signature.outputs signature.inputs (canonicalSignatureOptions signature) = signature := by
+  cases signature with
+  | mk outputs inputs optional keywords required rest =>
+    cases optional <;> cases keywords <;> cases required <;> cases rest <;> rfl
+/-- The canonical tail is always duplicate-free, whether empty or complete. -/
+theorem canonicalSignatureOptions_unique (signature : TypedSignature Key Ty) :
+    ((canonicalSignatureOptions signature).map signatureOptionKind).Nodup := by
+  unfold canonicalSignatureOptions
+  split <;> simp [signatureOptionKind]
+/-- Canonicalization changes no effective signature before a constructor runs. -/
+theorem readSignatureOptions_canonical (signature : TypedSignature Key Ty) :
+    readSignatureOptions signature.outputs signature.inputs (canonicalSignatureOptions signature) = some signature := by
+  simp only [readSignatureOptions, canonicalSignatureOptions_unique, ↓reduceIte, projectSignatureOptions_canonical]
+/-- The entire normalization step preserves an admitted projection. -/
+theorem normalizeSignatureOptions_sound (outputs inputs : List Ty) (options : List (SignatureOption Key Ty))
+    (signature : TypedSignature Key Ty) (accepted : readSignatureOptions outputs inputs options = some signature) :
+    readSignatureOptions outputs inputs (normalizeSignatureOptions outputs inputs options) = some signature := by
+  unfold readSignatureOptions at accepted
+  split at accepted
+  · have same := Option.some.inj accepted
+    rw [←same]
+    have header := projectSignatureOptions_header outputs inputs options
+    simpa only [normalizeSignatureOptions, header.1, header.2] using
+      readSignatureOptions_canonical (projectSignatureOptions outputs inputs options)
+  · simp at accepted
+/-- Repeated capture/normalization is stable rather than accumulating defaults. -/
+theorem normalizeSignatureOptions_idempotent (outputs inputs : List Ty) (options : List (SignatureOption Key Ty)) :
+    normalizeSignatureOptions outputs inputs (normalizeSignatureOptions outputs inputs options) =
+      normalizeSignatureOptions outputs inputs options := by
+  simp only [normalizeSignatureOptions]
+  have same := projectSignatureOptions_canonical (projectSignatureOptions outputs inputs options)
+  have header := projectSignatureOptions_header outputs inputs options
+  simpa only [header.1, header.2] using congrArg canonicalSignatureOptions same
+/-- Duplicate metadata remains refusal, rather than a normalized successful alias. -/
+theorem readSignatureOptions_duplicate (outputs inputs : List Ty) (options : List (SignatureOption Key Ty))
+    (duplicate : ¬(options.map signatureOptionKind).Nodup) : readSignatureOptions outputs inputs options = none := by
+  simp [readSignatureOptions, duplicate]
+/-- Specialization visits Type payloads without changing option or keyword names. -/
+def mapSignatureOption (substitute : A → B) : SignatureOption Key A → SignatureOption Key B
+  | .optional types => .optional (types.map substitute)
+  | .keywords entries => .keywords (entries.map (fun (key, type) => (key, substitute type)))
+  | .requiredKeywords keys => .requiredKeywords keys
+  | .rest type => .rest (type.map substitute)
+/-- One metadata binding commutes with prefix/residual Type substitution. -/
+theorem applySignatureOption_map (substitute : A → B) (option : SignatureOption Key A) (signature : TypedSignature Key A) :
+    applySignatureOption (mapSignatureOption substitute option) (signature.mapTypes substitute) =
+      (applySignatureOption option signature).mapTypes substitute := by
+  cases option <;> cases signature <;> rfl
+/-- The effective schema is the same whether bound before or after all Type slots
+are substituted. Missing values and literal required-key metadata remain absent. -/
+theorem projectSignatureOptions_map (substitute : A → B) (outputs inputs : List A) (options : List (SignatureOption Key A)) :
+    projectSignatureOptions (outputs.map substitute) (inputs.map substitute) (options.map (mapSignatureOption substitute)) =
+      (projectSignatureOptions outputs inputs options).mapTypes substitute := by
+  have fold (rest : List (SignatureOption Key A)) (signature : TypedSignature Key A) :
+      (rest.map (mapSignatureOption substitute)).foldr applySignatureOption (signature.mapTypes substitute) =
+        (rest.foldr applySignatureOption signature).mapTypes substitute := by
+    induction rest with
+    | nil => rfl
+    | cons head tail ih => simp only [List.map_cons, List.foldr_cons, ih, applySignatureOption_map]
+  exact fold options ⟨outputs, inputs, [], [], [], none⟩
+
+/-- Substitution preserves option names, so it cannot repair duplicate metadata. -/
+theorem mapSignatureOption_kind (substitute : A → B) (option : SignatureOption Key A) :
+    signatureOptionKind (mapSignatureOption substitute option) = signatureOptionKind option := by
+  cases option <;> rfl
+/-- One admitted schema binding serves both syntax specialization and descriptor
+construction; false admission stays false and no callback/default is evaluated. -/
+theorem readSignatureOptions_map (substitute : A → B) (outputs inputs : List A) (options : List (SignatureOption Key A)) :
+    readSignatureOptions (outputs.map substitute) (inputs.map substitute) (options.map (mapSignatureOption substitute)) =
+      (readSignatureOptions outputs inputs options).map (TypedSignature.mapTypes substitute) := by
+  have kinds : (options.map (mapSignatureOption substitute)).map signatureOptionKind = options.map signatureOptionKind := by
+    simp only [List.map_map, Function.comp_def, mapSignatureOption_kind]
+  simp only [readSignatureOptions, kinds]
+  split <;> simp_all only [Option.map_some, Option.map_none, projectSignatureOptions_map]
+/-- Canonical semantic candidates are deduplicated before complete inference.
+A genuinely different candidate is not merged by this alias-only law. -/
+theorem infer_signature_aliases [DecidableEq Key] [DecidableEq Ty]
+    (outputs inputs : List Ty) (first second : List (SignatureOption Key Ty))
+    (aliases : projectSignatureOptions outputs inputs first = projectSignatureOptions outputs inputs second) :
+    PrototypeTypes.infer (fun _ => true)
+      ([projectSignatureOptions outputs inputs first, projectSignatureOptions outputs inputs second].eraseDups) =
+        .unique (projectSignatureOptions outputs inputs first) := by
+  rw [←aliases]
+  simp [PrototypeTypes.infer, List.eraseDups_cons]
 
 /-- Binding type parameters cannot change which supplied argument shapes match. -/
 @[simp] theorem TypedSignature.mapTypes_shape (substitute : A → B) (signature : TypedSignature Key A) :

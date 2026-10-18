@@ -808,4 +808,65 @@ theorem inferredRecordView_sound (choice artifact)
 #print axioms Functional.RowTypes.inferred_record_sound
 #print axioms inferredRecordView_sound
 
+/-- Same callback metadata as the Scheme alias service after Value=UInt is bound.
+Only the order of option bindings differs; required keys remain an empty payload. -/
+def callbackOptions : List (SignatureOption String Atom) :=
+  [.optional [.uint], .keywords [("scale", .uint)], .rest (some .uint)]
+/-- Explicit empty metadata and reordered bindings describe one effective schema. -/
+def callbackAliasOptions : List (SignatureOption String Atom) :=
+  [.rest (some .uint), .requiredKeywords [], .keywords [("scale", .uint)], .optional [.uint]]
+/-- Canonical fields retain the original callback language and one result Type. -/
+def callbackOptionSchema := projectSignatureOptions [.uint] [.uint] callbackOptions
+/-- Finite candidates deduplicate effective signatures before original inference. -/
+def callbackOptionCandidates :=
+  [callbackOptionSchema, projectSignatureOptions [.uint] [.uint] callbackAliasOptions].eraseDups
+/-- The existing prefix/residual declaration builder receives one complete schema. -/
+def inferredOptionService := inferDeclared 1 (fun _ => true) callbackOptionCandidates
+  (fun signature => do
+    let artifact ← buildSelected false
+    return (signature, artifact))
+#guard match inferredOptionService with
+  | .ok (.unique _, some (_, 36)) => true
+  | _ => false
+#guard accepts callbackOptionSchema.shape (⟨[2, 3, 4, 5], [("scale", 2)]⟩ : Call String Nat)
+#guard readSignatureOptions [.uint] [.uint] ([.optional [], .optional [.uint]] : List (SignatureOption String Atom)) == none
+/-- Omitted/default metadata normalize equally, but optional UInt is not omitted. -/
+example : normalizeSignatureOptions [.uint] [.uint] ([] : List (SignatureOption String Atom)) =
+    normalizeSignatureOptions [.uint] [.uint] [.rest none, .requiredKeywords [], .keywords [], .optional []] := rfl
+/-- Prefix binding of actual Type expressions commutes with the shared metadata
+projection. The existing substitution owns variance and bound validation. -/
+example (options : List (SignatureOption String Expr)) (outputs inputs : List Expr) :
+    projectSignatureOptions (outputs.map (substitute (selectedEnvironment false)))
+      (inputs.map (substitute (selectedEnvironment false)))
+      (options.map (mapSignatureOption (substitute (selectedEnvironment false)))) =
+    (projectSignatureOptions outputs inputs options).mapTypes (substitute (selectedEnvironment false)) :=
+  projectSignatureOptions_map _ _ _ _
+/-- Publication certifies one actual canonical candidate and the complete original
+builder result. Equal metadata is not permission to reuse a revised host owner. -/
+theorem inferredOptionService_signature (signature published artifact)
+    (success : inferredOptionService = .ok (.unique signature, some (published, artifact))) :
+    signature = callbackOptionSchema ∧ published = signature ∧ buildSelected false = .ok artifact := by
+  obtain ⟨member, _, built⟩ := inferDeclared_unique 1 _ callbackOptionCandidates _ success
+  have singleton : callbackOptionCandidates = [callbackOptionSchema] := by decide
+  rw [singleton] at member
+  have chosen := List.mem_singleton.mp member
+  refine ⟨chosen, ?_⟩
+  cases called : buildSelected false with
+  | error cause =>
+    rw [called] at built
+    change Except.error cause = Except.ok (published, artifact) at built
+    contradiction
+  | ok value =>
+    rw [called] at built
+    change Except.ok (signature, value) = Except.ok (published, artifact) at built
+    have same := Except.ok.inj built
+    cases same
+    exact ⟨rfl, rfl⟩
+#print axioms readSignatureOptions_perm
+#print axioms normalizeSignatureOptions_sound
+#print axioms normalizeSignatureOptions_idempotent
+#print axioms projectSignatureOptions_map
+#print axioms infer_signature_aliases
+#print axioms inferredOptionService_signature
+
 end LeanPoo.Examples.TypedMethodDeclarations
