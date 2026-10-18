@@ -1,7 +1,7 @@
 import LeanPoo.Functional.Validation
 
 /-! Finite declarative call signatures. These laws describe supplied arguments and
-ordered dispatch; host default evaluation and native procedure arity remain premises. -/
+ordered dispatch; host default evaluation and Gerbil procedure arity remain premises. -/
 namespace LeanPoo.Functional.FunctionSignature
 
 /-- Required and optional positions, rest permission, and declared/required keys. -/
@@ -288,7 +288,7 @@ theorem combination_row_cells (width : Nat) :
     (directWork width).rowCells = (capturedWork width).rowCells := rfl
 /-- Fixed macro prefix over a copied rest spine. In Scheme, append with an empty
 last argument supplies the private spine; this pure model records values only.
-Mutable identity and native allocation require the separate Gerbil controls. -/
+Mutable identity and Gerbil allocation require the separate Gerbil controls. -/
 def assembleRow (fixed rest : List Value) : List Value :=
   fixed.foldr List.cons (rest.map id)
 

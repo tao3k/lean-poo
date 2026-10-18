@@ -24,7 +24,7 @@ advances the article's future work; no new namespace or performance claim is int
 
 Racket's method-fragment section specifies standard qualifier order, and its
 generalized-prototype section proposes a common fragment construction beyond
-records. Native ~MethodDeclaration.~ advances that future work: existing ~.declare~
+records. Gerbil ~MethodDeclaration.~ advances that future work: existing ~.declare~
 accepts both record metadata and method contributions, then ordinary Slot/C3
 assembly supplies ~.defgeneric~ with its raw group.
 
@@ -35,16 +35,16 @@ source stream for each selected method. ~fragmentSpecification_append~ connects
 fragment blocks to delayed inherited SlotSpec assembly; ~declaredGeneric_standard~
 and ~declaredGeneric_fragments~ preserve established qualifier semantics and the
 original complete receiver/argument row. Typed qualifiers and a valid supplied
-owner order are model premises; native grouping/linearization is tested separately.
+owner order are model premises; Gerbil grouping/linearization is tested separately.
 
 [[file:../../Examples/DeclaredMethods.lean][Declared method examples]] prove the full two-branch standard trace, current
 receiver data, around short-circuiting, failure-before-after and missing primary.
-Native controls execute all five adapters, real C3 sharing, recursive declaration
+Gerbil controls execute all five adapters, real C3 sharing, recursive declaration
 roots, source edits, conflicts and the actual generic macro.
 
-* Native limits
+* Gerbil implementation limits
 
-Only compatible local methods coalesce. Supported source edits invalidate the
+Local methods coalesce only when their policies and visibility agree. Supported source edits invalidate the
 registered metadata and receiver graph; raw writes and concurrent mutation remain
 outside it. Generic defaults and empty inherited groups catch only their own
 receiver/slot absence. Compilation does not run method bodies; invocation sequences
@@ -187,13 +187,13 @@ retry boundary. ~observationCharge_threshold~ retains separate dynamic map,
 completion, setup and GC prices; none is inferred from logical equivalence.
 ~Examples/DeclaredMethods.lean~ checks a bounded nested forecast, fresh current
 rates, complete C3 traces and review failure. It proves neither Scheme pointer
-identity nor native multiple-value ABI or compiler/collector behavior.
+identity nor Gerbil multiple-value ABI or compiler/collector behavior.
 
 The Gerbil example ~reviewed-summary-action~ packages multiple values explicitly
 before FUN composition, permits reentrant requests and retries current metadata.
-Gerbil controls compare the previous chain on zero/single/multiple summary
-results, false data and charge effects. A zero-result producer has an unspecified
-projected value; its host marker identity is not a compatibility claim. Complete
+Gerbil controls specify zero/single/multiple summary results, false data and
+charge effects directly through the core values->list observation. Opaque return
+carrier identity is not compared across independent invocations. Complete
 workflow pairs hold the current generic/contract/row lowering fixed on both sides;
 transport/hot scopes retain their separately labelled apply/list control. Account
 construction has its own identical-action measurement; independent phase medians

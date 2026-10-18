@@ -2,7 +2,7 @@ import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Functional.NonlocalDeclarations
 import LeanPoo.Functional.FunctionSignature
 
-/-! Matching pure declaration-to-generic controls. Native macro expansion, actual
+/-! Matching pure declaration-to-generic controls. Gerbil macro expansion, actual
 C3 sharing and descriptor mutation are exercised separately in Gerbil. -/
 namespace LeanPoo.Examples.DeclaredMethods
 open Object.MethodCombination
