@@ -701,4 +701,64 @@ theorem valueEndpoint_payload (ty : Ty)
 #print axioms inferredValueCallback_sound
 #print axioms valueEndpoint_payload
 
+/-- A finite quotient keeps the raw prefix separate from the repeated tail.
+Origins carry their raw slot, so a Boolean key payload never weakens slot zero. -/
+def restOriginAdmission (badTail : Bool) (_state : Nat) (indexed : Nat × ArgumentToken String Ty) : Bool :=
+  match indexed with
+  | (index, .value ty) => check 8 ty (.atom .integer) ||
+      (decide (0 < index) && !badTail && check 8 ty (.atom .bool))
+  | (_, .keyword key) => decide (key = "enabled")
+  | (_, .keyEscape) | (_, .restEscape) => true
+/-- This abstract graph overapproximates successful target traces. Tail loops
+retain indexed payloads and escapes; endings, not visited cycles, seed closure. -/
+def correlatedGraph : List (RawTransition Nat (Nat × ArgumentToken String Ty)) :=
+  [⟨0, 1, [(0, .value (.atom .uint))]⟩,
+   ⟨0, 1, [(0, .keyword "enabled"), (1, .value (.atom .bool))]⟩,
+   ⟨0, 1, [(0, .keyEscape), (1, .value (.atom .uint))]⟩,
+   ⟨0, 1, [(0, .restEscape), (1, .value (.atom .uint))]⟩,
+   ⟨1, 1, [(1, .value (.atom .uint))]⟩,
+   ⟨1, 1, [(1, .keyword "enabled"), (1, .value (.atom .bool))]⟩,
+   ⟨1, 2, [(1, .restEscape)]⟩]
+/-- Shared complete inference precedes the existing specialized declaration build. -/
+def inferredCorrelatedCallback := inferDeclared 2
+  (fun badTail => rawGraphCheck 2 correlatedGraph [2] 0 true (restOriginAdmission badTail))
+  [true, false] (fun badTail => do
+    let artifact ← buildCheckedShared (selectedEnvironment false)
+    return (badTail, artifact))
+#guard rawGraphCheck 2 correlatedGraph [2] 0 true (restOriginAdmission false)
+#guard !rawGraphCheck 2 correlatedGraph [2] 0 true (restOriginAdmission true)
+-- A provisional set containing just the ending is not a closed certificate.
+#guard !rawGraphCheck 0 correlatedGraph [2] 0 true (restOriginAdmission false)
+#guard !rawGraphCheck 2 correlatedGraph [2] 0 false (restOriginAdmission false)
+-- Moving Bool into the first slot cannot borrow its permitted tail evidence.
+#guard !rawGraphCheck 2 (⟨0, 1, [(0, .value (.atom .bool))]⟩ :: correlatedGraph)
+  [2] 0 true (restOriginAdmission false)
+#guard match inferredCorrelatedCallback with
+  | .ok (.unique false, some (false, (36, 136))) => true
+  | _ => false
+-- Literal removal is exact: only the numeric Enum arm is ordinary data.
+#guard ordinaryLiterals ([.keyword "other", .keyEscape, .restEscape, .value (7 : Int)] :
+  List (ArgumentToken String Int)) == [.value 7]
+-- A long physical tail still has a raw cell beyond the shortest decoded row.
+#guard rawCounter 13 12 ∈ rawTailCounts 13 2 0
+/-- Every accepting graph trace of a published callback, of arbitrary length,
+retains indexed origin admission. Actual decoder/product construction completeness
+and host validator interpretation remain explicit correspondence premises. -/
+theorem inferredCorrelatedCallback_sound (badTail artifact)
+    (published : inferredCorrelatedCallback = .ok (.unique badTail, some artifact))
+    (trace : List (RawTransition Nat (Nat × ArgumentToken String Ty)))
+    (path : RawGraphPath correlatedGraph 0 2 trace) :
+    trace.all (fun edge => edge.origins.all (restOriginAdmission badTail edge.source)) = true := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique 2 _ [true, false] _ published
+  exact (rawGraphCheck_sound 2 correlatedGraph [2] 0 true (restOriginAdmission badTail)
+    valid path (by simp)).2
+#print axioms ordinaryLiterals_mem
+#print axioms protocol_singleton_not_data
+#print axioms rawCounter_product
+#print axioms rawTailCounts_complete
+#print axioms inputAt_rawCounter
+#print axioms rawGraphCheck_sound
+#print axioms rawGraph_empty
+#print axioms inferredCorrelatedCallback_sound
+
 end LeanPoo.Examples.TypedMethodDeclarations

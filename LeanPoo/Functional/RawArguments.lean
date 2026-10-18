@@ -169,4 +169,182 @@ theorem stationaryRaw_sound (admit : Nat → ArgumentToken Key Ty → Bool)
     admit index origin = true :=
   List.all_eq_true.mp (List.all_eq_true.mp checked index (List.mem_range.mpr inside)) origin member
 
+/-- Ordinary decoding excludes outer keyword and both escape tokens. Values
+inside a container retain their ordinary outer carrier. -/
+def ordinaryToken : ArgumentToken Key Value → Bool
+  | .value _ => true
+  | _ => false
+
+/-- Exactly/Enum restriction is extensional filtering of their finite literals;
+no universal Type or opaque recognizer is introduced by this operation. -/
+def ordinaryLiterals (values : List (ArgumentToken Key Value)) := values.filter ordinaryToken
+
+/-- Finite literal restriction preserves exactly the ordinary inhabitants. -/
+theorem ordinaryLiterals_mem (values : List (ArgumentToken Key Value)) (token) :
+    token ∈ ordinaryLiterals values ↔ token ∈ values ∧ ∃ value, token = .value value := by
+  cases token <;> simp [ordinaryLiterals, ordinaryToken]
+
+/-- A lone protocol token cannot supply the same token as one positional value.
+Such a target input needs an escape; its apparent direct arity cell is empty. -/
+theorem protocol_singleton_not_data [DecidableEq Key] (token : ArgumentToken Key Value)
+    (protocol : ordinaryToken token = false) :
+    decodeKeyword [token] ≠ some (Call.mk [token] []) := by
+  cases token <;> simp_all [ordinaryToken, decodeKeyword]
+
+/-- Saturate only beyond the exact finite prefix. The sentinel denotes a lower
+bound on actual length, not a sample at which all origins are mixed together. -/
+def rawCounter (limit count : Nat) : Nat := min limit count
+
+/-- Every one/two-token transition commutes with counter saturation. -/
+theorem rawCounter_add (limit count step : Nat) :
+    rawCounter limit (count + step) = rawCounter limit (rawCounter limit count + step) := by
+  unfold rawCounter; omega
+
+/-- The product has independent limits and token/value increments. A Boolean
+keyword payload may occupy the second raw slot without broadening the first. -/
+theorem rawCounter_product (positions raw positionLimit rawLimit values tokens : Nat) :
+    (rawCounter positionLimit (positions + values), rawCounter rawLimit (raw + tokens)) =
+    (rawCounter positionLimit (rawCounter positionLimit positions + values),
+     rawCounter rawLimit (rawCounter rawLimit raw + tokens)) := by
+  rw [rawCounter_add, rawCounter_add rawLimit]
+
+/-- A decoded tail region checks ALL raw arity cells up to the raw sentinel,
+not the finite upper bound of its shortest decoded representative. -/
+def rawTailCounts (rawLimit decodedLimit keyCount : Nat) : List Nat :=
+  (List.range (rawLimit + 1)).filter (fun raw => decide (min rawLimit (decodedLimit + 2 * keyCount) ≤ raw))
+
+/-- Every physical raw arity of every longer decoded rest call has a checked cell.
+The decoder's lower bound is sufficient; no finite upper tail horizon is assumed. -/
+theorem rawTailCounts_complete (rawLimit decodedLimit decoded keys raw : Nat)
+    (tail : decodedLimit ≤ decoded) (lower : decoded + 2 * keys ≤ raw) :
+    rawCounter rawLimit raw ∈ rawTailCounts rawLimit decodedLimit keys := by
+  apply List.mem_filter.mpr
+  refine ⟨List.mem_range.mpr (by unfold rawCounter; omega), ?_⟩
+  apply decide_eq_true
+  unfold rawCounter
+  omega
+
+/-- A saturated terminal counter means every actual length at or above its limit. -/
+theorem rawCounter_tail (limit count : Nat) : rawCounter limit count = limit ↔ limit ≤ count := by
+  unfold rawCounter; omega
+
+/-- Below saturation the counter retains the exact physical position. -/
+theorem rawCounter_exact (limit count : Nat) (small : rawCounter limit count < limit) :
+    rawCounter limit count = count := by unfold rawCounter at *; omega
+
+/-- Source and target input lookup keep their positional relation after either
+counter saturates. Even the second slot of a two-token prefix retains its law. -/
+theorem inputAt_rawCounter (signature : TypedSignature Key Ty) (limit index step : Nat)
+    (bound : (signature.inputs ++ signature.optional).length ≤ limit) :
+    signature.inputAt (rawCounter limit index + step) = signature.inputAt (index + step) := by
+  by_cases small : index ≤ limit
+  · simp [rawCounter, Nat.min_eq_right small]
+  · rw [inputAt_tail signature _ (by unfold rawCounter; omega),
+        inputAt_tail signature _ (by omega)]
+
+/-- One complete graph transition retains the ordered origin labels it consumes.
+State may be the product of decoded position, key mask, raw offset and parser mode. -/
+structure RawTransition (State Origin : Type) where
+  source : State
+  target : State
+  origins : List Origin
+  deriving Repr
+
+/-- Finite accepting traces may revisit a state arbitrarily many times. This
+relation imposes no sampling horizon on the length of a rest tail. -/
+inductive RawGraphPath (edges : List (RawTransition State Origin)) :
+    State → State → List (RawTransition State Origin) → Prop where
+  | done (state) : RawGraphPath edges state state []
+  | step (edge) (inside : edge ∈ edges) (tail : RawGraphPath edges edge.target finish rest) :
+      RawGraphPath edges edge.source finish (edge :: rest)
+
+/-- Validate a backwards closure certificate and every edge into that closure.
+Endpoints must be live, and no predecessor of a live state may be omitted. This
+is checked even when the initial state is claimed to have an empty language. -/
+def rawGraphCertificate [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (admit : State → Origin → Bool) : Bool :=
+  endings.all (fun state => decide (state ∈ live)) &&
+  edges.all (fun edge => if edge.target ∈ live then
+    decide (edge.source ∈ live) && edge.origins.all (admit edge.source) else true)
+
+/-- A valid closure certifies every accepting trace, including unbounded repeated
+cycles. An uncompleted/provisional visited set cannot satisfy this theorem. -/
+theorem rawGraphPath_sound [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (admit : State → Origin → Bool)
+    (certificate : rawGraphCertificate edges endings live admit = true)
+    (path : RawGraphPath edges start finish trace) (finishes : finish ∈ live) :
+    start ∈ live ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true := by
+  simp only [rawGraphCertificate, Bool.and_eq_true] at certificate
+  induction path with
+  | done state => exact ⟨finishes, rfl⟩
+  | step edge inside tail ih =>
+    have suffix := ih finishes
+    have valid := List.all_eq_true.mp certificate.2 edge inside
+    simp only [suffix.1, ↓reduceIte, Bool.and_eq_true, decide_eq_true_eq] at valid
+    exact ⟨valid.1, by simpa only [List.all_cons, Bool.and_eq_true] using And.intro valid.2 suffix.2⟩
+
+/-- Endings are part of the certificate, not an assumed complete memo table. -/
+theorem rawGraphCertificate_sound [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (admit : State → Origin → Bool)
+    (certificate : rawGraphCertificate edges endings live admit = true)
+    (path : RawGraphPath edges start finish trace) (ending : finish ∈ endings) :
+    start ∈ live ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true := by
+  have endpoints := (Bool.and_eq_true_iff.mp certificate).1
+  exact rawGraphPath_sound edges endings live admit certificate path
+    (of_decide_eq_true (List.all_eq_true.mp endpoints finish ending))
+
+/-- Empty initial regions may skip source/output requirements only after their
+full closure certificate is validated. Nonempty regions require a real clause. -/
+def rawRegionCovers [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (initial : State) (hasSource : Bool)
+    (admit : State → Origin → Bool) : Bool :=
+  rawGraphCertificate edges endings live admit && (!(decide (initial ∈ live)) || hasSource)
+
+/-- Every actual successful trace forces a selected source and preserves the
+per-position origin law. A dead arity region cannot hide a live bad output case. -/
+theorem rawRegionCovers_sound [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (initial : State) (hasSource : Bool) (admit : State → Origin → Bool)
+    (checked : rawRegionCovers edges endings live initial hasSource admit = true)
+    (path : RawGraphPath edges initial finish trace) (ending : finish ∈ endings) :
+    hasSource = true ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true := by
+  simp only [rawRegionCovers, Bool.and_eq_true] at checked
+  have laws := rawGraphCertificate_sound edges endings live admit checked.1 path ending
+  exact ⟨by simpa [laws.1] using checked.2, laws.2⟩
+
+/-- The empty-region witness rules out ALL accepting traces, not merely traces
+up to a chosen raw length. This also excludes cycles with a reachable exit. -/
+theorem rawGraph_empty [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings live : List State) (admit : State → Origin → Bool)
+    (certificate : rawGraphCertificate edges endings live admit = true) (empty : initial ∉ live) :
+    ∀ finish trace, finish ∈ endings → ¬RawGraphPath edges initial finish trace := by
+  intro finish trace ending path
+  exact empty (rawGraphCertificate_sound edges endings live admit certificate path ending).1
+
+/-- One finite backwards sweep adds only actual predecessors of the current set.
+The runtime uses a standard hash-table worklist and validates its final closure. -/
+def rawPredecessors [DecidableEq State] (edges : List (RawTransition State Origin)) (live : List State) :=
+  edges.foldl (fun known edge => if edge.target ∈ known ∧ edge.source ∉ known then edge.source :: known else known) live
+
+/-- Controlled graph closure; a feasible unfinished closure is rejected by the
+certificate below. Fuel never causes a provisional cyclic success. -/
+def rawBackwards [DecidableEq State] (edges : List (RawTransition State Origin))
+    (endings : List State) : Nat → List State
+  | 0 => endings
+  | fuel + 1 => rawPredecessors edges (rawBackwards edges endings fuel)
+
+/-- Return a graph result only with an independently checked closure certificate.
+Scheme's work exhaustion remains a typed refusal, not this Boolean false. -/
+def rawGraphCheck [DecidableEq State] (fuel : Nat) (edges : List (RawTransition State Origin))
+    (endings : List State) (initial : State) (hasSource : Bool) (admit : State → Origin → Bool) : Bool :=
+  rawRegionCovers edges endings (rawBackwards edges endings fuel) initial hasSource admit
+
+/-- Finite closure checking lifts to arbitrarily long rest traces. Concrete
+product-graph completeness and validator interpretation remain explicit premises. -/
+theorem rawGraphCheck_sound [DecidableEq State] (fuel : Nat) (edges : List (RawTransition State Origin))
+    (endings : List State) (initial : State) (hasSource : Bool) (admit : State → Origin → Bool)
+    (checked : rawGraphCheck fuel edges endings initial hasSource admit = true)
+    (path : RawGraphPath edges initial finish trace) (ending : finish ∈ endings) :
+    hasSource = true ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true :=
+  rawRegionCovers_sound edges endings _ initial hasSource admit checked path ending
+
 end LeanPoo.Functional.FunctionSignature

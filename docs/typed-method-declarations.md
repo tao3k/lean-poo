@@ -314,8 +314,8 @@ Gerbil extends its existing `covers-signatures?` traversal and Type relation,
 reusing the decoder, normalizer, standard key deduplication and streaming masks.
 It never changes a caller's argument row to establish subtyping. The raw-region
 rule is sufficient, not maximal mixed-wire semantic inclusion. Bounded non-direct
-rows use the value-sensitive origin traversal described below; unbounded stationary
-tails require a complete per-slot origin envelope. Unsupported syntax
+rows use the value-sensitive origin traversal described below; unbounded tails retain position-specific origins through the certified product
+graph below. Unsupported syntax
 and quota exhaustion keep existing typed refusals; false rejects a candidate;
 complete no-solution/ambiguity/exhaustion cannot execute the declaration builder.
 The Scheme examples continue through FUN/refine/bind-evidence with actual keyword
@@ -344,8 +344,8 @@ its existing shared admission quota; no persistent memo certificate is introduce
 RawSpelling derivations. Each supplied origin retains its own slot-admission law;
 `rawSlots_sound` lifts that law to all supplied positions. `enumMarker_sound` and
 `keywordMarker_sound` retain literal membership and the distinction between keys
-and escapes. `stationaryRaw_sound` proves the conservative tail envelope rule under
-its explicit complete-origin premise, without introducing top/Any. The model does
+and escapes. `stationaryRaw_sound` remains a sufficient envelope law. The current graph rule
+below retains positions instead of imposing that envelope on every slot. The model does
 not prove host memo allocation costs, actual Gerbil compiler execution, or automatic
 assignment of decoded runtime values to their Type origins. That correspondence
 and validator interpretation remain explicit premises plus runtime regression gates.
@@ -368,6 +368,46 @@ oracle and negative/nested-Function/stationary/budget controls reside in
 `t/keyword-values-test.ss`. No recognizer is sampled to establish subtyping, no
 incoming row is rewritten, and no missing evidence is repaired with Any.
 
-This remains Appendix C/D future work. Literal-sensitive exclusion of ordinary
-protocol-valued data, more precise tail correlations, arbitrary predicate inclusion,
+This remains Appendix C/D future work. Opaque ordinary-value refinements, arbitrary predicate inclusion,
 default effects and unrestricted inference remain outside the decidable boundary.
+
+
+### Exact ordinary literals and correlated infinite tails
+
+The current Scheme judgment replaces the per-region origin DAG/envelope with a
+finite product of decoded position, remaining keys, raw offset and rest mode.
+`Keyword` has no ordinary value; `Exactly`/`Enum` retain only ordinary literals for
+that transition. Escape payloads and rest suffixes retain the full Type. Flat Union
+and Maybe restrictions reuse the existing constructors; opaque/wrapper-bearing
+origins remain conservative. The finite literal filtering equivalence and the
+impossibility of a one-token protocol literal supplying itself as data are proved
+by `ordinaryLiterals_mem` and `protocol_singleton_not_data`.
+
+Independent counter limits preserve prefix positions and repeated rest Types.
+`rawCounter_add`, `rawCounter_product`, `rawCounter_tail` and `inputAt_rawCounter`
+prove transition and slot-lookup correspondence for arbitrarily large actual
+positions. `rawTailCounts_complete` ensures a decoded tail still checks all later
+raw source-arity regions, not only the shortest decoded representative's upper bound.
+
+Reachable edges are recorded before backwards closure from legitimate endings.
+The result then independently validates that all endings are live and every edge
+into live starts live, along with ordered slot evidence. `rawGraphCheck_sound`
+proves that evidence for every accepting path, including arbitrarily many repeated
+cycles. `rawGraph_empty` excludes all accepting paths from a certified empty initial
+state, so only truly unused arity regions may skip source/output requirements.
+An unfinished visited set is insufficient; exhausted work never publishes evidence.
+
+The existing top-level example adds a graph whose first slot excludes Bool while
+later keyword payload slots admit it. Complete original inference and specialized
+`buildCheckedShared` publication imply the universal graph-trace law in
+`inferredCorrelatedCallback_sound`. The Scheme examples additionally compose a literal
+rest-escape prefix with an infinite numeric rest family through existing declarations,
+FUN/refine/bind-evidence. Nine new cases in `t/keyword-rest-test.ss` include a 3906-word
+independent runtime oracle, tails through 257 positions, a late arity-12 bad first
+source case, unused-result variance, literal controls and quota-before-builder failure.
+
+The proof boundary remains explicit: concrete graph construction must cover the
+decoder's typed-origin traces, and host validators must satisfy their interpretations.
+The proofs establish universal certificate/counter/literal laws, not Gerbil compiler
+correctness or unrestricted predicate inclusion. This advances the article's hypothetical
+type protocol; arbitrary effects and opaque ordinary refinements remain future work.
