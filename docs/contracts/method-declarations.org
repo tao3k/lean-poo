@@ -177,8 +177,9 @@ The summary workflow now uses standard FUN ~map~ instead of constructing a
 nested ~map~ Reader inside ~bind~ on every request. This rewrite applies to the
 standard ~Observation.~ operations and a continuation which does not read the
 Reader environment again. It is not a general rewrite for arbitrary mutable FUN
-method overrides. Owner reflection, summary, then charge remain in order; native
-~call/values~ retains the single-summary-result boundary and both final results.
+method overrides. Owner reflection, summary, then charge remain in order. The
+ordinary single-value context retains standard ~compose~ result projection
+(including additional-result behavior), while both final results remain intact.
 
 ~FunctionSignature.observation_fusion~ proves equality with arbitrary monadic
 source/completion effects. Refusal/current-source laws preserve the failure and
@@ -190,7 +191,9 @@ identity nor native multiple-value ABI or compiler/collector behavior.
 
 The Gerbil example ~reviewed-summary-action~ packages multiple values explicitly
 before FUN composition, permits reentrant requests and retries current metadata.
-Native controls also reject summary arity mismatch before charging. Complete
+Gerbil controls compare the previous chain on zero/single/multiple summary
+results, false data and charge effects. A zero-result producer has an unspecified
+projected value; its host marker identity is not a compatibility claim. Complete
 workflow pairs hold the current generic/contract/row lowering fixed on both sides;
 transport/hot scopes retain their separately labelled apply/list control. Account
 construction has its own identical-action measurement; independent phase medians
