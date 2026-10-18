@@ -145,3 +145,28 @@ compiler allocation theorem: the standard paired Scheme study separately tests
 single-operation allocation, hot calls and full Reader/reflection/C3 workflows.
 This supports the original article's user-defined method-combination and future
 MOP work; it does not replace its method-combination semantics.
+
+* Fixed-prefix row construction
+
+The combined generic now emits the resolved fixed prefix as core ~cons~ forms.
+Standard ~append~ with an empty final list copies the rest spine. This replaces
+runtime ~apply list~ without sharing mutable argument spines with callers.
+Core signature projection, defaults, checks and keyword escape placement are
+unchanged. Selection, lookup and combiner admission still precede row construction.
+No combiner, fragment or successful admission is frozen across calls.
+
+~assembleRow_eq~, ~assembleRow_length~, ~assembleRow_compose~ and
+~combineDirect_assembled~ establish complete-row equality and contextual
+substitution for arbitrary monadic combination. ~rowAssemblyCharge_difference~
+prices logical row cells, apply/list redistribution and rest copying separately.
+This proves neither heap identity nor CPU improvement. Gerbil regression tests
+mutate both the prefix and rest spine; the paired study measures transport,
+retained workflows, construction plus invocation and fixed-history sensitivity,
+with exact A/A controls, natural/collected GC and separate GC/residual CPU deltas.
+
+The implementation budget prices apply/list redistribution and append-based tail
+copying separately. ~rowAssemblyCharge_threshold~ proves the conditional transport
+criterion. ~rowAssemblyCharge_workflow~ additionally retains construction/setup
+and GC history on both sides: cheaper transport cannot by itself establish a
+cheaper complete workflow. These are supplied finite cost units; measured CPU
+and GC deltas, A/A spread and host interference remain separate evidence.

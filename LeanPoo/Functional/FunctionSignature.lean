@@ -286,4 +286,69 @@ theorem combination_charge_le (width cell closure call : Nat) :
 /-- The number of encoded row cells is unchanged for every width, including zero. -/
 theorem combination_row_cells (width : Nat) :
     (directWork width).rowCells = (capturedWork width).rowCells := rfl
+/-- Fixed macro prefix over a copied rest spine. In Scheme, append with an empty
+last argument supplies the private spine; this pure model records values only.
+Mutable identity and native allocation require the separate Gerbil controls. -/
+def assembleRow (fixed rest : List Value) : List Value :=
+  fixed.foldr List.cons (rest.map id)
+
+/-- Fixed-prefix construction preserves the complete apply/list row, including
+literal keyword/false payloads represented by the chosen Value type. -/
+theorem assembleRow_eq (fixed rest : List Value) :
+    assembleRow fixed rest = fixed ++ rest := by
+  induction fixed with
+  | nil => simp [assembleRow]
+  | cons head tail ih => simp [assembleRow] at ih ⊢
+
+/-- Every fixed and rest token occurs once; copying adds no logical arguments. -/
+theorem assembleRow_length (fixed rest : List Value) :
+    (assembleRow fixed rest).length = fixed.length + rest.length := by
+  rw [assembleRow_eq, List.length_append]
+
+/-- Two statically emitted fixed segments compose without reinterpreting the
+rest or changing argument order. No host default or contract is re-evaluated. -/
+theorem assembleRow_compose (outer inner rest : List Value) :
+    assembleRow outer (assembleRow inner rest) = assembleRow (outer ++ inner) rest := by
+  simp only [assembleRow_eq, List.append_assoc]
+
+/-- Substitution into arbitrary effectful selection/lookup/admission preserves
+their failure order and the combiner's complete result, not just row length. -/
+theorem combineDirect_assembled [Monad M]
+    (selection : M (Fragments → List Value → M Result)) (lookup : M Fragments)
+    (admit : (Fragments → List Value → M Result) → M Unit) (fixed rest : List Value) :
+    combineDirect selection lookup admit (assembleRow fixed rest) =
+      combineDirect selection lookup admit (fixed ++ rest) := by
+  rw [assembleRow_eq]
+
+/-- Parameterized implementation budget: equal logical row cells, but distinct
+prices for apply/list redistribution and copying the rest with append. Prices
+must come from the implementation; deleting an apply is not free tail copying. -/
+def rowAssemblyCharge (width cell applyCall copyRest : Nat) (usesApply : Bool) : Nat :=
+  width * cell + if usesApply then applyCall else copyRest
+
+/-- Shared row cost cancels; the removed dispatcher and new copy retain their
+own prices. This equality asserts no unconditional implementation speedup. -/
+theorem rowAssemblyCharge_difference (width cell applyCall copyRest : Nat) :
+    rowAssemblyCharge width cell applyCall copyRest true + copyRest =
+      rowAssemblyCharge width cell applyCall copyRest false + applyCall := by
+  simp [rowAssemblyCharge]; omega
+
+/-- A transport improvement requires the copying route to cost no more than
+apply/list; logical equality alone cannot establish this implementation premise. -/
+theorem rowAssemblyCharge_threshold (width cell applyCall copyRest : Nat) :
+    rowAssemblyCharge width cell applyCall copyRest false ≤
+      rowAssemblyCharge width cell applyCall copyRest true ↔ copyRest ≤ applyCall := by
+  simp [rowAssemblyCharge]
+
+/-- Complete-workflow admission retains setup and GC history explicitly. Even a
+cheaper transport can lose when construction or GC costs increase. These are
+supplied finite cost units, not a model of Gambit's collector or CPU scheduler. -/
+theorem rowAssemblyCharge_workflow (width cell applyCall copyRest
+    oldSetup newSetup oldGC newGC : Nat) :
+    newSetup + rowAssemblyCharge width cell applyCall copyRest false + newGC ≤
+      oldSetup + rowAssemblyCharge width cell applyCall copyRest true + oldGC ↔
+    newSetup + copyRest + newGC ≤ oldSetup + applyCall + oldGC := by
+  simp only [rowAssemblyCharge, Bool.false_eq_true, ↓reduceIte]
+  omega
+
 end LeanPoo.Functional.FunctionSignature

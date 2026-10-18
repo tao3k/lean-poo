@@ -89,3 +89,12 @@ selection, fragment lookup and admission order. The source-operation cost model
 has explicit prices; host compilation, actual allocations and GC remain separate
 Scheme measurement obligations. Existing original checks and completeness flags
 are unchanged; generalized declaration/MOP integration remains future work.
+
+* Fixed-prefix generic row review
+
+The same article discussion at lines 2063--2089 permits representation-dependent
+mixing over labelled fragments. Fixed-prefix assembly preserves its complete
+resolved argument row and changes no method-combination policy. Lean proves
+value equality and arbitrary-monad substitution; mutable spine ownership and
+measured CPU costs remain Gerbil obligations. The generalized Reader/reflection
+integration continues future work. No completeness flag is changed.

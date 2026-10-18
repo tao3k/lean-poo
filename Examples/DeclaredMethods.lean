@@ -236,4 +236,41 @@ example : (capturedWork 7).charge 1 3 2 = (directWork 7).charge 1 3 2 + 5 := rfl
 #print axioms combineDirect_lookup_error
 #print axioms combination_charge_difference
 #print axioms combination_charge_le
+/-- Replay transport composes with current admission and the complete qualified
+workflow; the callback can observe every false/keyword payload in its own row.
+The pure carrier does not model mutation or Gerbil procedure identity. -/
+def transportedSummary (fixed rest : List CallValue) (context : SummaryContext) :
+    Run (Nat × List CallValue) :=
+  combineDirect
+    (pure (fun (_ : Unit) row => do
+      let result ← configuredSummary true true true context
+      pure (result.1, row)))
+    (pure ()) (fun _ => pure ()) (assembleRow fixed rest)
+
+/-- Receiver identity is projected to its current rate; the structured message
+is projected to one opaque token. Each retry reads fresh context, while the
+caller-owned message remains one value, rather than being parsed as keywords. -/
+example : [
+    ((transportedSummary [.inl "label", .inr none, .inl "rest", .inr (some 10), .inr (some 2), .inr (some 2)]
+      [.inl "payload:false"] (10, true)).run []).map Prod.fst,
+    ((transportedSummary [.inl "label", .inr none, .inl "rest", .inr (some 20), .inr (some 2), .inr (some 2)]
+      [.inl "payload:false"] (20, true)).run []).map Prod.fst] =
+    [.ok (46, [.inl "label", .inr none, .inl "rest", .inr (some 10), .inr (some 2), .inr (some 2), .inl "payload:false"]),
+     .ok (86, [.inl "label", .inr none, .inl "rest", .inr (some 20), .inr (some 2), .inr (some 2), .inl "payload:false"])] := rfl
+
+/-- Row assembly cannot turn a hidden current method into an accepted request. -/
+example : ((transportedSummary [] [.inr none] (10, false)).run []) =
+    .error "slot is hidden or undeclared" := rfl
+/-- Illustrative budget: a cheaper transport can still lose to additional GC
+or construction. These supplied units are not measured execution times. -/
+example : rowAssemblyCharge 7 1 8 2 false < rowAssemblyCharge 7 1 8 2 true ∧
+    ¬ (100 + rowAssemblyCharge 7 1 8 2 false + 20 ≤
+       100 + rowAssemblyCharge 7 1 8 2 true + 0) ∧
+    ¬ (120 + rowAssemblyCharge 7 1 8 2 false + 0 ≤
+       100 + rowAssemblyCharge 7 1 8 2 true + 0) := by decide
+#print axioms assembleRow_eq
+#print axioms combineDirect_assembled
+#print axioms rowAssemblyCharge_difference
+#print axioms rowAssemblyCharge_threshold
+#print axioms rowAssemblyCharge_workflow
 end LeanPoo.Examples.DeclaredMethods
