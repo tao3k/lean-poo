@@ -161,4 +161,101 @@ theorem union_selected (shape member : Branch → Value → Bool) (check : Branc
     union shape member check missing invalid branches source =
       if member branch checked then .ok checked else .error invalid := by
   simp [union, selected, normalized, Except.bind]
+/-- Persistent backends first admit and snapshot the carrier, normalize every
+binding in order, then rebuild privately. Collision/comparison/postcondition
+refusals belong to rebuilding, so earlier backend errors are never reordered. -/
+def table (snapshot : Carrier → Except Error (List (Key × Value)))
+    (rebuild : List (Key × Value) → Except Error Carrier)
+    (key : Key → Except Error Key) (value : Value → Except Error Value)
+    (source : Carrier) : Except Error Carrier :=
+  (snapshot source).bind fun entries => (Validation.traverse (pair key value) entries).bind rebuild
+
+/-- An accepted backend contains the exact normalized key/value pairs rather
+than original callbacks. Snapshot/rebuild fidelity is a backend law, not a claim
+about host RBTree, Patricia or hash implementations. -/
+theorem table_positions (snapshot : Carrier → Except Error (List (Key × Value)))
+    (rebuild : List (Key × Value) → Except Error Carrier)
+    (key : Key → Except Error Key) (value : Value → Except Error Value) (source result : Carrier)
+    (materializes : ∀ entries output, rebuild entries = .ok output → snapshot output = .ok entries)
+    (accepted : table snapshot rebuild key value source = .ok result) :
+    ∃ before after, snapshot source = .ok before ∧ snapshot result = .ok after ∧
+      after.length = before.length ∧ ∀ entry ∈ before.zip after,
+        key entry.1.1 = .ok entry.2.1 ∧ value entry.1.2 = .ok entry.2.2 := by
+  unfold table at accepted
+  cases hs : snapshot source with
+  | error error => simp [hs, Except.bind] at accepted
+  | ok before =>
+    cases ht : Validation.traverse (pair key value) before with
+    | error error => simp [hs, ht, Except.bind] at accepted
+    | ok after =>
+      have built : rebuild after = .ok result := by simpa [hs, ht, Except.bind] using accepted
+      have positions := ContainerValidation.list_positions (pair key value) before after ht
+      exact ⟨before, after, rfl, materializes after result built, positions.1,
+        fun entry member => (pair_success key value entry.1 entry.2).mp (positions.2 entry member)⟩
+
+/-- Carrier failure stops before normalization and private construction. -/
+theorem table_shape_refused (snapshot : Carrier → Except Error (List (Key × Value)))
+    (rebuild : List (Key × Value) → Except Error Carrier)
+    (key : Key → Except Error Key) (value : Value → Except Error Value)
+    (source : Carrier) (error : Error) (failed : snapshot source = .error error) :
+    table snapshot rebuild key value source = .error error := by simp [table, failed, Except.bind]
+
+/-- Every original child failure precedes rebuilding and keeps its exact cause.
+This is effect sequencing; no rollback of arbitrary user IO is asserted. -/
+theorem table_refused (snapshot : Carrier → Except Error (List (Key × Value)))
+    (rebuild : List (Key × Value) → Except Error Carrier)
+    (key : Key → Except Error Key) (value : Value → Except Error Value)
+    (source : Carrier) (before : List (Key × Value)) (error : Error)
+    (shape : snapshot source = .ok before)
+    (failed : Validation.traverse (pair key value) before = .error error) :
+    table snapshot rebuild key value source = .error error := by simp [table, shape, failed, Except.bind]
+
+/-- Collision, insertion and post-recognition errors retain their actual backend
+order. A private prefix may exist; it is never a successful returned collection. -/
+theorem table_rebuild_refused (snapshot : Carrier → Except Error (List (Key × Value)))
+    (rebuild : List (Key × Value) → Except Error Carrier)
+    (key : Key → Except Error Key) (value : Value → Except Error Value)
+    (source : Carrier) (before entries : List (Key × Value)) (error : Error)
+    (shape : snapshot source = .ok before)
+    (normalized : Validation.traverse (pair key value) before = .ok entries)
+    (refused : rebuild entries = .error error) :
+    table snapshot rebuild key value source = .error error := by
+  simp [table, shape, normalized, refused, Except.bind]
+
+/-- A consumer never sees a partial candidate after collection refusal. -/
+theorem table_consumer_refused (admit : Carrier → Except Error Carrier)
+    (consume : Carrier → Except Error Result) (source : Carrier) (error : Error)
+    (failed : admit source = .error error) :
+    (admit source).bind consume = .error error := by simp [failed, Except.bind]
+
+/-- A persistent revision exposes either a complete checked collection or the
+original source; retry runs admission again, without a cached earlier result. -/
+def tableRevision (admit : Carrier → Except Error Carrier) (source : Carrier) :
+    Except Error Carrier × Carrier :=
+  match admit source with
+  | .error error => (.error error, source)
+  | .ok checked => (.ok checked, checked)
+
+/-- Failure preserves both the error and last source. Host persistent operations
+must separately satisfy nonmutation; callback side effects are not rolled back. -/
+theorem tableRevision_refused (admit : Carrier → Except Error Carrier) (source : Carrier)
+    (error : Error) (failed : admit source = .error error) :
+    tableRevision admit source = (.error error, source) := by simp [tableRevision, failed]
+
+/-- A final non-normalizing membership check gates materialization. -/
+def tableMaterialize (build : List Entry → Carrier) (member : Carrier → Bool)
+    (invalid : Error) (entries : List Entry) : Except Error Carrier :=
+  let candidate := build entries
+  if member candidate then .ok candidate else .error invalid
+
+/-- Final membership is necessary for every exposed collection. -/
+theorem tableMaterialize_sound (build : List Entry → Carrier) (member : Carrier → Bool)
+    (invalid : Error) (entries : List Entry) (result : Carrier)
+    (accepted : tableMaterialize build member invalid entries = .ok result) : member result = true := by
+  dsimp only [tableMaterialize] at accepted
+  split at accepted
+  · rename_i good
+    cases accepted
+    exact good
+  · simp at accepted
 end LeanPoo.Functional.VariantValidation

@@ -740,3 +740,48 @@ signatures remain separate work.
 Representation and cache coherence are now specified separately in
 [representation.md](representation.md): a cached index never substitutes for
 ObjectContract/refine admission. The checked service composes existing FUN bind.
+
+## Persistent table validation
+
+The collection protocol now shares `variant-validation.ss` `validate-bindings`
+between hash-backed Map and `methods.table`. A concrete persistent backend supplies
+carrier-only `.validate-shape`, snapshot traversal, `.empty`, `.key?` and `.acons`.
+The shared descriptor is a Type: `.element?` admits shape and checks child membership
+without invoking normalization, while `.validate` admits shape, normalizes keys
+then values in snapshot order, privately rebuilds changed bindings, and checks final
+membership. Unchanged bindings retain the original collection identity.
+
+RationalDict gates on its existing RBTree representation before the shared protocol.
+Trie checks all structural heights/paths before binding normalization, uses the same
+table membership semantics instead of Wrap's shallow recognition, and reconstructs
+wrapped leaves/changed keys through ordinary persistent insertion. Set<-Table forwards
+membership and normalization separately. Map retains `hash-new`'s source comparison
+policy; persistent backends use their declared membership/insertion policy. No
+Value=Any fast path can skip Key admission.
+
+Every returned key/value wrapper is stored. Key normalization that collides under
+the backend policy refuses; child errors stop before any reconstruction. Insertion,
+collision and final-membership errors preserve their actual sequencing. A collision
+may occur after private prefix construction; no partial table is returned. User IO
+and backend callback effects are not rolled back. Persistent backends must not mutate
+the source. Arbitrary cyclic/malformed host structures and nonterminating callbacks
+are not made safe by these finite snapshot laws.
+
+Lean `VariantValidation.table_positions` proves exact normalized binding retention
+and length preservation under an explicit snapshot/rebuild fidelity law.
+`table_shape_refused`, `table_refused`, `table_rebuild_refused`,
+`table_consumer_refused`, `tableRevision_refused` and `tableMaterialize_sound`
+cover shape, child, reconstruction, consumer, retained source and final membership.
+The builder owns collision/error ordering; these laws do not reorder host insertion
+before a logical collision test or prove RBTree/Patricia/hash implementation code.
+Top-level `Examples/VariantContracts.lean` exercises callable wrapping, collision and
+failure-state controls. Scheme `t/table-validation-test.ss` separately covers actual
+Function keys, nested List/Tuple/Map values, RationalDict, Trie, derived sets,
+recognition without normalization, source identity, custom errors and retry.
+
+`examples/service-collection.ss` reuses checked-action/FUN and ObjectContract refine
+for a nested callback ledger. Approval precedes invocation; the IO consumer runs only
+after a valid callback result. The already normalized ledger is not validated again
+by that consumer. This closes the concrete collection validation protocol, while the
+original incremental/isomorphism-aware collection-library TODO remains open. No
+performance or compiler/runtime correctness claim follows from this change.

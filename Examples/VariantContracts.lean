@@ -199,4 +199,41 @@ def check : Except String Unit := do
 #print axioms VariantValidation.union_selected
 #print axioms validateObject_refine
 #print axioms validated_binding
+/-- A backend snapshot carries callable fields; rebuilding retains the actual
+normalizing wrappers. Lists model ordered bindings, not a host tree layout. -/
+def ledgerSource : List (Nat × Call) := [(1, fun _ => .ok [.flag false])]
+
+/-- Reuse the existing Function boundary for the table's value descriptor. -/
+def ledgerValue (callback : Call) : Except String Call :=
+  .ok (FunctionValidation.wrap integerRow integerRow callback)
+
+/-- Persistent table admission composes snapshot normalization and reconstruction. -/
+def admitLedger (source : List (Nat × Call)) : Except String (List (Nat × Call)) :=
+  VariantValidation.table Except.ok Except.ok (fun key => .ok key) ledgerValue source
+
+/-- A checked lookup cannot bypass an invalid Function result; raw source remains
+an independently callable value. No function equality or callback termination is assumed. -/
+example : (admitLedger ledgerSource).bind (fun entries => entries.head!.2 [.integer 2]) =
+    .error "integer row" := rfl
+
+/-- Normalization may change keys; collision refusal suppresses the consumer. -/
+example : VariantValidation.map (fun (key : Int) => .ok key.natAbs)
+    (fun (value : Nat) => .ok (value + 1)) (· == ·) "collision" [(-1, 10), (1, 20)] =
+    .error "collision" := rfl
+
+/-- Key failure precedes value normalization; the exact failure survives retry
+preparation without replacing the old collection. -/
+example : VariantValidation.tableRevision
+    (fun source : List (Nat × Nat) => VariantValidation.table Except.ok Except.ok
+      (fun key => if key = 2 then .error "key-refused" else .ok key)
+      (fun value => .ok (value + 1)) source)
+    [(1, 10), (2, 20)] = (.error "key-refused", [(1, 10), (2, 20)]) := rfl
+
+#print axioms VariantValidation.tableMaterialize_sound
+#print axioms VariantValidation.table_shape_refused
+#print axioms VariantValidation.table_positions
+#print axioms VariantValidation.table_rebuild_refused
+#print axioms VariantValidation.table_refused
+#print axioms VariantValidation.table_consumer_refused
+#print axioms VariantValidation.tableRevision_refused
 end LeanPoo.Examples.VariantContracts
