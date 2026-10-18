@@ -1,5 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
-import LeanPoo.Functional.FunctionCoverage
+import LeanPoo.Functional.KeywordArguments
 
 /-! Two-axis declarations, inherited policy edits and negative assumptions share
 one existing generic. These finite equations model generalized-prototype future
@@ -478,5 +478,80 @@ def keywordRequired : List (TypedSignature String Ty) :=
 #print axioms coversTypedCalls_sound
 #print axioms replacesLanguage_sound
 #print axioms inferredCoverage_sound
+
+/-- The specialized UInt callback accepts ordinary UInt positions and an omitted
+scale keyword. The inherited prefix substitution is unchanged. -/
+def keywordCallback (requiredKey : Bool) : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .uint], inputs := [.atom .integer], keywords := [("scale", .atom .uint)],
+     requiredKeywords := if requiredKey then ["scale"] else [] }]
+/-- A plain caller's scalar fields exclude outer keyword/escape tokens. -/
+def positionalCallback : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .integer], inputs := [.atom .uint] }]
+/-- Unique inference selects a keyword callback that does not demand a new key,
+then enters the existing complete two-generic declaration builder. -/
+def inferredKeywordCallback := inferDeclared 2
+  (fun requiredKey => replacesPositionalTarget 8 (keywordCallback requiredKey) positionalCallback)
+  [true, false] (fun requiredKey => do
+    let artifact ← buildCheckedShared (selectedEnvironment false)
+    return (keywordCallback requiredKey, artifact))
+#guard match inferredKeywordCallback with
+  | .ok (.unique false, some (_, (36, 136))) => true
+  | _ => false
+-- Exposed Any/Union tokens are unsafe; container payloads do not change carriers.
+#guard !keywordStable 8 .top
+#guard !keywordStable 8 (.union [.atom .uint, .top])
+#guard keywordStable 8 (.pair .top .top)
+#guard keywordStable 8 (.union [.atom .uint, .atom .bool])
+#guard !replacesPositionalTarget 8 (keywordCallback false)
+  [{ outputs := [.atom .integer], inputs := [.top] }]
+/-- Raw transport candidates differ by one mandatory original argument. Both
+have Any rest, but only one covers target calls omitting the optional keyword. -/
+def rawCallback (tooMany : Bool) : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .uint], inputs := if tooMany then [.top, .top] else [.top], rest := some .top }]
+/-- Keyword target positions/keys are decoded before first-clause selection. -/
+def scaledCallback : List (TypedSignature String Ty) :=
+  [{ outputs := [.atom .integer], inputs := [.atom .uint], keywords := [("scale", .atom .uint)] }]
+/-- The same finite inference/declaration admission uses raw-minimum coverage. -/
+def inferredRawCallback := inferDeclared 2
+  (fun tooMany => replacesKeywordTarget 8 (rawCallback tooMany) scaledCallback)
+  [true, false] (fun tooMany => do
+    let artifact ← buildCheckedShared (selectedEnvironment false)
+    return (rawCallback tooMany, artifact))
+#guard match inferredRawCallback with
+  | .ok (.unique false, some (_, (36, 136))) => true
+  | _ => false
+/-- A published raw callback covers every raw spelling, without a target wrapper
+which would otherwise mask cross-mode differences. -/
+theorem inferredRawCallback_sound (tooMany artifact)
+    (published : inferredRawCallback = .ok (.unique tooMany, some artifact))
+    (tokens : List (ArgumentToken String Int)) (row)
+    (decoded : decodeKeyword tokens = some row) (expected)
+    (selected : selectTyped scaledCallback
+      (shapeRow row.positional.length (row.keywords.map Prod.fst)) = some expected) :
+    selectTyped (rawCallback tooMany) (Call.mk tokens []) = (rawCallback tooMany).head? ∧
+    RelList Subtype (.atom .uint :: []) expected.outputs := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ published
+  cases tooMany <;> exact replacesKeywordTarget_sound 8 _ _ scaledCallback valid tokens row decoded expected selected
+/-- Escaped positional keyword values and literal key markers remain exact data. -/
+def escapedRow : List (ArgumentToken String Int) :=
+  [.keyEscape, .keyword "scale", .restEscape, .keyword "scale", .keyEscape]
+#guard decodeKeyword escapedRow == some ⟨[.keyword "scale", .keyword "scale", .keyEscape], []⟩
+#guard decodeKeyword ([.keyword "scale", .value 2, .keyword "scale", .value 3] : List (ArgumentToken String Int)) == none
+#guard decodeKeyword ([.keyEscape] : List (ArgumentToken String Int)) == none
+-- Canonical encoders may add #!rest; actual empty callers need no raw tokens.
+#guard !replacesKeywordTarget 8 (rawCallback false)
+  [{ outputs := [.atom .integer], inputs := [], keywords := [("scale", .atom .uint)] }]
+#guard !replacesKeywordTarget 8
+  [{ outputs := [.atom .uint], inputs := [], rest := some (.atom .uint) }] scaledCallback
+-- Later Any rest cannot repair the first raw clause, nor can output count differ.
+#guard !replacesKeywordTarget 8
+  ({ outputs := [.atom .uint], inputs := [] } :: rawCallback false) scaledCallback
+#guard !replacesKeywordTarget 8 [{ outputs := [], inputs := [], rest := some .top }] scaledCallback
+#print axioms rawTransport_inputAt
+#print axioms decode_minimum
+#print axioms replacesKeywordTarget_sound
+#print axioms replacesPositionalTarget_stable
+#print axioms replacesPositionalTarget_sound
+#print axioms inferredRawCallback_sound
 
 end LeanPoo.Examples.TypedMethodDeclarations

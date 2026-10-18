@@ -256,8 +256,8 @@ and quantifies over **all** target-accepted decoded calls.
 Gerbil reuses the existing `function-signature.ss` selector, keyword decoder and
 normalizer through a shared checked signature projection. Its key subsets stream
 under the caller's quota; malformed/unsupported/exhausted requests cannot expose
-partial coverage. Its Boolean replacement is conservative across different raw
-keyword wire modes. The formal theorem concerns the shared decoded domain;
+partial coverage. Its Boolean replacement now admits the controlled cross-mode rules below.
+The original coverage theorem concerns the shared decoded domain;
 projection fidelity, common wire interpretation and subtype interpretation of
 opaque/runtime Type descriptors are premises. It does not verify host procedure
 arity, totality, defaults/recognizer effects, macro expansion, parsing or compilation.
@@ -270,3 +270,50 @@ threads the inferred callback through recursive wrapping, FUN/refinement and exa
 evidence publication. Regression controls include a separate operational wrapper
 oracle on all small arities/key orders and quota exhaustion after an admitted cell.
 This continues the paper's hypothetical type-system future work.
+
+
+## Different keyword interpretation modes
+
+`Functional/KeywordArguments.lean` stays in `Functional.FunctionSignature` and
+models Gerbil's existing decoder, not a new calling convention. Ordinary outer
+values decode identically in both modes. Keyword decoding rejects duplicate or
+dangling keys; key escape transports one positional value; rest escape ends token
+interpretation. `decode_minimum` proves `positions + 2 * supplied-keys <= raw-length`
+for every successful spelling, including escapes and every keyword order.
+
+`replacesKeywordTarget` checks a positional source's **first** clause: all fixed
+and optional inputs are top/Any, rest is unbounded Any, keys are absent, and the
+minimum raw length of each target cell satisfies the source's required count.
+Exact-count output covariance uses the existing subtype checker.
+`replacesKeywordTarget_sound` proves actual first selection on every original raw
+row accepted by the target and preserves that selected target's output relation.
+Counting the canonical encoder's optional rest escape would be unsound; the
+zero/one mandatory-argument controls reject that shortcut.
+
+`replacesPositionalTarget` reuses `replacesLanguage`, adding finite stable supplied
+input checks. `inputAt_representative` lifts these to all rest positions.
+`replacesPositionalTarget_sound` combines raw decoding agreement, actual first
+selection, input contravariance and exact output covariance. Its explicit carrier
+interpretation premise says recognized stable Types have ordinary outer tokens;
+it does not claim to verify arbitrary runtime recognizers. The finite Lean Ty
+vocabulary includes scalars, containers, functions and ordered Union; Scheme's
+additional admitted Maybe/Object/Record syntax uses its actual carrier guards.
+Top-level `Examples/TypedMethodDeclarations.lean` links both rules to original
+prefix specialization, complete unique inference and the existing whole builder;
+`inferredRawCallback_sound` makes the publication-to-universal-law link explicit.
+
+Gerbil extends its existing `covers-signatures?` traversal and Type relation,
+reusing the decoder, normalizer, standard key deduplication and streaming masks.
+It never changes a caller's argument row to establish subtyping. The raw transport
+rule is sufficient, not maximal mixed-wire semantic inclusion. Unsupported syntax
+and quota exhaustion keep existing typed refusals; false rejects a candidate;
+complete no-solution/ambiguity/exhaustion cannot execute the declaration builder.
+The Scheme examples continue through FUN/refine/bind-evidence with actual keyword
+defaults and exact raw argument identity. Independent direct-wrapper token-row
+controls and failure cases are in `t/keyword-coverage-test.ss`.
+
+As the original text explicitly leaves Scheme's type system hypothetical, this
+is type-protocol future work. Host procedure arity/totality, default/recognizer
+effects, compiler execution, arbitrary predicates and general mixed-wire inclusion
+remain outside the proof/decision boundary. No performance claim follows from
+these coverage proofs.
