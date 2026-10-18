@@ -88,3 +88,19 @@ checks delayed revision reads versus snapshots and nested ownership.  Host synta
 identity/hygiene, mutable storage, failed definition installation and nonlocal
 control are separate Gerbil obligations.  This is generalized-prototype/MOP future
 work, not compiler verification or completion of every original TODO.
+
+** Core formal projection and current combined invocation
+
+Gerbil's generic forwarder delegates binder projection and keyword partition to
+public core signature/dispatch mechanisms at expansion time.  Core definitions
+own dependent defaults and predicate contracts.  POO retains leading-receiver
+policy and escaped positional/rest data; incomplete projections refuse.
+
+The existing declared-methods workflow composes current reflection, a core-checked
+simple summary, FUN bind and standard C3 charging.  =FunctionSignature= adds eight
+laws for source-ordered keyword restoration and exact resolved call forwarding.
+Top-level =DeclaredMethods= examples check full qualifier order, retained false and
+keyword payloads, metadata/type refusal priority and retry.  Supplied argument and
+metadata admission, host syntax identity and numeric domains are premises.  These
+are not proofs of core parsing, macro hygiene, predicates or fixnum ranges.  This
+continues generalized-prototype/MOP and type-metadata future work.

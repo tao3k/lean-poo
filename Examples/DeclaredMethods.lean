@@ -1,11 +1,13 @@
 import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Functional.NonlocalDeclarations
+import LeanPoo.Functional.FunctionSignature
 
 /-! Matching pure declaration-to-generic controls. Native macro expansion, actual
 C3 sharing and descriptor mutation are exercised separately in Gerbil. -/
 namespace LeanPoo.Examples.DeclaredMethods
 open Object.MethodCombination
 open Functional.DeclarativeMetadata
+open Functional.FunctionSignature
 /-- The complete receiver carries current data and invocation arguments together. -/
 abbrev Row := Nat × Nat
 /-- Logged execution observes qualifier order without assuming effect rollback. -/
@@ -80,4 +82,49 @@ example : [((batchCharge 5 false (10,2)).run []).map Prod.fst,
 #print axioms fragmentSpecification_append
 #print axioms declaredGeneric_standard
 #print axioms declaredGeneric_fragments
+/-- A keyword-valued positional argument is data, distinct from a declared key.
+This finite fixture projects a receiver to its current rate; opaque host receiver
+identity and core predicate/default execution remain Gerbil obligations. -/
+abbrev CallValue := Sum String (Option Nat)
+/-- Current reflection precedes the core-checked generic in the FUN workflow.
+Given those admissions, forward the resolved dependent default and exact rest row
+into summary, then bind its success to the existing standard combined charge. -/
+def forwardedSummary (rate : Nat) (suppliedUnits : Option Nat) (visible : Bool) :
+    Run (Nat × Call String CallValue) := do
+  unless visible do throw "slot is hidden or undeclared"
+  let units ← match suppliedUnits with
+    | none => throw "argument contract refused"
+    | some units => pure units
+  let resolved : Call String CallValue :=
+    ⟨[.inr (some units), .inr (some units)], [("label", .inr none)]⟩
+  let frame := forwardResolved [.inr (some rate)] resolved [.inl "payload", .inr none]
+  record "summary"
+  let amount ← effective methods (fun _ => throw "no primary method") (rate, units)
+  pure (amount, frame)
+/-- The complete row retains false and keyword data while the shared base runs once. -/
+example : (forwardedSummary 10 (some 2) true).run [] = .ok ((46,
+    ⟨[.inr (some 10), .inr (some 2), .inr (some 2), .inl "payload", .inr none],
+      [("label", .inr none)]⟩),
+    ["summary", "around-enter", "billing-before", "risk-before", "billing-primary", "base",
+      "risk-after", "billing-after", "around-exit"]) := rfl
+/-- Combined refusal keeps metadata priority; restored current metadata permits retry. -/
+example : [((forwardedSummary 10 none false).run []).map (fun value => value.1.1),
+    ((forwardedSummary 10 none true).run []).map (fun value => value.1.1),
+    ((forwardedSummary 20 (some 2) true).run []).map (fun value => value.1.1)] =
+    [.error "slot is hidden or undeclared", .error "argument contract refused", .ok 86] := rfl
+/-- A present false is not an absent table entry; source order selects the output. -/
+example : restoreKeywords ["label", "mode"]
+    (fun key => if key = "label" then some false else some true) =
+    some [("label", false), ("mode", true)] := rfl
+example : restoreKeywords ["mode", "label"]
+    (fun key => if key = "label" then some false else some true) =
+    some [("mode", true), ("label", false)] := rfl
+#print axioms restoreKeywords_nil
+#print axioms restoreKeywords_cons
+#print axioms restoreKeywords_missing
+#print axioms restoreKeywords_source
+#print axioms forwardResolved_keywords
+#print axioms forwardResolved_positional
+#print axioms forwardResolved_length
+#print axioms forwardResolved_compose
 end LeanPoo.Examples.DeclaredMethods

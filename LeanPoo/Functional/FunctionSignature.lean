@@ -142,4 +142,68 @@ theorem decode_encodeKeywords (entries : List (Key × Value)) :
 theorem decodeKeywords_dangling (key : Key) :
     decodeKeywords (Value := Value) [.inl key] = none := rfl
 
+variable {Key Value : Type}
+
+/-- Reconstruct the source-ordered keyword bindings from an admitted lookup.
+The core dispatcher's table contents and projected identifiers are premises;
+enumerating that table instead would not retain the declared keyword order. -/
+def restoreKeywords (keys : List Key) (lookup : Key → Option Value) : Option (List (Key × Value)) :=
+  keys.mapM (fun key => (lookup key).map (fun value => (key, value)))
+
+/-- Empty keyword metadata performs no lookup. -/
+theorem restoreKeywords_nil (lookup : Key → Option Value) : restoreKeywords [] lookup = some [] := rfl
+
+/-- Bindings are restored in declaration order, including an explicitly false value. -/
+theorem restoreKeywords_cons (key : Key) (rest) (lookup : Key → Option Value) :
+    restoreKeywords (key :: rest) lookup = (do
+      let value ← lookup key
+      let tail ← restoreKeywords rest lookup
+      pure ((key, value) :: tail)) := by
+  unfold restoreKeywords
+  simp only [List.mapM_cons]
+  cases lookup key <;> rfl
+
+/-- An absent projected binding refuses instead of emitting a truncated call. -/
+theorem restoreKeywords_missing (key : Key) (rest) (lookup : Key → Option Value)
+    (missing : lookup key = none) : restoreKeywords (key :: rest) lookup = none := by
+  rw [restoreKeywords_cons, missing]
+  rfl
+
+/-- Source order and every original payload survive table reconstruction.
+Duplicate-key admission remains the host dispatcher's separate obligation. -/
+theorem restoreKeywords_source (entries : List (Key × Value)) (lookup : Key → Option Value)
+    (current : ∀ entry ∈ entries, lookup entry.1 = some entry.2) :
+    restoreKeywords (entries.map Prod.fst) lookup = some entries := by
+  induction entries with
+  | nil => rfl
+  | cons entry rest ih =>
+    have head := current entry (by simp)
+    have tail := ih (by intro other member; exact current other (by simp [member]))
+    rw [List.map_cons, restoreKeywords_cons, head, tail]
+    rfl
+
+/-- Forward only already resolved bindings. The leading receiver and escaped rest
+data remain positional; no default expression or predicate is present here. -/
+def forwardResolved (leading : List Value) (call : Call Key Value) (rest : List Value) : Call Key Value :=
+  ⟨leading ++ call.positional ++ rest, call.keywords⟩
+
+/-- Keyword bindings are unchanged by receiver/rest forwarding. -/
+theorem forwardResolved_keywords (leading : List Value) (call : Call Key Value) (rest) :
+    (forwardResolved leading call rest).keywords = call.keywords := rfl
+
+/-- Each supplied receiver/position/rest value occurs exactly once, in order. -/
+theorem forwardResolved_positional (leading : List Value) (call : Call Key Value) (rest) :
+    (forwardResolved leading call rest).positional = leading ++ call.positional ++ rest := rfl
+
+/-- Forwarding inserts no omitted defaults, extra receiver or synthetic arguments. -/
+theorem forwardResolved_length (leading : List Value) (call : Call Key Value) (rest) :
+    (forwardResolved leading call rest).positional.length =
+      leading.length + call.positional.length + rest.length := by simp [forwardResolved, Nat.add_assoc]
+
+/-- Nested wrappers preserve prefix/suffix order without reinterpreting any value. -/
+theorem forwardResolved_compose (outer inner : List Value) (call : Call Key Value)
+    (innerRest outerRest : List Value) :
+    forwardResolved outer (forwardResolved inner call innerRest) outerRest =
+      forwardResolved (outer ++ inner) call (innerRest ++ outerRest) := by
+  simp [forwardResolved, List.append_assoc]
 end LeanPoo.Functional.FunctionSignature
