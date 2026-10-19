@@ -158,8 +158,9 @@ circuit, assuming host replay actually detects source drift. The existing finite
 solver examples distinguish unique/no-solution/reordered ambiguous catalogs. These
 do not extend `Ty` to unrestricted dependent types or prove the Scheme compiler,
 host registry identity, arbitrary callback effects or concurrent mutation. This
-advances the article's type-protocol future work; dynamic Class/Schema catalogs
-remain open. See Scheme `doc/intrinsic-descriptors.md` for the executable boundary.
+advances the article's type-protocol future work. Dynamic Class/Schema capture
+has the finite scope below; arbitrary discovery remains open. See Scheme
+`doc/intrinsic-descriptors.md` for the executable boundary.
 
 ## Accepted-assignment construction
 
@@ -193,3 +194,42 @@ removes one abstract projection charge, not a proven number of bytes or GC time.
 metadata after exact source equality. Gerbil normalizes a private copied AST so
 replaced public literal subtrees cannot mutate that captured result. Post-builder
 syntax, binding and source checks remain; exact quota thresholds are not equated.
+
+## Stable finite Class/Schema directories
+
+Scheme `capture-type-catalog` resolves an explicit finite name list through the
+existing POO getter and Type protocols. Opaque, snapshot-local tokens carry real
+Class or external Schema descriptors. Aliases within one capture share identity;
+a fresh capture creates a separate scope. Tokens flow through the existing Type
+syntax, inference, prefix specialization and typed declaration compiler. Their
+judgment is nominal identity, without structural implication from a Class parent,
+a Schema predicate or printed metadata. A whole token can stand for a Type;
+TypeValuePair catalogs retain the original descriptor tags and recursive wrappers.
+
+Capture observes standard Class declared/effective Slots and declared child Types,
+plus explicitly supplied source objects, with at most 64 names, roots and visited
+Types. Metadata work is budgeted; arbitrary callback termination is a premise.
+Computed selectors use the existing registered-dependency discipline for cache
+invalidation. External Schema/custom-Type hidden dependencies must be declared;
+there is no automatic semantic dependency discovery or new Schema compiler.
+
+`reobserve-slot-reads!` shares the original Slot replay traversal, delivers its
+complete checked dependency closure to outer collectors, and rechecks after
+observers. Cold getters and metadata construction do not rerun. Old source/Slot/
+approval observations refuse before a validator runs; successful work is checked
+again before publishing. Original callback exceptions keep their cause and effects.
+Fresh capture/re-specialization retries under new identity; a fresh but rejecting
+Schema still rejects. Missing fields, invalid Types, malformed/unsupported capture,
+work exhaustion, stale sources and ordinary inference outcomes remain distinct.
+
+`OptionalValidation.CatalogType` and `catalogIdentity` model scope separation.
+`captureCatalog_sound` connects accepted materialization to complete ordered
+resolution and source admission. `catalogCall_sound`, `_stale`, `_changed`,
+`_error` and `_stable` state exact before/after-stamp publication, short circuit
+and normalization preservation. `Examples/OptionalContracts.lean` checks aliases,
+fresh scope refusal, late capture failure, shared approval/Slot stamp changes and
+unchanged dependent Function wrapping. Host identity and complete, correctly
+recorded registered sources are explicit premises; these laws do not prove the
+Scheme parser, arbitrary callback implication, metaclass discovery or concurrency.
+This extends the article's type-protocol future work. See the companion Scheme
+`doc/intrinsic-descriptors.md` for exact APIs and remaining unrestricted scope.

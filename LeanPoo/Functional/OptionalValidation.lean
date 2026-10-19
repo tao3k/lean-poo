@@ -215,4 +215,118 @@ theorem catalog_stale (guard : Except Error Unit) (next : Unit → Except Error 
     (cause : Error) (failed : guard = .error cause) : guard.bind next = .error cause := by
   simp [failed, Except.bind]
 
+/-- A nominal Type token is local to one captured directory. Display names do
+not enter identity; a host capture coalesces aliases of the same descriptor. -/
+structure CatalogType (Descriptor : Type) where
+  scope : Nat
+  descriptor : Descriptor
+  deriving DecidableEq
+
+/-- Only exact captured identity replaces an opaque Class/Schema token. -/
+def catalogIdentity [DecidableEq Descriptor] (source target : CatalogType Descriptor) : Bool :=
+  decide (source = target)
+
+/-- Identity inclusion preserves arbitrary actual Schema predicates, without
+assuming that Class ancestry or equal printed metadata implies subtyping. -/
+theorem catalogIdentity_sound [DecidableEq Descriptor] (source target : CatalogType Descriptor)
+    (member : CatalogType Descriptor → Value → Prop) (value : Value)
+    (accepted : catalogIdentity source target = true) (valid : member source value) : member target value := by
+  have same : source = target := of_decide_eq_true accepted
+  simpa [same] using valid
+
+/-- A fresh capture cannot silently reuse tokens from another directory scope. -/
+theorem catalogIdentity_scope [DecidableEq Descriptor] (source target : CatalogType Descriptor)
+    (different : source.scope ≠ target.scope) : catalogIdentity source target = false := by
+  have unequal : source ≠ target := fun same => different (congrArg CatalogType.scope same)
+  simp [catalogIdentity, unequal]
+
+/-- Resolve the complete finite name list before source admission. No partial
+prefix is returned when a getter, Type admission or final replay refuses. -/
+def captureCatalog (resolve : Name → Except Error Descriptor) (names : List Name)
+    (admit : List Descriptor → Except Error Unit) : Except Error (List Descriptor) :=
+  (Validation.traverse resolve names).bind fun entries => (admit entries).map fun _ => entries
+
+/-- A successful capture consists of exactly the resolved list and its successful
+source admission. Getter termination and discovery of external roots are premises. -/
+theorem captureCatalog_sound (resolve : Name → Except Error Descriptor) (names : List Name)
+    (admit : List Descriptor → Except Error Unit) (entries : List Descriptor)
+    (accepted : captureCatalog resolve names admit = .ok entries) :
+    Validation.traverse resolve names = .ok entries ∧ admit entries = .ok () := by
+  cases resolved : Validation.traverse resolve names with
+  | error cause => simp [captureCatalog, resolved, Except.bind] at accepted
+  | ok values =>
+    cases admitted : admit values with
+    | error cause => simp [captureCatalog, resolved, admitted, Except.bind, Except.map] at accepted
+    | ok witness =>
+      cases witness
+      have same : values = entries := by simpa [captureCatalog, resolved, admitted, Except.bind, Except.map] using accepted
+      subst values
+      exact ⟨rfl, admitted⟩
+
+/-- Failed resolution preserves its cause and suppresses final source admission. -/
+theorem captureCatalog_error (resolve : Name → Except Error Descriptor) (names : List Name)
+    (admit : List Descriptor → Except Error Unit) (cause : Error)
+    (failed : Validation.traverse resolve names = .error cause) :
+    captureCatalog resolve names admit = .error cause := by
+  simp [captureCatalog, failed, Except.bind]
+
+/-- A successful callback is published only under the same captured source stamp
+before and after work. Stamps may encode all declared finite read observations. -/
+def catalogCall [DecidableEq Stamp] (captured observed : Stamp)
+    (action : Unit → Except Error (Artifact × Stamp)) (stale : Error) : Except Error Artifact :=
+  if captured = observed then
+    (action ()).bind fun result => if captured = result.2 then .ok result.1 else .error stale
+  else .error stale
+
+/-- Old sources prevent the callback, independently of its behavior. -/
+theorem catalogCall_stale [DecidableEq Stamp] (captured observed : Stamp)
+    (action : Unit → Except Error (Artifact × Stamp)) (stale : Error) (old : captured ≠ observed) :
+    catalogCall captured observed action stale = .error stale := by simp [catalogCall, old]
+
+/-- The original callback error wins; a later source check cannot replace it. -/
+theorem catalogCall_error [DecidableEq Stamp] (captured observed : Stamp)
+    (action : Unit → Except Error (Artifact × Stamp)) (stale cause : Error)
+    (current : captured = observed) (failed : action () = .error cause) :
+    catalogCall captured observed action stale = .error cause := by
+  simp [catalogCall, current, failed, Except.bind]
+
+/-- A metadata edit during successful work prevents publication. Effects already
+performed by the callback are not rolled back by this result-level model. -/
+theorem catalogCall_changed [DecidableEq Stamp] (captured observed after : Stamp)
+    (action : Unit → Except Error (Artifact × Stamp)) (stale : Error) (artifact : Artifact)
+    (current : captured = observed) (called : action () = .ok (artifact, after)) (changed : captured ≠ after) :
+    catalogCall captured observed action stale = .error stale := by
+  subst observed
+  simp [catalogCall, called, changed, Except.bind]
+
+/-- Unchanged stamps preserve the original complete normalization program,
+including exact returned wrappers and every child error. -/
+theorem catalogCall_stable [DecidableEq Stamp] (captured : Stamp)
+    (program : Except Error Artifact) (stale : Error) :
+    catalogCall captured captured (fun _ => program.map fun value => (value, captured)) stale = program := by
+  cases program <;> simp [catalogCall, Except.map, Except.bind]
+
+/-- Accepted artifacts are exactly callback results under unchanged stamps.
+Host replay detecting supported mutation is separate from this semantic theorem. -/
+theorem catalogCall_sound [DecidableEq Stamp] (captured observed : Stamp)
+    (action : Unit → Except Error (Artifact × Stamp)) (stale : Error) (artifact : Artifact)
+    (accepted : catalogCall captured observed action stale = .ok artifact) :
+    captured = observed ∧ ∃ after, action () = .ok (artifact, after) ∧ captured = after := by
+  unfold catalogCall at accepted
+  split at accepted
+  next current =>
+    refine ⟨current, ?_⟩
+    cases called : action () with
+    | error cause => simp [called, Except.bind] at accepted
+    | ok result =>
+      rcases result with ⟨value, after⟩
+      simp only [called, Except.bind] at accepted
+      split at accepted
+      next stable =>
+        have same : value = artifact := Except.ok.inj accepted
+        subst value
+        exact ⟨after, rfl, stable⟩
+      next unstable => cases accepted
+  next old => cases accepted
+
 end LeanPoo.Functional.OptionalValidation

@@ -236,4 +236,43 @@ example (source target : List Descriptor) (predicate : Descriptor → Value → 
 #print axioms OptionalValidation.catalogTyped_missing
 #print axioms OptionalValidation.catalogTyped_sound
 #print axioms OptionalValidation.catalog_stale
+
+/-- Dynamic aliases share one captured descriptor token; fresh scopes remain
+separate even when a Class/Schema has the same public metadata. -/
+def capturedTransform : OptionalValidation.CatalogType Descriptor := ⟨7, .transform⟩
+example : OptionalValidation.catalogIdentity capturedTransform ⟨7, .transform⟩ = true := by decide
+example : OptionalValidation.catalogIdentity capturedTransform ⟨8, .transform⟩ = false := by decide
+example : OptionalValidation.catalogIdentity capturedTransform ⟨7, .other⟩ = false := by decide
+
+example : OptionalValidation.captureCatalog
+    (fun (key : Nat) => if key = 0 then (.ok Descriptor.transform : Except String Descriptor) else .error "getter")
+    [0, 1] (fun _ => .ok ()) = .error "getter" := by rfl
+example : OptionalValidation.captureCatalog
+    (fun (_ : Nat) => (.ok Descriptor.transform : Except String Descriptor))
+    [0, 1] (fun _ => .error "source drift") = .error "source drift" := by rfl
+
+/-- Provider selection, Class Slot metadata and shared approval are independent
+finite stamp positions. A later revision prevents publication of old artifacts. -/
+example : OptionalValidation.catalogCall ([0, 0, 0] : List Nat) [0, 0, 0]
+    (fun _ => (.ok (19, [0, 1, 0]) : Except String (Nat × List Nat))) "stale" = .error "stale" := by rfl
+example (action : Unit → Except String (Nat × List Nat)) :
+    OptionalValidation.catalogCall ([0, 0, 0] : List Nat) [0, 0, 1] action "stale" = .error "stale" :=
+  OptionalValidation.catalogCall_stale _ _ _ _ (by decide)
+
+/-- Under unchanged sources the exact dependent Function wrapper and original
+child errors pass through; this is not a proof of arbitrary Schema predicates. -/
+example (source : Descriptor × Value) :
+    OptionalValidation.catalogCall ([2, 3, 4] : List Nat) [2, 3, 4]
+      (fun _ => (catalog source).map fun checked => (checked, [2, 3, 4])) "stale" = catalog source :=
+  OptionalValidation.catalogCall_stable _ _ _
+
+#print axioms OptionalValidation.catalogIdentity_sound
+#print axioms OptionalValidation.catalogIdentity_scope
+#print axioms OptionalValidation.captureCatalog_sound
+#print axioms OptionalValidation.captureCatalog_error
+#print axioms OptionalValidation.catalogCall_stale
+#print axioms OptionalValidation.catalogCall_error
+#print axioms OptionalValidation.catalogCall_changed
+#print axioms OptionalValidation.catalogCall_stable
+#print axioms OptionalValidation.catalogCall_sound
 end LeanPoo.Examples.OptionalContracts
