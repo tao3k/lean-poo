@@ -1,6 +1,7 @@
 import LeanPoo.Object.MethodCombinationSemantics
 import LeanPoo.Functional.DeclarativeMetadata
 import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.RowTypes
 import LeanPoo.Functional.Parameters
 
 /-! Record and qualified method declarations share one fragment stream. This
@@ -655,5 +656,34 @@ theorem inferSourceUnion_sound (signature : Signature) (included : Branch → Bo
   exact ⟨(Except.ok.inj built).symm, fun value admitted =>
     VariantValidation.sourceCoverage_sound included (branches candidate) member target
       (fun branch _ => sound branch) valid value admitted⟩
+
+
+/-- Complete declaration inference checks one named layout against the target.
+Object layouts use requiredRow; original candidate/signature identities remain
+in the artifact, without replacing the host's Class or ObjectContract validator. -/
+def inferRowView [DecidableEq Key] (signature : Signature) (test : Field → Field → Bool)
+    (layout : Candidate → RowTypes.Row Key (Field × Bool)) (target : RowTypes.Row Key (Field × Bool))
+    (candidates : List Candidate) :=
+  inferDeclared candidates.length (fun candidate => RowTypes.recordCheck test (layout candidate) target)
+    candidates (fun candidate => (Except.ok (signature, candidate, layout candidate) :
+      Except String (Signature × Candidate × RowTypes.Row Key (Field × Bool))))
+
+/-- A uniquely built declaration retains its original artifact and preserves
+all named observations under the supplied child inclusion law. This is readable
+replacement, not mutable-write variance or equality of arbitrary normalizers. -/
+theorem inferRowView_sound [DecidableEq Key] (signature : Signature) (test : Field → Field → Bool)
+    (layout : Candidate → RowTypes.Row Key (Field × Bool)) (target : RowTypes.Row Key (Field × Bool))
+    (candidates : List Candidate) (accepts : Field → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (candidate : Candidate) (artifact : Signature × Candidate × RowTypes.Row Key (Field × Bool))
+    (published : inferRowView signature test layout target candidates = .ok (.unique candidate, some artifact)) :
+    artifact = (signature, candidate, layout candidate) ∧
+      ∀ observe, RowTypes.RecordAdmits accepts (layout candidate) observe → RowTypes.RecordAdmits accepts target observe := by
+  obtain ⟨_, valid, built⟩ := inferDeclared_unique candidates.length
+    (fun candidate => RowTypes.recordCheck test (layout candidate) target) candidates
+    (fun candidate => (Except.ok (signature, candidate, layout candidate) :
+      Except String (Signature × Candidate × RowTypes.Row Key (Field × Bool)))) published
+  exact ⟨(Except.ok.inj built).symm, fun observe admitted =>
+    RowTypes.recordCheck_sound test accepts sound (layout candidate) target valid observe admitted⟩
 
 end LeanPoo.Functional.DeclarativeMetadata

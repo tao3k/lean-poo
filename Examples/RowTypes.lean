@@ -1,5 +1,6 @@
 import LeanPoo.Functional.RowTypes
 import LeanPoo.Functional.RecursiveTypes
+import LeanPoo.Functional.MethodDeclarations
 
 /-! Object field replacement, inferred row extensions, and guarded finite unfolding.
 Names and Function signatures correspond to the Gerbil row service fixture. -/
@@ -65,4 +66,63 @@ example : LeanPoo.Prototype.Recursive.solve
 example : LeanPoo.Functional.RecursiveTypes.bounded 12 11 body .never 3 = .error () := by
   apply LeanPoo.Functional.RecursiveTypes.exhausted
   decide
+
+/-- An inherited Record view retains its optional audit and exact closed shape. -/
+def workerRecord : Row String (Ty × Bool) :=
+  ⟨[("run", (handler, false)), ("limit", (.atom .uint, false)), ("audit", (.atom .bool, true))], true⟩
+
+/-- A structural Object client requires its method and numeric limit only. -/
+def workerInterface : Row String Ty :=
+  ⟨[("limit", .atom .integer), ("run", clientHandler)], false⟩
+
+/-- A concrete closed Object can prove an undeclared optional field is absent. -/
+def workerObject : Row String Ty := ⟨[("run", handler), ("limit", .atom .uint)], true⟩
+
+/-- The Record client preserves optional absence without constructing a default. -/
+def workerClient : Row String (Ty × Bool) :=
+  ⟨[("audit", (.atom .bool, true)), ("run", (clientHandler, false)), ("limit", (.atom .integer, false))], false⟩
+
+example : recordCheck (PrototypeTypes.check 8) workerRecord (requiredRow workerInterface) = true := by decide
+example : recordCheck (PrototypeTypes.check 8) (requiredRow workerObject) workerClient = true := by decide
+example : recordCheck (PrototypeTypes.check 8) (requiredRow {workerObject with closed := false}) workerClient = false := by decide
+example : recordCheck (PrototypeTypes.check 8) workerRecord (requiredRow {workerInterface with closed := true}) = false := by decide
+
+/-- Candidate presence is checked jointly with child variance and target closure. -/
+def workerLayout (optionalRun : Bool) : Row String (Ty × Bool) :=
+  ⟨[("run", (handler, optionalRun)), ("limit", (.atom .uint, false)), ("audit", (.atom .bool, true))], true⟩
+
+/-- One complete declaration chooses the original required-run Record candidate. -/
+example : DeclarativeMetadata.inferRowView "Record worker / Object interface"
+    (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] =
+    .ok (.unique false, some ("Record worker / Object interface", false, workerLayout false)) := by rfl
+
+/-- Full declaration provenance composes with universal Record-to-Object reads.
+The caller supplies child behavior, including the established Function law. -/
+example (accepts : Ty → Value → Prop)
+    (sound : ∀ a b, PrototypeTypes.check 8 a b = true → ∀ value, accepts a value → accepts b value)
+    (artifact) (published : DeclarativeMetadata.inferRowView "Record worker / Object interface"
+      (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] =
+      .ok (.unique false, some artifact)) :
+    artifact = ("Record worker / Object interface", false, workerLayout false) ∧
+      ∀ observe, RecordAdmits accepts workerRecord observe → Admits accepts workerInterface observe := by
+  obtain ⟨same, included⟩ := DeclarativeMetadata.inferRowView_sound "Record worker / Object interface"
+    (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] accepts sound false artifact published
+  refine ⟨same, ?_⟩
+  intro observe valid
+  exact (requiredRow_admits accepts workerInterface observe).mp (included observe valid)
+
+/-- The reverse direction preserves all Record observations of the same carrier.
+Host Class initialization and wrapper effects are separate runtime obligations. -/
+example (accepts : Ty → Value → Prop)
+    (sound : ∀ a b, PrototypeTypes.check 8 a b = true → ∀ value, accepts a value → accepts b value)
+    (observe : String → Option Value) (valid : Admits accepts workerObject observe) :
+    RecordAdmits accepts workerClient observe :=
+  objectToRecord_sound (PrototypeTypes.check 8) accepts sound workerObject workerClient (by decide) observe valid
+
+#print axioms lookup_required
+#print axioms requiredRow_admits
+#print axioms recordToObject_sound
+#print axioms objectToRecord_sound
+#print axioms DeclarativeMetadata.inferRowView_sound
+
 end Examples.RowTypes

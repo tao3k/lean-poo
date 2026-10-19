@@ -134,3 +134,51 @@ Racket motivation, Lean semantic premises and Gerbil execution are separate
 receipts. This is not proof of the Gerbil compiler or all recursive/row type
 inference. No Scheme source, example or test requires a Lean checkout. Full existing
 checks are retained alongside the focused protocol suite.
+
+## Record and Object carrier replacement
+
+Explicit finite Record and Object rows now use the same complete named-field
+replacement protocol in either direction. Both denote POO objects: Record
+compiles through Class/RecordSlot and Object through ObjectContract. The public
+dispatcher previously selected their shared rule only for identical constructor
+kinds; it now admits either pair before the same-kind container cases. No second
+field solver, wrapper engine, namespace or descriptor conversion is introduced.
+
+Record-to-Object requires every Object field to have a required source field
+and readable child inclusion. Object-to-Record treats Object fields as required;
+a missing optional Record field is safe only for a closed Object source, which
+establishes absence. Open sources cannot hide unchecked values at missing optional
+names. Closed targets still require a closed source and reject every extra
+declared key, including optional ones. Field order and original descriptor kinds
+remain captured metadata, not normalization targets. Nested Function variance,
+List/Map values and prefix-specialized declarations use the existing child rule.
+Map keys and direct ordered Union bounds remain invariant. No Any is synthesized.
+
+The bridge applies to admitted literal Record/Object syntax, not opaque captured
+Class/Schema tokens, arbitrary ancestry, custom Slot callbacks or implicit
+layout discovery. Initialization/defaults/hooks and receiver-bound wrapping stay
+with their original validators; the relation does not grant covariant writes,
+normalizer effect equivalence, serialization conversion or approval reuse.
+Missing coverage is false; malformed/unsupported metadata and shared budget
+exhaustion retain their original typed failures. Optional absence creates no
+field/default, and successful input validation does not excuse invalid outputs.
+
+infer-worker-service composes an inherited worker Record, structural interface,
+UInt-indexed Map/List Function fields, complete inference, parameter-prefix
+specialization and qualified declarations. Existing descriptor-service-action
+sequences FUN/IO, refine and exact bind-evidence. Regressions cover both publication
+directions, inherited defaults, optional absence, callback rejection, policy
+retry, genuine cross-kind candidate ambiguity and opaque-token refusal. A closed
+Object output still rejects an optional input field retained by the host operation.
+
+RowTypes.requiredRow is an observation-only required-presence projection. Its
+lookup and admission equivalence laws connect Object reads to the existing Slot
+protocol; recordToObject_sound/objectToRecord_sound then reuse recordCheck_sound.
+DeclarativeMetadata.inferRowView_sound retains the exact captured signature,
+candidate/layout artifact and universal target observations after one complete
+unique solve. Top-level Examples/RowTypes.lean composes field Function variance,
+closure/presence refusals and declaration provenance. Host projection and child
+behavior remain explicit premises; these are not compiler or arbitrary callback
+proofs. This advances the article's type-protocol future work, consistent with
+its element-inclusion definition of subtyping, rather than attributing finite
+inference to the reference Racket implementation.

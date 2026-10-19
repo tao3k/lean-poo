@@ -277,4 +277,74 @@ theorem inferred_valid (wellFormed constraints : Assignment → Bool) (candidate
     assignment ∈ candidates ∧ wellFormed assignment = true ∧ constraints assignment = true := by
   obtain ⟨member, good⟩ := PrototypeTypes.infer_unique _ _ accepted
   exact ⟨member, by simpa [assignmentValid] using good⟩
+
+/-- Object fields have required presence. This private observation view adds
+flags without changing keys, field Types, ordering, closure or runtime values. -/
+def requiredRow (row : Row Key Field) : Row Key (Field × Bool) :=
+  ⟨row.fields.map (fun field => (field.1, (field.2, false))), row.closed⟩
+
+/-- Presence projection retains the very same named lookup and selected Type. -/
+theorem lookup_required [DecidableEq Key] (fields : List (Key × Field)) (name : Key) :
+    lookup (fields.map (fun field => (field.1, (field.2, false)))) name =
+      (lookup fields name).map (fun type => (type, false)) := by
+  induction fields with
+  | nil => rfl
+  | cons head rest ih =>
+    rcases head with ⟨key, type⟩
+    by_cases same : key = name <;> simp [lookup, same, ih]
+
+/-- Required-field Object observations and required Slot observations agree on
+both successful reads and closed-key restrictions. No normalization is inferred. -/
+theorem requiredRow_admits [DecidableEq Key] (accepts : Field → Value → Prop)
+    (row : Row Key Field) (observe : Key → Option Value) :
+    RecordAdmits accepts (requiredRow row) observe ↔ Admits accepts row observe := by
+  constructor
+  · rintro ⟨fields, closed⟩
+    constructor
+    · intro name type found
+      have good := fields name (type, false) (by simp [requiredRow, lookup_required, found])
+      cases observed : observe name with
+      | none => simp [slotAdmits, observed] at good
+      | some value => exact ⟨value, rfl, by simpa [slotAdmits, observed] using good⟩
+    · intro isClosed name value observed
+      obtain ⟨field, found⟩ := closed isClosed name value observed
+      cases original : lookup row.fields name with
+      | none => simp [requiredRow, lookup_required, original] at found
+      | some type => exact ⟨type, rfl⟩
+  · rintro ⟨fields, closed⟩
+    constructor
+    · intro name field found
+      cases original : lookup row.fields name with
+      | none => simp [requiredRow, lookup_required, original] at found
+      | some type =>
+        have same : (type, false) = field := by simpa [requiredRow, lookup_required, original] using found
+        subst field
+        obtain ⟨value, observed, valid⟩ := fields name type original
+        simpa [slotAdmits, observed] using valid
+    · intro isClosed name value observed
+      obtain ⟨type, found⟩ := closed isClosed name value observed
+      exact ⟨(type, false), by simp [requiredRow, lookup_required, found]⟩
+
+/-- A finite Record replaces an Object interface through the existing complete
+record checker. Required target reads cannot be supplied by optional fields. -/
+theorem recordToObject_sound [DecidableEq Key] (test : Field → Field → Bool)
+    (accepts : Field → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (source : Row Key (Field × Bool)) (target : Row Key Field)
+    (checked : recordCheck test source (requiredRow target) = true)
+    (observe : Key → Option Value) (valid : RecordAdmits accepts source observe) : Admits accepts target observe :=
+  (requiredRow_admits accepts target observe).mp
+    (recordCheck_sound test accepts sound source (requiredRow target) checked observe valid)
+
+/-- A closed Object can establish absence of missing optional Record fields;
+open sources retain the original refusal. No defaults or slots are fabricated. -/
+theorem objectToRecord_sound [DecidableEq Key] (test : Field → Field → Bool)
+    (accepts : Field → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (source : Row Key Field) (target : Row Key (Field × Bool))
+    (checked : recordCheck test (requiredRow source) target = true)
+    (observe : Key → Option Value) (valid : Admits accepts source observe) : RecordAdmits accepts target observe :=
+  recordCheck_sound test accepts sound (requiredRow source) target checked observe
+    ((requiredRow_admits accepts source observe).mpr valid)
+
 end LeanPoo.Functional.RowTypes
