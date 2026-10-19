@@ -581,4 +581,50 @@ theorem inferDeclaredCandidates_refused (budget : Nat)
     inferDeclaredCandidates budget derive valid candidates build = .error (.inl cause) := by
   simp [inferDeclaredCandidates, refused]
 
+/-- Reuse one reflected catalog across typed forcing and final admission. The
+constructor guard must keep registered catalog sources stable; the final admitter
+still observes the successor state and checks current source/revision metadata. -/
+def admitReflected (slots : List Slot) (force : List Slot → Except Error State)
+    (admit : State → List Slot → Except Error Artifact) : Except Error Artifact :=
+  (force slots).bind fun state => admit state slots
+/-- A private pure projection of the captured source can replace recomputation
+only after the existing exact source check. Both refusals and admission results
+remain identical; the host must prevent mutable aliases to the private snapshot. -/
+theorem admitDeclaredSource_project [DecidableEq Source] (captured observed : Source)
+    (project : Source → View) (admit : View → Except PrototypeTypes.Failure Artifact) :
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project captured)) =
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project observed)) := by
+  by_cases same : captured = observed
+  · subst observed; rfl
+  · simp [admitDeclaredSource, same, Except.bind]
+/-- Reference path repeats reflection only after the same forcing phase. -/
+def admitReflectedAgain (slots : List Slot) (force : List Slot → Except Error State)
+    (reflect : State → List Slot) (admit : State → List Slot → Except Error Artifact) : Except Error Artifact :=
+  (force slots).bind fun state => admit state (reflect state)
+/-- Catalog reuse preserves every forcing/admission error and artifact whenever
+the guarded forcing phase preserves the effective catalog, including its order.
+This is an explicit stability premise, not a proof of arbitrary host callbacks. -/
+theorem admitReflected_eq (slots : List Slot) (force : List Slot → Except Error State)
+    (reflect : State → List Slot) (admit : State → List Slot → Except Error Artifact)
+    (stable : ∀ state, force slots = .ok state → reflect state = slots) :
+    admitReflected slots force admit = admitReflectedAgain slots force reflect admit := by
+  cases result : force slots with
+  | error cause => simp [admitReflected, admitReflectedAgain, result, Except.bind]
+  | ok state => simp [admitReflected, admitReflectedAgain, result, stable state result, Except.bind]
+/-- A failed forcing phase still prevents every subsequent admission callback. -/
+theorem admitReflected_refuses (slots : List Slot) (force : List Slot → Except Error State)
+    (admit : State → List Slot → Except Error Artifact) (failed : force slots = .error cause) :
+    admitReflected slots force admit = .error cause := by
+  simp [admitReflected, failed, Except.bind]
+/-- One catalog projection is removed. Remaining forcing, binding, admission and
+primitive costs are unchanged abstract charges; this does not bound GC or time. -/
+theorem reflected_catalog_work (reflect force admit : Nat) :
+    reflect + force + reflect + admit = (reflect + force + admit) + reflect ∧
+      reflect + force + admit ≤ reflect + force + reflect + admit := by omega
+/-- Captured AST copying is common work. One normalization and one reflection
+are removed; source validation, binding, callbacks and final admission remain. -/
+theorem declared_catalog_work (normalize reflect copy force admit : Nat) :
+    copy + normalize + reflect + force + normalize + reflect + admit =
+      (copy + normalize + reflect + force + admit) + (normalize + reflect) := by omega
+
 end LeanPoo.Functional.DeclarativeMetadata

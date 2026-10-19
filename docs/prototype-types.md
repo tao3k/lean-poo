@@ -150,3 +150,19 @@ examples remain in top-level `Examples/PrototypeTypes.lean`. The comparison-work
 bound counts pure constraint replay, not total runtime, allocation or GC.
 Gerbil's paired factory/publication benchmark measures those remaining costs
 separately with unchanged validation, refusal and resource guards.
+
+## Guarded declaration catalogs
+
+`admitReflected_eq` in `Functional/MethodDeclarations.lean` models retaining one effective Slot catalog
+from typed forcing through final root-signature admission. The final admitter still
+receives the successor state, checks source equality and current descriptors, and
+keeps every forcing/admission error. Catalog order and membership must remain
+stable during forcing. Gerbil supplies that premise for supported registered
+edits through its existing construction guard and dependency invalidation closure;
+arbitrary unregistered host mutation and concurrent edits are outside that scope.
+Nested Object catalogs still use the original traversal. `reflected_catalog_work`
+removes one abstract projection charge, not a proven number of bytes or GC time.
+`admitDeclaredSource_project` additionally permits reuse of pure normalized
+metadata after exact source equality. Gerbil normalizes a private copied AST so
+replaced public literal subtrees cannot mutate that captured result. Post-builder
+syntax, binding and source checks remain; exact quota thresholds are not equated.

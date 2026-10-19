@@ -59,6 +59,34 @@ def refusal (badArity : Bool) : Except String String := do
 #print axioms assembleDeclared_cacheSound
 #print axioms invokeDeclared_absent
 #print axioms declaredPublication_refused
+/-- A guarded full catalog retains source order and hidden groups. The successor
+state may carry newly forced caches; the final admitter still reads that state. -/
+def heldCatalog : List (String × Nat) := [(".report", 7), (".recover", 8), ("hidden-audit", 9)]
+/-- Success/error equality is universal over both callbacks, rather than a test
+of a particular successful declaration. Stability must follow from the host guard. -/
+example (force : List (String × Nat) → Except String Nat)
+    (reflect : Nat → List (String × Nat))
+    (admit : Nat → List (String × Nat) → Except String Nat)
+    (stable : ∀ state, force heldCatalog = .ok state → reflect state = heldCatalog) :
+    admitReflected heldCatalog force admit = admitReflectedAgain heldCatalog force reflect admit :=
+  admitReflected_eq _ _ _ _ stable
+/-- Refusal during typed forcing cannot run the final catalog admission. -/
+example : admitReflected heldCatalog (fun _ => (.error "metadata-edit" : Except String Nat))
+    (fun _ _ => (.error "must-not-run" : Except String Nat)) = .error "metadata-edit" := by rfl
+#print axioms admitReflected_eq
+#print axioms admitReflected_refuses
+#print axioms reflected_catalog_work
+/-- Root and named interfaces still run the exact source check before using
+captured normalization, with arbitrary admission/refusal semantics afterwards. -/
+example (captured observed : String × List String)
+    (project : (String × List String) → List (String × Nat))
+    (admit : List (String × Nat) → Except Functional.PrototypeTypes.Failure Nat) :
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project captured)) =
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project observed)) :=
+  admitDeclaredSource_project _ _ _ _
+#print axioms admitDeclaredSource_project
+#print axioms declared_catalog_work
+
 end LeanPoo.Examples.TypedMethodDeclarations
 
 /-! Prefix specialization and bounded inference use the same declaration builder.
