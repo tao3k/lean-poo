@@ -415,3 +415,52 @@ universal replacement and Function-bearing snapshots. Faithful host snapshots,
 carrier/comparator preservation, callback behavior and supported source stability
 remain explicit boundaries; this advances finite type-protocol future work,
 not unrestricted predicate inference or a proof of the host runtime.
+
+## Source Union coverage for readable containers
+
+A source Union may replace one ordinary List, Tuple, Pair, Map, Record or Object
+view when **every original branch** passes the existing complete carrier/child
+relation for that same target. This extends the earlier flat scalar rule; it does
+not reorder, flatten, delete or rewrite alternatives. Direct Union-to-Union
+comparison stays invariant. Root Function/opaque-target inclusion is not expanded
+by this rule. Incompatible vector/list carriers, improper Pair tails, missing
+fields and live Map-key changes still refuse through their existing judgments.
+Nested Function fields use their existing variance and wrapping obligations.
+
+An empty source Union is uninhabited and vacuously covers an admitted ordinary
+container; its runtime validator still refuses every value. Complete syntax
+admission precedes comparison, so an unsupported late branch cannot be hidden by
+an earlier successful branch. Each branch comparison shares the existing work
+quota. Exhaustion remains distinct from a completed false result, no solution
+or genuine ambiguity. No Any is synthesized.
+
+The existing infer-worker-service factory now accepts original ordered
+Record/Object alternative candidates. The worked regression retains UInt8 and
+UInt callback layouts, inherited Record/contract field validation, nested
+Map/List callbacks, complete prefix inference and qualified declarations. Its
+FUN/refine/bind-evidence chain retains exact subject/context evidence, original
+candidate syntax, approval refusal/retry and raw callbacks. A first-selected
+UInt8 callback still refuses an out-of-range result even when a later UInt layout
+would accept it; validation never retries that later branch. Reversed original
+candidate trees remain genuinely ambiguous. Public ObjectContract sexp is a
+nominal display, so provenance uses captured finite syntax rather than display
+identity. Existing validators, Gerbil collection mechanisms and publication
+abstractions are reused without another dispatch or cache layer.
+
+Lean's existing Subtype/check/check_sound/replacement chain now covers ordinary
+List/Tuple/Pair/Map targets using all original branch derivations and the existing
+Union shape interpretation law. Row-bearing host views additionally use their
+existing field laws. VariantValidation.union_normalized_member proves membership
+of the **actual normalized result** in an original selected branch;
+sourceCoverage_wrapped transfers that result through complete branch coverage.
+Unlike the earlier flat identity law, it does not assume normalization leaves
+raw values unchanged. Existing union_error still preserves selected failure.
+Top-level PrototypeTypes/VariantContracts examples compose complete declaration
+inference, original artifact provenance, prefix substitution, universal inclusion
+and normalized Function-bearing payloads.
+
+This advances the article's finite type-protocol future work. Branch membership,
+faithful host carrier/row interpretation and behavioral Function inclusion remain
+explicit premises; procedure recognition alone does not certify behavior. No
+mutable-write permission, arbitrary predicate inference, unrestricted recursion,
+effect rollback or host runtime/compiler verification is claimed.

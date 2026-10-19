@@ -401,6 +401,28 @@ theorem union_finite_identity (member : Branch → Value → Bool) (check : Bran
     (List.all_eq_true.mp covered value inside) (identity value inside)
 
 
+/-- Successful ordered validation supplies membership of its actual normalized
+result in an original branch. Wrappers need not preserve the raw value. -/
+theorem union_normalized_member (shape member : Branch → Value → Bool)
+    (check : Branch → Value → Except Error Value) (missing invalid : Error)
+    (branches : List Branch) (source checked : Value)
+    (accepted : union shape member check missing invalid branches source = .ok checked) :
+    branches.any (fun branch => member branch checked) = true := by
+  cases picked : select shape branches source with
+  | none => simp [union, picked] at accepted
+  | some branch =>
+    have present : branch ∈ branches := List.mem_of_find?_eq_some picked
+    cases normalized : check branch source with
+    | error error => simp [union, picked, normalized, Except.bind] at accepted
+    | ok value =>
+      cases admitted : member branch value with
+      | false => simp [union, picked, normalized, admitted, Except.bind] at accepted
+      | true =>
+        have equal : value = checked := by
+          simpa [union, picked, normalized, admitted, Except.bind] using accepted
+        subst checked
+        exact List.any_eq_true.mpr ⟨branch, present, admitted⟩
+
 /-- Source alternatives replace one ordinary target only after every original
 branch passes its existing inclusion check. This does not reorder a Union target. -/
 def sourceCoverage (included : Branch → Bool) (branches : List Branch) : Bool :=
@@ -412,7 +434,7 @@ theorem sourceCoverage_exact (included : Branch → Bool) (branches : List Branc
   exact List.all_eq_true
 
 /-- A value admitted by any original branch belongs to the ordinary target when
-all branch checks are sound. Host flat-Type interpretation is an explicit premise. -/
+all branch checks are sound. Host branch interpretation is an explicit premise. -/
 theorem sourceCoverage_sound (included : Branch → Bool) (branches : List Branch)
     (member : Branch → Value → Bool) (target : Value → Prop)
     (sound : ∀ branch ∈ branches, included branch = true →
@@ -421,6 +443,18 @@ theorem sourceCoverage_sound (included : Branch → Bool) (branches : List Branc
     (admitted : branches.any (fun branch => member branch value) = true) : target value := by
   obtain ⟨branch, present, valid⟩ := List.any_eq_true.mp admitted
   exact sound branch present ((sourceCoverage_exact included branches).mp covered branch present) value valid
+
+/-- Every original branch must cover one readable target. Coverage applies to
+normalized Function-bearing containers without assuming identity normalization;
+selected failure is still handled by union_error, never by a later branch. -/
+theorem sourceCoverage_wrapped (included : Branch → Bool) (branches : List Branch)
+    (shape member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (target : Value → Prop) (missing invalid : Error)
+    (sound : ∀ branch ∈ branches, included branch = true → ∀ value, member branch value = true → target value)
+    (covered : sourceCoverage included branches = true) (source checked : Value)
+    (accepted : union shape member check missing invalid branches source = .ok checked) : target checked :=
+  sourceCoverage_sound included branches member target sound covered checked
+    (union_normalized_member shape member check missing invalid branches source checked accepted)
 
 /-- Identity-preserving source branches retain committed first selection and the
 same value under an ordinary identity target. No failed validator is retried;

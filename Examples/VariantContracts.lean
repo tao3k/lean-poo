@@ -263,4 +263,27 @@ example (entries : List (Nat × Call))
 
 #print axioms VariantValidation.map_empty_snapshot
 #print axioms VariantValidation.map_empty_replacement
+/-- A normalized Function-bearing payload remains in one original selected
+branch; source/raw identity is deliberately not an assumption. -/
+example (source checked : Payload)
+    (accepted : VariantValidation.union branchShape branchMember checkBranch
+      "missing" "invalid" [.schema, .function] source = .ok checked) :
+    branchMember .schema checked = true ∨ branchMember .function checked = true := by
+  simpa using VariantValidation.union_normalized_member branchShape branchMember checkBranch
+    "missing" "invalid" [.schema, .function] source checked accepted
+
+/-- Complete branch coverage transfers the actual wrapped result to an ordinary
+view. Host interpretation for each child is explicit, rather than raw identity. -/
+example (target : Payload → Prop)
+    (sound : ∀ branch ∈ [Branch.schema, .function],
+      ∀ value, branchMember branch value = true → target value)
+    (source checked : Payload)
+    (accepted : VariantValidation.union branchShape branchMember checkBranch
+      "missing" "invalid" [.schema, .function] source = .ok checked) : target checked := by
+  exact VariantValidation.sourceCoverage_wrapped (fun _ => true) [.schema, .function]
+    branchShape branchMember checkBranch target "missing" "invalid"
+    (fun branch member _ => sound branch member) rfl source checked accepted
+
+#print axioms VariantValidation.union_normalized_member
+#print axioms VariantValidation.sourceCoverage_wrapped
 end LeanPoo.Examples.VariantContracts

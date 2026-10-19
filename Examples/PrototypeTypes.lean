@@ -58,15 +58,19 @@ def candidates : List (Nat → Ty) :=
    environment (.atom .integer) (.atom .uint), environment (.atom .integer) (.atom .integer)]
 example : infer (satisfies 8 constraints) candidates =
     .unique (environment (.atom .uint) (.atom .uint)) := by
-  -- Reduce four ground judgments before filtering function-valued assignments.
+  -- Expose only finite substitutions before deciding ground judgments.
   have unsigned : satisfies 8 constraints (environment (.atom .uint) (.atom .uint)) = true := by
-    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+    simp [satisfies, constraints, substitute, environment]
+    decide
   have mixedLeft : satisfies 8 constraints (environment (.atom .uint) (.atom .integer)) = false := by
-    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+    simp [satisfies, constraints, substitute, environment]
+    decide
   have mixedRight : satisfies 8 constraints (environment (.atom .integer) (.atom .uint)) = false := by
-    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+    simp [satisfies, constraints, substitute, environment]
+    decide
   have signed : satisfies 8 constraints (environment (.atom .integer) (.atom .integer)) = false := by
-    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+    simp [satisfies, constraints, substitute, environment]
+    decide
   simp [infer, candidates, unsigned, mixedLeft, mixedRight, signed]
 /-- Any admitted finite assignment proves each original bound after substitution. -/
 example (env : Nat → Ty) (accepted : satisfies 8 constraints env = true) :
@@ -80,7 +84,9 @@ example : inferBounded 3 (satisfies 8 constraints) candidates = .error .exhauste
 /-- With only Self <: Super the same universe has multiple valid specializations. -/
 example : (match infer (satisfies 8 [(.var 0, .var 1)]) candidates with
     | .ambiguous _ => true | _ => false) = true := by
-  simp [infer, satisfies, candidates, substitute, check, environment]
+  simp only [infer, candidates, List.filter_cons, List.filter_nil]
+  simp [satisfies, substitute, environment]
+  decide
 /-- The behavioral replacement premise handles real Int functions separately from
 procedure recognition. Negative source inputs are permitted, results nonnegative. -/
 example (f : Int → Int) (valid : ∀ n, 0 ≤ f n) :
@@ -803,6 +809,41 @@ example : check 8 (.map (.atom .symbol) (.map (.integerEnum []) (.atom .uint)))
 example : check 8 (.map (.integerEnum []) (.atom .uint)) (.atom .string) = false := rfl
 
 #print axioms map_key_or_empty
+#print axioms replacement
+
+/-- A batch has two original callable layouts; one bad alternative invalidates
+coverage even if the other succeeds. Source order is retained in the artifact. -/
+def workerBatchBranches (bad : Bool) : List Ty :=
+  [.list service, if bad then .list (.atom .bool) else .list client]
+
+/-- All branches target the same readable container, through the existing checker. -/
+def workerBatchIncluded (branch : Ty) : Bool := check 8 branch (.list client)
+
+/-- Complete declaration inference preserves the exact ordered candidate. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion "worker batches"
+    workerBatchIncluded workerBatchBranches [true, false] =
+    .ok (.unique false, some ("worker batches", false, workerBatchBranches false)) := rfl
+
+/-- The shared Union derivation covers nested Function variance in every branch. -/
+example : check 10 (.union (workerBatchBranches false)) (.list client) = true := rfl
+example : check 10 (.union (workerBatchBranches true)) (.list client) = false := rfl
+example : check 10 (.union (workerBatchBranches false))
+    (.union (workerBatchBranches false).reverse) = false := rfl
+
+/-- Universal replacement uses the existing source-Union shape law and the
+proved child derivations. No Function behavior follows from procedure? alone. -/
+example (model : Interpretation Value) (value : Value)
+    (accepted : model.accepts (.union (workerBatchBranches false)) value) :
+    model.accepts (.list client) value :=
+  replacement model (check_sound 10 _ _ (by rfl)) value accepted
+
+/-- Prefix binding keeps the caller's container and original Union tree. -/
+example : substitute (prefixEnvironment [.list client]
+    (fun _ => .union (workerBatchBranches false))) (.pair (.var 0) (.var 1)) =
+    .pair (.list client) (.union (workerBatchBranches false)) := by
+  simp [substitute, prefixEnvironment]
+
+#print axioms check_sound
 #print axioms replacement
 
 end Examples.PrototypeTypes

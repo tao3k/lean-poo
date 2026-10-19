@@ -90,6 +90,7 @@ inductive Subtype : Ty → Ty → Prop where
   | boolean : booleanValues source = some values → booleanCheck fuel values target = true →
       Subtype source target
   | enumUnion : enumUnionCheck fuel values branches = true → Subtype (.integerEnum values) (.union branches)
+  | sourceUnion : (∀ branch ∈ branches, Subtype branch target) → Subtype (.union branches) target
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
   | orFalse : Subtype a b → Subtype (.orFalse a) (.orFalse b)
@@ -137,6 +138,10 @@ def check : Nat → Ty → Ty → Bool
     | .map k a, .map k' b => (same fuel k k' && check fuel a b) || emptyCheck fuel k || emptyCheck fuel a
     | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (check fuel) as bs
     | .union as, .union bs => all₂ (same fuel) as bs
+    | .union branches, .list child => branches.all (fun branch => check fuel branch (.list child))
+    | .union branches, .tuple children => branches.all (fun branch => check fuel branch (.tuple children))
+    | .union branches, .pair left right => branches.all (fun branch => check fuel branch (.pair left right))
+    | .union branches, .map key value => branches.all (fun branch => check fuel branch (.map key value))
     | .function outs ins, .function outs' ins' =>
         all₂ (check fuel) outs outs' && all₂ (check fuel) ins' ins
     | _, _ => false) || (emptySource (fuel + 1) a && emptyTarget (fuel + 1) b)
@@ -171,6 +176,10 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
       all_goals try { exact .maybe (ih _ _ accepted) }
       all_goals try { exact .orFalse (ih _ _ accepted) }
       all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
+      all_goals try {
+        apply Subtype.sourceUnion
+        intro branch member
+        exact ih _ _ (List.all_eq_true.mp accepted branch member) }
       case integerRange.integerRange source target => exact .numeric rfl rfl accepted
       case integerRange.integerEnum source values => exact .rangeEnum accepted
       case integerEnum.integerEnum values target =>
@@ -373,6 +382,9 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (fun accepted => by
       obtain ⟨pieces, projected, covered⟩ := enumUnionCheck_sound _ _ _ accepted
       exact model.enumUnion _ _ _ pieces projected covered)
+    (fun _ ih value valid => by
+      obtain ⟨branch, member, admitted⟩ := model.emptyLaws.union _ value valid
+      exact ih branch member value admitted)
     (fun _ ih => model.list _ _ ih)
     (fun _ ih => model.maybe _ _ ih)
     (fun _ ih => model.orFalse _ _ ih)
