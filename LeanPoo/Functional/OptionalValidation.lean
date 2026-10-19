@@ -277,6 +277,15 @@ theorem catalogCovers_sound [DecidableEq Descriptor] (source target : List Descr
 def CatalogAdmits (catalog : List Descriptor) (member : Descriptor → Value → Prop)
     (value : Descriptor × Value) : Prop := value.1 ∈ catalog ∧ member value.1 value.2
 
+/-- An empty dependent directory admits no tagged value, independently of its
+payload predicates. List emptiness is positive evidence; no descriptor is queried. -/
+theorem catalogEmpty_sound (catalog : List Descriptor) (member : Descriptor → Value → Prop)
+    (empty : catalog.isEmpty = true) : ∀ value, ¬ CatalogAdmits catalog member value := by
+  have missing : catalog = [] := List.isEmpty_iff.mp empty
+  subst catalog
+  intro value valid
+  simpa [CatalogAdmits] using valid.1
+
 /-- Catalog widening preserves the very same payload obligation, including
 higher-order values. No implication between different descriptor predicates is used. -/
 theorem catalog_replacement [DecidableEq Descriptor] (source target : List Descriptor)
@@ -300,6 +309,17 @@ theorem catalogTyped_missing [DecidableEq Descriptor] (catalog : List Descriptor
     (source : Descriptor × Value) (missing : source.1 ∉ catalog) :
     catalogTyped catalog shape member check invalidType invalidValue source = .error invalidType := by
   simp [catalogTyped, typed, missing]
+
+/-- Empty directories refuse before any shape or payload checker. The selected
+cause is the original missing-Type error, not a fabricated payload or sentinel. -/
+theorem catalogTyped_empty [DecidableEq Descriptor] (catalog : List Descriptor)
+    (shape : Descriptor → Value → Except Error Unit) (member : Descriptor → Value → Bool)
+    (check : Descriptor → Value → Except Error Value) (invalidType invalidValue : Error)
+    (source : Descriptor × Value) (empty : catalog.isEmpty = true) :
+    catalogTyped catalog shape member check invalidType invalidValue source = .error invalidType := by
+  have missing : catalog = [] := List.isEmpty_iff.mp empty
+  subst catalog
+  exact catalogTyped_missing [] shape member check invalidType invalidValue source (by simp)
 
 /-- Successful catalog normalization preserves its token and validates the
 normalized payload through that exact token. Host read-currentness is separate. -/

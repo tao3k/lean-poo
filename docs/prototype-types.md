@@ -341,3 +341,33 @@ recorded registered sources are explicit premises; these laws do not prove the
 Scheme parser, arbitrary callback implication, metaclass discovery or concurrency.
 This extends the article's type-protocol future work. See the companion Scheme
 `doc/intrinsic-descriptors.md` for exact APIs and remaining unrestricted scope.
+
+### Empty dependent directories
+
+The exact zero-entry `(TypeValuePair)` directory supplies positive finite
+emptiness evidence to the common replacement relation. Mandatory products and
+rows inherit that evidence; a List with this element type contains only nil,
+and an optional field with this payload must be absent. Descriptor metadata is
+retained in the inferred original candidate. No payload recognizer is consulted
+to establish emptiness. Nonempty directories, including captured Types whose
+recognizers always return false, remain opaque. Empty List/Map, Maybe's void and
+OrFalse's false remain inhabited; invariant Map keys and ordered Union trees
+retain their existing rules.
+
+`infer-plugin-service` in the companion Gerbil `examples/polymorphic-services.ss` composes the complete
+finite solver with existing specialization, typed declarations and the shared
+FUN/refine/bind-evidence publication action. Its regression fixture keeps a live
+Function-valued dependent plugin, removes only a provably absent optional layout
+obligation, retains carried Type identity and recursive wrappers, and exercises
+failure/retry, ambiguity and source-edit refusal. The validators themselves are
+unchanged: malformed pairs, invalid Types and missing catalog membership retain
+original diagnostic priority before payload validation.
+
+The companion Lean laws `OptionalValidation.catalogEmpty_sound` and
+`catalogTyped_empty` establish uninhabited membership and missing-Type refusal.
+`Examples/OptionalContracts.lean` composes these with `catalog_replacement`,
+`inferRowView_sound` and `absentField_observe` to derive unique original-layout
+selection, semantic replacement and actual absence. Live callback behavior and
+host descriptor interpretation remain explicit premises of their existing laws.
+This is finite type-protocol future work beyond the article's Racket construction,
+not a completeness theorem for arbitrary predicates or a proof of the host runtime.

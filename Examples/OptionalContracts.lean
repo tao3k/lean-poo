@@ -365,4 +365,63 @@ example (source checked : Value) (accepted : OptionalValidation.normalize falseV
 #print axioms OptionalValidation.normalized_replacement
 #print axioms OptionalValidation.inferOptional_replacement
 
+
+/-- Live and retired fields retain their exact dependent directory metadata.
+The inhabited alternative cannot be forgotten by the sealed target. -/
+def pluginCatalogLayout (liveRetired : Bool) : RowTypes.Row String (List Descriptor × Bool) :=
+  ⟨[("active", ([.transform], false)),
+    ("retired", (if liveRetired then [.transform] else [], true))], true⟩
+
+/-- The sealed client keeps the active Type token and never invents a retired value. -/
+def pluginCatalogTarget : RowTypes.Row String (List Descriptor × Bool) :=
+  ⟨[("active", ([.transform], false))], true⟩
+
+/-- The existing complete declaration search composes identity-based catalog
+coverage with the shared absence witness, without a catalog-specific solver. -/
+example : inferRowView "plugin directory" OptionalValidation.catalogCovers List.isEmpty
+    pluginCatalogLayout pluginCatalogTarget [true, false] =
+    .ok (.unique false, some ("plugin directory", false, pluginCatalogLayout false)) := rfl
+
+/-- Catalog emptiness supplies a universal witness without executing a payload
+predicate. Complete publication retains the original active/retired layout and
+proves both readable target membership and the actual absent observation. -/
+example (artifact)
+    (published : inferRowView "plugin directory" OptionalValidation.catalogCovers List.isEmpty
+      pluginCatalogLayout pluginCatalogTarget [true, false] = .ok (.unique false, some artifact)) :
+    artifact = ("plugin directory", false, pluginCatalogLayout false) ∧
+      ∀ observe, RowTypes.RecordAdmits (fun types value => OptionalValidation.CatalogAdmits types
+        (fun tag item => member tag item = true) value) (pluginCatalogLayout false) observe →
+      RowTypes.RecordAdmits (fun types value => OptionalValidation.CatalogAdmits types
+        (fun tag item => member tag item = true) value) pluginCatalogTarget observe ∧ observe "retired" = none := by
+  let accepts := fun types value => OptionalValidation.CatalogAdmits types (fun tag item => member tag item = true) value
+  have emptySound : ∀ types, types.isEmpty = true → ∀ value, ¬ accepts types value :=
+    fun types checked => OptionalValidation.catalogEmpty_sound types _ checked
+  obtain ⟨same, included⟩ := inferRowView_sound "plugin directory" OptionalValidation.catalogCovers List.isEmpty
+    pluginCatalogLayout pluginCatalogTarget [true, false] accepts
+    (fun source target covered value valid => OptionalValidation.catalog_replacement source target
+      (fun tag item => member tag item = true) value covered valid)
+    emptySound false artifact published
+  refine ⟨same, ?_⟩
+  intro observe valid
+  refine ⟨included observe valid, ?_⟩
+  exact RowTypes.absentField_observe List.isEmpty accepts emptySound ([], true)
+    (observe "retired") (by rfl) (valid.1 "retired" ([], true) (by rfl))
+
+/-- Empty directory refusal takes precedence over either possible child error. -/
+example (source : Descriptor × Value) :
+    OptionalValidation.catalogTyped [] (fun _ _ => .error "shape") (fun _ _ => false)
+      (fun _ _ => .error "payload") "missing Type" "bad result" source = .error "missing Type" :=
+  OptionalValidation.catalogTyped_empty [] _ _ _ _ _ source rfl
+
+/-- A false payload is an actual inhabitant under its original selected Type. -/
+example : OptionalValidation.CatalogAdmits [.other] (fun tag item => member tag item = true)
+    (.other, .falseValue) := by simp [OptionalValidation.CatalogAdmits, member]
+
+/-- A live Function directory is inhabited without assuming equality of functions. -/
+example : OptionalValidation.CatalogAdmits [.transform] (fun tag item => member tag item = true)
+    (.transform, .function row) := by simp [OptionalValidation.CatalogAdmits, member]
+
+#print axioms OptionalValidation.catalogEmpty_sound
+#print axioms OptionalValidation.catalogTyped_empty
+
 end LeanPoo.Examples.OptionalContracts
