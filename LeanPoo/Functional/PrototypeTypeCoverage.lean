@@ -354,4 +354,126 @@ theorem scalarUnion_validate (fuel family branches) (validate : Ty → Nat → E
   · intro branch inside selected
     exact identity branch inside value selected
 
+/-- Witnessed finite emptiness. Optional carriers and empty collections are not
+empty Types; no arbitrary predicate or fixed-point semantic law is inferred. -/
+inductive EmptyType : Ty → Prop where
+  | range : range.empty = true → EmptyType (.integerRange range)
+  | integers : EmptyType (.integerEnum [])
+  | booleans : EmptyType (.booleanEnum [])
+  | scalars : EmptyType (.scalarEnum family [])
+  | tuple : child ∈ children → EmptyType child → EmptyType (.tuple children)
+  | pairLeft : EmptyType a → EmptyType (.pair a b)
+  | pairRight : EmptyType b → EmptyType (.pair a b)
+  | union : (∀ child ∈ children, EmptyType child) → EmptyType (.union children)
+  | sum : (∀ child ∈ children, EmptyType child) → EmptyType (.sum tags children)
+
+/-- A bounded positive emptiness derivation, without descriptor normalization.
+False means no witness within this fragment/fuel, not a claimed inhabitant. -/
+def emptyCheck : Nat → Ty → Bool
+  | 0, _ => false
+  | fuel + 1, type => match type with
+    | .integerRange range => range.empty
+    | .integerEnum values => values.isEmpty
+    | .booleanEnum values => values.isEmpty
+    | .scalarEnum _ values => values.isEmpty
+    | .tuple children => children.any (emptyCheck fuel)
+    | .pair a b => emptyCheck fuel a || emptyCheck fuel b
+    | .union children | .sum _ children => children.all (emptyCheck fuel)
+    | _ => false
+
+/-- Every discovered empty product/alternative has a complete finite witness. -/
+theorem emptyCheck_sound (fuel : Nat) (type : Ty) (accepted : emptyCheck fuel type = true) :
+    EmptyType type := by
+  induction fuel generalizing type with
+  | zero => simp [emptyCheck] at accepted
+  | succ fuel ih =>
+    cases type <;> simp only [emptyCheck] at accepted
+    all_goals try contradiction
+    case integerRange range => exact .range accepted
+    case integerEnum values => cases values <;> simp_all; exact .integers
+    case booleanEnum values => cases values <;> simp_all; exact .booleans
+    case scalarEnum family values => cases values <;> simp_all; exact .scalars
+    case tuple children =>
+      obtain ⟨child, member, empty⟩ := List.any_eq_true.mp accepted
+      exact .tuple member (ih child empty)
+    case pair a b =>
+      simp only [Bool.or_eq_true] at accepted
+      rcases accepted with left | right
+      · exact .pairLeft (ih a left)
+      · exact .pairRight (ih b right)
+    case union children => exact .union (fun child member => ih child ((List.all_eq_true.mp accepted) child member))
+    case sum tags children => exact .sum (fun child member => ih child ((List.all_eq_true.mp accepted) child member))
+
+/-- Public ordered Union and Sum identities retain their existing invariant even
+when empty. An enclosing impossible product may still have no inhabitants. -/
+def emptySource (fuel : Nat) (type : Ty) : Bool :=
+  match type with
+  | .union _ | .sum _ _ => false
+  | _ => emptyCheck fuel type
+
+/-- Union targets still require full intrinsic flat admission; an empty source
+cannot hide a wrapper-bearing branch behind vacuous membership coverage. -/
+def emptyTarget (fuel : Nat) (type : Ty) : Bool :=
+  match type with
+  | .union _ => (numericPieces fuel type).isSome
+  | _ => true
+
+/-- Public emptiness permission cannot manufacture an unsupported derivation. -/
+theorem emptySource_sound (fuel type) (accepted : emptySource fuel type = true) : EmptyType type := by
+  cases type <;> first | exact emptyCheck_sound fuel _ accepted | contradiction
+
+/-- Host interpretation obligations are shape inversions and empty scalar laws.
+No user recognizer, callback, parser or recursive fixed point is certified here. -/
+structure EmptyLaws (accepts : Ty → Value → Prop) where
+  range : ∀ range, range.empty = true → ∀ value, ¬ accepts (.integerRange range) value
+  integers : ∀ value, ¬ accepts (.integerEnum []) value
+  booleans : ∀ value, ¬ accepts (.booleanEnum []) value
+  scalars : ∀ family value, ¬ accepts (.scalarEnum family []) value
+  tuple : ∀ children child, child ∈ children → ∀ value, accepts (.tuple children) value →
+    ∃ item, accepts child item
+  pairLeft : ∀ a b value, accepts (.pair a b) value → ∃ item, accepts a item
+  pairRight : ∀ a b value, accepts (.pair a b) value → ∃ item, accepts b item
+  union : ∀ children value, accepts (.union children) value → ∃ child ∈ children, accepts child value
+  sum : ∀ tags children value, accepts (.sum tags children) value → ∃ child ∈ children, ∃ item, accepts child item
+
+/-- Empty witnesses reject all observations under explicit host shape laws. -/
+theorem EmptyType.refuses (laws : EmptyLaws accepts) (empty : EmptyType type) :
+    ∀ value, ¬ accepts type value := by
+  induction empty with
+  | range proof => exact laws.range _ proof
+  | integers => exact laws.integers
+  | booleans => exact laws.booleans
+  | scalars => exact laws.scalars _
+  | tuple member _ ih =>
+    intro value valid
+    obtain ⟨item, checked⟩ := laws.tuple _ _ member value valid
+    exact ih item checked
+  | pairLeft _ ih =>
+    intro value valid
+    obtain ⟨item, checked⟩ := laws.pairLeft _ _ value valid
+    exact ih item checked
+  | pairRight _ ih =>
+    intro value valid
+    obtain ⟨item, checked⟩ := laws.pairRight _ _ value valid
+    exact ih item checked
+  | union _ ih =>
+    intro value valid
+    obtain ⟨child, member, checked⟩ := laws.union _ value valid
+    exact ih child member value checked
+  | sum _ ih =>
+    intro value valid
+    obtain ⟨child, member, item, checked⟩ := laws.sum _ _ value valid
+    exact ih child member item checked
+
+/-- Required row fields use the same product law. Optional fields cannot supply
+this premise; open/closed layout and mutable writes remain separate protocols. -/
+theorem requiredField_refuses (accepts : Field → Value → Prop) (required : Field → Prop)
+    (layout : Row → Value → Prop)
+    (projection : ∀ row value field, layout row value → required field → ∃ item, accepts field item)
+    (field : Field) (mandatory : required field) (empty : ∀ item, ¬ accepts field item) :
+    ∀ row value, ¬ layout row value := by
+  intro row value valid
+  obtain ⟨item, checked⟩ := projection row value field valid mandatory
+  exact empty item checked
+
 end LeanPoo.Functional.PrototypeTypes

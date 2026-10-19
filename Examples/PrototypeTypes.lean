@@ -41,7 +41,16 @@ def candidates : List (Nat → Ty) :=
    environment (.atom .integer) (.atom .uint), environment (.atom .integer) (.atom .integer)]
 example : infer (satisfies 8 constraints) candidates =
     .unique (environment (.atom .uint) (.atom .uint)) := by
-  simp [infer, satisfies, candidates, constraints, substitute, check, all₂, environment]
+  -- Reduce four ground judgments before filtering function-valued assignments.
+  have unsigned : satisfies 8 constraints (environment (.atom .uint) (.atom .uint)) = true := by
+    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+  have mixedLeft : satisfies 8 constraints (environment (.atom .uint) (.atom .integer)) = false := by
+    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+  have mixedRight : satisfies 8 constraints (environment (.atom .integer) (.atom .uint)) = false := by
+    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+  have signed : satisfies 8 constraints (environment (.atom .integer) (.atom .integer)) = false := by
+    simp [satisfies, constraints, substitute, check, emptySource, emptyCheck, emptyTarget, all₂, environment]
+  simp [infer, candidates, unsigned, mixedLeft, mixedRight, signed]
 /-- Any admitted finite assignment proves each original bound after substitution. -/
 example (env : Nat → Ty) (accepted : satisfies 8 constraints env = true) :
     Subtype (env 0) (env 1) :=
@@ -488,6 +497,52 @@ theorem inferredScalar_sound (family super artifact)
     (fun super => satisfies 12 (scalarConstraints family) (scalarEnvironment (.atom family) super))
     [.atom .string, .atom .symbol, .atom .keyword] (buildSignature (.atom family)) published
   exact ⟨fun a b member => satisfies_sound 12 _ _ valid member, built⟩
+/-- The disabled capability keeps its impossible mandatory input descriptor.
+The two Sum payloads mirror the Scheme callback fixture after literal tag IDs. -/
+def deadCallbackInput : Ty := .pair
+  (.sum [0, 1] [.tuple [.integerEnum []], .union [.integerEnum []]]) (.atom .uint)
+/-- Prefix binding fixes the ordinary service value independently of the callback. -/
+def emptyEnvironment (dead : Ty) : Nat → Ty := prefixEnvironment [.atom .uint] (fun _ => dead)
+/-- A declared bound rejects inhabited integer candidates without widening to top. -/
+def emptyConstraints : List (Expr × Expr) := [(.var 1, .ground (.atom .string))]
+/-- The existing all-or-error declaration builder receives the original candidate. -/
+def inferredEmpty := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
+  (fun dead => satisfies 12 emptyConstraints (emptyEnvironment dead))
+  [.atom .uint, deadCallbackInput] (buildSignature (.atom .uint))
+#guard emptyCheck 12 deadCallbackInput
+#guard check 12 deadCallbackInput (.atom .string)
+#guard check 12 (.function [.atom .uint] [.atom .string])
+  (.function [.atom .integer] [deadCallbackInput])
+#guard !emptyCheck 12 (.list (.integerEnum []))
+#guard !emptyCheck 12 (.map (.atom .uint) (.integerEnum []))
+#guard !emptyCheck 12 (.maybe (.integerEnum []))
+#guard !emptyCheck 12 (.orFalse (.integerEnum []))
+#guard !check 12 (.union []) (.union [.atom .uint])
+#guard !check 12 (.sum [0] [.integerEnum []]) (.sum [1] [.integerEnum []])
+#guard match inferredEmpty with
+  | .ok (.unique dead, some (_, bound)) => emptyCheck 12 dead && same 12 bound dead
+  | _ => false
+/-- No observation can reach a disabled callback under the required host shape
+laws; this does not prove that a Scheme procedure terminates if called directly. -/
+theorem deadCallback_refuses (accepts : Ty → Value → Prop) (laws : EmptyLaws accepts) :
+    ∀ value, ¬ accepts deadCallbackInput value :=
+  (emptyCheck_sound 12 deadCallbackInput (by decide)).refuses laws
+/-- Unique inference preserves every bound and exact artifact through the same
+completed declaration protocol used by inhabited service signatures. -/
+theorem inferredEmpty_sound (dead artifact)
+    (published : inferredEmpty = .ok (.unique dead, some artifact)) :
+    (∀ a b, (a, b) ∈ emptyConstraints →
+      Subtype (substitute (emptyEnvironment dead) a) (substitute (emptyEnvironment dead) b)) ∧
+      buildSignature (.atom .uint) dead = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 2
+    (fun dead => satisfies 12 emptyConstraints (emptyEnvironment dead))
+    [.atom .uint, deadCallbackInput] (buildSignature (.atom .uint)) published
+  exact ⟨fun a b member => satisfies_sound 12 _ _ valid member, built⟩
+#print axioms emptyCheck_sound
+#print axioms EmptyType.refuses
+#print axioms requiredField_refuses
+#print axioms deadCallback_refuses
+#print axioms inferredEmpty_sound
 #print axioms scalarWhole_iff
 #print axioms scalarCheck_sound
 #print axioms scalarCheck_complete

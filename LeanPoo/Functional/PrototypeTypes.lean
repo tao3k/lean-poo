@@ -76,6 +76,7 @@ inductive RelList (relation : Ty → Ty → Prop) : List Ty → List Ty → Prop
 
 /-- Declarative replacement, independent of prototype ancestry or samples. -/
 inductive Subtype : Ty → Ty → Prop where
+  | empty : emptySource fuel a = true → Subtype a b
   | refl (a) : Subtype a a
   | top (a) : Subtype a .top
   | uint : Subtype (.atom .uint) (.atom .integer)
@@ -104,7 +105,7 @@ Scheme. Fuel here bounds derivation unfolding, not host GC or callback costs. -/
 def check : Nat → Ty → Ty → Bool
   | 0, _, _ => false
   | fuel + 1, a, b =>
-    match a, b with
+    (match a, b with
     | _, .top => true
     | .atom a, .atom b => decide (a = b) || decide (a = .uint ∧ b = .integer)
     | .integerRange source, .integerRange target => source.includes target
@@ -136,7 +137,7 @@ def check : Nat → Ty → Ty → Bool
     | .union as, .union bs => all₂ (same fuel) as bs
     | .function outs ins, .function outs' ins' =>
         all₂ (check fuel) outs outs' && all₂ (check fuel) ins' ins
-    | _, _ => false
+    | _, _ => false) || (emptySource (fuel + 1) a && emptyTarget (fuel + 1) b)
 
 /-- Lift a Boolean comparison's soundness through exact positional matching. -/
 theorem all₂_sound (test : Ty → Ty → Bool) (sound : ∀ a b, test a b = true → Subtype a b)
@@ -159,68 +160,72 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
   induction fuel generalizing a b with
   | zero => simp [check] at accepted
   | succ fuel ih =>
-    cases a <;> cases b <;> simp only [check] at accepted
-    all_goals try { contradiction }
-    all_goals try { exact .top _ }
-    all_goals try { exact .list (ih _ _ accepted) }
-    all_goals try { exact .maybe (ih _ _ accepted) }
-    all_goals try { exact .orFalse (ih _ _ accepted) }
-    all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
-    case integerRange.integerRange source target => exact .numeric rfl rfl accepted
-    case integerRange.integerEnum source values => exact .rangeEnum accepted
-    case integerEnum.integerEnum values target =>
-      have equal := of_decide_eq_true accepted
-      subst target
-      exact .refl _
-    case scalarEnum.scalarEnum family values family' target =>
-      simp only [Bool.and_eq_true] at accepted
-      have names : family = family' := of_decide_eq_true accepted.1
-      have values : values = target := of_decide_eq_true accepted.2
-      subst family'; subst target
-      exact .refl _
-    case integerRange.union source branches => exact .numericUnion rfl accepted
-    case atom.union source branches =>
-      cases source <;> first | contradiction | exact .boolean rfl accepted | exact .numericUnion rfl accepted | exact .scalarUnion accepted
-    case atom.booleanEnum source values =>
-      cases source <;> first | contradiction | exact .boolean rfl accepted
-    case booleanEnum.atom values target =>
-      cases target <;> first | contradiction | exact .boolean rfl accepted
-    case booleanEnum.booleanEnum values target => exact .boolean rfl accepted
-    case booleanEnum.union values branches => exact .boolean rfl accepted
-    case integerEnum.union values branches => exact .enumUnion accepted
-    case integerRange.atom source target =>
-      cases target
-      all_goals first | contradiction | exact .numeric rfl rfl accepted
-    case atom.integerRange source target =>
-      cases source
-      all_goals first | contradiction | exact .numeric rfl rfl accepted
-    case pair.pair a b c d =>
-      simp only [Bool.and_eq_true] at accepted
-      have both := accepted
-      exact .pair (ih _ _ both.1) (ih _ _ both.2)
-    case map.map key a key' b =>
-      simp only [Bool.and_eq_true] at accepted
-      have both := accepted
-      have equal := same_sound _ _ _ both.1
-      subst key'
-      exact .map (ih _ _ both.2)
-    case sum.sum tags as tags' bs =>
-      simp only [Bool.and_eq_true] at accepted
-      have both := accepted
-      have equal : tags = tags' := of_decide_eq_true both.1
-      subst tags'
-      exact .sum (all₂_sound _ ih _ _ both.2)
-    case union.union as bs =>
-      have equal := all₂_equal _ (same_sound fuel) _ _ accepted
-      subst bs
-      exact .refl _
-    case function.function outs ins outs' ins' =>
-      have both : all₂ (check fuel) outs outs' = true ∧ all₂ (check fuel) ins' ins = true := by
-        simpa only [Bool.and_eq_true] using accepted
-      exact .function (all₂_sound _ ih _ _ both.1) (all₂_sound _ ih _ _ both.2)
-    case atom.atom a b =>
-      cases a <;> cases b <;> simp_all
-      all_goals first | exact .refl _ | exact .uint
+    simp only [check, Bool.or_eq_true] at accepted
+    rcases accepted with accepted | empty
+    · cases a <;> cases b <;> try simp only at accepted
+      all_goals try { contradiction }
+      all_goals try { exact .top _ }
+      all_goals try { exact .list (ih _ _ accepted) }
+      all_goals try { exact .maybe (ih _ _ accepted) }
+      all_goals try { exact .orFalse (ih _ _ accepted) }
+      all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
+      case integerRange.integerRange source target => exact .numeric rfl rfl accepted
+      case integerRange.integerEnum source values => exact .rangeEnum accepted
+      case integerEnum.integerEnum values target =>
+        have equal := of_decide_eq_true accepted
+        subst target
+        exact .refl _
+      case scalarEnum.scalarEnum family values family' target =>
+        simp only [Bool.and_eq_true] at accepted
+        have names : family = family' := of_decide_eq_true accepted.1
+        have values : values = target := of_decide_eq_true accepted.2
+        subst family'; subst target
+        exact .refl _
+      case integerRange.union source branches => exact .numericUnion rfl accepted
+      case atom.union source branches =>
+        cases source <;> first | contradiction | exact .boolean rfl accepted | exact .numericUnion rfl accepted | exact .scalarUnion accepted
+      case atom.booleanEnum source values =>
+        cases source <;> first | contradiction | exact .boolean rfl accepted
+      case booleanEnum.atom values target =>
+        cases target <;> first | contradiction | exact .boolean rfl accepted
+      case booleanEnum.booleanEnum values target => exact .boolean rfl accepted
+      case booleanEnum.union values branches => exact .boolean rfl accepted
+      case integerEnum.union values branches => exact .enumUnion accepted
+      case integerRange.atom source target =>
+        cases target
+        all_goals first | contradiction | exact .numeric rfl rfl accepted
+      case atom.integerRange source target =>
+        cases source
+        all_goals first | contradiction | exact .numeric rfl rfl accepted
+      case pair.pair a b c d =>
+        simp only [Bool.and_eq_true] at accepted
+        have both := accepted
+        exact .pair (ih _ _ both.1) (ih _ _ both.2)
+      case map.map key a key' b =>
+        simp only [Bool.and_eq_true] at accepted
+        have both := accepted
+        have equal := same_sound _ _ _ both.1
+        subst key'
+        exact .map (ih _ _ both.2)
+      case sum.sum tags as tags' bs =>
+        simp only [Bool.and_eq_true] at accepted
+        have both := accepted
+        have equal : tags = tags' := of_decide_eq_true both.1
+        subst tags'
+        exact .sum (all₂_sound _ ih _ _ both.2)
+      case union.union as bs =>
+        have equal := all₂_equal _ (same_sound fuel) _ _ accepted
+        subst bs
+        exact .refl _
+      case function.function outs ins outs' ins' =>
+        have both : all₂ (check fuel) outs outs' = true ∧ all₂ (check fuel) ins' ins = true := by
+          simpa only [Bool.and_eq_true] using accepted
+        exact .function (all₂_sound _ ih _ _ both.1) (all₂_sound _ ih _ _ both.2)
+      case atom.atom a b =>
+        cases a <;> cases b <;> simp_all
+        all_goals first | exact .refl _ | exact .uint
+    · simp only [Bool.and_eq_true] at empty
+      exact .empty empty.1
 
 /-- Closed scalar derivations admit only identical families or UInt <: Integer.
 String/Symbol conversion APIs cannot silently become a replacement permission. -/
@@ -230,7 +235,7 @@ theorem atom_inclusion (fuel : Nat) (source target : Atom)
   cases fuel with
   | zero => simp [check] at accepted
   | succ fuel =>
-    simp only [check, Bool.or_eq_true] at accepted
+    simp only [check, emptySource, emptyCheck, Bool.false_and, Bool.or_false, Bool.or_eq_true] at accepted
     rcases accepted with same | numeric
     · exact .inl (of_decide_eq_true same)
     · exact .inr (of_decide_eq_true numeric)
@@ -239,7 +244,7 @@ theorem atom_inclusion (fuel : Nat) (source target : Atom)
 theorem text_distinct (fuel : Nat) :
     check fuel (.atom .string) (.atom .symbol) = false ∧
       check fuel (.atom .symbol) (.atom .string) = false := by
-  cases fuel <;> simp [check]
+  cases fuel <;> simp [check, emptySource, emptyCheck]
 
 /-- Admitted Map replacement cannot alter normalized key syntax. This is an
 observational rule; permission to mutate the map requires a separate write law. -/
@@ -249,7 +254,7 @@ theorem map_key_invariant (fuel : Nat) (key key' value value' : Ty)
   | zero => simp [check] at accepted
   | succ fuel =>
     have both : same fuel key key' = true ∧ check fuel value value' = true := by
-      simpa only [check, Bool.and_eq_true] using accepted
+      simpa only [check, emptySource, emptyCheck, Bool.false_and, Bool.or_false, Bool.and_eq_true] using accepted
     exact same_sound _ _ _ both.1
 
 /-- Ordered Union replacement fixes every branch, including duplicates and
@@ -258,7 +263,7 @@ theorem union_branches_invariant (fuel : Nat) (as bs : List Ty)
     (accepted : check fuel (.union as) (.union bs) = true) : as = bs := by
   cases fuel with
   | zero => simp [check] at accepted
-  | succ fuel => exact all₂_equal _ (same_sound fuel) _ _ accepted
+  | succ fuel => exact all₂_equal _ (same_sound fuel) _ _ (by simpa only [check, emptySource, Bool.false_and, Bool.or_false] using accepted)
 
 /-- A Sum's finite tag skeleton is retained exactly; parser admission additionally
 requires distinct tags and one payload for each tag before this algebra is built. -/
@@ -268,13 +273,14 @@ theorem sum_tags_invariant (fuel : Nat) (tags tags' : List Nat) (as bs : List Ty
   | zero => simp [check] at accepted
   | succ fuel =>
     have both : decide (tags = tags') = true ∧ all₂ (check fuel) as bs = true := by
-      simpa only [check, Bool.and_eq_true] using accepted
+      simpa only [check, emptySource, emptyCheck, Bool.false_and, Bool.or_false, Bool.and_eq_true] using accepted
     exact of_decide_eq_true both.1
 
 /-- Semantic replacement is an explicit model premise. A bare Scheme procedure?
 recognizer does not satisfy the arrow law; its behavioral interpretation must. -/
 structure Interpretation (Value : Type) where
   accepts : Ty → Value → Prop
+  emptyLaws : EmptyLaws accepts
   top : ∀ a v, accepts a v → accepts .top v
   uint : ∀ v, accepts (.atom .uint) v → accepts (.atom .integer) v
   numeric : ∀ a b source target, numericBounds a = some source → numericBounds b = some target →
@@ -323,6 +329,7 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
   exact Subtype.rec
     (motive_1 := fun a b _ => ∀ v, model.accepts a v → model.accepts b v)
     (motive_2 := fun as bs _ => RelList (fun a b => ∀ v, model.accepts a v → model.accepts b v) as bs)
+    (fun empty _ valid => False.elim ((emptySource_sound _ _ empty).refuses model.emptyLaws _ valid))
     (fun _ _ h => h) model.top model.uint
     (fun left right included => model.numeric _ _ _ _ left right (IntegerRange.replacement _ _ included))
     (fun covered => model.rangeEnum _ _ (IntegerRange.coveredBy_sound _ _ covered))
