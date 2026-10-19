@@ -866,7 +866,7 @@ example : check 12 (.union (availabilityBranches false)) availabilityTarget = tr
 example : check 8 (.union [.maybe service, .maybe client]) (.maybe client) = true := rfl
 example : check 8 (.union [.orFalse service, .orFalse client]) (.orFalse client) = true := rfl
 example : check 8 (.union [.integerEnum [], .atom .uint]) (.atom .integer) = true := rfl
-example : check 8 (.union [.function [] []]) (.function [] []) = false := rfl
+example : check 8 (.union [.function [] []]) (.function [] []) = true := rfl
 
 /-- Universal replacement needs the existing behavioral Function and carrier
 interpretations; no new rule infers them from a recognizer. -/
@@ -879,6 +879,43 @@ example (model : Interpretation Value) (value : Value)
 example : substitute (prefixEnvironment [availabilityTarget]
     (fun _ => .union (availabilityBranches false))) (.pair (.var 0) (.var 1)) =
     .pair availabilityTarget (.union (availabilityBranches false)) := by
+  simp [substitute, prefixEnvironment]
+
+
+/-- Heterogeneous callback batches retain their original arrow alternatives.
+The first branch returns UInt8; the target returns UInt, both consume Integer.
+One branch with an incompatible input invalidates the whole candidate. -/
+def callbackBranches (bad : Bool) : List Ty :=
+  [.function [.integerRange { lower := some 0, upper := some 255 }] [.atom .integer],
+   if bad then .function [.atom .uint] [.atom .bool] else service]
+
+/-- Complete declaration inference checks callable alternatives before retaining
+its exact candidate, rather than coercing every callback to a top Type. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion "callback batches"
+    (fun branch => check 8 branch service) callbackBranches [true, false] =
+    .ok (.unique false, some ("callback batches", false, callbackBranches false)) := rfl
+
+/-- Container covariance composes with all-branch arrow coverage. Every original
+input is contravariant and every output covariant, including nested callbacks. -/
+example : check 12 (.map (.atom .uint) (.list (.union (callbackBranches false))))
+    (.map (.atom .uint) (.list service)) = true := rfl
+example : check 12 (.map (.atom .uint) (.list (.union (callbackBranches true))))
+    (.map (.atom .uint) (.list service)) = false := rfl
+example : check 8 (.union (callbackBranches false))
+    (.union (callbackBranches false).reverse) = false := rfl
+
+/-- The universal claim requires behavioral arrow interpretation, not procedure
+recognition. It uses the existing Union shape and arrow replacement laws. -/
+example (model : Interpretation Value) (value : Value)
+    (valid : model.accepts (.map (.atom .uint) (.list (.union (callbackBranches false)))) value) :
+    model.accepts (.map (.atom .uint) (.list service)) value :=
+  replacement model (check_sound 12 _ _ (by rfl)) value valid
+
+/-- Prefix specialization keeps the original callback Union without rewriting
+its order or the exact Map key descriptor. -/
+example : substitute (prefixEnvironment [.list service]
+    (fun _ => .list (.union (callbackBranches false)))) (.pair (.var 0) (.var 1)) =
+    .pair (.list service) (.list (.union (callbackBranches false))) := by
   simp [substitute, prefixEnvironment]
 
 end Examples.PrototypeTypes

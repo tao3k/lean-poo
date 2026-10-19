@@ -138,12 +138,18 @@ def check : Nat → Ty → Ty → Bool
     | .map k a, .map k' b => (same fuel k k' && check fuel a b) || emptyCheck fuel k || emptyCheck fuel a
     | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (check fuel) as bs
     | .union as, .union bs => all₂ (same fuel) as bs
-    | .union branches, target => match target with
-      | .function _ _ => false
-      | _ => branches.all (fun branch => check fuel branch target)
+    | .union branches, target => branches.all (fun branch => check fuel branch target)
     | .function outs ins, .function outs' ins' =>
         all₂ (check fuel) outs outs' && all₂ (check fuel) ins' ins
     | _, _ => false) || (emptySource (fuel + 1) a && emptyTarget (fuel + 1) b)
+
+/-- Callable alternatives cover one arrow exactly when every original branch
+passes the same bounded arrow judgment. Empty alternatives are vacuous, not a
+procedure witness; zero fuel still refuses. Ordered Union targets stay separate. -/
+theorem check_union_function (fuel : Nat) (branches outputs inputs : List Ty) :
+    check (fuel + 1) (.union branches) (.function outputs inputs) =
+      branches.all (fun branch => check fuel branch (.function outputs inputs)) := by
+  simp only [check, emptySource, Bool.false_and, Bool.or_false]
 
 /-- Lift a Boolean comparison's soundness through exact positional matching. -/
 theorem all₂_sound (test : Ty → Ty → Bool) (sound : ∀ a b, test a b = true → Subtype a b)

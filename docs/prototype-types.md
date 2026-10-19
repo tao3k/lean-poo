@@ -475,8 +475,8 @@ branch must replace the SAME complete target through its existing rules; known
 sentinel and empty-carrier evidence can therefore compose across nested layouts.
 No new implication between arbitrary predicates or opaque descriptors is inferred.
 
-Direct Union-to-Union identity, root Function/CaseFunction targets, opaque token
-targets and direct Sum tag-skeleton rules retain their existing bounds. Neither
+Direct Union-to-Union identity, opaque token targets and direct Sum tag-skeleton
+rules retain their existing bounds. Callable targets are covered below. Neither
 alternative order nor original directory identities are rewritten. Unsupported
 late metadata refuses complete admission, budget exhaustion is distinct from a
 negative judgment, and original candidate trees remain distinct for ambiguity.
@@ -496,7 +496,8 @@ approval failure/retry and rejection after a captured source-directory change.
 Gerbil validation and hash/collection mechanisms are reused unchanged.
 
 Lean's common source-Union checker case now covers every corresponding finite
-Ty data target while preserving direct Union and root arrow bounds. Existing
+Ty data target while preserving direct Union bounds; callable targets are covered
+below. Existing
 Subtype derivations and replacement remain the proof path; the additional host
 sentinel, row and dependent carriers use their established interpretation laws.
 `VariantValidation.union_success` exposes the actual selected branch, successful
@@ -514,3 +515,49 @@ stability and callback effect/termination obligations remain explicit. No
 mutable-write permission, unrestricted recursive inference, effect rollback,
 parser equivalence or host runtime/compiler verification is claimed. The full
 TODO/P2 ledger is not declared complete.
+
+## Callable source alternatives inside container interfaces
+
+The P2 audit found that the common source-Union rule excluded Function and
+CaseFunction targets even when every original branch passed their existing
+replacement judgment. This blocked callback directories such as
+`(Map (List (Union callback-a callback-b)) <- UInt)` from satisfying a shared
+callable interface. The rule now uses the SAME all-branch traversal and shared
+quota for these explicit targets. It delegates each child to the existing
+ordered call-language checker: inputs are contravariant, outputs covariant,
+multiple-value counts exact; optional/keyword/rest transport and first matching
+case selection retain their original checks. No new callable representation,
+user recognizer implication, branch reordering or Any fallback is introduced.
+
+This is a decidable part of the article's Type Descriptors/Appendix C future
+work; the Racket reference does not already implement this finite solver.
+Gerbil's case-lambda performs actual procedure dispatch, existing recursive Type
+validators install wrappers, and the shared whole-declaration builder composes
+FUN/refine/bind-evidence. The implementation adds no second dispatch engine.
+
+`infer-callback-directory-service` publishes a Map/List callback directory and a
+Tuple fallback through a Pair packet. Complete inference rejects a candidate
+whose optional first case shadows a later two-result case. The selected original
+Union stays in the report; an equivalent reversed candidate is ambiguous rather
+than silently canonicalized. Tests cover checked calls and multiple results,
+invalid argument suppression, first narrow result failure without later fallback,
+exact consumer evidence, unchanged raw references, policy failure and retry.
+A separate matrix covers Record fields, rich keyword/rest signatures, unsupported
+late metadata, exhaustion and empty alternatives.
+
+Direct Union-to-Union and inhabited Map-key layouts remain invariant. A Union
+containing a present-or-absent Function cannot become unconditionally callable.
+An empty Union has vacuous inclusion but cannot validate a procedure or publish a
+runtime inhabitant. Opaque target discovery and unrestricted recursive/effect
+inclusion remain unsupported. Static false means no derivation in this algebra;
+malformed/unsupported metadata and budget exhaustion retain typed refusals.
+
+Lean's `check_union_function` proves the exact bounded all-branch equation,
+including vacuity without fabricating a procedure witness. Existing check_sound,
+sourceUnion/replacement and declaration inference laws compose through Map/List
+covariance and prefix substitution; Examples/PrototypeTypes.lean supplies positive,
+negative and exact-artifact controls. The behavioral inclusion theorem explicitly
+requires faithful Union and Function interpretations. Procedure recognition alone
+proves neither totality nor output behavior. Gerbil regression tests separately
+exercise CaseFunction's richer call language; the Ty checker models fixed arrow
+rows, not the whole Scheme decoder, effects, GC or compiler.
