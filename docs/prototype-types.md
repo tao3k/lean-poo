@@ -34,6 +34,18 @@ writes as covariant or infer semantic relations from prototype ancestry.
 A negative judgment means no derivation here, not a counterexample to an arbitrary
 semantic implication. Unsupported descriptors are refused even against Any.
 
+Proper-list inclusion also admits Null into List and Pair into List when the
+head replaces the element Type and the complete tail replaces that same List.
+The recursive tail may be another Pair, List or Null. This uses the original
+replacement judgment and shared quota, not a second flattening or validation
+engine. Tuple is a vector in Gerbil: even the empty Tuple is disjoint from Null.
+No conversion, Map key widening or ordered Union rewriting is implied.
+`PrototypeTypeDescriptors` proves universal list-spine inclusion from child
+inclusion and preserves the original selected shape through complete declaration
+inference. The carrier model distinguishes empty vectors from empty lists;
+host constructor correspondence and recursive wrapper behavior remain runtime
+obligations. The handler-batch example and regressions exercise that boundary.
+
 `prototype-types.ss` connects that algebra to `parameters.ss`:
 
 ```scheme

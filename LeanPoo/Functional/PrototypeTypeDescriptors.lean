@@ -8,25 +8,25 @@ namespace LeanPoo.Functional.PrototypeTypes
 
 /-- Existing runtime descriptor families, with immutable width metadata. -/
 inductive Intrinsic where
-  | null | unit | bytes (length : Option Nat) | unsigned (bits : Nat) | signed (bits : Nat)
+  | null | emptyTuple | unit | bytes (length : Option Nat) | unsigned (bits : Nat) | signed (bits : Nat)
   | uint256 | jsInt | bytes32 | bytes64
   deriving Repr, DecidableEq
 /-- Distinct value carriers prevent byte-length projections becoming integers. -/
 inductive IntrinsicCarrier where
-  | null | unit | bytes | integer
+  | null | vector | unit | bytes | integer
   deriving Repr, DecidableEq
 /-- Abstract observations preserve the empty-list/void distinction and byte length.
 No mutable byte contents or descriptor callbacks enter a literal value cache. -/
 inductive IntrinsicValue where
-  | null | unit | bytes (length : Nat) | integer (value : Int)
+  | null | vector (length : Nat) | unit | bytes (length : Nat) | integer (value : Int)
   deriving Repr, DecidableEq
 /-- Carrier identity is independent of any numeric/length inclusion proof. -/
 def Intrinsic.carrier : Intrinsic → IntrinsicCarrier
-  | .null => .null | .unit => .unit | .bytes _ | .bytes32 | .bytes64 => .bytes
+  | .null => .null | .emptyTuple => .vector | .unit => .unit | .bytes _ | .bytes32 | .bytes64 => .bytes
   | .unsigned _ | .signed _ | .uint256 | .jsInt => .integer
 /-- A singleton has observation zero; a vector carries its nonnegative length. -/
 def IntrinsicValue.observation : IntrinsicValue → IntrinsicCarrier × Int
-  | .null => (.null, 0) | .unit => (.unit, 0)
+  | .null => (.null, 0) | .vector length => (.vector, length) | .unit => (.unit, 0)
   | .bytes length => (.bytes, length) | .integer value => (.integer, value)
 /-- Unsigned width is an interval observation, not normalization/modular arithmetic. -/
 def IntegerRange.forUnsigned (bits : Nat) : IntegerRange :=
@@ -37,7 +37,7 @@ def IntegerRange.forSigned (bits : Nat) : IntegerRange :=
 /-- Exact inclusive bounds reuse the existing interval algebra. UIntN zero has
 one integer, zero; IntN requires at least one bit at admission. -/
 def Intrinsic.range : Intrinsic → IntegerRange
-  | .null | .unit => ⟨some 0, some 0⟩
+  | .null | .emptyTuple | .unit => ⟨some 0, some 0⟩
   | .bytes none => ⟨some 0, none⟩
   | .bytes (some length) => ⟨some length, some length⟩
   | .unsigned bits => .forUnsigned bits
@@ -47,7 +47,7 @@ def Intrinsic.range : Intrinsic → IntegerRange
 /-- Decidable literal limits match Scheme admission before exponentiation or
 cached descriptor construction. This is not a host allocator cost theorem. -/
 def Intrinsic.admitted : Intrinsic → Bool
-  | .null | .unit | .bytes none | .uint256 | .jsInt | .bytes32 | .bytes64 => true
+  | .null | .emptyTuple | .unit | .bytes none | .uint256 | .jsInt | .bytes32 | .bytes64 => true
   | .bytes (some length) => decide (length ≤ 65536)
   | .unsigned bits => decide (bits ≤ 4096)
   | .signed bits => decide (1 ≤ bits ∧ bits ≤ 4096)
@@ -147,5 +147,78 @@ theorem metadataUnits_bounded (type : Intrinsic) (admitted : type.admitted = tru
 This observation law grants no Function callback wrapping permission by itself. -/
 theorem unit_optional (payload : Intrinsic) :
     IntrinsicValue.unit.observation.1 = IntrinsicCarrier.unit ∨ payload.Accepts .unit := .inl rfl
+
+/-- The empty list and empty vector remain disjoint despite equal length zero. -/
+theorem null_tuple_disjoint (value : IntrinsicValue) :
+    ¬ (Intrinsic.null.Accepts value ∧ Intrinsic.emptyTuple.Accepts value) := by
+  intro both
+  have impossible := both.1.1.symm.trans both.2.1
+  cases impossible
+
+/-- Finite list spines retain the original head Types and a homogeneous tail.
+This represents Null, List and Pair spines; vectors are a different carrier. -/
+inductive ProperListShape (Key : Type) where
+  | empty
+  | elements (type : Key)
+  | cons (head : Key) (tail : ProperListShape Key)
+  deriving Repr, DecidableEq
+
+/-- Membership uses the actual proper-list carrier, never tuple/vector length. -/
+def ProperListShape.Accepts (member : Key → Value → Prop) : ProperListShape Key → List Value → Prop
+  | .empty, values => values = []
+  | .elements type, values => ∀ value ∈ values, member type value
+  | .cons head tail, values => match values with
+    | [] => False
+    | value :: rest => member head value ∧ tail.Accepts member rest
+
+/-- Structural inclusion checks every mandatory head and the entire remaining
+tail using the original child relation; no top Type or sampled values are used. -/
+def properListCheck (test : Key → Key → Bool) : ProperListShape Key → Key → Bool
+  | .empty, _ => true
+  | .elements type, target => test type target
+  | .cons head tail, target => test head target && properListCheck test tail target
+
+/-- Universal readable inclusion follows from child inclusion for every element.
+The runtime projection into a proper-list spine is an explicit host premise. -/
+theorem properListCheck_sound (test : Key → Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, member a value → member b value)
+    (shape : ProperListShape Key) (target : Key) (accepted : properListCheck test shape target = true) :
+    ∀ values, shape.Accepts member values → ∀ value ∈ values, member target value := by
+  induction shape with
+  | empty =>
+    intro values valid value present
+    subst values
+    simp at present
+  | elements type =>
+    intro values valid value present
+    exact sound type target accepted value (valid value present)
+  | cons head tail ih =>
+    simp only [properListCheck, Bool.and_eq_true] at accepted
+    intro values valid value present
+    cases values with
+    | nil => simp [ProperListShape.Accepts] at valid
+    | cons first rest =>
+      rcases valid with ⟨firstValid, restValid⟩
+      rcases List.mem_cons.mp present with same | later
+      · subst value
+        exact sound head target accepted.1 first firstValid
+      · exact ih accepted.2 rest restValid value later
+
+/-- Existing complete declaration inference selects one original list shape.
+Ambiguous/no-solution requests cannot enter the builder. -/
+def inferProperList (test : Key → Key → Bool) (target : Key) (candidates : List (ProperListShape Key)) :=
+  LeanPoo.Functional.DeclarativeMetadata.inferDeclared candidates.length
+    (fun shape => properListCheck test shape target) candidates
+    (fun shape => (Except.ok (target, shape) : Except String (Key × ProperListShape Key)))
+
+/-- A completed declaration retains the exact checked shape and target, rather
+than converting a list into a tuple or changing the original inferred artifact. -/
+theorem inferProperList_sound (test : Key → Key → Bool) (target candidates shape artifact)
+    (published : inferProperList test target candidates = .ok (.unique shape, some artifact)) :
+    properListCheck test shape target = true ∧ artifact = (target, shape) := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique candidates.length
+    (fun shape => properListCheck test shape target) candidates
+    (fun shape => (Except.ok (target, shape) : Except String (Key × ProperListShape Key))) published
+  exact ⟨valid, (Except.ok.inj built).symm⟩
 
 end LeanPoo.Functional.PrototypeTypes

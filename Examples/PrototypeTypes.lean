@@ -648,4 +648,29 @@ example : LeanPoo.Functional.DeclarativeMetadata.Formula.conjoinAtom
 #print axioms rangeUnionCheck_sound
 #print axioms enumUnionCheck_sound
 #print axioms inferredUnion_sound
+/-- Empty lists and empty vectors retain different carriers at length zero. -/
+example : intrinsicCheck .null .emptyTuple = false ∧
+    intrinsicCheck .emptyTuple .null = false ∧
+    ¬ Intrinsic.emptyTuple.Accepts .null ∧ ¬ Intrinsic.null.Accepts (.vector 0) := by
+  simp [intrinsicCheck, Intrinsic.admitted, Intrinsic.carrier,
+    Intrinsic.Accepts, IntrinsicValue.observation]
+
+/-- A mandatory head and an unbounded checked tail both enter inclusion. -/
+example : properListCheck (fun a b : Nat => decide (a ≤ b))
+    (.cons 0 (.elements 1)) 1 = true := by decide
+
+/-- Neither an incompatible head nor an incompatible tail is silently erased. -/
+example : properListCheck (fun a b : Nat => decide (a ≤ b))
+    (.cons 2 .empty) 1 = false ∧
+    properListCheck (fun a b : Nat => decide (a ≤ b))
+      (.cons 0 (.elements 2)) 1 = false := by decide
+
+/-- Complete declaration inference retains the selected spine and original bound. -/
+example : inferProperList (fun a b : Nat => decide (a ≤ b)) 1
+    [.cons 0 .empty, .elements 2] =
+    .ok (.unique (.cons 0 .empty), some (1, .cons 0 .empty)) := rfl
+
+#print axioms null_tuple_disjoint
+#print axioms properListCheck_sound
+#print axioms inferProperList_sound
 end Examples.PrototypeTypes
