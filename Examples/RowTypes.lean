@@ -82,10 +82,10 @@ def workerObject : Row String Ty := ⟨[("run", handler), ("limit", .atom .uint)
 def workerClient : Row String (Ty × Bool) :=
   ⟨[("audit", (.atom .bool, true)), ("run", (clientHandler, false)), ("limit", (.atom .integer, false))], false⟩
 
-example : recordCheck (PrototypeTypes.check 8) workerRecord (requiredRow workerInterface) = true := by decide
-example : recordCheck (PrototypeTypes.check 8) (requiredRow workerObject) workerClient = true := by decide
-example : recordCheck (PrototypeTypes.check 8) (requiredRow {workerObject with closed := false}) workerClient = false := by decide
-example : recordCheck (PrototypeTypes.check 8) workerRecord (requiredRow {workerInterface with closed := true}) = false := by decide
+example : recordCheck (PrototypeTypes.check 8) (fun _ => false) workerRecord (requiredRow workerInterface) = true := by decide
+example : recordCheck (PrototypeTypes.check 8) (fun _ => false) (requiredRow workerObject) workerClient = true := by decide
+example : recordCheck (PrototypeTypes.check 8) (fun _ => false) (requiredRow {workerObject with closed := false}) workerClient = false := by decide
+example : recordCheck (PrototypeTypes.check 8) (fun _ => false) workerRecord (requiredRow {workerInterface with closed := true}) = false := by decide
 
 /-- Candidate presence is checked jointly with child variance and target closure. -/
 def workerLayout (optionalRun : Bool) : Row String (Ty × Bool) :=
@@ -93,7 +93,7 @@ def workerLayout (optionalRun : Bool) : Row String (Ty × Bool) :=
 
 /-- One complete declaration chooses the original required-run Record candidate. -/
 example : DeclarativeMetadata.inferRowView "Record worker / Object interface"
-    (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] =
+    (PrototypeTypes.check 8) (fun _ => false) workerLayout (requiredRow workerInterface) [true, false] =
     .ok (.unique false, some ("Record worker / Object interface", false, workerLayout false)) := by rfl
 
 /-- Full declaration provenance composes with universal Record-to-Object reads.
@@ -101,12 +101,12 @@ The caller supplies child behavior, including the established Function law. -/
 example (accepts : Ty → Value → Prop)
     (sound : ∀ a b, PrototypeTypes.check 8 a b = true → ∀ value, accepts a value → accepts b value)
     (artifact) (published : DeclarativeMetadata.inferRowView "Record worker / Object interface"
-      (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] =
+      (PrototypeTypes.check 8) (fun _ => false) workerLayout (requiredRow workerInterface) [true, false] =
       .ok (.unique false, some artifact)) :
     artifact = ("Record worker / Object interface", false, workerLayout false) ∧
       ∀ observe, RecordAdmits accepts workerRecord observe → Admits accepts workerInterface observe := by
   obtain ⟨same, included⟩ := DeclarativeMetadata.inferRowView_sound "Record worker / Object interface"
-    (PrototypeTypes.check 8) workerLayout (requiredRow workerInterface) [true, false] accepts sound false artifact published
+    (PrototypeTypes.check 8) (fun _ => false) workerLayout (requiredRow workerInterface) [true, false] accepts sound (by intro field impossible; contradiction) false artifact published
   refine ⟨same, ?_⟩
   intro observe valid
   exact (requiredRow_admits accepts workerInterface observe).mp (included observe valid)
@@ -117,12 +117,63 @@ example (accepts : Ty → Value → Prop)
     (sound : ∀ a b, PrototypeTypes.check 8 a b = true → ∀ value, accepts a value → accepts b value)
     (observe : String → Option Value) (valid : Admits accepts workerObject observe) :
     RecordAdmits accepts workerClient observe :=
-  objectToRecord_sound (PrototypeTypes.check 8) accepts sound workerObject workerClient (by decide) observe valid
+  objectToRecord_sound (PrototypeTypes.check 8) (fun _ => false) accepts sound (by intro field impossible; contradiction) workerObject workerClient (by decide) observe valid
 
 #print axioms lookup_required
 #print axioms requiredRow_admits
 #print axioms recordToObject_sound
 #print axioms objectToRecord_sound
 #print axioms DeclarativeMetadata.inferRowView_sound
+
+
+/-- The finite candidate keeps its retired Slot metadata; only its impossible
+payload is evidence of absence. Bool is the deliberately inhabited alternative. -/
+def retiredLayout (live : Bool) : Row String (Ty × Bool) :=
+  ⟨(requiredRow workerObject).fields ++ [("retired", (if live then .atom .bool else .union [], true))], true⟩
+
+/-- The closed interface forbids an actual retired key, even though the selected
+source declares it optional. No field is removed from the candidate artifact. -/
+def retiredTarget : Row String (Ty × Bool) := requiredRow {workerInterface with closed := true}
+
+example : recordCheck (PrototypeTypes.check 8) (emptyCheck 8) (retiredLayout false) retiredTarget = true := by decide
+example : recordCheck (PrototypeTypes.check 8) (emptyCheck 8) (retiredLayout true) retiredTarget = false := by decide
+example : recordCheck (PrototypeTypes.check 8) (emptyCheck 8)
+    {retiredLayout false with closed := false} retiredTarget = false := by decide
+-- A required target cannot be supplied by an absent optional source.
+example : recordCheck (PrototypeTypes.check 8) (emptyCheck 8) (retiredLayout false)
+    ⟨retiredTarget.fields ++ [("retired", (.atom .uint, false))], true⟩ = false := by decide
+-- An absent optional source need not replace an unrelated optional Function child.
+example : recordCheck (PrototypeTypes.check 8) (emptyCheck 8) (retiredLayout false)
+    ⟨retiredTarget.fields ++ [("retired", (handler, true))], true⟩ = true := by decide
+
+/-- One whole solve retains the original signature and the complete source layout. -/
+example : DeclarativeMetadata.inferRowView "sealed worker" (PrototypeTypes.check 8) (emptyCheck 8)
+    retiredLayout retiredTarget [true, false] =
+    .ok (.unique false, some ("sealed worker", false, retiredLayout false)) := rfl
+
+/-- Existing finite emptiness laws supply the witness interpretation. Publication
+proves both target reads and actual absence, without deleting source metadata. -/
+example (model : Interpretation Value) (laws : EmptyLaws model.accepts) (artifact)
+    (published : DeclarativeMetadata.inferRowView "sealed worker" (PrototypeTypes.check 8) (emptyCheck 8)
+      retiredLayout retiredTarget [true, false] = .ok (.unique false, some artifact)) :
+    artifact = ("sealed worker", false, retiredLayout false) ∧
+      ∀ observe, RecordAdmits model.accepts (retiredLayout false) observe →
+        RecordAdmits model.accepts retiredTarget observe ∧ observe "retired" = none := by
+  have emptySound : ∀ field, emptyCheck 8 field = true → ∀ value, ¬ model.accepts field value :=
+    fun field checked => (emptyCheck_sound 8 field checked).refuses laws
+  obtain ⟨same, included⟩ := DeclarativeMetadata.inferRowView_sound "sealed worker"
+    (PrototypeTypes.check 8) (emptyCheck 8) retiredLayout retiredTarget [true, false] model.accepts
+    (fun a b checked => PrototypeTypes.replacement model (check_sound 8 a b checked))
+    emptySound false artifact published
+  refine ⟨same, ?_⟩
+  intro observe valid
+  refine ⟨included observe valid, ?_⟩
+  exact absentField_observe (emptyCheck 8) model.accepts emptySound (.union [], true)
+    (observe "retired") (by rfl) (valid.1 "retired" (.union [], true) (by rfl))
+
+#print axioms recordShape_sound
+#print axioms absentField_observe
+#print axioms record_replacement
+#print axioms recordCheck_sound
 
 end Examples.RowTypes

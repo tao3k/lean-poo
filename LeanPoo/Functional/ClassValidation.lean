@@ -170,8 +170,8 @@ def recordFieldsCheck [DecidableEq Key] (test : Field → Field → Bool) :
   | _, _ => false
 
 /-- Class read replacement uses the shared named shape/presence protocol. -/
-abbrev recordCheck [DecidableEq Key] (test : Field → Field → Bool)
-    (source target : RecordType Key Field) : Bool := RowTypes.recordCheck test source target
+abbrev recordCheck [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
+    (source target : RecordType Key Field) : Bool := RowTypes.recordCheck test empty source target
 
 /-- The declarative relation retains exact names and presence obligations. -/
 def RecordFieldsReplace (relation : Field → Field → Prop) :
@@ -207,11 +207,11 @@ theorem recordFieldsCheck_sound [DecidableEq Key] (test : Field → Field → Bo
 
 /-- One field derivation now serves Class, inferred named views and Object
 shape laws; ordered value snapshots below retain their distinct positional law. -/
-theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool)
+theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
-    (source target : RecordType Key Field) (accepted : recordCheck test source target = true) :
-    RowTypes.RecordReplaces relation source target :=
-  RowTypes.recordCheck_derives test relation sound source target accepted
+    (source target : RecordType Key Field) (accepted : recordCheck test empty source target = true) :
+    RowTypes.RecordReplaces relation empty source target :=
+  RowTypes.recordCheck_derives test empty relation sound source target accepted
 
 /-- Class snapshots and named record views share one optional observation law. -/
 abbrev slotAdmits (accepts : Field → Value → Prop) (type : Field) (optional : Bool) : Option Value → Prop :=

@@ -96,47 +96,74 @@ theorem replacement [DecidableEq Key] (accepts : Field → Value → Prop)
     obtain ⟨actual, present⟩ := valid.2 sourceClosed name value observed
     exact (replaces.1 closed).2 name actual present
 
-/-- The existing Class field representation is (child Type, optional flag).
-Required target reads need required source fields. Missing optional targets need
-closed-source evidence; an open row may hide an incompatible value at that name. -/
-def recordFieldCheck [DecidableEq Key] (test : Field → Field → Bool)
+/-- Only optional presence and a positive empty-child witness prove absence.
+An empty collection, sentinel or failed witness is not evidence of no value. -/
+def absentField (empty : Field → Bool) (field : Field × Bool) : Bool := field.2 && empty field.1
+
+/-- Closed targets may forget only source keys proved absent. Runtime keys and
+original declaration order remain unchanged; open sources still cannot close. -/
+def recordShape [DecidableEq Key] (empty : Field → Bool) (source target : Row Key (Field × Bool)) : Bool :=
+  !target.closed || (source.closed && source.fields.all fun field =>
+    (lookup target.fields field.1).isSome || absentField empty field.2)
+
+/-- Required target fields still require required sources. An optional source
+proved absent needs no child replacement, since neither child can be demanded. -/
+def recordFieldCheck [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (source : Row Key (Field × Bool)) (name : Key) (expected : Field × Bool) : Bool :=
   match lookup source.fields name with
   | none => source.closed && expected.2
-  | some actual => (!actual.2 || expected.2) && test actual.1 expected.1
+  | some actual => (!actual.2 || expected.2) && (absentField empty actual || test actual.1 expected.1)
 
-/-- Records and Object rows reuse one closed-key shape. Runtime field order is
-preserved; this check decides readable named coverage, not construction order. -/
-def recordCheck [DecidableEq Key] (test : Field → Field → Bool)
+/-- One complete named check combines closure, proved absence and child inclusion.
+The witness is explicit; no implicit predicate or arbitrary callback is queried. -/
+def recordCheck [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (source target : Row Key (Field × Bool)) : Bool :=
-  shape source target && target.fields.all fun field => recordFieldCheck test source field.1 field.2
+  recordShape empty source target && target.fields.all fun field => recordFieldCheck test empty source field.1 field.2
 
-/-- Named record replacement retains sealedness, presence and child relations.
-Unlike an ordered snapshot, a named view may forget/reorder readable fields. -/
-def RecordReplaces [DecidableEq Key] (relation : Field → Field → Prop)
+/-- Named read replacement retains presence, closure and the original fields.
+Any forgotten key or bypassed child needs explicit positive absence evidence. -/
+def RecordReplaces [DecidableEq Key] (relation : Field → Field → Prop) (empty : Field → Bool)
     (source target : Row Key (Field × Bool)) : Prop :=
   (target.closed = true → source.closed = true ∧
-    ∀ name type, lookup source.fields name = some type → ∃ expected, lookup target.fields name = some expected) ∧
+    ∀ name type, lookup source.fields name = some type →
+      (∃ expected, lookup target.fields name = some expected) ∨ absentField empty type = true) ∧
   (∀ name expected, lookup target.fields name = some expected →
     match lookup source.fields name with
     | none => source.closed = true ∧ expected.2 = true
-    | some actual => (actual.2 = true → expected.2 = true) ∧ relation actual.1 expected.1)
+    | some actual => (actual.2 = true → expected.2 = true) ∧
+      (absentField empty actual = true ∨ relation actual.1 expected.1))
 
-/-- The executable check derives the complete named relation, reusing the same
-shape soundness proof as Object rows and any supplied child relation checker. -/
-theorem recordCheck_derives [DecidableEq Key] (test : Field → Field → Bool)
+/-- Successful shape checks retain a target key or its exact absence witness. -/
+theorem recordShape_sound [DecidableEq Key] (empty : Field → Bool) (source target : Row Key (Field × Bool))
+    (accepted : recordShape empty source target = true) (closed : target.closed = true) :
+    source.closed = true ∧ ∀ name type, lookup source.fields name = some type →
+      (∃ expected, lookup target.fields name = some expected) ∨ absentField empty type = true := by
+  simp only [recordShape, closed, Bool.not_true, Bool.false_or, Bool.and_eq_true] at accepted
+  refine ⟨accepted.1, ?_⟩
+  intro name type found
+  have good := List.all_eq_true.mp accepted.2 (name, type) (lookup_mem _ _ _ found)
+  simp only [Bool.or_eq_true] at good
+  rcases good with present | absent
+  · cases h : lookup target.fields name with
+    | none => simp [h] at present
+    | some expected => exact .inl ⟨expected, rfl⟩
+  · exact .inr absent
+
+/-- All Boolean branch obligations become one declarative named relation. This
+requires only child derivation; semantic witness soundness is used at observation. -/
+theorem recordCheck_derives [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (relation : Field → Field → Prop) (sound : ∀ a b, test a b = true → relation a b)
-    (source target : Row Key (Field × Bool)) (accepted : recordCheck test source target = true) :
-    RecordReplaces relation source target := by
+    (source target : Row Key (Field × Bool)) (accepted : recordCheck test empty source target = true) :
+    RecordReplaces relation empty source target := by
   simp only [recordCheck, Bool.and_eq_true] at accepted
-  refine ⟨shape_sound source target accepted.1, ?_⟩
+  refine ⟨recordShape_sound empty source target accepted.1, ?_⟩
   intro name expected found
   have good := List.all_eq_true.mp accepted.2 (name, expected) (lookup_mem _ _ _ found)
   cases h : lookup source.fields name with
   | none => simpa [recordFieldCheck, h] using good
   | some actual =>
-    simp only [recordFieldCheck, h, Bool.and_eq_true] at good
-    refine ⟨?_, sound _ _ good.2⟩
+    simp only [recordFieldCheck, h, Bool.and_eq_true, Bool.or_eq_true] at good
+    refine ⟨?_, good.2.imp_right (sound _ _)⟩
     intro optional
     simpa [optional] using good.1
 
@@ -154,20 +181,32 @@ theorem slot_replacement (accepts : Field → Value → Prop) (source target : F
   | none => exact presence valid
   | some value => exact included value valid
 
+/-- A sound empty-child witness forces the actual Slot observation to be absent,
+not merely optional. It grants no accepted value to an impossible child Type. -/
+theorem absentField_observe (empty : Field → Bool) (accepts : Field → Value → Prop)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (field : Field × Bool) (observe : Option Value)
+    (absent : absentField empty field = true) (valid : slotAdmits accepts field.1 field.2 observe) : observe = none := by
+  have parts : field.2 = true ∧ empty field.1 = true := by simpa [absentField, Bool.and_eq_true] using absent
+  have impossible := parts.2
+  cases observed : observe with
+  | none => rfl
+  | some value => exact False.elim (emptySound field.1 impossible value (by simpa [slotAdmits, observed] using valid))
+
 /-- Named observations reuse the same Slot predicate as Class snapshots. Closed
 rows exclude undeclared observations; no mutable-write relation is introduced. -/
 def RecordAdmits [DecidableEq Key] (accepts : Field → Value → Prop)
     (row : Row Key (Field × Bool)) (observe : Key → Option Value) : Prop :=
   (∀ name field, lookup row.fields name = some field → slotAdmits accepts field.1 field.2 (observe name)) ∧
-  (row.closed = true → ∀ name value, observe name = some value →
-    ∃ field, lookup row.fields name = some field)
+  (row.closed = true → ∀ name value, observe name = some value → ∃ field, lookup row.fields name = some field)
 
-/-- A named read view preserves all observations through the existing per-Slot
-law. Missing optional targets are absent by closed-source evidence, never guessed. -/
+/-- Read replacement uses the actual absence observation to forget a field or
+bypass its child, while retaining required reads and closed-source guarantees. -/
 theorem record_replacement [DecidableEq Key] (accepts : Field → Value → Prop)
-    (relation : Field → Field → Prop)
+    (relation : Field → Field → Prop) (empty : Field → Bool)
     (sound : ∀ a b, relation a b → ∀ value, accepts a value → accepts b value)
-    (source target : Row Key (Field × Bool)) (replaces : RecordReplaces relation source target)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (source target : Row Key (Field × Bool)) (replaces : RecordReplaces relation empty source target)
     (observe : Key → Option Value) (valid : RecordAdmits accepts source observe) :
     RecordAdmits accepts target observe := by
   constructor
@@ -183,44 +222,50 @@ theorem record_replacement [DecidableEq Key] (accepts : Field → Value → Prop
         simp [h] at present
     | some actual =>
       simp only [h] at good
-      exact slot_replacement accepts actual.1 expected.1 actual.2 expected.2 good.1
-        (sound _ _ good.2) (observe name) (valid.1 name actual h)
+      rcases good.2 with absent | included
+      · have missing := absentField_observe empty accepts emptySound actual (observe name) absent (valid.1 name actual h)
+        have optional : actual.2 = true := (by simpa [absentField, Bool.and_eq_true] using absent : actual.2 = true ∧ empty actual.1 = true).1
+        simpa [slotAdmits, missing] using good.1 optional
+      · exact slot_replacement accepts actual.1 expected.1 actual.2 expected.2 good.1
+          (sound _ _ included) (observe name) (valid.1 name actual h)
   · intro closed name value observed
     have constraints := replaces.1 closed
     obtain ⟨actual, present⟩ := valid.2 constraints.1 name value observed
-    exact constraints.2 name actual present
+    rcases constraints.2 name actual present with declared | absent
+    · exact declared
+    · have missing := absentField_observe empty accepts emptySound actual (observe name) absent (valid.1 name actual present)
+      simp [observed] at missing
 
-/-- Checker soundness composes derivation with observation preservation. Child
-Function interpretation remains a premise, not host procedure recognition. -/
-theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool)
+/-- Both supplied laws are explicit: child inclusion and positive emptiness.
+A failed emptiness check never authorizes field erasure or target admission. -/
+theorem recordCheck_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (accepts : Field → Value → Prop)
     (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
-    (source target : Row Key (Field × Bool)) (checked : recordCheck test source target = true)
-    (observe : Key → Option Value) (valid : RecordAdmits accepts source observe) :
-    RecordAdmits accepts target observe :=
-  record_replacement accepts (fun a b => test a b = true) sound source target
-    (recordCheck_derives test _ (fun _ _ h => h) source target checked) observe valid
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (source target : Row Key (Field × Bool)) (checked : recordCheck test empty source target = true)
+    (observe : Key → Option Value) (valid : RecordAdmits accepts source observe) : RecordAdmits accepts target observe :=
+  record_replacement accepts (fun a b => test a b = true) empty sound emptySound source target
+    (recordCheck_derives test empty _ (fun _ _ h => h) source target checked) observe valid
 
-/-- Absence evidence forces both closed-source and optional-target metadata. -/
-theorem recordFieldCheck_missing [DecidableEq Key] (test : Field → Field → Bool)
+/-- A missing target name still needs both closed-source and optional-target evidence. -/
+theorem recordFieldCheck_missing [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (source : Row Key (Field × Bool)) (name : Key) (expected : Field × Bool)
     (missing : lookup source.fields name = none)
-    (accepted : recordFieldCheck test source name expected = true) :
-    source.closed = true ∧ expected.2 = true := by
+    (accepted : recordFieldCheck test empty source name expected = true) : source.closed = true ∧ expected.2 = true := by
   simpa [recordFieldCheck, missing] using accepted
 
-/-- Reuse complete finite inference: a unique assignment retains the named
-record observation law, with no independent field solver or partial success. -/
-theorem inferred_record_sound [DecidableEq Key] (test : Field → Field → Bool)
+/-- Complete finite inference retains universal target observations and candidate
+provenance, using the same absence-aware row checker as declaration publication. -/
+theorem inferred_record_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (accepts : Field → Value → Prop)
     (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
-    (layout : Assignment → Row Key (Field × Bool)) (target : Row Key (Field × Bool))
-    (candidates : List Assignment)
-    (inferred : PrototypeTypes.infer (fun a => recordCheck test (layout a) target) candidates = .unique assignment)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (layout : Assignment → Row Key (Field × Bool)) (target : Row Key (Field × Bool)) (candidates : List Assignment)
+    (inferred : PrototypeTypes.infer (fun a => recordCheck test empty (layout a) target) candidates = .unique assignment)
     (observe : Key → Option Value) (valid : RecordAdmits accepts (layout assignment) observe) :
     assignment ∈ candidates ∧ RecordAdmits accepts target observe := by
   have accepted := PrototypeTypes.infer_unique _ _ inferred
-  exact ⟨accepted.1, recordCheck_sound test accepts sound _ _ accepted.2 observe valid⟩
+  exact ⟨accepted.1, recordCheck_sound test empty accepts sound emptySound _ _ accepted.2 observe valid⟩
 
 /-- Explicit row extension copies named fields and retains the extension's tail. -/
 def splice [DecidableEq Key] (explicit extension : Row Key Field) : Except Unit (Row Key Field) :=
@@ -327,24 +372,26 @@ theorem requiredRow_admits [DecidableEq Key] (accepts : Field → Value → Prop
 
 /-- A finite Record replaces an Object interface through the existing complete
 record checker. Required target reads cannot be supplied by optional fields. -/
-theorem recordToObject_sound [DecidableEq Key] (test : Field → Field → Bool)
+theorem recordToObject_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (accepts : Field → Value → Prop)
     (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
     (source : Row Key (Field × Bool)) (target : Row Key Field)
-    (checked : recordCheck test source (requiredRow target) = true)
+    (checked : recordCheck test empty source (requiredRow target) = true)
     (observe : Key → Option Value) (valid : RecordAdmits accepts source observe) : Admits accepts target observe :=
   (requiredRow_admits accepts target observe).mp
-    (recordCheck_sound test accepts sound source (requiredRow target) checked observe valid)
+    (recordCheck_sound test empty accepts sound emptySound source (requiredRow target) checked observe valid)
 
 /-- A closed Object can establish absence of missing optional Record fields;
 open sources retain the original refusal. No defaults or slots are fabricated. -/
-theorem objectToRecord_sound [DecidableEq Key] (test : Field → Field → Bool)
+theorem objectToRecord_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (accepts : Field → Value → Prop)
     (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
     (source : Row Key Field) (target : Row Key (Field × Bool))
-    (checked : recordCheck test (requiredRow source) target = true)
+    (checked : recordCheck test empty (requiredRow source) target = true)
     (observe : Key → Option Value) (valid : Admits accepts source observe) : RecordAdmits accepts target observe :=
-  recordCheck_sound test accepts sound (requiredRow source) target checked observe
+  recordCheck_sound test empty accepts sound emptySound (requiredRow source) target checked observe
     ((requiredRow_admits accepts source observe).mpr valid)
 
 end LeanPoo.Functional.RowTypes

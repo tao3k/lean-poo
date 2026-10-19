@@ -804,20 +804,20 @@ def recordReadView : Functional.ClassValidation.RecordType String Ty :=
     ("run", ⟨.function [.atom .uint] [.atom .integer], false⟩)], false⟩
 /-- One complete shared search precedes the original specialization/declaration builder. -/
 def inferredRecordView := inferDeclared 2
-  (fun choice => Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+  (fun choice => Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8) (fun _ => false)
     (recordReadLayout choice) recordReadView) [true, false] buildSelected
 #guard match inferredRecordView with
   | .ok (.unique false, some 36) => true
   | _ => false
 -- A missing optional field is safe only when no hidden source value can exist.
-#guard Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+#guard Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8) (fun _ => false)
   (⟨[], true⟩ : Functional.ClassValidation.RecordType String Ty)
   ⟨[("missing", ⟨.atom .bool, true⟩)], true⟩
-#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8) (fun _ => false)
   (⟨[], false⟩ : Functional.ClassValidation.RecordType String Ty)
   ⟨[("missing", ⟨.atom .bool, true⟩)], false⟩)
 -- Optional source metadata cannot satisfy a required target, even with equal Types.
-#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8)
+#guard !(Functional.ClassValidation.recordCheck (Functional.PrototypeTypes.check 8) (fun _ => false)
   (⟨[("n", ⟨.atom .uint, true⟩)], true⟩ : Functional.ClassValidation.RecordType String Ty)
   ⟨[("n", ⟨.atom .uint, false⟩)], false⟩)
 /-- Publication implies every source observation admits the reordered read view,
@@ -829,8 +829,9 @@ theorem inferredRecordView_sound (choice artifact)
     (valid : Functional.RowTypes.RecordAdmits model.accepts (recordReadLayout choice) observe) :
     Functional.RowTypes.RecordAdmits model.accepts recordReadView observe := by
   obtain ⟨_, accepted, _⟩ := inferDeclared_unique 2 _ [true, false] _ published
-  exact Functional.RowTypes.recordCheck_sound (Functional.PrototypeTypes.check 8) model.accepts
+  exact Functional.RowTypes.recordCheck_sound (Functional.PrototypeTypes.check 8) (fun _ => false) model.accepts
     (fun a b checked => Functional.PrototypeTypes.replacement model (check_sound 8 a b checked))
+    (by intro field impossible; contradiction)
     _ _ accepted observe valid
 #print axioms Functional.RowTypes.recordCheck_sound
 #print axioms Functional.RowTypes.recordFieldCheck_missing

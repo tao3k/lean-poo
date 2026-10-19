@@ -198,13 +198,13 @@ factory after the ground Self prefix is fixed. Field labels are finite IDs. -/
 def inferredRecord (self super : PrototypeTypes.Ty) : ClassValidation.RecordType Nat PrototypeTypes.Ty :=
   ⟨[(0, .function [self] [super], false), (1, .atom .uint, false),
     (2, .atom .uint, false), (3, .function [self] [super], true)], false⟩
-example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+example : ClassValidation.recordCheck (PrototypeTypes.check 8) (fun _ => false)
     (inferredRecord (.atom .uint) (.atom .integer))
     (inferredRecord (.atom .integer) (.atom .uint)) = true := by decide
-example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+example : ClassValidation.recordCheck (PrototypeTypes.check 8) (fun _ => false)
     (⟨[(0, .atom .uint, true)], true⟩ : ClassValidation.RecordType Nat PrototypeTypes.Ty)
     ⟨[(0, .atom .integer, false)], false⟩ = false := by decide
-example : ClassValidation.recordCheck (PrototypeTypes.check 8)
+example : ClassValidation.recordCheck (PrototypeTypes.check 8) (fun _ => false)
     (⟨[(0, .atom .uint, false)], false⟩ : ClassValidation.RecordType Nat PrototypeTypes.Ty)
     ⟨[(0, .atom .uint, false)], true⟩ = false := by decide
 /-- The prefix fixes Self to UInt; the argument and callback variance together
@@ -212,7 +212,7 @@ force the same Super = Integer as the executable Gerbil call observation. -/
 def recordCandidateValid (super : PrototypeTypes.Ty) : Bool :=
   PrototypeTypes.check 8 (.atom .uint) super &&
   PrototypeTypes.check 8 (.atom .integer) super &&
-  ClassValidation.recordCheck (PrototypeTypes.check 8)
+  ClassValidation.recordCheck (PrototypeTypes.check 8) (fun _ => false)
     (inferredRecord (.atom .uint) super) (inferredRecord (.atom .uint) (.atom .integer))
 example : PrototypeTypes.infer recordCandidateValid [.atom .uint, .atom .integer] =
     .unique (.atom .integer) := by
@@ -222,11 +222,11 @@ example : PrototypeTypes.infer recordCandidateValid [.atom .uint, .atom .integer
 /-- A selected complete inference assignment derives the entire record signature
 as one shared obligation. This reuses the finite search rather than a field solver. -/
 example (candidates : List (Nat → PrototypeTypes.Ty)) (target : ClassValidation.RecordType Nat PrototypeTypes.Ty)
-    (accepted : PrototypeTypes.infer (fun env => ClassValidation.recordCheck (PrototypeTypes.check 8)
+    (accepted : PrototypeTypes.infer (fun env => ClassValidation.recordCheck (PrototypeTypes.check 8) (fun _ => false)
         (inferredRecord (env 0) (env 1)) target) candidates = .unique env) :
-    RowTypes.RecordReplaces PrototypeTypes.Subtype
+    RowTypes.RecordReplaces PrototypeTypes.Subtype (fun _ => false)
       (inferredRecord (env 0) (env 1)) target := by
-  exact ClassValidation.recordCheck_sound _ _ (PrototypeTypes.check_sound 8) _ _
+  exact ClassValidation.recordCheck_sound _ _ _ (PrototypeTypes.check_sound 8) _ _
     (PrototypeTypes.infer_unique _ _ accepted).2
 /-- Optional absence remains absence, and cannot satisfy a required target. -/
 example : ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () true none := rfl

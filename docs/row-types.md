@@ -148,8 +148,8 @@ Record-to-Object requires every Object field to have a required source field
 and readable child inclusion. Object-to-Record treats Object fields as required;
 a missing optional Record field is safe only for a closed Object source, which
 establishes absence. Open sources cannot hide unchecked values at missing optional
-names. Closed targets still require a closed source and reject every extra
-declared key, including optional ones. Field order and original descriptor kinds
+names. Closed targets still require a closed source and reject extra declared
+keys unless an optional field has a positive empty-child witness proving absence. Field order and original descriptor kinds
 remain captured metadata, not normalization targets. Nested Function variance,
 List/Map values and prefix-specialized declarations use the existing child rule.
 Map keys and direct ordered Union bounds remain invariant. No Any is synthesized.
@@ -182,3 +182,47 @@ behavior remain explicit premises; these are not compiler or arbitrary callback
 proofs. This advances the article's type-protocol future work, consistent with
 its element-inclusion definition of subtyping, rather than attributing finite
 inference to the reference Racket implementation.
+
+## Proved-absent optional fields
+
+A declared optional field with a positively witnessed empty payload cannot be
+present in any admitted source object. The shared row protocol now uses that
+absence in two places: a closed target may omit the key, and an optional target
+at that key need not require child replacement. A required target still cannot
+be supplied by the absent source. Source closure is still required for every
+closed target; this rule cannot prove unrelated undeclared keys absent.
+
+The existing empty-type? witness supplies the evidence. Never, impossible
+mandatory products/required rows, reversed ranges and all-empty alternatives
+compose; an unsuccessful search or an opaque callback does not. Empty List/Map,
+Tuple and BytesN zero values, Maybe's void and OrFalse's false are inhabitants,
+so they cannot justify erasing a possible field. All syntax is admitted before
+comparison; hidden unsupported children and budget exhaustion remain typed
+refusals. Both named source/target kinds, field order, Map keys and ordered Union
+bounds retain their original identities. No Any is synthesized.
+
+No field is actually removed, projected out or normalized into a target Type.
+Original Class/Slot/ObjectContract validators still reject a supplied impossible
+field, and optional absence demands neither source nor target child callbacks.
+This is readable inclusion, not mutation permission or equivalence of arbitrary
+normalizer effects. Opaque Class/Schema tokens and unrestricted fixed-point
+emptiness remain outside the admitted finite rule.
+
+infer-worker-service now accepts the standard using/contract-checked closed?:
+policy to publish the same nested Map/List Function workflow through a sealed
+interface. Complete prefix inference and qualified declaration retain retired
+optional metadata in the selected Record, followed by the existing
+FUN/IO/refine/bind-evidence chain. Tests cover genuine ambiguity with the plain
+layout, present-field refusal, inhabited controls, policy retry and exact evidence.
+
+Lean's shared RowTypes.recordCheck now takes explicit emptiness evidence.
+recordShape_sound retains either a declared target key or its absence witness;
+absentField_observe proves actual absence from the existing Slot law. The general
+record replacement and complete inferRowView provenance laws require both child
+inclusion and witness soundness. Class validation and all existing examples use
+the same protocol; no compatibility checker is retained. Top-level
+Examples/RowTypes.lean derives the witness interpretation from existing
+emptyCheck_sound/EmptyLaws, proving target observations and actual retired-field
+absence while retaining the complete original candidate artifact. These extend
+the article's type-protocol future work, not its reference Racket listings or
+host compiler proofs.
