@@ -620,7 +620,7 @@ def checkedUnique (fuel constraints candidates environment)
     CheckedAssignment fuel constraints :=
   ⟨environment, (bounded_unique _ _ _ completed).2⟩
 /-- Refresh live source/binding state before compiling the accepted assignment.
-The assembler still creates a fresh descriptor, positional receiver and artifact. -/
+The same assembler retains ordinary intrinsic identity and construction rules. -/
 def instantiatePrepared (refresh : Except Error Snapshot) (checked : CheckedAssignment fuel constraints)
     (assemble : Snapshot → (Nat → Ty) → Except Error Artifact) : Except Error Artifact :=
   refresh.bind fun snapshot => assemble snapshot checked.environment
