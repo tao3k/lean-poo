@@ -17,6 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@just
+      - name: Reuse the declared release toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.elan/toolchains
+          key: lean-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}
       - uses: leanprover/lean-action@v1
         with:
           auto-config: false
@@ -42,12 +47,22 @@ jobs:
         with:
           path: .lake/build
           key: ${{ steps.library-cache.outputs.cache-primary-key }}
-      - name: Package this run's build
-        run: tar -I 'zstd -T0 -3' -cf lean-build.tar.zst .lake/build
+      - name: Package this run's compiler and build
+        run: |
+          cp lean-toolchain lean-toolchain-source.txt
+          lake env lean --version > lean-toolchain-version.txt
+          lake env lean --print-prefix > lean-toolchain-prefix.txt
+          tar -I 'zstd -T0 -3' -cf lean-build.tar.zst .lake/build
+          tar -C "$(lake env lean --print-prefix)" -I 'zstd -T0 -3' -cf lean-toolchain.tar.zst .
       - uses: actions/upload-artifact@v4
         with:
           name: lean-build-${{ github.sha }}
-          path: lean-build.tar.zst
+          path: |
+            lean-build.tar.zst
+            lean-toolchain.tar.zst
+            lean-toolchain-source.txt
+            lean-toolchain-version.txt
+            lean-toolchain-prefix.txt
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
@@ -64,19 +79,10 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
-          use-github-cache: false
       - uses: taiki-e/install-action@just
-      - uses: actions/download-artifact@v4
+      - uses: ./.github/actions/restore-lean
         with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar --zstd -xf lean-build.tar.zst
+          artifact: lean-build-${{ github.sha }}
       - name: Check independent file shard
         run: lake env python3 tools/check_atoms.py --shard ${{ matrix.shard }} --shards 12 --jobs 1
 
@@ -86,19 +92,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
-          use-github-cache: false
       - uses: taiki-e/install-action@just
-      - uses: actions/download-artifact@v4
+      - uses: ./.github/actions/restore-lean
         with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar --zstd -xf lean-build.tar.zst
+          artifact: lean-build-${{ github.sha }}
       - name: Check bounded diagnostics
         run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context _check-native-result-index
 
@@ -119,18 +116,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+      - uses: ./.github/actions/restore-lean
         with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
-          use-github-cache: false
-      - uses: actions/download-artifact@v4
-        with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar --zstd -xf lean-build.tar.zst
+          artifact: lean-build-${{ github.sha }}
       - name: Install the source evaluator
         run: sudo apt-get update && sudo apt-get install -y racket
       - name: Compare all original checks against Lean

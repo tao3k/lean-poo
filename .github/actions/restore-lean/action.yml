@@ -1,0 +1,30 @@
+name: Restore run-owned Lean toolchain and build
+description: Use the exact compiler and proof artifacts produced by this workflow run.
+inputs:
+  artifact:
+    description: Producer artifact name for this run and source revision.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact }}
+    - name: Restore the producer compiler and build
+      shell: bash
+      run: |
+        cmp lean-toolchain lean-toolchain-source.txt
+        producer_prefix="$(cat lean-toolchain-prefix.txt)"
+        toolchain_root="$HOME/.elan/toolchains/$(basename "$producer_prefix")"
+        test "$toolchain_root" = "$producer_prefix"
+        # Preserve producer paths used by cached compiled executables.
+        mkdir -p "$toolchain_root"
+        tar --zstd -xf lean-toolchain.tar.zst -C "$toolchain_root"
+        tar --zstd -xf lean-build.tar.zst
+        "$toolchain_root/bin/lean" --version | cmp - lean-toolchain-version.txt
+        echo "$toolchain_root/bin" >> "$GITHUB_PATH"
+    - name: Verify restored compiler commands
+      shell: bash
+      run: |
+        lean --version | cmp - lean-toolchain-version.txt
+        lake --version
