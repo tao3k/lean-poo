@@ -75,6 +75,33 @@ errors and recursive wrapping keep the existing normalize/validate-optional
 semantics. Arbitrary callback effect equivalence and host compiler correctness
 are outside this relation; Scheme tests exercise the separate runtime obligations.
 
+
+Optional sources now also replace ordinary intrinsic flat targets through the
+same two-branch obligation. `(OrFalse (Exactly #t))` covers Bool;
+`(Maybe Never)` covers Unit, while `(OrFalse (Enum))` covers exactly false.
+Empty children never erase their source sentinel. Entirely intrinsic flat Union
+targets can jointly cover both branches, including nested void/false optionals,
+numeric intervals and Keyword leaves. Each check retains the original candidate
+AST and shared work quota. Wrapper-bearing Union targets, invariant Map keys,
+direct ordered Union relations and keyword/escape origins are not widened.
+Optional Functions remain non-callable without checking their present branch.
+
+`infer-decision-service` exercises this inside Pair fields with a recursively
+wrapped Function, a concrete Bool decision and Unit acknowledgement. It reuses
+the complete prefix-specialization/declaration/FUN/refine/bind-evidence chain;
+invalid sentinels, returned callback inputs, policy retry and genuine equivalent
+candidate ambiguity are checked. No Any is synthesized. Missing coverage is false;
+unsupported metadata and exhaustion keep their typed refusal semantics.
+
+Lean's replacement_into_iff proves both source obligations are necessary and
+sufficient. normalized_replacement establishes membership of the exact returned
+value under the existing normalizer, preserving its checked Function wrapper;
+inferOptional_replacement retains the original completed declaration artifact.
+Host descriptor interpretation and the flat target's identity validation remain
+premises. These are readable inclusion laws, not arbitrary effect equivalence or
+compiler verification. This finite type protocol advances the article's future
+work; it is not attributed to the reference Racket implementation.
+
 `prototype-types.ss` connects that algebra to `parameters.ss`:
 
 ```scheme

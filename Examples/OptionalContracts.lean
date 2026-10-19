@@ -306,4 +306,63 @@ example : OptionalValidation.inferOptional "optional handler"
 #print axioms OptionalValidation.sentinel_replacement
 #print axioms OptionalValidation.finiteCoverage_sound
 #print axioms OptionalValidation.inferOptional_sound
+
+/-- OrFalse's false and Exactly true together cover precisely both Bool values. -/
+example (value : Bool) (valid : OptionalValidation.Admits
+    (fun item => !item) (fun item => item = true) value) :
+    value = false ∨ value = true := by
+  apply OptionalValidation.replacement_into (fun item : Bool => !item)
+    (fun item => item = true) (fun item => item = false ∨ item = true) _ _ value valid
+  · intro item missing
+    cases item <;> simp_all
+  · intro item present
+    exact .inr present
+
+/-- Empty payloads do not erase Maybe's void inhabitant. Unit admits that value. -/
+example (value : Option Empty) (valid : OptionalValidation.Admits
+    Option.isNone (fun _ => False) value) : value = none := by
+  apply OptionalValidation.replacement_into Option.isNone (fun _ => False)
+    (fun item : Option Empty => item = none) _ _ value valid
+  · intro item missing
+    cases item <;> simp_all
+  · intro _ impossible
+    exact impossible.elim
+
+/-- A false-only target cannot replace Maybe even with a completely empty child. -/
+example : ¬ (∀ value : Option Bool,
+    OptionalValidation.Admits Option.isNone (fun _ => False) value → value = some false) := by
+  intro included
+  have missing := included none (.inl rfl)
+  cases missing
+
+/-- A normalized decision/ack packet retains its checked callback. Only the
+original optional fields are read; no replacement wrapper or carrier is created. -/
+example (handler : Call) (decision : Bool) (ack : Option Empty)
+    (decisionOK : OptionalValidation.Admits (fun item => !item) (fun item => item = true) decision)
+    (ackOK : OptionalValidation.Admits Option.isNone (fun _ => False) ack) :
+    (handler, decision, ack).1 = handler ∧ (decision = false ∨ decision = true) ∧ ack = none := by
+  refine ⟨rfl, ?_, ?_⟩
+  · cases decision <;> simp
+  · rcases ackOK with missing | impossible
+    · cases ack <;> simp_all
+    · exact impossible.elim
+
+/-- Successful normalization proves target membership for the returned value,
+including a checked Function, under the original sentinel and child premises. -/
+example (source checked : Value) (accepted : OptionalValidation.normalize falseValue
+    (member .transform) (shape .transform) (checkValue .transform) "invalid" source = .ok checked) :
+    checked = .falseValue ∨ ∃ procedure, checked = .function procedure := by
+  apply OptionalValidation.normalized_replacement falseValue (member .transform)
+    (shape .transform) (checkValue .transform) "invalid" source checked
+    (fun value => value = .falseValue ∨ ∃ procedure, value = .function procedure) _ _ accepted
+  · intro value absent
+    cases value <;> simp_all [falseValue]
+  · intro value present
+    cases value <;> simp_all [member]
+
+#print axioms OptionalValidation.replacement_into
+#print axioms OptionalValidation.replacement_into_iff
+#print axioms OptionalValidation.normalized_replacement
+#print axioms OptionalValidation.inferOptional_replacement
+
 end LeanPoo.Examples.OptionalContracts

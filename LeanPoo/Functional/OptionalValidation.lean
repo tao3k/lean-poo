@@ -83,16 +83,36 @@ theorem payload_replacement (absent : Value → Bool) (source target : Value →
     (included : ∀ value, source value → target value) (value : Value)
     (valid : source value) : Admits absent target value := .inr (included value valid)
 
+/-- An optional source replaces an ordinary target only when both its original
+sentinel and every payload are included. Neither branch may be silently erased. -/
+theorem replacement_into (absent : Value → Bool) (source target : Value → Prop)
+    (sentinels : ∀ value, absent value = true → target value)
+    (payloads : ∀ value, source value → target value)
+    (value : Value) (valid : Admits absent source value) : target value := by
+  rcases valid with missing | present
+  · exact sentinels value missing
+  · exact payloads value present
+
+/-- The two branch obligations are necessary as well as sufficient for readable
+inclusion. A successful payload alone never establishes optional replacement. -/
+theorem replacement_into_iff (absent : Value → Bool) (source target : Value → Prop) :
+    (∀ value, Admits absent source value → target value) ↔
+      (∀ value, absent value = true → target value) ∧ (∀ value, source value → target value) := by
+  constructor
+  · intro included
+    exact ⟨fun value missing => included value (.inl missing),
+      fun value present => included value (.inr present)⟩
+  · rintro ⟨sentinels, payloads⟩
+    exact replacement_into absent source target sentinels payloads
+
 /-- Different optional kinds must cover both the original sentinel and every
 payload. Same-kind covariance is the special case with identical sentinels. -/
 theorem sentinel_replacement (sourceAbsent targetAbsent : Value → Bool)
     (source target : Value → Prop)
     (sentinels : ∀ value, sourceAbsent value = true → Admits targetAbsent target value)
     (payloads : ∀ value, source value → Admits targetAbsent target value)
-    (value : Value) (valid : Admits sourceAbsent source value) : Admits targetAbsent target value := by
-  rcases valid with missing | present
-  · exact sentinels value missing
-  · exact payloads value present
+    (value : Value) (valid : Admits sourceAbsent source value) : Admits targetAbsent target value :=
+  replacement_into sourceAbsent source (Admits targetAbsent target) sentinels payloads value valid
 
 /-- Exhaust all admitted immutable literal observations, retaining their order.
 False is an ordinary value in the list; it is not a missing entry or failed check. -/
@@ -126,6 +146,39 @@ theorem inferOptional_sound (signature : Signature) (sentinels payloads : Candid
     (fun candidate => (Except.ok (signature, candidate) : Except String (Signature × Candidate))) published
   simp only [Bool.and_eq_true] at valid
   exact ⟨valid.1, valid.2, (Except.ok.inj built).symm⟩
+
+/-- Successful original normalization retains its exact returned value, including
+Function wrappers, while establishing the ordinary target membership. Shape and
+child errors still follow the original normalize/success laws. -/
+theorem normalized_replacement (absent member : Value → Bool)
+    (shape : Value → Except Error Unit) (check : Value → Except Error Value)
+    (invalid : Error) (source checked : Value) (target : Value → Prop)
+    (sentinels : ∀ value, absent value = true → target value)
+    (payloads : ∀ value, member value = true → target value)
+    (accepted : normalize absent member shape check invalid source = .ok checked) : target checked := by
+  rcases (success absent member shape check invalid source checked).mp accepted with missing | present
+  · rcases missing with ⟨none, same⟩
+    subst checked
+    exact sentinels source none
+  · exact payloads checked present.2.2.2
+
+/-- A completed shared declaration keeps its exact captured artifact and proves
+ordinary-target inclusion for every admitted source value under both checked
+branch interpretations. Host metadata projection remains a separate premise. -/
+theorem inferOptional_replacement (signature : Signature) (sentinels payloads : Candidate → Bool)
+    (absent member : Candidate → Value → Bool) (target : Value → Prop)
+    (sentinelSound : ∀ candidate, sentinels candidate = true →
+      ∀ value, absent candidate value = true → target value)
+    (payloadSound : ∀ candidate, payloads candidate = true →
+      ∀ value, member candidate value = true → target value)
+    (candidates : List Candidate) (candidate : Candidate) (artifact : Signature × Candidate)
+    (published : inferOptional signature sentinels payloads candidates = .ok (.unique candidate, some artifact)) :
+    artifact = (signature, candidate) ∧
+      ∀ value, Admits (absent candidate) (fun item => member candidate item = true) value → target value := by
+  obtain ⟨sentinelOK, payloadOK, exactArtifact⟩ :=
+    inferOptional_sound signature sentinels payloads candidates candidate artifact published
+  exact ⟨exactArtifact, replacement_into (absent candidate) (fun item => member candidate item = true) target
+    (sentinelSound candidate sentinelOK) (payloadSound candidate payloadOK)⟩
 
 /-- A present accepted normalization belongs to the selected child, even when its
 result is an outer sentinel. Child errors never become successful absence. -/
