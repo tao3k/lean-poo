@@ -641,7 +641,7 @@ remain outside this Appendix C/D type-protocol future work.
 
 The P2 gap was distributed coverage: no single alternative may contain a range,
 although several alternatives jointly cover it. The finite relation now admits a
-IntegerRange (including either unbounded endpoint) or keyword-stable finite Exactly/Enum source into an ordered Union whose
+Integer, UInt, IntegerRange (including either unbounded endpoint), or keyword-stable finite Exactly/Enum source into an ordered Union whose
 entire tree consists of known built-in flat validators. Numeric branches are
 projected with their original optional endpoints, exact integer literals become singleton pieces, and other
 intrinsic scalars contribute no integer coverage. Nested branches are traversed
@@ -664,8 +664,8 @@ Function/container/refinement wrappers or arbitrary custom recognizers refuse
 this rule, even if an earlier flat branch covers the source or the source Enum
 is empty. Keyword/escape-token sources retain their dedicated raw-transport judgment.
 General Boolean/predicate discovery and dependent endpoints remain outside this rule.
-The public atomic Integer/UInt-to-Union rule remains conservative; the extension
-is for IntegerRange descriptors, including all-integer and one-sided ranges. This is not a serialization, arithmetic-method,
+Integer/UInt sources use their existing symbolic interval views in this same
+judgment. Their public descriptor kinds remain distinct from IntegerRange. This is not a serialization, arithmetic-method,
 JSON or complete object-protocol equivalence claim.
 
 Union's existing select-union/validate-union path remains authoritative: select
@@ -674,7 +674,7 @@ or failed postcondition. Coverage does not permit fallback after failure. The
 new UnionServiceType changes only Super's bound in the existing rich service;
 prefix/call inference, parameter specialization, original qualifiers and generic,
 callback wrapping, cache owner and FUN/refine/bind-evidence publication are shared.
-t/union-inference-test.ss contains ten integrated cases, independent descriptor
+t/union-inference-test.ss contains twelve integrated cases, independent descriptor
 witnesses, huge exact endpoints, selected-error controls and retry checks.
 
 Lean puts interval subtraction and its universal coverage theorem in the existing
@@ -710,3 +710,32 @@ premise; a selected error never authorizes a later branch. Host parsing,
 serialization, custom predicates, GC and primitive bit costs are outside these
 proofs. The finite endpoint-partition oracle complements rather than replaces
 the universal Lean soundness theorem.
+
+### Atomic numeric sources in the same coverage protocol
+
+Integer and UInt now enter the existing Union-source admission gate through
+`numeric-bounds`, as all-integer and nonnegative unbounded intervals. Projection,
+ordered residual subtraction, quota accounting and all-branch flat admission
+are shared with IntegerRange; there is no second numeric checker, finite cutoff,
+Any fallback or conversion of the public descriptor. The fixed intrinsic scalar
+recognizers remain authoritative; custom validators are not inferred equivalent.
+
+`UnsignedUnionServiceType` supplies the zero/positive-tail bound to the original
+rich signature factory. Paired Integer/UInt cases reuse the same complete
+specialization, declarations, optional/keyword/rest forwarding, nested Function
+wrapper, FUN/refine and evidence-bound publication. Runtime negative-input and
+keyword/escape-token failures remain enforced. An equivalent range candidate
+still creates genuine ambiguity; unsupported candidates yield no-solution and
+quota exhaustion stays a typed refusal before the builder, followed by fresh
+retry. Public Union-to-Union order/identity and Map key invariance are unchanged.
+
+Lean's numericUnion derivation records the existing numeric view explicitly.
+`numericBounds_contains` proves source observation preservation, and
+`numericUnion_sound` composes it with universal unbounded coverage. Conditional
+replacement composes the existing numeric-view and range-to-Union model laws;
+it adds no semantic model assumption. Shared inferred declaration proofs retain
+all constraints and the exact atomic descriptor in the built artifact. The
+integer projection does not model host keyword parsing, serializers, custom
+recognizers or GC/bit-operation costs; those claims are not made. This continues
+the article's type-protocol future work, rather than claiming the Racket
+reference already provides this static inference algorithm.

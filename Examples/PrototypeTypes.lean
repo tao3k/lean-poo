@@ -340,6 +340,59 @@ theorem inferredUnbounded_sound (super artifact)
     (fun super => satisfies 12 unboundedConstraints (rangeEnvironment super))
     [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] buildRange published
   exact ⟨fun a b member => satisfies_sound 12 unboundedConstraints (rangeEnvironment super) valid member, built⟩
+/-- UInt's ordered cover separates zero from the infinite strictly positive tail. -/
+def unsignedUnion : Ty := .union [.integerRange ⟨some 1, none⟩, .integerEnum [0]]
+/-- Ordinary observations and callback variance constrain the same atomic input
+parameter; the finite Self result and complete specialization builder are shared. -/
+def numericUnionConstraints (source target : Ty) : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground target), (.ground source, .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [smallRange] [source]))]
+/-- The existing declaration driver chooses the actual atomic descriptor; no
+range alias is manufactured as an additional candidate or substituted result. -/
+def inferredNumericUnion (source target : Ty) := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
+  (fun super => satisfies 12 (numericUnionConstraints source target) (rangeEnvironment super))
+  [.atom .integer, .atom .uint] buildRange
+#guard match inferredNumericUnion (.atom .integer) unboundedUnion with
+  | .ok (.unique (.atom .integer), some (.integerRange ⟨some 0, some 10⟩, .atom .integer)) => true
+  | _ => false
+#guard match inferredNumericUnion (.atom .uint) unsignedUnion with
+  | .ok (.unique (.atom .uint), some (.integerRange ⟨some 0, some 10⟩, .atom .uint)) => true
+  | _ => false
+#guard check 12 (.atom .integer) unboundedUnion
+#guard check 12 (.atom .uint) unsignedUnion
+#guard !check 12 (.atom .integer) unsignedUnion
+#guard !check 12 (.atom .uint) (.union [.integerRange ⟨some 1, none⟩])
+#guard !check 12 (.atom .integer) (.union [.integerEnum [-1, 0, 1]])
+#guard !check 12 (.atom .uint) (.union [unsignedUnion, .function [.atom .uint] [.atom .uint]])
+#guard !check 12 (.map (.atom .uint) smallRange) (.map unsignedUnion smallRange)
+#guard check 12 (.pair (.atom .integer) (.map (.atom .uint) (.atom .uint)))
+  (.pair unboundedUnion (.map (.atom .uint) unsignedUnion))
+#guard check 12 (.function [.atom .uint] [unboundedUnion])
+  (.function [unsignedUnion] [.atom .integer])
+/-- All integers and nonnegative integers use the same universal coverage theorem. -/
+theorem atomicUnion_accepts (value : Int) :
+    integerAccepts 12 unboundedUnion value = true ∧
+      (0 ≤ value → integerAccepts 12 unsignedUnion value = true) := by
+  constructor
+  · exact numericUnion_sound (.atom .integer) IntegerRange.all 12 _ rfl (by decide) value rfl
+  · intro nonnegative
+    exact numericUnion_sound (.atom .uint) IntegerRange.unsigned 12 _ rfl (by decide) value
+      (by simpa [integerAccepts] using nonnegative)
+/-- The same complete builder retains every inferred constraint and exact atomic
+Type. Rich host calling syntax remains covered by separate Scheme controls. -/
+theorem inferredNumericUnion_sound (source target super artifact)
+    (published : inferredNumericUnion source target = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ numericUnionConstraints source target →
+      Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
+      buildRange super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 2
+    (fun super => satisfies 12 (numericUnionConstraints source target) (rangeEnvironment super))
+    [.atom .integer, .atom .uint] buildRange published
+  exact ⟨fun a b member => satisfies_sound 12 _ (rangeEnvironment super) valid member, built⟩
+#print axioms numericBounds_contains
+#print axioms numericUnion_sound
+#print axioms atomicUnion_accepts
+#print axioms inferredNumericUnion_sound
 #print axioms unboundedUnion_accepts
 #print axioms inferredUnbounded_sound
 #print axioms LeanPoo.Functional.VariantValidation.coversInterval_sound

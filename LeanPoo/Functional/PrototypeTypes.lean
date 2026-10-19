@@ -260,6 +260,33 @@ theorem enumUnionCheck_sound (fuel values branches)
       simpa [enumUnionCheck, built] using accepted
     exact List.all_eq_true.mp all
 
+/-- The existing numeric view preserves integer observations of both atomic
+families and literal ranges; no identification of descriptor syntax is needed. -/
+theorem numericBounds_contains (source : Ty) (range : IntegerRange) (fuel : Nat) (value : Int)
+    (bounds : numericBounds source = some range)
+    (member : integerAccepts (fuel + 1) source value = true) : range.Contains value := by
+  cases source <;> simp only [numericBounds] at bounds
+  all_goals try contradiction
+  case integerRange actual =>
+    have equal : actual = range := Option.some.inj bounds
+    subst range
+    rcases actual with ⟨lower, upper⟩
+    cases lower <;> cases upper <;> simp_all [integerAccepts, IntegerRange.Contains]
+  case atom name =>
+    cases name
+    all_goals try contradiction
+    all_goals cases bounds
+    all_goals simp_all [integerAccepts, IntegerRange.Contains, IntegerRange.all, IntegerRange.unsigned]
+/-- Joint coverage applies uniformly to Integer, UInt and IntegerRange. Every
+accepted integer reaches an original alternative, independently of bit width. -/
+theorem numericUnion_sound (source range fuel branches)
+    (bounds : numericBounds source = some range)
+    (covered : rangeUnionCheck fuel range branches = true) (value : Int)
+    (member : integerAccepts (fuel + 1) source value = true) :
+    integerAccepts fuel (.union branches) value = true := by
+  obtain ⟨_, _, inclusion⟩ := rangeUnionCheck_sound _ _ _ covered
+  exact inclusion value (numericBounds_contains source range fuel value bounds member)
+
 /-- A pointwise relation checks exact length; zip cannot silently drop arguments. -/
 def all₂ (test : Ty → Ty → Bool) : List Ty → List Ty → Bool
   | [], [] => true
@@ -334,8 +361,8 @@ inductive Subtype : Ty → Ty → Prop where
   | numeric : numericBounds a = some source → numericBounds b = some target →
       source.includes target = true → Subtype a b
   | rangeEnum : range.coveredBy values = true → Subtype (.integerRange range) (.integerEnum values)
-  | rangeUnion : rangeUnionCheck fuel source branches = true →
-      Subtype (.integerRange source) (.union branches)
+  | numericUnion : numericBounds source = some range → rangeUnionCheck fuel range branches = true →
+      Subtype source (.union branches)
   | enumUnion : enumUnionCheck fuel values branches = true → Subtype (.integerEnum values) (.union branches)
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
@@ -359,6 +386,9 @@ def check : Nat → Ty → Ty → Bool
     | .integerRange source, .integerEnum values => source.coveredBy values
     | .integerEnum values, .integerEnum target => decide (values = target)
     | .integerRange source, .union branches => rangeUnionCheck fuel source branches
+    | .atom source, .union branches => match numericBounds (.atom source) with
+        | some range => rangeUnionCheck fuel range branches
+        | none => false
     | .integerEnum values, .union branches => enumUnionCheck fuel values branches
     | .integerRange source, .atom .integer => source.includes IntegerRange.all
     | .integerRange source, .atom .uint => source.includes IntegerRange.unsigned
@@ -408,7 +438,9 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
       have equal := of_decide_eq_true accepted
       subst target
       exact .refl _
-    case integerRange.union source branches => exact .rangeUnion accepted
+    case integerRange.union source branches => exact .numericUnion rfl accepted
+    case atom.union source branches =>
+      cases source <;> first | contradiction | exact .numericUnion rfl accepted
     case integerEnum.union values branches => exact .enumUnion accepted
     case integerRange.atom source target =>
       cases target
@@ -540,9 +572,11 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (fun _ _ h => h) model.top model.uint
     (fun left right included => model.numeric _ _ _ _ left right (IntegerRange.replacement _ _ included))
     (fun covered => model.rangeEnum _ _ (IntegerRange.coveredBy_sound _ _ covered))
-    (fun accepted => by
+    (fun bounds accepted => by
       obtain ⟨pieces, projected, covered⟩ := rangeUnionCheck_sound _ _ _ accepted
-      exact model.rangeUnion _ _ _ pieces projected covered)
+      intro value valid
+      apply model.rangeUnion _ _ _ pieces projected covered value
+      exact model.numeric _ _ _ _ bounds rfl (fun _ inside => inside) value valid)
     (fun accepted => by
       obtain ⟨pieces, projected, covered⟩ := enumUnionCheck_sound _ _ _ accepted
       exact model.enumUnion _ _ _ pieces projected covered)
