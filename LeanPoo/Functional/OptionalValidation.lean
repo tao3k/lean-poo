@@ -60,6 +60,32 @@ theorem success (missing member : Value → Bool) (shape : Value → Except Erro
     rw [ObjectContract.validateObject_success]
     cases hc : member checked <;> simp [gate, hc]
 
+/-- The existing sentinel protocol admits unchanged absence or child membership.
+Maybe supplies void; OrFalse supplies exactly false. The two predicates are not
+interchangeable, and no universal fallback Type is inserted. -/
+def Admits (absent : Value → Bool) (member : Value → Prop) (value : Value) : Prop :=
+  absent value = true ∨ member value
+
+/-- Covariance reuses one fixed sentinel and the child inclusion law. This is the
+optional interpretation premise of finite prototype replacement, including
+higher-order child contracts when their behavioral inclusion has been supplied. -/
+theorem replacement (absent : Value → Bool) (source target : Value → Prop)
+    (included : ∀ value, source value → target value) (value : Value)
+    (valid : Admits absent source value) : Admits absent target value := by
+  rcases valid with missing | present
+  · exact .inl missing
+  · exact .inr (included value present)
+
+/-- A present accepted normalization belongs to the selected child, even when its
+result is an outer sentinel. Child errors never become successful absence. -/
+theorem normalized_member (missing member : Value → Bool) (shape : Value → Except Error Unit)
+    (check : Value → Except Error Value) (invalid : Error) (source checked : Value)
+    (present : missing source = false)
+    (accepted : normalize missing member shape check invalid source = .ok checked) : member checked = true := by
+  rcases (success missing member shape check invalid source checked).mp accepted with absent | child
+  · simp [present] at absent
+  · exact child.2.2.2
+
 /-- Dynamic typed values retain the exact descriptor, validate their payload
 through that descriptor and install the normalized value. Invalid descriptors gate all payload work. -/
 def typed (valid : Descriptor → Bool) (shape : Descriptor → Value → Except Error Unit)

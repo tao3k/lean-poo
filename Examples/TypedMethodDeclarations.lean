@@ -1,4 +1,5 @@
 import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.OptionalValidation
 import LeanPoo.Functional.RawArguments
 import LeanPoo.Functional.ClassValidation
 
@@ -868,5 +869,68 @@ theorem inferredOptionService_signature (signature published artifact)
 #print axioms projectSignatureOptions_map
 #print axioms infer_signature_aliases
 #print axioms inferredOptionService_signature
+
+/-- The Scheme route fixes invariant Key and Self before searching the Super
+candidate. Finite candidates never introduce an unconstrained fallback Type. -/
+def optionalRouteEnvironment (choice : Bool) : Nat → Ty :=
+  prefixEnvironment [.atom .uint, .atom .uint] (fun _ => selectedType choice)
+/-- The same child Function occurs in Map entries and in the Maybe/OrFalse
+fallback. Sentinel kinds remain distinct under ordinary Type substitution. -/
+def optionalRouteExpression : Expr :=
+  let callback := Expr.function [.var 1] [.var 2]
+  let routes := Expr.map (.var 0) (.orFalse callback)
+  .function [.pair routes (.maybe (.orFalse callback))] [routes]
+/-- The observed callable interface has UInt outputs and Integer inputs throughout. -/
+def optionalRouteExpected : Ty :=
+  let callback := Ty.function [.atom .uint] [.atom .integer]
+  let routes := Ty.map (.atom .uint) (.orFalse callback)
+  .function [.pair routes (.maybe (.orFalse callback))] [routes]
+/-- Original Self <: Super and the complete caller interface are checked together;
+Function input contravariance and Map key invariance use the existing checker. -/
+def optionalRouteEligible (choice : Bool) : Bool :=
+  satisfies 12 [(.var 1, .var 2)] (optionalRouteEnvironment choice) &&
+    check 12 (substitute (optionalRouteEnvironment choice) optionalRouteExpression) optionalRouteExpected
+/-- Only a complete unique solution enters the original specialization/declaration
+builder. The complete callback artifact remains separate from inferred Type data. -/
+def inferredOptionalRoute := inferDeclared 2 optionalRouteEligible [true, false] buildSelected
+#guard optionalRouteEligible false
+#guard !optionalRouteEligible true
+#guard match inferredOptionalRoute with
+  | .ok (.unique false, some 36) => true
+  | _ => false
+#guard !keywordStable 8 (.orFalse .top)
+#guard keywordStable 8 (.orFalse (.atom .uint))
+#guard !(check 8 (.maybe (.atom .uint)) (.orFalse (.atom .integer)))
+#guard !(check 8 (.map (.orFalse (.atom .uint)) (.atom .uint))
+  (.map (.orFalse (.atom .integer)) (.atom .integer)))
+/-- Optional substitution retains its constructor; no void/false interchange or
+collapse of nested sentinels can change a candidate's runtime domain. -/
+example (env : Nat → Ty) (body : Expr) :
+    substitute env (.maybe (.orFalse body)) = .maybe (.orFalse (substitute env body)) := by
+  simp [substitute]
+/-- Published routes carry a real replacement derivation and the original complete
+builder result. No claim about Gambit execution follows from this finite checker. -/
+theorem inferredOptionalRoute_sound (choice artifact)
+    (published : inferredOptionalRoute = .ok (.unique choice, some artifact)) :
+    Subtype (substitute (optionalRouteEnvironment choice) optionalRouteExpression) optionalRouteExpected ∧
+      buildSelected choice = .ok artifact := by
+  obtain ⟨_, eligible, built⟩ := inferDeclared_unique 2 optionalRouteEligible [true, false] buildSelected published
+  have both : satisfies 12 [(.var 1, .var 2)] (optionalRouteEnvironment choice) = true ∧
+      check 12 (substitute (optionalRouteEnvironment choice) optionalRouteExpression) optionalRouteExpected = true :=
+    by simpa only [optionalRouteEligible, Bool.and_eq_true] using eligible
+  have related := both.2
+  exact ⟨check_sound _ _ _ related, built⟩
+/-- The original interpretation must provide sentinel/Function behavior. Under
+those premises, a published optional route preserves all admitted observations. -/
+theorem inferredOptionalRoute_preserves (choice artifact) (model : Interpretation Value)
+    (published : inferredOptionalRoute = .ok (.unique choice, some artifact))
+    (value : Value) (valid : model.accepts
+      (substitute (optionalRouteEnvironment choice) optionalRouteExpression) value) :
+    model.accepts optionalRouteExpected value :=
+  Functional.PrototypeTypes.replacement model (inferredOptionalRoute_sound choice artifact published).1 value valid
+#print axioms inferredOptionalRoute_sound
+#print axioms inferredOptionalRoute_preserves
+#print axioms Functional.OptionalValidation.replacement
+#print axioms Functional.OptionalValidation.normalized_member
 
 end LeanPoo.Examples.TypedMethodDeclarations

@@ -187,10 +187,11 @@ theorem selectTyped_cell [DecidableEq Key] (target : List (TypedSignature Key Ty
   exact accepts_keys _ _ _ _ ((eraseDups_nodup _).filter _) unique (mask_membership _ _ inside)
 
 /-- Ground finite Types with a stable ordinary outer carrier. Union exposes its
-alternatives; top admits protocol tokens. Fuel exhaustion is conservative false. -/
+alternatives, as do sentinel optionals; top admits protocol tokens. Fuel exhaustion is conservative false. -/
 def keywordStable : Nat → PrototypeTypes.Ty → Bool
   | 0, _ => false
   | fuel + 1, .union branches => branches.all (keywordStable fuel)
+  | fuel + 1, .maybe child | fuel + 1, .orFalse child => keywordStable fuel child
   | _ + 1, .top => false
   | _ + 1, _ => true
 

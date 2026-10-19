@@ -468,3 +468,42 @@ default elimination, normalization idempotence and substitution commutation.
 Its typed input premise excludes unknown raw syntax; Gerbil admission tests cover
 that boundary. These extend the article's type/MOP future work, not host compiler
 or effect semantics, arbitrary predicate equivalence or unrestricted inference.
+
+
+### Sentinel optionals in the finite type protocol
+
+`OrFalse` now follows the same syntax admission, Type-child traversal, positive
+recursion guard, specialization, observational covariance and descriptor compilation
+as `Maybe`. Compilation calls the original `OrFalse` constructor; `optional-validation`
+remains the sole runtime selected-child/sentinel validation protocol. No second
+optional wrapper or generic dispatcher is introduced. The constructor-name predicate
+is shared between prototype parameters and Mu binders, so the phases cannot admit
+different free-variable vocabularies.
+
+Only false is absent for OrFalse; only void is absent for Maybe. Nested optionals
+retain both sentinels. The two constructors do not replace each other. Map keys
+remain invariant and ordered Union branches remain literal; sentinel alternatives
+are not erased or used as an Any fallback. Keyword-mode coverage inspects an
+optional's exposed child: OrFalse UInt is token-stable, OrFalse Keyword is not.
+Ordinary-origin restriction retains the optional constructor even when its child
+reduces to Never, because the sentinel is still inhabited.
+
+`OptionalRoutingServiceType` fixes the invariant Key prefix, jointly infers Self
+and Super from nested callback inputs/results, then uses the original route method
+fragments and FUN/refine/bind-evidence publication. Its regression controls include
+unchanged false Map entries, wrapped present callbacks, missing Maybe values,
+refinement refusal, ambiguity, bounded exhaustion and a complete fresh retry.
+Controlled Mu expansion uses the existing decreasing approximant program: depth
+zero remains Never, not false and not resource exhaustion. Negative recursion
+through Function inputs still refuses. No arbitrary TypeValuePair-carried descriptor,
+Class callback, semantic predicate or unrestricted recursive inclusion is inferred.
+
+The Lean finite algebra now has distinct Maybe/OrFalse constructors, with recursive
+identity, child covariance, substitution and conditional interpretation laws.
+OptionalValidation proves sentinel-preserving inclusion and selected-child
+membership after successful present normalization. The top-level route example
+uses original bounded inference and the specialization/declaration builder and
+proves publication retains both a complete replacement derivation and builder
+result. Wrapper behavior/host effects remain interpretation premises. This is
+Appendix C/D future work, not a claim about the original Racket implementation's
+static inference or the correctness of Gerbil's compiler and collector.

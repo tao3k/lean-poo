@@ -14,6 +14,7 @@ inductive Atom where
 Function lists retain exact input and multiple-output counts. -/
 inductive Ty where
   | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
+  | maybe (element : Ty) | orFalse (element : Ty)
   | function (outputs inputs : List Ty)
   | pair (left right : Ty) | map (key value : Ty)
   | sum (tags : List Nat) (payloads : List Ty) | union (branches : List Ty)
@@ -32,7 +33,7 @@ def same : Nat → Ty → Ty → Bool
   | fuel + 1, a, b => match a, b with
     | .top, .top => true
     | .atom a, .atom b => decide (a = b)
-    | .list a, .list b => same fuel a b
+    | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => same fuel a b
     | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
     | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
     | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (same fuel) as bs
@@ -64,6 +65,8 @@ theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a
     all_goals first
       | exact congrArg Ty.atom (of_decide_eq_true accepted)
       | exact congrArg Ty.list (ih _ _ accepted)
+      | exact congrArg Ty.maybe (ih _ _ accepted)
+      | exact congrArg Ty.orFalse (ih _ _ accepted)
       | exact congrArg Ty.tuple (all₂_equal _ ih _ _ accepted)
       | exact congrArg Ty.union (all₂_equal _ ih _ _ accepted)
       | simp only [Bool.and_eq_true] at accepted
@@ -85,6 +88,8 @@ inductive Subtype : Ty → Ty → Prop where
   | top (a) : Subtype a .top
   | uint : Subtype (.atom .uint) (.atom .integer)
   | list : Subtype a b → Subtype (.list a) (.list b)
+  | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
+  | orFalse : Subtype a b → Subtype (.orFalse a) (.orFalse b)
   | tuple : RelList Subtype as bs → Subtype (.tuple as) (.tuple bs)
   | pair : Subtype a c → Subtype b d → Subtype (.pair a b) (.pair c d)
   | map : Subtype a b → Subtype (.map key a) (.map key b)
@@ -100,7 +105,7 @@ def check : Nat → Ty → Ty → Bool
     match a, b with
     | _, .top => true
     | .atom a, .atom b => decide (a = b) || decide (a = .uint ∧ b = .integer)
-    | .list a, .list b => check fuel a b
+    | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => check fuel a b
     | .tuple as, .tuple bs => all₂ (check fuel) as bs
     | .pair a b, .pair c d => check fuel a c && check fuel b d
     | .map k a, .map k' b => same fuel k k' && check fuel a b
@@ -135,6 +140,8 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     all_goals try { contradiction }
     all_goals try { exact .top _ }
     all_goals try { exact .list (ih _ _ accepted) }
+    all_goals try { exact .maybe (ih _ _ accepted) }
+    all_goals try { exact .orFalse (ih _ _ accepted) }
     all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
     case pair.pair a b c d =>
       simp only [Bool.and_eq_true] at accepted
@@ -202,6 +209,10 @@ structure Interpretation (Value : Type) where
   uint : ∀ v, accepts (.atom .uint) v → accepts (.atom .integer) v
   list : ∀ a b, (∀ v, accepts a v → accepts b v) →
     ∀ v, accepts (.list a) v → accepts (.list b) v
+  maybe : ∀ a b, (∀ v, accepts a v → accepts b v) →
+    ∀ v, accepts (.maybe a) v → accepts (.maybe b) v
+  orFalse : ∀ a b, (∀ v, accepts a v → accepts b v) →
+    ∀ v, accepts (.orFalse a) v → accepts (.orFalse b) v
   tuple : ∀ as bs, RelList (fun a b => ∀ v, accepts a v → accepts b v) as bs →
     ∀ v, accepts (.tuple as) v → accepts (.tuple bs) v
   pair : ∀ a b c d, (∀ v, accepts a v → accepts c v) →
@@ -224,6 +235,8 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (motive_2 := fun as bs _ => RelList (fun a b => ∀ v, model.accepts a v → model.accepts b v) as bs)
     (fun _ _ h => h) model.top model.uint
     (fun _ ih => model.list _ _ ih)
+    (fun _ ih => model.maybe _ _ ih)
+    (fun _ ih => model.orFalse _ _ ih)
     (fun _ ih => model.tuple _ _ ih)
     (fun _ _ ha hb => model.pair _ _ _ _ ha hb)
     (fun _ ih => model.map _ _ _ ih)
@@ -236,6 +249,7 @@ and higher-rank impredicative quantifiers are outside this expression language. 
 inductive Expr where
   | ground (type : Ty) | var (name : Nat)
   | list (element : Expr) | tuple (fields : List Expr)
+  | maybe (element : Expr) | orFalse (element : Expr)
   | function (outputs inputs : List Expr)
   | pair (left right : Expr) | map (key value : Expr)
   | sum (tags : List Nat) (payloads : List Expr) | union (branches : List Expr)
@@ -247,6 +261,8 @@ def substitute (env : Nat → Ty) : Expr → Ty
   | .ground t => t
   | .var name => env name
   | .list e => .list (substitute env e)
+  | .maybe e => .maybe (substitute env e)
+  | .orFalse e => .orFalse (substitute env e)
   | .tuple es => .tuple (es.map (substitute env))
   | .pair a b => .pair (substitute env a) (substitute env b)
   | .map key value => .map (substitute env key) (substitute env value)
