@@ -185,12 +185,13 @@ def rangeConstraints : List (Expr × Expr) :=
    (.var 0, .ground smallRange),
    (.function [.var 0] [.var 1], .ground (.function [smallRange] [largeRange]))]
 /-- Metadata uses the original Self/Super positional binder. -/
-def rangeParameters : LeanPoo.Functional.Parameters.Template String Ty :=
+def signatureParameters : LeanPoo.Functional.Parameters.Template String Ty :=
   ⟨["Self", "Super"], fun _ => none⟩
-/-- No builder result is returned until both prefix/residual bindings finish. -/
-def buildRange (super : Ty) : Except String (Ty × Ty) := do
-  let staged ← (LeanPoo.Functional.Parameters.checkedSpecialize ".parameters" rangeParameters
-    [smallRange]).mapError (fun _ => "prefix")
+/-- One complete signature builder handles numeric and Boolean prefixes; no
+artifact is returned until both prefix and residual bindings finish. -/
+def buildSignature (self super : Ty) : Except String (Ty × Ty) := do
+  let staged ← (LeanPoo.Functional.Parameters.checkedSpecialize ".parameters" signatureParameters
+    [self]).mapError (fun _ => "prefix")
   (LeanPoo.Functional.DeclarativeMetadata.specializeDeclared ".parameters" staged [super]
     (fun bound => (do
       if !bound.remaining.isEmpty then throw "residual parameters"
@@ -201,7 +202,7 @@ def buildRange (super : Ty) : Except String (Ty × Ty) := do
 enter the original complete declaration driver; aliases are not new candidates. -/
 def inferredRange := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
   (fun super => satisfies 12 rangeConstraints (rangeEnvironment super))
-  [.atom .integer, .atom .uint, largeRange] buildRange
+  [.atom .integer, .atom .uint, largeRange] (buildSignature smallRange)
 #guard match inferredRange with
   | .ok (.unique (.integerRange ⟨some 0, some 100⟩), some
       (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 100⟩)) => true
@@ -218,10 +219,10 @@ theorem inferredRange_sound (super artifact)
     (published : inferredRange = .ok (.unique super, some artifact)) :
     (∀ a b, (a, b) ∈ rangeConstraints →
       Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
-      buildRange super = .ok artifact := by
+      (buildSignature smallRange) super = .ok artifact := by
   obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
     (fun super => satisfies 12 rangeConstraints (rangeEnvironment super))
-    [.atom .integer, .atom .uint, largeRange] buildRange published
+    [.atom .integer, .atom .uint, largeRange] (buildSignature smallRange) published
   exact ⟨fun a b member => satisfies_sound 12 rangeConstraints (rangeEnvironment super) valid member, built⟩
 #print axioms IntegerRange.replacement
 #print axioms IntegerRange.empty_refuses
@@ -237,7 +238,7 @@ def enumConstraints : List (Expr × Expr) :=
 not the finite alphabet descriptor that was used to constrain it. -/
 def inferredEnum := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
   (fun super => satisfies 12 enumConstraints (rangeEnvironment super))
-  [.atom .integer, .atom .uint, smallRange] buildRange
+  [.atom .integer, .atom .uint, smallRange] (buildSignature smallRange)
 #guard match inferredEnum with
   | .ok (.unique (.integerRange ⟨some 0, some 10⟩), some
       (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 10⟩)) => true
@@ -252,10 +253,10 @@ theorem inferredEnum_sound (super artifact)
     (published : inferredEnum = .ok (.unique super, some artifact)) :
     (∀ a b, (a, b) ∈ enumConstraints →
       Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
-      buildRange super = .ok artifact := by
+      (buildSignature smallRange) super = .ok artifact := by
   obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
     (fun super => satisfies 12 enumConstraints (rangeEnvironment super))
-    [.atom .integer, .atom .uint, smallRange] buildRange published
+    [.atom .integer, .atom .uint, smallRange] (buildSignature smallRange) published
   exact ⟨fun a b member => satisfies_sound 12 enumConstraints (rangeEnvironment super) valid member, built⟩
 #print axioms IntegerRange.coverFrom_sound
 #print axioms IntegerRange.coverFrom_complete
@@ -272,7 +273,7 @@ def unionConstraints : List (Expr × Expr) :=
 /-- Reuse the original complete declaration driver and positional builder. -/
 def inferredUnion := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
   (fun super => satisfies 12 unionConstraints (rangeEnvironment super))
-  [.atom .integer, .atom .uint, smallRange] buildRange
+  [.atom .integer, .atom .uint, smallRange] (buildSignature smallRange)
 #guard match inferredUnion with
   | .ok (.unique (.integerRange ⟨some 0, some 10⟩), some
       (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 10⟩)) => true
@@ -291,10 +292,10 @@ theorem inferredUnion_sound (super artifact)
     (published : inferredUnion = .ok (.unique super, some artifact)) :
     (∀ a b, (a, b) ∈ unionConstraints →
       Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
-      buildRange super = .ok artifact := by
+      (buildSignature smallRange) super = .ok artifact := by
   obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
     (fun super => satisfies 12 unionConstraints (rangeEnvironment super))
-    [.atom .integer, .atom .uint, smallRange] buildRange published
+    [.atom .integer, .atom .uint, smallRange] (buildSignature smallRange) published
   exact ⟨fun a b member => satisfies_sound 12 unionConstraints (rangeEnvironment super) valid member, built⟩
 /-- An ordered infinite-tail cover retains the finite bridge and nested order. -/
 def unboundedUnion : Ty := .union [.integerRange ⟨some 1, none⟩,
@@ -307,7 +308,7 @@ def unboundedConstraints : List (Expr × Expr) :=
 /-- The same complete specialization/declaration builder consumes the unique Type. -/
 def inferredUnbounded := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
   (fun super => satisfies 12 unboundedConstraints (rangeEnvironment super))
-  [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] buildRange
+  [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] (buildSignature smallRange)
 #guard match inferredUnbounded with
   | .ok (.unique (.integerRange ⟨none, none⟩), some
       (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨none, none⟩)) => true
@@ -335,10 +336,10 @@ theorem inferredUnbounded_sound (super artifact)
     (published : inferredUnbounded = .ok (.unique super, some artifact)) :
     (∀ a b, (a, b) ∈ unboundedConstraints →
       Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
-      buildRange super = .ok artifact := by
+      (buildSignature smallRange) super = .ok artifact := by
   obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
     (fun super => satisfies 12 unboundedConstraints (rangeEnvironment super))
-    [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] buildRange published
+    [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] (buildSignature smallRange) published
   exact ⟨fun a b member => satisfies_sound 12 unboundedConstraints (rangeEnvironment super) valid member, built⟩
 /-- UInt's ordered cover separates zero from the infinite strictly positive tail. -/
 def unsignedUnion : Ty := .union [.integerRange ⟨some 1, none⟩, .integerEnum [0]]
@@ -351,7 +352,7 @@ def numericUnionConstraints (source target : Ty) : List (Expr × Expr) :=
 range alias is manufactured as an additional candidate or substituted result. -/
 def inferredNumericUnion (source target : Ty) := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
   (fun super => satisfies 12 (numericUnionConstraints source target) (rangeEnvironment super))
-  [.atom .integer, .atom .uint] buildRange
+  [.atom .integer, .atom .uint] (buildSignature smallRange)
 #guard match inferredNumericUnion (.atom .integer) unboundedUnion with
   | .ok (.unique (.atom .integer), some (.integerRange ⟨some 0, some 10⟩, .atom .integer)) => true
   | _ => false
@@ -384,11 +385,58 @@ theorem inferredNumericUnion_sound (source target super artifact)
     (published : inferredNumericUnion source target = .ok (.unique super, some artifact)) :
     (∀ a b, (a, b) ∈ numericUnionConstraints source target →
       Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
-      buildRange super = .ok artifact := by
+      (buildSignature smallRange) super = .ok artifact := by
   obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 2
     (fun super => satisfies 12 (numericUnionConstraints source target) (rangeEnvironment super))
-    [.atom .integer, .atom .uint] buildRange published
+    [.atom .integer, .atom .uint] (buildSignature smallRange) published
   exact ⟨fun a b member => satisfies_sound 12 _ (rangeEnvironment super) valid member, built⟩
+/-- Exactly true and Enum false jointly cover Bool, preserving nested order
+and the deliberately duplicated true branch in the runtime service. -/
+def booleanUnion : Ty := .union [.booleanEnum [true], .union [.booleanEnum [false], .booleanEnum [true]]]
+/-- The Boolean prefix and callback result remain fixed while Super is inferred. -/
+def booleanEnvironment (super : Ty) : Nat → Ty := prefixEnvironment [.atom .bool] (fun _ => super)
+/-- The complete call and declared upper bound constrain the same Super parameter. -/
+def booleanConstraints : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground booleanUnion), (.ground (.atom .bool), .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [.atom .bool] [.atom .bool]))]
+/-- Reuse the original complete declaration driver and the shared signature binder. -/
+def inferredBoolean := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 booleanConstraints (booleanEnvironment super))
+  [.atom .integer, .atom .uint, .atom .bool] (buildSignature (.atom .bool))
+#guard match inferredBoolean with
+  | .ok (.unique (.atom .bool), some (.atom .bool, .atom .bool)) => true
+  | _ => false
+#guard check 12 (.atom .bool) booleanUnion
+#guard check 12 (.atom .bool) (.booleanEnum [false, true, false])
+#guard !check 12 (.atom .bool) (.union [.booleanEnum [true]])
+#guard !check 12 (.atom .bool) (.union [.booleanEnum [false, false]])
+#guard !check 12 (.atom .bool) (.union [.atom .integer, .atom .uint])
+#guard !check 12 (.atom .bool) (.union [booleanUnion, .function [.atom .bool] [.atom .bool]])
+#guard !check 12 (.map (.atom .bool) (.atom .uint)) (.map booleanUnion (.atom .uint))
+#guard check 12 (.pair (.atom .bool) (.map (.atom .uint) (.atom .bool)))
+  (.pair booleanUnion (.map (.atom .uint) booleanUnion))
+#guard check 12 (.function [.atom .bool] [booleanUnion])
+  (.function [booleanUnion] [.atom .bool])
+#guard !check 12 booleanUnion (.union [.union [.booleanEnum [false], .booleanEnum [true]], .booleanEnum [true]])
+/-- Both inhabitants are covered exhaustively; false cannot disappear as absence. -/
+theorem booleanUnion_accepts : ∀ value : Bool, booleanAccepts 12 booleanUnion value = true :=
+  booleanCheck_total 12 booleanUnion (by decide)
+/-- Complete Boolean specialization retains every constraint and the exact Bool
+artifact. Host keyword parsing and user callback behavior remain explicit bounds. -/
+theorem inferredBoolean_sound (super artifact)
+    (published : inferredBoolean = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ booleanConstraints →
+      Subtype (substitute (booleanEnvironment super) a) (substitute (booleanEnvironment super) b)) ∧
+      buildSignature (.atom .bool) super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 booleanConstraints (booleanEnvironment super))
+    [.atom .integer, .atom .uint, .atom .bool] (buildSignature (.atom .bool)) published
+  exact ⟨fun a b member => satisfies_sound 12 _ (booleanEnvironment super) valid member, built⟩
+#print axioms booleanUnion_validate
+#print axioms booleanCheck_sound
+#print axioms booleanCheck_total
+#print axioms booleanUnion_accepts
+#print axioms inferredBoolean_sound
 #print axioms numericBounds_contains
 #print axioms numericUnion_sound
 #print axioms atomicUnion_accepts

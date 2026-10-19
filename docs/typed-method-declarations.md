@@ -641,7 +641,7 @@ remain outside this Appendix C/D type-protocol future work.
 
 The P2 gap was distributed coverage: no single alternative may contain a range,
 although several alternatives jointly cover it. The finite relation now admits a
-Integer, UInt, IntegerRange (including either unbounded endpoint), or keyword-stable finite Exactly/Enum source into an ordered Union whose
+Bool, Integer, UInt, IntegerRange (including either unbounded endpoint), or keyword-stable finite Exactly/Enum source into an ordered Union whose
 entire tree consists of known built-in flat validators. Numeric branches are
 projected with their original optional endpoints, exact integer literals become singleton pieces, and other
 intrinsic scalars contribute no integer coverage. Nested branches are traversed
@@ -674,7 +674,7 @@ or failed postcondition. Coverage does not permit fallback after failure. The
 new UnionServiceType changes only Super's bound in the existing rich service;
 prefix/call inference, parameter specialization, original qualifiers and generic,
 callback wrapping, cache owner and FUN/refine/bind-evidence publication are shared.
-t/union-inference-test.ss contains twelve integrated cases, independent descriptor
+t/union-inference-test.ss contains fourteen integrated cases, independent descriptor
 witnesses, huge exact endpoints, selected-error controls and retry checks.
 
 Lean puts interval subtraction and its universal coverage theorem in the existing
@@ -739,3 +739,43 @@ integer projection does not model host keyword parsing, serializers, custom
 recognizers or GC/bit-operation costs; those claims are not made. This continues
 the article's type-protocol future work, rather than claiming the Racket
 reference already provides this static inference algorithm.
+
+### Bool coverage through its complete finite domain
+
+Bool enters the same flat source protocol using the private literal view
+`(Enum #f #t)`. Exactly/Enum membership and ordered Union traversal perform the
+check; no second literal recognizer, Any fallback or public descriptor rewrite
+is introduced. Both values must be covered, including false as ordinary data.
+Bool can also replace an explicit Enum containing both values. That supporting
+finite judgment preserves genuine ambiguity between Bool and an equivalent
+literal candidate; a singleton or missing value still gives no-solution.
+
+The full tree must remain intrinsic and flat. An earlier Bool alternative does
+not hide a Function/container/custom validator; public Union branch order and
+Map key identity stay invariant. Keyword and escape origins retain the existing
+transport judgment, and no runtime selected-branch error permits fallback.
+Coverage consumes the original quota and exhaustion cannot become false or a
+partial declaration. The finite oracle independently checks both Boolean values;
+false/zero, keyword/escape, selected-error and malformed/incomplete controls remain.
+
+`BooleanServiceType` uses the original rich signature with optional/keyword/rest
+inputs, a duplicate true alternative, both result values and nested Function
+wrapping. Numeric, text and Boolean factories now share `infer-signature-calls`
+and the original typed fragments, generic owner and FUN/IO publication. Gerbil's
+grouped using contracts check host callbacks. A Boolean refinement can approve
+false, bind evidence to the exact context, or refuse before the consumer; retry
+starts a fresh inference request. Examples exercise both values and rejection.
+
+Lean adds a Boolean literal projection beside the existing integer projection,
+retaining the same all-branch flat admission. booleanCheck_total is exhaustive
+for every Bool, and booleanUnion_validate composes it with the existing ordered
+identity-validation theorem. Conditional replacement explicitly requires the
+Boolean finite-view interpretation law; it does not prove mutable host Type
+overrides, keyword parsing or arbitrary validators. The complete specialization
+proof uses the same generic signature builder for numeric and Boolean prefixes
+and preserves the exact Bool artifact and every declared/call constraint.
+Homogeneous Boolean literal leaves model Exactly/Enum via singleton/general
+lists; mixed scalar behavior retains the generic identity/shape premises. No
+serialization, primitive-cost/GC or general predicate implication claim is made.
+This continues the article's type-protocol future work, not a claim that the
+Racket reference implements this static coverage algorithm.

@@ -118,6 +118,7 @@ inductive Ty where
   | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
   | integerRange (range : IntegerRange)
   | integerEnum (values : List Int)
+  | booleanEnum (values : List Bool)
   | maybe (element : Ty) | orFalse (element : Ty)
   | function (outputs inputs : List Ty)
   | pair (left right : Ty) | map (key value : Ty)
@@ -181,7 +182,7 @@ def numericPieces : Nat → Ty → Option (List VariantValidation.Interval)
     | .integerEnum values => some (values.map (fun value => (some value, some value)))
     | .atom .integer => some [(none, none)]
     | .atom .uint => some [(some 0, none)]
-    | .atom _ => some []
+    | .atom _ | .booleanEnum _ => some []
     | .union branches => collectPieces (numericPieces fuel) branches
     | _ => none
 /-- Projection never invents an integer belonging to no original flat branch. -/
@@ -201,6 +202,10 @@ theorem numericPieces_sound (fuel type pieces)
       subst piece
       cases low <;> cases high <;>
         simp_all [integerAccepts, VariantValidation.intervalHas] <;> omega
+    case booleanEnum values =>
+      simp only [numericPieces, Option.some.injEq] at built
+      subst pieces
+      simp at member
     case integerEnum values =>
       simp only [numericPieces, Option.some.injEq] at built
       subst pieces
@@ -287,6 +292,60 @@ theorem numericUnion_sound (source range fuel branches)
   obtain ⟨_, _, inclusion⟩ := rangeUnionCheck_sound _ _ _ covered
   exact inclusion value (numericBounds_contains source range fuel value bounds member)
 
+/-- Bool's intrinsic finite view includes false as a value, never as absence.
+Boolean Exactly descriptors are represented by singleton booleanEnum lists. -/
+def booleanValues : Ty → Option (List Bool)
+  | .atom .bool => some [false, true]
+  | .booleanEnum values => some values
+  | _ => none
+/-- Pure Boolean observations of the same intrinsic flat descriptor tree. -/
+def booleanAccepts : Nat → Ty → Bool → Bool
+  | 0, _, _ => false
+  | fuel + 1, type, value => match type with
+    | .atom .bool => true
+    | .booleanEnum values => decide (value ∈ values)
+    | .union branches => branches.any (fun branch => booleanAccepts fuel branch value)
+    | _ => false
+/-- Reuse all-branch flat admission and finite literal traversal. Wrappers cannot
+hide behind an earlier successful branch, including for an empty literal set. -/
+def booleanCheck (fuel : Nat) (values : List Bool) (target : Ty) : Bool :=
+  match numericPieces fuel target with
+  | none => false
+  | some _ => values.all (fun value => booleanAccepts fuel target value)
+/-- Successful finite coverage retains admission and every original literal. -/
+theorem booleanCheck_sound (fuel values target)
+    (accepted : booleanCheck fuel values target = true) :
+    ∃ pieces, numericPieces fuel target = some pieces ∧
+      ∀ value ∈ values, booleanAccepts fuel target value = true := by
+  cases built : numericPieces fuel target with
+  | none => simp [booleanCheck, built] at accepted
+  | some pieces =>
+    refine ⟨pieces, rfl, ?_⟩
+    exact List.all_eq_true.mp (by simpa [booleanCheck, built] using accepted)
+/-- Bool coverage is exhaustive over the whole domain, not sampled observations. -/
+theorem booleanCheck_total (fuel target)
+    (accepted : booleanCheck fuel [false, true] target = true) :
+    ∀ value : Bool, booleanAccepts fuel target value = true := by
+  obtain ⟨_, _, members⟩ := booleanCheck_sound _ _ _ accepted
+  intro value
+  cases value <;> exact members _ (by simp)
+
+/-- Exhaustive Boolean coverage and identity-preserving flat validators keep
+both values through the first matching branch. A selected error still cannot
+fall through; identity/shape agreement is an explicit runtime interpretation. -/
+theorem booleanUnion_validate (fuel : Nat) (branches : List Ty)
+    (validate : Ty → Bool → Except Error Bool) (missing invalid : Error)
+    (covered : booleanCheck (fuel + 1) [false, true] (.union branches) = true)
+    (identity : ∀ branch ∈ branches, ∀ value,
+      booleanAccepts fuel branch value = true → validate branch value = .ok value) :
+    ∀ value, VariantValidation.union (booleanAccepts fuel) (booleanAccepts fuel)
+      validate missing invalid branches value = .ok value := by
+  intro value
+  apply VariantValidation.union_identity
+  · exact booleanCheck_total (fuel + 1) (.union branches) covered value
+  · intro branch inside selected
+    exact identity branch inside value selected
+
 /-- A pointwise relation checks exact length; zip cannot silently drop arguments. -/
 def all₂ (test : Ty → Ty → Bool) : List Ty → List Ty → Bool
   | [], [] => true
@@ -301,7 +360,7 @@ def same : Nat → Ty → Ty → Bool
     | .top, .top => true
     | .atom a, .atom b => decide (a = b)
     | .integerRange a, .integerRange b => decide (a = b)
-    | .integerEnum a, .integerEnum b => decide (a = b)
+    | .integerEnum a, .integerEnum b | .booleanEnum a, .booleanEnum b => decide (a = b)
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => same fuel a b
     | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
     | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
@@ -335,6 +394,7 @@ theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a
       | exact congrArg Ty.atom (of_decide_eq_true accepted)
       | exact congrArg Ty.integerRange (of_decide_eq_true accepted)
       | exact congrArg Ty.integerEnum (of_decide_eq_true accepted)
+      | exact congrArg Ty.booleanEnum (of_decide_eq_true accepted)
       | exact congrArg Ty.list (ih _ _ accepted)
       | exact congrArg Ty.maybe (ih _ _ accepted)
       | exact congrArg Ty.orFalse (ih _ _ accepted)
@@ -363,6 +423,8 @@ inductive Subtype : Ty → Ty → Prop where
   | rangeEnum : range.coveredBy values = true → Subtype (.integerRange range) (.integerEnum values)
   | numericUnion : numericBounds source = some range → rangeUnionCheck fuel range branches = true →
       Subtype source (.union branches)
+  | boolean : booleanValues source = some values → booleanCheck fuel values target = true →
+      Subtype source target
   | enumUnion : enumUnionCheck fuel values branches = true → Subtype (.integerEnum values) (.union branches)
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
@@ -386,9 +448,14 @@ def check : Nat → Ty → Ty → Bool
     | .integerRange source, .integerEnum values => source.coveredBy values
     | .integerEnum values, .integerEnum target => decide (values = target)
     | .integerRange source, .union branches => rangeUnionCheck fuel source branches
+    | .atom .bool, .union branches => booleanCheck fuel [false, true] (.union branches)
     | .atom source, .union branches => match numericBounds (.atom source) with
         | some range => rangeUnionCheck fuel range branches
         | none => false
+    | .atom .bool, .booleanEnum values => booleanCheck fuel [false, true] (.booleanEnum values)
+    | .booleanEnum values, .atom .bool => booleanCheck fuel values (.atom .bool)
+    | .booleanEnum values, .booleanEnum target => booleanCheck fuel values (.booleanEnum target)
+    | .booleanEnum values, .union branches => booleanCheck fuel values (.union branches)
     | .integerEnum values, .union branches => enumUnionCheck fuel values branches
     | .integerRange source, .atom .integer => source.includes IntegerRange.all
     | .integerRange source, .atom .uint => source.includes IntegerRange.unsigned
@@ -440,7 +507,13 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
       exact .refl _
     case integerRange.union source branches => exact .numericUnion rfl accepted
     case atom.union source branches =>
-      cases source <;> first | contradiction | exact .numericUnion rfl accepted
+      cases source <;> first | contradiction | exact .boolean rfl accepted | exact .numericUnion rfl accepted
+    case atom.booleanEnum source values =>
+      cases source <;> first | contradiction | exact .boolean rfl accepted
+    case booleanEnum.atom values target =>
+      cases target <;> first | contradiction | exact .boolean rfl accepted
+    case booleanEnum.booleanEnum values target => exact .boolean rfl accepted
+    case booleanEnum.union values branches => exact .boolean rfl accepted
     case integerEnum.union values branches => exact .enumUnion accepted
     case integerRange.atom source target =>
       cases target
@@ -539,6 +612,10 @@ structure Interpretation (Value : Type) where
     numericPieces fuel (.union branches) = some pieces →
     (∀ value, source.Contains value → integerAccepts fuel (.union branches) value = true) →
     ∀ v, accepts (.integerRange source) v → accepts (.union branches) v
+  boolean : ∀ source values target fuel pieces, booleanValues source = some values →
+    numericPieces fuel target = some pieces →
+    (∀ value ∈ values, booleanAccepts fuel target value = true) →
+    ∀ v, accepts source v → accepts target v
   enumUnion : ∀ values branches fuel pieces,
     numericPieces fuel (.union branches) = some pieces →
     (∀ value ∈ values, integerAccepts fuel (.union branches) value = true) →
@@ -577,6 +654,9 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
       intro value valid
       apply model.rangeUnion _ _ _ pieces projected covered value
       exact model.numeric _ _ _ _ bounds rfl (fun _ inside => inside) value valid)
+    (fun view accepted => by
+      obtain ⟨pieces, projected, covered⟩ := booleanCheck_sound _ _ _ accepted
+      exact model.boolean _ _ _ _ pieces view projected covered)
     (fun accepted => by
       obtain ⟨pieces, projected, covered⟩ := enumUnionCheck_sound _ _ _ accepted
       exact model.enumUnion _ _ _ pieces projected covered)
