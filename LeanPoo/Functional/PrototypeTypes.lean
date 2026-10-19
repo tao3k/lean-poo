@@ -8,7 +8,7 @@ namespace LeanPoo.Functional.PrototypeTypes
 
 /-- The admitted scalar vocabulary has one proper numeric inclusion. -/
 inductive Atom where
-  | bool | integer | uint
+  | bool | integer | uint | string | symbol
   deriving Repr, DecidableEq
 /-- Finite expressions reuse existing Type/Function/container constructor shapes.
 Function lists retain exact input and multiple-output counts. -/
@@ -170,6 +170,25 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     case atom.atom a b =>
       cases a <;> cases b <;> simp_all
       all_goals first | exact .refl _ | exact .uint
+
+/-- Closed scalar derivations admit only identical families or UInt <: Integer.
+String/Symbol conversion APIs cannot silently become a replacement permission. -/
+theorem atom_inclusion (fuel : Nat) (source target : Atom)
+    (accepted : check fuel (.atom source) (.atom target) = true) :
+    source = target ∨ (source = .uint ∧ target = .integer) := by
+  cases fuel with
+  | zero => simp [check] at accepted
+  | succ fuel =>
+    simp only [check, Bool.or_eq_true] at accepted
+    rcases accepted with same | numeric
+    · exact .inl (of_decide_eq_true same)
+    · exact .inr (of_decide_eq_true numeric)
+
+/-- Runtime text/symbol conversion does not identify the source and target Types. -/
+theorem text_distinct (fuel : Nat) :
+    check fuel (.atom .string) (.atom .symbol) = false ∧
+      check fuel (.atom .symbol) (.atom .string) = false := by
+  cases fuel <;> simp [check]
 
 /-- Admitted Map replacement cannot alter normalized key syntax. This is an
 observational rule; permission to mutate the map requires a separate write law. -/

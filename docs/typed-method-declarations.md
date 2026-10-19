@@ -507,3 +507,44 @@ proves publication retains both a complete replacement derivation and builder
 result. Wrapper behavior/host effects remain interpretation premises. This is
 Appendix C/D future work, not a claim about the original Racket implementation's
 static inference or the correctness of Gerbil's compiler and collector.
+
+
+### Scalar families and immutable labels
+
+The finite language now includes the existing String and Symbol Types and
+immutable Symbol values in Exactly/Enum. It compiles to the original runtime
+descriptors. `scalar-recognizer` is one private table of built-in Gerbil predicates:
+syntax admission, constructor reservation, flat literal inclusion and keyword-wire
+stability use that shared lookup. Unknown names do not fall back to Any. This is
+finite POO policy, not another implementation of Gerbil contracts: host `using`
+admits the example observer, and the original descriptors own runtime validation.
+Mutable/derived POO recognizers are not evaluated during finite derivation.
+
+String and Symbol are separate families; their conversion methods imply no
+replacement relation. Symbol data is distinct from keywords, #!key and #!rest.
+Exactly/Enum literal names remain data during prefix substitution, even when they
+spell a parameter or constructor. Uninterned symbol identity survives capture;
+changing the caller's Enum list cannot change the compiled snapshot. Mutable
+strings are accepted as String *values*, but remain unsupported literal metadata
+for Exactly/Enum, preventing mutable keys from entering the finite literal algebra.
+Map key invariance and ordered Union selection remain unchanged.
+
+`TextServiceType` prefix-binds Label=Symbol and infers Value=String among explicit
+Bool/Symbol/String candidates from input/result/callback observations. It uses the
+original qualified fragment builder. Numeric and text services now share one
+`signature-publication-action`: FUN approval, generic call, root refinement and
+exact bind-evidence publication. Their policies supply their own descriptor; no
+parallel effect interpreter or fallback dispatcher is introduced. Tests cover the
+original scalar descriptors against independent host predicates, literal capture,
+keyword transport, nested finite recursion, complete publication and fresh retry.
+
+Lean extends the existing Atom algebra rather than adding a new type judgment.
+`atom_inclusion` proves that an accepted scalar relation is identity or UInt <:
+Integer; `text_distinct` excludes implicit text conversion. Original checker
+soundness, substitution and finite inference laws continue to apply. The top-level
+prototype example runs the original prefix/residual parameter binder and declaration
+driver and proves successful publication retains all constraints and its builder
+result. Its Symbol-family observation abstracts the finite literal label set; it
+does not prove host predicates, symbol interning, conversion, parser or macro
+implementation. These are Appendix C/D type-protocol future work. Arbitrary Class
+callbacks, mutable literal semantics and unrestricted inference remain OPEN.

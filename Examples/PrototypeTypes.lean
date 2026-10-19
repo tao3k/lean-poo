@@ -1,5 +1,6 @@
 import LeanPoo.Functional.PrototypeTypes
 import LeanPoo.Functional.VariantValidation
+import LeanPoo.Functional.MethodDeclarations
 
 /-! Bounded prototype type future work: the same UInt/Integer service signature,
 Self <: Super bounds and higher-order negative positions as the Gerbil fixture. -/
@@ -120,4 +121,55 @@ example (key : Nat → Except String Nat) (value : Nat → Except String Nat)
 #print axioms union_branches_invariant
 #print axioms sum_tags_invariant
 #print axioms inferred_constraints
+/-- Label is prefix-bound Symbol; the finite residual candidates are the same
+heterogeneous Bool/Symbol/String alternatives used by the Gerbil text service. -/
+def textEnvironment (value : Atom) : Nat → Ty :=
+  prefixEnvironment [.atom .symbol] (fun _ => .atom value)
+/-- Original supplied-input and expected-result constraints share the nested
+callback's negative Label position and positive Value position. -/
+def textConstraints : List (Expr × Expr) :=
+  [(.ground (.atom .symbol), .var 0), (.var 1, .ground (.atom .string)),
+   (.function [.var 1] [.var 0], .ground (.function [.atom .string] [.atom .symbol]))]
+/-- Public parameters are the existing positional Template, with no new binder. -/
+def textParameters : LeanPoo.Functional.Parameters.Template String Ty :=
+  ⟨["Label", "Value"], fun _ => none⟩
+/-- Prefix and residual specialization must both finish before declaration work.
+The returned pair records the actual bound fields; host effects are not modeled. -/
+def buildText (value : Atom) : Except String (Ty × Ty) := do
+  let staged ← (LeanPoo.Functional.Parameters.checkedSpecialize ".parameters" textParameters
+    [.atom .symbol]).mapError (fun _ => "prefix")
+  (LeanPoo.Functional.DeclarativeMetadata.specializeDeclared ".parameters" staged [.atom value]
+    (fun bound => (do
+      if !bound.remaining.isEmpty then throw "residual parameters"
+      let some label := bound.fields "Label" | throw "missing Label"
+      let some result := bound.fields "Value" | throw "missing Value"
+      pure (label, result) : Except String (Ty × Ty)))).mapError (fun _ => "declaration")
+/-- The original complete finite inference driver is the only route to buildText. -/
+def inferredText := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun value => satisfies 8 textConstraints (textEnvironment value))
+  [.bool, .symbol, .string] buildText
+#guard match inferredText with
+  | .ok (.unique .string, some (.atom .symbol, .atom .string)) => true
+  | _ => false
+/-- Publication retains all original substituted constraints and the complete
+positional builder result. This does not certify the host macro expander. -/
+theorem inferredText_sound (value artifact)
+    (published : inferredText = .ok (.unique value, some artifact)) :
+    (∀ a b, (a, b) ∈ textConstraints →
+      Subtype (substitute (textEnvironment value) a) (substitute (textEnvironment value) b)) ∧
+    buildText value = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique
+    3 (fun value => satisfies 8 textConstraints (textEnvironment value))
+    [Atom.bool, Atom.symbol, Atom.string] buildText published
+  exact ⟨fun a b member => satisfies_sound 8 textConstraints (textEnvironment value) valid member, built⟩
+/-- An incomplete finite universe still refuses, even when a text candidate might
+otherwise be unique. No accepted prefix can authorize the declaration builder. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
+    (fun value => satisfies 8 textConstraints (textEnvironment value))
+    [.bool, .symbol, .string] buildText = .error (.inl .exhausted) := by
+  apply LeanPoo.Functional.DeclarativeMetadata.inferDeclared_exhausted
+  decide
+#print axioms atom_inclusion
+#print axioms text_distinct
+#print axioms inferredText_sound
 end Examples.PrototypeTypes
