@@ -41,6 +41,31 @@ def map (key : Key → Except Error Key) (value : Value → Except Error Value)
   (Validation.traverse (pair key value) entries).bind fun checked =>
     if distinctKeys same checked then .ok checked else .error collision
 
+/-- An admitted table snapshot has no entries when either component is
+uninhabited. This uses complete entry membership, not an observed empty sample. -/
+theorem map_empty_snapshot (keys : Key → Prop) (values : Value → Prop)
+    (entries : List (Key × Value))
+    (valid : ∀ entry ∈ entries, keys entry.1 ∧ values entry.2)
+    (empty : (∀ key, ¬ keys key) ∨ (∀ value, ¬ values value)) : entries = [] := by
+  cases entries with
+  | nil => rfl
+  | cons entry rest =>
+    have head := valid entry (by simp)
+    exact False.elim (empty.elim (fun refuse => refuse entry.1 head.1) (fun refuse => refuse entry.2 head.2))
+
+/-- Empty snapshots bypass key/value callbacks and collision comparisons for
+any target Map. The host must supply a faithful complete snapshot and carrier. -/
+theorem map_empty_replacement (keys : Key → Prop) (values : Value → Prop)
+    (entries : List (Key × Value))
+    (valid : ∀ entry ∈ entries, keys entry.1 ∧ values entry.2)
+    (empty : (∀ key, ¬ keys key) ∨ (∀ value, ¬ values value))
+    (key : Key → Except Error Key) (value : Value → Except Error Value)
+    (same : Key → Key → Bool) (collision : Error) :
+    entries = [] ∧ map key value same collision entries = .ok [] := by
+  have absent := map_empty_snapshot keys values entries valid empty
+  subst entries
+  exact ⟨rfl, by simp [map, Validation.traverse, distinctKeys, Except.bind]⟩
+
 /-- Successful map normalization preserves all normalized entries and excludes
 key collisions. In particular, insertion cannot silently shrink this result. -/
 theorem map_success (key : Key → Except Error Key) (value : Value → Except Error Value)

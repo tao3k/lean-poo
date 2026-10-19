@@ -242,4 +242,25 @@ example : VariantValidation.table (Error := String) Except.ok (fun entries => .o
 #print axioms VariantValidation.table_refused
 #print axioms VariantValidation.table_consumer_refused
 #print axioms VariantValidation.tableRevision_refused
+/-- A complete retired snapshot is empty by key impossibility. Arbitrary target
+Function validators and key comparisons cannot be evaluated on empty entries. -/
+example (entries : List (Nat × Call))
+    (admitted : ∀ entry ∈ entries, False ∧ True)
+    (key : Nat → Except String Nat) (value : Call → Except String Call)
+    (same : Nat → Nat → Bool) :
+    entries = [] ∧ VariantValidation.map key value same "collision" entries = .ok [] :=
+  VariantValidation.map_empty_replacement (fun _ => False) (fun _ => True)
+    entries admitted (Or.inl (fun _ => id)) key value same "collision"
+
+/-- Empty-value evidence works symmetrically. A callback error is not such a
+witness: complete semantic membership remains a separate required premise. -/
+example (entries : List (Nat × Call))
+    (admitted : ∀ entry ∈ entries, True ∧ False) :
+    entries = [] ∧ VariantValidation.map (fun _ => .error "key")
+      (fun _ => .error "value") (fun _ _ => true) "collision" entries = .ok [] :=
+  VariantValidation.map_empty_replacement (fun _ => True) (fun _ => False)
+    entries admitted (Or.inr (fun _ => id)) _ _ _ "collision"
+
+#print axioms VariantValidation.map_empty_snapshot
+#print axioms VariantValidation.map_empty_replacement
 end LeanPoo.Examples.VariantContracts

@@ -768,4 +768,41 @@ example : LeanPoo.Functional.VariantValidation.union
 #print axioms LeanPoo.Functional.VariantValidation.sourceCoverage_normalized
 #print axioms LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion_sound
 
+/-- The handler remains live; only an impossible retired key permits a changed
+Map layout. An inhabited alternative must still refuse. -/
+def retiredRoutePacket (live : Bool) : Ty :=
+  .pair service (.map (if live then .atom .symbol else .integerEnum []) (.atom .bool))
+
+/-- The receiver expects unsigned keys and behaviorally checked handlers. -/
+def retiredRouteTarget : Ty := .pair service (.map (.atom .uint) service)
+
+/-- Complete inference retains the original candidate, without rewriting its
+key to UInt or its Bool payload to a Function. -/
+example : inferBounded 2 (fun live => check 16 (retiredRoutePacket live) retiredRouteTarget)
+    [true, false] = .ok (.unique false) := rfl
+
+/-- Prefix specialization retains the original bound handler and residual Map. -/
+example : substitute (prefixEnvironment [service]
+    (fun _ => .map (.integerEnum []) (.atom .bool))) (.pair (.var 0) (.var 1)) =
+    retiredRoutePacket false := by
+  simp [substitute, prefixEnvironment, retiredRoutePacket]
+
+/-- Replacement is universal under explicit behavioral and faithful empty-map
+interpretation laws, independently of finite example values. -/
+example (model : Interpretation Value) (value : Value)
+    (valid : model.accepts (retiredRoutePacket false) value) :
+    model.accepts retiredRouteTarget value :=
+  replacement model (check_sound 16 _ _ (by rfl)) value valid
+
+/-- Value emptiness is equally sufficient; a nested empty Map remains inhabited
+and cannot supply an emptiness witness to its enclosing Map. -/
+example : check 8 (.map (.atom .symbol) (.integerEnum []))
+    (.map (.atom .uint) service) = true := rfl
+example : check 8 (.map (.atom .symbol) (.map (.integerEnum []) (.atom .uint)))
+    (.map (.atom .uint) (.atom .integer)) = false := rfl
+example : check 8 (.map (.integerEnum []) (.atom .uint)) (.atom .string) = false := rfl
+
+#print axioms map_key_or_empty
+#print axioms replacement
+
 end Examples.PrototypeTypes

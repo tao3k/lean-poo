@@ -8,6 +8,9 @@ Descriptors” and Appendix C/D motivates explicit universal Self/Super paramete
 subtype constraints and `(Proto A B) = (Fun A B -> A)` with `A <: B`.
 It does not provide the following solver as an existing paper implementation.
 
+Map-key invariance below applies to potentially inhabited entries; the final
+necessarily-empty Map section gives the explicit positive-witness exception.
+
 ## One composable protocol
 
 `type-relation.ss` admits this finite expression grammar:
@@ -371,3 +374,44 @@ selection, semantic replacement and actual absence. Live callback behavior and
 host descriptor interpretation remain explicit premises of their existing laws.
 This is finite type-protocol future work beyond the article's Racket construction,
 not a completeness theorem for arbitrary predicates or a proof of the host runtime.
+
+## Necessarily empty Map carriers
+
+The common replacement rule keeps keys invariant and values covariant whenever
+source entries may exist. It now also accepts another Map layout when the existing
+positive finite empty-Type witness proves the source key **or** source value
+uninhabited. In that case every admitted table has zero entries. Its empty hash
+carrier is inhabited: it does not become String, Never or an empty element for
+List. A nested necessarily empty Map therefore cannot justify emptiness of an
+outer Map. Direct ordered Union replacement and keyword/escape rules are unchanged.
+
+This is observational readable replacement, not permission to insert target keys
+or mutate a table. Candidate syntax, original key/value descriptors and comparator
+policy are retained. No opaque recognizer is queried to infer emptiness; hidden
+unsupported syntax still refuses admission, and work exhaustion is distinct from
+negative coverage. Unknown callback semantics and nonempty finite catalogs supply
+no witness. No Any is synthesized.
+
+`infer-retired-route-service` reuses the complete descriptor-service solver,
+prefix specialization, qualified declarations and descriptor-service-action's
+FUN/refine/bind-evidence chain. A live handler remains recursively wrapped beside
+a retired table with its original impossible-key metadata. Integrated controls
+cover unique selection, distinct original candidates remaining ambiguous,
+nonempty insertion refusal before consumer admission, clearing/retry, exact
+subject/context evidence, and intact raw callbacks. Existing Map validation uses
+Gerbil hash snapshots/new-table policy through validate-bindings; an empty source
+is retained by identity and invokes no child validator. No extra table traversal,
+cache or descriptor registry is added.
+
+Lean's existing checker, Subtype derivations and replacement theorem include the
+same empty-key/value rule. `map_key_or_empty` exposes the exact alternatives;
+`map_key_invariant` now requires nonempty component semantics. The interpretation's
+emptyMap law is explicit. `VariantValidation.map_empty_snapshot` derives zero
+entries from complete per-entry membership and either uninhabited component;
+`map_empty_replacement` derives success for arbitrary target key/value validators
+without executing them or a collision comparison. Top-level PrototypeTypes and
+VariantContracts examples exercise complete inference, prefix substitution,
+universal replacement and Function-bearing snapshots. Faithful host snapshots,
+carrier/comparator preservation, callback behavior and supported source stability
+remain explicit boundaries; this advances finite type-protocol future work,
+not unrestricted predicate inference or a proof of the host runtime.

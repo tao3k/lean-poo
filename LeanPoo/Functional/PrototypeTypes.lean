@@ -96,6 +96,8 @@ inductive Subtype : Ty → Ty → Prop where
   | tuple : RelList Subtype as bs → Subtype (.tuple as) (.tuple bs)
   | pair : Subtype a c → Subtype b d → Subtype (.pair a b) (.pair c d)
   | map : Subtype a b → Subtype (.map key a) (.map key b)
+  | emptyMap : emptyCheck fuel key = true ∨ emptyCheck fuel value = true →
+      Subtype (.map key value) (.map key' value')
   | sum : RelList Subtype as bs → Subtype (.sum tags as) (.sum tags bs)
   | function : RelList Subtype outs outs' → RelList Subtype ins' ins →
       Subtype (.function outs ins) (.function outs' ins')
@@ -132,7 +134,7 @@ def check : Nat → Ty → Ty → Bool
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => check fuel a b
     | .tuple as, .tuple bs => all₂ (check fuel) as bs
     | .pair a b, .pair c d => check fuel a c && check fuel b d
-    | .map k a, .map k' b => same fuel k k' && check fuel a b
+    | .map k a, .map k' b => (same fuel k k' && check fuel a b) || emptyCheck fuel k || emptyCheck fuel a
     | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (check fuel) as bs
     | .union as, .union bs => all₂ (same fuel) as bs
     | .function outs ins, .function outs' ins' =>
@@ -202,11 +204,15 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
         have both := accepted
         exact .pair (ih _ _ both.1) (ih _ _ both.2)
       case map.map key a key' b =>
-        simp only [Bool.and_eq_true] at accepted
-        have both := accepted
-        have equal := same_sound _ _ _ both.1
-        subst key'
-        exact .map (ih _ _ both.2)
+        simp only [Bool.or_eq_true, Bool.and_eq_true] at accepted
+        rcases accepted with covered | emptyValue
+        · rcases covered with ordinary | emptyKey
+          · obtain ⟨keys, values⟩ := ordinary
+            have equal := same_sound _ _ _ keys
+            subst key'
+            exact .map (ih _ _ values)
+          · exact .emptyMap (Or.inl emptyKey)
+        · exact .emptyMap (Or.inr emptyValue)
       case sum.sum tags as tags' bs =>
         simp only [Bool.and_eq_true] at accepted
         have both := accepted
@@ -246,16 +252,33 @@ theorem text_distinct (fuel : Nat) :
       check fuel (.atom .symbol) (.atom .string) = false := by
   cases fuel <;> simp [check, emptySource, emptyCheck]
 
-/-- Admitted Map replacement cannot alter normalized key syntax. This is an
-observational rule; permission to mutate the map requires a separate write law. -/
-theorem map_key_invariant (fuel : Nat) (key key' value value' : Ty)
-    (accepted : check fuel (.map key value) (.map key' value') = true) : key = key' := by
+/-- A changed Map key requires positive evidence that no source entry can exist.
+The source Map itself is inhabited by the empty table, never an empty Type. -/
+theorem map_key_or_empty (fuel : Nat) (key key' value value' : Ty)
+    (accepted : check fuel (.map key value) (.map key' value') = true) :
+    key = key' ∨ EmptyType key ∨ EmptyType value := by
   cases fuel with
   | zero => simp [check] at accepted
   | succ fuel =>
-    have both : same fuel key key' = true ∧ check fuel value value' = true := by
-      simpa only [check, emptySource, emptyCheck, Bool.false_and, Bool.or_false, Bool.and_eq_true] using accepted
-    exact same_sound _ _ _ both.1
+    have branches : (same fuel key key' && check fuel value value') = true ∨
+        emptyCheck fuel key = true ∨ emptyCheck fuel value = true := by
+      simpa [check, emptySource, emptyCheck, or_assoc] using accepted
+    rcases branches with ordinary | emptyKey | emptyValue
+    · have both : same fuel key key' = true ∧ check fuel value value' = true := by
+        simpa only [Bool.and_eq_true] using ordinary
+      exact Or.inl (same_sound _ _ _ both.1)
+    · exact Or.inr (Or.inl (emptyCheck_sound _ _ emptyKey))
+    · exact Or.inr (Or.inr (emptyCheck_sound _ _ emptyValue))
+
+/-- Possible source entries retain key identity. Readable replacement grants no
+permission to mutate either the source or target table. -/
+theorem map_key_invariant (fuel : Nat) (key key' value value' : Ty)
+    (keyLive : ¬ EmptyType key) (valueLive : ¬ EmptyType value)
+    (accepted : check fuel (.map key value) (.map key' value') = true) : key = key' := by
+  rcases map_key_or_empty fuel key key' value value' accepted with equal | emptyKey | emptyValue
+  · exact equal
+  · exact False.elim (keyLive emptyKey)
+  · exact False.elim (valueLive emptyValue)
 
 /-- Ordered Union replacement fixes every branch, including duplicates and
 higher-order payloads. A later permissive branch cannot erase a selected failure. -/
@@ -315,6 +338,9 @@ structure Interpretation (Value : Type) where
     (∀ v, accepts b v → accepts d v) → ∀ v, accepts (.pair a b) v → accepts (.pair c d) v
   map : ∀ key a b, (∀ v, accepts a v → accepts b v) →
     ∀ v, accepts (.map key a) v → accepts (.map key b) v
+  emptyMap : ∀ key value key' value',
+    ((∀ item, ¬ accepts key item) ∨ (∀ item, ¬ accepts value item)) →
+    ∀ table, accepts (.map key value) table → accepts (.map key' value') table
   sum : ∀ tags as bs, RelList (fun a b => ∀ v, accepts a v → accepts b v) as bs →
     ∀ v, accepts (.sum tags as) v → accepts (.sum tags bs) v
   function : ∀ outs outs' ins ins',
@@ -353,6 +379,9 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (fun _ ih => model.tuple _ _ ih)
     (fun _ _ ha hb => model.pair _ _ _ _ ha hb)
     (fun _ ih => model.map _ _ _ ih)
+    (fun witness => model.emptyMap _ _ _ _ (witness.elim
+      (fun empty => Or.inl ((emptyCheck_sound _ _ empty).refuses model.emptyLaws))
+      (fun empty => Or.inr ((emptyCheck_sound _ _ empty).refuses model.emptyLaws))))
     (fun _ ih => model.sum _ _ _ ih)
     (fun _ _ ho hi => model.function _ _ _ _ ho hi)
     RelList.nil (fun _ _ head tail => RelList.cons head tail) derivation
