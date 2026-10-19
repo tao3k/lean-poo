@@ -627,4 +627,33 @@ theorem declared_catalog_work (normalize reflect copy force admit : Nat) :
     copy + normalize + reflect + force + normalize + reflect + admit =
       (copy + normalize + reflect + force + admit) + (normalize + reflect) := by omega
 
+
+/-- Complete inference uses the existing declaration search and all-branch
+coverage. The artifact retains the captured signature, candidate and original
+ordered alternatives; only a unique complete solve is allowed to build it. -/
+def inferSourceUnion (signature : Signature) (included : Branch → Bool)
+    (branches : Candidate → List Branch) (candidates : List Candidate) :=
+  inferDeclared candidates.length (fun candidate => VariantValidation.sourceCoverage included (branches candidate))
+    candidates (fun candidate => (Except.ok (signature, candidate, branches candidate) :
+      Except String (Signature × Candidate × List Branch)))
+
+/-- A completed source-Union declaration preserves exact provenance and universal
+readable inclusion. Source interpretation and each intrinsic branch judgment are
+premises, rather than an inference about arbitrary callbacks or host syntax. -/
+theorem inferSourceUnion_sound (signature : Signature) (included : Branch → Bool)
+    (branches : Candidate → List Branch) (candidates : List Candidate)
+    (member : Branch → Value → Bool) (target : Value → Prop)
+    (sound : ∀ branch, included branch = true → ∀ value, member branch value = true → target value)
+    (candidate : Candidate) (artifact : Signature × Candidate × List Branch)
+    (published : inferSourceUnion signature included branches candidates = .ok (.unique candidate, some artifact)) :
+    artifact = (signature, candidate, branches candidate) ∧
+      ∀ value, (branches candidate).any (fun branch => member branch value) = true → target value := by
+  obtain ⟨_, valid, built⟩ := inferDeclared_unique candidates.length
+    (fun candidate => VariantValidation.sourceCoverage included (branches candidate)) candidates
+    (fun candidate => (Except.ok (signature, candidate, branches candidate) :
+      Except String (Signature × Candidate × List Branch))) published
+  exact ⟨(Except.ok.inj built).symm, fun value admitted =>
+    VariantValidation.sourceCoverage_sound included (branches candidate) member target
+      (fun branch _ => sound branch) valid value admitted⟩
+
 end LeanPoo.Functional.DeclarativeMetadata

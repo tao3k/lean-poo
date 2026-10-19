@@ -375,4 +375,44 @@ theorem union_finite_identity (member : Branch → Value → Bool) (check : Bran
   exact union_identity member check missing invalid branches value
     (List.all_eq_true.mp covered value inside) (identity value inside)
 
+
+/-- Source alternatives replace one ordinary target only after every original
+branch passes its existing inclusion check. This does not reorder a Union target. -/
+def sourceCoverage (included : Branch → Bool) (branches : List Branch) : Bool :=
+  branches.all included
+
+/-- Complete branch coverage cannot hide a failing or unvisited source branch. -/
+theorem sourceCoverage_exact (included : Branch → Bool) (branches : List Branch) :
+    sourceCoverage included branches = true ↔ ∀ branch ∈ branches, included branch = true := by
+  exact List.all_eq_true
+
+/-- A value admitted by any original branch belongs to the ordinary target when
+all branch checks are sound. Host flat-Type interpretation is an explicit premise. -/
+theorem sourceCoverage_sound (included : Branch → Bool) (branches : List Branch)
+    (member : Branch → Value → Bool) (target : Value → Prop)
+    (sound : ∀ branch ∈ branches, included branch = true →
+      ∀ value, member branch value = true → target value)
+    (covered : sourceCoverage included branches = true) (value : Value)
+    (admitted : branches.any (fun branch => member branch value) = true) : target value := by
+  obtain ⟨branch, present, valid⟩ := List.any_eq_true.mp admitted
+  exact sound branch present ((sourceCoverage_exact included branches).mp covered branch present) value valid
+
+/-- Identity-preserving source branches retain committed first selection and the
+same value under an ordinary identity target. No failed validator is retried;
+recognition/identity and target interpretation must hold for every source branch. -/
+theorem sourceCoverage_normalized (included : Branch → Bool) (branches : List Branch)
+    (member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (target : Value → Prop) (targetCheck : Value → Except Error Value)
+    (missing invalid : Error)
+    (sound : ∀ branch ∈ branches, included branch = true →
+      ∀ value, member branch value = true → target value)
+    (identity : ∀ branch ∈ branches, ∀ value, member branch value = true → check branch value = .ok value)
+    (targetIdentity : ∀ value, target value → targetCheck value = .ok value)
+    (covered : sourceCoverage included branches = true) (value : Value)
+    (admitted : branches.any (fun branch => member branch value) = true) :
+    union member member check missing invalid branches value = .ok value ∧ targetCheck value = .ok value := by
+  exact ⟨union_identity member check missing invalid branches value admitted
+    (fun branch present => identity branch present value),
+    targetIdentity value (sourceCoverage_sound included branches member target sound covered value admitted)⟩
+
 end LeanPoo.Functional.VariantValidation

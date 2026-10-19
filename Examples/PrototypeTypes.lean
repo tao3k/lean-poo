@@ -696,4 +696,76 @@ example : inferEmptyList (fun key : Nat => decide (key = 0)) [.elements 1, .elem
 #print axioms emptyListCheck_inhabited
 #print axioms singleton_tail
 #print axioms inferEmptyList_sound
+
+/-- Intrinsic branch interpretations for an unsigned measurement view. The
+negative control is admitted syntax but cannot replace the unsigned target. -/
+inductive MeasurementBranch where
+  | unsigned | zero | negative
+  deriving DecidableEq, Repr
+
+/-- Retain overlapping branches and their original order in each candidate. -/
+def measurementBranches (bad : Bool) : List MeasurementBranch :=
+  if bad then [.unsigned, .negative] else [.unsigned, .zero, .unsigned]
+
+/-- The existing intrinsic child judgment accepts unsigned and exact-zero leaves. -/
+def measurementIncluded : MeasurementBranch → Bool
+  | .negative => false
+  | _ => true
+
+/-- The host projection interprets each immutable intrinsic branch on Int values. -/
+def measurementMember : MeasurementBranch → Int → Bool
+  | .unsigned, value => decide (0 ≤ value)
+  | .zero, value => decide (value = 0)
+  | .negative, value => decide (value < 0)
+
+/-- Child inclusion is proved for every integer, independently of finite samples. -/
+theorem measurementIncluded_sound (branch : MeasurementBranch)
+    (checked : measurementIncluded branch = true) (value : Int)
+    (valid : measurementMember branch value = true) : 0 ≤ value := by
+  cases branch <;> simp_all [measurementIncluded, measurementMember]
+
+/-- The complete declaration search rejects the negative candidate, keeping the
+original signature and overlapping ordered branches of the unique candidate. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion "measurement"
+    measurementIncluded measurementBranches [true, false] =
+    .ok (.unique false, some ("measurement", false, [.unsigned, .zero, .unsigned])) := rfl
+
+/-- Unique inference supplies both exact artifact provenance and universal
+inclusion. Callback packaging, Map keys and publication use their existing laws. -/
+example (artifact) (published : LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion
+    "measurement" measurementIncluded measurementBranches [true, false] = .ok (.unique false, some artifact)) :
+    artifact = ("measurement", false, measurementBranches false) ∧
+      ∀ value, (measurementBranches false).any (fun branch => measurementMember branch value) = true → 0 ≤ value :=
+  LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion_sound "measurement" measurementIncluded
+    measurementBranches [true, false] measurementMember (fun value => 0 ≤ value)
+    measurementIncluded_sound false artifact published
+
+/-- Flat source normalization keeps the original value and committed first
+branch; an ordinary target performs no conversion or replacement allocation. -/
+example (value : Int) (admitted : (measurementBranches false).any
+    (fun branch => measurementMember branch value) = true) :
+    LeanPoo.Functional.VariantValidation.union measurementMember measurementMember
+      (fun _ item => .ok item) "missing" "invalid" (measurementBranches false) value = .ok value ∧
+      (Except.ok value : Except String Int) = .ok value := by
+  apply LeanPoo.Functional.VariantValidation.sourceCoverage_normalized measurementIncluded
+    (measurementBranches false) measurementMember (fun _ item => .ok item)
+    (fun item => 0 ≤ item) Except.ok "missing" "invalid"
+  · intro branch _ checked item valid
+    exact measurementIncluded_sound branch checked item valid
+  · intro _ _ _ _; rfl
+  · intro _ _; rfl
+  · rfl
+  · exact admitted
+
+/-- Recognition coverage cannot mask a selected validator failure. The identity
+premise above is essential; this deliberately failing control keeps its cause. -/
+example : LeanPoo.Functional.VariantValidation.union
+    (fun (_ : Unit) (_ : Int) => true) (fun _ _ => true)
+    (fun _ _ => (.error "selected" : Except String Int)) "missing" "invalid" [(), ()] 0 = .error "selected" := rfl
+
+#print axioms LeanPoo.Functional.VariantValidation.sourceCoverage_exact
+#print axioms LeanPoo.Functional.VariantValidation.sourceCoverage_sound
+#print axioms LeanPoo.Functional.VariantValidation.sourceCoverage_normalized
+#print axioms LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion_sound
+
 end Examples.PrototypeTypes
