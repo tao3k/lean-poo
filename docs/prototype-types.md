@@ -134,6 +134,33 @@ See [finite inference audit and emptiness](finite-inference-audit.md) for remain
 
 See [literal intrinsic descriptors](intrinsic-descriptors.md) for singleton, width, byte, alias and admission coverage.
 
+## Finite dependent TypeValuePair catalogs
+
+The Scheme grammar now admits explicit catalogs such as `(TypeValuePair UInt Bool)`.
+These are sets of actual shared descriptor identities, retaining declaration order.
+Catalog coverage requires every source identity in the target; payload subtyping
+does not change a carried UInt descriptor into Integer. Map key identity and ordered
+Union normalization retain their existing stricter rules. Intrinsic names are literal
+and distinct; Any/Never, computed descriptors, free catalog entries and arbitrary
+predicate discovery are unsupported. The whole catalog can be a type parameter.
+
+The shared Scheme `type-value-catalog` helper reuses existing dependent validation,
+recursive Function wrapping and actual slot-read replay. Its explicit runtime list
+may contain custom/Function Types, without extending the finite inference grammar.
+Old observations refuse after supported source/ancestor edits; reconstruction retries.
+The common qualified declaration/FUN/refine/bind-evidence chain tests exact carried
+identity, false payloads, keyword/escape carriers, policy failure and retry.
+
+`Functional/OptionalValidation.lean` proves catalog coverage and replacement for
+arbitrary payload predicates, missing-tag refusal before child work, exact descriptor
+retention and selected normalized membership. Its stale law proves guard short
+circuit, assuming host replay actually detects source drift. The existing finite
+solver examples distinguish unique/no-solution/reordered ambiguous catalogs. These
+do not extend `Ty` to unrestricted dependent types or prove the Scheme compiler,
+host registry identity, arbitrary callback effects or concurrent mutation. This
+advances the article's type-protocol future work; dynamic Class/Schema catalogs
+remain open. See Scheme `doc/intrinsic-descriptors.md` for the executable boundary.
+
 ## Accepted-assignment construction
 
 `CheckedAssignment` and `checkedUnique` retain the constraints proved by a

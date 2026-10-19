@@ -158,4 +158,61 @@ theorem typed_error (valid : Descriptor → Bool) (shape : Descriptor → Value 
   have rejected := child_error (fun _ => false) (member source.1) (shape source.1) (check source.1)
     invalidValue error source.2 rfl structural failed
   simp [typed, typeOK, rejected, Except.map]
+/-- Finite catalogs contain exact descriptor tokens. Coverage is readable set
+inclusion, not payload subtyping; the host supplies stable, injective identities. -/
+def catalogCovers [DecidableEq Descriptor] (source target : List Descriptor) : Bool :=
+  source.all fun descriptor => decide (descriptor ∈ target)
+
+/-- Coverage visits every source token; a finite check never invents a target. -/
+theorem catalogCovers_sound [DecidableEq Descriptor] (source target : List Descriptor)
+    (accepted : catalogCovers source target = true) :
+    ∀ descriptor ∈ source, descriptor ∈ target := by
+  simpa [catalogCovers, List.all_eq_true] using accepted
+
+/-- An admitted dependent pair retains the descriptor which selects its payload. -/
+def CatalogAdmits (catalog : List Descriptor) (member : Descriptor → Value → Prop)
+    (value : Descriptor × Value) : Prop := value.1 ∈ catalog ∧ member value.1 value.2
+
+/-- Catalog widening preserves the very same payload obligation, including
+higher-order values. No implication between different descriptor predicates is used. -/
+theorem catalog_replacement [DecidableEq Descriptor] (source target : List Descriptor)
+    (member : Descriptor → Value → Prop) (value : Descriptor × Value)
+    (covered : catalogCovers source target = true) (valid : CatalogAdmits source member value) :
+    CatalogAdmits target member value :=
+  ⟨catalogCovers_sound source target covered value.1 valid.1, valid.2⟩
+
+/-- The existing dependent normalizer owns recursive wrapping; a finite catalog
+only supplies its descriptor gate. Membership and child errors keep their order. -/
+def catalogTyped [DecidableEq Descriptor] (catalog : List Descriptor)
+    (shape : Descriptor → Value → Except Error Unit) (member : Descriptor → Value → Bool)
+    (check : Descriptor → Value → Except Error Value) (invalidType invalidValue : Error)
+    (source : Descriptor × Value) : Except Error (Descriptor × Value) :=
+  typed (fun descriptor => decide (descriptor ∈ catalog)) shape member check invalidType invalidValue source
+
+/-- An unlisted carried descriptor refuses before any dependent payload callback. -/
+theorem catalogTyped_missing [DecidableEq Descriptor] (catalog : List Descriptor)
+    (shape : Descriptor → Value → Except Error Unit) (member : Descriptor → Value → Bool)
+    (check : Descriptor → Value → Except Error Value) (invalidType invalidValue : Error)
+    (source : Descriptor × Value) (missing : source.1 ∉ catalog) :
+    catalogTyped catalog shape member check invalidType invalidValue source = .error invalidType := by
+  simp [catalogTyped, typed, missing]
+
+/-- Successful catalog normalization preserves its token and validates the
+normalized payload through that exact token. Host read-currentness is separate. -/
+theorem catalogTyped_sound [DecidableEq Descriptor] (catalog : List Descriptor)
+    (shape : Descriptor → Value → Except Error Unit) (member : Descriptor → Value → Bool)
+    (check : Descriptor → Value → Except Error Value) (invalidType invalidValue : Error)
+    (source checked : Descriptor × Value)
+    (accepted : catalogTyped catalog shape member check invalidType invalidValue source = .ok checked) :
+    checked.1 = source.1 ∧ source.1 ∈ catalog ∧ member source.1 checked.2 = true := by
+  have requirements := typed_requirements _ shape member check invalidType invalidValue source checked accepted
+  exact ⟨descriptor_preserved _ shape member check invalidType invalidValue source checked accepted,
+    of_decide_eq_true requirements.1, requirements.2.2.2⟩
+
+/-- An actual stale-source refusal gates the entire computation. Establishing
+that host read replay detects a supported edit is an implementation obligation. -/
+theorem catalog_stale (guard : Except Error Unit) (next : Unit → Except Error Artifact)
+    (cause : Error) (failed : guard = .error cause) : guard.bind next = .error cause := by
+  simp [failed, Except.bind]
+
 end LeanPoo.Functional.OptionalValidation

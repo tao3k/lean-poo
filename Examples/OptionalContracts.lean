@@ -209,4 +209,31 @@ def test : Except String Unit := do
 #print axioms OptionalValidation.typed_error
 #print axioms validateObject_refine
 #print axioms validated_binding
+
+/-- A finite explicit catalog uses the same dependent Function normalizer. -/
+def catalog := OptionalValidation.catalogTyped [Descriptor.transform] shape member checkValue
+  "outside catalog" "invalid result"
+
+example : OptionalValidation.catalogCovers [Descriptor.transform]
+    [.other, .transform] = true := by decide
+example : OptionalValidation.catalogCovers [Descriptor.transform] [.other] = false := by decide
+example : catalog (.other, .integer 7) = .error "outside catalog" := by
+  apply OptionalValidation.catalogTyped_missing
+  simp
+
+example (source checked : Descriptor × Value) (accepted : catalog source = .ok checked) :
+    checked.1 = source.1 ∧ source.1 ∈ [Descriptor.transform] ∧ member source.1 checked.2 = true :=
+  OptionalValidation.catalogTyped_sound _ _ _ _ _ _ _ _ accepted
+
+example (source target : List Descriptor) (predicate : Descriptor → Value → Prop)
+    (value : Descriptor × Value) (covered : OptionalValidation.catalogCovers source target = true)
+    (accepted : OptionalValidation.CatalogAdmits source predicate value) :
+    OptionalValidation.CatalogAdmits target predicate value :=
+  OptionalValidation.catalog_replacement _ _ _ _ covered accepted
+
+#print axioms OptionalValidation.catalogCovers_sound
+#print axioms OptionalValidation.catalog_replacement
+#print axioms OptionalValidation.catalogTyped_missing
+#print axioms OptionalValidation.catalogTyped_sound
+#print axioms OptionalValidation.catalog_stale
 end LeanPoo.Examples.OptionalContracts

@@ -3,11 +3,26 @@ import LeanPoo.Functional.PrototypeTypeDescriptors
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.MethodDeclarations
 import LeanPoo.Functional.EvidenceBinding
+import LeanPoo.Functional.OptionalValidation
 
 /-! Bounded prototype type future work: the same UInt/Integer service signature,
 Self <: Super bounds and higher-order negative positions as the Gerbil fixture. -/
 namespace Examples.PrototypeTypes
 open LeanPoo.Functional.PrototypeTypes
+
+/-- Exact catalog tokens feed the existing finite solver: output is bounded by
+the input catalog and both observed-result obligations. Token 0 denotes the
+shared UInt descriptor; token 1 denotes Bool, independently of payload subtyping. -/
+def catalogCandidate (output : List Nat) : Bool :=
+  LeanPoo.Functional.OptionalValidation.catalogCovers output [0, 1, 2] &&
+    LeanPoo.Functional.OptionalValidation.catalogCovers [0] output &&
+    LeanPoo.Functional.OptionalValidation.catalogCovers output [0]
+
+example : infer catalogCandidate [[1], [0]] = .unique [0] := by decide
+example : infer catalogCandidate [[1]] = .none := by decide
+example : infer (fun (output : List Nat) =>
+    LeanPoo.Functional.OptionalValidation.catalogCovers output [0, 1, 2])
+    [[0, 1], [1, 0]] = .ambiguous [[0, 1], [1, 0]] := by decide
 
 /-- Numeric service instances return a narrower value than their accepted input. -/
 def service : Ty := .function [.atom .uint] [.atom .integer]
