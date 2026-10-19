@@ -261,4 +261,99 @@ theorem tableMaterialize_sound (build : List Entry → Carrier) (member : Carrie
     cases accepted
     exact good
   · simp at accepted
+
+/-- Membership in one closed exact-integer interval. Reversed bounds are empty. -/
+def intervalHas (piece : Int × Int) (value : Int) : Prop := piece.1 ≤ value ∧ value ≤ piece.2
+/-- Remove one closed cover without sorting or enumerating interval inhabitants. -/
+def subtractInterval (source covered : Int × Int) : List (Int × Int) :=
+  if covered.2 < covered.1 ∨ source.2 < covered.1 ∨ covered.2 < source.1 then [source]
+  else (if source.1 < covered.1 then [(source.1, covered.1 - 1)] else []) ++
+       (if covered.2 < source.2 then [(covered.2 + 1, source.2)] else [])
+/-- Every uncovered integer survives subtraction in one retained interval. -/
+theorem subtractInterval_keeps (source covered : Int × Int) (value : Int)
+    (valid : intervalHas source value) (absent : ¬ intervalHas covered value) :
+    ∃ piece ∈ subtractInterval source covered, intervalHas piece value := by
+  rcases source with ⟨lower, upper⟩
+  rcases covered with ⟨left, right⟩
+  simp only [intervalHas] at valid absent
+  unfold subtractInterval
+  split
+  · exact ⟨(lower, upper), by simp, valid⟩
+  · by_cases before : value < left
+    · refine ⟨(lower, left - 1), ?_, ?_⟩
+      · simp [show lower < left by omega]
+      · simp only [intervalHas]; omega
+    · refine ⟨(right + 1, upper), ?_, ?_⟩
+      · simp [show right < upper by omega]
+      · simp only [intervalHas]; omega
+/-- A finite interval family contains an integer when one original piece does. -/
+def intervalsContain (pieces : List (Int × Int)) (value : Int) : Prop :=
+  ∃ piece ∈ pieces, intervalHas piece value
+/-- Ordered subtraction visits each residual through the standard flat-map fold. -/
+def uncoveredIntervals : List (Int × Int) → List (Int × Int) → List (Int × Int)
+  | [], remaining => remaining
+  | covered :: rest, remaining =>
+      uncoveredIntervals rest (remaining.flatMap (fun source => subtractInterval source covered))
+/-- An integer absent from all covers cannot disappear from the residuals. -/
+theorem uncoveredIntervals_keeps (covers remaining : List (Int × Int)) (value : Int)
+    (absent : ¬ intervalsContain covers value) (valid : intervalsContain remaining value) :
+    intervalsContain (uncoveredIntervals covers remaining) value := by
+  induction covers generalizing remaining with
+  | nil => exact valid
+  | cons covered rest ih =>
+    apply ih
+    · intro found
+      obtain ⟨piece, member, holds⟩ := found
+      exact absent ⟨piece, List.mem_cons_of_mem covered member, holds⟩
+    · obtain ⟨source, member, holds⟩ := valid
+      obtain ⟨piece, retained, holds⟩ := subtractInterval_keeps source covered value holds
+        (fun h => absent ⟨covered, by simp, h⟩)
+      exact ⟨piece, List.mem_flatMap.mpr ⟨source, member, retained⟩, holds⟩
+/-- Coverage is empty residuals, with empty source intervals admitted explicitly. -/
+def coversInterval (source : Int × Int) (covers : List (Int × Int)) : Bool :=
+  decide (source.2 < source.1) || (uncoveredIntervals covers [source]).isEmpty
+/-- Successful finite subtraction covers every integer, independently of width,
+branch order, duplicates or overlap. This does not certify host allocation costs. -/
+theorem coversInterval_sound (source : Int × Int) (covers : List (Int × Int))
+    (accepted : coversInterval source covers = true) (value : Int) (valid : intervalHas source value) :
+    intervalsContain covers value := by
+  simp only [coversInterval, Bool.or_eq_true, decide_eq_true_eq] at accepted
+  rcases accepted with empty | covered
+  · simp only [intervalHas] at valid; omega
+  · classical
+    by_cases present : intervalsContain covers value
+    · exact present
+    exfalso
+    have absent := present
+    have retained := uncoveredIntervals_keeps covers [source] value absent ⟨source, by simp, valid⟩
+    have empty := List.isEmpty_iff.mp covered
+    simp [empty, intervalsContain] at retained
+/-- Identity validators preserve the original value through the first selected
+flat branch. Recognition coverage never authorizes retry after validation error. -/
+theorem union_identity (member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (missing invalid : Error) (branches : List Branch) (source : Value)
+    (accepted : branches.any (fun branch => member branch source) = true)
+    (identity : ∀ branch ∈ branches, member branch source = true → check branch source = .ok source) :
+    union member member check missing invalid branches source = .ok source := by
+  induction branches with
+  | nil => simp at accepted
+  | cons branch rest ih =>
+    cases matching : member branch source
+    · have next : rest.any (fun branch => member branch source) = true := by simpa [matching] using accepted
+      simpa [union, select, List.find?, matching] using
+        ih next (fun b h => identity b (List.mem_cons_of_mem branch h))
+    · simp [union, select, List.find?, matching, identity branch (by simp) matching, Except.bind]
+
+/-- Finite mixed scalar sources use ordered membership directly. Identity and
+recognizer/shape agreement are explicit premises, not inferred for custom Types. -/
+theorem union_finite_identity (member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (missing invalid : Error) (branches : List Branch) (values : List Value)
+    (covered : values.all (fun value => branches.any (fun branch => member branch value)) = true)
+    (identity : ∀ value ∈ values, ∀ branch ∈ branches,
+      member branch value = true → check branch value = .ok value) :
+    ∀ value ∈ values, union member member check missing invalid branches value = .ok value := by
+  intro value inside
+  exact union_identity member check missing invalid branches value
+    (List.all_eq_true.mp covered value inside) (identity value inside)
+
 end LeanPoo.Functional.VariantValidation

@@ -636,3 +636,54 @@ proofs include this edge under explicit interpretation premises. The top-level
 example retains the exact bound artifact and all derived constraints. General
 predicate discovery, dependent endpoint expressions and Boolean-union coverage
 remain outside this Appendix C/D type-protocol future work.
+
+### Joint range/Enum coverage by ordered flat Union
+
+The P2 gap was distributed coverage: no single alternative may contain a range,
+although several alternatives jointly cover it. The finite relation now admits a
+bounded IntegerRange or keyword-stable finite Exactly/Enum source into an ordered Union whose
+entire tree consists of known built-in flat validators. Numeric branches are
+clipped to the source, exact integer literals become singleton pieces, and other
+intrinsic scalars contribute no integer coverage. Nested branches are traversed
+in declaration order using Gerbil append-map/foldl. Each projected interval is
+subtracted from the residual intervals; a successful check leaves none. Huge
+ranges are not enumerated, sorted or materialized. Duplicates, overlap, reversed
+empty ranges and source holes retain their exact membership meaning.
+
+Keyword-stable finite mixed scalar Enum sources use the existing literal-in-type? protocol,
+checking every literal against the original ordered tree. No fallback Type is
+manufactured. All syntax is admitted before coverage: unsupported metadata and
+work exhaustion keep their typed refusals. A complete gap is false/no-solution;
+ambiguous descriptor kinds never enter builders; a fresh request can retry.
+Projection and every residual visit consume the existing shared work quota.
+
+Only this cross-kind read/validation relation is extended. Union-to-Union branch
+identity/order, Map keys and other invariant positions retain their old checks.
+The public target descriptor is never flattened, sorted or coalesced. Trees with
+Function/container/refinement wrappers or arbitrary custom recognizers refuse
+this rule, even if an earlier flat branch covers the source or the source Enum
+is empty. Keyword/escape-token sources retain their dedicated raw-transport judgment.
+Public unbounded source ranges and general Boolean/predicate discovery
+remain outside this new rule. This is not a serialization, arithmetic-method,
+JSON or complete object-protocol equivalence claim.
+
+Union's existing select-union/validate-union path remains authoritative: select
+the first structurally matching branch, validate it once, and propagate its error
+or failed postcondition. Coverage does not permit fallback after failure. The
+new UnionServiceType changes only Super's bound in the existing rich service;
+prefix/call inference, parameter specialization, original qualifiers and generic,
+callback wrapping, cache owner and FUN/refine/bind-evidence publication are shared.
+t/union-inference-test.ss contains seven integrated cases, independent descriptor
+witnesses, huge exact endpoints, selected-error controls and retry checks.
+
+Lean puts interval subtraction and its universal coverage theorem in the existing
+VariantValidation module. union_identity/union_finite_identity state exactly when
+ordered flat validation preserves the original value; the existing union_error
+law still forbids retry after a selected error. PrototypeTypes adds fuel-bounded
+all-branch projection, its membership proof, checker/replacement edges and complete
+inference/declaration provenance. Numeric certificates cover bounded integer
+sources and integer Enum projections; mixed scalar normalization has the generic
+identity theorem under explicit recognizer/shape/validator premises. Host lowering,
+mutable Type overrides, primitive bit costs, hash/GC behavior and asymptotic
+allocation bounds are not proved. This advances Appendix C/D type-protocol future
+work; full resource limits and complete acceptance checks remain required.

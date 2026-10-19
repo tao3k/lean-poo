@@ -261,4 +261,46 @@ theorem inferredEnum_sound (super artifact)
 #print axioms IntegerRange.coverFrom_complete
 #print axioms IntegerRange.coveredBy_sound
 #print axioms inferredEnum_sound
+/-- Joint coverage retains the original nested order, including the middle Enum
+that bridges otherwise disjoint low/high intervals. -/
+def unionBound : Ty := .union [.integerRange ⟨some 7, some 10⟩,
+  .union [.integerEnum [5, 6], .integerRange ⟨some 0, some 4⟩]]
+/-- Prefix observations and this multi-branch bound constrain the same Super. -/
+def unionConstraints : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground unionBound), (.ground smallRange, .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [smallRange] [smallRange]))]
+/-- Reuse the original complete declaration driver and positional builder. -/
+def inferredUnion := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 unionConstraints (rangeEnvironment super))
+  [.atom .integer, .atom .uint, smallRange] buildRange
+#guard match inferredUnion with
+  | .ok (.unique (.integerRange ⟨some 0, some 10⟩), some
+      (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 10⟩)) => true
+  | _ => false
+#guard check 12 smallRange unionBound
+#guard check 12 (.integerEnum [0, 5, 10]) unionBound
+#guard !check 12 smallRange (.union [.integerRange ⟨some 0, some 4⟩, .integerRange ⟨some 6, some 10⟩])
+#guard !check 12 smallRange (.union [smallRange, .function [.atom .uint] [.atom .uint]])
+#guard !check 12 (.integerEnum []) (.union [smallRange, .function [.atom .uint] [.atom .uint]])
+#guard !check 12 (.map smallRange (.atom .uint)) (.map unionBound (.atom .uint))
+#guard !check 12 unionBound (.union [.union [.integerEnum [5, 6], .integerRange ⟨some 0, some 4⟩],
+  .integerRange ⟨some 7, some 10⟩])
+/-- Joint coverage authorizes every original/call constraint and the exact fully
+bound artifact; it grants no permission to reorder branches or serialize values. -/
+theorem inferredUnion_sound (super artifact)
+    (published : inferredUnion = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ unionConstraints →
+      Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
+      buildRange super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 unionConstraints (rangeEnvironment super))
+    [.atom .integer, .atom .uint, smallRange] buildRange published
+  exact ⟨fun a b member => satisfies_sound 12 unionConstraints (rangeEnvironment super) valid member, built⟩
+#print axioms LeanPoo.Functional.VariantValidation.coversInterval_sound
+#print axioms LeanPoo.Functional.VariantValidation.union_identity
+#print axioms LeanPoo.Functional.VariantValidation.union_finite_identity
+#print axioms numericPieces_sound
+#print axioms rangeUnionCheck_sound
+#print axioms enumUnionCheck_sound
+#print axioms inferredUnion_sound
 end Examples.PrototypeTypes
