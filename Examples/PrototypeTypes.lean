@@ -296,6 +296,52 @@ theorem inferredUnion_sound (super artifact)
     (fun super => satisfies 12 unionConstraints (rangeEnvironment super))
     [.atom .integer, .atom .uint, smallRange] buildRange published
   exact ⟨fun a b member => satisfies_sound 12 unionConstraints (rangeEnvironment super) valid member, built⟩
+/-- An ordered infinite-tail cover retains the finite bridge and nested order. -/
+def unboundedUnion : Ty := .union [.integerRange ⟨some 1, none⟩,
+  .union [.integerEnum [0], .integerRange ⟨none, some (-1)⟩]]
+/-- Inputs must admit every exact integer; Self and callback results stay bounded. -/
+def unboundedConstraints : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground unboundedUnion),
+   (.ground (.integerRange IntegerRange.all), .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [smallRange] [.integerRange IntegerRange.all]))]
+/-- The same complete specialization/declaration builder consumes the unique Type. -/
+def inferredUnbounded := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 unboundedConstraints (rangeEnvironment super))
+  [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] buildRange
+#guard match inferredUnbounded with
+  | .ok (.unique (.integerRange ⟨none, none⟩), some
+      (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨none, none⟩)) => true
+  | _ => false
+#guard check 12 (.integerRange IntegerRange.all) unboundedUnion
+#guard check 12 (.integerRange ⟨some (-2), none⟩)
+  (.union [.integerEnum [-2, -1], .integerRange IntegerRange.unsigned])
+#guard check 12 (.integerRange ⟨none, some 2⟩)
+  (.union [.integerRange ⟨none, some 0⟩, .integerEnum [2, 1]])
+#guard !check 12 (.integerRange IntegerRange.all)
+  (.union [.integerRange ⟨none, some (-1)⟩, .integerRange ⟨some 1, none⟩])
+#guard !check 12 (.integerRange IntegerRange.all)
+  (.union [.integerRange ⟨none, some 0⟩, .integerEnum [1, 2]])
+#guard !check 12 (.integerRange IntegerRange.all)
+  (.union [unboundedUnion, .function [.atom .uint] [.atom .uint]])
+#guard !check 0 (.integerRange IntegerRange.all) unboundedUnion
+/-- Every exact integer is covered, without a sampled boundary or finite cutoff. -/
+theorem unboundedUnion_accepts (value : Int) : integerAccepts 12 unboundedUnion value = true := by
+  obtain ⟨_, _, covered⟩ := rangeUnionCheck_sound 12 IntegerRange.all
+    [.integerRange ⟨some 1, none⟩, .union [.integerEnum [0], .integerRange ⟨none, some (-1)⟩]] (by decide)
+  exact covered value (by simp [IntegerRange.Contains, IntegerRange.all])
+/-- The complete declaration preserves all constraints and the exact artifact;
+this is type replacement, not a proof of host keyword parsing or GC behavior. -/
+theorem inferredUnbounded_sound (super artifact)
+    (published : inferredUnbounded = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ unboundedConstraints →
+      Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
+      buildRange super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 unboundedConstraints (rangeEnvironment super))
+    [.atom .uint, .integerRange IntegerRange.unsigned, .integerRange IntegerRange.all] buildRange published
+  exact ⟨fun a b member => satisfies_sound 12 unboundedConstraints (rangeEnvironment super) valid member, built⟩
+#print axioms unboundedUnion_accepts
+#print axioms inferredUnbounded_sound
 #print axioms LeanPoo.Functional.VariantValidation.coversInterval_sound
 #print axioms LeanPoo.Functional.VariantValidation.union_identity
 #print axioms LeanPoo.Functional.VariantValidation.union_finite_identity

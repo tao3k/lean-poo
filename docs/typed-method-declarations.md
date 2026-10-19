@@ -641,9 +641,9 @@ remain outside this Appendix C/D type-protocol future work.
 
 The P2 gap was distributed coverage: no single alternative may contain a range,
 although several alternatives jointly cover it. The finite relation now admits a
-bounded IntegerRange or keyword-stable finite Exactly/Enum source into an ordered Union whose
+IntegerRange (including either unbounded endpoint) or keyword-stable finite Exactly/Enum source into an ordered Union whose
 entire tree consists of known built-in flat validators. Numeric branches are
-clipped to the source, exact integer literals become singleton pieces, and other
+projected with their original optional endpoints, exact integer literals become singleton pieces, and other
 intrinsic scalars contribute no integer coverage. Nested branches are traversed
 in declaration order using Gerbil append-map/foldl. Each projected interval is
 subtracted from the residual intervals; a successful check leaves none. Huge
@@ -663,8 +663,9 @@ The public target descriptor is never flattened, sorted or coalesced. Trees with
 Function/container/refinement wrappers or arbitrary custom recognizers refuse
 this rule, even if an earlier flat branch covers the source or the source Enum
 is empty. Keyword/escape-token sources retain their dedicated raw-transport judgment.
-Public unbounded source ranges and general Boolean/predicate discovery
-remain outside this new rule. This is not a serialization, arithmetic-method,
+General Boolean/predicate discovery and dependent endpoints remain outside this rule.
+The public atomic Integer/UInt-to-Union rule remains conservative; the extension
+is for IntegerRange descriptors, including all-integer and one-sided ranges. This is not a serialization, arithmetic-method,
 JSON or complete object-protocol equivalence claim.
 
 Union's existing select-union/validate-union path remains authoritative: select
@@ -673,7 +674,7 @@ or failed postcondition. Coverage does not permit fallback after failure. The
 new UnionServiceType changes only Super's bound in the existing rich service;
 prefix/call inference, parameter specialization, original qualifiers and generic,
 callback wrapping, cache owner and FUN/refine/bind-evidence publication are shared.
-t/union-inference-test.ss contains seven integrated cases, independent descriptor
+t/union-inference-test.ss contains ten integrated cases, independent descriptor
 witnesses, huge exact endpoints, selected-error controls and retry checks.
 
 Lean puts interval subtraction and its universal coverage theorem in the existing
@@ -681,9 +682,31 @@ VariantValidation module. union_identity/union_finite_identity state exactly whe
 ordered flat validation preserves the original value; the existing union_error
 law still forbids retry after a selected error. PrototypeTypes adds fuel-bounded
 all-branch projection, its membership proof, checker/replacement edges and complete
-inference/declaration provenance. Numeric certificates cover bounded integer
+inference/declaration provenance. Numeric certificates cover bounded and unbounded integer
 sources and integer Enum projections; mixed scalar normalization has the generic
 identity theorem under explicit recognizer/shape/validator premises. Host lowering,
 mutable Type overrides, primitive bit costs, hash/GC behavior and asymptotic
 allocation bounds are not proved. This advances Appendix C/D type-protocol future
 work; full resource limits and complete acceptance checks remain required.
+
+Unbounded-source acceptance uses the same residual algorithm: a false lower
+endpoint denotes negative infinity and a false upper endpoint positive infinity.
+Only finite endpoints undergo predecessor/successor arithmetic. Finite covers
+cannot erase an infinite residual; a missing single integer remains a gap even
+at arbitrarily large endpoints. There is no finite cutoff or Any fallback.
+`UnboundedUnionServiceType` reuses the rich declaration factory with optional,
+keyword and rest inputs, bounded results and callbacks, then the original
+FUN/refine/bind-evidence publication. Negative and positive unbounded inputs,
+refinement refusal, ambiguity, quota exhaustion and fresh retry are executable
+controls. Keyword/escape sources keep the public transport restriction.
+
+This is an Appendix C/D type-protocol extension, not a claim that the Racket
+reference implements this inference algorithm. Lean generalizes the existing
+interval projection/subtraction proofs to optional endpoints and proves every
+integer in an accepted source belongs to the original ordered alternatives.
+The complete inferred specialization retains every constraint and builder
+artifact. Ordered validation still needs the explicit identity/shape agreement
+premise; a selected error never authorizes a later branch. Host parsing,
+serialization, custom predicates, GC and primitive bit costs are outside these
+proofs. The finite endpoint-partition oracle complements rather than replaces
+the universal Lean soundness theorem.

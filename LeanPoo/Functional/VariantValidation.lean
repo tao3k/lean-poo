@@ -262,40 +262,59 @@ theorem tableMaterialize_sound (build : List Entry → Carrier) (member : Carrie
     exact good
   · simp at accepted
 
-/-- Membership in one closed exact-integer interval. Reversed bounds are empty. -/
-def intervalHas (piece : Int × Int) (value : Int) : Prop := piece.1 ≤ value ∧ value ≤ piece.2
-/-- Remove one closed cover without sorting or enumerating interval inhabitants. -/
-def subtractInterval (source covered : Int × Int) : List (Int × Int) :=
-  if covered.2 < covered.1 ∨ source.2 < covered.1 ∨ covered.2 < source.1 then [source]
-  else (if source.1 < covered.1 then [(source.1, covered.1 - 1)] else []) ++
-       (if covered.2 < source.2 then [(covered.2 + 1, source.2)] else [])
-/-- Every uncovered integer survives subtraction in one retained interval. -/
-theorem subtractInterval_keeps (source covered : Int × Int) (value : Int)
+/-- Closed integer interval endpoints; None denotes negative/positive infinity. -/
+abbrev Interval := Option Int × Option Int
+/-- Membership uses exact integers, including either unbounded endpoint. -/
+def intervalHas (piece : Interval) (value : Int) : Prop :=
+  (∀ lower ∈ piece.1, lower ≤ value) ∧ (∀ upper ∈ piece.2, value ≤ upper)
+/-- Only reversed finite bounds denote an empty interval. -/
+def intervalEmpty (piece : Interval) : Bool :=
+  match piece with | (some lower, some upper) => decide (upper < lower) | _ => false
+/-- Remove one cover without enumeration, sorting or finite infinity sentinels. -/
+def subtractInterval (source covered : Interval) : List Interval :=
+  if intervalEmpty covered ||
+      (source.2.any fun upper => covered.1.any fun left => upper < left) ||
+      (covered.2.any fun right => source.1.any fun lower => right < lower) then [source]
+  else (match covered.1 with
+        | some left => if source.1.all (· < left) then [(source.1, some (left - 1))] else []
+        | none => []) ++
+       (match covered.2 with
+        | some right => if source.2.all (right < ·) then [(some (right + 1), source.2)] else []
+        | none => [])
+/-- Every uncovered integer survives subtraction, including on infinite tails. -/
+theorem subtractInterval_keeps (source covered : Interval) (value : Int)
     (valid : intervalHas source value) (absent : ¬ intervalHas covered value) :
     ∃ piece ∈ subtractInterval source covered, intervalHas piece value := by
-  rcases source with ⟨lower, upper⟩
-  rcases covered with ⟨left, right⟩
-  simp only [intervalHas] at valid absent
+  have outside : (∃ left, covered.1 = some left ∧ value < left) ∨
+      (∃ right, covered.2 = some right ∧ right < value) := by
+    rcases covered with ⟨left, right⟩
+    cases left <;> cases right <;> simp_all [intervalHas] <;> omega
   unfold subtractInterval
   split
-  · exact ⟨(lower, upper), by simp, valid⟩
-  · by_cases before : value < left
-    · refine ⟨(lower, left - 1), ?_, ?_⟩
-      · simp [show lower < left by omega]
-      · simp only [intervalHas]; omega
-    · refine ⟨(right + 1, upper), ?_, ?_⟩
-      · simp [show right < upper by omega]
-      · simp only [intervalHas]; omega
-/-- A finite interval family contains an integer when one original piece does. -/
-def intervalsContain (pieces : List (Int × Int)) (value : Int) : Prop :=
+  · exact ⟨source, by simp, valid⟩
+  · rcases outside with ⟨left, endpoint, before⟩ | ⟨right, endpoint, after⟩
+    · have extended : source.1.all (· < left) = true := by
+        have above := valid.1
+        cases bound : source.1 <;> simp_all <;> omega
+      refine ⟨(source.1, some (left - 1)), ?_, ?_⟩
+      · simp [endpoint, extended]
+      · exact ⟨valid.1, by simp; omega⟩
+    · have extended : source.2.all (right < ·) = true := by
+        have below := valid.2
+        cases bound : source.2 <;> simp_all <;> omega
+      refine ⟨(some (right + 1), source.2), ?_, ?_⟩
+      · simp [endpoint, extended]
+      · exact ⟨by simp; omega, valid.2⟩
+/-- A finite descriptor family contains an integer when one original piece does. -/
+def intervalsContain (pieces : List Interval) (value : Int) : Prop :=
   ∃ piece ∈ pieces, intervalHas piece value
 /-- Ordered subtraction visits each residual through the standard flat-map fold. -/
-def uncoveredIntervals : List (Int × Int) → List (Int × Int) → List (Int × Int)
+def uncoveredIntervals : List Interval → List Interval → List Interval
   | [], remaining => remaining
   | covered :: rest, remaining =>
       uncoveredIntervals rest (remaining.flatMap (fun source => subtractInterval source covered))
 /-- An integer absent from all covers cannot disappear from the residuals. -/
-theorem uncoveredIntervals_keeps (covers remaining : List (Int × Int)) (value : Int)
+theorem uncoveredIntervals_keeps (covers remaining : List Interval) (value : Int)
     (absent : ¬ intervalsContain covers value) (valid : intervalsContain remaining value) :
     intervalsContain (uncoveredIntervals covers remaining) value := by
   induction covers generalizing remaining with
@@ -309,23 +328,23 @@ theorem uncoveredIntervals_keeps (covers remaining : List (Int × Int)) (value :
       obtain ⟨piece, retained, holds⟩ := subtractInterval_keeps source covered value holds
         (fun h => absent ⟨covered, by simp, h⟩)
       exact ⟨piece, List.mem_flatMap.mpr ⟨source, member, retained⟩, holds⟩
-/-- Coverage is empty residuals, with empty source intervals admitted explicitly. -/
-def coversInterval (source : Int × Int) (covers : List (Int × Int)) : Bool :=
-  decide (source.2 < source.1) || (uncoveredIntervals covers [source]).isEmpty
-/-- Successful finite subtraction covers every integer, independently of width,
-branch order, duplicates or overlap. This does not certify host allocation costs. -/
-theorem coversInterval_sound (source : Int × Int) (covers : List (Int × Int))
+/-- Coverage requires empty residuals, or an explicitly empty source interval. -/
+def coversInterval (source : Interval) (covers : List Interval) : Bool :=
+  intervalEmpty source || (uncoveredIntervals covers [source]).isEmpty
+/-- Successful subtraction covers every integer, including unbounded sources.
+This does not certify host allocation costs or arbitrary predicate implication. -/
+theorem coversInterval_sound (source : Interval) (covers : List Interval)
     (accepted : coversInterval source covers = true) (value : Int) (valid : intervalHas source value) :
     intervalsContain covers value := by
-  simp only [coversInterval, Bool.or_eq_true, decide_eq_true_eq] at accepted
+  simp only [coversInterval, Bool.or_eq_true] at accepted
   rcases accepted with empty | covered
-  · simp only [intervalHas] at valid; omega
+  · rcases source with ⟨lower, upper⟩
+    cases lower <;> cases upper <;> simp_all [intervalEmpty, intervalHas] <;> omega
   · classical
     by_cases present : intervalsContain covers value
     · exact present
     exfalso
-    have absent := present
-    have retained := uncoveredIntervals_keeps covers [source] value absent ⟨source, by simp, valid⟩
+    have retained := uncoveredIntervals_keeps covers [source] value present ⟨source, by simp, valid⟩
     have empty := List.isEmpty_iff.mp covered
     simp [empty, intervalsContain] at retained
 /-- Identity validators preserve the original value through the first selected

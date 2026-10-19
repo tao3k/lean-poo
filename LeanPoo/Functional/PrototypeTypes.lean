@@ -146,16 +146,16 @@ def integerAccepts : Nat → Ty → Int → Bool
     | _ => false
 /-- Ordered Option traversal projects all branches or refuses the entire tree.
 A wrapper-bearing branch cannot be hidden behind an earlier numeric match. -/
-def collectPieces (project : Ty → Option (List (Int × Int))) : List Ty → Option (List (Int × Int))
+def collectPieces (project : Ty → Option (List VariantValidation.Interval)) : List Ty → Option (List VariantValidation.Interval)
   | [] => some []
   | branch :: rest => match project branch, collectPieces project rest with
     | some first, some tail => some (first ++ tail)
     | _, _ => none
 /-- Every projected piece retains a source branch; concatenation does not sort,
 coalesce or rewrite the original declaration's alternative descriptors. -/
-theorem collectPieces_origin (project : Ty → Option (List (Int × Int)))
-    (branches : List Ty) (pieces : List (Int × Int))
-    (built : collectPieces project branches = some pieces) (piece : Int × Int) (member : piece ∈ pieces) :
+theorem collectPieces_origin (project : Ty → Option (List VariantValidation.Interval))
+    (branches : List Ty) (pieces : List VariantValidation.Interval)
+    (built : collectPieces project branches = some pieces) (piece : VariantValidation.Interval) (member : piece ∈ pieces) :
     ∃ branch ∈ branches, ∃ parts, project branch = some parts ∧ piece ∈ parts := by
   induction branches generalizing pieces with
   | nil => simp [collectPieces] at built; subst pieces; simp at member
@@ -172,21 +172,21 @@ theorem collectPieces_origin (project : Ty → Option (List (Int × Int)))
         · exact ⟨branch, by simp, first, head, left⟩
         · obtain ⟨original, inside, parts, projected, retained⟩ := ih last tail right
           exact ⟨original, List.mem_cons_of_mem branch inside, parts, projected, retained⟩
-/-- Numeric intervals are clipped to the bounded source; Enum members are points.
+/-- Numeric intervals retain optional endpoints; Enum members are singleton points.
 Nonnumeric built-in atoms contribute no integer cover. Other carriers refuse. -/
-def numericPieces : Nat → Int → Int → Ty → Option (List (Int × Int))
-  | 0, _, _, _ => none
-  | fuel + 1, lower, upper, type => match type with
-    | .integerRange range => some [(max lower (range.lower.getD lower), min upper (range.upper.getD upper))]
-    | .integerEnum values => some (values.map (fun value => (value, value)))
-    | .atom .integer => some [(lower, upper)]
-    | .atom .uint => some [(max lower 0, upper)]
+def numericPieces : Nat → Ty → Option (List VariantValidation.Interval)
+  | 0, _ => none
+  | fuel + 1, type => match type with
+    | .integerRange range => some [(range.lower, range.upper)]
+    | .integerEnum values => some (values.map (fun value => (some value, some value)))
+    | .atom .integer => some [(none, none)]
+    | .atom .uint => some [(some 0, none)]
     | .atom _ => some []
-    | .union branches => collectPieces (numericPieces fuel lower upper) branches
+    | .union branches => collectPieces (numericPieces fuel) branches
     | _ => none
 /-- Projection never invents an integer belonging to no original flat branch. -/
-theorem numericPieces_sound (fuel lower upper type pieces)
-    (built : numericPieces fuel lower upper type = some pieces) (piece : Int × Int)
+theorem numericPieces_sound (fuel type pieces)
+    (built : numericPieces fuel type = some pieces) (piece : VariantValidation.Interval)
     (member : piece ∈ pieces) (value : Int) (valid : VariantValidation.intervalHas piece value) :
     integerAccepts fuel type value = true := by
   induction fuel generalizing type pieces with
@@ -206,7 +206,7 @@ theorem numericPieces_sound (fuel lower upper type pieces)
       subst pieces
       obtain ⟨original, inside, equal⟩ := List.mem_map.mp member
       subst piece
-      have equal : value = original := by simp only [VariantValidation.intervalHas] at valid; omega
+      have equal : value = original := by simp [VariantValidation.intervalHas] at valid; omega
       simp [integerAccepts, equal, inside]
     case atom name =>
       cases name <;> simp only [numericPieces, Option.some.injEq] at built
@@ -220,39 +220,39 @@ theorem numericPieces_sound (fuel lower upper type pieces)
         collectPieces_origin _ branches pieces built piece member
       simp only [integerAccepts, List.any_eq_true]
       exact ⟨branch, inside, ih _ _ projected retained⟩
-/-- One bounded range may span several ordered flat alternatives. Coverage uses
+/-- An optionally unbounded range may span several ordered flat alternatives. Coverage uses
 residual subtraction and visits no integer merely because an interval is wide. -/
-def rangeUnionCheck (fuel : Nat) (lower upper : Int) (branches : List Ty) : Bool :=
-  match numericPieces fuel lower upper (.union branches) with
+def rangeUnionCheck (fuel : Nat) (source : IntegerRange) (branches : List Ty) : Bool :=
+  match numericPieces fuel (.union branches) with
   | none => false
-  | some pieces => VariantValidation.coversInterval (lower, upper) pieces
+  | some pieces => VariantValidation.coversInterval (source.lower, source.upper) pieces
 /-- A finite literal source is checked member by member against the same ordered
 flat tree; all branches must first be admitted, even for an empty source. -/
 def enumUnionCheck (fuel : Nat) (values : List Int) (branches : List Ty) : Bool :=
-  match numericPieces fuel 0 0 (.union branches) with
+  match numericPieces fuel (.union branches) with
   | none => false
   | some _ => values.all (fun value => integerAccepts fuel (.union branches) value)
 /-- Successful range coverage retains both complete flat admission and universal
 integer membership. Hashing, mutable host predicates and serialization are absent. -/
-theorem rangeUnionCheck_sound (fuel lower upper branches)
-    (accepted : rangeUnionCheck fuel lower upper branches = true) :
-    ∃ pieces, numericPieces fuel lower upper (.union branches) = some pieces ∧
-      ∀ value, lower ≤ value → value ≤ upper → integerAccepts fuel (.union branches) value = true := by
-  cases built : numericPieces fuel lower upper (.union branches) with
+theorem rangeUnionCheck_sound (fuel source branches)
+    (accepted : rangeUnionCheck fuel source branches = true) :
+    ∃ pieces, numericPieces fuel (.union branches) = some pieces ∧
+      ∀ value, source.Contains value → integerAccepts fuel (.union branches) value = true := by
+  cases built : numericPieces fuel (.union branches) with
   | none => simp [rangeUnionCheck, built] at accepted
   | some pieces =>
     refine ⟨pieces, rfl, ?_⟩
-    intro value above below
-    have covered : VariantValidation.coversInterval (lower, upper) pieces = true := by
+    intro value inside
+    have covered : VariantValidation.coversInterval (source.lower, source.upper) pieces = true := by
       simpa [rangeUnionCheck, built] using accepted
-    obtain ⟨piece, member, valid⟩ := VariantValidation.coversInterval_sound _ _ covered value ⟨above, below⟩
-    exact numericPieces_sound _ _ _ _ _ built piece member value valid
+    obtain ⟨piece, member, valid⟩ := VariantValidation.coversInterval_sound _ _ covered value inside
+    exact numericPieces_sound _ _ _ built piece member value valid
 /-- Finite literal coverage likewise retains the all-branch admission certificate. -/
 theorem enumUnionCheck_sound (fuel values branches)
     (accepted : enumUnionCheck fuel values branches = true) :
-    ∃ pieces, numericPieces fuel 0 0 (.union branches) = some pieces ∧
+    ∃ pieces, numericPieces fuel (.union branches) = some pieces ∧
       ∀ value ∈ values, integerAccepts fuel (.union branches) value = true := by
-  cases built : numericPieces fuel 0 0 (.union branches) with
+  cases built : numericPieces fuel (.union branches) with
   | none => simp [enumUnionCheck, built] at accepted
   | some pieces =>
     refine ⟨pieces, rfl, ?_⟩
@@ -334,8 +334,8 @@ inductive Subtype : Ty → Ty → Prop where
   | numeric : numericBounds a = some source → numericBounds b = some target →
       source.includes target = true → Subtype a b
   | rangeEnum : range.coveredBy values = true → Subtype (.integerRange range) (.integerEnum values)
-  | rangeUnion : rangeUnionCheck fuel lower upper branches = true →
-      Subtype (.integerRange ⟨some lower, some upper⟩) (.union branches)
+  | rangeUnion : rangeUnionCheck fuel source branches = true →
+      Subtype (.integerRange source) (.union branches)
   | enumUnion : enumUnionCheck fuel values branches = true → Subtype (.integerEnum values) (.union branches)
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
@@ -358,9 +358,7 @@ def check : Nat → Ty → Ty → Bool
     | .integerRange source, .integerRange target => source.includes target
     | .integerRange source, .integerEnum values => source.coveredBy values
     | .integerEnum values, .integerEnum target => decide (values = target)
-    | .integerRange source, .union branches => match source.lower, source.upper with
-        | some lower, some upper => rangeUnionCheck fuel lower upper branches
-        | _, _ => false
+    | .integerRange source, .union branches => rangeUnionCheck fuel source branches
     | .integerEnum values, .union branches => enumUnionCheck fuel values branches
     | .integerRange source, .atom .integer => source.includes IntegerRange.all
     | .integerRange source, .atom .uint => source.includes IntegerRange.unsigned
@@ -410,9 +408,7 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
       have equal := of_decide_eq_true accepted
       subst target
       exact .refl _
-    case integerRange.union source branches =>
-      rcases source with ⟨lower, upper⟩
-      cases lower <;> cases upper <;> first | contradiction | exact .rangeUnion accepted
+    case integerRange.union source branches => exact .rangeUnion accepted
     case integerEnum.union values branches => exact .enumUnion accepted
     case integerRange.atom source target =>
       cases target
@@ -507,12 +503,12 @@ structure Interpretation (Value : Type) where
     (∀ value, source.Contains value → target.Contains value) → ∀ v, accepts a v → accepts b v
   rangeEnum : ∀ range values, (∀ value, range.Contains value → value ∈ values) →
     ∀ v, accepts (.integerRange range) v → accepts (.integerEnum values) v
-  rangeUnion : ∀ lower upper branches fuel pieces,
-    numericPieces fuel lower upper (.union branches) = some pieces →
-    (∀ value, lower ≤ value → value ≤ upper → integerAccepts fuel (.union branches) value = true) →
-    ∀ v, accepts (.integerRange ⟨some lower, some upper⟩) v → accepts (.union branches) v
+  rangeUnion : ∀ source branches fuel pieces,
+    numericPieces fuel (.union branches) = some pieces →
+    (∀ value, source.Contains value → integerAccepts fuel (.union branches) value = true) →
+    ∀ v, accepts (.integerRange source) v → accepts (.union branches) v
   enumUnion : ∀ values branches fuel pieces,
-    numericPieces fuel 0 0 (.union branches) = some pieces →
+    numericPieces fuel (.union branches) = some pieces →
     (∀ value ∈ values, integerAccepts fuel (.union branches) value = true) →
     ∀ v, accepts (.integerEnum values) v → accepts (.union branches) v
   list : ∀ a b, (∀ v, accepts a v → accepts b v) →
@@ -545,8 +541,8 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (fun left right included => model.numeric _ _ _ _ left right (IntegerRange.replacement _ _ included))
     (fun covered => model.rangeEnum _ _ (IntegerRange.coveredBy_sound _ _ covered))
     (fun accepted => by
-      obtain ⟨pieces, projected, covered⟩ := rangeUnionCheck_sound _ _ _ _ accepted
-      exact model.rangeUnion _ _ _ _ pieces projected covered)
+      obtain ⟨pieces, projected, covered⟩ := rangeUnionCheck_sound _ _ _ accepted
+      exact model.rangeUnion _ _ _ pieces projected covered)
     (fun accepted => by
       obtain ⟨pieces, projected, covered⟩ := enumUnionCheck_sound _ _ _ accepted
       exact model.enumUnion _ _ _ pieces projected covered)
