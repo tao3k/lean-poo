@@ -424,4 +424,80 @@ example : OptionalValidation.CatalogAdmits [.transform] (fun tag item => member 
 #print axioms OptionalValidation.catalogEmpty_sound
 #print axioms OptionalValidation.catalogTyped_empty
 
+/-- Availability distinguishes physical void/false branches from live payloads. -/
+inductive AvailabilityBranch where
+  | missing | disabled | payload
+
+/-- Source branch recognition does not execute a live Function body. -/
+def availabilityMember : AvailabilityBranch → Value → Bool
+  | .missing, value => missing value
+  | .disabled, value => falseValue value
+  | .payload, value => member .transform value
+
+/-- Only the selected live branch wraps its callback; sentinels pass unchanged. -/
+def availabilityCheck : AvailabilityBranch → Value → Except String Value
+  | .payload, value => checkValue .transform value
+  | _, value => .ok value
+
+/-- The ordinary view retains both exact sentinels and the original payload Type. -/
+def availabilityTarget (value : Value) : Prop :=
+  OptionalValidation.Admits missing
+    (OptionalValidation.Admits falseValue (fun item => member .transform item = true)) value
+
+/-- Complete branch coverage applies to the actual wrapped result, without
+assuming raw identity or running a payload validator on absent source values. -/
+example (source checked : Value)
+    (accepted : VariantValidation.union availabilityMember availabilityMember availabilityCheck
+      "missing branch" "invalid branch" [.missing, .disabled, .payload] source = .ok checked) :
+    availabilityTarget checked := by
+  apply VariantValidation.sourceCoverage_wrapped (fun _ => true) [.missing, .disabled, .payload]
+    availabilityMember availabilityMember availabilityCheck availabilityTarget "missing branch" "invalid branch"
+    (fun branch _ _ value valid => ?_) rfl source checked accepted
+  cases branch with
+  | missing => exact Or.inl valid
+  | disabled => exact Or.inr (Or.inl valid)
+  | payload => exact Or.inr (Or.inr valid)
+
+/-- An accepted Function payload still rejects an invalid result on later call;
+normalization does not erase the selected original Function boundary. -/
+example : (VariantValidation.union availabilityMember availabilityMember availabilityCheck
+    "missing branch" "invalid branch" [.missing, .disabled, .payload]
+    (.function (fun _ => .ok [.flag false]))).bind (fun checked =>
+      match checked with
+      | .function callback => callback [.integer 2]
+      | _ => .error "not callable") = .error "integer row" := rfl
+
+/-- Absent values bypass all live payload construction and preserve their identity. -/
+example : VariantValidation.union availabilityMember availabilityMember availabilityCheck
+    "missing branch" "invalid branch" [.missing, .disabled, .payload] .missing = .ok .missing := rfl
+example : VariantValidation.union availabilityMember availabilityMember availabilityCheck
+    "missing branch" "invalid branch" [.missing, .disabled, .payload] .falseValue = .ok .falseValue := rfl
+
+/-- Dependent branch membership checks exact catalog identity before payloads. -/
+def availabilityCatalogMember (types : List Descriptor) (value : Descriptor × Value) : Bool :=
+  types.contains value.1 && member value.1 value.2
+
+/-- Ordered dependent alternatives preserve the ACTUAL carried token while
+widening only allowed catalog membership. Function payloads may be wrapped. -/
+example (branches : List (List Descriptor)) (target : List Descriptor)
+    (covered : VariantValidation.sourceCoverage
+      (fun catalog => OptionalValidation.catalogCovers catalog target) branches = true)
+    (source checked : Descriptor × Value)
+    (accepted : VariantValidation.union availabilityCatalogMember availabilityCatalogMember
+      (fun catalog => OptionalValidation.catalogTyped catalog shape member checkValue "missing Type" "invalid payload")
+      "missing branch" "invalid branch" branches source = .ok checked) :
+    checked.1 = source.1 ∧ OptionalValidation.CatalogAdmits target
+      (fun tag item => member tag item = true) checked := by
+  obtain ⟨catalog, present, _, normalized, _⟩ := VariantValidation.union_success
+    availabilityCatalogMember availabilityCatalogMember
+    (fun catalog => OptionalValidation.catalogTyped catalog shape member checkValue "missing Type" "invalid payload")
+    "missing branch" "invalid branch" branches source checked accepted
+  obtain ⟨same, inside, payload⟩ := OptionalValidation.catalogTyped_sound catalog shape member checkValue
+    "missing Type" "invalid payload" source checked normalized
+  have admitted : OptionalValidation.CatalogAdmits catalog (fun tag item => member tag item = true) checked :=
+    ⟨by simpa [same] using inside, by simpa [same] using payload⟩
+  exact ⟨same, OptionalValidation.catalog_replacement catalog target _ checked
+    ((VariantValidation.sourceCoverage_exact _ branches).mp covered catalog present) admitted⟩
+
+#print axioms VariantValidation.union_success
 end LeanPoo.Examples.OptionalContracts

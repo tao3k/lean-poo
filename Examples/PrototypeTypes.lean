@@ -846,4 +846,39 @@ example : substitute (prefixEnvironment [.list client]
 #print axioms check_sound
 #print axioms replacement
 
+/-- Optional and tagged layouts share one complete source-branch judgment;
+one incompatible tag order invalidates the entire original candidate. -/
+def availabilityBranches (bad : Bool) : List Ty :=
+  [.sum [0, 1] [.maybe service, .orFalse (.list service)],
+   .sum (if bad then [1, 0] else [0, 1]) [.maybe client, .orFalse (.list client)]]
+
+/-- A single state interface retains optional sentinels and exact tag positions. -/
+def availabilityTarget : Ty := .sum [0, 1] [.maybe client, .orFalse (.list client)]
+
+/-- Whole declaration inference checks every branch before preserving its
+original ordered layout in the unique published artifact. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferSourceUnion "availability"
+    (fun branch => check 10 branch availabilityTarget) availabilityBranches [true, false] =
+    .ok (.unique false, some ("availability", false, availabilityBranches false)) := rfl
+
+/-- The common checker now covers Sum, Maybe, OrFalse and ordinary scalar views. -/
+example : check 12 (.union (availabilityBranches false)) availabilityTarget = true := rfl
+example : check 8 (.union [.maybe service, .maybe client]) (.maybe client) = true := rfl
+example : check 8 (.union [.orFalse service, .orFalse client]) (.orFalse client) = true := rfl
+example : check 8 (.union [.integerEnum [], .atom .uint]) (.atom .integer) = true := rfl
+example : check 8 (.union [.function [] []]) (.function [] []) = false := rfl
+
+/-- Universal replacement needs the existing behavioral Function and carrier
+interpretations; no new rule infers them from a recognizer. -/
+example (model : Interpretation Value) (value : Value)
+    (admitted : model.accepts (.union (availabilityBranches false)) value) :
+    model.accepts availabilityTarget value :=
+  replacement model (check_sound 12 _ _ (by rfl)) value admitted
+
+/-- Prefix binding retains the original Sum/optional/Union tree without a cast. -/
+example : substitute (prefixEnvironment [availabilityTarget]
+    (fun _ => .union (availabilityBranches false))) (.pair (.var 0) (.var 1)) =
+    .pair availabilityTarget (.union (availabilityBranches false)) := by
+  simp [substitute, prefixEnvironment]
+
 end Examples.PrototypeTypes

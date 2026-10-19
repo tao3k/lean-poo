@@ -464,3 +464,53 @@ faithful host carrier/row interpretation and behavioral Function inclusion remai
 explicit premises; procedure recognition alone does not certify behavior. No
 mutable-write permission, arbitrary predicate inference, unrestricted recursion,
 effect rollback or host runtime/compiler verification is claimed.
+
+## Complete source-branch checks for finite data views
+
+Source Union decomposition now uses one common branch judgment for admitted
+ordinary finite data targets: built-in flat scalars, List/Tuple/Pair/Map,
+Record/Object, Maybe/OrFalse, TypeValuePair catalogs and Sum. This closes the
+previous whitelist omission for optional/dependent/tagged views. Every original
+branch must replace the SAME complete target through its existing rules; known
+sentinel and empty-carrier evidence can therefore compose across nested layouts.
+No new implication between arbitrary predicates or opaque descriptors is inferred.
+
+Direct Union-to-Union identity, root Function/CaseFunction targets, opaque token
+targets and direct Sum tag-skeleton rules retain their existing bounds. Neither
+alternative order nor original directory identities are rewritten. Unsupported
+late metadata refuses complete admission, budget exhaustion is distinct from a
+negative judgment, and original candidate trees remain distinct for ambiguity.
+Keyword and escape origins still use the existing dedicated transport relation;
+that private flat-origin relation is not replaced by data-view coverage. No Any
+is synthesized. An inhabited optional/container sentinel is never bottom.
+
+`infer-availability-service` builds on the existing descriptor-service schema,
+complete prefix inference and qualified declaration builder. Its packet pairs a
+live handler with a tagged ready/idle state. Ready payloads preserve void, false
+or an exact captured Type; idle payloads preserve false or checked handler lists.
+Original candidate Union layouts combine all these views before existing
+FUN/refine/bind-evidence publication. Regression cases exercise both actual
+Function Type identities and bounds, every sentinel, nested callback wrapping,
+returned callbacks, exact evidence/context, strict tag order, genuine ambiguity,
+approval failure/retry and rejection after a captured source-directory change.
+Gerbil validation and hash/collection mechanisms are reused unchanged.
+
+Lean's common source-Union checker case now covers every corresponding finite
+Ty data target while preserving direct Union and root arrow bounds. Existing
+Subtype derivations and replacement remain the proof path; the additional host
+sentinel, row and dependent carriers use their established interpretation laws.
+`VariantValidation.union_success` exposes the actual selected branch, successful
+child normalization and normalized membership. `union_normalized_member` reuses
+that success law, so `sourceCoverage_wrapped` still applies without raw-value
+identity. OptionalContracts examples combine it with the existing void/false
+protocol and catalogTyped_sound/catalog_replacement to prove wrapped payload
+membership AND exact carried-token preservation. PrototypeTypes examples cover
+complete Sum/optional declaration inference, original artifacts, prefix binding
+and universal behavioral inclusion. Later invalid Function results remain errors.
+
+This advances the article's finite type-protocol future work. Faithful host
+carrier/sentinel interpretation, behavioral Function contracts, source-read
+stability and callback effect/termination obligations remain explicit. No
+mutable-write permission, unrestricted recursive inference, effect rollback,
+parser equivalence or host runtime/compiler verification is claimed. The full
+TODO/P2 ledger is not declared complete.

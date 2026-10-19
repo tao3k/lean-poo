@@ -401,13 +401,14 @@ theorem union_finite_identity (member : Branch → Value → Bool) (check : Bran
     (List.all_eq_true.mp covered value inside) (identity value inside)
 
 
-/-- Successful ordered validation supplies membership of its actual normalized
-result in an original branch. Wrappers need not preserve the raw value. -/
-theorem union_normalized_member (shape member : Branch → Value → Bool)
+/-- Successful ordered validation exposes its actual selected branch, child
+normalization and returned membership. No later branch may replace this witness. -/
+theorem union_success (shape member : Branch → Value → Bool)
     (check : Branch → Value → Except Error Value) (missing invalid : Error)
     (branches : List Branch) (source checked : Value)
     (accepted : union shape member check missing invalid branches source = .ok checked) :
-    branches.any (fun branch => member branch checked) = true := by
+    ∃ branch ∈ branches, select shape branches source = some branch ∧
+      check branch source = .ok checked ∧ member branch checked = true := by
   cases picked : select shape branches source with
   | none => simp [union, picked] at accepted
   | some branch =>
@@ -421,7 +422,17 @@ theorem union_normalized_member (shape member : Branch → Value → Bool)
         have equal : value = checked := by
           simpa [union, picked, normalized, admitted, Except.bind] using accepted
         subst checked
-        exact List.any_eq_true.mpr ⟨branch, present, admitted⟩
+        exact ⟨branch, present, rfl, normalized, admitted⟩
+
+/-- The normalized result belongs to an original branch even when wrapping
+changes the raw value. All selection facts come from the shared success law. -/
+theorem union_normalized_member (shape member : Branch → Value → Bool)
+    (check : Branch → Value → Except Error Value) (missing invalid : Error)
+    (branches : List Branch) (source checked : Value)
+    (accepted : union shape member check missing invalid branches source = .ok checked) :
+    branches.any (fun branch => member branch checked) = true := by
+  obtain ⟨branch, present, _, _, valid⟩ := union_success shape member check missing invalid branches source checked accepted
+  exact List.any_eq_true.mpr ⟨branch, present, valid⟩
 
 /-- Source alternatives replace one ordinary target only after every original
 branch passes its existing inclusion check. This does not reorder a Union target. -/

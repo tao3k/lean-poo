@@ -138,10 +138,9 @@ def check : Nat → Ty → Ty → Bool
     | .map k a, .map k' b => (same fuel k k' && check fuel a b) || emptyCheck fuel k || emptyCheck fuel a
     | .sum tags as, .sum tags' bs => decide (tags = tags') && all₂ (check fuel) as bs
     | .union as, .union bs => all₂ (same fuel) as bs
-    | .union branches, .list child => branches.all (fun branch => check fuel branch (.list child))
-    | .union branches, .tuple children => branches.all (fun branch => check fuel branch (.tuple children))
-    | .union branches, .pair left right => branches.all (fun branch => check fuel branch (.pair left right))
-    | .union branches, .map key value => branches.all (fun branch => check fuel branch (.map key value))
+    | .union branches, target => match target with
+      | .function _ _ => false
+      | _ => branches.all (fun branch => check fuel branch target)
     | .function outs ins, .function outs' ins' =>
         all₂ (check fuel) outs outs' && all₂ (check fuel) ins' ins
     | _, _ => false) || (emptySource (fuel + 1) a && emptyTarget (fuel + 1) b)
