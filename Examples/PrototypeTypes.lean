@@ -172,4 +172,58 @@ example : LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
 #print axioms atom_inclusion
 #print axioms text_distinct
 #print axioms inferredText_sound
+/-- The range fixture binds Self to the result interval before inferring Super. -/
+def smallRange : Ty := .integerRange ⟨some 0, some 10⟩
+/-- Supplied inputs and the declared upper bound agree on this inclusive domain. -/
+def largeRange : Ty := .integerRange ⟨some 0, some 100⟩
+/-- The same residual assignment drives ordinary arguments and callback inputs. -/
+def rangeEnvironment (super : Ty) : Nat → Ty := prefixEnvironment [smallRange] (fun _ => super)
+/-- Declared Self <: Super <: [0,100] and complete supplied/result constraints
+jointly select the actual interval rather than Integer or UInt. -/
+def rangeConstraints : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground largeRange), (.ground largeRange, .var 1),
+   (.var 0, .ground smallRange),
+   (.function [.var 0] [.var 1], .ground (.function [smallRange] [largeRange]))]
+/-- Metadata uses the original Self/Super positional binder. -/
+def rangeParameters : LeanPoo.Functional.Parameters.Template String Ty :=
+  ⟨["Self", "Super"], fun _ => none⟩
+/-- No builder result is returned until both prefix/residual bindings finish. -/
+def buildRange (super : Ty) : Except String (Ty × Ty) := do
+  let staged ← (LeanPoo.Functional.Parameters.checkedSpecialize ".parameters" rangeParameters
+    [smallRange]).mapError (fun _ => "prefix")
+  (LeanPoo.Functional.DeclarativeMetadata.specializeDeclared ".parameters" staged [super]
+    (fun bound => (do
+      if !bound.remaining.isEmpty then throw "residual parameters"
+      let some self := bound.fields "Self" | throw "missing Self"
+      let some super := bound.fields "Super" | throw "missing Super"
+      pure (self, super) : Except String (Ty × Ty)))).mapError (fun _ => "declaration")
+/-- Canonical metadata is projected before these three distinct Type candidates
+enter the original complete declaration driver; aliases are not new candidates. -/
+def inferredRange := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 rangeConstraints (rangeEnvironment super))
+  [.atom .integer, .atom .uint, largeRange] buildRange
+#guard match inferredRange with
+  | .ok (.unique (.integerRange ⟨some 0, some 100⟩), some
+      (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 100⟩)) => true
+  | _ => false
+#guard check 8 (.integerRange ⟨some 3, some 1⟩) (.atom .uint)
+#guard !check 8 smallRange (.integerRange ⟨some 3, some 1⟩)
+#guard !check 8 (.map smallRange (.atom .uint)) (.map largeRange (.atom .integer))
+/-- Literal range metadata is not a position for Type-variable substitution. -/
+example (env : Nat → Ty) (bounds : IntegerRange) :
+    substitute env (.ground (.integerRange bounds)) = .integerRange bounds := by simp [substitute]
+/-- Successful publication retains every original/call constraint and the exact
+complete builder result; its range derivations preserve all integer observations. -/
+theorem inferredRange_sound (super artifact)
+    (published : inferredRange = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ rangeConstraints →
+      Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
+      buildRange super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 rangeConstraints (rangeEnvironment super))
+    [.atom .integer, .atom .uint, largeRange] buildRange published
+  exact ⟨fun a b member => satisfies_sound 12 rangeConstraints (rangeEnvironment super) valid member, built⟩
+#print axioms IntegerRange.replacement
+#print axioms IntegerRange.empty_refuses
+#print axioms inferredRange_sound
 end Examples.PrototypeTypes

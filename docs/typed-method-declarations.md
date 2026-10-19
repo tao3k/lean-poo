@@ -548,3 +548,51 @@ result. Its Symbol-family observation abstracts the finite literal label set; it
 does not prove host predicates, symbol interning, conversion, parser or macro
 implementation. These are Appendix C/D type-protocol future work. Arbitrary Class
 callbacks, mutable literal semantics and unrestricted inference remain OPEN.
+
+
+### Inclusive IntegerRange constraints
+
+Finite syntax now admits `(IntegerRange min: lower max: upper)` using the original
+number.ss constructor. Each endpoint is a literal exact integer or false; omitted
+or false bounds are unbounded. Duplicate, unknown, dangling and nonliteral bounds
+refuse before candidate building. Reversed endpoints describe the original empty
+range and are not malformed metadata or exhausted work. False is not an integer
+inhabitant. The fixnum-only core `in-range-inclusive?` cannot replace this existing
+arbitrary-precision/unbounded descriptor.
+
+Integer, UInt and IntegerRange share a symbolic numeric judgment. Inclusion checks
+at most two endpoint orders, including one-sided and empty intervals, without
+enumerating their inhabitants. Exactly/Enum integer literals may be admitted into
+a range. Nonnumeric range inclusion, arbitrary endpoint expressions and general
+range-to-Enum/Boolean-union coverage remain conservative. Public ordered Union
+branches and Map keys remain invariant. Only keyword order and explicit unbounded
+metadata canonicalize; IntegerRange is never erased into Integer/UInt merely
+because its integer membership coincides. Their descriptor/arithmetic protocols
+are distinct. Metadata positions are not Type-substitution positions.
+
+Function and range metadata now share the checked `literal-options` protocol:
+Gerbil's `plist->alist` supplies source order, `agetq` supplies literal defaults,
+and `alist->plist`/ordered mapping preserve source spelling during substitution.
+The former private reverse-list convention has been removed from Function's
+consumer, without a compatibility path. Function's 24 option-permutation controls
+still pass. Admission policy remains POO-specific typed refusal; neither a host
+binding error nor a duplicate key is silently accepted.
+
+`RangeServiceType` reuses the original rich SignatureServiceType parameter and
+Function schema, adding Super's inclusive upper/lower bound. Self=[0,10], observed
+inputs=[0,100] and Super<:[0,100] force one complete residual candidate. Existing
+optional/keyword/rest forwarding, qualifiers, callback wrappers and cache owners
+remain explicit. The same catalog publication action accepts a configurable root
+maximum; a result can pass its Function range yet fail refinement before IO or
+evidence escapes. Tests also retain ambiguity across distinct descriptor kinds,
+failure/exhaustion before builders, large exact endpoints and fresh retries.
+
+Lean adds an IntegerRange value to the existing PrototypeTypes algebra. Universal
+endpoint inclusion preserves every exact integer observation, and empty ranges
+refuse every integer. The original checker soundness/interpretation proof now
+uses those range laws, with a declared numeric interpretation premise. The top-level
+example reuses bounded inference and prefix/residual declaration binding and
+retains every original/call constraint plus the whole builder result. These laws
+advance the article's type-system future work; parser/macro implementation,
+mutable descriptor semantics, integer bit-operation costs and host GC/runtime
+performance are not proved. Full time/heap/work bounds and checks remain required.

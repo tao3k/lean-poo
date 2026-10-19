@@ -10,15 +10,64 @@ namespace LeanPoo.Functional.PrototypeTypes
 inductive Atom where
   | bool | integer | uint | string | symbol
   deriving Repr, DecidableEq
+/-- Literal inclusive endpoints of the existing IntegerRange descriptor.
+None means unbounded; reversed finite bounds denote the empty integer set. -/
+structure IntegerRange where
+  lower : Option Int
+  upper : Option Int
+  deriving Repr, DecidableEq
+/-- Membership uses exact integer order, not enumeration or machine word bounds. -/
+def IntegerRange.Contains (range : IntegerRange) (value : Int) : Prop :=
+  (∀ lower, range.lower = some lower → lower ≤ value) ∧
+  (∀ upper, range.upper = some upper → value ≤ upper)
+/-- All exact integers and UInt have fixed symbolic interval views. -/
+def IntegerRange.all : IntegerRange := ⟨none, none⟩
+/-- UInt's interval is inclusive zero through an unbounded upper endpoint. -/
+def IntegerRange.unsigned : IntegerRange := ⟨some 0, none⟩
+/-- Empty numeric ranges are successful descriptor data, not exhausted work. -/
+def IntegerRange.empty (range : IntegerRange) : Bool :=
+  match range.lower, range.upper with
+  | some lower, some upper => decide (upper < lower)
+  | _, _ => false
+/-- Source inclusion checks only endpoints. Descriptor identity is separate:
+mutually included Integer/UInt/range spellings need not have identical metadata. -/
+def IntegerRange.includes (source target : IntegerRange) : Bool :=
+  source.empty ||
+    (match target.lower with | none => true | some lower => source.lower.any (fun actual => decide (lower ≤ actual))) &&
+    (match target.upper with | none => true | some upper => source.upper.any (fun actual => decide (actual ≤ upper)))
+/-- Checked interval inclusion preserves every integer observation, including
+empty and one-sided ranges. No host predicate or primitive execution is assumed. -/
+theorem IntegerRange.replacement (source target : IntegerRange)
+    (included : source.includes target = true) (value : Int)
+    (valid : source.Contains value) : target.Contains value := by
+  rcases source with ⟨lower, upper⟩
+  rcases target with ⟨lower', upper'⟩
+  cases lower <;> cases upper <;> cases lower' <;> cases upper' <;>
+    simp_all [IntegerRange.includes, IntegerRange.empty, IntegerRange.Contains] <;> omega
+/-- Reversed finite endpoints cannot certify any integer observation. -/
+theorem IntegerRange.empty_refuses (range : IntegerRange) (value : Int)
+    (empty : range.empty = true) : ¬ range.Contains value := by
+  rcases range with ⟨lower, upper⟩
+  cases lower <;> cases upper <;> simp_all [IntegerRange.empty, IntegerRange.Contains] <;> omega
+
 /-- Finite expressions reuse existing Type/Function/container constructor shapes.
 Function lists retain exact input and multiple-output counts. -/
 inductive Ty where
   | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
+  | integerRange (range : IntegerRange)
   | maybe (element : Ty) | orFalse (element : Ty)
   | function (outputs inputs : List Ty)
   | pair (left right : Ty) | map (key value : Ty)
   | sum (tags : List Nat) (payloads : List Ty) | union (branches : List Ty)
   deriving Repr
+
+/-- The numeric interpretation covers only Integer, UInt and literal ranges;
+other scalar families never acquire numeric conversion or fallback semantics. -/
+def numericBounds : Ty → Option IntegerRange
+  | .atom .integer => some IntegerRange.all
+  | .atom .uint => some IntegerRange.unsigned
+  | .integerRange range => some range
+  | _ => none
 
 /-- A pointwise relation checks exact length; zip cannot silently drop arguments. -/
 def all₂ (test : Ty → Ty → Bool) : List Ty → List Ty → Bool
@@ -33,6 +82,7 @@ def same : Nat → Ty → Ty → Bool
   | fuel + 1, a, b => match a, b with
     | .top, .top => true
     | .atom a, .atom b => decide (a = b)
+    | .integerRange a, .integerRange b => decide (a = b)
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => same fuel a b
     | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
     | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
@@ -64,6 +114,7 @@ theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a
     all_goals try rfl
     all_goals first
       | exact congrArg Ty.atom (of_decide_eq_true accepted)
+      | exact congrArg Ty.integerRange (of_decide_eq_true accepted)
       | exact congrArg Ty.list (ih _ _ accepted)
       | exact congrArg Ty.maybe (ih _ _ accepted)
       | exact congrArg Ty.orFalse (ih _ _ accepted)
@@ -87,6 +138,8 @@ inductive Subtype : Ty → Ty → Prop where
   | refl (a) : Subtype a a
   | top (a) : Subtype a .top
   | uint : Subtype (.atom .uint) (.atom .integer)
+  | numeric : numericBounds a = some source → numericBounds b = some target →
+      source.includes target = true → Subtype a b
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
   | orFalse : Subtype a b → Subtype (.orFalse a) (.orFalse b)
@@ -105,6 +158,11 @@ def check : Nat → Ty → Ty → Bool
     match a, b with
     | _, .top => true
     | .atom a, .atom b => decide (a = b) || decide (a = .uint ∧ b = .integer)
+    | .integerRange source, .integerRange target => source.includes target
+    | .integerRange source, .atom .integer => source.includes IntegerRange.all
+    | .integerRange source, .atom .uint => source.includes IntegerRange.unsigned
+    | .atom .integer, .integerRange target => IntegerRange.all.includes target
+    | .atom .uint, .integerRange target => IntegerRange.unsigned.includes target
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => check fuel a b
     | .tuple as, .tuple bs => all₂ (check fuel) as bs
     | .pair a b, .pair c d => check fuel a c && check fuel b d
@@ -143,6 +201,13 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     all_goals try { exact .maybe (ih _ _ accepted) }
     all_goals try { exact .orFalse (ih _ _ accepted) }
     all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
+    case integerRange.integerRange source target => exact .numeric rfl rfl accepted
+    case integerRange.atom source target =>
+      cases target
+      all_goals first | contradiction | exact .numeric rfl rfl accepted
+    case atom.integerRange source target =>
+      cases source
+      all_goals first | contradiction | exact .numeric rfl rfl accepted
     case pair.pair a b c d =>
       simp only [Bool.and_eq_true] at accepted
       have both := accepted
@@ -226,6 +291,8 @@ structure Interpretation (Value : Type) where
   accepts : Ty → Value → Prop
   top : ∀ a v, accepts a v → accepts .top v
   uint : ∀ v, accepts (.atom .uint) v → accepts (.atom .integer) v
+  numeric : ∀ a b source target, numericBounds a = some source → numericBounds b = some target →
+    (∀ value, source.Contains value → target.Contains value) → ∀ v, accepts a v → accepts b v
   list : ∀ a b, (∀ v, accepts a v → accepts b v) →
     ∀ v, accepts (.list a) v → accepts (.list b) v
   maybe : ∀ a b, (∀ v, accepts a v → accepts b v) →
@@ -253,6 +320,7 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (motive_1 := fun a b _ => ∀ v, model.accepts a v → model.accepts b v)
     (motive_2 := fun as bs _ => RelList (fun a b => ∀ v, model.accepts a v → model.accepts b v) as bs)
     (fun _ _ h => h) model.top model.uint
+    (fun left right included => model.numeric _ _ _ _ left right (IntegerRange.replacement _ _ included))
     (fun _ ih => model.list _ _ ih)
     (fun _ ih => model.maybe _ _ ih)
     (fun _ ih => model.orFalse _ _ ih)
