@@ -1,0 +1,151 @@
+import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.MethodDeclarations
+
+/-! Literal intrinsic descriptors extend the type-protocol future work. Carrier
+identity is retained separately from interval observations; byte length is not
+an integer value conversion. Host recognizers and serialization are premises. -/
+namespace LeanPoo.Functional.PrototypeTypes
+
+/-- Existing runtime descriptor families, with immutable width metadata. -/
+inductive Intrinsic where
+  | null | unit | bytes (length : Option Nat) | unsigned (bits : Nat) | signed (bits : Nat)
+  | uint256 | jsInt | bytes32 | bytes64
+  deriving Repr, DecidableEq
+/-- Distinct value carriers prevent byte-length projections becoming integers. -/
+inductive IntrinsicCarrier where
+  | null | unit | bytes | integer
+  deriving Repr, DecidableEq
+/-- Abstract observations preserve the empty-list/void distinction and byte length.
+No mutable byte contents or descriptor callbacks enter a literal value cache. -/
+inductive IntrinsicValue where
+  | null | unit | bytes (length : Nat) | integer (value : Int)
+  deriving Repr, DecidableEq
+/-- Carrier identity is independent of any numeric/length inclusion proof. -/
+def Intrinsic.carrier : Intrinsic → IntrinsicCarrier
+  | .null => .null | .unit => .unit | .bytes _ | .bytes32 | .bytes64 => .bytes
+  | .unsigned _ | .signed _ | .uint256 | .jsInt => .integer
+/-- A singleton has observation zero; a vector carries its nonnegative length. -/
+def IntrinsicValue.observation : IntrinsicValue → IntrinsicCarrier × Int
+  | .null => (.null, 0) | .unit => (.unit, 0)
+  | .bytes length => (.bytes, length) | .integer value => (.integer, value)
+/-- Unsigned width is an interval observation, not normalization/modular arithmetic. -/
+def IntegerRange.forUnsigned (bits : Nat) : IntegerRange :=
+  ⟨some 0, some ((2 : Int) ^ bits - 1)⟩
+/-- Signed width includes the negative power endpoint and excludes positive overflow. -/
+def IntegerRange.forSigned (bits : Nat) : IntegerRange :=
+  ⟨some (-((2 : Int) ^ (bits - 1))), some ((2 : Int) ^ (bits - 1) - 1)⟩
+/-- Exact inclusive bounds reuse the existing interval algebra. UIntN zero has
+one integer, zero; IntN requires at least one bit at admission. -/
+def Intrinsic.range : Intrinsic → IntegerRange
+  | .null | .unit => ⟨some 0, some 0⟩
+  | .bytes none => ⟨some 0, none⟩
+  | .bytes (some length) => ⟨some length, some length⟩
+  | .unsigned bits => .forUnsigned bits
+  | .signed bits => .forSigned bits
+  | .uint256 => .forUnsigned 256 | .jsInt => .forSigned 54
+  | .bytes32 => ⟨some 32, some 32⟩ | .bytes64 => ⟨some 64, some 64⟩
+/-- Decidable literal limits match Scheme admission before exponentiation or
+cached descriptor construction. This is not a host allocator cost theorem. -/
+def Intrinsic.admitted : Intrinsic → Bool
+  | .null | .unit | .bytes none | .uint256 | .jsInt | .bytes32 | .bytes64 => true
+  | .bytes (some length) => decide (length ≤ 65536)
+  | .unsigned bits => decide (bits ≤ 4096)
+  | .signed bits => decide (1 ≤ bits ∧ bits ≤ 4096)
+/-- An accepted observation has both the correct carrier and exact interval. -/
+def Intrinsic.Accepts (type : Intrinsic) (value : IntrinsicValue) : Prop :=
+  value.observation.1 = type.carrier ∧ type.range.Contains value.observation.2
+/-- Checked inclusion retains descriptor identity in the artifact, using only a
+same-carrier interval view for the semantic judgment. No Any is introduced. -/
+def intrinsicCheck (source target : Intrinsic) : Bool :=
+  if source.admitted then if target.admitted then
+    decide (source.carrier = target.carrier) && source.range.includes target.range
+  else false else false
+/-- Successful comparisons cannot bypass either side's literal admission. -/
+theorem intrinsicCheck_admitted (source target)
+    (accepted : intrinsicCheck source target = true) :
+    source.admitted = true ∧ target.admitted = true := by
+  unfold intrinsicCheck at accepted
+  split at accepted
+  · split at accepted
+    · exact ⟨by assumption, by assumption⟩
+    · contradiction
+  · contradiction
+/-- Universal observation inclusion follows from existing interval replacement;
+no finite sampling, unchecked cross-carrier conversion or host inference is used. -/
+theorem intrinsicCheck_sound (source target : Intrinsic)
+    (accepted : intrinsicCheck source target = true) :
+    ∀ value, source.Accepts value → target.Accepts value := by
+  unfold intrinsicCheck at accepted
+  split at accepted
+  · split at accepted
+    · simp only [Bool.and_eq_true] at accepted
+      have same := of_decide_eq_true accepted.1
+      intro value valid
+      exact ⟨valid.1.trans same, IntegerRange.replacement _ _ accepted.2 _ valid.2⟩
+    · contradiction
+  · contradiction
+/-- Replacement never changes the observed carrier even for equal numeric
+projections. In particular BytesN 0 does not become Null or UIntN 0. -/
+theorem intrinsicCheck_carrier (source target)
+    (accepted : intrinsicCheck source target = true) : source.carrier = target.carrier := by
+  unfold intrinsicCheck at accepted
+  split at accepted
+  · split at accepted
+    · simp only [Bool.and_eq_true] at accepted
+      exact of_decide_eq_true accepted.1
+    · contradiction
+  · contradiction
+/-- Width aliases are observational views only, retaining source-kind identity
+for invariant Map keys and exact declaration metadata. -/
+def Intrinsic.numericView : Intrinsic → Option Ty
+  | .unsigned bits => some (.integerRange (Intrinsic.unsigned bits).range)
+  | .signed bits => some (.integerRange (Intrinsic.signed bits).range)
+  | .uint256 => some (.integerRange Intrinsic.uint256.range)
+  | .jsInt => some (.integerRange Intrinsic.jsInt.range)
+  | _ => none
+/-- Numeric observations of either width family use precisely the same interval
+judgment as the existing inferred range protocol, with no normalization of data. -/
+theorem numericView_exact (type : Intrinsic) (range : IntegerRange)
+    (projected : type.numericView = some (.integerRange range))
+    (value : Int) : type.Accepts (.integer value) ↔ range.Contains value := by
+  cases type <;> simp [Intrinsic.numericView] at projected
+  all_goals cases projected
+  all_goals simp [Intrinsic.Accepts, IntrinsicValue.observation, Intrinsic.carrier]
+/-- Required data/callback bounds share one captured assignment and builder. -/
+def inferIntrinsic (input expected : Intrinsic) (candidates : List Intrinsic) :=
+  LeanPoo.Functional.DeclarativeMetadata.inferDeclared candidates.length
+    (fun output => intrinsicCheck output input && intrinsicCheck output expected)
+    candidates (fun output => (Except.ok (input, output) : Except String (Intrinsic × Intrinsic)))
+/-- Whole declaration completion preserves both original obligations and the
+exact pair of descriptors. Equal interval views cannot substitute artifact kinds. -/
+theorem inferIntrinsic_sound (input expected candidates output artifact)
+    (published : inferIntrinsic input expected candidates = .ok (.unique output, some artifact)) :
+    intrinsicCheck output input = true ∧ intrinsicCheck output expected = true ∧
+      artifact = (input, output) := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique candidates.length
+    (fun output => intrinsicCheck output input && intrinsicCheck output expected)
+    candidates (fun output => (Except.ok (input, output) : Except String (Intrinsic × Intrinsic))) published
+  simp only [Bool.and_eq_true] at valid
+  exact ⟨valid.1, valid.2, (Except.ok.inj built).symm⟩
+
+/-- Admission charges at least one work unit for each literal width, matching
+Scheme's chunks of 64 before bounds arithmetic. Parser/search costs are separate. -/
+def Intrinsic.metadataUnits : Intrinsic → Nat
+  | .unsigned bits | .signed bits => max 1 ((bits + 63) / 64)
+  | .bytes (some length) => max 1 ((length + 63) / 64)
+  | .uint256 => 4 | .jsInt | .bytes32 | .bytes64 => 1
+  | _ => 0
+/-- Admitted width preparation is bounded independently of value enumeration. -/
+theorem metadataUnits_bounded (type : Intrinsic) (admitted : type.admitted = true) :
+    type.metadataUnits ≤ 1024 := by
+  cases type <;> simp_all [Intrinsic.admitted, Intrinsic.metadataUnits]
+  all_goals
+    first
+    | omega
+    | split <;> simp_all <;> omega
+/-- Maybe's void sentinel can satisfy its protocol without evaluating a payload.
+This observation law grants no Function callback wrapping permission by itself. -/
+theorem unit_optional (payload : Intrinsic) :
+    IntrinsicValue.unit.observation.1 = IntrinsicCarrier.unit ∨ payload.Accepts .unit := .inl rfl
+
+end LeanPoo.Functional.PrototypeTypes

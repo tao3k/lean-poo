@@ -10,7 +10,7 @@ used as a composition seed is inhabited and is not an empty Type.
 | Priority | Finding | Acceptance / next boundary |
 | --- | --- | --- |
 | P2 first | Impossible mandatory products/rows were refused across kinds | Implemented here: positive finite emptiness witnesses feed the existing replacement judgment, shared inference, ordered parameter specialization and whole declaration admission. |
-| P2 next | Runtime Null/Unit and fixed-width numeric/byte descriptors exceed the inference vocabulary | Still open. Admit immutable metadata and exact carrier/width laws before adding inference; existing runtime availability is not static coverage. |
+| P2 covered | Runtime Null/Unit and fixed-width numeric/byte descriptors | Closed for literal bounded UIntN/IntN/BytesN, Bytes, singleton names and existing fixed aliases; see intrinsic-descriptors.md for admission, interval/carrier and artifact laws. Dynamic widths remain unsupported. |
 | P2 next | TypeValuePair and Class/Schema callbacks can determine types dynamically | Still open. A future decidable protocol must capture a finite, stable descriptor catalog; arbitrary dependent/callback discovery is unsupported. |
 | Outside current boundary | Arbitrary predicate implication/emptiness, implicit principal or higher-rank inference, unrestricted recursive language inclusion | Unsupported; neither samples nor an Any fallback establish these laws. |
 

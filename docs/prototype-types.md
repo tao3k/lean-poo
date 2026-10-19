@@ -131,3 +131,5 @@ See [intrinsic scalar Union coverage](scalar-coverage.md) for String/Symbol/Keyw
 its exact decidable scope, shared publication chain and proof interpretation bounds.
 
 See [finite inference audit and emptiness](finite-inference-audit.md) for remaining P2 coverage and the required-field witness protocol.
+
+See [literal intrinsic descriptors](intrinsic-descriptors.md) for singleton, width, byte, alias and admission coverage.

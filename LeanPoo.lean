@@ -36,6 +36,7 @@ import LeanPoo.Functional.RawArguments
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.RecursiveGeneration
 import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.PrototypeTypeDescriptors
 import LeanPoo.Functional.RowTypes
 import LeanPoo.Functional.RecursiveTypes
 import LeanPoo.Functional.Codec

@@ -1,4 +1,5 @@
 import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.PrototypeTypeDescriptors
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.MethodDeclarations
 
@@ -538,6 +539,45 @@ theorem inferredEmpty_sound (dead artifact)
     (fun dead => satisfies 12 emptyConstraints (emptyEnvironment dead))
     [.atom .uint, deadCallbackInput] (buildSignature (.atom .uint)) published
   exact ⟨fun a b member => satisfies_sound 12 _ _ valid member, built⟩
+/-- Each service keeps a literal prefix and complete original descriptor artifact.
+These mirror Null/Unit, signed-input/unsigned-output and byte-buffer publication. -/
+def descriptorServices :=
+  [(Intrinsic.null, Intrinsic.null, [Intrinsic.unit, .null]),
+   (Intrinsic.unit, Intrinsic.unit, [Intrinsic.null, .unit]),
+   (Intrinsic.signed 9, Intrinsic.unsigned 8, [Intrinsic.unsigned 8, .unsigned 9]),
+   (Intrinsic.bytes none, Intrinsic.bytes (some 32), [Intrinsic.bytes (some 16), .bytes (some 32)])]
+#guard descriptorServices.all fun (input, expected, candidates) =>
+  match inferIntrinsic input expected candidates with
+  | .ok (.unique output, some (boundInput, boundOutput)) =>
+      decide (boundInput = input) && decide (boundOutput = output) && intrinsicCheck output expected
+  | _ => false
+#guard intrinsicCheck (.unsigned 0) (.unsigned 1)
+#guard intrinsicCheck (.unsigned 8) (.signed 9)
+#guard !intrinsicCheck (.signed 8) (.unsigned 8)
+#guard !intrinsicCheck (.bytes (some 0)) .null
+#guard !intrinsicCheck (.bytes (some 1)) (.unsigned 8)
+#guard intrinsicCheck .bytes32 (.bytes none)
+#guard intrinsicCheck .uint256 (.unsigned 256)
+#guard intrinsicCheck .jsInt (.signed 54)
+#guard !(Intrinsic.signed 0).admitted
+#guard !(Intrinsic.unsigned 4097).admitted
+#guard !(Intrinsic.bytes (some 65537)).admitted
+/-- The two excluded signed endpoints are concrete counterexamples, including
+negative overflow. Acceptance uses exact integer order, not bit truncation. -/
+example : (Intrinsic.signed 8).Accepts (.integer (-128)) ∧
+    ¬ (Intrinsic.signed 8).Accepts (.integer (-129)) ∧
+    ¬ (Intrinsic.signed 8).Accepts (.integer 128) := by
+  simp [Intrinsic.Accepts, IntrinsicValue.observation, Intrinsic.carrier,
+    Intrinsic.range, IntegerRange.forSigned, IntegerRange.Contains]
+/-- Runtime aliases can share interval meaning without losing artifact identity. -/
+example : Intrinsic.uint256 ≠ Intrinsic.unsigned 256 ∧
+    intrinsicCheck .uint256 (.unsigned 256) = true := by decide
+#print axioms intrinsicCheck_sound
+#print axioms intrinsicCheck_carrier
+#print axioms intrinsicCheck_admitted
+#print axioms numericView_exact
+#print axioms metadataUnits_bounded
+#print axioms inferIntrinsic_sound
 #print axioms emptyCheck_sound
 #print axioms EmptyType.refuses
 #print axioms requiredField_refuses
