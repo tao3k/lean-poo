@@ -432,6 +432,68 @@ theorem inferredBoolean_sound (super artifact)
     (fun super => satisfies 12 booleanConstraints (booleanEnvironment super))
     [.atom .integer, .atom .uint, .atom .bool] (buildSignature (.atom .bool)) published
   exact ⟨fun a b member => satisfies_sound 12 _ (booleanEnvironment super) valid member, built⟩
+/-- Finite Symbol/Keyword alternatives precede the complete intrinsic family;
+extra Bool coverage does not identify different source families. -/
+def scalarBound (family : Atom) : Ty := .union [.scalarEnum .symbol [1], .scalarEnum .keyword [2],
+  .union [.atom family, .atom .bool]]
+/-- The same prefix binder handles String, Symbol and Keyword without conversion. -/
+def scalarEnvironment (family super : Ty) : Nat → Ty := prefixEnvironment [family] (fun _ => super)
+/-- Supplied inputs, callback variance and declared bounds constrain one parameter. -/
+def scalarConstraints (family : Atom) : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground (scalarBound family)), (.ground (.atom family), .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [.atom family] [.atom family]))]
+/-- Complete declaration inference uses the existing signature builder for all
+three intrinsic families; candidate identity and order remain descriptor data. -/
+def inferredScalar (family : Atom) := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 (scalarConstraints family) (scalarEnvironment (.atom family) super))
+  [.atom .string, .atom .symbol, .atom .keyword] (buildSignature (.atom family))
+#guard match inferredScalar .string with
+  | .ok (.unique (.atom .string), some (.atom .string, .atom .string)) => true | _ => false
+#guard match inferredScalar .symbol with
+  | .ok (.unique (.atom .symbol), some (.atom .symbol, .atom .symbol)) => true | _ => false
+#guard match inferredScalar .keyword with
+  | .ok (.unique (.atom .keyword), some (.atom .keyword, .atom .keyword)) => true | _ => false
+#guard check 12 (.atom .keyword) (scalarBound .keyword)
+#guard !check 12 (.atom .symbol) (.union [.atom .keyword])
+#guard !check 12 (.atom .string) (.union [.scalarEnum .symbol [0, 1], .scalarEnum .keyword [2]])
+#guard !check 12 (.atom .keyword) (.union [.scalarEnum .keyword [0, 1, 2]])
+#guard !check 12 (.atom .symbol) (.union [.atom .symbol, .function [.atom .symbol] [.atom .symbol]])
+#guard !check 12 (.map (.atom .keyword) (.atom .bool)) (.map (scalarBound .keyword) (.atom .bool))
+#guard check 12 (.function [.atom .symbol] [scalarBound .keyword])
+  (.function [scalarBound .symbol] [.atom .keyword])
+/-- Every member of a classified family reaches an original branch; literal IDs
+are abstract labels, not a proof of host parsing or String/Symbol conversion. -/
+theorem scalarBound_accepts (family : Atom) (classified : infiniteScalar family = true) :
+    ∀ value, scalarAccepts 12 family (scalarBound family) value = true := by
+  intro value
+  cases family <;> simp only [infiniteScalar] at classified
+  all_goals try contradiction
+  all_goals exact scalarWhole_sound _ _ _ _ (by decide)
+/-- No finite list of literal labels covers an infinite source; the cutoff gives
+an explicit missing member instead of a sampled negative observation. -/
+theorem finiteScalar_missing (family : Atom) (values : List Nat) :
+    scalarAccepts 12 family (.union [.scalarEnum family values])
+      (scalarCutoff 12 (.union [.scalarEnum family values]) + 1) = false := by
+  rw [scalarFresh _ _ _ _ (by omega)]
+  rfl
+/-- Publication retains every call/declaration constraint and complete artifact.
+Host keyword transport is checked independently by Scheme's released decoder. -/
+theorem inferredScalar_sound (family super artifact)
+    (published : inferredScalar family = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ scalarConstraints family →
+      Subtype (substitute (scalarEnvironment (.atom family) super) a)
+        (substitute (scalarEnvironment (.atom family) super) b)) ∧
+      buildSignature (.atom family) super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 (scalarConstraints family) (scalarEnvironment (.atom family) super))
+    [.atom .string, .atom .symbol, .atom .keyword] (buildSignature (.atom family)) published
+  exact ⟨fun a b member => satisfies_sound 12 _ _ valid member, built⟩
+#print axioms scalarWhole_iff
+#print axioms scalarCheck_sound
+#print axioms scalarCheck_complete
+#print axioms scalarUnion_validate
+#print axioms finiteScalar_missing
+#print axioms inferredScalar_sound
 #print axioms booleanUnion_validate
 #print axioms booleanCheck_sound
 #print axioms booleanCheck_total

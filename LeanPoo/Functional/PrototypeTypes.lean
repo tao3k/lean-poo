@@ -1,350 +1,8 @@
-import Std
-import LeanPoo.Functional.VariantValidation
+import LeanPoo.Functional.PrototypeTypeCoverage
 
-/-! Finite rank-one prototype types. This advances the type-system future work in
-Appendices C/D: explicit Self <: Super constraints, structural variance and finite
-candidate inference. Host recognizers, effect behavior and mutable slot writes
-are not identified with this semantic replacement relation. -/
+/-! Checked replacement, structural variance and finite prototype inference.
+This advances the type-protocol future work, with explicit semantic premises. -/
 namespace LeanPoo.Functional.PrototypeTypes
-
-/-- The admitted scalar vocabulary has one proper numeric inclusion. -/
-inductive Atom where
-  | bool | integer | uint | string | symbol
-  deriving Repr, DecidableEq
-/-- Literal inclusive endpoints of the existing IntegerRange descriptor.
-None means unbounded; reversed finite bounds denote the empty integer set. -/
-structure IntegerRange where
-  lower : Option Int
-  upper : Option Int
-  deriving Repr, DecidableEq
-/-- Membership uses exact integer order, not enumeration or machine word bounds. -/
-def IntegerRange.Contains (range : IntegerRange) (value : Int) : Prop :=
-  (∀ lower, range.lower = some lower → lower ≤ value) ∧
-  (∀ upper, range.upper = some upper → value ≤ upper)
-/-- All exact integers and UInt have fixed symbolic interval views. -/
-def IntegerRange.all : IntegerRange := ⟨none, none⟩
-/-- UInt's interval is inclusive zero through an unbounded upper endpoint. -/
-def IntegerRange.unsigned : IntegerRange := ⟨some 0, none⟩
-/-- Empty numeric ranges are successful descriptor data, not exhausted work. -/
-def IntegerRange.empty (range : IntegerRange) : Bool :=
-  match range.lower, range.upper with
-  | some lower, some upper => decide (upper < lower)
-  | _, _ => false
-/-- Source inclusion checks only endpoints. Descriptor identity is separate:
-mutually included Integer/UInt/range spellings need not have identical metadata. -/
-def IntegerRange.includes (source target : IntegerRange) : Bool :=
-  source.empty ||
-    (match target.lower with | none => true | some lower => source.lower.any (fun actual => decide (lower ≤ actual))) &&
-    (match target.upper with | none => true | some upper => source.upper.any (fun actual => decide (actual ≤ upper)))
-/-- Checked interval inclusion preserves every integer observation, including
-empty and one-sided ranges. No host predicate or primitive execution is assumed. -/
-theorem IntegerRange.replacement (source target : IntegerRange)
-    (included : source.includes target = true) (value : Int)
-    (valid : source.Contains value) : target.Contains value := by
-  rcases source with ⟨lower, upper⟩
-  rcases target with ⟨lower', upper'⟩
-  cases lower <;> cases upper <;> cases lower' <;> cases upper' <;>
-    simp_all [IntegerRange.includes, IntegerRange.empty, IntegerRange.Contains] <;> omega
-/-- Reversed finite endpoints cannot certify any integer observation. -/
-theorem IntegerRange.empty_refuses (range : IntegerRange) (value : Int)
-    (empty : range.empty = true) : ¬ range.Contains value := by
-  rcases range with ⟨lower, upper⟩
-  cases lower <;> cases upper <;> simp_all [IntegerRange.empty, IntegerRange.Contains] <;> omega
-
-/-- Membership traversal is bounded by finite target data, never interval width.
-Scheme uses an equal? table for these literal lookups and its shared work quota. -/
-def IntegerRange.coverFrom : Nat → Int → Int → List Int → Bool
-  | fuel, lower, upper, values =>
-    if upper < lower then true else match fuel with
-      | 0 => false
-      | fuel + 1 => decide (lower ∈ values) && coverFrom fuel (lower + 1) upper values
-/-- A successful bounded traversal contains every integer in the closed interval. -/
-theorem IntegerRange.coverFrom_sound (fuel lower upper values)
-    (accepted : coverFrom fuel lower upper values = true) :
-    ∀ value, lower ≤ value → value ≤ upper → value ∈ values := by
-  induction fuel generalizing lower with
-  | zero => simp [coverFrom] at accepted; omega
-  | succ fuel ih =>
-    simp only [coverFrom] at accepted
-    split at accepted
-    · omega
-    · simp only [Bool.and_eq_true] at accepted
-      obtain ⟨head, tail⟩ := accepted
-      intro value above below
-      by_cases equal : value = lower
-      · simpa [equal] using of_decide_eq_true head
-      · exact ih (lower + 1) tail value (by omega) below
-/-- Coverage is complete when the finite probe budget spans the interval and
-every integer belongs to the target; duplicate data never proves membership. -/
-theorem IntegerRange.coverFrom_complete (fuel : Nat) (lower upper : Int) (values : List Int)
-    (enough : upper - lower < (fuel : Int))
-    (members : ∀ value, lower ≤ value → value ≤ upper → value ∈ values) :
-    coverFrom fuel lower upper values = true := by
-  induction fuel generalizing lower with
-  | zero => simp [coverFrom]; omega
-  | succ fuel ih =>
-    simp only [coverFrom]
-    split
-    · rfl
-    · simp only [Bool.and_eq_true]
-      constructor
-      · exact decide_eq_true (members lower (by omega) (by omega))
-      · apply ih (lower + 1) (by omega)
-        intro value above below
-        exact members value (by omega) below
-/-- Empty ranges fit every finite target. Nonempty unbounded ranges refuse;
-finite traversal has at most as many membership probes as target literals. -/
-def IntegerRange.coveredBy (range : IntegerRange) (values : List Int) : Bool :=
-  range.empty || match range.lower, range.upper with
-    | some lower, some upper => coverFrom values.length lower upper values
-    | _, _ => false
-/-- Finite literal coverage preserves every integer observation, including empty
-and huge-endpoint intervals; duplicate literals supply no missing membership. -/
-theorem IntegerRange.coveredBy_sound (range : IntegerRange) (values : List Int)
-    (accepted : range.coveredBy values = true) (value : Int)
-    (valid : range.Contains value) : value ∈ values := by
-  unfold coveredBy at accepted
-  simp only [Bool.or_eq_true] at accepted
-  rcases accepted with empty | covered
-  · exact False.elim (range.empty_refuses value empty valid)
-  · rcases range with ⟨lower, upper⟩
-    cases lower <;> cases upper <;> simp only at covered
-    all_goals try contradiction
-    exact coverFrom_sound _ _ _ _ covered value (valid.1 _ rfl) (valid.2 _ rfl)
-
-/-- Finite expressions reuse existing Type/Function/container constructor shapes.
-Function lists retain exact input and multiple-output counts. -/
-inductive Ty where
-  | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
-  | integerRange (range : IntegerRange)
-  | integerEnum (values : List Int)
-  | booleanEnum (values : List Bool)
-  | maybe (element : Ty) | orFalse (element : Ty)
-  | function (outputs inputs : List Ty)
-  | pair (left right : Ty) | map (key value : Ty)
-  | sum (tags : List Nat) (payloads : List Ty) | union (branches : List Ty)
-  deriving Repr
-
-/-- The numeric interpretation covers only Integer, UInt and literal ranges;
-other scalar families never acquire numeric conversion or fallback semantics. -/
-def numericBounds : Ty → Option IntegerRange
-  | .atom .integer => some IntegerRange.all
-  | .atom .uint => some IntegerRange.unsigned
-  | .integerRange range => some range
-  | _ => none
-
-/-- Pure integer observations of built-in flat Types; alternatives retain order.
-Zero fuel refuses rather than claiming coverage of an unvisited subtree. -/
-def integerAccepts : Nat → Ty → Int → Bool
-  | 0, _, _ => false
-  | fuel + 1, type, value => match type with
-    | .integerRange range => range.lower.all (fun lower => decide (lower ≤ value)) &&
-                            range.upper.all (fun upper => decide (value ≤ upper))
-    | .integerEnum values => decide (value ∈ values)
-    | .atom .integer => true
-    | .atom .uint => decide (0 ≤ value)
-    | .union branches => branches.any (fun branch => integerAccepts fuel branch value)
-    | _ => false
-/-- Ordered Option traversal projects all branches or refuses the entire tree.
-A wrapper-bearing branch cannot be hidden behind an earlier numeric match. -/
-def collectPieces (project : Ty → Option (List VariantValidation.Interval)) : List Ty → Option (List VariantValidation.Interval)
-  | [] => some []
-  | branch :: rest => match project branch, collectPieces project rest with
-    | some first, some tail => some (first ++ tail)
-    | _, _ => none
-/-- Every projected piece retains a source branch; concatenation does not sort,
-coalesce or rewrite the original declaration's alternative descriptors. -/
-theorem collectPieces_origin (project : Ty → Option (List VariantValidation.Interval))
-    (branches : List Ty) (pieces : List VariantValidation.Interval)
-    (built : collectPieces project branches = some pieces) (piece : VariantValidation.Interval) (member : piece ∈ pieces) :
-    ∃ branch ∈ branches, ∃ parts, project branch = some parts ∧ piece ∈ parts := by
-  induction branches generalizing pieces with
-  | nil => simp [collectPieces] at built; subst pieces; simp at member
-  | cons branch rest ih =>
-    cases head : project branch with
-    | none => simp [collectPieces, head] at built
-    | some first =>
-      cases tail : collectPieces project rest with
-      | none => simp [collectPieces, head, tail] at built
-      | some last =>
-        simp only [collectPieces, head, tail, Option.some.injEq] at built
-        subst pieces
-        rcases List.mem_append.mp member with left | right
-        · exact ⟨branch, by simp, first, head, left⟩
-        · obtain ⟨original, inside, parts, projected, retained⟩ := ih last tail right
-          exact ⟨original, List.mem_cons_of_mem branch inside, parts, projected, retained⟩
-/-- Numeric intervals retain optional endpoints; Enum members are singleton points.
-Nonnumeric built-in atoms contribute no integer cover. Other carriers refuse. -/
-def numericPieces : Nat → Ty → Option (List VariantValidation.Interval)
-  | 0, _ => none
-  | fuel + 1, type => match type with
-    | .integerRange range => some [(range.lower, range.upper)]
-    | .integerEnum values => some (values.map (fun value => (some value, some value)))
-    | .atom .integer => some [(none, none)]
-    | .atom .uint => some [(some 0, none)]
-    | .atom _ | .booleanEnum _ => some []
-    | .union branches => collectPieces (numericPieces fuel) branches
-    | _ => none
-/-- Projection never invents an integer belonging to no original flat branch. -/
-theorem numericPieces_sound (fuel type pieces)
-    (built : numericPieces fuel type = some pieces) (piece : VariantValidation.Interval)
-    (member : piece ∈ pieces) (value : Int) (valid : VariantValidation.intervalHas piece value) :
-    integerAccepts fuel type value = true := by
-  induction fuel generalizing type pieces with
-  | zero => simp [numericPieces] at built
-  | succ fuel ih =>
-    cases type <;> try { simp [numericPieces] at built }
-    case integerRange range =>
-      rcases range with ⟨low, high⟩
-      simp only [numericPieces, Option.some.injEq] at built
-      subst pieces
-      simp only [List.mem_singleton] at member
-      subst piece
-      cases low <;> cases high <;>
-        simp_all [integerAccepts, VariantValidation.intervalHas] <;> omega
-    case booleanEnum values =>
-      simp only [numericPieces, Option.some.injEq] at built
-      subst pieces
-      simp at member
-    case integerEnum values =>
-      simp only [numericPieces, Option.some.injEq] at built
-      subst pieces
-      obtain ⟨original, inside, equal⟩ := List.mem_map.mp member
-      subst piece
-      have equal : value = original := by simp [VariantValidation.intervalHas] at valid; omega
-      simp [integerAccepts, equal, inside]
-    case atom name =>
-      cases name <;> simp only [numericPieces, Option.some.injEq] at built
-      all_goals subst pieces
-      all_goals try { simp at member }
-      all_goals simp only [List.mem_singleton] at member
-      all_goals subst piece
-      all_goals simp_all [integerAccepts, VariantValidation.intervalHas] <;> omega
-    case union branches =>
-      obtain ⟨branch, inside, parts, projected, retained⟩ :=
-        collectPieces_origin _ branches pieces built piece member
-      simp only [integerAccepts, List.any_eq_true]
-      exact ⟨branch, inside, ih _ _ projected retained⟩
-/-- An optionally unbounded range may span several ordered flat alternatives. Coverage uses
-residual subtraction and visits no integer merely because an interval is wide. -/
-def rangeUnionCheck (fuel : Nat) (source : IntegerRange) (branches : List Ty) : Bool :=
-  match numericPieces fuel (.union branches) with
-  | none => false
-  | some pieces => VariantValidation.coversInterval (source.lower, source.upper) pieces
-/-- A finite literal source is checked member by member against the same ordered
-flat tree; all branches must first be admitted, even for an empty source. -/
-def enumUnionCheck (fuel : Nat) (values : List Int) (branches : List Ty) : Bool :=
-  match numericPieces fuel (.union branches) with
-  | none => false
-  | some _ => values.all (fun value => integerAccepts fuel (.union branches) value)
-/-- Successful range coverage retains both complete flat admission and universal
-integer membership. Hashing, mutable host predicates and serialization are absent. -/
-theorem rangeUnionCheck_sound (fuel source branches)
-    (accepted : rangeUnionCheck fuel source branches = true) :
-    ∃ pieces, numericPieces fuel (.union branches) = some pieces ∧
-      ∀ value, source.Contains value → integerAccepts fuel (.union branches) value = true := by
-  cases built : numericPieces fuel (.union branches) with
-  | none => simp [rangeUnionCheck, built] at accepted
-  | some pieces =>
-    refine ⟨pieces, rfl, ?_⟩
-    intro value inside
-    have covered : VariantValidation.coversInterval (source.lower, source.upper) pieces = true := by
-      simpa [rangeUnionCheck, built] using accepted
-    obtain ⟨piece, member, valid⟩ := VariantValidation.coversInterval_sound _ _ covered value inside
-    exact numericPieces_sound _ _ _ built piece member value valid
-/-- Finite literal coverage likewise retains the all-branch admission certificate. -/
-theorem enumUnionCheck_sound (fuel values branches)
-    (accepted : enumUnionCheck fuel values branches = true) :
-    ∃ pieces, numericPieces fuel (.union branches) = some pieces ∧
-      ∀ value ∈ values, integerAccepts fuel (.union branches) value = true := by
-  cases built : numericPieces fuel (.union branches) with
-  | none => simp [enumUnionCheck, built] at accepted
-  | some pieces =>
-    refine ⟨pieces, rfl, ?_⟩
-    have all : values.all (fun value => integerAccepts fuel (.union branches) value) = true := by
-      simpa [enumUnionCheck, built] using accepted
-    exact List.all_eq_true.mp all
-
-/-- The existing numeric view preserves integer observations of both atomic
-families and literal ranges; no identification of descriptor syntax is needed. -/
-theorem numericBounds_contains (source : Ty) (range : IntegerRange) (fuel : Nat) (value : Int)
-    (bounds : numericBounds source = some range)
-    (member : integerAccepts (fuel + 1) source value = true) : range.Contains value := by
-  cases source <;> simp only [numericBounds] at bounds
-  all_goals try contradiction
-  case integerRange actual =>
-    have equal : actual = range := Option.some.inj bounds
-    subst range
-    rcases actual with ⟨lower, upper⟩
-    cases lower <;> cases upper <;> simp_all [integerAccepts, IntegerRange.Contains]
-  case atom name =>
-    cases name
-    all_goals try contradiction
-    all_goals cases bounds
-    all_goals simp_all [integerAccepts, IntegerRange.Contains, IntegerRange.all, IntegerRange.unsigned]
-/-- Joint coverage applies uniformly to Integer, UInt and IntegerRange. Every
-accepted integer reaches an original alternative, independently of bit width. -/
-theorem numericUnion_sound (source range fuel branches)
-    (bounds : numericBounds source = some range)
-    (covered : rangeUnionCheck fuel range branches = true) (value : Int)
-    (member : integerAccepts (fuel + 1) source value = true) :
-    integerAccepts fuel (.union branches) value = true := by
-  obtain ⟨_, _, inclusion⟩ := rangeUnionCheck_sound _ _ _ covered
-  exact inclusion value (numericBounds_contains source range fuel value bounds member)
-
-/-- Bool's intrinsic finite view includes false as a value, never as absence.
-Boolean Exactly descriptors are represented by singleton booleanEnum lists. -/
-def booleanValues : Ty → Option (List Bool)
-  | .atom .bool => some [false, true]
-  | .booleanEnum values => some values
-  | _ => none
-/-- Pure Boolean observations of the same intrinsic flat descriptor tree. -/
-def booleanAccepts : Nat → Ty → Bool → Bool
-  | 0, _, _ => false
-  | fuel + 1, type, value => match type with
-    | .atom .bool => true
-    | .booleanEnum values => decide (value ∈ values)
-    | .union branches => branches.any (fun branch => booleanAccepts fuel branch value)
-    | _ => false
-/-- Reuse all-branch flat admission and finite literal traversal. Wrappers cannot
-hide behind an earlier successful branch, including for an empty literal set. -/
-def booleanCheck (fuel : Nat) (values : List Bool) (target : Ty) : Bool :=
-  match numericPieces fuel target with
-  | none => false
-  | some _ => values.all (fun value => booleanAccepts fuel target value)
-/-- Successful finite coverage retains admission and every original literal. -/
-theorem booleanCheck_sound (fuel values target)
-    (accepted : booleanCheck fuel values target = true) :
-    ∃ pieces, numericPieces fuel target = some pieces ∧
-      ∀ value ∈ values, booleanAccepts fuel target value = true := by
-  cases built : numericPieces fuel target with
-  | none => simp [booleanCheck, built] at accepted
-  | some pieces =>
-    refine ⟨pieces, rfl, ?_⟩
-    exact List.all_eq_true.mp (by simpa [booleanCheck, built] using accepted)
-/-- Bool coverage is exhaustive over the whole domain, not sampled observations. -/
-theorem booleanCheck_total (fuel target)
-    (accepted : booleanCheck fuel [false, true] target = true) :
-    ∀ value : Bool, booleanAccepts fuel target value = true := by
-  obtain ⟨_, _, members⟩ := booleanCheck_sound _ _ _ accepted
-  intro value
-  cases value <;> exact members _ (by simp)
-
-/-- Exhaustive Boolean coverage and identity-preserving flat validators keep
-both values through the first matching branch. A selected error still cannot
-fall through; identity/shape agreement is an explicit runtime interpretation. -/
-theorem booleanUnion_validate (fuel : Nat) (branches : List Ty)
-    (validate : Ty → Bool → Except Error Bool) (missing invalid : Error)
-    (covered : booleanCheck (fuel + 1) [false, true] (.union branches) = true)
-    (identity : ∀ branch ∈ branches, ∀ value,
-      booleanAccepts fuel branch value = true → validate branch value = .ok value) :
-    ∀ value, VariantValidation.union (booleanAccepts fuel) (booleanAccepts fuel)
-      validate missing invalid branches value = .ok value := by
-  intro value
-  apply VariantValidation.union_identity
-  · exact booleanCheck_total (fuel + 1) (.union branches) covered value
-  · intro branch inside selected
-    exact identity branch inside value selected
 
 /-- A pointwise relation checks exact length; zip cannot silently drop arguments. -/
 def all₂ (test : Ty → Ty → Bool) : List Ty → List Ty → Bool
@@ -361,6 +19,7 @@ def same : Nat → Ty → Ty → Bool
     | .atom a, .atom b => decide (a = b)
     | .integerRange a, .integerRange b => decide (a = b)
     | .integerEnum a, .integerEnum b | .booleanEnum a, .booleanEnum b => decide (a = b)
+    | .scalarEnum name as, .scalarEnum name' bs => decide (name = name') && decide (as = bs)
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => same fuel a b
     | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
     | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
@@ -395,6 +54,8 @@ theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a
       | exact congrArg Ty.integerRange (of_decide_eq_true accepted)
       | exact congrArg Ty.integerEnum (of_decide_eq_true accepted)
       | exact congrArg Ty.booleanEnum (of_decide_eq_true accepted)
+      | simp only [Bool.and_eq_true] at accepted
+        exact congr (congrArg Ty.scalarEnum (of_decide_eq_true accepted.1)) (of_decide_eq_true accepted.2)
       | exact congrArg Ty.list (ih _ _ accepted)
       | exact congrArg Ty.maybe (ih _ _ accepted)
       | exact congrArg Ty.orFalse (ih _ _ accepted)
@@ -423,6 +84,8 @@ inductive Subtype : Ty → Ty → Prop where
   | rangeEnum : range.coveredBy values = true → Subtype (.integerRange range) (.integerEnum values)
   | numericUnion : numericBounds source = some range → rangeUnionCheck fuel range branches = true →
       Subtype source (.union branches)
+  | scalarUnion : scalarCheck fuel family (.union branches) = true →
+      Subtype (.atom family) (.union branches)
   | boolean : booleanValues source = some values → booleanCheck fuel values target = true →
       Subtype source target
   | enumUnion : enumUnionCheck fuel values branches = true → Subtype (.integerEnum values) (.union branches)
@@ -447,11 +110,15 @@ def check : Nat → Ty → Ty → Bool
     | .integerRange source, .integerRange target => source.includes target
     | .integerRange source, .integerEnum values => source.coveredBy values
     | .integerEnum values, .integerEnum target => decide (values = target)
+    | .scalarEnum family values, .scalarEnum family' target =>
+        decide (family = family') && decide (values = target)
     | .integerRange source, .union branches => rangeUnionCheck fuel source branches
     | .atom .bool, .union branches => booleanCheck fuel [false, true] (.union branches)
-    | .atom source, .union branches => match numericBounds (.atom source) with
-        | some range => rangeUnionCheck fuel range branches
-        | none => false
+    | .atom source, .union branches =>
+        if infiniteScalar source then scalarCheck fuel source (.union branches)
+        else match numericBounds (.atom source) with
+          | some range => rangeUnionCheck fuel range branches
+          | none => false
     | .atom .bool, .booleanEnum values => booleanCheck fuel [false, true] (.booleanEnum values)
     | .booleanEnum values, .atom .bool => booleanCheck fuel values (.atom .bool)
     | .booleanEnum values, .booleanEnum target => booleanCheck fuel values (.booleanEnum target)
@@ -505,9 +172,15 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
       have equal := of_decide_eq_true accepted
       subst target
       exact .refl _
+    case scalarEnum.scalarEnum family values family' target =>
+      simp only [Bool.and_eq_true] at accepted
+      have names : family = family' := of_decide_eq_true accepted.1
+      have values : values = target := of_decide_eq_true accepted.2
+      subst family'; subst target
+      exact .refl _
     case integerRange.union source branches => exact .numericUnion rfl accepted
     case atom.union source branches =>
-      cases source <;> first | contradiction | exact .boolean rfl accepted | exact .numericUnion rfl accepted
+      cases source <;> first | contradiction | exact .boolean rfl accepted | exact .numericUnion rfl accepted | exact .scalarUnion accepted
     case atom.booleanEnum source values =>
       cases source <;> first | contradiction | exact .boolean rfl accepted
     case booleanEnum.atom values target =>
@@ -612,6 +285,10 @@ structure Interpretation (Value : Type) where
     numericPieces fuel (.union branches) = some pieces →
     (∀ value, source.Contains value → integerAccepts fuel (.union branches) value = true) →
     ∀ v, accepts (.integerRange source) v → accepts (.union branches) v
+  scalarUnion : ∀ family branches fuel pieces, infiniteScalar family = true →
+    numericPieces fuel (.union branches) = some pieces →
+    (∀ value, scalarAccepts fuel family (.union branches) value = true) →
+    ∀ v, accepts (.atom family) v → accepts (.union branches) v
   boolean : ∀ source values target fuel pieces, booleanValues source = some values →
     numericPieces fuel target = some pieces →
     (∀ value ∈ values, booleanAccepts fuel target value = true) →
@@ -654,6 +331,9 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
       intro value valid
       apply model.rangeUnion _ _ _ pieces projected covered value
       exact model.numeric _ _ _ _ bounds rfl (fun _ inside => inside) value valid)
+    (fun accepted => by
+      obtain ⟨familyKind, pieces, projected, covered⟩ := scalarCheck_sound _ _ _ accepted
+      exact model.scalarUnion _ _ _ pieces familyKind projected covered)
     (fun view accepted => by
       obtain ⟨pieces, projected, covered⟩ := booleanCheck_sound _ _ _ accepted
       exact model.boolean _ _ _ _ pieces view projected covered)

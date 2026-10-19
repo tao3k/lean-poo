@@ -126,3 +126,6 @@ Lean's fuel bounds derivation depth / abstract assignment scans; Gerbil addition
 charges syntax, search and compilation visits. No Scheme test or library imports a
 Lean checkout. Full existing single-process tests and Lean resource-guarded checks
 remain required; focused controls do not replace either gate.
+
+See [intrinsic scalar Union coverage](scalar-coverage.md) for String/Symbol/Keyword,
+its exact decidable scope, shared publication chain and proof interpretation bounds.

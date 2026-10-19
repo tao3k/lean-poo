@@ -434,6 +434,8 @@
   "LeanPoo/Functional/ProjectedSelf.lean",
   "LeanPoo/Functional/PropertyTesting.lean",
   "LeanPoo/Functional/ProtocolSelection.lean",
+  "LeanPoo/Functional/PrototypeTypeCoverage.lean",
+  "LeanPoo/Functional/PrototypeTypeSyntax.lean",
   "LeanPoo/Functional/PrototypeTypes.lean",
   "LeanPoo/Functional/QueueSelection.lean",
   "LeanPoo/Functional/RawArguments.lean",
