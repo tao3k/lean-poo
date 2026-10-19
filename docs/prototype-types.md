@@ -46,6 +46,18 @@ inference. The carrier model distinguishes empty vectors from empty lists;
 host constructor correspondence and recursive wrapper behavior remain runtime
 obligations. The handler-batch example and regressions exercise that boundary.
 
+The converse singleton case uses the existing positive empty-Type witness:
+`(List Dead)` replaces Null only if Dead is proved empty. The List remains
+inhabited by nil; an empty Tuple/Map/List or an optional sentinel is an inhabitant,
+not proof of an empty element Type. Pair recursion carries this fact into exact
+singleton tails. No public descriptor, Map key or ordered Union tree is rewritten.
+`emptyListCheck_sound` and `emptyListCheck_inhabited` prove both sides of this
+distinction; `singleton_tail` retains the exact head and `inferEmptyList_sound`
+retains the original completed declaration artifact. Empty-witness interpretation
+and host carrier projection remain premises. The singleton-handler example
+composes this with inferred qualified methods, nested Function wrappers and
+FUN/refine/bind-evidence; equivalent candidates remain ambiguous.
+
 `prototype-types.ss` connects that algebra to `parameters.ss`:
 
 ```scheme

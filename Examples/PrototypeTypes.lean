@@ -673,4 +673,27 @@ example : inferProperList (fun a b : Nat => decide (a ≤ b)) 1
 #print axioms null_tuple_disjoint
 #print axioms properListCheck_sound
 #print axioms inferProperList_sound
+/-- No payload inhabits the zero key, but its List still contains nil. -/
+example : (ProperListShape.elements (0 : Nat)).Accepts
+    (fun key (_value : Nat) => key ≠ 0) [] := by simp [ProperListShape.Accepts]
+
+/-- Universal list membership at a witnessed empty element reduces to nil. -/
+example (values : List Nat)
+    (valid : (ProperListShape.elements (0 : Nat)).Accepts (fun key _ => key ≠ 0) values) :
+    values = [] :=
+  emptyListCheck_sound (fun key : Nat => decide (key = 0)) (fun key (_value : Nat) => key ≠ 0)
+    (fun _ admitted _ nonzero => nonzero (of_decide_eq_true admitted)) _ rfl values valid
+
+/-- A mandatory cons is not an inhabited singleton-empty list. -/
+example : emptyListCheck (fun key : Nat => decide (key = 0))
+    (.cons 0 .empty) = false := rfl
+
+/-- Unique inference preserves the empty-element List descriptor as its artifact. -/
+example : inferEmptyList (fun key : Nat => decide (key = 0)) [.elements 1, .elements 0] =
+    .ok (.unique (.elements 0), some (.elements 0)) := rfl
+
+#print axioms emptyListCheck_sound
+#print axioms emptyListCheck_inhabited
+#print axioms singleton_tail
+#print axioms inferEmptyList_sound
 end Examples.PrototypeTypes

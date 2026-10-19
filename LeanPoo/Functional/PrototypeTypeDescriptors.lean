@@ -221,4 +221,68 @@ theorem inferProperList_sound (test : Key → Key → Bool) (target candidates s
     (fun shape => (Except.ok (target, shape) : Except String (Key × ProperListShape Key))) published
   exact ⟨valid, (Except.ok.inj built).symm⟩
 
+/-- A finite empty-element witness gives a List exactly its empty-list value.
+It never declares List itself empty, and never treats vectors as list spines. -/
+def emptyListCheck (empty : Key → Bool) : ProperListShape Key → Bool
+  | .empty => true
+  | .elements type => empty type
+  | .cons _ _ => false
+
+/-- Successful empty-list admission implies readable inclusion in Null for all
+values. Child emptiness is an explicit sound witness, not failed inhabitation. -/
+theorem emptyListCheck_sound (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (shape : ProperListShape Key) (accepted : emptyListCheck empty shape = true) :
+    ∀ values, shape.Accepts member values → values = [] := by
+  cases shape with
+  | empty => intro values valid; exact valid
+  | elements type =>
+    intro values valid
+    cases values with
+    | nil => rfl
+    | cons first rest => exact False.elim (sound type accepted first (valid first (by simp)))
+  | cons head tail => simp [emptyListCheck] at accepted
+
+/-- The admitted list Type is inhabited by nil, even when no payload can exist.
+This prevents confusing empty containers with empty Types in further reasoning. -/
+theorem emptyListCheck_inhabited (empty : Key → Bool) (member : Key → Value → Prop)
+    (shape : ProperListShape Key) (accepted : emptyListCheck empty shape = true) :
+    shape.Accepts member [] := by
+  cases shape with
+  | empty => rfl
+  | elements type => simp [ProperListShape.Accepts]
+  | cons head tail => simp [emptyListCheck] at accepted
+
+/-- A Pair with an admitted empty-list tail has exactly one original head.
+The theorem preserves its value and membership, without a vector conversion. -/
+theorem singleton_tail (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (head : Key) (tail : ProperListShape Key) (accepted : emptyListCheck empty tail = true)
+    (values : List Value) (valid : (ProperListShape.cons head tail).Accepts member values) :
+    ∃ value, values = [value] ∧ member head value := by
+  cases values with
+  | nil => simp [ProperListShape.Accepts] at valid
+  | cons first rest =>
+    have onlyNil := emptyListCheck_sound empty member sound tail accepted rest valid.2
+    exact ⟨first, by simp [onlyNil], valid.1⟩
+
+/-- The existing complete declaration search preserves original empty-list shape
+candidates, including genuinely ambiguous representations of the same value set. -/
+def inferEmptyList (empty : Key → Bool) (candidates : List (ProperListShape Key)) :=
+  LeanPoo.Functional.DeclarativeMetadata.inferDeclared candidates.length
+    (emptyListCheck empty) candidates
+    (fun shape => (Except.ok shape : Except String (ProperListShape Key)))
+
+/-- Accepted inference keeps exact source metadata and universally rejects any
+nonempty result under the original empty-element interpretation premise. -/
+theorem inferEmptyList_sound (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (candidates : List (ProperListShape Key)) (shape artifact : ProperListShape Key)
+    (published : inferEmptyList empty candidates = .ok (.unique shape, some artifact)) :
+    artifact = shape ∧ (∀ values, shape.Accepts member values → values = []) := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique candidates.length
+    (emptyListCheck empty) candidates
+    (fun shape => (Except.ok shape : Except String (ProperListShape Key))) published
+  exact ⟨(Except.ok.inj built).symm, emptyListCheck_sound empty member sound shape valid⟩
+
 end LeanPoo.Functional.PrototypeTypes
