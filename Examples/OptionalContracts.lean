@@ -275,4 +275,35 @@ example (source : Descriptor × Value) :
 #print axioms OptionalValidation.catalogCall_changed
 #print axioms OptionalValidation.catalogCall_stable
 #print axioms OptionalValidation.catalogCall_sound
+-- Exhaustive Boolean coverage uses false as the sentinel and true as payload.
+#guard OptionalValidation.finiteCoverage (fun value : Bool => !value) id [false, true]
+
+-- A false-only observation cannot certify the missing true payload branch.
+#guard !OptionalValidation.finiteCoverage (fun value : Bool => !value) (fun _ => false) [false, true]
+
+/-- Different sentinels compose only when both void and false remain admitted. -/
+example (value : Option Bool) :
+    OptionalValidation.Admits (fun item => decide (item = none))
+      (fun item => item = some false ∨ item = some true) value →
+    OptionalValidation.Admits (fun item => decide (item = some false))
+      (fun item => item = none ∨ item = some true) value := by
+  apply OptionalValidation.sentinel_replacement
+  · intro item missing
+    have same : item = none := of_decide_eq_true missing
+    exact .inr (.inl same)
+  · intro item valid
+    rcases valid with negative | positive
+    · exact .inl (by simp [negative])
+    · exact .inr (.inr positive)
+
+/-- One complete solve retains captured signature metadata and the chosen nesting. -/
+example : OptionalValidation.inferOptional "optional handler"
+    (fun candidate : Nat => decide (candidate = 2))
+    (fun candidate => decide (candidate ≤ 2)) [1, 2, 3] =
+    .ok (.unique 2, some ("optional handler", 2)) := rfl
+
+#print axioms OptionalValidation.payload_replacement
+#print axioms OptionalValidation.sentinel_replacement
+#print axioms OptionalValidation.finiteCoverage_sound
+#print axioms OptionalValidation.inferOptional_sound
 end LeanPoo.Examples.OptionalContracts

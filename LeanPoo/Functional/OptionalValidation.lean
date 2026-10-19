@@ -1,4 +1,5 @@
 import LeanPoo.Functional.ContainerValidation
+import LeanPoo.Functional.MethodDeclarations
 
 /-! Sentinel optionals and dependent typed values, interpreted with pure finite
 callbacks. A present branch checks its own child membership; normalization may
@@ -75,6 +76,56 @@ theorem replacement (absent : Value → Bool) (source target : Value → Prop)
   rcases valid with missing | present
   · exact .inl missing
   · exact .inr (included value present)
+
+/-- Ordinary payload inclusion lifts into an optional without inventing a top
+Type or changing the value's carrier. Normalization remains the child protocol. -/
+theorem payload_replacement (absent : Value → Bool) (source target : Value → Prop)
+    (included : ∀ value, source value → target value) (value : Value)
+    (valid : source value) : Admits absent target value := .inr (included value valid)
+
+/-- Different optional kinds must cover both the original sentinel and every
+payload. Same-kind covariance is the special case with identical sentinels. -/
+theorem sentinel_replacement (sourceAbsent targetAbsent : Value → Bool)
+    (source target : Value → Prop)
+    (sentinels : ∀ value, sourceAbsent value = true → Admits targetAbsent target value)
+    (payloads : ∀ value, source value → Admits targetAbsent target value)
+    (value : Value) (valid : Admits sourceAbsent source value) : Admits targetAbsent target value := by
+  rcases valid with missing | present
+  · exact sentinels value missing
+  · exact payloads value present
+
+/-- Exhaust all admitted immutable literal observations, retaining their order.
+False is an ordinary value in the list; it is not a missing entry or failed check. -/
+def finiteCoverage (absent member : Value → Bool) (values : List Value) : Bool :=
+  values.all (fun value => absent value || member value)
+
+/-- Finite coverage is universal over the complete supplied source language.
+Host Bool/Enum enumeration completeness is an explicit interpretation premise. -/
+theorem finiteCoverage_sound (absent member : Value → Bool) (values : List Value)
+    (accepted : finiteCoverage absent member values = true) (value : Value)
+    (present : value ∈ values) : Admits absent (fun item => member item = true) value := by
+  have checked := (List.all_eq_true.mp accepted) value present
+  simpa only [Admits, Bool.or_eq_true] using checked
+
+/-- One complete declaration search checks sentinel and payload obligations on
+the same candidate, retaining the exact captured signature in its artifact. -/
+def inferOptional (signature : Signature) (sentinels payloads : Candidate → Bool)
+    (candidates : List Candidate) :=
+  LeanPoo.Functional.DeclarativeMetadata.inferDeclared candidates.length
+    (fun candidate => sentinels candidate && payloads candidate) candidates
+    (fun candidate => (Except.ok (signature, candidate) : Except String (Signature × Candidate)))
+
+/-- A unique completed declaration preserves both obligations and the original
+signature/candidate pair; no independently solved sentinel branch may replace it. -/
+theorem inferOptional_sound (signature : Signature) (sentinels payloads : Candidate → Bool)
+    (candidates : List Candidate) (candidate : Candidate) (artifact : Signature × Candidate)
+    (published : inferOptional signature sentinels payloads candidates = .ok (.unique candidate, some artifact)) :
+    sentinels candidate = true ∧ payloads candidate = true ∧ artifact = (signature, candidate) := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique candidates.length
+    (fun candidate => sentinels candidate && payloads candidate) candidates
+    (fun candidate => (Except.ok (signature, candidate) : Except String (Signature × Candidate))) published
+  simp only [Bool.and_eq_true] at valid
+  exact ⟨valid.1, valid.2, (Except.ok.inj built).symm⟩
 
 /-- A present accepted normalization belongs to the selected child, even when its
 result is an outer sentinel. Child errors never become successful absence. -/

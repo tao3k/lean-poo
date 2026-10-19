@@ -58,6 +58,23 @@ and host carrier projection remain premises. The singleton-handler example
 composes this with inferred qualified methods, nested Function wrappers and
 FUN/refine/bind-evidence; equivalent candidates remain ambiguous.
 
+Maybe/OrFalse targets now share general payload lifting and exact sentinel
+coverage. Same-kind covariance retains its fast child proof; broader optional
+sources must cover both their original sentinel and their payload. Bool and
+immutable Exactly/Enum sources check every literal, using false only as OrFalse's
+sentinel and Unit only as Maybe's sentinel. Different nesting orders may include
+the same values while retaining distinct candidate metadata and genuine ambiguity.
+Map keys, direct ordered Union identity and keyword/escape origin checks are not
+relaxed. Optional Functions do not become unconditionally callable.
+
+OptionalValidation's payload_replacement, sentinel_replacement,
+finiteCoverage_sound and inferOptional_sound prove the corresponding readable
+inclusion and exact original declaration provenance under complete host
+interpretation/child-inclusion premises. Runtime sentinel bypass, present child
+errors and recursive wrapping keep the existing normalize/validate-optional
+semantics. Arbitrary callback effect equivalence and host compiler correctness
+are outside this relation; Scheme tests exercise the separate runtime obligations.
+
 `prototype-types.ss` connects that algebra to `parameters.ss`:
 
 ```scheme
