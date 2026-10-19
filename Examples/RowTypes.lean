@@ -176,4 +176,70 @@ example (model : Interpretation Value) (laws : EmptyLaws model.accepts) (artifac
 #print axioms record_replacement
 #print axioms recordCheck_sound
 
+/-- The primary Gerbil worker consumes Integer and returns checked UInt8;
+its backup and target interface use the existing UInt-returning handler. -/
+def primaryWorker : Ty := .function [.integerRange { lower := some 0, upper := some 255 }] [.atom .integer]
+
+/-- The host literal tag interpretation supplies Symbol membership. The finite Ty
+fixture forgets exact tag literals but retains both original branch identities. -/
+def taggedWorkers (bad : Bool) : List (Nat × Ty) :=
+  [(0, primaryWorker),
+   (1, if bad then .atom .bool else handler)]
+
+/-- Worker consumers require readable tag/value fields and permit extra slots. -/
+def taggedWorkerView : Row String (Ty × Bool) :=
+  ⟨[("tag", (.atom .symbol, false)), ("value", (handler, false))], false⟩
+
+/-- The tag Type is a faithful host-supplied literal view in the generic theorem;
+this concrete Ty projection uses Symbol for both tags, never top or Any. -/
+def workerTag (_ : Nat) : Ty := .atom .symbol
+
+/-- All tagged branches use the existing field test and required/open row rule. -/
+def taggedWorkersCheck (bad : Bool) : Bool :=
+  taggedRowsCheck (PrototypeTypes.check 8) (fun field => emptyCheck 8 field)
+    "tag" "value" workerTag (taggedWorkers bad) taggedWorkerView
+
+example : taggedWorkersCheck false = true := by decide
+example : taggedWorkersCheck true = false := by decide
+example : taggedRowsCheck (PrototypeTypes.check 8) (fun field => emptyCheck 8 field)
+    "tag" "value" workerTag (taggedWorkers false) { taggedWorkerView with closed := true } = false := by decide
+example : taggedRowsCheck (PrototypeTypes.check 8) (fun field => emptyCheck 8 field)
+    "tag" "value" workerTag (taggedWorkers false)
+    ⟨("audit", (.atom .uint, true)) :: taggedWorkerView.fields, false⟩ = false := by decide
+
+/-- Complete inference keeps the original branch list in the unique artifact;
+an incompatible later branch cannot be hidden by an earlier successful one. -/
+example : DeclarativeMetadata.inferDeclared 2 taggedWorkersCheck [true, false]
+    (fun bad => (Except.ok ("tagged workers", bad, taggedWorkers bad) :
+      Except String (String × Bool × List (Nat × Ty)))) =
+    .ok (.unique false, some ("tagged workers", false, taggedWorkers false)) := rfl
+
+/-- Universal readable replacement follows from each selected branch's actual
+observations and the same behavioral Function/empty-Type interpretations. -/
+example (model : Interpretation Value) (branch : Nat × Ty)
+    (present : branch ∈ taggedWorkers false) (observe : String → Option Value)
+    (valid : Admits model.accepts
+      (taggedRow "tag" "value" (workerTag branch.1) branch.2) observe) :
+    RecordAdmits model.accepts taggedWorkerView observe :=
+  taggedRowsCheck_sound (PrototypeTypes.check 8) (fun field => emptyCheck 8 field)
+    model.accepts (fun a b accepted => PrototypeTypes.replacement model (PrototypeTypes.check_sound 8 a b accepted))
+    (fun field accepted => (emptyCheck_sound 8 field accepted).refuses model.emptyLaws)
+    "tag" "value" workerTag (taggedWorkers false) taggedWorkerView (by decide) branch present observe valid
+
+/-- Prefix binding preserves the original Sum branch order and callback layout. -/
+example : substitute (prefixEnvironment [.atom .symbol]
+    (fun _ => .sum [0, 1] [primaryWorker, handler])) (.pair (.var 0) (.var 1)) =
+    .pair (.atom .symbol) (.sum [0, 1] [primaryWorker, handler]) := by
+  simp [substitute, prefixEnvironment]
+
+/-- Actual Sum normalization keeps the original discriminator and exact checked
+payload. The checked payload may be a Function wrapper, not the raw procedure. -/
+example (lookup : Nat → Option (Value → Except String Value)) (source checked : Nat × Value)
+    (accepted : VariantValidation.sum lookup "unknown tag" source = .ok checked) :
+    ∃ normalize, lookup source.1 = some normalize ∧
+      normalize source.2 = .ok checked.2 ∧ checked.1 = source.1 :=
+  VariantValidation.sum_success lookup "unknown tag" source checked accepted
+
+#print axioms taggedRowsCheck_sound
+
 end Examples.RowTypes

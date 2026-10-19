@@ -129,9 +129,11 @@ theorem sum_error (lookup : Tag → Option (Value → Except Error Value)) (miss
     sum lookup missing source = .error error := by
   simp [sum, selected, failed, Except.map]
 
-/-- Any successful Sum result retains the original tag, independently of payload normalization. -/
-theorem sum_tag_preserved (lookup : Tag → Option (Value → Except Error Value)) (missing : Error)
-    (source checked : Tag × Value) (good : sum lookup missing source = .ok checked) : checked.1 = source.1 := by
+/-- Success exposes the selected original tag and its exact normalized payload,
+even when wrapping changes the payload reference. No alternative was retried. -/
+theorem sum_success (lookup : Tag → Option (Value → Except Error Value)) (missing : Error)
+    (source checked : Tag × Value) (good : sum lookup missing source = .ok checked) :
+    ∃ check, lookup source.1 = some check ∧ check source.2 = .ok checked.2 ∧ checked.1 = source.1 := by
   cases selected : lookup source.1 with
   | none => simp [sum, selected] at good
   | some check =>
@@ -140,7 +142,14 @@ theorem sum_tag_preserved (lookup : Tag → Option (Value → Except Error Value
     | ok value =>
       have equal : (source.1, value) = checked := by
         simpa [sum, selected, normalized, Except.map] using good
-      exact (congrArg Prod.fst equal).symm
+      subst checked
+      exact ⟨check, rfl, normalized, rfl⟩
+
+/-- Any successful Sum result retains the original tag, independently of payload normalization. -/
+theorem sum_tag_preserved (lookup : Tag → Option (Value → Except Error Value)) (missing : Error)
+    (source checked : Tag × Value) (good : sum lookup missing source = .ok checked) : checked.1 = source.1 := by
+  obtain ⟨_, _, _, retained⟩ := sum_success lookup missing source checked good
+  exact retained
 
 /-- Union selection is ordered structural matching, separate from recognition. -/
 def select (shape : Branch → Value → Bool) (branches : List Branch) (source : Value) : Option Branch :=

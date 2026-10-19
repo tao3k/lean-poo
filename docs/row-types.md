@@ -226,3 +226,60 @@ emptyCheck_sound/EmptyLaws, proving target observations and actual retired-field
 absence while retaining the complete original candidate artifact. These extend
 the article's type-protocol future work, not its reference Racket listings or
 host compiler proofs.
+
+## Tagged Sum values as readable Object and Record interfaces
+
+The P2 carrier audit found that Sum already uses the POO object carrier with
+required `tag` and `value` fields, but finite replacement rejected all Object and
+Record views. The shared relation now checks EVERY original Sum variant through
+`row-related?`: a temporary open Object row declares `(Exactly symbol-tag)` and
+the original payload Type. Gerbil's plist->alist and make-symbol are the same
+mechanisms used by the existing Sum constructor. No runtime value is projected,
+no new validator/dispatch engine is added, and the original descriptor and tag
+order stay in inference solutions, specialization and declarations.
+
+Sum accepts extra/inherited slots, so each source row remains OPEN. A nonempty
+Sum cannot justify a closed target, an undeclared required field, or an optional
+extra target field: that name could already exist with an incompatible value.
+Required tag/value reads and optional target presence use the existing row rule;
+tag Types are checked just like payload Types, including exact Symbol versus
+Keyword distinction. Reverse Object-to-Sum replacement, direct Sum tag skeletons,
+ordered Union identities and inhabited Map keys retain their existing bounds.
+No mutable-write, codec/index equivalence or closure permission is inferred.
+Empty alternatives have vacuous coverage but still have no runtime inhabitant.
+Every variant is required to pass; semantic pruning of impossible variants is not
+introduced. Malformed/unsupported syntax and exhausted shared budgets keep their
+typed refusal categories; ordinary missing coverage is false.
+
+`infer-tagged-worker-service` composes a Pair packet containing a Map/List of
+heterogeneous tagged callback workers and a fallback Function. Complete prefix
+inference and the existing qualified declaration/FUN/refine/bind-evidence chain
+run only after all tag/payload obligations hold. Controls cover a later rogue tag,
+a later noncallable payload, selected UInt8 versus UInt result wrappers, inherited
+extra audit data, unchanged raw callbacks, recursively returned callback packets,
+exact consumer/context evidence, policy failure and successful retry. Reordered
+original Sum candidates remain distinct and genuinely ambiguous; no sorting or
+Any fallback is used. Separate relation controls cover optional Record reads,
+closed layouts, unknown extra fields, reverse replacement, Map keys, unsupported
+late metadata, vacuous Sum validation refusal and exhaustion.
+
+This extends the article's Type Descriptors/Appendix C future work. The Racket
+discussion motivates composable runtime descriptors and explicit subtype
+obligations; it does not supply this finite candidate solver. The Gerbil runtime
+carrier and validators, Lean obligations and finite examples are separate evidence.
+
+Lean's existing RowTypes module adds taggedRow/taggedRowsCheck, delegates to the
+same required/open recordCheck protocol, and proves every-branch acceptance and
+universal readable replacement. The theorem requires faithful literal-tag and
+child interpretations plus actual observations; it neither executes arbitrary
+predicates nor infers Function behavior from procedure recognition. The concrete
+Ty fixture projects tag literals to Symbol, explicitly retaining original branch
+identities; exact literal discrimination is exercised in Gerbil. Existing complete
+inferDeclared preserves the exact branch artifact and prefix substitution keeps
+the original Sum layout. VariantValidation.sum_success extracts the actual selected
+normalizer, exact checked payload and unchanged tag after normalization, and
+sum_tag_preserved now reuses that law. Wrapping may change references; raw identity
+is never a proof premise. Top-level Examples/RowTypes.lean includes positive,
+negative, declaration, specialization and universal semantic controls. Source
+syntax projection, mutable effects, termination and compiler correctness are not
+proved by these conditional laws.

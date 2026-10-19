@@ -394,4 +394,43 @@ theorem objectToRecord_sound [DecidableEq Key] (test : Field → Field → Bool)
   recordCheck_sound test empty accepts sound emptySound (requiredRow source) target checked observe
     ((requiredRow_admits accepts source observe).mpr valid)
 
+/-- A tagged branch promises two required reads, retaining an open carrier.
+The host supplies a faithful literal-tag Type; no codec or layout cast follows. -/
+def taggedRow (tagName valueName : Key) (tagType payload : Field) : Row Key Field :=
+  ⟨[(tagName, tagType), (valueName, payload)], false⟩
+
+/-- Every original tagged branch must satisfy one readable Record interface
+through the existing required/open row protocol and field replacement test. -/
+def taggedRowsCheck [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
+    (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
+    (target : Row Key (Field × Bool)) : Bool :=
+  branches.all fun branch => recordCheck test empty
+    (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target
+
+/-- Acceptance certifies every original branch; a compatible earlier branch
+cannot hide a later payload/tag/shape refusal. No branch order is rewritten. -/
+theorem taggedRowsCheck_branch [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
+    (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
+    (target : Row Key (Field × Bool))
+    (accepted : taggedRowsCheck test empty tagName valueName literal branches target = true)
+    (branch : Tag × Field) (present : branch ∈ branches) :
+    recordCheck test empty (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target = true :=
+  List.all_eq_true.mp accepted branch present
+
+/-- Successful tagged observation coverage composes the existing row replacement
+law. Literal/child behavior and the selected branch's actual reads are explicit
+premises; arbitrary predicates, mutable writes and codec equivalence are not. -/
+theorem taggedRowsCheck_sound [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
+    (accepts : Field → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
+    (target : Row Key (Field × Bool))
+    (accepted : taggedRowsCheck test empty tagName valueName literal branches target = true)
+    (branch : Tag × Field) (present : branch ∈ branches) (observe : Key → Option Value)
+    (valid : Admits accepts (taggedRow tagName valueName (literal branch.1) branch.2) observe) :
+    RecordAdmits accepts target observe :=
+  objectToRecord_sound test empty accepts sound emptySound _ target
+    (taggedRowsCheck_branch test empty tagName valueName literal branches target accepted branch present) observe valid
+
 end LeanPoo.Functional.RowTypes
