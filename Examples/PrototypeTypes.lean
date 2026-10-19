@@ -2,6 +2,7 @@ import LeanPoo.Functional.PrototypeTypes
 import LeanPoo.Functional.PrototypeTypeDescriptors
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.EvidenceBinding
 
 /-! Bounded prototype type future work: the same UInt/Integer service signature,
 Self <: Super bounds and higher-order negative positions as the Gerbil fixture. -/
@@ -572,6 +573,31 @@ example : (Intrinsic.signed 8).Accepts (.integer (-128)) ∧
 /-- Runtime aliases can share interval meaning without losing artifact identity. -/
 example : Intrinsic.uint256 ≠ Intrinsic.unsigned 256 ∧
     intrinsicCheck .uint256 (.unsigned 256) = true := by decide
+/-- A complete accepted higher-order service assignment keeps the same live
+source error and the same compiled signature when pure bounds are not replayed. -/
+example (assignment : CheckedAssignment 8 constraints) (refresh : Except String Nat) :
+    instantiatePrepared refresh assignment (fun version env =>
+      .ok (version, substitute env prototypeSignature)) =
+    instantiateRechecked refresh assignment (fun version env =>
+      .ok (version, substitute env prototypeSignature)) "bounds" :=
+  instantiatePrepared_eq _ _ _ _
+/-- Stale live metadata blocks even a previously proved assignment. -/
+example (assignment : CheckedAssignment 8 constraints) :
+    instantiatePrepared (.error "stale" : Except String Nat) assignment
+      (fun version env => .ok (version, substitute env prototypeSignature)) = .error "stale" :=
+  instantiatePrepared_refuses _ _ _
+/-- Refused approval never evaluates a failing evidence projection; successful
+approval preserves that projection failure rather than silently accepting it. -/
+example : LeanPoo.Functional.DeclarativeMetadata.Formula.conjoinAtom
+    (.ok false : Except String Bool) (fun _ => .error "projection") = .ok false ∧
+    LeanPoo.Functional.DeclarativeMetadata.Formula.conjoinAtom
+      (.ok true : Except String Bool) (fun _ => .error "projection") = .error "projection" := by
+  exact ⟨rfl, rfl⟩
+#print axioms instantiatePrepared_eq
+#print axioms instantiatePrepared_refuses
+#print axioms checkedUnique_bound
+#print axioms accepted_comparison_work
+#print axioms LeanPoo.Functional.DeclarativeMetadata.Formula.conjoinAtom_holds
 #print axioms intrinsicCheck_sound
 #print axioms intrinsicCheck_carrier
 #print axioms intrinsicCheck_admitted

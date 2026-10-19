@@ -608,4 +608,49 @@ theorem function_replacement (sourceIn targetIn sourceOut targetOut : Value → 
     (input : ∀ v, targetIn v → sourceIn v) (output : ∀ v, sourceOut v → targetOut v)
     (f : Value → Value) (behavior : ∀ v, sourceIn v → sourceOut (f v)) :
     ∀ v, targetIn v → targetOut (f v) := fun _v h => output _ (behavior _ (input _ h))
+/-- Private-request acceptance witness. Constraints and substitution are the
+same captured finite values before and after live binding refresh. This is not
+permission to trust public mutable schema fields or arbitrary host predicates. -/
+structure CheckedAssignment (fuel : Nat) (constraints : List (Expr × Expr)) where
+  environment : Nat → Ty
+  accepted : satisfies fuel constraints environment = true
+/-- Only a completed unique search supplies the accepted substitution witness. -/
+def checkedUnique (fuel constraints candidates environment)
+    (completed : inferBounded budget (satisfies fuel constraints) candidates = .ok (.unique environment)) :
+    CheckedAssignment fuel constraints :=
+  ⟨environment, (bounded_unique _ _ _ completed).2⟩
+/-- Refresh live source/binding state before compiling the accepted assignment.
+The assembler still creates a fresh descriptor, positional receiver and artifact. -/
+def instantiatePrepared (refresh : Except Error Snapshot) (checked : CheckedAssignment fuel constraints)
+    (assemble : Snapshot → (Nat → Ty) → Except Error Artifact) : Except Error Artifact :=
+  refresh.bind fun snapshot => assemble snapshot checked.environment
+/-- The former replay path repeats only pure captured constraints after the same
+live refresh. Its error parameter is unreachable for a complete accepted witness. -/
+def instantiateRechecked (refresh : Except Error Snapshot) (checked : CheckedAssignment fuel constraints)
+    (assemble : Snapshot → (Nat → Ty) → Except Error Artifact) (denied : Error) : Except Error Artifact :=
+  refresh.bind fun snapshot => if satisfies fuel constraints checked.environment then
+    assemble snapshot checked.environment else .error denied
+/-- Removing redundant pure checks preserves the exact result/error/artifact and
+refresh order; equality also covers failed refresh and failed compilation. -/
+theorem instantiatePrepared_eq (refresh : Except Error Snapshot)
+    (checked : CheckedAssignment fuel constraints)
+    (assemble : Snapshot → (Nat → Ty) → Except Error Artifact) (denied : Error) :
+    instantiatePrepared refresh checked assemble = instantiateRechecked refresh checked assemble denied := by
+  simp [instantiatePrepared, instantiateRechecked, checked.accepted]
+/-- A current-source failure still prevents all construction and publication. -/
+theorem instantiatePrepared_refuses (cause : Error) (checked : CheckedAssignment fuel constraints)
+    (assemble : Snapshot → (Nat → Ty) → Except Error Artifact) :
+    instantiatePrepared (.error cause) checked assemble = .error cause := rfl
+/-- Every original captured bound remains proved without replaying the checker. -/
+theorem checkedUnique_bound (completed : inferBounded budget (satisfies fuel constraints)
+    candidates = .ok (.unique environment)) (member : (a,b) ∈ constraints) :
+    Subtype (substitute environment a) (substitute environment b) :=
+  satisfies_sound fuel constraints environment (bounded_unique _ _ _ completed).2 member
+/-- Abstract charged comparison work removes exactly the repeated bound checks.
+Copying, allocation, compilation, primitive costs and GC require separate models
+or measurements; this is not an elapsed-time or total-allocation speed theorem. -/
+theorem accepted_comparison_work (refresh build replay : Nat) :
+    refresh + replay + build = (refresh + build) + replay ∧ refresh + build ≤ refresh + replay + build := by
+  omega
+
 end LeanPoo.Functional.PrototypeTypes

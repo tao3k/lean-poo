@@ -133,3 +133,20 @@ its exact decidable scope, shared publication chain and proof interpretation bou
 See [finite inference audit and emptiness](finite-inference-audit.md) for remaining P2 coverage and the required-field witness protocol.
 
 See [literal intrinsic descriptors](intrinsic-descriptors.md) for singleton, width, byte, alias and admission coverage.
+
+## Accepted-assignment construction
+
+`CheckedAssignment` and `checkedUnique` retain the constraints proved by a
+completed bounded search. `instantiatePrepared_eq` removes only repeated pure
+checks of that captured assignment, while keeping the same live refresh and
+assembler, exact errors and constructed artifact. `instantiatePrepared_refuses`
+still blocks stale metadata before assembly. Public mutable schemas are not
+proof certificates; the Gerbil path is restricted to its private complete solution
+and copies raw syntax independently from public normalized alternatives.
+
+`Formula.conjoinAtom_holds` in EvidenceBinding proves the fused fresh-atom
+conjunction, including separate short-circuit and error laws. The integrated
+examples remain in top-level `Examples/PrototypeTypes.lean`. The comparison-work
+bound counts pure constraint replay, not total runtime, allocation or GC.
+Gerbil's paired factory/publication benchmark measures those remaining costs
+separately with unchanged validation, refusal and resource guards.

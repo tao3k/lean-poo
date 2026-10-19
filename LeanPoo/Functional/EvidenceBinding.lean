@@ -83,4 +83,28 @@ theorem Contract.bindEvidence_publish_mismatch [DecidableEq Args] [DecidableEq D
   have refused := bound.invoke_logic execute request result next input called output invalid
   apply bound.publish_refuses old execute request .logic
   simp [Contract.wrap, refused, Except.map]
+/-- The fused known-atom conjunction executes the original decision once and
+only reaches the fresh evidence decision after true. Host Boolean admission
+and exception-to-phase mapping remain the existing checked wrapper's job. -/
+def Formula.conjoinAtom (previous : Except Error Bool) (evidence : Unit → Except Error Bool) : Except Error Bool :=
+  previous.bind fun accepted => if accepted then evidence () else .ok false
+/-- Original false short-circuits projection and exact-reference checks. -/
+theorem Formula.conjoinAtom_false (evidence : Unit → Except Error Bool) :
+    Formula.conjoinAtom (.ok false) evidence = .ok false := rfl
+/-- An original decision exception is retained before evidence is evaluated. -/
+theorem Formula.conjoinAtom_error (error : Error) (evidence : Unit → Except Error Bool) :
+    Formula.conjoinAtom (.error error) evidence = .error error := rfl
+/-- Successful original approval delegates the exact evidence result or error. -/
+theorem Formula.conjoinAtom_true (evidence : Unit → Except Error Bool) :
+    Formula.conjoinAtom (.ok true) evidence = evidence () := rfl
+/-- Fusing an atom and conjunction preserves the existing declarative formula;
+this eliminates construction nodes, not logical checks or binding freshness. -/
+theorem Formula.conjoinAtom_holds (formula : Formula Atom) (key : Atom) (meaning : Atom → Prop)
+    [DecidablePred meaning] :
+    Formula.conjoinAtom (Error := Unit) (.ok (decide (formula.Holds meaning)))
+      (fun _ => .ok (decide (meaning key))) =
+        .ok (decide ((Formula.both formula (.atom key)).Holds meaning)) := by
+  by_cases previous : formula.Holds meaning <;> by_cases next : meaning key <;>
+    simp [Formula.conjoinAtom, Formula.Holds, previous, next, Except.bind]
+
 end LeanPoo.Functional.DeclarativeMetadata
