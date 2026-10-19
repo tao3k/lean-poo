@@ -50,11 +50,73 @@ theorem IntegerRange.empty_refuses (range : IntegerRange) (value : Int)
   rcases range with ⟨lower, upper⟩
   cases lower <;> cases upper <;> simp_all [IntegerRange.empty, IntegerRange.Contains] <;> omega
 
+/-- Membership traversal is bounded by finite target data, never interval width.
+Scheme uses an equal? table for these literal lookups and its shared work quota. -/
+def IntegerRange.coverFrom : Nat → Int → Int → List Int → Bool
+  | fuel, lower, upper, values =>
+    if upper < lower then true else match fuel with
+      | 0 => false
+      | fuel + 1 => decide (lower ∈ values) && coverFrom fuel (lower + 1) upper values
+/-- A successful bounded traversal contains every integer in the closed interval. -/
+theorem IntegerRange.coverFrom_sound (fuel lower upper values)
+    (accepted : coverFrom fuel lower upper values = true) :
+    ∀ value, lower ≤ value → value ≤ upper → value ∈ values := by
+  induction fuel generalizing lower with
+  | zero => simp [coverFrom] at accepted; omega
+  | succ fuel ih =>
+    simp only [coverFrom] at accepted
+    split at accepted
+    · omega
+    · simp only [Bool.and_eq_true] at accepted
+      obtain ⟨head, tail⟩ := accepted
+      intro value above below
+      by_cases equal : value = lower
+      · simpa [equal] using of_decide_eq_true head
+      · exact ih (lower + 1) tail value (by omega) below
+/-- Coverage is complete when the finite probe budget spans the interval and
+every integer belongs to the target; duplicate data never proves membership. -/
+theorem IntegerRange.coverFrom_complete (fuel : Nat) (lower upper : Int) (values : List Int)
+    (enough : upper - lower < (fuel : Int))
+    (members : ∀ value, lower ≤ value → value ≤ upper → value ∈ values) :
+    coverFrom fuel lower upper values = true := by
+  induction fuel generalizing lower with
+  | zero => simp [coverFrom]; omega
+  | succ fuel ih =>
+    simp only [coverFrom]
+    split
+    · rfl
+    · simp only [Bool.and_eq_true]
+      constructor
+      · exact decide_eq_true (members lower (by omega) (by omega))
+      · apply ih (lower + 1) (by omega)
+        intro value above below
+        exact members value (by omega) below
+/-- Empty ranges fit every finite target. Nonempty unbounded ranges refuse;
+finite traversal has at most as many membership probes as target literals. -/
+def IntegerRange.coveredBy (range : IntegerRange) (values : List Int) : Bool :=
+  range.empty || match range.lower, range.upper with
+    | some lower, some upper => coverFrom values.length lower upper values
+    | _, _ => false
+/-- Finite literal coverage preserves every integer observation, including empty
+and huge-endpoint intervals; duplicate literals supply no missing membership. -/
+theorem IntegerRange.coveredBy_sound (range : IntegerRange) (values : List Int)
+    (accepted : range.coveredBy values = true) (value : Int)
+    (valid : range.Contains value) : value ∈ values := by
+  unfold coveredBy at accepted
+  simp only [Bool.or_eq_true] at accepted
+  rcases accepted with empty | covered
+  · exact False.elim (range.empty_refuses value empty valid)
+  · rcases range with ⟨lower, upper⟩
+    cases lower <;> cases upper <;> simp only at covered
+    all_goals try contradiction
+    exact coverFrom_sound _ _ _ _ covered value (valid.1 _ rfl) (valid.2 _ rfl)
+
 /-- Finite expressions reuse existing Type/Function/container constructor shapes.
 Function lists retain exact input and multiple-output counts. -/
 inductive Ty where
   | top | atom (name : Atom) | list (element : Ty) | tuple (fields : List Ty)
   | integerRange (range : IntegerRange)
+  | integerEnum (values : List Int)
   | maybe (element : Ty) | orFalse (element : Ty)
   | function (outputs inputs : List Ty)
   | pair (left right : Ty) | map (key value : Ty)
@@ -83,6 +145,7 @@ def same : Nat → Ty → Ty → Bool
     | .top, .top => true
     | .atom a, .atom b => decide (a = b)
     | .integerRange a, .integerRange b => decide (a = b)
+    | .integerEnum a, .integerEnum b => decide (a = b)
     | .list a, .list b | .maybe a, .maybe b | .orFalse a, .orFalse b => same fuel a b
     | .tuple as, .tuple bs | .union as, .union bs => all₂ (same fuel) as bs
     | .pair a b, .pair c d | .map a b, .map c d => same fuel a c && same fuel b d
@@ -115,6 +178,7 @@ theorem same_sound (fuel : Nat) (a b : Ty) (accepted : same fuel a b = true) : a
     all_goals first
       | exact congrArg Ty.atom (of_decide_eq_true accepted)
       | exact congrArg Ty.integerRange (of_decide_eq_true accepted)
+      | exact congrArg Ty.integerEnum (of_decide_eq_true accepted)
       | exact congrArg Ty.list (ih _ _ accepted)
       | exact congrArg Ty.maybe (ih _ _ accepted)
       | exact congrArg Ty.orFalse (ih _ _ accepted)
@@ -140,6 +204,7 @@ inductive Subtype : Ty → Ty → Prop where
   | uint : Subtype (.atom .uint) (.atom .integer)
   | numeric : numericBounds a = some source → numericBounds b = some target →
       source.includes target = true → Subtype a b
+  | rangeEnum : range.coveredBy values = true → Subtype (.integerRange range) (.integerEnum values)
   | list : Subtype a b → Subtype (.list a) (.list b)
   | maybe : Subtype a b → Subtype (.maybe a) (.maybe b)
   | orFalse : Subtype a b → Subtype (.orFalse a) (.orFalse b)
@@ -159,6 +224,8 @@ def check : Nat → Ty → Ty → Bool
     | _, .top => true
     | .atom a, .atom b => decide (a = b) || decide (a = .uint ∧ b = .integer)
     | .integerRange source, .integerRange target => source.includes target
+    | .integerRange source, .integerEnum values => source.coveredBy values
+    | .integerEnum values, .integerEnum target => decide (values = target)
     | .integerRange source, .atom .integer => source.includes IntegerRange.all
     | .integerRange source, .atom .uint => source.includes IntegerRange.unsigned
     | .atom .integer, .integerRange target => IntegerRange.all.includes target
@@ -202,6 +269,11 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
     all_goals try { exact .orFalse (ih _ _ accepted) }
     all_goals try { exact .tuple (all₂_sound _ ih _ _ accepted) }
     case integerRange.integerRange source target => exact .numeric rfl rfl accepted
+    case integerRange.integerEnum source values => exact .rangeEnum accepted
+    case integerEnum.integerEnum values target =>
+      have equal := of_decide_eq_true accepted
+      subst target
+      exact .refl _
     case integerRange.atom source target =>
       cases target
       all_goals first | contradiction | exact .numeric rfl rfl accepted
@@ -293,6 +365,8 @@ structure Interpretation (Value : Type) where
   uint : ∀ v, accepts (.atom .uint) v → accepts (.atom .integer) v
   numeric : ∀ a b source target, numericBounds a = some source → numericBounds b = some target →
     (∀ value, source.Contains value → target.Contains value) → ∀ v, accepts a v → accepts b v
+  rangeEnum : ∀ range values, (∀ value, range.Contains value → value ∈ values) →
+    ∀ v, accepts (.integerRange range) v → accepts (.integerEnum values) v
   list : ∀ a b, (∀ v, accepts a v → accepts b v) →
     ∀ v, accepts (.list a) v → accepts (.list b) v
   maybe : ∀ a b, (∀ v, accepts a v → accepts b v) →
@@ -321,6 +395,7 @@ theorem replacement (model : Interpretation Value) (derivation : Subtype a b) :
     (motive_2 := fun as bs _ => RelList (fun a b => ∀ v, model.accepts a v → model.accepts b v) as bs)
     (fun _ _ h => h) model.top model.uint
     (fun left right included => model.numeric _ _ _ _ left right (IntegerRange.replacement _ _ included))
+    (fun covered => model.rangeEnum _ _ (IntegerRange.coveredBy_sound _ _ covered))
     (fun _ ih => model.list _ _ ih)
     (fun _ ih => model.maybe _ _ ih)
     (fun _ ih => model.orFalse _ _ ih)

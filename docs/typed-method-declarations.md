@@ -564,7 +564,7 @@ Integer, UInt and IntegerRange share a symbolic numeric judgment. Inclusion chec
 at most two endpoint orders, including one-sided and empty intervals, without
 enumerating their inhabitants. Exactly/Enum integer literals may be admitted into
 a range. Nonnumeric range inclusion, arbitrary endpoint expressions and general
-range-to-Enum/Boolean-union coverage remain conservative. Public ordered Union
+Boolean-union coverage remain conservative; finite range-to-Enum coverage is\nextended below. Public ordered Union
 branches and Map keys remain invariant. Only keyword order and explicit unbounded
 metadata canonicalize; IntegerRange is never erased into Integer/UInt merely
 because its integer membership coincides. Their descriptor/arithmetic protocols
@@ -596,3 +596,43 @@ retains every original/call constraint plus the whole builder result. These laws
 advance the article's type-system future work; parser/macro implementation,
 mutable descriptor semantics, integer bit-operation costs and host GC/runtime
 performance are not proved. Full time/heap/work bounds and checks remain required.
+
+### Range inclusion in finite literal targets
+
+IntegerRange now replaces Enum/Exactly when the target contains every integer in
+the interval. Empty intervals fit even an empty or nonnumeric finite target;
+nonempty unbounded intervals refuse. Bounded intervals wider than the number of
+target literals refuse before indexing. Otherwise Enum's existing first-index-hash<-vector prepares its equal? table
+from the captured literals, then a quota-charged traversal checks each
+integer in the interval. Duplicate, unrelated and noninteger literals never fill
+holes; order and duplicates in descriptor data are retained. Exactly is the same
+finite-target rule with one member. Public Union branches and Map keys remain
+invariant, and semantically equivalent range/Enum candidates remain distinct.
+
+This is a decision within admitted immutable literal syntax, not an arbitrary
+predicate/union solver. Unsupported literals retain the existing `unsupported`
+refusal; bad range metadata remains `malformed`; work depletion raises `exhausted`
+and never becomes a negative judgment. A complete negative inclusion yields no
+solution, and multiple matching descriptor kinds yield ambiguity. No builder is
+called in either case; fresh retries use the original bounded declaration driver.
+
+The existing infer-range-service accepts an explicit schema and reuses its full
+rich Function, qualifier, forwarding and wrapper construction. EnumServiceType
+only changes Super's declared bound to a finite alphabet. A range selected from
+heterogeneous candidates is installed with its original descriptor and passes the
+same FUN/refine/bind-evidence chain. Recursively wrapped callbacks, invariant
+parents, output violations, refinement refusal and failure retries are covered by
+t/range-inference-test.ss (12 cases total, five added for this increment).
+
+Lean's existing algebra adds an integerEnum view of the target's exact integer
+members; arbitrary noninteger literals and host hash internals are not modeled.
+coverFrom_sound and coveredBy_sound establish universal membership preservation.
+coverFrom_complete establishes completeness when the probe budget spans the
+interval and every member belongs to the target. The traversal structurally
+consumes at most target length probes. The Scheme width precheck is a rejection
+optimization; the formal proof does not certify host hash complexity or integer
+bit costs. Checker/replacement and the original complete inference/declaration
+proofs include this edge under explicit interpretation premises. The top-level
+example retains the exact bound artifact and all derived constraints. General
+predicate discovery, dependent endpoint expressions and Boolean-union coverage
+remain outside this Appendix C/D type-protocol future work.

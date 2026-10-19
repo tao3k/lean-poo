@@ -226,4 +226,39 @@ theorem inferredRange_sound (super artifact)
 #print axioms IntegerRange.replacement
 #print axioms IntegerRange.empty_refuses
 #print axioms inferredRange_sound
+/-- The finite target keeps its literal order and duplicates; range inclusion
+uses integer membership, without changing candidate descriptor identity. -/
+def rangeAlphabet : Ty := .integerEnum [10, 0, 9, 1, 8, 2, 7, 3, 6, 4, 5, 5]
+/-- The prefix, observations and finite alphabet jointly determine Super. -/
+def enumConstraints : List (Expr × Expr) :=
+  [(.var 0, .var 1), (.var 1, .ground rangeAlphabet), (.ground smallRange, .var 1),
+   (.function [.var 0] [.var 1], .ground (.function [smallRange] [smallRange]))]
+/-- The original bounded driver and complete builder publish the range candidate,
+not the finite alphabet descriptor that was used to constrain it. -/
+def inferredEnum := LeanPoo.Functional.DeclarativeMetadata.inferDeclared 3
+  (fun super => satisfies 12 enumConstraints (rangeEnvironment super))
+  [.atom .integer, .atom .uint, smallRange] buildRange
+#guard match inferredEnum with
+  | .ok (.unique (.integerRange ⟨some 0, some 10⟩), some
+      (.integerRange ⟨some 0, some 10⟩, .integerRange ⟨some 0, some 10⟩)) => true
+  | _ => false
+#guard !check 8 smallRange (.integerEnum [0, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10])
+#guard check 8 (.integerRange ⟨some 1, some 0⟩) (.integerEnum [])
+#guard !check 8 (.integerRange ⟨none, some 0⟩) (.integerEnum [-1, 0])
+#guard !check 8 (.map smallRange (.atom .uint)) (.map rangeAlphabet (.atom .uint))
+/-- Successful finite-alphabet publication retains all substituted constraints
+and the exact complete builder result; runtime interpretation remains explicit. -/
+theorem inferredEnum_sound (super artifact)
+    (published : inferredEnum = .ok (.unique super, some artifact)) :
+    (∀ a b, (a, b) ∈ enumConstraints →
+      Subtype (substitute (rangeEnvironment super) a) (substitute (rangeEnvironment super) b)) ∧
+      buildRange super = .ok artifact := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique 3
+    (fun super => satisfies 12 enumConstraints (rangeEnvironment super))
+    [.atom .integer, .atom .uint, smallRange] buildRange published
+  exact ⟨fun a b member => satisfies_sound 12 enumConstraints (rangeEnvironment super) valid member, built⟩
+#print axioms IntegerRange.coverFrom_sound
+#print axioms IntegerRange.coverFrom_complete
+#print axioms IntegerRange.coveredBy_sound
+#print axioms inferredEnum_sound
 end Examples.PrototypeTypes
