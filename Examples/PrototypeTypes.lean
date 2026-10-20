@@ -703,6 +703,35 @@ example : inferEmptyList (fun key : Nat => decide (key = 0)) [.elements 1, .elem
 #print axioms singleton_tail
 #print axioms inferEmptyList_sound
 
+/-- Restricted to proper-list observations, Bool/Keyword/Null's ordered flat
+view admits exactly nil. Host carrier disjointness supplies this interpretation;
+the universal transfer does not infer anything from a successful sample. -/
+example (values : List Nat)
+    (valid : (ProperListShape.elements (0 : Nat)).Accepts (fun key _ => key ≠ 0) values) :
+    False ∨ (False ∨ values = []) := by
+  apply (emptyListCheck_into_iff (fun key : Nat => decide (key = 0))
+    (fun key (_value : Nat) => key ≠ 0)
+    (fun _ admitted _ nonzero => nonzero (of_decide_eq_true admitted))
+    (.elements 0) rfl (fun items => False ∨ (False ∨ items = []))).mpr
+      (Or.inr (Or.inr rfl)) values valid
+
+/-- The complete inference artifact remains the original List candidate. Two
+distinct empty-element candidates stay ambiguous in the shared declaration search. -/
+example : inferEmptyList (fun key : Nat => decide (key ≤ 1)) [.elements 0, .elements 1] =
+    .ok (.ambiguous [.elements 0, .elements 1], none) := rfl
+
+example (values : List Nat)
+    (valid : (ProperListShape.elements (0 : Nat)).Accepts (fun key _ => key ≠ 0) values) :
+    (Except.ok values : Except String (List Nat)) = .ok values ∧ values = [] :=
+  emptyListCheck_normalized (fun key : Nat => decide (key = 0))
+    (fun key (_value : Nat) => key ≠ 0)
+    (fun _ admitted _ nonzero => nonzero (of_decide_eq_true admitted))
+    (.elements 0) rfl (fun items => items = []) rfl Except.ok rfl values valid
+
+#print axioms emptyListCheck_into_iff
+#print axioms emptyListCheck_normalized
+#print axioms inferEmptyList_into
+
 /-- Intrinsic branch interpretations for an unsigned measurement view. The
 negative control is admitted syntax but cannot replace the unsigned target. -/
 inductive MeasurementBranch where

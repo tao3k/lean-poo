@@ -253,6 +253,36 @@ theorem emptyListCheck_inhabited (empty : Key → Bool) (member : Key → Value 
   | elements type => simp [ProperListShape.Accepts]
   | cons head tail => simp [emptyListCheck] at accepted
 
+/-- Once a proper List has exactly nil, covering nil is necessary and sufficient
+for universal readable replacement. This reuses the target's existing intrinsic
+judgment, rather than dropping an inhabited container as if it were bottom. -/
+theorem emptyListCheck_into_iff (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (shape : ProperListShape Key) (accepted : emptyListCheck empty shape = true)
+    (target : List Value → Prop) :
+    (∀ values, shape.Accepts member values → target values) ↔ target [] := by
+  constructor
+  · intro included
+    exact included [] (emptyListCheck_inhabited empty member shape accepted)
+  · intro covered values valid
+    have onlyNil := emptyListCheck_sound empty member sound shape accepted values valid
+    simpa [onlyNil] using covered
+
+/-- Identity validation on nil preserves the exact source value and target
+membership. No child validator runs on this carrier. A target with arbitrary
+normalization effects cannot borrow the identity premise of the flat fragment. -/
+theorem emptyListCheck_normalized (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (shape : ProperListShape Key) (accepted : emptyListCheck empty shape = true)
+    (target : List Value → Prop) (covered : target [])
+    (normalize : List Value → Except Error (List Value))
+    (identityNil : normalize [] = .ok [])
+    (values : List Value) (valid : shape.Accepts member values) :
+    normalize values = .ok values ∧ target values := by
+  have onlyNil := emptyListCheck_sound empty member sound shape accepted values valid
+  subst values
+  exact ⟨identityNil, covered⟩
+
 /-- A Pair with an admitted empty-list tail has exactly one original head.
 The theorem preserves its value and membership, without a vector conversion. -/
 theorem singleton_tail (empty : Key → Bool) (member : Key → Value → Prop)
@@ -284,5 +314,19 @@ theorem inferEmptyList_sound (empty : Key → Bool) (member : Key → Value → 
     (emptyListCheck empty) candidates
     (fun shape => (Except.ok shape : Except String (ProperListShape Key))) published
   exact ⟨(Except.ok.inj built).symm, emptyListCheck_sound empty member sound shape valid⟩
+
+/-- Completed unique inference retains the original List artifact while the
+existing target's nil judgment transfers every actual source value. Neither
+equivalent candidate metadata nor ordered alternatives are canonicalized away. -/
+theorem inferEmptyList_into (empty : Key → Bool) (member : Key → Value → Prop)
+    (sound : ∀ key, empty key = true → ∀ value, ¬ member key value)
+    (candidates : List (ProperListShape Key)) (shape artifact : ProperListShape Key)
+    (published : inferEmptyList empty candidates = .ok (.unique shape, some artifact))
+    (target : List Value → Prop) (covered : target []) :
+    artifact = shape ∧ ∀ values, shape.Accepts member values → target values := by
+  obtain ⟨original, onlyNil⟩ := inferEmptyList_sound empty member sound candidates shape artifact published
+  refine ⟨original, ?_⟩
+  intro values valid
+  simpa [onlyNil values valid] using covered
 
 end LeanPoo.Functional.PrototypeTypes

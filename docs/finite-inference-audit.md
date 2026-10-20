@@ -85,3 +85,42 @@ Sum/Map-key identity and codec boundaries stay intact. RowTypes proves exhaustiv
 branch obligations, inhabited-branch checking and universal readable replacement
 with explicit child/empty interpretation and distinct tag/value labels. See
 row-types.md and the corresponding Gerbil tagged-worker integration controls.
+
+### Singleton-empty List coverage through the existing Null judgment
+
+A witnessed impossible element makes `(List Element)` inhabited by exactly `()`,
+not an empty Type. Previously List-to-Null succeeded and Null-to-intrinsic-Union
+succeeded, but their composition was refused. The shared replacement rule now
+requires the existing positive `empty-type?` child witness and delegates to the
+same `Null` comparison under the original quota. It retains the List AST in the
+inferred assignment, descriptor, signature and declaration artifact.
+
+Only entirely intrinsic identity-validating targets use this view. For example,
+`(List (Pair Never (Function (UInt) (Integer))))` covers
+`(Union Bool (Union Keyword Null))`, including inside Pair/Map values and Function
+results. No payload or child callback can run on nil. An empty vector or Map is
+another carrier; a List of empty Lists, optional sentinels or empty vectors has
+possible nonempty lists. Neither can borrow this witness. Map keys and direct
+ordered alternative descriptors remain invariant. A Union containing Function
+or other wrapping branches stays outside this rule, even if it contains Null.
+
+The existing `infer-descriptor-service` factory and `descriptor-service-action`
+compose the whole workflow: prefix-bind the intrinsic Union input, infer the
+original impossible-element List output from complete call observations, install
+qualified methods, wrap the returned callback, refine publication policy and
+bind exact context evidence. Policy refusal does not consume the observer;
+a fresh action can retry. Two distinct singleton-List descriptions remain
+genuinely ambiguous. Invalid callback arguments, nonempty batches, unsupported
+late branches and quota exhaustion retain their original failure semantics.
+`t/empty-inference-test.ss` exercises this complete chain without another driver.
+
+Lean's `emptyListCheck_into_iff` proves that target membership of nil is both
+necessary and sufficient, using the existing witness and actual List membership.
+`emptyListCheck_normalized` preserves the exact value under the intrinsic target's
+explicit identity-on-nil law. `inferEmptyList_into` preserves the original complete
+unique declaration artifact and transfers every actual source value. Top-level
+`Examples/PrototypeTypes.lean` includes ordered flat-view, normalization and
+ambiguity controls. Host carrier interpretation and child emptiness soundness
+remain explicit; arbitrary recognizers, effects, mutable writes, codecs and
+compiler correctness are not proved. This advances the article's finite type
+protocol future work, not an existing Racket inference solver.
