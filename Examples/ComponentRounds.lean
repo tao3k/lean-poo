@@ -39,7 +39,21 @@ def check : Except String Unit := do
     throw "repeated migration closure mismatch"
   unless (r6.apply.code 7).isNone && (r6.apply.base 7).isNone &&
       (r6.apply.code 8).isNone && (r6.apply.base 8).isNone do throw "removed providers reappeared"
-#eval match check with
+/-- Two disjoint rings have exactly their declared component partitions. Large
+shared path families test both stored positives and cross-component negatives;
+the empty catalog remains accepted without inventing an index. -/
+def layersCheck : Except String Unit := do
+  for width in [0,1,4,8,16] do
+    let edge : Fin (2*width) → Fin (2*width) → Bool := fun a b =>
+      decide (a.val/width = b.val/width ∧ (a.val+1)%width = b.val%width)
+    let some checked := discover edge | throw "ring discovery refused"
+    for a in List.finRange (2*width) do
+      unless (checked.members a).length == width do throw "ring group size"
+      for b in List.finRange (2*width) do
+        unless checked.rel a b == decide (a.val/width = b.val/width) do
+          throw "cross-component path invented or ring path lost"
+
+#eval match check.bind (fun _ => layersCheck) with
   | .ok () => IO.println "COMPONENT-ROUNDS-OK"
   | .error message => throw (IO.userError message)
 #print axioms SupportRevision.joinAt_stale
@@ -47,4 +61,5 @@ def check : Except String Unit := do
 #print axioms SupportRevision.join_erased
 #print axioms Functional.ComponentExecution.resolved_correct
 #print axioms Functional.ComponentExecution.focus_laws
+#print axioms reachableTable_get
 end LeanPoo.Examples.ComponentRounds

@@ -35,6 +35,14 @@ def exhaustive : Except String Nat := do
 def chain (n : Nat) : Equations n := fun index =>
   if zero : index.val = 0 then .literal true else .read ⟨index.val-1,by omega⟩
 
+/-- Repeated reads make recursive function expansion expensive even though the
+finite synchronous solution is still the height-sized all-true chain. -/
+def sharedChain (n : Nat) : Equations n := fun index =>
+  if zero : index.val = 0 then .literal true
+  else
+    let previous : Fin n := ⟨index.val-1,by omega⟩
+    .both (.read previous) (.read previous)
+
 def controls : Except String Unit := do
   let empty : Equations 0 := Fin.elim0
   unless (close empty).depth == 0 && (materialize empty).evaluated.isEmpty do throw "empty equations"
@@ -53,6 +61,12 @@ def controls : Except String Unit := do
   for n in List.range 13 do
     let result := close (chain n)
     unless (List.ofFn result.value).all id && result.depth == n do throw "height-sized propagation"
+  for n in [16,32,64,128] do
+    let result := close (sharedChain n)
+    unless (List.ofFn result.value).all id && result.depth == n do throw "shared height-sized propagation"
+
+#print axioms close_reference
+#print axioms roundEvaluations_bound
 
 #eval match exhaustive.bind (fun count => controls.map (fun _ => count)) with
   | .error error => throw (IO.userError error)

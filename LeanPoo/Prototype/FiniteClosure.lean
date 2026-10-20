@@ -29,6 +29,8 @@ structure Closed where
   bound : depth ≤ system.height
   reached : FiniteFix.iterate system.prototype () system.bottom depth = value
 
+/-- Retain the candidate used by the stability check for the next iteration;
+neither the transition nor its state construction is repeated on that branch. -/
 private def search (current : State) (depth : Nat)
     (reached : FiniteFix.iterate system.prototype () system.bottom depth = current)
     (rising : system.below current (system.step current))
@@ -38,13 +40,17 @@ private def search (current : State) (depth : Nat)
   if fixed : next = current then
     ⟨current,fixed,lower,depth,Nat.le_trans progress (system.bounded current),reached⟩
   else
-    search (system.step current) (depth+1)
+    search next (depth+1)
       (by change system.step (FiniteFix.iterate system.prototype () system.bottom depth) = _; rw [reached])
       (system.monotone rising)
       (by intro other stable; have below := system.monotone (lower other stable); simpa [stable] using below)
-      (by have grows := system.strict rising (Ne.symm fixed); omega)
+      (by
+        change depth+1 ≤ system.weight (system.step current)
+        have grows := system.strict rising (Ne.symm fixed)
+        omega)
 termination_by system.height - system.weight current
 decreasing_by
+  change system.height - system.weight (system.step current) < system.height - system.weight current
   have grows := system.strict rising (Ne.symm fixed)
   have bounded := system.bounded (system.step current)
   omega

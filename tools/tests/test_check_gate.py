@@ -139,8 +139,8 @@ class CheckGateTests(unittest.TestCase):
                     if parent.poll() is not None:
                         self.fail('Gate exited before actual phase output')
                 parent.terminate()
-                parent.communicate(timeout=5)
-                self.assertEqual(parent.returncode, 143)
+                output, _ = parent.communicate(timeout=5)
+                self.assertEqual(parent.returncode, 143, output)
                 for pid in marker.read_text().splitlines():
                     with self.assertRaises(ProcessLookupError):
                         os.kill(int(pid), 0)

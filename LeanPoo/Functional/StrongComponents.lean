@@ -28,6 +28,31 @@ theorem reachable_sound {n : Nat} (edge : Fin n → Fin n → Bool) (fuel : Nat)
     · subst b; exact .refl a
     · exact .step direct (ih next rest)
 
+/-- Tabulate each bounded path layer once in ordinary immutable vectors.
+Every successor query reads the preceding matrix rather than expanding a fresh
+recursive search. The fuel, edge order and Boolean short-circuit rule are intact. -/
+def reachableTable {n : Nat} (edge : Fin n → Fin n → Bool) :
+    Nat → Vector (Vector Bool n) n
+  | 0 => Vector.ofFn (fun a => Vector.ofFn (fun b => decide (a = b)))
+  | fuel + 1 =>
+    let previous := reachableTable edge fuel
+    Vector.ofFn (fun a => Vector.ofFn (fun b => decide (a = b) ||
+      (List.finRange n).any (fun next => edge a next && previous[next.val][b.val])))
+
+/-- Stored layers equal the original bounded search for every finite graph,
+depth and pair, including false answers; certification cannot gain new positives. -/
+theorem reachableTable_get {n : Nat} (edge : Fin n → Fin n → Bool)
+    (fuel : Nat) (a b : Fin n) :
+    (reachableTable edge fuel)[a.val][b.val] = reachable edge fuel a b := by
+  induction fuel generalizing a b with
+  | zero => simp [reachableTable, reachable]
+  | succ fuel ih =>
+    simp only [reachableTable, Vector.getElem_ofFn, reachable]
+    congr 1
+    apply congrArg ((List.finRange n).any)
+    funext next
+    rw [ih next b]
+
 /-- A checked finite relation is reflexive, includes every edge, and is transitive. -/
 def Laws {n : Nat} (edge rel : Fin n → Fin n → Bool) : Prop :=
   (∀ a, rel a a = true) ∧ (∀ a b, edge a b = true → rel a b = true) ∧
@@ -45,13 +70,13 @@ claimed here; exactness of every accepted result is proved below. The finite
 relation is materialized once in standard immutable vectors so certification
 reuses the same computed entries, including on larger cyclic component families. -/
 def discover {n : Nat} (edge : Fin n → Fin n → Bool) : Option (Checked edge) :=
-  let table : Vector (Vector Bool n) n := Vector.ofFn (fun a => Vector.ofFn (fun b => reachable edge n a b))
+  let table := reachableTable edge n
   let rel := fun a b => (table.get a).get b
   letI : Decidable (Laws edge rel) := by unfold Laws; infer_instance
   if valid : Laws edge rel then
     some ⟨rel, valid, fun a b found => reachable_sound edge n a b (by
       change table[a.val][b.val] = true at found
-      simpa only [table, Vector.getElem_ofFn] using found)⟩
+      simpa only [table, reachableTable_get] using found)⟩
   else none
 
 /-- Certification removes the search bound from the meaning of accepted results. -/

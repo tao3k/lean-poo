@@ -1,5 +1,7 @@
 import LeanPoo.Prototype.FiniteClosure
 import LeanPoo.Functional.ConstructionCache
+import Init.Data.Vector.Lemmas
+import Init.Data.Vector.OfFn
 
 /-! Finite positive Boolean component equations, including genuine cycles.
 A structurally monotone syntax yields automatic least closure and compiles to
@@ -96,6 +98,7 @@ theorem Expr.twoOfThree_correct (first second third : Expr n) (state : Bits n) :
 
 abbrev Equations (n : Nat) := Fin n → Expr n
 
+/-- The public synchronous equation semantics remains function-valued. -/
 def step (equations : Equations n) (state : Bits n) : Bits n := fun index => (equations index).eval state
 
 def system (equations : Equations n) : Prototype.FiniteClosure.System (Bits n) where
@@ -114,7 +117,82 @@ def system (equations : Equations n) : Prototype.FiniteClosure.System (Bits n) w
     have unequal : weight left ≠ weight right := fun same => different (weight_eq below same)
     omega
 
-def close (equations : Equations n) := Prototype.FiniteClosure.close (system equations)
+/-- Read a materialized finite approximation without unfolding prior rounds. -/
+private def storedValues (state : Vector Bool n) : Bits n := fun index => state[index.val]
+
+/-- Standard vector tabulation recovers the complete function approximation. -/
+private theorem storedValues_ofFn (state : Bits n) : storedValues (Vector.ofFn state) = state := by
+  funext index
+  simp [storedValues]
+
+/-- Equal readers denote equal stored approximations, including empty vectors. -/
+private theorem storedValues_injective : Function.Injective (storedValues (n := n)) := by
+  intro left right same
+  apply Vector.ext
+  intro index bound
+  exact congrFun same ⟨index,bound⟩
+
+/-- The existing finite-height solver operates on explicit vectors internally.
+Every transition constructs one complete next vector, so repeated reads cannot
+rebuild previous synchronous rounds through a function-valued state. -/
+private def storedSystem (equations : Equations n) : Prototype.FiniteClosure.System (Vector Bool n) where
+  bottom := Vector.replicate n false
+  below left right := Below (storedValues left) (storedValues right)
+  trans first second index present := second index (first index present)
+  bottomBelow := by intro state index present; simp [storedValues] at present
+  step state := Vector.ofFn (step equations (storedValues state))
+  monotone := by
+    intro left right below index present
+    simp only [storedValues_ofFn] at present ⊢
+    exact Expr.monotone (equations index) below present
+  height := n
+  weight state := weight (storedValues state)
+  bounded state := weight_bound (storedValues state)
+  strict := by
+    intro left right below different
+    have unequal : storedValues left ≠ storedValues right := fun same => different (storedValues_injective same)
+    have mono := weight_mono below
+    have strict : weight (storedValues left) ≠ weight (storedValues right) := fun same => unequal (weight_eq below same)
+    omega
+
+/-- Solve with stored approximations, then return the original certified public
+fixed-point interface. The finite unfolding, leastness and height are preserved;
+the representation change adds no fuel, acceptance condition or failure case. -/
+def close (equations : Equations n) : Prototype.FiniteClosure.Closed (system equations) :=
+  let result := Prototype.FiniteClosure.close (storedSystem equations)
+  { value := storedValues result.value
+    fixed := by
+      have fixed := congrArg storedValues result.fixed
+      simpa only [storedSystem, system, storedValues_ofFn] using fixed
+    least := by
+      intro other fixed
+      have lifted : (storedSystem equations).step (Vector.ofFn other) = Vector.ofFn other := by
+        simp only [storedSystem, storedValues_ofFn]
+        exact congrArg Vector.ofFn fixed
+      have below := result.least (Vector.ofFn other) lifted
+      simpa only [storedSystem, system, storedValues_ofFn] using below
+    depth := result.depth
+    bound := result.bound
+    reached := by
+      have related := Prototype.FiniteFix.iterate_relation
+        (storedSystem equations).prototype (system equations).prototype
+        (fun stored state => storedValues stored = state) () ()
+        (storedSystem equations).bottom (system equations).bottom
+        (by funext index; simp [storedSystem, system, storedValues])
+        (by
+          intro stored state same
+          simp only [Prototype.FiniteClosure.System.prototype, storedSystem, system, storedValues_ofFn]
+          rw [same]) result.depth
+      rw [result.reached] at related
+      exact related.symm }
+
+/-- Stored closure has exactly the existing reference solver's least solution.
+This transports semantic correctness; it does not assert compiler/runtime costs. -/
+theorem close_reference (equations : Equations n) :
+    (close equations).value = (Prototype.FiniteClosure.close (system equations)).value :=
+  Prototype.FiniteClosure.least_unique (system equations)
+    (fun first second => weight_eq first (Nat.le_antisymm (weight_mono first) (weight_mono second)))
+    (close equations).value (close equations).fixed (close equations).least |>.symm
 
 open GeneralizedGraph
 
@@ -177,10 +255,22 @@ theorem least (equations : Equations n) (other : Bits n) (fixed : step equations
     Below (close equations).value other := (close equations).least other fixed
 
 theorem least_unique (equations : Equations n) (other : Bits n) (fixed : step equations other = other)
-    (otherLeast : ∀ value, step equations value = value → Below other value) : (close equations).value = other :=
-  Prototype.FiniteClosure.least_unique (system equations)
+    (otherLeast : ∀ value, step equations value = value → Below other value) : (close equations).value = other := by
+  rw [close_reference]
+  exact Prototype.FiniteClosure.least_unique (system equations)
     (fun first second => weight_eq first (Nat.le_antisymm (weight_mono first) (weight_mono second))) other fixed otherLeast
 
 theorem updates_bound (equations : Equations n) : (close equations).depth ≤ n := (close equations).bound
+
+/-- Logical equation evaluations for full shared rounds, including the final
+stability comparison. Expression-node work, allocation and compiler time are
+separate costs; a table read does not evaluate its equation again. -/
+def roundEvaluations (equations : Equations n) : Nat := n * ((close equations).depth + 1)
+
+/-- Finite-height closure bounds the shared-round evaluation budget quadratically.
+This is an abstract work bound, not a host elapsed-time or allocation theorem. -/
+theorem roundEvaluations_bound (equations : Equations n) :
+    roundEvaluations equations ≤ n * (n + 1) :=
+  Nat.mul_le_mul_left n (Nat.add_le_add_right (updates_bound equations) 1)
 
 end LeanPoo.Functional.PositiveEquations

@@ -1,4 +1,5 @@
 import LeanPoo.Functional.IncrementalClosure
+import LeanPoo.Functional.StrongComponents
 open LeanPoo LeanPoo.Functional LeanPoo.Functional.PositiveEquations
 
 /-- Parameterized families all have the independent oracle 'every fact is true'. -/
@@ -16,11 +17,39 @@ def workload (family : String) (n : Nat) : Equations n := fun index =>
       Expr.twoOfThree (.read previous) (.read previous) (.read ⟨0,by have := index.isLt; omega⟩)
     else .read previous
 
+/-- Force the complete reachability matrix for two disjoint cycles. Cross-group
+negatives exercise the expensive shared-search case; every cell has an independent
+partition oracle. Both controls include matrix allocation in the query timer. -/
+def measurePaths (variant family : String) (n : Nat) : IO Unit := do
+  unless n ≥ 2 && n%2 == 0 && ["ring","shared"].contains family do
+    throw (IO.userError "path controls require an even size and ring/shared family")
+  let width := n/2
+  let edge : Fin n → Fin n → Bool := fun a b =>
+    decide (a.val/width = b.val/width) &&
+      (decide ((a.val+1)%width = b.val%width) ||
+        (family == "shared" && decide ((a.val+2)%width = b.val%width)))
+  let begin ← IO.monoNanosNow
+  let table := if variant == "paths-unshared" then
+      Vector.ofFn (fun a => Vector.ofFn (fun b => StrongComponents.reachable edge n a b))
+    else StrongComponents.reachableTable edge n
+  let forced ← IO.mkRef table
+  let facts ← forced.get
+  let queryNs := (← IO.monoNanosNow)-begin
+  for a in List.finRange n do
+    for b in List.finRange n do
+      unless facts[a.val][b.val] == decide (a.val/width = b.val/width) do
+        throw (IO.userError "independent path partition oracle")
+  IO.println s!"variant={variant} family={family} n={n} query_ns={queryNs} oracle_parity=true"
+
+/-- Force every result before stopping the query timer and check a scalar oracle.
+The unshared control is for measurement, not a supported compatibility path. -/
 def main (args : List String) : IO Unit := do
   let [variant,family,size] := args | throw (IO.userError "variant family size")
   let some n := size.toNat? | throw (IO.userError "size")
-  unless n > 0 && ["reference","worklist","retained-index"].contains variant &&
+  unless n > 0 && ["reference","unshared","paths","paths-unshared","worklist","retained-index"].contains variant &&
       ["chain","reverse","fanout","shared","ring","quorum"].contains family do throw (IO.userError "parameters")
+  if ["paths","paths-unshared"].contains variant then
+    return ← measurePaths variant family n
   let setupBegin ← IO.monoNanosNow
   let prepared ← if variant == "retained-index" then
       IO.mkRef (some (IncrementalClosure.compile (workload family n)))
@@ -28,9 +57,11 @@ def main (args : List String) : IO Unit := do
   let retained ← prepared.get
   let setupNs := (← IO.monoNanosNow)-setupBegin
   let begin ← IO.monoNanosNow
-  let (facts,counts) ← if variant == "reference" then do
-      let result := PositiveEquations.close (workload family n)
-      let forced ← IO.mkRef (Vector.ofFn result.value, (none : Option IncrementalClosure.Stats))
+  let (facts,counts) ← if variant == "reference" || variant == "unshared" then do
+      let values := if variant == "unshared" then
+          Vector.ofFn (Prototype.FiniteClosure.close (system (workload family n))).value
+        else Vector.ofFn (PositiveEquations.close (workload family n)).value
+      let forced ← IO.mkRef (values, (none : Option IncrementalClosure.Stats))
       forced.get
     else do
       let plan := match retained with | some plan => plan | none => IncrementalClosure.compile (workload family n)

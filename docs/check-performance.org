@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs 141 independent example/contract
+once, checks C4's source-owned types, and runs all 342 independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 145 unique example/test files, including the typed
+The current gate covers 342 unique example/test files, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -29,10 +29,10 @@ the prior successful gate is not complete evidence for that diagnostic.
 
 The ~library~ job builds the public library and proofs. Its compressed build
 artifact is named with the current workflow SHA and passed only within that
-run. Twelve file-shard jobs each consume it and check nine or ten files. The
+run. Twelve file-shard jobs each consume it and check their complete canonical partition. The
 matrix has ~max-parallel: 12~ and ~fail-fast: false~; an independent ~diagnostics~
 job consumes the same artifact. Including library, docs and the aggregate,
-the workflow has sixteen jobs. The ~docs~ job installs only the Org
+the workflow has seventeen jobs, including the compiled executable checks. The ~docs~ job installs only the Org
 parser and runs independently of Lean. Each job has a bounded timeout.
 
 The ~check~ job retains the previous status name and runs even after failure.
@@ -692,3 +692,110 @@ With the same complete controls and limits, isolated =QueueSelection= passed in
 190.19 seconds. Its slowest file was 22.94 seconds. The earlier 184.59-second
 attempt was a failure, not a faster baseline; no speedup percentage is inferred.
 The 300-second phase and original 30-second/2048 MiB/heartbeat file limits remain.
+
+* Shared fixed-point approximations
+
+The accepted local complete gate before this change took 506.936 seconds:
+41.617 seconds for preparation, about 300 seconds for ordinary source checks,
+46.671 seconds for the exclusive SCC control, and 118.296 seconds for all 42
+short stress controls. This was the complete 342-file gate, not a single library
+build. These are observations from that run, not an unavoidable lower bound.
+
+A four-supervisor scheduling candidate used POSIX locks to retain the existing
+14-compiler ceiling while lending idle shard slots. The same deterministic 28
+ordinary files ran in fixed/shared/shared/fixed order. Fixed scheduling took
+58.194 and 56.420 seconds; shared scheduling took 86.377 and 45.095 seconds.
+All four runs preserved source and transcript hashes. Its worse median and
+larger spread do not support adoption; the candidate was withdrawn. The
+production two-shard scheduling and all original limits remain in force.
+
+The substantive change is in =PositiveEquations.close=. Its existing public
+function-valued equation semantics remains unchanged. Internally the existing
+finite-height solver now holds a =Vector Bool n= at every synchronous round;
+standard =Vector.ofFn= tabulates the next approximation. Repeated equation reads
+therefore access the stored prior vector. =FiniteClosure.search= also passes its
+already constructed candidate into the next iteration rather than expressing
+the same transition a second time.
+
+An initial attempt to return a vector-backed reader from the function-valued
+transition did not establish sharing: the paired executable control exceeded
+its unchanged 30-second bound. That failed candidate is not performance evidence.
+The accepted design must store vectors in the solver state itself.
+
+The transport proof retains the original public =Closed= interface: fixedness,
+leastness, finite unfolding from false, and the finite-height depth bound.
+=close_reference= proves equality with the original function-state solver's
+least solution, including the empty carrier and unsupported cycles. Existing
+truth-table controls remain, with additional shared-read chains of heights
+16, 32, 64 and 128.
+
+=roundEvaluations_bound= bounds the logical full-round equation-evaluation budget
+by =n * (n + 1)=, counting the final stability comparison. This excludes expression
+size, allocation, compiler transformations, wall time and operating-system costs.
+It is not a proof of a Scheme implementation or a universal elapsed-time bound.
+The =unshared= mode in the existing =cyclicClosureScale= executable is a measurement
+control using the existing function-state system, not a compatibility interface.
+Run both modes in alternating order with the same family and size; both force all
+facts before stopping the timer and require the same independent scalar oracle.
+No full benchmark logs or generated receipts are committed.
+
+The stored-state executable passed 16 alternating control/candidate rows for
+shared-read and quorum families at sizes 12 and 16. For example the two
+size-16 shared-read query measurements were 165.939/33.626 ms for function
+states and 0.0187/0.0351 ms for stored states. This isolates the solver; it does
+not include Lean elaboration, process startup or the complete publication workflow.
+Both modes include their equation construction and force the complete result.
+
+The same three unchanged recursive publication examples (Submissions, Recovery,
+Coordination), at three workers and their original limits, completed in
+29.510 seconds before and 21.459 seconds after the representation change.
+Total child CPU changed from 16.941 to 11.240 seconds. All three source and
+transcript hashes matched. This is one before/after observation, not a paired
+whole-gate speedup claim; the complete gate is measured and reported separately.
+
+#+begin_src sh
+lake build cyclicClosureScale
+for variant in unshared reference reference unshared; do
+  timeout --signal=TERM --kill-after=3s 30s .lake/build/bin/cyclicClosureScale "$variant" shared 16
+done
+#+end_src
+
+* Stored reachability layers
+
+The first full-gate attempt with only stored Boolean approximations was cancelled
+after 330 seconds, with 125 files reported complete. Two completed ordinary
+partitions used essentially the same CPU as their earlier counterparts but had
+longer wall times. That partial run is not accepted as a complete gate, and its
+wall/CPU gap is not attributed to other tasks or to a measured GC cause.
+
+The remaining large component examples still called =StrongComponents.discover=,
+whose per-pair =reachable= search expanded shared paths repeatedly. Discovery now
+uses =reachableTable=: each structurally bounded depth creates one immutable
+matrix and reads the preceding matrix. =reachableTable_get= proves equality with
+the original search at every index and fuel, for both true and false results.
+The original depth and certification predicate remain. All existing SCC membership,
+revision-seed and invalidation theorems still apply; no unchecked partition or
+additional acceptance/failure case is introduced.
+
+The same executable measures =paths-unshared= and =paths= in alternating order,
+including matrix construction and allocation, then checks every cell against an
+independent two-disjoint-ring partition oracle. All 16 rows passed. The size-12
+shared-path queries measured 141.509/104.985 ms before and 1.766/0.875 ms with
+stored layers. Size-12 single-ring queries instead measured 0.295/0.298 ms before
+and 0.863/0.787 ms with stored layers. The latter is a real small-case regression;
+these controls support the shared-path benefit, not universal graph speedup.
+
+The complete component-round executable, including its original revision,
+publication, stale-request and value checks plus new positive/negative controls
+for two disjoint rings at sizes 0, 2, 8, 16 and 32, passed its unchanged 120-second
+limit in 8.627 seconds (2.519 seconds CPU). The preceding accepted complete gate's
+original component-round executable took 46.116 seconds (12.686 seconds CPU).
+The new corpus has additional checks, so these are scope-labelled observations,
+not a matched percentage claim. Both unchanged joint-publication examples also
+passed; all 342 source files remain in the final complete gate.
+
+#+begin_src sh
+for variant in paths-unshared paths paths paths-unshared; do
+  timeout --signal=TERM --kill-after=3s 30s .lake/build/bin/cyclicClosureScale "$variant" shared 12
+done
+#+end_src
