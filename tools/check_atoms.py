@@ -151,6 +151,18 @@ def stop_children(signum, frame):
     os._exit(128 + signum)
 
 
+def atom_phase(atom):
+    """Keep the long SCC control outside the original short stress deadline."""
+    if atom['command'][0] != 'timeout':
+        return 'atoms'
+    return 'scc' if '120s' in atom['command'] else 'stress'
+
+
+def phase_workers(phase, jobs):
+    """Allocate a validated file budget; short stress work uses at most two."""
+    return {'atoms': jobs, 'scc': 1, 'stress': min(2, jobs)}[phase]
+
+
 def execution_lanes(atoms, jobs):
     """Separate ordinary work from explicit-deadline stress work in phases.
     This changes scheduling only: every original command/deadline is retained.
@@ -158,15 +170,12 @@ def execution_lanes(atoms, jobs):
     """
     if jobs < 1:
         raise ValueError('Jobs must be positive')
-    bounded = [a for a in atoms if a['command'][0] == 'timeout']
-    ordinary = [a for a in atoms if a['command'][0] != 'timeout']
     lanes = []
-    if ordinary:
-        lanes.append((jobs, ordinary))
-    if bounded:
-        # These allocation-heavy evaluations must not compete with each other
-        # inside their fixed wall-clock windows. Ordinary proofs still use jobs.
-        lanes.append((1, bounded))
+    for phase in ('atoms', 'scc', 'stress'):
+        selected = [atom for atom in atoms if atom_phase(atom) == phase]
+        if selected:
+            # Waiting precedes launch; every original process cap is retained.
+            lanes.append((phase_workers(phase, jobs), selected))
     return lanes
 
 

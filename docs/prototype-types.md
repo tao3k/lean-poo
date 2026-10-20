@@ -665,3 +665,64 @@ original declaration after complete unique residual inference. These laws cover
 the stated finite grammar and interpretation premises; the template directory is
 regression evidence, not universal host Type or compiler correctness. The existing
 complete checks and research boundaries remain mandatory.
+
+## Shared request quota through declaration admission
+
+The concentrated audit found a concrete cross-phase reset: the three declared
+entry points metered initial binding/inference with the caller's quota, then
+`declare-instance`, live-bound inspection and `admit-signatures` created fresh
+8192 counters. Successful inference could therefore bypass the caller's remaining
+budget during final admission. A second lifetime bug was exposed by the exact
+sufficient-quota regression: Map syntax and Record .cc fields retained child
+compiler calls, which spent an already completed request counter on first runtime
+observation. Both are implementation gaps within the existing type algebra.
+
+The checked compiler now captures compiled Map Key/Value and Record Slots before
+entering those lazy constructors. Runtime validation, clones and nested Function
+wrapping reuse those exact descriptors without invoking the compiler again. The
+regression closes a counting callback immediately after compilation, then checks
+first observation, cloning, wrapped calls and input/output failure controls.
+
+`instantiate-declared`, `infer-declared` and `infer-declared-calls` now create one
+existing `type-work` closure and thread it explicitly through the checked workers,
+captured source syntax, live binding checks, reflected signature forcing and final
+admission. The checked workers compose existing algorithms; they do not introduce
+another solver, Type namespace or fallback. A standalone public inspection still
+owns its own request. Independent nested public requests have independent counters.
+The default 8192, maximum 1048576 and depth 64 are unchanged.
+
+Exhaustion before the declaration builder prevents that callback. Exhaustion after
+the builder returns no published instance; prior callback effects are not rolled
+back. A builder failure precedes later admission and retains its original cause.
+No-solution/ambiguous complete reports return without entering declaration
+admission. Retry starts a fresh request, rechecks current sources and may succeed
+at the exact sufficient quota. Nothing caches approvals or failed balances.
+
+`metadata-service-request` prepares the explicit prefix as a separate bounded
+specialization and returns the existing budgeted residual inference/declaration
+operation. Repeated attempts revalidate and capture live candidates/observations.
+Its worked regression exhausts final admission, then retries with the exact
+sufficient quota and follows the original nested Pair/List/Map/optional callback
+validation, qualified method combination, FUN, refine and bind-evidence chain.
+A shared three-entry regression directory checks the pure-stage boundary, exact
+complete boundary, late refusal, reentrancy, original causes and fresh retry.
+
+The quota counts protocol-owned structural work, not arbitrary builder/computed
+callbacks, descriptor factories called by those callbacks, wall time or GC.
+Declaration expansion retains its existing recursion/construction guards; process
+limits still bound host execution. Lean `declarationStage_compose`,
+`completeDeclaredWork_sound`, early/late refusal, builder-refusal and larger-budget
+laws establish balance/provenance for explicit abstract stage charges.
+observeDeclaredWork_balance retains the ended-request balance when observing a
+captured descriptor; host closure independence remains the executable
+poison-counter correspondence premise.
+`Examples/Parameters.lean` composes these laws with the existing complete metadata
+publication. Its illustrative 7/5 charges are not measured Scheme costs and do not
+prove every runtime visit is metered. This advances the article's type-protocol
+future work; the Racket appendix does not already implement finite inference.
+
+Private call projection reuses admitted actual/formal syntax instead of parsing
+its copied constraints again. Public raw queries keep complete admission.
+`admitDeclaredSource_valid` transports a checked syntax property only after exact
+source equality; host mutable data still receives bounded traversal. Completed
+declaration reports capture admitted artifacts, not a deferred request counter.

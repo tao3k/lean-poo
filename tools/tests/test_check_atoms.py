@@ -38,6 +38,18 @@ class CheckAtomsTests(unittest.TestCase):
             self.assertEqual(lanes[1][0], 1)
             self.assertTrue(all(a['command'][0] == 'timeout' for a in lanes[1][1]))
 
+    def test_component_rounds_retain_limits_in_the_exclusive_phase(self):
+        lanes = execution_lanes(load_atoms(), 14)
+        selected = [(workers, atom) for workers, atoms in lanes for atom in atoms
+                    if atom['file'] == 'Examples/ComponentRounds.lean']
+        self.assertEqual(len(selected), 1)
+        workers, atom = selected[0]
+        self.assertEqual(workers, 1)
+        command = atom['command']
+        self.assertIn('120s', command)
+        self.assertEqual(command[command.index('-M') + 1], '2048')
+        self.assertEqual(command[command.index('-T') + 1], '10000000')
+
     def test_ordinary_jobs_overlap_but_stress_jobs_are_exclusive(self):
         atoms = [dict(file=f'bounded-{i}', command=['timeout', '30s']) for i in range(8)]
         atoms += [dict(file=f'ordinary-{i}', command=['lean']) for i in range(8)]
@@ -63,7 +75,7 @@ class CheckAtomsTests(unittest.TestCase):
 
         with patch('tools.check_atoms.run_atom', fixture):
             results = execute(atoms, 4)
-        self.assertEqual(peak[1], 1)
+        self.assertEqual(peak[1], 2)
         self.assertEqual(peak[0], 4)
         self.assertEqual(mixed, [])
         self.assertCountEqual([r['file'] for r in results], [a['file'] for a in atoms])
@@ -93,9 +105,12 @@ class CheckAtomsTests(unittest.TestCase):
         files = [atom['file'] for partition in partitions for atom in partition]
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
+        self.assertEqual(len(files), 342)
         bounded = [a for a in atoms if a['command'][0] == 'timeout']
-        self.assertEqual(len(bounded), 42)
-        for atom in bounded:
+        self.assertEqual(len(bounded), 43)
+        original = [a for a in bounded if a['file'] != 'Examples/ComponentRounds.lean']
+        self.assertEqual(len(original), 42)
+        for atom in original:
             self.assertIn('30s', atom['command'])
             self.assertIn('2048', atom['command'])
             self.assertIn('10000000', atom['command'])

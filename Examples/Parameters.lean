@@ -231,6 +231,55 @@ theorem metadataPublication_sound (callback artifact)
   intro a b inside
   exact satisfies_sound 24 metadataBounds _ accepted inside
 
+/-- Illustrative structural charges surround the existing complete metadata
+publication. Seven/five are abstract ledger units, not measured Gerbil costs.
+The finite candidate/bound proofs and original artifact remain unchanged. -/
+def metadataBudgetedPublication (budget : Nat) :=
+  completeDeclaredWork 7 5 budget metadataPublication
+    (fun result => (Except.ok result : Except (Sum Functional.PrototypeTypes.Failure String) _))
+
+#guard match metadataBudgetedPublication 11 with | .error (.inl .exhausted) => true | _ => false
+#guard match metadataBudgetedPublication 12 with | .ok ((.unique _, some _), 0) => true | _ => false
+#guard match metadataBudgetedPublication 20 with | .ok ((.unique _, some _), 8) => true | _ => false
+
+/-- Budgeted admission retains the SAME original declaration and every bound
+from the independently established complete unique metadata search. -/
+theorem metadataBudgetedPublication_sound (budget callback artifact remaining)
+    (accepted : metadataBudgetedPublication budget = .ok ((.unique callback, some artifact), remaining)) :
+    12 ≤ budget ∧ remaining = budget - 12 ∧
+      artifact = substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) metadataSignature ∧
+      ∀ a b, (a, b) ∈ metadataBounds →
+        Subtype (substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) a)
+          (substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) b) := by
+  obtain ⟨enough, balance, report, prepared, built⟩ :=
+    completeDeclaredWork_sound 7 5 budget metadataPublication _ accepted
+  have same : report = (.unique callback, some artifact) := Except.ok.inj built
+  rw [same] at prepared
+  obtain ⟨source, bounds⟩ := metadataPublication_sound callback artifact prepared
+  exact ⟨enough, balance, source, bounds⟩
+
+/-- A builder failure wins over the later quota check; successful retry needs
+an independent quota and still returns the original artifact. -/
+example : completeDeclaredWork 7 5 7 (.ok ())
+    (fun _ => (Except.error (.inr "approval refused") : Except (Sum Functional.PrototypeTypes.Failure String) Ty)) =
+      .error (.inr "approval refused") := rfl
+
+/-- Runtime observation of an already admitted artifact carries a zero balance
+unchanged. Actual Scheme closure independence is a separate executable check. -/
+example : observeDeclaredWork
+    (Except.ok (metadataCallback, 0) : Except String (Ty × Nat))
+    (fun callback => .ok callback) = .ok (metadataCallback, 0) := rfl
+
+#print axioms observeDeclaredWork_balance
+#print axioms declarationStage_compose
+#print axioms completeDeclaredWork_sound
+#print axioms completeDeclaredWork_early_refusal
+#print axioms completeDeclaredWork_late_refusal
+#print axioms completeDeclaredWork_build_refusal
+#print axioms completeDeclaredWork_more
+#print axioms admitDeclaredSource_valid
+#print axioms metadataBudgetedPublication_sound
+
 /-- Specializing field Types before an admitted row extension preserves the
 same extension and every literal label; no override or inferred row is inserted. -/
 example (fixed : List Ty) (explicit extension result : Functional.RowTypes.Row String Expr)

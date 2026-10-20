@@ -40,4 +40,33 @@ theorem dependencies_seed (family : String) (n width : Nat) (left right : Bool) 
   split
   · split <;> rfl
   · rfl
+
+/-- Only the root equation observes the seed; other expression trees can be shared. -/
+theorem equations_nonzero (family : String) (n width : Nat) (left right : Bool)
+    (index : Fin n) (nonzero : index.val ≠ 0) :
+    equations family n width left index = equations family n width right index := by
+  simp [equations, nonzero]
+
+/-- Revise the root literal while retaining every other compiled expression. -/
+def reseed (family : String) (n width : Nat) (base : Plan n) (seed : Bool) : Equations n :=
+  fun index => if index.val = 0 then equations family n width seed index else base.source index
+
+/-- A source certificate makes shared-expression revision equal to fresh construction. -/
+theorem reseed_eq (family : String) (n width : Nat) (base : Plan n) (before after : Bool)
+    (source : base.source = equations family n width before) :
+    reseed family n width base after = equations family n width after := by
+  funext index
+  simp only [reseed]
+  split
+  · rfl
+  · rename_i nonzero
+    rw [source]
+    exact equations_nonzero family n width before after index nonzero
+
+/-- Literal revision retains the exact read topology needed by reconfigure. -/
+theorem reseed_dependencies (family : String) (n width : Nat) (base : Plan n) (before after : Bool)
+    (source : base.source = equations family n width before) (index : Fin n) :
+    dependencies (reseed family n width base after index) = dependencies (base.source index) := by
+  rw [reseed_eq family n width base before after source, source]
+  exact dependencies_seed family n width after before index
 end LeanPoo.Functional.ClosureScenarios

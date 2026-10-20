@@ -272,6 +272,8 @@ check-example: check-compose
     lake build Examples
     just --set lean "{{lean}}" _check-examples
 
+# ComponentRounds shares the existing exclusive deadline phase. Its original
+# 120s / 2GiB / heartbeat limits remain; the other ordinary proofs stay parallel.
 [private]
 _check-examples:
     {{lean}} Examples/PrototypeCore.lean
@@ -341,7 +343,7 @@ _check-examples:
     {{lean}} Examples/ServiceRevisions.lean
     {{lean}} Examples/ComponentMembership.lean
     {{lean}} Examples/ComponentMigration.lean
-    {{lean}} Examples/ComponentRounds.lean
+    timeout --signal=TERM --kill-after=3s 120s {{lean}} -M 2048 -T 10000000 Examples/ComponentRounds.lean
     {{lean}} Examples/ComponentRequests.lean
     {{lean}} Examples/ApprovalRevision.lean
     {{lean}} Examples/SharedApprovals.lean

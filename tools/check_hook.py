@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -52,6 +53,19 @@ def run_check(command, output, progress=None):
         process.stdout.close()
 
 
+def saved_check(command, summary, progress=None):
+    """Keep the lossless transcript without replaying it through captured hooks."""
+    with tempfile.NamedTemporaryFile(mode='w', prefix='lean-poo-check-',
+                                     suffix='.log', delete=False) as transcript:
+        message = f'Full check transcript: {transcript.name}\n'
+        summary.write(message)
+        summary.flush()
+        if progress is not None and progress is not summary:
+            progress.write(message)
+            progress.flush()
+        return run_check(command, transcript, progress if progress is not None else summary)
+
+
 def main():
     # Hook runners capture stdout even when Git has a controlling terminal.
     # CI and detached invocations retain ordinary stdout without needing a tty.
@@ -60,7 +74,7 @@ def main():
     except OSError:
         terminal = None
     try:
-        return run_check(['just', 'check'], sys.stdout, terminal)
+        return saved_check(['just', 'check'], sys.stdout, terminal)
     finally:
         if terminal is not None:
             terminal.close()

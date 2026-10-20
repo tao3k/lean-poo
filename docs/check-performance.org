@@ -637,3 +637,58 @@ at 1536 MiB. Named local closure certificates and composed family/refusal proofs
 avoid repeating proof-carrying closure normalization. The unchanged propositions
 now pass at the same 1536 MiB limit; the maintained 2048 MiB limit was not raised.
 The original failed CI/local logs remain diagnostic evidence, not successful checks.
+* Atomic local checks and CI source partitions
+
+The complete inventory remains 342 files: 299 ordinary files, the executable
+SCC round control, and the original 42 short stress controls. Ordinary local
+checks reuse CI's twelve canonical source partitions. At most two shard phases
+run together; they share the automatic file-worker budget (14 permits two pools
+of seven). Waiting for a phase slot happens before its 300-second deadline.
+Every file retains its compiler, heartbeat and wall limits. This changes the
+supervised unit from one coupled ordinary batch to the existing CI partitions;
+it does not establish a whole-gate speedup.
+
+The SCC control runs exclusively after all ordinary shards, followed by the
+original 42-item stress phase with its unchanged 300-second deadline. Original
+30-second file deadlines remain intact; the SCC control retains 120 seconds.
+Coverage tests require every canonical file exactly once, separate receipt paths,
+the same CI partition membership, and a worker allocation within the budget.
+Failed ordinary or SCC checks do not suppress the remaining exclusive checks.
+
+| SCC placement | Wall seconds | CPU seconds | Result |
+|---------------+--------------+-------------+--------|
+| Ordinary 14-worker pool | 120.101 | 12.032 | Timeout |
+| Isolated with original limits | 34.959 | 12.097 | Pass |
+| Exclusive in a complete gate attempt | 46.449 | 12.066 | Pass |
+
+The first complete attempt retained its SCC timeout. A second attempt exceeded
+the stress phase deadline after incorrectly adding SCC work to that phase; a
+later coupled ordinary batch also exceeded its phase deadline. None is accepted
+as a successful gate. These observations motivate the source-partition and
+phase-admission repair; they are not end-to-end runtime performance evidence.
+
+The commit hook writes its lossless transcript to a standard temporary file and
+shows its path immediately. Terminal summaries reflect actual phase/file events.
+Captured failure output keeps the transcript path rather than replaying thousands
+of lines. The original exit status and full diagnostics remain available; no
+benchmark payloads, generated receipts or archives are added to Git.
+
+The short stress pool is admitted at at most two processes within the automatic
+file budget; SCC remains alone. CI's one-worker shards remain one-worker. The
+first two-process control completed all 42 commands in 184.59 seconds but failed
+=QueueSelection= at its original 30-second file deadline, so it was rejected.
+
+That control retained all 96 scenarios, four profiles, scalar oracles and cost
+assertions. Its duplicated work was removed through existing literal revision
+and preparation: =reseed_eq= preserves the full source, =reconfigure_compile=
+preserves the exact fresh Plan including ordered/multiple watchers, and
+=prepare_reconfigure= preserves the profile's ceilings. Standard =Thunk= values
+share the same pure append/chunked execution across profiles;
+=Prepared.runCached_eq= preserves every result/statistic/work field. These are
+semantic equivalence laws, not proofs of compiler caching or physical hit costs.
+
+With the same complete controls and limits, isolated =QueueSelection= passed in
+24.61 seconds; the complete two-process stress control then passed 42/42 in
+190.19 seconds. Its slowest file was 22.94 seconds. The earlier 184.59-second
+attempt was a failure, not a faster baseline; no speedup percentage is inferred.
+The 300-second phase and original 30-second/2048 MiB/heartbeat file limits remain.

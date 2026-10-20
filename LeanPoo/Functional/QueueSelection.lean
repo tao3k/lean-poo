@@ -102,6 +102,30 @@ def Prepared.run (prepared : Prepared profile plan) : HybridClosure.Run n :=
                 ⟨result.store,result.stats,{frames := result.stats.writes}⟩
   | .hybrid => HybridClosure.measured profile.prices plan
 
+/-- Share certified pure append/chunked executions across profiles using standard
+memoizing thunks. Hybrid execution retains the current profile's actual prices.
+Returned work describes the certified solve, not a measurement of cache-hit costs. -/
+def Prepared.runCached (prepared : Prepared profile plan)
+    (appended chunked : Thunk (Result plan (Vector.replicate n false) (List.ofFn id)))
+    (_append_actual : appended.get = fastClose plan)
+    (_chunked_actual : chunked.get = ChunkedClosure.close plan) : HybridClosure.Run n :=
+  match prepared.choose with
+  | .append => let result := appended.get
+               ⟨result.store,result.stats,{copied := result.stats.pushes}⟩
+  | .chunked => let result := chunked.get
+                ⟨result.store,result.stats,{frames := result.stats.writes}⟩
+  | .hybrid => HybridClosure.measured profile.prices plan
+
+/-- Sharing changes evaluation reuse, not any selected store, statistic or work
+counter. Supplied thunks require exact execution certificates, not just bounds. -/
+theorem Prepared.runCached_eq (prepared : Prepared profile plan)
+    (appended chunked : Thunk (Result plan (Vector.replicate n false) (List.ofFn id)))
+    (append_actual : appended.get = fastClose plan)
+    (chunked_actual : chunked.get = ChunkedClosure.close plan) :
+    prepared.runCached appended chunked append_actual chunked_actual = prepared.run := by
+  unfold Prepared.runCached Prepared.run
+  split <;> simp only [append_actual, chunked_actual]
+
 /-- Compute the differential charge of a supplied run without executing the
 solver again. The caller must retain the actual selected run; arbitrary supplied
 statistics do not inherit the selected-bound theorem. -/
@@ -208,6 +232,37 @@ def Prepared.reconfigure (prepared : Prepared profile plan) (equations : Equatio
 
 theorem reconfigure_choice (prepared : Prepared profile plan) (equations : Equations n) (same) :
     (prepared.reconfigure equations same).choose = prepared.choose := rfl
+
+/-- Reusing certified ceilings after a literal revision equals fresh preparation. -/
+theorem prepare_reconfigure (profile : Profile) (plan : Plan n) (equations : Equations n)
+    (same : ∀ index, dependencies (equations index) = dependencies (plan.source index)) :
+    (prepare profile plan).reconfigure equations same =
+      prepare profile (IncrementalClosure.reconfigure plan equations same) := rfl
+
+private theorem plan_eq_of_tables (left right : Plan n)
+    (table : left.equations = right.equations) (index : left.watches = right.watches) : left = right := by
+  cases left
+  cases right
+  cases table
+  cases index
+  rfl
+
+private theorem compile_index_eq (before after : Equations n)
+    (same : ∀ index, dependencies (before index) = dependencies (after index)) :
+    (compile before).watches = (compile after).watches := by
+  simp only [compile, buildIndex, edges, collectDeps_correct, List.append_nil]
+  simp only [Vector.getElem_ofFn, same]
+
+/-- Reusing a canonical index after exact read-footprint preservation is the
+same Plan as fresh compilation, including watcher order and multiplicities. -/
+theorem reconfigure_compile (before after : Equations n)
+    (same : ∀ index, dependencies (after index) = dependencies ((compile before).source index)) :
+    IncrementalClosure.reconfigure (compile before) after same = compile after := by
+  apply plan_eq_of_tables
+  · rfl
+  · apply compile_index_eq
+    intro index
+    simpa only [compile_source] using (same index).symm
 
 def assemble (equations : Equations n) (plan : Plan n) (source : plan.source = equations) :
     ConstructionCache.Cache (declaration equations) × Stats :=

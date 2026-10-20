@@ -286,6 +286,143 @@ def specializeDeclared [DecidableEq Name] (reserved : Name) (source : Parameters
   | .error cause => .error (.inl cause)
   | .ok bound => (build bound).mapError Sum.inr
 
+/-- Charge one protocol stage before exposing its result. Costs count admitted
+structural visits, not host callback steps, allocations, GC or elapsed time.
+A stage failure keeps its exact cause whenever its preceding work is available. -/
+def declarationStage (cost budget : Nat)
+    (step : Except (Sum PrototypeTypes.Failure Error) Value) :
+    Except (Sum PrototypeTypes.Failure Error) (Value × Nat) :=
+  if cost ≤ budget then step.map (fun value => (value, budget - cost))
+  else .error (.inl .exhausted)
+
+/-- The uniquely selected inference/binding and source-admission stage hands its
+remaining quota to final declaration admission. The builder runs between them;
+its own effects are not rolled back if the later protocol quota is exhausted.
+The existing inferDeclared laws independently establish unique-solve provenance. -/
+def completeDeclaredWork (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (Artifact × Nat) :=
+  (declarationStage before budget prepare).bind fun (context, remaining) =>
+    (build context).bind fun artifact => declarationStage after remaining (.ok artifact)
+
+/-- Splitting a successful work ledger across phases cannot refresh the quota. -/
+theorem declarationStage_compose (first second budget : Nat) (value : Value) :
+    ((declarationStage first budget (.ok value) :
+        Except (Sum PrototypeTypes.Failure Error) (Value × Nat)).bind
+      (fun (result, remaining) => declarationStage second remaining (.ok result))) =
+    declarationStage (first + second) budget (.ok value) := by
+  by_cases a : first ≤ budget
+  · by_cases b : second ≤ budget - first
+    · have total : first + second ≤ budget := by omega
+      simp [Except.map, Except.bind, declarationStage, a, b, total, Nat.sub_sub]
+    · have total : ¬first + second ≤ budget := by omega
+      simp [Except.map, Except.bind, declarationStage, a, b, total]
+  · have total : ¬first + second ≤ budget := by omega
+    simp [Except.bind, declarationStage, a, total]
+
+/-- Complete success entails both original semantic results and the total quota
+bound, with an exact remaining balance. No reset/default counter is admissible. -/
+theorem completeDeclaredWork_sound (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (accepted : completeDeclaredWork before after budget prepare build = .ok (artifact, remaining)) :
+    before + after ≤ budget ∧ remaining = budget - (before + after) ∧
+      ∃ context, prepare = .ok context ∧ build context = .ok artifact := by
+  unfold completeDeclaredWork declarationStage at accepted
+  split at accepted
+  · rename_i first
+    cases prepared : prepare with
+    | error cause => simp [prepared, Except.map, Except.bind] at accepted
+    | ok context =>
+      cases built : build context with
+      | error cause => simp [prepared, built, Except.map, Except.bind] at accepted
+      | ok result =>
+        simp only [prepared, Except.map, Except.bind, built] at accepted
+        split at accepted
+        · rename_i second
+          simp only [Except.ok.injEq, Prod.mk.injEq] at accepted
+          obtain ⟨rfl, balance⟩ := accepted
+          exact ⟨by omega, by omega, context, rfl, built⟩
+        · contradiction
+  · contradiction
+
+/-- Sufficient work preserves the exact artifact and balance, independent of
+phase partitioning. This is a protocol-work law, not a timing prediction. -/
+theorem completeDeclaredWork_ok (before after budget : Nat) (context : Context) (artifact : Artifact)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (built : build context = .ok artifact) (enough : before + after ≤ budget) :
+    completeDeclaredWork before after budget (.ok context) build =
+      .ok (artifact, budget - (before + after)) := by
+  have first : before ≤ budget := by omega
+  have second : after ≤ budget - before := by omega
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, second, built, Nat.sub_sub]
+
+/-- A late quota failure exposes neither the built artifact nor a successful
+prefix. A fresh request is modeled by a fresh numeric input, not a reused balance. -/
+theorem completeDeclaredWork_late_refusal (before after budget : Nat) (context : Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (artifact : Artifact)
+    (built : build context = .ok artifact) (first : before ≤ budget)
+    (short : budget < before + after) :
+    completeDeclaredWork before after budget (.ok context) build = .error (.inl .exhausted) := by
+  have second : ¬after ≤ budget - before := by omega
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, second, built]
+
+/-- A builder failure precedes final admission and retains its original cause,
+even when the remaining quota would not suffice for successful admission. -/
+theorem completeDeclaredWork_build_refusal (before after budget : Nat) (context : Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (cause)
+    (first : before ≤ budget) (failed : build context = .error cause) :
+    completeDeclaredWork before after budget (.ok context) build = .error cause := by
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, failed]
+
+/-- An exhausted preparation quota prevents the continuation and exposes no
+context or receiver, independently of whether the preparer would succeed. -/
+theorem completeDeclaredWork_early_refusal (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (short : budget < before) :
+    completeDeclaredWork before after budget prepare build = .error (.inl .exhausted) := by
+  simp [completeDeclaredWork, declarationStage, Except.bind, Nat.not_le.mpr short]
+
+/-- Fresh requests with sufficient quota preserve the original successful
+artifact; no remaining balance from a failed request needs to be reused. -/
+theorem completeDeclaredWork_more (before after budget larger : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (accepted : completeDeclaredWork before after budget prepare build = .ok (artifact, remaining))
+    (more : budget ≤ larger) :
+    completeDeclaredWork before after larger prepare build =
+      .ok (artifact, larger - (before + after)) := by
+  obtain ⟨enough, _, context, prepared, built⟩ := completeDeclaredWork_sound _ _ _ _ _ accepted
+  rw [prepared]
+  exact completeDeclaredWork_ok _ _ _ _ _ _ built (by omega)
+
+/-- Observe a captured descriptor without access to its ended request counter.
+The observer retains its own failure/effect interpretation. Host closure capture
+is an explicit correspondence premise, checked by the Scheme poison-counter test. -/
+def observeDeclaredWork (admitted : Except Error (Descriptor × Nat))
+    (observe : Descriptor → Except Error Value) : Except Error (Value × Nat) :=
+  admitted.bind fun (descriptor, remaining) =>
+    (observe descriptor).map fun value => (value, remaining)
+
+/-- Every successful observation keeps the exact ended-request balance and the
+same captured descriptor; observing it cannot charge or refresh that balance. -/
+theorem observeDeclaredWork_balance (admitted : Except Error (Descriptor × Nat))
+    (observe : Descriptor → Except Error Value)
+    (accepted : observeDeclaredWork admitted observe = .ok (value, remaining)) :
+    ∃ descriptor, admitted = .ok (descriptor, remaining) ∧ observe descriptor = .ok value := by
+  cases admitted with
+  | error cause => simp [observeDeclaredWork, Except.bind] at accepted
+  | ok pair =>
+    rcases pair with ⟨descriptor, balance⟩
+    cases observed : observe descriptor with
+    | error cause => simp [observeDeclaredWork, Except.bind, Except.map, observed] at accepted
+    | ok result =>
+      simp only [observeDeclaredWork, Except.bind, observed, Except.map,
+        Except.ok.injEq, Prod.mk.injEq] at accepted
+      obtain ⟨rfl, rfl⟩ := accepted
+      exact ⟨descriptor, rfl, observed⟩
+
 /-- Malformed parameter metadata refuses even for an empty prefix, before build. -/
 theorem specializeDeclared_invalid [DecidableEq Name] (reserved : Name)
     (source : Parameters.Template Name Value) (values : List Value)
@@ -450,6 +587,15 @@ theorem admitDeclaredSource_stable [DecidableEq Source] (captured observed : Sou
   split at accepted
   · assumption
   · contradiction
+
+/-- Exact source admission transports an already established syntax judgment.
+The host still bounds the observed mutable data before testing equality and
+keeps the captured snapshot private; this law does not admit changed syntax. -/
+theorem admitDeclaredSource_valid [DecidableEq Source] (captured observed : Source)
+    (valid : Source → Prop) (checked : valid captured) (artifact result : Artifact)
+    (accepted : admitDeclaredSource captured observed artifact = .ok result) : valid observed := by
+  rw [← admitDeclaredSource_stable captured observed artifact result accepted]
+  exact checked
 
 
 /-- Source preservation and full catalog coverage form one publication admission,
