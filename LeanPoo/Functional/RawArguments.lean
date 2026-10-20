@@ -1,4 +1,5 @@
 import LeanPoo.Functional.KeywordCoverage
+import LeanPoo.Functional.Validation
 
 /-! Value-sensitive raw argument coverage in the existing FunctionSignature
 protocol. This advances the article's hypothetical type system. Origin admission
@@ -6,6 +7,73 @@ is explicit: data requires subtype evidence, protocol markers require their own
 Keyword/Exactly/Enum evidence. No origin is replaced with a universal Type.
 The finite checker models the request-local traversal, not host memo/GC costs. -/
 namespace LeanPoo.Functional.FunctionSignature
+
+/-- A complete ordered projection retains every child at its original position.
+Apply this at each alternative layer: an opaque/wrapping child refuses the whole
+view. The existing all-or-error traversal supplies the executable protocol. -/
+theorem rawOriginView_order (project : Origin → Except Error View)
+    (origins : List Origin) (views : List View)
+    (complete : Validation.traverse project origins = .ok views) :
+    origins.map project = views.map (Except.ok : View → Except Error View) := by
+  induction origins generalizing views with
+  | nil =>
+    have empty : views = [] := by simpa [Validation.traverse] using complete.symm
+    simp [empty]
+  | cons origin rest ih =>
+    cases first : project origin with
+    | error cause => simp [Validation.traverse, first, Except.bind] at complete
+    | ok view =>
+      cases tail : Validation.traverse project rest with
+      | error cause => simp [Validation.traverse, first, tail, Except.bind, Except.map] at complete
+      | ok remaining =>
+        have same : view :: remaining = views := by
+          simpa [Validation.traverse, first, tail, Except.bind, Except.map] using complete
+        subst views
+        simpa [first] using congrArg (List.cons (.ok view)) (ih remaining tail)
+
+/-- Even a late unsupported child prevents a successful partial view. Earlier
+valid siblings cannot conceal a wrapping child or a projection refusal. -/
+theorem rawOriginView_noPartial (project : Origin → Except Error View)
+    (origins : List Origin) (origin : Origin) (inside : origin ∈ origins)
+    (cause : Error) (failed : project origin = .error cause) (views : List View) :
+    Validation.traverse project origins ≠ .ok views := by
+  intro complete
+  have present : project origin ∈ origins.map project := List.mem_map.mpr ⟨origin, inside, rfl⟩
+  rw [rawOriginView_order project origins views complete] at present
+  obtain ⟨view, _, same⟩ := List.mem_map.mp present
+  simp [failed] at same
+
+/-- Intrinsic child interpretation composes through the complete ordered view.
+This is value membership only, not public ordered-descriptor replacement. Host
+leaf recognition/identity and sentinel interpretation are explicit obligations. -/
+theorem rawOriginView_membership (project : Origin → Except Error View)
+    (member : Origin → Value → Bool) (accept : View → Value → Bool)
+    (law : ∀ origin view, project origin = .ok view → ∀ value, member origin value = accept view value)
+    (origins : List Origin) (views : List View)
+    (complete : Validation.traverse project origins = .ok views) (value : Value) :
+    origins.any (fun origin => member origin value) = views.any (fun view => accept view value) := by
+  have ordered := rawOriginView_order project origins views complete
+  clear complete
+  induction origins generalizing views with
+  | nil => cases views <;> simp_all
+  | cons origin rest ih =>
+    cases views with
+    | nil => simp at ordered
+    | cons view remaining =>
+      have paired := List.cons.inj ordered
+      simp only [List.any_cons, law origin view paired.1 value, ih remaining paired.2]
+
+/-- Intersect the complete intrinsic view with the actual decoder token boundary.
+False/void data remain ordinary; no universal Type or complement is invented. -/
+theorem rawOriginView_ordinary (project : Origin → Except Error View)
+    (member : Origin → Value → Bool) (accept : View → Value → Bool)
+    (law : ∀ origin view, project origin = .ok view → ∀ value, member origin value = accept view value)
+    (origins : List Origin) (views : List View)
+    (complete : Validation.traverse project origins = .ok views)
+    (ordinary : Value → Bool) (value : Value) :
+    (origins.any (fun origin => member origin value) && ordinary value) =
+      (views.any (fun view => accept view value) && ordinary value) := by
+  rw [rawOriginView_membership project member accept law origins views complete value]
 
 /-- Every successful spelling consumes positional data in order and each supplied
 key once, with optional key/rest escapes. Payload Types remain at their origins.

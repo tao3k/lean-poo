@@ -627,3 +627,21 @@ impossible container origins. The original descriptor remains intact; actual
 empty collections/sentinels stay live and complete closure still gates every
 call region. See [finite-inference-audit.md](finite-inference-audit.md#impossible-container-origins-in-raw-keyword-coverage)
 for the retired-keyword publication example, failure semantics and proof scope.
+
+### Intrinsic alternative origins
+
+Private raw keyword coverage now interprets intrinsic `Or`, `Maybe` and `OrFalse`
+through the existing flat inclusion solver. Complete ordered projection preserves
+all children; false/void remain real ordinary arguments, while keyword/escape
+origins retain their exact transport obligations. Wrapping/opaque children keep
+the original bounded comparison. Public ordered replacement, Map keys and the
+original specialized declaration are unchanged; no `Any` fallback is introduced.
+
+`RawArguments.lean` proves ordered projection, rejection of partial views,
+universal membership and ordinary-data intersection. `Examples/RawArguments.lean`
+checks optional token interpretation and composes complete declaration provenance
+with the existing ordered identity-validation theorem. Gerbil's independent
+keyword/rest procedure, recursive wrappers, refinement/evidence publication,
+policy retry and type-refusal regressions exercise the executable correspondence.
+These are finite type-protocol future-work results with explicit host leaf and
+decoder interpretation obligations, not compiler, effect or GC correctness proofs.
