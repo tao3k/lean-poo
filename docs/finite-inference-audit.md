@@ -9,9 +9,10 @@ used as a composition seed is inhabited and is not an empty Type.
 
 | Priority | Finding | Acceptance / next boundary |
 | --- | --- | --- |
+| P2 finite Or protocol | Runtime Or lacked recursive wrappers and inference admission | CLOSED through existing ordered selection, shared selected-child normalization and all-branch source coverage. Original Or membership selection, Union structural selection, descriptor kinds, Map keys and codec boundaries remain distinct. Complete callback-directory publication and conditional Lean laws are covered. |
 | P2 first | Impossible mandatory products/rows were refused across kinds | Implemented here: positive finite emptiness witnesses feed the existing replacement judgment, shared inference, ordered parameter specialization and whole declaration admission. |
 | P2 covered | Runtime Null/Unit and fixed-width numeric/byte descriptors | Closed for literal bounded UIntN/IntN/BytesN, Bytes, singleton names and existing fixed aliases; see intrinsic-descriptors.md for admission, interval/carrier and artifact laws. Dynamic widths remain unsupported. |
-| P2 next | TypeValuePair and Class/Schema callbacks can determine types dynamically | Still open. A future decidable protocol must capture a finite, stable descriptor catalog; arbitrary dependent/callback discovery is unsupported. |
+| P2 bounded catalog | TypeValuePair and captured Class/Schema catalogs | Implemented for explicit finite stable directories and snapshot-local identity tokens. Arbitrary dependent/callback discovery remains unsupported; see intrinsic-descriptors.md and the maintained Gerbil audit. |
 | Outside current boundary | Arbitrary predicate implication/emptiness, implicit principal or higher-rank inference, unrestricted recursive language inclusion | Unsupported; neither samples nor an Any fallback establish these laws. |
 
 Existing finite Function/case language, keyword-origin, Pair/Map/Sum/Union and

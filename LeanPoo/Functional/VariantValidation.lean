@@ -494,4 +494,40 @@ theorem sourceCoverage_normalized (included : Branch → Bool) (branches : List 
     (fun branch present => identity branch present value),
     targetIdentity value (sourceCoverage_sound included branches member target sound covered value admitted)⟩
 
+/-- Or reuses the ordered validation engine with actual membership as selection.
+Union retains its separately supplied structural predicate. -/
+def orValidate (member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (missing invalid : Error) (branches : List Branch) (source : Value) : Except Error Value :=
+  union member member check missing invalid branches source
+
+/-- Successful Or wrapping retains the first actual member and its exact checked
+result. Membership of a later branch cannot replace this selected witness. -/
+theorem orValidate_success (member : Branch → Value → Bool)
+    (check : Branch → Value → Except Error Value) (missing invalid : Error)
+    (branches : List Branch) (source checked : Value)
+    (accepted : orValidate member check missing invalid branches source = .ok checked) :
+    ∃ branch ∈ branches, select member branches source = some branch ∧
+      check branch source = .ok checked ∧ member branch checked = true :=
+  union_success member member check missing invalid branches source checked accepted
+
+/-- A selected Or validator failure keeps the original cause, with no branch
+retry. Effectful host recognition remains a separate execution obligation. -/
+theorem orValidate_error (member : Branch → Value → Bool)
+    (check : Branch → Value → Except Error Value) (missing invalid error : Error)
+    (branches : List Branch) (source : Value) (branch : Branch)
+    (picked : select member branches source = some branch)
+    (failed : check branch source = .error error) :
+    orValidate member check missing invalid branches source = .error error := by
+  simp [orValidate, union, picked, failed, Except.bind]
+
+/-- Complete source coverage applies to the actual returned wrapper under the
+original branch list. This is readable inclusion, not a codec/index conversion. -/
+theorem sourceCoverage_or_wrapped (included : Branch → Bool) (branches : List Branch)
+    (member : Branch → Value → Bool) (check : Branch → Value → Except Error Value)
+    (target : Value → Prop) (missing invalid : Error)
+    (sound : ∀ branch ∈ branches, included branch = true → ∀ value, member branch value = true → target value)
+    (covered : sourceCoverage included branches = true) (source checked : Value)
+    (accepted : orValidate member check missing invalid branches source = .ok checked) : target checked :=
+  sourceCoverage_wrapped included branches member member check target missing invalid sound covered source checked accepted
+
 end LeanPoo.Functional.VariantValidation

@@ -561,3 +561,24 @@ requires faithful Union and Function interpretations. Procedure recognition alon
 proves neither totality nor output behavior. Gerbil regression tests separately
 exercise CaseFunction's richer call language; the Ty checker models fixed arrow
 rows, not the whole Scheme decoder, effects, GC or compiler.
+
+### Or and ordered normalization
+
+Gerbil's existing Or now participates in finite syntax, substitution and complete
+source-branch inference, compiling through the original constructor. Its first
+actual member and Union's first structural match remain distinct. Both reuse one
+selected-child validator and retain recursive wrappers, original failures and
+selected returned membership. Direct ordered alternative targets, Map keys,
+keyword-mode boundaries and codec/index semantics retain their existing rules.
+
+VariantValidation.orValidate specializes the existing ordered engine with actual
+membership. orValidate_success, orValidate_error and sourceCoverage_or_wrapped
+prove exact selection/results, original failure and universal readable inclusion
+of the returned wrapper. Examples/VariantContracts.lean composes those laws with
+complete unique inference and original declaration artifacts. Soundness requires
+faithful host membership and child inclusion; arbitrary recognizer effects and
+compiler/codec correctness are separate obligations. This is type-protocol future
+work. The Gerbil callback-directory regression runs the same higher-order
+Map/List/Tuple, specialization/declaration/FUN/refine/evidence workflow for both
+constructors. Standard bounded generation, shrinking and replay reuse the existing
+alternative graph, including transparent-cycle refusal and resource limits.

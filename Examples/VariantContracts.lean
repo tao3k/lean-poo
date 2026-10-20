@@ -1,4 +1,5 @@
 import LeanPoo.Functional.VariantValidation
+import LeanPoo.Functional.MethodDeclarations
 
 /-! Finite alignment of Pair → Map → Sum → ordered Union → refined Function.
 Table equivalence/order and host reference identities are supplied interpretations. -/
@@ -286,4 +287,37 @@ example (target : Payload → Prop)
 
 #print axioms VariantValidation.union_normalized_member
 #print axioms VariantValidation.sourceCoverage_wrapped
+/-- One numeric carrier has a narrow and a broad actual member, while both share
+the same outer shape. Or therefore skips a nonmember before normalization. -/
+def numberMember (narrow : Bool) (value : Int) : Bool := !narrow || decide (0 ≤ value)
+
+/-- The original narrow branch's cause is retained when structural selection
+commits to it; this checker never retries a broad branch on its own. -/
+def numberCheck (narrow : Bool) (value : Int) : Except String Int :=
+  if numberMember narrow value then .ok value else .error "negative"
+
+example : VariantValidation.orValidate numberMember numberCheck "missing" "invalid" [true, false] (-3) =
+    .ok (-3) := rfl
+example : VariantValidation.union (fun _ _ => true) numberMember numberCheck
+    "missing" "invalid" [true, false] (-3) = .error "negative" := rfl
+
+/-- Complete inference keeps the one original branch catalog and built artifact;
+universal source coverage then applies to its actual wrapped Or result. -/
+example (budget : Nat) (included : Branch → Bool) (candidates : List (List Branch))
+    (build : List Branch → Except String Artifact) (branches : List Branch) (artifact : Artifact)
+    (accepted : inferDeclared budget (VariantValidation.sourceCoverage included) candidates build =
+      .ok (.unique branches, some artifact))
+    (target : Payload → Prop)
+    (sound : ∀ branch ∈ branches, included branch = true →
+      ∀ value, branchMember branch value = true → target value)
+    (source checked : Payload)
+    (normalized : VariantValidation.orValidate branchMember checkBranch "missing" "invalid" branches source = .ok checked) :
+    branches ∈ candidates ∧ build branches = .ok artifact ∧ target checked := by
+  obtain ⟨original, covered, built⟩ := inferDeclared_unique budget _ candidates build accepted
+  exact ⟨original, built, VariantValidation.sourceCoverage_or_wrapped included branches
+    branchMember checkBranch target "missing" "invalid" sound covered source checked normalized⟩
+
+#print axioms VariantValidation.orValidate_success
+#print axioms VariantValidation.orValidate_error
+#print axioms VariantValidation.sourceCoverage_or_wrapped
 end LeanPoo.Examples.VariantContracts
