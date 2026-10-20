@@ -124,3 +124,48 @@ ambiguity controls. Host carrier interpretation and child emptiness soundness
 remain explicit; arbitrary recognizers, effects, mutable writes, codecs and
 compiler correctness are not proved. This advances the article's finite type
 protocol future work, not an existing Racket inference solver.
+
+### Impossible container origins in raw keyword coverage
+
+A reproduced mismatch remained between ordinary replacement and the raw decoder
+product graph: `Never` keyword payloads were recognized as impossible, while
+`(Pair Never Function)`, impossible Tuples/rows and empty TypeValuePair directories
+were treated as potentially supplied. This refused valid positional callbacks
+for keyword callers whose retired keyword cannot carry any actual value.
+
+The duplicate scalar-only `empty-origin?` algorithm is removed. The graph now
+reuses the same positive finite `empty-type?` witness as ordinary replacement for
+positional, ordinary and keyword payload origins. Gerbil `hash-ensure-ref` caches
+only completed true/false results within this graph; quota/host exceptions never
+install an answer. The existing work counter covers witness preparation and
+traversal. No successful coverage, approval or source snapshot is cached across
+requests or revisions.
+
+This is not permission to discard empty collections. Nil inhabits List Never;
+empty Maps/vectors and optional void/false sentinels remain live keyword payloads.
+Unknown Class/Schema descriptors cannot supply emptiness evidence. Source clause
+selection, raw/rest position correlation, marker/keyword boundaries, exact output
+variance and original ordered descriptor metadata remain unchanged. Complete
+backwards closure is still required even for a region claimed to have no calls.
+Unsupported syntax and work exhaustion remain typed request failures.
+
+`RetiredKeywordServiceType` and `infer-retired-keyword-service` reuse the existing
+prefix solver and qualified declaration factory. The returned positional callback
+uses the existing Gerbil argument decoder, rather than another parser. The
+`keyword-rest-test.ss` workflow combines inferred metadata, raw escapes, infinite
+rest tails, recursive callback wrapping, FUN/refine/bind-evidence, exact context,
+policy refusal/retry and genuine candidate ambiguity. Actual retired payloads and
+live incompatible outputs refuse before consumer admission. The original retired
+keyword stays in the target contract; it is not removed from the declaration.
+
+Lean's existing FunctionSignature protocol adds `rawPruneEdges_mem` and
+`rawGraphPath_prune`: under a sound positive witness, every realizable original
+trace retains exactly its ordered edges, including arbitrarily many rest cycles.
+`rawGraphCheck_pruned_sound` composes this with the existing complete closure
+certificate, retaining a selected source and every slot law for each actual call.
+Top-level `Examples/RawArguments.lean` includes complete unique
+publication with the original graph, dead/live edges, fuel and missing-source
+controls. Host decoder correspondence and child-witness interpretation remain
+explicit; arbitrary predicate implication, compiler/runtime correctness, effects
+and performance are not proved. This advances the article's finite type-protocol
+future work, rather than an already implemented Racket inference solver.

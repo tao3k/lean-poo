@@ -242,6 +242,7 @@
   "Examples/PrototypeTypes.lean",
   "Examples/QualifiedCombination.lean",
   "Examples/QuiescentUpgrade.lean",
+  "Examples/RawArguments.lean",
   "Examples/ReceiptWorkflow.lean",
   "Examples/RecordPrototype.lean",
   "Examples/RecoverableDispatch.lean",

@@ -621,3 +621,9 @@ ambiguity controls. Host carrier interpretation and child emptiness soundness
 remain explicit; arbitrary recognizers, effects, mutable writes, codecs and
 compiler correctness are not proved. This advances the article's finite type
 protocol future work, not an existing Racket inference solver.
+
+Raw keyword coverage now shares the existing finite emptiness witness for
+impossible container origins. The original descriptor remains intact; actual
+empty collections/sentinels stay live and complete closure still gates every
+call region. See [finite-inference-audit.md](finite-inference-audit.md#impossible-container-origins-in-raw-keyword-coverage)
+for the retired-keyword publication example, failure semantics and proof scope.

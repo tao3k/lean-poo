@@ -329,6 +329,7 @@ _check-examples:
     {{lean}} Examples/RecursiveMetaprotocol.lean
     {{lean}} Examples/DeclaredMethods.lean
     {{lean}} Examples/TypedMethodDeclarations.lean
+    {{lean}} Examples/RawArguments.lean
     {{lean}} Examples/MethodCompilation.lean
     {{lean}} Examples/CatalogReflection.lean
     {{lean}} Examples/DeclaredPrototypes.lean

@@ -357,4 +357,59 @@ theorem rawGraphCheck_sound [DecidableEq State] (fuel : Nat) (edges : List (RawT
     hasSource = true ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true :=
   rawRegionCovers_sound edges endings _ initial hasSource admit checked path ending
 
+/-- Remove only transitions containing a positively impossible origin. Original
+edge order, origins and endpoints remain intact; this is not a visited-cycle or
+bounded-trace approximation. Scheme reuses its shared finite emptiness witness. -/
+def rawPruneEdges (empty : Origin → Bool) (edges : List (RawTransition State Origin)) :=
+  edges.filter fun edge => !edge.origins.any empty
+
+/-- An edge whose origins have actual inhabitants survives sound empty-origin
+pruning. Unknown descriptors cannot be erased merely because no sample exists. -/
+theorem rawPruneEdges_mem (empty : Origin → Bool) (member : Origin → Value → Prop)
+    (sound : ∀ origin, empty origin = true → ∀ value, ¬ member origin value)
+    (edges : List (RawTransition State Origin)) (edge : RawTransition State Origin)
+    (inside : edge ∈ edges)
+    (realized : ∀ origin ∈ edge.origins, ∃ value, member origin value) :
+    edge ∈ rawPruneEdges empty edges := by
+  have none : edge.origins.any empty = false := by
+    apply Bool.eq_false_iff.mpr
+    intro found
+    obtain ⟨origin, present, impossible⟩ := List.any_eq_true.mp found
+    obtain ⟨value, valid⟩ := realized origin present
+    exact sound origin impossible value valid
+  exact List.mem_filter.mpr ⟨inside, by simp [none]⟩
+
+/-- Every realizable original trace survives with exactly its ordered edges.
+Finite traces may traverse a rest cycle arbitrarily many times. Host decoder
+completeness and witness interpretation remain separate explicit obligations. -/
+theorem rawGraphPath_prune (empty : Origin → Bool) (member : Origin → Value → Prop)
+    (sound : ∀ origin, empty origin = true → ∀ value, ¬ member origin value)
+    (edges : List (RawTransition State Origin))
+    (path : RawGraphPath edges start finish trace)
+    (realized : ∀ edge ∈ trace, ∀ origin ∈ edge.origins, ∃ value, member origin value) :
+    RawGraphPath (rawPruneEdges empty edges) start finish trace := by
+  revert realized
+  induction path with
+  | done state => intro _; exact .done state
+  | step edge inside tail ih =>
+    intro realized
+    exact .step edge
+      (rawPruneEdges_mem empty member sound edges edge inside (realized edge (by simp)))
+      (ih (fun next present => realized next (List.mem_cons_of_mem _ present)))
+
+/-- The existing complete backwards-closure checker remains sufficient after
+pruning: every realizable original call still needs its actual selected source
+and every per-position law. Removed impossible regions cannot hide live errors. -/
+theorem rawGraphCheck_pruned_sound [DecidableEq State]
+    (empty : Origin → Bool) (member : Origin → Value → Prop)
+    (sound : ∀ origin, empty origin = true → ∀ value, ¬ member origin value)
+    (fuel : Nat) (edges : List (RawTransition State Origin))
+    (endings : List State) (initial : State) (hasSource : Bool) (admit : State → Origin → Bool)
+    (checked : rawGraphCheck fuel (rawPruneEdges empty edges) endings initial hasSource admit = true)
+    (path : RawGraphPath edges initial finish trace) (ending : finish ∈ endings)
+    (realized : ∀ edge ∈ trace, ∀ origin ∈ edge.origins, ∃ value, member origin value) :
+    hasSource = true ∧ trace.all (fun edge => edge.origins.all (admit edge.source)) = true :=
+  rawGraphCheck_sound fuel (rawPruneEdges empty edges) endings initial hasSource admit checked
+    (rawGraphPath_prune empty member sound edges path realized) ending
+
 end LeanPoo.Functional.FunctionSignature
