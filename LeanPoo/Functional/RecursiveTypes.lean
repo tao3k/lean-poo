@@ -34,6 +34,17 @@ Branching body copies are separately charged by the Scheme work counter. -/
 theorem unfold_step (body : α → α) (bottom : α) (depth : Nat) :
     unfold body bottom (depth + 1) = body (unfold body bottom depth) := rfl
 
+/-- A metadata transformation commutes with every finite approximant when it
+preserves bottom and the admitted body substitution. These explicit premises
+exclude binder capture; no unbounded fixed point or callback law is inferred. -/
+theorem unfold_transform (transform : α → β) (source : α → α) (target : β → β)
+    (bottom : α) (initial : β) (base : transform bottom = initial)
+    (step : ∀ value, transform (source value) = target (transform value)) (depth : Nat) :
+    transform (unfold source bottom depth) = unfold target initial depth := by
+  induction depth with
+  | zero => exact base
+  | succ depth ih => simp only [unfold, step, ih]
+
 /-- Guardedness in Scheme is syntactic; this semantic monotonicity premise states
 what increasing a recursive approximation means for observational replacement. -/
 theorem increasing (relation : α → α → Prop) (body : α → α) (bottom : α)

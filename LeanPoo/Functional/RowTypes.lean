@@ -315,6 +315,39 @@ resource errors are outside this total Boolean predicate and cannot mean false. 
 def assignmentValid (wellFormed constraints : Assignment → Bool) (assignment : Assignment) : Bool :=
   wellFormed assignment && constraints assignment
 
+/-- Transform only field payloads; literal names, order and closure remain exact. -/
+def mapFields (transform : Field → Result) (row : Row Key Field) : Row Key Result :=
+  ⟨row.fields.map (fun (name, type) => (name, transform type)), row.closed⟩
+
+/-- Field transformation commutes with named lookup without renaming labels. -/
+theorem lookup_mapFields [DecidableEq Key] (transform : Field → Result)
+    (fields : List (Key × Field)) (name : Key) :
+    lookup (fields.map (fun (key, type) => (key, transform type))) name =
+      (lookup fields name).map transform := by
+  induction fields with
+  | nil => rfl
+  | cons field rest ih =>
+    rcases field with ⟨key, type⟩
+    by_cases same : key = name <;> simp [lookup, same, ih]
+
+/-- A disjoint row extension remains disjoint after transforming field Types.
+Specialization and splicing commute while retaining all labels and tail policy. -/
+theorem splice_mapFields [DecidableEq Key] (transform : Field → Result)
+    (explicit extension result : Row Key Field) (accepted : splice explicit extension = .ok result) :
+    splice (mapFields transform explicit) (mapFields transform extension) = .ok (mapFields transform result) := by
+  have disjoint : (mapFields transform explicit).fields.all
+      (fun field => (lookup (mapFields transform extension).fields field.1).isNone) = true := by
+    apply List.all_eq_true.mpr
+    intro field present
+    obtain ⟨original, inside, rfl⟩ := List.mem_map.mp present
+    have absent := splice_disjoint explicit extension result accepted original.1 original.2 inside
+    simp [mapFields, lookup_mapFields, absent]
+  have preserved := splice_result explicit extension result accepted
+  simp only [splice, disjoint, ↓reduceIte]
+  apply congrArg Except.ok
+  cases explicit; cases extension; cases result
+  simp_all [mapFields, List.map_append]
+
 /-- Reuse the existing complete finite solver: a unique instance is both well
 formed after row substitution and satisfies every supplied declaration constraint. -/
 theorem inferred_valid (wellFormed constraints : Assignment → Bool) (candidates : List Assignment)

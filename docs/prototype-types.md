@@ -645,3 +645,23 @@ keyword/rest procedure, recursive wrappers, refinement/evidence publication,
 policy retry and type-refusal regressions exercise the executable correspondence.
 These are finite type-protocol future-work results with explicit host leaf and
 decoder interpretation obligations, not compiler, effect or GC correctness proofs.
+
+### Concentrated metadata and specialization acceptance
+
+The finite P2 acceptance unit now spans metadata transformation, partial binding,
+complete residual inference and declaration publication. Gerbil substitution
+reuses the existing child mapper for every ordinary constructor; Mu retains its
+scoped substitution rule. Source-preserving transformation and canonicalization
+are separate modes, including both Map arrow spellings and rich Function options.
+The existing candidate-inference test module contains 39 cross-phase templates and
+one composite row/container/callback publication through the common FUN action.
+
+`PrototypeTypes.substituteExpr_identity`, `substitute_substituteExpr`,
+`substitute_specializeExpr` and `satisfies_specializeExpr` prove structural and
+whole-constraint composition. RowTypes preserves named field lookup/splicing;
+RecursiveTypes gives the finite unfolding transformation law under explicit
+bottom/body correspondence. Top-level `Examples/Parameters.lean` retains the
+original declaration after complete unique residual inference. These laws cover
+the stated finite grammar and interpretation premises; the template directory is
+regression evidence, not universal host Type or compiler correctness. The existing
+complete checks and research boundaries remain mandatory.

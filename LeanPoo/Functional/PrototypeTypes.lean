@@ -429,6 +429,40 @@ def substitute (env : Nat → Ty) : Expr → Ty
   | .union es => .union (es.map (substitute env))
   | .function outs ins => .function (outs.map (substitute env)) (ins.map (substitute env))
 
+/-- Partial syntax substitution retains the original constructor/branch/field
+positions. Ground leaves are immutable; only explicit variable positions change.
+Rich named rows, Function options and Mu binders have separate host syntax laws. -/
+def substituteExpr (env : Nat → Expr) : Expr → Expr
+  | .ground t => .ground t
+  | .var name => env name
+  | .list e => .list (substituteExpr env e)
+  | .maybe e => .maybe (substituteExpr env e)
+  | .orFalse e => .orFalse (substituteExpr env e)
+  | .tuple es => .tuple (es.map (substituteExpr env))
+  | .pair a b => .pair (substituteExpr env a) (substituteExpr env b)
+  | .map key value => .map (substituteExpr env key) (substituteExpr env value)
+  | .sum tags es => .sum tags (es.map (substituteExpr env))
+  | .union es => .union (es.map (substituteExpr env))
+  | .function outs ins => .function (outs.map (substituteExpr env)) (ins.map (substituteExpr env))
+
+/-- One compositional law covers every supported structural expression and every
+nested child list. Staged substitution cannot alter tag or alternative order. -/
+theorem substitute_substituteExpr (env : Nat → Expr) (tail : Nat → Ty) (expression : Expr) :
+    substitute tail (substituteExpr env expression) =
+      substitute (fun name => substitute tail (env name)) expression := by
+  apply Expr.rec
+    (motive_1 := fun e => substitute tail (substituteExpr env e) = substitute (fun n => substitute tail (env n)) e)
+    (motive_2 := fun es => (es.map (substituteExpr env)).map (substitute tail) =
+      es.map (substitute (fun n => substitute tail (env n)))) <;>
+    intros <;> simp_all [substituteExpr, substitute]
+
+/-- An identity syntax transformation preserves the complete expression tree,
+including repeated branches and literal Sum tags. -/
+theorem substituteExpr_identity (expression : Expr) : substituteExpr Expr.var expression = expression := by
+  apply Expr.rec (motive_1 := fun e => substituteExpr Expr.var e = e)
+    (motive_2 := fun es => es.map (substituteExpr Expr.var) = es) <;>
+    intros <;> simp_all [substituteExpr]
+
 /-- Bounds and call-site inequalities are checked together for each assignment. -/
 def satisfies (fuel : Nat) (constraints : List (Expr × Expr)) (env : Nat → Ty) : Bool :=
   constraints.all fun (a, b) => check fuel (substitute env a) (substitute env b)
@@ -638,6 +672,28 @@ theorem prefixEnvironment_tail (fixed : List Ty) (tail : Nat → Ty) (name : Nat
     prefixEnvironment fixed tail (fixed.length + name) = tail name := by
   have absent : ¬ fixed.length + name < fixed.length := by omega
   simp [prefixEnvironment, absent]
+
+/-- Residual variable indices match the existing persistent prefix environment.
+This is syntax specialization, not a fresh inference or receiver construction. -/
+def specializeExpr (fixed : List Ty) (expression : Expr) : Expr :=
+  substituteExpr (fun name => if present : name < fixed.length then .ground fixed[name] else .var (name - fixed.length)) expression
+
+/-- Grounding after a partial specialization agrees with grounding the original
+tree at the combined environment, for arbitrary containers and Function variance. -/
+theorem substitute_specializeExpr (fixed : List Ty) (tail : Nat → Ty) (expression : Expr) :
+    substitute tail (specializeExpr fixed expression) = substitute (prefixEnvironment fixed tail) expression := by
+  rw [specializeExpr, substitute_substituteExpr]
+  congr 1
+  funext name
+  by_cases present : name < fixed.length <;> simp [present, substitute, prefixEnvironment]
+
+/-- Entire bound/query lists commute with prefix specialization, not just an
+isolated field. The original order and every obligation are retained. -/
+theorem satisfies_specializeExpr (fuel : Nat) (fixed : List Ty)
+    (constraints : List (Expr × Expr)) (tail : Nat → Ty) :
+    satisfies fuel (constraints.map (fun (a, b) => (specializeExpr fixed a, specializeExpr fixed b))) tail =
+      satisfies fuel constraints (prefixEnvironment fixed tail) := by
+  simp [satisfies, List.all_map, Function.comp_def, substitute_specializeExpr]
 
 /-- Unique complete residual inference establishes every ORIGINAL substituted
 bound/query under the combined environment, not just the unbound suffix alone. -/

@@ -2,6 +2,8 @@ import LeanPoo.Functional.Parameters
 import LeanPoo.Functional.SlotScope
 import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
+import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.RecursiveTypes
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
 The executable Gerbil fixture additionally tests actual C3, macro hygiene, generic
@@ -181,4 +183,71 @@ example : snapshotSlotBindings
 #print axioms snapshotSlotBindings_cons
 #print axioms snapshotSlotBindings_recursive
 #print axioms snapshotSlotBindings_refused
+
+section
+open Functional.PrototypeTypes Functional.DeclarativeMetadata
+
+/-- One composite packet retains Pair/Map/List children, optional sentinels,
+tag order and nested Function variance while Value is partially specialized. -/
+def metadataPacket : Expr := .tuple
+  [.pair (.list (.var 0)) (.map (.ground (.atom .uint))
+    (.function [.var 0] [.ground (.atom .integer)])),
+   .orFalse (.maybe (.sum [0, 1]
+    [.tuple [.function [.var 0] [.ground (.atom .integer)]],
+     .list (.function [.var 0] [.ground (.atom .integer)])]))]
+/-- Callback remains a residual variable; the original bound observes the whole
+packet. Rich named-row admission is separately modeled by RowTypes.splice. -/
+def metadataBounds : List (Expr × Expr) :=
+  [(.var 1, .function [metadataPacket] [.var 0])]
+/-- Original service signature retains both user outputs and its input position. -/
+def metadataSignature : Expr := .function [.var 0, .var 1] [.var 0]
+/-- A broader Integer input safely implements the remaining UInt callback bound. -/
+def metadataCallback : Ty := .function [substitute (fun _ => .atom .uint) metadataPacket] [.atom .integer]
+/-- Unique complete search alone builds the original signature at the combined
+environment. No normalized private view is installed as the source declaration. -/
+def metadataPublication := inferDeclared 1
+  (fun callback => satisfies 24
+    (metadataBounds.map (fun (a, b) => (specializeExpr [.atom .uint] a, specializeExpr [.atom .uint] b)))
+    (fun _ => callback)) [metadataCallback]
+  (fun callback => (Except.ok
+    (substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) metadataSignature) : Except String Ty))
+
+#guard match metadataPublication with | .ok (.unique _, some _) => true | _ => false
+example : substitute (fun _ => metadataCallback) (specializeExpr [.atom .uint] metadataSignature) =
+    substitute (prefixEnvironment [.atom .uint] (fun _ => metadataCallback)) metadataSignature :=
+  substitute_specializeExpr _ _ _
+
+/-- Original constraint provenance and the exact original declaration survive
+partial specialization, residual inference and one complete publication. -/
+theorem metadataPublication_sound (callback artifact)
+    (published : metadataPublication = .ok (.unique callback, some artifact)) :
+    artifact = substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) metadataSignature ∧
+    ∀ a b, (a, b) ∈ metadataBounds →
+      Subtype (substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) a)
+        (substitute (prefixEnvironment [.atom .uint] (fun _ => callback)) b) := by
+  obtain ⟨_, accepted, built⟩ := inferDeclared_unique 1 _ [metadataCallback] _ published
+  refine ⟨(Except.ok.inj built).symm, ?_⟩
+  rw [satisfies_specializeExpr] at accepted
+  intro a b inside
+  exact satisfies_sound 24 metadataBounds _ accepted inside
+
+/-- Specializing field Types before an admitted row extension preserves the
+same extension and every literal label; no override or inferred row is inserted. -/
+example (fixed : List Ty) (explicit extension result : Functional.RowTypes.Row String Expr)
+    (accepted : Functional.RowTypes.splice explicit extension = .ok result) :
+    Functional.RowTypes.splice
+      (Functional.RowTypes.mapFields (specializeExpr fixed) explicit)
+      (Functional.RowTypes.mapFields (specializeExpr fixed) extension) =
+        .ok (Functional.RowTypes.mapFields (specializeExpr fixed) result) :=
+  Functional.RowTypes.splice_mapFields _ _ _ _ accepted
+
+#print axioms substitute_substituteExpr
+#print axioms substituteExpr_identity
+#print axioms substitute_specializeExpr
+#print axioms satisfies_specializeExpr
+#print axioms metadataPublication_sound
+#print axioms Functional.RecursiveTypes.unfold_transform
+#print axioms Functional.RowTypes.lookup_mapFields
+#print axioms Functional.RowTypes.splice_mapFields
+end
 end LeanPoo.Examples.Parameters

@@ -1,5 +1,6 @@
 """Real recursive/forking failures cannot strand compiler groups or reader threads."""
 import os
+import selectors
 from pathlib import Path
 import signal
 import subprocess
@@ -14,21 +15,57 @@ from tools.process_guard import collect, kill_group
 
 
 class ProcessGuardTests(unittest.TestCase):
-    def start(self, program):
+    def start(self, program, pass_fds=()):
+        """Own one process group, inheriting only explicit fixture-ready pipes."""
         return subprocess.Popen([sys.executable, '-u', '-c', program],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                start_new_session=True)
+                                start_new_session=True, pass_fds=pass_fds)
 
     def test_term_ignoring_recursion_is_bounded_and_reaped(self):
         before = {t.ident for t in threading.enumerate()}
-        process = self.start('import signal\nsignal.signal(signal.SIGTERM,signal.SIG_IGN)\n'
-                             'print("recursive-ready",flush=True)\nwhile True: pass\n')
+        ready, notify = os.pipe()
+        try:
+            process = self.start('import signal,os,time\ntime.sleep(0.3)\n'
+                                 'signal.signal(signal.SIGTERM,signal.SIG_IGN)\n'
+                                 f'print("recursive-ready",flush=True)\nos.write({notify},b"R")\n'
+                                 'while True: pass\n', pass_fds=(notify,))
+        except BaseException:
+            os.close(ready)
+            raise
+        finally:
+            os.close(notify)
+        try:
+            # Establish the adversarial fixture BEFORE measuring its watchdog.
+            # A separate fd leaves the actual stdout assertion to collect().
+            with selectors.DefaultSelector() as selector:
+                selector.register(ready, selectors.EVENT_READ)
+                self.assertTrue(selector.select(2), 'recursive fixture did not become ready')
+                self.assertEqual(os.read(ready, 1), b'R')
+            lines = []
+            started = time.monotonic()
+            code, _ = collect(process, lines.append, 0.2)
+        finally:
+            os.close(ready)
+            kill_group(process)
+            process.wait(timeout=3)
+            process.stdout.close()
+        self.assertEqual(code, 124)
+        self.assertLess(time.monotonic() - started, 3)
+        self.assertIn(b'recursive-ready\n', lines)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(process.pid, 0)
+        self.assertEqual({t.ident for t in threading.enumerate()}, before)
+
+    def test_startup_without_readiness_is_bounded_and_reaped(self):
+        """The production watchdog also bounds a child that never becomes ready."""
+        before = {t.ident for t in threading.enumerate()}
+        process = self.start('import time\ntime.sleep(5)\n')
         lines = []
         started = time.monotonic()
         code, _ = collect(process, lines.append, 0.2)
         self.assertEqual(code, 124)
         self.assertLess(time.monotonic() - started, 3)
-        self.assertIn(b'recursive-ready\n', lines)
+        self.assertEqual(lines, [])
         with self.assertRaises(ProcessLookupError):
             os.kill(process.pid, 0)
         self.assertEqual({t.ident for t in threading.enumerate()}, before)
