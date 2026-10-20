@@ -224,7 +224,7 @@ example (model : Interpretation Value) (branch : Nat × Ty)
   taggedRowsCheck_sound (PrototypeTypes.check 8) (fun field => emptyCheck 8 field)
     model.accepts (fun a b accepted => PrototypeTypes.replacement model (PrototypeTypes.check_sound 8 a b accepted))
     (fun field accepted => (emptyCheck_sound 8 field accepted).refuses model.emptyLaws)
-    "tag" "value" workerTag (taggedWorkers false) taggedWorkerView (by decide) branch present observe valid
+    "tag" "value" (by decide) workerTag (taggedWorkers false) taggedWorkerView (by decide) branch present observe valid
 
 /-- Prefix binding preserves the original Sum branch order and callback layout. -/
 example : substitute (prefixEnvironment [.atom .symbol]
@@ -241,5 +241,40 @@ example (lookup : Nat → Option (Value → Except String Value)) (source checke
   VariantValidation.sum_success lookup "unknown tag" source checked accepted
 
 #print axioms taggedRowsCheck_sound
+
+/-- A retired branch retains its tag and nested callback metadata. Only a
+positive impossible mandatory payload permits omission from a readable view. -/
+def retiredWorkers (live : Bool) : List (Nat × Ty) :=
+  (2, if live then .atom .bool else .pair (.union []) handler) :: taggedWorkers false
+
+/-- Complete candidate inference uses the same common row/empty judgments. -/
+def retiredWorkersCheck (live : Bool) : Bool :=
+  taggedRowsCheck (PrototypeTypes.check 8) (emptyCheck 8)
+    "tag" "value" workerTag (retiredWorkers live) taggedWorkerView
+
+example : retiredWorkersCheck false = true := by decide
+example : retiredWorkersCheck true = false := by decide
+example : taggedRowsCheck (PrototypeTypes.check 8) (emptyCheck 8)
+    "tag" "value" workerTag (retiredWorkers false) {taggedWorkerView with closed := true} = false := by decide
+
+/-- An impossible branch does not erase the original candidate or nested
+callback signature from the artifact selected by the complete declaration solver. -/
+example : DeclarativeMetadata.inferDeclared 2 retiredWorkersCheck [true, false]
+    (fun live => (Except.ok ("retired workers", live, retiredWorkers live) :
+      Except String (String × Bool × List (Nat × Ty)))) =
+    .ok (.unique false, some ("retired workers", false, retiredWorkers false)) := rfl
+
+/-- Every actual selected branch still satisfies the consumer. The empty-payload
+case is impossible, using the existing interpretation law, not a sampled value. -/
+example (model : Interpretation Value) (branch : Nat × Ty)
+    (present : branch ∈ retiredWorkers false) (observe : String → Option Value)
+    (valid : Admits model.accepts
+      (taggedRow "tag" "value" (workerTag branch.1) branch.2) observe) :
+    RecordAdmits model.accepts taggedWorkerView observe :=
+  taggedRowsCheck_sound (PrototypeTypes.check 8) (emptyCheck 8)
+    model.accepts (fun a b accepted => PrototypeTypes.replacement model (PrototypeTypes.check_sound 8 a b accepted))
+    (fun field accepted => (emptyCheck_sound 8 field accepted).refuses model.emptyLaws)
+    "tag" "value" (by decide) workerTag (retiredWorkers false) taggedWorkerView
+    (by decide) branch present observe valid
 
 end Examples.RowTypes

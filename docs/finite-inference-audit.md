@@ -73,3 +73,14 @@ model does not prove the Gerbil compiler, callback termination, GC or allocation
 costs. The row lemma requires an actual required-field projection premise, not
 an inference from nominal Class ancestry or a proof of the Scheme row compiler.
 No Scheme source or test depends on a Lean checkout.
+
+### Impossible tagged payloads
+
+The existing Sum-to-readable-row judgment reuses positive finite emptiness before
+each branch's complete row obligation. Original variants and candidate artifacts
+remain unchanged. Every inhabited branch must still pass the full check; empty
+containers and optional sentinels are inhabited and cannot discharge it. Direct
+Sum/Map-key identity and codec boundaries stay intact. RowTypes proves exhaustive
+branch obligations, inhabited-branch checking and universal readable replacement
+with explicit child/empty interpretation and distinct tag/value labels. See
+row-types.md and the corresponding Gerbil tagged-worker integration controls.

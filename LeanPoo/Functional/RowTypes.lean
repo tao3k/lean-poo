@@ -399,23 +399,40 @@ The host supplies a faithful literal-tag Type; no codec or layout cast follows. 
 def taggedRow (tagName valueName : Key) (tagType payload : Field) : Row Key Field :=
   ⟨[(tagName, tagType), (valueName, payload)], false⟩
 
-/-- Every original tagged branch must satisfy one readable Record interface
-through the existing required/open row protocol and field replacement test. -/
+/-- Every original tagged branch must either have a positively witnessed empty
+payload or satisfy the existing readable row protocol. No branch is rewritten. -/
 def taggedRowsCheck [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
     (target : Row Key (Field × Bool)) : Bool :=
-  branches.all fun branch => recordCheck test empty
+  branches.all fun branch => empty branch.2 || recordCheck test empty
     (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target
 
-/-- Acceptance certifies every original branch; a compatible earlier branch
-cannot hide a later payload/tag/shape refusal. No branch order is rewritten. -/
+/-- Acceptance certifies every original branch by an empty-payload witness or
+the full row check. An inhabited later branch cannot hide behind an earlier one. -/
 theorem taggedRowsCheck_branch [DecidableEq Key] (test : Field → Field → Bool) (empty : Field → Bool)
     (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
     (target : Row Key (Field × Bool))
     (accepted : taggedRowsCheck test empty tagName valueName literal branches target = true)
     (branch : Tag × Field) (present : branch ∈ branches) :
-    recordCheck test empty (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target = true :=
-  List.all_eq_true.mp accepted branch present
+    empty branch.2 = true ∨
+      recordCheck test empty (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target = true := by
+  have checked := List.all_eq_true.mp accepted branch present
+  simpa using checked
+
+/-- An actual payload rules out the empty alternative, so every inhabited
+branch must pass the unchanged complete tag/payload/shape comparison. -/
+theorem taggedRowsCheck_inhabited_branch [DecidableEq Key]
+    (test : Field → Field → Bool) (empty : Field → Bool) (accepts : Field → Value → Prop)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
+    (target : Row Key (Field × Bool))
+    (accepted : taggedRowsCheck test empty tagName valueName literal branches target = true)
+    (branch : Tag × Field) (present : branch ∈ branches) (value : Value)
+    (inhabited : accepts branch.2 value) :
+    recordCheck test empty (requiredRow (taggedRow tagName valueName (literal branch.1) branch.2)) target = true := by
+  rcases taggedRowsCheck_branch test empty tagName valueName literal branches target accepted branch present with impossible | checked
+  · exact False.elim (emptySound branch.2 impossible value inhabited)
+  · exact checked
 
 /-- Successful tagged observation coverage composes the existing row replacement
 law. Literal/child behavior and the selected branch's actual reads are explicit
@@ -424,13 +441,18 @@ theorem taggedRowsCheck_sound [DecidableEq Key] (test : Field → Field → Bool
     (accepts : Field → Value → Prop)
     (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
     (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
-    (tagName valueName : Key) (literal : Tag → Field) (branches : List (Tag × Field))
+    (tagName valueName : Key) (distinct : tagName ≠ valueName)
+    (literal : Tag → Field) (branches : List (Tag × Field))
     (target : Row Key (Field × Bool))
     (accepted : taggedRowsCheck test empty tagName valueName literal branches target = true)
     (branch : Tag × Field) (present : branch ∈ branches) (observe : Key → Option Value)
     (valid : Admits accepts (taggedRow tagName valueName (literal branch.1) branch.2) observe) :
-    RecordAdmits accepts target observe :=
-  objectToRecord_sound test empty accepts sound emptySound _ target
-    (taggedRowsCheck_branch test empty tagName valueName literal branches target accepted branch present) observe valid
+    RecordAdmits accepts target observe := by
+  rcases taggedRowsCheck_branch test empty tagName valueName literal branches target accepted branch present with impossible | checked
+  · have payload : lookup (taggedRow tagName valueName (literal branch.1) branch.2).fields valueName = some branch.2 := by
+      simp [taggedRow, lookup, distinct]
+    obtain ⟨value, _, admitted⟩ := valid.1 valueName branch.2 payload
+    exact False.elim (emptySound branch.2 impossible value admitted)
+  · exact objectToRecord_sound test empty accepts sound emptySound _ target checked observe valid
 
 end LeanPoo.Functional.RowTypes

@@ -231,7 +231,8 @@ host compiler proofs.
 
 The P2 carrier audit found that Sum already uses the POO object carrier with
 required `tag` and `value` fields, but finite replacement rejected all Object and
-Record views. The shared relation now checks EVERY original Sum variant through
+Record views. The shared relation checks every inhabited original Sum variant
+through
 `row-related?`: a temporary open Object row declares `(Exactly symbol-tag)` and
 the original payload Type. Gerbil's plist->alist and make-symbol are the same
 mechanisms used by the existing Sum constructor. No runtime value is projected,
@@ -239,7 +240,8 @@ no new validator/dispatch engine is added, and the original descriptor and tag
 order stay in inference solutions, specialization and declarations.
 
 Sum accepts extra/inherited slots, so each source row remains OPEN. A nonempty
-Sum cannot justify a closed target, an undeclared required field, or an optional
+Sum with an inhabited branch cannot justify a closed target, an undeclared
+required field, or an optional
 extra target field: that name could already exist with an incompatible value.
 Required tag/value reads and optional target presence use the existing row rule;
 tag Types are checked just like payload Types, including exact Symbol versus
@@ -247,8 +249,9 @@ Keyword distinction. Reverse Object-to-Sum replacement, direct Sum tag skeletons
 ordered Union identities and inhabited Map keys retain their existing bounds.
 No mutable-write, codec/index equivalence or closure permission is inferred.
 Empty alternatives have vacuous coverage but still have no runtime inhabitant.
-Every variant is required to pass; semantic pruning of impossible variants is not
-introduced. Malformed/unsupported syntax and exhausted shared budgets keep their
+Every original variant must pass either a positive empty-payload witness or the
+complete readable row check. No variant is removed from metadata or validation.
+Malformed/unsupported syntax and exhausted shared budgets keep their
 typed refusal categories; ordinary missing coverage is false.
 
 `infer-tagged-worker-service` composes a Pair packet containing a Map/List of
@@ -269,7 +272,8 @@ obligations; it does not supply this finite candidate solver. The Gerbil runtime
 carrier and validators, Lean obligations and finite examples are separate evidence.
 
 Lean's existing RowTypes module adds taggedRow/taggedRowsCheck, delegates to the
-same required/open recordCheck protocol, and proves every-branch acceptance and
+same required/open recordCheck and positive emptiness protocols, and proves
+exhaustive branch obligations and
 universal readable replacement. The theorem requires faithful literal-tag and
 child interpretations plus actual observations; it neither executes arbitrary
 predicates nor infers Function behavior from procedure recognition. The concrete
@@ -283,3 +287,22 @@ is never a proof premise. Top-level Examples/RowTypes.lean includes positive,
 negative, declaration, specialization and universal semantic controls. Source
 syntax projection, mutable effects, termination and compiler correctness are not
 proved by these conditional laws.
+
+### Positively impossible Sum payloads
+
+The shared tagged-row checker now accepts each original branch by either a sound
+positive empty-payload witness or the full existing row comparison. No variant
+is removed from the descriptor or inferred artifact. Inhabited containers and
+optional sentinels cannot serve as empty-Type witnesses; direct Sum replacement,
+wire/index order, Map keys and runtime selected-branch failure remain unchanged.
+
+`taggedRowsCheck_inhabited_branch` proves that every actual payload still requires
+the full tag/payload/shape check. `taggedRowsCheck_sound` proves universal readable
+replacement under child/literal interpretation, positive emptiness soundness and
+distinct tag/value field names. The latter is necessary for first-field lookup
+to expose the actual payload. `Examples/RowTypes.lean` covers retired nested
+callback metadata, live-branch refusals, closed layouts and exact unique artifacts.
+The Gerbil tagged-worker example composes Map/List workers, specialization,
+qualified declarations, recursive Function wrapping and FUN/refine/bind-evidence,
+including runtime retired-value refusal, ambiguity and approval retry.
+These conditional laws extend the article's future work, not its Racket solver.
