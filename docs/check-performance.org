@@ -799,3 +799,68 @@ for variant in paths-unshared paths paths paths-unshared; do
   timeout --signal=TERM --kill-after=3s 30s .lake/build/bin/cyclicClosureScale "$variant" shared 12
 done
 #+end_src
+
+* Pressure-oracle preparation and cyclic discovery
+
+The policy publication pressure test now prepares mask-independent expected
+metadata/action results once per policy/key, and retains an immutable old service
+interface for failed-revision observations. It still executes every actual revision
+and public action. An executable coverage assertion requires exactly 7168 revisions,
+2697 admissions, 4471 refusals, 21688 complete observations and 576 finite observations.
+~expectedError_prepared~ preserves first-refusal ordering for every mask.
+
+Process startup/import controls and whole-test CPU/wall measurements are separate
+from algorithm timers. Source parsing, elaboration and compiled evaluation remain
+inside each original 30-second pressure deadline. Sharing expected values cannot
+be reported as production cache reuse or as a universal wall-time improvement.
+The SCC graph selector and grouping changes have independent semantic proofs and
+same-process paired matrix/factory controls; see [[file:strong-components.md][SCC discovery]].
+
+** Reuse compiled public evaluator code for measured pressure controls
+
+The library producer builds ~LeanPoo:shared~ once alongside the existing library
+and executables. Lake owns its source/dependency freshness and linking; the same
+current-run artifact contains it for CI consumers. Seven measured tariff/publication
+and queue controls load that implementation with Lean's ~--plugin~ option. Their
+Lean files, kernel checks, #eval bodies, source order, thread count, 30-second wall
+deadlines, allocation and memory arguments are retained verbatim. Other controls
+avoid that initialization cost. This is evaluator reuse, not compiler verification
+or an additional claim about the article's constructs.
+
+The atomic runner refuses missing preparation and records the exact loaded file's
+SHA-256. Replacement/removal during checking fails even if every individual test
+returned success. Admission tests preserve the complete canonical inventory and
+all original budget arguments, and exercise that otherwise-green replacement
+failure. OS-reported peak RSS joins CPU/wall in each receipt. The compiler's shared
+library initialization has a memory cost; the existing 2 GiB memory limit and
+two-worker pressure pool remain, and no lower allocation claim follows.
+
+Four reversed-order fork controls retained their complete observation transcripts;
+one interpreter sample timed out. Both completed prepared samples and the completed
+interpreter sample have identical transcript hashes. Queue controls also retain
+identical transcript hashes, with observed CPU 4.72 s versus 2.77 s. These are local,
+source-bound observations, not unconditional latency guarantees. The full producer,
+all 342 files, diagnostics, supervision, Org and executable checks still must pass.
+The earlier 30-second failures and rejected per-module loading experiment remain
+negative evidence outside Git. A warm shared implementation does not establish a
+cold full-build improvement; preparation and CI transfer costs remain part of the
+complete gate measurement.
+
+
+** Compile pure factory callbacks without moving their checks
+
+~Examples.Support.GeneralizedFork~ holds the existing pure construction, view,
+revision and transport definitions in their existing namespace. The producer
+builds its Lake module dynlib after ~LeanPoo:shared~; only the fork pressure test
+loads both, in dependency order. The independently written arithmetic/refusal
+oracles, ~run~, all coverage assertions and ~#eval~ remain in
+~Tests/GeneralizedFork.lean~ under its original 30-second deadline. The source
+inventory includes the support module; the canonical 342 executable checks are
+unchanged. Both loaded files are included in the preparation identity guard.
+
+~TariffComponent.checkoutMany~ reuses standard ~List.foldlM~ for ordered action
+composition. ~checkout_reference~ proves equality to the explicit four-service
+chain as complete stateful actions, including the first error and its exact state
+prefix for arbitrary services, units and ledgers. A paired experiment showed no
+reliable CPU reduction from that helper alone, so it is not reported as a speedup.
+Compilation and expected-data sharing are distinct from changing runtime semantics.

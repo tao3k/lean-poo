@@ -55,6 +55,20 @@ def stageFragments (rate : Int) (name : String) (limit : Option Int := none) : L
   .inr (fun self => .primary (fun _ units => do mark name; return units * self.get))]
 
 
+/-- Compose a finite service list in source order. The standard monadic fold
+stops at the first refusal, preserving its complete state prefix; later prices
+are not invoked. Sharing this executable combinator avoids rebuilding an
+interpreted bind chain at each observation. The noinline boundary keeps that
+fold out of the callers' generated evaluator code. -/
+@[noinline] def checkoutMany (services : List Local) (units : Int) : Action Int :=
+  services.foldlM (fun total service => do
+    let value ← service.price units
+    return total + value) 0
+
+/-- An empty selection leaves the caller's ledger intact and contributes zero. -/
+theorem checkoutMany_nil (units : Int) : checkoutMany [] units = pure 0 := rfl
+
+
 def summary : EStateM.Result String (List String) Int → Option Int × Option String × List String
   | .ok value state => (some value,none,state)
   | .error error state => (none,some error,state)

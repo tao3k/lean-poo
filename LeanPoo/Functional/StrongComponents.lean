@@ -31,27 +31,124 @@ theorem reachable_sound {n : Nat} (edge : Fin n → Fin n → Bool) (fuel : Nat)
 /-- Tabulate each bounded path layer once in ordinary immutable vectors.
 Every successor query reads the preceding matrix rather than expanding a fresh
 recursive search. The fuel, edge order and Boolean short-circuit rule are intact. -/
-def reachableTable {n : Nat} (edge : Fin n → Fin n → Bool) :
+def reachableLayers {n : Nat} (edge : Fin n → Fin n → Bool) :
     Nat → Vector (Vector Bool n) n
   | 0 => Vector.ofFn (fun a => Vector.ofFn (fun b => decide (a = b)))
   | fuel + 1 =>
-    let previous := reachableTable edge fuel
+    let previous := reachableLayers edge fuel
     Vector.ofFn (fun a => Vector.ofFn (fun b => decide (a = b) ||
       (List.finRange n).any (fun next => edge a next && previous[next.val][b.val])))
 
 /-- Stored layers equal the original bounded search for every finite graph,
 depth and pair, including false answers; certification cannot gain new positives. -/
-theorem reachableTable_get {n : Nat} (edge : Fin n → Fin n → Bool)
+theorem reachableLayers_get {n : Nat} (edge : Fin n → Fin n → Bool)
     (fuel : Nat) (a b : Fin n) :
-    (reachableTable edge fuel)[a.val][b.val] = reachable edge fuel a b := by
+    (reachableLayers edge fuel)[a.val][b.val] = reachable edge fuel a b := by
   induction fuel generalizing a b with
-  | zero => simp [reachableTable, reachable]
+  | zero => simp [reachableLayers, reachable]
   | succ fuel ih =>
-    simp only [reachableTable, Vector.getElem_ofFn, reachable]
+    simp only [reachableLayers, Vector.getElem_ofFn, reachable]
     congr 1
     apply congrArg ((List.finRange n).any)
     funext next
     rw [ih next b]
+
+/-- Prepare each actual successor list once; rejected edges never allocate work
+inside the subsequent bounded search. The declared source order is retained. -/
+def successors {n : Nat} (edge : Fin n → Fin n → Bool) : Vector (List (Fin n)) n :=
+  Vector.ofFn (fun a => (List.finRange n).filter (edge a))
+
+/-- Search prepared adjacency lists rather than rescanning every possible edge
+at every recursive position. This still consumes exactly the supplied depth. -/
+def reachableRows {n : Nat} (rows : Vector (List (Fin n)) n) : Nat → Fin n → Fin n → Bool
+  | 0, a, b => decide (a = b)
+  | fuel + 1, a, b => decide (a = b) || rows[a.val].any
+      (fun next => reachableRows rows fuel next b)
+
+/-- Filtering absent edges preserves both positive and negative bounded paths. -/
+theorem reachableRows_successors {n : Nat} (edge : Fin n → Fin n → Bool)
+    (fuel : Nat) (a b : Fin n) :
+    reachableRows (successors edge) fuel a b = reachable edge fuel a b := by
+  induction fuel generalizing a with
+  | zero => rfl
+  | succ fuel ih =>
+    simp only [reachableRows, successors, Vector.getElem_ofFn, List.any_filter, reachable]
+    congr 1
+    apply congrArg ((List.finRange n).any)
+    funext next
+    simpa only [successors] using congrArg (fun found => edge a next && found) (ih next)
+
+/-- Inspect each declared edge once during preparation. Single-successor graphs
+use prepared sparse traversal; overlapping branches use shared layers. Both
+return a full matrix, with identical fuel and source-order failure semantics. -/
+def reachableTable {n : Nat} (edge : Fin n → Fin n → Bool) (fuel : Nat) :
+    Vector (Vector Bool n) n :=
+  let rows := successors edge
+  -- List.any keeps executable by-decide certificates kernel-reducible.
+  if (List.finRange n).any (fun a => decide (rows[a.val].length > 1)) then reachableLayers edge fuel
+  else Vector.ofFn (fun a => Vector.ofFn (fun b => reachableRows rows fuel a b))
+
+/-- Strategy selection preserves every bounded answer, including negative paths;
+selection is an optimization decision, never a new acceptance assumption. -/
+theorem reachableTable_get {n : Nat} (edge : Fin n → Fin n → Bool)
+    (fuel : Nat) (a b : Fin n) :
+    (reachableTable edge fuel)[a.val][b.val] = reachable edge fuel a b := by
+  unfold reachableTable
+  dsimp only
+  split
+  · exact reachableLayers_get edge fuel a b
+  · simp only [Vector.getElem_ofFn, reachableRows_successors]
+
+/-- Composing declared paths supports a reverse traversal without changing the
+forward graph or requiring its strongly connected partition in advance. -/
+theorem Reach.trans {n : Nat} {edge : Fin n → Fin n → Bool} {a b c : Fin n}
+    (first : Reach edge a b) (second : Reach edge b c) : Reach edge a c := by
+  induction first with
+  | refl => exact second
+  | step direct _ ih => exact .step direct (ih second)
+
+/-- Reverse traversal swaps the endpoints of each actual path. -/
+theorem Reach.reverse {n : Nat} {edge : Fin n → Fin n → Bool} {a b : Fin n}
+    (path : Reach edge a b) : Reach (fun left right => edge right left) b a := by
+  induction path with
+  | refl => exact .refl _
+  | step direct _ ih => exact ih.trans (.step direct (.refl _))
+
+/-- Forward/reverse intersection is exactly mutual reachability. This permits
+one pair of traversals per discovered group rather than one set per vertex. -/
+theorem forward_reverse_group {n : Nat} (edge : Fin n → Fin n → Bool) (a b : Fin n) :
+    (Reach edge a b ∧ Reach (fun left right => edge right left) a b) ↔
+      (Reach edge a b ∧ Reach edge b a) := by
+  constructor <;> intro ⟨forward, backward⟩
+  · exact ⟨forward, backward.reverse⟩
+  · exact ⟨forward, backward.reverse⟩
+
+/-- A nontrivial path enters its destination from a distinct predecessor;
+trailing self loops cannot manufacture a second member of a component. -/
+theorem Reach.entry {n : Nat} {edge : Fin n → Fin n → Bool} {a b : Fin n}
+    (path : Reach edge a b) (different : a ≠ b) :
+    ∃ prior, prior ≠ b ∧ Reach edge a prior ∧ edge prior b = true := by
+  induction path with
+  | refl => exact False.elim (different rfl)
+  | @step a next b direct rest ih =>
+    by_cases same : next = b
+    · subst next; exact ⟨a, different, .refl a, direct⟩
+    · obtain ⟨prior, distinct, segment, last⟩ := ih same
+      exact ⟨prior, distinct, .step direct segment, last⟩
+
+/-- Once assigned nodes are known to belong to distinct completed components,
+all other predecessors being assigned certifies a singleton, even with self loops.
+This is the invariant required by the traversal-skipping implementation rule. -/
+theorem singleton_of_assigned_predecessors {n : Nat} (edge : Fin n → Fin n → Bool)
+    (assigned : Fin n → Bool) (a b : Fin n)
+    (incoming : ∀ prior, edge prior a = true → prior ≠ a → assigned prior = true)
+    (separate : ∀ prior, assigned prior = true → ¬ (Reach edge a prior ∧ Reach edge prior a))
+    (forward : Reach edge a b) (backward : Reach edge b a) : a = b := by
+  by_cases same : a = b
+  · exact same
+  · obtain ⟨prior, distinct, segment, last⟩ := backward.entry (Ne.symm same)
+    exact False.elim (separate prior (incoming prior last distinct)
+      ⟨forward.trans segment, .step last (.refl a)⟩)
 
 /-- A checked finite relation is reflexive, includes every edge, and is transitive. -/
 def Laws {n : Nat} (edge rel : Fin n → Fin n → Bool) : Prop :=

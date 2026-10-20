@@ -171,7 +171,7 @@ def main():
     emit(f'CHECK-GATE-START jobs={jobs}')
     atoms = atom_checks(jobs, os.environ.get('LEAN_POO_ATOM_RECEIPT'))
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
+        [('library', ['lake', 'build', 'LeanPoo', 'LeanPoo:shared', 'Examples.Support.GeneralizedFork:dynlib', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('types', ['lean', '-j', '2', 'LeanPoo/C4/Types.lean']),
          *[(name, command) for name, command in atoms if name.startswith('shard-')],

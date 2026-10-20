@@ -31,6 +31,7 @@ def measurePaths (variant family : String) (n : Nat) : IO Unit := do
   let begin ← IO.monoNanosNow
   let table := if variant == "paths-unshared" then
       Vector.ofFn (fun a => Vector.ofFn (fun b => StrongComponents.reachable edge n a b))
+    else if variant == "paths-layered" then StrongComponents.reachableLayers edge n
     else StrongComponents.reachableTable edge n
   let forced ← IO.mkRef table
   let facts ← forced.get
@@ -46,9 +47,17 @@ The unshared control is for measurement, not a supported compatibility path. -/
 def main (args : List String) : IO Unit := do
   let [variant,family,size] := args | throw (IO.userError "variant family size")
   let some n := size.toNat? | throw (IO.userError "size")
-  unless n > 0 && ["reference","unshared","paths","paths-unshared","worklist","retained-index"].contains variant &&
+  unless n > 0 && ["reference","unshared","paths","paths-unshared","paths-layered","paths-paired","worklist","retained-index"].contains variant &&
       ["chain","reverse","fanout","shared","ring","quorum"].contains family do throw (IO.userError "parameters")
-  if ["paths","paths-unshared"].contains variant then
+  if variant == "paths-paired" then
+    -- Share process startup, not computed matrices. Reverse order balances the
+    -- selector against both lightweight and layered controls under natural GC.
+    for round in List.range 3 do
+      for selected in ["paths-unshared","paths","paths-layered","paths-layered","paths","paths-unshared"] do
+        IO.print s!"round={round} "
+        measurePaths selected family n
+    return
+  if ["paths","paths-unshared","paths-layered"].contains variant then
     return ← measurePaths variant family n
   let setupBegin ← IO.monoNanosNow
   let prepared ← if variant == "retained-index" then

@@ -32,10 +32,18 @@ def refusal (mask stage : Nat) : Bool := (mask / 2^stage) % 2 == 1
 def names := ["pricing","shipping","insurance","reserve","tax","risk","settlement","invoice","audit","release"]
 def fees (policy : Policy) : List Int := List.replicate 7 0 ++ [policy.invoiceFee,policy.auditFee,policy.releaseFee]
 
-def expectedError (policy : Policy) (key : Int) (mask : Nat) : Option String :=
-  let flags := expectedFlags policy key
+/-- Search a prepared independent oracle in the same left-to-right refusal order. -/
+def expectedErrorWithFlags (flags : List Bool) (mask : Nat) : Option String :=
   names.zipIdx |>.findSome? fun (name,stage) =>
     if refusal mask stage && !flags[stage]! then some (name ++ ".construction") else none
+
+/-- Preparation is independent of the refusal mask and does not inspect production results. -/
+def expectedError (policy : Policy) (key : Int) (mask : Nat) : Option String :=
+  expectedErrorWithFlags (expectedFlags policy key) mask
+
+/-- Sharing the expected metadata preserves the first error for every mask. -/
+theorem expectedError_prepared (policy : Policy) (key : Int) (mask : Nat) :
+    expectedErrorWithFlags (expectedFlags policy key) mask = expectedError policy key mask := rfl
 
 def expectedOutcome (policy : Policy) (values : List Int) (units : Int) (ledger : List String) :
     Option Int × Option String × List String := Id.run do
@@ -64,8 +72,13 @@ def finiteRates (key : Int) : Nat → List Int
 def swapLayout (A B C : Type) : DictionaryBridge ((A × B) × C) (C × (B × A)) :=
   ⟨(fun raw => (raw.2,raw.1.2,raw.1.1)),(fun raw => ((raw.2.2,raw.2.1),raw.1)),fun _ => rfl,fun _ => rfl⟩
 
+/-- Execute every policy/key/mask revision and complete observation; share only immutable expected data and prepared views. -/
 def run : IO Unit := do
   let original ← IO.ofExcept (publish initial 0)
+  -- Retain an immutable interface, not an action result: every refusal still
+  -- executes its observation against the old publication and explicit ledger.
+  let retained := (assemble original).interface
+  let retainedExpected := expectedOutcome initial (expectedRates 0) 2 ["retained"]
   let mut revisions := 0
   let mut accepted := 0
   let mut refused := 0
@@ -76,32 +89,36 @@ def run : IO Unit := do
   let ledgers : List (List String) := [[],["prefix"]]
   let unitsCases : List Int := [-1,0,2,3,4,5,7,9]
   for (policy,key) in scenarios do
+    let expectedValues := expectedRates key
+    let expectedReuse := expectedFlags policy key
+    let actions := ([2,3] : List Int).flatMap (fun units => ledgers.map (fun ledger =>
+      (units,ledger,expectedOutcome policy expectedValues units ledger)))
     for mask in List.range 1024 do
       revisions := revisions+1
       match revise original policy key (refusal mask) with
       | .error error =>
         refused := refused+1
-        unless expectedError policy key mask == some error do throw (IO.userError "policy/data first refusal")
-        unless summary ((checkout (assemble original).interface 2).run ["retained"]) ==
-            expectedOutcome initial (expectedRates 0) 2 ["retained"] do throw (IO.userError "refused policy revision changed old publication")
+        unless expectedErrorWithFlags expectedReuse mask == some error do throw (IO.userError "policy/data first refusal")
+        unless summary ((checkout retained 2).run ["retained"]) == retainedExpected do throw (IO.userError "refused policy revision changed old publication")
       | .ok revision =>
         accepted := accepted+1
-        unless (expectedError policy key mask).isNone && revision.flags == expectedFlags policy key do
+        unless (expectedErrorWithFlags expectedReuse mask).isNone && revision.flags == expectedReuse do
           throw (IO.userError "configuration omitted from construction key")
         let closed := assemble revision.publication
-        unless rates closed.interface == expectedRates key do throw (IO.userError "policy altered numerical metadata")
+        unless rates closed.interface == expectedValues do throw (IO.userError "policy altered numerical metadata")
         let fields := closed.transport (swapLayout _ _ _) (swapLayout _ _ _)
-        for units in ([2,3] : List Int) do
-          for ledger in ledgers do
-            for service in [closed.interface,(swapLayout _ _ _).fromFields fields.interface] do
-              observations := observations+1
-              unless summary ((checkout service units).run ledger) == expectedOutcome policy (expectedRates key) units ledger do
-                throw (IO.userError "ten-component complete action / policy / representation")
+        let services := [closed.interface,(swapLayout _ _ _).fromFields fields.interface]
+        for (units,ledger,expected) in actions do
+          for service in services do
+            observations := observations+1
+            unless summary ((checkout service units).run ledger) == expected do
+              throw (IO.userError "ten-component complete action / policy / representation")
     let revised ← IO.ofExcept (revise original policy key (fun _ => false))
+    let service := (assemble revised.publication).interface
     for units in unitsCases do
       for ledger in ledgers do
         observations := observations+1
-        unless summary ((checkout (assemble revised.publication).interface units).run ledger) ==
+        unless summary ((checkout service units).run ledger) ==
             expectedOutcome policy (expectedRates key) units ledger do throw (IO.userError "ten-stage distinct error prefix")
   for policy in [initial,allFees] do
     for key in ([0,14] : List Int) do
@@ -120,9 +137,12 @@ def run : IO Unit := do
     (fork.selectLeft (initial,(Base.assemble original.upstream).interface)).2
     (fun _ _ => Except.error "changed policy needs fresh admission")
   unless refusedConfig.toOption.isNone do throw (IO.userError "configuration API trusted dependency equality alone")
+  unless revisions == 7168 && accepted == 2697 && refused == 4471 && observations == 21688 && finite == 576 do
+    throw (IO.userError "policy publication coverage changed")
   IO.println s!"POLICY-PUBLICATION-CONTROLS-OK revisions={revisions} accepted={accepted} refused={refused} complete-observations={observations} finite-observations={finite} ten-components actual-policy keys full-refusal-masks retained-upstream recooked-interface"
 #eval run
 
+#print axioms expectedError_prepared
 #print axioms Functional.PolicyPublication.assemble
 #print axioms Functional.PolicyPublication.retained_audit
 #print axioms Functional.PolicyPublication.retained_release

@@ -43,9 +43,11 @@ def check : Except String Unit := do
 shared path families test both stored positives and cross-component negatives;
 the empty catalog remains accepted without inventing an index. -/
 def layersCheck : Except String Unit := do
-  for width in [0,1,4,8,16] do
+  for (width, branching) in ([0,1,4,8,16] : List Nat).flatMap (fun width => [(width,false),(width,true)]) do
     let edge : Fin (2*width) → Fin (2*width) → Bool := fun a b =>
-      decide (a.val/width = b.val/width ∧ (a.val+1)%width = b.val%width)
+      decide (a.val/width = b.val/width) &&
+        (decide ((a.val+1)%width = b.val%width) ||
+          (branching && decide ((a.val+2)%width = b.val%width)))
     let some checked := discover edge | throw "ring discovery refused"
     for a in List.finRange (2*width) do
       unless (checked.members a).length == width do throw "ring group size"
@@ -61,5 +63,8 @@ def layersCheck : Except String Unit := do
 #print axioms SupportRevision.join_erased
 #print axioms Functional.ComponentExecution.resolved_correct
 #print axioms Functional.ComponentExecution.focus_laws
+#print axioms reachableLayers_get
 #print axioms reachableTable_get
+#print axioms forward_reverse_group
+#print axioms singleton_of_assigned_predecessors
 end LeanPoo.Examples.ComponentRounds

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import shlex
 import signal
+import sys
 import subprocess
 import threading
 import time
@@ -108,6 +109,49 @@ def configure_limits(atoms):
     return result
 
 
+# These tariff/publication and queue controls share expensive evaluator code.
+# Only this measured family pays shared-library initialization; ordinary and
+# small stress checks retain their cheaper interpreter startup.
+PRECOMPILED_CASES = frozenset('Tests/' + name + '.lean' for name in (
+    'GeneralizedFork', 'SharedSettlement', 'PolicyPublication',
+    'ConstructionWorkflow', 'InheritedSettlement', 'AccountMigration', 'QueueSelection'))
+
+
+def configure_precompiled(atoms, library=None, fork_library=None):
+    """Reuse the source-built public implementation without changing a check.
+
+    Kernel elaboration, #eval bodies, timeout/memory/allocation/thread arguments
+    and source order remain intact. Missing preparation is an error, not a
+    silent execution-mode change. Listing commands does not require the build.
+    """
+    suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+    library = Path(library or ROOT / f'.lake/build/lib/libLeanPoo_LeanPoo.{suffix}').resolve()
+    fork_library = Path(fork_library or ROOT / f'.lake/build/lib/lean/LeanPoo_Examples_Support_GeneralizedFork.{suffix}').resolve()
+    flag = '--plugin=' + str(library)
+    result = []
+    for atom in atoms:
+        command = list(atom['command'])
+        if atom['file'] in PRECOMPILED_CASES:
+            if atom_phase(atom) != 'stress':
+                raise ValueError('Prepared pressure checks must retain their original deadline')
+            flags = [flag]
+            if atom['file'] == 'Tests/GeneralizedFork.lean':
+                flags.append('--plugin=' + str(fork_library))
+            for prepared in flags:
+                if prepared not in command:
+                    command.insert(-1, prepared)
+        result.append(dict(atom, command=command))
+    return result
+
+
+def preparation_identity(atoms):
+    """Bind receipts to the exact implementation bytes actually loaded."""
+    paths = sorted({arg.removeprefix('--plugin=') for atom in atoms
+                    for arg in atom['command'] if arg.startswith('--plugin=')})
+    return [dict(path=path, sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest())
+            for path in paths]
+
+
 def run_atom(atom, seconds=120):
     file = atom['file']
     emit(f'CHECK-ATOM-START {file}')
@@ -130,9 +174,10 @@ def run_atom(atom, seconds=120):
         with PROCESS_LOCK:
             ACTIVE.discard(process)
     elapsed = time.monotonic() - started
+    peak_rss = usage.ru_maxrss * (1 if sys.platform == 'darwin' else 1024)
     emit(f'CHECK-ATOM-END {file} exit={code} wall={elapsed:.3f}s cpu={cpu:.3f}s')
     return dict(file=file, recipe=atom['recipe'], command=atom['command'],
-                returncode=code, wall_seconds=elapsed, cpu_seconds=cpu, transcript_sha256=digest.hexdigest(),
+                returncode=code, wall_seconds=elapsed, cpu_seconds=cpu, peak_rss_bytes=peak_rss, transcript_sha256=digest.hexdigest(),
                 source_sha256=hashlib.sha256((ROOT / file).read_bytes()).hexdigest())
 
 
@@ -213,6 +258,7 @@ def main():
     try:
         inventory = load_atoms()
         atoms = configure_limits(configure_threads(select_atoms(inventory, args.shard, args.shards, args.files), args.lean_threads))
+        atoms = configure_precompiled(atoms)
         if args.jobs < 1:
             raise ValueError('Jobs must be positive')
     except (ValueError, subprocess.SubprocessError) as error:
@@ -220,15 +266,29 @@ def main():
     if args.list:
         print(json.dumps(atoms, indent=2))
         return 0
+    try:
+        preparation = preparation_identity(atoms)
+    except OSError as error:
+        parser.error(f'Prepared pressure implementation missing; build LeanPoo:shared and Examples.Support.GeneralizedFork:dynlib: {error}')
     signal.signal(signal.SIGTERM, stop_children)
     signal.signal(signal.SIGINT, stop_children)
     started = time.monotonic()
     emit(f'CHECK-ATOMS-START files={len(atoms)} jobs={args.jobs} shard={args.shard}/{args.shards}')
+    if preparation:
+        emit('CHECK-PREPARATION ' + json.dumps(preparation))
     results = execute(atoms, args.jobs)
     failures = [r['file'] for r in results if r['returncode'] != 0]
+    try:
+        preparation_changed = preparation_identity(atoms) != preparation
+    except OSError:
+        preparation_changed = True
+    if preparation_changed:
+        emit('CHECK-PREPARATION-ERROR implementation changed during checks')
+        failures.append('prepared-implementation-changed')
     receipt = dict(schema='lean-poo.check-atoms.v1', jobs=args.jobs, shard=args.shard,
                    shards=args.shards, lean_threads=args.lean_threads, inventory_files=len(inventory), selected_files=len(atoms),
                    wall_seconds=time.monotonic() - started, failures=failures, results=results,
+                   preparation=preparation,
                    justfile_sha256=hashlib.sha256((ROOT / 'Justfile').read_bytes()).hexdigest())
     if args.receipt:
         args.receipt.write_text(json.dumps(receipt, indent=2) + '\n')

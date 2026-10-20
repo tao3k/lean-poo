@@ -47,3 +47,27 @@ Immutable/extensional metadata, pure locally total callbacks, correct declared
 reads and faithful group builders are premises. Raw search budgets exclude SCC
 analysis, residual evaluation, cooking and approval costs. No new benchmark data
 or serialized proof/JSON artifacts are required for this functional increment.
+
+## Shared preparation and sparse cyclic graphs
+
+`successors` materializes declared adjacency lists once, in source order.
+`reachableRows_successors` proves the resulting depth-bounded traversal equal to
+`reachable` for every graph, depth, and endpoint pair, including negative answers.
+`reachableTable` uses that traversal for at most one successor per node and
+`reachableLayers` for branching graphs. `reachableTable_get` proves exactness
+independently of the strategy decision. Single cycles therefore avoid preparing
+all intermediate matrices and repeatedly testing absent edges; branching graphs
+retain shared preceding layers. The public acceptance checks and fuel are unchanged.
+
+`Reach.reverse` and `forward_reverse_group` establish that intersecting forward
+and reversed reachability gives exactly mutual reachability. Gerbil uses this
+rule to discover one whole group per pair of traversals, retaining source-order
+members and representatives. The theorem specifies the grouping rule; it does
+not verify the Scheme hash-table implementation, runtime, or callback purity.
+
+Run the compiled `cyclicClosureScale paths-paired ring 8` (also `ring 12`,
+`shared 8`, `shared 12`) for same-process reversed-order comparisons of sparse
+selection, layered preparation and the original recursive matrix. Every sample
+forces its complete matrix and checks every cell against the independent two-ring
+oracle. Timers include preparation and natural GC, exclude process startup, and
+provide no theorem about host elapsed time or allocation.
