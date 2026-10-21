@@ -1,5 +1,6 @@
 import LeanPoo.Functional.PrototypeTypes
 import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.FunctionSignature
 
 /-! Literal intrinsic descriptors extend the type-protocol future work. Carrier
 identity is retained separately from interval observations; byte length is not
@@ -471,5 +472,95 @@ theorem inferNumericFamily_union (input expected candidates output artifact targ
       ∃ target ∈ targets, target.Accepts value := by
   obtain ⟨original, _, expectedValid⟩ := inferNumericFamily_sound _ _ _ _ _ published
   exact ⟨original, fun value valid => numericFamilyUnionCheck_sound _ _ covered value (expectedValid value valid)⟩
+
+/-- Only supplied input Types participate; omitted defaults and unused rest
+positions cannot turn a callable row into an impossible row. -/
+def emptyCallRow (fuel : Nat) (supplied : List Ty) : Bool :=
+  supplied.any (emptyCheck fuel)
+/-- A positive existing empty-Type witness contradicts any legal supplied call.
+Host projection and membership obey the same explicit shape laws as containers. -/
+theorem emptyCallRow_refuses (laws : EmptyLaws (member : Ty → Value → Prop)) (fuel supplied)
+    (empty : emptyCallRow fuel supplied = true)
+    (legal : ∀ type ∈ supplied, ∃ value, member type value) : False := by
+  obtain ⟨type, present, checked⟩ := List.any_eq_true.mp empty
+  obtain ⟨value, valid⟩ := legal type present
+  exact (emptyCheck_sound fuel type checked).refuses laws value valid
+/-- Positional and provided-keyword views compose through the same witness. -/
+theorem emptyCallRow_append (fuel : Nat) (positions keys : List Ty) :
+    emptyCallRow fuel (positions ++ keys) =
+      (emptyCallRow fuel positions || emptyCallRow fuel keys) := by
+  simp [emptyCallRow]
+/-- A zero-input row remains live even if its descriptor has impossible defaults. -/
+theorem emptyCallRow_nil (fuel : Nat) : emptyCallRow fuel [] = false := rfl
+/-- Check the ORIGINAL first selected clause: a dead row discharges only that
+row's replacement obligation and never exposes a later target overload. -/
+def selectedCallCheck (fuel : Nat) (inputs : Clause → List Ty)
+    (covered : Clause → Bool) : Option Clause → Bool
+  | none => true
+  | some clause => emptyCallRow fuel (inputs clause) || covered clause
+/-- A legal selected call still needs its complete provider replacement check. -/
+theorem selectedCallCheck_live (laws : EmptyLaws (member : Ty → Value → Prop))
+    (fuel : Nat) (inputs : Clause → List Ty) (covered : Clause → Bool) (clause : Clause)
+    (accepted : selectedCallCheck fuel inputs covered (some clause) = true)
+    (legal : ∀ type ∈ inputs clause, ∃ value, member type value) : covered clause = true := by
+  simp only [selectedCallCheck, Bool.or_eq_true] at accepted
+  rcases accepted with empty | covered
+  · exact False.elim (emptyCallRow_refuses laws fuel _ empty legal)
+  · exact covered
+/-- First structural selection is retained even when the selected input is empty. -/
+theorem selectedCallCheck_first (fuel : Nat) (inputs : Clause → List Ty) (covered : Clause → Bool)
+    (acceptsShape : Clause → Bool) (head : Clause) (tail : List Clause)
+    (first : acceptsShape head = true) :
+    selectedCallCheck fuel inputs covered ((head :: tail).find? acceptsShape) =
+      (emptyCallRow fuel (inputs head) || covered head) := by
+  simp [List.find?, first, selectedCallCheck]
+/-- Faithful validation of an impossible selected row refuses before either
+body execution or overload fallback, via the existing invokeValues theorem. -/
+theorem emptyCallRow_invoke_refused [DecidableEq Key]
+    (laws : EmptyLaws (member : Ty → Value → Prop)) (fuel supplied)
+    (empty : emptyCallRow fuel supplied = true)
+    (clauses : List (LeanPoo.Functional.FunctionSignature.TypedSignature Key Ty))
+    (call : LeanPoo.Functional.FunctionSignature.Call Key Value)
+    (shapeError countError : Error)
+    (normalize : LeanPoo.Functional.FunctionSignature.TypedSignature Key Ty →
+      LeanPoo.Functional.FunctionSignature.Call Key Value →
+        Except Error (LeanPoo.Functional.FunctionSignature.Call Key Value))
+    (body : LeanPoo.Functional.FunctionSignature.Call Key Value → Except Error (List Value × Owner))
+    (check : Ty → Value → Except Error Value)
+    (signature : LeanPoo.Functional.FunctionSignature.TypedSignature Key Ty)
+    (selected : clauses.find? (fun clause =>
+      LeanPoo.Functional.FunctionSignature.accepts clause.shape call) = some signature)
+    (faithful : ∀ checked, normalize signature call = .ok checked →
+      ∀ type ∈ supplied, ∃ value, member type value) :
+    ∃ error, LeanPoo.Functional.FunctionSignature.invokeValues clauses call
+      shapeError countError normalize body check =
+        (Except.error error : Except Error (List Value × Owner)) := by
+  cases result : normalize signature call with
+  | error error => exact ⟨error,
+      LeanPoo.Functional.FunctionSignature.invokeValues_type_error
+        clauses call shapeError countError error normalize body check signature selected result⟩
+  | ok checked => exact False.elim (emptyCallRow_refuses laws fuel supplied empty (faithful checked result))
+/-- One finite partition uses the same selected-row check for each cell. -/
+def callRowsCheck (fuel : Nat) (rows : List (List Ty × Bool)) : Bool :=
+  rows.all (fun row => emptyCallRow fuel row.1 || row.2)
+/-- Complete unique declaration inference retains the exact built artifact;
+every inhabited cell must pass its original replacement obligation. -/
+theorem inferCallRows_sound (laws : EmptyLaws (member : Ty → Value → Prop)) (fuel budget)
+    (rows : Assignment → List (List Ty × Bool)) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact) (assignment artifact)
+    (published : LeanPoo.Functional.DeclarativeMetadata.inferDeclared budget
+      (fun candidate => callRowsCheck fuel (rows candidate)) candidates build =
+        .ok (.unique assignment, some artifact)) :
+    build assignment = .ok artifact ∧ ∀ row ∈ rows assignment,
+      (∀ type ∈ row.1, ∃ value, member type value) → row.2 = true := by
+  obtain ⟨_, checked, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique
+    budget (fun candidate => callRowsCheck fuel (rows candidate)) candidates build published
+  refine ⟨built, ?_⟩
+  intro row present legal
+  have valid := (List.all_eq_true.mp checked) row present
+  simp only [Bool.or_eq_true] at valid
+  rcases valid with empty | covered
+  · exact False.elim (emptyCallRow_refuses laws fuel row.1 empty legal)
+  · exact covered
 
 end LeanPoo.Functional.PrototypeTypes

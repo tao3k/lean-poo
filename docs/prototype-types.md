@@ -726,3 +726,54 @@ its copied constraints again. Public raw queries keep complete admission.
 `admitDeclaredSource_valid` transports a checked syntax property only after exact
 source equality; host mutable data still receives bounded traversal. Completed
 declaration reports capture admitted artifacts, not a deferred request counter.
+
+## Uninhabited selected call rows
+
+Function replacement now distinguishes structural call shapes from their legal
+supplied values. After the original first target clause is selected, a positive
+existing empty-Type witness for any supplied positional/keyword formal can
+exclude that row from replacement obligations. Optional defaults and unused rest
+positions are not supplied inputs. A live row still requires a source shape,
+contravariant supplied inputs and covariant results with the exact output count.
+The public `function-covers?` gate remains a structural shape-language check;
+it does not drop these rows or become a value-sensitive replacement certificate.
+
+This is a finite decidable omission in the existing protocol, not arbitrary
+predicate emptiness. `types/relation.ss` reuses `empty-type?`, the shared quota,
+standard presence-aware hash lookup and `function-signature.ss` normalization.
+Positive and negative witnesses are cached only inside one replacement request;
+exceptions/exhaustion cannot install a partial witness. Empty Lists/Maps/vectors,
+Maybe/OrFalse sentinels and procedures remain inhabited or unknown. A Never
+result does not make a Function empty. No Any, default execution or arity adapter
+is manufactured, and every syntax sibling is admitted before emptiness is used.
+
+Selection commits before this check. An impossible first case does not expose a
+later case with the same shape. Keyword decoding/escape modes and saturated
+rest regions retain the existing call-language engine. Omitted optional inputs
+remain live; supplied impossible optional/rest/key cells can be discharged.
+Unknown predicates, unrestricted recursion and host procedure arity/totality
+remain outside the checker. Failed supplied validation still refuses before the
+body, output validation or overload fallback.
+
+`examples/signature-service.ss` now publishes a closed handler directory whose
+Map values and refresh results share one Callback assignment. Gerbil case-lambda
+implements actual zero/two-argument callbacks; declared reserved one-argument and
+optional/rest slots are provably impossible. The whole declaration is inferred
+only after Value prefix specialization, then the existing Reader/FUN, refine and
+bind-evidence workflow wraps every nested callback. Regression controls cover
+unique/ambiguous/no-solution inference, exact context/subject evidence, refusal,
+retry, selected-case ordering, mandatory keyword impossibility, optional omission,
+live container/sentinel counterexamples and malformed/exhausted requests.
+
+Lean keeps the existing PrototypeTypes namespace. `emptyCallRow_refuses` reuses
+EmptyLaws and the original emptyCheck witness; `selectedCallCheck_live/first`
+retain live coverage and first selection. `emptyCallRow_invoke_refused` composes
+the existing invokeValues rule to exclude body/fallback after faithful input
+validation. `inferCallRows_sound` composes the original complete declaration
+solver, retains the exact built artifact and proves every inhabited cell's
+original obligation. The top-level GeneratedCalls examples exercise dead/live
+selection and whole unique/ambiguous declaration construction. These laws require
+faithful supplied-Type projection, intrinsic emptiness/shape interpretation and
+live-cell coverage; they do not prove a new parser, all host predicates, arbitrary
+callbacks or runtime/GC behavior. This advances the article's type-protocol future
+work while retaining complete checks and their original resource limits.

@@ -1,4 +1,5 @@
 import LeanPoo.Functional.FunctionSignature
+import LeanPoo.Functional.PrototypeTypeDescriptors
 import LeanPoo.Functional.PropertyTesting
 
 /-! Finite service controls for required/optional keys, ordered overloads,
@@ -47,4 +48,33 @@ example : decodeKeywords (Value := Bool) [.inl "dangling"] = none := rfl
 #print axioms encodeKeywords_length
 #print axioms decode_encodeKeywords
 #print axioms decodeKeywords_dangling
+
+open LeanPoo.Functional.PrototypeTypes
+/-- Empty mandatory products have no call values; nil/sentinels still do. -/
+example : emptyCallRow 4 [.pair (.integerEnum []) (.function [.atom .uint] [.atom .uint])] = true := rfl
+example : emptyCallRow 4 [.list (.integerEnum []), .maybe (.integerEnum []), .tuple []] = false := rfl
+/-- The first dead clause shadows the later live clause; it is not removed. -/
+example : selectedCallCheck 4 (fun (clause : Nat) => if clause = 0 then [.integerEnum []] else [.atom .uint])
+    (fun _ => false) ([0, 1].find? (fun _ => true)) = true := rfl
+example : selectedCallCheck 4 (fun (clause : Nat) => if clause = 0 then [.integerEnum []] else [.atom .uint])
+    (fun _ => false) ([1, 0].find? (fun _ => true)) = false := rfl
+/-- The zero/two-input service retains its live coverage obligations around a
+reserved impossible one-input cell. The candidate controls the second live cell. -/
+def retiringRows (candidate : Nat) : List (List Ty × Bool) :=
+  [([], true), ([.pair (.integerEnum []) (.function [.atom .uint] [.atom .uint])], false),
+    ([.atom .uint, .atom .uint], decide (candidate ≠ 1))]
+/-- One original complete declaration solver selects/builds the entire service. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
+    (fun candidate => callRowsCheck 4 (retiringRows candidate)) [0, 1]
+    (fun candidate => (Except.ok ("handlers", candidate) : Except String (String × Nat))) =
+      .ok (.unique 0, some ("handlers", 0)) := rfl
+/-- Distinct complete accepted candidates remain ambiguous and build nothing. -/
+example : LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
+    (fun candidate => callRowsCheck 4 (retiringRows candidate)) [0, 2]
+    (fun _ => (Except.error "builder must not run" : Except String Nat)) =
+      .ok (.ambiguous [0, 2], none) := rfl
+#print axioms emptyCallRow_refuses
+#print axioms selectedCallCheck_live
+#print axioms emptyCallRow_invoke_refused
+#print axioms inferCallRows_sound
 end Examples.GeneratedCalls
