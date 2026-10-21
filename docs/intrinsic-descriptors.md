@@ -112,3 +112,49 @@ The semantic proofs require faithful interpretation of the host numeric
 predicates and valid source function behavior. They do not establish arithmetic
 or conversion accuracy, codec equivalence, arbitrary descriptor override behavior
 or compiler/runtime correctness. This is the article's type-protocol future work.
+
+## Rational and literal modulus protocol
+
+The existing `Rational` descriptor uses Gerbil `rational?`: integers, exact
+noninteger rationals and finite flonums are accepted; NaN and infinities are not.
+It includes into Real/Number. Float does not include into Rational. Real can
+include into a completely admitted flat ordered Union when both Rational and
+Float are covered. This checks two obligations without changing branch order,
+wrapper selection, invariant Map keys or carried descriptor identity. A missing
+family, unsupported sibling or exhausted quota cannot become successful coverage.
+Floating/complex literal metadata remains unsupported; no Any is synthesized.
+
+`(Z/ n)` admits a literal positive exact modulus with at most 4096 bits. Admission
+uses standard `positive-integer?`, and compilation constructs the existing Z/
+descriptor whose recognizer is `uint-below?`. Its exact integer view is [0,n-1],
+so endpoint, Enum and ordered flat Union rules reuse the existing interval solver.
+No residue enumeration or modular `.normalize` is performed by validation or
+inclusion. Whole finite candidates may choose different moduli; a modulus itself
+is not a Type variable. Zero, negative, inexact, missing or extra arguments are
+malformed; larger metadata is unsupported; insufficient work is exhausted. Each
+parser pass charges one visit per 64 metadata bits, at most 64 visits, separately
+from the shared syntax/search/compilation work. Catalog and wrapper quotas persist.
+
+`examples/numeric-services.ss` now includes rational sensor batches converted to
+residue tables, checked calibrators and checked batch callbacks. Conversion is
+explicit producer behavior using standard hash mapping and composition. A second
+real relay preserves exceptional flonums through the joint Rational/Float view.
+Both reuse Input prefix specialization, whole Output inference, qualified method
+fragments and the existing FUN/refine/bind-evidence action. Tests cover unique,
+ambiguous and unsuccessful search, malformed/exhausted metadata, independent
+host-predicate membership, immutable snapshots, nested argument/result refusal,
+policy refusal and fresh retry. An invalid producer result is rejected, not reduced.
+
+Lean extends the existing PrototypeTypes namespace: `numericFamilyCheck_sound`
+separates finite/exceptional flonums; `numericFamilyUnionCheck_sound` proves joint
+coverage with an actual member of the original target list. `residueRange_exact`
+connects interval membership to 0 <= value < n; `residueRange_includes_iff` and
+`residue_replacement` prove safe readable replacement for arbitrary admitted
+moduli. `residueMetadataUnits_bounded` bounds metadata word visits without value
+enumeration, and `inferNumericFamily_union` composes complete unique declaration
+inference with ordered joint coverage while retaining the exact artifact. Existing
+Function variance laws apply to nested calibrators. Host numeric classification,
+faithful wrappers/binders, fixed input snapshots and source behavior are premises;
+these theorems do not establish arithmetic/conversion/serialization correctness,
+primitive allocation or GC costs, concurrent heap safety, or the host compiler.
+This is an extension of the article's Appendix C/D type-protocol future work.

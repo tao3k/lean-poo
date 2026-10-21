@@ -332,27 +332,29 @@ theorem inferEmptyList_into (empty : Key → Bool) (member : Key → Value → P
 /-- Intrinsic numeric families use host predicates, not prototype ancestry.
 Integer intervals reuse the existing exact endpoint algebra. -/
 inductive NumericFamily where
-  | number | real | float | integer (range : IntegerRange)
+  | number | real | rational | float | integer (range : IntegerRange)
   deriving Repr, DecidableEq
-/-- Observations distinguish exact integers, other exact reals, flonums and
+/-- Observations distinguish exact integers, other exact rationals, finite/exceptional flonums and
 nonreal numbers. IDs carry no arithmetic or floating-point correctness claim. -/
 inductive NumericObservation where
   | integer (value : Int) | exactReal (id : Nat) | float (id : Nat)
-  | nonreal (id : Nat) | other
+  | exceptionalFloat (id : Nat) | nonreal (id : Nat) | other
   deriving Repr, DecidableEq
 /-- Every observation retains its original value class; no cast is performed. -/
 def NumericFamily.Accepts : NumericFamily → NumericObservation → Prop
   | .number, .other => False
   | .number, _ => True
-  | .real, .integer _ | .real, .exactReal _ | .real, .float _ => True
-  | .float, .float _ => True
+  | .real, .integer _ | .real, .exactReal _ | .real, .float _ | .real, .exceptionalFloat _ => True
+  | .rational, .integer _ | .rational, .exactReal _ | .rational, .float _ => True
+  | .float, .float _ | .float, .exceptionalFloat _ => True
   | .integer range, .integer value => range.Contains value
   | _, _ => False
 /-- The admitted numeric comparison is independent of mutable host descriptors.
 Finite literal or ordered-Union lifting remains a separate existing obligation. -/
 def numericFamilyCheck : NumericFamily → NumericFamily → Bool
   | _, .number => true
-  | .real, .real | .float, .real | .integer _, .real | .float, .float => true
+  | .real, .real | .rational, .real | .float, .real | .integer _, .real | .float, .float => true
+  | .rational, .rational | .integer _, .rational => true
   | .integer source, .integer target => source.includes target
   | _, _ => false
 /-- Accepted numeric replacement preserves every observation, including exact
@@ -394,5 +396,80 @@ theorem inferNumericFamily_sound (input expected candidates output artifact)
   simp only [Bool.and_eq_true] at valid
   cases built
   exact ⟨rfl, numericFamilyCheck_sound _ _ valid.1, numericFamilyCheck_sound _ _ valid.2⟩
+
+/-- Every Scheme real lies in Rational or Float; NaN/infinities take only the
+Float branch. Host classification is a premise, not an arithmetic theorem. -/
+theorem real_numeric_split (value : NumericObservation)
+    (valid : NumericFamily.real.Accepts value) :
+    NumericFamily.rational.Accepts value ∨ NumericFamily.float.Accepts value := by
+  cases value <;> simp_all [NumericFamily.Accepts]
+/-- Ordered finite numeric targets retain their original branches. Only Real
+has this additional two-family decomposition; nothing is reordered or coerced. -/
+def numericFamilyUnionCheck (source : NumericFamily) (targets : List NumericFamily) : Bool :=
+  targets.any (numericFamilyCheck source) ||
+    (decide (source = .real) && targets.any (numericFamilyCheck .rational) &&
+      targets.any (numericFamilyCheck .float))
+/-- A successful joint view covers every original real observation, including
+exceptional flonums, with an actual member of the original target list. -/
+theorem numericFamilyUnionCheck_sound (source targets)
+    (accepted : numericFamilyUnionCheck source targets = true) :
+    ∀ value, source.Accepts value → ∃ target ∈ targets, target.Accepts value := by
+  simp only [numericFamilyUnionCheck, Bool.or_eq_true, Bool.and_eq_true] at accepted
+  rcases accepted with direct | ⟨⟨sourceReal, rationals⟩, floats⟩
+  · obtain ⟨target, member, valid⟩ := List.any_eq_true.mp direct
+    exact fun value sourceValid => ⟨target, member, numericFamilyCheck_sound _ _ valid value sourceValid⟩
+  · have sourceReal : source = .real := of_decide_eq_true sourceReal
+    subst source
+    obtain ⟨rationalTarget, rationalMember, rationalValid⟩ := List.any_eq_true.mp rationals
+    obtain ⟨floatTarget, floatMember, floatValid⟩ := List.any_eq_true.mp floats
+    intro value valid
+    rcases real_numeric_split value valid with rational | float
+    · exact ⟨rationalTarget, rationalMember, numericFamilyCheck_sound _ _ rationalValid value rational⟩
+    · exact ⟨floatTarget, floatMember, numericFamilyCheck_sound _ _ floatValid value float⟩
+/-- Existing Z/ descriptors recognize unsigned residues; the view never invokes
+their modular normalization, arithmetic methods or byte encoders. -/
+def residueRange (modulus : Nat) : IntegerRange := ⟨some 0, some (Int.ofNat modulus - 1)⟩
+/-- Exact observational bounds coincide with the standard uint-below? contract. -/
+theorem residueRange_exact (modulus : Nat) (value : Int) :
+    (residueRange modulus).Contains value ↔ 0 ≤ value ∧ value < Int.ofNat modulus := by
+  simp only [residueRange, IntegerRange.Contains]
+  simp only [Option.some.injEq, forall_eq']
+  omega
+/-- Positive literal modulus admission has the same 4096-bit metadata ceiling
+as the host parser. It is independent of the number of possible residues. -/
+def residueAdmitted (modulus : Nat) : Prop := 0 < modulus ∧ Nat.log2 modulus + 1 ≤ 4096
+/-- Charge metadata words, not inhabitants; host callback/GC costs are separate. -/
+def residueMetadataUnits (modulus : Nat) : Nat := (Nat.log2 modulus + 64) / 64
+/-- Accepted modulus metadata contributes at most 64 word visits in one parser
+pass, even when enumerating its residues would be infeasible. -/
+theorem residueMetadataUnits_bounded (modulus : Nat) (admitted : residueAdmitted modulus) :
+    residueMetadataUnits modulus ≤ 64 := by
+  simp only [residueMetadataUnits, residueAdmitted] at *
+  omega
+
+/-- For positive source moduli, readable residue inclusion is exactly endpoint
+order. It neither asserts a ring homomorphism nor changes descriptor identity. -/
+theorem residueRange_includes_iff (source target : Nat) (positive : 0 < source) :
+    (residueRange source).includes (residueRange target) = true ↔ source ≤ target := by
+  simp [residueRange, IntegerRange.includes, IntegerRange.empty]
+  omega
+/-- The existing interval judgment transfers every original residue unchanged.
+Out-of-range integers require explicit producer conversion, not validation. -/
+theorem residue_replacement (source target : Nat)
+    (accepted : (residueRange source).includes (residueRange target) = true)
+    (value : Int) (valid : 0 ≤ value ∧ value < Int.ofNat source) :
+    0 ≤ value ∧ value < Int.ofNat target :=
+  (residueRange_exact target value).mp
+    (IntegerRange.replacement _ _ accepted value ((residueRange_exact source value).mpr valid))
+/-- Complete unique publication and joint target coverage compose without a
+second solver: the artifact retains the original input/output metadata, and
+its result has a member of the original ordered target list for every value. -/
+theorem inferNumericFamily_union (input expected candidates output artifact targets)
+    (published : inferNumericFamily input expected candidates = .ok (.unique output, some artifact))
+    (covered : numericFamilyUnionCheck expected targets = true) :
+    artifact = (input, output) ∧ ∀ value, output.Accepts value →
+      ∃ target ∈ targets, target.Accepts value := by
+  obtain ⟨original, _, expectedValid⟩ := inferNumericFamily_sound _ _ _ _ _ published
+  exact ⟨original, fun value valid => numericFamilyUnionCheck_sound _ _ covered value (expectedValid value valid)⟩
 
 end LeanPoo.Functional.PrototypeTypes

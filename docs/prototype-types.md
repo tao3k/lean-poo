@@ -13,7 +13,7 @@ necessarily-empty Map section gives the explicit positive-witness exception.
 
 ## One composable protocol
 
-`type-relation.ss` admits this finite expression grammar:
+`types/relation.ss` admits this finite expression grammar:
 
 ```scheme
 Any | Bool | Integer | UInt | declared-variable

@@ -988,4 +988,11 @@ example (artifact) (published : inferNumericFamily .real .float [.number, .float
 #print axioms numericFamilyCheck_sound
 #print axioms inferNumericFamily_sound
 
+/-- Residue inference retains exact bounds; exceptional flonums need Float. -/
+example : inferNumericFamily .rational (.integer (residueRange 7)) [.float, .integer (residueRange 7)] =
+    .ok (.unique (.integer (residueRange 7)), some (.rational, .integer (residueRange 7))) := rfl
+example : numericFamilyUnionCheck .real [.rational, .float] = true := rfl
+example : ¬ NumericFamily.rational.Accepts (.exceptionalFloat 0) := by simp [NumericFamily.Accepts]
+example : (residueRange 7).Contains 6 ∧ ¬ (residueRange 7).Contains 7 := by simp only [residueRange_exact]; decide
+
 end Examples.PrototypeTypes
