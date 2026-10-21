@@ -38,5 +38,36 @@ publication are not verified by this model. Scheme has no Lean dependency.
 Conflict checking concerns changed keys, allowing unrelated edits to rebase. It
 is not global revision fencing and does not reject ABA at equal bindings. Scheme
 separately refuses captured descriptor revisions; those runtime guards are tested,
-not proved by the abstract delta equations. General key/value-changing
-isomorphisms and maintained aggregates remain future work.
+not proved by the abstract delta equations.
+
+## Explicit key/value conversion
+
+The next completed unit reuses `Prototype.DictionaryBridge` for explicit typed
+bijections. `transportView`, `transportChange` and `transportChanges` lift those
+to observations and ordered deltas. Proofs establish key injectivity, optional
+expectation equality reflection, complete view/edit roundtrips, undo commutation,
+finite discovery commutation, write commutation and installation commutation on
+both success and the exact first mapped conflict key.
+
+Gerbil's existing `Wrapper.` `.ap/.unap` and `methods.table` implement the same
+protocol. `table-isomorphism` takes explicit source/target table descriptors and
+key/value Wrappers with matching Domain/Codomain. Its `Delta` Wrapper converts
+`(admitted-base . delta)` pairs, installing the origin first and converting both
+snapshots through one target-backend collision registry. This rejects aliases
+across deleted/inserted keys as well as within either snapshot. Edit order and
+origin/converter metadata lineage are preserved. Failures expose no partial result;
+FUN composition suppresses the IO consumer and allows rediscovery/retry.
+
+Both inverse laws, preservation of admitted values, pure stable callbacks, and
+agreement between backend equality and the logical observation model are premises.
+Runtime recognition/roundtrip checks are finite controls, not a universal callback
+proof. Reordering already admitted Tuple/Pair Function leaves preserves their exact
+procedure identities without wrapping again; arbitrary raw callbacks are not made
+safe by membership recognition. The Lean service example uses opaque callback
+handles, shared services, deletion/insertion, conflicting publication and inverse
+recovery. It does not prove Scheme procedure semantics or arbitrary termination.
+
+Conversion includes complete snapshot scans, original delta installation, private
+carrier construction, registry lookups and metadata checks; it is not O(edits) in
+general. No runtime performance improvement is inferred from these algebraic laws.
+Automatically inferred conversions and maintained aggregates remain future work.

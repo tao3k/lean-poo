@@ -64,6 +64,52 @@ example : Prototype.LensLaws
     (fun value service => (replace service.1 3 value, service.2)) :=
   Prototype.LensLaws.productFirst.compose (optional_lens 3)
 
+/-- Explicitly change the key type without inferring an isomorphism. -/
+def serviceKeys : Prototype.DictionaryBridge Nat (Nat × Unit) :=
+  ⟨fun key => (key, ()), Prod.fst, fun _ => rfl, fun pair => by cases pair; rfl⟩
+
+/-- Reorder an opaque callback handle and its flag, preserving handle identity.
+The model intentionally does not decide extensional equality of procedures. -/
+def serviceValues : Prototype.DictionaryBridge (Nat × Bool) (Bool × Nat) :=
+  ⟨Prod.swap, Prod.swap, fun _ => rfl, fun _ => rfl⟩
+
+/-- Two services share a callback handle; the revision moves one service and
+changes its flag while leaving the other handle unchanged. -/
+def callbackLedger (key : Nat) : Option (Nat × Bool) :=
+  if key = 1 ∨ key = 9 then some (41, false) else none
+
+/-- Ordered deletion and insertion retain the shared admitted callback handle. -/
+def callbackEdits : List (Change Nat (Nat × Bool)) :=
+  [⟨1, some (41, false), none⟩, ⟨3, none, some (41, true)⟩]
+
+/-- The general theorem covers every key and maps the exact refusal key. -/
+example : applyChanges (transportChanges serviceKeys serviceValues callbackEdits)
+      (transportView serviceKeys serviceValues callbackLedger) =
+    ((applyChanges callbackEdits callbackLedger).mapError serviceKeys.toFields).map
+      (transportView serviceKeys serviceValues) :=
+  transport_applyChanges serviceKeys serviceValues callbackEdits callbackLedger
+
+example : transportView serviceKeys serviceValues callbackLedger (9, ()) = some (false, 41) := by rfl
+
+example : transportChanges serviceKeys.inverse serviceValues.inverse
+    (transportChanges serviceKeys serviceValues callbackEdits) = callbackEdits :=
+  transportChanges_inverse serviceKeys serviceValues callbackEdits
+
+/-- A competing edit fails at the converted key; no successful prefix is returned. -/
+example : (applyChanges (transportChanges serviceKeys serviceValues callbackEdits)
+    (transportView serviceKeys serviceValues (replace callbackLedger 1 none))).map
+      (fun view => view (3, ())) = .error (1, ()) := by rfl
+
+/-- Finite negative control: a collapsing key map cannot satisfy the inverse law. -/
+example : ¬ ∃ inverse : Nat → Nat, ∀ key : Nat, inverse (key % 2) = key := by
+  rintro ⟨inverse, law⟩
+  have zero := law 0
+  have two := law 2
+  simp only [Nat.zero_mod, Nat.mod_self] at zero two
+  omega
+
+#print axioms transport_applyChanges
+#print axioms transportView_inverse
 #print axioms applyChanges_inverse
 #print axioms diff_complete
 #print axioms transport_changes

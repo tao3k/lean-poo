@@ -1,5 +1,6 @@
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Prototype.LensLaws
+import LeanPoo.Prototype.DictionaryBridge
 
 /-! Finite optimistic table deltas over the existing dictionary observation model.
 Carrier laws are explicit premises; this does not verify Gerbil's tree runtime. -/
@@ -211,4 +212,126 @@ theorem reject_changed (change : Change Key Value) (rest : List (Change Key Valu
     (view : Key → Option Value) (stale : view change.key ≠ change.before) :
     applyChanges (change :: rest) view = .error change.key := by simp [applyChanges, stale]
 
+section Isomorphism
+variable {K L V W : Type}
+open Prototype (DictionaryBridge)
+
+/-- Explicit value conversion preserves absence and carries admitted payloads unchanged
+except for the supplied bijection. Function handles may be opaque payloads. -/
+def transportView (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (view : K → Option V) : L → Option W :=
+  fun key => (view (keys.fromFields key)).map values.toFields
+
+/-- Translate one edit, retaining both expectations and replacements. -/
+def transportChange (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (edit : Change K V) : Change L W :=
+  ⟨keys.toFields edit.key, edit.before.map values.toFields, edit.after.map values.toFields⟩
+
+/-- List map preserves edit order, including the first possible conflict. -/
+def transportChanges (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (edits : List (Change K V)) : List (Change L W) := edits.map (transportChange keys values)
+
+/-- A lawful explicit key conversion cannot collapse distinct keys. -/
+theorem transport_key_injective (keys : DictionaryBridge K L) : Function.Injective keys.toFields := by
+  intro a b same
+  have recovered := congrArg keys.fromFields same
+  simpa only [keys.from_to] using recovered
+
+/-- Optional expectation equality is reflected, not merely preserved. -/
+theorem transport_option_injective (values : DictionaryBridge V W) :
+    Function.Injective (Option.map values.toFields) := by
+  intro a b same
+  have recovered := congrArg (Option.map values.fromFields) same
+  simpa [Option.map_map, Function.comp_def, values.from_to] using recovered
+
+/-- Both inverse laws restore the complete source observation at every key. -/
+theorem transportView_inverse (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (view : K → Option V) :
+    transportView keys.inverse values.inverse (transportView keys values view) = view := by
+  funext key
+  simp [transportView, DictionaryBridge.inverse, keys.from_to, Option.map_map,
+    Function.comp_def, values.from_to]
+
+/-- Delta inversion commutes with explicit conversion without reordering edits. -/
+theorem transportChanges_inverse (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (edits : List (Change K V)) :
+    transportChanges keys.inverse values.inverse (transportChanges keys values edits) = edits := by
+  induction edits with
+  | nil => rfl
+  | cons edit rest ih =>
+    cases edit
+    simp [transportChanges, transportChange, DictionaryBridge.inverse, keys.from_to,
+      Option.map_map, Function.comp_def, values.from_to, transportChanges] at *
+
+/-- Undo reverses order in either representation in exactly the same way. -/
+theorem transport_inverseChanges (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (edits : List (Change K V)) :
+    transportChanges keys values (inverseChanges edits) =
+      inverseChanges (transportChanges keys values edits) := by
+  simp [transportChanges, inverseChanges, List.map_reverse, List.map_map,
+    Function.comp_def, transportChange]
+
+/-- Persistent optional writes commute with the two explicit bijections. -/
+theorem transport_replace [DecidableEq K] [DecidableEq L]
+    (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (view : K → Option V) (key : K) (value : Option V) :
+    transportView keys values (replace view key value) =
+      replace (transportView keys values view) (keys.toFields key) (value.map values.toFields) := by
+  funext query
+  have same : keys.fromFields query = key ↔ query = keys.toFields key := by
+    constructor
+    · intro h
+      rw [← keys.to_from query, h]
+    · intro h
+      rw [h, keys.from_to]
+  simp only [transportView, replace]
+  by_cases h : query = keys.toFields key
+  · simp [h, keys.from_to]
+  · simp [same, h]
+
+/-- Discovery uses the transported finite inventory in its original order.
+No enumeration of all possible keys, or inferred conversion law, is required. -/
+theorem transport_diffChanges [DecidableEq V] [DecidableEq W]
+    (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (inventory : List K) (before after : K → Option V) :
+    diffChanges (inventory.map keys.toFields)
+        (transportView keys values before) (transportView keys values after) =
+      transportChanges keys values (diffChanges inventory before after) := by
+  induction inventory with
+  | nil => rfl
+  | cons key rest ih =>
+    have same : (before key).map values.toFields = (after key).map values.toFields ↔
+        before key = after key := (transport_option_injective values).eq_iff
+    simp only [List.map_cons, diffChanges, List.filterMap_cons, transportView,
+      keys.from_to, same]
+    by_cases aligned : before key = after key
+    · simp only [aligned, ↓reduceIte]
+      exact ih
+    · simp only [aligned, ↓reduceIte]
+      change _ :: _ = _ :: _
+      congr 1
+
+/-- Installation commutes on success and on refusal, mapping the exact first
+conflict key. Universal inverse laws and carrier admission remain explicit premises. -/
+theorem transport_applyChanges [DecidableEq K] [DecidableEq L]
+    [DecidableEq V] [DecidableEq W]
+    (keys : DictionaryBridge K L) (values : DictionaryBridge V W)
+    (edits : List (Change K V)) (view : K → Option V) :
+    applyChanges (transportChanges keys values edits) (transportView keys values view) =
+      ((applyChanges edits view).mapError keys.toFields).map (transportView keys values) := by
+  induction edits generalizing view with
+  | nil => rfl
+  | cons edit rest ih =>
+    have same : (view edit.key).map values.toFields = edit.before.map values.toFields ↔
+        view edit.key = edit.before := (transport_option_injective values).eq_iff
+    simp only [transportChanges, List.map_cons, applyChanges, transportChange,
+      transportView, keys.from_to]
+    by_cases aligned : view edit.key = edit.before
+    · simp only [aligned, ↓reduceIte]
+      rw [← transport_replace]
+      exact ih _
+    · simp only [same, aligned, ↓reduceIte]
+      rfl
+
+end Isomorphism
 end LeanPoo.Functional.OrderedDictionary
