@@ -299,4 +299,42 @@ example (fixed : List Ty) (explicit extension result : Functional.RowTypes.Row S
 #print axioms Functional.RowTypes.lookup_mapFields
 #print axioms Functional.RowTypes.splice_mapFields
 end
+/-- One finite Self binding uses the existing parameter snapshot, not a new Type. -/
+def signatureBindings : List (BoundParameter String Nat) := [⟨"Self", 7, 0⟩]
+
+/-- A stale initial owner suppresses even an explicitly failing observer. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+    (fun _ => some 8) (fun _ => 0) (fun _ => .error "observer refused")
+    (fun (_ : Nat) _ => some 7) (fun _ _ => 0) = .error (.inl .bounds) := rfl
+
+/-- A successful observer that replaces Self cannot publish its certificate. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+    (fun _ => some 7) (fun _ => 0) (fun _ => (Except.ok 23 : Except String Nat))
+    (fun _ _ => some 8) (fun _ _ => 0) = .error (.inl .bounds) := rfl
+
+/-- Identity alone is insufficient when the descriptor's direct revision changes. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+    (fun _ => some 7) (fun _ => 0) (fun _ => (Except.ok 23 : Except String Nat))
+    (fun _ _ => some 7) (fun _ _ => 1) = .error (.inl .bounds) := rfl
+
+/-- The observer's own failure precedes the success-only stale-source recheck. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+    (fun _ => some 7) (fun _ => 0) (fun _ => .error "observer refused")
+    (fun (_ : Nat) _ => some 8) (fun _ _ => 1) = .error (.inr "observer refused") := rfl
+
+/-- Restoring the field identity allows a fresh request with the original revision. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+    (fun _ => some 7) (fun _ => 0) (fun _ => (Except.ok 23 : Except String Nat))
+    (fun _ _ => some 7) (fun _ _ => 0) = .ok 23 := rfl
+
+/-- Unique inference cannot hide a stale signature-preparation failure. -/
+example : Functional.DeclarativeMetadata.inferDeclared 1 (fun (_ : Nat) => true) [7]
+    (fun _ => Functional.DeclarativeMetadata.prepareDeclaredSignature signatureBindings
+      (fun _ => some 7) (fun _ => 0) (fun _ => (Except.ok 23 : Except String Nat))
+      (fun _ _ => some 8) (fun _ _ => 0)) = .error (.inr (.inl .bounds)) := rfl
+
+#print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_sound
+#print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_stale
+#print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_error
+#print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_changed
 end LeanPoo.Examples.Parameters

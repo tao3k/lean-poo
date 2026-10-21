@@ -465,6 +465,74 @@ theorem admitDeclaredBindings_stable [DecidableEq Descriptor]
   · contradiction
 
 
+/-- Signature preparation uses the existing bound-source admission both before
+and after its callback. The host supplies actual post-callback observations;
+this does not prove arbitrary callback purity, termination or transitive sources.
+Syntax equality and closed-parameter checks remain additional host obligations. -/
+def prepareDeclaredSignature [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat)
+    (prepare : Unit → Except Cause Artifact)
+    (afterFields : Artifact → Name → Option Descriptor) (afterRevision : Artifact → Descriptor → Nat) :
+    Except (PrototypeTypes.Failure ⊕ Cause) Artifact :=
+  ((admitDeclaredBindings bindings fields revision ()).mapError Sum.inl).bind fun _ =>
+    ((prepare ()).mapError Sum.inr).bind fun artifact =>
+      (admitDeclaredBindings bindings (afterFields artifact) (afterRevision artifact) artifact).mapError Sum.inl
+
+/-- A stale input cannot enter preparation, irrespective of its effects. -/
+theorem prepareDeclaredSignature_stale [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision
+    (stale : Parameters.bindingsCurrent bindings fields revision = false) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inl .bounds) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, stale, Except.mapError, Except.bind]
+
+/-- Preparation errors retain their exact cause, preceding all success rechecks. -/
+theorem prepareDeclaredSignature_error [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (cause : Cause)
+    (current : Parameters.bindingsCurrent bindings fields revision = true)
+    (failed : prepare () = .error cause) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inr cause) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, current, failed, Except.mapError, Except.bind]
+
+/-- A callback that changes a bound source returns no signature artifact. -/
+theorem prepareDeclaredSignature_changed [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (artifact : Artifact)
+    (current : Parameters.bindingsCurrent bindings fields revision = true)
+    (built : prepare () = .ok artifact)
+    (changed : Parameters.bindingsCurrent bindings (afterFields artifact) (afterRevision artifact) = false) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inl .bounds) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, current, built, changed, Except.mapError, Except.bind]
+
+/-- Acceptance establishes source identity/revision at BOTH observations and
+retains the callback's exact artifact, under the supplied host snapshot model. -/
+theorem prepareDeclaredSignature_sound [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (artifact : Artifact)
+    (accepted : prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .ok artifact) :
+    prepare () = .ok artifact ∧
+      ∀ binding ∈ bindings,
+        (fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision) ∧
+        (afterFields artifact binding.name = some binding.descriptor ∧
+          afterRevision artifact binding.descriptor = binding.revision) := by
+  cases before : Parameters.bindingsCurrent bindings fields revision with
+  | false => simp [prepareDeclaredSignature_stale _ _ _ _ _ _ before] at accepted
+  | true =>
+    cases built : prepare () with
+    | error cause => simp [prepareDeclaredSignature_error _ _ _ _ _ _ cause before built] at accepted
+    | ok result =>
+      cases after : Parameters.bindingsCurrent bindings (afterFields result) (afterRevision result) with
+      | false => simp [prepareDeclaredSignature_changed _ _ _ _ _ _ result before built after] at accepted
+      | true =>
+        have same : result = artifact := by
+          simpa [prepareDeclaredSignature, admitDeclaredBindings, before, built, after, Except.mapError, Except.bind] using accepted
+        subst result
+        exact ⟨rfl, fun binding member =>
+          ⟨Parameters.bindingsCurrent_sound _ _ _ before binding member,
+           Parameters.bindingsCurrent_sound _ _ _ after binding member⟩⟩
+
 /-- A collected finite call batch enters the SAME inference/declaration driver.
 Collection failures keep their phase/cause; all siblings share one assignment and
 one complete builder result, never one independently inferred value per method. -/
