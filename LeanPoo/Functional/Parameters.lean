@@ -1,4 +1,5 @@
 import LeanPoo.Prototype.SlotSpec
+import LeanPoo.Object.CacheInvalidation
 
 /-! Positional specialization and lexical construction options lower to the
 existing slot model. These are pure source-level laws, not proofs of the Gerbil
@@ -365,5 +366,64 @@ theorem specializeCurrent_error [DecidableEq Name] [DecidableEq Descriptor]
     ((inspect.mapError Sum.inr).bind fun source =>
       (specializeCurrent reserved expected bound source revision values).mapError Sum.inl) = .error (Sum.inr cause) := by
   simp [failed, Except.mapError, Except.bind]
+
+/-- Registering known catalog sources makes their bounded reverse paths advance
+the retained Type revision. Compose existing graph invalidation and binding
+admission; faithful edge registration and source stamps remain host premises. -/
+theorem bindingsCurrent_invalidated [DecidableEq Descriptor]
+    (graph : C4.Graph) (changed : List String) (cache : String → Object.RevisionCache Value)
+    (owner : Descriptor → String) (bindings : List (BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (binding : BoundParameter Name Descriptor)
+    (member : binding ∈ bindings) (origin : String) (steps : Nat)
+    (touched : origin ∈ changed) (path : Proof.Descendant graph origin steps (owner binding.descriptor))
+    (bounded : steps ≤ graph.nodes.length)
+    (stamp : binding.revision = (cache (owner binding.descriptor)).revision) :
+    bindingsCurrent bindings fields
+      (fun descriptor => (Object.invalidateCaches graph changed cache (owner descriptor)).revision) = false := by
+  apply bindingsCurrent_refuses bindings fields _ binding member
+  right
+  have affected := Proof.mem_invalidated_of_descendant graph changed origin
+    (owner binding.descriptor) steps touched path bounded
+  have advanced := Object.invalidateCaches_once graph changed cache (owner binding.descriptor) affected
+  rw [advanced, stamp]
+  omega
+
+/-- A stale retained directory cannot reach positional binding, even if its Type
+is absent from the residual signature and all remaining names are unchanged. -/
+theorem specializeCurrent_invalidated [DecidableEq Name] [DecidableEq Descriptor]
+    (reserved : Name) (expected : List Name) (bindings : List (BoundParameter Name Descriptor))
+    (source : Template Name Descriptor) (values : List Descriptor)
+    (graph : C4.Graph) (changed : List String) (cache : String → Object.RevisionCache Value)
+    (owner : Descriptor → String) (binding : BoundParameter Name Descriptor) (member : binding ∈ bindings)
+    (origin : String) (steps : Nat) (touched : origin ∈ changed)
+    (path : Proof.Descendant graph origin steps (owner binding.descriptor)) (bounded : steps ≤ graph.nodes.length)
+    (stamp : binding.revision = (cache (owner binding.descriptor)).revision) :
+    specializeCurrent reserved expected bindings source
+      (fun descriptor => (Object.invalidateCaches graph changed cache (owner descriptor)).revision) values =
+      .error .declaration :=
+  specializeCurrent_stale _ _ _ _ _ _
+    (bindingsCurrent_invalidated graph changed cache owner bindings source.fields binding member
+      origin steps touched path bounded stamp)
+
+/-- Edits outside every retained Type's registered reverse closure preserve the
+original admission exactly. No unrelated Type revision is advanced. -/
+theorem bindingsCurrent_frame [DecidableEq Descriptor]
+    (graph : C4.Graph) (changed : List String) (cache : String → Object.RevisionCache Value)
+    (owner : Descriptor → String) (bindings : List (BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor)
+    (unaffected : ∀ binding ∈ bindings, owner binding.descriptor ∉ Proof.invalidatedNodes graph changed) :
+    bindingsCurrent bindings fields
+      (fun descriptor => (Object.invalidateCaches graph changed cache (owner descriptor)).revision) =
+    bindingsCurrent bindings fields (fun descriptor => (cache (owner descriptor)).revision) := by
+  induction bindings with
+  | nil => rfl
+  | cons binding rest ih =>
+    simp only [bindingsCurrent, List.all_cons]
+    simp only [Object.invalidateCaches_frame graph changed cache (owner binding.descriptor)
+      (unaffected binding (by simp))]
+    have tail := ih (fun item member => unaffected item (List.mem_cons_of_mem binding member))
+    exact congrArg (fun value =>
+      decide (fields binding.name = some binding.descriptor ∧
+        (cache (owner binding.descriptor)).revision = binding.revision) && value) tail
 
 end LeanPoo.Functional.Parameters

@@ -359,3 +359,38 @@ original-input consumption, error preservation and composition with `check_sound
 conditional on faithful host capture and Type interpretation. It does not prove
 Scheme heap copying, arbitrary callback behavior or compiler correctness. This
 advances the article's type-protocol future work, not a missing Racket theorem.
+
+## Retained catalog bindings and source revisions
+
+An explicit directory token guarded runtime validation, but its compiled Type did
+not register the known directory sources in the existing reverse dependency graph.
+A prefix-bound Type could therefore keep revision zero after a directory edit.
+When that parameter disappeared from the residual signature, ordinary binding
+inspection, inference and declaration preparation could accept the stale snapshot.
+
+`capture-type-values` now owns one deduplicated list of authenticated read owners.
+`catalog-contract` registers those owners through `depend-on-object!`, charging
+links to the original construction quota. It reuses weak dependency storage and
+whole-closure invalidation; registration runs no getters and does not rediscover
+metadata or replay approval. Alias/shared paths advance each owner only once.
+Each newly compiled parameter is stamped immediately, before compiling later
+parameters or running the binding getter. The existing pure revision fence checks
+these new stamps before returning; it never refreshes an invalid stamp after a
+callback. Independent-directory and binding-window controls cover this ordering.
+Unused directory entries and explicit external roots still belong to the complete
+snapshot. Unrelated sources remain unaffected, and runtime source guards preserve
+original callback failures. No arbitrary transitive callback dependency is inferred.
+
+`catalog-service-type` retains a Policy Type independently of its Input/Output
+signature. The existing specialized-action supplies inference, qualified methods,
+refine, bind-evidence and FUN/IO publication. `catalog-inference-test.ss` covers nine
+residual entry paths, directory/unused-member/root/Class-Slot edits, pending action
+refusal before body/IO effects, policy denial and recapture/retry with nested
+Function wrappers. The new module is included in the complete test inventory.
+
+Lean composes registered finite reverse paths and cache revision laws with the
+existing bindingsCurrent/specializeCurrent gates, including shared invalidation
+and unaffected-frame controls. Faithful capture/edge registration, finite bounded
+paths and sequential supported mutation are explicit premises. This advances the
+article's type-protocol future work; it proves neither Gerbil heap/GC behavior nor
+unknown callback sources or compiler correctness.

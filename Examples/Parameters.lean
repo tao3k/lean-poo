@@ -719,4 +719,48 @@ example (fuel : Nat) (source target : Ty) (inspect : Ty × Ty → Except String 
 #print axioms withCapturedInputs_subtype
 end CapturedTypeInputs
 
+section CatalogBindingSources
+/-- The compiled Type has direct and shared metadata paths to one directory. -/
+def catalogTypeNode : C4.Node := ⟨"type", [["directory", "metadata"]], false⟩
+/-- Unrelated data remains outside the known catalog's reverse closure. -/
+def catalogGraph : C4.Graph := ⟨[⟨"directory", [], false⟩,
+  ⟨"metadata", [["directory"]], false⟩, catalogTypeNode, ⟨"unrelated", [], false⟩]⟩
+/-- One revision stamp represents the Type captured by the existing prefix binder. -/
+def catalogCache (_ : String) : Object.RevisionCache Nat := ⟨7, some 31⟩
+/-- Policy is retained even though only Output remains in the callable problem. -/
+def catalogBindings : List (BoundParameter String String) := [⟨"Policy", "type", 7⟩]
+/-- The receiver's parameter order has not changed; staleness comes from sources. -/
+def catalogTemplate : Template String String :=
+  ⟨["Output"], fun name => if name = "Policy" then some "type" else none⟩
+/-- This registered edge is the host obligation supplied by captured Slot reads. -/
+theorem catalogPath : Proof.Descendant catalogGraph "directory" 1 "type" :=
+  .child .self catalogTypeNode (by simp [catalogGraph]) (by decide)
+/-- Source invalidation composes with existing bound admission before construction. -/
+example : bindingsCurrent catalogBindings catalogTemplate.fields
+    (fun descriptor => (Object.invalidateCaches catalogGraph ["directory"] catalogCache descriptor).revision) = false :=
+  bindingsCurrent_invalidated catalogGraph ["directory"] catalogCache id catalogBindings
+    catalogTemplate.fields ⟨"Policy", "type", 7⟩ (by simp [catalogBindings])
+    "directory" 1 (by simp) catalogPath (by decide) rfl
+/-- No stale receiver escapes merely because its remaining names still match. -/
+example : specializeCurrent ".parameters" ["Output"] catalogBindings catalogTemplate
+    (fun descriptor => (Object.invalidateCaches catalogGraph ["directory"] catalogCache descriptor).revision)
+    ["UInt"] = .error .declaration :=
+  specializeCurrent_invalidated _ _ _ _ _ catalogGraph ["directory"] catalogCache id
+    ⟨"Policy", "type", 7⟩ (by simp [catalogBindings]) "directory" 1 (by simp) catalogPath (by decide) rfl
+/-- Multiple paths and two revised roots advance the owner exactly once. -/
+example : (Object.invalidateCaches catalogGraph ["directory", "metadata"] catalogCache "type").revision = 8 := by decide
+/-- A separate edit preserves the exact existing bound judgment. -/
+example : bindingsCurrent catalogBindings catalogTemplate.fields
+    (fun descriptor => (Object.invalidateCaches catalogGraph ["unrelated"] catalogCache descriptor).revision) =
+    bindingsCurrent catalogBindings catalogTemplate.fields (fun descriptor => (catalogCache descriptor).revision) := by
+  apply bindingsCurrent_frame
+  intro binding member
+  have same : binding = ⟨"Policy", "type", 7⟩ := by simpa [catalogBindings] using member
+  subst binding
+  decide
+#print axioms bindingsCurrent_invalidated
+#print axioms specializeCurrent_invalidated
+#print axioms bindingsCurrent_frame
+end CatalogBindingSources
+
 end LeanPoo.Examples.Parameters
