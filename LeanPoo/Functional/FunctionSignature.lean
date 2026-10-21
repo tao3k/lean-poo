@@ -870,4 +870,69 @@ theorem outputConstraints_length (outputs : List PrototypeTypes.Expr) (expected 
   · simp [outputConstraints, same] at success
 
 
+/-- Value projection of constructor-owned declaration rows. Type tokens and rest
+retain their supplied identities; all list fields and keyword binding pairs are
+copied. Lean lists have value semantics: actual Scheme nonaliasing is a separate
+runtime obligation, not a consequence of this equality model. -/
+def TypedSignature.capture (signature : TypedSignature Key Ty) : TypedSignature Key Ty :=
+  ⟨signature.outputs.map id, signature.inputs.map id, signature.optional.map id,
+    signature.keywords.map (fun (key, ty) => (key, ty)),
+    signature.requiredKeywords.map id, signature.rest⟩
+
+/-- Capturing topology changes none of the declared Types, literal keys or counts. -/
+@[simp] theorem TypedSignature.capture_eq (signature : TypedSignature Key Ty) :
+    signature.capture = signature := by
+  cases signature
+  simp [TypedSignature.capture]
+
+/-- Capturing a declaration commutes with existing parameter specialization. -/
+theorem TypedSignature.capture_mapTypes (substitute : A → B) (signature : TypedSignature Key A) :
+    (signature.capture).mapTypes substitute = (signature.mapTypes substitute).capture := by simp
+
+/-- Ordered case selection keeps the first matching ORIGINAL clause after capture. -/
+theorem capture_selection [DecidableEq Key] (clauses : List (TypedSignature Key Ty)) (call : Call Key Value) :
+    select ((clauses.map TypedSignature.capture).map TypedSignature.shape) call =
+      select (clauses.map TypedSignature.shape) call := by
+  simp [List.map_map, Function.comp_def]
+
+/-- A missing declared required key is structural refusal, irrespective of the
+supplied values or any later host default/body behavior. -/
+theorem accepts_missing_required [DecidableEq Key] (signature : Signature Key)
+    (call : Call Key Value) (key : Key) (required : key ∈ signature.requiredKeywords)
+    (missing : key ∉ call.keywords.map Prod.fst) : accepts signature call = false := by
+  cases accepted : accepts signature call with
+  | false => rfl
+  | true =>
+    have complete : signature.requiredKeywords.all (fun key => decide (key ∈ call.keywords.map Prod.fst)) = true := by
+      simp only [accepts, Bool.and_eq_true] at accepted
+      exact accepted.2
+    have present := of_decide_eq_true ((List.all_eq_true.mp complete) key required)
+    exact False.elim (missing present)
+
+/-- A captured signature still refuses its original missing keys before calling
+normalizers or bodies. The host must supply the faithful captured row projection. -/
+theorem invoke_capture_missing [DecidableEq Key] (signature : TypedSignature Key Ty)
+    (call : Call Key Value) (key : Key) (required : key ∈ signature.requiredKeywords)
+    (missing : key ∉ call.keywords.map Prod.fst) (shapeError : Error)
+    (normalize : Signature Key → Call Key Value → Except Error (Call Key Value))
+    (body : Call Key Value → Except Error Result) :
+    invoke [signature.capture.shape] call shapeError normalize body = .error shapeError := by
+  apply invoke_shape_error
+  have refused : accepts signature.shape call = false :=
+    accepts_missing_required _ _ _ required missing
+  simp [select, refused]
+
+/-- Full invocation preserves normalization, exact result checks, causes and
+cache owners. This delegates to the existing invoker instead of adding dispatch. -/
+theorem invokeValues_capture [DecidableEq Key] (clauses : List (TypedSignature Key Ty))
+    (call : Call Key Value) (shapeError countError : Error)
+    (normalize : TypedSignature Key Ty → Call Key Value → Except Error (Call Key Value))
+    (body : Call Key Value → Except Error (List Value × Owner))
+    (check : Ty → Value → Except Error Value) :
+    invokeValues (clauses.map TypedSignature.capture) call shapeError countError normalize body check =
+      invokeValues clauses call shapeError countError normalize body check := by
+  have unchanged : (TypedSignature.capture : TypedSignature Key Ty → TypedSignature Key Ty) = id :=
+    funext TypedSignature.capture_eq
+  simp only [unchanged, List.map_id]
+
 end LeanPoo.Functional.FunctionSignature

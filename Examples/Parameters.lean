@@ -3,6 +3,7 @@ import LeanPoo.Functional.SlotScope
 import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
 import LeanPoo.Functional.InferenceReports
+import LeanPoo.Functional.FunctionSignature
 import LeanPoo.Functional.RecursiveTypes
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
@@ -404,4 +405,60 @@ example (env artifact reported)
 #print axioms inferDeclaredQueries_exhausted
 #print axioms inferDeclaredQueries_error
 end QueryReports
+section CapturedSignatures
+open Functional.FunctionSignature
+
+/-- Finite Type identities model UInt output and Integer supplied positions;
+required/optional/keyword/rest rows are all present in this declaration. -/
+def ownedSignature : TypedSignature String Nat :=
+  ⟨[1], [2], [2], [("gate", 1), ("quota", 1)], ["gate", "quota"], some 2⟩
+/-- A later case has a wider result and requires only gate; its order is explicit. -/
+def fallbackSignature : TypedSignature String Nat :=
+  {ownedSignature with outputs := [3], requiredKeywords := ["gate"]}
+/-- This call deliberately lacks quota while satisfying positional and gate shape. -/
+def missingQuota : Call String Int := ⟨[4], [("gate", 3)]⟩
+/-- The closed call supplies both original mandatory keys. -/
+def completeQuota : Call String Int := ⟨[4], [("gate", 3), ("quota", 4)]⟩
+/-- The finite leaf checker distinguishes unsigned output from wider Integer;
+the general capture laws work with arbitrary supplied Type interpretations. -/
+def checkCapturedValue (type : Nat) (value : Int) : Except String Int :=
+  if type = 1 ∧ value < 0 then .error "unsigned output" else .ok value
+
+/-- A reused caller definition may request another language; the existing captured
+signature still has its own original missing-key refusal. -/
+example : accepts ownedSignature.capture.shape missingQuota = false ∧
+    accepts fallbackSignature.shape missingQuota = true := by decide
+
+/-- Original required keys refuse before any supplied normalizer/body callback. -/
+example (normalize : Signature String → Call String Int → Except String (Call String Int))
+    (body : Call String Int → Except String Nat) :
+    invoke [ownedSignature.capture.shape] missingQuota "shape" normalize body = .error "shape" :=
+  invoke_capture_missing _ _ "quota" (by decide) (by decide) _ _ _
+
+/-- Missing quota selects the second ORIGINAL case and retains its result/owner. -/
+example : invokeValues ([ownedSignature, fallbackSignature].map TypedSignature.capture)
+    missingQuota "shape" "count" (fun _ call => .ok call)
+    (fun _ => .ok ([-1], 73)) checkCapturedValue = .ok ([-1], 73) := rfl
+
+/-- Once the first clause matches, its result error never falls back to the wider
+second clause. Constructor capture changes neither that cause nor the owner rule. -/
+example : invokeValues ([ownedSignature, fallbackSignature].map TypedSignature.capture)
+    completeQuota "shape" "count" (fun _ call => .ok call)
+    (fun _ => .ok ([-1], 73)) checkCapturedValue = .error "unsigned output" := rfl
+
+/-- Prefix substitution and capture commute in every Type position without
+rewriting literal keyword names or changing ordered dispatch. -/
+example (signature : TypedSignature String Functional.PrototypeTypes.Expr)
+    (fixed : List Functional.PrototypeTypes.Ty) :
+    signature.capture.mapTypes (Functional.PrototypeTypes.specializeExpr fixed) =
+      (signature.mapTypes (Functional.PrototypeTypes.specializeExpr fixed)).capture :=
+  TypedSignature.capture_mapTypes _ _
+
+#print axioms TypedSignature.capture_eq
+#print axioms TypedSignature.capture_mapTypes
+#print axioms capture_selection
+#print axioms accepts_missing_required
+#print axioms invoke_capture_missing
+#print axioms invokeValues_capture
+end CapturedSignatures
 end LeanPoo.Examples.Parameters
