@@ -648,4 +648,38 @@ example : specializeExpected ".parameters" ["T", "U"]
 #print axioms specializeExpected_error
 end ExpectedParameterBinding
 
+section RetainedTypeBinding
+/-- T is an earlier composite Type, with identity 7 at direct revision 2. -/
+def retainedType : BoundParameter String Nat := ⟨"T", 7, 2⟩
+/-- U remains positional while T retains its exact original descriptor identity. -/
+def retainedTemplate : Template String Nat := ⟨["U"], fun name => if name = "T" then some 7 else none⟩
+/-- Faithful direct revisions supplied by the host's final source fence. -/
+def retainedRevision (_ : Nat) : Nat := 2
+
+/-- Healthy staged binding preserves T while binding U to another descriptor. -/
+example : (specializeCurrent ".parameters" ["U"] [retainedType] retainedTemplate retainedRevision [8]).map
+    (fun result => (result.fields "T", result.fields "U", result.remaining)) = .ok (some 7, some 8, []) := rfl
+
+/-- An unchanged remaining list cannot approve a replaced retained field. -/
+example : specializeCurrent ".parameters" ["U"] [retainedType]
+    ⟨["U"], fun _ => some 9⟩ retainedRevision [8] = .error .declaration := rfl
+
+/-- Same identity with a changed direct revision is equally stale. -/
+example : specializeCurrent ".parameters" ["U"] [retainedType] retainedTemplate
+    (fun _ => 3) [8] = .error .declaration := rfl
+
+/-- The existing callback admission gate rejects a successful constructor whose
+post-callback retained field differs; no parallel effect model is introduced. -/
+example : Functional.DeclarativeMetadata.prepareDeclaredSignature [retainedType] retainedTemplate.fields retainedRevision
+    (fun _ => (Except.ok () : Except String Unit)) (fun _ _ => some 9) (fun _ => retainedRevision) =
+      .error (.inl .bounds) := rfl
+
+#print axioms specializeCurrent_stale
+#print axioms specializeCurrent_fresh
+#print axioms specializeCurrent_changed
+#print axioms specializeCurrent_sound
+#print axioms specializeCurrent_error
+#print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_sound
+end RetainedTypeBinding
+
 end LeanPoo.Examples.Parameters

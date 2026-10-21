@@ -298,4 +298,72 @@ theorem specializeExpected_error [DecidableEq Name] (inspect : Except Cause (Tem
       (specializeExpected reserved expected source values).mapError Sum.inl) = .error (Sum.inr cause) := by
   simp [failed, Except.mapError, Except.bind]
 
+/-- Compose retained descriptor admission with the EXISTING checked name binder.
+The source/fields/revisions are faithful post-getter observations; hosts must
+also enforce the final revision fence after construction and disjoint bound names. -/
+def specializeCurrent [DecidableEq Name] [DecidableEq Descriptor] (reserved : Name)
+    (expected : List Name) (bound : List (BoundParameter Name Descriptor))
+    (source : Template Name Descriptor) (revision : Descriptor → Nat) (values : List Descriptor) :
+    Except Failure (Template Name Descriptor) :=
+  if bindingsCurrent bound source.fields revision then specializeExpected reserved expected source values
+  else .error .declaration
+
+/-- Changed retained identity/revision refuses despite unchanged remaining names. -/
+theorem specializeCurrent_stale [DecidableEq Name] [DecidableEq Descriptor] (reserved : Name)
+    (expected : List Name) (bound : List (BoundParameter Name Descriptor))
+    (source : Template Name Descriptor) revision (values : List Descriptor)
+    (stale : bindingsCurrent bound source.fields revision = false) :
+    specializeCurrent reserved expected bound source revision values = .error .declaration := by
+  simp [specializeCurrent, stale]
+
+/-- Stable retained bindings reuse exactly the existing checked positional gate. -/
+theorem specializeCurrent_fresh [DecidableEq Name] [DecidableEq Descriptor] (reserved : Name)
+    (expected : List Name) (bound : List (BoundParameter Name Descriptor))
+    (source : Template Name Descriptor) revision (values : List Descriptor)
+    (current : bindingsCurrent bound source.fields revision = true) :
+    specializeCurrent reserved expected bound source revision values =
+      specializeExpected reserved expected source values := by simp [specializeCurrent, current]
+
+/-- Retained admission cannot hide a change to the remaining parameter order. -/
+theorem specializeCurrent_changed [DecidableEq Name] [DecidableEq Descriptor] (reserved : Name)
+    (expected : List Name) (bound : List (BoundParameter Name Descriptor))
+    (source : Template Name Descriptor) revision (values : List Descriptor)
+    (changed : source.remaining ≠ expected) :
+    specializeCurrent reserved expected bound source revision values = .error .declaration := by
+  cases stable : bindingsCurrent bound source.fields revision <;>
+    simp [specializeCurrent, stable, specializeExpected, changed]
+
+/-- A successful receiver has the exact new fields/suffix AND every original
+retained descriptor/revision. Disjointness is supplied by the host's existing
+binding grammar, so the new prefix cannot overwrite an earlier Type parameter. -/
+theorem specializeCurrent_sound [DecidableEq Name] [DecidableEq Descriptor] (reserved : Name)
+    (expected : List Name) (bound : List (BoundParameter Name Descriptor))
+    (source result : Template Name Descriptor) revision (values : List Descriptor)
+    (disjoint : ∀ binding ∈ bound, binding.name ∉ expected)
+    (accepted : specializeCurrent reserved expected bound source revision values = .ok result) :
+    source.remaining = expected ∧ result.remaining = expected.drop values.length ∧
+      result.fields = bindPrefix expected values source.fields ∧
+      ∀ binding ∈ bound, result.fields binding.name = some binding.descriptor ∧
+        revision binding.descriptor = binding.revision := by
+  unfold specializeCurrent at accepted
+  split at accepted
+  · rename_i current
+    obtain ⟨order, _, suffix, fields⟩ := specializeExpected_sound reserved expected source result values accepted
+    refine ⟨order, suffix, fields, ?_⟩
+    intro binding member
+    have stable := bindingsCurrent_sound bound source.fields revision current binding member
+    have outside : binding.name ∉ expected.take values.length :=
+      fun present => disjoint binding member (List.mem_of_mem_take present)
+    exact ⟨by rw [fields, bind_frame expected values source.fields binding.name outside]; exact stable.1, stable.2⟩
+  · contradiction
+
+/-- Original getter errors precede all successful binding/name admission. -/
+theorem specializeCurrent_error [DecidableEq Name] [DecidableEq Descriptor]
+    (inspect : Except Cause (Template Name Descriptor)) (reserved : Name) (expected : List Name)
+    (bound : List (BoundParameter Name Descriptor)) revision (values : List Descriptor)
+    (cause : Cause) (failed : inspect = .error cause) :
+    ((inspect.mapError Sum.inr).bind fun source =>
+      (specializeCurrent reserved expected bound source revision values).mapError Sum.inl) = .error (Sum.inr cause) := by
+  simp [failed, Except.mapError, Except.bind]
+
 end LeanPoo.Functional.Parameters
