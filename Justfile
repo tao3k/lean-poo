@@ -383,6 +383,7 @@ _check-examples:
     {{lean}} Examples/RowTypes.lean
     {{lean}} Examples/ContractChecks.lean
     {{lean}} Examples/ServiceCollection.lean
+    {{lean}} Examples/TableRevision.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean

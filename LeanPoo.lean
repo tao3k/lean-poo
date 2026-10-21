@@ -56,6 +56,7 @@ import LeanPoo.Functional.RecursiveHandling
 import LeanPoo.Functional.RecursiveDispatch
 import LeanPoo.Functional.ReceiptAdmission
 import LeanPoo.Functional.RecordEvolution
+import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Functional.MetadataFamily
 import LeanPoo.Functional.MetadataClosure
