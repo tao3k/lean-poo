@@ -964,4 +964,28 @@ example : projectCalls (fun call => if call = 1 then .error .malformed else obse
     [0, 1, 2] (fun _ => (.ok 9 : Except Failure Nat)) = .error .malformed := by
   rfl
 
+/-- Number/Real/Float are intrinsic predicate views, not ancestry-derived casts. -/
+example : numericFamilyCheck .float .real = true := rfl
+example : numericFamilyCheck .number .real = false := rfl
+example : numericFamilyCheck .real .float = false := rfl
+example : numericFamilyCheck (.integer .unsigned) .number = true := rfl
+/-- A noninteger exact real prevents Real from collapsing to Float or Integer. -/
+example : NumericFamily.real.Accepts (.exactReal 0) ∧
+    ¬ NumericFamily.float.Accepts (.exactReal 0) := by simp [NumericFamily.Accepts]
+/-- Nonreal numbers are accepted by Number alone among the real-valued views. -/
+example : NumericFamily.number.Accepts (.nonreal 0) ∧
+    ¬ NumericFamily.real.Accepts (.nonreal 0) := by simp [NumericFamily.Accepts]
+/-- Prefix-specialized real measurements uniquely select the original Float
+candidate; the wider Number candidate cannot satisfy the output observation. -/
+example : inferNumericFamily .real .float [.number, .float] =
+    .ok (.unique .float, some (.real, .float)) := by rfl
+/-- Whole publication retains both original numeric bounds for every value. -/
+example (artifact) (published : inferNumericFamily .real .float [.number, .float] =
+    .ok (.unique .float, some artifact)) : artifact = (.real, .float) ∧
+    (∀ value, NumericFamily.float.Accepts value → NumericFamily.real.Accepts value) ∧
+    (∀ value, NumericFamily.float.Accepts value → NumericFamily.float.Accepts value) :=
+  inferNumericFamily_sound _ _ _ _ _ published
+#print axioms numericFamilyCheck_sound
+#print axioms inferNumericFamily_sound
+
 end Examples.PrototypeTypes

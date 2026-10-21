@@ -329,4 +329,70 @@ theorem inferEmptyList_into (empty : Key → Bool) (member : Key → Value → P
   intro values valid
   simpa [onlyNil values valid] using covered
 
+/-- Intrinsic numeric families use host predicates, not prototype ancestry.
+Integer intervals reuse the existing exact endpoint algebra. -/
+inductive NumericFamily where
+  | number | real | float | integer (range : IntegerRange)
+  deriving Repr, DecidableEq
+/-- Observations distinguish exact integers, other exact reals, flonums and
+nonreal numbers. IDs carry no arithmetic or floating-point correctness claim. -/
+inductive NumericObservation where
+  | integer (value : Int) | exactReal (id : Nat) | float (id : Nat)
+  | nonreal (id : Nat) | other
+  deriving Repr, DecidableEq
+/-- Every observation retains its original value class; no cast is performed. -/
+def NumericFamily.Accepts : NumericFamily → NumericObservation → Prop
+  | .number, .other => False
+  | .number, _ => True
+  | .real, .integer _ | .real, .exactReal _ | .real, .float _ => True
+  | .float, .float _ => True
+  | .integer range, .integer value => range.Contains value
+  | _, _ => False
+/-- The admitted numeric comparison is independent of mutable host descriptors.
+Finite literal or ordered-Union lifting remains a separate existing obligation. -/
+def numericFamilyCheck : NumericFamily → NumericFamily → Bool
+  | _, .number => true
+  | .real, .real | .float, .real | .integer _, .real | .float, .float => true
+  | .integer source, .integer target => source.includes target
+  | _, _ => false
+/-- Accepted numeric replacement preserves every observation, including exact
+rationals and nonreal numbers that cannot be identified with flonums. -/
+theorem numericFamilyCheck_sound (source target : NumericFamily)
+    (accepted : numericFamilyCheck source target = true) :
+    ∀ value, source.Accepts value → target.Accepts value := by
+  cases source <;> cases target <;> simp only [numericFamilyCheck] at accepted
+  all_goals try contradiction
+  all_goals intro value valid
+  all_goals cases value <;> simp_all [NumericFamily.Accepts]
+  exact IntegerRange.replacement _ _ accepted _ valid
+/-- Numeric input contravariance and output covariance reuse the existing
+universal arrow theorem; valid host behavior remains an explicit premise. -/
+theorem numericFunction_replacement (sourceIn targetIn sourceOut targetOut : NumericFamily)
+    (inputs : numericFamilyCheck targetIn sourceIn = true)
+    (outputs : numericFamilyCheck sourceOut targetOut = true)
+    (f : NumericObservation → NumericObservation)
+    (behavior : ∀ v, sourceIn.Accepts v → sourceOut.Accepts (f v)) :
+    ∀ v, targetIn.Accepts v → targetOut.Accepts (f v) :=
+  function_replacement _ _ _ _ (numericFamilyCheck_sound _ _ inputs)
+    (numericFamilyCheck_sound _ _ outputs) f behavior
+/-- The existing complete finite declaration solver publishes original kinds;
+source-specific numeric comparison never replaces the whole inference protocol. -/
+def inferNumericFamily (input expected : NumericFamily) (candidates : List NumericFamily) :=
+  LeanPoo.Functional.DeclarativeMetadata.inferDeclared candidates.length
+    (fun output => numericFamilyCheck output input && numericFamilyCheck output expected)
+    candidates (fun output => (Except.ok (input, output) : Except String (NumericFamily × NumericFamily)))
+/-- A unique published numeric artifact satisfies every original bound, with
+universal value inclusion supplied by the intrinsic numeric relation. -/
+theorem inferNumericFamily_sound (input expected candidates output artifact)
+    (published : inferNumericFamily input expected candidates = .ok (.unique output, some artifact)) :
+    artifact = (input, output) ∧
+      (∀ value, output.Accepts value → input.Accepts value) ∧
+      (∀ value, output.Accepts value → expected.Accepts value) := by
+  obtain ⟨_, valid, built⟩ := LeanPoo.Functional.DeclarativeMetadata.inferDeclared_unique candidates.length
+    (fun output => numericFamilyCheck output input && numericFamilyCheck output expected)
+    candidates (fun output => (Except.ok (input, output) : Except String (NumericFamily × NumericFamily))) published
+  simp only [Bool.and_eq_true] at valid
+  cases built
+  exact ⟨rfl, numericFamilyCheck_sound _ _ valid.1, numericFamilyCheck_sound _ _ valid.2⟩
+
 end LeanPoo.Functional.PrototypeTypes

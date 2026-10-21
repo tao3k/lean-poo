@@ -83,3 +83,32 @@ predicate implication, implicit Class/Schema callback discovery, dependent
 TypeValuePair catalogs, general Boolean algebra and unrestricted recursion remain
 open or outside the current decidable boundary. Full resource limits and complete
 local/exact-head CI checks remain enabled; no Lean checkout is used by Scheme.
+
+## Intrinsic numeric families
+
+The companion Scheme implementation now admits its existing Number, Real and
+Float runtime descriptors through the same finite syntax registry, recursive
+compiler and numeric comparison used by integer intervals. Gerbil number?,
+real? and flonum? remain authoritative; no generic ancestry-to-subtyping rule,
+implicit value conversion or floating literal metadata is introduced.
+
+`PrototypeTypeDescriptors.lean` adds numeric observation classes distinguishing
+exact integers, other exact reals, flonums and nonreal numbers. Its
+`numericFamilyCheck_sound` proves universal inclusion for Float/Real/Number and
+integer interval views. `numericFunction_replacement` reuses the original arrow
+variance theorem; `inferNumericFamily_sound` composes the existing whole
+`inferDeclared` solver and preserves both original bounds and the exact artifact.
+The existing top-level `Examples/PrototypeTypes.lean` covers rational/nonreal
+separation and a prefix-specialized, uniquely selected Float declaration.
+
+Scheme's `examples/numeric-services.ss` explicitly converts measurement tables
+and calibrator boundaries using standard hash mapping and composition. The
+existing qualified declaration, recursive Function, refine, bind-evidence and
+FUN/IO protocols remain responsible for publication. Regressions retain Map-key
+and carried-Type identity, ordered alternatives, keyword/case boundaries, policy
+failure and independent retry. No Scheme checkout depends on this Lean project.
+
+The semantic proofs require faithful interpretation of the host numeric
+predicates and valid source function behavior. They do not establish arithmetic
+or conversion accuracy, codec equivalence, arbitrary descriptor override behavior
+or compiler/runtime correctness. This is the article's type-protocol future work.
