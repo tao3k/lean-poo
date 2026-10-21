@@ -5,6 +5,28 @@ reference motivates explicit subtype and modular-extension obligations; it does
 not implement this finite candidate inference algorithm. An empty record value
 used as a composition seed is inhabited and is not an empty Type.
 
+## Complete requests before source refresh
+
+Schema ownership alone did not protect caller-owned request inputs. Gerbil's
+computed parameter getter could replace a `(UInt)` candidate buffer with `(Bool)`
+before inference copied it. The shared explicit/prefix/raw/call entry paths now
+capture all their input syntax before reading schema getters. One bounded copier
+serves schemas and requests; canonicalization and query/call admission reuse owned
+data. The existing solver and unified declaration continuations remain unchanged.
+
+`PrototypeTypes.InferenceRequest` and `inferCapturedRequest` reuse `inferCaptured`
+and the bounded solver. Four laws preserve exact capture/getter refusal, complete
+classification, original candidate membership and every original bound. Top-level
+Examples/Parameters.lean changes both live buffers after capture and checks empty,
+ambiguous and refused requests. Gerbil controls cover all shared entry paths,
+declaration-builder exclusion, nested Function wrapping and the complete observed
+descriptor-service refine/bind-evidence/FUN/IO chain with failure/retry.
+Faithful syntax capture, candidate enumeration and call projection remain host
+correspondence premises. Runtime nonaliasing is tested; arbitrary concurrent raw
+mutation, effect rollback and compiler correctness are not inferred from Lean's
+immutable request records. This advances the article's finite type-system future
+work and makes no performance improvement claim.
+
 ## Captured schemas before computed metadata
 
 Gerbil's shared schema gate now bounds and copies variables, expressions, bounds

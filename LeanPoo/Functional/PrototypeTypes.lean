@@ -874,4 +874,61 @@ theorem inferCaptured_bound (capture : State → Except Failure (List (Expr × E
     rw [inferCaptured_eq capture refresh initial current fuel budget candidates constraints captured refreshed] at accepted
     exact checkedUnique_bound accepted member
 
+/-- One owned finite request retains BOTH its original candidate universe and
+its original bound/query obligations. Host call projection and Cartesian
+enumeration must faithfully interpret the captured syntax; this is not a heap
+or parser model and does not imply arbitrary callback stability. -/
+structure InferenceRequest where
+  candidates : List (Nat → Ty)
+  constraints : List (Expr × Expr)
+
+/-- Reuse constraint capture/refresh ordering with the same captured request's
+candidate universe. Source refresh cannot supply a replacement candidate list. -/
+def inferCapturedRequest (capture : State → Except Failure InferenceRequest)
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat) :
+    Except Failure (Inference (Nat → Ty)) :=
+  (capture initial).bind fun request =>
+    inferCaptured (fun _ => .ok request.constraints) refresh initial fuel budget request.candidates
+
+/-- Cyclic/deep request capture refuses before refresh or any candidate prefix. -/
+theorem inferCapturedRequest_refused (capture : State → Except Failure InferenceRequest)
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (cause : Failure) (failed : capture initial = .error cause) :
+    inferCapturedRequest capture refresh initial fuel budget = .error cause := by
+  simp [inferCapturedRequest, failed, Except.bind]
+
+/-- Any successful refresh preserves exact classification over the original
+request, including candidate order, ambiguity, no solution and exhaustion. -/
+theorem inferCapturedRequest_eq (capture : State → Except Failure InferenceRequest)
+    (refresh : State → Except Failure State) (initial current : State) (fuel budget : Nat)
+    (request : InferenceRequest) (captured : capture initial = .ok request)
+    (refreshed : refresh initial = .ok current) :
+    inferCapturedRequest capture refresh initial fuel budget =
+      inferBounded budget (satisfies fuel request.constraints) request.candidates := by
+  simp [inferCapturedRequest, captured, inferCaptured, refreshed, Except.bind]
+
+/-- A getter failure keeps its exact cause after successful request capture. -/
+theorem inferCapturedRequest_refresh_refused (capture : State → Except Failure InferenceRequest)
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (request : InferenceRequest) (captured : capture initial = .ok request)
+    (cause : Failure) (failed : refresh initial = .error cause) :
+    inferCapturedRequest capture refresh initial fuel budget = .error cause := by
+  simp [inferCapturedRequest, captured, inferCaptured, failed, Except.bind]
+
+/-- Unique publication cannot introduce an assignment outside the original
+universe, and every original captured inequality remains proved. -/
+theorem inferCapturedRequest_unique (capture : State → Except Failure InferenceRequest)
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (request : InferenceRequest) (captured : capture initial = .ok request)
+    (accepted : inferCapturedRequest capture refresh initial fuel budget = .ok (.unique environment)) :
+    environment ∈ request.candidates ∧ ∀ a b, (a,b) ∈ request.constraints →
+      Subtype (substitute environment a) (substitute environment b) := by
+  cases refreshed : refresh initial with
+  | error cause =>
+    simp [inferCapturedRequest, captured, inferCaptured, refreshed, Except.bind] at accepted
+  | ok current =>
+    rw [inferCapturedRequest_eq capture refresh initial current fuel budget request captured refreshed] at accepted
+    have checked := bounded_unique _ _ _ accepted
+    exact ⟨checked.1, fun _ _ member => satisfies_sound _ _ _ checked.2 member⟩
+
 end LeanPoo.Functional.PrototypeTypes

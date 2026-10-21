@@ -508,5 +508,37 @@ example : inferCaptured Except.ok rewrittenBounds initialBounds 8 1
 #print axioms inferCaptured_refresh_refused
 #print axioms inferCaptured_eq
 #print axioms inferCaptured_bound
+
+/-- This request supplied only the valid UInt/Integer assignment. -/
+def initialRequest : InferenceRequest := ⟨[validBinding], initialBounds⟩
+/-- A computed getter reuses live candidate AND query buffers after capture. -/
+def replaceRequest (_ : InferenceRequest) : Except Functional.PrototypeTypes.Failure InferenceRequest :=
+  .ok ⟨[invalidBinding], [(.var 0, .var 0)]⟩
+
+example : inferCapturedRequest Except.ok replaceRequest initialRequest 8 1 =
+    .ok (.unique validBinding) := by
+  have valid : satisfies 8 initialBounds validBinding = true := by
+    simp only [satisfies, initialBounds, List.all_cons, List.all_nil, substitute, validBinding]
+    decide
+  simp [inferCapturedRequest, inferCaptured, replaceRequest, initialRequest,
+    Except.bind, inferBounded, infer, valid]
+
+/-- Refresh cannot admit a replacement candidate when the initial universe is empty. -/
+example : inferCapturedRequest Except.ok replaceRequest ⟨[], initialBounds⟩ 8 1 =
+    .ok .none := rfl
+
+/-- Duplicate original candidates remain ambiguous; refresh is not a tie breaker. -/
+example : inferCapturedRequest Except.ok replaceRequest
+    ⟨[validBinding, validBinding], []⟩ 8 2 =
+      .ok (.ambiguous [validBinding, validBinding]) := rfl
+
+/-- Capture failure cannot be replaced by a later getter error or success. -/
+example : inferCapturedRequest (fun (_ : Unit) => .error .exhausted)
+    (fun _ => .error .bounds) () 8 1 = .error .exhausted := rfl
+
+#print axioms inferCapturedRequest_refused
+#print axioms inferCapturedRequest_eq
+#print axioms inferCapturedRequest_refresh_refused
+#print axioms inferCapturedRequest_unique
 end CapturedSchemes
 end LeanPoo.Examples.Parameters
