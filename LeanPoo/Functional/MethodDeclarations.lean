@@ -915,4 +915,61 @@ theorem inferRowView_sound [DecidableEq Key] (signature : Signature) (test : Fie
   exact ⟨(Except.ok.inj built).symm, fun observe admitted =>
     RowTypes.recordCheck_sound test empty accepts sound emptySound (layout candidate) target valid observe admitted⟩
 
+/-- Compose the existing source-snapshot and bound-identity gates at the final
+post-callback observation. Source includes original syntax/closed suffix metadata;
+host revision fences must faithfully supply these observations without getters
+between the final checks. This is not a Scheme heap or callback-purity proof. -/
+def finalizeDeclaredSource [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  (admitDeclaredSource captured observed ()).bind fun _ =>
+    admitDeclaredBindings bindings fields revision artifact
+
+/-- Raw syntax edits cannot borrow previously successful binding checks. -/
+theorem finalizeDeclaredSource_changed [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact : Artifact) (changed : captured ≠ observed) :
+    finalizeDeclaredSource captured observed bindings fields revision artifact = .error .bounds := by
+  simp [finalizeDeclaredSource, admitDeclaredSource, changed, Except.bind]
+
+/-- Late direct descriptor changes refuse under the SAME final source snapshot. -/
+theorem finalizeDeclaredSource_stale [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact : Artifact) (stale : Parameters.bindingsCurrent bindings fields revision = false) :
+    finalizeDeclaredSource captured observed bindings fields revision artifact = .error .bounds := by
+  by_cases same : captured = observed <;>
+    simp [finalizeDeclaredSource, admitDeclaredSource, admitDeclaredBindings, same, stale, Except.bind]
+
+/-- Successful final admission retains the exact artifact and jointly establishes
+original syntax, a closed suffix and every original binding identity/revision. -/
+theorem finalizeDeclaredSource_sound [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact result : Artifact)
+    (accepted : finalizeDeclaredSource captured observed bindings fields revision artifact = .ok result) :
+    captured = observed ∧ artifact = result ∧ ∀ binding ∈ bindings,
+      fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision := by
+  cases stage : admitDeclaredSource captured observed () with
+  | error cause => simp [finalizeDeclaredSource, stage, Except.bind] at accepted
+  | ok checked =>
+    have final : admitDeclaredBindings bindings fields revision artifact = .ok result := by
+      simpa [finalizeDeclaredSource, stage, Except.bind] using accepted
+    have exactArtifact : artifact = result := by
+      unfold admitDeclaredBindings at final
+      split at final
+      · exact Except.ok.inj final
+      · contradiction
+    exact ⟨admitDeclaredSource_stable captured observed () checked stage, exactArtifact,
+      fun binding member => admitDeclaredBindings_stable bindings fields revision artifact result final binding member⟩
+
+/-- An original getter failure precedes every final-source refusal, retaining
+its exact cause. Effects before that failure are not modeled as rolled back. -/
+theorem finalizeDeclaredSource_error [DecidableEq Source] [DecidableEq Descriptor]
+    (inspect : Except Cause Source) (captured : Source)
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision (artifact : Artifact)
+    (cause : Cause) (failed : inspect = .error cause) :
+    ((inspect.mapError Sum.inr).bind fun observed =>
+      (finalizeDeclaredSource captured observed bindings fields revision artifact).mapError Sum.inl) =
+        .error (Sum.inr cause) := by simp [failed, Except.mapError, Except.bind]
+
 end LeanPoo.Functional.DeclarativeMetadata

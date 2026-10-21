@@ -541,4 +541,42 @@ example : inferCapturedRequest (fun (_ : Unit) => .error .exhausted)
 #print axioms inferCapturedRequest_refresh_refused
 #print axioms inferCapturedRequest_unique
 end CapturedSchemes
+
+section FinalSourceAdmission
+open Functional.DeclarativeMetadata
+
+/-- The finite fixture encodes original UInt/Integer syntax and a closed suffix. -/
+def finalSourceMetadata : List Nat × List String := ([0, 1], [])
+/-- The original Output descriptor has identity 7 and direct revision 2. -/
+def finalSourceBindings : List (Functional.Parameters.BoundParameter String Nat) :=
+  [⟨"Output", 7, 2⟩]
+/-- Actual post-getter observations retain the same field identity. -/
+def finalSourceFields (_ : String) : Option Nat := some 7
+/-- A pure direct-revision observation runs after every source callback. -/
+def finalSourceRevisions (_ : Nat) : Nat := 2
+
+example : finalizeDeclaredSource finalSourceMetadata finalSourceMetadata
+    finalSourceBindings finalSourceFields finalSourceRevisions "artifact" = .ok "artifact" := rfl
+
+/-- A late raw syntax edit refuses despite earlier successful binding admission. -/
+example : finalizeDeclaredSource finalSourceMetadata ([2, 1], [])
+    finalSourceBindings finalSourceFields finalSourceRevisions "artifact" = .error .bounds := rfl
+
+/-- Reopened parameters cannot pass using the original closed suffix snapshot. -/
+example : finalizeDeclaredSource finalSourceMetadata ([0, 1], ["Again"])
+    finalSourceBindings finalSourceFields finalSourceRevisions "artifact" = .error .bounds := rfl
+
+/-- A later getter invalidating an earlier descriptor refuses the whole artifact. -/
+example : finalizeDeclaredSource finalSourceMetadata finalSourceMetadata
+    finalSourceBindings finalSourceFields (fun _ => 3) "artifact" = .error .bounds := rfl
+
+/-- The same final gate also retains exact descriptor identity, not just revision. -/
+example : finalizeDeclaredSource finalSourceMetadata finalSourceMetadata
+    finalSourceBindings (fun _ => some 8) finalSourceRevisions "artifact" = .error .bounds := rfl
+
+#print axioms finalizeDeclaredSource_changed
+#print axioms finalizeDeclaredSource_stale
+#print axioms finalizeDeclaredSource_sound
+#print axioms finalizeDeclaredSource_error
+end FinalSourceAdmission
 end LeanPoo.Examples.Parameters

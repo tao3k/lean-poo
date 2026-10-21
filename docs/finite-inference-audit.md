@@ -5,6 +5,33 @@ reference motivates explicit subtype and modular-extension obligations; it does
 not implement this finite candidate inference algorithm. An empty record value
 used as a composition seed is inhabited and is not an empty Type.
 
+## Joint final-source admission
+
+Gerbil's final parameter getter could previously revise source syntax after its
+equality check and still let signature preparation return a certificate. Later
+binding getters could also invalidate earlier descriptors. The shared binding
+continuation now finishes with a pure joint check of known direct revisions and
+held binding metadata; source syntax/closed-suffix checks run after getters.
+Whole declaration admission passes catalog walking as the same gate's consumer:
+one grammar/binding validation surrounds getters, followed by pure postconditions
+without repeating the complete parser or Type validator.
+Retained root/nested signature origins are checked by direct revision after the
+last source getter as well, under the existing catalog-current laws.
+It uses existing revision/invalidation, Type and qualified declaration mechanisms,
+without traversing the complete cached read-dependency graph or rerunning getters.
+
+`DeclarativeMetadata.finalizeDeclaredSource` composes the existing source-snapshot
+and bound-identity gates. Four laws preserve exact source equality, bound identity
+and direct revision, exact artifacts, refusal and original callback exceptions.
+Examples/Parameters.lean covers changed syntax, reopened parameters and changed
+descriptor identity/revision. Gerbil regressions add staged finalizers, later
+binding getter invalidation, real nested catalog reads, exact failure causes and
+fresh inferred declaration/refine/bind-evidence/FUN/IO publication with callbacks.
+Post-getter source interpretation and direct revision discipline remain host
+correspondence premises. Effects are not rolled back; arbitrary transitive
+callback semantics and compiler/heap correctness are not established. This closes
+a finite future-work implementation omission and makes no elapsed-time claim.
+
 ## Complete requests before source refresh
 
 Schema ownership alone did not protect caller-owned request inputs. Gerbil's
