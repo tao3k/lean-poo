@@ -394,3 +394,40 @@ and unaffected-frame controls. Faithful capture/edge registration, finite bounde
 paths and sequential supported mutation are explicit premises. This advances the
 article's type-protocol future work; it proves neither Gerbil heap/GC behavior nor
 unknown callback sources or compiler correctness.
+
+
+## Whole-request finite directory admission
+
+Individually current catalog tokens were insufficient: reading a later independent
+directory could revise an earlier one, leaving a successful negative judgment or
+no-solution report based on incompatible snapshots. The same gap affected query
+and candidate directories absent from the selected signature during declaration
+construction. This is a finite known-source coherence omission, not unrestricted
+callback dependency inference.
+
+`call-with-current-catalogs` encloses grammar admission, recursive compilation,
+finite inference, specialization and declaration construction in one request.
+It retains actually admitted directory snapshots in first-read order and deduplicates
+aliases by their private snapshot identity. Successful completion, including false,
+no-solution and ambiguous reports, reuses the existing authenticated pure source
+replay under the original quota. Final checks do not invoke observers, rerun
+inference, rediscover metadata or cache approval. Internal composition shares the
+frame; nested public requests retain their own final check and budget. Original
+callback exceptions propagate unchanged, and callback effects are not rolled back.
+
+`staged-service-action` composes the existing Reader/FUN declaration pipeline with
+refine, bind-evidence and IO publication. Regression controls cover independent
+source drift, unused candidate mutation during construction, refusal before body/IO,
+recapture and retry, nested request isolation and exact original exceptions.
+
+Lean's `finishTypeRequest` composes existing binding admission with the original
+consumer result. Its laws establish exact healthy results, refusal of every stale
+successful classification, original error precedence and currentness of every
+recorded source. Host replay retains its exact `stale slot dependency` error;
+the model represents source refusal through the existing `.bounds` admission
+outcome, without identifying host exception objects. Top-level
+`Examples/Parameters.lean` includes cross-directory
+replacement and publication controls. Host-faithful recording, source identities,
+revisions and supported sequential mutation are explicit premises. This advances
+the article's type-protocol future work; it does not prove arbitrary callbacks,
+concurrent host heaps, GC behavior or the Gerbil compiler.

@@ -763,4 +763,49 @@ example : bindingsCurrent catalogBindings catalogTemplate.fields
 #print axioms bindingsCurrent_frame
 end CatalogBindingSources
 
+
+section JointCatalogAdmission
+open Functional.DeclarativeMetadata
+/-- Two independent finite directories were admitted before the later observer. -/
+def requestSources : List (BoundParameter String String) :=
+  [⟨"left", "UInt", 0⟩, ⟨"right", "UInt", 0⟩]
+/-- A later source callback replaces the first directory entry after its admission. -/
+def requestFields (changed : Bool) (name : String) : Option String :=
+  if changed && name == "left" then some "Bool" else some "UInt"
+/-- Original source stamps precede the supported sequential metadata change. -/
+def requestRevision (_ : Bool) (_ : String) : Nat := 0
+/-- Even an ordinary negative replacement judgment cannot escape an incoherent request. -/
+example : finishTypeRequest requestSources
+    (fun _ => (.ok (false, true) : Except String (Bool × Bool)))
+    requestFields requestRevision = .error (.inl .bounds) :=
+  finishTypeRequest_stale _ _ _ _ false true rfl (by decide)
+/-- No-solution and ambiguous reports require the same final admission as unique ones. -/
+example (report : Functional.PrototypeTypes.Inference Nat) :
+    finishTypeRequest requestSources
+      (fun _ => (.ok (report, true) : Except String (Functional.PrototypeTypes.Inference Nat × Bool)))
+      requestFields requestRevision = .error (.inl .bounds) :=
+  finishTypeRequest_stale _ _ _ _ report true rfl (by decide)
+/-- Healthy final snapshots preserve the exact report without re-running inference. -/
+example : finishTypeRequest requestSources
+    (fun _ => (.ok (false, false) : Except String (Bool × Bool)))
+    requestFields requestRevision = .ok false :=
+  finishTypeRequest_fresh _ _ _ _ false false rfl (by decide)
+/-- A builder's original refusal is retained even when its source snapshot is stale. -/
+example : finishTypeRequest requestSources
+    (fun _ => (.error "builder refused" : Except String (Bool × Bool)))
+    requestFields requestRevision = .error (.inr "builder refused") := rfl
+/-- Publication accounts for all recorded sources, including unused candidates. -/
+example (run : Unit → Except String (Nat × Bool)) result
+    (accepted : finishTypeRequest requestSources run requestFields requestRevision = .ok result) :
+    ∃ after, run () = .ok (result, after) ∧
+      ∀ source ∈ requestSources, requestFields after source.name = some source.descriptor ∧
+        requestRevision after source.descriptor = source.revision :=
+  finishTypeRequest_sources _ _ _ _ _ accepted
+#print axioms finishTypeRequest_error
+#print axioms finishTypeRequest_stale
+#print axioms finishTypeRequest_fresh
+#print axioms finishTypeRequest_sound
+#print axioms finishTypeRequest_sources
+end JointCatalogAdmission
+
 end LeanPoo.Examples.Parameters

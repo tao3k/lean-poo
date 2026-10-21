@@ -147,4 +147,68 @@ theorem withCapturedInputs_subtype (fuel : Nat) (source target : Ty)
   have current := (withCapturedInputs_sound _ _ _ _ _ accepted).2
   exact check_sound fuel source target (Except.ok.inj current)
 
+/-- Finish any Type result using the EXISTING source admission. Snapshot models
+actual post-consumer source observations, including unused candidates/queries.
+Host recording, source identity and revision fidelity are explicit premises. -/
+def finishTypeRequest [DecidableEq Descriptor]
+    (sources : List (Parameters.BoundParameter Name Descriptor))
+    (run : Unit → Except Cause (Result × Snapshot))
+    (fields : Snapshot → Name → Option Descriptor) (revision : Snapshot → Descriptor → Nat) :
+    Except (PrototypeTypes.Failure ⊕ Cause) Result :=
+  ((run ()).mapError Sum.inr).bind fun pair =>
+    (admitDeclaredBindings sources (fields pair.2) (revision pair.2) pair.1).mapError Sum.inl
+
+/-- Original callback/refusal causes precede all success-only source checks. -/
+theorem finishTypeRequest_error [DecidableEq Descriptor] (sources) (run : Unit → Except Cause (Result × Snapshot))
+    (fields : Snapshot → Name → Option Descriptor) revision cause
+    (failed : run () = .error cause) :
+    finishTypeRequest sources run fields revision = .error (.inr cause) := by
+  simp [finishTypeRequest, failed, Except.mapError, Except.bind]
+
+/-- Even false, no-solution or ambiguous successful results require current sources. -/
+theorem finishTypeRequest_stale [DecidableEq Descriptor] (sources)
+    (run : Unit → Except Cause (Result × Snapshot)) (fields : Snapshot → Name → Option Descriptor)
+    revision result after (completed : run () = .ok (result, after))
+    (stale : Parameters.bindingsCurrent sources (fields after) (revision after) = false) :
+    finishTypeRequest sources run fields revision = .error (.inl .bounds) := by
+  simp [finishTypeRequest, completed, admitDeclaredBindings, stale, Except.mapError, Except.bind]
+
+/-- A healthy completed operation returns its exact result, without re-solving. -/
+theorem finishTypeRequest_fresh [DecidableEq Descriptor] (sources)
+    (run : Unit → Except Cause (Result × Snapshot)) (fields : Snapshot → Name → Option Descriptor)
+    revision result after (completed : run () = .ok (result, after))
+    (current : Parameters.bindingsCurrent sources (fields after) (revision after) = true) :
+    finishTypeRequest sources run fields revision = .ok result := by
+  simp [finishTypeRequest, completed, admitDeclaredBindings, current, Except.mapError, Except.bind]
+
+/-- Every published result comes from the original consumer with a jointly
+current final source set. No result classification can bypass the source gate. -/
+theorem finishTypeRequest_sound [DecidableEq Descriptor] (sources)
+    (run : Unit → Except Cause (Result × Snapshot)) (fields : Snapshot → Name → Option Descriptor)
+    revision result (accepted : finishTypeRequest sources run fields revision = .ok result) :
+    ∃ after, run () = .ok (result, after) ∧
+      Parameters.bindingsCurrent sources (fields after) (revision after) = true := by
+  cases completed : run () with
+  | error cause => simp [finishTypeRequest, completed, Except.mapError, Except.bind] at accepted
+  | ok pair =>
+    rcases pair with ⟨value, after⟩
+    by_cases current : Parameters.bindingsCurrent sources (fields after) (revision after) = true
+    · have same : value = result := by
+        simpa [finishTypeRequest, completed, admitDeclaredBindings, current, Except.mapError, Except.bind] using accepted
+      subst value
+      exact ⟨after, rfl, current⟩
+    · simp [finishTypeRequest, completed, admitDeclaredBindings, current, Except.mapError, Except.bind] at accepted
+
+/-- Universal currentness of EACH recorded source follows from the final gate,
+including sources omitted from the selected signature or bound receiver. -/
+theorem finishTypeRequest_sources [DecidableEq Descriptor] (sources)
+    (run : Unit → Except Cause (Result × Snapshot)) (fields : Snapshot → Name → Option Descriptor)
+    revision result (accepted : finishTypeRequest sources run fields revision = .ok result) :
+    ∃ after, run () = .ok (result, after) ∧
+      ∀ source ∈ sources, fields after source.name = some source.descriptor ∧
+        revision after source.descriptor = source.revision := by
+  obtain ⟨after, completed, current⟩ := finishTypeRequest_sound sources run fields revision result accepted
+  exact ⟨after, completed, fun source member =>
+    Parameters.bindingsCurrent_sound sources (fields after) (revision after) current source member⟩
+
 end LeanPoo.Functional.DeclarativeMetadata
