@@ -947,4 +947,21 @@ example : substitute (prefixEnvironment [.list service]
     .pair (.list service) (.list (.union (callbackBranches false))) := by
   simp [substitute, prefixEnvironment]
 
+/-- A known rejected shape cannot hide a later unsupported observation.
+Calls are symbolic host-admission cases, not a verified Scheme parser. -/
+def observationAdmission (call : Nat) : Except Failure Unit :=
+  if call = 2 then .error .unsupported else .ok ()
+/-- Complete sibling checking precedes the delayed shape projection. -/
+example : projectCalls observationAdmission [0, 1, 2]
+    (fun _ => (.error .bounds : Except Failure Nat)) = .error .unsupported := by
+  rfl
+/-- A valid batch preserves the same projected constraints. -/
+example : projectCalls observationAdmission [0, 1]
+    (fun _ => (.ok [3, 4] : Except Failure (List Nat))) = .ok [3, 4] := by
+  rfl
+/-- No later observation overwrites the first malformed admission cause. -/
+example : projectCalls (fun call => if call = 1 then .error .malformed else observationAdmission call)
+    [0, 1, 2] (fun _ => (.ok 9 : Except Failure Nat)) = .error .malformed := by
+  rfl
+
 end Examples.PrototypeTypes

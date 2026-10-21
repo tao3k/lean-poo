@@ -755,4 +755,73 @@ theorem accepted_comparison_work (refresh build replay : Nat) :
     refresh + replay + build = (refresh + build) + replay ∧ refresh + build ≤ refresh + replay + build := by
   omega
 
+/-- Whole-call admission uses the standard left-to-right monadic traversal.
+It checks every observation before projection; host decoding/Type admission is
+an explicit interpretation premise, not inferred from this finite model. -/
+def checkCalls (admit : Call → Except Failure Unit) (calls : List Call) :
+    Except Failure (List Unit) := calls.mapM admit
+
+/-- One standard traversal step preserves left-to-right admission order. -/
+theorem checkCalls_cons (admit : Call → Except Failure Unit) (call : Call) (calls : List Call) :
+    checkCalls admit (call :: calls) =
+      (admit call).bind (fun result => (checkCalls admit calls).map (result :: ·)) := by
+  unfold checkCalls
+  rw [List.mapM_cons]
+  cases admit call <;> cases calls.mapM admit <;> rfl
+
+/-- A completed preflight has admitted every sibling, including unselected ones. -/
+theorem checkCalls_sound (admit : Call → Except Failure Unit) (calls : List Call)
+    (checked : List Unit) (accepted : checkCalls admit calls = .ok checked)
+    (call : Call) (member : call ∈ calls) : admit call = .ok () := by
+  induction calls generalizing checked with
+  | nil => simp at member
+  | cons head rest ih =>
+    cases first : admit head with
+    | error cause => simp [checkCalls_cons, first, Except.bind] at accepted
+    | ok result =>
+      cases result
+      cases tail : checkCalls admit rest with
+      | error cause => simp [checkCalls_cons, first, tail, Except.bind, Except.map] at accepted
+      | ok remaining =>
+        rcases List.mem_cons.mp member with equal | later
+        · subst call; exact first
+        · exact ih remaining tail later
+
+/-- A late invalid sibling keeps its original cause after all valid predecessors;
+no projection or candidate search can turn it into an ordinary bounds failure. -/
+theorem checkCalls_late_refusal (admit : Call → Except Failure Unit)
+    (front : List Call) (bad : Call) (rest : List Call) (cause : Failure)
+    (prior : ∀ call ∈ front, admit call = .ok ()) (refused : admit bad = .error cause) :
+    checkCalls admit (front ++ bad :: rest) = .error cause := by
+  induction front with
+  | nil => simp [checkCalls_cons, refused, Except.bind]
+  | cons head tail ih =>
+    have first := prior head (by simp)
+    have later : ∀ call ∈ tail, admit call = .ok () := fun call member => prior call (by simp [member])
+    simp [checkCalls_cons, first, ih later, Except.bind, Except.map]
+
+/-- Candidate-independent admission precedes the delayed complete projection.
+The same gate serves fixed and candidate-dependent signature layouts. -/
+def projectCalls (admit : Call → Except Failure Unit) (calls : List Call)
+    (project : Unit → Except Failure Queries) : Except Failure Queries :=
+  (checkCalls admit calls).bind (fun _ => project ())
+
+/-- Failed preflight cannot call a projection, including one that would fail bounds. -/
+theorem projectCalls_refused (admit : Call → Except Failure Unit) (calls : List Call)
+    (project : Unit → Except Failure Queries) (cause : Failure)
+    (refused : checkCalls admit calls = .error cause) :
+    projectCalls admit calls project = .error cause := by
+  simp [projectCalls, refused, Except.bind]
+
+/-- Success preserves the exact original projection plus complete call admission. -/
+theorem projectCalls_sound (admit : Call → Except Failure Unit) (calls : List Call)
+    (project : Unit → Except Failure Queries) (queries : Queries)
+    (accepted : projectCalls admit calls project = .ok queries) :
+    project () = .ok queries ∧ ∀ call ∈ calls, admit call = .ok () := by
+  cases checked : checkCalls admit calls with
+  | error cause => simp [projectCalls, checked, Except.bind] at accepted
+  | ok observations =>
+    exact ⟨by simpa [projectCalls, checked, Except.bind] using accepted,
+      fun call member => checkCalls_sound admit calls observations checked call member⟩
+
 end LeanPoo.Functional.PrototypeTypes

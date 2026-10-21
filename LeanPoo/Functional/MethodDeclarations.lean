@@ -482,6 +482,20 @@ theorem inferDeclaredCalls_refused (fuel budget bounds candidates)
     (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (cause : PrototypeTypes.Failure) :
     inferDeclaredCalls fuel budget bounds (.error cause) candidates build = .error (.inl cause) := rfl
 
+/-- Whole observation admission gates the existing constraint/declaration driver.
+A late malformed sibling keeps its refusal even if projecting the first sibling
+would fail bounds or the candidate universe is empty. The admitted host decoder
+is an explicit premise; this theorem does not verify Gerbil macro expansion. -/
+theorem inferDeclaredCalls_preflight_refused (fuel budget bounds candidates)
+    (admit : Call → Except PrototypeTypes.Failure Unit) (calls : List Call)
+    (project : Unit → Except PrototypeTypes.Failure (List (PrototypeTypes.Expr × PrototypeTypes.Expr)))
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (cause : PrototypeTypes.Failure)
+    (refused : PrototypeTypes.checkCalls admit calls = .error cause) :
+    inferDeclaredCalls fuel budget bounds (PrototypeTypes.projectCalls admit calls project)
+      candidates build = .error (.inl cause) := by
+  rw [PrototypeTypes.projectCalls_refused admit calls project cause refused]
+  rfl
+
 /-- Complete unique inference retains candidate and successful WHOLE builder provenance. -/
 theorem inferDeclaredCalls_provenance (fuel budget bounds queries candidates)
     (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (env artifact)
