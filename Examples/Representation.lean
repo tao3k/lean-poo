@@ -38,4 +38,19 @@ example : read refreshed reshaped = none := by decide
 /-- Failed/absent computations cannot be represented as a successful value guard. -/
 example : cell reshaped 0 = none := by decide
 
+/-- Repeated methods count toward promotion even when only one name is present. -/
+def repeated : List (String × Int) := List.replicate 8 ("fee", 1)
+example : pack repeated = .small repeated := by decide
+example : pack (repeated ++ [("extra", 0)]) = .tree (repeated ++ [("extra", 0)]) := by decide
+example : ((pack repeated).put "fee" 7).entries = ("fee", 7) :: List.replicate 7 ("fee", 1) := by decide
+
+/-- One multi-round service trace promotes, removes all duplicates and demotes. -/
+def revisions : List (Edit Int) := [.put "extra" 0, .put "fee" 7, .remove "fee", .put "capacity" 30]
+example : (revisions.foldl editStorage (pack repeated)).entries = [("extra", 0), ("capacity", 30)] := by decide
+example : searchWork repeated "missing" = 8 := by decide
+example : searchWork repeated "fee" = 1 := by decide
+
+#print axioms revision_trace
+#print axioms compact_search_bound
+
 end LeanPoo.Examples.Representation

@@ -9,7 +9,7 @@ in the original representation TODO; they are not a new claim of a complete MOP.
 
 ## Protocol and public operations
 
-`prototype-map.ss` uses V19 `std/struct/rbtree`, not a second tree implementation.
+`prototype-map.ss` uses private compact vectors and V19 `std/struct/rbtree`, not a second tree implementation.
 It stores ordered contributions and a first-name index. Persistent updates copy
 balanced-tree paths, preserve later same-name methods and append new names. Input
 and reflection list spines/entry pairs are owned; values and SlotSpecs are shared.
@@ -66,7 +66,48 @@ revocation or speed/allocation improvement is claimed.
 ## Remaining optimization ideas
 
 This closes the mapping/layout/invalidation protocol, not every speculative
-performance idea in the historical TODO. Small-map specialization, Patricia trees,
+performance idea in the historical TODO. Patricia trees,
 frequency sorting, automatic JIT/PIC selection, full hash removal and compiler
 constant-folding qualification remain unimplemented. Matched complete-workflow
 benchmarks are required before claiming any strategy is faster.
+
+## Compact persistent prototype maps
+
+The concrete small-map item in the representation TODO is now implemented through
+`prototype-map.ss`, without another public namespace or object API. Up to eight
+**contributions**, including duplicates, occupy a private vector. A first-name
+identity scan selects replacement; appending the ninth contribution promotes to
+Gerbil's existing RBTree representation. Removing all contributions for a name
+can demote the remaining ordered entries. Missing removal retains the snapshot.
+The vector, entry pairs and mutable tree handles never escape; list observations
+return fresh spines/pairs, while values and SlotSpecs remain intentionally shared.
+This is source-level persistence, not deep immutability of arbitrary values.
+
+The limit bounds a compact scan at eight identity comparisons and a compact
+write's resulting row at nine cells, including promotion. Standard vector copying,
+`std/vector/vector` filtering and `std/struct/rbtree` perform the storage work.
+Promotion still pays tree construction; tree removal still rebuilds in order.
+There is no logarithmic removal, universal speedup or allocator/GC cost theorem.
+
+`representation-test.ss` compares 96 mixed revisions and every retained snapshot
+with an independent ordered-list oracle. Boundary, duplicate-name, index-zero,
+present-false, uninterned-symbol and failed-preflight controls cover both stores.
+`expanded-service` crosses the bound through actual persistent object construction;
+contraction, overrides, subsequent source edits, checked FUN observation, policy
+refusal and retry keep the existing source invalidation/contract protocol.
+
+Lean's existing `Prototype.Representation` namespace proves complete ordered
+observations, first-write/frame laws, representation selection, bounded compact
+search/copy and arbitrary finite revision-trace equivalence. Its tree observation
+assumes faithful standard-library iteration; distinct Scheme symbol identities
+must map to distinct model keys. It does not verify RBTree balancing, vector
+primitives, the collector or compiler. Existing revision/layout theorems still
+supply cache rejection; changing map storage grants no new cache authority.
+
+`object-scale-benchmark` now records CPU, wall, GC CPU, collection count and raw
+allocation deltas via the existing shared Scheme sampler. Both natural and
+pre-collected regimes retain the complete cold construction/read, clone-only and
+clone/read workflows. Widths 1/4/8/9/16 supplement the original 8/64/256 cases;
+all original depths remain. Independently built baseline/candidate executables
+use identical source workloads and balanced order. Raw observations stay outside
+Git, and GC/history differences must not be reported as selector-only speedups.

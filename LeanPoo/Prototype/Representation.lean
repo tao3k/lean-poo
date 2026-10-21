@@ -48,6 +48,124 @@ theorem first_erase (entries : List (String × Value)) (name : String) : first (
     rcases entry with ⟨key,value⟩
     by_cases h : key = name <;> simp [erase,first,h] at * <;> assumption
 
+/-- A source-level storage refinement. Tree contents denote the standard library's
+ordered contribution observation; this does not model balancing or physical cells. -/
+inductive Storage (Value : Type) where
+  | small (entries : List (String × Value))
+  | tree (entries : List (String × Value))
+  deriving DecidableEq
+
+/-- Both physical choices must expose precisely the same ordered contributions. -/
+def Storage.entries : Storage Value → List (String × Value)
+  | .small entries | .tree entries => entries
+
+/-- Count contributions, including duplicates, rather than only unique field names. -/
+def pack (entries : List (String × Value)) : Storage Value :=
+  if entries.length ≤ 8 then .small entries else .tree entries
+
+/-- Promotion/demotion retain the entire ordered method chain, without evaluation. -/
+@[simp] theorem entries_pack (entries : List (String × Value)) : (pack entries).entries = entries := by
+  simp only [pack]; split <;> rfl
+
+/-- Exactly the compact branch has the declared bounded contribution count. -/
+theorem pack_small_iff (entries : List (String × Value)) :
+    pack entries = .small entries ↔ entries.length ≤ 8 := by
+  simp only [pack]; split <;> simp_all
+
+/-- Persistent writes use the existing first-contribution operation before repacking. -/
+def Storage.put (source : Storage Value) (name : String) (value : Value) : Storage Value :=
+  pack (putFirst source.entries name value)
+
+/-- Persistent removal uses the existing all-contribution erasure before repacking. -/
+def Storage.remove (source : Storage Value) (name : String) : Storage Value :=
+  pack (erase source.entries name)
+
+/-- Either representation preserves all untouched and later same-name contributions. -/
+@[simp] theorem entries_put (source : Storage Value) (name : String) (value : Value) :
+    (source.put name value).entries = putFirst source.entries name value := by
+  simp [Storage.put]
+
+/-- Demotion cannot retain a forgotten direct method or change surviving order. -/
+@[simp] theorem entries_remove (source : Storage Value) (name : String) :
+    (source.remove name).entries = erase source.entries name := by
+  simp [Storage.remove]
+
+/-- The existing first-write law applies across both representation transitions. -/
+theorem storage_first_put (source : Storage Value) (name : String) (value : Value) :
+    first (source.put name value).entries name = some value := by
+  simpa using first_put source.entries name value
+
+/-- A persistent revision cannot change an unrelated field's first contribution. -/
+theorem storage_put_frame (source : Storage Value) (name other : String) (value : Value)
+    (different : other ≠ name) :
+    first (source.put name value).entries other = first source.entries other := by
+  simpa using first_put_frame source.entries name other value different
+
+/-- Count actual identity tests in the compact first-name search, including misses. -/
+def searchWork (entries : List (String × Value)) (name : String) : Nat :=
+  match entries with
+  | [] => 0
+  | (key, _) :: tail => if key = name then 1 else 1 + searchWork tail name
+
+/-- Compact search never examines more contributions than the stored vector holds. -/
+theorem searchWork_le (entries : List (String × Value)) (name : String) :
+    searchWork entries name ≤ entries.length := by
+  induction entries with
+  | nil => simp [searchWork]
+  | cons entry tail ih =>
+    rcases entry with ⟨key, value⟩
+    simp only [searchWork, List.length_cons]
+    split <;> omega
+
+/-- A selected compact representation has at most eight identity tests per lookup.
+This counts source operations only, not allocator, GC, compiler or wall time. -/
+theorem compact_search_bound (entries : List (String × Value)) (name : String)
+    (compact : pack entries = .small entries) : searchWork entries name ≤ 8 := by
+  exact Nat.le_trans (searchWork_le entries name) ((pack_small_iff entries).mp compact)
+
+/-- First replacement preserves length; a new contribution increases it by one. -/
+theorem putFirst_length_le (entries : List (String × Value)) (name : String) (value : Value) :
+    (putFirst entries name value).length ≤ entries.length + 1 := by
+  induction entries with
+  | nil => simp [putFirst]
+  | cons entry tail ih =>
+    rcases entry with ⟨key, old⟩
+    simp only [putFirst, List.length_cons]
+    split <;> simp_all only [List.length_cons] <;> omega
+
+/-- Compact writes copy at most nine vector cells, including the promotion row.
+Tree construction after promotion has a separate standard-library cost. -/
+theorem compact_copy_bound (entries : List (String × Value)) (name : String) (value : Value)
+    (compact : pack entries = .small entries) : (putFirst entries name value).length ≤ 9 := by
+  have size := (pack_small_iff entries).mp compact
+  have written := putFirst_length_le entries name value
+  omega
+
+/-- Whole finite revision traces use one semantic operation family in both stores. -/
+inductive Edit (Value : Type) where
+  | put (name : String) (value : Value)
+  | remove (name : String)
+
+/-- One standard semantic revision step on the ordered contribution list. -/
+def editEntries (entries : List (String × Value)) : Edit Value → List (String × Value)
+  | .put name value => putFirst entries name value
+  | .remove name => erase entries name
+
+/-- One revision step through the concrete representation selector. -/
+def editStorage (source : Storage Value) : Edit Value → Storage Value
+  | .put name value => source.put name value
+  | .remove name => source.remove name
+
+/-- Arbitrarily many promotions/demotions preserve the full ordered specification. -/
+theorem revision_trace (edits : List (Edit Value)) (source : Storage Value) :
+    (edits.foldl editStorage source).entries = edits.foldl editEntries source.entries := by
+  induction edits generalizing source with
+  | nil => rfl
+  | cons edit tail ih =>
+    simp only [List.foldl_cons]
+    rw [ih]
+    cases edit <;> simp [editStorage, editEntries]
+
 /-- A layout has one receiver identity, monotone revision and allocation token.
 Shapes may be shared, while the field interpretation belongs to this receiver. -/
 structure View (Value : Type) where
