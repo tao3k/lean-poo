@@ -225,4 +225,77 @@ theorem bindingsCurrent_refuses [DecidableEq Descriptor] (bindings : List (Bound
     · exact False.elim (different same.1)
     · exact False.elim (different same.2)
 
+/-- A type schema checks the names read by the actual positional binder, then
+uses that SAME snapshot. Hosts supply faithful capture and pure admission;
+no arbitrary concurrent mutation or descriptor-compiler correctness is asserted. -/
+def specializeExpected [DecidableEq Name] (reserved : Name) (expected : List Name)
+    (source : Template Name Value) (values : List Value) : Except Failure (Template Name Value) :=
+  if source.remaining = expected then checkedSpecialize reserved source values else .error .declaration
+
+/-- A reordered, added or removed name refuses even when the new arity fits. -/
+theorem specializeExpected_changed [DecidableEq Name] (reserved : Name) (expected : List Name)
+    (source : Template Name Value) (values : List Value) (changed : source.remaining ≠ expected) :
+    specializeExpected reserved expected source values = .error .declaration := by
+  simp [specializeExpected, changed]
+
+/-- Unchanged metadata reuses the existing checked positional protocol exactly. -/
+theorem specializeExpected_same [DecidableEq Name] (reserved : Name)
+    (source : Template Name Value) (values : List Value) :
+    specializeExpected reserved source.remaining source values = checkedSpecialize reserved source values := by
+  simp [specializeExpected]
+
+/-- Success binds values under the original schema order and leaves its exact
+suffix; all unbound fields retain the existing persistent interpretation. -/
+theorem specializeExpected_sound [DecidableEq Name] (reserved : Name) (expected : List Name)
+    (source result : Template Name Value) (values : List Value)
+    (accepted : specializeExpected reserved expected source values = .ok result) :
+    source.remaining = expected ∧ validNames reserved expected = true ∧
+      result.remaining = expected.drop values.length ∧
+      result.fields = bindPrefix expected values source.fields := by
+  unfold specializeExpected at accepted
+  split at accepted
+  · rename_i same
+    unfold checkedSpecialize at accepted
+    split at accepted
+    · rename_i valid
+      unfold specialize at accepted
+      split at accepted
+      · have exactResult := Except.ok.inj accepted
+        cases exactResult
+        exact ⟨same, same ▸ valid, by simp [same], by simp [same]⟩
+      · contradiction
+    · contradiction
+  · contradiction
+
+/-- A changed order cannot weaken ordinary excessive-argument refusal. -/
+theorem specializeExpected_excess [DecidableEq Name] (reserved : Name)
+    (source : Template Name Value) (values : List Value)
+    (valid : validNames reserved source.remaining = true)
+    (excess : source.remaining.length < values.length) :
+    specializeExpected reserved source.remaining source values = .error .excess := by
+  simp [specializeExpected, checkedSpecialize, valid, specialize_excess source values excess]
+
+/-- Checked prefixes compose under the original order and its exact residual
+suffix; this reuses the existing incremental law rather than a second binder. -/
+theorem specializeExpected_append [DecidableEq Name] (reserved : Name)
+    (source : Template Name Value) (first second : List Value)
+    (valid : validNames reserved source.remaining = true)
+    (fits : first.length + second.length ≤ source.remaining.length) :
+    (specializeExpected reserved source.remaining source first).bind
+      (fun derived => specializeExpected reserved (source.remaining.drop first.length) derived second) =
+        specializeExpected reserved source.remaining source (first ++ second) := by
+  have one : first.length ≤ source.remaining.length := by omega
+  have two : second.length ≤ source.remaining.length - first.length := by omega
+  have rest := valid_drop reserved source.remaining first.length valid
+  simp [specializeExpected, checkedSpecialize, valid, specialize, one, two, rest,
+    Except.bind, List.length_append, fits, List.drop_drop, bind_append]
+
+/-- Failed source inspection retains its cause before any order/arity check. -/
+theorem specializeExpected_error [DecidableEq Name] (inspect : Except Cause (Template Name Value))
+    (reserved : Name) (expected : List Name) (values : List Value) (cause : Cause)
+    (failed : inspect = .error cause) :
+    ((inspect.mapError Sum.inr).bind fun source =>
+      (specializeExpected reserved expected source values).mapError Sum.inl) = .error (Sum.inr cause) := by
+  simp [failed, Except.mapError, Except.bind]
+
 end LeanPoo.Functional.Parameters

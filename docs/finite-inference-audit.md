@@ -265,3 +265,38 @@ single output and checks later-request selection and failure ordering. Scheme's
 `examples/signature-service.ss` and candidate-inference regressions execute the
 corresponding nested publication chain. Direct source/binding revision checks
 remain in force; no Any fallback or transitive callback stability is introduced.
+
+## Coherent Type parameter binding
+
+A source `.parameters` list could change order after schema admission but before
+ordinary positional specialization read it again. Pure instantiation then returned
+`(Pair UInt Bool)` with actual fields T=Bool and U=UInt. Prefix and inferred
+assembly now share `bind-type-parameters`, which compares the original variable
+order with the SAME name snapshot consumed by the existing positional binder.
+Reordered/added/removed valid names refuse `bounds` before cloning. No second
+getter follows admission; generic `specialize` also uses this single implementation.
+Gerbil's multi-binding `using` handles the new continuation's ordinary contracts;
+standard take/drop and existing persistent `.cc` still own construction.
+
+Eight typed entry paths and three metadata changes exercise the complete boundary.
+A generic control edits the source after snapshot admission and proves construction
+still uses that snapshot. Original getter/admission failures retain their cause.
+Repair through the supported slot protocol permits an independent request; the
+shared signature-service action then composes prefix specialization, inference,
+qualified declarations, recursive Function wrapping, refine and exact evidence/FUN/IO
+publication. Nonunique reports remain explicit application errors, not guessed Types.
+
+Lean's existing Parameters namespace proves original order, exact residual suffix,
+field mapping, excessive-argument refusal and incremental composition. The generic
+positional model's `declaration` refusal represents the typed host's `bounds` gate;
+source errors are transported separately. Host snapshot/admission/descriptor
+interpretation are premises, not compiler/heap/concurrent-mutation proofs. This
+advances the finite type future work without extending its research boundary.
+
+`Parameters.specializeExpected` and its six laws model the shared gate;
+`Examples/Parameters.lean` contrasts swapped old fields with rejected order changes
+and exact direct/staged bindings. The executable acceptance is in parameters-test
+and candidate-inference-test, including the full specialized-action example.
+Admission callbacks must preserve the copied names they receive. Arbitrary
+callback purity, rollback, transitive source stability and unbounded inference
+remain outside this protocol. Existing resource limits and full checks remain required.

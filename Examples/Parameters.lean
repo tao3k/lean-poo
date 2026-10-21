@@ -615,4 +615,37 @@ example : prepareSelectedPath (fun (_ : Unit) => Except.ok ["api", "run"])
 #print axioms prepareSelectedPath_sound
 end SelectedFieldAdmission
 
+section ExpectedParameterBinding
+/-- The schema records T/UInt and U/Bool as an ordered pair of finite codes. -/
+def expectedTypeParameters : Template String Nat := ⟨["T", "U"], fun _ => none⟩
+/-- A later getter exposes a different but individually valid parameter order. -/
+def reorderedTypeParameters : Template String Nat := ⟨["U", "T"], fun _ => none⟩
+
+/-- The original binder alone silently swaps the schema's intended fields. -/
+example : (specialize reorderedTypeParameters [0, 1]).map (fun result => result.fields "T") = .ok (some 1) := rfl
+
+/-- The type-aware admission refuses that order before constructing a receiver. -/
+example : specializeExpected ".parameters" ["T", "U"] reorderedTypeParameters [0, 1] = .error .declaration := rfl
+
+/-- Fresh unchanged metadata preserves the intended T/UInt and U/Bool mapping. -/
+example : (specializeExpected ".parameters" ["T", "U"] expectedTypeParameters [0, 1]).map
+    (fun result => (result.remaining, result.fields "T", result.fields "U")) = .ok ([], some 0, some 1) := rfl
+
+/-- A partial request retains U for the same existing next-prefix protocol. -/
+example : ((specializeExpected ".parameters" ["T", "U"] expectedTypeParameters [0]).bind
+    (fun derived => specializeExpected ".parameters" ["U"] derived [1])).map
+      (fun result => (result.remaining, result.fields "T", result.fields "U")) = .ok ([], some 0, some 1) := rfl
+
+/-- Added names refuse independently of otherwise sufficient positional arity. -/
+example : specializeExpected ".parameters" ["T", "U"]
+    (⟨["T", "U", "V"], fun _ => none⟩ : Template String Nat) [0] = .error .declaration := rfl
+
+#print axioms specializeExpected_changed
+#print axioms specializeExpected_same
+#print axioms specializeExpected_sound
+#print axioms specializeExpected_excess
+#print axioms specializeExpected_append
+#print axioms specializeExpected_error
+end ExpectedParameterBinding
+
 end LeanPoo.Examples.Parameters
