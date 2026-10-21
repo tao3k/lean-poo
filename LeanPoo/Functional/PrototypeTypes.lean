@@ -824,4 +824,54 @@ theorem projectCalls_sound (admit : Call → Except Failure Unit) (calls : List 
     exact ⟨by simpa [projectCalls, checked, Except.bind] using accepted,
       fun call member => checkCalls_sound admit calls observations checked call member⟩
 
+/-- Own the finite constraint syntax before refreshing computed source state.
+`capture` must faithfully project the initial host syntax into immutable Lean
+data. Heap nonaliasing and callback execution are runtime correspondence premises;
+the refreshed state cannot replace the constraints supplied to the existing solver. -/
+def inferCaptured (capture : State → Except Failure (List (Expr × Expr)))
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (candidates : List (Nat → Ty)) : Except Failure (Inference (Nat → Ty)) :=
+  (capture initial).bind fun constraints =>
+    (refresh initial).bind fun _ => inferBounded budget (satisfies fuel constraints) candidates
+
+/-- Finite capture failure precedes every computed getter and candidate search. -/
+theorem inferCaptured_capture_refused (capture : State → Except Failure (List (Expr × Expr)))
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (candidates : List (Nat → Ty)) (cause : Failure) (failed : capture initial = .error cause) :
+    inferCaptured capture refresh initial fuel budget candidates = .error cause := by
+  simp [inferCaptured, failed, Except.bind]
+
+/-- A getter failure keeps its exact cause; no partial search result escapes. -/
+theorem inferCaptured_refresh_refused (capture : State → Except Failure (List (Expr × Expr)))
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (candidates : List (Nat → Ty)) (constraints : List (Expr × Expr)) (cause : Failure)
+    (captured : capture initial = .ok constraints) (failed : refresh initial = .error cause) :
+    inferCaptured capture refresh initial fuel budget candidates = .error cause := by
+  simp [inferCaptured, captured, failed, Except.bind]
+
+/-- Any successful source refresh uses the same original complete constraints.
+This retains classification, ambiguity, exhaustion and original candidate order. -/
+theorem inferCaptured_eq (capture : State → Except Failure (List (Expr × Expr)))
+    (refresh : State → Except Failure State) (initial current : State) (fuel budget : Nat)
+    (candidates : List (Nat → Ty)) (constraints : List (Expr × Expr))
+    (captured : capture initial = .ok constraints) (refreshed : refresh initial = .ok current) :
+    inferCaptured capture refresh initial fuel budget candidates =
+      inferBounded budget (satisfies fuel constraints) candidates := by
+  simp [inferCaptured, captured, refreshed, Except.bind]
+
+/-- A unique result after arbitrary successful refresh still proves every
+original bound. A changed live syntax cannot substitute a weaker constraint. -/
+theorem inferCaptured_bound (capture : State → Except Failure (List (Expr × Expr)))
+    (refresh : State → Except Failure State) (initial : State) (fuel budget : Nat)
+    (candidates : List (Nat → Ty)) (constraints : List (Expr × Expr))
+    (captured : capture initial = .ok constraints)
+    (accepted : inferCaptured capture refresh initial fuel budget candidates = .ok (.unique environment))
+    (member : (a,b) ∈ constraints) :
+    Subtype (substitute environment a) (substitute environment b) := by
+  cases refreshed : refresh initial with
+  | error cause => simp [inferCaptured, captured, refreshed, Except.bind] at accepted
+  | ok current =>
+    rw [inferCaptured_eq capture refresh initial current fuel budget candidates constraints captured refreshed] at accepted
+    exact checkedUnique_bound accepted member
+
 end LeanPoo.Functional.PrototypeTypes

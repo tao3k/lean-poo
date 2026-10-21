@@ -461,4 +461,52 @@ example (signature : TypedSignature String Functional.PrototypeTypes.Expr)
 #print axioms invoke_capture_missing
 #print axioms invokeValues_capture
 end CapturedSignatures
+
+section CapturedSchemes
+open Functional.PrototypeTypes
+
+/-- The source declares Self <: Super before any computed parameter getter. -/
+def initialBounds : List (Expr × Expr) := [(.var 0, .var 1)]
+/-- The getter's later buffer reuse weakens its live bound to Self <: Self. -/
+def rewrittenBounds (_ : List (Expr × Expr)) : Except Functional.PrototypeTypes.Failure (List (Expr × Expr)) :=
+  .ok [(.var 0, .var 0)]
+/-- Integer output cannot replace the original UInt input bound. -/
+def invalidBinding (name : Nat) : Ty := if name = 0 then .atom .integer else .atom .uint
+/-- The ordinary UInt output / Integer input specialization remains valid. -/
+def validBinding (name : Nat) : Ty := if name = 0 then .atom .uint else .atom .integer
+
+example : inferCaptured Except.ok rewrittenBounds initialBounds 8 2
+    [invalidBinding, validBinding] = .ok (.unique validBinding) := by
+  have invalid : satisfies 8 initialBounds invalidBinding = false := by
+    simp only [satisfies, initialBounds, List.all_cons, List.all_nil, substitute, invalidBinding]
+    decide
+  have valid : satisfies 8 initialBounds validBinding = true := by
+    simp only [satisfies, initialBounds, List.all_cons, List.all_nil, substitute, validBinding]
+    decide
+  simp [inferCaptured, rewrittenBounds, Except.bind, inferBounded, infer, invalid, valid]
+
+/-- Re-reading the weakened live buffer would instead accept both candidates. -/
+example : inferBounded 2 (satisfies 8 [(.var 0, .var 0)]) [invalidBinding, validBinding] =
+    .ok (.ambiguous [invalidBinding, validBinding]) := by
+  have left : satisfies 8 [(.var 0, .var 0)] invalidBinding = true := by
+    simp only [satisfies, List.all_cons, List.all_nil, substitute, invalidBinding]
+    decide
+  have right : satisfies 8 [(.var 0, .var 0)] validBinding = true := by
+    simp only [satisfies, List.all_cons, List.all_nil, substitute, validBinding]
+    decide
+  simp [inferBounded, infer, left, right]
+
+/-- Capture failure wins over a computed getter failure and cannot start search. -/
+example : inferCaptured (fun (_ : Unit) => .error .exhausted)
+    (fun _ => .error .bounds) () 8 2 [invalidBinding, validBinding] = .error .exhausted := rfl
+
+/-- Complete search still refuses an insufficient quota after successful refresh. -/
+example : inferCaptured Except.ok rewrittenBounds initialBounds 8 1
+    [invalidBinding, validBinding] = .error .exhausted := rfl
+
+#print axioms inferCaptured_capture_refused
+#print axioms inferCaptured_refresh_refused
+#print axioms inferCaptured_eq
+#print axioms inferCaptured_bound
+end CapturedSchemes
 end LeanPoo.Examples.Parameters

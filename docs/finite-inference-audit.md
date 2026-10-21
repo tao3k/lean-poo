@@ -5,6 +5,26 @@ reference motivates explicit subtype and modular-extension obligations; it does
 not implement this finite candidate inference algorithm. An empty record value
 used as a composition seed is inhabited and is not an empty Type.
 
+## Captured schemas before computed metadata
+
+Gerbil's shared schema gate now bounds and copies variables, expressions, bounds
+and binding-list topology before computed parameter getters or Type admission.
+Previously a getter could weaken `Self <: Super` into `Self <: Self` before the
+copy, admitting the forbidden Integer-output/UInt-input instantiation. Original
+descriptor identities and revision stamps remain unchanged; existing prefix,
+inference and whole-declaration mechanisms consume one captured schema.
+
+`PrototypeTypes.inferCaptured` composes faithful immutable constraint capture,
+source refresh and the existing complete bounded solver. Its four laws preserve
+capture/getter refusal order, exact classification and every original accepted
+bound. Examples/Parameters.lean distinguishes the original unique solve from the
+extra candidate accepted by a live-buffer reread, and retains exhaustion.
+The Gerbil observed descriptor-service example carries this through nested
+Function wrapping, qualified declarations, refine/bind-evidence and FUN/IO,
+including rejected publication and retry. Host syntax projection and actual heap
+nonaliasing remain explicit runtime correspondence premises. Arbitrary callback
+purity, rollback, unrestricted inference and compiler verification are not proved.
+
 ## Remaining substantive coverage
 
 | Priority | Finding | Acceptance / next boundary |
