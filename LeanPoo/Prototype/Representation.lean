@@ -52,16 +52,17 @@ theorem first_erase (entries : List (String × Value)) (name : String) : first (
 ordered contribution observation; this does not model balancing or physical cells. -/
 inductive Storage (Value : Type) where
   | small (entries : List (String × Value))
-  | tree (entries : List (String × Value))
+  | tree (entries : List (String × Value)) (compact : Bool)
   deriving DecidableEq
 
 /-- Both physical choices must expose precisely the same ordered contributions. -/
 def Storage.entries : Storage Value → List (String × Value)
-  | .small entries | .tree entries => entries
+  | .small entries => entries
+  | .tree entries _ => entries
 
 /-- Count contributions, including duplicates, rather than only unique field names. -/
 def pack (entries : List (String × Value)) : Storage Value :=
-  if entries.length ≤ 8 then .small entries else .tree entries
+  if entries.length ≤ 8 then .small entries else .tree entries true
 
 /-- Promotion/demotion retain the entire ordered method chain, without evaluation. -/
 @[simp] theorem entries_pack (entries : List (String × Value)) : (pack entries).entries = entries := by
@@ -72,13 +73,35 @@ theorem pack_small_iff (entries : List (String × Value)) :
     pack entries = .small entries ↔ entries.length ≤ 8 := by
   simp only [pack]; split <;> simp_all
 
+/-- The explicit policy survives promotion; tree-only mode never enables small maps. -/
+def Storage.compact : Storage Value → Bool
+  | .small _ => true
+  | .tree _ compact => compact
+
+/-- New snapshots default to the standard tree policy; compact storage is explicit. -/
+def packWith (compact : Bool) (entries : List (String × Value)) : Storage Value :=
+  if compact then pack entries else .tree entries false
+
+/-- Policy selection changes storage, never the ordered contribution observation. -/
+@[simp] theorem entries_packWith (compact : Bool) (entries : List (String × Value)) :
+    (packWith compact entries).entries = entries := by
+  cases compact with
+  | false => rfl
+  | true => exact entries_pack entries
+
+/-- Representation conversion retains the caller-selected strategy, including large maps. -/
+@[simp] theorem compact_packWith (compact : Bool) (entries : List (String × Value)) :
+    (packWith compact entries).compact = compact := by
+  cases compact <;> by_cases small : entries.length ≤ 8 <;>
+    simp [packWith, pack, small, Storage.compact]
+
 /-- Persistent writes use the existing first-contribution operation before repacking. -/
 def Storage.put (source : Storage Value) (name : String) (value : Value) : Storage Value :=
-  pack (putFirst source.entries name value)
+  packWith source.compact (putFirst source.entries name value)
 
 /-- Persistent removal uses the existing all-contribution erasure before repacking. -/
 def Storage.remove (source : Storage Value) (name : String) : Storage Value :=
-  pack (erase source.entries name)
+  packWith source.compact (erase source.entries name)
 
 /-- Either representation preserves all untouched and later same-name contributions. -/
 @[simp] theorem entries_put (source : Storage Value) (name : String) (value : Value) :
@@ -89,6 +112,18 @@ def Storage.remove (source : Storage Value) (name : String) : Storage Value :=
 @[simp] theorem entries_remove (source : Storage Value) (name : String) :
     (source.remove name).entries = erase source.entries name := by
   simp [Storage.remove]
+
+/-- Writes cannot silently enable a rejected automatic policy. -/
+@[simp] theorem put_policy (source : Storage Value) (name : String) (value : Value) :
+    (source.put name value).compact = source.compact := by simp [Storage.put]
+
+/-- Removal/demotion retains the chosen policy for future revisions. -/
+@[simp] theorem remove_policy (source : Storage Value) (name : String) :
+    (source.remove name).compact = source.compact := by simp [Storage.remove]
+
+/-- The default tree policy remains a tree even for small or empty revised rows. -/
+theorem default_put_tree (entries : List (String × Value)) (name : String) (value : Value) :
+    (Storage.tree entries false).put name value = .tree (putFirst entries name value) false := by rfl
 
 /-- The existing first-write law applies across both representation transitions. -/
 theorem storage_first_put (source : Storage Value) (name : String) (value : Value) :
@@ -165,6 +200,16 @@ theorem revision_trace (edits : List (Edit Value)) (source : Storage Value) :
     simp only [List.foldl_cons]
     rw [ih]
     cases edit <;> simp [editStorage, editEntries]
+
+/-- A complete finite revision trace preserves the explicitly selected strategy. -/
+theorem revision_trace_policy (edits : List (Edit Value)) (source : Storage Value) :
+    (edits.foldl editStorage source).compact = source.compact := by
+  induction edits generalizing source with
+  | nil => rfl
+  | cons edit tail ih =>
+    simp only [List.foldl_cons]
+    rw [ih]
+    cases edit <;> simp [editStorage]
 
 /-- A layout has one receiver identity, monotone revision and allocation token.
 Shapes may be shared, while the field interpretation belongs to this receiver. -/

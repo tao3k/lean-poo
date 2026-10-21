@@ -74,11 +74,14 @@ benchmarks are required before claiming any strategy is faster.
 ## Compact persistent prototype maps
 
 The concrete small-map item in the representation TODO is now implemented through
-`prototype-map.ss`, without another public namespace or object API. Up to eight
-**contributions**, including duplicates, occupy a private vector. A first-name
+`prototype-map.ss`, without another public namespace or object API. The default policy remains `tree`. Explicit
+`prototype-map entries policy: 'compact` selects private vectors through eight
+**contributions**, including duplicates. Existing snapshots preserve their policy;
+explicit `tree`/`compact` conversion owns a new snapshot with identical entries.
+`prototype-map-policy` reports the selected policy, not the current physical backend. A first-name
 identity scan selects replacement; appending the ninth contribution promotes to
 Gerbil's existing RBTree representation. Removing all contributions for a name
-can demote the remaining ordered entries. Missing removal retains the snapshot.
+can demote the remaining ordered entries only under the selected compact policy. Missing removal retains the snapshot.
 The vector, entry pairs and mutable tree handles never escape; list observations
 return fresh spines/pairs, while values and SlotSpecs remain intentionally shared.
 This is source-level persistence, not deep immutability of arbitrary values.
@@ -97,7 +100,7 @@ contraction, overrides, subsequent source edits, checked FUN observation, policy
 refusal and retry keep the existing source invalidation/contract protocol.
 
 Lean's existing `Prototype.Representation` namespace proves complete ordered
-observations, first-write/frame laws, representation selection, bounded compact
+observations, first-write/frame laws, representation and policy selection/preservation, bounded compact
 search/copy and arbitrary finite revision-trace equivalence. Its tree observation
 assumes faithful standard-library iteration; distinct Scheme symbol identities
 must map to distinct model keys. It does not verify RBTree balancing, vector
@@ -108,6 +111,27 @@ supply cache rejection; changing map storage grants no new cache authority.
 allocation deltas via the existing shared Scheme sampler. Both natural and
 pre-collected regimes retain the complete cold construction/read, clone-only and
 clone/read workflows. Widths 1/4/8/9/16 supplement the original 8/64/256 cases;
-all original depths remain. Independently built baseline/candidate executables
-use identical source workloads and balanced order. Raw observations stay outside
+all original depths remain. The final executable accepts `natural|collected` and `tree|compact`, exercising
+both current policies through the same public map constructor and standard build.
+The added cold construction/clone/read phase includes the first promotion inside
+its measured workload. Balanced ABBA process order retains all widths/depths. Raw observations stay outside
 Git, and GC/history differences must not be reported as selector-only speedups.
+
+## Explicit policy after a rejected default experiment
+
+The first automatic compact candidate was rejected as a default: two ABBA samples
+per GC regime showed eight-contribution clone-only CPU increasing by 61.1% under
+natural GC and 90.9% after collection, aggregating the three retained depths.
+Tree reconstruction at persistent promotion is real work; lower aggregate wall
+observations did not certify this path. The latest design defaults to standard
+trees and exposes compact storage as a deliberate constructor policy. Writes,
+promotion, removal/demotion and conversion preserve that choice. Core `using`
+rejects unknown policies before construction; the standard `length<=n?` bounds
+compact admission without scanning a large input just to choose the backend.
+
+Lean now carries that policy in tree snapshots, proves selection/observation
+identity and write/removal/whole-trace policy preservation, and proves that a
+default tree write remains a tree even for small rows. A compact scan bound is
+not a total allocation bound: promotion still pays the standard tree builder.
+This implements the concrete selectable representation protocol. Automatic
+JIT/PIC selection and a universal speedup remain unimplemented qualification work.
