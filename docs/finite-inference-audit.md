@@ -333,3 +333,29 @@ snapshots and revision propagation for supported edits are premises. Arbitrary
 raw/concurrent mutation, transitive callback discovery and compiler correctness
 remain outside this finite future-work protocol. Full checks and resource limits
 remain unchanged.
+
+## Public Type request ownership
+
+A live finite-directory observer could rewrite another public operand during
+admission: a false Tuple replacement became true, and nested Function compilation
+could accept a Bool after its caller syntax was edited. Public `expression-type`,
+`subtype-expression?` and `function-covers?` now share `call-with-type-inputs`:
+Gerbil's ordered map captures EVERY operand with the existing bounded copier
+before invoking the original consumer. Internal inference already owns its input
+and continues to use its existing checked operations without another copy.
+
+Source order, leaf/token identity, ordered clauses, errors and one request quota
+remain. Copy visits consume that quota; exhaustion before admission invokes no
+observer. Callback edits remain visible to later independent requests, and their
+original exceptions are not replaced. Existing catalog invalidation still refuses
+stale sources; this is not a permanent metadata certificate or a rollback policy.
+
+`checked-operation-action` composes an explicit compiled operation contract with
+prefix specialization, finite constraint inference, qualified declarations and the
+existing refine/bind-evidence/FUN/IO service. Controls cover both binary operands,
+shape changes, an invalid sibling that an observer tries to erase, nested wrapper
+inputs/results, policy refusal and fresh retry. Lean `withCapturedInputs` proves
+original-input consumption, error preservation and composition with `check_sound`,
+conditional on faithful host capture and Type interpretation. It does not prove
+Scheme heap copying, arbitrary callback behavior or compiler correctness. This
+advances the article's type-protocol future work, not a missing Racket theorem.

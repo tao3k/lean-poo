@@ -682,4 +682,41 @@ example : Functional.DeclarativeMetadata.prepareDeclaredSignature [retainedType]
 #print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_sound
 end RetainedTypeBinding
 
+section CapturedTypeInputs
+open Functional.PrototypeTypes Functional.DeclarativeMetadata
+/-- The original binary request cannot replace a UInt tuple with a Bool tuple. -/
+def ownedOperands : Ty × Ty := (.tuple [.atom .uint], .tuple [.atom .bool])
+/-- Live admission may change the caller's target to make a LATER request valid. -/
+def changedOperands : Ty × Ty := (.tuple [.atom .uint], .tuple [.atom .uint])
+/-- The observer returns changed caller state, independently of the captured pair. -/
+def editOperands (_ : Ty × Ty) : Except String (Ty × Ty) := .ok changedOperands
+/-- This is the existing bounded judgment, with no new subtype rule or fallback. -/
+def judgeOperands (pair : Ty × Ty) : Except String Bool := .ok (check 4 pair.1 pair.2)
+/-- Admission effects cannot turn the original refused request into acceptance. -/
+example : withCapturedInputs ownedOperands editOperands judgeOperands =
+    .ok (false, changedOperands) := rfl
+/-- A new request intentionally sees the completed edit and can be accepted. -/
+example : withCapturedInputs changedOperands editOperands judgeOperands =
+    .ok (true, changedOperands) := rfl
+/-- A nested callback remains part of the original finite compilation input. -/
+def ownedCallback : Ty := .tuple [.atom .uint, .function [.atom .uint] [.atom .integer]]
+/-- Replacing that callback with Bool changes caller state, not the captured tree. -/
+example : withCapturedInputs ownedCallback
+    (fun _ => (.ok (.tuple [.atom .uint, .atom .bool]) : Except String Ty))
+    (fun input => .ok input) = .ok (ownedCallback, .tuple [.atom .uint, .atom .bool]) := rfl
+/-- Original failures do not manufacture a successful judgment or compiled result. -/
+example : withCapturedInputs ownedOperands (fun _ => (.error "observer refused" : Except String Unit))
+    judgeOperands = .error "observer refused" := rfl
+/-- Accepted captured judgments compose the existing universal replacement law. -/
+example (fuel : Nat) (source target : Ty) (inspect : Ty × Ty → Except String (Ty × Ty)) after
+    (accepted : withCapturedInputs (source, target) inspect
+      (fun pair => .ok (check fuel pair.1 pair.2)) = .ok (true, after)) :
+    Subtype source target := withCapturedInputs_subtype fuel source target inspect after accepted
+#print axioms withCapturedInputs_fresh
+#print axioms withCapturedInputs_error
+#print axioms withCapturedInputs_consume_error
+#print axioms withCapturedInputs_sound
+#print axioms withCapturedInputs_subtype
+end CapturedTypeInputs
+
 end LeanPoo.Examples.Parameters

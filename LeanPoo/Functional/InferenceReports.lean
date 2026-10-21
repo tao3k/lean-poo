@@ -91,4 +91,60 @@ theorem inferDeclaredQueries_error (fuel budget bounds queries candidates)
     inferDeclaredQueries fuel budget bounds queries candidates build = .error (.inr cause) := by
   simp [inferDeclaredQueries, inferDeclared, completed, failed, Except.map]
 
+/-- Public Type operations consume one faithfully captured input, even when live
+admission returns changed caller state. Scheme owns every operand BEFORE invoking
+admission; this conditional model does not prove its heap copier or callbacks. -/
+def withCapturedInputs (inputs : Input) (inspect : Input → Except Cause Buffer)
+    (consume : Input → Except Cause Result) : Except Cause (Result × Buffer) :=
+  (inspect inputs).bind fun after => (consume inputs).map fun result => (result, after)
+
+/-- Caller edits remain observable, but cannot replace the admitted operands. -/
+theorem withCapturedInputs_fresh (inputs : Input) (inspect : Input → Except Cause Buffer)
+    (consume : Input → Except Cause Result) (after result)
+    (inspected : inspect inputs = .ok after) (consumed : consume inputs = .ok result) :
+    withCapturedInputs inputs inspect consume = .ok (result, after) := by
+  simp [withCapturedInputs, inspected, consumed, Except.bind, Except.map]
+
+/-- Original admission failures take precedence over any later consumer result. -/
+theorem withCapturedInputs_error (inputs : Input) (inspect : Input → Except Cause Buffer)
+    (consume : Input → Except Cause Result) (cause)
+    (failed : inspect inputs = .error cause) :
+    withCapturedInputs inputs inspect consume = .error cause := by
+  simp [withCapturedInputs, failed, Except.bind]
+
+/-- Compilation/check failures retain their exact cause after successful admission. -/
+theorem withCapturedInputs_consume_error (inputs : Input) (inspect : Input → Except Cause Buffer)
+    (consume : Input → Except Cause Result) (after cause)
+    (inspected : inspect inputs = .ok after) (failed : consume inputs = .error cause) :
+    withCapturedInputs inputs inspect consume = .error cause := by
+  simp [withCapturedInputs, inspected, failed, Except.bind, Except.map]
+
+/-- A successful result came from BOTH operations on the original captured input,
+never a caller buffer returned by admission. This composes arbitrary existing
+compiler/declaration laws without treating the changed buffer as a certificate. -/
+theorem withCapturedInputs_sound (inputs : Input) (inspect : Input → Except Cause Buffer)
+    (consume : Input → Except Cause Result) (after result)
+    (accepted : withCapturedInputs inputs inspect consume = .ok (result, after)) :
+    inspect inputs = .ok after ∧ consume inputs = .ok result := by
+  cases first : inspect inputs with
+  | error cause => simp [withCapturedInputs, first, Except.bind] at accepted
+  | ok observed =>
+    cases second : consume inputs with
+    | error cause => simp [withCapturedInputs, first, second, Except.bind, Except.map] at accepted
+    | ok value =>
+      have same : (value, observed) = (result, after) := by
+        simpa [withCapturedInputs, first, second, Except.bind, Except.map] using accepted
+      cases same
+      exact ⟨rfl, rfl⟩
+
+/-- Captured binary judgments retain the existing universal subtype proof for
+BOTH original operands, regardless of the caller state produced by admission. -/
+theorem withCapturedInputs_subtype (fuel : Nat) (source target : Ty)
+    (inspect : Ty × Ty → Except Cause Buffer) (after)
+    (accepted : withCapturedInputs (source, target) inspect
+      (fun pair => .ok (check fuel pair.1 pair.2)) = .ok (true, after)) :
+    Subtype source target := by
+  have current := (withCapturedInputs_sound _ _ _ _ _ accepted).2
+  exact check_sound fuel source target (Except.ok.inj current)
+
 end LeanPoo.Functional.DeclarativeMetadata
