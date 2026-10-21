@@ -238,3 +238,30 @@ controls. Host decoder correspondence and child-witness interpretation remain
 explicit; arbitrary predicate implication, compiler/runtime correctness, effects
 and performance are not proved. This advances the article's finite type-protocol
 future work, rather than an already implemented Racket inference solver.
+
+## Original field selection during signature preparation
+
+A computed parameter getter could rewrite a caller-owned Object method path
+before `instance-signature` selected its Function. A different valid sibling
+therefore supplied the descriptor and private origin stamp. Signature preparation
+now admits and copies the complete finite symbolic path before any instance or
+binding getter. Selection and provenance use the same owned path; later requests
+observe subsequent buffer edits. Shared Function path admission replaces the two
+walkers' duplicate checks. Cycles, malformed paths and exhausted requests refuse
+before source effects; getter errors retain their original cause. Negative-watch
+payload immutability/purity remains the existing dispatch precondition.
+
+The nested run/audit example combines candidate inference, whole declaration
+admission, returned Function wrapping, refinement and exact evidence publication
+through FUN/IO, including approval/policy refusal and retry. Lean proves capture
+and refresh failure order and successful selection at the original path, under
+faithful host capture/refresh/compiler interpretation. This advances finite type
+future work; it proves neither arbitrary mutation/rollback nor Scheme compilation.
+
+`FunctionSignature.prepareSelectedPath` composes capture, refresh and compilation;
+its `capture_error`, `refresh_error`, `eq` and `sound` laws retain the original
+selection. `Examples/Parameters.lean` distinguishes run's two outputs from audit's
+single output and checks later-request selection and failure ordering. Scheme's
+`examples/signature-service.ss` and candidate-inference regressions execute the
+corresponding nested publication chain. Direct source/binding revision checks
+remain in force; no Any fallback or transitive callback stability is introduced.

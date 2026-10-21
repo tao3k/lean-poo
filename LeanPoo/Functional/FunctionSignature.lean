@@ -935,4 +935,49 @@ theorem invokeValues_capture [DecidableEq Key] (clauses : List (TypedSignature K
     funext TypedSignature.capture_eq
   simp only [unchanged, List.map_id]
 
+/-- Capture the finite field path before any source refresh. The host supplies
+faithful finite copying/admission and final source checks; callback effects are
+not rolled back and this theorem does not certify arbitrary Scheme mutation. -/
+def prepareSelectedPath (capture : State → Except Error (List Key))
+    (refresh : State → Except Error Catalog)
+    (compile : Catalog → List Key → Except Error Artifact) (initial : State) : Except Error Artifact :=
+  (capture initial).bind fun path => (refresh initial).bind fun catalog => compile catalog path
+
+/-- Malformed/cyclic/exhausted path capture refuses before source refresh. -/
+theorem prepareSelectedPath_capture_error (capture : State → Except Error (List Key))
+    (refresh : State → Except Error Catalog) (compile : Catalog → List Key → Except Error Artifact)
+    (initial : State) (cause : Error) (failed : capture initial = .error cause) :
+    prepareSelectedPath capture refresh compile initial = .error cause := by
+  simp [prepareSelectedPath, failed, Except.bind]
+
+/-- A source getter failure retains its original cause after successful capture. -/
+theorem prepareSelectedPath_refresh_error (capture : State → Except Error (List Key))
+    (refresh : State → Except Error Catalog) (compile : Catalog → List Key → Except Error Artifact)
+    (initial : State) (path : List Key) (cause : Error)
+    (captured : capture initial = .ok path) (failed : refresh initial = .error cause) :
+    prepareSelectedPath capture refresh compile initial = .error cause := by
+  simp [prepareSelectedPath, captured, failed, Except.bind]
+
+/-- Preparation always compiles the ORIGINAL path, including after refresh has
+edited the caller's request buffer. A later independent capture may select another path. -/
+theorem prepareSelectedPath_eq (capture : State → Except Error (List Key))
+    (refresh : State → Except Error Catalog) (compile : Catalog → List Key → Except Error Artifact)
+    (initial : State) (path : List Key) (catalog : Catalog)
+    (captured : capture initial = .ok path) (refreshed : refresh initial = .ok catalog) :
+    prepareSelectedPath capture refresh compile initial = compile catalog path := by
+  simp [prepareSelectedPath, captured, refreshed, Except.bind]
+
+/-- Successful preparation has a successful refresh and a compilation at the
+captured path; it cannot justify a different sibling merely because that sibling is valid. -/
+theorem prepareSelectedPath_sound (capture : State → Except Error (List Key))
+    (refresh : State → Except Error Catalog) (compile : Catalog → List Key → Except Error Artifact)
+    (initial : State) (path : List Key) (artifact : Artifact)
+    (captured : capture initial = .ok path)
+    (accepted : prepareSelectedPath capture refresh compile initial = .ok artifact) :
+    ∃ catalog, refresh initial = .ok catalog ∧ compile catalog path = .ok artifact := by
+  cases stage : refresh initial with
+  | error cause => simp [prepareSelectedPath, captured, stage, Except.bind] at accepted
+  | ok catalog =>
+    exact ⟨catalog, rfl, by simpa [prepareSelectedPath, captured, stage, Except.bind] using accepted⟩
+
 end LeanPoo.Functional.FunctionSignature

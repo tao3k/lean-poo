@@ -579,4 +579,40 @@ example : finalizeDeclaredSource finalSourceMetadata finalSourceMetadata
 #print axioms finalizeDeclaredSource_sound
 #print axioms finalizeDeclaredSource_error
 end FinalSourceAdmission
+section SelectedFieldAdmission
+open Functional.FunctionSignature
+
+/-- Distinct sibling signatures make accidental field redirection observable. -/
+def selectionCatalog (path : List String) : Except String (List String) :=
+  if path = ["api", "run"] then .ok ["UInt", "IntegerCallback"]
+  else if path = ["api", "audit"] then .ok ["Bool"] else .error "missing"
+
+/-- Refresh can change the live request path while preserving the finite catalog. -/
+def refreshSelection (_ : List String) : Except String (List String × Unit) :=
+  .ok (["api", "audit"], ())
+
+/-- Selection uses the captured path, not the path modified by a computed getter. -/
+example : prepareSelectedPath (fun path => Except.ok path) refreshSelection
+    (fun _ path => selectionCatalog path) ["api", "run"] = .ok ["UInt", "IntegerCallback"] := by rfl
+
+/-- A later request observes the changed buffer and selects the actual sibling. -/
+example : prepareSelectedPath (fun path => Except.ok path) refreshSelection
+    (fun _ path => selectionCatalog path) ["api", "audit"] = .ok ["Bool"] := by rfl
+
+/-- A cyclic/exhausted request is modeled by failed capture, before refresh. -/
+example : prepareSelectedPath (fun (_ : Unit) => (Except.error "exhausted" : Except String (List String)))
+    (fun _ => Except.error "source-failed")
+    (fun (_ : Unit) path => selectionCatalog path) () = .error "exhausted" := by rfl
+
+/-- Source errors after capture preserve their original diagnostic. -/
+example : prepareSelectedPath (fun (_ : Unit) => Except.ok ["api", "run"])
+    (fun _ => (Except.error "source-failed" : Except String Unit))
+    (fun _ path => selectionCatalog path) () = .error "source-failed" := by rfl
+
+#print axioms prepareSelectedPath_capture_error
+#print axioms prepareSelectedPath_refresh_error
+#print axioms prepareSelectedPath_eq
+#print axioms prepareSelectedPath_sound
+end SelectedFieldAdmission
+
 end LeanPoo.Examples.Parameters
