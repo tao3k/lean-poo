@@ -2,7 +2,7 @@ import LeanPoo.Functional.Parameters
 import LeanPoo.Functional.SlotScope
 import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
-import LeanPoo.Functional.MethodDeclarations
+import LeanPoo.Functional.InferenceReports
 import LeanPoo.Functional.RecursiveTypes
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
@@ -337,4 +337,71 @@ example : Functional.DeclarativeMetadata.inferDeclared 1 (fun (_ : Nat) => true)
 #print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_stale
 #print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_error
 #print axioms Functional.DeclarativeMetadata.prepareDeclaredSignature_changed
+section QueryReports
+open Functional.PrototypeTypes Functional.DeclarativeMetadata
+
+/-- An ordered nested callback query retains its original syntax through report
+publication; UInt output narrows a callback returning the inferred parameter. -/
+def requestQueries : List (Expr × Expr) :=
+  [(.function [.ground (.atom .uint)] [.ground (.atom .integer)],
+    .function [.var 0] [.ground (.atom .integer)])]
+/-- One finite prefix has already fixed other fields; this is its residual Self. -/
+def requestEnvironment : Nat → Ty := fun _ => .atom .uint
+/-- The declaration callback returns its artifact and a reused incompatible buffer. -/
+def revisedRequest (_ : Nat → Ty) : Except String (Nat × List (Expr × Expr)) :=
+  .ok (31, [(.ground (.atom .bool), .var 0)])
+
+/-- The actual nested callback query succeeds under the supplied finite candidate.
+Compute only this closed Boolean judgment, not an expanded symbolic search tree. -/
+theorem requestSolved : inferBounded 1 (satisfies 4 ([] ++ requestQueries)) [requestEnvironment] =
+    .ok (.unique requestEnvironment) := by
+  have valid : satisfies 4 requestQueries requestEnvironment = true := by
+    simp only [satisfies, requestQueries, List.all_cons, List.all_nil, substitute,
+      List.map_cons, List.map_nil, requestEnvironment, Bool.and_true]
+    decide
+  simp [inferBounded, infer, valid]
+
+/-- Even a callback that changes caller data cannot change the captured evidence. -/
+example : inferDeclaredQueries 4 1 [] requestQueries [requestEnvironment] revisedRequest =
+    .ok ((.unique requestEnvironment, some 31), requestQueries) :=
+  inferDeclaredQueries_unique _ _ _ _ _ _ _ _ _ requestSolved rfl
+
+/-- Fresh inference uses the changed request and refuses it as a complete no-solution;
+the old report above remains a report about the original constraints. -/
+example : inferDeclaredQueries 4 1 [] [(.ground (.atom .bool), .var 0)]
+    [requestEnvironment] revisedRequest = .ok ((.none, none), [(.ground (.atom .bool), .var 0)]) := by
+  have invalid : satisfies 4 [(.ground (.atom .bool), .var 0)] requestEnvironment = false := by
+    simp only [satisfies, List.all_cons, List.all_nil, substitute, requestEnvironment, Bool.and_true]
+    decide
+  apply inferDeclaredQueries_none
+  simp [inferBounded, infer, invalid]
+
+/-- Incomplete search returns no artifact or successful report even if its first
+candidate would satisfy the query; the existing exhaustion theorem supplies it. -/
+example : inferDeclaredQueries 4 0 [] requestQueries [requestEnvironment] revisedRequest =
+    .error (.inl .exhausted) := inferDeclaredQueries_exhausted _ _ _ _ _ _ (by decide)
+
+/-- The caller's own declaration error is not replaced by diagnostic success. -/
+example : inferDeclaredQueries 4 1 [] requestQueries [requestEnvironment]
+    (fun _ => (Except.error "declaration refused" : Except String (Nat × Unit))) =
+    .error (.inr "declaration refused") :=
+  inferDeclaredQueries_error _ _ _ _ _ _ _ _ requestSolved rfl
+
+/-- Accepted reports justify every ORIGINAL query under the selected assignment;
+faithful Scheme copying and host Type interpretations remain explicit premises. -/
+example (env artifact reported)
+    (accepted : inferDeclaredQueries 4 1 [] requestQueries [requestEnvironment] revisedRequest =
+      .ok ((.unique env, some artifact), reported)) :
+    reported = requestQueries ∧
+      ∀ a b, (a, b) ∈ reported → Subtype (substitute env a) (substitute env b) := by
+  obtain ⟨captured, _, constraints, _⟩ := inferDeclaredQueries_sound _ _ _ _ _ _ _ _ _ accepted
+  exact ⟨captured, fun a b inside => constraints a b (by simpa using inside)⟩
+
+#print axioms inferDeclaredQueries_sound
+#print axioms inferDeclaredQueries_unique
+#print axioms inferDeclaredQueries_none
+#print axioms inferDeclaredQueries_ambiguous
+#print axioms inferDeclaredQueries_exhausted
+#print axioms inferDeclaredQueries_error
+end QueryReports
 end LeanPoo.Examples.Parameters

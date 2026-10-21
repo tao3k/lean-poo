@@ -329,3 +329,5 @@ import LeanPoo.Object.DeclarationOrder
 import LeanPoo.Prototype.Representation
 
 import LeanPoo.Functional.BuildCache
+
+import LeanPoo.Functional.InferenceReports

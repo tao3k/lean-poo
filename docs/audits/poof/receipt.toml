@@ -401,6 +401,7 @@
   "LeanPoo/Functional/IndexedOverlay.lean",
   "LeanPoo/Functional/IndexedRegistry.lean",
   "LeanPoo/Functional/IndexedTransaction.lean",
+  "LeanPoo/Functional/InferenceReports.lean",
   "LeanPoo/Functional/InheritanceHooks.lean",
   "LeanPoo/Functional/InheritedMOP.lean",
   "LeanPoo/Functional/InheritedSettlement.lean",
