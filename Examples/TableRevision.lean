@@ -1,4 +1,4 @@
-import LeanPoo.Functional.TableStyle
+import LeanPoo.Functional.TableIndex
 
 /-! Portable service-ledger revisions with false values, deletion, retry and
 nested optional focus. Gerbil supplies paired RationalDict/Trie regression tests. -/
@@ -509,3 +509,83 @@ example : LeanPoo.Functional.OrderedDictionary.styleConvert (E := String) .linea
 #print axioms LeanPoo.Functional.OrderedDictionary.styleStep_linear_existing
 #print axioms LeanPoo.Functional.OrderedDictionary.styleStep_table_conflict
 #print axioms LeanPoo.Functional.OrderedDictionary.installStyle_aba
+
+
+namespace LeanPoo.Examples.TableRevision
+open LeanPoo.Functional.OrderedDictionary
+
+/-- Two unique identifier declarations and a grouped declaration have typed keys. -/
+inductive ServiceIndex where
+  | badge | endpoint | team
+  deriving DecidableEq, Repr
+
+/-- Badge and endpoint keys are numeric; team keys also carry a grouping flag. -/
+abbrev serviceIndexKey : ServiceIndex → Type
+  | .badge | .endpoint => Nat
+  | .team => Nat × Bool
+
+instance (name : ServiceIndex) : DecidableEq (serviceIndexKey name) := by
+  cases name <;> exact inferInstance
+
+/-- Final values include a shared opaque callback handle in the fourth field. -/
+abbrev IndexedService := Nat × Nat × Nat × Nat
+
+/-- The existing persistent optional-write carrier supplies all primary changes. -/
+def indexedPrimary : TableCarrier Nat IndexedService (Nat → Option IndexedService) where
+  read := id
+  write := replace
+  read_write := fun _ _ _ => rfl
+
+/-- Each declaration observes one already admitted primary row. -/
+def serviceIndexProject : (name : ServiceIndex) → Nat → IndexedService → serviceIndexKey name
+  | .badge => fun _ row => row.1
+  | .endpoint => fun _ row => row.2.1
+  | .team => fun _ row => (row.2.2.1, true)
+
+/-- Grouped declarations allow several primary owners in the same bucket. -/
+def serviceIndexUnique : ServiceIndex → Bool
+  | .badge | .endpoint => true
+  | .team => false
+
+/-- Initial services share a team and callback, alongside an untouched service. -/
+def indexedBefore (key : Nat) : Option IndexedService :=
+  if key = 1 then some (101, 1001, 10, 42)
+  else if key = 2 then some (102, 1002, 10, 42)
+  else if key = 9 then some (109, 1009, 90, 42) else none
+
+/-- The finite oracle enumerates the final fixture's complete live support. -/
+def enumerateIndexed (primary : Nat → Option IndexedService) : List (Nat × IndexedService) :=
+  [1, 2, 9].filterMap fun key => (primary key).map fun row => (key, row)
+
+/-- Transient collisions and repeated keys are retained in the primary batch. -/
+def indexedChanges : List (Change Nat IndexedService) :=
+  [⟨1, some (101, 1001, 10, 42), some (102, 1002, 20, 42)⟩,
+   ⟨2, some (102, 1002, 10, 42), some (101, 1001, 20, 42)⟩,
+   ⟨1, some (102, 1002, 20, 42), none⟩,
+   ⟨3, none, some (103, 1003, 30, 42)⟩,
+   ⟨1, none, some (102, 1002, 20, 42)⟩,
+   ⟨3, some (103, 1003, 30, 42), none⟩]
+
+/-- The atomic result synchronizes every typed index while retaining shared payloads. -/
+example : (applyIndexed indexedPrimary [.badge, .endpoint, .team] serviceIndexUnique
+    serviceIndexProject enumerateIndexed indexedChanges
+      (indexedBefore, correlatedViews serviceIndexProject indexedBefore)).map
+        (fun state => (state.1 1, state.2 .badge 102 1, state.2 .team (20, true) 2, state.1 9)) =
+    .ok (some (102, 1002, 20, 42), some (102, 1002, 20, 42),
+      some (101, 1001, 20, 42), some (109, 1009, 90, 42)) := by rfl
+
+/-- A fresh badge cannot hide a collision in the later unique endpoint declaration. -/
+example : applyIndexed indexedPrimary [.badge, .endpoint, .team] serviceIndexUnique
+    serviceIndexProject enumerateIndexed [⟨1, some (101, 1001, 10, 42), some (103, 1002, 20, 42)⟩]
+      (indexedBefore, correlatedViews serviceIndexProject indexedBefore) = .error (.inr .endpoint) := by rfl
+
+/-- Primary conflict has precedence over a later possible uniqueness violation. -/
+example : applyIndexed indexedPrimary [.badge, .endpoint, .team] serviceIndexUnique
+    serviceIndexProject enumerateIndexed [⟨1, none, some (103, 1002, 20, 42)⟩]
+      (indexedBefore, correlatedViews serviceIndexProject indexedBefore) = .error (.inl 1) := by rfl
+
+end LeanPoo.Examples.TableRevision
+
+#print axioms LeanPoo.Functional.OrderedDictionary.applyIndexed_correlated
+#print axioms LeanPoo.Functional.OrderedDictionary.checkIndexRows_ownership
+#print axioms LeanPoo.Functional.OrderedDictionary.indexed_cache_inverse

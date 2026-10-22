@@ -60,3 +60,6 @@ unsupported on the wire; no closure serialization is inferred from membership.
 
 Pure/mutable/linear style derivation is now closed for admitted persistent tables;
 see [table-styles.md](table-styles.md) for ownership, failure and observation laws.
+
+Declarative correlated index installation is now available over the same persistent
+backends and styles; see [table-indexes.md](table-indexes.md) for its laws and scope.
