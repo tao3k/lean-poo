@@ -119,8 +119,14 @@ jobs:
       - uses: ./.github/actions/restore-lean
         with:
           artifact: lean-build-${{ github.sha }}
+      # The source runner needs racket/list, json and srfi/1, not GUI or docs.
       - name: Install the source evaluator
-        run: sudo apt-get update && sudo apt-get install -y racket
+        uses: Bogdanp/setup-racket@8889db76ff6cdc86df8aa09fdd1729cd090b7144 # v1.16
+        with:
+          version: stable
+          distribution: minimal
+          variant: CS
+          packages: srfi-lite-lib
       - name: Compare all original checks against Lean
         run: lake env python3 tools/poof_source_check.py --compare-lean --receipt source-differential.json
       - uses: actions/upload-artifact@v4
