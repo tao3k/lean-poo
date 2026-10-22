@@ -462,3 +462,10 @@ example : LeanPoo.Functional.OrderedDictionary.runEntryChecks
 
 #print axioms LeanPoo.Functional.OrderedDictionary.wrapper_sources_nested
 #print axioms LeanPoo.Functional.OrderedDictionary.conjugate_codec_roundtrip
+
+#print axioms LeanPoo.Functional.OrderedDictionary.pair_codec_roundtrip
+
+-- The structural codec model evaluates the left child before the right thunk.
+example {A B E : Type} (cause : E) (right : Unit → Except E B) :
+    (Except.error cause : Except E A).bind
+      (fun left => (right ()).map (fun value => (left, value))) = .error cause := rfl

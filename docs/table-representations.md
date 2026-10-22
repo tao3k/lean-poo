@@ -6,7 +6,7 @@ a new table's read/write operations from an existing lawful persistent carrier a
 explicit key, value and carrier `DictionaryBridge` isomorphisms. The target needs
 no second data-structure algorithm.
 
-The fifteen laws cover:
+The sixteen laws cover:
 
 * Lookup and write correspondence without a snapshot scan.
 * Whole delta and ordered batch execution, with exact carrier results and mapped
@@ -44,3 +44,16 @@ Pair, matching ordinary `compose`, and JSON encoding first converts the Rational
 to its Pair. Regression controls cover signed exact fractional byte/JSON roundtrips;
 the generic codec theorem assumes the underlying codec law and does not prove a
 JSON parser or arbitrary numeric normalization.
+
+Pair JSON decoding delegates to both child descriptors, including the existing
+integer-string and nested-container codecs. Exact rationals with 80/100-bit
+components and nested Pair/List controls cover that boundary; `pair_codec_roundtrip`
+retains the separate child-codec premises. Raw JSON children are not returned as
+though they were already decoded values.
+
+Pair child decoders run explicitly left to right; a left failure preserves its
+original cause and suppresses the right decoder, as checked by an effect trace
+and the corresponding ordered Except example.
+
+Serialization requires existing child codecs. Opaque Function closures remain
+unsupported on the wire; no closure serialization is inferred from membership.

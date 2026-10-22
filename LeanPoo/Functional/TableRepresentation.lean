@@ -184,4 +184,14 @@ theorem conjugate_codec_roundtrip {Wire : Type} (carrier : DictionaryBridge A B)
     carrier.toFields (decode (encode (carrier.fromFields target))) = target := by
   rw [law, carrier.to_from]
 
+omit [DecidableEq K] [DecidableEq L] in
+/-- Pair decoding delegates to both child codecs; retaining raw wire children is
+insufficient whenever an integer, container or wrapper has a nonidentity decoder. -/
+theorem pair_codec_roundtrip {X Y : Type} (encodeLeft : A → X) (decodeLeft : X → A)
+    (encodeRight : B → Y) (decodeRight : Y → B)
+    (leftLaw : Function.LeftInverse decodeLeft encodeLeft)
+    (rightLaw : Function.LeftInverse decodeRight encodeRight) (left : A) (right : B) :
+    (decodeLeft (encodeLeft left), decodeRight (encodeRight right)) = (left, right) := by
+  rw [leftLaw, rightLaw]
+
 end LeanPoo.Functional.OrderedDictionary
