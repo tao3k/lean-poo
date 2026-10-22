@@ -676,4 +676,43 @@ theorem reuseFoldWork_bound (edits : List (Change K V)) :
 
 end FoldReuse
 
+section MetadataPreparation
+variable {Id A : Type}
+
+/-- Finite captured metadata is compared against one stable current snapshot.
+This abstracts revision equality, not callback effects or concurrent locking. -/
+def stampMatches (scope : List Id) (expected current : Id → Option Nat) : Bool :=
+  scope.all (fun key => expected key == current key)
+
+/-- Joint metadata preparation preserves both original dependency scopes. -/
+theorem stampMatches_append (left right : List Id) (expected current : Id → Option Nat) :
+    stampMatches (left ++ right) expected current =
+      (stampMatches left expected current && stampMatches right expected current) := by
+  simp [stampMatches, List.all_append]
+
+/-- Deduplicating a shared scope neither drops a dependency nor admits stale stamps. -/
+theorem stampMatches_dedup [BEq Id] [LawfulBEq Id] (scope : List Id)
+    (expected current : Id → Option Nat) :
+    stampMatches scope.eraseDups expected current = stampMatches scope expected current := by
+  apply Bool.eq_iff_iff.mpr
+  simp [stampMatches, List.all_eq_true]
+
+/-- Preparation retains its value only when the complete captured scope is current.
+The refusal is uniform, matching the bridge's stale-metadata boundary. -/
+def prepareStamped (scope : List Id) (expected current : Id → Option Nat) (value : A) : Except Unit A :=
+  if stampMatches scope expected current then .ok value else .error ()
+
+/-- One deduplicated preparation is equivalent to two nested preparations, on
+success and refusal. All reads must belong to the same stable metadata snapshot. -/
+theorem prepareStamped_fuse [BEq Id] [LawfulBEq Id] (left right : List Id)
+    (expected current : Id → Option Nat) (value : A) :
+    (do let _ ← prepareStamped left expected current ()
+        prepareStamped right expected current value) =
+      prepareStamped (left ++ right).eraseDups expected current value := by
+  simp only [prepareStamped, stampMatches_dedup, stampMatches_append]
+  cases hl : stampMatches left expected current <;>
+    cases hr : stampMatches right expected current <;> rfl
+
+end MetadataPreparation
+
 end LeanPoo.Functional.OrderedDictionary

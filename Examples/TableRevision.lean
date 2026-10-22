@@ -192,6 +192,20 @@ example : replace originalStamps 1 (some 1) 1 ≠ originalStamps 1 :=
 zero target projections and zero complete conversion scans on the paired path. -/
 example : reuseFoldWork callbackEdits = (2,0,0) := rfl
 
+/-- Shared source/aggregate stamps can be prepared once without losing refusal. -/
+example : prepareStamped [0,0,2] originalStamps originalStamps (7 : Int) = .ok 7 := rfl
+
+example : prepareStamped [0,1,0,2] originalStamps
+    (replace originalStamps 1 (some 1)) (7 : Int) = .error () := rfl
+
+example : (do let _ ← prepareStamped [0,1] originalStamps originalStamps ()
+              prepareStamped [0,2] originalStamps originalStamps (7 : Int)) =
+    prepareStamped ([0,1] ++ [0,2]).eraseDups originalStamps originalStamps 7 :=
+  prepareStamped_fuse [0,1] [0,2] originalStamps originalStamps 7
+
+#print axioms prepareStamped_fuse
+#print axioms stampMatches_dedup
+
 #print axioms reuseFold_correct
 #print axioms retained_fold_inverse
 #print axioms fold_dependency_frame

@@ -161,3 +161,36 @@ differences of -16.907/-15.943 ms (natural/collected) and CPU differences of
 A/A controls were noisy; neither universal speedup nor reduced GC cost is claimed.
 The Scheme document retains all phase summaries and the unsuccessful 90-second
 static-link attempt separately from successful module compilation/execution.
+
+
+## Shared preparation and benchmark linkage
+
+`stampMatches_append`, `stampMatches_dedup` and `prepareStamped_fuse` justify
+preparing the union of finite metadata scopes once on a stable revision snapshot,
+with the same success/refusal result. Gerbil shares its typed direction preparation
+between ordinary isomorphisms and fold derivation, eliminating two unused private
+Wrappers, a duplicate forward direction and an unused revision capture. Existing
+source/derived fold guards and inverse/collision controls remain authoritative.
+The proof does not cover runtime allocation, GC, locking or compiler behavior.
+
+The Scheme study separately measures factory preparation and complete cold
+materialization. Its compiled module runs in the existing statically linked test
+program through Gerbil's loader, avoiding a second copy of the shared C link closure.
+Shared-binary preparation retains its original 300-second stage bound; workload
+compilation retains 90 seconds. The 123-module test inventory and one-process
+execution remain intact. These source/build changes need paired measurements;
+the earlier noisy +5.211 ms cold median is not itself evidence of a GC cause.
+
+The linked program runs directly with Gerbil's official home from activation or
+compiler discovery. This removes an extra tools VM without inventing a load path.
+A harness OK followed by timeout remains a failed acceptance, not a completed run.
+
+The linked-runtime paired run completed 240 observations. Factory CPU medians
+were -0.028/-0.005 ms and cold CPU medians -0.338/-0.397 ms (natural/collected).
+Cold wall medians were -0.870/+0.085 ms with larger A/A noise, so cold wall-time
+improvement remains unproved. Module compilation completed within 90 seconds
+(41.30 s first, 26.21 s unchanged repeat); the repeat did no compile or link jobs.
+Shared-binary preparation still cost 192.89 s under its original 300-second stage.
+Full Scheme acceptance passed 123 modules and naturally exited 0; earlier
+harness-OK/timeouts remain failures. All phase summaries and limits are recorded
+in the Scheme document, separate from the finite metadata-fusion theorem.
