@@ -203,6 +203,21 @@ example : (do let _ ← prepareStamped [0,1] originalStamps originalStamps ()
     prepareStamped ([0,1] ++ [0,2]).eraseDups originalStamps originalStamps 7 :=
   prepareStamped_fuse [0,1] [0,2] originalStamps originalStamps 7
 
+/-- Exact sharing and empty outer scopes retain their existing guard lists. -/
+example : extendProtection ([0,1,2] : List Nat) [0,1,2] true = [0,1,2] := rfl
+example : extendProtection ([0,3,2] : List Nat) [] false = [0,3,2] := rfl
+
+/-- Partial overlaps keep their complete original protection without searching. -/
+example : extendProtection ([0,3,2] : List Nat) [0,1,2] false = [0,3,2,0,1,2] := rfl
+
+/-- A changed new origin remains rejected by the constant-time scope selection. -/
+example : stampMatches (extendProtection [0,3,2] [0,1,2] false) originalStamps
+    (replace originalStamps 3 (some 1)) = false := rfl
+
+#print axioms stampMatches_extendProtection
+#print axioms extendProtection_shared
+#print axioms extendProtection_length_le
+
 #print axioms prepareStamped_fuse
 #print axioms stampMatches_dedup
 

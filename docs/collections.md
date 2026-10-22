@@ -194,3 +194,26 @@ Shared-binary preparation still cost 192.89 s under its original 300-second stag
 Full Scheme acceptance passed 123 modules and naturally exited 0; earlier
 harness-OK/timeouts remain failures. All phase summaries and limits are recorded
 in the Scheme document, separate from the finite metadata-fusion theorem.
+
+
+## Constant-time protection scope reuse
+
+`extendProtection` models the selected guard list: an empty outer scope retains
+the incoming list, exact sharing retains the active list, and partial overlap
+keeps the original append. A true sharing flag must imply equal scope contents.
+`mem_extendProtection` proves the same protected dependency set under that premise;
+`stampMatches_extendProtection` preserves both metadata acceptance and refusal.
+`extendProtection_length_le` bounds list entries, not heap allocation or GC time.
+All descriptor instantiation checks, recursive-construction refusal, metadata
+revision checks and callback mutation guards remain in the Gerbil implementation.
+
+A general membership-filtering version was measured and rejected: reduced list
+duplication added hot-call and retry costs. The admitted implementation uses only
+constant-time identity/empty checks. Examples include shared scopes, empty outer
+scopes, retained partial overlaps and rejection of a newly changed origin.
+
+The build change uses Gerbil's existing `defbuild-script` with the existing
+`clan/poo/t` prefix and t/ source directory for benchmark consumers. The complete
+library check still precedes public study preparation. Standard make owns input
+and dependency freshness; no custom cache or load path is added. Timing and GC
+observations belong to the Scheme study, not these finite semantic theorems.

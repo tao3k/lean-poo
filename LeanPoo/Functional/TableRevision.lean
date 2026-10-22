@@ -713,6 +713,48 @@ theorem prepareStamped_fuse [BEq Id] [LawfulBEq Id] (left right : List Id)
   cases hl : stampMatches left expected current <;>
     cases hr : stampMatches right expected current <;> rfl
 
+/-- Reuse a shared guard scope or an empty outer scope without a membership scan.
+The Boolean abstracts pointer sharing; true must imply equal scope contents. -/
+def extendProtection (sources active : List Id) (shared : Bool) : List Id :=
+  if shared then active else if active.isEmpty then sources else sources ++ active
+
+/-- The identity fast path preserves exactly the original protection set.
+Faithful sharing is required; active membership alone is not readiness. -/
+theorem mem_extendProtection (sources active : List Id) (shared : Bool)
+    (faithful : shared = true → sources = active) (key : Id) :
+    key ∈ extendProtection sources active shared ↔ key ∈ sources ++ active := by
+  cases shared with
+  | false => cases active <;> simp [extendProtection]
+  | true => simp [extendProtection, faithful rfl]
+
+/-- Exact sharing retains the outer scope itself; no subset search is required. -/
+theorem extendProtection_shared (sources active : List Id) :
+    extendProtection sources active true = active := rfl
+
+/-- An empty outer scope retains the source list itself. -/
+theorem extendProtection_empty (sources : List Id) :
+    extendProtection sources [] false = sources := rfl
+
+/-- Scope storage is bounded by the original append. This is a list-size bound,
+not a runtime allocation, GC or descriptor-initialization theorem. -/
+theorem extendProtection_length_le (sources active : List Id) (shared : Bool) :
+    (extendProtection sources active shared).length ≤ sources.length + active.length := by
+  cases shared with
+  | false => cases active <;> simp [extendProtection]
+  | true => exact Nat.le_add_left _ _
+
+/-- Metadata admission is identical under faithful sharing, including refusal.
+Instantiation and recursive-construction checks remain separate prerequisites. -/
+theorem stampMatches_extendProtection (sources active : List Id) (shared : Bool)
+    (faithful : shared = true → sources = active) (expected current : Id → Option Nat) :
+    stampMatches (extendProtection sources active shared) expected current =
+      stampMatches (sources ++ active) expected current := by
+  apply Bool.eq_iff_iff.mpr
+  simp only [stampMatches, List.all_eq_true]
+  constructor <;> intro all key member
+  · exact all key ((mem_extendProtection sources active shared faithful key).mpr member)
+  · exact all key ((mem_extendProtection sources active shared faithful key).mp member)
+
 end MetadataPreparation
 
 end LeanPoo.Functional.OrderedDictionary
