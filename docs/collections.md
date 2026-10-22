@@ -217,3 +217,17 @@ The build change uses Gerbil's existing `defbuild-script` with the existing
 library check still precedes public study preparation. Standard make owns input
 and dependency freshness; no custom cache or load path is added. Timing and GC
 observations belong to the Scheme study, not these finite semantic theorems.
+
+## Faithful metadata across consumer scopes
+
+`stampMatches_transport` and `prepareStamped_transport` permit relabeling a finite
+dependency scope only when captured and current stamps agree at every source
+label and corresponding interface label. Acceptance and refusal are both preserved.
+`prepareStamped_stale_producer` proves that an outdated producer refuses before
+consumer admission, even when the consumer's own interface view agrees with itself.
+The executable example covers all three dependencies and an obsolete producer.
+
+This models the obligation behind reusing checked interfaces. It does not prove
+Gerbil make, compiler correctness, filesystem timestamps, linker behavior or GC.
+The complete producer check, standard consumer dependency check, linked runtime
+root checks and live test inventory admission all remain operational prerequisites.

@@ -214,6 +214,23 @@ example : extendProtection ([0,3,2] : List Nat) [0,1,2] false = [0,3,2,0,1,2] :=
 example : stampMatches (extendProtection [0,3,2] [0,1,2] false) originalStamps
     (replace originalStamps 3 (some 1)) = false := rfl
 
+/-- Interface labels may differ while retaining exactly the producer stamps. -/
+example : prepareStamped [100,101,102]
+    (fun key => originalStamps (key - 100)) (fun key => originalStamps (key - 100)) (9 : Int) =
+    prepareStamped [0,1,2] originalStamps originalStamps 9 := by
+  exact prepareStamped_transport [0,1,2] (fun key => key + 100) originalStamps originalStamps
+    (fun key => originalStamps (key - 100)) (fun key => originalStamps (key - 100))
+    (by intro key _; simp) (by intro key _; simp) 9
+
+/-- Old interfaces can still match themselves; producer refusal must prevail. -/
+example : prepareStamped [100,101] originalStamps originalStamps (9 : Int) = .ok 9 := rfl
+example : (do let _ ← prepareStamped [0,1] originalStamps
+                (replace originalStamps 1 (some 1)) ()
+              prepareStamped [100,101] originalStamps originalStamps (9 : Int)) = .error () := rfl
+
+#print axioms prepareStamped_transport
+#print axioms prepareStamped_stale_producer
+
 #print axioms stampMatches_extendProtection
 #print axioms extendProtection_shared
 #print axioms extendProtection_length_le

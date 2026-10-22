@@ -755,6 +755,45 @@ theorem stampMatches_extendProtection (sources active : List Id) (shared : Bool)
   · exact all key ((mem_extendProtection sources active shared faithful key).mpr member)
   · exact all key ((mem_extendProtection sources active shared faithful key).mp member)
 
+/-- Source and interface labels may differ, but corresponding captured/current
+stamps must agree. This is a faithful-metadata premise, not compiler correctness. -/
+theorem stampMatches_transport {Label : Type} (scope : List Id) (resolve : Id → Label)
+    (expected current : Id → Option Nat) (interfaceExpected interfaceCurrent : Label → Option Nat)
+    (captured : ∀ key ∈ scope, interfaceExpected (resolve key) = expected key)
+    (fresh : ∀ key ∈ scope, interfaceCurrent (resolve key) = current key) :
+    stampMatches (scope.map resolve) interfaceExpected interfaceCurrent =
+      stampMatches scope expected current := by
+  apply Bool.eq_iff_iff.mpr
+  simp only [stampMatches, List.all_eq_true]
+  constructor
+  · intro checked key member
+    have valid := checked (resolve key) (List.mem_map.mpr ⟨key, member, rfl⟩)
+    simpa [captured key member, fresh key member] using valid
+  · intro checked label member
+    obtain ⟨key, inside, rfl⟩ := List.mem_map.mp member
+    simpa [captured key inside, fresh key inside] using checked key inside
+
+/-- Faithful compiled metadata preserves admission and uniform refusal when a
+consumer uses the already checked producer's interfaces under new labels. -/
+theorem prepareStamped_transport {Label : Type} (scope : List Id) (resolve : Id → Label)
+    (expected current : Id → Option Nat) (interfaceExpected interfaceCurrent : Label → Option Nat)
+    (captured : ∀ key ∈ scope, interfaceExpected (resolve key) = expected key)
+    (fresh : ∀ key ∈ scope, interfaceCurrent (resolve key) = current key) (value : A) :
+    prepareStamped (scope.map resolve) interfaceExpected interfaceCurrent value =
+      prepareStamped scope expected current value := by
+  unfold prepareStamped
+  rw [stampMatches_transport scope resolve expected current interfaceExpected interfaceCurrent captured fresh]
+
+/-- Stale producer metadata refuses before any consumer admission. A current
+interface view alone never substitutes for the complete producer check. -/
+theorem prepareStamped_stale_producer (producer consumer : List Id)
+    (expected current interfaceExpected interfaceCurrent : Id → Option Nat) (value : A)
+    (stale : stampMatches producer expected current = false) :
+    (do let _ ← prepareStamped producer expected current ()
+        prepareStamped consumer interfaceExpected interfaceCurrent value) = .error () := by
+  simp [prepareStamped, stale]
+  rfl
+
 end MetadataPreparation
 
 end LeanPoo.Functional.OrderedDictionary
