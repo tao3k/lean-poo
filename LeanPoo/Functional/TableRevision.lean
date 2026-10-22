@@ -334,4 +334,228 @@ theorem transport_applyChanges [DecidableEq K] [DecidableEq L]
       rfl
 
 end Isomorphism
+section Aggregate
+variable {K V : Type} [DecidableEq K] [DecidableEq V]
+
+/-- Missing contributes zero; stored values, including false, are projected once. -/
+def contribution (score : K → V → Int) (key : K) (value : Option V) : Int :=
+  (value.map (score key)).getD 0
+
+/-- Full finite reference fold. The inventory is unique and covers every live key. -/
+def foldView (inventory : List K) (score : K → V → Int) (view : K → Option V) : Int :=
+  inventory.foldr (fun key acc => contribution score key (view key) + acc) 0
+
+/-- Retract the expected old contribution, then add the admitted replacement. -/
+def foldStep (score : K → V → Int) (acc : Int) (edit : Change K V) : Int :=
+  acc - contribution score edit.key edit.before + contribution score edit.key edit.after
+
+/-- The update performs no inventory scan; only the supplied ordered edits matter. -/
+def foldChanges (score : K → V → Int) (edits : List (Change K V)) (acc : Int) : Int :=
+  edits.foldl (foldStep score) acc
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- The reference fold observes only keys in its supplied finite inventory. -/
+theorem foldView_congr (inventory : List K) (score : K → V → Int)
+    (left right : K → Option V) (same : ∀ key ∈ inventory, left key = right key) :
+    foldView inventory score left = foldView inventory score right := by
+  induction inventory with
+  | nil => rfl
+  | cons key rest ih =>
+    simp only [foldView, List.foldr_cons]
+    rw [same key (by simp)]
+    congr 1
+    exact ih (fun k h => same k (by simp [h]))
+
+omit [DecidableEq V] in
+/-- The finite reference fold satisfies the optional-write law for exact sums.
+Every changed key must be included once; scores may depend on keys and payloads. -/
+theorem foldView_replace (inventory : List K) (unique : inventory.Nodup)
+    (score : K → V → Int) (view : K → Option V) (key : K) (value : Option V)
+    (member : key ∈ inventory) :
+    foldView inventory score (replace view key value) =
+      foldView inventory score view - contribution score key (view key) + contribution score key value := by
+  induction inventory with
+  | nil => simp at member
+  | cons head rest ih =>
+    have tailUnique := (List.nodup_cons.mp unique).2
+    by_cases same : key = head
+    · subst head
+      have apart := (List.nodup_cons.mp unique).1
+      have tail : foldView rest score (replace view key value) = foldView rest score view := by
+        apply foldView_congr rest score
+        intro query inside
+        have neq : query ≠ key := by intro eq; subst query; exact apart inside
+        simp [replace, neq]
+      simp only [foldView, List.foldr_cons, replace, ↓reduceIte]
+      change contribution score key value + foldView rest score (replace view key value) = _
+      rw [tail]
+      simp only [foldView]
+      omega
+    · have inside : key ∈ rest := by simpa [same] using member
+      have different : head ≠ key := Ne.symm same
+      have tail := ih tailUnique inside
+      simp only [foldView, List.foldr_cons]
+      change contribution score head ((replace view key value) head) +
+        foldView rest score (replace view key value) = _
+      rw [tail]
+      simp only [replace, different, ↓reduceIte, foldView]
+      omega
+
+/-- Any stable fold with the optional-write law admits sparse updates. This
+states the exact premise for user-supplied accumulators, including product metrics;
+it does not infer a retractable algebra from the existence of methods. -/
+theorem foldl_correct {Acc : Type} (observe : (K → Option V) → Acc)
+    (step : Acc → Change K V → Acc) (edits : List (Change K V))
+    (write : ∀ view edit, edit ∈ edits →
+      observe (replace view edit.key edit.after) =
+        step (observe view) ⟨edit.key, view edit.key, edit.after⟩)
+    (before after : K → Option V) (success : applyChanges edits before = .ok after) :
+    edits.foldl step (observe before) = observe after := by
+  induction edits generalizing before with
+  | nil => cases success; rfl
+  | cons edit rest ih =>
+    simp only [applyChanges] at success
+    split at success
+    next aligned =>
+      have head := write before edit (by simp)
+      have headEq : step (observe before) edit = observe (replace before edit.key edit.after) := by
+        cases edit
+        simpa only [aligned] using head.symm
+      rw [List.foldl_cons, headEq]
+      exact ih (fun view e h => write view e (by simp [h])) _ success
+    next => cases success
+
+/-- After successful installation the incremental value equals a complete fold.
+Conflict checking itself is still the existing applyChanges operation. -/
+theorem foldChanges_correct (inventory : List K) (unique : inventory.Nodup)
+    (score : K → V → Int) (edits : List (Change K V))
+    (covered : ∀ edit ∈ edits, edit.key ∈ inventory)
+    (before after : K → Option V) (success : applyChanges edits before = .ok after) :
+    foldChanges score edits (foldView inventory score before) = foldView inventory score after := by
+  induction edits generalizing before with
+  | nil => cases success; rfl
+  | cons edit rest ih =>
+    simp only [applyChanges] at success
+    split at success
+    next aligned =>
+      have write := foldView_replace inventory unique score before edit.key edit.after
+        (covered edit (by simp))
+      simp only [foldChanges, List.foldl_cons]
+      change foldChanges score rest (foldStep score (foldView inventory score before) edit) = _
+      have head : foldStep score (foldView inventory score before) edit =
+          foldView inventory score (replace before edit.key edit.after) := by
+        simpa [foldStep, aligned] using write.symm
+      rw [head]
+      exact ih (fun e h => covered e (by simp [h])) _ success
+    next => cases success
+
+/-- Fully check installation before returning either the source or aggregate. -/
+def applyFold (score : K → V → Int) (edits : List (Change K V))
+    (view : K → Option V) (acc : Int) : Except K ((K → Option V) × Int) :=
+  (applyChanges edits view).map fun after => (after, foldChanges score edits acc)
+
+/-- The complete operation returns the full-fold oracle or exactly its old-value
+conflict; the error contains no privately staged source or aggregate. -/
+theorem applyFold_correct (inventory : List K) (unique : inventory.Nodup)
+    (score : K → V → Int) (edits : List (Change K V))
+    (covered : ∀ edit ∈ edits, edit.key ∈ inventory) (view : K → Option V) :
+    applyFold score edits view (foldView inventory score view) =
+      (applyChanges edits view).map (fun after => (after, foldView inventory score after)) := by
+  cases success : applyChanges edits view with
+  | error key => simp [applyFold, success, Except.map]
+  | ok after =>
+    have correct := foldChanges_correct inventory unique score edits covered view after success
+    simp [applyFold, success, Except.map, correct]
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Undo of exact integer contributions restores any accumulator, independent
+of the representation. Full source recovery is applyChanges_inverse. -/
+theorem foldChanges_inverse (score : K → V → Int) (edits : List (Change K V)) (acc : Int) :
+    foldChanges score (inverseChanges edits) (foldChanges score edits acc) = acc := by
+  induction edits generalizing acc with
+  | nil => rfl
+  | cons edit rest ih =>
+    simp only [foldChanges, List.foldl_cons, inverseChanges, List.reverse_cons,
+      List.map_append, List.map_cons, List.map_nil, List.foldl_append]
+    change foldStep score (foldChanges score (inverseChanges rest)
+      (foldChanges score rest (foldStep score acc edit))) ⟨edit.key, edit.after, edit.before⟩ = acc
+    rw [ih]
+    simp only [foldStep]
+    omega
+
+/-- Count projection calls, excluding initial scanning, shape checks, lookup,
+metadata, arithmetic and allocation. Failure may stop before this upper bound. -/
+def foldWork (edits : List (Change K V)) : Nat :=
+  edits.foldr (fun edit cost => (if edit.before.isSome then 1 else 0) +
+    (if edit.after.isSome then 1 else 0) + cost) 0
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Incremental contribution work is bounded by two projections per edit. -/
+theorem foldWork_bound (edits : List (Change K V)) : foldWork edits ≤ 2 * edits.length := by
+  induction edits with
+  | nil => simp [foldWork]
+  | cons edit rest ih =>
+    simp only [foldWork, List.foldr_cons, List.length_cons] at *
+    split <;> split <;> omega
+
+/-- Pull a contribution function back through the explicit key/value inverses. -/
+def transportScore {L W : Type} (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (score : K → V → Int) : L → W → Int :=
+  fun key value => score (keys.fromFields key) (values.fromFields value)
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Optional mapped payloads carry exactly the same contribution. -/
+theorem transport_contribution {L W : Type} (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (score : K → V → Int)
+    (key : K) (value : Option V) :
+    contribution (transportScore keys values score) (keys.toFields key)
+      (value.map values.toFields) = contribution score key value := by
+  cases value <;> simp [contribution, transportScore, keys.from_to, values.from_to]
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Full folds agree under the mapped inventory, without assuming a backend order. -/
+theorem transport_foldView {L W : Type} (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (score : K → V → Int)
+    (inventory : List K) (view : K → Option V) :
+    foldView (inventory.map keys.toFields) (transportScore keys values score)
+      (transportView keys values view) = foldView inventory score view := by
+  induction inventory with
+  | nil => rfl
+  | cons key rest ih =>
+    simp only [foldView, List.map_cons, List.foldr_cons, transportView, keys.from_to]
+    rw [transport_contribution]
+    exact congrArg (fun value => contribution score key (view key) + value) ih
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Sparse aggregate updates commute with explicit isomorphism transport. -/
+theorem transport_foldChanges {L W : Type} (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (score : K → V → Int)
+    (edits : List (Change K V)) (acc : Int) :
+    foldChanges (transportScore keys values score) (transportChanges keys values edits) acc =
+      foldChanges score edits acc := by
+  induction edits generalizing acc with
+  | nil => rfl
+  | cons edit rest ih =>
+    simp only [foldChanges, transportChanges, List.map_cons, List.foldl_cons]
+    change foldChanges _ (transportChanges keys values rest)
+      (foldStep _ acc (transportChange keys values edit)) = _
+    rw [ih]
+    simp only [foldStep, transportChange, transport_contribution]
+    rfl
+
+/-- The complete source/aggregate result and first refusal key transport together. -/
+theorem transport_applyFold {L W : Type} [DecidableEq L] [DecidableEq W]
+    (keys : Prototype.DictionaryBridge K L) (values : Prototype.DictionaryBridge V W)
+    (score : K → V → Int) (edits : List (Change K V)) (view : K → Option V) (acc : Int) :
+    applyFold (transportScore keys values score) (transportChanges keys values edits)
+        (transportView keys values view) acc =
+      ((applyFold score edits view acc).mapError keys.toFields).map
+        (fun result => (transportView keys values result.1, result.2)) := by
+  simp only [applyFold]
+  rw [transport_applyChanges]
+  cases result : applyChanges edits view <;>
+    simp [Except.map, Except.mapError, transport_foldChanges]
+
+end Aggregate
+
 end LeanPoo.Functional.OrderedDictionary

@@ -70,4 +70,44 @@ recovery. It does not prove Scheme procedure semantics or arbitrary termination.
 Conversion includes complete snapshot scans, original delta installation, private
 carrier construction, registry lookups and metadata checks; it is not O(edits) in
 general. No runtime performance improvement is inferred from these algebraic laws.
-Automatically inferred conversions and maintained aggregates remain future work.
+Automatically inferred conversions remain future work.
+
+## Delta-driven folds
+
+`foldl_correct` proves a general optional-write law sufficient for arbitrary
+accumulators: the complete fold after one write must equal a sparse step using
+the actual old optional binding. No group structure is inferred for user code.
+The concrete `contribution`/`foldView`/`foldStep`/`foldChanges` construction uses
+exact integer contributions; `foldView_replace` derives the write law from a
+unique finite inventory containing every updated key. `foldChanges_correct` and
+`applyFold_correct` prove sparse/full agreement and unchanged first-conflict
+refusal. `foldChanges_inverse` proves accumulator restoration. Full reference
+folds, sparse steps and complete source/aggregate installation commute with the
+existing explicit key/value bridges (`transport_applyFold`), pulling scores back
+through their inverse maps.
+
+`foldWork_bound` counts at most two projections per supplied edit. It excludes
+initial scans, shape admission, equality, backend writes, descriptor preparation,
+metadata lineage, arithmetic, allocation and GC. The model makes no wall-clock
+or general O(delta-count) workflow claim. In particular, isomorphism conversion
+still scans both snapshots, and Trie shape admission may scan its structure.
+
+Gerbil `table-fold` uses the existing Wrapper and `.zero/.add/.sub` protocol.
+Its opaque state retains the admitted source alongside its aggregate; `.unap`
+recovers that source rather than inverting a lossy numeric total. Initial `.ap`
+performs full recognition/folding. `.apply-delta` completes old-value/origin
+checks before any aggregate callback, then returns the privately staged source
+and sparse aggregate together. `.get` and `.unap` enforce owner and metadata
+freshness, including converted delta origins retained through empty/inverse
+updates. FUN composition suppresses the consumer on failure and permits retry.
+Pointwise count/weighted-sum examples retain shared checked Function handles.
+The regression compares 24 rounds on each RationalDict/Trie carrier with an
+independent sum and forbids accidental fold enumeration during sparse updates.
+
+The proof premises include stable admitted values, pure successful operations,
+backend refinement and the optional-write law. Exact integer sums are proved;
+product metrics satisfy the law coordinatewise. Arbitrary floating-point or
+order-sensitive folds are not covered by the retractable law merely because
+methods exist. Runtime type checks and metadata guards are tested controls,
+not universal proofs of arbitrary Scheme callbacks, external effects, concurrency
+or termination. The examples remain in top-level Examples/TableRevision.lean.

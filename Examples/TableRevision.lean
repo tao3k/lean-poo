@@ -108,6 +108,60 @@ example : ¬ ∃ inverse : Nat → Nat, ∀ key : Nat, inverse (key % 2) = key :
   simp only [Nat.zero_mod, Nat.mod_self] at zero two
   omega
 
+/-- Count enabled callback capacity with an exact key-dependent integer score.
+The opaque callback handle is read as data; folding never invokes a callback. -/
+def capacityScore (key : Nat) (payload : Nat × Bool) : Int :=
+  if payload.2 then Int.ofNat (key * payload.1) else 0
+
+/-- Delete one disabled service and insert an enabled service, sharing handle 41. -/
+example : (applyFold capacityScore callbackEdits callbackLedger
+    (foldView [1,3,9] capacityScore callbackLedger)).map Prod.snd = .ok 123 := by rfl
+
+/-- Every successful full workflow agrees with its complete finite reference fold. -/
+example : applyFold capacityScore callbackEdits callbackLedger
+      (foldView [1,3,9] capacityScore callbackLedger) =
+    (applyChanges callbackEdits callbackLedger).map
+      (fun after => (after, foldView [1,3,9] capacityScore after)) := by
+  apply applyFold_correct [1,3,9] (by decide)
+  intro edit member
+  simp [callbackEdits] at member
+  rcases member with rfl | rfl <;> decide
+
+/-- Inverse edits restore the original accumulator, including an unrelated offset. -/
+example : foldChanges capacityScore (inverseChanges callbackEdits)
+    (foldChanges capacityScore callbackEdits 700) = 700 :=
+  foldChanges_inverse capacityScore callbackEdits 700
+
+/-- Moving both keys and callback payload layout preserves source and aggregate,
+including errors, by the general isomorphism theorem. -/
+example : applyFold (transportScore serviceKeys serviceValues capacityScore)
+      (transportChanges serviceKeys serviceValues callbackEdits)
+      (transportView serviceKeys serviceValues callbackLedger) 0 =
+    ((applyFold capacityScore callbackEdits callbackLedger 0).mapError serviceKeys.toFields).map
+      (fun result => (transportView serviceKeys serviceValues result.1, result.2)) :=
+  transport_applyFold serviceKeys serviceValues capacityScore callbackEdits callbackLedger 0
+
+/-- A competing callback handle refuses before any aggregate is returned. -/
+def callbackWinner : Nat → Option (Nat × Bool) := replace callbackLedger 1 (some (42, false))
+
+example : (applyFold capacityScore callbackEdits callbackWinner 0).map Prod.snd = .error 1 := by rfl
+
+/-- Rediscover against the winning snapshot, then retry the complete operation. -/
+def callbackTarget : Nat → Option (Nat × Bool) :=
+  replace (replace callbackLedger 1 none) 3 (some (41, true))
+
+example : (applyFold capacityScore (diffChanges [1,3,9] callbackWinner callbackTarget)
+    callbackWinner (foldView [1,3,9] capacityScore callbackWinner)).map Prod.snd = .ok 123 := by rfl
+
+/-- This delete/insert delta projects exactly two payloads; no full fold occurs. -/
+example : foldWork callbackEdits = 2 := by rfl
+
+#print axioms foldChanges_correct
+#print axioms applyFold_correct
+#print axioms foldChanges_inverse
+#print axioms transport_applyFold
+#print axioms foldWork_bound
+
 #print axioms transport_applyChanges
 #print axioms transportView_inverse
 #print axioms applyChanges_inverse
