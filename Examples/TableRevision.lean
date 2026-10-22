@@ -1,4 +1,4 @@
-import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableRepresentation
 
 /-! Portable service-ledger revisions with false values, deletion, retry and
 nested optional focus. Gerbil supplies paired RationalDict/Trie regression tests. -/
@@ -359,6 +359,65 @@ example : stampMatches ([[] , [7], [8]] : List (List Nat)).flatten
     (fun _ => some 1) (fun key => if key = 7 then some 2 else some 1) = false := by decide
 
 
+/-- Key negation is an explicit involution, rather than an inferred ordering rule. -/
+def mirroredKeys : Prototype.DictionaryBridge Int Int :=
+  ⟨Neg.neg, Neg.neg, fun key => Int.neg_neg key, fun key => Int.neg_neg key⟩
+
+/-- Reuse the same persistent write primitive and retain unrelated service metadata. -/
+def mirroredSource : TableCarrier Int (Nat × Int) ((Int → Option (Nat × Int)) × String) where
+  read := Prod.fst
+  write := fun source key value => (replace source.1 key value, source.2)
+  read_write := fun _ _ _ => rfl
+
+/-- The raw target rearranges the host carrier without defining a new table backend. -/
+def mirroredRepresentation : Prototype.DictionaryBridge
+    ((Int → Option (Nat × Int)) × String) (String × (Int → Option (Nat × Int))) :=
+  ⟨Prod.swap, Prod.swap, fun _ => rfl, fun _ => rfl⟩
+
+/-- Derive every optional-write operation from the original carrier and three bridges. -/
+def mirroredTable := mirroredSource.conjugate mirroredKeys batchValues mirroredRepresentation
+
+/-- Shared callback handles stay abstract; the independent host label is retained. -/
+def mirroredBase : (Int → Option (Nat × Int)) × String :=
+  (fun key => if key = 1 then some (41, 10) else if key = 9 then some (41, 90) else none, "capacity")
+
+/-- Consecutive revisions include deletion/reinsertion and a temporary service. -/
+def mirroredEdits : List (Change Int (Nat × Int)) :=
+  [⟨1, some (41, 10), some (41, 20)⟩,
+   ⟨1, some (41, 20), none⟩, ⟨2, none, some (41, 5)⟩,
+   ⟨1, none, some (41, 30)⟩, ⟨2, some (41, 5), none⟩]
+
+/-- The generated read changes key/value representation, not callback identity. -/
+example : mirroredTable.read (mirroredRepresentation.toFields mirroredBase) (-1) = some (10, 41) := by rfl
+
+/-- The generated installer preserves the shared service and unrelated host label. -/
+example : (mirroredTable.apply (transportChanges mirroredKeys batchValues mirroredEdits)
+    (mirroredRepresentation.toFields mirroredBase)).map
+      (fun target => (target.1, mirroredTable.read target (-1), mirroredTable.read target (-2),
+        mirroredTable.read target (-9))) =
+      .ok ("capacity", some (30, 41), none, some (90, 41)) := by rfl
+
+/-- The general theorem covers the complete carrier, every key and every first error. -/
+example : mirroredTable.apply (transportChanges mirroredKeys batchValues mirroredEdits)
+      (mirroredRepresentation.toFields mirroredBase) =
+    ((mirroredSource.apply mirroredEdits mirroredBase).mapError mirroredKeys.toFields).map
+      mirroredRepresentation.toFields := mirroredSource.conjugate_apply _ _ _ _ _
+
+/-- A later competing request exposes the negated first conflict key. -/
+example : mirroredTable.apply (transportChanges mirroredKeys batchValues
+    (mirroredEdits ++ [⟨1, some (41, 10), some (41, 40)⟩]))
+    (mirroredRepresentation.toFields mirroredBase) = .error (-1) := by rfl
+
+/-- Standard folds preserve source traversal order even when keys are negated. -/
+example : transportBindings mirroredKeys batchValues [(1, (41, 10)), (9, (41, 90))] =
+    [(-1, (10, 41)), (-9, (90, 41))] := by decide
+
+/-- Inverting the derivation recovers the original complete read/write algorithms. -/
+example : (mirroredTable.conjugate mirroredKeys.inverse batchValues.inverse mirroredRepresentation.inverse).read =
+      mirroredSource.read ∧
+    (mirroredTable.conjugate mirroredKeys.inverse batchValues.inverse mirroredRepresentation.inverse).write =
+      mirroredSource.write := mirroredSource.conjugate_inverse _ _ _
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
@@ -385,3 +444,21 @@ example : LeanPoo.Functional.OrderedDictionary.runEntryChecks
 #print axioms LeanPoo.Functional.OrderedDictionary.batch_foldWork_bound
 #print axioms LeanPoo.Functional.OrderedDictionary.pruneDeletedOwners_live
 #print axioms LeanPoo.Functional.OrderedDictionary.batch_stampMatches
+
+-- Audit representation derivation laws independently of the Scheme runtime.
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_read
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_write
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_apply
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_batch
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_undo
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_inverse
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_trans_read
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_trans_write
+#print axioms LeanPoo.Functional.OrderedDictionary.transportBindings_length
+#print axioms LeanPoo.Functional.OrderedDictionary.transportBindings_foldl
+#print axioms LeanPoo.Functional.OrderedDictionary.transportBindings_foldr
+#print axioms LeanPoo.Functional.OrderedDictionary.transportBindings_inverse
+#print axioms LeanPoo.Functional.OrderedDictionary.wrapper_sources_current
+
+#print axioms LeanPoo.Functional.OrderedDictionary.wrapper_sources_nested
+#print axioms LeanPoo.Functional.OrderedDictionary.conjugate_codec_roundtrip
