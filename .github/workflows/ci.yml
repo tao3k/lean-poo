@@ -105,8 +105,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@just
+      # org-element is included; mail services and Lisp sources are not needed.
       - name: Install Org parser
-        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends emacs-nox
       - name: Parse maintained Org documents
         run: just check-docs
 
