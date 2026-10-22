@@ -59,6 +59,7 @@ import LeanPoo.Functional.RecordEvolution
 import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.TableBatch
 import LeanPoo.Functional.TableRepresentation
+import LeanPoo.Functional.TableStyle
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Functional.MetadataFamily
 import LeanPoo.Functional.MetadataClosure

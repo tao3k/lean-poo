@@ -33,7 +33,7 @@ claim follows from the finite operation correspondence.
 
 This closes explicit representation-driven algorithm derivation, a concrete unit
 of the general collection TODO. Automatic discovery of arbitrary symmetries,
-linear/mutable API generation, optimization synthesis and the whole general
+destructive backend optimization, optimization synthesis and the whole general
 collection library remain separate work.
 
 Nested generated protocols publish complete `.sources` metadata. Existing delta,
@@ -57,3 +57,6 @@ and the corresponding ordered Except example.
 
 Serialization requires existing child codecs. Opaque Function closures remain
 unsupported on the wire; no closure serialization is inferred from membership.
+
+Pure/mutable/linear style derivation is now closed for admitted persistent tables;
+see [table-styles.md](table-styles.md) for ownership, failure and observation laws.

@@ -1,4 +1,4 @@
-import LeanPoo.Functional.TableRepresentation
+import LeanPoo.Functional.TableStyle
 
 /-! Portable service-ledger revisions with false values, deletion, retry and
 nested optional focus. Gerbil supplies paired RationalDict/Trie regression tests. -/
@@ -418,6 +418,23 @@ example : (mirroredTable.conjugate mirroredKeys.inverse batchValues.inverse mirr
     (mirroredTable.conjugate mirroredKeys.inverse batchValues.inverse mirroredRepresentation.inverse).write =
       mirroredSource.write := mirroredSource.conjugate_inverse _ _ _
 
+/-- Every generated style executes the derived ledger's repeated edits with the
+same host label, shared callback handles and temporary-service removal. -/
+example (style : TableStyle) :
+    (styleStep style (some (mirroredRepresentation.toFields mirroredBase))
+      (mirroredTable.apply (transportChanges mirroredKeys batchValues mirroredEdits))).2.map
+      (fun target => (target.1, mirroredTable.read target (-1), mirroredTable.read target (-2),
+        mirroredTable.read target (-9))) =
+      .ok ("capacity", some (30, 41), none, some (90, 41)) := by
+  cases style <;> rfl
+
+/-- A late conflicting edit retires no owner and retains the exact old carrier. -/
+example (style : TableStyle) :
+    styleStep style (some (mirroredRepresentation.toFields mirroredBase))
+      (mirroredTable.apply (transportChanges mirroredKeys batchValues
+        (mirroredEdits ++ [⟨1, some (41, 10), some (41, 40)⟩]))) =
+      (some (mirroredRepresentation.toFields mirroredBase), .error (.callback (-1))) := rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
@@ -469,3 +486,26 @@ example : LeanPoo.Functional.OrderedDictionary.runEntryChecks
 example {A B E : Type} (cause : E) (right : Unit → Except E B) :
     (Except.error cause : Except E A).bind
       (fun left => (right ()).map (fun value => (left, value))) = .error cause := rfl
+
+-- All styles expose the same complete backend result, including first refusal.
+example (state : Option Int) (update : Int → Except String Int) :
+    (LeanPoo.Functional.OrderedDictionary.styleStep .pure state update).2 =
+      (LeanPoo.Functional.OrderedDictionary.styleStep .linear state update).2 :=
+  LeanPoo.Functional.OrderedDictionary.styleStep_result _ _ _ _
+
+-- A successful mutable installation preserves its snapshot as an independent pure value.
+example : LeanPoo.Functional.OrderedDictionary.styleStep .mutable (some (10 : Int))
+    (fun value => (Except.ok (value + 5) : Except String Int)) = (some 15, .ok 15) := rfl
+
+-- Failure never consumes the old capability; a later explicit retry can succeed.
+example : LeanPoo.Functional.OrderedDictionary.styleStep .linear (some (10 : Int))
+    (fun _ => (Except.error "late conflict" : Except String Int)) =
+      (some 10, .error (.callback "late conflict")) := rfl
+
+-- Same-style conversion also retires an owned reference; snapshot reads are separate.
+example : LeanPoo.Functional.OrderedDictionary.styleConvert (E := String) .linear .linear
+    (some (42 : Int)) = (none, .ok (.linear, 42)) := rfl
+
+#print axioms LeanPoo.Functional.OrderedDictionary.styleStep_linear_existing
+#print axioms LeanPoo.Functional.OrderedDictionary.styleStep_table_conflict
+#print axioms LeanPoo.Functional.OrderedDictionary.installStyle_aba

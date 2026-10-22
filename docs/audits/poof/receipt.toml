@@ -491,6 +491,7 @@
   "LeanPoo/Functional/TableBatch.lean",
   "LeanPoo/Functional/TableRepresentation.lean",
   "LeanPoo/Functional/TableRevision.lean",
+  "LeanPoo/Functional/TableStyle.lean",
   "LeanPoo/Functional/TransactionCheck.lean",
   "LeanPoo/Functional/Transformation.lean",
   "LeanPoo/Functional/TransformationProfiles.lean",
