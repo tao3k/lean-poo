@@ -63,3 +63,9 @@ see [table-styles.md](table-styles.md) for ownership, failure and observation la
 
 Declarative correlated index installation is now available over the same persistent
 backends and styles; see [table-indexes.md](table-indexes.md) for its laws and scope.
+
+Explicit ordering is a separate law-governed extension: `table-comparer-wrapper`
+transports a declared comparer through the key isomorphism, and `table-order`
+derives ordered folds and finite ranges without guessing host numeric order.
+See [table-order.md](table-order.md) for bounds, invalidation and cost premises.
+Backend-specific seek and automatic ordering discovery remain outside this unit.

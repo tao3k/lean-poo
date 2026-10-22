@@ -1,4 +1,4 @@
-import LeanPoo.Functional.TableIndex
+import LeanPoo.Functional.TableOrder
 
 /-! Portable service-ledger revisions with false values, deletion, retry and
 nested optional focus. Gerbil supplies paired RationalDict/Trie regression tests. -/
@@ -434,6 +434,29 @@ example (style : TableStyle) :
       (mirroredTable.apply (transportChanges mirroredKeys batchValues
         (mirroredEdits ++ [⟨1, some (41, 10), some (41, 40)⟩]))) =
       (some (mirroredRepresentation.toFields mirroredBase), .error (.callback (-1))) := rfl
+
+/-- The explicit comparison matches the three-way protocol used by Gerbil. -/
+def priorityCompare (a b : Int) : Int := if a < b then -1 else if a = b then 0 else 1
+
+/-- External negative identifiers keep ascending internal priority, not host order. -/
+example : checkedTableRange (transportComparer mirroredKeys priorityCompare)
+    (some ⟨-10, false⟩) (some ⟨-40, true⟩)
+    ([(-10, 1), (-20, 2), (-30, 3), (-40, 1)] : List (Int × Nat)) =
+    .ok [(-20, 2), (-30, 3), (-40, 1)] := by rfl
+
+/-- Reversed priority endpoints are a refusal rather than an empty successful query. -/
+example : checkedTableRange (transportComparer mirroredKeys priorityCompare)
+    (some ⟨-40, true⟩) (some ⟨-10, true⟩) ([] : List (Int × Nat)) = .error () := by rfl
+
+/-- Opaque service callbacks survive the transported interval unchanged. -/
+example (callback : Int → Int) :
+    tableRangeRows (transportComparer mirroredKeys priorityCompare)
+      (some ⟨-20, true⟩) none [(-10, callback), (-20, callback), (-30, callback)] =
+      [(-20, callback), (-30, callback)] := by rfl
+
+#print axioms transportComparer_laws
+#print axioms tableRangeRows_transport
+#print axioms tableRangeRows_ordered
 
 end LeanPoo.Examples.TableRevision
 
