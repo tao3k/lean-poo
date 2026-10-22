@@ -488,6 +488,7 @@
   "LeanPoo/Functional/StrongComponents.lean",
   "LeanPoo/Functional/SupportRevision.lean",
   "LeanPoo/Functional/SupportedComponents.lean",
+  "LeanPoo/Functional/TableBatch.lean",
   "LeanPoo/Functional/TableRevision.lean",
   "LeanPoo/Functional/TransactionCheck.lean",
   "LeanPoo/Functional/Transformation.lean",

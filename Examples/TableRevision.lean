@@ -1,4 +1,4 @@
-import LeanPoo.Functional.TableRevision
+import LeanPoo.Functional.TableBatch
 
 /-! Portable service-ledger revisions with false values, deletion, retry and
 nested optional focus. Gerbil supplies paired RationalDict/Trie regression tests. -/
@@ -291,6 +291,74 @@ example : (bindingDependencies ([(0,8),(1,2)] : List (Nat × Nat))).length = 10 
 #print axioms applyChanges_inverse
 #print axioms diff_complete
 #print axioms transport_changes
+
+/-- Two services share a callback handle, represented abstractly by its stable id. -/
+def batchBase (key : Nat) : Option (Nat × Int) :=
+  if key = 1 ∨ key = 9 then some (41, 10) else none
+
+/-- Three rounds update, delete, then reinsert one service with the same callback. -/
+def serviceBatches : List (List (Change Nat (Nat × Int))) :=
+  [[⟨1, some (41, 10), some (41, 20)⟩],
+   [⟨1, some (41, 20), none⟩, ⟨2, none, some (41, 5)⟩],
+   [⟨1, none, some (41, 30)⟩, ⟨2, some (41, 5), none⟩]]
+
+example : (batchChanges serviceBatches).length = 5 := by decide
+
+/-- The temporary service disappears while the shared unrelated handle survives. -/
+example : (applyChanges (batchChanges serviceBatches) batchBase).map
+    (fun view => (view 1, view 2, view 9)) =
+      .ok (some (41, 30), none, some (41, 10)) := by rfl
+
+/-- General sequential equivalence applies to all keys and repeated edits. -/
+example : applyChanges (batchChanges serviceBatches) batchBase =
+    applyBatches serviceBatches batchBase := batchChanges_correct _ _
+
+/-- A late conflicting request keeps the exact first refusal key. -/
+example : applyBatches
+    (serviceBatches ++ [[⟨1, some (41, 10), some (41, 40)⟩]]) batchBase = .error 1 := by rfl
+
+/-- An aggregate consumer cannot receive a state from a failed complete batch. -/
+example : applyFold (fun _ value => value.2)
+    (batchChanges (serviceBatches ++ [[⟨1, some (41, 10), some (41, 40)⟩]])) batchBase 20 =
+      .error 1 := applyFold_batch_error _ _ _ _ _ (by rfl)
+
+/-- A fresh retry expects the current value and updates both ledger and aggregate. -/
+example : (applyFold (fun _ value => value.2)
+    (batchChanges (serviceBatches ++ [[⟨1, some (41, 30), some (41, 40)⟩]])) batchBase 20).map
+      (fun result => (result.1 1, result.2)) = .ok (some (41, 40), 50) := by rfl
+
+/-- Undo retracts every intermediate contribution, including the temporary service. -/
+example : foldChanges (fun _ value => value.2) (inverseChanges (batchChanges serviceBatches))
+    (foldChanges (fun _ value => value.2) (batchChanges serviceBatches) 20) = 20 :=
+  foldChanges_inverse _ _ _
+
+/-- Cancelling writes cannot be squashed: the stale base must still refuse. -/
+example : applyChanges ([⟨1, some 10, some 11⟩, ⟨1, some 11, some 10⟩] : List (Change Nat Int))
+    (fun _ => some 99) = .error 1 := by rfl
+
+/-- Empty operation lists alone have no such conflict observation. -/
+example : (applyChanges ([] : List (Change Nat Int)) (fun _ => some 99)).map
+    (fun view => view 1) = .ok (some 99) := by rfl
+
+/-- Pair-shaped keys are an explicit representation isomorphism. -/
+def batchKeys : Prototype.DictionaryBridge Nat (Nat × Unit) :=
+  ⟨fun key => (key, ()), Prod.fst, fun _ => rfl, fun pair => by cases pair; rfl⟩
+
+/-- Rearranging a capacity and callback handle leaves the handle untouched. -/
+def batchValues : Prototype.DictionaryBridge (Nat × Int) (Int × Nat) :=
+  ⟨Prod.swap, Prod.swap, fun _ => rfl, fun _ => rfl⟩
+
+/-- Whole-batch transport preserves intermediate checks and the mapped error key. -/
+example : applyChanges (transportChanges batchKeys batchValues (batchChanges serviceBatches))
+      (transportView batchKeys batchValues batchBase) =
+    ((applyChanges (batchChanges serviceBatches) batchBase).mapError batchKeys.toFields).map
+      (transportView batchKeys batchValues) := transport_applyChanges _ _ _ _
+
+/-- An origin with no writes remains a dependency after composition. -/
+example : stampMatches ([[] , [7], [8]] : List (List Nat)).flatten
+    (fun _ => some 1) (fun key => if key = 7 then some 2 else some 1) = false := by decide
+
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
@@ -303,3 +371,17 @@ example : LeanPoo.Functional.OrderedDictionary.runEntryChecks
     [(fun _ => Except.ok ()), (fun _ => Except.error "module"),
       (fun _ => Except.error "workload")] = (Except.error "module" : Except String Unit) := rfl
 #print axioms LeanPoo.Functional.OrderedDictionary.runEntryChecks_append
+
+-- Audit the new batch laws for unintended proof assumptions.
+#print axioms LeanPoo.Functional.OrderedDictionary.batchChanges_correct
+#print axioms LeanPoo.Functional.OrderedDictionary.batchChanges_append
+#print axioms LeanPoo.Functional.OrderedDictionary.batchChanges_associative
+#print axioms LeanPoo.Functional.OrderedDictionary.batchChanges_inverse
+#print axioms LeanPoo.Functional.OrderedDictionary.applyBatches_inverse
+#print axioms LeanPoo.Functional.OrderedDictionary.transport_batchChanges
+#print axioms LeanPoo.Functional.OrderedDictionary.foldChanges_append
+#print axioms LeanPoo.Functional.OrderedDictionary.applyFold_batch_error
+#print axioms LeanPoo.Functional.OrderedDictionary.batchChanges_length
+#print axioms LeanPoo.Functional.OrderedDictionary.batch_foldWork_bound
+#print axioms LeanPoo.Functional.OrderedDictionary.pruneDeletedOwners_live
+#print axioms LeanPoo.Functional.OrderedDictionary.batch_stampMatches
