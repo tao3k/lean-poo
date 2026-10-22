@@ -259,3 +259,30 @@ code, while executable regression checks selected alias identity and whole-facad
 freshness. These controls do not upgrade the finite laws into compiler or GC
 correctness proofs. Wall-time and allocation results, including rejected candidates
 and unresolved variance, are recorded separately in the companion study.
+
+## Hygienic preparation and allocation-free stamp comparison
+
+The Scheme construction macro now uses Gerbil compiler/base's
+`make-bound-identifier-table`, retaining the standard full
+`bound-identifier=?` predicate. A name hash selects comparison candidates; it
+never makes distinct lexical scopes equal. Existing slot normalization lives in
+`support/object-syntax`, rather than adding a module or a second syntax engine.
+`retainIndexedSlotIdentifiers_eq` in `Functional/SlotScope.lean` establishes
+first-occurrence sequence equality for a consistent discriminator and complete
+identifier equality. `matchingSlotIdentifiers_length_le` bounds candidate lists;
+physical hash collisions and table resizing remain host implementation premises.
+
+The runtime candidate replacing mapped revision snapshots with length-guarded
+standard `andmap` was rejected: the paired full workflow did not establish a
+speedup. Existing mapped guards remain installed. New public-reader regression
+controls still reject truncated, extended and malformed captured version records.
+An unguarded standard `andmap` stops at the shorter input and would be unsafe.
+
+The accepted entry change uses standard `just` dependencies to retain the same
+library, executable, workload-module and workload checks, eliminating three
+nested `just` invocations. `checkedEntryCost_shared` proves a launch-cost bound
+with identical ordered stage costs as an explicit premise.
+`runEntryChecks_append` also preserves the ordered effectful actions and their
+first failure when removing grouping boundaries in a lawful monad. It does not infer
+that premise from host build scripts or prove a GC or wall-clock guarantee. The
+companion Scheme document retains measured paired results and adverse controls.

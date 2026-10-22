@@ -808,4 +808,18 @@ example (run : Unit → Except String (Nat × Bool)) result
 #print axioms finishTypeRequest_sources
 end JointCatalogAdmission
 
+
+/-- A spelling collision cannot erase the second lexical scope or reorder fields. -/
+example : retainIndexedSlotIdentifiers (fun id : String × Nat => id.1) []
+    [("rate", 1), ("rate", 2), ("rate", 1), ("limit", 1), ("rate", 2)] =
+    [("rate", 1), ("rate", 2), ("limit", 1)] := by decide
+
+/-- A fresh spelling avoids every previous full-identifier equality candidate. -/
+example : matchingSlotIdentifiers (fun id : String × Nat => id.1) ("next", 3)
+    [("rate", 1), ("rate", 2), ("limit", 1)] = [] := by decide
+
+#print axioms retainIndexedSlotIdentifiers_eq
+#print axioms matchingSlotIdentifiers_length_le
+#print axioms matchingSlotIdentifiers_fresh
+
 end LeanPoo.Examples.Parameters

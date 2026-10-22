@@ -292,3 +292,14 @@ example : (bindingDependencies ([(0,8),(1,2)] : List (Nat × Nat))).length = 10 
 #print axioms diff_complete
 #print axioms transport_changes
 end LeanPoo.Examples.TableRevision
+
+-- Identical complete stage work, with three fewer nested entry invocations.
+example : LeanPoo.Functional.OrderedDictionary.checkedEntryCost [90, 20, 15, 75] 1 3 = 203 := by decide
+example : LeanPoo.Functional.OrderedDictionary.checkedEntryCost [90, 20, 15, 75] 4 3 = 212 := by decide
+#print axioms LeanPoo.Functional.OrderedDictionary.checkedEntryCost_shared
+
+-- The first refusal survives flattening; the workload result is not selected.
+example : LeanPoo.Functional.OrderedDictionary.runEntryChecks
+    [(fun _ => Except.ok ()), (fun _ => Except.error "module"),
+      (fun _ => Except.error "workload")] = (Except.error "module" : Except String Unit) := rfl
+#print axioms LeanPoo.Functional.OrderedDictionary.runEntryChecks_append

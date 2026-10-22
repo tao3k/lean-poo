@@ -162,4 +162,67 @@ theorem snapshotSlotBindings_refused [DecidableEq Name]
     snapshotSlotBindings read (binding :: rest) fields body = .error message := by
   rw [snapshotSlotBindings_cons, failed]
   rfl
+
+/-- Select one spelling bucket without identifying distinct lexical scopes.
+The full identifier equality remains authoritative; the spelling is only an index. -/
+def matchingSlotIdentifiers {Identifier Spelling : Type} [DecidableEq Spelling]
+    (spelling : Identifier → Spelling) (query : Identifier) (seen : List Identifier) :=
+  seen.filter (fun candidate => decide (spelling candidate = spelling query))
+
+/-- Equal full identifiers always share a spelling bucket. Hash collisions and
+same-spelling identifiers with distinct marks cannot change membership. -/
+theorem mem_matchingSlotIdentifiers {Identifier Spelling : Type} [DecidableEq Spelling]
+    (spelling : Identifier → Spelling) (query : Identifier) (seen : List Identifier) :
+    query ∈ matchingSlotIdentifiers spelling query seen ↔ query ∈ seen := by
+  simp [matchingSlotIdentifiers]
+
+/-- First-occurrence selection with a complete identifier comparison, independent
+of the compiler table implementation. It retains the original supplied values. -/
+def retainSlotIdentifiers {Identifier : Type} [DecidableEq Identifier] :
+    List Identifier → List Identifier → List Identifier
+  | _, [] => []
+  | seen, query :: rest =>
+    if query ∈ seen then retainSlotIdentifiers seen rest
+    else query :: retainSlotIdentifiers (query :: seen) rest
+
+/-- The indexed selector uses spelling only to narrow full equality candidates.
+The host's consistent hash, resizing and syntax representation remain premises. -/
+def retainIndexedSlotIdentifiers {Identifier Spelling : Type}
+    [DecidableEq Identifier] [DecidableEq Spelling] (spelling : Identifier → Spelling) :
+    List Identifier → List Identifier → List Identifier
+  | _, [] => []
+  | seen, query :: rest =>
+    if query ∈ matchingSlotIdentifiers spelling query seen
+    then retainIndexedSlotIdentifiers spelling seen rest
+    else query :: retainIndexedSlotIdentifiers spelling (query :: seen) rest
+
+/-- Indexing preserves the entire retained sequence, including scoped identities
+and declaration order; it does not replace full equality with spelling equality. -/
+theorem retainIndexedSlotIdentifiers_eq {Identifier Spelling : Type}
+    [DecidableEq Identifier] [DecidableEq Spelling] (spelling : Identifier → Spelling)
+    (seen inputs : List Identifier) :
+    retainIndexedSlotIdentifiers spelling seen inputs = retainSlotIdentifiers seen inputs := by
+  induction inputs generalizing seen with
+  | nil => rfl
+  | cons query rest ih =>
+    simp only [retainIndexedSlotIdentifiers, retainSlotIdentifiers, mem_matchingSlotIdentifiers]
+    split <;> simp only [ih]
+
+/-- A spelling bucket contains no more candidates than the complete prior set.
+This bounds logical equality candidates, excluding hashing, allocation and GC. -/
+theorem matchingSlotIdentifiers_length_le {Identifier Spelling : Type} [DecidableEq Spelling]
+    (spelling : Identifier → Spelling) (query : Identifier) (seen : List Identifier) :
+    (matchingSlotIdentifiers spelling query seen).length ≤ seen.length :=
+  List.length_filter_le _ _
+
+/-- A fresh spelling has no full-equality candidates. Same-spelling distinct
+scopes remain in its bucket and still require the original equality check. -/
+theorem matchingSlotIdentifiers_fresh {Identifier Spelling : Type} [DecidableEq Spelling]
+    (spelling : Identifier → Spelling) (query : Identifier) (seen : List Identifier)
+    (fresh : ∀ candidate ∈ seen, spelling candidate ≠ spelling query) :
+    matchingSlotIdentifiers spelling query seen = [] := by
+  apply List.filter_eq_nil_iff.mpr
+  intro candidate member
+  simp [fresh candidate member]
+
 end LeanPoo.Functional.Parameters

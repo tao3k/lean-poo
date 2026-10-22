@@ -697,6 +697,35 @@ theorem stampMatches_dedup [BEq Id] [LawfulBEq Id] (scope : List Id)
   apply Bool.eq_iff_iff.mpr
   simp [stampMatches, List.all_eq_true]
 
+/-- Execute the same ordered check actions without pre-evaluating later stages.
+The supplied monad owns effects and failure; no check is cached or removed. -/
+def runEntryChecks {m : Type → Type} [Monad m] : List (Unit → m Unit) → m Unit
+  | [] => pure ()
+  | check :: rest => do
+    check ()
+    runEntryChecks rest
+
+/-- Removing a grouping boundary preserves the whole ordered effectful execution,
+including the first monadic failure, provided the supplied monad is lawful. -/
+theorem runEntryChecks_append {m : Type → Type} [Monad m] [LawfulMonad m]
+    (left right : List (Unit → m Unit)) :
+    runEntryChecks (left ++ right) = (do runEntryChecks left; runEntryChecks right) := by
+  induction left with
+  | nil => simp [runEntryChecks]
+  | cons check rest ih => simp [runEntryChecks, ih, bind_assoc]
+
+/-- Fixed complete stage work plus entry-launch overhead. Stage checks, order,
+resource limits and output are required to be unchanged outside this cost model. -/
+def checkedEntryCost (stages : List Nat) (entries launch : Nat) : Nat :=
+  stages.foldl (· + ·) 0 + entries * launch
+
+/-- Standard recipe dependencies replace three nested entry invocations with
+one shared entry. The same stage-cost list is an explicit premise; host scheduling,
+filesystem checks, compiler correctness and GC are not established here. -/
+theorem checkedEntryCost_shared (stages : List Nat) (launch : Nat) :
+    checkedEntryCost stages 1 launch ≤ checkedEntryCost stages 4 launch := by
+  exact Nat.add_le_add_left (Nat.mul_le_mul_right launch (by decide : 1 ≤ 4)) _
+
 /-- Preparation retains its value only when the complete captured scope is current.
 The refusal is uniform, matching the bridge's stale-metadata boundary. -/
 def prepareStamped (scope : List Id) (expected current : Id → Option Nat) (value : A) : Except Unit A :=
