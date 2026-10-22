@@ -111,3 +111,53 @@ order-sensitive folds are not covered by the retractable law merely because
 methods exist. Runtime type checks and metadata guards are tested controls,
 not universal proofs of arbitrary Scheme callbacks, external effects, concurrency
 or termination. The examples remain in top-level Examples/TableRevision.lean.
+
+
+## Aggregate reuse and scoped invalidation
+
+The next unit derives a target fold from the source fold and explicit inverse
+maps. Gerbil retains one private source/target-state pair and a live key-ownership
+registry. Hits reuse state identity without conversion; warm source deltas update
+only mapped bindings and adopt the source aggregate rather than initializing or
+updating a second aggregate. Paired inverse recovery returns the source state;
+nonpaired valid targets use full inverse conversion and key reconstruction.
+
+`writeChanges` abstracts private persistent replay after all source conflicts pass.
+`applyChanges_writeChanges` justifies that replay; `transport_writeChanges`
+preserves the cached correspondence. `reuseFold_correct` proves equality with the
+complete existing target fold execution, including mapped first conflicts.
+`retained_fold_inverse` uses the existing inverse law. `fold_dependency_frame`
+instantiates the existing table frame theorem for metadata stamps, while
+`fold_dependency_changed` rejects a changed captured stamp. The example separates
+source/aggregate scope from converter scope: converter changes invalidate derived
+representations without discarding a still-current original source aggregate.
+Incoming origins remain captured, including through inverse fallback. Independently
+fresh states with the exact same immutable root can rebind the cached representation
+and use the new source aggregate/origins; neither stale input is thereby made fresh.
+`rebind_fold_view` states the observation-equivalence premise for that reuse.
+
+`reuseFoldWork_bound` counts at most two source projections per edit, zero target
+projections and no full target snapshot replay on the paired path. Cold conversion,
+source carrier admission, metadata and lineage checks, inverse-law controls,
+backend registry/write costs, allocation and GC remain outside that count. Runtime
+identity and complete failure/cache publication behavior are tested controls,
+not pointer-level or compiler proofs. Stable admitted leaves, pure callbacks,
+explicit bijection/fold laws and carrier refinement remain premises.
+
+Gerbil's capacity example composes the existing optional lenses and FUN consumer
+with checked shared callbacks, two representations and inverse recovery. The
+regression refuses accidental warm scans and covers chained metadata invalidation,
+unrelated converter edits, stale origins, collision refusal and retry. Its Scheme
+paired study compares full and reused paths, with matched setup, AB/BA and A/A
+controls, natural/collected GC, fresh factories, hot hits, revision/undo, complete
+discovery workflows and failed-attempt/retry phases. No performance or correctness
+claim for the compiler, runtime or arbitrary user callbacks is inferred from these
+algebraic proofs or finite measurements.
+
+The companion local compiled-module study (64 bindings, 10 operations, six AB/BA
+and four A/A pairs per phase/GC regime) observed complete-workflow median wall
+differences of -16.907/-15.943 ms (natural/collected) and CPU differences of
+-4.573/-4.597 ms per operation. Cold natural wall time regressed +5.211 ms and
+A/A controls were noisy; neither universal speedup nor reduced GC cost is claimed.
+The Scheme document retains all phase summaries and the unsuccessful 90-second
+static-link attempt separately from successful module compilation/execution.

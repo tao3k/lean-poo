@@ -156,6 +156,47 @@ example : (applyFold capacityScore (diffChanges [1,3,9] callbackWinner callbackT
 /-- This delete/insert delta projects exactly two payloads; no full fold occurs. -/
 example : foldWork callbackEdits = 2 := by rfl
 
+/-- Sparse target replay reuses the source fold; the paired-view invariant makes
+it observationally identical to full target execution, including failure keys. -/
+example : reuseFold serviceKeys serviceValues capacityScore callbackEdits callbackLedger
+      (transportView serviceKeys serviceValues callbackLedger) 0 =
+    applyFold (transportScore serviceKeys serviceValues capacityScore)
+      (transportChanges serviceKeys serviceValues callbackEdits)
+      (transportView serviceKeys serviceValues callbackLedger) 0 :=
+  reuseFold_correct serviceKeys serviceValues capacityScore callbackEdits callbackLedger _ rfl 0
+
+example : (reuseFold serviceKeys serviceValues capacityScore callbackEdits callbackWinner
+    (transportView serviceKeys serviceValues callbackWinner) 0).map Prod.snd = .error (1, ()) := by rfl
+
+/-- A source already paired with a target retains its exact aggregate on recovery. -/
+example : (transportView serviceKeys.inverse serviceValues.inverse
+    (transportView serviceKeys serviceValues callbackLedger), (700 : Int)) = (callbackLedger, 700) :=
+  retained_fold_inverse serviceKeys serviceValues callbackLedger 700
+
+/-- Metadata 0 is source, 1 converter, and 2 aggregate: only converter changes. -/
+def originalStamps (_ : Nat) : Option Nat := some 0
+
+def converterEdit : List (Change Nat Nat) := [⟨1, some 0, some 1⟩]
+
+example : ∀ key ∈ [0,2], replace originalStamps 1 (some 1) key = originalStamps key := by
+  apply fold_dependency_frame converterEdit originalStamps _ (by rfl) [0,2]
+  intro edit member
+  simp only [converterEdit, List.mem_singleton] at member
+  subst edit
+  decide
+
+example : replace originalStamps 1 (some 1) 1 ≠ originalStamps 1 :=
+  fold_dependency_changed originalStamps 1 0 1 rfl (by decide)
+
+/-- Only source projections are needed: two in this delete/insert example,
+zero target projections and zero complete conversion scans on the paired path. -/
+example : reuseFoldWork callbackEdits = (2,0,0) := rfl
+
+#print axioms reuseFold_correct
+#print axioms retained_fold_inverse
+#print axioms fold_dependency_frame
+#print axioms reuseFoldWork_bound
+
 #print axioms foldChanges_correct
 #print axioms applyFold_correct
 #print axioms foldChanges_inverse

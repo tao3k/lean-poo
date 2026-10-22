@@ -558,4 +558,122 @@ theorem transport_applyFold {L W : Type} [DecidableEq L] [DecidableEq W]
 
 end Aggregate
 
+section FoldReuse
+variable {K V L W : Type} [DecidableEq K] [DecidableEq V]
+  [DecidableEq L] [DecidableEq W]
+
+/-- Trusted paired views need only persistent writes after source conflicts pass.
+The runtime cache establishes the correspondence before skipping target admission. -/
+def writeChanges (edits : List (Change K V)) (view : K → Option V) : K → Option V :=
+  edits.foldl (fun current edit => replace current edit.key edit.after) view
+
+/-- Complete source checking establishes the same view as private write-only replay. -/
+theorem applyChanges_writeChanges (edits : List (Change K V)) (before after : K → Option V)
+    (success : applyChanges edits before = .ok after) : writeChanges edits before = after := by
+  induction edits generalizing before with
+  | nil => cases success; rfl
+  | cons edit rest ih =>
+    simp only [applyChanges] at success
+    split at success
+    · exact ih _ success
+    · cases success
+
+omit [DecidableEq V] [DecidableEq W] in
+/-- Sparse mapped writes retain the paired-view invariant without a full fold. -/
+theorem transport_writeChanges (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (edits : List (Change K V))
+    (view : K → Option V) :
+    writeChanges (transportChanges keys values edits) (transportView keys values view) =
+      transportView keys values (writeChanges edits view) := by
+  induction edits generalizing view with
+  | nil => rfl
+  | cons edit rest ih =>
+    simp only [writeChanges, transportChanges, List.map_cons, List.foldl_cons]
+    change writeChanges (transportChanges keys values rest)
+      (replace (transportView keys values view) (keys.toFields edit.key)
+        (edit.after.map values.toFields)) = _
+    rw [← transport_replace, ih]
+    rfl
+
+/-- Reuse the source aggregate result, updating only the paired target bindings.
+The cached target is an explicit input, so correspondence is a visible premise. -/
+def reuseFold (keys : Prototype.DictionaryBridge K L) (values : Prototype.DictionaryBridge V W)
+    (score : K → V → Int) (edits : List (Change K V))
+    (source : K → Option V) (target : L → Option W) (acc : Int) :
+    Except L ((L → Option W) × Int) :=
+  ((applyFold score edits source acc).mapError keys.toFields).map
+    (fun result => (writeChanges (transportChanges keys values edits) target, result.2))
+
+/-- Reusing a lawful aggregate agrees with full target execution, including
+its exact first error. No target contribution or full fold is evaluated. -/
+theorem reuseFold_correct (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (score : K → V → Int)
+    (edits : List (Change K V)) (source : K → Option V) (target : L → Option W)
+    (paired : target = transportView keys values source) (acc : Int) :
+    reuseFold keys values score edits source target acc =
+      applyFold (transportScore keys values score) (transportChanges keys values edits) target acc := by
+  subst target
+  rw [transport_applyFold]
+  unfold reuseFold applyFold
+  cases success : applyChanges edits source with
+  | error key => rfl
+  | ok after =>
+    have view := applyChanges_writeChanges edits source after success
+    simp only [Except.map, Except.mapError]
+    rw [transport_writeChanges, view]
+
+omit [DecidableEq K] [DecidableEq V] [DecidableEq L] [DecidableEq W] in
+/-- An independently fresh source with the same observation can rebind an
+existing representation. Its aggregate comes from the new admitted source; no
+expired source/target certificate or old aggregate is used to infer freshness. -/
+theorem rebind_fold_view (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (oldSource freshSource : K → Option V)
+    (target : L → Option W) (paired : target = transportView keys values oldSource)
+    (same : freshSource = oldSource) (freshAggregate : Int) :
+    (target, freshAggregate) = (transportView keys values freshSource, freshAggregate) := by
+  rw [same, paired]
+
+omit [DecidableEq K] [DecidableEq V] [DecidableEq L] [DecidableEq W] in
+/-- A paired inverse needs neither conversion nor aggregate reconstruction:
+its retained source and accumulator are exactly the original ones. -/
+theorem retained_fold_inverse (keys : Prototype.DictionaryBridge K L)
+    (values : Prototype.DictionaryBridge V W) (source : K → Option V) (acc : Int) :
+    (transportView keys.inverse values.inverse (transportView keys values source), acc) =
+      (source, acc) := by rw [transportView_inverse]
+
+/-- Metadata reuse is an instance of the existing table frame theorem. Changes
+outside one captured scope preserve it, even when another scope is invalidated. -/
+theorem fold_dependency_frame {Id : Type} [DecidableEq Id]
+    (edits : List (Change Id Nat)) (before after : Id → Option Nat)
+    (success : applyChanges edits before = .ok after) (scope : List Id)
+    (outside : ∀ edit ∈ edits, edit.key ∉ scope) :
+    ∀ key ∈ scope, after key = before key := by
+  intro key member
+  exact applyChanges_frame edits before after success key (fun edit inside eq =>
+    outside edit inside (by simpa [eq] using member))
+
+/-- A changed captured stamp refuses reuse of that scope. Independent scopes
+remain governed by fold_dependency_frame, rather than a global cache flush. -/
+theorem fold_dependency_changed {Id : Type} [DecidableEq Id]
+    (before : Id → Option Nat) (key : Id) (old next : Nat)
+    (captured : before key = some old) (different : old ≠ next) :
+    replace before key (some next) key ≠ before key := by
+  simp only [replace, ↓reduceIte, captured, ne_eq, Option.some.injEq]
+  exact Ne.symm different
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Source projections retain their previous bound; target refolding and full
+snapshot scans have zero calls on the paired sparse path. This source-work model
+excludes shape checks, registry/backend costs, metadata, allocation and GC. -/
+def reuseFoldWork (edits : List (Change K V)) : Nat × Nat × Nat := (foldWork edits, 0, 0)
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- The paired path keeps the source projection bound and adds no target scans. -/
+theorem reuseFoldWork_bound (edits : List (Change K V)) :
+    (reuseFoldWork edits).1 ≤ 2 * edits.length ∧
+      (reuseFoldWork edits).2.1 = 0 ∧ (reuseFoldWork edits).2.2 = 0 :=
+  ⟨foldWork_bound edits, rfl, rfl⟩
+
+end FoldReuse
+
 end LeanPoo.Functional.OrderedDictionary
