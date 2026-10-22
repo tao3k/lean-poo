@@ -228,6 +228,43 @@ example : (do let _ ← prepareStamped [0,1] originalStamps
                 (replace originalStamps 1 (some 1)) ()
               prepareStamped [100,101] originalStamps originalStamps (9 : Int)) = .error () := rfl
 
+/-- A large facade keeps its complete module stamp with one grouped import. -/
+example : prepareStamped [0] originalStamps originalStamps (9 : Int) =
+    prepareStamped (bindingDependencies [(0,1453)]) originalStamps originalStamps 9 := by
+  exact prepareStamped_grouped [(0,1453)] (by intro entry inside; simp at inside; subst entry; decide)
+    originalStamps originalStamps 9
+
+/-- A changed facade refuses even when every retained binding is callable. -/
+example : prepareStamped [0] originalStamps (replace originalStamps 0 (some 1)) (9 : Int) =
+    .error () := rfl
+
+/-- An empty group would silently omit a stale stamp; positivity is essential. -/
+example : stampMatches (bindingDependencies [(0,0)]) originalStamps
+    (replace originalStamps 0 (some 1)) = true ∧
+    stampMatches [0] originalStamps (replace originalStamps 0 (some 1)) = false := by decide
+
+/-- Existing metadata/dispatch facades retain ten inspections instead of 82,
+including one complete module stamp for each selected import boundary. -/
+example : prepareStamped (bindingDependencies [(0,8),(1,2)]) originalStamps
+    (replace originalStamps 1 (some 1)) (9 : Int) =
+    prepareStamped (bindingDependencies [(0,44),(1,38)]) originalStamps
+      (replace originalStamps 1 (some 1)) 9 := by
+  apply prepareStamped_regroup
+  · intro entry inside; simp at inside
+    rcases inside with rfl | rfl <;> decide
+  · intro entry inside; simp at inside
+    rcases inside with rfl | rfl <;> decide
+  · rfl
+
+example : (bindingDependencies ([(0,8),(1,2)] : List (Nat × Nat))).length = 10 ∧
+    (bindingDependencies ([(0,44),(1,38)] : List (Nat × Nat))).length = 82 := by decide
+
+#print axioms prepareStamped_regroup
+#print axioms bindingDependencies_count_le
+
+#print axioms prepareStamped_grouped
+#print axioms groupedDependencies_length_le
+
 #print axioms prepareStamped_transport
 #print axioms prepareStamped_stale_producer
 

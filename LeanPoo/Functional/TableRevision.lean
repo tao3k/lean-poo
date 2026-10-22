@@ -794,6 +794,98 @@ theorem prepareStamped_stale_producer (producer consumer : List Id)
   simp [prepareStamped, stale]
   rfl
 
+/-- A flattened import may repeat one module stamp for many bound identifiers.
+Counts describe metadata inspection work, not runtime allocation or GC. -/
+def bindingDependencies (groups : List (Id × Nat)) : List Id :=
+  groups.flatMap (fun entry => List.replicate entry.2 entry.1)
+
+/-- Positive groups retain exactly the same module dependency membership.
+Zero-sized groups cannot justify admitting an unchecked dependency. -/
+theorem mem_bindingDependencies (groups : List (Id × Nat))
+    (positive : ∀ entry ∈ groups, 0 < entry.2) (key : Id) :
+    key ∈ bindingDependencies groups ↔ key ∈ groups.map Prod.fst := by
+  simp only [bindingDependencies, List.mem_flatMap, List.mem_replicate, List.mem_map]
+  constructor
+  · rintro ⟨entry, inside, _, same⟩
+    exact ⟨entry, inside, same.symm⟩
+  · rintro ⟨entry, inside, same⟩
+    exact ⟨entry, inside, Nat.ne_of_gt (positive entry inside), same.symm⟩
+
+/-- Grouping repeated binding checks preserves both current and stale admission.
+The entire module stamp must still represent all of its required dependencies. -/
+theorem stampMatches_grouped (groups : List (Id × Nat))
+    (positive : ∀ entry ∈ groups, 0 < entry.2) (expected current : Id → Option Nat) :
+    stampMatches (groups.map Prod.fst) expected current =
+      stampMatches (bindingDependencies groups) expected current := by
+  apply Bool.eq_iff_iff.mpr
+  simp only [stampMatches, List.all_eq_true]
+  constructor <;> intro checked key inside
+  · exact checked key ((mem_bindingDependencies groups positive key).mp inside)
+  · exact checked key ((mem_bindingDependencies groups positive key).mpr inside)
+
+/-- Grouped preparation returns the identical payload or the identical refusal. -/
+theorem prepareStamped_grouped (groups : List (Id × Nat))
+    (positive : ∀ entry ∈ groups, 0 < entry.2) (expected current : Id → Option Nat) (value : A) :
+    prepareStamped (groups.map Prod.fst) expected current value =
+      prepareStamped (bindingDependencies groups) expected current value := by
+  unfold prepareStamped
+  rw [stampMatches_grouped groups positive expected current]
+
+/-- The flat inspection count is the sum of the per-module binding counts. -/
+theorem bindingDependencies_length (groups : List (Id × Nat)) :
+    (bindingDependencies groups).length = (groups.map Prod.snd).sum := by
+  simp [bindingDependencies, List.length_flatMap]
+
+/-- Retaining one inspection per positive group never increases metadata work.
+This is a list-entry bound, not a wall-clock, compiler or GC theorem. -/
+theorem groupedDependencies_length_le (groups : List (Id × Nat))
+    (positive : ∀ entry ∈ groups, 0 < entry.2) :
+    (groups.map Prod.fst).length ≤ (bindingDependencies groups).length := by
+  rw [List.length_map, bindingDependencies_length]
+  induction groups with
+  | nil => simp
+  | cons entry rest ih =>
+    have head := positive entry (by simp)
+    have tail := ih (by intro other inside; exact positive other (by simp [inside]))
+    simp only [List.length_cons, List.map_cons, List.sum_cons]
+    omega
+
+/-- Retaining selected aliases plus a whole-module stamp preserves admission.
+Both representations must retain positive groups with the same module labels. -/
+theorem stampMatches_regroup (before after : List (Id × Nat))
+    (beforePositive : ∀ entry ∈ before, 0 < entry.2)
+    (afterPositive : ∀ entry ∈ after, 0 < entry.2)
+    (labels : before.map Prod.fst = after.map Prod.fst) (expected current : Id → Option Nat) :
+    stampMatches (bindingDependencies after) expected current =
+      stampMatches (bindingDependencies before) expected current := by
+  rw [← stampMatches_grouped after afterPositive, ← stampMatches_grouped before beforePositive, labels]
+
+/-- The selected import representation keeps the exact payload and refusal. -/
+theorem prepareStamped_regroup (before after : List (Id × Nat))
+    (beforePositive : ∀ entry ∈ before, 0 < entry.2)
+    (afterPositive : ∀ entry ∈ after, 0 < entry.2)
+    (labels : before.map Prod.fst = after.map Prod.fst) (expected current : Id → Option Nat) (value : A) :
+    prepareStamped (bindingDependencies after) expected current value =
+      prepareStamped (bindingDependencies before) expected current value := by
+  unfold prepareStamped
+  rw [stampMatches_regroup before after beforePositive afterPositive labels]
+
+/-- A per-module inspection budget composes across a finite declaration chain.
+Safety additionally requires the positive, complete label coverage proved above. -/
+theorem bindingDependencies_count_le (keys : List Id) (retained available : Id → Nat)
+    (bounded : ∀ key ∈ keys, retained key ≤ available key) :
+    (bindingDependencies (keys.map (fun key => (key, retained key)))).length ≤
+      (bindingDependencies (keys.map (fun key => (key, available key)))).length := by
+  simp only [bindingDependencies_length, List.map_map]
+  change (keys.map retained).sum ≤ (keys.map available).sum
+  induction keys with
+  | nil => simp
+  | cons key rest ih =>
+    have head := bounded key (by simp)
+    have tail := ih (by intro other inside; exact bounded other (by simp [inside]))
+    simp only [List.map_cons, List.sum_cons]
+    omega
+
 end MetadataPreparation
 
 end LeanPoo.Functional.OrderedDictionary

@@ -231,3 +231,31 @@ This models the obligation behind reusing checked interfaces. It does not prove
 Gerbil make, compiler correctness, filesystem timestamps, linker behavior or GC.
 The complete producer check, standard consumer dependency check, linked runtime
 root checks and live test inventory admission all remain operational prerequisites.
+
+## Grouped module metadata
+
+`bindingDependencies` models the repeated module label attached to individual
+imported bindings. `mem_bindingDependencies`, `stampMatches_grouped` and
+`prepareStamped_grouped` preserve complete dependency membership and both
+acceptance/refusal when every group is positive and its single module stamp
+represents the original dependency. Empty groups cannot discharge a dependency.
+`bindingDependencies_length` gives the exact sum of binding counts;
+`groupedDependencies_length_le` bounds grouped inspections by that sum.
+These are finite metadata/work laws under one stable snapshot, not a verification
+of Gerbil expansion, compiler freshness, allocation, GC or wall-clock speed.
+
+The worked example retains a facade with 1,453 bindings, refuses a stale facade,
+and demonstrates why an empty group would incorrectly omit a stale stamp.
+The Gerbil regression separately verifies that the runner still imports the
+complete official expander facade and resolves the same public harness entry.
+
+`prepareStamped_regroup` also covers a retained complete module stamp together
+with selected aliases, when both positive representations have the same labels.
+`bindingDependencies_count_le` composes an explicit per-module inspection budget.
+The examples instantiate metadata/dispatch facades with 82 original versus ten
+retained records and the same stale-facade refusal. The Gerbil source/loader audit
+checks 73 modules' public interface, ordered module coverage and initialization
+code, while executable regression checks selected alias identity and whole-facade
+freshness. These controls do not upgrade the finite laws into compiler or GC
+correctness proofs. Wall-time and allocation results, including rejected candidates
+and unresolved variance, are recorded separately in the companion study.
