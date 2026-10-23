@@ -109,3 +109,7 @@ protocol future work; [[file:../docs/contracts/hybrid-queues.org][the hybrid con
 
 [[file:SelectedAccess.lean][SelectedAccess]] adds certified cached queue selection to retained-index cyclic
 revocation and shared bursts; [[file:../docs/contracts/queue-selection.org][the contract]] includes decision costs and bounded claims.
+
+[[file:SlotObservation.lean][SlotObservation]] checks nested read scopes, exact refusal payloads and capture-only
+frame reuse. [[file:../docs/slot-observation.md][The scope model]] states its conditional primitive-cost bound and excludes
+physical scheduler, collector and wall-time guarantees.

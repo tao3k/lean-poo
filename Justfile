@@ -276,6 +276,7 @@ check-example: check-compose
 # 120s / 2GiB / heartbeat limits remain; the other ordinary proofs stay parallel.
 [private]
 _check-examples:
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Examples/SlotObservation.lean
     {{lean}} Examples/PrototypeCore.lean
     {{lean}} Examples/DictionaryRecords.lean
     {{lean}} Examples/MutableState.lean

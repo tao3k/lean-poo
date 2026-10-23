@@ -337,3 +337,5 @@ import LeanPoo.Prototype.Representation
 import LeanPoo.Functional.BuildCache
 
 import LeanPoo.Functional.InferenceReports
+
+import LeanPoo.Object.SlotObservation
