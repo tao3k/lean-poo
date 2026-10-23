@@ -118,3 +118,86 @@ persistent writes; no constant-time/sublinear or wall-time improvement is claime
 Finite laws do not verify Gerbil's tree implementation, structural equality,
 procedure extensionality, exception-safe foreign resources, GC or scheduling.
 Destructive backend reuse and automatic symmetry discovery remain separate scope.
+
+## Element-level collection styles
+
+`set-styles descriptor` derives `Pure`, `Mutable`, `Linear`, `Posh` and `Classy`
+from a `Set<-Table.` presentation. It stays in `clan/poo/table` and calls the same
+private derivation engine as `table-styles`. There is one reference type, capture
+operation, immutable-head conflict check and installation path; no second owner,
+lock, scheduler or conversion adapter is introduced.
+
+The constructor checks `descriptor.Elt` is the backing `Table.Key` and the backing
+Value is the standard Unit descriptor. The style protocol's `Domain` is the set
+Type. Both backing recognition and the set's possibly stricter `.element?` are
+required at admission and after every staged transformation. A broad custom
+predicate cannot bypass carrier admission; a narrow predicate cannot be bypassed
+by operating through the backing table. Declared `.sources` on the set and the
+backing table's origins are retained together. Revisions to any of them invalidate
+old protocols and cursors, including EOF.
+
+```scheme
+(def styles (set-styles RationalSet))
+(def classy (.@ styles Classy))
+(def current (.call classy .ap admitted-permissions))
+(def grants (.call classy .ap admitted-grants))
+(@@method current.union grants)
+(def next (@@method current.cons permission))
+(def elements (for/collect (element next) element))
+(def sum (@@method next.foldl + 0))
+```
+
+All five protocols supply `.elt? state element`, `.cons element state`,
+`.remove state element`, `.union/.inter/.diff/.symdiff left right`, and
+`.subset?/.disjoint?/.=? left right`. Binary operands are states of the same
+protocol/family; conversion or explicit pure-snapshot admission is required to
+cross owned families or styles. Pure snapshots remain shareable.
+
+A binary update captures the right snapshot, then stages and commits only the
+left capability. Pure/posh returns a successor and retains the old state;
+mutable/classy returns the same updated identity; linear retires the left aliases
+and returns a new capability. A distinct right owner is observed, not consumed.
+If both operands alias the same capability, successful owned retirement applies
+to every such alias. These are single-left-owner commits, not atomic publication
+of two independently mutable owners. Reentrant/competing updates still use the
+original head comparison. No callback is placed under the head lock.
+
+All 25 conversions retain the exact admitted persistent set root and wrapped
+Function elements. The existing FUN `.admit` boundary normalizes raw elements;
+`.ap`, operations and conversions recognize admitted values without wrapping them
+again. Inserted elements must already be admitted (validate a new Function before
+`.cons`, or use explicit `.admit` on a raw snapshot). Pure recognition cannot
+establish that an arbitrary raw procedure already has its Function wrapper.
+
+`.list<-`, `.iter<-`, `.foldl` and `.foldr` expose elements, not `(element . Unit)`
+entries. Folds use `(element accumulator)` callbacks. Posh/classy reuse Gerbil's
+existing Iterable registration. Ordered `.seek`, `.seek<-` and `.range` delegate
+to the backing table and project keys only; comparator direction, bounds, errors
+and positioned traversal are unchanged. No ordering capability is inferred for
+an unordered source. Retained cursors observe their captured root after ownership
+transfer, but source metadata remains checked at every pull and EOF.
+
+Set `.diff` remains set difference; backing `Table.diff` remains ordinary delta
+discovery. `.apply-delta` and `.apply-batch` use those existing table deltas in every
+set style, including inverse recovery and all original conflict/metadata rules.
+`access-style-action` in the existing service example composes grants/revocations,
+classy updates, linear transfer and a final posh receiver through Reader/FUN into
+an IO consumer. Intermediate owners are local to the action. Failure suppresses
+that consumer; retry explicitly starts from an admitted root, without replaying
+external effects automatically.
+
+`LeanPoo/Functional/SetStyle.lean` proves the binary update delegates to the existing
+style engine, exact backend refusal preserves independent owners, right ownership
+is retained, style changes leave results unchanged, and all 25 transfers preserve
+the carrier. Element fold and cursor proofs preserve order, opaque Function key
+identity, pull counts and EOF metadata refusal without requiring equality of
+functions. The preparation theorem retains ownership when specialized output
+recognition refuses. The top-level set example extends the same access revision
+chain; no new example namespace or Scheme checkout dependency is required.
+
+Regression controls cover the conversion matrix, four operations in every style,
+nonconsuming relations, standard Iterable/fold, owned and aliased retirement,
+foreign/retired operands, explicit retry, declared set origins, stricter custom
+recognizers, positioned element queries, Function wrapper identity, batch/inverse
+and Reader/IO suppression. Admission and backend merge costs remain visible;
+this feature does not assert destructive storage reuse or wall-time improvement.

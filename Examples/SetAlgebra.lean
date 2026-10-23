@@ -1,4 +1,4 @@
-import LeanPoo.Functional.SetAlgebra
+import LeanPoo.Functional.SetStyle
 
 /-! Access-policy algebra composes existing table revisions, inverse recovery,
 styles and service lenses. This advances the collection proposal's future work. -/
@@ -58,5 +58,29 @@ example : LeanPoo.Prototype.LensLaws
 
 /-- Pure access normalization is idempotent at the observable membership boundary. -/
 example : combineSet .union proposed proposed = proposed := set_union_idempotent proposed
+
+/-- Set-style policy merging uses exactly the original mutable publication law. -/
+example : setStyleCombine (E := String) .mutable (some original) (some grants)
+    (fun before additions => .ok (combineSet .union before additions)) =
+      ((some (combineSet .union original grants), some grants),
+       .ok (combineSet .union original grants)) := rfl
+
+/-- Linear inverse failure leaves both owners available for explicit retry. -/
+example : setStyleCombine .linear (some original) (some revoked)
+    (fun _ _ => (Except.error "refused" : Except String (Membership Nat))) =
+      ((some original, some revoked), .error (.callback "refused")) := rfl
+
+/-- Receiver observation never exposes Unit payloads to an element callback. -/
+example : setElements ([(1, ()), (3, ()), (5, ())] : List (Nat × Unit)) = [1,3,5] := rfl
+
+/-- Metadata refusal occurs before a delayed element is returned or consumed. -/
+example : pullSetElement (K := Nat) ⟨[1, 2], [(3, ())]⟩ [1, 3] =
+    (.error (), 0) := by
+  apply pullSetElement_stale
+  decide
+
+/-- Already captured elements preserve exact callable identity without equality. -/
+example (f : Nat → Nat) : pullSetElement ⟨[1], [(f, ())]⟩ [1] =
+    (.ok (some f, ⟨[1], []⟩), 1) := pullSetElement_current [1] f []
 
 end LeanPoo.Examples.SetAlgebra
