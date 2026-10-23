@@ -92,6 +92,92 @@ theorem claimIndex_conflict (owners : I → Option K) (bucket : I) (left right :
     (found : owners bucket = some left) (different : left ≠ right) :
     claimIndex owners bucket right = .error (left, right) := by simp [claimIndex, found, different]
 
+/-- Finite multiple-key membership retains the exact admitted row payload.
+This extends the collection future work; projection purity and carrier laws are premises. -/
+def indexKeysView (project : K → V → List I) (primary : K → Option V)
+    (bucket : I) (key : K) : Option V :=
+  match primary key with
+  | none => none
+  | some row => if bucket ∈ project key row then some row else none
+
+/-- Reuse the existing column retraction before restoring all final memberships. -/
+def reviseIndexKeys (keys : List K) (project : K → V → List I) (after : K → Option V)
+    (cache : I → K → Option V) : I → K → Option V :=
+  fun bucket key => if key ∈ keys then indexKeysView project after bucket key
+    else retractIndex keys cache bucket key
+
+/-- Successful revision changes exactly the touched columns, for every bucket. -/
+theorem reviseIndexKeys_lookup (keys : List K) (project : K → V → List I)
+    (after : K → Option V) (cache : I → K → Option V) (bucket : I) (key : K) :
+    reviseIndexKeys keys project after cache bucket key =
+      if key ∈ keys then indexKeysView project after bucket key else cache bucket key := by
+  by_cases h : key ∈ keys <;> simp [reviseIndexKeys, retractIndex, h]
+
+/-- Changed-key installation restores all buckets without scanning untouched rows. -/
+theorem reviseIndexKeys_correct (keys : List K) (project : K → V → List I)
+    (before after : K → Option V) (frame : ∀ key, key ∉ keys → after key = before key) :
+    reviseIndexKeys keys project after (indexKeysView project before) = indexKeysView project after := by
+  funext bucket key
+  by_cases h : key ∈ keys
+  · simp [reviseIndexKeys_lookup, h]
+  · simp [reviseIndexKeys_lookup, h, indexKeysView, frame key h]
+
+/-- Existing delta installation supplies the frame required by multiple-key indexes. -/
+theorem reviseIndexKeys_delta [DecidableEq V] (ops : TableCarrier K V A)
+    (project : K → V → List I) (edits : List (Change K V)) (before after : A)
+    (success : ops.apply edits before = .ok after) :
+    reviseIndexKeys (edits.map Change.key) project (ops.read after)
+      (indexKeysView project (ops.read before)) = indexKeysView project (ops.read after) := by
+  apply reviseIndexKeys_correct
+  intro key outside
+  apply applyChanges_frame edits (ops.read before) (ops.read after)
+  · rw [← ops.apply_read, success]; rfl
+  · intro change member same
+    apply outside
+    exact List.mem_map.mpr ⟨change, member, same.symm⟩
+
+/-- Duplicate projected keys do not change membership or opaque Function payloads. -/
+theorem indexKeysView_duplicate (project : K → V → List I) (primary : K → Option V) :
+    indexKeysView (fun key row => project key row ++ project key row) primary =
+      indexKeysView project primary := by
+  funext bucket key
+  cases h : primary key <;> simp [indexKeysView, h]
+
+/-- Stable membership-preserving deduplication changes no grouped observation. -/
+theorem indexKeysView_membership (left right : K → V → List I) (primary : K → Option V)
+    (same : ∀ key row bucket, bucket ∈ left key row ↔ bucket ∈ right key row) :
+    indexKeysView left primary = indexKeysView right primary := by
+  funext bucket key
+  cases h : primary key with
+  | none => simp [indexKeysView, h]
+  | some row => simp [indexKeysView, h, same key row bucket]
+
+/-- Single-key declarations are exactly the existing index protocol. -/
+theorem indexKeysView_single (project : K → V → I) (primary : K → Option V) :
+    indexKeysView (fun key row => [project key row]) primary = indexView project primary := by
+  funext bucket key
+  cases h : primary key <;> simp [indexKeysView, indexView, h, eq_comm]
+
+/-- Ordered multiple-key claims reuse the existing owner rule and short-circuit
+with the first conflicting key; no partially updated owners escape a failure. -/
+def claimIndexKeys (owners : I → Option K) (buckets : List I) (key : K) :
+    Except (I × (K × K)) (I → Option K) :=
+  match buckets with
+  | [] => .ok owners
+  | bucket :: rest => match claimIndex owners bucket key with
+    | .error conflict => .error (bucket, conflict)
+    | .ok next => claimIndexKeys next rest key
+
+/-- No memberships is a successful no-op, not an absent primary row. -/
+theorem claimIndexKeys_empty (owners : I → Option K) (key : K) :
+    claimIndexKeys owners [] key = .ok owners := rfl
+
+/-- A conflicting head suppresses all later membership claims and retains its cause. -/
+theorem claimIndexKeys_conflict (owners : I → Option K) (bucket : I) (rest : List I)
+    (left right : K) (found : owners bucket = some left) (different : left ≠ right) :
+    claimIndexKeys owners (bucket :: rest) right = .error (bucket, (left, right)) := by
+  simp [claimIndexKeys, claimIndex_conflict owners bucket left right found different]
+
 /-- A finite reference check compares projections while allowing repeated owner IDs. -/
 def uniqueIndexRows (project : K → V → I) (rows : List (K × V)) : Bool :=
   rows.all fun left => rows.all fun right =>

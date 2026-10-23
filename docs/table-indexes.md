@@ -107,8 +107,8 @@ not projected or scanned by that installer. Point backend work, grouped bucket
 updates, metadata admission, and recognition retain their own costs. Single writes
 currently use full difference discovery; style admission/recognition may enumerate.
 The 100-row regression verifies two projections for a one-row delta, not constant
-end-to-end time or a wall-clock speedup. Indexes over ranges, multiple keys per row,
-and automatic query/representation optimization remain separate work.
+end-to-end time or a wall-clock speedup. Explicit ordered ranges and finite multiple-key projections are implemented below.
+Automatic query/representation optimization remains separate work.
 
 ## Explicit ordered backends
 
@@ -117,3 +117,35 @@ It applies the same comparator and Option bounds to unique owners or grouped
 primary buckets. Revision, uniqueness, retry, inverse and style ownership are
 unchanged. See [table-order.md](table-order.md) for positioning on declared backends, the sorting fallback,
 and explicit law, invalidation and cost boundaries.
+## Finite multiple-key declarations
+
+`multiple?: #t` declares that `project` returns a finite proper list of index keys.
+Omitting the flag means exactly one key, including a list-valued key when the
+backend actually supports it. The flag is checked with Gerbil's contract mechanism;
+no projection cardinality is guessed from a value. All projected keys must already
+belong to the declared Key Type. No Function key or row callback is rewrapped.
+The complete key list is admitted before updating that index. Gerbil's standard
+`delete-duplicates/hash` retains first occurrence order; empty lists create no
+membership and duplicate keys do not repeat backend updates.
+
+Unique and grouped indexes use the same two-phase delta installer. All old keys
+are retracted before any final memberships are inserted, permitting simultaneous
+alias swaps and team migration. A collision retains the first projected conflict
+key and both primary owners; no staged snapshot or FUN consumer escapes failure.
+A fresh retry and inverse reuse the existing style/metadata/origin protocol.
+Declaration edits, including cardinality changes, invalidate existing snapshots.
+Callback effects are not rolled back. Stable pure finite projections and backend
+key equality agreeing with `equal?` remain explicit premises.
+
+`make-tagged-services` combines unique aliases, ordered shared-team buckets,
+nested checked Functions, linear ownership/FUN consumption, refusal, repair and
+undo. Lean's `indexKeysView` / `reviseIndexKeys` prove membership correlation,
+changed-column framing, accepted delta reconstruction, duplicate invariance and
+single-key correspondence. `claimIndexKeys` reuses the existing ordered unique
+claim rule and proves exact head-failure propagation. These are finite semantic
+laws advancing the collection proposal, not extraction or compiler proofs.
+
+Projection counts remain at most two per edit/declaration. Backend work additionally
+scales with the number of distinct old and final memberships; standard list
+admission/deduplication retains its own cost. This is not constant work per row,
+a wall-time claim, automatic query optimization or discovery of callback purity.

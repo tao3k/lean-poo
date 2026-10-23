@@ -542,6 +542,45 @@ example (rows : List (Nat × Bool)) (edit : Change Nat Bool) :
 #print axioms prunedDelta_inverse
 #print axioms prunedDelta_work
 
+/-- Services may belong to several teams, including repeated or empty memberships. -/
+def taggedBefore (key : Nat) : Option (List Nat × Nat) :=
+  if key = 1 then some ([10, 20, 10], 42)
+  else if key = 2 then some ([20, 30], 42)
+  else if key = 9 then some ([], 42) else none
+
+/-- Atomic migration changes both shared memberships and retains the payload token. -/
+def taggedAfter (key : Nat) : Option (List Nat × Nat) :=
+  if key = 1 then some ([30, 40], 42)
+  else if key = 2 then some ([10, 40, 40], 42)
+  else if key = 9 then some ([], 42) else none
+
+/-- Two touched columns rebuild every team, including removal and shared insertion. -/
+theorem taggedMigration :
+    reviseIndexKeys [1, 2] (fun _ row => row.1) taggedAfter
+      (indexKeysView (fun _ row => row.1) taggedBefore) =
+    indexKeysView (fun _ row => row.1) taggedAfter := by
+  apply reviseIndexKeys_correct
+  intro key outside
+  simp only [List.mem_cons, List.mem_singleton, not_or] at outside
+  simp [taggedBefore, taggedAfter, outside.1, outside.2]
+
+example : indexKeysView (fun _ row => row.1) taggedAfter 20 1 = none := by decide
+example : indexKeysView (fun _ row => row.1) taggedAfter 40 2 = some ([10, 40, 40], 42) := by decide
+example : indexKeysView (fun _ row => row.1) taggedBefore 20 9 = none := by decide
+
+/-- Existing aliases are disjoint across owners; one owner may have several aliases. -/
+def aliasOwners (key : Nat) : Option Nat :=
+  if key = 101 ∨ key = 111 then some 1
+  else if key = 102 ∨ key = 112 then some 2 else none
+
+/-- A fresh first alias cannot conceal the exact later collision. -/
+example : (claimIndexKeys aliasOwners [200, 111, 101] 2).map (fun _ => ()) =
+    .error (111, (1, 2)) := by rfl
+
+/-- Repeated claims by the same owner are accepted without changing observations. -/
+example : (claimIndexKeys aliasOwners [200, 200] 2).map (fun owners => owners 200) =
+    .ok (some 2) := by rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
