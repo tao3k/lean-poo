@@ -240,3 +240,6 @@ opaque callback payloads, revision, retirement, delayed stale rejection and
 unsupported queries. These proofs assume immutable admitted roots, authentic
 origin versions, lawful finite enumeration and backend behavior; they do not
 verify the runtime Iterator implementation, GC, scheduling or arbitrary IO.
+
+The typed required/optional key protocol and compositional atomic modification
+are documented in [table-focus.md](table-focus.md), with TableFocus proofs.

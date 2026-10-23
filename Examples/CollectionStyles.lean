@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableObservation
+import LeanPoo.Functional.TableFocus
 
 /-! Receiver-bound service revisions advance the collection proposal's future
 work. Functions are immutable opaque payloads, never compared or rewrapped. -/
@@ -96,5 +97,43 @@ example : observeStyle (E := String) (R := List Ledger) [3] [3] before.value non
 /-- Callback failure retains its original cause and prevents an IO result. -/
 example : observeStyle [3] [3] before.value
     (some (fun row => revise 120 row)) = .error (.backend "budget exceeded") := rfl
+
+/-- A partial service ledger retains the exact already-admitted callback. -/
+def ledgerView (key : Nat) : Option Ledger :=
+  if key = 1 then some (100, callback) else if key = 2 then some (200, callback) else none
+
+/-- Reserving capacity refuses missing/insufficient rows before publication. -/
+def reserveCapacity (amount : Nat) : Option Ledger → Except String (Option Ledger)
+  | none => .error "missing service"
+  | some (capacity, run) =>
+    if amount ≤ capacity then .ok (some (capacity - amount, run)) else .error "capacity"
+
+/-- A consuming point modification updates capacity and retains callable behavior. -/
+example : (focusModify .linear (some ledgerView) 1 (reserveCapacity 30)).2.map
+    (fun view => (view 1).map (fun row => (row.1, row.2 4))) = .ok (some (70, 5)) := rfl
+
+/-- A second service remains unchanged, including the opaque Function field. -/
+example : replace ledgerView 1 (some (70, callback)) 2 = ledgerView 2 := rfl
+
+/-- Failure keeps the owner live for a fresh, explicit smaller reservation. -/
+example : focusModify .linear (some ledgerView) 1 (reserveCapacity 101) =
+    (some ledgerView, .error (.callback "capacity")) := rfl
+
+/-- Composed service focus retains its unrelated frame; it is not a second owner. -/
+example : (focusServiceModify .mutable (some (ledgerView, 42)) 1 (reserveCapacity 30)).2.map
+    (fun service => ((service.1 1).map Prod.fst, service.2)) = .ok (some 70, 42) := rfl
+
+/-- Old prepared work cannot overwrite a reentrant winner. -/
+example : (installStyle (E := String) .mutable
+    (⟨1, some (replace ledgerView 1 (some (99, callback)))⟩ : TableGeneration (Nat → Option Ledger))
+    0 (replace ledgerView 1 (some (70, callback)))).2 = .error .stale := rfl
+
+/-- Required absence is explicit refusal with no fabricated default callback. -/
+example : focusModify .pure (some ledgerView) 9
+    (requireFocus "missing service" (fun row => .ok (row.1 - 1, row.2))) =
+    (some ledgerView, .error (.callback "missing service")) := rfl
+
+/-- Even a get-put no-op observes the linear retirement discipline. -/
+example : (focusWrite (E := String) .linear 1 (ledgerView 1) (some ledgerView)).1 = none := rfl
 
 end LeanPoo.Examples.CollectionStyles
