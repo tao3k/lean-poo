@@ -1,6 +1,6 @@
-# Collection style correspondence
+# Interface-passing and receiver-bound collection styles
 
-`table-styles` derives all three protocols from one existing persistent table,
+`table-styles` derives pure, mutable, linear, posh and classy protocols from one existing persistent table,
 including a `table-wrapper` representation. It remains part of `clan/poo/table`;
 `table/styles.scm` is a standard Gerbil include, not a second public namespace.
 This advances the general collection TODO and the proposal's future work, using
@@ -98,3 +98,80 @@ late conflict and retry, reentrant/ABA changes, two real staged workers, stale
 metadata, and rejected foreign ownership. No automatic retry or callback replay is
 introduced. Costs include admission, conversions and equality; changing styles
 alone is not an in-place optimization or a wall-time performance result.
+
+Local full acceptance: 126 modules / 1,219 cases passed in the single-process
+linked test program, status 0, wall 62.225 s, CPU 21.384 s and GC CPU 3.813 s.
+The unchanged limits are 1 GiB heap and 300 s for the complete suite. These are
+acceptance measurements, not matched speedup evidence.
+
+## Posh and classy receiver derivation
+
+The collection proposal [fare/projects#10](https://github.com/fare/projects/issues/10)
+uses **posh** for pure object-oriented style and **classy** for impure
+object-oriented style, with interface information attached to runtime objects.
+This implementation advances that proposal and the original prototype paper's
+future work. It does not claim that the paper's Racket code already provides this
+collection library.
+
+`Posh` and `Classy` reuse FUN `Wrapper`, the same admitted persistent backend and
+the same private capture/installation engine as `Pure`, `Mutable` and `Linear`.
+They attach their originating protocol to an ordinary private Gerbil `defstruct`.
+Official `defmethod` dispatch supplies receiver calls. The existing `@@method`
+escape is explicit because this project's ordinary braces denote POO object
+construction. There is no new method expander, public namespace or cache.
+
+```scheme
+(import (only-in :clan/poo/brace @@method))
+(def styles (table-styles descriptor))
+(def posh (.call (.@ styles Posh) .ap admitted-root))
+(def newer (@@method posh.acons key admitted-value))
+(def classy (@@method newer.convert 'classy))
+(@@method classy.apply-batch ordered-deltas)
+(def snapshot (@@method classy.snapshot))
+```
+
+The receiver methods are `snapshot`, `bind`, `step`, `apply-delta`, `apply-batch`,
+`convert`, `ref`, `count`, `list<-`, `acons` and `remove`. Point operations use the
+backend's existing argument/default and absent-key semantics. The same operations
+are available on the generated FUN protocols (`.snapshot` is spelled `.unap`).
+Read methods observe the current head under the original metadata guard; no
+computed receiver field caches a mutable snapshot. `step` and point/batch updates
+require already admitted results. Use the protocol's explicit `.admit` boundary
+to recursively normalize raw Functions once.
+
+| Presentation | Successful update | Successful ownership transfer |
+| --- | --- | --- |
+| Posh | New receiver; old receiver and snapshot remain usable. | Source remains usable. |
+| Classy | Same receiver identity; aliases observe the new head. | All old receiver aliases become consumed. |
+
+Every source can convert to `pure`, `mutable`, `linear`, `posh` or `classy`.
+All **25** combinations retain the exact admitted snapshot and Function closures.
+Same-style owned conversion still retires the old capability. Posh can produce
+multiple independent owned receivers from a shareable pure root, which does not
+assert exclusive physical ownership of the tree or its leaves.
+
+Target admission and complete receiver construction happen before retirement of
+the source. Invalid targets, foreign protocol receivers, callback/validation
+errors and stale-generation conflicts expose no staged result. Prior external
+callback effects are not rolled back. A callback can reenter or race another
+request: the original immutable-head check still allows at most one installation
+from a captured generation. There is no implicit retry, callback replay or
+backward-compatibility dispatch path.
+
+`examples/service-collection.ss:revise-ledger-receivers` composes a derived
+key/value representation, checked Function leaves, posh-to-classy transfer,
+ordered batches, transfer back and Reader/IO. The regression suite covers the
+25-way matrix, exact Function retention, inverse recovery, failed batch suppression
+of IO, receiver provenance, metadata invalidation, reentrant conflict and retry.
+The existing real concurrent staging regression also runs with `Classy`.
+
+The extended `LeanPoo/Functional/TableStyle.lean` proves receiver observation
+commutes with the existing engine, posh persistence, classy identity, exact callback
+failure, retired-reference refusal, preparation-before-commit failure retention,
+the full conversion matrix and representation erasure. Generation-race safety
+reuses the existing installation theorem. `Examples/CollectionStyles.lean`
+combines checked-callback payloads, revisions, failed preparation, retry and stale
+installation. Authentic family provenance, fresh host identities and immutable
+persistent payloads are premises; runtime class dispatch, OOM/process termination,
+mutex implementation and arbitrary user IO are not formalized. These are semantic
+laws, not a speedup or compiler-correctness claim.
