@@ -759,3 +759,38 @@ end LeanPoo.Examples.TableRevision
 #print axioms LeanPoo.Functional.OrderedDictionary.applyIndexed_correlated
 #print axioms LeanPoo.Functional.OrderedDictionary.checkIndexRows_ownership
 #print axioms LeanPoo.Functional.OrderedDictionary.indexed_cache_inverse
+
+
+namespace LeanPoo.Examples.TableRevision
+open Functional.OrderedDictionary
+
+/-- Quote a read plus an equality comparison on every attempted edit; only
+successful comparisons incur the persistent backend write. Units are abstract. -/
+def revisionQuote (_ : Nat → Option Bool) (_ : Change Nat Bool) (ok : Bool) : Nat :=
+  3 + if ok then 5 else 0
+
+/-- A late conflict pays one successful write and the next comparison, with no
+suffix installation. The complete error semantics remain the existing ones. -/
+example : viewCarrier.applyCost revisionQuote
+    [⟨1, some false, some true⟩, ⟨2, some false, none⟩, ⟨9, some true, none⟩] original = 11 := by
+  rfl
+
+/-- An early conflict does not pay the cold setup again, nor a successful write;
+setup and output observation remain separate in the full-workflow sum. -/
+example : tableWorkflowCost 8
+    (viewCarrier.applyCost revisionQuote [⟨2, some false, none⟩] original) 20 0 = 31 := by
+  rfl
+
+/-- Reducing an install by ten units is insufficient if conversion/preparation
+adds eleven. This negative control prevents an allocation-only speedup claim. -/
+example : ¬ tableWorkflowCost (8 + 11) (30 - 10) 20 8 ≤
+    tableWorkflowCost 8 30 20 8 := by decide
+
+end LeanPoo.Examples.TableRevision
+
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.applyCost_conflict
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.applyCost_add
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_cost
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_cost_overhead
+#print axioms LeanPoo.Functional.OrderedDictionary.tableWorkflowCost_breakEven
+#print axioms LeanPoo.Functional.OrderedDictionary.carrier_check_share

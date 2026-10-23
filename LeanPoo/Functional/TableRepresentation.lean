@@ -194,4 +194,114 @@ theorem pair_codec_roundtrip {X Y : Type} (encodeLeft : A → X) (decodeLeft : X
     (decodeLeft (encodeLeft left), decodeRight (encodeRight right)) = (left, right) := by
   rw [leftLaw, rightLaw]
 
+
+/-- Charge the actually executed revision prefix. A charge may depend on the
+current persistent carrier, edit and comparison outcome: conversion, equality,
+recognition, metadata and backend work need not have constant costs. -/
+def TableCarrier.applyCost (ops : TableCarrier K V A) [DecidableEq V]
+    (charge : A → Change K V → Bool → Nat) : List (Change K V) → A → Nat
+  | [], _ => 0
+  | edit :: rest, source =>
+    if ops.read source edit.key = edit.before then
+      charge source edit true + ops.applyCost charge rest (ops.write source edit.key edit.after)
+    else charge source edit false
+
+/-- A conflict charges its read/comparison and conversions, but neither a backend
+write nor any suffix. The caller's charge must likewise exclude a refused write. -/
+theorem TableCarrier.applyCost_conflict (ops : TableCarrier K V A) [DecidableEq V]
+    (charge : A → Change K V → Bool → Nat) (edit : Change K V)
+    (rest : List (Change K V)) (source : A)
+    (conflict : ops.read source edit.key ≠ edit.before) :
+    ops.applyCost charge (edit :: rest) source = charge source edit false := by
+  simp [TableCarrier.applyCost, conflict]
+
+/-- Independent cost categories add over the same execution, including an early
+conflict. This permits charging actual equality/conversion/preparation separately
+without erasing them from a claimed backend improvement. -/
+theorem TableCarrier.applyCost_add (ops : TableCarrier K V A) [DecidableEq V]
+    (left right : A → Change K V → Bool → Nat) (edits : List (Change K V)) (source : A) :
+    ops.applyCost (fun state edit ok => left state edit ok + right state edit ok) edits source =
+      ops.applyCost left edits source + ops.applyCost right edits source := by
+  induction edits generalizing source with
+  | nil => rfl
+  | cons edit rest ih =>
+    simp only [TableCarrier.applyCost]
+    split
+    · rw [ih]; omega
+    · rfl
+
+/-- Isomorphic execution charges the same successful/failed prefix when the
+explicit target quote includes the corresponding source quote. No equality,
+conversion, metadata, allocation or GC cost is inferred from an isomorphism law. -/
+theorem TableCarrier.conjugate_cost [DecidableEq V] [DecidableEq W]
+    (ops : TableCarrier K V A) (keys : DictionaryBridge K L)
+    (values : DictionaryBridge V W) (carrier : DictionaryBridge A B)
+    (sourceCharge : A → Change K V → Bool → Nat)
+    (targetCharge : B → Change L W → Bool → Nat)
+    (quotes : ∀ state edit ok,
+      targetCharge (carrier.toFields state) (transportChange keys values edit) ok =
+        sourceCharge state edit ok)
+    (edits : List (Change K V)) (source : A) :
+    (ops.conjugate keys values carrier).applyCost targetCharge
+      (transportChanges keys values edits) (carrier.toFields source) =
+        ops.applyCost sourceCharge edits source := by
+  induction edits generalizing source with
+  | nil => rfl
+  | cons edit rest ih =>
+    simp only [transportChanges, List.map_cons, TableCarrier.applyCost]
+    have same : (ops.read source edit.key).map values.toFields = edit.before.map values.toFields ↔
+        ops.read source edit.key = edit.before := (transport_option_injective values).eq_iff
+    simp only [transportChange, TableCarrier.conjugate_read, same]
+    by_cases aligned : ops.read source edit.key = edit.before
+    · simp only [aligned, ↓reduceIte]
+      rw [TableCarrier.conjugate_write]
+      have q := quotes source edit true
+      simp only [transportChange] at q
+      rw [q]
+      exact congrArg (fun n => sourceCharge source edit true + n) (ih _)
+    · simp only [aligned, ↓reduceIte]
+      exact quotes _ _ _
+
+/-- Full workflow accounting retains preparation, observation and undo in addition
+ to installation. Costs are externally measured or justified; units are explicit. -/
+def tableWorkflowCost (prepare install observe undo : Nat) : Nat :=
+  prepare + install + observe + undo
+
+/-- A cheaper installer implies a cheaper full workflow only after charging the
+additional preparation/conversion/equality/observation overhead against its saving. -/
+theorem tableWorkflowCost_breakEven (prepare install observe undo extra saving : Nat)
+    (bounded : extra ≤ saving) (available : saving ≤ install) :
+    tableWorkflowCost (prepare + extra) (install - saving) observe undo ≤
+      tableWorkflowCost prepare install observe undo := by
+  unfold tableWorkflowCost; omega
+
+/-- Wrapper overhead is retained over the same actually executed prefix. A source
+backend speedup alone cannot cancel conversion/equality/guard work silently. -/
+theorem TableCarrier.conjugate_cost_overhead [DecidableEq V] [DecidableEq W]
+    (ops : TableCarrier K V A) (keys : DictionaryBridge K L)
+    (values : DictionaryBridge V W) (carrier : DictionaryBridge A B)
+    (backend overhead : A → Change K V → Bool → Nat)
+    (target : B → Change L W → Bool → Nat)
+    (quotes : ∀ state edit ok,
+      target (carrier.toFields state) (transportChange keys values edit) ok =
+        backend state edit ok + overhead state edit ok)
+    (edits : List (Change K V)) (source : A) :
+    (ops.conjugate keys values carrier).applyCost target
+      (transportChanges keys values edits) (carrier.toFields source) =
+        ops.applyCost backend edits source + ops.applyCost overhead edits source := by
+  rw [ops.conjugate_cost keys values carrier
+    (fun state edit ok => backend state edit ok + overhead state edit ok) target quotes]
+  exact ops.applyCost_add backend overhead edits source
+
+/-- Sharing an encountered pure conversion leaves both inverse comparisons and
+short-circuit refusal unchanged. Stateful/effectful callback semantics are not
+inferred from this equality and are not justified for cross-call memoization. -/
+theorem carrier_check_share {X Y : Type} (encode : X → Y) (decode : Y → X)
+    (sameX : X → X → Bool) (sameY : Y → Y → Bool) (input : X) :
+    (let output := encode input
+     sameX (decode output) input && sameY (encode (decode output)) output) =
+    (let output := encode input
+     let recovered := decode output
+     sameX recovered input && sameY (encode recovered) output) := rfl
+
 end LeanPoo.Functional.OrderedDictionary
