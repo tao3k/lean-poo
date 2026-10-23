@@ -175,3 +175,68 @@ installation. Authentic family provenance, fresh host identities and immutable
 persistent payloads are premises; runtime class dispatch, OOM/process termination,
 mutex implementation and arbitrary user IO are not formalized. These are semantic
 laws, not a speedup or compiler-correctness claim.
+
+## Snapshot-bound observation across every style
+
+Style generation now lifts the existing observation protocol as a whole:
+`.iter<-`, `.foldl`, `.foldr`, `.seek<-`, `.seek`, `.range`, `.index-ref/opt` and
+`.index-range`. Both `Posh` and `Classy` implement Gerbil's standard `Iterable`;
+ordinary `iter` / `for` work on receivers. Their corresponding explicit methods
+use the existing `@@method` syntax, with the receiver first; protocol folds retain
+`methods.table`'s `(callback seed state)` signature. For example:
+
+```scheme
+(def cursor (iter classy))
+(def total (@@method classy.foldl (lambda (_ value acc) (+ value acc)) 0))
+(def window (@@method classy.range (some lower) (some upper) #t #f))
+(def positioned (@@method classy.seek<- (some lower)))
+(def priority (@@method classy.index-range 'priority #f #f))
+```
+
+An operation captures exactly one admitted persistent root before its backend
+callback. Reentrant updates during a fold do not change that fold's remaining
+snapshot. A delayed cursor retains the root captured at creation: later updates,
+ownership transfer or retirement do not splice another generation into it.
+New cursor issuance from a retired owner still refuses. This is nonconsuming
+snapshot observation, just as `.unap` already returns a shareable pure root.
+
+Every delayed pull, including repeated EOF, checks the captured descriptor
+revisions through `iterator-map` and the original source guard. No ownership lock
+is held across iteration or arbitrary callbacks. Descriptor revisions invalidate
+old cursors; rebuilding the factory and creating a new cursor is explicit retry.
+A backend pull that raises is not automatically replayed: whether its internal
+cursor has already advanced remains the backend's own exception semantics.
+External callback effects are not rolled back.
+
+Ordered and indexed queries forward the original comparator, inclusive/exclusive
+bounds, Option/missing-key convention, branch order and failure cause. A missing
+backend method raises `unsupported table observation`; a style never invents an
+ordering, index or seek algorithm. These methods are callable on every generated
+protocol, but the protocol's field presence does not certify source capability.
+`source` remains the authority for capabilities. Construction guards the dynamic
+slot lookup through the existing `.slot?` protocol.
+
+Positioned traversal calls the existing backend once, then wraps its iterator in
+the original metadata guard. It does not restore seek by full enumeration or
+sorting. Generic `.iter<-` retains its backend's existing cost (the default table
+implementation materializes `.list<-`); no general lazy-tree or constant-time
+claim is made. Fold callbacks/results keep backend traversal and return semantics.
+The wrapper adds guards and ordinary interface dispatch, not a performance theorem.
+
+`observe-indexed-receiver` in the existing service example composes one
+snapshot-bound FUN observation with correlated range selection, checked Function
+invocation and outer Reader/IO consumption. A callback refusal suppresses the IO
+consumer; previous callback effects remain. Regressions cover all five styles,
+standard Iterable dispatch, fold directions and reentrant publication, source
+invalidation at EOF, retained cursors after transfer, positioned traversal with a
+scan-forbidden backend, atomic index publication, inverse and explicit retry.
+
+`LeanPoo/Functional/TableObservation.lean` reuses `TableOrder`'s guarded finite
+cursor. It proves exact delegation/failure causes, unsupported and consumed
+refusal, stale-origin precedence, stream/payload preservation, single-pull/zero-pull
+admission, EOF validation and separation between a changed classy head and its
+captured snapshot. The existing top-level `Examples/CollectionStyles.lean` covers
+opaque callback payloads, revision, retirement, delayed stale rejection and
+unsupported queries. These proofs assume immutable admitted roots, authentic
+origin versions, lawful finite enumeration and backend behavior; they do not
+verify the runtime Iterator implementation, GC, scheduling or arbitrary IO.
