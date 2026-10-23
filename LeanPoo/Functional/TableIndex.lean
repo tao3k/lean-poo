@@ -430,4 +430,43 @@ theorem prunedDelta_work (tree : DeltaTraversal K V) (admission : Nat) :
       simp only [prunedDeltaWork, fullDeltaWork]; omega
   omega
 
+/-- Constructor scopes grow from declarations to discovered backends and then
+child/origin metadata. Supported edits admitted outside these nested scopes
+cannot change an earlier recipe while a later computed declaration is read.
+The protected-edit premise is supplied by the host object mutation discipline. -/
+theorem indexPreparation_frame {Id Metadata : Type} [DecidableEq Id] [DecidableEq Metadata]
+    (declarations backends origins : List Id) (edits : List (Change Id Metadata))
+    (before after : Id → Option Metadata)
+    (guarded : ∀ edit ∈ edits, edit.key ∉
+      extendProtection origins (extendProtection backends declarations false) false)
+    (accepted : applyChanges edits before = .ok after) :
+    ∀ key ∈ declarations ++ backends ++ origins, after key = before key := by
+  intro key member
+  apply applyChanges_frame edits before after accepted key
+  intro edit inside same
+  apply guarded edit inside
+  rw [mem_extendProtection origins _ false (by simp), List.mem_append,
+      mem_extendProtection backends declarations false (by simp), List.mem_append]
+  subst key
+  simp only [List.mem_append] at member
+  rcases member with (declaration | backend) | origin
+  · exact Or.inr (Or.inr declaration)
+  · exact Or.inr (Or.inl backend)
+  · exact Or.inl origin
+
+/-- Current source stamps after protected preparation still describe the original
+captured recipes. No stamp sampled only after compilation can establish this
+premise when getters were allowed to mutate previously compiled participants. -/
+theorem indexPreparation_current {Id : Type} [DecidableEq Id]
+    (declarations backends origins : List Id) (edits : List (Change Id Nat))
+    (before after : Id → Option Nat)
+    (guarded : ∀ edit ∈ edits, edit.key ∉
+      extendProtection origins (extendProtection backends declarations false) false)
+    (accepted : applyChanges edits before = .ok after) :
+    stampMatches (declarations ++ backends ++ origins) before after = true := by
+  simp only [stampMatches, List.all_eq_true]
+  intro key member
+  exact beq_iff_eq.mpr (indexPreparation_frame declarations backends origins edits
+    before after guarded accepted key member).symm
+
 end LeanPoo.Functional.OrderedDictionary

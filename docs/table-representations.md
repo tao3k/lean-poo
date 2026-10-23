@@ -531,3 +531,61 @@ and new B/B -0.832 s; stable full-entry speedup and tail guarantees remain unpro
 The startup-sensitive external mean improvement must not be substituted for the
 loaded-entry comparison. Lean proves conditional shape/admission semantics and
 observed refusal preservation, not timing of this host or its collector.
+
+### Whole-entry preparation candidate: withdrawn after tail acceptance
+
+The earlier candidate B/B difference of -0.832335 s decomposes into
+-0.514042 s non-GC CPU, -0.333111 s GC CPU and +0.014818 s signed wall-minus-CPU
+residual. It is same-version drift, not evidence of an 0.832 s selector/GC defect.
+Preparation, fixed prefixes, forced collection, first call and batches remain
+separately charged. Unattributed entry work includes reporting and collected-mode
+GC outside the explicit post-GC intervals; residual is not automatically scheduler
+wait, and summing stage medians is invalid.
+
+A concrete candidate removed eager source/derived fixture construction from cold,
+prepare and equality slices, while retaining every timed action and oracle. The
+same compiled workload supplied eager/selected controls; no library policy, GC
+mode, count, timeout or resource bound changed. Eight complete width-64, batch-10,
+6-pair processes ran eager/selected/selected/eager/selected/eager/eager/selected,
+without overlapping local builds. Every process returned 0 with 219 summaries.
+This study preceded the declaration-preparation correction below: its executable
+SHA-256 was `2626be4bb8918b55a66d57786721bb65b526bf6fe1c7ab51ebf3be04f80d785c`,
+compiled workload SCM SHA-256
+`4d2fd0e194bb0e9dace0b6a28c34abecdb2afbabf29b63fbcc2d778179eecc0a`.
+It is not a measurement of the subsequent final library binary.
+
+| Matched process slots (eager → selected) | External wall, s | Loaded entry delta, s | Non-GC CPU delta, s | GC CPU delta, s | Residual delta, s |
+| --- | --- | --- | --- | --- | --- |
+| 0 → 1 | 37.79 → 36.53 | -1.296 | -0.903 | -0.085 | -0.309 |
+| 3 → 2 | 35.16 → 36.78 | +1.614 | +0.722 | +0.233 | +0.660 |
+| 5 → 4 | 36.92 → 35.75 | -1.161 | -0.525 | -0.065 | -0.571 |
+| 6 → 7 | 37.05 → 36.14 | -0.907 | -0.542 | -0.061 | -0.304 |
+
+The loaded-entry mean delta is -437.376 ms, with 3 wins/1 loss and empirical
+p90/max **+1.614399 s** (four paired process observations, not a population bound).
+Preparation CPU falls in all four pairs by 77–352 ms. Its wall delta ranges
+-360 to +93 ms; the adverse pair includes +171 ms preparation residual.
+First-post-GC call CPU deltas range -6.837 to +7.788 ms over the whole entry;
+first-call wall deltas range -24.021 to +62.027 ms. Startup wall was 14–40 ms,
+reported separately and still included in external wall. Eager A/A differences
+are -2.631/+0.131 s; selected B/B differences are +0.280/+0.385 s. Neither control
+is silently removed or declared to prove bounded variance.
+
+Crucially, the actual Trie cold-call wall tails fail acceptance. Each regime has
+24 matched candidate-side calls, preserving every round: natural has 22 losses,
+mean +84.026 us, empirical p90 +252.509 us, max +326.204 us; collected has 21 losses,
+mean +144.545 us, p90 +393.105 us, max +522.065 us. Natural retry also retains
+9 losses/15 wins and max +180.507 us. These within-process fixture observations
+are not 24 independent process samples. Changed preparation demonstrably changes
+subsequent histories; fewer setup operations cannot establish a safe whole-workflow
+speedup. **The pruning candidate was withdrawn, including its temporary CLI switch.**
+The default fixture preparation and every check remain unchanged. Setup work counts
+are now printed separately, with their reporting charged to the complete entry.
+
+Raw stdout, timing receipts and signed histories remain read-only outside Git in
+`/tmp/poo-fixture-entry-20261023.dU1Upx/`. The bounded investigation is complete;
+there is no stable entry/tail improvement claim and no promise to eliminate future
+wall variation. `measuredEntry_prepare_bound` requires the saving to cover every
+other cost and residual; `measuredTail_bound` requires every retained observation
+to meet a bound. Lean examples explicitly refute admission based only on a lower
+mean or preparation cost. These are conditional accounting laws, not VM/GC proofs.

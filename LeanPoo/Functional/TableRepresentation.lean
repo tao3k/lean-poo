@@ -414,6 +414,40 @@ theorem measuredWall_bound (oldWork oldGC newWork newGC : Nat) (oldR newR : Int)
   unfold measuredWall
   omega
 
+/-- Whole-entry non-GC CPU is partitioned into disjoint preparation, fixed prefix,
+first-call, batch and remaining work. GC and signed wall residual are charged once;
+per-stage medians are not additive observations. -/
+def measuredEntry (prepare warmup firstCall batch remaining gc : Nat) (residual : Int) : Int :=
+  measuredWall (prepare + warmup + firstCall + batch + remaining) gc residual
+
+/-- Removing unused fixture preparation improves complete entry wall only when
+changes in every other stage, GC and residual fit the measured preparation saving.
+These inequalities are empirical premises, not a runtime or scheduler guarantee. -/
+theorem measuredEntry_prepare_bound
+    (oldPrepare oldPrefix oldFirst oldBatch oldRemaining oldGC : Nat)
+    (newPrepare newPrefix newFirst newBatch newRemaining newGC : Nat) (oldR newR : Int)
+    (budget : ((newPrefix : Int) + newFirst + newBatch + newRemaining + newGC + newR) -
+        ((oldPrefix : Int) + oldFirst + oldBatch + oldRemaining + oldGC + oldR) ≤
+      (oldPrepare : Int) - newPrepare) :
+    measuredEntry newPrepare newPrefix newFirst newBatch newRemaining newGC newR ≤
+      measuredEntry oldPrepare oldPrefix oldFirst oldBatch oldRemaining oldGC oldR := by
+  simp only [measuredEntry, measuredWall]
+  omega
+
+/-- The empirical nonnegative upper envelope retains every adverse observation.
+Zero is the floor so an all-negative sample set claims no future negative bound. -/
+def measuredTail (samples : List Int) : Int := samples.foldr max 0
+
+/-- A tail bound requires every retained observation, rather than its mean, to
+meet the bound. Sample admission and correspondence are separate host obligations. -/
+theorem measuredTail_bound (samples : List Int) (limit : Int) (nonnegative : 0 ≤ limit)
+    (bounded : ∀ sample ∈ samples, sample ≤ limit) : measuredTail samples ≤ limit := by
+  induction samples with
+  | nil => exact nonnegative
+  | cons head rest ih =>
+    exact Int.max_le.mpr ⟨bounded head (by simp),
+      ih (fun sample inside => bounded sample (by simp [inside]))⟩
+
 /-- Private construction protects origins; publication adds the completed receiver.
 The prepared list is reused only within this derived protocol, never globally. -/
 def receiverScope {Id : Type} (receiver : Option Id) (sources : List Id) : List Id :=

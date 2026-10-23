@@ -149,3 +149,45 @@ Projection counts remain at most two per edit/declaration. Backend work addition
 scales with the number of distinct old and final memberships; standard list
 admission/deduplication retains its own cost. This is not constant work per row,
 a wall-time claim, automatic query optimization or discovery of callback purity.
+
+## Protected declaration preparation
+
+`table-indexes` captures the finite proper declaration-list spine before any
+metadata getter. Existing `with-table-sources` protects the source and every
+captured declaration while discovering their backends; it then protects those
+backends while collecting child/origin Types. Recipe compilation, duplicate-name
+and Value compatibility checks, and initial empty-state construction run inside
+the complete nested protection. The private compiler receives the same captured
+backend list instead of reading `table` again. No second mutation/invalidation
+engine or public namespace is introduced.
+
+This closes a real construction omission: a later computed `project` getter could
+rewrite an earlier declaration after its recipe had been captured. Sampling all
+revisions only afterwards incorrectly certified the old recipe against the new
+revision. Supported peer writes now refuse with the exact existing
+`object mutation during computation` error. A changed caller-owned list affects
+future requests, never the already captured family. Backend discovery precedes
+ordered recipe compilation; original getter errors short-circuit the current
+phase. Effects already performed by callbacks are not rolled back.
+
+`examples/service-collection.ss` `publish-indexed-services` composes preparation,
+initial wrapping and the existing linear FUN/IO revision action. Tests combine
+computed-metadata refusal, unique conflict, explicit fresh retry, shared checked
+Functions, inverse restoration and stale-family refusal; additional controls cover
+backend/child/source mutation and request-spine replacement. Later supported
+metadata revisions continue to invalidate the completed family normally.
+
+Lean's `indexPreparation_frame` reuses `applyChanges_frame` and the existing
+`extendProtection` scope laws: every successful finite supported edit outside the
+nested scopes preserves all declaration, backend and child/origin observations.
+`indexPreparation_current` derives current complete stamps. Faithful scope/source
+interpretation and supported edits are premises. Raw setters, concurrent metadata
+mutation, hidden callback dependencies, arbitrary initialization hooks and callback
+termination/effect rollback are not established by these finite future-work laws.
+
+Local final functional acceptance passed the standard linked single-process suite:
+128 modules / 1,270 cases, normal status 0, wall 38.324 s, CPU 21.311 s, GC CPU
+3.608 s under the unchanged 1 GiB / 300 s bound. This is a correctness receipt,
+not a paired timing claim. The three new cases cover computed peer edits, the
+backend/child/source scope, and caller-buffer capture, with full publication and
+inverse/refusal controls inside them.

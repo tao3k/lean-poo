@@ -605,6 +605,30 @@ example : pointChanges (fun _ : Nat => some false) 1 none = [⟨1, some false, n
 /-- An unchanged request is empty, matching .diff rather than claiming a read lock. -/
 example : pointChanges (fun _ : Nat => some false) 1 (some false) = [] := by rfl
 
+/-- Lower mean wall cost can coexist with an adverse tail; do not admit an
+entry-level latency claim from the aggregate saving alone. Units are arbitrary. -/
+example : ([-1000, -1000, 500] : List Int).sum < 0 ∧
+    measuredTail [-1000, -1000, 500] = 500 := by decide
+
+/-- A preparation saving is insufficient when GC/residual growth exceeds it,
+even with identical first-call, prefix and complete batch costs. -/
+example : measuredEntry 5 10 10 100 5 30 2 > measuredEntry 10 10 10 100 5 20 0 := by decide
+
+/-- Declaration, backend and child metadata remain correlated over any accepted
+finite callback edit trace outside the complete nested preparation scope. -/
+example (edits : List (Change Nat Nat)) (before after : Nat → Option Nat)
+    (guarded : ∀ edit ∈ edits, edit.key ∉
+      extendProtection [2] (extendProtection [1] [0] false) false)
+    (accepted : applyChanges edits before = .ok after) :
+    after 0 = before 0 ∧ after 1 = before 1 ∧ after 2 = before 2 := by
+  have frame := indexPreparation_frame [0] [1] [2] edits before after guarded accepted
+  exact ⟨frame 0 (by simp), frame 1 (by simp), frame 2 (by simp)⟩
+
+/-- Sampling a revision only after a permitted late rewrite would certify the
+wrong recipe; protecting participants before reading recipes is essential. -/
+example : (applyChanges [⟨0, some 7, some 107⟩] (fun _ : Nat => some (7 : Nat))).map
+      (fun state => state 0) = .ok (some 107) := rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
@@ -892,3 +916,9 @@ end LeanPoo.Examples.TableRevision
 /-- A declared shape law cannot replace read authority in the observed route. -/
 example : LeanPoo.Functional.OrderedDictionary.readTypeContext true
     (fun _ => Except.error "validator denied") (true : Bool) = .error "validator denied" := rfl
+
+#print axioms LeanPoo.Functional.OrderedDictionary.measuredEntry_prepare_bound
+#print axioms LeanPoo.Functional.OrderedDictionary.measuredTail_bound
+
+#print axioms LeanPoo.Functional.OrderedDictionary.indexPreparation_frame
+#print axioms LeanPoo.Functional.OrderedDictionary.indexPreparation_current
