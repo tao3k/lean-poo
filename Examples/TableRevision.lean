@@ -581,6 +581,19 @@ example : (claimIndexKeys aliasOwners [200, 111, 101] 2).map (fun _ => ()) =
 example : (claimIndexKeys aliasOwners [200, 200] 2).map (fun owners => owners 200) =
     .ok (some 2) := by rfl
 
+/-- A live outer view cannot authorize a cursor whose inner revision changed. -/
+example : (if ([4, 9] : List Nat) = [4, 9] then
+    checkedTablePull [2, 7] [2, 8] [(120, 42), (121, 42)] else (.error (), 0)) =
+    ((.error (), 0) : Except Unit (Option (Nat × Nat) × List (Nat × Nat)) × Nat) := by rfl
+
+/-- A resumed cursor keeps the exact opaque service callback and remaining tail. -/
+example (callback : Int → Int) : checkedTablePull [4, 9] [4, 9]
+    [(120, callback), (121, callback)] =
+    (.ok (some (120, callback), [(121, callback)]), 1) := by rfl
+
+/-- A stale exhausted cursor refuses rather than returning another successful EOF. -/
+example : checkedTablePull (K := Nat) (V := Nat) [4, 9] [4, 10] [] = (.error (), 0) := by rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.

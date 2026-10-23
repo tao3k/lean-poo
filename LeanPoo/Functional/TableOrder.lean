@@ -224,6 +224,53 @@ theorem tableRangePrefix_work (height positionCost : Nat) (bounded : positionCos
   rw [tableRangePrefix_pulls]
   omega
 
+/-- One finite backend pull returns the original row and unmodified tail, or EOF.
+This models observation, not the host coroutine implementation. -/
+def tableCursorPull (rows : List (K × V)) : Option (K × V) × List (K × V) :=
+  match rows with
+  | [] => (none, [])
+  | row :: rest => (some row, rest)
+
+/-- A delayed observation checks the captured origin revisions before pulling.
+The work component counts backend pulls only; guards, shape checks and GC are separate. -/
+def checkedTablePull (issued current : List Nat) (rows : List (K × V)) :
+    Except Unit (Option (K × V) × List (K × V)) × Nat :=
+  if issued = current then (.ok (tableCursorPull rows), 1) else (.error (), 0)
+
+/-- Current metadata preserves the original payload, tail and single backend pull. -/
+theorem checkedTablePull_current (issued : List Nat) (rows : List (K × V)) :
+    checkedTablePull issued issued rows = (.ok (tableCursorPull rows), 1) := by
+  simp [checkedTablePull]
+
+/-- Refusal suppresses the backend pull and exposes no row or advanced tail. -/
+theorem checkedTablePull_stale (issued current : List Nat) (rows : List (K × V))
+    (stale : issued ≠ current) :
+    checkedTablePull issued current rows = (.error (), 0) := by
+  simp [checkedTablePull, stale]
+
+/-- EOF never bypasses revision checking, including observations after exhaustion. -/
+theorem checkedTablePull_eof (issued current : List Nat) :
+    checkedTablePull (K := K) (V := V) issued current [] =
+      if issued = current then (.ok (none, []), 1) else (.error (), 0) := by
+  simp [checkedTablePull, tableCursorPull]
+
+/-- Passing outer metadata guards delegates exactly the same single backend pull.
+A stale outer origin prevents delegation even when the inner origin is current. -/
+theorem checkedTablePull_nested (outerIssued outerCurrent innerIssued innerCurrent : List Nat)
+    (rows : List (K × V)) :
+    (if outerIssued = outerCurrent then checkedTablePull innerIssued innerCurrent rows
+      else (.error (), 0)) =
+    (if outerIssued = outerCurrent ∧ innerIssued = innerCurrent
+      then (.ok (tableCursorPull rows), 1) else (.error (), 0)) := by
+  by_cases outer : outerIssued = outerCurrent <;>
+    by_cases inner : innerIssued = innerCurrent <;> simp [checkedTablePull, outer, inner]
+
+/-- Identity iterator mapping leaves the complete finite range and its pull count
+unchanged. This is the law for composing order views without re-enumerating rows;
+no constant bound is assigned to the number of metadata guards. -/
+theorem tableRangePrefix_identity (accept : K → Bool) (rows : List (K × V)) :
+    tableRangePrefix accept (rows.map id) = tableRangePrefix accept rows := by simp
+
 /-- Reference admission checks every intermediate carrier before proceeding.
 A shape refusal is distinct from the original update error. -/
 def checkedShapeUpdates {S Edit E : Type} (valid : S → Bool) (refusal : E)

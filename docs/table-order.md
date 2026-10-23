@@ -317,3 +317,20 @@ qualified. Allocations and interval GC history alone do not explain residuals.
 The final single-process check passes all 128 modules / 1,249 cases within the
 unchanged 300-second / 1-GiB bound (24.15 seconds measured test wall). No checks,
 failed observations, resource limits or complete admissions were removed.
+
+## Ordered cursor composition
+
+The Scheme order constructor now retains its ordered cursor capability through
+nested views and typed Wrapper transfer. Matching comparer identity delegates to
+the same backend; fallback sorting remains necessary when the underlying public
+API has no positioning operation. No backend complexity is inferred from a method
+name. Existing Iterator guards check sources on every deferred pull, including EOF.
+
+`tableCursorPull` and `checkedTablePull` give a finite observation model: current
+revisions preserve the exact opaque row and remaining tail with one backend pull;
+stale revisions expose no row and perform no pull. `checkedTablePull_nested`
+requires both layers' revisions to agree before delegation. The identity mapping
+law retains the complete range prefix and its pull count. Guard traversal, shape
+admission, host iterator implementation, allocation, callback effects and GC remain
+outside that abstract pull count. The service examples include callback identity,
+inner-origin refusal and refusal after exhaustion.
