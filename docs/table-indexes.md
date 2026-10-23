@@ -115,5 +115,5 @@ and automatic query/representation optimization remain separate work.
 Declare `table-order backend comparer` as an index table to enable `.index-range`.
 It applies the same comparator and Option bounds to unique owners or grouped
 primary buckets. Revision, uniqueness, retry, inverse and style ownership are
-unchanged. See [table-order.md](table-order.md) for the finite sort/filter
-implementation and its explicit law, invalidation and cost boundaries.
+unchanged. See [table-order.md](table-order.md) for positioning on declared backends, the sorting fallback,
+and explicit law, invalidation and cost boundaries.

@@ -114,4 +114,114 @@ theorem tableRangeRows_restore (compare : K → K → Int) (lower upper : Option
     (before restored : List (K × V)) (recovered : restored = before) :
     tableRangeRows compare lower upper restored = tableRangeRows compare lower upper before := by rw [recovered]
 
+
+/-- The loop's observable prefix and actual number of iterator pulls, including
+EOF or the first rejected upper-bound entry. Backend positioning is separate. -/
+def tableRangePrefix (accept : K → Bool) : List (K × V) → List (K × V) × Nat
+  | [] => ([], 1)
+  | row :: rest => if accept row.1 then
+      let next := tableRangePrefix accept rest
+      (row :: next.1, next.2 + 1)
+    else ([], 1)
+
+/-- Prefix execution is the standard takeWhile observation, without payload maps. -/
+theorem tableRangePrefix_rows (accept : K → Bool) (rows : List (K × V)) :
+    (tableRangePrefix accept rows).1 = rows.takeWhile (fun row => accept row.1) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih => simp [tableRangePrefix, List.takeWhile_cons, ih]; split <;> rfl
+
+/-- A range consumes exactly its returned rows plus one boundary/EOF pull. -/
+theorem tableRangePrefix_pulls (accept : K → Bool) (rows : List (K × V)) :
+    (tableRangePrefix accept rows).2 = (tableRangePrefix accept rows).1.length + 1 := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    cases h : accept row.1 <;> simp [tableRangePrefix, h, ih, Nat.add_assoc]
+
+/-- An ordered backend must justify this finite window partition. The skipped
+prefix fails the lower bound, the hits pass both, and the suffix fails upper.
+This is an explicit backend law, not inferred from a method name or comparator. -/
+structure TableRangeWindow (lower upper : K → Bool) (rows : List (K × V)) where
+  before : List (K × V)
+  hits : List (K × V)
+  after : List (K × V)
+  partition : rows = before ++ hits ++ after
+  before_lower : ∀ row ∈ before, lower row.1 = false
+  hits_lower : ∀ row ∈ hits, lower row.1 = true
+  hits_upper : ∀ row ∈ hits, upper row.1 = true
+  after_lower : ∀ row ∈ after, lower row.1 = true
+  after_upper : ∀ row ∈ after, upper row.1 = false
+
+/-- The reference full filter returns exactly the certified contiguous window. -/
+theorem tableRangeWindow_filter (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    rows.filter (fun row => lower row.1 && upper row.1) = window.hits := by
+  conv =>
+    lhs
+    rw [window.partition]
+  rw [List.filter_append, List.filter_append]
+  have before : window.before.filter (fun row => lower row.1 && upper row.1) = [] := by
+    apply List.filter_eq_nil_iff.mpr; intro row member; simp [window.before_lower row member]
+  have hits : window.hits.filter (fun row => lower row.1 && upper row.1) = window.hits := by
+    apply List.filter_eq_self.mpr; intro row member
+    simp [window.hits_lower row member, window.hits_upper row member]
+  have after : window.after.filter (fun row => lower row.1 && upper row.1) = [] := by
+    apply List.filter_eq_nil_iff.mpr; intro row member; simp [window.after_upper row member]
+  simp [before, hits, after]
+
+/-- A lawful positioned cursor skips exactly the lower-rejected prefix. -/
+theorem tableRangeWindow_seek (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    rows.filter (fun row => lower row.1) = window.hits ++ window.after := by
+  conv =>
+    lhs
+    rw [window.partition]
+  rw [List.filter_append, List.filter_append]
+  have before : window.before.filter (fun row => lower row.1) = [] :=
+    List.filter_eq_nil_iff.mpr (by intro row member; simp [window.before_lower row member])
+  have hits : window.hits.filter (fun row => lower row.1) = window.hits :=
+    List.filter_eq_self.mpr window.hits_lower
+  have after : window.after.filter (fun row => lower row.1) = window.after :=
+    List.filter_eq_self.mpr window.after_lower
+  simp [before, hits, after]
+
+/-- Early stop after a lawful seek equals the complete reference filter. -/
+theorem tableRangeWindow_correct (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    (tableRangePrefix upper (rows.filter (fun row => lower row.1))).1 =
+      rows.filter (fun row => lower row.1 && upper row.1) := by
+  rw [tableRangeWindow_seek lower upper rows window, tableRangePrefix_rows,
+      tableRangeWindow_filter lower upper rows window]
+  rw [List.takeWhile_append_of_pos window.hits_upper]
+  have rest : window.after.takeWhile (fun row => upper row.1) = [] := by
+    cases h : window.after with
+    | nil => rfl
+    | cons row tail =>
+      have reject := window.after_upper row (by rw [h]; simp)
+      simp [reject]
+  simp [rest]
+
+/-- Prefix pruning is safe when every covered key is below the seek boundary.
+This is the interval law used when a Trie skips a preceding branch/subtree. -/
+theorem tableSeek_skip_prefix (rows : List (Nat × V)) (limit boundary : Nat)
+    (covered : ∀ row ∈ rows, row.1 < limit) (beyond : limit ≤ boundary) :
+    rows.filter (fun row => decide (boundary ≤ row.1)) = [] := by
+  apply List.filter_eq_nil_iff.mpr
+  intro row member
+  have h := covered row member
+  intro accepted
+  have reaches : boundary ≤ row.1 := of_decide_eq_true accepted
+  omega
+
+/-- With a backend-specific height-bounded positioning certificate, the total
+abstract work is bounded by that height plus output and one sentinel pull.
+No theorem here assigns a constant cost to a coroutine, recognition or GC. -/
+theorem tableRangePrefix_work (height positionCost : Nat) (bounded : positionCost ≤ height + 1)
+    (accept : K → Bool) (rows : List (K × V)) :
+    positionCost + (tableRangePrefix accept rows).2 ≤
+      height + (tableRangePrefix accept rows).1.length + 2 := by
+  rw [tableRangePrefix_pulls]
+  omega
+
 end LeanPoo.Functional.OrderedDictionary

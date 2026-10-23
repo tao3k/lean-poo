@@ -454,6 +454,18 @@ example (callback : Int → Int) :
       (some ⟨-20, true⟩) none [(-10, callback), (-20, callback), (-30, callback)] =
       [(-20, callback), (-30, callback)] := by rfl
 
+/-- The positioned loop reads the first excluded boundary but not its suffix. -/
+example : tableRangePrefix (fun key : Nat => decide (key ≤ 1803))
+    [(1800, 42), (1801, 42), (1802, 42), (1803, 42), (1804, 42), (9000, 42)] =
+    ([(1800, 42), (1801, 42), (1802, 42), (1803, 42)], 5) := rfl
+
+/-- An already exhausted cursor still performs one EOF observation. -/
+example : tableRangePrefix (fun _ : Nat => true) ([] : List (Nat × Nat)) = ([], 1) := rfl
+
+#print axioms tableRangeWindow_correct
+#print axioms tableRangePrefix_pulls
+#print axioms tableRangePrefix_work
+
 #print axioms transportComparer_laws
 #print axioms tableRangeRows_transport
 #print axioms tableRangeRows_ordered

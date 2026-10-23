@@ -68,4 +68,6 @@ Explicit ordering is a separate law-governed extension: `table-comparer-wrapper`
 transports a declared comparer through the key isomorphism, and `table-order`
 derives ordered folds and finite ranges without guessing host numeric order.
 See [table-order.md](table-order.md) for bounds, invalidation and cost premises.
-Backend-specific seek and automatic ordering discovery remain outside this unit.
+Explicit backend seek now transfers through the same Wrappers when a source
+advertises it and the caller shares its transported Comparer. Automatic ordering
+discovery and private backend tree inspection remain outside this unit.
