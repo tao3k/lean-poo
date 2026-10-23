@@ -153,3 +153,73 @@ explicit first admission, positioning unwraps 19 nodes versus the reference's
 First admission and failed-admission retry are tested separately. This work count
 is not substituted for the wall/CPU/GC measurements above. Full pair/history data
 remain in local logs; no generated dataset or archive is committed.
+
+### Persistent update closure
+
+`Trie.` declares `.shape-preserving?: #t`: for a valid persistent carrier and an
+admitted Key, a successful `.acons` or `.remove` returns a valid carrier. This is
+an explicit backend law, not a security certificate. Overrides must preserve it
+or declare `#f`; arbitrary user backends are not inferred to satisfy it. Structural
+mutation remains outside the persistent-root contract. Source versions are still
+checked before using any admission, including constructor-produced roots.
+
+`table-order` checks the initial input and update Key, delegates the update, and
+records the output only after success under that law. It reuses Gerbil's weak-key
+identity table with Boolean values; it does not retain intermediate roots, cache
+exceptions, normalize Function leaves or cache contract approvals. Undeclared
+backends keep full input checking. Metadata changes reject the view rather than
+silently rebuilding its cache. Reclaimed entries can require fresh admission.
+
+The controlled `checkedShapeUpdates_reuse` theorem equates repeated shape checks
+with a once-admitted update chain under an explicit preservation premise, retaining
+the original update error. `checkedShapeUpdates_valid` proves successful outputs
+are admitted. `repeatedShapeWork_square` isolates the quadratic prefix-validation
+term; actual point-update, weak-table, metadata, allocator and GC costs are not
+removed by this algebra. The bounded-service example retains an opaque callback,
+rejects capacity overflow and succeeds on a fresh repaired retry. These proofs do
+not establish the preservation law for arbitrary Scheme code or its wall time.
+
+### Cold preparation receipt (256 bindings)
+
+Two complete local `just benchmark-collections 256 3 6` runs retained all twelve
+phases, six AB/BA pairs, four reference A/A pairs and four candidate B/B pairs in
+each natural/pre-collected regime. Both used the same Gerbil 1cfb032 / Gambit
+ea114fc release on macOS arm64. The reference and candidate use the same positioned
+comparer for factory/preparation/cold/workflow; only the explicit preservation law
+is disabled in the reference. Query-only seek/range retain the sorting reference.
+The immutable primary is built outside these timed factory actions; process startup
+is recorded separately. No full observations are committed.
+
+The instrumented prelude (outside timing) counts 256 projections on **both** paths.
+Full shape recognition falls from 256 calls / 130,692 backend unfolds to one call /
+one unfold. Total backend unfolds fall from 138,438 to 7,747: the removed work is
+repeat recognition, not skipped index rows, callback validation or index assembly.
+Regression checks also validate every intermediate sparse/80-bit-key output with
+the raw recognizer, covering repeated insertions, missing removals and empty roots.
+
+Second-run microseconds per operation (independent paired medians, not additive):
+
+| Phase | Regime | Reference wall | Reused wall | Paired wall delta | Non-GC CPU delta | GC CPU delta |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| factory | natural | 351.15 | 166.14 | -188.83 | +1.50 | -190.17 |
+| factory | collected | 161.69 | 161.17 | -1.51 | -1.17 | 0 |
+| prepare | natural | 63,528.66 | 5,590.00 | -57,893.95 | -57,853.83 | -50.17 |
+| prepare | collected | 63,275.81 | 5,366.64 | -57,820.52 | -57,712.33 | -31.17 |
+| cold complete | natural | 64,288.14 | 5,931.66 | -58,346.99 | -58,131.50 | -23.50 |
+| cold complete | collected | 64,841.67 | 6,011.53 | -58,793.51 | -58,496.17 | -58.17 |
+| publication/undo | natural | 6,233.49 | 4,983.98 | -1,293.34 | -1,409.33 | +118.33 |
+| publication/undo | collected | 7,983.53 | 6,914.18 | -2,373.85 | -1,484.50 | 0 |
+
+Cold paired wall deltas remain negative in every sample: natural
+[-58,951.38, -57,862.28], collected [-60,341.20, -58,100.62]. Candidate B/B ranges
+are [-271.32, +207.03] and [-130.65, +59.29]; reference A/A retains the adverse
+natural-history range [-12,542.01, +648.26]. The first run independently measured
+cold medians 5,957.37 / 5,990.70 and paired savings 58,297.32 / 58,479.47.
+Thus cold improvement is supported by both wall and non-GC CPU, not allocation
+alone. Factory preparation itself has no qualified non-GC speedup.
+
+Do **not** generalize this to stable publication latency: the second collected
+workflow retains a +3,278.65 wall regression, reference A/A -6,475.37 and candidate
+B/B +519.99; natural candidate B/B also reaches +2,044.60. Natural workflow GC CPU
+regresses by 118.33 despite its favorable median wall delta. GC history and wall-only
+outliers remain visible; no timeout, sample or failure was removed to qualify them.

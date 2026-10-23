@@ -470,6 +470,47 @@ example : tableRangePrefix (fun _ : Nat => true) ([] : List (Nat × Nat)) = ([],
 #print axioms tableRangeRows_transport
 #print axioms tableRangeRows_ordered
 
+/-- A bounded service builder retains an opaque checked callback on every update. -/
+def boundedServiceUpdate (limit : Nat) (state : Nat × (Int → Int)) (amount : Nat) :
+    Except String (Nat × (Int → Int)) :=
+  if state.1 + amount ≤ limit then .ok (state.1 + amount, state.2)
+  else .error "capacity exceeded"
+
+/-- The finite builder's successful updates preserve the admitted carrier bound. -/
+theorem boundedServiceUpdate_preserves (limit : Nat) (state : Nat × (Int → Int))
+    (amount : Nat) (next : Nat × (Int → Int))
+    (_admitted : decide (state.1 ≤ limit) = true)
+    (success : boundedServiceUpdate limit state amount = .ok next) :
+    decide (next.1 ≤ limit) = true := by
+  simp only [boundedServiceUpdate] at success
+  split at success
+  · simp only [Except.ok.injEq] at success
+    subst next
+    simpa
+  · simp at success
+
+/-- One admission and per-prefix admission have identical callback/error results. -/
+example (limit : Nat) (callback : Int → Int) (edits : List Nat) :
+    checkedShapeUpdates (fun state => decide (state.1 ≤ limit)) "shape refused"
+      (boundedServiceUpdate limit) (0, callback) edits =
+      edits.foldlM (boundedServiceUpdate limit) (0, callback) :=
+  checkedShapeUpdates_reuse _ _ _ (boundedServiceUpdate_preserves limit) _ (by simp) edits
+
+/-- Refusal preserves the precise update error; a fresh bounded retry can succeed. -/
+example (callback : Int → Int) :
+    checkedShapeUpdates (fun state => decide (state.1 ≤ 5)) "shape refused"
+      (boundedServiceUpdate 5) (0, callback) [1, 2, 9] = .error "capacity exceeded" := rfl
+
+/-- The retry's carrier contains the exact original callback, without rewrapping. -/
+example (callback : Int → Int) :
+    checkedShapeUpdates (fun state => decide (state.1 ≤ 5)) "shape refused"
+      (boundedServiceUpdate 5) (0, callback) [1, 2] = .ok (3, callback) := rfl
+
+#print axioms checkedShapeUpdates_admit_equiv
+#print axioms checkedShapeUpdates_reuse
+#print axioms checkedShapeUpdates_valid
+#print axioms repeatedShapeWork_square
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.

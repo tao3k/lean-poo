@@ -224,4 +224,80 @@ theorem tableRangePrefix_work (height positionCost : Nat) (bounded : positionCos
   rw [tableRangePrefix_pulls]
   omega
 
+/-- Reference admission checks every intermediate carrier before proceeding.
+A shape refusal is distinct from the original update error. -/
+def checkedShapeUpdates {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state : S) : List Edit → Except E S
+  | [] => if valid state then .ok state else .error refusal
+  | edit :: rest => if valid state then
+      match step state edit with
+      | .error cause => .error cause
+      | .ok next => checkedShapeUpdates valid refusal step next rest
+    else .error refusal
+
+/-- Shape-preserving persistent updates permit one initial admission. Errors are
+preserved exactly; this law assumes immutable roots and admitted edit arguments.
+It does not certify an arbitrary backend or the Gerbil implementation. -/
+theorem checkedShapeUpdates_reuse {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (state : S) (admitted : valid state = true) (edits : List Edit) :
+    checkedShapeUpdates valid refusal step state edits = edits.foldlM step state := by
+  induction edits generalizing state with
+  | nil => simp [checkedShapeUpdates, admitted]; rfl
+  | cons edit rest ih =>
+    simp only [checkedShapeUpdates, admitted, ↓reduceIte, List.foldlM_cons]
+    cases h : step state edit with
+    | error cause => rfl
+    | ok next => exact ih next (preserves state edit next admitted h)
+
+/-- The optimized chain admits an arbitrary initial carrier before using closure. -/
+def admittedShapeUpdates {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state : S) (edits : List Edit) : Except E S :=
+  if valid state then edits.foldlM step state else .error refusal
+
+/-- Initial rejection and every update error coincide for all inputs, not only
+already admitted snapshots. A backend preservation law is still required. -/
+theorem checkedShapeUpdates_admit_equiv {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (state : S) (edits : List Edit) :
+    checkedShapeUpdates valid refusal step state edits =
+      admittedShapeUpdates valid refusal step state edits := by
+  cases h : valid state with
+  | true => simpa [admittedShapeUpdates, h] using
+      checkedShapeUpdates_reuse valid refusal step preserves state h edits
+  | false => cases edits <;> simp [checkedShapeUpdates, admittedShapeUpdates, h]
+
+/-- Successful checked chains always return an admitted root, including retries. -/
+theorem checkedShapeUpdates_valid {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state next : S) (edits : List Edit)
+    (success : checkedShapeUpdates valid refusal step state edits = .ok next) :
+    valid next = true := by
+  induction edits generalizing state with
+  | nil =>
+    simp only [checkedShapeUpdates] at success
+    split at success <;> simp_all
+  | cons edit rest ih =>
+    simp only [checkedShapeUpdates] at success
+    split at success
+    · cases h : step state edit with
+      | error cause => simp [h] at success
+      | ok intermediate => exact ih intermediate (by simpa [h] using success)
+    · simp_all
+
+/-- Work charged by replaying a growing prefix of n nodes at every insertion. -/
+def repeatedShapeWork : Nat → Nat
+  | 0 => 0
+  | n + 1 => repeatedShapeWork n + 2 * n + 1
+
+/-- Prefix replay has quadratic validation work; initial admission reuse removes
+this term. Actual backend update, guard, allocation and GC costs remain separate. -/
+theorem repeatedShapeWork_square (n : Nat) : repeatedShapeWork n = n * n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => simp [repeatedShapeWork, ih, Nat.mul_add, Nat.add_mul]; omega
+
 end LeanPoo.Functional.OrderedDictionary
