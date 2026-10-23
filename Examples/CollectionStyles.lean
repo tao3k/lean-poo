@@ -1,5 +1,6 @@
 import LeanPoo.Functional.TableObservation
 import LeanPoo.Functional.TableFocus
+import LeanPoo.Functional.TableMapping
 
 /-! Receiver-bound service revisions advance the collection proposal's future
 work. Functions are immutable opaque payloads, never compared or rewrapped. -/
@@ -135,5 +136,54 @@ example : focusModify .pure (some ledgerView) 9
 
 /-- Even a get-put no-op observes the linear retirement discipline. -/
 example : (focusWrite (E := String) .linear 1 (ledgerView 1) (some ledgerView)).1 = none := rfl
+
+/-- Shared admitted callbacks survive value mapping and deliberate row removal. -/
+def serviceRows : List (Nat × Ledger) := [(1, (100, callback)), (2, (10, callback)), (3, (0, callback))]
+
+/-- Retire service three and reserve from every other ORIGINAL row. -/
+def reserveServices (amount : Nat) (key : Nat) (row : Ledger) : Except String (Option Ledger) :=
+  if key = 3 then .ok none else reserveCapacity amount (some row)
+
+/-- The late insufficient row refuses the whole bulk request without retirement. -/
+example : styleMapBindings .linear (some serviceRows) (reserveServices 20) (fun _ => .ok ()) =
+    (some serviceRows, .error (.callback "capacity")) := rfl
+
+/-- A fresh smaller request yields one complete result with the same callbacks. -/
+example : (styleMapBindings .linear (some serviceRows) (reserveServices 5) (fun _ => .ok ())).2.map
+    (fun rows => rows.map (fun entry => (entry.1, entry.2.1, entry.2.2 4))) =
+    .ok [(1, 95, 5), (2, 5, 5)] := rfl
+
+/-- Value mapping cannot change a Function leaf when the callback retains it. -/
+example : mapBindings (E := String) (fun _ (row : Ledger) => .ok (some row)) serviceRows =
+    .ok serviceRows := mapBindings_identity serviceRows
+
+/-- Whole-root refinement can refuse a typed projection before publication. -/
+example : styleMapBindings .mutable (some serviceRows)
+    (fun key row => .ok (if key = 1 then some row else none))
+    (fun rows => if rows.any (fun row => row.1 == 2) then .ok () else .error "primary lost") =
+    (some serviceRows, .error (.callback "primary lost")) := rfl
+
+/-- Cost accounting charges only the generic path's changed writes, not Trie nodes. -/
+example : mappingWrites [false, true, false, true] = 2 := rfl
+
+/-- A unique index is checked on the final primary, allowing a complete swap. -/
+def indexRows : List (Nat × Nat) := [(1, 10), (2, 20)]
+/-- Reuse the shared final-root admission stage for the finite uniqueness law. -/
+def admitUniqueRows (rows : List (Nat × Nat)) : Except String Unit :=
+  if (rows.map Prod.snd).Nodup then .ok () else .error "unique conflict"
+
+example : styleMapBindings .linear (some indexRows)
+    (fun key _ => .ok (some (if key = 1 then 20 else 10))) admitUniqueRows =
+      (none, .ok [(1, 20), (2, 10)]) := rfl
+
+/-- A genuine collision refuses and keeps the old owner available for retry. -/
+example : styleMapBindings .linear (some indexRows)
+    (fun _ _ => .ok (some 30)) admitUniqueRows =
+      (some indexRows, .error (.callback "unique conflict")) := rfl
+
+/-- A key-negating representation invokes callbacks at the visible coordinates. -/
+example : mapBindings (E := String) (fun (key : Int) (value : Nat) =>
+    .ok (some (if key = -1 then value + 1 else value + 2))) [(-1, 10), (-2, 20)] =
+      .ok [(-1, 11), (-2, 22)] := rfl
 
 end LeanPoo.Examples.CollectionStyles

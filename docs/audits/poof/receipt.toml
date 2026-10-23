@@ -496,6 +496,7 @@
   "LeanPoo/Functional/TableBatch.lean",
   "LeanPoo/Functional/TableFocus.lean",
   "LeanPoo/Functional/TableIndex.lean",
+  "LeanPoo/Functional/TableMapping.lean",
   "LeanPoo/Functional/TableObservation.lean",
   "LeanPoo/Functional/TableOrder.lean",
   "LeanPoo/Functional/TableRepresentation.lean",
