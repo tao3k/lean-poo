@@ -594,6 +594,17 @@ example (callback : Int → Int) : checkedTablePull [4, 9] [4, 9]
 /-- A stale exhausted cursor refuses rather than returning another successful EOF. -/
 example : checkedTablePull (K := Nat) (V := Nat) [4, 9] [4, 10] [] = (.error (), 0) := by rfl
 
+/-- Point capture preserves a shared service token while a later unrelated rebase survives. -/
+example : (applyChanges (pointChanges (fun k : Nat => if k = 1 then some 42 else none) 1 (some 43))
+    (fun k => if k = 1 then some 42 else if k = 9 then some 90 else none)).map
+    (fun view => (view 1, view 9)) = .ok (some 43, some 90) := by rfl
+
+/-- Stored false and absence remain distinct in a single optional removal request. -/
+example : pointChanges (fun _ : Nat => some false) 1 none = [⟨1, some false, none⟩] := by rfl
+
+/-- An unchanged request is empty, matching .diff rather than claiming a read lock. -/
+example : pointChanges (fun _ : Nat => some false) 1 (some false) = [] := by rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.

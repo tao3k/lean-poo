@@ -6,6 +6,75 @@ namespace LeanPoo.Functional.OrderedDictionary
 
 variable {K V : Type} [DecidableEq K] [DecidableEq V]
 
+/-- Capture one optional replacement, omitting an unchanged binding just as finite
+snapshot discovery does. Empty results are not read assertions on later bases. -/
+def pointChanges (before : K → Option V) (key : K) (after : Option V) : List (Change K V) :=
+  if before key = after then [] else [⟨key, before key, after⟩]
+
+/-- Callback refusal precedes publication of a captured request. The supplied
+computation is evaluated once; applying its resulting edits never replays it. -/
+def capturePointChanges {E : Type} (before : K → Option V) (key : K)
+    (update : Option V → Except E (Option V)) : Except E (List (Change K V)) :=
+  (update (before key)).map (pointChanges before key)
+
+/-- One-key capture equals discovery restricted to that key and its optional write. -/
+theorem pointChanges_diff (before : K → Option V) (key : K) (after : Option V) :
+    pointChanges before key after = diffChanges [key] before (replace before key after) := by
+  unfold diffChanges
+  rw [List.filterMap_cons]
+  simp only [replace, ite_true]
+  unfold pointChanges
+  split <;> rfl
+
+/-- No trial carrier or whole-key inventory is required to describe this write. -/
+theorem pointChanges_apply (before : K → Option V) (key : K) (after : Option V) :
+    applyChanges (pointChanges before key after) before = .ok (replace before key after) := by
+  rw [pointChanges_diff, apply_diffChanges [key] (by simp)]
+  simp [replace]
+
+/-- Captured point updates frame unrelated bindings, including a rebased snapshot. -/
+theorem pointChanges_rebase (before rebased : K → Option V) (key : K) (after : Option V)
+    (aligned : before key = rebased key) :
+    applyChanges (pointChanges before key after) rebased = .ok (replace rebased key after) := by
+  have same : pointChanges before key after = pointChanges rebased key after := by
+    simp [pointChanges, aligned]
+  rw [same, pointChanges_apply]
+
+/-- A nonempty request retains its original expectation and exact conflicting key. -/
+theorem pointChanges_stale (before rebased : K → Option V) (key : K) (after : Option V)
+    (changed : before key ≠ after) (stale : rebased key ≠ before key) :
+    applyChanges (pointChanges before key after) rebased = .error key := by
+  simp [pointChanges, changed, applyChanges, stale]
+
+/-- Inverting an accepted point request recovers the entire source observation. -/
+theorem pointChanges_inverse (before : K → Option V) (key : K) (after : Option V) :
+    applyChanges (inverseChanges (pointChanges before key after)) (replace before key after) =
+      .ok before := applyChanges_inverse _ _ _ (pointChanges_apply before key after)
+
+/-- Generation emits at most one edit, independently of the snapshot's domain size.
+Admission, recognizers, metadata, lookup, callbacks and backend costs are separate. -/
+theorem pointChanges_length (before : K → Option V) (key : K) (after : Option V) :
+    (pointChanges before key after).length ≤ 1 := by
+  unfold pointChanges; split <;> simp
+
+/-- A failed callback returns only its unchanged cause, without a usable delta. -/
+theorem capturePointChanges_failure {E : Type} (before : K → Option V) (key : K)
+    (update : Option V → Except E (Option V)) (cause : E)
+    (failed : update (before key) = .error cause) :
+    capturePointChanges before key update = .error cause := by
+  simp [capturePointChanges, failed, Except.map]
+
+/-- Explicit key/value isomorphisms commute with capture, including no-op omission. -/
+theorem pointChanges_transport {L W : Type} [DecidableEq L] [DecidableEq W]
+    (keys : Prototype.DictionaryBridge K L) (values : Prototype.DictionaryBridge V W)
+    (before : K → Option V) (key : K) (after : Option V) :
+    transportChanges keys values (pointChanges before key after) =
+      pointChanges (transportView keys values before) (keys.toFields key) (after.map values.toFields) := by
+  have same : (before key).map values.toFields = after.map values.toFields ↔ before key = after :=
+    (transport_option_injective values).eq_iff
+  simp only [pointChanges, transportView, keys.from_to, same]
+  split <;> simp [transportChanges, transportChange]
+
 /-- Flatten finite batches in caller order without reading any table snapshot. -/
 def batchChanges (batches : List (List (Change K V))) : List (Change K V) :=
   batches.flatten

@@ -286,3 +286,24 @@ with identical ordered stage costs as an explicit premise.
 first failure when removing grouping boundaries in a lawful monad. It does not infer
 that premise from host build scripts or prove a GC or wall-clock guarantee. The
 companion Scheme document retains measured paired results and adverse controls.
+
+## Captured optional point updates
+
+The Scheme `.delta/opt key update before` operation captures a single optional
+replacement for later installation without constructing a trial carrier or scanning
+for differences. It shares existing delta origins, ordered composition, transport,
+folds, inverse and style installation. Typed admission and callback failure precede
+delta publication; applying the result does not replay the capture callback. Option
+shells are privately copied while admitted leaves retain identity. Empty requests
+retain origins and are not assertions against later changes to the written key.
+
+`TableBatch.pointChanges` is the finite model in the existing ordered-dictionary
+namespace. It equals single-key discovery and proves exact installation, rebasing
+on an aligned key, stale-key refusal, complete inverse recovery, one-edit bound,
+callback failure and key/value-isomorphism commutation. Existing batch/index/style
+laws apply unchanged. Scheme tests additionally cover mutable public Option shells,
+Function identity, no trial writes or difference scans, multi-key index refusal,
+retry and FUN consumption. The model assumes stable payload observations and lawful
+persistent carriers; it does not verify the host runtime or mutation of shared
+leaves. Admission, metadata, recognition, callback and backend costs are outside
+the emitted-edit bound; no end-to-end asymptotic or wall-clock claim follows.
