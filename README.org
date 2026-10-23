@@ -53,7 +53,10 @@ just check
 #+end_src
 
 The smaller Justfile targets include ~check-c4~, ~check-object~,
-~check-proof~, ~check-debug~, and ~check-docs~. Use ~just check-incremental true~
+~check-proof~, ~check-debug~, and ~check-docs~. The documentation check uses
+Pandoc's Org reader and the existing Python audit; it does not require Emacs.
+It parses the four directory/root indexes and every Org file under ~docs~ with
+separate file scopes, without executing source blocks or producing output files. Use ~just check-incremental true~
 or ~just check-debug true~ to print semantic diagnostics only when needed.
 Run ~just --list~ for the full command list. [[file:Examples/LayeredObject.lean][LayeredObject.lean]] shows C4
 composition, lazy reads, cloning, and revision. [[file:Examples/MethodDictionary.lean][MethodDictionary.lean]] shows an inherited formatter with dynamic and

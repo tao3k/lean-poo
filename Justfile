@@ -639,7 +639,8 @@ check-po: check-example check-tests check-docs
 # Parse every maintained Org page, including the root and directory indexes.
 check-docs:
     python3 tools/audit_poof.py --check
-    emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (append (list "README.org" "Examples/README.org" "Tests/README.org" "Benchmarks/README.org") (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
+    python3 -m unittest tools.tests.test_check_docs -v
+    python3 tools/check_docs.py
 
 # Execute the reviewed original Racket blocks and compare all 24 Lean observations.
 # A versioned source fixture removes the reference-checkout dependency in CI.
