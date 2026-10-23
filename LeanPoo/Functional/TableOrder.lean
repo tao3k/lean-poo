@@ -347,4 +347,37 @@ theorem repeatedShapeWork_square (n : Nat) : repeatedShapeWork n = n * n := by
   | zero => rfl
   | succ n ih => simp [repeatedShapeWork, ih, Nat.mul_add, Nat.add_mul]; omega
 
+/-- A persistent backend's shape law transfers through an explicit carrier
+isomorphism. Typed edit admission and immutability remain caller premises. -/
+theorem representedShapeUpdate_preserves {S T Edit E : Type}
+    (carrier : Prototype.DictionaryBridge S T) (valid : S → Bool)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (target : T) (edit : Edit) (next : T)
+    (admitted : valid (carrier.fromFields target) = true)
+    (success : (step (carrier.fromFields target) edit).map carrier.toFields = .ok next) :
+    valid (carrier.fromFields next) = true := by
+  cases result : step (carrier.fromFields target) edit with
+  | error cause => simp [result, Except.map] at success
+  | ok source =>
+    simp [result, Except.map] at success
+    subst next
+    simpa [carrier.from_to] using preserves _ edit source admitted result
+
+/-- Reuse the existing admitted-update theorem for a represented carrier,
+retaining initial admission, all step errors and complete update order. -/
+theorem representedShapeUpdates_reuse {S T Edit E : Type}
+    (carrier : Prototype.DictionaryBridge S T) (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (target : T) (edits : List Edit) :
+    checkedShapeUpdates (fun t => valid (carrier.fromFields t)) refusal
+        (fun t edit => (step (carrier.fromFields t) edit).map carrier.toFields) target edits =
+      admittedShapeUpdates (fun t => valid (carrier.fromFields t)) refusal
+        (fun t edit => (step (carrier.fromFields t) edit).map carrier.toFields) target edits := by
+  apply checkedShapeUpdates_admit_equiv
+  exact representedShapeUpdate_preserves carrier valid step preserves
+
 end LeanPoo.Functional.OrderedDictionary

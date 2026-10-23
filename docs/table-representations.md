@@ -391,3 +391,143 @@ revision law and malformed/length controls remain semantic audit evidence for th
 withdrawn comparison, not claims about its adoption or allocation behavior.
 Final Scheme acceptance: 128 modules / 1,266 cases in one process, exit 0 under
 existing limits. All study phases, failures, retry/undo and Function oracles remain.
+
+## Persistent output admission after GC
+
+The derived table protocol now reuses the same explicit persistent-shape law and
+weak-key admission helper as ordered tables. Only a successfully returned typed
+`.acons`/`.remove` result is recorded as an admitted output. Initial/foreign roots
+still require admission. If the backend has no ordered capability or does not
+explicitly declare `.shape-preserving? #t`, ordinary shape admission still runs.
+Carrier shape, child membership, both inverse comparisons, complete metadata
+revision guards and original backend errors remain. No runtime GC-policy selector,
+strong global root cache or new namespace is introduced.
+The law assumes immutable persistent roots and a truthful backend declaration;
+it does not certify arbitrary host mutation or arbitrary backend implementations.
+
+The regression runs both declaration policies over a 64-binding represented Trie,
+forces actual GC with live roots, exercises failed installation, restaging/retry,
+undo and foreign-root rejection. Shape traversal counters are 1,035/276; this is
+attribution only. Existing complex Function-bearing full workflows remain in the
+study. Lean transfers the existing admitted-update theorem through an explicit
+carrier isomorphism, preserving initial refusal, update errors/order and opaque
+callback identity. This reuses TableOrder's existing closure law; it is not a
+proof about GC scheduling, allocation, compiler behavior or wall-clock bounds.
+
+### Preliminary paired receipt: first call, batch and tails
+
+Reference linked head: `0525c02`, SHA-256 `96f4f232…75a8c`; candidate binary:
+`5a34ea35…b2bd3`. Both execute the same expanded 31-phase workload: all earlier
+28 phases plus three declared-policy controls (cold/workflow/retry). Every process
+passes all 219 summaries with 64 bindings, 10 batch operations, six AB/BA and four
+A/A plus four B/B pairs. ABBA uses four separate old/new/new/old processes, with
+unchanged 1 GiB / 300 s limits and no overlapping local builds. Raw observations,
+first-call/forced-GC histories and binaries stay outside Git.
+
+Before this final set, a 28-phase exploratory set showed an inclusive median
++638.12 us and worst +9999.93 us; candidate B/B also had millisecond outliers.
+It was not accepted as a speedup. Its run-0 stdout was accidentally overwritten
+before backup; generated reports and the other three full transcripts survive.
+It is incomplete diagnostic evidence, not the final acceptance set. All four
+final 31-phase raw logs were saved to fresh paths with overwrite refusal.
+
+For the original Trie retry workflow, cross-version post-GC inclusive cost charges
+forced GC plus first call plus all ten batch calls, divided by 11. All **12/12**
+matched observations improve: mean -345.26 us, median -355.92 us, empirical p90
+-287.36 us, range [-418.10, -272.08] us. Disjoint mean contributions are:
+
+| Charged component | Wall us | Non-GC CPU us | GC CPU us | Residual us |
+| --- | ---: | ---: | ---: | ---: |
+| Forced collection | +2.39 | +0.08 | +2.14 | +0.17 |
+| First call | -31.61 | -31.32 | 0.00 | -0.30 |
+| Ten-call batch | -316.03 | -320.93 | +2.52 | +2.38 |
+
+Thus the saving is measured non-GC work in both first and later calls, not a forced
+GC saving. The previous experiment's inclusive median +20.96 us is retained in
+its receipt; it is not silently replaced by a favorable first-call-only result.
+Natural/collected retry medians are -332.36/-310.61 us, but their adverse maxima
+remain +28.97/+204.32 us. Timing improvement is not universal across samples.
+
+The added same-process control compares two complete derived protocols differing
+only in the existing declaration. Candidate post-GC inclusive observations again
+win **12/12**: mean -379.95 us, median -335.87 us, p90 -290.20 us, range
+[-845.39, -254.52] us. Each actual execution-order stratum wins 6/6, with worst
+-254.52/-290.20 us. Weighted mean components are batch -351.53 us, first -26.31 us
+and forced GC -2.12 us. Candidate same-policy B/B maxima are +25.81/+59.43 us;
+reference A/A also retains a +405.01 us sample. No such adverse control is removed.
+
+Old-binary negative controls do not establish a benefit from the declaration:
+7 wins/5 losses, median -58.35 us, p90 +369.66 us and range
+[-4431.18, +463.36] us. Their large favorable residuals make the mean misleading.
+All reported quantiles are empirical small-sample diagnostics, not future tails.
+
+Complete external entry ABBA wall seconds are 46.27 / 41.27 / 39.12 / 39.96.
+These are the same **219-summary workload**, not compared against earlier smaller
+studies. Startup wall is 1.046/0.074/0.039/0.104 s. Loaded-entry wall is
+45.178/41.178/39.071/39.842 s: balanced mean improves 2.386 s, comprising CPU
+-1.667 s (non-GC -1.504, GC -0.164) and residual -0.718 s. But old A/A drifts
+-5.336 s and new B/B -2.107 s. **Stable full-entry wall speedup and a latency
+bound remain unproved**, despite the paired complete-retry evidence above.
+The measured entry includes setup, prefixes, reporting and all controls.
+
+Final local Scheme acceptance: 128 modules / 1,267 cases, one process, normal exit
+0 with existing limits. Complete conversion, equality, retry, inverse and Function
+oracles remain. Only this compact receipt is versioned; raw data is not committed.
+
+Observed execution retains ordinary admission for a fresh point-update output,
+including the actual validator getter's access refusal. Only unobserved calls may
+promote the declared persistent output. The existing observed-denial theorem and
+an exact-cause regression cover this read-authority boundary; previously admitted
+roots keep the original weak-cache semantics. The preliminary receipt above used
+the pre-observation-guard binary and is superseded by the final receipt below.
+
+### Final receipt with observed-validator protection
+
+This receipt uses the final guarded implementation, binary SHA-256
+`2626be4b…d785c`, against the same `0525c02` reference (`96f4f232…75a8c`).
+All four fresh-path ABBA logs complete 219 summaries, 64 bindings, ten batch
+operations and six AB/BA plus four A/A and four B/B controls. Every original phase
+remains. No builds overlap measurements; 1 GiB / 300 s limits are unchanged.
+The complete single-process suite passes 128 modules / 1,267 cases, including
+exact validator-access denial and both declaration policies across real GC.
+Shape-work counters with the additional observed controls are 1,065/306; they
+are not the performance acceptance criterion.
+
+For the original full Trie retry, inclusive post-GC new-minus-old observations
+charge forced collection + first call + ten batch calls, divided by 11:
+**12 wins / 0 losses**, mean -387.59 us, median -378.98 us, empirical p90
+-237.83 us, range [-776.57, -206.38] us. Every adverse sample is retained.
+The additive mean components are:
+
+| Charged component | Wall us | Non-GC CPU us | GC CPU us | Residual us |
+| --- | ---: | ---: | ---: | ---: |
+| Forced collection | -3.87 | -0.07 | -3.69 | -0.11 |
+| First call | -55.07 | -53.53 | 0.00 | -1.54 |
+| Ten-call batch | -328.66 | -334.10 | +3.92 | +1.52 |
+
+GC savings do not explain the improvement: mean GC CPU across these components
+is approximately +0.23 us. First and later calls both reduce non-GC work.
+Natural retry still has an adverse +733.59 us sample despite its -331.40 us
+median. Collected retry improves in all 12 samples, range [-438.31, -257.83] us.
+Post-GC batch A/A and B/B ranges remain [-133.71, +24.63] and
+[-180.60, +20.19] us respectively; noise is not discarded.
+
+The same-process two-derived-protocol declaration control also wins 12/12:
+mean -335.29 us, median -343.99 us, p90 -263.71 us, range
+[-429.35, -262.09] us. Each actual order stratum wins 6/6, with worst
+-274.44/-262.09 us. Candidate same-policy B/B maxima are +41.46/+31.17 us;
+reference A/A maxima are +39.23/+30.11 us. The old-binary negative control has
+5 wins/7 losses, median +11.12 us, p90 +225.46 us and range
+[-592.67, +237.49] us. These are finite observations, not distributional bounds.
+
+Complete external entry ABBA wall seconds are 37.60 / 36.25 / 35.42 / 36.24;
+startup wall is 1.129/0.014/0.015/0.040 s. Loaded-entry wall is
+36.454/36.225/35.393/36.192 s. Both cross-version directions improve, by
+0.229/0.799 s. Balanced loaded mean improves 0.514 s: CPU -0.608 s,
+non-GC -0.702 s, GC CPU **+0.094 s**, residual **+0.094 s**. Measured setup mean
+actually grows 0.016 s, while batch wall falls 0.483 s. The result is not credited
+to repeated metadata preparation or to lower GC time. Old A/A changes -0.262 s
+and new B/B -0.832 s; stable full-entry speedup and tail guarantees remain unproved.
+The startup-sensitive external mean improvement must not be substituted for the
+loaded-entry comparison. Lean proves conditional shape/admission semantics and
+observed refusal preservation, not timing of this host or its collector.

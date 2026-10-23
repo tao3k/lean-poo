@@ -856,3 +856,39 @@ example : LeanPoo.Functional.OrderedDictionary.receiverScope (some "receiver")
     ["source", "key", "value"] = ["receiver", "source", "key", "value"] := rfl
 example : LeanPoo.Functional.OrderedDictionary.receiverScope (none : Option Nat) [1, 2] = [1, 2] := rfl
 #print axioms LeanPoo.Functional.OrderedDictionary.receiverScope_closed
+
+namespace LeanPoo.Examples.TableRevision
+open Functional.OrderedDictionary
+
+/-- Reorder a bounded service's capacity and opaque callback without cloning it. -/
+def boundedServiceCarrier : Prototype.DictionaryBridge
+    (Nat × (Int → Int)) ((Int → Int) × Nat) :=
+  ⟨Prod.swap, Prod.swap, fun _ => rfl, fun _ => rfl⟩
+
+/-- The existing persistent-shape theorem transfers to represented service
+updates, retaining ordered failure and the exact callback through retries. -/
+example (limit : Nat) (target : (Int → Int) × Nat) (edits : List Nat) :
+    checkedShapeUpdates (fun t => decide (t.2 ≤ limit)) "shape refused"
+        (fun t edit => (boundedServiceUpdate limit (t.2, t.1) edit).map Prod.swap) target edits =
+      admittedShapeUpdates (fun t => decide (t.2 ≤ limit)) "shape refused"
+        (fun t edit => (boundedServiceUpdate limit (t.2, t.1) edit).map Prod.swap) target edits :=
+  representedShapeUpdates_reuse boundedServiceCarrier _ _ _ (boundedServiceUpdate_preserves limit) _ _
+
+/-- An over-capacity first attempt refuses; a fresh smaller retry retains the
+same callback while admission can reuse the declared update-closure law. -/
+example (callback : Int → Int) :
+    admittedShapeUpdates (fun t => decide (t.2 ≤ 5)) "shape refused"
+      (fun t edit => (boundedServiceUpdate 5 (t.2, t.1) edit).map Prod.swap)
+      (callback, 0) [1, 2, 9] = .error "capacity exceeded" := rfl
+example (callback : Int → Int) :
+    admittedShapeUpdates (fun t => decide (t.2 ≤ 5)) "shape refused"
+      (fun t edit => (boundedServiceUpdate 5 (t.2, t.1) edit).map Prod.swap)
+      (callback, 0) [1, 2] = .ok (callback, 3) := rfl
+
+end LeanPoo.Examples.TableRevision
+#print axioms LeanPoo.Functional.OrderedDictionary.representedShapeUpdate_preserves
+#print axioms LeanPoo.Functional.OrderedDictionary.representedShapeUpdates_reuse
+
+/-- A declared shape law cannot replace read authority in the observed route. -/
+example : LeanPoo.Functional.OrderedDictionary.readTypeContext true
+    (fun _ => Except.error "validator denied") (true : Bool) = .error "validator denied" := rfl
