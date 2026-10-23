@@ -434,6 +434,21 @@ theorem measuredEntry_prepare_bound
   simp only [measuredEntry, measuredWall]
   omega
 
+/-- A collector-policy saving is admissible only if it pays for every other
+complete-entry cost, including preparation, first calls and signed wall residual.
+This is an accounting condition on retained observations, not a collector theorem. -/
+theorem measuredEntry_gc_bound
+    (oldPrepare newPrepare oldPrefix newPrefix oldFirst newFirst oldBatch newBatch
+      oldRemaining newRemaining oldGC newGC : Nat) (oldR newR : Int)
+    (covered :
+      ((newPrepare : Int) + newPrefix + newFirst + newBatch + newRemaining + newR) -
+        ((oldPrepare : Int) + oldPrefix + oldFirst + oldBatch + oldRemaining + oldR) ≤
+      (oldGC : Int) - newGC) :
+    measuredEntry newPrepare newPrefix newFirst newBatch newRemaining newGC newR ≤
+      measuredEntry oldPrepare oldPrefix oldFirst oldBatch oldRemaining oldGC oldR := by
+  simp only [measuredEntry, measuredWall]
+  omega
+
 /-- The empirical nonnegative upper envelope retains every adverse observation.
 Zero is the floor so an all-negative sample set claims no future negative bound. -/
 def measuredTail (samples : List Int) : Int := samples.foldr max 0
@@ -447,6 +462,46 @@ theorem measuredTail_bound (samples : List Int) (limit : Int) (nonnegative : 0 �
   | cons head rest ih =>
     exact Int.max_le.mpr ⟨bounded head (by simp),
       ih (fun sample inside => bounded sample (by simp [inside]))⟩
+
+/-- Capture the actual ordered successful prefix and the original first failure.
+Reporting consumes this log after sampling; it must not mutate sample state or
+throw. This finite Except model does not model GC, the VM or arbitrary IO effects. -/
+def measurePair {Side Sample Cause : Type} (sample : Side → Except Cause Sample) :
+    List Side → List (Side × Sample) × Except Cause Unit
+  | [] => ([], .ok ())
+  | side :: rest => match sample side with
+    | .error cause => ([], .error cause)
+    | .ok value =>
+      let following := measurePair sample rest
+      ((side, value) :: following.1, following.2)
+
+/-- Deferred reporting changes neither admission nor the first refusal relative
+ to the existing ordered checks. Host sample/trace interpretation is a premise. -/
+theorem measurePair_status {Side Sample Cause : Type}
+    (sample : Side → Except Cause Sample) (order : List Side) :
+    (measurePair sample order).2 =
+      runEntryChecks (order.map (fun side _ => (sample side).map (fun _ => ()))) := by
+  induction order with
+  | nil => rfl
+  | cons side rest ih =>
+    cases admitted : sample side <;>
+      simp [measurePair, admitted, runEntryChecks, Except.map, ih] <;> rfl
+
+/-- A failed second side retains the exact completed first sample for the reporter,
+without pretending to have measured the failed side or replacing its cause. -/
+theorem measurePair_second_error {Side Sample Cause : Type}
+    (sample : Side → Except Cause Sample) (first second : Side) (value : Sample) (cause : Cause)
+    (left : sample first = .ok value) (right : sample second = .error cause) :
+    measurePair sample [first, second] = ([(first, value)], .error cause) := by
+  simp [measurePair, left, right]
+
+/-- Refusal at the first side has no completed samples; successful pairs retain
+both observations exactly once in the original order, including repeated sides. -/
+theorem measurePair_complete {Side Sample Cause : Type}
+    (sample : Side → Except Cause Sample) (first second : Side) (a b : Sample)
+    (left : sample first = .ok a) (right : sample second = .ok b) :
+    measurePair sample [first, second] = ([(first, a), (second, b)], .ok ()) := by
+  simp [measurePair, left, right]
 
 /-- Private construction protects origins; publication adds the completed receiver.
 The prepared list is reused only within this derived protocol, never globally. -/

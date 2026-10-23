@@ -629,6 +629,17 @@ wrong recipe; protecting participants before reading recipes is essential. -/
 example : (applyChanges [⟨0, some 7, some 107⟩] (fun _ : Nat => some (7 : Nat))).map
       (fun state => state 0) = .ok (some 107) := rfl
 
+/-- The reporter retains the first measured callback handle if the paired
+second action refuses; deferred observation never invents a successful second row. -/
+example (callback : Int → Int) :
+    measurePair (fun candidate => if candidate then Except.error "sample refused"
+      else Except.ok callback) [false, true] = ([(false, callback)], .error "sample refused") := rfl
+
+/-- Reversed matched order retains both exact observations, rather than sorting
+rows or dropping an adverse result before reporting the pair. -/
+example : measurePair (fun candidate => Except.ok (if candidate then (-7 : Int) else 9) :
+    Bool → Except String Int) [true, false] = ([(true, -7), (false, 9)], .ok ()) := rfl
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
@@ -922,3 +933,43 @@ example : LeanPoo.Functional.OrderedDictionary.readTypeContext true
 
 #print axioms LeanPoo.Functional.OrderedDictionary.indexPreparation_frame
 #print axioms LeanPoo.Functional.OrderedDictionary.indexPreparation_current
+
+#print axioms LeanPoo.Functional.OrderedDictionary.measurePair_status
+#print axioms LeanPoo.Functional.OrderedDictionary.measurePair_second_error
+#print axioms LeanPoo.Functional.OrderedDictionary.measurePair_complete
+
+namespace LeanPoo.Examples.TableRevision
+open Functional.OrderedDictionary
+
+/-- Same endpoint identities admit both ordinary transport and derived folds. -/
+def serviceTranslationMetadata (id : Nat) : Option (Nat × Nat) :=
+  match id with
+  | 0 => some (7, 8)
+  | 1 => some (9, 10)
+  | 2 => some (7, 9)
+  | 3 => some (8, 10)
+  | _ => none
+
+example : translationTypesAgree serviceTranslationMetadata 0 1 2 3 = true := rfl
+
+/-- A later getter's rewrite of the earlier converter invalidates the declaration,
+even though capturing revision stamps after that rewrite could look current. -/
+example : translationTypesAgree
+    (fun id => if id = 2 then some (11, 9) else serviceTranslationMetadata id)
+    0 1 2 3 = false := rfl
+
+/-- Supported edits outside the complete scope preserve exact endpoint admission. -/
+example (edits : List (Change Nat (Nat × Nat))) (after : Nat → Option (Nat × Nat))
+    (guarded : ∀ edit ∈ edits, edit.key ∉
+      extendProtection [6] (extendProtection [4, 5] [0, 1, 2, 3] false) false)
+    (accepted : applyChanges edits serviceTranslationMetadata = .ok after) :
+    translationTypesAgree after 0 1 2 3 = true :=
+  (translationPreparation_compatible 0 1 2 3 [4, 5] [6] edits
+    serviceTranslationMetadata after guarded accepted).trans rfl
+
+/-- Reduced collector work alone cannot justify a worse complete-entry tail. -/
+example : ¬ measuredEntry 20 5 5 10 0 1 100 ≤ measuredEntry 20 5 5 10 0 9 0 := by decide
+
+end LeanPoo.Examples.TableRevision
+#print axioms LeanPoo.Functional.OrderedDictionary.translationPreparation_compatible
+#print axioms LeanPoo.Functional.OrderedDictionary.measuredEntry_gc_bound

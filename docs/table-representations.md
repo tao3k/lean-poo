@@ -589,3 +589,142 @@ wall variation. `measuredEntry_prepare_bound` requires the saving to cover every
 other cost and residual; `measuredTail_bound` requires every retained observation
 to meet a bound. Lean examples explicitly refute admission based only on a lower
 mean or preparation cost. These are conditional accounting laws, not VM/GC proofs.
+
+### Ordered measurement reporting and complete-entry accounting
+
+The paired driver now finishes both ordered samples before formatting or flushing
+records. This removes reporter allocation/IO from the gap between A and B without
+removing it from complete-entry wall time. AB/BA and A/A/B/B orders, setup, fixed
+prefixes, natural/collected/post-GC regimes, forced collection, first calls, batches,
+independent oracles and all 219 summaries remain. On a sample failure it reports
+the successful prefix once, then preserves the original cause if reporting succeeds;
+a reporter failure is itself fatal. Three regressions cover order, both refusal
+positions and reporter failure. Lean's `measurePair_status`, `measurePair_complete`
+and `measurePair_second_error` model finite ordered sampling and its exact error;
+reporter noninterference/success and faithful sample interpretation are premises,
+not proofs of Scheme IO, GC or VM timing.
+
+Standard library, test-program and benchmark-module preparation all use Gambit's
+`time` form. Parent preparation CPU/GC, enclosing command wall, binary startup,
+loaded-entry CPU/GC, setup/prefix/first/batch/forced costs and signed residuals stay
+separate. Parent CPU is not the whole launcher/child envelope. No warm cache allows
+skipping the standard dependency check. Profiling the released expander import
+hook found shared source imports (many already cached), not evidence that the same
+module was repeatedly expanded. A paired-list `andmap` candidate lost 16/16 focused
+comparisons; a cached-vector fold lost 15/16 and allocated more. Neither is shipped.
+
+A fresh source snapshot of Scheme commit `80a788a` was built by the standard package
+builder and passed all 128 modules/1270 cases. The reporter candidate passed all
+128 modules/1273 cases. Both used the same preparation instrumentation and release.
+Eight complete entries ran reference/candidate/candidate/reference/candidate/
+reference/reference/candidate, width 64, ten calls and six rounds, without overlapping
+local builds. Every entry exited 0 and produced 219 summaries. Raw stdout and timings
+are read-only outside Git at `/tmp/poo-report-pairs-20261023.OTYvyh/`.
+
+| Matched process slots | External wall reference → candidate, s | Loaded non-GC CPU delta, s | Loaded GC CPU delta, s | Loaded residual delta, s |
+| --- | ---: | ---: | ---: | ---: |
+| 0 → 1 | 51.68 → 52.54 | -0.132 | -0.059 | -0.087 |
+| 3 → 2 | 49.00 → 48.01 | -0.475 | -0.173 | -0.285 |
+| 5 → 4 | 52.93 → 50.12 | -0.749 | -0.343 | -0.828 |
+| 6 → 7 | 55.85 → 67.59 | +2.752 | +0.281 | +9.468 |
+
+External paired mean is **+2.20 s**, with 2 wins/2 losses and empirical p90/max
+**+11.74 s**; four process pairs are not a distributional tail bound. The adverse
+pair's library-parent wall differs by only +0.116 s. Thus neither lower GC nor
+less dependency preparation explains the whole tail. First-process startup wall
+was 1.296 s (reference) and 2.652 s (candidate), with CPU about 0.032 s each; later
+starts are retained too. These are neither timed outliers to delete nor a stable
+speedup claim. Same-version controls and exact keyed workflow tails remain in the
+raw study. A finite observation does not establish a cause for wall-minus-CPU.
+
+Source and implementation identity: reference/candidate `closure-measure.ss`
+SHA-256 are `fd1a21528f988d45cd12160104ca474b3f8a45b1716186540b14ba4f19c9aba9` /
+`0e1f48da22e33ab323f3028b0b69bb30b3c5643e5a581f42befbf724dbe7c47d`;
+workload-source hashes are `a2c53fd98ff8fbf3744f333bc22fa9518e0409633ca5d834f70d823153c1c94c` /
+`f6db05ae6acecac39418a2d551affe75fff61db691ee3f5be4826772530b9f69`.
+Executable hashes are `3db240c5156458ae16aa0aad9bdb6551c4fa2a1c4126ad3e580d0e2f5b0fa4a4` /
+`68a60c8a84d9563ea7fdd40d00baa7dd197fcdcdf7b1a0d7c79d1025a4042719`.
+Generated `~0.scm` implementation hashes are
+`68b21ce92d7f3fbb09f7a795c20336d57d79237643a9c002c3abff8316fa5b28` /
+`99983e2c656de85d2b259d09dedd3ba8383d09e67e2e420343effa52938d0983`.
+The loader SCM alone cannot identify a changed compiled implementation.
+
+#### Standard minimum-heap policy: complete wall gain, workflow tail refusal
+
+A second study used the SAME candidate executable/source in all eight entries,
+default/minimum/minimum/default/minimum/default/default/minimum. The only policy
+difference was Gambit's documented `min-heap=32M`, within the unchanged 1 GiB
+maximum; all stage deadlines, checks, GC regimes and preparation remained. Every
+entry passed 219 summaries. This is a hot-artifact dependency-check/full-execution
+study, not a new cold compilation speed claim. Raw signed histories, output and
+outer timings are at `/tmp/poo-heap-pairs-20261023.8rBkpa/`; the measured source and
+binary hashes are the candidate hashes above, before the later declaration fix.
+
+| Pair | External wall default → minimum, s | Loaded non-GC CPU delta, s | Loaded GC CPU delta, s | Loaded residual delta, s |
+| --- | ---: | ---: | ---: | ---: |
+| 0 → 1 | 114.51 → 87.81 | +0.462 | -3.845 | -14.455 |
+| 3 → 2 | 115.35 → 81.59 | -3.987 | -4.526 | -10.253 |
+| 5 → 4 | 111.37 → 95.83 | -0.957 | -3.945 | -21.568 |
+| 6 → 7 | 78.52 → 61.15 | -1.415 | -3.511 | -6.939 |
+
+All four external pairs win: mean -23.3425 s, empirical p90/max -15.54 s, range
+[-33.76, -15.54] s. Group maxima are 115.35/95.83 s. Nevertheless same-policy
+A/A changes +0.84/-32.85 s and B/B -6.22/-34.68 s; the host's large wall variation
+is retained, not credited to the policy. Loaded means split into -1.4745 s non-GC
+CPU, -3.9569 s GC CPU and -13.3039 s residual. Parent preparation wall savings
+range **-13.940 to +10.509 s**, mean -4.147 s; repeated preparation itself is not
+uniformly faster. Startup wall is 0.045–0.171 s for default and 0.015–0.122 s for
+minimum, with every first process retained. One shell-stage receipt says
+`real 2.:0`; its command-envelope residual is unavailable, not repaired. Internal
+parent statistics and outer complete wall remain valid for that process.
+
+**The policy is not made the default.** Retaining every keyed per-workflow sample
+exposes adverse tails despite the complete-entry gain:
+
+| Workflow / charged regime | Wins/losses (24 matched calls) | Mean delta, us | Empirical p90, us | Maximum, us |
+| --- | ---: | ---: | ---: | ---: |
+| Trie complete / collected | 9 / 15 | +1034.19 | +4009.70 | +7488.11 |
+| Trie retry / post-GC batch | 11 / 13 | -30.78 | +2203.70 | +3000.09 |
+| Trie retry / forced GC + first + batch | 11 / 13 | +57.55 | +2729.33 | +2787.29 |
+| Rational complete / natural | 16 / 8 | +272.64 | +1805.11 | +10064.60 |
+
+The inclusive row charges forced collection, the first call and ten batch calls,
+divided by 11, before computing tails. Its two actual order strata retain 5/7 and
+6/6 wins/losses with adverse maxima +2729.33/+2787.29 us. Same-policy inclusive
+retry tails also vary (A/A max +501.07/+1969.23 us, B/B +1519.25/+3574.54 us);
+those controls do not justify deleting cross-policy losses. These are 24 keyed
+calls from four process pairs, not 24 independent process observations. Lower GC
+CPU, a lower average or a lower whole-entry maximum alone does not close every
+workflow's acceptance. No stable future tail guarantee is claimed. The bounded
+policy investigation ends with the existing default preserved; no environment
+variable, scheduler, collector, reduced check count or enlarged limit is added.
+`measuredEntry_gc_bound` states the conditional complete-cost criterion, including
+preparation and residual, rather than proving the installed collector's behavior.
+
+### Complete translation-declaration preparation
+
+The next TODO unit closes a reproducible shared preparation omission, rather than
+adding another performance scenario. Before the correction, all three public
+constructors (`table-isomorphism`, derived fold `.isomorphism`, `table-wrapper`)
+accepted a later computed value Domain getter rewriting an earlier key Domain;
+the returned declaration then retained incompatible current endpoints. Sampling
+revision stamps only after that rewrite did not detect it.
+
+The shared continuation now protects parents/converters during source discovery,
+then protects the complete child/origin scope during endpoint admission and
+callback selection. Existing object mutation guards, source closure, `using` and
+FUN/IO supply the protocol. An explicit lexical boundary keeps incompatible
+endpoint refusal ahead of callback getters. There is no alternate type relation,
+new namespace or second transport/fold implementation.
+
+Twelve independent constructor/victim combinations cover converter, source,
+target and child metadata, unchanged revisions on refusal, exact getter causes,
+fresh retry and type-before-callback failure order. `prepare-ledger-transport`
+uses existing Reader bind: reprepare once per request, transport its original
+base/delta, install privately and consume only on success. Its service example
+retains the exact checked Function through construction refusal, conflict,
+rediscovery/retry and inverse recovery. Lean's `translationPreparation_compatible`
+reuses `indexPreparation_frame` to preserve all four exact endpoint pairs across
+protected edits. Faithful metadata/source snapshots and supported sequential
+writes are premises; arbitrary raw mutation, callback termination, physical GC
+and Scheme compiler correctness are outside this finite future-work unit.

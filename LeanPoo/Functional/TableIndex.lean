@@ -469,4 +469,35 @@ theorem indexPreparation_current {Id : Type} [DecidableEq Id]
   exact beq_iff_eq.mpr (indexPreparation_frame declarations backends origins edits
     before after guarded accepted key member).symm
 
+/-- Four finite descriptor endpoints: tables carry key/value identities and
+converters carry domain/codomain identities. No inference or predicate sampling
+stands in for these exact identities. -/
+def translationTypesAgree {Id Kind : Type} [DecidableEq Kind]
+    (metadata : Id → Option (Kind × Kind)) (source target key value : Id) : Bool :=
+  match metadata source, metadata target, metadata key, metadata value with
+  | some (sk, sv), some (tk, tv), some (kd, kc), some (vd, vc) =>
+      decide (kd = sk ∧ kc = tk ∧ vd = sv ∧ vc = tv)
+  | _, _, _, _ => false
+
+/-- Endpoint admission survives preparation only when the declaration participants
+remain protected throughout getter/callback selection, not merely when stamps
+sampled after preparation happen to be current. The supported-edit discipline and
+faithful descriptor snapshots are host premises. -/
+theorem translationPreparation_compatible {Id Kind : Type}
+    [DecidableEq Id] [DecidableEq Kind]
+    (source target key value : Id) (children origins : List Id)
+    (edits : List (Change Id (Kind × Kind)))
+    (before after : Id → Option (Kind × Kind))
+    (guarded : ∀ edit ∈ edits, edit.key ∉
+      extendProtection origins
+        (extendProtection children [source, target, key, value] false) false)
+    (accepted : applyChanges edits before = .ok after) :
+    translationTypesAgree after source target key value =
+      translationTypesAgree before source target key value := by
+  have frame := indexPreparation_frame [source, target, key, value]
+    children origins edits before after guarded accepted
+  simp only [translationTypesAgree]
+  rw [frame source (by simp), frame target (by simp),
+      frame key (by simp), frame value (by simp)]
+
 end LeanPoo.Functional.OrderedDictionary
