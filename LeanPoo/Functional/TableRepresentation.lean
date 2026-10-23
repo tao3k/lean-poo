@@ -304,4 +304,75 @@ theorem carrier_check_share {X Y : Type} (encode : X → Y) (decode : Y → X)
      let recovered := decode output
      sameX recovered input && sameY (encode recovered) output) := rfl
 
+
+/-- A per-attempt quote scales over the actual executed prefix, including the
+failed comparison but not an unexecuted suffix. This prices repeated Type lookup
+without pretending that each edit or each callback has unit machine cost. -/
+theorem TableCarrier.applyCost_scale (ops : TableCarrier K V A) [DecidableEq V]
+    (unit : A → Change K V → Bool → Nat) (price : Nat)
+    (edits : List (Change K V)) (source : A) :
+    ops.applyCost (fun state edit ok => price * unit state edit ok) edits source =
+      price * ops.applyCost unit edits source := by
+  induction edits generalizing source with
+  | nil => simp [TableCarrier.applyCost]
+  | cons edit rest ih =>
+    simp only [TableCarrier.applyCost]
+    split
+    · rw [ih, Nat.mul_add]
+    · rfl
+
+/-- Direct Type selection and already captured field access have separate prices.
+Extra preparation includes all captured-record allocation, validation and GC costs;
+conversion/equality/backend costs are common, not erased from the total. -/
+def typeContextCost (prepare visits selection common : Nat) : Nat :=
+  prepare + visits * (2 * selection + common)
+
+/-- Capture is beneficial only after paying its complete preparation premium.
+The saved selection price is an explicit premise; no host timing is inferred. -/
+theorem typeContextCost_breakEven (prepare extra visits field saved common : Nat)
+    (budget : extra ≤ visits * (2 * saved)) :
+    typeContextCost (prepare + extra) visits field common ≤
+      typeContextCost prepare visits (field + saved) common := by
+  simp only [typeContextCost, Nat.mul_add] at *
+  omega
+
+omit [DecidableEq K] [DecidableEq L] in
+/-- Equivalent captured child selections leave every mapped key/value unchanged.
+This law requires the live selection to agree while the existing origin guard is
+current; it does not license reusing a context after a revision change. -/
+theorem transportBindings_captured (keys liveKeys : DictionaryBridge K L)
+    (values liveValues : DictionaryBridge V W) (bindings : List (K × V))
+    (keyCurrent : liveKeys.toFields = keys.toFields)
+    (valueCurrent : liveValues.toFields = values.toFields) :
+    transportBindings liveKeys liveValues bindings = transportBindings keys values bindings := by
+  simp only [transportBindings, keyCurrent, valueCurrent]
+
+/-- Any stale captured dependency, including a child Type, refuses admission;
+there is no exception for an empty revision batch or an unused conversion. -/
+theorem typeContext_stale {Id : Type} (ids : List Id) (expected current : Id → Option Nat)
+    (id : Id) (present : id ∈ ids) (changed : expected id ≠ current id) :
+    stampMatches ids expected current = false := by
+  unfold stampMatches
+  apply Bool.eq_false_iff.mpr
+  intro aligned
+  exact changed (beq_iff_eq.mp ((List.all_eq_true.mp aligned) id present))
+
+/-- An observed selection performs the live getter, including its refusal. The
+unobserved branch may reuse a guarded child identity, not its access authority. -/
+def readTypeContext {E T : Type} (observed : Bool)
+    (read : Unit → Except E T) (saved : T) : Except E T :=
+  if observed then read () else .ok saved
+
+/-- Observation preserves the exact access-denial cause rather than serving a
+cached value. This is an Except-level law, not a VM trace or timing theorem. -/
+theorem readTypeContext_denied {E T : Type} (cause : E) (saved : T) :
+    readTypeContext true (fun _ => Except.error cause) saved = .error cause := rfl
+
+/-- Both selection modes agree only when the current live getter admits the
+captured identity; stale-origin rejection remains a separate prerequisite. -/
+theorem readTypeContext_current {E T : Type} (observed : Bool)
+    (read : Unit → Except E T) (saved : T) (current : read () = .ok saved) :
+    readTypeContext observed read saved = .ok saved := by
+  cases observed <;> simp [readTypeContext, current]
+
 end LeanPoo.Functional.OrderedDictionary

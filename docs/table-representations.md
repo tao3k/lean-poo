@@ -210,3 +210,87 @@ including supervision, diagnostics and document checks. Six new conditional laws
 and three concrete cost controls use the existing namespace and root examples.
 Only this compact summary is versioned; raw runs, statistics and binaries stay
 outside Git. CI continues to run the complete suite and all study phases.
+
+## Guarded child Type selection
+
+The private translation directions retain the four admitted child Type identities
+inside the existing revision scope. This replaces repeated unobserved `Key` and
+`Value` demands with record-field selection; it creates no additional converter
+closures. Compatibility, membership, inverse comparisons, collision checks and
+origin guards remain in the complete workflow. Preparation includes the extra
+record fields and all four initial child demands.
+
+When slot-read observation is active, conversion still uses the actual live
+metadata getters. This preserves access refusal and current dependency reads;
+no cached value stands in for access authority and no read token is fabricated.
+Regressions cover exact denial causes, stale read provenance, replacement of a
+child Type, child mutation during conversion, empty-delta refusal and fresh
+rebinding after revision.
+
+The shared study retains every earlier phase and adds preparation, complete
+observation and structural-equality diagnostic slices for both backends. Workflow
+and retry also retain post-GC inclusive controls. Equality fixtures preserve the
+same Function identities and include both equal and unequal reconstructed values.
+These slices locate costs; subtracting their noisy timings is not a measurement
+of equality time inside the complete workflow. Complete wall/CPU/GC observations,
+AB/BA order, A/A and B/B controls and all failures remain authoritative.
+
+The Lean model proves captured/live transport agreement under explicit identity
+agreement, stale-dependency rejection, observed-getter denial preservation and
+prefix-cost scaling. Its break-even law charges complete extra preparation
+against repeated selection savings, with cold and GC-premium negative controls.
+It assumes externally justified cost quotes and does not prove Gerbil allocation,
+GC scheduling, machine timing or speedup from field-access counts.
+
+### Local paired receipt: guarded child selections
+
+The old linked program is `ad206b8`; the candidate captures child identities in
+its two existing direction records. Both execute the identical 28-phase workload
+with 64 bindings, 10 operations, six AB/BA pairs and four A/A plus four B/B pairs
+per phase/regime. Each of four process runs completes all 195 summaries and exits
+0 under the unchanged 1 GiB / 300 s limits. No build runs overlap measurements.
+The linked programs have distinct SHA-256 identities (old `20ff1531…f54fc`,
+candidate `e9a1a3d9…ff9e1`); raw observations and binaries remain outside Git.
+
+Below are **new minus old**, microseconds per complete operation, with 12 matched
+cross-version observations per cell. Negative is faster. Natural/collected columns
+are wall medians; non-GC and GC columns are separate natural CPU medians and do
+not necessarily add to the wall median.
+
+| Backend / phase | Natural wall | Collected wall | Natural non-GC CPU | Natural GC CPU |
+| --- | ---: | ---: | ---: | ---: |
+| RationalDict cold | -349.86 | -182.31 | -205.90 | -44.30 |
+| RationalDict workflow | -131.60 | -148.94 | -107.50 | -16.75 |
+| RationalDict retry | -164.84 | -143.29 | -136.15 | -34.20 |
+| Trie cold | -144.20 | -101.09 | -122.70 | -18.15 |
+| Trie workflow | -141.24 | -178.90 | -84.65 | -40.85 |
+| Trie retry | -118.21 | -110.20 | -121.40 | -15.90 |
+
+Both workflow natural and collected cells improve in all 12 cross-version
+observations. Natural workflow ranges are [-185.73, -51.69] us RationalDict and
+[-524.50, -12.11] us Trie. Same-version natural workflow A/A medians are
++61.50/-144.95 us and B/B -2.29/-96.64 us respectively: drift remains material.
+Other cells retain adverse samples. In particular Trie natural retry ranges from
+-336.69 to **+2157.40 us**. That worst batch has CPU -66.60 us and GC CPU
++69.40 us per operation, with two collections on both sides. Most of its elapsed
+regression is therefore wall-minus-CPU residual, not an increase in measured CPU;
+this does not identify the external cause or justify removing the sample.
+The collected Trie workflow range also retains a -8540.11 us extreme.
+
+Preparation alone has natural medians -0.20/+6.31 us (RationalDict/Trie), with
+non-GC CPU +3.10/-6.70 us; it has no stable standalone speedup. Complete observation
+natural medians are -51.64/-33.10 us. The independent equality control changes by
++0.012/-0.036 us: no equality algorithm changed, and this control is not subtracted
+from workflow timing. Conversion checks, equality and metadata refusal remain.
+
+Charging forced collection **plus first call plus batch**, divided by all 11 calls,
+gives workflow/retry medians -85.99/-332.79 us RationalDict and
+-49.86/-159.71 us Trie. Workflow maxima remain +72.18/+56.51 us and Trie retry
++610.46 us. This synthetic control does not promise production GC latency.
+
+Complete entry wall seconds in ABBA order are 36.10 / 34.32 / 32.34 / 33.88.
+Balanced new-minus-old is -1.66 s, while old A/A changes by -2.22 s and new B/B by
+-1.98 s. Thus these measurements support the bounded workflow improvement but
+**do not establish a stable full-entry speedup or eliminate latency variance**.
+Final local Scheme acceptance is 128 modules / 1,265 cases in one process;
+Lean full acceptance retains all 343 atoms, stress, supervision and document gates.

@@ -794,3 +794,35 @@ end LeanPoo.Examples.TableRevision
 #print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.conjugate_cost_overhead
 #print axioms LeanPoo.Functional.OrderedDictionary.tableWorkflowCost_breakEven
 #print axioms LeanPoo.Functional.OrderedDictionary.carrier_check_share
+
+
+namespace LeanPoo.Examples.TableRevision
+open Functional.OrderedDictionary
+
+/-- Four repeated conversion visits repay the quoted full metadata preparation
+premium; conversion and equality remain in the common 90-unit work quote. -/
+example : typeContextCost (20 + 128) 4 2 90 ≤ typeContextCost 20 4 (2 + 28) 90 := by
+  decide
+
+/-- A one-visit cold path cannot amortize that same metadata preparation premium. -/
+example : ¬ typeContextCost (20 + 128) 1 2 90 ≤ typeContextCost 20 1 (2 + 28) 90 := by
+  decide
+
+/-- GC/preparation may consume the entire nominal lookup saving. Lower access
+counts alone do not justify admitting this adverse complete-workflow quote. -/
+example : ¬ typeContextCost (20 + 225) 4 2 90 ≤ typeContextCost 20 4 (2 + 28) 90 := by
+  decide
+
+end LeanPoo.Examples.TableRevision
+
+#print axioms LeanPoo.Functional.OrderedDictionary.TableCarrier.applyCost_scale
+#print axioms LeanPoo.Functional.OrderedDictionary.typeContextCost_breakEven
+#print axioms LeanPoo.Functional.OrderedDictionary.transportBindings_captured
+#print axioms LeanPoo.Functional.OrderedDictionary.typeContext_stale
+
+/-- A cached Type cannot bypass an observed access denial. -/
+example : LeanPoo.Functional.OrderedDictionary.readTypeContext true
+    (fun _ => Except.error "denied") (7 : Nat) = .error "denied" := rfl
+
+#print axioms LeanPoo.Functional.OrderedDictionary.readTypeContext_denied
+#print axioms LeanPoo.Functional.OrderedDictionary.readTypeContext_current
