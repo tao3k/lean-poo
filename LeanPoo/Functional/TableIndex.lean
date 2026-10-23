@@ -248,4 +248,100 @@ theorem indexed_cache_inverse [DecidableEq V] (ops : TableCarrier K V A) (projec
     indexView project (ops.read restored) = indexView project (ops.read before) := by
   rw [indexed_primary_inverse ops edits before after restored forward backward]
 
+/-- A pair-recursion certificate partitions aligned observations into shared
+bindings, one changed binding, or ordered disjoint subtrees. A backend must supply
+this alignment correctly; pointer identity alone is not a proof of immutability. -/
+inductive DeltaTraversal (K V : Type) where
+  | shared (rows : List (K × V))
+  | changed (edit : Change K V)
+  | fork (left right : DeltaTraversal K V)
+
+/-- Reference events enumerate even unchanged bindings of a shared subtree. -/
+def deltaTraversalEvents : DeltaTraversal K V → List (Change K V)
+  | .shared rows => rows.map (fun row => ⟨row.1, some row.2, some row.2⟩)
+  | .changed edit => [edit]
+  | .fork left right => deltaTraversalEvents left ++ deltaTraversalEvents right
+
+/-- The first phase emits old updates/deletions; a stored false is still present. -/
+def deltaOldChanged [DecidableEq V] (edit : Change K V) : Bool :=
+  edit.before.isSome && !decide (edit.before = edit.after)
+
+/-- Only genuinely absent old bindings enter the second insertion phase. -/
+def deltaNewInserted (edit : Change K V) : Bool := edit.before.isNone && edit.after.isSome
+
+/-- A shared subtree has no changes, but its complete admission is not omitted. -/
+def prunedDeltaPhase (accept : Change K V → Bool) : DeltaTraversal K V → List (Change K V)
+  | .shared _ => []
+  | .changed edit => if accept edit then [edit] else []
+  | .fork left right => prunedDeltaPhase accept left ++ prunedDeltaPhase accept right
+
+/-- Exact old-then-new ordering is retained even when insertions have smaller keys. -/
+def prunedDelta [DecidableEq V] (tree : DeltaTraversal K V) : List (Change K V) :=
+  prunedDeltaPhase deltaOldChanged tree ++ prunedDeltaPhase deltaNewInserted tree
+
+/-- The generic callback order over the same aligned observation certificate. -/
+def fullDelta [DecidableEq V] (tree : DeltaTraversal K V) : List (Change K V) :=
+  (deltaTraversalEvents tree).filter deltaOldChanged ++
+    (deltaTraversalEvents tree).filter deltaNewInserted
+
+omit [DecidableEq K] in
+/-- Pruning is sound whenever the chosen phase rejects every unchanged event. -/
+theorem prunedDeltaPhase_correct (accept : Change K V → Bool)
+    (unchanged : ∀ key row, accept ⟨key, some row, some row⟩ = false)
+    (tree : DeltaTraversal K V) :
+    prunedDeltaPhase accept tree = (deltaTraversalEvents tree).filter accept := by
+  induction tree with
+  | shared rows =>
+    simp only [prunedDeltaPhase, deltaTraversalEvents]
+    symm
+    apply List.filter_eq_nil_iff.mpr
+    intro edit member
+    obtain ⟨row, _, rfl⟩ := List.mem_map.mp member
+    simp [unchanged]
+  | changed edit => cases h : accept edit <;> simp [prunedDeltaPhase, deltaTraversalEvents, h]
+  | fork left right ihLeft ihRight =>
+    simp [prunedDeltaPhase, deltaTraversalEvents, List.filter_append, ihLeft, ihRight]
+
+/-- Callback order and payloads coincide, not merely their final dictionary. -/
+theorem prunedDelta_correct [DecidableEq V] (tree : DeltaTraversal K V) :
+    prunedDelta tree = fullDelta tree := by
+  simp only [prunedDelta, fullDelta]
+  rw [prunedDeltaPhase_correct deltaOldChanged (by intros; simp [deltaOldChanged]),
+      prunedDeltaPhase_correct deltaNewInserted (by intros; simp [deltaNewInserted])]
+
+/-- Existing optimistic installation has identical success and exact first failure. -/
+theorem prunedDelta_install [DecidableEq V] (tree : DeltaTraversal K V) (view : K → Option V) :
+    applyChanges (prunedDelta tree) view = applyChanges (fullDelta tree) view := by
+  rw [prunedDelta_correct]
+
+/-- Existing inverse/retry semantics use the identical ordered edit sequence. -/
+theorem prunedDelta_inverse [DecidableEq V] (tree : DeltaTraversal K V) :
+    inverseChanges (prunedDelta tree) = inverseChanges (fullDelta tree) := by
+  rw [prunedDelta_correct]
+
+/-- One pair pass inspects a shared node once instead of all of its bindings. -/
+def prunedDeltaWork : DeltaTraversal K V → Nat
+  | .shared _ | .changed _ => 1
+  | .fork left right => 1 + prunedDeltaWork left + prunedDeltaWork right
+
+/-- The unpruned reference additionally inspects shared bindings. Backend key
+lookup and compressed-node alignment costs are separate from this visitor model. -/
+def fullDeltaWork : DeltaTraversal K V → Nat
+  | .shared rows => 1 + rows.length
+  | .changed _ => 1
+  | .fork left right => 1 + fullDeltaWork left + fullDeltaWork right
+
+omit [DecidableEq K] in
+/-- Both traversals pay the same complete initial admission. Only change-discovery
+work is reduced; this is not a wall-clock, GC or concrete Gerbil recursor proof. -/
+theorem prunedDelta_work (tree : DeltaTraversal K V) (admission : Nat) :
+    admission + 2 * prunedDeltaWork tree ≤ admission + 2 * fullDeltaWork tree := by
+  have bounded : prunedDeltaWork tree ≤ fullDeltaWork tree := by
+    induction tree with
+    | shared rows => simp [prunedDeltaWork, fullDeltaWork]
+    | changed edit => simp [prunedDeltaWork, fullDeltaWork]
+    | fork left right ihLeft ihRight =>
+      simp only [prunedDeltaWork, fullDeltaWork]; omega
+  omega
+
 end LeanPoo.Functional.OrderedDictionary

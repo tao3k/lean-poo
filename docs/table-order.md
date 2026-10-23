@@ -223,3 +223,97 @@ workflow retains a +3,278.65 wall regression, reference A/A -6,475.37 and candid
 B/B +519.99; natural candidate B/B also reaches +2,044.60. Natural workflow GC CPU
 regresses by 118.33 despite its favorable median wall delta. GC history and wall-only
 outliers remain visible; no timeout, sample or failure was removed to qualify them.
+
+## Shared change discovery in publication
+
+`methods.table` now exposes `.for-each-change emit before after`. Its ordered
+callback law is the existing `.diff` order: old updates/deletions in source order,
+then new insertions in target order. `emit` receives Key, old Option and new Option.
+The generic `table-for-each-change` implementation remains the independent complete
+enumeration/lookup oracle. `.diff` still admits both inputs, guards all origins,
+constructs the private delta and retains empty-delta dependencies. No child
+recognition, Function wrapping, metadata approval or conflict check is cached away.
+
+Trie specializes discovery using its existing pair and single-tree recursors.
+An unchanged persistent subtree can be skipped by identity; one-sided subtrees
+reuse the recursor's absolute prefix API. The generic three-argument `.foldl`
+contract is unchanged, including lawful forwarding/instrumentation overrides.
+Trie overrides must retain its declared ascending traversal law or override the
+change protocol consistently. Other table implementations keep the generic path.
+The helper is included from `trie/changes.scm` in the existing Trie module and is
+registered through standard make `extra-inputs`; it creates no namespace or cache.
+
+Reusing pair alignment exposed an existing common-prefix defect: changing a
+singleton key 8 to 10 reported a deletion at 0 in the left cut child. Both children
+now start at the common prefix. A finite independent oracle checks 128 sparse /
+80-bit-key topology pairs; dense shared-subtree controls, stored false, failed
+initial admission, exact callback error order, Function identity, unique-index
+refusal, grouped migration and FUN consumer suppression/retry are also covered.
+Complete admission is explicitly counted even for identical roots. In the 2,048
+row / one-edit control, discovery alone drops from 61,438 backend unfolds to 56;
+that count excludes the two required complete admissions.
+
+The Lean `DeltaTraversal` certificate describes aligned shared/changed/ordered
+regions. `prunedDelta_correct` proves the exact ordered edit list, so existing
+installation and inverse operations retain their successes and original first
+failure. `prunedDelta_work` preserves the fixed complete admission charge and
+bounds only discovery visitor work. The alignment certificate, immutable-node
+interpretation and agreement with the host equality/order are backend premises;
+this does not verify concrete Gerbil node normalization, compiler, GC or wall time.
+
+The original +3,278.65 us collected workflow pair had **zero interval collections
+on both sides**, +2,304.67 us CPU delta and +973.99 us additional wall-minus-CPU
+delta. This excludes an in-interval GC explanation, not effects of prior GC,
+metadata preparation, cache state or clock/scheduling history. The signed residual
+is recorded without assigning it automatically to operating-system waiting.
+
+Revision benchmarks now compare the same shape-preserving indexed backend on both
+sides and isolate generic versus shared discovery. Factory, cold preparation and
+seek/range comparisons retain their previous controls. Additional `order-diff`,
+`order-stage`, `order-owner` and `order-publication` phases separate discovery,
+prepared-delta index installation, ownership conversion and fresh-factory complete
+publication. The retained `order-workflow` still includes mutation construction,
+discovery, admission, installation, range observation and inverse recovery.
+Full publication additionally includes fresh descriptor/style and cache preparation;
+primary rows and process startup remain separately recorded setup. All prior
+phases, AB/BA, A/A, B/B and raw GC/allocation histories remain present.
+
+### Paired publication receipt
+
+The bounded macOS run uses `just benchmark-collections 256 3 6`, the compiled
+Gerbil test runner, fresh fixtures, two prefix actions, six alternating AB/BA pairs
+and four A/A plus four B/B pairs. All sixteen phases and semantic oracles pass.
+Positive signed deltas below are regressions; numbers are microseconds per call.
+No natural-history collection is forced. The added `post-gc` diagnostic, limited
+to the five revision phases, records forced GC and the first following call
+separately, then the ordinary batch. Its charged summary includes GC, first call
+and the batch divided by the number of calls; this is not a runtime GC policy.
+
+| Phase | Natural paired wall | Precollected paired wall | Precollected non-GC CPU |
+| --- | ---: | ---: | ---: |
+| Difference, including complete admission | -1,608.17 | -1,386.72 | -1,384.50 |
+| Prepared-delta index installation | +8.19 | +5.01 | +2.67 |
+| Ownership conversion | -3.18 | -0.64 | +1.17 |
+| Retained-factory complete workflow | -1,423.16 | -1,330.53 | -1,330.67 |
+| Fresh-factory complete publication | -1,316.11 | -1,475.02 | -1,457.50 |
+
+Prepared installation and ownership bodies are identical between variants: these
+phases are controls, not additional speedup claims. Fresh-factory publication has
+reference/candidate medians 10,461.69 / 9,066.03 naturally and 10,620.83 / 9,140.01
+precollected. Its charged post-GC paired median is -1,444.46. Forced-GC medians are
+666.02 / 651.12; the following first complete calls are 10,173.44 / 8,661.51.
+This observation does not reproduce a candidate-specific post-GC first-call penalty
+or establish the cause of the historical outlier.
+
+**Variation remains.** Natural publication A/A spans [-80.66, +75.02] and B/B
+[-776.05, +5,698.36]; the latter's median is +1,344.05. Precollected A/A spans
+[-200.99, +167.29], B/B [-58.65, +287.69]; charged post-GC B/B still spans
+[+58.47, +308.99]. A preceding independent run also had favorable publication
+paired medians (-3,126.34 / -2,679.71), but retained an adverse +1,664.40 AB pair
+and B/B up to +5,232.02. Neither run is discarded. Discovery work and measured
+median CPU improve; stable tail latency and a universal wall speedup are **not**
+qualified. Allocations and interval GC history alone do not explain residuals.
+
+The final single-process check passes all 128 modules / 1,249 cases within the
+unchanged 300-second / 1-GiB bound (24.15 seconds measured test wall). No checks,
+failed observations, resource limits or complete admissions were removed.

@@ -511,6 +511,37 @@ example (callback : Int → Int) :
 #print axioms checkedShapeUpdates_valid
 #print axioms repeatedShapeWork_square
 
+/-- The traversal certificate separates a shared false-valued row from a new
+smaller key and a removed larger key; insertions must still be emitted last. -/
+def booleanRevisionTraversal : DeltaTraversal Nat Bool :=
+  .fork (.changed ⟨0, none, some false⟩)
+    (.fork (.shared [(8, false)]) (.changed ⟨20, some true, none⟩))
+
+/-- An insertion at zero cannot precede the deletion at twenty. -/
+example : (prunedDelta booleanRevisionTraversal).map Change.key = [20, 0] := rfl
+
+/-- A stale old binding refuses at the same first key, without partial publication. -/
+example : applyChanges (prunedDelta booleanRevisionTraversal) (fun _ => none) = .error 20 := rfl
+
+/-- Missing and stored false remain distinct after successful installation. -/
+example : (applyChanges (prunedDelta booleanRevisionTraversal)
+    (fun key => if key = 8 then some false else if key = 20 then some true else none)).map
+      (fun view => (view 0, view 8, view 20)) = .ok (some false, some false, none) := rfl
+
+/-- Undo restores the original observations without recomputing the shared rows. -/
+example : (applyChanges (inverseChanges (prunedDelta booleanRevisionTraversal))
+    (fun key => if key = 0 ∨ key = 8 then some false else none)).map
+      (fun view => (view 0, view 8, view 20)) = .ok (none, some false, some true) := rfl
+
+/-- A shared region of arbitrary size contributes one visit per pair pass. -/
+example (rows : List (Nat × Bool)) (edit : Change Nat Bool) :
+    prunedDeltaWork (.fork (.shared rows) (.changed edit)) = 3 := rfl
+
+#print axioms prunedDelta_correct
+#print axioms prunedDelta_install
+#print axioms prunedDelta_inverse
+#print axioms prunedDelta_work
+
 end LeanPoo.Examples.TableRevision
 
 -- Identical complete stage work, with three fewer nested entry invocations.
