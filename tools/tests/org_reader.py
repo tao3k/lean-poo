@@ -1,4 +1,9 @@
-"""Exercise the real Org reader and prevent silent document-scope reduction."""
+"""Org reader integration controls, explicitly required by just check-docs.
+
+Core supervision discovery has no document-tool dependency. All reader controls
+run in the docs job, where the official parser is installed, rather than causing
+duplicate downloads in the library job. No controls are skipped.
+"""
 import json
 from pathlib import Path
 import subprocess
