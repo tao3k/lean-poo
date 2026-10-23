@@ -386,6 +386,7 @@ _check-examples:
     {{lean}} Examples/ServiceCollection.lean
     {{lean}} Examples/TableRevision.lean
     {{lean}} Examples/CollectionStyles.lean
+    {{lean}} Examples/SetAlgebra.lean
     {{lean}} Examples/AccountMigration.lean
     {{lean}} Examples/CyclicAccess.lean
     {{lean}} Examples/ClosureLayouts.lean
