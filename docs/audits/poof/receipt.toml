@@ -499,6 +499,7 @@
   "LeanPoo/Functional/TableOrder.lean",
   "LeanPoo/Functional/TableRepresentation.lean",
   "LeanPoo/Functional/TableRevision.lean",
+  "LeanPoo/Functional/TableSelection.lean",
   "LeanPoo/Functional/TableStyle.lean",
   "LeanPoo/Functional/TransactionCheck.lean",
   "LeanPoo/Functional/Transformation.lean",

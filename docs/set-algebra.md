@@ -201,3 +201,39 @@ foreign/retired operands, explicit retry, declared set origins, stricter custom
 recognizers, positioned element queries, Function wrapper identity, batch/inverse
 and Reader/IO suppression. Admission and backend merge costs remain visible;
 this feature does not assert destructive storage reuse or wall-time improvement.
+
+## Checked selection and atomic partition
+
+The Gerbil `methods.table` now implements `.filter` and `.partition`, previously declared
+only on `Set<-Table.` without a backing table method. Both use the backend's
+existing fold/insertion protocol. The predicate receives `(key value)` for tables
+and one element for sets, runs exactly once per visited binding in `.foldl` order,
+and must return a Boolean. Exceptions retain their original cause; non-Booleans
+raise Gerbil's contract violation. No child is normalized again: admitted Function
+keys and values keep their exact wrappers. Output enumeration uses backend order.
+
+Both operations are available on all five style protocols and via receiver
+`filter`/`partition`. Partition returns two values, selected then rejected. It
+recognizes both roots and prepares both presentations/capabilities before one
+head comparison and installation. Pure/posh keep the predecessor. Mutable/classy
+retain the original identity as the selected result and allocate an independent
+rejected owner. Linear retires its predecessor once and returns two fresh owners.
+Even an empty branch must satisfy the original descriptor/refinement; a custom
+nonempty descriptor may therefore refuse a partition. Late branch refusal leaves
+the original owner live. Reentrant/competing installations make the staged commit
+stale; the winner remains visible, and neither losing result escapes. Predicate
+side effects are observable and are not rolled back. This is not a two-object
+transaction after the operation returns.
+
+`partition-access-action` composes classification and complete branch admission
+with Reader/FUN map before IO. Tests cover two backends against all 16 four-key
+classifications, five table/set styles, receiver calls, exact wrapper identities,
+late refusal/retry, mutable reentrance, descriptor guards and delta inverse recovery.
+The Lean `TableSelection` model proves stable-filter agreement, coverage, exact
+refusal, one-owner style delegation, second-admission failure and stale-install
+rejection; examples combine classification, refusal/retry and inverse revision.
+These are finite backend/ownership laws advancing the collection proposal's future
+work, not a proof of host allocation or arbitrary callback rollback. The default
+implementation visits n bindings once and performs at most n backend insertions;
+there is no new tree algorithm or bound on custom recognizer costs. Ordinary
+single-result updates retain their direct path without partition list allocation.

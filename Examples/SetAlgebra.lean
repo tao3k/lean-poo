@@ -1,4 +1,4 @@
-import LeanPoo.Functional.SetStyle
+import LeanPoo.Functional.TableSelection
 
 /-! Access-policy algebra composes existing table revisions, inverse recovery,
 styles and service lenses. This advances the collection proposal's future work. -/
@@ -82,5 +82,39 @@ example : pullSetElement (K := Nat) ⟨[1, 2], [(3, ())]⟩ [1, 3] =
 /-- Already captured elements preserve exact callable identity without equality. -/
 example (f : Nat → Nat) : pullSetElement ⟨[1], [(f, ())]⟩ [1] =
     (.ok (some f, ⟨[1], []⟩), 1) := pullSetElement_current [1] f []
+
+/-- Classification routes a shared service inventory without changing its entries. -/
+def inventory : List (Nat × Nat) := [(1, 10), (2, 20), (3, 30), (4, 40)]
+/-- A capacity policy is a decidable Boolean, not an Any/truthiness fallback. -/
+def capacityPolicy (entry : Nat × Nat) : Except String Bool := .ok (decide (entry.2 ≤ 20))
+
+example : selectBindings capacityPolicy inventory =
+    .ok ([(1, 10), (2, 20)], [(3, 30), (4, 40)]) := rfl
+
+/-- A second-branch refinement refuses even after the first branch is admitted. -/
+def admitInventory (rows : List (Nat × Nat)) : Except String (List (Nat × Nat)) :=
+  if rows.any (fun entry => decide (entry.2 > 30)) then .error "capacity" else .ok rows
+
+example : stylePartition .linear (some inventory) (fun _ =>
+    preparePartitionRoots admitInventory [(1, 10), (2, 20)] [(3, 30), (4, 40)]) =
+    (some inventory, .error (.callback "capacity")) := rfl
+
+/-- Retry adjusts the policy before the single successful owner retirement. -/
+example : stylePartition .linear (some inventory) (selectBindings capacityPolicy) =
+    (none, .ok ([(1, 10), (2, 20)], [(3, 30), (4, 40)])) := rfl
+
+/-- Posh/pure preserve the source; classy/mutable publish the first branch. -/
+example : (stylePartition .pure (some inventory) (selectBindings capacityPolicy)).1 = some inventory := rfl
+example : (stylePartition .mutable (some inventory) (selectBindings capacityPolicy)).1 =
+    some [(1, 10), (2, 20)] := rfl
+
+/-- The filtered policy remains an ordinary reversible table revision. -/
+def filteredView (key : Nat) : Option Nat := if key = 1 ∨ key = 2 then some (key * 10) else none
+/-- Reuse existing complete delta installation and inverse, not a partition delta. -/
+def inventoryView (key : Nat) : Option Nat := if key ∈ [1, 2, 3, 4] then some (key * 10) else none
+
+example : (applyChanges (inverseChanges (diffChanges [1, 2, 3, 4] inventoryView filteredView))
+    filteredView).map (fun view => (view 1, view 2, view 3, view 4)) =
+    .ok (some 10, some 20, some 30, some 40) := by rfl
 
 end LeanPoo.Examples.SetAlgebra
