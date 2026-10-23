@@ -826,3 +826,33 @@ example : LeanPoo.Functional.OrderedDictionary.readTypeContext true
 
 #print axioms LeanPoo.Functional.OrderedDictionary.readTypeContext_denied
 #print axioms LeanPoo.Functional.OrderedDictionary.readTypeContext_current
+
+namespace LeanPoo.Examples.TableRevision
+open Functional.OrderedDictionary
+
+/-- A truncated revision vector must refuse, even if its shared prefix agrees. -/
+example : revisionsCurrent [0, 1] [7] (fun _ => 7) = false := by decide
+example : revisionsCurrent [0] [7, 7] (fun _ => 7) = false := by decide
+example : revisionsCurrent [0, 1, 2] [7, 7, 8] (fun _ => 7) = false := by decide
+example : revisionsCurrent [0, 1, 2] [7, 7, 7] (fun _ => 7) = true := by decide
+
+/-- Rounded tenth-microsecond control from the adverse retry batch: lower
+non-GC CPU and lower total CPU still coexist with higher observed wall time. -/
+example : 21849 < 23209 ∧ 21849 + 2292 < 23209 + 1598 ∧
+    measuredWall 23209 1598 189 < measuredWall 21849 2292 22429 := by decide
+
+end LeanPoo.Examples.TableRevision
+
+#print axioms LeanPoo.Functional.OrderedDictionary.revisionsCurrent_eq
+#print axioms LeanPoo.Functional.OrderedDictionary.measuredWall_bound
+
+/-- Generic structural equality refuses a malformed revision without numeric
+coercion; the Scheme boundary separately refuses improper version lists. -/
+example : LeanPoo.Functional.OrderedDictionary.revisionsCurrent
+    [0, 1] [some 7, none] (fun _ => some 7) = false := by decide
+
+/-- The prepared receiver is covered even when it was absent from origin metadata. -/
+example : LeanPoo.Functional.OrderedDictionary.receiverScope (some "receiver")
+    ["source", "key", "value"] = ["receiver", "source", "key", "value"] := rfl
+example : LeanPoo.Functional.OrderedDictionary.receiverScope (none : Option Nat) [1, 2] = [1, 2] := rfl
+#print axioms LeanPoo.Functional.OrderedDictionary.receiverScope_closed

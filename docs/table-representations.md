@@ -294,3 +294,100 @@ Balanced new-minus-old is -1.66 s, while old A/A changes by -2.22 s and new B/B 
 **do not establish a stable full-entry speedup or eliminate latency variance**.
 Final local Scheme acceptance is 128 modules / 1,265 cases in one process;
 Lean full acceptance retains all 343 atoms, stress, supervision and document gates.
+
+## Receiver scopes and entry accounting
+
+Wrapper guards reuse the complete receiver/source scope prepared after private
+construction, instead of allocating its leading pair for every operation. All
+instantiation, revision-map equality and metadata checks remain in place. A nested
+call reuses the standard existing scope-identity fast path only when its complete
+active list is identical; partial overlaps retain the existing protection path.
+
+A separate candidate replacing revision-map equality with Gerbil's two-list
+`andmap` was withdrawn after complete paired measurement. Length and proper-list
+checks were essential for refusal semantics, but temporary-list removal did not
+produce complete-workflow speedup. Its reference equivalence law remains a
+semantic control, not an assertion that the runtime uses that candidate.
+
+Regressions revise each of six independent origin positions, reject old reads and
+empty deltas, and reject derived-receiver writes inside FUN and fold callbacks.
+The receiver revision and original snapshot survive refusal. Lean proves complete
+receiver/origin coverage and, for the withdrawn comparison candidate, exact
+agreement of the paired predicate with complete mapped-list equality, including
+short/long mismatches. A signed wall-residual law makes the empirical premise
+explicit: CPU savings imply wall savings only when residual growth fits within
+them. A negative control models lower non-GC and total CPU with higher wall time.
+
+The existing full study measures the unchanged fixed prefix through its shared
+Gambit statistics helper and reports the entire loaded entry, including diagnostics,
+setup, prefixes, measured calls, GC and output. Startup is separate. These totals
+are not inferred by adding medians. Raw boundary histories retain GC wall/CPU,
+collection counts, allocations, heap/live history and adverse observations.
+
+### Paired receipt: retry tails and prepared receiver scopes
+
+The reference is linked `e55e57a`. Both experiments execute the identical complete
+28-phase study: 64 bindings, 10 operations, six AB/BA pairs plus four A/A and four
+B/B pairs, all 195 summaries per process. Four processes run old/new/new/old with
+unchanged 1 GiB / 300 s bounds. No local builds overlap measured runs. Raw results,
+failed attempts and binaries remain outside Git. No forced GC is added to natural
+observations and no adverse sample is removed.
+
+**Withdrawn revision-list candidate.** Proper-list and length checks plus public
+Gerbil two-list `andmap` preserve mapped-list equality only with structural scalar
+equality. The first numeric-equality prototype failed the existing malformed-state
+regression; correcting the implementation retained its stale-error expectation and
+added improper-list controls. The corrected full suite passed, but performance did
+not justify adoption. Trie natural retry wall median was +1.06 us, RationalDict
+workflow +18.49 us. Loaded-entry mean regressed +2.289 s: CPU +0.425 s (non-GC
++0.281, GC +0.144), residual +1.864 s. External entry ABBA seconds were
+32.14 / 35.29 / 31.63 / 31.85. Fewer temporary lists did not establish speedup.
+The runtime therefore retains its original complete revision-map comparisons.
+
+**Prepared receiver scope.** This separate experiment reuses one private completed
+scope instead of consing it on each guard invocation. The source/origin list,
+instantiation calls, revision checks, callback protection and inverse checks remain.
+The candidate binary SHA-256 is `96f4f232…75a8c`; the reference is
+`e9a1a3d9…ff9e1`. New-minus-old medians below are us per operation, with 12 matched
+cross-version samples. CPU-component medians need not add to a wall median.
+
+| Phase / regime | Wall | Non-GC CPU | GC CPU | Wall residual | GC wall |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Trie retry / natural | -53.51 | -56.50 | -6.15 | -0.10 | -5.07 |
+| Trie retry / collected | -0.45 | -21.10 | +11.30 | +2.60 | +12.79 |
+| Trie retry / post-GC batch | +9.41 | +2.30 | +6.60 | +3.00 | +6.54 |
+| Trie workflow / natural | +6.06 | -1.25 | +7.55 | +0.41 | +8.12 |
+| RationalDict retry / natural | -52.00 | -33.10 | -11.30 | -2.95 | -11.35 |
+
+Trie natural retry cross-version range is [-914.72, +48.88] us. This run does not
+repeat the earlier +2157.40 us regression, but cannot establish a future tail bound.
+Its same-version A/A median/range is -25.89 / [-857.23, +97.18] us; B/B is
+-74.15 / [-204.49, -1.69] us. Drift remains large relative to the median benefit.
+Charging forced GC **plus first call plus batch**, divided by all 11 calls,
+Trie retry remains +20.96 us, range [-61.47, +359.93], including non-GC +9.77 us.
+Other inclusive medians are RationalDict workflow/retry -39.87/-12.65 us and Trie
+workflow -27.96 us. These adverse controls remain in the receipt; the library does
+not inspect benchmark regime or change its production GC policy.
+
+External entry wall ABBA seconds are 32.84 / 31.31 / 30.37 / 30.54. The first old
+startup alone is 1.1044 s, versus approximately 0.015 s for the other runs, so an
+unqualified external-entry speedup would conflate startup history with execution.
+Loaded-entry wall is 31.693 / 31.289 / 30.346 / 30.511 s. Balanced means change by
+-0.285 s wall, -0.255 s CPU, -0.293 s non-GC CPU, +0.038 s GC CPU and -0.030 s
+residual. Old A/A wall changes -1.182 s and new B/B -0.943 s: **stable full-entry
+speedup is not established**. Measured loaded-entry components (old/new means) are
+setup 3.554/3.400 s, fixed prefix 4.470/4.434 s, batches 21.766/21.669 s and charged
+forced-GC/first calls 0.448/0.423 s. Remaining time includes diagnostics, reporting,
+statistics and collected-regime GC outside batch intervals; it is not all GC or
+all scheduler delay. These are sums of disjoint measured intervals, not medians.
+
+The original +2157.40 us retry observation remains evidence: CPU -66.60 us,
+non-GC -136.00 us, GC CPU +69.40 us and wall residual about +2224.00 us, with two
+collections on each side. It does not identify a Scheme algorithmic slowdown or
+a specific external cause. Lean's signed-residual bound explicitly requires any
+residual growth to fit inside measured CPU savings; no OS/GC latency bound is proved.
+The receiver-scope law retains the receiver and every origin. The reference paired
+revision law and malformed/length controls remain semantic audit evidence for the
+withdrawn comparison, not claims about its adoption or allocation behavior.
+Final Scheme acceptance: 128 modules / 1,266 cases in one process, exit 0 under
+existing limits. All study phases, failures, retry/undo and Function oracles remain.

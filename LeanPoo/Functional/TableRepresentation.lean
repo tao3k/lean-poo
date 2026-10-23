@@ -375,4 +375,56 @@ theorem readTypeContext_current {E T : Type} (observed : Bool)
     readTypeContext observed read saved = .ok saved := by
   cases observed <;> simp [readTypeContext, current]
 
+/-- Standard two-list traversal needs an explicit length check: truncation must
+not admit a missing origin. Revision reads are pure state observations. -/
+def revisionsCurrent {Id Version : Type} [BEq Version]
+    (sources : List Id) (versions : List Version) (revision : Id → Version) : Bool :=
+  (sources.length == versions.length) &&
+    (sources.zip versions).all (fun (source, expected) => revision source == expected)
+
+/-- Paired comparison admits exactly the same complete revision
+sequence as mapping every revision and comparing the resulting list. -/
+theorem revisionsCurrent_eq {Id Version : Type} [BEq Version]
+    (sources : List Id) (versions : List Version) (revision : Id → Version) :
+    revisionsCurrent sources versions revision = (sources.map revision == versions) := by
+  induction sources generalizing versions with
+  | nil => cases versions <;> simp [revisionsCurrent]
+  | cons source rest ih =>
+    cases versions with
+    | nil => simp [revisionsCurrent]
+    | cons version tail =>
+      have len : (rest.length + 1 == tail.length + 1) =
+          (rest.length == tail.length) := by simp
+      simp only [revisionsCurrent, List.length_cons, len,
+        List.zip_cons_cons, List.all_cons, List.map_cons, List.cons_beq_cons]
+      rw [← ih]
+      simp only [revisionsCurrent]
+      cases (rest.length == tail.length) <;>
+        cases (revision source == version) <;> simp_all
+
+/-- Wall cost explicitly retains a signed residual beyond measured CPU. A
+non-GC improvement does not by itself establish a wall-clock improvement. -/
+def measuredWall (nonGC gc : Nat) (residual : Int) : Int := nonGC + gc + residual
+
+/-- A measured CPU saving implies a wall saving only if the residual increase
+fits inside that saving. The premise is empirical, not a scheduler theorem. -/
+theorem measuredWall_bound (oldWork oldGC newWork newGC : Nat) (oldR newR : Int)
+    (budget : newR - oldR ≤ (oldWork : Int) + oldGC - ((newWork : Int) + newGC)) :
+    measuredWall newWork newGC newR ≤ measuredWall oldWork oldGC oldR := by
+  unfold measuredWall
+  omega
+
+/-- Private construction protects origins; publication adds the completed receiver.
+The prepared list is reused only within this derived protocol, never globally. -/
+def receiverScope {Id : Type} (receiver : Option Id) (sources : List Id) : List Id :=
+  receiver.toList ++ sources
+
+/-- Reusing a completed scope retains protection for its receiver and every
+origin. This is a membership/protection law, not a VM allocation theorem. -/
+theorem receiverScope_closed {Id : Type} (owner : Id) (sources : List Id)
+    (allows : Id → Prop) :
+    (∀ id ∈ receiverScope (some owner) sources, allows id) ↔
+      allows owner ∧ (∀ id ∈ sources, allows id) := by
+  simp [receiverScope]
+
 end LeanPoo.Functional.OrderedDictionary
