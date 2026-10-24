@@ -370,11 +370,22 @@ def admitCohortCache : ∀ name, CohortCache name → Except String Unit
   | .team, groups => if groups.all (fun group => group.2.length % 2 == 0) then .ok ()
       else .error "team cohort incomplete"
 
+/-- The predecessor contains both correlated admitted caches, not an empty
+placeholder. Function-bearing grouped payloads remain the exact original rows. -/
+def stableCohortCaches : List (Sigma CohortCache) :=
+  [⟨.badge, [(101, 1), (102, 2), (103, 3), (104, 4)]⟩,
+   ⟨.team, [(10, stableCohort.take 2), (20, stableCohort.drop 2)]⟩]
+
+/-- Establish the predecessor's complete-cache admission before using it in the
+failure/retry example. No equality procedure for callbacks is introduced. -/
+example : stageIndexCaches (cohortCaches stableCohort) admitCohortCache [.badge, .team] =
+    .ok stableCohortCaches := rfl
+
 /-- Late grouped-cache refusal keeps the complete old linear snapshot for retry. -/
-example : styleStep .linear (some (stableCohort, ([] : List (Sigma CohortCache))))
+example : styleStep .linear (some (stableCohort, stableCohortCaches))
     (fun _ => publishIndexCaches incompleteCohort [.badge, .team]
       (cohortCaches incompleteCohort) admitCohortCache) =
-    (some (stableCohort, []), .error (.callback "team cohort incomplete")) := rfl
+    (some (stableCohort, stableCohortCaches), .error (.callback "team cohort incomplete")) := rfl
 
 /-- Explicit restaging of a complete exchange succeeds with exactly the proposed
 primary and callback identities. No equality instance for closures is needed. -/
