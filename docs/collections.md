@@ -316,3 +316,27 @@ Aggregate reuse still avoids target reinitialization/reprojection, but complete
 recognition may scan both snapshots. `reuseFoldWork` explicitly charges supplied
 source and target admission visits. See [table-fold.md](table-fold.md) for atomic
 batch semantics, retained-pair failure/retry, service composition and proof scope.
+
+
+## Selective grouped folds
+
+`foldGroups` summarizes each nonempty finite owner bucket, preserving the distinction
+between an absent group and a present zero aggregate. The generic summary function
+may observe ordered bucket contents; an inverse/commutative law is not assumed.
+`grouped_bucket_frame` derives unchanged buckets from coverage of original/final
+group memberships of changed rows. `repairGroupFolds_correct` then proves selective
+refolding agrees with full regrouping. `foldGroups_delta` proves that a direct
+ordinary delta over the touched groups reconstructs the complete summary, and
+`foldGroups_inverse` restores summaries from the explicit source inverse.
+
+These laws correspond to Gerbil `table-group-fold`, which reuses existing grouped
+indexes and a fold kernel shared with ordinary `table-fold`. Whole source admission
+precedes projection; complete target recognition precedes direct delivery and the
+existing style publisher. Top-level `Examples/ServiceCollection.lean` covers
+zero-sum shared teams, migration, unrelated group reuse, last-owner removal and
+inverse recovery. The stable finite owner inventory/reference traversal, lawful
+persistent backends, repeatable pure callbacks and faithful recognizers remain
+premises. Host costs include all rows of affected buckets, index preparation,
+validation and public installation; no machine speedup, GC, compiler correctness,
+automatic retraction law or destructive rollback is proved. This advances the
+collection proposal's future work rather than claiming automatic library synthesis.

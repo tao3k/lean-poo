@@ -254,4 +254,123 @@ theorem traceBindings_represented [DecidableEq K] [DecidableEq V] [DecidableEq L
     exact (transportView_inverse keys values source).symm
   exact traceBindings_transport keys.inverse values.inverse edits presented after source inversePair installed
 
+/-- Fold each nonempty owner bucket; a zero aggregate is still a present group.
+The finite inventory covers live owners and fixes the reference traversal order. -/
+def foldGroups (owners : List K) (summarize : (K → Option V) → A)
+    (groups : I → K → Option V) (bucket : I) : Option A :=
+  if owners.any (fun key => (groups bucket key).isSome) then some (summarize (groups bucket)) else none
+
+/-- Presence depends on owners, never on the aggregate value being nonzero. -/
+theorem foldGroups_present (owners : List K) (summarize : (K → Option V) → A)
+    (groups : I → K → Option V) (bucket : I) :
+    (foldGroups owners summarize groups bucket).isSome = true ↔
+      ∃ key ∈ owners, (groups bucket key).isSome = true := by
+  simp [foldGroups, List.any_eq_true]
+
+/-- Any surviving owner keeps even an opaque or zero-valued aggregate present. -/
+theorem foldGroups_survives (owners : List K) (summarize : (K → Option V) → A)
+    (groups : I → K → Option V) (bucket : I) (key : K)
+    (listed : key ∈ owners) (live : (groups bucket key).isSome = true) :
+    foldGroups owners summarize groups bucket = some (summarize (groups bucket)) := by
+  have present : owners.any (fun key => (groups bucket key).isSome) = true :=
+    List.any_eq_true.mpr ⟨key, listed, live⟩
+  simp [foldGroups, present]
+
+/-- No live owners means no group; the empty fold's zero is not published. -/
+theorem foldGroups_empty (owners : List K) (summarize : (K → Option V) → A)
+    (groups : I → K → Option V) (bucket : I)
+    (empty : ∀ key ∈ owners, groups bucket key = none) :
+    foldGroups owners summarize groups bucket = none := by
+  have absent : owners.any (fun key => (groups bucket key).isSome) = false := by
+    simp only [List.any_eq_false]
+    intro key listed
+    simp [empty key listed]
+  simp [foldGroups, absent]
+
+/-- Existing selective index repair supplies the exact final buckets to aggregation.
+No law for an inverse or commutative aggregate is needed for this equality. -/
+theorem foldGroups_revise [DecidableEq K] [DecidableEq I]
+    (owners keys : List K) (summarize : (K → Option V) → A)
+    (project : K → V → I) (before after : K → Option V)
+    (frame : ∀ key, key ∉ keys → after key = before key) :
+    foldGroups owners summarize (reviseIndex keys project after (indexView project before)) =
+      foldGroups owners summarize (indexView project after) := by
+  rw [reviseIndex_correct keys project before after frame]
+
+/-- The touched group inventory contains both original and final memberships of
+changed rows. Therefore every other complete bucket is observationally unchanged. -/
+theorem grouped_bucket_frame [DecidableEq I]
+    (buckets : List I) (project : K → V → I) (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) → project key row ∈ buckets)
+    (bucket : I) (outside : bucket ∉ buckets) :
+    indexView project before bucket = indexView project after bucket := by
+  funext key
+  by_cases same : before key = after key
+  · simp [indexView, same]
+  · have excludes (row : V) (live : before key = some row ∨ after key = some row) :
+        project key row ≠ bucket := by
+      intro equal
+      exact outside (equal ▸ covered key same row live)
+    have old : indexView project before bucket key = none := by
+      cases h : before key with
+      | none => simp [indexView, h]
+      | some row => simp [indexView, h, excludes row (Or.inl h)]
+    have new : indexView project after bucket key = none := by
+      cases h : after key with
+      | none => simp [indexView, h]
+      | some row => simp [indexView, h, excludes row (Or.inr h)]
+    rw [old, new]
+
+/-- Unaffected groups retain their cached aggregate without evaluating summarize. -/
+def repairGroupFolds [DecidableEq I] (buckets : List I)
+    (compute : I → Option A) (cache : I → Option A) : I → Option A :=
+  fun bucket => if bucket ∈ buckets then compute bucket else cache bucket
+
+/-- Refolding only old/final groups agrees with full regrouping and aggregation. -/
+theorem repairGroupFolds_correct [DecidableEq I]
+    (owners : List K) (buckets : List I) (summarize : (K → Option V) → A)
+    (project : K → V → I) (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) → project key row ∈ buckets) :
+    repairGroupFolds buckets (foldGroups owners summarize (indexView project after))
+      (foldGroups owners summarize (indexView project before)) =
+      foldGroups owners summarize (indexView project after) := by
+  funext bucket
+  by_cases h : bucket ∈ buckets
+  · simp [repairGroupFolds, h]
+  · simp only [repairGroupFolds]
+    split
+    · contradiction
+    · unfold foldGroups
+      rw [grouped_bucket_frame buckets project before after covered bucket h]
+
+/-- A direct target delta over touched groups reconstructs the whole summary.
+No target snapshot discovery or unconditional full target-key inventory is needed. -/
+theorem foldGroups_delta [DecidableEq I] [DecidableEq A]
+    (owners : List K) (buckets : List I) (unique : buckets.Nodup)
+    (summarize : (K → Option V) → A) (project : K → V → I) (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) → project key row ∈ buckets) :
+    applyChanges (diffChanges buckets (foldGroups owners summarize (indexView project before))
+      (foldGroups owners summarize (indexView project after)))
+      (foldGroups owners summarize (indexView project before)) =
+      .ok (foldGroups owners summarize (indexView project after)) := by
+  apply diff_complete buckets unique
+  intro bucket outside
+  unfold foldGroups
+  rw [grouped_bucket_frame buckets project before after covered bucket outside]
+
+/-- Source inversion restores grouped summaries even when migration erased an
+entire group. This inverts the explicit delta, not the aggregate's information loss. -/
+theorem foldGroups_inverse [DecidableEq K] [DecidableEq V] [DecidableEq I]
+    (owners : List K) (summarize : (K → Option V) → A) (project : K → V → I)
+    (edits : List (Change K V)) (before after : K → Option V)
+    (ready : applyChanges edits before = .ok after) :
+    (applyChanges (inverseChanges edits) after).map
+      (fun restored => foldGroups owners summarize (indexView project restored)) =
+      .ok (foldGroups owners summarize (indexView project before)) := by
+  rw [applyChanges_inverse edits before after ready]
+  rfl
+
 end LeanPoo.Functional.OrderedDictionary
