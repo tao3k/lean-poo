@@ -267,4 +267,51 @@ theorem admitted_set_membership [DecidableEq K] (view : Membership K) (key : K)
   change Except.ok (setMembership view key present key) = Except.ok present
   simp [setMembership]
 
+/-- For an arity-admitted argument row, the shared method boundary checks original
+roots and recognizes the element arguments,
+then resolves the delegate and admits its complete result. Recognition need not
+normalize stored Function leaves; lookup remains after both input phases. -/
+def admitSetMethod (roots : List A) (admit : A → Except E Unit)
+    (args : Args) (recognize : Args → Except E Args)
+    (resolve : Unit → Except E (Args → Except E A)) : Except E A :=
+  admitSetOperation roots admit fun _ =>
+    (recognize args).bind fun checked =>
+      (resolve ()).bind fun method => method checked
+
+/-- Recognition-only argument checks and successful delegate resolution preserve
+exactly the previous operation semantics, including every final refusal. -/
+theorem admitSetMethod_delegation (roots : List A) (admit : A → Except E Unit)
+    (args : Args) (recognize : Args → Except E Args)
+    (resolve : Unit → Except E (Args → Except E A)) (method : Args → Except E A)
+    (recognized : recognize args = .ok args) (resolved : resolve () = .ok method) :
+    admitSetMethod roots admit args recognize resolve =
+      admitSetOperation roots admit (fun _ => method args) := by
+  simp [admitSetMethod, recognized, resolved, Except.bind]
+
+/-- Original-root refusal suppresses argument predicates and delegate lookup. -/
+theorem admitSetMethod_roots_refused (roots : List A) (admit : A → Except E Unit)
+    (args : Args) (recognize : Args → Except E Args)
+    (resolve : Unit → Except E (Args → Except E A)) (cause : E)
+    (refused : roots.mapM admit = .error cause) :
+    admitSetMethod roots admit args recognize resolve = .error cause := by
+  simp [admitSetMethod, admitSetOperation, refused, Except.bind]
+
+/-- A refused element argument row suppresses lookup and result admission;
+its original cause is retained even if the delegate would also fail. -/
+theorem admitSetMethod_arguments_refused (roots : List A) (admit : A → Except E Unit)
+    (args : Args) (recognize : Args → Except E Args)
+    (resolve : Unit → Except E (Args → Except E A)) (checks : List Unit) (cause : E)
+    (accepted : roots.mapM admit = .ok checks) (refused : recognize args = .error cause) :
+    admitSetMethod roots admit args recognize resolve = .error cause := by
+  simp [admitSetMethod, admitSetOperation, accepted, refused, Except.bind]
+
+/-- Every successful family method satisfies the same faithful Set recognizer;
+introducing a method family cannot bypass final validation. -/
+theorem admitSetMethod_valid (roots : List A) (admit : A → Except E Unit)
+    (args : Args) (recognize : Args → Except E Args)
+    (resolve : Unit → Except E (Args → Except E A)) (Valid : A → Prop)
+    (faithful : ∀ root, admit root = .ok () → Valid root) (root : A)
+    (published : admitSetMethod roots admit args recognize resolve = .ok root) : Valid root :=
+  admitSetOperation_valid roots admit _ Valid faithful root published
+
 end LeanPoo.Functional.OrderedDictionary

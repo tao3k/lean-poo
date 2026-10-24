@@ -639,4 +639,17 @@ example : observeStyle [0, 0, 0] [1, 0, 0] (some (cohortView [1, 2]))
   apply observeStyle_stale
   decide
 
+/-- A refused original cohort wins over a simultaneous bad argument and lookup.
+The same boundary handles insertion, removal and a seedless complete constructor. -/
+example : admitSetMethod [cohortView [1]] admitAccessCohort (3 : Nat)
+    (fun _ => .error "bad principal") (fun _ => .error "bad delegate") =
+      .error "incomplete cohort" := by rfl
+
+/-- Recognizing a Function-valued argument can preserve its exact identity;
+no equality or normalization of the closure is needed for delegation. -/
+example (f : Nat → Nat) (method : (Nat → Nat) → Except String (Membership Nat)) :
+    admitSetMethod [] admitAccessCohort f Except.ok (fun _ => .ok method) =
+      admitSetOperation [] admitAccessCohort (fun _ => method f) := by
+  apply admitSetMethod_delegation <;> rfl
+
 end LeanPoo.Examples.CollectionStyles

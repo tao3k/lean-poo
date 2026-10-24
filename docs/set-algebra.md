@@ -288,3 +288,14 @@ repaired publication, rejected membership insertion and cold pair construction.
 Backing construction/algebra laws, faithful recognition, finite traversal and
 stable declared callback dependencies remain premises. Arbitrary callback
 termination, hidden effects, compiler/runtime correctness and latency are not proved.
+
+The point-method family derives a single argument/result boundary from existing
+Function signatures and `Wrapper.map`. For arity-admitted calls, root recognition precedes element checks
+and lazy delegate lookup. Recognition returns original arguments (including
+Function closures); singleton uses the complete backing list constructor.
+`admitSetMethod_delegation` proves equivalence to operation admission under
+identity recognition and successful lookup. Separate refusal laws preserve the
+root/argument/lookup order, and the publication theorem retains final validity.
+Arity admission uses the existing Function signature matcher; the method laws
+start from an arity-admitted argument row. These laws assume faithful recognizers and do not establish host contract macro,
+metadata guard, compiler, GC or timing correctness.
