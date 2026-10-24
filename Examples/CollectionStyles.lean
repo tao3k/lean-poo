@@ -3,6 +3,7 @@ import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableIndex
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
+import LeanPoo.Functional.SetAlgebra
 import LeanPoo.Functional.TableSelection
 
 /-! Receiver-bound service revisions advance the collection proposal's future
@@ -585,5 +586,57 @@ example : (traceBindings [(0, none), (0, some false)]
 
 /-- Two writes emit two overlay entries and convert only the two present replacements. -/
 example : traceBindingsWork serviceLedgerWrites = (2, 2) := rfl
+
+/-- Four approval principals give a decidable cohort universe for the example. -/
+def cohortMembers (view : Membership Nat) : List Nat := [1, 2, 3, 4].filter view
+
+/-- Approval publication requires whole pairs; no closure of this predicate under
+arbitrary union/intersection/membership updates is assumed. -/
+def admitAccessCohort (view : Membership Nat) : Except String Unit :=
+  if (cohortMembers view).length % 2 = 0 then .ok () else .error "incomplete cohort"
+
+/-- An explicit finite membership view uses the same equality as the list oracle. -/
+def cohortView (members : List Nat) : Membership Nat := fun key => members.contains key
+
+/-- Both operands are valid, but their union has three principals and must refuse. -/
+example :
+    (admitSetOperation [cohortView [1, 2], cohortView [2, 3]] admitAccessCohort
+      (fun _ => .ok (combineSet .union (cohortView [1, 2]) (cohortView [2, 3])))).map
+      cohortMembers = .error "incomplete cohort" := by rfl
+
+/-- Repair publishes all four principals after complete admission. -/
+example :
+    (admitSetOperation [cohortView [1, 2], cohortView [3, 4]] admitAccessCohort
+      (fun _ => .ok (combineSet .union (cohortView [1, 2]) (cohortView [3, 4])))).map
+      cohortMembers = .ok [1, 2, 3, 4] := by rfl
+
+/-- A one-member update is outside this refinement's lawful lens domain. -/
+example :
+    (admitSetOperation [cohortView [1, 2]] admitAccessCohort
+      (fun _ => .ok (setMembership (cohortView [1, 2]) 3 true))).map cohortMembers =
+      .error "incomplete cohort" := by rfl
+
+/-- Cold construction admits the complete pair without requiring a singleton
+intermediate. Backend atomic construction remains an explicit implementation law. -/
+example : (admitSetOperation [] admitAccessCohort (fun _ => .ok (cohortView [3, 4]))).map
+    cohortMembers = .ok [3, 4] := by rfl
+
+/-- Refusal preserves an owner in each style; the existing style failure law also
+covers posh/classy after receiver erasure. No callback effects are rolled back. -/
+example (style : TableStyle) :
+    styleStep style (some (cohortView [1, 2])) (fun before =>
+      admitSetOperation [before, cohortView [2, 3]] admitAccessCohort
+        (fun _ => .ok (combineSet .union before (cohortView [2, 3])))) =
+      (some (cohortView [1, 2]), .error (.callback "incomplete cohort")) := by
+  apply styleStep_failure
+  rfl
+
+/-- Captured Set/Table/dependency revisions refuse an expired focus before running
+a new recognizer or membership operation, using the existing observation guard. -/
+example : observeStyle [0, 0, 0] [1, 0, 0] (some (cohortView [1, 2]))
+    (some (fun before => admitSetOperation [before] admitAccessCohort
+      (fun _ => .ok (setMembership before 3 true)))) = .error .stale := by
+  apply observeStyle_stale
+  decide
 
 end LeanPoo.Examples.CollectionStyles

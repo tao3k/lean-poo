@@ -195,4 +195,76 @@ theorem membershipTable_setMembership [DecidableEq K] (view : Membership K) (key
   funext query
   by_cases h : query = key <;> simp [membershipTable, setMembership, replace, h]
 
+/-- Admission for the concrete set protocol: every input precedes construction,
+then the complete successor is recognized once before publication. The recognizer
+combines backing carrier/child checks and the declared set refinement. -/
+def admitSetOperation (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) : Except E A :=
+  (inputs.mapM admit).bind fun _ =>
+    (construct ()).bind fun root => (admit root).map fun _ => root
+
+/-- An input refusal suppresses construction and preserves the exact cause. -/
+theorem admitSetOperation_inputs_refused (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) (cause : E)
+    (refused : inputs.mapM admit = .error cause) :
+    admitSetOperation inputs admit construct = .error cause := by
+  simp [admitSetOperation, refused, Except.bind]
+
+/-- A backend refusal cannot be replaced by a later root-recognizer failure. -/
+theorem admitSetOperation_build_refused (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) (checks : List Unit) (cause : E)
+    (accepted : inputs.mapM admit = .ok checks) (refused : construct () = .error cause) :
+    admitSetOperation inputs admit construct = .error cause := by
+  simp [admitSetOperation, accepted, refused, Except.bind]
+
+/-- Valid inputs do not imply an arbitrary refinement is closed under union or
+any other algebra operation. Final admission remains a separate obligation. -/
+theorem admitSetOperation_final_refused (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) (checks : List Unit) (root : A) (cause : E)
+    (accepted : inputs.mapM admit = .ok checks) (built : construct () = .ok root)
+    (refused : admit root = .error cause) :
+    admitSetOperation inputs admit construct = .error cause := by
+  simp [admitSetOperation, accepted, built, refused, Except.bind, Except.map]
+
+/-- A successful complete constructor publishes its exact root, never a normalized
+copy. No hypothesis requires the constructor's private intermediate roots. -/
+theorem admitSetOperation_ready (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) (checks : List Unit) (root : A)
+    (accepted : inputs.mapM admit = .ok checks) (built : construct () = .ok root)
+    (checked : admit root = .ok ()) :
+    admitSetOperation inputs admit construct = .ok root := by
+  simp [admitSetOperation, accepted, built, checked, Except.bind, Except.map]
+
+/-- Faithful recognition establishes both carrier laws and the declared set
+refinement for every published root, independent of backend representation. -/
+theorem admitSetOperation_valid (inputs : List A) (admit : A → Except E Unit)
+    (construct : Unit → Except E A) (Valid : A → Prop)
+    (faithful : ∀ root, admit root = .ok () → Valid root) (root : A)
+    (published : admitSetOperation inputs admit construct = .ok root) : Valid root := by
+  cases hi : inputs.mapM admit with
+  | error cause => simp [admitSetOperation, hi, Except.bind] at published
+  | ok checks =>
+    cases hb : construct () with
+    | error cause => simp [admitSetOperation, hi, hb, Except.bind] at published
+    | ok result =>
+      cases ha : admit result with
+      | error cause => simp [admitSetOperation, hi, hb, ha, Except.bind, Except.map] at published
+      | ok checkedUnit =>
+        cases checkedUnit
+        have same : result = root := by
+          simpa [admitSetOperation, hi, hb, ha, Except.bind, Except.map] using published
+        subst root
+        exact faithful result ha
+
+/-- Partial refinements retain the ordinary membership lens observation law on
+accepted writes. A refused membership change is not silently weakened. -/
+theorem admitted_set_membership [DecidableEq K] (view : Membership K) (key : K)
+    (present : Bool) (admit : Membership K → Except E Unit)
+    (accepted : admit view = .ok ()) (checked : admit (setMembership view key present) = .ok ()) :
+    (admitSetOperation [view] admit (fun _ => .ok (setMembership view key present))).map
+      (fun after => after key) = .ok present := by
+  simp [admitSetOperation, accepted, checked, List.mapM_cons, Except.bind, Except.map]
+  change Except.ok (setMembership view key present key) = Except.ok present
+  simp [setMembership]
+
 end LeanPoo.Functional.OrderedDictionary

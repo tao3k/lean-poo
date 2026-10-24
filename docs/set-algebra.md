@@ -204,7 +204,7 @@ this feature does not assert destructive storage reuse or wall-time improvement.
 
 ## Checked selection and atomic partition
 
-The Gerbil `methods.table` now implements `.filter` and `.partition`, previously declared
+`methods.table` now implements `.filter` and `.partition`, previously declared
 only on `Set<-Table.` without a backing table method. Both use the backend's
 existing fold/insertion protocol. The predicate receives `(key value)` for tables
 and one element for sets, runs exactly once per visited binding in `.foldl` order,
@@ -237,3 +237,54 @@ work, not a proof of host allocation or arbitrary callback rollback. The default
 implementation visits n bindings once and performs at most n backend insertions;
 there is no new tree algorithm or bound on custom recognizer costs. Ordinary
 single-result updates retain their direct path without partition list allocation.
+
+## Complete set descriptor admission
+
+A concrete omission remained after backing-table admission: a Set descriptor may
+refine its Table. Two valid two-member approval cohorts can have a three-member
+union. Previously direct algebra, normalization, constructors and membership
+setters could return that invalid set, and the Trie subset shortcut could accept
+an invalid identical operand. This is a protocol defect, not a request to infer
+that arbitrary refinements are closed under an algebra.
+
+The existing table module now shares `with-set-inputs`, `require-set` and
+`build-set`. Supported operations protect the Set, its declared `.sources`, the
+Table and its child/origin closure. Each input passes both backing recognition and
+the Set predicate before backend work. Each constructed result passes both before
+publication. Union/intersection/difference/symmetric difference, relations and
+comparison, selection/decomposition, normalization and membership setters share
+this boundary. A broad Set predicate cannot weaken backing admission. Existing
+backend failures and recognizer exceptions retain their original causes. Raw
+backend escape hatches are not made safe by this presentation.
+
+List, singleton and iterator construction reuse the Table's complete `.<-list`
+constructor. They do not replay checked point insertions through inadmissible
+intermediate roots. Explicit-seed iterator construction materializes the finite
+new elements and the existing bindings, then constructs once. Seedless construction
+does not demand an admitted empty seed. `.empty` is itself partial when the Set
+excludes emptiness. No streaming-space or sublinear constructor cost is claimed;
+backend construction, full recognition and iterator effects are charged separately.
+
+Membership focuses capture Set/Table/dependency revisions and reject old focuses
+after supported metadata changes. Get/put and put/get laws apply to admitted roots
+and admitted replacements; arbitrary whole-set predicates can refuse a change.
+Refusal does not weaken the predicate, install a partial root, consume a style
+owner or reach the FUN consumer. It does not roll back external callback effects.
+Rebuild an expired focus and explicitly retry a repaired request.
+
+`make-cohort-access` and the existing `access-style-action` compose Function-valued
+principals, whole approval cohorts, grant/revoke algebra, Classy ownership,
+Linear-to-Posh conversion and FUN/IO. Regressions cover both RationalDict and Trie,
+a represented backing table that forbids singleton roots, exact Function identity,
+all five styles, metadata writes, cause identity and fresh-focus retry.
+
+Lean `admitSetOperation` models ordered input admission, one complete constructor
+and final admission through standard Except/List sequencing. Universal laws prove
+first refusal, backend/refinement failure order, exact successor preservation and
+valid publication under a faithful recognizer. The admitted membership law reuses
+`setMembership`; the existing style failure theorem preserves every owner's
+predecessor. Finite approval examples exhibit valid operands with an invalid union,
+repaired publication, rejected membership insertion and cold pair construction.
+Backing construction/algebra laws, faithful recognition, finite traversal and
+stable declared callback dependencies remain premises. Arbitrary callback
+termination, hidden effects, compiler/runtime correctness and latency are not proved.
