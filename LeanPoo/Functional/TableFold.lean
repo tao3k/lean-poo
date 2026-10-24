@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableRevision
+import LeanPoo.Functional.TableIndex
 
 /-! Complete final-root admission for incremental aggregate publication. This is
 finite future work for explicit persistent carriers and supplied recognizers. -/
@@ -110,5 +111,130 @@ theorem admitFoldTransfer_ready (source : S) (value : A)
     admitFoldTransfer (.ok (source, value)) convert admit = .ok (target, value) := by
   simp [admitFoldTransfer, converted, admitFoldUpdate, accepted,
     Except.bind, Except.map]
+
+
+/-- A key-space capability changes registry payloads independently of business
+rows. Key equality is transported by the same explicit bijection, not inferred. -/
+def keySpaceView (keys : Prototype.DictionaryBridge K L) (registry : K → Option A) : L → Option A :=
+  transportView keys (Prototype.DictionaryBridge.identity A) registry
+
+/-- Registry writes preserve arbitrary owner payloads through an explicit key map. -/
+theorem keySpaceView_replace [DecidableEq K] [DecidableEq L]
+    (keys : Prototype.DictionaryBridge K L) (registry : K → Option A) (key : K) (value : Option A) :
+    keySpaceView keys (replace registry key value) =
+      replace (keySpaceView keys registry) (keys.toFields key) value := by
+  simpa [keySpaceView, Prototype.DictionaryBridge.identity] using
+    transport_replace keys (Prototype.DictionaryBridge.identity A) registry key value
+
+/-- A touched key retains its last optional value. Some none means a known
+removal; none means no overlay entry, so stored false cannot collapse either. -/
+def overlayView (base : K → Option V) (pending : K → Option (Option V)) : K → Option V :=
+  fun key => (pending key).getD (base key)
+
+/-- One overlay update has the same observation as a persistent table write. -/
+theorem overlayView_replace [DecidableEq K] (base : K → Option V)
+    (pending : K → Option (Option V)) (key : K) (value : Option V) :
+    overlayView base (replace pending key (some value)) = replace (overlayView base pending) key value := by
+  funext query
+  by_cases same : query = key <;> simp [overlayView, replace, same]
+
+/-- Final write-only observation; intermediate roots need no whole-family admission. -/
+def writeBindings [DecidableEq K] (writes : List (K × Option V)) (view : K → Option V) : K → Option V :=
+  writes.foldl (fun current write => replace current write.1 write.2) view
+
+/-- Retain every requested write in order while capturing expectations from a
+private overlay or the original target. Old values need no conversion callback. -/
+def traceBindings [DecidableEq K] (writes : List (K × Option V)) (base : K → Option V)
+    (pending : K → Option (Option V)) : List (Change K V) :=
+  match writes with
+  | [] => []
+  | (key, value) :: rest =>
+    ⟨key, overlayView base pending key, value⟩ ::
+      traceBindings rest base (replace pending key (some value))
+
+/-- The entire traced request installs as one ordered delta, including repeated
+keys, cancellation, deletion/reinsertion and stored false. -/
+theorem traceBindings_apply [DecidableEq K] [DecidableEq V] (writes : List (K × Option V))
+    (base : K → Option V) (pending : K → Option (Option V)) :
+    applyChanges (traceBindings writes base pending) (overlayView base pending) =
+      .ok (writeBindings writes (overlayView base pending)) := by
+  induction writes generalizing pending with
+  | nil => rfl
+  | cons write rest ih =>
+    rcases write with ⟨key, value⟩
+    simp only [traceBindings, applyChanges, ite_true, writeBindings, List.foldl_cons]
+    rw [← overlayView_replace]
+    exact ih _
+
+/-- A fresh overlay starts at the admitted paired target without enumerating it. -/
+theorem traceBindings_fresh [DecidableEq K] [DecidableEq V] (writes : List (K × Option V))
+    (base : K → Option V) :
+    applyChanges (traceBindings writes base (fun _ => none)) base = .ok (writeBindings writes base) := by
+  have empty : overlayView base (fun _ => none) = base := by funext key; rfl
+  simpa only [empty] using traceBindings_apply writes base (fun _ => none)
+
+/-- Key order and multiplicity are retained rather than squashed to endpoints. -/
+theorem traceBindings_keys [DecidableEq K] (writes : List (K × Option V))
+    (base : K → Option V) (pending : K → Option (Option V)) :
+    (traceBindings writes base pending).map Change.key = writes.map Prod.fst := by
+  induction writes generalizing pending with
+  | nil => rfl
+  | cons write rest ih => cases write; simp [traceBindings, ih]
+
+/-- Exactly one edit is emitted per requested write, independent of snapshot size. -/
+theorem traceBindings_length [DecidableEq K] (writes : List (K × Option V))
+    (base : K → Option V) (pending : K → Option (Option V)) :
+    (traceBindings writes base pending).length = writes.length := by
+  induction writes generalizing pending with
+  | nil => rfl
+  | cons write rest ih => cases write; simp [traceBindings, ih]
+
+/-- Tracing drops supplied old values because the source already checked them;
+the actual target expectations are recovered from its own issued snapshot. -/
+theorem writeBindings_changes [DecidableEq K] (edits : List (Change K V)) (view : K → Option V) :
+    writeBindings (edits.map (fun edit => (edit.key, edit.after))) view = writeChanges edits view := by
+  induction edits generalizing view with
+  | nil => rfl
+  | cons edit rest ih => simpa [writeBindings, writeChanges] using ih (replace view edit.key edit.after)
+
+/-- With an admitted source delta and lawful paired target, the traced target
+installer gives exactly the transported final source, without converting old rows. -/
+theorem traceBindings_transport [DecidableEq K] [DecidableEq V] [DecidableEq L] [DecidableEq W]
+    (keys : Prototype.DictionaryBridge K L) (values : Prototype.DictionaryBridge V W)
+    (edits : List (Change K V)) (source after : K → Option V) (target : L → Option W)
+    (paired : target = transportView keys values source)
+    (installed : applyChanges edits source = .ok after) :
+    applyChanges (traceBindings ((transportChanges keys values edits).map
+      (fun edit => (edit.key, edit.after))) target (fun _ => none)) target =
+      .ok (transportView keys values after) := by
+  rw [traceBindings_fresh, writeBindings_changes]
+  subst target
+  rw [transport_writeChanges, applyChanges_writeChanges edits source after installed]
+
+/-- Correlated indexes use the existing final-state two-phase update after one
+complete traced installation, so transient duplicate identifiers need no admission. -/
+theorem traceBindings_index [DecidableEq K] [DecidableEq V] [DecidableEq I]
+    (writes : List (K × Option V)) (base : K → Option V) (project : K → V → I) :
+    reviseIndex (writes.map Prod.fst) project (writeBindings writes base) (indexView project base) =
+      indexView project (writeBindings writes base) := by
+  apply reviseIndex_correct
+  intro key outside
+  apply applyChanges_frame _ base _ (traceBindings_fresh writes base) key
+  intro edit member same
+  apply outside
+  rw [← traceBindings_keys writes base (fun _ => none)]
+  exact List.mem_map.mpr ⟨edit, member, same.symm⟩
+
+/-- Count overlay entries (one read and one write each) and encountered replacement
+conversions. Registry
+construction, complete root/cache admission, backend lookup and GC remain separate. -/
+def traceBindingsWork (writes : List (K × Option V)) : Nat × Nat :=
+  (writes.length, (writes.filter (fun write => write.2.isSome)).length)
+
+/-- The overlay emits one edit and converts at most one present replacement per
+request; it does not infer constant-time backend or whole-workflow costs. -/
+theorem traceBindingsWork_bound (writes : List (K × Option V)) :
+    (traceBindingsWork writes).1 = writes.length ∧ (traceBindingsWork writes).2 ≤ writes.length := by
+  exact ⟨rfl, List.length_filter_le _ _⟩
 
 end LeanPoo.Functional.OrderedDictionary

@@ -69,3 +69,74 @@ backend preparation, allocation and GC require separate costs. Persistent carrie
 laws, finite inventory coverage, faithful recognition and stable callbacks remain
 premises; compiler/runtime correctness and arbitrary callback termination are not
 proved. These semantic/cost laws establish no end-to-end speedup.
+
+## Composed target construction and installation
+
+A second concrete omission concerned whole target operations. A valid two-owner
+unique-index swap succeeded through the index's own `.apply-delta` but failed
+through the fold bridge, which issued `.acons` one row at a time. An order view
+also inherited the point-write fallback. Cold conversion likewise inserted rows
+individually, so a valid complete family could fail on a forbidden singleton.
+These are protocol composition defects, not automatic optimization research.
+
+The common table protocol now exposes `.key-table value-type`: a persistent key
+space with that payload Type and the same lookup equality. Parametric backends
+explicitly declare payload rebinding and structural child recognition, dropping business-root
+refinements. Closed indexed families delegate to their primary key space. Order
+views delegate lookup equality rather than inferring it from traversal order.
+Representation Wrappers reuse `table-wrapper` with the original key isomorphism,
+an identity carrier and an identity payload map. They do not apply the original
+business-row carrier conversion to owner IDs. Endpoint Key/Value identities are
+checked, and existing guards protect capability getters and declared metadata.
+An absent capability refuses explicitly. A user backend must supply this law for
+its actual equality; no hash equality,
+comparator or arbitrary constructor polymorphism is inferred.
+
+Cold conversion prepares bindings in source visitation order with Gerbil's
+`with-list-builder`, then calls the target's bulk constructor (spelled
+`.<-list` in code) once. Index construction recognizes the complete primary and
+builds each cache family once. Ordered and representation views preserve the
+source constructor. Individual conversion failures occur before that constructor
+is invoked; its backend/recognizer exceptions retain their exact cause.
+
+Warm transfer prepares a private key-space overlay containing its last translated
+edit at each touched key. The next expectation comes from that record or the
+issued target snapshot. A known removal, an untouched key and a stored false are
+separate states. Only keys and present replacements are converted; old target
+rows are retained without conversion. All repeated edits and origin dependencies
+remain in one delta. The target's existing `.apply-delta` runs once, and order
+views preserve that delegation. Complete final-root admission still precedes
+aggregate adoption and cache publication. Removed key owners remain reserved
+until all requested mappings pass collision checks and installation succeeds.
+
+Failure preserves the previous pair and suppresses the FUN/IO consumer. Target
+backend effects and source contribution effects are not rolled back; no mutable
+owner is consumed by these persistent fold states. Explicit retry starts with a
+fresh valid request, and inverse recovery uses the same complete installer.
+The constructor-owned origin discipline also applies to empty batches.
+
+`make-service-ledger` reuses the existing two-identifier/shared-team service
+factory, counted fold and caller-supplied presentation. The integrated example
+composes indexes, explicit order and boxed key representation; it rejects a real
+identifier conflict, publishes both identifier swaps and team migration together,
+then undoes them while preserving the admitted Function objects. Regression also
+prohibits target point writes, checks complete cold construction, repeated
+remove/reinsert with false values, exact conversion failures, stale declarations,
+and mistyped or interfering key-space getters.
+
+The existing table module includes its fold implementation from `table/fold.scm`;
+no public namespace or duplicate collection engine is introduced. Lean's
+`keySpaceView_replace`, `overlayView_replace`, `traceBindings_apply`,
+`traceBindings_transport` and `traceBindings_index` connect the typed key space,
+ordered delta, existing table installer and two-phase index laws. The finite
+service example checks a forbidden intermediate identifier snapshot versus an
+accepted complete swap, grouped migration and distinct callback identities.
+
+`traceBindingsWork` counts one overlay read/write per request and at most one
+present-replacement conversion. It does not count converter roundtrip primitives
+as single machine instructions. Constructing private key spaces, complete
+admission, backend operations, wrapper guards, allocation and GC remain charged
+separately. Neither a universal equality implementation nor wall-clock speedup is
+proved. Persistent carrier, capability equality and explicit bijection laws are
+premises, as are stable declared callbacks. No Scheme runtime/compiler proof or
+unrestricted callback-termination result is claimed.

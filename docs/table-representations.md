@@ -728,3 +728,12 @@ reuses `indexPreparation_frame` to preserve all four exact endpoint pairs across
 protected edits. Faithful metadata/source snapshots and supported sequential
 writes are premises; arbitrary raw mutation, callback termination, physical GC
 and Scheme compiler correctness are outside this finite future-work unit.
+
+### Closed target construction and atomic transfer
+
+A `.key-table` capability preserves the backend's key equality for private owner
+and edit registries, independently of business-row representation and indexes.
+Closed index/order/representation constructors retain that capability as well as
+complete construction and atomic delta installation. Fold bridges now compose
+these whole operations; they do not expand a valid index swap into point writes.
+See [table-fold.md](table-fold.md) for the contract, failure order and finite laws.

@@ -445,11 +445,12 @@ example : mappedTablePull (fun (_row : Nat × Bool) => (Except.ok false : Except
 /-- Finite admitted callback identities are decidable; arbitrary function equality
 is not. Scheme tests separately retain the actual checked procedure object. -/
 inductive FoldCallback where
-  | increment
+  | increment | addTwo
   deriving DecidableEq
 
 /-- Interpretation is supplied by the admitted callback directory. -/
-def FoldCallback.run (_identity : FoldCallback) (argument : Nat) : Nat := callback argument
+def FoldCallback.run (identity : FoldCallback) (argument : Nat) : Nat :=
+  match identity with | .increment => callback argument | .addTwo => argument + 2
 
 /-- The finite table model keeps callback identity rather than comparing closures. -/
 abbrev FoldLedgerRow := Nat × FoldCallback
@@ -506,5 +507,83 @@ example : checkedFold foldLedgerScore admitEvenLedger (inverseChanges (foldLedge
     foldLedgerBefore _ 30
   · rfl
   · rfl
+
+
+/-- A finite service directory models two distinct admitted callbacks without
+assuming decidable equality of arbitrary functions. -/
+structure ServiceLedgerRow where
+  badge : Nat
+  endpoint : Nat
+  team : Nat
+  callback : FoldCallback
+  deriving DecidableEq
+
+/-- The same explicit sign representation as the Scheme boxed ordered view. -/
+def serviceLedgerKeys : Prototype.DictionaryBridge Int Int :=
+  ⟨Neg.neg, Neg.neg, fun key => Int.neg_neg key, fun key => Int.neg_neg key⟩
+
+/-- Three admitted services share one team while the last remains untouched. -/
+def serviceLedgerBefore (key : Int) : Option ServiceLedgerRow :=
+  if key = 1 then some ⟨101, 1001, 10, .increment⟩
+  else if key = 2 then some ⟨102, 1002, 10, .addTwo⟩
+  else if key = 9 then some ⟨109, 1009, 90, .increment⟩ else none
+
+/-- Both unique identifiers swap, both services move teams, and callbacks persist. -/
+def serviceLedgerEdits : List (Change Int ServiceLedgerRow) :=
+  [⟨1, serviceLedgerBefore 1, some ⟨102, 1002, 20, .increment⟩⟩,
+   ⟨2, serviceLedgerBefore 2, some ⟨101, 1001, 20, .addTwo⟩⟩]
+
+/-- Mapping produces only key/replacement requests; the overlay supplies expectations. -/
+def serviceLedgerWrites : List (Int × Option ServiceLedgerRow) :=
+  (transportChanges serviceLedgerKeys (Prototype.DictionaryBridge.identity ServiceLedgerRow)
+    serviceLedgerEdits).map (fun edit => (edit.key, edit.after))
+
+/-- The issued paired snapshot is independent of a later owner's head. -/
+def serviceLedgerTarget : Int → Option ServiceLedgerRow :=
+  transportView serviceLedgerKeys (Prototype.DictionaryBridge.identity ServiceLedgerRow) serviceLedgerBefore
+
+/-- One atomic traced install agrees with the transported source, not a sequence
+of separately approved identifier/index snapshots. -/
+example : applyChanges (traceBindings serviceLedgerWrites serviceLedgerTarget (fun _ => none))
+    serviceLedgerTarget = .ok (transportView serviceLedgerKeys
+      (Prototype.DictionaryBridge.identity ServiceLedgerRow) (writeChanges serviceLedgerEdits serviceLedgerBefore)) := by
+  apply traceBindings_transport serviceLedgerKeys (Prototype.DictionaryBridge.identity ServiceLedgerRow)
+    serviceLedgerEdits serviceLedgerBefore _ serviceLedgerTarget rfl
+  rfl
+
+/-- A single intermediate identifier update would fail uniqueness. -/
+example : uniqueIndexRows (fun (_key : Int) (row : ServiceLedgerRow) => row.badge)
+    [(-1, ⟨102, 1002, 20, .increment⟩), (-2, ⟨102, 1002, 10, .addTwo⟩)] = false := rfl
+
+/-- The complete exchanged identifiers are independently accepted by both indexes. -/
+example :
+    let rows : List (Int × ServiceLedgerRow) :=
+      [(-1, ⟨102, 1002, 20, .increment⟩), (-2, ⟨101, 1001, 20, .addTwo⟩)]
+    (uniqueIndexRows (fun _ row => row.badge) rows,
+     uniqueIndexRows (fun _ row => row.endpoint) rows) = (true, true) := rfl
+
+/-- The target delta preserves the distinct admitted callback through team migration. -/
+example : (applyChanges (traceBindings serviceLedgerWrites serviceLedgerTarget (fun _ => none))
+    serviceLedgerTarget).map (fun root => (root (-2)).map (fun row => row.callback.run 7)) =
+      .ok (some 9) := rfl
+
+/-- The existing two-phase grouped index now observes the complete final team. -/
+example : (reviseIndex (serviceLedgerWrites.map Prod.fst)
+    (fun (_key : Int) (row : ServiceLedgerRow) => row.team)
+    (writeBindings serviceLedgerWrites serviceLedgerTarget)
+    (indexView (fun (_key : Int) (row : ServiceLedgerRow) => row.team) serviceLedgerTarget) 20 (-2)).map
+      ServiceLedgerRow.badge = some 101 := rfl
+
+/-- Key-space registry payloads need not have the business row's layout or Type. -/
+example : keySpaceView serviceLedgerKeys (fun (key : Int) => if key = 2 then some (99 : Nat) else none)
+    (-2) = some 99 := rfl
+
+/-- A known removal supplies none as the next expected value, unlike untouched state. -/
+example : (traceBindings [(0, none), (0, some false)]
+    (fun (key : Nat) => if key = 0 then some false else none) (fun _ => none)).map Change.before =
+    [some false, none] := rfl
+
+/-- Two writes emit two overlay entries and convert only the two present replacements. -/
+example : traceBindingsWork serviceLedgerWrites = (2, 2) := rfl
 
 end LeanPoo.Examples.CollectionStyles
