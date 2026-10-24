@@ -344,3 +344,25 @@ Pair shells and backend Option shells are copied; Function keys remain exact.
 Whole recognition, metadata preparation, backend work and public installation
 remain charged. Coherent backend logical equality and persistence are premises;
 these finite observation laws do not assert a runtime, GC or machine-cost theorem.
+
+
+## Finite multivalued image
+
+The existing `setImage` now has explicit finite-relation laws over
+`indexKeysView` and `reviseIndexKeys`, corresponding to Gerbil's existing multikey
+index declaration and `set-image multiple?: #t`. Each live owner contributes all
+members of a proper finite list; empty lists contribute nothing, duplicate outputs
+are idempotent, and a singleton list agrees with the single-output protocol.
+The finite owner inventory covers live sources and keys denote backend equality
+classes. Stable pure projection, lawful persistent backends and faithful admission
+remain premises; arbitrary projector termination and mutable relation discovery
+are not proved.
+
+Selective repair and successful checked source deltas agree with complete relation
+regrouping. Explicit source inverses restore the whole image, without inferring an
+inverse relation. Existing occupancy-edit, final admission and style-publication
+laws retain failure order, exact target transitions and immutable retry behavior.
+The service catalog in top-level `Examples/CollectionStyles.lean` gives duplicate,
+empty and shared permissions, surviving ownership, complete service migration and
+inverse recovery. This advances the collection proposal's future work; no runtime,
+GC or compiler correctness/speedup claim follows from these finite laws.

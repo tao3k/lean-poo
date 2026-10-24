@@ -344,6 +344,79 @@ theorem setImage_grouped_iff [DecidableEq I] (owners : List K)
   · rintro ⟨key, listed, present, projected⟩
     exact ⟨key, listed, by simp [indexView, present, projected]⟩
 
+/-- A finite multivalued image is the union of all live owners' declared
+memberships. Duplicate outputs do not confer additional ownership. -/
+theorem setImage_keys_iff [DecidableEq I] (owners : List K)
+    (project : K → Unit → List I) (primary : K → Option Unit) (bucket : I) :
+    setImage owners (indexKeysView project primary) bucket = true ↔
+      ∃ key ∈ owners, primary key = some () ∧ bucket ∈ project key () := by
+  rw [setImage_present]
+  constructor
+  · rintro ⟨key, listed, live⟩
+    cases h : primary key with
+    | none => simp [indexKeysView, h] at live
+    | some value =>
+      cases value
+      exact ⟨key, listed, h, by simpa [indexKeysView, h] using live⟩
+  · rintro ⟨key, listed, present, projected⟩
+    exact ⟨key, listed, by simp [indexKeysView, present, projected]⟩
+
+/-- Single-output and finite-output cardinalities share one image semantics;
+a list-valued single key is distinct from a declared list of keys. -/
+theorem setImage_keys_singleton [DecidableEq I] (owners : List K)
+    (project : K → Unit → I) (primary : K → Option Unit) :
+    setImage owners (indexKeysView (fun key row => [project key row]) primary) =
+      setImage owners (indexView project primary) := by
+  congr 1
+  funext bucket key
+  cases h : primary key <;> simp [indexKeysView, indexView, h, eq_comm]
+
+/-- Duplicating every finite output does not change target observations or
+introduce a second reference to normalize an opaque Function key. -/
+theorem setImage_keys_duplicate [DecidableEq K] [DecidableEq I] (owners : List K) (project : K → Unit → List I)
+    (primary : K → Option Unit) :
+    setImage owners (indexKeysView (fun key row => project key row ++ project key row) primary) =
+      setImage owners (indexKeysView project primary) := by
+  rw [indexKeysView_duplicate]
+
+/-- A live owner may contribute no keys, without an invented sentinel element. -/
+theorem setImage_keys_empty [DecidableEq I] (owners : List K) (primary : K → Option Unit) (bucket : I) :
+    setImage owners (indexKeysView (fun _ _ => []) primary) bucket = false := by
+  simp only [setImage, List.any_eq_false]
+  intro key _listed
+  cases h : primary key <;> simp [indexKeysView, h]
+
+/-- Selective multikey index repair yields exactly a complete finite flattening,
+using the existing source frame. It does not scan unrelated source columns. -/
+theorem setImage_keys_revise [DecidableEq K] [DecidableEq I] (owners keys : List K)
+    (project : K → Unit → List I) (before after : K → Option Unit)
+    (frame : ∀ key, key ∉ keys → after key = before key) :
+    setImage owners (reviseIndexKeys keys project after (indexKeysView project before)) =
+      setImage owners (indexKeysView project after) := by
+  rw [reviseIndexKeys_correct keys project before after frame]
+
+/-- Existing source delta conflicts and frame discipline suffice to repair the
+whole finite-output image. Backend costs and recognizers are separate premises. -/
+theorem setImage_keys_delta [DecidableEq K] [DecidableEq I] (owners : List K)
+    (ops : TableCarrier K Unit A) (project : K → Unit → List I)
+    (edits : List (Change K Unit)) (before after : A)
+    (ready : ops.apply edits before = .ok after) :
+    setImage owners (reviseIndexKeys (edits.map Change.key) project (ops.read after)
+      (indexKeysView project (ops.read before))) =
+      setImage owners (indexKeysView project (ops.read after)) := by
+  rw [reviseIndexKeys_delta ops project edits before after ready]
+
+/-- Inverting a successful source delta restores the complete multivalued image;
+no inverse of the many-to-many relation is needed or inferred. -/
+theorem setImage_keys_inverse [DecidableEq K] [DecidableEq I] (owners : List K)
+    (project : K → Unit → List I) (edits : List (Change K Unit))
+    (before after : K → Option Unit) (ready : applyChanges edits before = .ok after) :
+    (applyChanges (inverseChanges edits) after).map
+      (fun restored => setImage owners (indexKeysView project restored)) =
+      .ok (setImage owners (indexKeysView project before)) := by
+  rw [applyChanges_inverse edits before after ready]
+  rfl
+
 /-- Deliver one target edit only when owner-bucket occupancy changes. The key
 and Unit leaves are exact; unchanged shared buckets emit no replacement. -/
 def setImageEdit (bucket : I) (before after : Bool) : List (Change I Unit) :=

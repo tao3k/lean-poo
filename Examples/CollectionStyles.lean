@@ -806,4 +806,54 @@ example : reviseSetCombination [1] .union
     (fun _ : Nat => false) (fun key => key == 1)
     (combineSet .union (fun key => key == 1) (fun _ => false)) 1 = true := by decide
 
+/-- An immutable catalog grants multiple permissions per service; repeated
+permission 20 is one membership, and service 4 deliberately grants nothing. -/
+def servicePermissions (service : Nat) (_ : Unit) : List Nat :=
+  match service with
+  | 1 => [10, 20, 20]
+  | 2 => [20, 30]
+  | 3 => [30, 40]
+  | _ => []
+
+/-- The inventory covers all owners in both revisions, including the empty grant. -/
+def permissionOwners : List Nat := [1, 2, 3, 4]
+
+/-- Services 1 and 2 independently own permission 20 in the initial snapshot. -/
+def permissionServicesBefore (key : Nat) : Option Unit :=
+  if key = 1 ∨ key = 2 then some () else none
+
+/-- A complete service migration retains audit 30 and newly grants permission 40. -/
+def permissionServicesAfter (key : Nat) : Option Unit :=
+  if key = 3 ∨ key = 4 then some () else none
+
+/-- The mathematical flattened image matches the catalog, with duplicates erased. -/
+example : [10, 20, 30, 40].map
+    (setImage permissionOwners (indexKeysView servicePermissions permissionServicesBefore)) =
+      [true, true, true, false] := rfl
+
+/-- Removing only the first service retains the second owner's shared permission. -/
+example : setImage permissionOwners (indexKeysView servicePermissions
+    (replace permissionServicesBefore 1 none)) 20 = true := rfl
+
+/-- Complete index repair preserves the shared audit grant while removing the
+last owners of 10/20 and inserting 40; no partial public result is observed. -/
+example : [10, 20, 30, 40].map
+    (setImage permissionOwners (reviseIndexKeys [1, 2, 3, 4] servicePermissions
+      permissionServicesAfter (indexKeysView servicePermissions permissionServicesBefore))) =
+      [false, false, true, true] := rfl
+
+/-- The retained audit membership emits no target edit despite owner migration. -/
+example : setImageEdit 30
+    (setImage permissionOwners (indexKeysView servicePermissions permissionServicesBefore) 30)
+    (setImage permissionOwners (indexKeysView servicePermissions permissionServicesAfter) 30) = [] := rfl
+
+/-- An explicit source inverse restores every image bucket, including empty and
+duplicate grant rows. This is relation recovery rather than inferred inversion. -/
+example (edits : List (Change Nat Unit))
+    (ready : applyChanges edits permissionServicesBefore = .ok permissionServicesAfter) :
+    (applyChanges (inverseChanges edits) permissionServicesAfter).map
+      (fun restored => setImage permissionOwners (indexKeysView servicePermissions restored)) =
+      .ok (setImage permissionOwners (indexKeysView servicePermissions permissionServicesBefore)) :=
+  setImage_keys_inverse permissionOwners servicePermissions edits _ _ ready
+
 end LeanPoo.Examples.CollectionStyles
