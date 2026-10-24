@@ -222,4 +222,57 @@ example : prepareOrderedSplit (E := String) (fun (k : Int) => .ok (-k - 2))
     (some 20) (fun _ => .ok ()) [(-1, 10), (-2, 20), (-3, 30)] =
       .ok ([(-1, 10)], some 20, [(-3, 30)]) := rfl
 
+/-- The right service snapshot contributes an overlap and a new callback-bearing row. -/
+def rightMergeView (key : Nat) : Option Ledger :=
+  if key = 2 then some (5, callback) else if key = 3 then some (30, callback) else none
+
+/-- Original-root lookup prepares one resolver opportunity at each union key. -/
+def mergeServiceRequests (before : List (Nat × Ledger)) :=
+  mergeRequests [1, 2, 3]
+    (fun key => (before.find? (fun row => row.1 == key)).map Prod.snd) rightMergeView
+
+/-- Overlaps combine budgets while retaining the exact left Function payload. -/
+def mergeServiceChoice (_key : Nat) (left right : Option Ledger) : Except String (Option Ledger) :=
+  match left, right with
+  | some (budget, fn), some (extra, _) => .ok (some (budget + extra, fn))
+  | _, _ => .ok (leftJoinOption left right)
+
+/-- This admission observes only the final total, after all resolver decisions. -/
+def admitMergedServices (rows : List (Nat × Ledger)) : Except String Unit :=
+  if rows.foldl (fun total row => total + row.2.1) 0 ≤ 60 then .ok ()
+  else .error "shared budget exceeded"
+
+/-- Original roots carry checked Functions; merging never rewraps them. -/
+def beforeMergeServices : List (Nat × Ledger) := [(1, (10, callback)), (2, (20, callback))]
+
+/-- A full merge adds the right-exclusive service and retains opaque callbacks. -/
+example : mergeBindings mergeServiceChoice (mergeServiceRequests beforeMergeServices) =
+    .ok [(1, (10, callback)), (2, (25, callback)), (3, (30, callback))] := rfl
+
+/-- Late global refusal preserves the original linear owner for explicit retry. -/
+example : styleMergeBindings .linear (some beforeMergeServices) mergeServiceRequests
+    mergeServiceChoice admitMergedServices =
+      (some beforeMergeServices, .error (.callback "shared budget exceeded")) := rfl
+
+/-- A fresh request drops the optional new service, retaining the right snapshot. -/
+example : styleMergeBindings .linear (some beforeMergeServices) mergeServiceRequests
+    (fun key a b => if key = 3 then .ok none else mergeServiceChoice key a b)
+    admitMergedServices = (none, .ok [(1, (10, callback)), (2, (25, callback))]) := rfl
+
+/-- Two uniqueness-preserving replacements install against their final state. -/
+example : prepareBindingMerge (fun (key : Nat) _ _ => .ok (some (if key = 1 then 20 else 10)))
+    admitUniqueRows [(1, some 10, none), (2, some 20, none)] = .ok [(1, 20), (2, 10)] := rfl
+
+/-- A genuine final collision exposes no merged root. -/
+example : prepareBindingMerge (fun (_key : Nat) _ _ => .ok (some 30))
+    admitUniqueRows [(1, some 10, none), (2, some 20, none)] = .error "unique conflict" := rfl
+
+/-- First-source priority distinguishes missing from a stored false. -/
+example : mergeBindings (E := String) (fun (_key : Nat) a b => .ok (leftJoinOption a b))
+    [(1, some false, some true), (2, none, some false)] = .ok [(1, false), (2, false)] := rfl
+
+/-- One-sided union bypasses an overlap resolver that would refuse invocation. -/
+example : unionDecision (fun (_key : Nat) (_a _b : Bool) => .error "overlap refused")
+    1 (some false) none = .ok (some false) := rfl
+
 end LeanPoo.Examples.CollectionStyles
