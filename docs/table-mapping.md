@@ -228,3 +228,28 @@ Private preparation and public style installation still charge their own complet
 validation/backend/index work. The source-level removal of difference discovery
 is not a proof of compiler/runtime behavior, concurrency, allocation, GC or wall
 speedup. All existing check inventories and resource bounds are retained.
+
+
+## Two-source lookup maintenance
+
+The finite `lookupJoinView` retains each left row and its exact optional right
+observation. `lookupJoin_frame` derives unchanged enriched rows from left/right
+source frames and coverage of left edits plus original/final right-reference
+buckets. `lookupJoin_repair` proves selective repair agrees with full enrichment;
+`lookupJoin_refresh` reuses the existing complete projection-cache theorem rather
+than introducing another reservation/collision algorithm. Explicit inverses of
+both source deltas restore the joined observations. Ordered paired admission
+retains left-before-right failure causes and exposes no pair on refusal.
+
+These laws correspond to Gerbil `table-lookup-join`, which composes grouped indexes,
+a private typed Pair/Sum carrier and existing table-projection delivery with the
+same five-style Reader/FUN/IO publisher. Top-level `Examples/ServiceCollection.lean`
+covers shared false policies, absent policies, selective revision and inverse
+controls. The host regressions retain typed Function identity, output key swaps,
+source/target refusal, independent snapshot branches and corrected retry.
+Logical key equality, stable pure callbacks, persistent backends, complete source
+frames and sound affected inventories remain premises. Full preparation,
+validation, bucket enumeration and public installation are charged separately;
+there is no GC/compiler proof, machine speedup claim, automatic query discovery,
+many-to-many expansion or public two-source-owner transaction claim. This advances
+the collection proposal's future work with explicit finite lookup construction.

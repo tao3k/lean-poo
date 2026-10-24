@@ -1,5 +1,6 @@
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableFold
+import LeanPoo.Functional.TableProjection
 
 /-! Ordered host Iterable observations over source-bound recursive service rows.
 The host hash/interface and iterator laws are premises; no GC/dispatch proof is asserted.
@@ -76,4 +77,41 @@ example (edits : List (Change Nat (Nat × Int)))
       .ok (teamCapacity (indexView (fun _ row => row.1) capacityBefore)) := by
   rw [applyChanges_inverse edits capacityBefore capacityAfter ready]
   rfl
+
+/-- Services share a policy key; the third service references a missing policy. -/
+def policyReferences (key : Nat) : Option Nat :=
+  match key with
+  | 1 => some 10
+  | 2 => some 10
+  | 3 => some 30
+  | 9 => some 90
+  | _ => none
+
+/-- Stored false is an admitted policy payload, not an absent record. -/
+def policiesBefore (key : Nat) : Option Bool :=
+  if key = 10 then some false else if key = 90 then some true else none
+
+/-- Revising a shared policy affects both referencing services, preserving others. -/
+def policiesAfter (key : Nat) : Option Bool :=
+  replace policiesBefore 10 (some true) key
+
+example : [1, 2, 3, 9].map (lookupJoinView (fun _ row => row) policyReferences policiesBefore) =
+    [some (10, some false), some (10, some false), some (30, none), some (90, some true)] := rfl
+
+/-- An affected inventory repairs both shared readers without replacing service 9. -/
+example : [1, 2, 3, 9].map (repairGroupFolds [1, 2]
+    (lookupJoinView (fun _ row => row) policyReferences policiesAfter)
+    (lookupJoinView (fun _ row => row) policyReferences policiesBefore)) =
+    [some (10, some true), some (10, some true), some (30, none), some (90, some true)] := rfl
+
+/-- Simultaneous source deletion and policy insertion are observed from final
+snapshots; no transient row is offered to the stable downstream projection. -/
+example : [1, 3].map (lookupJoinView (fun _ row => row)
+    (replace policyReferences 1 none) (replace policiesAfter 30 (some false))) =
+    [none, some (30, some false)] := rfl
+
+/-- Source inverses recover shared false policy observations exactly. -/
+example : (applyChanges (inverseChanges [⟨10, some false, some true⟩]) policiesAfter).map
+    (fun restored => [1, 2, 3].map (lookupJoinView (fun _ row => row) policyReferences restored)) =
+      .ok [some (10, some false), some (10, some false), some (30, none)] := rfl
 end Examples.ServiceCollection

@@ -294,4 +294,111 @@ theorem projectionDelivery_stale_generation (style : TableStyle)
     installStyle (E := E) style current expected after = (current, .error .stale) :=
   installStyle_stale style current expected after stale
 
+/-- Typed lookup enrichment is key preserving on the left. Option distinguishes
+an absent right row from a stored false or opaque Function payload. -/
+def lookupJoinView (classify : K → V → I) (left : K → Option V)
+    (right : I → Option R) (key : K) : Option (V × Option R) :=
+  (left key).map fun row => (row, right (classify key row))
+
+/-- Deleted left rows demand neither a lookup nor an output projection. -/
+theorem lookupJoinView_absent (classify : K → V → I) (left : K → Option V)
+    (right : I → Option R) (key : K) (absent : left key = none) :
+    lookupJoinView classify left right key = none := by simp [lookupJoinView, absent]
+
+/-- The original left payload and right presence are retained exactly. -/
+theorem lookupJoinView_present (classify : K → V → I) (left : K → Option V)
+    (right : I → Option R) (key : K) (row : V) (present : left key = some row) :
+    lookupJoinView classify left right key = some (row, right (classify key row)) := by
+  simp [lookupJoinView, present]
+
+/-- Left edits and old/final buckets referencing right edits form a sound affected
+inventory. Unlisted rows have unchanged left payloads and right observations. -/
+theorem lookupJoin_frame (leftKeys : List K) (rightKeys : List I) (affected : List K)
+    (classify : K → V → I) (lb la : K → Option V) (rb ra : I → Option R)
+    (leftFrame : ∀ key, key ∉ leftKeys → lb key = la key)
+    (rightFrame : ∀ key, key ∉ rightKeys → rb key = ra key)
+    (coversLeft : ∀ key ∈ leftKeys, key ∈ affected)
+    (coversRight : ∀ key row, (lb key = some row ∨ la key = some row) →
+      classify key row ∈ rightKeys → key ∈ affected)
+    (key : K) (outside : key ∉ affected) :
+    lookupJoinView classify lb rb key = lookupJoinView classify la ra key := by
+  have same := leftFrame key (fun member => outside (coversLeft key member))
+  cases found : lb key with
+  | none => simp [lookupJoinView, ← same, found]
+  | some row =>
+    have unaffected : classify key row ∉ rightKeys :=
+      fun member => outside (coversRight key row (Or.inl found) member)
+    simp [lookupJoinView, ← same, found, rightFrame _ unaffected]
+
+/-- Repair only the finite affected inventory, retaining all other enriched rows.
+The coalesced registry is an implementation of logical key equality, not a scan. -/
+theorem lookupJoin_repair [DecidableEq K] (leftKeys : List K) (rightKeys : List I)
+    (affected : List K) (classify : K → V → I) (lb la : K → Option V) (rb ra : I → Option R)
+    (leftFrame : ∀ key, key ∉ leftKeys → lb key = la key)
+    (rightFrame : ∀ key, key ∉ rightKeys → rb key = ra key)
+    (coversLeft : ∀ key ∈ leftKeys, key ∈ affected)
+    (coversRight : ∀ key row, (lb key = some row ∨ la key = some row) →
+      classify key row ∈ rightKeys → key ∈ affected) :
+    repairGroupFolds affected (lookupJoinView classify la ra) (lookupJoinView classify lb rb) =
+      lookupJoinView classify la ra := by
+  funext key
+  by_cases member : key ∈ affected
+  · simp [repairGroupFolds, member]
+  · simpa [repairGroupFolds, member] using
+      lookupJoin_frame leftKeys rightKeys affected classify lb la rb ra
+        leftFrame rightFrame coversLeft coversRight key member
+
+/-- The existing projection cache can refresh lookup-enriched rows without a new
+output-claim or collision algorithm. Every final observation equals full projection. -/
+theorem lookupJoin_refresh [DecidableEq K] (leftKeys : List K) (rightKeys : List I)
+    (affected : List K) (classify : K → V → I) (lb la : K → Option V) (rb ra : I → Option R)
+    (project : K → (V × Option R) → Except E (Option (L × W)))
+    (cache result : K → Option (L × W))
+    (leftFrame : ∀ key, key ∉ leftKeys → lb key = la key)
+    (rightFrame : ∀ key, key ∉ rightKeys → rb key = ra key)
+    (coversLeft : ∀ key ∈ leftKeys, key ∈ affected)
+    (coversRight : ∀ key row, (lb key = some row ∨ la key = some row) →
+      classify key row ∈ rightKeys → key ∈ affected)
+    (coherent : ∀ key, projectedEntry project (lookupJoinView classify lb rb) key = .ok (cache key))
+    (ready : refreshEntryCache project (lookupJoinView classify la ra) affected cache = .ok result) :
+    ∀ key, projectedEntry project (lookupJoinView classify la ra) key = .ok (result key) := by
+  apply refreshEntryCache_complete project (lookupJoinView classify lb rb)
+    (lookupJoinView classify la ra) affected cache result coherent _ ready
+  exact lookupJoin_frame leftKeys rightKeys affected classify lb la rb ra
+    leftFrame rightFrame coversLeft coversRight
+
+/-- Explicit inverses of both checked source deltas restore the enriched view.
+No inverse of a lossy lookup/projection or rollback of postcommit IO is inferred. -/
+theorem lookupJoin_inverse [DecidableEq K] [DecidableEq I] [DecidableEq V] [DecidableEq R]
+    (classify : K → V → I) (dl : List (Change K V)) (dr : List (Change I R))
+    (lb la : K → Option V) (rb ra : I → Option R)
+    (leftReady : applyChanges dl lb = .ok la) (rightReady : applyChanges dr rb = .ok ra) :
+    (((applyChanges (inverseChanges dl) la).mapError (Sum.inl : K → Sum K I)).bind fun l =>
+      ((applyChanges (inverseChanges dr) ra).mapError (Sum.inr : I → Sum K I)).map
+        fun r => lookupJoinView classify l r) =
+      .ok (lookupJoinView classify lb rb) := by
+  rw [applyChanges_inverse dl lb la leftReady, applyChanges_inverse dr rb ra rightReady]
+  rfl
+
+/-- Source preparation is ordered: complete left installation/admission precedes
+right installation/admission, and both precede classification/projection. -/
+def prepareLookupSources (left : Except E L) (right : L → Except E R) : Except E (L × R) :=
+  left.bind fun l => (right l).map (l, ·)
+
+/-- A left refusal retains its cause and does not invoke the right preparation. -/
+theorem prepareLookupSources_left_refused (cause : E) (right : L → Except E R) :
+    prepareLookupSources (.error cause) right = .error cause := rfl
+
+/-- Right refusal exposes no prepared source pair or projection successor. -/
+theorem prepareLookupSources_right_refused (left : L) (right : L → Except E R) (cause : E)
+    (refused : right left = .error cause) :
+    prepareLookupSources (.ok left) right = .error cause := by
+  simp [prepareLookupSources, refused, Except.bind, Except.map]
+
+/-- Successful paired admission preserves the exact supplied source values. -/
+theorem prepareLookupSources_ready (left : L) (right : L → Except E R) (next : R)
+    (ready : right left = .ok next) :
+    prepareLookupSources (.ok left) right = .ok (left, next) := by
+  simp [prepareLookupSources, ready, Except.bind, Except.map]
+
 end LeanPoo.Functional.OrderedDictionary
