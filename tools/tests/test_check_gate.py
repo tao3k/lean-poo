@@ -119,6 +119,20 @@ class CheckGateTests(unittest.TestCase):
                 results = execute(preparations, [('checks', [sys.executable, '-c', verify])])
             self.assertEqual([r['returncode'] for r in results], [0, 0, 0, 0])
 
+    def test_signal_defers_unwinding_until_executor_boundary(self):
+        import signal
+        from tools import check_gate
+        try:
+            # A signal may arrive inside Thread.start; the handler must return.
+            check_gate.stop_children(signal.SIGTERM, None)
+            self.assertTrue(check_gate.STOPPING.is_set())
+            with self.assertRaises(SystemExit) as stopped:
+                execute([], [])
+            self.assertEqual(stopped.exception.code, 143)
+        finally:
+            check_gate.STOPPING.clear()
+            check_gate.STOP_SIGNAL = signal.SIGTERM
+
     def test_interruption_stops_active_phase_processes(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / 'waiting.py'

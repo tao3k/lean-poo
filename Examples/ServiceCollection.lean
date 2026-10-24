@@ -149,4 +149,19 @@ example : (applyChanges (inverseChanges [⟨1, some 10, some 20⟩])
     (replace placementServices 1 (some 20))).map (fun restored =>
       groupJoinView (fun _ row => row) (fun _ row => row) restored placementWorkers (1,3)) =
     .ok (some (10,10)) := rfl
+/-- One service expands to a finite route list, including a disabled empty list.
+Opaque host callbacks are represented by payload identities, not reconstructed. -/
+def serviceRoutes (key : Nat) (routes : List Nat) : Except String (List (Nat × Nat)) :=
+  .ok (routes.map (·, key))
+
+example : expansionRows (expansionPacket [(10, 1), (11, 1)]) = [(10, 1), (11, 1)] := rfl
+example : projectedEntry (expansionProject serviceRoutes)
+    (fun _ => some []) 1 = .ok none := rfl
+example : reserveExpansion (E := String) [(10, 1), (11, 1)] [20] =
+    .ok [(10, 1), (11, 1)] := rfl
+example : reserveExpansion (E := String) [(10, 1), (10, 1)] [] =
+    .error (.inr 10) := rfl
+example : reserveExpansion (E := String) [(20, 1), (30, 1)] [20] =
+    .error (.inr 20) := rfl
+
 end Examples.ServiceCollection

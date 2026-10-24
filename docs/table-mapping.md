@@ -284,3 +284,29 @@ quadratic output; neither callback counts nor finite laws prove GC or wall-clock
 performance or verify the Gerbil compiler/runtime. Top-level
 `Examples/ServiceCollection.lean` covers shared groups, double migration, untouched
 observations, finite affected inventories and inverse recovery.
+
+## Finite multivalued projection
+
+The companion `table-projection` now accepts `multiple?: #t`: an explicit finite
+list of output entries per source owner. Empty packets own no keys. The same
+selective entry cache and reservation kernel are reused in `TableProjection.lean`;
+no separate target installer is modeled. Packet preservation does not require
+value equality or reconstruction, including opaque checked Function leaves.
+
+The laws cover full-recomputation correspondence after selective refresh, exact
+untouched-owner framing, internal/cross-owner duplicate exclusion and source
+inverse recovery. Scheme reuses the existing preparation/delivery/style boundary,
+so source admission precedes callbacks and complete target admission precedes any
+returned successor. Regrouping affected owners releases all old claims before new
+claims; unrelated owners remain reserved. Stable pure callbacks, immutable leaves,
+faithful logical-key equality, complete finite inventories and lawful persistent
+installers are explicit premises. This advances the collection proposal's future
+work, without claiming automatic discovery or compiler/GC correctness.
+
+`Examples/ServiceCollection.lean` checks empty route owners, ordered multi-output
+packets and internal/retained-owner collision refusal. The Scheme service example
+shares one checked callback among explicit route keys and uses the existing
+Reader/FUN/IO publisher for all five styles, exact target deltas, retry and undo.
+Output cardinality may exceed source cardinality: list traversal/copying, ownership
+registries, metadata preparation, complete recognition and backend writes remain
+charged separately from the touched-present-owner callback bound.

@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCK = threading.RLock()
 ACTIVE = set()
 STOPPING = threading.Event()
+STOP_SIGNAL = signal.SIGTERM
 GIB = 1024 ** 3
 
 
@@ -88,6 +89,13 @@ def run_phase(name, command, seconds=300):
 
 
 def stop_children(signum, frame):
+    """Request cancellation without unwinding a partially started Python thread.
+
+    execute raises at a safe boundary after its executor has joined workers;
+    asynchronous SystemExit inside Thread.start can corrupt condition locks.
+    """
+    global STOP_SIGNAL
+    STOP_SIGNAL = signum
     STOPPING.set()
     with LOCK:
         for process in ACTIVE:
@@ -95,7 +103,6 @@ def stop_children(signum, frame):
                 os.killpg(process.pid, signal.SIGTERM)
             except ProcessLookupError:
                 pass
-    raise SystemExit(128 + signum)
 
 
 def shard_concurrency(jobs):
@@ -141,6 +148,8 @@ def execute(preparation, checks, deferred_checks=(), check_workers=None):
         with ThreadPoolExecutor(max_workers=len(preparation)) as pool:
             futures = [pool.submit(run_phase, name, command) for name, command in preparation]
             results.extend(task.result() for task in futures)
+        if STOPPING.is_set():
+            raise SystemExit(128 + STOP_SIGNAL)
         if any(result['returncode'] for result in results):
             return results
     if checks:
@@ -148,8 +157,12 @@ def execute(preparation, checks, deferred_checks=(), check_workers=None):
         with ThreadPoolExecutor(max_workers=len(checks) if check_workers is None else check_workers) as pool:
             futures = [pool.submit(run_phase, name, command) for name, command in checks]
             results.extend(task.result() for task in futures)
+    if STOPPING.is_set():
+        raise SystemExit(128 + STOP_SIGNAL)
     for name, command in deferred_checks:
         results.append(run_phase(name, command))
+        if STOPPING.is_set():
+            raise SystemExit(128 + STOP_SIGNAL)
     return results
 
 

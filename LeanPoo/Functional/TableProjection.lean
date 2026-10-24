@@ -526,4 +526,127 @@ theorem groupJoin_inverse [DecidableEq K] [DecidableEq I] [DecidableEq G]
   rw [applyChanges_inverse dl lb la hl, applyChanges_inverse dr rb ra hr]
   rfl
 
+/-- Empty finite expansions carry no ownership; nonempty packets retain opaque
+payloads exactly. Unit lets the existing generic entry-cache kernel do the work. -/
+def expansionPacket (rows : List (L × W)) : Option (Unit × List (L × W)) :=
+  if rows.isEmpty then none else some ((), rows)
+
+/-- Generalize the existing optional projection at its single callback boundary.
+Absent source rows still demand no callback; expansion refusal retains its cause. -/
+def expansionProject (expand : K → V → Except E (List (L × W)))
+    (key : K) (value : V) : Except E (Option (Unit × List (L × W))) :=
+  (expand key value).map expansionPacket
+
+/-- Reading an empty ownership packet yields no target bindings. -/
+def expansionRows (packet : Option (Unit × List (L × W))) : List (L × W) :=
+  (packet.map Prod.snd).getD []
+
+/-- Packing never reconstructs or normalizes values, including Function leaves. -/
+theorem expansionRows_packet (rows : List (L × W)) :
+    expansionRows (expansionPacket rows) = rows := by
+  cases rows <;> rfl
+
+/-- The exact existing selective-cache theorem now covers every finite output
+list. Coverage is supplied by installed source changes, not a global freshness
+assumption. Recognition and callback purity remain explicit premises. -/
+theorem expansion_refresh_complete [DecidableEq K]
+    (expand : K → V → Except E (List (L × W))) (before after : K → Option V)
+    (keys : List K) (cache result : K → Option (Unit × List (L × W)))
+    (coherent : ∀ key, projectedEntry (expansionProject expand) before key = .ok (cache key))
+    (covered : ∀ key, key ∉ keys → before key = after key)
+    (ready : refreshEntryCache (expansionProject expand) after keys cache = .ok result) :
+    ∀ key, projectedEntry (expansionProject expand) after key = .ok (result key) :=
+  refreshEntryCache_complete _ before after keys cache result coherent covered ready
+
+/-- Unselected source owners retain their entire finite output packet. This
+includes output order and opaque payload identity, not only target membership. -/
+theorem expansion_refresh_frame [DecidableEq K]
+    (expand : K → V → Except E (List (L × W))) (after : K → Option V)
+    (keys : List K) (cache result : K → Option (Unit × List (L × W)))
+    (ready : refreshEntryCache (expansionProject expand) after keys cache = .ok result)
+    (key : K) (outside : key ∉ keys) : expansionRows (result key) = expansionRows (cache key) := by
+  rw [refreshEntryCache_frame _ after keys cache result ready key outside]
+
+/-- With total pure expansion, selective cache refresh gives exactly the full
+finite expansion at each source key, including absent and empty owners. -/
+theorem expansion_refresh_rows [DecidableEq K]
+    (expand : K → V → List (L × W)) (before after : K → Option V) (keys : List K)
+    (cache result : K → Option (Unit × List (L × W)))
+    (coherent : ∀ key, cache key = (before key).bind (fun value => expansionPacket (expand key value)))
+    (covered : ∀ key, key ∉ keys → before key = after key)
+    (ready : refreshEntryCache (expansionProject (fun key value => .ok (expand key value) :
+      K → V → Except E (List (L × W)))) after keys cache = .ok result) (key : K) :
+    expansionRows (result key) = ((after key).map (expand key)).getD [] := by
+  have old : ∀ query, projectedEntry (expansionProject (fun k v => .ok (expand k v) :
+      K → V → Except E (List (L × W)))) before query = .ok (cache query) := by
+    intro query
+    rw [coherent query]
+    cases h : before query <;> simp [projectedEntry, expansionProject, h, Except.map]
+  have complete := expansion_refresh_complete (fun k v => .ok (expand k v) :
+    K → V → Except E (List (L × W))) before after keys cache result old covered ready key
+  cases h : after key with
+  | none =>
+    simp [projectedEntry, h] at complete
+    rw [← complete]
+    rfl
+  | some value =>
+    simp [projectedEntry, expansionProject, h, Except.map] at complete
+    rw [← complete]
+    simpa [h] using expansionRows_packet (expand key value)
+
+/-- Reserve an already admitted finite expansion with the same collision kernel
+as ordinary projection. Every duplicate refuses, even within a single owner. -/
+def reserveExpansion [DecidableEq L] (rows : List (L × W)) (seen : List L) :
+    Except (E ⊕ L) (List (L × W)) :=
+  mapEntries (fun key value => .ok (some (key, value))) rows seen
+
+/-- Successful reservation preserves every entry in order, without value equality. -/
+theorem reserveExpansion_preserves [DecidableEq L] (rows : List (L × W))
+    (seen : List L) (output : List (L × W))
+    (ready : reserveExpansion (E := E) rows seen = .ok output) : output = rows := by
+  induction rows generalizing seen output with
+  | nil => simpa [reserveExpansion, mapEntries] using ready.symm
+  | cons row rest ih =>
+    rcases row with ⟨key, value⟩
+    by_cases duplicate : key ∈ seen
+    · simp [reserveExpansion, mapEntries, duplicate] at ready
+    · cases hr : reserveExpansion (E := E) rest (key :: seen) with
+      | error cause =>
+        unfold reserveExpansion at hr
+        simp [reserveExpansion, mapEntries, duplicate, hr, Except.map] at ready
+      | ok tail =>
+        have same := ih (key :: seen) tail hr
+        unfold reserveExpansion at hr
+        simpa [reserveExpansion, mapEntries, duplicate, hr, Except.map, same] using ready.symm
+
+/-- Internal and cross-owner duplicates cannot survive successful reservation. -/
+theorem reserveExpansion_unique [DecidableEq L] (rows : List (L × W))
+    (seen : List L) (output : List (L × W))
+    (ready : reserveExpansion (E := E) rows seen = .ok output) :
+    (output.map Prod.fst).Nodup := mapEntries_nodup _ rows seen output ready
+
+/-- Untouched owners cannot be overwritten, even by an equal payload. -/
+theorem reserveExpansion_avoids [DecidableEq L] (rows : List (L × W))
+    (seen : List L) (output : List (L × W))
+    (ready : reserveExpansion (E := E) rows seen = .ok output) (key : L)
+    (present : key ∈ output.map Prod.fst) : key ∉ seen :=
+  mapEntries_avoids _ rows seen output ready key present
+
+/-- A repeated logical key refuses at that entry before later reservations. -/
+theorem reserveExpansion_collision [DecidableEq L] (row : L × W)
+    (rest : List (L × W)) (seen : List L) (duplicate : row.1 ∈ seen) :
+    reserveExpansion (E := E) (row :: rest) seen = .error (.inr row.1) := by
+  exact mapEntries_collision _ row.1 row.2 rest seen row rfl duplicate
+
+/-- Installed source inverses recover every full finite expansion. Output
+projection need not be invertible: the original source delta carries recovery. -/
+theorem expansion_inverse [DecidableEq K] [DecidableEq V]
+    (expand : K → V → Except E (List (L × W))) (edits : List (Change K V))
+    (before after : K → Option V) (installed : applyChanges edits before = .ok after) :
+    (applyChanges (inverseChanges edits) after).map
+      (fun source => projectedEntry (expansionProject expand) source) =
+      .ok (projectedEntry (expansionProject expand) before) := by
+  rw [applyChanges_inverse edits before after installed]
+  rfl
+
 end LeanPoo.Functional.OrderedDictionary
