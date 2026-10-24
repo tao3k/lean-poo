@@ -742,4 +742,32 @@ example (cache : Nat → Nat) (edits : List (Change Nat Bool))
         (none, .ok (cache, inverseChanges edits, before)) :=
   publishProjectionDelivery_inverse cache .linear edits before after ready
 
+/-- Owners 1 and 4 share a region; owner 2 belongs to another region. -/
+def regionalGrants : Nat → Option Unit := fun key =>
+  if key = 1 ∨ key = 4 ∨ key = 2 then some () else none
+
+/-- The stable region map is independent of the stored Unit payload. -/
+def grantRegion (key : Nat) (_row : Unit) : Nat := key % 3
+
+/-- Losing owner 1 retains region 1 because owner 4 survives. -/
+example : setImage [1, 2, 4] (indexView grantRegion
+    (fun key => if key = 1 then none else regionalGrants key)) 1 = true := by decide
+
+/-- Losing every owner of region 1 removes it without affecting region 2. -/
+example : setImage [1, 2, 4] (indexView grantRegion
+    (fun key => if key = 1 ∨ key = 4 then none else regionalGrants key)) 1 = false := by decide
+
+/-- Coalesced grouped repair and complete rebuilding give the same new image. -/
+example : setImage [1, 2, 4, 6] (reviseIndex [1, 2, 6] grantRegion
+    (fun key => if key = 4 ∨ key = 6 then some () else none)
+    (indexView grantRegion regionalGrants)) 0 = true := by decide
+
+/-- The inverse source delta restores all owners and their deduplicated regions. -/
+example : (applyChanges (inverseChanges
+    [{key := 1, before := some (), after := none},
+     {key := 4, before := some (), after := none}])
+    (fun key => if key = 2 then some () else none)).map
+    (fun restored => setImage [1, 2, 4] (indexView grantRegion restored) 1) = .ok true := by
+  simp [inverseChanges, applyChanges, replace, Except.map, setImage, indexView, grantRegion]
+
 end LeanPoo.Examples.CollectionStyles

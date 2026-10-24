@@ -1,4 +1,6 @@
 import LeanPoo.Functional.TableStyle
+import LeanPoo.Functional.TableIndex
+import LeanPoo.Functional.TableProjection
 
 /-! Finite set algebra is an additional layer over existing Unit-valued tables.
 Backend merge/lookup and persistent write laws remain explicit premises. -/
@@ -313,5 +315,92 @@ theorem admitSetMethod_valid (roots : List A) (admit : A → Except E Unit)
     (faithful : ∀ root, admit root = .ok () → Valid root) (root : A)
     (published : admitSetMethod roots admit args recognize resolve = .ok root) : Valid root :=
   admitSetOperation_valid roots admit _ Valid faithful root published
+
+/-- Image membership observes grouped owners, never a unique-owner projection.
+Logical keys are backend equality classes; the finite inventory covers live owners. -/
+def setImage (owners : List K) (groups : I → K → Option Unit) (bucket : I) : Bool :=
+  owners.any (fun key => (groups bucket key).isSome)
+
+/-- Deduplication has exactly the existential witness semantics of a Set image. -/
+theorem setImage_present (owners : List K) (groups : I → K → Option Unit) (bucket : I) :
+    setImage owners groups bucket = true ↔
+      ∃ key ∈ owners, (groups bucket key).isSome = true := by
+  simp [setImage, List.any_eq_true]
+
+/-- A grouped image is precisely the mathematical image of the admitted source,
+restricted to the explicit finite inventory; Unit stores no extra payload. -/
+theorem setImage_grouped_iff [DecidableEq I] (owners : List K)
+    (project : K → Unit → I) (primary : K → Option Unit) (bucket : I) :
+    setImage owners (indexView project primary) bucket = true ↔
+      ∃ key ∈ owners, primary key = some () ∧ project key () = bucket := by
+  rw [setImage_present]
+  constructor
+  · rintro ⟨key, listed, live⟩
+    cases h : primary key with
+    | none => simp [indexView, h] at live
+    | some value =>
+      cases value
+      exact ⟨key, listed, h, by simpa [indexView, h] using live⟩
+  · rintro ⟨key, listed, present, projected⟩
+    exact ⟨key, listed, by simp [indexView, present, projected]⟩
+
+/-- Deliver one target edit only when owner-bucket occupancy changes. The key
+and Unit leaves are exact; unchanged shared buckets emit no replacement. -/
+def setImageEdit (bucket : I) (before after : Bool) : List (Change I Unit) :=
+  if before = after then [] else
+    [⟨bucket, if before then some () else none, if after then some () else none⟩]
+
+/-- Removing a nonlast owner produces zero target writes. -/
+theorem setImageEdit_retained (bucket : I) (present : Bool) :
+    setImageEdit bucket present present = [] := by simp [setImageEdit]
+
+/-- Last-owner removal carries an exact old membership expectation. -/
+theorem setImageEdit_last (bucket : I) :
+    setImageEdit bucket true false = [⟨bucket, some (), none⟩] := rfl
+
+/-- Explicit target inversion restores the occupancy transition, including no-op. -/
+theorem setImageEdit_inverse (bucket : I) (before after : Bool) :
+    inverseChanges (setImageEdit bucket before after) = setImageEdit bucket after before := by
+  cases before <;> cases after <;> rfl
+
+/-- Removing one owner cannot erase an image with another surviving witness. -/
+theorem setImage_retained (owners : List K) (groups : I → K → Option Unit)
+    (bucket : I) (survivor : K) (listed : survivor ∈ owners)
+    (live : groups bucket survivor = some ()) : setImage owners groups bucket = true := by
+  exact (setImage_present owners groups bucket).mpr ⟨survivor, listed, by simp [live]⟩
+
+/-- A bucket disappears exactly when its complete live-owner inventory is empty. -/
+theorem setImage_absent (owners : List K) (groups : I → K → Option Unit) (bucket : I) :
+    setImage owners groups bucket = false ↔ ∀ key ∈ owners, groups bucket key = none := by
+  simp [setImage, List.any_eq_false, Option.isSome_eq_false_iff]
+
+/-- Selective grouped-index repair gives the same image as complete regrouping.
+This uses the existing frame law, not an unproved fresh counting algorithm. -/
+theorem setImage_revise [DecidableEq K] [DecidableEq I]
+    (owners keys : List K) (project : K → Unit → I) (before after : K → Option Unit)
+    (frame : ∀ key, key ∉ keys → after key = before key) (bucket : I) :
+    setImage owners (reviseIndex keys project after (indexView project before)) bucket =
+      setImage owners (indexView project after) bucket := by
+  rw [reviseIndex_correct keys project before after frame]
+
+/-- Successful source edits and their explicit inverse restore the same grouped
+image. No inverse of the many-to-one projection itself is asserted. -/
+theorem setImage_inverse [DecidableEq K] [DecidableEq I]
+    (owners : List K) (project : K → Unit → I) (edits : List (Change K Unit))
+    (before after : K → Option Unit) (ready : applyChanges edits before = .ok after) :
+    (applyChanges (inverseChanges edits) after).map
+      (fun restored => setImage owners (indexView project restored)) =
+      .ok (setImage owners (indexView project before)) := by
+  rw [applyChanges_inverse edits before after ready]
+  rfl
+
+/-- Publishing a prepared image reuses the existing style transaction: target
+failure returns no successor and preserves the public owner for retry. -/
+theorem setImage_publish_refused (next : S) (delta : D) (style : TableStyle)
+    (before : T) (install : T → D → Except E T) (cause : E)
+    (refused : install before delta = .error cause) :
+    publishProjectionDelivery (.ok (next, delta)) style (some before) install =
+      (some before, .error (.callback cause)) :=
+  publishProjectionDelivery_install_refused next delta style before install cause refused
 
 end LeanPoo.Functional.OrderedDictionary

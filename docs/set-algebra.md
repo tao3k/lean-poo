@@ -299,3 +299,26 @@ root/argument/lookup order, and the publication theorem retains final validity.
 Arity admission uses the existing Function signature matcher; the method laws
 start from an arity-admitted argument row. These laws assume faithful recognizers and do not establish host contract macro,
 metadata guard, compiler, GC or timing correctness.
+
+
+## Many-to-one Set images
+
+`setImage` observes the nonempty owner buckets of the existing `indexView`.
+Its finite inventory ranges over logical backend keys and must cover live owners.
+`setImage_present`, `setImage_retained` and `setImage_absent` establish existential
+membership, surviving-owner retention and last-owner removal. `setImage_revise`
+reuses `reviseIndex_correct`: a successful source edit supplies the untouched-key
+frame. `setImage_inverse` restores the source and its image using an explicit
+inverse edit sequence; it never inverts the many-to-one projector.
+
+Gerbil's `set-image` uses structural source key spaces for grouped buckets, keeps
+whole Set refinements at the operation boundary, and delivers an ordinary target
+delta through the existing publication protocol. `setImage_publish_refused`
+reuses its atomic style refusal law; successful, stale, conflict and inverse
+publication behavior remains governed by `TableProjection`/`TableStyle`.
+The top-level `Examples/CollectionStyles.lean` regional-grant examples retain
+one shared owner, erase the last, repair only changed owners and restore inverse
+edits. These laws assume faithful backend/recognizer behavior and stable pure
+projection; they do not prove Gerbil execution, arbitrary callback termination, GC
+or elapsed-time bounds. Complete source/target recognition and backend operations
+remain charged; no target snapshot diff is needed for warm delivery.
