@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableObservation
+import LeanPoo.Functional.TableIndex
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
 import LeanPoo.Functional.TableSelection
@@ -324,5 +325,69 @@ example : stylePartition .linear (some cohortServices)
 DecidableEq on the closure-bearing row type. -/
 example : eraseSelection (fun key : Nat => if key = 1 then some (10, callback) else none)
     [2, 4] 1 = some (10, callback) := rfl
+
+/-- Two declared caches deliberately use different payload Types. -/
+inductive CohortIndex where
+  | badge | team
+  deriving DecidableEq, Repr
+
+/-- A service keeps its badge, team and shared opaque checked callback. -/
+abbrev CohortRow := Nat × Nat × (Nat → Nat)
+
+/-- Every row carries this same callback; recognition never invokes or compares it. -/
+def cohortCallback (n : Nat) : Nat := n + 1
+
+/-- The original two teams contain two services each. -/
+def stableCohort : List (Nat × CohortRow) :=
+  [(1, (101, 10, cohortCallback)), (2, (102, 10, cohortCallback)),
+   (3, (103, 20, cohortCallback)), (4, (104, 20, cohortCallback))]
+
+/-- One moved service leaves both team buckets invalid despite a valid primary. -/
+def incompleteCohort : List (Nat × CohortRow) :=
+  [(1, (101, 20, cohortCallback)), (2, (102, 10, cohortCallback)),
+   (3, (103, 20, cohortCallback)), (4, (104, 20, cohortCallback))]
+
+/-- One atomic badge/team exchange restores complete cohorts without rewrapping. -/
+def exchangedCohort : List (Nat × CohortRow) :=
+  [(1, (103, 20, cohortCallback)), (2, (102, 10, cohortCallback)),
+   (3, (101, 10, cohortCallback)), (4, (104, 20, cohortCallback))]
+
+/-- Unique badge owners and complete grouped primary rows have different Types. -/
+def CohortCache : CohortIndex → Type
+  | .badge => List (Nat × Nat)
+  | .team => List (Nat × List (Nat × CohortRow))
+
+/-- These finite prepared views are supplied by the already correlated installer. -/
+def cohortCaches (rows : List (Nat × CohortRow)) : ∀ name, Except String (CohortCache name)
+  | .badge => .ok (rows.map (fun row => (row.2.1, row.1)))
+  | .team => .ok [(10, rows.filter (fun row => row.2.2.1 == 10)),
+                  (20, rows.filter (fun row => row.2.2.1 == 20))]
+
+/-- A grouped cache must recognize each whole source-table bucket, not just the
+cache carrier and projected team key. Partial intermediate buckets are private. -/
+def admitCohortCache : ∀ name, CohortCache name → Except String Unit
+  | .badge, owners => if owners.length % 2 = 0 then .ok () else .error "badge cohort incomplete"
+  | .team, groups => if groups.all (fun group => group.2.length % 2 == 0) then .ok ()
+      else .error "team cohort incomplete"
+
+/-- Late grouped-cache refusal keeps the complete old linear snapshot for retry. -/
+example : styleStep .linear (some (stableCohort, ([] : List (Sigma CohortCache))))
+    (fun _ => publishIndexCaches incompleteCohort [.badge, .team]
+      (cohortCaches incompleteCohort) admitCohortCache) =
+    (some (stableCohort, []), .error (.callback "team cohort incomplete")) := rfl
+
+/-- Explicit restaging of a complete exchange succeeds with exactly the proposed
+primary and callback identities. No equality instance for closures is needed. -/
+example : (publishIndexCaches exchangedCohort [.badge, .team]
+    (cohortCaches exchangedCohort) admitCohortCache).map Prod.fst = .ok exchangedCohort := rfl
+
+/-- Restoring the original primary passes the same complete cache recognizers. -/
+example : (publishIndexCaches stableCohort [.badge, .team]
+    (cohortCaches stableCohort) admitCohortCache).map Prod.fst = .ok stableCohort := rfl
+
+/-- A unique-claim failure suppresses its own final admission and later recipes. -/
+example : stageIndexCaches (fun name => match name with
+    | .badge => .error "unique claim conflict" | .team => .error "later recipe")
+    admitCohortCache [.badge, .team] = .error "unique claim conflict" := rfl
 
 end LeanPoo.Examples.CollectionStyles

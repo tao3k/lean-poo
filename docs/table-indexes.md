@@ -42,7 +42,10 @@ index construction does not discard or silently replace their wrappers.
    Repeated edits require no additional mutable key set. A unique insertion accepts
    absence or the same owner; a different owner raises `table-index-conflict` with
    `name`, projected `key`, `existing` owner and `incoming` owner.
-4. Return a single private snapshot only after all indexes succeed. A later index
+4. Recognize each complete cache through its declared table Type before preparing
+   the next declaration. This includes the carrier, typed owner values, custom
+   whole-cache refinements and every grouped bucket's source-table refinement.
+5. Return a single private snapshot only after all indexes succeed. A later index
    failure exposes neither the staged primary nor earlier prepared indexes.
 
 Uniqueness applies at the atomic installation boundary. Two identifiers can swap;
@@ -102,13 +105,22 @@ projections and comparator implementations.
 
 Cold construction visits every primary row for each declaration. Warm delta
 installation invokes at most two projections per edit per declaration; missing
-old/new rows invoke fewer. Unaffected primary rows and their cached entries are
-not projected or scanned by that installer. Point backend work, grouped bucket
-updates, metadata admission, and recognition retain their own costs. Single writes
-currently use full difference discovery; style admission/recognition may enumerate.
+old/new rows invoke fewer. Unaffected primary rows are not re-projected by the delta-maintenance kernel.
+Complete source/cache recognition can still scan them before publication; the
+sparse projection bound is not an O(delta) whole-workflow bound. Point backend
+work, grouped bucket updates, metadata admission and recognition retain their
+own costs. Single writes
+now capture one optional delta without a trial carrier or full difference discovery;
+source/style admission and recognition may still enumerate.
 The 100-row regression verifies two projections for a one-row delta, not constant
 end-to-end time or a wall-clock speedup. Explicit ordered ranges and finite multiple-key projections are implemented below.
 Automatic query/representation optimization remains separate work.
+
+
+Local full acceptance passed all 127 modules / 1,229 cases in the standard linked
+single-process runner: exit 0, wall 29.818 s, CPU 18.469 s and GC CPU 3.327 s.
+The 1 GiB heap, 300 s whole-suite limit and all original checks remain unchanged.
+This receipt is not a matched performance comparison.
 
 ## Explicit ordered backends
 
@@ -117,6 +129,7 @@ It applies the same comparator and Option bounds to unique owners or grouped
 primary buckets. Revision, uniqueness, retry, inverse and style ownership are
 unchanged. See [table-order.md](table-order.md) for positioning on declared backends, the sorting fallback,
 and explicit law, invalidation and cost boundaries.
+
 ## Finite multiple-key declarations
 
 `multiple?: #t` declares that `project` returns a finite proper list of index keys.
@@ -191,3 +204,51 @@ Local final functional acceptance passed the standard linked single-process suit
 not a paired timing claim. The three new cases cover computed peer edits, the
 backend/child/source scope, and caller-buffer capture, with full publication and
 inverse/refusal controls inside them.
+
+
+## Complete cache admission
+
+Cold construction and warm revisions share `checked-entry` in the existing
+`table/indexes.scm` module. Gerbil's standard `for/collect` prepares declarations
+in order; after one backend finishes, `require-table` recognizes its complete
+cache before the next recipe starts. It never normalizes or reconstructs the
+accepted cache. Shape-only backend updates and uniqueness claims cannot stand
+in for this full Type boundary. No new namespace or transaction mechanism is used.
+
+This closes a reproducible omission: a unique cache declared to have even
+cardinality previously accepted three owners without invoking its recognizer.
+Grouped indexes similarly stored buckets that violated `Value = source` when
+the primary Type imposed a whole-root refinement. A valid final primary alone
+does not imply that every group bucket is admitted.
+
+Primary conflicts precede cache work. Within each declaration, backend/projection
+and uniqueness failure precede final recognition; an earlier recognition failure
+suppresses all later recipes. Recognizer exceptions retain their exact cause;
+false membership raises the existing TypeError. Supported metadata writes remain
+blocked under the complete origin guard. No partial primary or cache family is
+published, and styles retain the old owner for explicit retry. An empty delta
+still recognizes every completed cache rather than inferring approval from no
+changed keys. Arbitrary callback effects are not rolled back.
+
+`make-cohort-services` combines a RationalDict service primary, unique badge map
+and UInt Trie team cache. The same source Type requires even membership in the
+primary and in each team bucket. A one-service team migration refuses; a single
+atomic team exchange plus badge swap succeeds. The existing Wrapper, five
+styles and Reader/FUN/IO publisher retain checked callback identities. Regression
+controls include both cache backends, failure ordering, bad carrier/owner outputs,
+no-op admission, late refusal, retry and inverse restoration.
+
+`TableIndex.lean` models preparation/recognition of genuinely heterogeneous cache
+Types. It proves declaration order, complete per-entry admission, unchanged
+accepted payloads, exact refusal, complete-family publication and old-owner
+retention. `Examples/CollectionStyles.lean` uses opaque callback-bearing cohorts
+and different badge/team cache Types. Correlation, persistent backend fidelity,
+complete Type recognition and stable projections remain explicit host premises.
+These laws advance the collection proposal's future work; they do not prove
+arbitrary user recognizers, compiler execution, GC behavior or universal latency.
+
+Each successful recipe performs one top-level complete recognition. Child
+recognizers and custom root predicates may enumerate all cached bindings or all
+group members, including untouched rows. Cold scans, changed-key maintenance,
+cache recognition, conversions and consumer work are distinct costs. No bounded
+projection count or unchanged-cache identity is used to omit these checks.

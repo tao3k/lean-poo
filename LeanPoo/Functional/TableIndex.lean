@@ -500,4 +500,130 @@ theorem translationPreparation_compatible {Id Kind : Type}
   rw [frame source (by simp), frame target (by simp),
       frame key (by simp), frame value (by simp)]
 
+section CacheAdmission
+variable {Name : Type} {Cache : Name → Type}
+
+/-- Prepare and recognize each complete heterogeneous cache in declaration order.
+A later preparation never starts after an earlier recognition refuses. Recognition
+returns Unit so it cannot normalize or replace an admitted opaque cache payload. -/
+def stageIndexCaches (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) :
+    List Name → Except E (List (Sigma Cache))
+  | [] => .ok []
+  | name :: rest => match prepare name with
+    | .error cause => .error cause
+    | .ok cache => match admit name cache with
+      | .error cause => .error cause
+      | .ok () => match stageIndexCaches prepare admit rest with
+        | .error cause => .error cause
+        | .ok prepared => .ok (⟨name, cache⟩ :: prepared)
+
+/-- Backend/projector failure precedes the current cache recognizer and all later
+recipes. Both the original cause and lack of a partial return are preserved. -/
+theorem stageIndexCaches_prepare_refused (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) (name : Name) (rest : List Name) (cause : E)
+    (refused : prepare name = .error cause) :
+    stageIndexCaches prepare admit (name :: rest) = .error cause := by
+  simp [stageIndexCaches, refused]
+
+/-- A whole-cache refusal takes precedence over every later recipe, even after
+this recipe's persistent backend finished constructing a well-shaped cache. -/
+theorem stageIndexCaches_admit_refused (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) (name : Name) (rest : List Name)
+    (cache : Cache name) (cause : E) (built : prepare name = .ok cache)
+    (refused : admit name cache = .error cause) :
+    stageIndexCaches prepare admit (name :: rest) = .error cause := by
+  simp [stageIndexCaches, built, refused]
+
+/-- Accepted entries have exactly the requested declaration names and order. -/
+theorem stageIndexCaches_names (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) (names : List Name)
+    (prepared : List (Sigma Cache)) (success : stageIndexCaches prepare admit names = .ok prepared) :
+    prepared.map Sigma.fst = names := by
+  induction names generalizing prepared with
+  | nil => simp [stageIndexCaches] at success; subst prepared; rfl
+  | cons name rest ih =>
+    cases hp : prepare name with
+    | error cause => simp [stageIndexCaches, hp] at success
+    | ok cache =>
+      cases ha : admit name cache with
+      | error cause => simp [stageIndexCaches, hp, ha] at success
+      | ok done =>
+        cases done
+        cases ht : stageIndexCaches prepare admit rest with
+        | error cause => simp [stageIndexCaches, hp, ha, ht] at success
+        | ok tail =>
+          simp [stageIndexCaches, hp, ha, ht] at success
+          subst prepared
+          simp [ih tail ht]
+
+/-- Every published cache passed its OWN complete Type recognizer. This includes
+recursive bucket constraints when grouped caches store primary-table values. -/
+theorem stageIndexCaches_admitted (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) (names : List Name)
+    (prepared : List (Sigma Cache)) (success : stageIndexCaches prepare admit names = .ok prepared) :
+    ∀ entry ∈ prepared, admit entry.1 entry.2 = .ok () := by
+  induction names generalizing prepared with
+  | nil => simp [stageIndexCaches] at success; subst prepared; simp
+  | cons name rest ih =>
+    cases hp : prepare name with
+    | error cause => simp [stageIndexCaches, hp] at success
+    | ok cache =>
+      cases ha : admit name cache with
+      | error cause => simp [stageIndexCaches, hp, ha] at success
+      | ok done =>
+        cases done
+        cases ht : stageIndexCaches prepare admit rest with
+        | error cause => simp [stageIndexCaches, hp, ha, ht] at success
+        | ok tail =>
+          simp [stageIndexCaches, hp, ha, ht] at success
+          subst prepared
+          intro entry member
+          rcases List.mem_cons.mp member with same | later
+          · subst entry; exact ha
+          · exact ih tail ht entry later
+
+/-- Successful staging has one admitted entry per declaration. Recognition cost
+itself can scan the full cache or buckets; this is not an O(delta) time bound. -/
+theorem stageIndexCaches_length (prepare : ∀ name, Except E (Cache name))
+    (admit : ∀ name, Cache name → Except E Unit) (names : List Name)
+    (prepared : List (Sigma Cache)) (success : stageIndexCaches prepare admit names = .ok prepared) :
+    prepared.length = names.length := by
+  have same := congrArg List.length (stageIndexCaches_names prepare admit names prepared success)
+  simpa using same
+
+/-- Publish one original primary with the complete admitted cache family. Cold
+construction and warm revision use this same boundary after primary admission. -/
+def publishIndexCaches (primary : A) (names : List Name)
+    (prepare : ∀ name, Except E (Cache name)) (admit : ∀ name, Cache name → Except E Unit) :
+    Except E (A × List (Sigma Cache)) :=
+  (stageIndexCaches prepare admit names).map (primary, ·)
+
+/-- No primary or earlier prepared cache is returned when any family stage fails. -/
+theorem publishIndexCaches_refused (primary : A) (names : List Name)
+    (prepare : ∀ name, Except E (Cache name)) (admit : ∀ name, Cache name → Except E Unit)
+    (cause : E) (refused : stageIndexCaches prepare admit names = .error cause) :
+    publishIndexCaches primary names prepare admit = .error cause := by
+  simp [publishIndexCaches, refused, Except.map]
+
+/-- Admission retains exact primary/cache identities; it does not rebuild them
+or disturb correlation already established by the persistent index installer. -/
+theorem publishIndexCaches_ready (primary : A) (names : List Name)
+    (prepare : ∀ name, Except E (Cache name)) (admit : ∀ name, Cache name → Except E Unit)
+    (prepared : List (Sigma Cache)) (ready : stageIndexCaches prepare admit names = .ok prepared) :
+    publishIndexCaches primary names prepare admit = .ok (primary, prepared) := by
+  simp [publishIndexCaches, ready, Except.map]
+
+/-- A cold or warm family failure leaves every owned presentation's old complete
+snapshot available for explicit retry. External callback effects are not modeled. -/
+theorem publishIndexCaches_style_refused (style : TableStyle) (primary : A)
+    (before : A × List (Sigma Cache)) (names : List Name)
+    (prepare : ∀ name, Except E (Cache name)) (admit : ∀ name, Cache name → Except E Unit)
+    (cause : E) (refused : stageIndexCaches prepare admit names = .error cause) :
+    styleStep style (some before) (fun _ => publishIndexCaches primary names prepare admit) =
+      (some before, .error (.callback cause)) :=
+  styleStep_failure style before _ cause (publishIndexCaches_refused primary names prepare admit cause refused)
+
+end CacheAdmission
+
 end LeanPoo.Functional.OrderedDictionary
