@@ -102,10 +102,14 @@ is invoked; its backend/recognizer exceptions retain their exact cause.
 Warm transfer prepares a private key-space overlay containing its last translated
 edit at each touched key. The next expectation comes from that record or the
 issued target snapshot. A known removal, an untouched key and a stored false are
-separate states. Only keys and present replacements are converted; old target
-rows are retained without conversion. All repeated edits and origin dependencies
+separate states. The fold bridge converts only keys and present replacements. Wrapper layers
+retain their declared lookup, inverse and old-value checks; source expectations
+are reused from their captured root/overlay rather than re-converted. All repeated edits and origin dependencies
 remain in one delta. The target's existing `.apply-delta` runs once, and order
-views preserve that delegation. Complete final-root admission still precedes
+views preserve that delegation. Wrappers check each public old value against the
+issued view, retain per-entry conversion/refusal order, then submit a single
+inverse-mapped source delta. Kind/origin refusal still precedes view freshness and
+shape diagnostics; source conflict keys return in the public key domain. Complete final-root admission still precedes
 aggregate adoption and cache publication. Removed key owners remain reserved
 until all requested mappings pass collision checks and installation succeeds.
 
@@ -127,7 +131,7 @@ and mistyped or interfering key-space getters.
 The existing table module includes its fold implementation from `table/fold.scm`;
 no public namespace or duplicate collection engine is introduced. Lean's
 `keySpaceView_replace`, `overlayView_replace`, `traceBindings_apply`,
-`traceBindings_transport` and `traceBindings_index` connect the typed key space,
+`traceBindings_transport`, `traceBindings_represented` and `traceBindings_index` connect the typed key space,
 ordered delta, existing table installer and two-phase index laws. The finite
 service example checks a forbidden intermediate identifier snapshot versus an
 accepted complete swap, grouped migration and distinct callback identities.

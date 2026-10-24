@@ -237,4 +237,21 @@ theorem traceBindingsWork_bound (writes : List (K × Option V)) :
     (traceBindingsWork writes).1 = writes.length ∧ (traceBindingsWork writes).2 ≤ writes.length := by
   exact ⟨rfl, List.length_filter_le _ _⟩
 
+
+/-- A representation view can validate public expectations first, then trace one
+inverse-mapped source install. Intermediate point writes and old-value conversion
+are unnecessary; existing representation and installer laws supply the result. -/
+theorem traceBindings_represented [DecidableEq K] [DecidableEq V] [DecidableEq L] [DecidableEq W]
+    (keys : Prototype.DictionaryBridge K L) (values : Prototype.DictionaryBridge V W)
+    (edits : List (Change L W)) (source : K → Option V) (presented after : L → Option W)
+    (paired : presented = transportView keys values source)
+    (installed : applyChanges edits presented = .ok after) :
+    applyChanges (traceBindings ((transportChanges keys.inverse values.inverse edits).map
+      (fun edit => (edit.key, edit.after))) source (fun _ => none)) source =
+      .ok (transportView keys.inverse values.inverse after) := by
+  have inversePair : source = transportView keys.inverse values.inverse presented := by
+    rw [paired]
+    exact (transportView_inverse keys values source).symm
+  exact traceBindings_transport keys.inverse values.inverse edits presented after source inversePair installed
+
 end LeanPoo.Functional.OrderedDictionary
