@@ -715,4 +715,31 @@ example : (refreshEntryCache (fun (_ : Nat) (_ : Nat) =>
       (fun _ => none) [1] (fun _ => some (10, 100))).map (fun cache => cache 1) = .ok none := by
   simp [refreshEntryCache, projectedEntry, replace, Except.bind, Except.map]
 
+/-- Direct delivery carries an opaque cache and the original finite edit list;
+no equality on the Function state or inventory for diff discovery is required. -/
+example (cache : Nat → Nat) (edits : List (Change Nat Bool)) :
+    deliverProjection (.ok (cache, edits))
+      (fun next delta => .ok (next, delta) :
+        (Nat → Nat) → List (Change Nat Bool) → Except String ((Nat → Nat) × List (Change Nat Bool))) =
+      .ok (cache, edits) := rfl
+
+/-- A changed public target refuses the delivered old expectation before returning
+any new source/cache state, even though private projection preparation succeeded. -/
+example (cache : Nat → Nat) :
+    publishProjectionDelivery (.ok (cache, [⟨1, some 10, some 30⟩]) :
+      Except Nat ((Nat → Nat) × List (Change Nat Nat))) .linear
+      (some (fun _ => some 99)) (fun root delta => applyChanges delta root) =
+        (some (fun _ => some 99), .error (.callback 1)) := by
+  simp [publishProjectionDelivery, styleStep, applyChanges, Except.map]
+
+/-- Explicit target inversion recovers the actual published base, including any
+unrelated rows retained by changed-key rebasing, using an opaque prepared cache. -/
+example (cache : Nat → Nat) (edits : List (Change Nat Bool))
+    (before after : Nat → Option Bool) (ready : applyChanges edits before = .ok after) :
+    publishProjectionDelivery (.ok (cache, inverseChanges edits) :
+      Except Nat ((Nat → Nat) × List (Change Nat Bool))) .linear
+      (some after) (fun root delta => applyChanges delta root) =
+        (none, .ok (cache, inverseChanges edits, before)) :=
+  publishProjectionDelivery_inverse cache .linear edits before after ready
+
 end LeanPoo.Examples.CollectionStyles

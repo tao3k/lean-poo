@@ -187,3 +187,44 @@ inverse projection, arbitrary Function equality, global publication freshness,
 physical ownership or compiler/runtime verification. Source/target full admission,
 registry preparation, index operations, comparisons, allocation and GC remain
 charged; callback selectivity is not an end-to-end O(edits) or wall-time claim.
+
+## Direct target-delta delivery and style publication
+
+The optional `receive` argument of Gerbil projection `.apply-delta` receives the
+admitted successor and the EXACT target delta used by private installation.
+Standard `values` returns both; default use returns only the state. No previous
+state/history slot, full `.diff` scan or new delta representation is introduced.
+`publish-projected-ledger-action` reuses Reader/FUN/IO and the existing target style
+installer before returning state/target/delta. Failures before public installation
+suppress that publication and IO; postcommit IO is not rolled back.
+
+`TableProjection.lean` now contains:
+
+* `deliverProjection_*`: exact state/delta handoff, default state-only and pair
+  correspondence, preparation suppression and unchanged receiver refusal.
+* `publishProjectionDelivery_*`: existing style ownership on success, target
+  conflict/admission failure retaining the predecessor, and consumed refusal.
+* Changed-key conflict, target inverse and untouched-frame laws reused directly
+  from `TableRevision`; generation rejection reused from `TableStyle`.
+
+The canonical projection cache and public target are distinct observations under
+changed-key rebase: public unrelated rows remain, including during inverse recovery.
+The delivered inverse restores the actual public predecessor when its recognition
+succeeds. It does not invert arbitrary projection callbacks or authenticate a
+one-shot publication ticket. Opaque Function-bearing cache handoff needs no
+payload equality; target replay's old-value relation, carrier fidelity and complete
+recognizers remain premises. Empty deltas retain origins and may be replayable.
+
+The top-level collection examples cover opaque Function state, changed public
+expectations and explicit target inverse recovery. Scheme controls cover five
+styles, source/target refusal, public-only constraints, new-key occupation,
+reentrant winners, stale empty origins, receiver exceptions and retry. The service
+workflow swaps primary keys and unique badge/endpoint indexes, migrates shared
+memberships, preserves checked Functions and uses the delivered inverse. Its
+`.diff` is deliberately unavailable; another control rejects difference traversal
+and checks identity of installed and delivered deltas.
+
+Private preparation and public style installation still charge their own complete
+validation/backend/index work. The source-level removal of difference discovery
+is not a proof of compiler/runtime behavior, concurrency, allocation, GC or wall
+speedup. All existing check inventories and resource bounds are retained.

@@ -183,4 +183,115 @@ theorem publishProjection_refused (before : A) (cause : E) :
 theorem publishProjection_ready (before next : A) :
     publishProjection before (.ok next : Except E A) = next := rfl
 
+/-- Deliver the exact admitted successor and already prepared target delta.
+The continuation has no snapshot inventory or difference-discovery argument. -/
+def deliverProjection (prepared : Except E (S × D))
+    (receive : S → D → Except E A) : Except E A :=
+  prepared.bind fun result => receive result.1 result.2
+
+/-- Preparation refusal suppresses the receiver and preserves its exact cause. -/
+theorem deliverProjection_refused (cause : E) (receive : S → D → Except E A) :
+    deliverProjection (.error cause) receive = .error cause := rfl
+
+/-- Successful delivery does not reconstruct or compare the delta or opaque state. -/
+theorem deliverProjection_exact (state : S) (delta : D) (receive : S → D → Except E A) :
+    deliverProjection (.ok (state, delta)) receive = receive state delta := rfl
+
+/-- Default state-only use and standard multiple-value delivery retain the same
+state and exact delta, including empty deltas carrying provenance. -/
+theorem deliverProjection_values (state : S) (delta : D) :
+    deliverProjection (.ok (state, delta)) (fun next edits => .ok (next, edits) :
+      S → D → Except E (S × D)) = .ok (state, delta) := rfl
+
+/-- Omitting the receiver keeps the exact ordinary state-only result. -/
+theorem deliverProjection_state (state : S) (delta : D) :
+    deliverProjection (.ok (state, delta)) (fun next _ => .ok next : S → D → Except E S) =
+      .ok state := rfl
+
+/-- Receiver refusal does not change its cause or publish a successor result. -/
+theorem deliverProjection_receiver_refused (state : S) (delta : D) (cause : E) :
+    deliverProjection (.ok (state, delta)) (fun _ _ => .error cause : S → D → Except E A) =
+      .error cause := rfl
+
+/-- Reuse the existing style update and its admission-bearing installer. The
+canonical projection state remains distinct from a public root rebased over
+unrelated rows. No new mutation protocol or inferred inverse is introduced. -/
+def publishProjectionDelivery (prepared : Except E (S × D)) (style : TableStyle)
+    (current : Option T) (install : T → D → Except E T) :
+    Option T × Except (StyleFailure E) (S × D × T) :=
+  match prepared with
+  | .error cause => (current, .error (.callback cause))
+  | .ok (next, delta) =>
+    let result := styleStep style current (fun root => install root delta)
+    (result.1, result.2.map (fun root => (next, delta, root)))
+
+/-- Source/projection failure cannot demand any public target installation. -/
+theorem publishProjectionDelivery_preparation_refused (cause : E) (style : TableStyle)
+    (current : Option T) (install : T → D → Except E T) :
+    publishProjectionDelivery (.error cause : Except E (S × D)) style current install =
+      (current, .error (.callback cause)) := rfl
+
+/-- Any target conflict or target admission failure retains the public owner and
+returns no projection successor; retry may reuse the immutable predecessor. -/
+theorem publishProjectionDelivery_install_refused (next : S) (delta : D)
+    (style : TableStyle) (before : T) (install : T → D → Except E T) (cause : E)
+    (refused : install before delta = .error cause) :
+    publishProjectionDelivery (.ok (next, delta)) style (some before) install =
+      (some before, .error (.callback cause)) := by
+  simp [publishProjectionDelivery, styleStep, refused, Except.map]
+
+/-- Consumed target ownership refuses before any target write, in every style. -/
+theorem publishProjectionDelivery_consumed (next : S) (delta : D)
+    (style : TableStyle) (install : T → D → Except E T) :
+    publishProjectionDelivery (.ok (next, delta) : Except E (S × D)) style none install =
+      (none, .error .consumed) := rfl
+
+/-- Success preserves exact prepared state/delta and actual published root. Posh
+and classy inherit the pure/mutable cases through the existing presentation map. -/
+theorem publishProjectionDelivery_ready (next : S) (delta : D) (style : TableStyle)
+    (before after : T) (install : T → D → Except E T)
+    (ready : install before delta = .ok after) :
+    publishProjectionDelivery (.ok (next, delta)) style (some before) install =
+      ((match style with | .pure => some before | .mutable => some after | .linear => none),
+        .ok (next, delta, after)) := by
+  cases style <;> simp [publishProjectionDelivery, styleStep, ready, Except.map]
+
+/-- Already prepared target edits reuse changed-key refusal. A conflict cannot
+silently overwrite an independent publication even if private preparation passed. -/
+theorem publishProjectionDelivery_changed [DecidableEq K] [DecidableEq V]
+    (next : S) (style : TableStyle) (change : Change K V) (rest : List (Change K V))
+    (current : K → Option V) (stale : current change.key ≠ change.before) :
+    publishProjectionDelivery (.ok (next, change :: rest) : Except K (S × List (Change K V)))
+      style (some current) (fun root edits => applyChanges edits root) =
+        (some current, .error (.callback change.key)) :=
+  publishProjectionDelivery_install_refused next _ style current _ change.key
+    (reject_changed change rest current stale)
+
+/-- Inversion uses the DELIVERED target edits, not an inferred inverse projection
+or a discovered snapshot diff. The complete original public root is recovered. -/
+theorem publishProjectionDelivery_inverse [DecidableEq K] [DecidableEq V]
+    (next : S) (style : TableStyle) (edits : List (Change K V))
+    (before after : K → Option V) (ready : applyChanges edits before = .ok after) :
+    publishProjectionDelivery (.ok (next, inverseChanges edits) : Except K (S × List (Change K V)))
+      style (some after) (fun root changes => applyChanges changes root) =
+        ((match style with | .pure => some after | .mutable => some before | .linear => none),
+          .ok (next, inverseChanges edits, before)) :=
+  publishProjectionDelivery_ready next _ style after before _ (applyChanges_inverse edits before after ready)
+
+/-- Unrelated rows in the public root are deliberately preserved by changed-key
+rebasing; they need not appear in the canonical projection cache. -/
+theorem publishProjectionDelivery_frame [DecidableEq K] [DecidableEq V]
+    (changes : List (Change K V)) (before after : K → Option V)
+    (ready : applyChanges changes before = .ok after) (query : K)
+    (outside : ∀ change ∈ changes, query ≠ change.key) : after query = before query :=
+  applyChanges_frame changes before after ready query outside
+
+/-- The existing generation check also rejects a target winner installed DURING
+an installer callback. It protects against ABA even when changed values match. -/
+theorem projectionDelivery_stale_generation (style : TableStyle)
+    (current : TableGeneration T) (expected : Nat) (after : T)
+    (stale : current.version ≠ expected) :
+    installStyle (E := E) style current expected after = (current, .error .stale) :=
+  installStyle_stale style current expected after stale
+
 end LeanPoo.Functional.OrderedDictionary
