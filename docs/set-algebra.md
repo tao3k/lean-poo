@@ -322,3 +322,25 @@ edits. These laws assume faithful backend/recognizer behavior and stable pure
 projection; they do not prove Gerbil execution, arbitrary callback termination, GC
 or elapsed-time bounds. Complete source/target recognition and backend operations
 remain charged; no target snapshot diff is needed for warm delivery.
+
+
+## Two-input incremental algebra
+
+`reviseSetCombination` recomputes the existing `SetOperation.choose` decision only
+at the coalesced edit inventory. `combineSet_frame` and
+`reviseSetCombination_correct` reuse the two source frames; duplicates may be
+coalesced without altering the result. `setCombination_delta` invokes the existing
+finite `diff_complete` law to reconstruct the complete result using only edited
+keys. `setCombination_noop` proves that unchanged binary results require no target
+writes even when source ownership changes; explicit inverses use the existing
+ordered inverse law. `prepareSetCombination` retains left/right failure ordering
+and feeds the existing delivery/style publication gate without exposing a partial
+source pair. The top-level grant/revocation examples revise both services together.
+
+The Gerbil protocol is `set-combination` in the existing table module. It shares
+snapshot algebra's Option selector, typed key-space registries, persistent source
+installers and the existing Reader/FUN/IO target publication boundary. Source
+Pair shells and backend Option shells are copied; Function keys remain exact.
+Whole recognition, metadata preparation, backend work and public installation
+remain charged. Coherent backend logical equality and persistence are premises;
+these finite observation laws do not assert a runtime, GC or machine-cost theorem.

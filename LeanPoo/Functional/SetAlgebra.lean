@@ -403,4 +403,93 @@ theorem setImage_publish_refused (next : S) (delta : D) (style : TableStyle)
       (some before, .error (.callback cause)) :=
   publishProjectionDelivery_install_refused next delta style before install cause refused
 
+/-- A two-input incremental view recomputes only the coalesced edited keys. -/
+def reviseSetCombination [DecidableEq K] (keys : List K) (operation : SetOperation)
+    (left right cache : Membership K) : Membership K := fun key =>
+  if key ∈ keys then operation.choose (left key) (right key) else cache key
+
+/-- Independent source frames imply a frame for every binary Set operation. -/
+theorem combineSet_frame (operation : SetOperation)
+    (beforeLeft beforeRight afterLeft afterRight : Membership K) (keys : List K)
+    (leftFrame : ∀ key, key ∉ keys → afterLeft key = beforeLeft key)
+    (rightFrame : ∀ key, key ∉ keys → afterRight key = beforeRight key)
+    (key : K) (outside : key ∉ keys) :
+    combineSet operation afterLeft afterRight key = combineSet operation beforeLeft beforeRight key := by
+  simp only [combineSet, leftFrame key outside, rightFrame key outside]
+
+/-- Changed-key maintenance agrees with a complete binary recomputation. -/
+theorem reviseSetCombination_correct [DecidableEq K] (operation : SetOperation)
+    (beforeLeft beforeRight afterLeft afterRight : Membership K) (keys : List K)
+    (leftFrame : ∀ key, key ∉ keys → afterLeft key = beforeLeft key)
+    (rightFrame : ∀ key, key ∉ keys → afterRight key = beforeRight key) :
+    reviseSetCombination keys operation afterLeft afterRight
+      (combineSet operation beforeLeft beforeRight) = combineSet operation afterLeft afterRight := by
+  funext key
+  by_cases inside : key ∈ keys
+  · simp [reviseSetCombination, combineSet, inside]
+  · simp [reviseSetCombination, combineSet, inside, leftFrame key inside, rightFrame key inside]
+
+/-- Duplicate edit occurrences do not change the maintained result; the backend
+registry may coalesce by logical key equality without changing source order checks. -/
+theorem reviseSetCombination_coalesced [DecidableEq K] (operation : SetOperation)
+    (left right cache : Membership K) (raw keys : List K)
+    (same : ∀ key, key ∈ raw ↔ key ∈ keys) :
+    reviseSetCombination raw operation left right cache =
+      reviseSetCombination keys operation left right cache := by
+  funext key
+  simp only [reviseSetCombination, same key]
+
+/-- The delivered target delta uses only edited keys, yet reconstructs the whole
+new combination under the two source frame premises. Full scans are unnecessary. -/
+theorem setCombination_delta [DecidableEq K] (operation : SetOperation)
+    (beforeLeft beforeRight afterLeft afterRight : Membership K) (keys : List K)
+    (unique : keys.Nodup)
+    (leftFrame : ∀ key, key ∉ keys → afterLeft key = beforeLeft key)
+    (rightFrame : ∀ key, key ∉ keys → afterRight key = beforeRight key) :
+    applyChanges (diffChanges keys (membershipTable (combineSet operation beforeLeft beforeRight))
+      (membershipTable (combineSet operation afterLeft afterRight)))
+      (membershipTable (combineSet operation beforeLeft beforeRight)) =
+      .ok (membershipTable (combineSet operation afterLeft afterRight)) := by
+  apply diff_complete keys unique
+  intro key outside
+  simp only [membershipTable, combineSet_frame operation beforeLeft beforeRight
+    afterLeft afterRight keys leftFrame rightFrame key outside]
+
+/-- Source ownership can move without a target edit when the binary result agrees. -/
+theorem setCombination_noop (operation : SetOperation)
+    (beforeLeft beforeRight afterLeft afterRight : Membership K) (keys : List K)
+    (same : combineSet operation beforeLeft beforeRight = combineSet operation afterLeft afterRight) :
+    diffChanges keys (membershipTable (combineSet operation beforeLeft beforeRight))
+      (membershipTable (combineSet operation afterLeft afterRight)) = [] := by
+  rw [same]
+  simp [diffChanges]
+
+/-- Explicit target inverse edits restore the original complete membership view. -/
+theorem setCombination_inverse [DecidableEq K] (edits : List (Change K Unit))
+    (before after : Membership K)
+    (ready : applyChanges edits (membershipTable before) = .ok (membershipTable after)) :
+    applyChanges (inverseChanges edits) (membershipTable after) = .ok (membershipTable before) :=
+  applyChanges_inverse edits _ _ ready
+
+/-- Two source installations are staged in order, before any result preparation.
+Successful source values remain private until the existing publication gate. -/
+def prepareSetCombination (left : Except E L) (right : Except E R)
+    (prepare : L → R → Except E A) : Except E A :=
+  left.bind fun a => right.bind fun b => prepare a b
+
+/-- Left refusal suppresses the continuation and retains its original cause. -/
+theorem prepareSetCombination_left_refused (cause : E) (right : Except E R)
+    (prepare : L → R → Except E A) :
+    prepareSetCombination (.error cause) right prepare = .error cause := rfl
+
+/-- Right refusal exposes no left successor or target result. -/
+theorem prepareSetCombination_right_refused (left : L) (cause : E)
+    (prepare : L → R → Except E A) :
+    prepareSetCombination (.ok left) (.error cause) prepare = .error cause := rfl
+
+/-- Jointly accepted sources feed the exact existing delivery/publication stage. -/
+theorem prepareSetCombination_ready (left : L) (right : R)
+    (prepare : L → R → Except E A) :
+    prepareSetCombination (.ok left) (.ok right) prepare = prepare left right := rfl
+
 end LeanPoo.Functional.OrderedDictionary

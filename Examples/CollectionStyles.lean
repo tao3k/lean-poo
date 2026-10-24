@@ -770,4 +770,40 @@ example : (applyChanges (inverseChanges
     (fun restored => setImage [1, 2, 4] (indexView grantRegion restored) 1) = .ok true := by
   simp [inverseChanges, applyChanges, replace, Except.map, setImage, indexView, grantRegion]
 
+/-- Two services supply granted and revoked identities independently. -/
+def grantedBefore (key : Nat) : Bool := decide (key = 1 ∨ key = 2)
+
+/-- The first round denies identity 2. -/
+def revokedBefore (key : Nat) : Bool := decide (key = 2)
+
+/-- The next grant revision replaces identity 1 with identity 3. -/
+def grantedAfter (key : Nat) : Bool := decide (key = 2 ∨ key = 3)
+
+/-- A simultaneous revocation revision denies identity 3 instead. -/
+def revokedAfter (key : Nat) : Bool := decide (key = 3)
+
+/-- Effective access moves from identity 1 to identity 2 under both revisions. -/
+example : (combineSet .diff grantedBefore revokedBefore 1,
+    combineSet .diff grantedAfter revokedAfter 2,
+    combineSet .diff grantedAfter revokedAfter 3) = (true, true, false) := by decide
+
+/-- Only edited keys are required to install the entire effective access view. -/
+example : applyChanges (diffChanges [1, 2, 3]
+    (membershipTable (combineSet .diff grantedBefore revokedBefore))
+    (membershipTable (combineSet .diff grantedAfter revokedAfter)))
+    (membershipTable (combineSet .diff grantedBefore revokedBefore)) =
+    .ok (membershipTable (combineSet .diff grantedAfter revokedAfter)) := by
+  apply setCombination_delta .diff _ _ _ _ [1, 2, 3] (by decide)
+  · intro key outside
+    simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at outside
+    simp [grantedBefore, grantedAfter, outside.1, outside.2.1, outside.2.2]
+  · intro key outside
+    simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at outside
+    simp [revokedBefore, revokedAfter, outside.2.1, outside.2.2]
+
+/-- Moving one union owner between services requires no target replacement. -/
+example : reviseSetCombination [1] .union
+    (fun _ : Nat => false) (fun key => key == 1)
+    (combineSet .union (fun key => key == 1) (fun _ => false)) 1 = true := by decide
+
 end LeanPoo.Examples.CollectionStyles
