@@ -58,6 +58,7 @@ import LeanPoo.Functional.ReceiptAdmission
 import LeanPoo.Functional.RecordEvolution
 import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableRepresentation
 import LeanPoo.Functional.TableStyle
 import LeanPoo.Functional.TableIndex

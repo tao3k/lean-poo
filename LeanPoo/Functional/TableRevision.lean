@@ -563,7 +563,8 @@ variable {K V L W : Type} [DecidableEq K] [DecidableEq V]
   [DecidableEq L] [DecidableEq W]
 
 /-- Trusted paired views need only persistent writes after source conflicts pass.
-The runtime cache establishes the correspondence before skipping target admission. -/
+The runtime cache establishes binding correspondence; independent complete
+source/target refinements must still be admitted by the publication protocol. -/
 def writeChanges (edits : List (Change K V)) (view : K → Option V) : K → Option V :=
   edits.foldl (fun current edit => replace current edit.key edit.after) view
 
@@ -662,16 +663,18 @@ theorem fold_dependency_changed {Id : Type} [DecidableEq Id]
   exact Ne.symm different
 
 omit [DecidableEq K] [DecidableEq V] in
-/-- Source projections retain their previous bound; target refolding and full
-snapshot scans have zero calls on the paired sparse path. This source-work model
-excludes shape checks, registry/backend costs, metadata, allocation and GC. -/
-def reuseFoldWork (edits : List (Change K V)) : Nat × Nat × Nat := (foldWork edits, 0, 0)
+/-- Count sparse source projections, target reprojections and the supplied complete
+source/target admission visits. Reuse removes target refolding, not recognition.
+Recognizer/backend work, metadata, allocation and GC require separate costs. -/
+def reuseFoldWork (edits : List (Change K V)) (sourceAdmission targetAdmission : Nat) :
+    Nat × Nat × Nat := (foldWork edits, 0, sourceAdmission + targetAdmission)
 
 omit [DecidableEq K] [DecidableEq V] in
-/-- The paired path keeps the source projection bound and adds no target scans. -/
-theorem reuseFoldWork_bound (edits : List (Change K V)) :
-    (reuseFoldWork edits).1 ≤ 2 * edits.length ∧
-      (reuseFoldWork edits).2.1 = 0 ∧ (reuseFoldWork edits).2.2 = 0 :=
+/-- The paired path keeps sparse projection bounds and charges both admissions. -/
+theorem reuseFoldWork_bound (edits : List (Change K V)) (sourceAdmission targetAdmission : Nat) :
+    (reuseFoldWork edits sourceAdmission targetAdmission).1 ≤ 2 * edits.length ∧
+      (reuseFoldWork edits sourceAdmission targetAdmission).2.1 = 0 ∧
+      (reuseFoldWork edits sourceAdmission targetAdmission).2.2 = sourceAdmission + targetAdmission :=
   ⟨foldWork_bound edits, rfl, rfl⟩
 
 end FoldReuse

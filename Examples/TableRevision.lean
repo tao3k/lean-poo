@@ -188,9 +188,9 @@ example : ∀ key ∈ [0,2], replace originalStamps 1 (some 1) key = originalSta
 example : replace originalStamps 1 (some 1) 1 ≠ originalStamps 1 :=
   fold_dependency_changed originalStamps 1 0 1 rfl (by decide)
 
-/-- Only source projections are needed: two in this delete/insert example,
-zero target projections and zero complete conversion scans on the paired path. -/
-example : reuseFoldWork callbackEdits = (2,0,0) := rfl
+/-- Two sparse source projections and no target reprojection are needed here;
+the two source and two target admission visits are still charged explicitly. -/
+example : reuseFoldWork callbackEdits 2 2 = (2,0,4) := rfl
 
 /-- Shared source/aggregate stamps can be prepared once without losing refusal. -/
 example : prepareStamped [0,0,2] originalStamps originalStamps (7 : Int) = .ok 7 := rfl

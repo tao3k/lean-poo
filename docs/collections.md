@@ -307,3 +307,12 @@ retry and FUN consumption. The model assumes stable payload observations and law
 persistent carriers; it does not verify the host runtime or mutation of shared
 leaves. Admission, metadata, recognition, callback and backend costs are outside
 the emitted-edit bound; no end-to-end asymptotic or wall-clock claim follows.
+
+### Complete fold publication boundary
+
+Source and warm-target fold updates now recognize their complete final root;
+compatible child Types or paired bindings alone do not establish root refinements.
+Aggregate reuse still avoids target reinitialization/reprojection, but complete
+recognition may scan both snapshots. `reuseFoldWork` explicitly charges supplied
+source and target admission visits. See [table-fold.md](table-fold.md) for atomic
+batch semantics, retained-pair failure/retry, service composition and proof scope.

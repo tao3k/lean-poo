@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableObservation
+import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableIndex
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
@@ -439,5 +440,71 @@ example : mappedTablePull translateCohortEntry [2, 5] [2, 6] [] =
 /-- A present false result is not confused with the EOF sentinel. -/
 example : mappedTablePull (fun (_row : Nat × Bool) => (Except.ok false : Except String Bool))
     [0] [0] [(1, false)] = (([], .ok (some false)), (1, 1)) := rfl
+
+
+/-- Finite admitted callback identities are decidable; arbitrary function equality
+is not. Scheme tests separately retain the actual checked procedure object. -/
+inductive FoldCallback where
+  | increment
+  deriving DecidableEq
+
+/-- Interpretation is supplied by the admitted callback directory. -/
+def FoldCallback.run (_identity : FoldCallback) (argument : Nat) : Nat := callback argument
+
+/-- The finite table model keeps callback identity rather than comparing closures. -/
+abbrev FoldLedgerRow := Nat × FoldCallback
+
+/-- The original finite ledger shares the same admitted callback identity. -/
+def foldLedgerBefore (key : Nat) : Option FoldLedgerRow :=
+  if key = 0 then some (10, FoldCallback.increment) else if key = 1 then some (20, FoldCallback.increment) else none
+
+/-- The explicit finite inventory supplies a decidable whole-table refinement. -/
+def admitEvenLedger (root : Nat → Option FoldLedgerRow) : Except String Unit :=
+  if ([0, 1, 2].filter fun key => (root key).isSome).length % 2 = 0
+    then .ok () else .error "even ledger required"
+
+/-- Contribution reads the budget and never executes or normalizes the Function. -/
+def foldLedgerScore (_key : Nat) (row : FoldLedgerRow) : Int := Int.ofNat row.1
+
+/-- Removal followed by insertion is one final-state publication, not two admissions. -/
+def foldLedgerEdits (budget : Nat) : List (Change Nat FoldLedgerRow) :=
+  [⟨0, some (10, FoldCallback.increment), none⟩, ⟨2, none, some (budget, FoldCallback.increment)⟩]
+
+/-- A compatible unrefined request cannot admit an odd refined source successor. -/
+example : checkedFold foldLedgerScore admitEvenLedger
+    [⟨0, some (10, FoldCallback.increment), none⟩] foldLedgerBefore 30 =
+    .error (.inr "even ledger required") := rfl
+
+/-- The intermediate odd root is private; only the accepted final root reaches the aggregate. -/
+example : (checkedFold foldLedgerScore admitEvenLedger (foldLedgerEdits 40)
+    foldLedgerBefore 30).map (fun result => (result.1 0, result.1 1, result.1 2, result.2)) =
+    .ok (none, some (20, FoldCallback.increment), some (40, FoldCallback.increment), 60) := rfl
+
+/-- The independent target refinement sums the same finite service inventory. -/
+def admitLedgerBudget (root : Nat → Option FoldLedgerRow) : Except String Unit :=
+  if foldView [0, 1, 2] foldLedgerScore root ≤ 50 then .ok () else .error "target budget exceeded"
+
+/-- Lawful identity representation still cannot bypass a target-only root constraint. -/
+example : admitFoldTransfer
+    (checkedFold foldLedgerScore admitEvenLedger (foldLedgerEdits 40) foldLedgerBefore 30)
+    (fun root => .ok root)
+    (fun root => (admitLedgerBudget root).mapError Sum.inr) =
+    .error (.inr "target budget exceeded") := rfl
+
+/-- A fresh repaired request reuses the source aggregate and the exact Function leaf. -/
+example : (admitFoldTransfer
+    (checkedFold foldLedgerScore admitEvenLedger (foldLedgerEdits 25) foldLedgerBefore 30)
+    (fun root => .ok root)
+    (fun root => (admitLedgerBudget root).mapError Sum.inr)).map
+    (fun result => (result.2, (result.1 2).map (fun row => row.2.run 7))) = .ok (45, some 8) := rfl
+
+/-- Checked inverse recovery separately admits the recovered source and restores its sum. -/
+example : checkedFold foldLedgerScore admitEvenLedger (inverseChanges (foldLedgerEdits 25))
+    (writeChanges (foldLedgerEdits 25) foldLedgerBefore)
+    (foldChanges foldLedgerScore (foldLedgerEdits 25) 30) = .ok (foldLedgerBefore, 30) := by
+  apply checkedFold_inverse foldLedgerScore admitEvenLedger (foldLedgerEdits 25)
+    foldLedgerBefore _ 30
+  · rfl
+  · rfl
 
 end LeanPoo.Examples.CollectionStyles
