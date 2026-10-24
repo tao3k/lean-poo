@@ -184,4 +184,20 @@ example : prepareDecons (fun (rows : List Nat) => if rows.length = 1 then Except
     (fun rows => .ok (deconsBindings rows).1) (fun rows (_ : Nat) => .ok rows.tail)
     "no value" false [1, 2] = .error "capacity" := rfl
 
+/-- Batch service draining retains the same callback identities and backend order. -/
+example : prefixBindings 2 false pendingServices = [(9, 90)] := rfl
+example : prefixBindings 20 true pendingServices = pendingServices := rfl
+example : prefixBindings 0 false [false, true] = [false, true] := rfl
+example : prefixBindings 1 true [false, true] = [false] := rfl
+
+/-- Even-sized service batches may skip a forbidden odd-sized intermediate root. -/
+example : preparePrefix "count" (fun (rows : List Nat) =>
+    if rows.length % 2 = 0 then .ok () else .error "capacity")
+    2 false [1, 2, 3, 4] = .ok [3, 4] := rfl
+example : preparePrefix "count" (fun (rows : List Nat) =>
+    if rows.length % 2 = 0 then .ok () else .error "capacity")
+    1 false [1, 2, 3, 4] = .error "capacity" := rfl
+example : preparePrefix "count" (fun (_ : List Nat) => Except.ok ())
+    (-1) true [1, 2] = .error "count" := rfl
+
 end Examples.ServiceCollection

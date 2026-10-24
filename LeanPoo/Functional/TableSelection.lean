@@ -465,4 +465,93 @@ theorem installDecons_ready (style : TableStyle) (current next : TableGeneration
     installDecons (E := E) style current expected found rest = (next, .ok (found, rest)) := by
   simp [installDecons, ready, Except.map]
 
+/-- Finite counter selection follows backend visitation order. It models the
+stateful Bool predicate passed to the existing filter, not repeated extraction. -/
+def prefixBindings (count : Nat) (keepPrefix : Bool) : List A → List A
+  | [] => []
+  | row :: rest =>
+    if count = 0 then
+      if keepPrefix then [] else row :: rest
+    else if keepPrefix then row :: prefixBindings (count - 1) keepPrefix rest
+      else prefixBindings (count - 1) keepPrefix rest
+
+/-- Taking a prefix retains exactly the first min(count,length) payload identities. -/
+theorem prefixBindings_take (count : Nat) (rows : List A) :
+    prefixBindings count true rows = rows.take count := by
+  induction rows generalizing count with
+  | nil => simp [prefixBindings]
+  | cons row rest ih =>
+    cases count with
+    | zero => simp [prefixBindings]
+    | succ n => simp [prefixBindings, ih]
+
+/-- Dropping uses the same counter and traversal, with the complementary decision. -/
+theorem prefixBindings_drop (count : Nat) (rows : List A) :
+    prefixBindings count false rows = rows.drop count := by
+  induction rows generalizing count with
+  | nil => simp [prefixBindings]
+  | cons row rest ih =>
+    cases count with
+    | zero => simp [prefixBindings]
+    | succ n => simp [prefixBindings, ih]
+
+/-- The complementary views reconstruct the exact traversal, without payload equality. -/
+theorem prefixBindings_reconstruct (count : Nat) (rows : List A) :
+    prefixBindings count true rows ++ prefixBindings count false rows = rows := by
+  rw [prefixBindings_take, prefixBindings_drop, List.take_append_drop]
+
+/-- Repeated draining is one cumulative drop on observations, without claiming
+that intermediate refined roots are necessarily admitted. -/
+theorem prefixBindings_drop_add (first second : Nat) (rows : List A) :
+    prefixBindings second false (prefixBindings first false rows) =
+      prefixBindings (first + second) false rows := by
+  simp only [prefixBindings_drop, List.drop_drop]
+
+/-- Signed host counts are admitted before selection. Only the original and the
+complete selected root are recognized; no intermediate remainder is required. -/
+def preparePrefix (badCount : E) (admit : List A → Except E Unit)
+    (count : Int) (keepPrefix : Bool) (rows : List A) : Except E (List A) :=
+  if count < 0 then .error badCount else
+    (admit rows).bind fun _ =>
+      let selected := prefixBindings count.toNat keepPrefix rows
+      (admit selected).map fun _ => selected
+
+/-- Negative counts preserve the supplied cause and suppress root admission. -/
+theorem preparePrefix_negative (badCount : E) (admit : List A → Except E Unit)
+    (count : Int) (keepPrefix : Bool) (rows : List A) (negative : count < 0) :
+    preparePrefix badCount admit count keepPrefix rows = .error badCount := by
+  simp [preparePrefix, negative]
+
+/-- Original-root refusal suppresses selection and retains its cause. -/
+theorem preparePrefix_source_refused (badCount cause : E) (admit : List A → Except E Unit)
+    (count : Nat) (keepPrefix : Bool) (rows : List A) (refused : admit rows = .error cause) :
+    preparePrefix badCount admit count keepPrefix rows = .error cause := by
+  simp [preparePrefix, Int.not_lt.mpr (Int.natCast_nonneg count), refused, Except.bind]
+
+/-- Final-root refusal is exact and exposes no candidate for publication. -/
+theorem preparePrefix_refused (badCount cause : E) (admit : List A → Except E Unit)
+    (count : Nat) (keepPrefix : Bool) (rows : List A) (source : admit rows = .ok ())
+    (refused : admit (prefixBindings count keepPrefix rows) = .error cause) :
+    preparePrefix badCount admit count keepPrefix rows = .error cause := by
+  simp [preparePrefix, Int.not_lt.mpr (Int.natCast_nonneg count), source, refused, Except.bind, Except.map]
+
+/-- Successful preparation recognizes only the full result; partial refinements
+on intermediate removals cannot cause a spurious refusal. Existing installStyle
+then supplies generation/consumption/retry laws without a second ownership engine. -/
+theorem preparePrefix_ready (badCount : E) (admit : List A → Except E Unit)
+    (count : Nat) (keepPrefix : Bool) (rows : List A) (source : admit rows = .ok ())
+    (ready : admit (prefixBindings count keepPrefix rows) = .ok ()) :
+    preparePrefix badCount admit count keepPrefix rows = .ok (prefixBindings count keepPrefix rows) := by
+  simp [preparePrefix, source, ready, Except.bind, Except.map]
+
+/-- A failed complete prefix leaves every style's predecessor retryable. -/
+theorem styleStep_prefix_refused (style : TableStyle) (badCount cause : E)
+    (admit : List A → Except E Unit) (count : Nat) (keepPrefix : Bool) (rows : List A)
+    (source : admit rows = .ok ())
+    (refused : admit (prefixBindings count keepPrefix rows) = .error cause) :
+    styleStep style (some rows) (preparePrefix badCount admit count keepPrefix) =
+      (some rows, .error (.callback cause)) := by
+  have denied := preparePrefix_refused badCount cause admit count keepPrefix rows source refused
+  simp [styleStep, denied]
+
 end LeanPoo.Functional.OrderedDictionary

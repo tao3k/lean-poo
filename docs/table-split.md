@@ -101,3 +101,46 @@ guarded deletion, metadata, complete admission and index preparation remain char
 there is no `.diff` discovery, inferred ordering or destructive storage proof.
 This advances the collection proposal's future work without claiming the whole
 proposal or automatic algorithm discovery complete.
+
+## Finite traversal prefixes
+
+`(.call table .take count root)` and `.drop` select the first `count` bindings
+or their complement in the backend's existing `.filter` visitation order. Counts
+are exact nonnegative integers, checked by Gerbil's standard `uint?` contract;
+inexact numbers, fractions, negative values and nonnumbers refuse even on empty
+input. Oversize counts clamp to the finite traversal. This does not infer a sort
+order: an explicit representation's declared traversal determines its prefix.
+
+A single counter predicate delegates to `.filter`. Consequently the existing
+Trie structural selection, generic optimistic removals, correlated-index
+maintenance and whole-root admission are reused. There is no repeated `decons`,
+new snapshot diff or second traversal algorithm. Only complete results must satisfy
+custom refinements: a four-entry even-sized family can drop two directly although
+the intermediate three-entry root would refuse. Function leaves retain identity.
+Set delegates through its existing common `build-set` boundary, keeping Unit private.
+Set/style entry points authenticate their input before delegating; no common error
+priority is asserted when both the count and the input/owner are invalid.
+
+All five styles reuse the one-root installer; receiver methods are `take`/`drop`.
+Mutable/Classy preserve identity, Pure/Posh preserve the predecessor, and Linear
+retires it only on success. A successful no-op is still a normal style step.
+Invalid counts, rejected final roots and stale metadata publish nothing of their
+own; an intervening successful publication wins and the stale outer attempt refuses.
+Callback effects and concurrent successful operations are not rolled back.
+
+`drop-ledger-action` composes linear draining with the existing Reader/FUN/IO
+observation. Regression controls include both persistent backends, transported
+representation order, all ownership presentations, false Set elements, forbidden
+intermediate roots, correlated indexes, exact Function identities, inverse deltas,
+metadata revisions and reentrant publication. Raw snapshots remain retry inputs.
+
+The counter logic needs constant auxiliary state, but `.filter` may visit the
+**entire** source, even for count zero. Full recognition, backend deletion/index
+work, preparation and allocation remain charged. No O(count) seek or physical
+storage-reuse claim is made. Lean's `prefixBindings` proves take/drop correspondence,
+exact reconstruction and cumulative-drop observations without payload equality;
+`preparePrefix` proves negative-count, final-refusal and readiness laws. Existing
+style installation laws supply consumption and stale-generation semantics. These
+finite laws assume faithful persistent traversal and do not verify the compiler,
+GC, effectful recognizers or elapsed time. Host noninteger rejection is a Gerbil
+contract regression; the Lean count model covers signed integers only.
