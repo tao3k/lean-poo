@@ -283,4 +283,46 @@ example : ([some false, some true] : List (Option Bool)).foldl
 example : ([some true, some false] : List (Option Bool)).foldl
     (fun accumulated next => leftJoinOption next accumulated) none = some false := rfl
 
+/-- Four shared callback-bearing services are routed from one immutable snapshot. -/
+def cohortServices : List (Nat × Ledger) :=
+  [(1, (10, callback)), (2, (20, callback)), (3, (30, callback)), (4, (40, callback))]
+
+/-- Only complete pairs of services are valid. Odd intermediate states need not
+be admitted; the persistent installer recognizes the final branch only. -/
+def admitCohort (rows : List (Nat × Ledger)) : Except String (List (Nat × Ledger)) :=
+  if rows.length % 2 = 0 then .ok rows else .error "incomplete cohort"
+
+/-- An invalid one/three split retains the predecessor and exposes no partial IO input. -/
+example : stylePartition .linear (some cohortServices)
+    (prepareSelection admitCohort (fun row => .ok (row.2.1 ≤ 10))) =
+      (some cohortServices, .error (.callback "incomplete cohort")) := rfl
+
+/-- Fresh two/two staging succeeds without requiring an admitted empty seed or
+admitted one-row intermediate roots. Every original checked callback is retained. -/
+example : stylePartition .linear (some cohortServices)
+    (prepareSelection admitCohort (fun row => .ok (row.2.1 ≤ 20))) =
+      (none, .ok ([(1, (10, callback)), (2, (20, callback))],
+        [(3, (30, callback)), (4, (40, callback))])) := rfl
+
+/-- Approval can reject just the second prepared branch after the first succeeds. -/
+def admitRouting (rows : List (Nat × Ledger)) : Except String (List (Nat × Ledger)) :=
+  if rows.map Prod.fst = [3, 4] then .error "approval unavailable" else .ok rows
+
+/-- Late joint refusal retains the linear predecessor, including opaque Functions. -/
+example : stylePartition .linear (some cohortServices)
+    (prepareSelection admitRouting (fun row => .ok (row.2.1 ≤ 20))) =
+      (some cohortServices, .error (.callback "approval unavailable")) := rfl
+
+/-- A fresh routing request may succeed after the refused request without reviving
+an already consumed reference or replaying its old classifier. -/
+example : stylePartition .linear (some cohortServices)
+    (prepareSelection admitRouting (fun row => .ok (row.1 % 2 = 1))) =
+      (none, .ok ([(1, (10, callback)), (3, (30, callback))],
+        [(2, (20, callback)), (4, (40, callback))])) := rfl
+
+/-- Selection deletion observations preserve closure identity without needing
+DecidableEq on the closure-bearing row type. -/
+example : eraseSelection (fun key : Nat => if key = 1 then some (10, callback) else none)
+    [2, 4] 1 = some (10, callback) := rfl
+
 end LeanPoo.Examples.CollectionStyles

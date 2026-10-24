@@ -138,6 +138,113 @@ theorem preparePartitionRoots_second_refused (admit : A → Except E A) (yes no 
     preparePartitionRoots admit yes no = .error cause := by
   simp [preparePartitionRoots, first, second]
 
+
+/-- A shared selection boundary admits the original root before any predicate,
+then admits both fully prepared results. It never invents an empty seed. -/
+def prepareSelection (admit : List A → Except E (List A))
+    (classify : A → Except E Bool) (rows : List A) : Except E (List A × List A) :=
+  match admit rows with
+  | .error cause => .error cause
+  | .ok original => match selectBindings classify original with
+    | .error cause => .error cause
+    | .ok (yes, no) => preparePartitionRoots admit yes no
+
+/-- Original-root refusal suppresses classification even for a structural backend. -/
+theorem prepareSelection_input_refused (admit : List A → Except E (List A))
+    (classify : A → Except E Bool) (rows : List A) (cause : E)
+    (refused : admit rows = .error cause) :
+    prepareSelection admit classify rows = .error cause := by
+  simp [prepareSelection, refused]
+
+/-- Classifier refusal precedes every output admission and retains its exact cause. -/
+theorem prepareSelection_classifier_refused (admit : List A → Except E (List A))
+    (classify : A → Except E Bool) (rows : List A) (cause : E)
+    (original : admit rows = .ok rows) (refused : selectBindings classify rows = .error cause) :
+    prepareSelection admit classify rows = .error cause := by
+  simp [prepareSelection, original, refused]
+
+/-- An admitted first branch is still private when the second branch refuses. -/
+theorem prepareSelection_second_refused (admit : List A → Except E (List A))
+    (classify : A → Except E Bool) (rows yes no : List A) (cause : E)
+    (original : admit rows = .ok rows) (selected : selectBindings classify rows = .ok (yes, no))
+    (first : admit yes = .ok yes) (second : admit no = .error cause) :
+    prepareSelection admit classify rows = .error cause := by
+  simp [prepareSelection, original, selected, preparePartitionRoots, first, second]
+
+/-- Both shared boundary and existing owner transaction retain the predecessor
+on late refusal. Predicate side effects themselves are outside this state model. -/
+theorem styleSelection_second_refused (style : TableStyle)
+    (admit : List A → Except E (List A)) (classify : A → Except E Bool)
+    (rows yes no : List A) (cause : E)
+    (original : admit rows = .ok rows) (selected : selectBindings classify rows = .ok (yes, no))
+    (first : admit yes = .ok yes) (second : admit no = .error cause) :
+    stylePartition style (some rows) (prepareSelection admit classify) =
+      (some rows, .error (.callback cause)) :=
+  stylePartition_refused style rows _ cause
+    (prepareSelection_second_refused admit classify rows yes no cause original selected first second)
+
+/-- Generic selection stages only persistent deletions. This observation model
+needs key equality, never equality or normalization of opaque Function payloads. -/
+def eraseSelection [DecidableEq K] (view : K → Option V) (keys : List K) : K → Option V :=
+  keys.foldl (fun state key => replace state key none) view
+
+/-- Deletion staging is order/duplicate insensitive at observation level. Exact
+backend refusal order remains the supplied fold order rather than this relation. -/
+theorem eraseSelection_lookup [DecidableEq K] (view : K → Option V)
+    (keys : List K) (query : K) :
+    eraseSelection view keys query = if query ∈ keys then none else view query := by
+  induction keys generalizing view with
+  | nil => rfl
+  | cons key rest ih =>
+    simp only [eraseSelection, List.foldl_cons] at *
+    rw [ih]
+    by_cases later : query ∈ rest
+    · simp [later]
+    · by_cases same : query = key <;> simp [later, same, replace]
+
+/-- On an enumerated binding, deleting the rejected keys is exact stable
+selection. Admission is required only for the final root, not a neutral seed. -/
+theorem eraseSelection_selected [DecidableEq K] (view : K → Option V)
+    (keys : List K) (keep : K → Bool) (query : K) (present : query ∈ keys) :
+    eraseSelection view (keys.filter (fun key => !keep key)) query =
+      if keep query then view query else none := by
+  rw [eraseSelection_lookup]
+  cases decision : keep query <;> simp [decision, present]
+
+/-- Untouched leaves, including checked closures, retain the exact old value. -/
+theorem eraseSelection_frame [DecidableEq K] (view : K → Option V)
+    (keys : List K) (query : K) (outside : query ∉ keys) :
+    eraseSelection view keys query = view query := by
+  simp [eraseSelection_lookup, outside]
+
+/-- With no removals, the reference path performs no persistent writes at all. -/
+theorem eraseSelection_no_writes [DecidableEq K] (view : K → Option V) :
+    eraseSelection view [] = view := rfl
+
+/-- Generic partition captures exactly one deletion per original binding across
+its two branches. This counts edits, not backend allocation or wall-clock time. -/
+theorem selection_deletion_budget (keep : K → Bool) (keys : List K) :
+    (keys.filter keep).length + (keys.filter (fun key => !keep key)).length = keys.length := by
+  exact selectBindings_length (E := Unit) (fun key => .ok (keep key)) keys _ _
+    (selectBindings_total keep keys)
+
+/-- Representation transport preserves both branch order and opaque identities
+when the visible classifier agrees. Carrier inverse laws remain separate premises. -/
+theorem selectBindings_transport (translate : A → B) (source : A → Except E Bool)
+    (target : B → Except E Bool) (aligned : ∀ row, target (translate row) = source row)
+    (rows : List A) :
+    selectBindings target (rows.map translate) =
+      (selectBindings source rows).map (fun roots => (roots.1.map translate, roots.2.map translate)) := by
+  induction rows with
+  | nil => rfl
+  | cons head tail ih =>
+    cases hc : source head with
+    | error cause => simp [selectBindings, aligned, hc, Except.map]
+    | ok chosen =>
+      cases ht : selectBindings source tail with
+      | error cause => simp [selectBindings, aligned, hc, ih, ht, Except.map]
+      | ok roots => cases chosen <;> simp [selectBindings, aligned, hc, ih, ht, Except.map]
+
 /-- Pair publication cannot overwrite a reentrant or competing newer generation.
 The unused prepared second root remains local on this refusal. -/
 theorem installPartition_stale (style : TableStyle) (current : TableGeneration A)
