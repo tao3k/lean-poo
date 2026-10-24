@@ -1,6 +1,7 @@
 import LeanPoo.Functional.TableObservation
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
+import LeanPoo.Functional.TableSelection
 
 /-! Receiver-bound service revisions advance the collection proposal's future
 work. Functions are immutable opaque payloads, never compared or rewrapped. -/
@@ -185,5 +186,40 @@ example : styleMapBindings .linear (some indexRows)
 example : mapBindings (E := String) (fun (key : Int) (value : Nat) =>
     .ok (some (if key = -1 then value + 1 else value + 2))) [(-1, 10), (-2, 20)] =
       .ok [(-1, 11), (-2, 22)] := rfl
+
+/-- Service decomposition keeps opaque callbacks, including at the pivot. -/
+def splitServiceRows : List (Nat × Ledger) :=
+  [(1, (10, callback)), (2, (20, callback)), (3, (30, callback))]
+
+/-- The explicit numeric comparer is relative to the service being routed. -/
+def serviceSign (key : Nat) : Except String Int := .ok ((key : Int) - 2)
+
+/-- The same preparation can serve pure, mutable, linear and receiver views. -/
+def splitServices (rows : List (Nat × Ledger)) :=
+  prepareOrderedSplit serviceSign (some (20, callback)) (fun _ => .ok ()) rows
+
+/-- Functions retain their identity in both successors and the pivot payload. -/
+example : splitServices splitServiceRows =
+    .ok ([(1, (10, callback))], some (20, callback), [(3, (30, callback))]) := rfl
+
+/-- Linear routing consumes once, after all results have been prepared. -/
+example : styleSplit .linear (some splitServiceRows) splitServices =
+    (none, .ok ([(1, (10, callback))], some (20, callback), [(3, (30, callback))])) := rfl
+
+/-- A right-side refinement refusal retains the original owner for a fresh retry. -/
+example : styleSplit .linear (some splitServiceRows)
+    (prepareOrderedSplit serviceSign (some (20, callback)) (fun rows =>
+      if rows.any (fun row => row.1 = 3) then .error "right service unavailable" else .ok ())) =
+      (some splitServiceRows, .error (.callback "right service unavailable")) := rfl
+
+/-- Stored false stays present; it is never confused with an absent pivot. -/
+example : prepareOrderedSplit (E := String) (fun (k : Nat) => .ok ((k : Int) - 2))
+    (some false) (fun _ => .ok ()) [(1, true), (2, false), (3, true)] =
+      .ok ([(1, true)], some false, [(3, true)]) := rfl
+
+/-- A transported order can reverse host key order without changing partition laws. -/
+example : prepareOrderedSplit (E := String) (fun (k : Int) => .ok (-k - 2))
+    (some 20) (fun _ => .ok ()) [(-1, 10), (-2, 20), (-3, 30)] =
+      .ok ([(-1, 10)], some 20, [(-3, 30)]) := rfl
 
 end LeanPoo.Examples.CollectionStyles

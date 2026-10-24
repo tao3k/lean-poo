@@ -145,4 +145,98 @@ theorem installPartition_stale (style : TableStyle) (current : TableGeneration A
     installStyle (E := E) style current expected roots.1 = (current, .error .stale) :=
   installStyle_stale style current expected roots.1 stale
 
+/-- Ordered splitting reuses two checked selections on the ORIGINAL rows. No
+intermediate remainder is required to satisfy a possibly partial root refinement.
+The middle observation is an already admitted lookup in that same snapshot. -/
+def prepareOrderedSplit (compare : K → Except E Int) (middle : Option V)
+    (admit : List (K × V) → Except E Unit) (rows : List (K × V)) :
+    Except E (List (K × V) × Option V × List (K × V)) :=
+  match selectBindings (fun row => (compare row.1).map (fun sign => decide (sign < 0))) rows with
+  | .error cause => .error cause
+  | .ok (left, _) =>
+    match selectBindings (fun row => (compare row.1).map (fun sign => decide (sign > 0))) rows with
+    | .error cause => .error cause
+    | .ok (right, _) => match admit left with
+      | .error cause => .error cause
+      | .ok () => match admit right with
+        | .error cause => .error cause
+        | .ok () => .ok (left, middle, right)
+
+/-- Under total comparison and admission, both sides are exact stable filters.
+This preserves opaque Function payloads without equality or normalization. -/
+theorem prepareOrderedSplit_total (compare : K → Int) (middle : Option V)
+    (rows : List (K × V)) :
+    prepareOrderedSplit (E := E) (fun k => .ok (compare k)) middle (fun _ => .ok ()) rows =
+      .ok (rows.filter (fun row => decide (compare row.1 < 0)), middle,
+        rows.filter (fun row => decide (compare row.1 > 0))) := by
+  simp [prepareOrderedSplit, selectBindings_total, Except.map]
+
+/-- Every original binding belongs to exactly its sign region; the zero region
+corresponds to the pivot only under the caller's lawful comparer/key-identity law. -/
+theorem orderedSplit_regions (compare : K → Int) (row : K × V) (rows : List (K × V)) :
+    row ∈ rows.filter (fun r => decide (compare r.1 < 0)) ∨
+      row ∈ rows.filter (fun r => decide (compare r.1 = 0)) ∨
+      row ∈ rows.filter (fun r => decide (compare r.1 > 0)) ↔ row ∈ rows := by
+  simp only [List.mem_filter, decide_eq_true_eq]
+  constructor
+  · intro h; rcases h with h | h | h <;> exact h.1
+  · intro h
+    by_cases less : compare row.1 < 0
+    · exact .inl ⟨h, less⟩
+    · by_cases same : compare row.1 = 0
+      · exact .inr (.inl ⟨h, same⟩)
+      · exact .inr (.inr ⟨h, by omega⟩)
+
+/-- Preparing two owners and a non-owning observation uses the same partition
+installer. A failure cannot expose the pivot or either prepared capability. -/
+def styleSplit (style : TableStyle) (state : Option A)
+    (prepare : A → Except E (A × B × A)) :
+    Option A × Except (StyleFailure E) (A × B × A) :=
+  match state with
+  | none => (none, .error .consumed)
+  | some before => match prepare before with
+    | .error cause => (state, .error (.callback cause))
+    | .ok (left, middle, right) =>
+      let staged := stylePartition (E := E) style state (fun _ => .ok (left, right))
+      (staged.1, .ok (left, middle, right))
+
+/-- Both roots and the exact pivot observation are independent of presentation. -/
+theorem styleSplit_observation (style : TableStyle) (before left right : A) (middle : B)
+    (prepare : A → Except E (A × B × A)) (ready : prepare before = .ok (left, middle, right)) :
+    (styleSplit style (some before) prepare).2 = .ok (left, middle, right) := by
+  simp [styleSplit, ready]
+
+/-- Any refusal, including the final root's recognition, preserves the old owner. -/
+theorem styleSplit_refused (style : TableStyle) (before : A)
+    (prepare : A → Except E (A × B × A)) (cause : E)
+    (refused : prepare before = .error cause) :
+    styleSplit style (some before) prepare = (some before, .error (.callback cause)) := by
+  simp [styleSplit, refused]
+
+/-- Successful linear decomposition retires the predecessor once, even if empty. -/
+theorem styleSplit_linear (before left right : A) (middle : B)
+    (prepare : A → Except E (A × B × A)) (ready : prepare before = .ok (left, middle, right)) :
+    styleSplit .linear (some before) prepare = (none, .ok (left, middle, right)) := by
+  simp [styleSplit, ready, stylePartition, styleStep]
+
+/-- A consumed predecessor cannot execute preparation or revive any result. -/
+theorem styleSplit_consumed (style : TableStyle) (prepare : A → Except E (A × B × A)) :
+    styleSplit style none prepare = (none, .error .consumed) := rfl
+
+/-- No binding can occur on both sides of a lawful sign comparison. -/
+theorem orderedSplit_disjoint (compare : K → Int) (row : K × V) (rows : List (K × V)) :
+    ¬ (row ∈ rows.filter (fun r => decide (compare r.1 < 0)) ∧
+      row ∈ rows.filter (fun r => decide (compare r.1 > 0))) := by
+  simp only [List.mem_filter, decide_eq_true_eq]
+  intro ⟨⟨_, less⟩, ⟨_, greater⟩⟩
+  omega
+
+/-- A late right-root refusal suppresses even the admitted left root and pivot. -/
+theorem prepareOrderedSplit_right_refused (compare : K → Int) (middle : Option V)
+    (rows : List (K × V)) (admit : List (K × V) → Except E Unit) (cause : E)
+    (left : admit (rows.filter (fun row => decide (compare row.1 < 0))) = .ok ())
+    (right : admit (rows.filter (fun row => decide (compare row.1 > 0))) = .error cause) :
+    prepareOrderedSplit (fun k => .ok (compare k)) middle admit rows = .error cause := by
+  simp [prepareOrderedSplit, selectBindings_total, Except.map, left, right]
+
 end LeanPoo.Functional.OrderedDictionary

@@ -15,6 +15,34 @@ structure TableComparerLaws (compare : K → K → Int) : Prop where
   reverse : ∀ a b, compare a b = -(compare b a)
   trans : ∀ a b c, compare a b < 0 → compare b c < 0 → compare a c < 0
 
+/-- Normalize numeric comparison to the standard tree's three signs rather than
+returning an arbitrary (possibly bignum) subtraction as its protocol result. -/
+def integerKeyComparer (a b : Int) : Int :=
+  if a = b then 0 else if a < b then -1 else 1
+
+/-- Arbitrarily large keys still produce a bounded comparison result. This is a
+semantic sign theorem, not a proof about the compiler's fixnum representation. -/
+theorem integerKeyComparer_sign (a b : Int) :
+    integerKeyComparer a b = -1 ∨ integerKeyComparer a b = 0 ∨ integerKeyComparer a b = 1 := by
+  unfold integerKeyComparer
+  split
+  · simp
+  · split <;> simp
+
+/-- Normalizing signs preserves exact equality and never identifies distinct keys. -/
+theorem integerKeyComparer_zero (a b : Int) : integerKeyComparer a b = 0 ↔ a = b := by
+  unfold integerKeyComparer
+  by_cases same : a = b
+  · simp [same]
+  · simp [same]; split <;> simp
+
+/-- Normalizing signs preserves the strict numeric order used by both split sides. -/
+theorem integerKeyComparer_negative (a b : Int) : integerKeyComparer a b < 0 ↔ a < b := by
+  unfold integerKeyComparer
+  by_cases same : a = b
+  · subst b; simp
+  · by_cases less : a < b <;> simp [same, less]
+
 /-- Explicit pullback compares target keys by their source representations. -/
 def transportComparer (keys : DictionaryBridge K L) (compare : K → K → Int) : L → L → Int :=
   fun a b => compare (keys.fromFields a) (keys.fromFields b)
