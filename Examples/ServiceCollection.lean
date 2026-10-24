@@ -114,4 +114,39 @@ example : [1, 3].map (lookupJoinView (fun _ row => row)
 example : (applyChanges (inverseChanges [⟨10, some false, some true⟩]) policiesAfter).map
     (fun restored => [1, 2, 3].map (lookupJoinView (fun _ row => row) policyReferences restored)) =
       .ok [some (10, some false), some (10, some false), some (30, none)] := rfl
+
+/-- Services and workers share a finite team catalog; each matching pair has its
+own identity even when the payloads or groups coincide. -/
+def placementServices : Nat → Option Nat := fun k =>
+  if k = 1 ∨ k = 2 then some 10 else if k = 9 then some 90 else none
+
+/-- Two workers share team 10 and a third remains isolated on team 90. -/
+def placementWorkers : Nat → Option Nat := fun k =>
+  if k = 3 ∨ k = 4 then some 10 else if k = 8 then some 90 else none
+
+/-- Finite many-to-many expansion retains all four distinct shared-group pairs. -/
+example : [(1,3), (1,4), (2,3), (2,4), (9,8), (1,8)].map
+    (groupJoinView (fun _ row => row) (fun _ row => row) placementServices placementWorkers) =
+    [some (10,10), some (10,10), some (10,10), some (10,10), some (90,90), none] := rfl
+
+/-- Simultaneous migration removes two pairs, changes two survivors, and does
+not invalidate the unrelated team-90 observation. -/
+example : [(1,3), (1,4), (2,3), (2,4), (9,8)].map
+    (groupJoinView (fun _ row => row) (fun _ row => row)
+      (replace placementServices 1 (some 20)) (replace placementWorkers 4 (some 20))) =
+    [none, some (20,20), some (10,10), none, some (90,90)] := rfl
+
+/-- Old/final matching buckets include exactly the affected pair identities;
+coalescing removes overlap before the projection callback is demanded. -/
+example : groupJoinAffected [(1,3), (1,4), (2,3), (2,4), (9,8)] [1] [4]
+    (groupJoinView (fun _ row => row) (fun _ row => row) placementServices placementWorkers)
+    (groupJoinView (fun _ row => row) (fun _ row => row)
+      (replace placementServices 1 (some 20)) (replace placementWorkers 4 (some 20))) =
+    [(1,3), (1,4), (2,4)] := rfl
+
+/-- Source inverses recover the shared-group pair set after a double migration. -/
+example : (applyChanges (inverseChanges [⟨1, some 10, some 20⟩])
+    (replace placementServices 1 (some 20))).map (fun restored =>
+      groupJoinView (fun _ row => row) (fun _ row => row) restored placementWorkers (1,3)) =
+    .ok (some (10,10)) := rfl
 end Examples.ServiceCollection

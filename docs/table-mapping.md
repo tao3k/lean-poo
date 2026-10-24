@@ -253,3 +253,34 @@ validation, bucket enumeration and public installation are charged separately;
 there is no GC/compiler proof, machine speedup claim, automatic query discovery,
 many-to-many expansion or public two-source-owner transaction claim. This advances
 the collection proposal's future work with explicit finite lookup construction.
+
+
+## Finite grouped many-to-many expansion
+
+The Scheme `table-group-join` protocol composes two existing grouped indexes with
+the existing entry projection and Reader/FUN/IO delivery chain. Explicit group-key
+and Pair-key backends define equality. Old/final buckets for edited endpoints
+cover finite insertion, deletion and migration without reprojecting unrelated
+groups. Complete source admission precedes classifiers; existing output claims
+reject collisions and preserve immutable retry. Source inverses and delivered
+target inverses are separate recovery operations. Five-style public installation
+does not consume two independently owned public sources atomically or roll back
+callback/postcommit effects.
+
+`groupJoinView`, `groupJoinAffected_covers`, `groupJoinAffected_frame`,
+`groupJoin_refresh` and `groupJoin_inverse` establish the logical observation,
+finite-inventory coverage, unchanged-pair frame, selective/full-cache equivalence
+and checked inverse recovery. `groupJoinAffected_bound` bounds only the finite
+filtered pair inventory. The existing projection claim/refusal/delivery laws are
+reused. No equality on opaque Function payloads is needed for the frame/cache
+laws; inverse source delta laws retain their explicit payload-equality premise.
+
+Premises are stable pure callbacks, faithful group/componentwise pair equality,
+complete old/final matching buckets and persistent atomic installers. Preparation
+includes two indexes, matched-pair expansion, metadata and full recognition. Warm
+cost includes source/index installs, bucket traversal and coalescing, affected
+projection and private/public target installation. Large matched groups can have
+quadratic output; neither callback counts nor finite laws prove GC or wall-clock
+performance or verify the Gerbil compiler/runtime. Top-level
+`Examples/ServiceCollection.lean` covers shared groups, double migration, untouched
+observations, finite affected inventories and inverse recovery.
