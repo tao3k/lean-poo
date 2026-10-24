@@ -301,7 +301,7 @@ theorem mergeBindings_transport (key : K → L) (value : V → W)
 def leftJoinOption (left right : Option V) : Option V :=
   match left with | some value => some value | none => right
 
-/-- Accepted batch grouping cannot change first-source priority or opaque values. -/
+/-- Regrouping accepted joins cannot change operand priority or opaque values. -/
 theorem leftJoinOption_assoc (a b c : Option V) :
     leftJoinOption (leftJoinOption a b) c = leftJoinOption a (leftJoinOption b c) := by
   cases a <;> rfl

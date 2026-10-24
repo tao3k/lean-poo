@@ -275,4 +275,12 @@ example : mergeBindings (E := String) (fun (_key : Nat) a b => .ok (leftJoinOpti
 example : unionDecision (fun (_key : Nat) (_a _b : Bool) => .error "overlap refused")
     1 (some false) none = .ok (some false) := rfl
 
+/-- The existing batch fold puts each later source on the left of binary join. -/
+example : ([some false, some true] : List (Option Bool)).foldl
+    (fun accumulated next => leftJoinOption next accumulated) none = some true := rfl
+
+/-- A later stored false wins by presence; it is not confused with absence. -/
+example : ([some true, some false] : List (Option Bool)).foldl
+    (fun accumulated next => leftJoinOption next accumulated) none = some false := rfl
+
 end LeanPoo.Examples.CollectionStyles

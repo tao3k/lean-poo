@@ -35,14 +35,14 @@ unary maps and binary merging.
 `.union` calls its resolver only on overlaps, with raw admitted payloads; one-sided
 bindings pass through. The resolver must still be a procedure on empty inputs.
 `.join` is left-biased by presence, retaining a stored false over a right value.
-`.join/list` validates its finite input list and folds with the accumulated root
-on the left: the earliest source wins. A nonempty batch starts at its first root,
+`.join/list` validates its finite input list and retains its existing `foldl` operand order:
+the current item is on the left, so later sources win. A nonempty batch starts at its first root,
 so it does not manufacture a forbidden empty seed. An empty batch must admit the
 backend's empty root or refuse.
 
 Each intermediate join remains a checked operation. Associativity of the
 mathematical left-biased optional view does not waive a custom root refinement
-that rejects an intermediate result. Successful batches retain first-source
+that rejects an intermediate result. Successful batches retain this declared source
 priority; failed batches expose no new owned state.
 
 Generic `.=?` now observes both domains and matching child values directly. It
@@ -84,7 +84,7 @@ this is not a constant-time merge or an end-to-end speedup claim.
 
 `TableMapping.lean` reuses a generalized effectful binding map for paired requests
 and output values, retaining existing unary laws. It proves domain/size bounds,
-explicit representation transport, overlap-only union, first-source join
+explicit representation transport, overlap-only union, left-biased join
 associativity, callback/root refusal and linear consumption. Its observation
 model also proves generic equality reflexive and sound under finite enumeration
 and child-equality laws. `Examples/CollectionStyles.lean` checks opaque callbacks,
