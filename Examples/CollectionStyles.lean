@@ -401,4 +401,43 @@ example : stageIndexCaches (fun name => match name with
     | .badge => .error "unique claim conflict" | .team => .error "later recipe")
     admitCohortCache [.badge, .team] = .error "unique claim conflict" := rfl
 
+/-- External keys reverse sign, while the exact checked service/callback survives. -/
+def translateCohortEntry (entry : Nat × CohortRow) : Except String (Int × CohortRow) :=
+  translateCursorEntry (fun key => .ok (-(Int.ofNat key))) (fun value => .ok value) entry
+
+/-- Conversion is demanded only at the first pull, before any IO consumer. -/
+example : (mappedTablePull translateCohortEntry [2, 5] [2, 5] stableCohort).1.2 =
+    .ok (some (-1, (101, 10, cohortCallback))) := rfl
+
+/-- A new owner publication changes its head, not an issued cursor's old snapshot. -/
+example :
+    let next := receiverStep (E := String) ⟨7, .classy, 1, some stableCohort⟩ 2
+      (fun _ => .ok exchangedCohort)
+    (next.1.value, (mappedTablePull translateCohortEntry [2, 5] [2, 5] stableCohort).1.2) =
+      (some exchangedCohort, .ok (some (-1, (101, 10, cohortCallback)))) := rfl
+
+/-- Metadata refusal preserves the complete unread stream and invokes no mapping. -/
+example : mappedTablePull translateCohortEntry [2, 5] [2, 6] stableCohort =
+    ((stableCohort, .error .stale), (0, 0)) := rfl
+
+/-- A transient failure at the second service occurs after that source row is pulled. -/
+def translateAvailableCohort (entry : Nat × CohortRow) : Except String (Int × CohortRow) :=
+  if entry.1 = 2 then .error "conversion unavailable" else translateCohortEntry entry
+
+/-- The failed row is not automatically replayed by the same mutable Iterator. -/
+example : mappedTablePull translateAvailableCohort [2, 5] [2, 5] (stableCohort.drop 1) =
+    ((stableCohort.drop 2, .error (.backend "conversion unavailable")), (1, 1)) := rfl
+
+/-- A fresh request restarts at the original snapshot after conversion is repaired. -/
+example : (mappedTablePull translateCohortEntry [2, 5] [2, 5] stableCohort).1.1 =
+    stableCohort.drop 1 := rfl
+
+/-- Even an exhausted cursor must refuse newly invalidated metadata. -/
+example : mappedTablePull translateCohortEntry [2, 5] [2, 6] [] =
+    (([], .error .stale), (0, 0)) := rfl
+
+/-- A present false result is not confused with the EOF sentinel. -/
+example : mappedTablePull (fun (_row : Nat × Bool) => (Except.ok false : Except String Bool))
+    [0] [0] [(1, false)] = (([], .ok (some false)), (1, 1)) := rfl
+
 end LeanPoo.Examples.CollectionStyles

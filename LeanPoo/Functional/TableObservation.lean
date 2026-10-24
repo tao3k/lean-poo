@@ -113,4 +113,102 @@ theorem style_positioned_range (accept : K → Bool) (rows : List (K × V)) :
     tableRangePrefix accept (rows.map id) = tableRangePrefix accept rows :=
   tableRangePrefix_identity accept rows
 
+
+/-- Key recognition/conversion precedes value conversion for each demanded row.
+The actual Wrapper also checks encountered inverses; those laws are separate. -/
+def translateCursorEntry (key : K → Except E L) (value : V → Except E W)
+    (entry : K × V) : Except E (L × W) :=
+  match key entry.1 with
+  | .error cause => .error cause
+  | .ok translatedKey => (value entry.2).map (translatedKey, ·)
+
+/-- A refused key suppresses the value callback and preserves the original cause. -/
+theorem translateCursorEntry_key_refused (key : K → Except E L) (value : V → Except E W)
+    (entry : K × V) (cause : E) (refused : key entry.1 = .error cause) :
+    translateCursorEntry key value entry = .error cause := by
+  simp [translateCursorEntry, refused]
+
+/-- Successful child conversions preserve both supplied values without normalization. -/
+theorem translateCursorEntry_ready (key : K → Except E L) (value : V → Except E W)
+    (entry : K × V) (k : L) (v : W) (hk : key entry.1 = .ok k) (hv : value entry.2 = .ok v) :
+    translateCursorEntry key value entry = .ok (k, v) := by
+  simp [translateCursorEntry, hk, hv, Except.map]
+/-- One represented pull reuses the checked source cursor, then translates only
+its present entry. State is explicit: conversion failure follows a source pull,
+whereas stale metadata retains the original tail. Work counts source pulls and
+entry translations, not inverse calls, admission, construction, guards or GC. -/
+def mappedTablePull (translate : K × V → Except E R) (issued current : List Nat)
+    (rows : List (K × V)) :
+    (List (K × V) × Except (TableObservationFailure E) (Option R)) × (Nat × Nat) :=
+  let pulled := checkedTablePull issued current rows
+  match pulled.1 with
+  | .error () => ((rows, .error .stale), (pulled.2, 0))
+  | .ok (none, rest) => ((rest, .ok none), (pulled.2, 0))
+  | .ok (some row, rest) =>
+    ((rest, (translate row).map some |>.mapError TableObservationFailure.backend), (pulled.2, 1))
+
+/-- Rejected origins neither advance the source nor invoke a converter. -/
+theorem mappedTablePull_stale (translate : K × V → Except E R) (issued current : List Nat)
+    (rows : List (K × V)) (stale : issued ≠ current) :
+    mappedTablePull translate issued current rows = ((rows, .error .stale), (0, 0)) := by
+  simp [mappedTablePull, checkedTablePull, stale]
+
+/-- A current source translates exactly its first row; later rows are not inspected. -/
+theorem mappedTablePull_head (translate : K × V → Except E R) (versions : List Nat)
+    (row : K × V) (rest : List (K × V)) :
+    mappedTablePull translate versions versions (row :: rest) =
+      ((rest, (translate row).map some |>.mapError TableObservationFailure.backend), (1, 1)) := by
+  simp [mappedTablePull, checkedTablePull, tableCursorPull]
+
+/-- EOF bypasses translation, never origin checks; repeated exhausted pulls obey
+this same law rather than returning an unguarded cached sentinel. -/
+theorem mappedTablePull_eof (translate : K × V → Except E R) (issued current : List Nat) :
+    mappedTablePull translate issued current [] =
+      if issued = current then (([], .ok none), (1, 0)) else (([], .error .stale), (0, 0)) := by
+  by_cases same : issued = current <;>
+    simp [mappedTablePull, checkedTablePull, tableCursorPull, same]
+
+/-- A checked Function or stored false payload is retained as the exact translated
+value; Option distinguishes the present result from EOF. -/
+theorem mappedTablePull_success (translate : K × V → Except E R) (versions : List Nat)
+    (row : K × V) (rest : List (K × V)) (value : R) (ready : translate row = .ok value) :
+    mappedTablePull translate versions versions (row :: rest) =
+      ((rest, .ok (some value)), (1, 1)) := by
+  simp [mappedTablePull_head, ready, Except.map, Except.mapError]
+
+/-- Conversion refusal preserves the cause and the already advanced source tail.
+It makes no claim that an arbitrary mutable backend cursor can rewind. -/
+theorem mappedTablePull_conversion_refused (translate : K × V → Except E R)
+    (versions : List Nat) (row : K × V) (rest : List (K × V)) (cause : E)
+    (refused : translate row = .error cause) :
+    mappedTablePull translate versions versions (row :: rest) =
+      ((rest, .error (.backend cause)), (1, 1)) := by
+  simp [mappedTablePull_head, refused, Except.map, Except.mapError]
+
+/-- A stale outer representation suppresses an otherwise current inner iterator.
+Composing protocol layers must not restore an unguarded eager fallback. -/
+theorem mappedTablePull_outer_refused (translate : K × V → Except E R)
+    (outerIssued outerCurrent innerIssued innerCurrent : List Nat) (rows : List (K × V))
+    (stale : outerIssued ≠ outerCurrent) :
+    (if outerIssued = outerCurrent then mappedTablePull translate innerIssued innerCurrent rows
+      else ((rows, .error .stale), (0, 0))) = ((rows, .error .stale), (0, 0)) := by
+  simp [stale]
+
+/-- An accepted outer view adds no second source pull or extra entry translation.
+This does not assign constant cost to the number of metadata guard layers. -/
+theorem mappedTablePull_outer_current (translate : K × V → Except E R)
+    (outer inner : List Nat) (rows : List (K × V)) :
+    (if outer = outer then mappedTablePull translate inner inner rows
+      else ((rows, .error .stale), (0, 0))) = mappedTablePull translate inner inner rows := by
+  simp
+
+/-- Lazy representation delegation agrees with eager mapping at the demanded head
+under an explicit successful conversion. No future conversion is required to pass. -/
+theorem mappedTablePull_agrees (translate : K × V → Except E (L × W))
+    (encode : K × V → L × W) (versions : List Nat) (row : K × V)
+    (rest : List (K × V)) (ready : translate row = .ok (encode row)) :
+    (mappedTablePull translate versions versions (row :: rest)).1.2 =
+      .ok (tableCursorPull ((row :: rest).map encode)).1 := by
+  simp [mappedTablePull_success translate versions row rest (encode row) ready, tableCursorPull]
+
 end LeanPoo.Functional.OrderedDictionary
