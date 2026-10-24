@@ -652,4 +652,34 @@ example (f : Nat → Nat) (method : (Nat → Nat) → Except String (Membership 
       admitSetOperation [] admitAccessCohort (fun _ => method f) := by
   apply admitSetMethod_delegation <;> rfl
 
+/-- Explicit entry projection changes keys and keeps opaque checked callbacks;
+it does not need a source/target isomorphism or equality on Functions. -/
+example (f g : Nat → Nat) :
+    mapEntries (E := String) (fun key callback => .ok (some (key + 10, callback)))
+      [(1, f), (2, g)] [] = .ok [(11, f), (12, g)] := by rfl
+
+/-- The first primary collision precedes a later callback failure. -/
+example : mapEntries (fun (key : Nat) (value : Nat) =>
+    if key = 3 then .error "late callback" else .ok (some (10, value)))
+      [(1, 100), (2, 200), (3, 300)] [] = .error (.inr 10) := by rfl
+
+/-- Optional projection retains a false payload, rather than confusing it with
+an absent Option or silently changing the target key. -/
+example : mapEntries (E := String) (fun (key : Nat) (_ : Nat) =>
+    .ok (if key = 2 then some (key + 10, false) else none))
+      [(1, 100), (2, 200)] [] = .ok [(12, false)] := by rfl
+
+/-- Whole-target constraints admit the complete cohort, not singleton prefixes. -/
+example : prepareEntryMap (fun (key : Nat) (value : Nat) => .ok (some (key + 10, value)))
+    (fun _ => .ok ()) (Except.ok : List (Nat × Nat) → Except String (List (Nat × Nat)))
+    (fun rows => if rows.length = 2 then .ok () else .error "incomplete cohort")
+    [(1, 100), (2, 200)] = .ok [(11, 100), (12, 200)] := by rfl
+
+/-- A source observation can return a different target type without consuming or
+rewriting the source reference. Existing stale/consumed laws remain applicable. -/
+example : observeStyle [0] [0] (some [(1, 100), (2, 200)])
+    (some (fun rows => mapEntries (E := String)
+      (fun (key : Nat) (value : Nat) => .ok (some (key + 10, decide (value > 100)))) rows [])) =
+      .ok [(11, false), (12, true)] := by rfl
+
 end LeanPoo.Examples.CollectionStyles

@@ -89,3 +89,56 @@ changed-primary-write accounting is bounded by one decision per visited original
 These are finite semantic and conditional work laws, not compiler, allocation or
 GC proofs. The service examples combine shared callbacks, capacity reservation,
 row removal, late failure, explicit retry and a required-service postcondition.
+
+## Explicit heterogeneous entry projection
+
+`(.call source .map/into target project input)` accepts one target Pair per
+original binding. `filter-map/into` accepts the existing Option protocol: `#f`
+drops a row, while `(some (cons key #f))` retains a false target value. A present
+non-Pair is a TypeError; a malformed Option retains the existing table refusal.
+Both keys and values may change Type. No inverse or Any fallback is inferred.
+
+The common entry boundary protects both descriptors and their declared origins,
+admits the original source, then obtains the target's existing typed `.key-table`
+capability. Missing/incompatible capability refuses before any project callback,
+even on an empty input. Each original row is visited once in backend order. The
+callback-owned Option/Pair shells are copied before child recognition; admitted
+Function leaves stay identical. The target registry checks its own lookup equality
+rather than host hashing/equal?. The first duplicate raises the existing
+`table-index-conflict` with name `primary` and both source owners, before later
+callbacks or target construction. A late callback failure retains its exact cause.
+
+Only the complete row list reaches one target `.<-list` call, followed by whole
+recognition. Business refinements, represented carriers and correlated indexes
+therefore see the final target, without requiring an admitted empty or singleton
+prefix. Cache uniqueness failures keep their existing index names. No partial
+target is returned and IO is suppressed on any refusal. External callback effects
+and mutations inside shared payload leaves are not rolled back.
+
+All five source styles and the receiver methods expose the same projection as a
+nonconsuming snapshot observation. The result is a raw target root; use the
+existing target style `.ap` to choose its presentation. A cross-type result never
+replaces a source owner. Reentrant source publications remain visible; observing
+an earlier captured snapshot does not assert freshness for a later publication.
+`map-ledger-into-action` composes the source FUN protocol with Reader/IO. The
+worked service flow reorders Pair/Function fields into Tuple rows, changes the key
+Type, builds unique badge/endpoint and shared-team indexes, retries after genuine
+constraint refusal, and uses ordinary target deltas for revision/inverse recovery.
+An inverse of those target edits is not an inverse of the general projection.
+
+Lean `mapEntries` uses target logical key classes and standard Except/Sum/List
+sequencing. It proves first callback/collision refusal, no duplicate published
+keys, avoidance of prior keys, the output-length bound and correspondence with
+the existing ordered `mapBindings` traversal, without equality on payloads.
+`prepareEntryMap` proves source/projection/whole-target failure order and exact,
+faithfully admitted publication. Existing `observeStyle` laws supply stale and
+consumed-source refusal for the different target type. The backend registry must
+implement these logical key classes; traversal, bulk construction, callback
+termination, faithful recognizers and stable leaves remain premises. This does
+not verify the Gerbil compiler, arbitrary predicate implication or wall time.
+
+For n source bindings and m retained rows, a successful projection invokes n
+callbacks and performs m target-registry lookups and insertions. It allocates a
+finite row list and constructs the target once. Source/result recognition, child
+checks, registry preparation, target/index construction, comparisons, converters,
+allocation and GC are additional charged costs; no O(edits) or speedup is claimed.

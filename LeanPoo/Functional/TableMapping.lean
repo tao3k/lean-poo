@@ -380,4 +380,227 @@ theorem bindingViewsEqual_sound (same : V → V → Bool) (leftKeys rightKeys : 
       have equal := child a b (by simpa [hl, hr] using observed)
       simp [equal]
 
+/-- Ordered heterogeneous entry projection with a private target-key registry.
+Keys denote the backend's logical equality classes. Callback refusal and the
+first duplicate are distinct; neither produces a partial output. -/
+def mapEntries [DecidableEq L] (transform : K → V → Except E (Option (L × W))) :
+    List (K × V) → List L → Except (E ⊕ L) (List (L × W))
+  | [], _ => .ok []
+  | (key, value) :: rest, seen =>
+    match transform key value with
+    | .error cause => .error (.inl cause)
+    | .ok none => mapEntries transform rest seen
+    | .ok (some row) =>
+      if row.1 ∈ seen then .error (.inr row.1)
+      else (mapEntries transform rest (row.1 :: seen)).map (row :: ·)
+
+/-- A callback refusal precedes every later projection or target construction. -/
+theorem mapEntries_callback_refused [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (key : K) (value : V)
+    (rest : List (K × V)) (seen : List L) (cause : E)
+    (refused : transform key value = .error cause) :
+    mapEntries transform ((key, value) :: rest) seen = .error (.inl cause) := by
+  simp [mapEntries, refused]
+
+/-- Even equal payloads cannot silently overwrite an earlier projected key. -/
+theorem mapEntries_collision [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (key : K) (value : V)
+    (rest : List (K × V)) (seen : List L) (row : L × W)
+    (projected : transform key value = .ok (some row)) (duplicate : row.1 ∈ seen) :
+    mapEntries transform ((key, value) :: rest) seen = .error (.inr row.1) := by
+  simp [mapEntries, projected, duplicate]
+
+/-- Successful optional projection emits at most one binding per source row. -/
+theorem mapEntries_length [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (rows : List (K × V))
+    (seen : List L) (mapped : List (L × W))
+    (success : mapEntries transform rows seen = .ok mapped) : mapped.length ≤ rows.length := by
+  induction rows generalizing seen mapped with
+  | nil => simp [mapEntries] at success; subst mapped; simp
+  | cons head tail ih =>
+    rcases head with ⟨key, value⟩
+    cases hc : transform key value with
+    | error cause => simp [mapEntries, hc] at success
+    | ok next =>
+      cases next with
+      | none => exact Nat.le_trans (ih seen mapped (by simpa [mapEntries, hc] using success)) (by simp)
+      | some row =>
+        by_cases duplicate : row.1 ∈ seen
+        · simp [mapEntries, hc, duplicate] at success
+        · cases ht : mapEntries transform tail (row.1 :: seen) with
+          | error cause => simp [mapEntries, hc, duplicate, ht, Except.map] at success
+          | ok rest =>
+            simp [mapEntries, hc, duplicate, ht, Except.map] at success
+            subst mapped
+            have bound := ih (row.1 :: seen) rest ht
+            simp only [List.length_cons]
+            omega
+
+/-- The private registry excludes every previously accepted target key. -/
+theorem mapEntries_avoids [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (rows : List (K × V))
+    (seen : List L) (mapped : List (L × W))
+    (success : mapEntries transform rows seen = .ok mapped) :
+    ∀ key ∈ mapped.map Prod.fst, key ∉ seen := by
+  induction rows generalizing seen mapped with
+  | nil => simp [mapEntries] at success; subst mapped; simp
+  | cons head tail ih =>
+    rcases head with ⟨source, value⟩
+    cases hc : transform source value with
+    | error cause => simp [mapEntries, hc] at success
+    | ok next =>
+      cases next with
+      | none => exact ih seen mapped (by simpa [mapEntries, hc] using success)
+      | some row =>
+        by_cases duplicate : row.1 ∈ seen
+        · simp [mapEntries, hc, duplicate] at success
+        · cases ht : mapEntries transform tail (row.1 :: seen) with
+          | error cause => simp [mapEntries, hc, duplicate, ht, Except.map] at success
+          | ok rest =>
+            simp [mapEntries, hc, duplicate, ht, Except.map] at success
+            subst mapped
+            intro key present
+            simp only [List.map_cons, List.mem_cons] at present
+            rcases present with same | later
+            · subst key; exact duplicate
+            · exact fun h => ih (row.1 :: seen) rest ht key later (List.mem_cons_of_mem _ h)
+
+/-- A published entry sequence has no duplicate logical target keys. -/
+theorem mapEntries_nodup [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (rows : List (K × V))
+    (seen : List L) (mapped : List (L × W))
+    (success : mapEntries transform rows seen = .ok mapped) : (mapped.map Prod.fst).Nodup := by
+  induction rows generalizing seen mapped with
+  | nil => simp [mapEntries] at success; subst mapped; simp
+  | cons head tail ih =>
+    rcases head with ⟨key, value⟩
+    cases hc : transform key value with
+    | error cause => simp [mapEntries, hc] at success
+    | ok next =>
+      cases next with
+      | none => exact ih seen mapped (by simpa [mapEntries, hc] using success)
+      | some row =>
+        by_cases duplicate : row.1 ∈ seen
+        · simp [mapEntries, hc, duplicate] at success
+        · cases ht : mapEntries transform tail (row.1 :: seen) with
+          | error cause => simp [mapEntries, hc, duplicate, ht, Except.map] at success
+          | ok rest =>
+            simp [mapEntries, hc, duplicate, ht, Except.map] at success
+            subst mapped
+            apply List.nodup_cons.mpr
+            constructor
+            · exact fun h => mapEntries_avoids transform tail (row.1 :: seen) rest ht row.1 h (by simp)
+            · exact ih (row.1 :: seen) rest ht
+
+/-- Source admission, finite projection, one complete constructor and final
+recognition share one Except pipeline. No empty/intermediate target is required. -/
+def prepareEntryMap [DecidableEq L] (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) : Except (E ⊕ L) A :=
+  ((admitSource rows).mapError Sum.inl).bind fun _ =>
+    (mapEntries transform rows []).bind fun mapped =>
+      ((construct mapped).mapError Sum.inl).bind fun root =>
+        ((admitTarget root).mapError Sum.inl).map fun _ => root
+
+/-- An invalid source suppresses projections and target preparation. -/
+theorem prepareEntryMap_source_refused [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) (cause : E) (refused : admitSource rows = .error cause) :
+    prepareEntryMap transform admitSource construct admitTarget rows = .error (.inl cause) := by
+  simp [prepareEntryMap, refused, Except.mapError, Except.bind]
+
+/-- Projection/collision refusal never calls the complete target constructor. -/
+theorem prepareEntryMap_projection_refused [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) (cause : E ⊕ L) (accepted : admitSource rows = .ok ())
+    (refused : mapEntries transform rows [] = .error cause) :
+    prepareEntryMap transform admitSource construct admitTarget rows = .error cause := by
+  simp [prepareEntryMap, accepted, refused, Except.mapError, Except.bind]
+
+/-- Whole-target refusal cannot publish an unchecked constructor result. -/
+theorem prepareEntryMap_target_refused [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) (mapped : List (L × W)) (root : A) (cause : E)
+    (accepted : admitSource rows = .ok ()) (projected : mapEntries transform rows [] = .ok mapped)
+    (built : construct mapped = .ok root) (refused : admitTarget root = .error cause) :
+    prepareEntryMap transform admitSource construct admitTarget rows = .error (.inl cause) := by
+  simp [prepareEntryMap, accepted, projected, built, refused, Except.mapError, Except.bind, Except.map]
+
+/-- Successful projection agrees with the existing ordered binding traversal,
+then forgets only source keys. No equality or normalization of payloads is used. -/
+theorem mapEntries_agrees [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W))) (rows : List (K × V))
+    (seen : List L) (mapped : List (L × W))
+    (success : mapEntries transform rows seen = .ok mapped) :
+    (mapBindings transform rows).map (List.map Prod.snd) = .ok mapped := by
+  induction rows generalizing seen mapped with
+  | nil => simp [mapEntries] at success; subst mapped; rfl
+  | cons head tail ih =>
+    rcases head with ⟨key, value⟩
+    cases hc : transform key value with
+    | error cause => simp [mapEntries, hc] at success
+    | ok next =>
+      cases next with
+      | none =>
+        have ready := ih seen mapped (by simpa [mapEntries, hc] using success)
+        cases hb : mapBindings transform tail <;> simp [hb, Except.map] at ready
+        simp_all [mapBindings, Except.map]
+      | some row =>
+        by_cases duplicate : row.1 ∈ seen
+        · simp [mapEntries, hc, duplicate] at success
+        · cases ht : mapEntries transform tail (row.1 :: seen) with
+          | error cause => simp [mapEntries, hc, duplicate, ht, Except.map] at success
+          | ok rest =>
+            simp [mapEntries, hc, duplicate, ht, Except.map] at success
+            subst mapped
+            have ready := ih (row.1 :: seen) rest ht
+            cases hb : mapBindings transform tail <;> simp [hb, Except.map] at ready
+            simp_all [mapBindings, Except.map]
+
+/-- A successful complete constructor publishes its exact admitted root, without
+requiring any private prefix to satisfy target business constraints. -/
+theorem prepareEntryMap_ready [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) (mapped : List (L × W)) (root : A)
+    (accepted : admitSource rows = .ok ()) (projected : mapEntries transform rows [] = .ok mapped)
+    (built : construct mapped = .ok root) (checked : admitTarget root = .ok ()) :
+    prepareEntryMap transform admitSource construct admitTarget rows = .ok root := by
+  simp [prepareEntryMap, accepted, projected, built, checked, Except.mapError, Except.bind, Except.map]
+
+/-- Every published target satisfies a faithful whole-root recognizer. The
+concrete carrier, key-equivalence registry and constructor laws remain premises. -/
+theorem prepareEntryMap_valid [DecidableEq L]
+    (transform : K → V → Except E (Option (L × W)))
+    (admitSource : List (K × V) → Except E Unit)
+    (construct : List (L × W) → Except E A) (admitTarget : A → Except E Unit)
+    (rows : List (K × V)) (Valid : A → Prop)
+    (faithful : ∀ root, admitTarget root = .ok () → Valid root) (root : A)
+    (published : prepareEntryMap transform admitSource construct admitTarget rows = .ok root) : Valid root := by
+  cases hs : admitSource rows with
+  | error cause => simp [prepareEntryMap, hs, Except.mapError, Except.bind] at published
+  | ok accepted =>
+    cases hp : mapEntries transform rows [] with
+    | error cause => simp [prepareEntryMap, hs, hp, Except.mapError, Except.bind] at published
+    | ok mapped =>
+      cases hb : construct mapped with
+      | error cause => simp [prepareEntryMap, hs, hp, hb, Except.mapError, Except.bind] at published
+      | ok output =>
+        cases ha : admitTarget output with
+        | error cause => simp [prepareEntryMap, hs, hp, hb, ha, Except.mapError, Except.bind, Except.map] at published
+        | ok checked =>
+          cases accepted; cases checked
+          have same : output = root := by
+            simpa [prepareEntryMap, hs, hp, hb, ha, Except.mapError, Except.bind, Except.map] using published
+          subst root
+          exact faithful output ha
+
 end LeanPoo.Functional.OrderedDictionary
