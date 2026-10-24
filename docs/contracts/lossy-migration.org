@@ -1,0 +1,118 @@
+#+TITLE: Lossy cooked self and typed carrier migration — future work
+
+* Source and scope
+
+The pinned source's future-work section (1807–1827) proposes generalized MOPs,
+logical/type metadata and staged computation. Appendix B (2098–2154) separates
+the raw prototype computation, method lens and cooked self, including production
+to consumption representation conversion. This extension advances that future
+proposal. Original concrete construction closure and
+~whole_paper_implemented=false~ remain unchanged.
+
+* Raw closure and public cooking
+
+~StagedPublication.Model~ now contains public cooking and the existing generic
+family model. It no longer requires a full inverse from cooked to raw.
+~Candidate.closed~ is the actual materialized raw fixed point; ~interface~ cooks
+that stored state directly. Graph construction continues to use its declared raw
+self observations. An arbitrary public cooker alone does not prove a protocol
+whose fragments read that cooked self.
+
+[[file:../../LeanPoo/Functional/ProjectedSelf.lean][ProjectedSelf]] supplies that additional correspondence. A ~Projection~ declares
+visible keys, cooking, an observation decoder and equality of the decoded
+observations at those keys. It need not recover other raw slots. ~check~ verifies
+that every inferred value/presence dependency belongs to the visible keys;
+~check_ok_iff~ proves completeness and soundness of this finite coverage check.
+The existing scheduler independently rejects unknown, opaque or cyclic bodies.
+Conservative conditional analysis covers both branches and negative-capability
+presence reads.
+
+~step~ proves equality of entire raw steps for the actual existing
+~protocol.reindexSelf~ construction, using existing lens assembly and computation
+locality. ~close~ transfers stored raw closure to that lossy cooked-self protocol
+without running another constructor. Existing ~DictionaryBridge~ conversion can
+change the retained public representation via ~Projection.represent~. The bridge
+inverts public representations; it does not invert information lost by cooking.
+
+* Explicit migration across carriers
+
+[[file:../../LeanPoo/Functional/CarrierMigration.lean][CarrierMigration]] reuses ~Object.FieldTransfer~ and its exact conversion/missing
+policy. The whole target shape is checked first: duplicate target, unsupported
+key and computed target overwrite refuse before source reads/converters.
+Conversion reads only each declared source field. True absence obeys the explicit
+missing policy; an actual failed source outcome refuses with that exact error,
+even for a field permitting a target default. Other fields retain target defaults.
+Only data bases change; the new graph keeps its target support and computation
+bodies, then runs the existing schedule, fresh materialization, generic-family
+checks and joint admission.
+
+The source and target may differ in key type, dependent payload family, policy,
+public representation and generic argument/result carriers. Target methods,
+computed values and caches are reconstructed. No old approval or cache is cast
+into the new schema. Exact payload representation conversion separately preserves
+absence and source errors, with ~represent_roundtrip~ for an explicit bridge.
+It does not license cross-carrier construction-cache reuse.
+
+| Universal proof | Obligation |
+|-----------------+------------|
+| ~read_failed~ | Actual source failures cannot default or enter a converter |
+| ~prepare_shape_first~ | Entire shape refusal precedes conversion |
+| ~prepare_origin~ | Exact conversion outcome; target code/support retained |
+| ~apply_frame~ / ~apply_head~ | Unlisted fields unchanged; written payload equals actual conversion |
+| ~data_value~ | Materialized noncomputed data equals its target base |
+| ~rebuild_origin~ | Approved target uses the exact prepared declaration and policy |
+| ~publish_refused~ / ~publish_accepted~ | Whole old snapshot on refusal; whole approved new snapshot on acceptance |
+
+Publication returns a typed ~Sum~ of source and target snapshots because the
+carriers genuinely differ. Acceptance switches the public version to the target;
+refusal retains the exact original value, including all its warm family entries.
+Source snapshots remain ordinary immutable readable values.
+
+* Settlement to prepaid-account workflow
+
+[[file:../../LeanPoo/Functional/AccountMigration.lean][AccountMigration]] starts with the existing shared settlement graph and
+quote/reserve/cancel family, including a previously checked reservation that warms
+the source. Transfers rename and check ~String~-keyed ~Int~ total into an
+enum-keyed ~Nat~ balance; optional legacy input becomes a target label. Target
+rate and private-note defaults remain target-owned. A fresh target graph computes
+a ~Money~ charge and audit text from the shared balance/rate/label dependency
+join. Two heterogeneous generics implement spending and receipt formatting.
+Public cooking retains typed successful/failed/absent observations of the four
+construction dependencies, drops audit/private-note storage and then converts to
+a different API representation through the existing bridge.
+
+~lossy~ proves the actual cooker is noninjective. ~cook_hidden~ proves a hidden
+note change cannot change the public interface. ~closed~ carries actual closure
+of the lossy cooked-self lens protocol. ~migration_origin~ and
+~migrated_balance~ bind an accepted migration's actual target graph and balance to
+the old snapshot's declared converter, rather than merely checking some target
+balance after construction. The latter states the explicit converter range
+premise; it is not an unchecked narrowing cast.
+
+[[file:../../Examples/AccountMigration.lean][Example]] composes source warming, cross-carrier migration, target invocation,
+a hidden-note revision rebuilding one node while five retained builders refuse,
+a forbidden new hidden dependency and a conversion refusal preserving the old
+warm source. [[file:../../Tests/AccountMigration.lean][Independent controls]] cover:
+
+- 48 input/rate/fee settings and 3936 target calls with independent arithmetic.
+- All 3072 builder masks: 48 complete accepted target builds, 3024 constructor
+  refusals preserving actual source observations and its warmed reserve cache.
+- Conversion range, missing/default/failed source distinctions, duplicate/unknown/
+  computed target shape precedence, and preservation of exact errors/absence
+  through representation conversion.
+- Hidden value, presence, negative-capability and unused-conditional-branch reads.
+- Target registration, negative-watch, budget and lossy-self coverage refusals.
+
+Existing 30-second/2-GiB process bounds remain unchanged.
+
+* Remaining boundaries
+
+Migration needs explicit typed field mappings and converters. No semantic schema
+matching or automatic arbitrary converter is inferred. Same-carrier edits retain
+the existing certified selective reuse; a carrier-changing migration performs a
+fresh target build. Lossy cooked-self correspondence requires equality on every
+inferred read, so genuinely discarded observations cannot subsequently be read
+without changing the projection. Opaque effects, external-effect rollback,
+arbitrary dependent type inference remain outside this finite pure construction.
+[[file:cyclic-closure.org][Finite positive cyclic closure]] supplies a separate proved monotone class;
+arbitrary cyclic equations remain unsupported.

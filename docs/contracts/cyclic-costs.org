@@ -1,0 +1,105 @@
+#+TITLE: Costed positive cyclic closure — future work
+
+* Executed path and semantic refinement
+
+[[file:../../LeanPoo/Functional/IncrementalClosure.lean][IncrementalClosure]] replaces repeated whole-state function unfolding with a
+compiled expression vector, a reverse dependency vector and a tail-recursive
+work queue. Each false fact is evaluated when visited; once true it is skipped.
+A fact changes at most once. Only that fact's dependents are then scheduled.
+Repeated read operands remain explicit edges and are charged individually.
+
+~fast_canonical~ proves the actual array result equals the original least fixed
+point. ~execute_refines~ ties actual tail-loop arrays AND counters to the certified
+search. Reference search is confined to erased proof fields in ~fastClose~;
+production does not run the reference solver to validate the fast solver.
+The existing publication boundary consumes this actual fast materialization.
+
+[[file:../../LeanPoo/Functional/CyclicAccess.lean][CyclicAccess]] reuses the reverse index when literal/configuration changes
+preserve every equation's actual read-dependency list. This uses a proof of
+~equation_dependencies~, not a matching version label. Solving still starts from
+all false, so cyclic self-support cannot retain revoked authority. Existing safe
+recursive memoization, family warming, approval and atomic refusal remain bound
+to their original semantics.
+
+* Proved source operation budget
+
+Let V be fact count, E the number of compiled read occurrences, L the total
+expression nodes and M the maximum nodes in an equation. E includes duplicate
+operands. The instrumented strict interpreter visits both children; its returned
+node count is proved equal to syntax size by ~run_correct~.
+
+| Operation | Kernel bound for one solve |
+|-----------+----------------------------|
+| Queue pops | V + E |
+| Expression evaluations | At most queue pops |
+| AST node visits | At most M times expression evaluations |
+| False-to-true state writes | V |
+| Dependent pushes | E |
+
+~compiled_edge_count~ binds E to actual compiled read occurrences. Queue balance,
+remaining edge credit and strict fact growth justify automatically derived fuel;
+clients supply no timeout/stabilization witness. ~priced_bound~ accepts separate
+nonnegative prices for pop, evaluation dispatch, node visit, write and push, and
+proves the weighted bound for the actual returned counters.
+
+This is a source primitive model. Queue cons/append work is covered by pops and
+pushes; degree-list length traversals cost O(E) over all changes. Preprocessing
+uses a linear dependency accumulator and direct vector index insertion rather
+than all-pairs matching. Runtime fuel uses a linear list sum, avoiding the old
+shifted-function summation. Preprocessing's O(V+L+E) description assumes unit-cost
+vector access/update and list operations; it is an algorithm inspection, not an
+additional kernel theorem about allocation, preprocessing instructions or backend
+array ownership. A Scheme backend must justify these primitive prices, mutation,
+allocation and representation choices before inheriting a machine-time bound.
+Neither asymptotic optimality nor universal wall-clock acceleration is claimed.
+
+* Reproducible measurement and independent controls
+
+Build ~lake build cyclicClosureScale~, then run:
+
+#+begin_src sh
+python3 tools/benchmark_cyclic_closure.py --output /tmp/cyclic-closure.json
+#+end_src
+
+The [[file:../performance/cyclic-closure-v1.json][raw receipt]] retains every trial, source and binary hashes, toolchain,
+platform, independent scalar oracle, actual counters, timeout and failure rows.
+Reference and worklist use the SAME executable, workload and timing boundary:
+construct/solve/materialize the result vector. Process startup is separately
+reported. Each trial runs in its own process. Retained-index measurements report
+index construction as ~setup_ns~ and exclude it only from their explicitly named
+~query_ns~; they must not be compared as a cold end-to-end gain. Each process has
+a fixed 20-second deadline; timeout rows remain failures to complete.
+
+Families cover forward/reverse chains, fanout, repeated shared reads, a seeded
+ring and quorum joins. All facts being true is an independent scalar oracle;
+small exhaustive semantic controls remain in PositiveEquations. The bounded
+[[file:../../Tests/IncrementalClosure.lean][72-case controls]] additionally check exact linear-chain operation counts,
+primitive bounds, empty declarations, index retention and all-false cyclic
+revocation. Existing end-to-end CyclicAccess controls check publication semantics;
+these closure microbenchmarks do not measure whole-service or backend speed.
+
+This advances generalized-MOP future work. Original concrete closure and
+~whole_paper_implemented=false~ remain unchanged.
+
+* Local paired receipt summary
+
+Cold query medians in milliseconds, three separate processes per cell.
+Timed-out reference cells have no finite median. Index reuse is excluded here.
+
+| Family / facts | Reference | Worklist (including index construction) |
+|----------------+-----------+-----------------------------------------|
+| chain / 64 | 5.621959 | 0.028792 |
+| reverse / 64 | 4.582709 | 0.020667 |
+| fanout / 64 | 0.058541 | 0.021166 |
+| shared / 64 | 3/3 timeout (20 s each) | 0.027042 |
+| ring / 64 | 5.513417 | 0.019500 |
+| quorum / 64 | 3/3 timeout (20 s each) | 0.055667 |
+| chain / 256 | 533.123791 | 0.048584 |
+| chain / 1024 | 3/3 timeout (20 s each) | 0.162292 |
+
+* Representation and allocation refinement
+
+[[file:closure-layouts.org][Representation and allocation contracts]] now supply the concrete byte/write
+and chunked-queue refinement, allocation/peak bounds and finite cost-policy
+selection. The original flat worklist and its receipt remain as the measured
+reference for this next refinement.

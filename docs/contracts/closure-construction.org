@@ -1,0 +1,146 @@
+#+TITLE: Fused closure construction and aligned publication
+
+* Status and executable scope
+
+This advances the paper's generalized-protocol future work. It covers the existing
+finite positive Boolean expression language, private construction, dependency-equal
+revision, least closure, cooking, service-family preparation and candidate admission.
+It does not certify a Scheme compiler, GC or native instruction sequence.
+
+[[file:../../LeanPoo/Functional/ClosureConstruction.lean][ClosureConstruction]] models copying and indexing in one traversal. copyIndexed_spec
+proves exact copied syntax, exact ordered reverse-index updates, descriptor visits
+and read occurrences. fusedIndex_eq proves the same index as the previous compiler;
+the executable compile function and CyclicPublication.prepare use this fused index.
+No allocation/latency claim about Lean's own erased/compiled representation follows.
+
+Scheme specializes indexed and copy-only visitors with a small defrule, using one
+private typed compilation context in the compiler's existing using style. Index
+writes are expanded directly; no per-equation read callback is created or invoked.
+A checked vector/tag dispatch avoids the pattern continuation closures visible in
+the previous generated walker. Public descriptors are still validated and copied;
+node/depth and fixnum-priced range checks remain. Revisions recheck the new maximum
+expression size before publishing a plan, including after syntax growth.
+
+constructionWords exposes descriptor, reverse-list, vector, metadata, context and
+visitor closure sizes as backend parameters. fusion_saving requires the removed
+visitor allocation to pay for the larger shared context; it does not hide that
+constant cost for empty/small inputs. visitor_saving removes exactly V declared
+visitor costs. preparation_paid requires future savings to pay preparation costs.
+The native allocator counters below are observations, separate from those proofs.
+
+* Reconfiguration and preparation alignment
+
+The quick revision check accepts identical tags/read indices. A fallback collects
+ordered read occurrences with a linear tail accumulator, matching collectDeps.
+The fallback allocates two temporary read lists (2D cells for D occurrences);
+reshape_read_packets in ReshapedAccess proves this count. It also traverses both
+syntax trees, in addition to the bounded quick comparison. These checks and
+temporary cells must be charged separately from fusedCost/constructionWords, which
+cover private copying/index preparation, not the complete reshape-validation path.
+Equal lists permit reassociation and changes between both/either; they need not
+preserve the previous Boolean answer. Reordered/added/deleted/duplicated occurrences
+are refused. Both paths solve from bottom, so old cyclic authority is not reused.
+reshape_index and reshape_canonical prove retained index and new canonical closure.
+[[file:../../Examples/ReshapedAccess.lean][ReshapedAccess]] changes the answer while retaining exactly the same reads.
+
+Scheme prepare-closure now returns the identical admitted plan when adaptive
+metadata already exists, including after retained revision. Otherwise it prepares
+once. ensureAdaptive_cached and ensureAdaptive_idempotent model zero new degree
+visits on repeated preparation. Historical plan selector-visits describe the plan's
+construction, not another invocation of an already completed preparation operation.
+
+* Aligned staged publication
+
+Scheme closure-workflow builds one private candidate containing the plan, least
+facts, cooked view and heterogeneous named procedures. Duplicate/invalid service
+declarations and cooking/admission failures refuse the whole candidate. Publication
+returns the identical previous bundle on refusal; old views and services remain
+bound to their old closure. Callback side effects outside the bundle are not rolled
+back, so builders/admission must not mutate published values. The private hash index
+is not exposed. Raw facts are returned through a fresh list.
+
+CyclicPublication.publishRetained uses prepareWithPlan and CarrierMigration.publish.
+publishRetained_index proves exact index reuse; publishRetained_refused proves old
+version retention. Existing Version canonicality, leastness, exact-candidate approval
+and heterogeneous family proofs remain in force. The Scheme runtime checks are not
+a proof of translation equivalence for arbitrary callback programs.
+
+The Scheme closure-access example uses the exact ten CyclicAccess equations and
+cooked slots (member at fact 2, approved at fact 5, release at fact 7, active indices).
+It exercises two different service signatures, consent failure, revocation and
+admission refusal over all 32 configurations. Ordinary multiple inheritance, .o and
+class/type machinery are reused. The new callback family is not the complete typed
+multi-dispatch, logical-metadata or recursive-attestation subsystem; see the explicit
+Scheme alignment map rather than assuming those interfaces were ported.
+
+* Native benchmarks with one fixed definition
+
+Scheme t/closure-cases.ss owns the cases, engines, scopes, seeds, trials and counter
+columns. Native read/write data replaces JSON throughout the active closure tools.
+Metadata/column names occur once, followed by numeric result vectors and a completion
+marker. Readers reject truncated/failed studies, duplicates, keys outside the fixed
+case set, missing identities, changed definitions and mismatched Lean/Scheme counters.
+The driver checks source identities before/after the run; optional reader root checks
+support current-source admission. Data is read, never evaluated.
+
+There is no new numeric schema version or JSON filename. Existing historical JSON
+receipts remain untouched. Current files are closure-phases.scm, closure-paired.scm
+and closure-benchmarks.scm; a baseline phase control is kept separately. Each child
+retains a 20-second deadline and Scheme's 1 GiB heap cap. Compilation retains 90s.
+The full matrix has 960 observations per runtime and 22,080 paired field assertions.
+The fixed-case reader derives these counts from the declared dimensions.
+
+Phase controls separate fixed/cold/adaptive construction, first/cached preparation,
+solve, retained revision and cold construct+solve. They record native CPU/wall time,
+GC CPU, GC count and cumulative allocated bytes. GC CPU is part of total CPU, not
+an additional cost to add twice. Both natural and pre-collected batches are retained.
+Same-process controls rotate four engines across eight rounds; cold/revision batches
+use 32 requests to reduce the previous five-request sampling sensitivity. Warm batches
+retain 200 solves. Compare within each runtime; Scheme generates source before its
+query clock whereas Lean materializes its equation function during construction.
+
+The statistics layout was checked against Gambit's kernel process-statistics/time
+implementation and the local 20-field interface. The end snapshot's own allocation
+is subtracted using its reported overhead field. This is cumulative allocation,
+not retained/live memory or peak heap. Probe/dispatch and GC history still affect
+measurements; CPU minima do not follow from a minimum declared queue ceiling.
+
+* Recorded controls
+
+The native matrix contains 1,920 observations and 22,080 matching field checks.
+The phase study contains 640 observations (five families, two GC regimes, eight
+rotations and eight phases). The same-process study contains 480 observations.
+All children completed under their unchanged limits. Duplicate, mismatch,
+truncated, failed, changed-definition and stale-source controls were refused.
+The common matrix is about 405 KB; prior historical JSON files remain untouched.
+
+Current same-process median CPU microseconds/request:
+
+| Family / scope | fixed append | auto |
+|----------------+--------------+------|
+| diamond 1024 cold | 124.69 | 120.58 |
+| diamond 1024 warm | 78.85 | 77.96 |
+| diamond 1024 refresh | 105.33 | 104.69 |
+| dense 256 cold | 3052.36 | 2517.69 |
+| dense 256 warm | 1314.80 | 875.22 |
+| dense 256 refresh | 2907.36 | 2441.59 |
+
+Diamond cold append and auto request identical measured bytes (293,615.5 per
+request in that control). They execute the same append engine. The old v4 short
+samples had no GC measurements, so their difference cannot be retrospectively
+attributed to a particular collection. The new study increases cold batch size
+and records GC explicitly; it does not establish a universal latency ordering.
+
+The earlier diagnostic phase control (same eight-rotation measurement structure,
+before adding the cached-preparation phase) measured diamond cold construct+solve
+around 193 microseconds versus 136 in the current natural-GC control. Measured
+allocation fell from roughly 393 KB to 294 KB/request. The additional phase and
+GC/interleaving differences mean this is diagnostic before/after evidence, not a
+strict isolated speed guarantee. The fused source visitor savings have the separate
+proof above. Initial adaptive preparation costs roughly 5.54 microseconds; cached
+preparation is roughly 0.012 microseconds, with a residual probe/batch allocation
+near the measurement floor. A zero-source-allocation argument is not rounded into
+a claim of exactly zero measured allocator activity.
+
+The process-statistics field layout used by the native measurement helper is
+available in [[https://github.com/gambit/gambit/blob/master/lib/_kernel.scm][Gambit's kernel source]].

@@ -1,0 +1,103 @@
+#+TITLE: Independent generalized components — research extension
+
+[[file:generalized-prototypes.org][Generalized protocol]] · [[file:focused-updates.org][Lawful focused updates]]
+
+* Mount a protocol through an existing lawful focus
+
+This advances the paper's generalized-prototype future work (1807–1827,
+2084–2154). The initial protocol compiled individual focused fragments; this
+extension composes entire independently supplied component protocols.
+
+~Compiler.mount~ uses existing ~lensGen~ with a ~Functional.Focus~ getter and
+setter. It maps global cooked self to the local interface, compiles the local
+fragment, then installs the local raw result. ~Protocol.mount~ supplies global
+cooking. ~assemble_mount~ proves that mounting a complete fragment list equals
+local assembly followed by one lawful installation, including the empty list.
+The existing Focus laws are required; no arbitrary lens is assumed lawful.
+
+* Independence and grouping
+
+~Generalized.Components left right Whole Global~ retains two nested focuses,
+existing ~Focus.Independent~ read/set laws, two public views, global cooking and
+proofs that each view equals local cooking of that component's raw projection.
+Global cooking can additionally expose an orchestrator using both interfaces.
+
+~leftFragments~ / ~rightFragments~ preserve each family's complete relative
+order. ~assemble_partition~ proves interleaved assembly equals two local
+assemblies with the same global final self, installed in the original parent.
+~assemble_equiv~ applies when both ordered projections are equal. The canonical
+~groupedFragments~ layout therefore preserves assembly by ~assemble_grouped~.
+
+These laws group construction, not public effects. They do not swap before/
+after/primary methods within a component, or change the order in which a public
+checkout invokes billing and shipping. Local fragments can read their cooked
+view; compatibility excludes hidden reads of the other component. Components
+with such dependencies need another explicit contract and cannot claim these
+independence laws automatically.
+
+* Finite projection, actual closure and replacement
+
+~step_partition~, ~approximate_left~ and ~approximate_right~ project every
+finite whole observation to the corresponding local computation, with projected
+base and seed. This holds at every depth, including zero.
+
+~Components.close~ joins two actual ~Closed~ witnesses by installing their raw
+values into the whole base. It proves the whole fixed-point equation; no new
+knot, evaluator or iteration limit is involved. ~close_left~ / ~close_right~
+preserve the entire local cooked interfaces, including function-valued methods.
+~projectLeft~ / ~projectRight~ recover local closure witnesses from an actual
+whole closure. ~frame~ and ~closed_frame~ preserve any observation outside both
+focuses under its explicit setter-frame premises.
+
+~regroup~ retains an existing closed raw value and proves its equation under
+the grouped construction; ~regroup_interface~ is exact interface equality.
+~replaceRight~ retains the old left witness only after the caller proves that
+the complete ordered left-fragment projection is unchanged. It requires a new
+right closure witness and produces closure for the declared revised list.
+~replaceRight_left~ proves exact left interface equality. It does not decide
+arbitrary function equality or infer whether an edit is independent.
+
+The helper certifies its supplied fragment list. A revised graph/root must
+still be prepared through the existing C3 gate. A semantically equivalent
+grouped layout does not manufacture a new source C3 derivation. Existing whole
+protocol/closure transport carries mounted services through exact raw/public
+dictionary bridges; no closure wire serialization is introduced.
+
+* Checkout with completed billing and refused shipping
+
+[[file:../../Examples/ComponentCheckout.lean][ComponentCheckout]] mounts independent billing/shipping protocols through
+composed lawful focuses in one C3 diamond. A shared Base contributes once to
+each local method group. Local tariff-view compatibility permits structural
+two-step closure witnesses. The example checks that recipe's leading rate
+before constructing a witness; it refuses lists without that explicit premise.
+This is not an automatic closure procedure for arbitrary programs.
+
+Billing uses noncommuting markup/fee primaries and standard audit methods.
+Shipping has its own guarded standard combination. Global checkout invokes
+billing first, then shipping, with one retained-state ledger. A successful
+quote is 54. Capacity refusal retains the completed billing trace plus the
+shipping guard, omitting later shipping methods. Regrouped and converted
+closed interfaces preserve the result. Replacing only shipping retains the
+old billing witness, produces 46 and leaves the old 54 interface usable.
+~retained_billing~ proves complete value/error/state equality for every quantity
+and initial ledger under the replacement API's exact premises.
+
+[[file:../../Tests/GeneralizedComponents.lean][GeneralizedComponents]] compares 120 parameter combinations across original,
+grouped, raw-converted and raw/public-converted interfaces (480 complete
+checkout observations), plus 120 shipping revisions. Direct price formulas and
+complete success/failure traces are independent controls. The suite also
+checks retained billing behavior, tenant metadata, shared-base cardinality,
+a missing closure premise and a deliberately reversed local method order
+that changes the result to 32. A kernel counterexample rejects overlapping
+focus independence. Universal API laws supply the stronger generic guarantees.
+
+The future-work audit status remains ~future_proposal~. This is a scoped
+component composition protocol, not a complete reflective MOP, automatic effect
+analysis, cross-library conflict solver or arbitrary termination checker.
+
+* Components with an upstream dependency
+
+The independent ~Components~ compatibility laws remain unchanged. Use the
+[[file:generalized-dependencies.org][directional dependency protocol]] when downstream construction depends on a selected
+upstream interface view. It reuses the same storage partition without claiming
+semantic independence or reordering public method effects.

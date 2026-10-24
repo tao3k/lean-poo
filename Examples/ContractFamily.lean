@@ -1,0 +1,254 @@
+import LeanPoo.Functional.ContractFamily
+import LeanPoo.Functional.ServiceMetadata
+
+/-! Heterogeneous reserve/cancel contracts across cross-service revisions.
+Generalized-prototype future work; wrapper state is always the actual caller state. -/
+namespace LeanPoo.Examples.ContractFamily
+open Functional Functional.ServiceBundle Functional.ContractFamily Functional.DeclarativeMetadata
+
+/-- Invocation-time service state; revision makes accidental capture of an old snapshot observable. -/
+structure Current where
+  capacity : Int
+  invoice : String
+  revision : Nat
+
+/-- Reserve uses its existing logical atoms; other example services need only a unit atom. -/
+abbrev Atoms : Service → Type | .reserve => ServiceMetadata.Atom | _ => Unit
+/-- Closed heterogeneous constructor inputs: capacity for reserve, invoice for cancel, unit for quote. -/
+abbrev Inputs : Service → Type | .reserve => Int | .cancel => String | .quote => Unit
+
+/-- Require consent and a successful cancellation containing this invoice.
+Specialization changes invoice meaning, not the input/output predicates or logical rule. -/
+def cancellation (invoice : String) : Contract Unit (String × Bool) (ConstructionWorkflow.Action (List String)) where
+  input := ⟨"consent",fun args => args.2 = true,fun _ => inferInstance⟩
+  output := ⟨"successful-cancellation",fun result => result.isOk = true,fun _ => inferInstance⟩
+  meaning := fun _ args result => match result with | .ok events => events = [args.1,invoice] | .error _ => False
+  decide := by intro atom args result; cases result <;> exact inferInstance
+  rule := .atom ()
+
+/-- Prototype specialization preserves exactly the original metadata semantics. -/
+def specializedReservation (capacity : Int) :=
+  (ServiceMetadata.reservation 0).withMeaning (ServiceMetadata.reservation capacity).meaning
+    (ServiceMetadata.reservation capacity).decide
+
+/-- Specializing the reservation template has exactly the fresh descriptor semantics. -/
+theorem specialized_reservation_eq (capacity : Int) :
+    specializedReservation capacity = ServiceMetadata.reservation capacity := rfl
+
+/-- Reuse the invariant cancellation template and replace only invoice-specific meaning.
+The equality theorem below checks correspondence with a fresh descriptor. -/
+def specializedCancellation (invoice : String) :=
+  (cancellation "").withMeaning (cancellation invoice).meaning (cancellation invoice).decide
+
+/-- Specializing the cancellation template has exactly the fresh descriptor semantics. -/
+theorem specialized_cancellation_eq (invoice : String) :
+    specializedCancellation invoice = cancellation invoice := rfl
+
+/-- Build contracts from closed per-service inputs, with policy selecting current support.
+Quote deliberately fails construction so the example can expose unsupported metadata. -/
+def source : Source Service (List Service) Current Atoms Args Result String where
+  Context := Inputs
+  keys := fun selected _ => selected
+  project := fun key _ current => match key with
+    | .reserve => current.capacity
+    | .cancel => current.invoice
+    | .quote => ()
+  construct := fun key inputs => match key with
+    | .reserve => .ok (ServiceMetadata.reservation inputs)
+    | .cancel => .ok (cancellation inputs)
+    | .quote => .error "no quote contract"
+
+/-- Closed constructor contexts admit equality so reuse is decided per service. -/
+instance : (key : Service) → DecidableEq (source.Context key) := fun key => match key with
+  | .quote => inferInstanceAs (DecidableEq Unit)
+  | .reserve => inferInstanceAs (DecidableEq Int)
+  | .cancel => inferInstanceAs (DecidableEq String)
+
+/-- Execute against the passed current state and advance revision on reserve/cancel.
+Cancellation without consent is a service-level failure result, then contract-checked. -/
+def execute : (key : Service) → Current → Args key → Except String (Result key × Current)
+  | .reserve, current, units => .ok (.ok (current.capacity-units,decide ((units : Int) ≤ current.capacity)), {current with revision := current.revision+1})
+  | .cancel, current, args => .ok ((if args.2 then .ok [args.1,current.invoice] else .error "consent"), {current with revision := current.revision+1})
+  | .quote, current, _ => .ok (.ok current.capacity,current)
+
+/-- Deliberately violate reserve conservation to demonstrate rejection by a rebound wrapper. -/
+def badExecute : (key : Service) → Current → Args key → Except String (Result key × Current)
+  | .reserve, current, _ => .ok (.ok (99,true),current)
+  | key, current, args => execute key current args
+
+/-- A family tied to this executor, selected support and current policy/cooked indices. -/
+abbrev Prepared (selected : List Service) (current : Current) := Family source execute selected current
+
+/-- Continue only on successful preparation; stringify typed build errors for executable checks.
+This adapter does not approve failed candidates or alter family semantics. -/
+def withFamily {runner : (key : Service) → Current → Args key → Except String (Result key × Current)}
+    {selected : List Service} {current : Current}
+    (outcome : Except (PreparationError Service String) (Family source runner selected current))
+    (next : Family source runner selected current → Except String Unit) : Except String Unit :=
+  match outcome with | .error error => .error (reprStr error) | .ok family => next family
+
+/-- One closed shared pair feeds the existing heterogeneous source. -/
+def shared : SharedProjection Service (List Service) Current (Int × String) (Int × String) Inputs where
+  input := fun _ current => (current.capacity,current.invoice)
+  prepare := id
+  project := fun key prepared => match key with
+    | .reserve => prepared.1
+    | .cancel => prepared.2
+    | .quote => ()
+
+/-- Adapt the closed shared pair to the same key and constructor protocol as source. -/
+def sharedSource := shared.toSource source.keys source.construct
+
+/-- Invoice changes invalidate common preparation but not reservation semantics. -/
+theorem shared_reserve_unchanged (capacity : Int) (invoice₁ invoice₂ : String) :
+    sharedSource.project .reserve [] ⟨capacity,invoice₁,1⟩ =
+      sharedSource.project .reserve [] ⟨capacity,invoice₂,2⟩ := rfl
+
+/-- The cancellation projection always sees the supplied current invoice. -/
+theorem shared_cancellation_current (capacity : Int) (invoice : String) :
+    sharedSource.project .cancel [] ⟨capacity,invoice,2⟩ = invoice := rfl
+
+-- Check cold/miss preparation and warm reuse counts with a current invoice.
+#eval do
+  let input : Int × String := (10,"invoice:1")
+  let cold := shared.refresh input none
+  let retained := shared.refresh input (some ⟨input,cold.1⟩)
+  let revised := shared.refresh (10,"invoice:2") (some ⟨input,retained.1⟩)
+  unless cold.2 == 1 && retained.2 == 0 && revised.2 == 1 do
+    throw (IO.userError "shared preparation count")
+  unless shared.project .reserve revised.1.value == 10 && shared.project .cancel revised.1.value == "invoice:2" do
+    throw (IO.userError "shared heterogeneous inputs")
+  IO.println "SHARED-CONTRACTS-OK cold=1 retained=0 joint=1 heterogeneous-current"
+
+/-- For every service, direct access equals projection from the closed prepared pair. -/
+theorem direct_shared_coherent (key : Service) (input : Int × String) :
+    (match key with | .reserve => input.1 | .cancel => input.2 | .quote => ()) =
+      shared.project key (shared.prepare input) := by cases key <;> rfl
+
+-- Compare direct/shared choice including selector, template setup and GC charges.
+#eval do
+  let cheap : PreparationCosts := ⟨3,1,1,1⟩
+  let indexed : PreparationCosts := ⟨3,1,20,1⟩
+  let guarded : PreparationCosts := ⟨3,1,1,3⟩
+  unless cheap.choose 2 == PreparationCosts.Strategy.direct && indexed.choose 2 == PreparationCosts.Strategy.shared && guarded.choose 2 == PreparationCosts.Strategy.shared do
+    throw (IO.userError "preparation strategy or selector accounting")
+  let prices : PreparationCosts.PublicationCosts := ⟨8,12,1,20,4⟩
+  unless prices.total (cheap.selected 2) 2 2 3 3 ≤ prices.total (cheap.shared 2) 2 2 3 3 do
+    throw (IO.userError "publication stage cost")
+  let templates : PreparationCosts.TemplateCosts := ⟨24,2,20⟩
+  unless templates.setup + templates.specialize > templates.rebuild &&
+      templates.setup + 2 * templates.specialize ≤ 2 * templates.rebuild do
+    throw (IO.userError "one-time template setup must be amortized")
+  unless PreparationCosts.withCollections 5 2 1 > PreparationCosts.withCollections 6 2 0 do
+    throw (IO.userError "collection excess can reverse primitive saving")
+  IO.println "CONTRACT-STRATEGY-OK direct/shared/selector-budget invariant-template setup-amortization"
+
+-- Check stable selection reuse, changed-arity fallback and positive guard amortization.
+#eval do
+  let prices : PreparationCosts := ⟨3,1,1,1⟩
+  let prepared := prices.cacheSelection 2
+  unless prepared.select 2 == (PreparationCosts.Strategy.direct,0) &&
+      prepared.select 1 == (prices.choose 1,1) &&
+      prepared.selections [2,2,2,2] == 1 && prepared.selections [2,1,2] == 2 do
+    throw (IO.userError "prepared cache hit/fallback/accounting")
+  let indexed := (⟨3,1,20,1⟩ : PreparationCosts).cacheSelection 2
+  unless indexed.strategy == PreparationCosts.Strategy.shared do
+    throw (IO.userError "prepared indexed cache")
+  let budget : PreparationCosts := ⟨10,1,1,4⟩
+  let charged := budget.cacheSelection 2
+  let overhead : PreparationCosts.SelectionCacheCosts := ⟨2,1⟩
+  unless charged.totalCost overhead [2] > budget.selectionCost &&
+      charged.totalCost overhead [2,2,2,2] ≤ 4 * budget.selectionCost do
+    throw (IO.userError "cache setup and support guard must be paid")
+  IO.println "SELECTION-CACHE-OK stable=one-choice changed-arity=fallback"
+
+/-- Exercise cold/warm construction, invoice-only rebuild, current-state invocation,
+executor rebinding, removal, duplicate/missing support and atomic admission refusal.
+Returns the first diagnostic failure; success requires every semantic observation. -/
+def check : Except String Unit :=
+  let initial : Current := ⟨10,"invoice:1",1⟩
+  let revised : Current := ⟨10,"invoice:2",2⟩
+  let selected := [Service.reserve,.cancel]
+  withFamily (prepare source execute selected initial (fun _ => true)) fun cold =>
+  withFamily (refresh source execute selected initial (some cold) (some ⟨rfl⟩) (fun _ => true)) fun retained =>
+  withFamily (refresh source execute selected revised (some retained) (some ⟨rfl⟩) (fun _ => true)) fun changed => do
+    unless cold.built == selected && cold.bound == selected do throw "cold preparation"
+    unless retained.built.isEmpty && retained.bound.isEmpty && retained.reused == selected do throw "unchanged work"
+    unless changed.built == [.cancel] && changed.bound == [.cancel] && changed.reused == [.reserve] do throw "selective contract construction"
+    match changed.cells.get? .reserve, changed.cells.get? .cancel with
+    | some reserve, some cancel =>
+      let (result,state) ← (reserve.bound revised 2).mapError (fun _ => "retained reserve")
+      unless result.toOption == some (8,true) && state.revision == 3 do throw "wrapper captured old state"
+      let (events,_) ← (cancel.bound revised ("customer",true)).mapError (fun _ => "revised cancellation")
+      unless events.toOption == some ["customer","invoice:2"] do throw "contract captured stale invoice"
+    | _,_ => throw "incomplete family"
+    withFamily (refresh source badExecute selected revised (some changed) none (fun _ => true)) fun rebound => do
+      unless rebound.built.isEmpty && rebound.bound == selected do throw "executor change reused wrapper"
+      match rebound.cells.get? .reserve with
+      | some entry => match entry.bound revised 2 with
+        | .error .logic => pure ()
+        | _ => throw "rebound executor escaped conservation"
+      | none => throw "missing rebound reserve"
+      withFamily (refresh source execute [.reserve] revised (some changed) (some ⟨rfl⟩) (fun _ => true)) fun removed => do
+        unless (removed.cells.get? .cancel).isNone do throw "removed contract still callable"
+        let old : Snapshot source execute := ⟨selected,revised,changed⟩
+        let refused := publish source execute old selected revised (fun _ => true) (fun _ => Except.error "joint-refusal")
+        match refused.1 with
+        | .error (.inr "joint-refusal") => pure ()
+        | _ => throw "joint approval bypassed"
+        match refresh source execute [Service.reserve,.reserve] revised (some changed) (some ⟨rfl⟩) (fun _ => true) with
+        | .error (.duplicate .reserve) => pure ()
+        | _ => throw "duplicate contract accepted"
+        match refresh source execute selected revised (some changed) (some ⟨rfl⟩) (fun key => key != .reserve) with
+        | .error (.missing .reserve) => pure ()
+        | _ => throw "orphan retained contract accepted"
+
+-- Charge real changed-key expansion calls/adapters while keeping all other stages.
+#eval do
+  let prices : PreparationCosts.ExpansionCosts := ⟨8,2,1⟩
+  unless prices.shared 0 == 0 && prices.separate 0 == 0 &&
+      prices.shared 1 == 9 && prices.separate 1 == 20 &&
+      prices.shared 3 == 27 && prices.separate 3 == 60 do
+    throw (IO.userError "shared expansion changed-key charges")
+  unless PreparationCosts.withCollections (100 + prices.shared 3) 40 1 >
+      PreparationCosts.withCollections (100 + prices.separate 3) 40 0 do
+    throw (IO.userError "GC can reverse expansion savings")
+  IO.println "SHARED-EXPANSION-COST-OK changed=0/1/3 setup/selector/bind/approval-stay-separate"
+
+#eval match check with
+  | .ok () => IO.println "CONTRACT-FAMILY-OK retained-wrapper current-state selective-invoice executor-rebind removal duplicate missing-service joint-refusal"
+  | .error error => throw (IO.userError error)
+#print axioms Functional.ContractFamily.Family.step_retained
+#print axioms Functional.ContractFamily.Cell.retain_bound
+#print axioms Functional.ContractFamily.Cell.rebind_contract
+#print axioms Functional.ContractFamily.Family.step_missing
+#print axioms Functional.ContractFamily.SharedProjection.refresh_project
+#print axioms Functional.ContractFamily.SharedProjection.refresh_retained
+#print axioms Functional.ContractFamily.SharedProjection.cached_source_project
+#print axioms Functional.ContractFamily.SharedProjection.refresh_cost
+#print axioms Functional.ContractFamily.SharedProjection.retain_origin
+#print axioms specialized_reservation_eq
+#print axioms specialized_cancellation_eq
+#print axioms Functional.DeclarativeMetadata.Contract.withMeaning_input
+#print axioms Functional.DeclarativeMetadata.Contract.withMeaning_rule
+#print axioms Functional.ContractFamily.SharedProjection.direct_source_project
+#print axioms Functional.ContractFamily.SharedProjection.direct_source_eq
+#print axioms Functional.ContractFamily.PreparationCosts.direct_covered
+#print axioms Functional.ContractFamily.PreparationCosts.selected_bound
+#print axioms Functional.ContractFamily.PreparationCosts.publication_direct_bound
+#print axioms Functional.ContractFamily.PreparationCosts.template_amortized
+#print axioms Functional.ContractFamily.PreparationCosts.publication_collection_bound
+#print axioms Functional.ContractFamily.PreparationCosts.collection_budget_bound
+#print axioms Functional.ContractFamily.PreparationCosts.SelectionCache.select_eq
+#print axioms Functional.ContractFamily.PreparationCosts.SelectionCache.hit
+#print axioms Functional.ContractFamily.PreparationCosts.SelectionCache.amortized
+#print axioms Functional.ContractFamily.PreparationCosts.SelectionCache.total_amortized
+#print axioms Functional.ContractFamily.PreparationCosts.paired_delta
+#print axioms Functional.ContractFamily.PreparationCosts.balanced_order
+#print axioms Functional.ContractFamily.publish_refused
+end LeanPoo.Examples.ContractFamily
+
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.saving
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.publication_bound
+
+#print axioms LeanPoo.Functional.ContractFamily.PreparationCosts.ExpansionCosts.collection_bound

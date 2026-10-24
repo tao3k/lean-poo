@@ -1,0 +1,137 @@
+# Persistent prototype maps and guarded slot layouts
+
+This implements the representation protocol acceptance target from TODO.md. The
+Racket paper's “Different instance representation” uses balanced maps and delayed
+sharing; “Same instance representation, different prototype representation” makes
+explicit slot specifications compatible with the same final-self semantics.
+Shape sharing, vector offsets and inline sites advance the implementation ideas
+in the original representation TODO; they are not a new claim of a complete MOP.
+
+## Protocol and public operations
+
+`prototype-map.ss` uses private compact vectors and V19 `std/struct/rbtree`, not a second tree implementation.
+It stores ordered contributions and a first-name index. Persistent updates copy
+balanced-tree paths, preserve later same-name methods and append new names. Input
+and reflection list spines/entry pairs are owned; values and SlotSpecs are shared.
+`prototype-map-remove` removes all direct contributions for a name, rebuilding the
+order tree. There is no logarithmic removal or deep-value immutability claim.
+
+The actual `object.ss` constructor, defaults, setters, `.putslot!`, `.putdefault!`
+and `.cc` use these snapshots. `.cc` shares unaffected tree paths and rebinds
+formulas to the new receiver; it does not retain an evaluated parent instance.
+`.removeslot!` and `.removedefault!` expose inherited contributions again.
+
+`slot-layout.ss` weakly interns a sorted unique symbolic shape. Symbol identities,
+including uninterned names, determine its process-local order. No serial number
+is a disk format or cross-process identity. Each live shape shares its name/index
+mapping; each receiver owns its vector cells. Ordinary lookup retains the existing
+hash interface. The vector is prepared only by an explicit `object-layout` or
+`.ref/inline` access, and successful ordinary reads keep it coherent. This is an
+opt-in representation protocol, not a claim that every hash instance was replaced.
+
+A caller creates `make-slot-cache 'total`, then uses `.ref/inline receiver site`.
+The site retains one owner, revision, layout and certified index, never a separate
+cached result. Every hit requires exact owner/revision/layout identity. Equal
+shapes on distinct receivers cannot share cells. Supported parent, protocol,
+declaration, slot, default, topology and instance edits invalidate existing values,
+compiled methods, ordering, reflection AND layout through the same registered
+reverse-dependency closure. A diamond advances each affected owner once. Failed
+preflight changes neither snapshots nor guards. Missing slots/errors never install
+a successful index; present false remains a real value. An ABA value/shape change
+still rejects the previous generation. Removal of a method does not erase an
+explicit instance assignment; these are separate existing protocols.
+
+## Integrated acceptance
+
+`t/representation-test.ss` exercises persistent snapshots, duplicate method order,
+uninterned symbols, live shape sharing, receiver switching, shared-parent diamonds,
+computed values, insert/delete/default/topology changes, failed edits, cycles and
+retry. `examples/representation-service.ss` composes checked ObjectContract/refine
+with existing Reader/FUN bind and a reusable total access site. Every invocation
+still validates the candidate; a layout hit does not substitute for admission.
+
+Lean `Prototype/Representation.lean` proves first-write/frame/removal laws, current
+index observations, owner/revision/layout rejection, present-false behavior and
+connects stale-revision rejection to existing finite graph invalidation. Executable
+controls live in top-level `Examples/Representation.lean`.
+
+The proofs model source-level behavior. They do not verify the RBTree library,
+weak table, collector, compiler or physical vector implementation. Token identity
+must denote a fixed shape and receiver-local cells. All dependencies must be
+registered; supported edits/evaluation are serialized. Raw generated struct setters,
+raw instance-hash mutations and unregistered callback dependencies bypass the
+protocol. No host process termination, concurrent atomicity, retained-function
+revocation or speed/allocation improvement is claimed.
+
+## Remaining optimization ideas
+
+This closes the mapping/layout/invalidation protocol, not every speculative
+performance idea in the historical TODO. Patricia trees,
+frequency sorting, automatic JIT/PIC selection, full hash removal and compiler
+constant-folding qualification remain unimplemented. Matched complete-workflow
+benchmarks are required before claiming any strategy is faster.
+
+## Compact persistent prototype maps
+
+The concrete small-map item in the representation TODO is now implemented through
+`prototype-map.ss`, without another public namespace or object API. The default policy remains `tree`. Explicit
+`prototype-map entries policy: 'compact` selects private vectors through eight
+**contributions**, including duplicates. Existing snapshots preserve their policy;
+explicit `tree`/`compact` conversion owns a new snapshot with identical entries.
+`prototype-map-policy` reports the selected policy, not the current physical backend. A first-name
+identity scan selects replacement; appending the ninth contribution promotes to
+Gerbil's existing RBTree representation. Removing all contributions for a name
+can demote the remaining ordered entries only under the selected compact policy. Missing removal retains the snapshot.
+The vector, entry pairs and mutable tree handles never escape; list observations
+return fresh spines/pairs, while values and SlotSpecs remain intentionally shared.
+This is source-level persistence, not deep immutability of arbitrary values.
+
+The limit bounds a compact scan at eight identity comparisons and a compact
+write's resulting row at nine cells, including promotion. Standard vector copying,
+`std/vector/vector` filtering and `std/struct/rbtree` perform the storage work.
+Promotion still pays tree construction; tree removal still rebuilds in order.
+There is no logarithmic removal, universal speedup or allocator/GC cost theorem.
+
+`representation-test.ss` compares 96 mixed revisions and every retained snapshot
+with an independent ordered-list oracle. Boundary, duplicate-name, index-zero,
+present-false, uninterned-symbol and failed-preflight controls cover both stores.
+`expanded-service` crosses the bound through actual persistent object construction;
+contraction, overrides, subsequent source edits, checked FUN observation, policy
+refusal and retry keep the existing source invalidation/contract protocol.
+
+Lean's existing `Prototype.Representation` namespace proves complete ordered
+observations, first-write/frame laws, representation and policy selection/preservation, bounded compact
+search/copy and arbitrary finite revision-trace equivalence. Its tree observation
+assumes faithful standard-library iteration; distinct Scheme symbol identities
+must map to distinct model keys. It does not verify RBTree balancing, vector
+primitives, the collector or compiler. Existing revision/layout theorems still
+supply cache rejection; changing map storage grants no new cache authority.
+
+`object-scale-benchmark` now records CPU, wall, GC CPU, collection count and raw
+allocation deltas via the existing shared Scheme sampler. Both natural and
+pre-collected regimes retain the complete cold construction/read, clone-only and
+clone/read workflows. Widths 1/4/8/9/16 supplement the original 8/64/256 cases;
+all original depths remain. The final executable accepts `natural|collected` and `tree|compact`, exercising
+both current policies through the same public map constructor and standard build.
+The added cold construction/clone/read phase includes the first promotion inside
+its measured workload. Balanced ABBA process order retains all widths/depths. Raw observations stay outside
+Git, and GC/history differences must not be reported as selector-only speedups.
+
+## Explicit policy after a rejected default experiment
+
+The first automatic compact candidate was rejected as a default: two ABBA samples
+per GC regime showed eight-contribution clone-only CPU increasing by 61.1% under
+natural GC and 90.9% after collection, aggregating the three retained depths.
+Tree reconstruction at persistent promotion is real work; lower aggregate wall
+observations did not certify this path. The latest design defaults to standard
+trees and exposes compact storage as a deliberate constructor policy. Writes,
+promotion, removal/demotion and conversion preserve that choice. Core `using`
+rejects unknown policies before construction; the standard `length<=n?` bounds
+compact admission without scanning a large input just to choose the backend.
+
+Lean now carries that policy in tree snapshots, proves selection/observation
+identity and write/removal/whole-trace policy preservation, and proves that a
+default tree write remains a tree even for small rows. A compact scan bound is
+not a total allocation bound: promotion still pays the standard tree builder.
+This implements the concrete selectable representation protocol. Automatic
+JIT/PIC selection and a universal speedup remain unimplemented qualification work.
