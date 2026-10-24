@@ -1,6 +1,7 @@
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
+import LeanPoo.Functional.TableSelection
 
 /-! Ordered host Iterable observations over source-bound recursive service rows.
 The host hash/interface and iterator laws are premises; no GC/dispatch proof is asserted.
@@ -163,5 +164,24 @@ example : reserveExpansion (E := String) [(10, 1), (10, 1)] [] =
     .error (.inr 10) := rfl
 example : reserveExpansion (E := String) [(20, 1), (30, 1)] [20] =
     .error (.inr 20) := rfl
+
+/-- A service queue extracts its first admitted callback identity in backend order. -/
+def pendingServices : List (Nat × Nat) := [(1, 10), (2, 20), (9, 90)]
+
+example : deconsBindings pendingServices = (some (1, 10), [(2, 20), (9, 90)]) := rfl
+example : deconsBindings ([] : List Bool) = (none, []) := rfl
+example : deconsBindings [false] = (some false, []) := rfl
+example : (deconsBindings pendingServices).1.toList ++ (deconsBindings pendingServices).2 =
+    pendingServices := deconsBindings_reconstruct pendingServices
+
+/-- Required empty service dispatch preserves the supplied missing-value cause. -/
+example : prepareDecons (fun (_ : List Nat) => Except.ok ())
+    (fun _ => Except.ok none) (fun rows (_ : Nat) => Except.ok rows) "no value" true [] =
+    .error "no value" := rfl
+
+/-- A whole-remainder capacity rule may refuse an otherwise typed extraction. -/
+example : prepareDecons (fun (rows : List Nat) => if rows.length = 1 then Except.error "capacity" else .ok ())
+    (fun rows => .ok (deconsBindings rows).1) (fun rows (_ : Nat) => .ok rows.tail)
+    "no value" false [1, 2] = .error "capacity" := rfl
 
 end Examples.ServiceCollection

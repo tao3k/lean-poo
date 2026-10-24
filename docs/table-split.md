@@ -76,3 +76,28 @@ snapshot. `Examples/CollectionStyles.lean` checks opaque callback payloads, stor
 false, a transported order and refusal/retry. These finite semantic laws do not
 verify Gerbil compilation, locks, arbitrary callback termination, physical memory
 ownership or GC behavior.
+
+## Checked single-entry decomposition
+
+The companion `methods.table` now implements the explicit `decons` TODO through
+required/optional binding extraction and Set element presentation. All five styles
+and their Gerbil receivers reuse the existing single-root installer. Source
+admission precedes backend choice; a present choice is one old-value guarded
+removal; complete remainder admission precedes the observation and successor.
+Required empty extraction preserves the existing Option error, while successful
+optional empty extraction follows the same one-step ownership policy.
+
+`TableSelection.lean` supplies finite traversal reconstruction, absence and exact
+cardinality without payload equality, guarded chosen-key removal/frame/inverse,
+source/empty/remainder failure sequencing and stale-generation refusal through
+`installStyle`. Pure/Posh, Mutable/Classy and Linear retain their existing policy.
+`Examples/ServiceCollection.lean` checks false versus absent, service-order
+reconstruction, required empty refusal and whole-remainder capacity refusal.
+
+The Scheme service example composes correlated indexes and checked Function leaves
+with Reader/FUN/IO and inverse recovery. Backend choice order/fidelity, immutable
+leaves, stable callbacks and persistent installers are explicit premises. Choice,
+guarded deletion, metadata, complete admission and index preparation remain charged;
+there is no `.diff` discovery, inferred ordering or destructive storage proof.
+This advances the collection proposal's future work without claiming the whole
+proposal or automatic algorithm discovery complete.

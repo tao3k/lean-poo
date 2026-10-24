@@ -356,4 +356,113 @@ theorem prepareOrderedSplit_left_refused (compare : K → Except E Int) (middle 
     prepareOrderedSplit compare middle admit rows = .error cause := by
   simp [prepareOrderedSplit, selected, refused]
 
+/-- Default extraction follows the declared finite backend traversal. It neither
+compares nor rebuilds an opaque selected payload. -/
+def deconsBindings (rows : List A) : Option A × List A :=
+  match rows with
+  | [] => (none, [])
+  | head :: tail => (some head, tail)
+
+/-- Putting the optional observation back in front recovers the entire traversal. -/
+theorem deconsBindings_reconstruct (rows : List A) :
+    (deconsBindings rows).1.toList ++ (deconsBindings rows).2 = rows := by
+  cases rows <;> rfl
+
+/-- Optional absence means an empty source, including when A contains false/Unit. -/
+theorem deconsBindings_none (rows : List A) : (deconsBindings rows).1 = none ↔ rows = [] := by
+  cases rows <;> simp [deconsBindings]
+
+/-- Every nonempty extraction removes exactly one entry, with multiplicity intact. -/
+theorem deconsBindings_length (head : A) (tail : List A) :
+    (deconsBindings (head :: tail)).2.length + 1 = (head :: tail).length := by simp [deconsBindings]
+
+/-- One chosen binding becomes an ordinary old-value guarded removal. -/
+def deconsChange (row : K × V) : List (Change K V) := [⟨row.1, some row.2, none⟩]
+
+/-- A faithful choice installs precisely the chosen-key removal; no full diff is needed. -/
+theorem deconsChange_apply [DecidableEq K] [DecidableEq V]
+    (view : K → Option V) (row : K × V) (faithful : view row.1 = some row.2) :
+    applyChanges (deconsChange row) view = .ok (replace view row.1 none) := by
+  simp [deconsChange, applyChanges, faithful]
+
+/-- A missing or changed selected binding refuses with the original conflict key. -/
+theorem deconsChange_conflict [DecidableEq K] [DecidableEq V]
+    (view : K → Option V) (row : K × V) (mismatch : view row.1 ≠ some row.2) :
+    applyChanges (deconsChange row) view = .error row.1 := by
+  simp [deconsChange, applyChanges, mismatch]
+
+/-- Every other key is framed independently of backend ordering or payload equality. -/
+theorem deconsChange_frame [DecidableEq K] (view : K → Option V) (row : K × V)
+    (query : K) (other : query ≠ row.1) : replace view row.1 none query = view query := by
+  simp [replace, other]
+
+/-- The exact inverse delta restores the full source observation after extraction. -/
+theorem deconsChange_inverse [DecidableEq K] [DecidableEq V]
+    (view : K → Option V) (row : K × V) (faithful : view row.1 = some row.2) :
+    applyChanges (inverseChanges (deconsChange row)) (replace view row.1 none) = .ok view :=
+  applyChanges_inverse _ _ _ (deconsChange_apply view row faithful)
+
+/-- Source admission, captured choice, guarded removal and whole-remainder
+recognition precede the returned observation. Required empty extraction refuses
+before any installation; external callback effects are not rolled back. -/
+def prepareDecons (admit : S → Except E Unit) (choose : S → Except E (Option B))
+    (remove : S → B → Except E S) (missing : E) (required : Bool) (source : S) :
+    Except E (Option B × S) :=
+  (admit source).bind fun _ => (choose source).bind fun found =>
+    match found with
+    | none => if required then .error missing else .ok (none, source)
+    | some row => (remove source row).bind fun rest => (admit rest).map fun _ => (found, rest)
+
+/-- Invalid sources suppress choice and removal, preserving the exact refusal. -/
+theorem prepareDecons_source_refused (admit : S → Except E Unit)
+    (choose : S → Except E (Option B)) (remove : S → B → Except E S)
+    (missing cause : E) (required : Bool) (source : S) (bad : admit source = .error cause) :
+    prepareDecons admit choose remove missing required source = .error cause := by
+  simp [prepareDecons, bad, Except.bind]
+
+/-- Optional empty extraction retains the admitted source and exposes no false payload. -/
+theorem prepareDecons_empty (admit : S → Except E Unit)
+    (choose : S → Except E (Option B)) (remove : S → B → Except E S)
+    (missing : E) (source : S) (valid : admit source = .ok ()) (empty : choose source = .ok none) :
+    prepareDecons admit choose remove missing false source = .ok (none, source) := by
+  simp [prepareDecons, valid, empty, Except.bind]
+
+/-- Required empty extraction has its distinct existing Option cause. -/
+theorem prepareDecons_required_empty (admit : S → Except E Unit)
+    (choose : S → Except E (Option B)) (remove : S → B → Except E S)
+    (missing : E) (source : S) (valid : admit source = .ok ()) (empty : choose source = .ok none) :
+    prepareDecons admit choose remove missing true source = .error missing := by
+  simp [prepareDecons, valid, empty, Except.bind]
+
+/-- Even a valid chosen binding cannot escape when the whole remainder refuses. -/
+theorem prepareDecons_remainder_refused (admit : S → Except E Unit)
+    (choose : S → Except E (Option B)) (remove : S → B → Except E S)
+    (missing cause : E) (required : Bool) (source rest : S) (row : B)
+    (valid : admit source = .ok ()) (chosen : choose source = .ok (some row))
+    (removed : remove source row = .ok rest) (bad : admit rest = .error cause) :
+    prepareDecons admit choose remove missing required source = .error cause := by
+  simp [prepareDecons, valid, chosen, removed, bad, Except.bind, Except.map]
+
+/-- Non-owning extracted data stays private until the same single-root installer
+accepts the captured generation. A stale or consumed owner leaks no observation. -/
+def installDecons (style : TableStyle) (current : TableGeneration A)
+    (expected : Nat) (found : B) (rest : A) :
+    TableGeneration A × Except (StyleFailure E) (B × A) :=
+  let result := installStyle (E := E) style current expected rest
+  (result.1, result.2.map (found, ·))
+
+/-- A competing generation rejects both the prepared remainder and selected data. -/
+theorem installDecons_stale (style : TableStyle) (current : TableGeneration A)
+    (expected : Nat) (found : B) (rest : A) (stale : current.version ≠ expected) :
+    installDecons (E := E) style current expected found rest = (current, .error .stale) := by
+  simp [installDecons, installStyle_stale style current expected rest stale, Except.map]
+
+/-- Successful installation preserves the exact observation and existing ownership
+policy. Pure/posh, mutable/classy and linear share this single-root result. -/
+theorem installDecons_ready (style : TableStyle) (current next : TableGeneration A)
+    (expected : Nat) (found : B) (rest : A)
+    (ready : installStyle (E := E) style current expected rest = (next, .ok rest)) :
+    installDecons (E := E) style current expected found rest = (next, .ok (found, rest)) := by
+  simp [installDecons, ready, Except.map]
+
 end LeanPoo.Functional.OrderedDictionary
