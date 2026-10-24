@@ -500,6 +500,7 @@
   "LeanPoo/Functional/TableMapping.lean",
   "LeanPoo/Functional/TableObservation.lean",
   "LeanPoo/Functional/TableOrder.lean",
+  "LeanPoo/Functional/TableProjection.lean",
   "LeanPoo/Functional/TableRepresentation.lean",
   "LeanPoo/Functional/TableRevision.lean",
   "LeanPoo/Functional/TableSelection.lean",

@@ -142,3 +142,48 @@ callbacks and performs m target-registry lookups and insertions. It allocates a
 finite row list and constructs the target once. Source/result recognition, child
 checks, registry preparation, target/index construction, comparisons, converters,
 allocation and GC are additional charged costs; no O(edits) or speedup is claimed.
+
+## Incremental heterogeneous projection
+
+Gerbil `table-projection` reuses the existing Wrapper, source/target typed key
+registries and ordered deltas. `.ap` initializes; `.unap`/`.get` observe admitted
+source/target roots; `.apply-delta` returns an immutable successor. Source delta
+conflicts and complete source admission precede callbacks. First-touch source-key
+coalescing projects only final present rows; cached rows of deleted keys are
+retracted without calling the callback. All affected old owners are released before
+new reservations, permitting final swaps. New/untouched collisions still refuse.
+One ordinary target delta retains complete correlated index and root admission.
+Failure returns no new state and the predecessor is available for fresh retry.
+
+`LeanPoo/Functional/TableProjection.lean` supplies these finite laws in the existing
+OrderedDictionary namespace:
+
+* `refreshEntryCache_observe`, `_frame`, `_complete`: successful selective refresh
+  agrees with a full stable key-local projection at every source key, retaining
+  exact cached opaque Function leaves outside the touched inventory.
+* `projection_changes_covered`: existing successful ordered changes provide the
+  required untouched-source frame. First-touch deduplication uses backend logical
+  equality; callbacks respect that equivalence.
+* `reserveProjection_unique`: cached untouched owners plus newly reserved rows
+  have no duplicate target keys, using existing `mapEntries` uniqueness/avoidance.
+* `prepareProjectionRevision_*`: source, projection and final target refusal order;
+  complete exact source/cache/target publication after all phases succeed.
+* `publishProjection_*`: immutable predecessor on failure, complete successor on
+  success. External effects/GC/thread scheduling are outside this law.
+* `projectionCalls_bound`: final-present callback demands are bounded by touched
+  key count, not by total snapshot size. Recognition/backend work is separate.
+
+`Examples/CollectionStyles.lean` adds Function-bearing key swaps, shared untouched
+callbacks, collision refusal and deletion without a demanded callback. Scheme
+regressions compose repeated-key batches, 32-round full-oracle comparison across
+RationalDict/Trie, primary and unique-index refusal, metadata lineage, retries,
+shared-team migration and FUN/IO with target Linear style recovery.
+
+Stable pure key-local callbacks, stable admitted leaves, faithful backend equality,
+registry/traversal laws, complete recognizers and persistent atomic target installers
+are premises. Explicit callback origins invalidate all stale states; undeclared
+mutable dependencies cannot be made incremental automatically. There is no inferred
+inverse projection, arbitrary Function equality, global publication freshness,
+physical ownership or compiler/runtime verification. Source/target full admission,
+registry preparation, index operations, comparisons, allocation and GC remain
+charged; callback selectivity is not an end-to-end O(edits) or wall-time claim.

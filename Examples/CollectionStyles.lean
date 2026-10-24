@@ -3,6 +3,7 @@ import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableIndex
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
+import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.SetAlgebra
 import LeanPoo.Functional.TableSelection
 
@@ -681,5 +682,37 @@ example : observeStyle [0] [0] (some [(1, 100), (2, 200)])
     (some (fun rows => mapEntries (E := String)
       (fun (key : Nat) (value : Nat) => .ok (some (key + 10, decide (value > 100)))) rows [])) =
       .ok [(11, false), (12, true)] := by rfl
+
+/-- Cached service callbacks remain opaque; only their logical output keys move. -/
+def serviceProjection (_key : Nat) (row : Nat × (Nat → Nat)) :
+    Except String (Option (Nat × (Nat → Nat))) := .ok (some (row.1, row.2))
+
+/-- A batched final-state swap refreshes two services while the shared third
+callback remains the exact predecessor value, independent of function equality. -/
+example (f g h : Nat → Nat) :
+    (refreshEntryCache serviceProjection
+      (fun key => if key = 1 then some (20, f) else if key = 2 then some (10, g) else none)
+      [1, 2] (fun key => if key = 3 then some (30, h) else none)).map
+      (fun cache => cache 3) = .ok (some (30, h)) := by
+  simp [refreshEntryCache, projectedEntry, serviceProjection, replace, Except.bind, Except.map]
+
+/-- Releasing both old owners permits a final swap; retained key 30 still blocks
+collisions. Payloads are Functions, so these checks cannot use payload equality. -/
+example (f g h : Nat → Nat) :
+    reserveProjection serviceProjection [(30, h)] [(1, (20, f)), (2, (10, g))] =
+      .ok [(30, h), (20, f), (10, g)] := by
+  simp [reserveProjection, mapEntries, serviceProjection, Except.map]
+
+/-- A new service cannot overwrite an untouched shared output, even with the
+same Function. Failure contains no target or cached successor. -/
+example (f : Nat → Nat) :
+    reserveProjection serviceProjection [(30, f)] [(1, (30, f))] = .error (.inr 30) := by
+  simp [reserveProjection, mapEntries, serviceProjection, Except.map]
+
+/-- Deletion closes without demanding a callback that would otherwise refuse. -/
+example : (refreshEntryCache (fun (_ : Nat) (_ : Nat) =>
+      (.error "must not run" : Except String (Option (Nat × Nat))))
+      (fun _ => none) [1] (fun _ => some (10, 100))).map (fun cache => cache 1) = .ok none := by
+  simp [refreshEntryCache, projectedEntry, replace, Except.bind, Except.map]
 
 end LeanPoo.Examples.CollectionStyles

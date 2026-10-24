@@ -69,6 +69,7 @@ import LeanPoo.Functional.SetStyle
 import LeanPoo.Functional.TableSelection
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableMapping
+import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.OrderedDictionary
 import LeanPoo.Functional.MetadataFamily
 import LeanPoo.Functional.MetadataClosure
