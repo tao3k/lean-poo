@@ -153,12 +153,12 @@ def prepareOrderedSplit (compare : K → Except E Int) (middle : Option V)
     Except E (List (K × V) × Option V × List (K × V)) :=
   match selectBindings (fun row => (compare row.1).map (fun sign => decide (sign < 0))) rows with
   | .error cause => .error cause
-  | .ok (left, _) =>
-    match selectBindings (fun row => (compare row.1).map (fun sign => decide (sign > 0))) rows with
+  | .ok (left, _) => match admit left with
     | .error cause => .error cause
-    | .ok (right, _) => match admit left with
+    | .ok () =>
+      match selectBindings (fun row => (compare row.1).map (fun sign => decide (sign > 0))) rows with
       | .error cause => .error cause
-      | .ok () => match admit right with
+      | .ok (right, _) => match admit right with
         | .error cause => .error cause
         | .ok () => .ok (left, middle, right)
 
@@ -238,5 +238,15 @@ theorem prepareOrderedSplit_right_refused (compare : K → Int) (middle : Option
     (right : admit (rows.filter (fun row => decide (compare row.1 > 0))) = .error cause) :
     prepareOrderedSplit (fun k => .ok (compare k)) middle admit rows = .error cause := by
   simp [prepareOrderedSplit, selectBindings_total, Except.map, left, right]
+
+/-- A left-root refusal stops preparation before the second comparison traversal,
+matching the checked map's admission order; neither a pivot nor a side escapes. -/
+theorem prepareOrderedSplit_left_refused (compare : K → Except E Int) (middle : Option V)
+    (admit : List (K × V) → Except E Unit) (rows left remainder : List (K × V))
+    (cause : E)
+    (selected : selectBindings (fun row => (compare row.1).map (fun sign => decide (sign < 0)))
+      rows = .ok (left, remainder)) (refused : admit left = .error cause) :
+    prepareOrderedSplit compare middle admit rows = .error cause := by
+  simp [prepareOrderedSplit, selected, refused]
 
 end LeanPoo.Functional.OrderedDictionary

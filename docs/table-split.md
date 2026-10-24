@@ -32,6 +32,11 @@ recognition before either escapes. No intermediate remainder must satisfy a
 custom refinement, but each final root must satisfy it; some refinements therefore
 legitimately reject a split.
 
+Style factories retain declared Comparer identity and dependencies even on raw
+backends that omit them from `.sources`. Their union is deduplicated once at
+factory construction; retained owners reject revisions, and fresh factories can
+explicitly retry against the current declarations.
+
 `table-styles` / `set-styles` lift the operation through their existing multi-result
 stage. Pure/Posh retain the predecessor. Mutable/Classy retain its identity as the
 left result and allocate a distinct right owner. Linear retires the predecessor
@@ -55,7 +60,11 @@ The reference split makes two checked mapping traversals, plus pivot lookup,
 metadata protection and complete input/output recognition. The backend determines
 node allocation, delta preparation, index updates, representation conversions and
 any ordering/sorting costs. This is **not** a logarithmic split or an allocation
-improvement claim. The invalid Trie recursion, which confused pivot and traversal
+improvement claim. RationalDict now also supplies the existing `number-comparer` to the standard
+RBTree bulk and point constructors. Subtraction was invalid there: a large
+integer difference or a rational difference need not be a fixnum comparison
+result. Bignum and fractional-key controls exercise both construction paths.
+The invalid Trie recursion, which confused pivot and traversal
 prefix, is removed in favor of the shared checked protocol.
 
 `LeanPoo.Functional.OrderedDictionary` in `TableSelection.lean` proves exact stable
