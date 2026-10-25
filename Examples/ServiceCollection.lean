@@ -1,6 +1,7 @@
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableCapture
 import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
@@ -661,5 +662,24 @@ the collision reports that target key for explicit diagnostic/retry handling. -/
 example : claimTransportOwner (fun (key : Int × Bool) => key.1)
     (fun target : Int => if target = 1 then some (1, false) else none)
     1 (-1, true) = .error 1 := by rfl
+
+/-- Both cells can be reused after emission without turning stored false into
+absence or replacing the old expectation with the latest provider value. -/
+example : (overwriteChangeShell
+    (emitChange ((fun n : Nat => n == 1), ([] : List (Change Nat Bool)))
+      ⟨7, some 0, some 1⟩) 0 true).2 = [⟨7, some false, some true⟩] := rfl
+
+/-- Reusing the same cell across emissions retains emission-time observations
+and the full ordered history, rather than the final contents of that cell. -/
+example : captureEvents
+    [((fun _ : Nat => false), (⟨7, some 0, none⟩ : BorrowedChange Nat Nat)),
+     ((fun _ : Nat => true), (⟨7, none, some 0⟩ : BorrowedChange Nat Nat))] =
+      [⟨7, some false, none⟩, ⟨7, none, some true⟩] := rfl
+
+/-- Callback handles are opaque leaves, retained without an equality decision
+or a second wrapper construction. Shell ownership does not copy their internals. -/
+example {Handle : Type} (callback : Handle) :
+    captureChange (fun _ : Nat => callback) (⟨7, some 0, some 1⟩ : BorrowedChange Nat Nat) =
+      ⟨7, some callback, some callback⟩ := rfl
 
 end Examples.ServiceCollection

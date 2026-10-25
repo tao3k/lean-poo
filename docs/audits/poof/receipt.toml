@@ -494,6 +494,7 @@
   "LeanPoo/Functional/SupportRevision.lean",
   "LeanPoo/Functional/SupportedComponents.lean",
   "LeanPoo/Functional/TableBatch.lean",
+  "LeanPoo/Functional/TableCapture.lean",
   "LeanPoo/Functional/TableFocus.lean",
   "LeanPoo/Functional/TableFold.lean",
   "LeanPoo/Functional/TableIndex.lean",
