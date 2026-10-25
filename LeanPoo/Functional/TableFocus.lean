@@ -1,5 +1,6 @@
 import LeanPoo.Functional.TableStyle
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableCapture
 
 /-! Typed key focuses reuse optional dictionary replacement, checked callbacks and
 style ownership. Laws concern observations of persistent finite carriers; no
@@ -199,5 +200,110 @@ theorem association_absent_linear (before : K → Option V) (key : K)
     (admit : Option V → Except E Unit) (ready : admit none = .ok ()) :
     (focusModify .linear (some before) key (admitAssociation admit none)).1 = none := by
   simp [focusModify, styleStep, admitAssociation, ready, Except.map]
+
+
+section CapturedFocus
+variable {Cell : Type}
+
+/-- One point-admission result supplies the focused optional reply. The existing
+capture primitive freezes cells before recognizers; its external heap effects
+are outside this owner/publication projection, rather than being rolled back. -/
+def focusCapturedReply (heap : Cell → V) (key : K) (request : Option Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) : Except E (Option V) :=
+  (checkedChangeCapture heap ⟨key, none, request⟩ recognize).2.map Change.after
+
+omit [DecidableEq K] in
+/-- Recognition sees the frozen reply and cannot substitute later provider data. -/
+theorem focusCapturedReply_ready (heap later : Cell → V) (key : K) (request : Option Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit)
+    (ready : recognize (captureChange heap ⟨key, none, request⟩) heap = (later, .ok ())) :
+    focusCapturedReply heap key request recognize = .ok (request.map heap) := by
+  unfold focusCapturedReply
+  rw [checkedChangeCapture_ready heap later ⟨key, none, request⟩ recognize ready]
+  rfl
+
+omit [DecidableEq K] in
+/-- Point admission returns its original cause without a replacement value. -/
+theorem focusCapturedReply_refused (heap later : Cell → V) (key : K) (request : Option Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) (cause : E)
+    (refused : recognize (captureChange heap ⟨key, none, request⟩) heap = (later, .error cause)) :
+    focusCapturedReply heap key request recognize = .error cause := by
+  unfold focusCapturedReply
+  rw [checkedChangeCapture_refused heap later ⟨key, none, request⟩ recognize cause refused]
+  rfl
+
+/-- Delegate admission inside the already captured owner operation. The modifier
+returns an emission-time heap and optional cell, not a future read of that cell.
+Required replies use the existing present-key adapter; metadata/source admission
+and generation installation retain their separate preconditions. -/
+def focusCapturedModify (style : TableStyle) (state : Option (K → Option V)) (key : K)
+    (transform : Option V → Except E ((Cell → V) × Option Cell))
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) :=
+  focusModify style state key (fun old => (transform old).bind fun observed =>
+    focusCapturedReply observed.1 key observed.2 recognize)
+
+/-- Successful capture has exactly the existing focus-write owner transition,
+including linear retirement and the three conditional observation lens laws. -/
+theorem focusCapturedModify_ready (style : TableStyle) (before : K → Option V) (key : K)
+    (heap later : Cell → V) (request : Option Cell)
+    (transform : Option V → Except E ((Cell → V) × Option Cell))
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit)
+    (returned : transform (before key) = .ok (heap, request))
+    (admitted : recognize (captureChange heap ⟨key, none, request⟩) heap = (later, .ok ())) :
+    focusCapturedModify style (some before) key transform recognize =
+      focusWrite (E := E) style key (request.map heap) (some before) := by
+  have reply := focusCapturedReply_ready heap later key request recognize admitted
+  cases style <;> simp [focusCapturedModify, focusModify, focusWrite, styleStep,
+    returned, reply, Except.bind]
+
+/-- Refused value admission retains the complete live owner for explicit retry. -/
+theorem focusCapturedModify_refused (style : TableStyle) (before : K → Option V) (key : K)
+    (heap later : Cell → V) (request : Option Cell)
+    (transform : Option V → Except E ((Cell → V) × Option Cell))
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) (cause : E)
+    (returned : transform (before key) = .ok (heap, request))
+    (refused : recognize (captureChange heap ⟨key, none, request⟩) heap = (later, .error cause)) :
+    focusCapturedModify style (some before) key transform recognize =
+      (some before, .error (.callback cause)) := by
+  have reply := focusCapturedReply_refused heap later key request recognize cause refused
+  unfold focusCapturedModify
+  apply focusModify_refused
+  simp [returned, reply, Except.bind]
+
+/-- Modifier refusal does not reach payload admission or ownership installation. -/
+theorem focusCapturedModify_callback_refused (style : TableStyle) (before : K → Option V) (key : K)
+    (transform : Option V → Except E ((Cell → V) × Option Cell))
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) (cause : E)
+    (refused : transform (before key) = .error cause) :
+    focusCapturedModify style (some before) key transform recognize =
+      (some before, .error (.callback cause)) := by
+  unfold focusCapturedModify
+  apply focusModify_refused
+  simp [refused, Except.bind]
+
+/-- A consumed owner wins failure precedence before a modifier or recognizer is
+executed. This is the shared point-update order, not a second pre-owner check. -/
+theorem focusCapturedModify_consumed (style : TableStyle) (key : K)
+    (transform : Option V → Except E ((Cell → V) × Option Cell))
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) :
+    focusCapturedModify style none key transform recognize = (none, .error .consumed) := rfl
+
+/-- An admitted, frozen reply cannot overwrite a reentrant winner. Reuse the
+existing generation installer; payload capture grants no publication authority. -/
+theorem focusCapturedInstall_stale (style : TableStyle)
+    (current : TableGeneration (K → Option V)) (expected : Nat) (before : K → Option V)
+    (key : K) (heap later : Cell → V) (request : Option Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit)
+    (ready : recognize (captureChange heap ⟨key, none, request⟩) heap = (later, .ok ()))
+    (stale : current.version ≠ expected) :
+    (focusCapturedReply heap key request recognize).map (fun value =>
+      installStyle (E := E) style current expected (replace before key value)) =
+        .ok (current, .error .stale) := by
+  rw [focusCapturedReply_ready heap later key request recognize ready]
+  change Except.ok (installStyle (E := E) style current expected
+    (replace before key (request.map heap))) = _
+  rw [focusInstall_stale style current expected before key (request.map heap) stale]
+
+end CapturedFocus
 
 end LeanPoo.Functional.OrderedDictionary

@@ -682,4 +682,16 @@ example {Handle : Type} (callback : Handle) :
     captureChange (fun _ : Nat => callback) (⟨7, some 0, some 1⟩ : BorrowedChange Nat Nat) =
       ⟨7, some callback, some callback⟩ := rfl
 
+/-- A focus reply survives validator writes to the borrowed cell; only the
+captured false value reaches the later point update. -/
+example : focusCapturedReply (fun _ : Nat => false) (7 : Nat) (some 0)
+    (fun _ _ => ((fun _ => true), (Except.ok () : Except String Unit))) =
+      .ok (some false) := rfl
+
+/-- Retired owners reject even a value recognizer that would otherwise succeed;
+no response is read or admitted before that ownership refusal. -/
+example (transform : Option Bool → Except String ((Nat → Bool) × Option Nat))
+    (recognize : Change Nat Bool → (Nat → Bool) → (Nat → Bool) × Except String Unit) :
+    focusCapturedModify .linear none 7 transform recognize = (none, .error .consumed) := rfl
+
 end Examples.ServiceCollection
