@@ -458,4 +458,24 @@ example : prepareDivision admitCapacityDivision [(1, 3), (2, 4)] =
 example : styleDivision .linear (some []) (prepareDivision admitCapacityDivision) =
     (none, .ok []) := rfl
 
+/-- This nonmonotone service policy uses both key and capacity, so it cannot
+be replaced by a key-only binary-search assumption. -/
+def serviceQuery (row : Nat × Int) : Except String Bool :=
+  .ok (row.1 % 2 == 1 && row.2 > 2)
+
+example : queryBindings serviceQuery capacityWindow = .ok (some (1, 3)) := rfl
+example : queryBindings serviceQuery capacityWindow.reverse = .ok (some (3, 7)) := rfl
+
+/-- A later failure is not observed after the first matching service. -/
+def failingServiceQuery (row : Nat × Int) : Except String Bool :=
+  if row.1 = 1 then .ok true else .error "later service"
+
+example : queryBindings failingServiceQuery capacityWindow = .ok (some (1, 3)) := rfl
+example : queryVisits failingServiceQuery capacityWindow = 1 := rfl
+
+/-- Complete policy refusal precedes predicates and preserves a linear owner. -/
+example : observeQuery (some capacityWindow)
+    (prepareQuery (fun _ => Except.error "policy") serviceQuery) =
+    (some capacityWindow, .error (.callback "policy")) := rfl
+
 end Examples.ServiceCollection

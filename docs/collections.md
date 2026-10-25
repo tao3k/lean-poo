@@ -625,3 +625,24 @@ Strictly decreasing finite sizes justify explicit recursion under faithful backe
 laws, not arbitrary callback termination, physical disjoint ownership, automatic
 parallelism, compiler/GC correctness or wall-clock speedups. This advances the
 proposed collection library's future work without declaring the project complete.
+
+Checked predicate observations now share the finite `TableSelection.queryBindings`
+kernel. The Gerbil Table predicate receives key and value; the Set presentation
+projects to elements. Public first/last searches and any/every admit the complete
+snapshot before short-circuiting, with strict Boolean decisions and original
+failure identity. Recognition bypasses public admission to avoid self-recursion.
+The incorrect Trie key-only monotonic specialization is removed from this general
+interface; explicit seek remains the ordered capability. Existing five-style and
+Gerbil receiver paths observe without consuming ownership, and the service example
+composes a retained Function lookup with Reader/FUN/IO.
+
+Proofs establish source membership and satisfaction, absence and universal
+interpretation, decided-prefix shielding, reverse membership, refusal precedence,
+unchanged/consumed ownership and a source-length bound on predicate invocations.
+The model assumes faithful persistent backend traversal and stable admitted leaves;
+complete recognition, backend/guard/conversion/allocation/GC costs remain charged.
+A short predicate prefix does not prove a sublinear total query. No host callback
+termination, runtime/compiler correctness or wall-clock claim is made. This is an
+explicit future-work extension. Design reflection: reuse one traversal and the
+existing admission/ownership boundaries, remove the false optimization premise,
+and keep raw recognition separate from public query admission; add no namespace.

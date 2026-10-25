@@ -667,4 +667,137 @@ theorem styleDivision_empty_mutable (before : A) (prepare : A → Except E (List
     styleDivision .mutable (some before) prepare = (some before, .ok []) := by
   simp [styleDivision, ready, styleStep]
 
+/-- Follow declared traversal until the first true decision or original refusal.
+No tail predicate is evaluated after either outcome. -/
+def queryBindings (predicate : A → Except E Bool) : List A → Except E (Option A)
+  | [] => .ok none
+  | entry :: rest => match predicate entry with
+    | .error cause => .error cause
+    | .ok true => .ok (some entry)
+    | .ok false => queryBindings predicate rest
+
+/-- Successful observation preserves source identity and predicate satisfaction. -/
+theorem queryBindings_sound (predicate : A → Except E Bool) (rows : List A) (found : A)
+    (success : queryBindings predicate rows = .ok (some found)) :
+    found ∈ rows ∧ predicate found = .ok true := by
+  induction rows with
+  | nil => simp [queryBindings] at success
+  | cons head tail ih =>
+    cases hp : predicate head with
+    | error cause => simp [queryBindings, hp] at success
+    | ok decision =>
+      cases decision
+      · have h := ih (by simpa [queryBindings, hp] using success)
+        exact ⟨List.mem_cons_of_mem head h.1, h.2⟩
+      · have same : head = found := by simpa [queryBindings, hp] using success
+        subst found
+        exact ⟨List.mem_cons_self, hp⟩
+
+/-- Absence certifies every decision was false; refusal cannot become absence. -/
+theorem queryBindings_none_iff (predicate : A → Except E Bool) (rows : List A) :
+    queryBindings predicate rows = .ok none ↔ ∀ entry ∈ rows, predicate entry = .ok false := by
+  induction rows with
+  | nil => simp [queryBindings]
+  | cons head tail ih =>
+    cases hp : predicate head with
+    | error cause => simp [queryBindings, hp]
+    | ok decision => cases decision <;> simp [queryBindings, hp, ih]
+
+/-- Universal success is absence of a false decision, with original errors retained.
+This supplies the shared search kernel's Boolean-complement interpretation. -/
+theorem queryBindings_all_iff (predicate : A → Except E Bool) (rows : List A) :
+    queryBindings (fun entry => match predicate entry with
+      | .error cause => .error cause | .ok decision => .ok (!decision)) rows = .ok none ↔
+    ∀ entry ∈ rows, predicate entry = .ok true := by
+  rw [queryBindings_none_iff]
+  apply forall_congr'
+  intro entry
+  apply forall_congr'
+  intro _
+  cases hp : predicate entry with
+  | error cause => simp
+  | ok decision => cases decision <;> simp
+
+/-- An original refusal is not converted to a negative predicate decision. -/
+theorem queryBindings_head_refused (predicate : A → Except E Bool) (entry : A)
+    (rest : List A) (cause : E) (refused : predicate entry = .error cause) :
+    queryBindings predicate (entry :: rest) = .error cause := by
+  simp [queryBindings, refused]
+
+/-- A decided prefix shields every later entry, even a callback that would fail. -/
+theorem queryBindings_decided_prefix (predicate : A → Except E Bool) (before tail : List A)
+    (found : A) (decided : queryBindings predicate before = .ok (some found)) :
+    queryBindings predicate (before ++ tail) = .ok (some found) := by
+  induction before with
+  | nil => simp [queryBindings] at decided
+  | cons head rest ih =>
+    cases hp : predicate head with
+    | error cause => simp [queryBindings, hp] at decided
+    | ok decision =>
+      cases decision
+      · simpa [queryBindings, hp] using ih (by simpa [queryBindings, hp] using decided)
+      · simpa [queryBindings, hp] using decided
+
+/-- Reverse traversal uses the same kernel and retains original source entries. -/
+theorem queryBindings_reverse_sound (predicate : A → Except E Bool) (rows : List A) (found : A)
+    (success : queryBindings predicate rows.reverse = .ok (some found)) :
+    found ∈ rows ∧ predicate found = .ok true := by
+  have h := queryBindings_sound predicate rows.reverse found success
+  exact ⟨List.mem_reverse.mp h.1, h.2⟩
+
+/-- Count predicate calls only; full admission/backend/guard/allocation costs remain
+separate. This is not a constant-time or elapsed-time claim. -/
+def queryVisits (predicate : A → Except E Bool) : List A → Nat
+  | [] => 0
+  | entry :: rest => 1 + match predicate entry with
+    | .ok false => queryVisits predicate rest
+    | _ => 0
+
+/-- Predicate work cannot exceed the original finite traversal length. -/
+theorem queryVisits_le_length (predicate : A → Except E Bool) (rows : List A) :
+    queryVisits predicate rows ≤ rows.length := by
+  induction rows with
+  | nil => simp [queryVisits]
+  | cons head tail ih =>
+    cases hp : predicate head with
+    | error cause => simp [queryVisits, hp]
+    | ok decision => cases decision <;> simp [queryVisits, hp] <;> omega
+
+/-- Full snapshot admission precedes all short-circuit user predicates. -/
+def prepareQuery (admit : List A → Except E Unit) (predicate : A → Except E Bool)
+    (rows : List A) : Except E (Option A) :=
+  match admit rows with
+  | .error cause => .error cause
+  | .ok () => queryBindings predicate rows
+
+/-- An invalid tail cannot be hidden by an earlier possible match. -/
+theorem prepareQuery_refused (admit : List A → Except E Unit) (predicate : A → Except E Bool)
+    (rows : List A) (cause : E) (refused : admit rows = .error cause) :
+    prepareQuery admit predicate rows = .error cause := by
+  simp [prepareQuery, refused]
+
+/-- Successful admission leaves the exact predicate/traversal result unchanged. -/
+theorem prepareQuery_ready (admit : List A → Except E Unit) (predicate : A → Except E Bool)
+    (rows : List A) (ready : admit rows = .ok ()) :
+    prepareQuery admit predicate rows = queryBindings predicate rows := by
+  simp [prepareQuery, ready]
+
+/-- Read-only observation retains ownership on success, absence and refusal.
+A consumed owner is distinct from a successful search with no matching entry. -/
+def observeQuery (state : Option (List A)) (query : List A → Except E (Option A)) :
+    Option (List A) × Except (StyleFailure E) (Option A) :=
+  (state, match state with
+    | none => .error .consumed
+    | some rows => match query rows with
+      | .error cause => .error (.callback cause)
+      | .ok found => .ok found)
+
+/-- Every presentation keeps its observed owner, including a live linear owner. -/
+theorem observeQuery_preserves (state : Option (List A)) (query : List A → Except E (Option A)) :
+    (observeQuery state query).1 = state := rfl
+
+/-- No observation can revive consumed ownership. -/
+theorem observeQuery_consumed (query : List A → Except E (Option A)) :
+    observeQuery none query = (none, .error .consumed) := rfl
+
 end LeanPoo.Functional.OrderedDictionary
