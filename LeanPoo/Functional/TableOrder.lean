@@ -8,10 +8,13 @@ namespace LeanPoo.Functional.OrderedDictionary
 open Prototype (DictionaryBridge)
 variable {K L V : Type}
 
-/-- The host three-way comparer must agree with key equality and a strict order. -/
-structure TableComparerLaws (compare : K → K → Int) : Prop where
+/-- The host comparer must agree with its declared key relation and strict order.
+Structural equality is the default; quotient-like backends supply their own lawful
+equivalence. Reflexivity/symmetry/transitivity of that relation are separate premises. -/
+structure TableComparerLaws (compare : K → K → Int)
+    (equivalent : K → K → Prop := Eq) : Prop where
   sign : ∀ a b, compare a b = -1 ∨ compare a b = 0 ∨ compare a b = 1
-  zero : ∀ a b, compare a b = 0 ↔ a = b
+  zero : ∀ a b, compare a b = 0 ↔ equivalent a b
   reverse : ∀ a b, compare a b = -(compare b a)
   trans : ∀ a b c, compare a b < 0 → compare b c < 0 → compare a c < 0
 
@@ -819,5 +822,99 @@ theorem equalitySteps_bound (same : V → V → Except E Bool) (left right : K �
     cases hd : equalBindingOption same (left key) (right key) with
     | error cause => simp [equalitySteps, hd]
     | ok decision => cases decision <;> simp [equalitySteps, hd] <;> omega
+
+/-- A representation may have several keys for one backend key. Pulling the
+source order through an explicit projection preserves signs and strict order,
+while zero follows backend equivalence rather than structural representation. -/
+theorem projectedComparer_laws (project : L → K) (compare : K → K → Int)
+    (laws : TableComparerLaws compare) :
+    TableComparerLaws (fun a b => compare (project a) (project b))
+      (fun a b => project a = project b) where
+  sign a b := laws.sign (project a) (project b)
+  zero a b := laws.zero (project a) (project b)
+  reverse a b := laws.reverse (project a) (project b)
+  trans a b c := laws.trans (project a) (project b) (project c)
+
+/-- Equality after projection is a genuine equivalence, including tagged numeric
+representations that are structurally different but identify the same key. -/
+theorem projectedKey_equivalence (project : L → K) :
+    Equivalence (fun a b => project a = project b) := by
+  constructor
+  · intro a; rfl
+  · intro a b h; exact h.symm
+  · intro a b c first second; exact first.trans second
+
+/-- Explicit key isomorphisms transport a declared backend equivalence together
+with its order; they need not replace it with representation equality. -/
+theorem transportComparer_equivalence_laws (keys : DictionaryBridge K L)
+    (compare : K → K → Int) (equivalent : K → K → Prop)
+    (laws : TableComparerLaws compare equivalent) :
+    TableComparerLaws (transportComparer keys compare)
+      (fun a b => equivalent (keys.fromFields a) (keys.fromFields b)) where
+  sign a b := laws.sign (keys.fromFields a) (keys.fromFields b)
+  zero a b := laws.zero (keys.fromFields a) (keys.fromFields b)
+  reverse a b := laws.reverse (keys.fromFields a) (keys.fromFields b)
+  trans a b c := laws.trans (keys.fromFields a) (keys.fromFields b) (keys.fromFields c)
+
+/-- Stream a sorted backend through lower filtering and upper early stop. The
+second component counts visited backend rows, not root admission, sorting, guard
+work, EOF or the host Iterator's per-pull implementation cost. -/
+def tableLinearRange (lower upper : K → Bool) : List (K × V) → List (K × V) × Nat
+  | [] => ([], 0)
+  | row :: rest =>
+    if lower row.1 then
+      if upper row.1 then
+        let next := tableLinearRange lower upper rest
+        (row :: next.1, next.2 + 1)
+      else ([], 1)
+    else
+      let next := tableLinearRange lower upper rest
+      (next.1, next.2 + 1)
+
+/-- Streaming preserves precisely the existing positioned-prefix observation,
+including opaque payload identities. No sort is needed when the backend supplies
+an enumeration satisfying the same declared order window. -/
+theorem tableLinearRange_rows (lower upper : K → Bool) (rows : List (K × V)) :
+    (tableLinearRange lower upper rows).1 =
+      (rows.filter (fun row => lower row.1)).takeWhile (fun row => upper row.1) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    cases hl : lower row.1 <;> cases hu : upper row.1 <;>
+      simp [tableLinearRange, hl, hu, ih]
+
+/-- The existing contiguous-window law equates the unsorted streaming path with
+full reference range filtering. A changed comparator needs a new window witness. -/
+theorem tableLinearRange_correct (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    (tableLinearRange lower upper rows).1 =
+      rows.filter (fun row => lower row.1 && upper row.1) := by
+  rw [tableLinearRange_rows]
+  rw [← tableRangePrefix_rows]
+  exact tableRangeWindow_correct lower upper rows window
+
+/-- Linear positioning visits each backend row at most once. This explicitly
+avoids attributing a logarithmic seek law to the standard in-order Iterator. -/
+theorem tableLinearRange_visits (lower upper : K → Bool) (rows : List (K × V)) :
+    (tableLinearRange lower upper rows).2 ≤ rows.length := by
+  induction rows with
+  | nil => simp [tableLinearRange]
+  | cons row rest ih =>
+    cases hl : lower row.1 <;> cases hu : upper row.1 <;>
+      simp [tableLinearRange, hl, hu] <;> omega
+
+/-- Charge complete preparation once, backend visits, output-row checking and
+metadata/EOF guards separately. Callback, allocation and GC prices are premises;
+there is no universal wall-clock or constant-time admission claim. -/
+theorem tableLinearRange_cost (lower upper : K → Bool) (rows : List (K × V))
+    (prepare visit guard rowCheck : Nat) :
+    prepare + (tableLinearRange lower upper rows).2 * visit +
+      ((tableLinearRange lower upper rows).1.length + 1) * guard +
+      ((tableLinearRange lower upper rows).1.length + 1) * rowCheck ≤
+    prepare + rows.length * visit +
+      ((tableLinearRange lower upper rows).1.length + 1) * guard +
+      ((tableLinearRange lower upper rows).1.length + 1) * rowCheck := by
+  have bound := Nat.mul_le_mul_right visit (tableLinearRange_visits lower upper rows)
+  omega
 
 end LeanPoo.Functional.OrderedDictionary

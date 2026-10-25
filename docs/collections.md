@@ -885,3 +885,35 @@ Design reflection: reuse the original source normalization and index initializer
 do not add per-row validation wrappers or a second cache/index implementation.
 Cold rebuild, complete membership and child work remain explicit costs. Reusing an
 unchanged state skips initialization, not current metadata or business admission.
+
+
+### Standard rational backend order
+
+Gerbil's `std/struct/rbtree` already enumerates keys in numeric order. RationalDict
+now declares that order and its numeric key equivalence, including exact/inexact
+aliases such as 1 and 1.0. A comparer records its equality predicate explicitly;
+zero/sign checks remain strict, and key Wrappers transport the relation as well as
+the order. Seek delegation requires both procedure and equality identities to
+match. Structural equality remains the default for other explicit comparers.
+
+The existing in-order Iterator supplies linear lower-bound filtering and feeds
+`table-order` ranges, representation Wrappers, index ranges and all five styles.
+The snapshot is admitted once; each emitted Pair is captured/typed and each pull,
+including EOF, checks current origins. This avoids repeated full-snapshot admission
+per row and does not add a tree algorithm or a sort to the matching ordered path.
+Mismatched or revised comparers retain the reference sort/filter route.
+
+`TableComparerLaws` accepts an explicit key relation. Projected/transported order
+laws retain equivalence without equating representation tags. `tableLinearRange`
+proves agreement with the existing finite ordered-window reference, visits at most
+one pass over the backend rows, and charges preparation, visits, guards and row
+checking separately, including one boundary row. These are conditional finite
+protocol/cost laws, not proofs of the RBTree implementation, floating-point
+primitives, compiler, allocation prices or wall time. Positioning is linear;
+there is no logarithmic-seek claim.
+
+Design reflection: expose the order the backend already owns and reuse standard
+Iterator/FUN/IO, representation and index composition. Keep backend equality
+explicit instead of silently replacing numeric aliases with structural equality.
+Persistent keys/rows, lawful numeric ordering, pure converters and current declared
+metadata remain premises; callback side effects are not rolled back.

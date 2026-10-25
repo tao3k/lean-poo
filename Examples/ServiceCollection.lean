@@ -622,4 +622,15 @@ example : VariantValidation.tableView (fun (rows : List Nat) => Except.ok rows)
     Except.ok (fun _ _ => true) (fun _ => .error "must not rebuild")
     (fun _ => .ok ()) [1, 2] = (Except.ok [1, 2] : Except String (List Nat)) := rfl
 
+/-- Numeric representation tags may differ while the backend key is equal.
+This abstracts aliases; it does not prove floating-point primitive behavior. -/
+example : (fun (a b : Int × Bool) => integerKeyComparer a.1 b.1) (1, false) (1, true) = 0 := rfl
+
+/-- One linear positioned range retains the original callback handles and
+representation tags, without sorting or rewriting admitted rows. -/
+example : tableLinearRange (fun (key : Int × Bool) => decide (1 ≤ key.1))
+    (fun key => decide (key.1 ≤ 2))
+    [((-2, false), 7), ((1, false), 8), ((2, true), 9), ((3, false), 10)] =
+      ([((1, false), 8), ((2, true), 9)], 4) := rfl
+
 end Examples.ServiceCollection
