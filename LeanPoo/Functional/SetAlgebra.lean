@@ -21,6 +21,16 @@ def SetOperation.choose : SetOperation → Bool → Bool → Bool
   | .diff, a, b => a && !b
   | .symdiff, a, b => xor a b
 
+/-- The shared table resolver specializes exactly to all four Unit-valued Set
+operations, including absent/absent suppression. -/
+theorem tableCombination_unit (operation : SetOperation)
+    (left right : K → Option Unit) (key : K) :
+    (tableCombinationView (fun _ a b =>
+      if operation.choose a.isSome b.isSome then some () else none) left right key).isSome =
+      operation.choose (left key).isSome (right key).isSome := by
+  cases operation <;> cases hl : left key <;> cases hr : right key <;>
+    simp [tableCombinationView, hl, hr, SetOperation.choose]
+
 /-- Pointwise semantics does not impose a new enumeration or comparison order. -/
 def combineSet (operation : SetOperation) (left right : Membership K) : Membership K :=
   fun key => operation.choose (left key) (right key)

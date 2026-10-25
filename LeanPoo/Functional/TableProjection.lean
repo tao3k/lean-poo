@@ -857,4 +857,74 @@ theorem composeProjectionStep_associative
         rcases pair with ⟨u', output⟩
         simp [composeProjectionStep, deliverProjection, a, b, c, Except.bind, Except.map]
 
+/-- Resolve the finite union domain of two tables with possibly different value
+Types. Both absent bypasses the resolver, so it cannot invent unrelated keys. -/
+def tableCombinationView (choose : K → Option V → Option R → Option W)
+    (left : K → Option V) (right : K → Option R) (key : K) : Option W :=
+  match left key, right key with
+  | none, none => none
+  | a, b => choose key a b
+
+/-- Removing the final source binding always removes the combined binding. -/
+theorem tableCombinationView_absent (choose : K → Option V → Option R → Option W)
+    (left : K → Option V) (right : K → Option R) (key : K)
+    (hl : left key = none) (hr : right key = none) :
+    tableCombinationView choose left right key = none := by
+  simp [tableCombinationView, hl, hr]
+
+/-- Source frames suffice for reuse; the resolver need not be commutative,
+invertible, or homogeneous, but it must be stable and key-local. -/
+theorem tableCombinationView_frame (choose : K → Option V → Option R → Option W)
+    (lb la : K → Option V) (rb ra : K → Option R) (keys : List K)
+    (hl : ∀ key, key ∉ keys → lb key = la key)
+    (hr : ∀ key, key ∉ keys → rb key = ra key) (key : K) (outside : key ∉ keys) :
+    tableCombinationView choose lb rb key = tableCombinationView choose la ra key := by
+  simp only [tableCombinationView, hl key outside, hr key outside]
+
+/-- Binary table merge uses the existing selective cache-repair operator rather
+than a second merge algorithm. Coalesced edited keys cover both source frames. -/
+theorem tableCombination_repair [DecidableEq K]
+    (choose : K → Option V → Option R → Option W)
+    (lb la : K → Option V) (rb ra : K → Option R) (keys : List K)
+    (hl : ∀ key, key ∉ keys → lb key = la key)
+    (hr : ∀ key, key ∉ keys → rb key = ra key) :
+    repairGroupFolds keys (tableCombinationView choose la ra) (tableCombinationView choose lb rb) =
+      tableCombinationView choose la ra :=
+  repairGroupFolds_complete keys _ _ (tableCombinationView_frame choose lb la rb ra keys hl hr)
+
+/-- An exact target delta over edited keys installs the complete final view.
+No full target scan or snapshot difference discovery is required by this law. -/
+theorem tableCombination_delta [DecidableEq K] [DecidableEq W]
+    (choose : K → Option V → Option R → Option W)
+    (lb la : K → Option V) (rb ra : K → Option R) (keys : List K) (unique : keys.Nodup)
+    (hl : ∀ key, key ∉ keys → lb key = la key)
+    (hr : ∀ key, key ∉ keys → rb key = ra key) :
+    applyChanges (diffChanges keys (tableCombinationView choose lb rb)
+      (tableCombinationView choose la ra)) (tableCombinationView choose lb rb) =
+      .ok (tableCombinationView choose la ra) := by
+  apply diff_complete keys unique
+  exact tableCombinationView_frame choose lb la rb ra keys hl hr
+
+/-- Membership-equivalent edit inventories have identical observations; a single
+logical-key registry can remove duplicate left/right revision occurrences. -/
+theorem tableCombination_coalesced [DecidableEq K]
+    (compute cache : K → Option W) (raw keys : List K)
+    (same : ∀ key, key ∈ raw ↔ key ∈ keys) :
+    repairGroupFolds raw compute cache = repairGroupFolds keys compute cache := by
+  funext key
+  simp only [repairGroupFolds, same key]
+
+/-- Inverting both accepted source requests restores every combined observation,
+without an inverse resolver and without reconstructing opaque payloads. -/
+theorem tableCombination_inverse [DecidableEq K] [DecidableEq V] [DecidableEq R]
+    (choose : K → Option V → Option R → Option W)
+    (dl : List (Change K V)) (dr : List (Change K R))
+    (lb la : K → Option V) (rb ra : K → Option R)
+    (hl : applyChanges dl lb = .ok la) (hr : applyChanges dr rb = .ok ra) :
+    ((applyChanges (inverseChanges dl) la).bind fun l =>
+      (applyChanges (inverseChanges dr) ra).map fun r => tableCombinationView choose l r) =
+      .ok (tableCombinationView choose lb rb) := by
+  rw [applyChanges_inverse dl lb la hl, applyChanges_inverse dr rb ra hr]
+  rfl
+
 end LeanPoo.Functional.OrderedDictionary

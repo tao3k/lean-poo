@@ -340,4 +340,45 @@ the newly shared cohort, without an inverse projection or a full target diff. -/
 example : groupJoinKeysView (fun _ row => row.1) (fun _ row => row.1)
     migratedCohortServices cohortWorkers (1, 4) = some (([20, 30, 30], 3), ([30], true)) := by decide
 
+/-- Finite default capacities and independently typed enabled overrides share the
+same service key space; disabled overrides retain the original default. -/
+def defaultCapacities : Nat → Option Int := fun key =>
+  if key = 1 then some 3 else if key = 2 then some 4 else none
+
+/-- Enabled overrides have explicit state separate from their integer payload. -/
+def capacityOverrides : Nat → Option (Bool × Int) := fun key =>
+  if key = 1 then some (false, 7) else none
+
+/-- This key-local resolver also represents selecting an opaque checked Function;
+it never reconstructs or normalizes the selected payload. -/
+def chooseCapacity (_key : Nat) (fallback : Option Int) (override : Option (Bool × Int)) : Option Int :=
+  match override with
+  | some (true, capacity) => some capacity
+  | _ => fallback
+
+example : tableCombinationView chooseCapacity defaultCapacities capacityOverrides 1 = some 3 := rfl
+
+example : tableCombinationView chooseCapacity defaultCapacities
+    (replace capacityOverrides 1 (some (true, 7))) 1 = some 7 := rfl
+
+/-- Deleting both sources suppresses even a resolver willing to invent a value. -/
+example : tableCombinationView (fun _ _ _ => some (99 : Int))
+    (fun _ : Nat => (none : Option Int)) (fun _ => (none : Option Bool)) 8 = none := rfl
+
+/-- Joint edits coalesce to one key, producing one guarded target update. -/
+example : applyChanges
+    (diffChanges [1] (tableCombinationView chooseCapacity defaultCapacities capacityOverrides)
+      (tableCombinationView chooseCapacity defaultCapacities
+        (replace capacityOverrides 1 (some (true, 7)))))
+    (tableCombinationView chooseCapacity defaultCapacities capacityOverrides) =
+    .ok (tableCombinationView chooseCapacity defaultCapacities
+      (replace capacityOverrides 1 (some (true, 7)))) := by
+  apply tableCombination_delta
+  · decide
+  · intro key _
+    rfl
+  · intro key outside
+    simp only [List.mem_singleton] at outside
+    simp [replace, outside]
+
 end Examples.ServiceCollection

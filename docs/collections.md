@@ -428,3 +428,51 @@ wrapper was added. The finite multiplicity option follows the existing index and
 projection interfaces; membership validation is shared rather than stacked on
 individual operations. This closes an explicit association-composition unit of
 the proposed collection library's future work, not automatic relation discovery.
+
+### Incremental value-table combination
+
+`(table-combination Left Right Target choose [origins])` maintains a key-preserving
+merge of two persistent tables. All three Key descriptors must be identical and
+their backend logical equalities coherent; Value descriptors may differ.
+`choose key left-option right-option` returns an admitted target Option, without
+normalizing Function leaves. Both absent bypasses choose and removes the result.
+Stored false is present. Resolution must be stable and key-local; external callback
+dependencies belong in explicit origins.
+
+Cold preparation admits both roots, enumerates their union through the target's
+key registry and resolves each logical key once. Warm revision installs both
+guarded source deltas before resolving any key, coalesces their touched keys,
+and skips target writes when the selected optional value is unchanged. Source
+conflict, malformed response, target refinement or arbitrary resolver failure
+exposes no successor and does not call the consumer. The original persistent cache
+remains available for corrected explicit retry. Effects inside callbacks are not
+rolled back. No target snapshot scan or .diff is used to deliver the exact delta.
+
+The implementation generalizes the existing set-combination engine rather than
+adding another installer. Set/Elt refinements and invalidation retain their own
+admission boundary; Unit-valued algebra now uses the same private state, key
+registry, conflict checks and update loop. Wrapper, view composition and the
+existing binary FUN/IO publisher preserve all five ownership styles. The service
+override example merges checked default Functions with enabled typed override
+records, then publishes their exact retained Function identities. Another example
+feeds merged values directly into grouped aggregation.
+
+Regressions cover heterogeneous values, all styles, independent full-merge
+oracles on Trie/RationalDict, simultaneous edits, deletion of the final owner,
+zero/no-op writes, stale source conflicts, malformed Options, original exception
+identity, refinement refusal/retry, origin invalidation and inverse recovery.
+Lean's TableProjection laws reuse the existing selective repair and delta
+operators: union-domain absence, two-source frame, complete sparse repair, exact
+target delta, coalesced inventories and source inverse recovery. SetAlgebra proves
+that the shared resolver specializes exactly to all four Unit-valued operations. Faithful
+recognizers/equality, finite inventories, pure callbacks and persistent backend
+laws remain premises; compiler/GC and arbitrary mutation are not proved.
+
+Design reflection: this is the missing value-carrying counterpart of snapshot
+.merge and incremental Set algebra. One shared engine replaces the Set-specific
+copy; there is no new namespace, per-operation wrapper stack or compatibility
+path. Cold union enumeration, complete admission, metadata preparation and target
+installation remain costs. Warm resolver count is bounded by distinct edited
+keys, but complete backend/admission work is still charged; no wall-clock speedup
+or generally sublinear workflow is asserted. Automatic resolver/dependency
+discovery remains research work within the proposed collection library.
