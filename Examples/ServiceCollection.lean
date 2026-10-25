@@ -1,4 +1,5 @@
 import LeanPoo.Functional.CacheLookup
+import LeanPoo.Functional.TableBatch
 import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.TableSelection
@@ -477,5 +478,30 @@ example : queryVisits failingServiceQuery capacityWindow = 1 := rfl
 example : observeQuery (some capacityWindow)
     (prepareQuery (fun _ => Except.error "policy") serviceQuery) =
     (some capacityWindow, .error (.callback "policy")) := rfl
+
+/-- A finite revision stream swaps unique service priorities after replacing a
+superseded first request. Intermediate business states need not be admitted. -/
+def importServiceRows : List (Nat × Int) := [(1, 30), (1, 20), (2, 10)]
+
+/-- The unchanged third service is outside the touched-key delta. -/
+def importServiceSeed : Nat → Option Int := fun key =>
+  if key = 1 then some 10 else if key = 2 then some 20 else if key = 9 then some 90 else none
+
+example : streamView importServiceRows importServiceSeed 1 = some 20 := rfl
+example : streamView importServiceRows importServiceSeed 2 = some 10 := rfl
+example : streamView importServiceRows importServiceSeed 9 = some 90 := rfl
+example : applyChanges (streamChanges [1, 2] importServiceRows importServiceSeed) importServiceSeed =
+    .ok (streamView importServiceRows importServiceSeed) := streamChanges_correct [1, 2] (by decide) _ (by simp [importServiceRows]) _
+example : applyChanges (inverseChanges (streamChanges [1, 2] importServiceRows importServiceSeed))
+    (streamView importServiceRows importServiceSeed) = .ok importServiceSeed := streamChanges_inverse [1, 2] (by decide) _ (by simp [importServiceRows]) _
+
+/-- Business policy admits the original service but rejects the completed import.
+The existing styleStep failure law applies without another ownership model. -/
+def admitImportedServices (view : Nat → Option Int) : Except String Unit :=
+  if view 1 = some 10 then .ok () else .error "service policy"
+
+example : styleStep .linear (some importServiceSeed)
+    (prepareStreamImport admitImportedServices (fun _ => .ok importServiceRows)) =
+    (some importServiceSeed, .error (.callback "service policy")) := rfl
 
 end Examples.ServiceCollection

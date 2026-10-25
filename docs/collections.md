@@ -646,3 +646,28 @@ termination, runtime/compiler correctness or wall-clock claim is made. This is a
 explicit future-work extension. Design reflection: reuse one traversal and the
 existing admission/ownership boundaries, remove the false optimization premise,
 and keep raw recognition separate from public query admission; add no namespace.
+
+
+Finite Iterable import now reuses the existing table key-space capability and
+ordinary final-state delta installer. A private registry captures each admitted
+Pair before further pulls and coalesces duplicate keys with last-write precedence.
+Seedless import uses the existing bulk constructor on unique final bindings;
+seeded import reads only touched old values and installs once, without seed listing
+or a snapshot diff. Set maps lazily to Unit entries. Five styles, standard receivers
+and `import-ledger-action` share the ordinary ownership and Reader/FUN/IO paths.
+
+`TableBatch` proves ordered last writes, unchanged keys, one-delta reconstruction,
+inverse recovery, per-entry failure/cardinality and seed/read/final admission.
+Registry enumeration distinctness, coverage and no-extra-key properties are explicit
+backend premises; delta cardinality is bounded by touched keys, themselves bounded
+by input rows. The existing `TableStyle.styleStep_failure` law supplies failure retention. Service
+examples include duplicate supersession, an indexed-priority swap and inverse.
+Physical Iterator/EOF behavior, persistence and stable admitted leaves remain
+premises. Stream progress and external effects are not rolled back; retry needs a
+fresh stream. Complete recognition, key registry construction, backend/index work,
+allocation and GC remain charged. Infinite streaming, physical ownership and host
+runtime/compiler proofs are not claimed. This is finite collection future work.
+
+Design reflection: one key registry and one existing installer replace pointwise
+business-root construction and Set snapshot rebuilding; no new namespace, ownership
+engine, duplicate validation layer or implicit equality policy is introduced.

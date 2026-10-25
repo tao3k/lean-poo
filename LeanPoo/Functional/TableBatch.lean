@@ -205,4 +205,154 @@ theorem batch_stampMatches {Id : Type} (origins : List (List Id))
   | cons scope rest ih =>
     simp only [List.flatten_cons, stampMatches_append, List.all_cons, ih]
 
+/-- Final observation of a finite admitted input stream. Repeated logical keys
+retain the last yielded value; no intermediate business root is published. -/
+def streamView (rows : List (K × V)) (before : K → Option V) : K → Option V :=
+  rows.foldl (fun current row => replace current row.1 (some row.2)) before
+
+omit [DecidableEq V] in
+/-- Concatenated streams preserve ordered last-write interpretation. -/
+theorem streamView_append (left right : List (K × V)) (before : K → Option V) :
+    streamView (left ++ right) before = streamView right (streamView left before) := by
+  simp [streamView, List.foldl_append]
+
+omit [DecidableEq V] in
+/-- The last occurrence wins independently of a backend list constructor's order. -/
+theorem streamView_last (rows : List (K × V)) (before : K → Option V) (key : K) (value : V) :
+    streamView (rows ++ [(key, value)]) before key = some value := by
+  simp [streamView, replace]
+
+omit [DecidableEq V] in
+/-- A stream cannot change keys it never yielded. -/
+theorem streamView_frame (rows : List (K × V)) (before : K → Option V) (key : K)
+    (absent : key ∉ rows.map Prod.fst) : streamView rows before key = before key := by
+  induction rows generalizing before with
+  | nil => rfl
+  | cons head tail ih =>
+    have parts : key ≠ head.1 ∧ key ∉ tail.map Prod.fst := by
+      simpa only [List.map_cons, List.mem_cons, not_or] using absent
+    have apart := parts.1
+    have rest := parts.2
+    change streamView tail (replace before head.1 (some head.2)) key = before key
+    rw [ih _ rest]
+    simp [replace, apart]
+
+/-- A faithful backend key registry supplies distinct touched keys. Discovery
+uses only that explicit inventory, not a scan of the original snapshot. -/
+def streamChanges (keys : List K) (rows : List (K × V)) (before : K → Option V) : List (Change K V) :=
+  diffChanges keys before (streamView rows before)
+
+/-- One ordinary installer reconstructs final stream observations. Distinctness
+and coverage are explicit persistent key-registry laws, not inferred host equality. -/
+theorem streamChanges_correct (keys : List K) (unique : keys.Nodup) (rows : List (K × V))
+    (covered : ∀ row ∈ rows, row.1 ∈ keys) (before : K → Option V) :
+    applyChanges (streamChanges keys rows before) before = .ok (streamView rows before) := by
+  apply diff_complete keys unique before (streamView rows before)
+  intro key absent
+  apply Eq.symm
+  apply streamView_frame
+  intro present
+  obtain ⟨row, member, same⟩ := List.mem_map.mp present
+  exact absent (same ▸ covered row member)
+
+/-- Ordinary inverse deltas recover the exact original lookup observation. -/
+theorem streamChanges_inverse (keys : List K) (unique : keys.Nodup) (rows : List (K × V))
+    (covered : ∀ row ∈ rows, row.1 ∈ keys) (before : K → Option V) :
+    applyChanges (inverseChanges (streamChanges keys rows before)) (streamView rows before) = .ok before := by
+  exact applyChanges_inverse _ _ _ (streamChanges_correct keys unique rows covered before)
+
+/-- Delta cardinality is bounded by the distinct touched-key registry, not the
+entire seed snapshot or the number of repeated input occurrences. -/
+theorem streamChanges_length (keys : List K) (rows : List (K × V)) (before : K → Option V) :
+    (streamChanges keys rows before).length ≤ keys.length := by
+  exact List.length_filterMap_le _ _
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- A faithful registry has no more distinct keys than the finite input has rows. -/
+theorem streamKeys_length (keys : List K) (unique : keys.Nodup) (rows : List (K × V))
+    (noExtra : ∀ key ∈ keys, key ∈ rows.map Prod.fst) : keys.length ≤ rows.length := by
+  have bound := List.Nodup.length_le_of_subset unique noExtra
+  simpa using bound
+
+/-- Each finite event represents one Iterator pull plus Pair capture and child
+admission. A failure stops before later events; arbitrary Iterator execution and
+EOF behavior remain host-interface premises, not proven runtime claims. -/
+def collectStreamEntries {E : Type} : List (Except E (K × V)) → Except E (List (K × V))
+  | [] => .ok []
+  | event :: rest => match event with
+    | .error cause => .error cause
+    | .ok row => match collectStreamEntries rest with
+      | .error cause => .error cause
+      | .ok rows => .ok (row :: rows)
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- A rejected entry cannot be hidden by later overwrites or successful rows. -/
+theorem collectStreamEntries_head_refused {E : Type} (cause : E)
+    (rest : List (Except E (K × V))) :
+    collectStreamEntries (.error cause :: rest) = .error cause := rfl
+
+omit [DecidableEq K] [DecidableEq V] in
+/-- Every successful event contributes exactly one captured Pair, before coalescing. -/
+theorem collectStreamEntries_length {E : Type} (events : List (Except E (K × V)))
+    (rows : List (K × V)) (success : collectStreamEntries events = .ok rows) :
+    rows.length = events.length := by
+  induction events generalizing rows with
+  | nil => simpa [collectStreamEntries] using success
+  | cons event rest ih =>
+    cases event with
+    | error cause => simp [collectStreamEntries] at success
+    | ok row =>
+      cases hr : collectStreamEntries rest with
+      | error cause => simp [collectStreamEntries, hr] at success
+      | ok tail =>
+        have same : row :: tail = rows := by simpa [collectStreamEntries, hr] using success
+        subst rows
+        simpa using congrArg Nat.succ (ih tail hr)
+
+/-- Seed admission precedes the finite read request; final business admission
+runs once on the complete coalesced observation, never on intermediate roots. -/
+def prepareStreamImport {E : Type} (admit : (K → Option V) → Except E Unit)
+    (read : Unit → Except E (List (K × V))) (before : K → Option V) : Except E (K → Option V) :=
+  match admit before with
+  | .error cause => .error cause
+  | .ok () => match read () with
+    | .error cause => .error cause
+    | .ok rows =>
+      let after := streamView rows before
+      match admit after with
+      | .error cause => .error cause
+      | .ok () => .ok after
+
+omit [DecidableEq V] in
+/-- An invalid seed refuses independently of any stream-reader computation. -/
+theorem prepareStreamImport_seed_refused {E : Type} (admit : (K → Option V) → Except E Unit)
+    (read : Unit → Except E (List (K × V))) (before : K → Option V) (cause : E)
+    (refused : admit before = .error cause) :
+    prepareStreamImport admit read before = .error cause := by simp [prepareStreamImport, refused]
+
+omit [DecidableEq V] in
+/-- Stream failure exposes no partial observation and keeps its original cause. -/
+theorem prepareStreamImport_read_refused {E : Type} (admit : (K → Option V) → Except E Unit)
+    (read : Unit → Except E (List (K × V))) (before : K → Option V) (cause : E)
+    (ready : admit before = .ok ()) (refused : read () = .error cause) :
+    prepareStreamImport admit read before = .error cause := by simp [prepareStreamImport, ready, refused]
+
+omit [DecidableEq V] in
+/-- Final policy refusal exposes no candidate, even though all rows were read. -/
+theorem prepareStreamImport_final_refused {E : Type} (admit : (K → Option V) → Except E Unit)
+    (read : Unit → Except E (List (K × V))) (before : K → Option V) (rows : List (K × V)) (cause : E)
+    (ready : admit before = .ok ()) (readReady : read () = .ok rows)
+    (refused : admit (streamView rows before) = .error cause) :
+    prepareStreamImport admit read before = .error cause := by
+  simp [prepareStreamImport, ready, readReady, refused]
+
+omit [DecidableEq V] in
+/-- Only the admitted complete result is exposed after a successful finite read. -/
+theorem prepareStreamImport_ready {E : Type} (admit : (K → Option V) → Except E Unit)
+    (read : Unit → Except E (List (K × V))) (before : K → Option V) (rows : List (K × V))
+    (ready : admit before = .ok ()) (readReady : read () = .ok rows)
+    (finalReady : admit (streamView rows before) = .ok ()) :
+    prepareStreamImport admit read before = .ok (streamView rows before) := by
+  simp [prepareStreamImport, ready, readReady, finalReady]
+
 end LeanPoo.Functional.OrderedDictionary
