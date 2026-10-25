@@ -760,3 +760,24 @@ Reader/FUN/IO example retains failure retry and exact Function identity after un
 This is finite collection future work. Design reflection: keep mature backend
 algorithms, remove their public validation bypass and lift the existing relation
 protocol; add no equality/ownership engine or namespace.
+
+
+Collection IO now admits complete Table/Set roots before List/Pair encoding and
+keeps one protected scope through schema resolution, child codecs and full decode
+construction. Existing wire formats and backend duplicate/index policies remain.
+Five styles reuse nonconsuming snapshot reads and fresh owner creation; receivers
+observe encoding through the same FUN protocol. The service registry explicitly
+maps known checked Function handles to finite JSON tokens, preserving exact objects;
+closure code or undeclared binary codecs are not inferred. Failure suppresses IO
+consumers and leaves unrelated owners available for retry.
+
+`TableRepresentation.encodeCollection`/`decodeCollection` prove admission/refusal
+order and conditional roundtrip from child codec and carrier inverse laws. Port
+outcomes retain state beside failure: invalid roots write no prefix, while late
+codec errors retain the original cause and prior port effects. Parser and backend
+laws, finite inputs, stable leaves and supported metadata writes remain premises.
+No callback termination, physical ownership, GC, compiler or parser correctness is
+asserted. Full recognition, preparation, traversal, child encoding and construction
+remain charged. This is finite collection future work. Design reflection: derive
+IO through existing codecs/constructors and existing style observers/creators, not
+another format, compatibility layer, owner engine or public namespace.

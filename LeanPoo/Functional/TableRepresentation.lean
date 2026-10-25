@@ -516,4 +516,84 @@ theorem receiverScope_closed {Id : Type} (owner : Id) (sources : List Id)
       allows owner ∧ (∀ id ∈ sources, allows id) := by
   simp [receiverScope]
 
+/-- A complete source is admitted before row projection or the existing encoder.
+Leaf normalization and inferred serialization of opaque handles are not introduced. -/
+def encodeCollection (admit : A → Except E Unit) (rows : A → Rows)
+    (encode : Rows → Except E Wire) (source : A) : Except E Wire :=
+  match admit source with
+  | .error cause => .error cause
+  | .ok () => encode (rows source)
+
+/-- Decode privately, delegate the existing complete builder, and expose only an
+admitted root. Parser/builder laws and finite input are explicit premises. -/
+def decodeCollection (decode : Wire → Except E Rows) (build : Rows → Except E A)
+    (admit : A → Except E Unit) (wire : Wire) : Except E A :=
+  match decode wire with
+  | .error cause => .error cause
+  | .ok rows => match build rows with
+    | .error cause => .error cause
+    | .ok root => match admit root with
+      | .error cause => .error cause
+      | .ok () => .ok root
+
+/-- Invalid source refusal precedes every child encoder and returns its exact cause. -/
+theorem encodeCollection_refused (admit : A → Except E Unit) (rows : A → Rows)
+    (encode : Rows → Except E Wire) (source : A) (cause : E)
+    (refused : admit source = .error cause) :
+    encodeCollection admit rows encode source = .error cause := by simp [encodeCollection, refused]
+
+/-- Parser refusal is preserved instead of returning an empty or partial collection. -/
+theorem decodeCollection_parser_refused (decode : Wire → Except E Rows)
+    (build : Rows → Except E A) (admit : A → Except E Unit) (wire : Wire) (cause : E)
+    (refused : decode wire = .error cause) :
+    decodeCollection decode build admit wire = .error cause := by simp [decodeCollection, refused]
+
+/-- Complete construction failure retains the backend's duplicate/index policy. -/
+theorem decodeCollection_builder_refused (decode : Wire → Except E Rows)
+    (build : Rows → Except E A) (admit : A → Except E Unit) (wire : Wire) (rows : Rows) (cause : E)
+    (parsed : decode wire = .ok rows) (refused : build rows = .error cause) :
+    decodeCollection decode build admit wire = .error cause := by simp [decodeCollection, parsed, refused]
+
+/-- A decoded carrier with invalid final invariants never escapes as a successful root. -/
+theorem decodeCollection_root_refused (decode : Wire → Except E Rows)
+    (build : Rows → Except E A) (admit : A → Except E Unit) (wire : Wire) (rows : Rows)
+    (root : A) (cause : E) (parsed : decode wire = .ok rows) (built : build rows = .ok root)
+    (refused : admit root = .error cause) :
+    decodeCollection decode build admit wire = .error cause := by simp [decodeCollection, parsed, built, refused]
+
+/-- Ordinary representation/child codec inverse laws imply the admitted roundtrip.
+The statement makes no assertion about a particular JSON/binary parser implementation. -/
+theorem collection_codec_roundtrip (admit : A → Except E Unit) (rows : A → Rows)
+    (build : Rows → A) (encode : Rows → Wire) (decode : Wire → Rows)
+    (carrierLaw : Function.LeftInverse build rows) (codecLaw : Function.LeftInverse decode encode)
+    (source : A) (ready : admit source = .ok ()) :
+    (encodeCollection admit rows (fun input => .ok (encode input)) source).bind
+      (decodeCollection (fun wire => .ok (decode wire)) (fun input => .ok (build input)) admit) =
+        .ok source := by
+  simp only [encodeCollection, ready, Except.bind, decodeCollection]
+  rw [codecLaw (rows source), carrierLaw source]
+  simp [ready]
+
+/-- Port effects are retained explicitly beside failure. Admission happens before
+any write, but a later failing child codec is not a transaction over the port. -/
+def marshalCollection (admit : A → Except E Unit) (write : A → Port → Port × Except E Unit)
+    (source : A) (port : Port) : Port × Except E Unit :=
+  match admit source with
+  | .error cause => (port, .error cause)
+  | .ok () => write source port
+
+/-- Invalid roots leave the port untouched, before even a length prefix is emitted. -/
+theorem marshalCollection_refused (admit : A → Except E Unit)
+    (write : A → Port → Port × Except E Unit) (source : A) (port : Port) (cause : E)
+    (refused : admit source = .error cause) :
+    marshalCollection admit write source port = (port, .error cause) := by
+  simp [marshalCollection, refused]
+
+/-- A late codec refusal preserves both its exact cause and the prior emitted prefix. -/
+theorem marshalCollection_late_refused (admit : A → Except E Unit)
+    (write : A → Port → Port × Except E Unit) (source : A) (before after : Port) (cause : E)
+    (ready : admit source = .ok ()) (failed : write source before = (after, .error cause)) :
+    marshalCollection admit write source before = (after, .error cause) := by
+  simp [marshalCollection, ready, failed]
+
 end LeanPoo.Functional.OrderedDictionary

@@ -555,4 +555,14 @@ example : prepareBindingComparison (E := String)
     (fun rows : List (Nat × Int) => if rows = [(1, -1)] then .error "negative capacity" else .ok ())
     (fun _ _ => .ok true) [(1, 10)] [(1, -1)] = .error "negative capacity" := rfl
 
+/-- A finite handle codec restores the exact known callback token, without
+serializing code or proving a host parser. -/
+example : decodeCollection (E := String) (fun token : Nat => .ok [(1, token)])
+    (fun rows => .ok rows) (fun _ => .ok ()) 7 = .ok [(1, 7)] := rfl
+
+/-- Port failure retains its already emitted prefix rather than inventing rollback. -/
+example : marshalCollection (E := String) (fun (_ : Nat) => .ok ())
+    (fun (_ : Nat) (priorBytes : List Nat) => (priorBytes ++ [2, 1, 10], .error "late codec refusal"))
+    7 [] = ([2, 1, 10], .error "late codec refusal") := rfl
+
 end Examples.ServiceCollection
