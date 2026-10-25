@@ -26,8 +26,35 @@ cause retention, retry, exact Function identity and all five publication styles.
 The model does not prove host callbacks, metadata machinery, physical ownership,
 compiler or GC behavior. Whole admission, affected-bucket refolds, preparation and
 backend operations remain charged; callback bounds are not wall-time claims.
-Binary input synchronization and automatic view discovery remain outside this
+Distributed source synchronization and automatic view discovery remain outside this
 explicit composition unit. This advances the collection proposal's future work.
+
+### Joint join revisions through derived views
+
+The same Gerbil constructor now retains a lookup/group join's `.apply-deltas`
+entry through further unary derived views, including nested composition. Its
+source Domain is the join's captured Pair, not a fabricated table descriptor.
+The upstream protocol must declare exactly one revision entry. Both old-value
+guarded source requests reach the existing joint admission before downstream
+callbacks; no sequential source update, snapshot `.diff` or extra Function
+normalization is introduced. The common revision kernel is reused through
+Gerbil's standard `cut` forwarding. The existing five-style publisher installs
+only the final output delta. `make-service-policy-summary` combines shared
+Boolean policies, service callbacks and selective per-cohort capacity totals.
+
+The model already quantifies over the request type, so a pair of source deltas
+uses the same success, connection, invariant and atomic-refusal proofs. The new
+`composeProjectionStep_associative` law proves three-stage semantic reassociation,
+including the exact final delta and failure order. This does not allow host
+caches to cross their owner boundaries. Top-level service examples additionally
+use actual finite old-value guarded source edits: a valid left request and stale
+right request refuse before downstream delivery, leaving publication unchanged.
+Runtime controls cover both join families, inherited no-op origins, Function
+identity, selective affected keys, multi-round inverse recovery, original errors,
+retry and final public-owner conflicts across all five styles. Complete source
+recognition, affected-group expansion/refolding and backend preparation stay
+charged. Arbitrary query discovery, distributed synchronization and effect rollback
+remain outside this explicit persistent protocol.
 
 This closes a concrete collection TODO: `.map/2` was listed but absent from
 `methods.table`, while Trie exposed only its carrier-specific traversal. The new

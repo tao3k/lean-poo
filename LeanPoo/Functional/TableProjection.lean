@@ -749,4 +749,28 @@ theorem composeProjectionStep_callback_bound (first : K → Option V) (second : 
     projectionCalls first keys + projectionCalls second middleKeys ≤ keys.length + middleKeys.length :=
   Nat.add_le_add (projectionCalls_bound first keys) (projectionCalls_bound second middleKeys)
 
+/-- Rebracketing a three-view chain preserves its exact result and failure order.
+The first request may itself be a pair of joint source deltas: no extra kernel
+or sequential source installation is required. Host cache ownership remains
+distinct; this is semantic reassociation, not permission to exchange raw caches. -/
+theorem composeProjectionStep_associative
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (third : U → N → Except E (U × O)) (s : S) (t : T) (u : U) (delta : D) :
+    (composeProjectionStep (composeProjectionStep first second) third ((s, t), u) delta).map
+      (fun result => ((result.1.1.1, (result.1.1.2, result.1.2)), result.2)) =
+    composeProjectionStep first (composeProjectionStep second third) (s, (t, u)) delta := by
+  cases a : first s delta with
+  | error cause => simp [composeProjectionStep, deliverProjection, a, Except.bind, Except.map]
+  | ok pair =>
+    rcases pair with ⟨s', middle⟩
+    cases b : second t middle with
+    | error cause => simp [composeProjectionStep, deliverProjection, a, b, Except.bind, Except.map]
+    | ok pair =>
+      rcases pair with ⟨t', terminal⟩
+      cases c : third u terminal with
+      | error cause => simp [composeProjectionStep, deliverProjection, a, b, c, Except.bind, Except.map]
+      | ok pair =>
+        rcases pair with ⟨u', output⟩
+        simp [composeProjectionStep, deliverProjection, a, b, c, Except.bind, Except.map]
+
 end LeanPoo.Functional.OrderedDictionary

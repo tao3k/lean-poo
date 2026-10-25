@@ -226,4 +226,42 @@ example : publishProjection ([(10, 3)], [(0, 3)])
       ([(10, 3)], [(0, 3)]) [(10, 3), (20, 7)]).map Prod.fst) =
     ([(10, 3)], [(0, 3)]) := rfl
 
+/-- Finite joint source preparation uses the existing old-value guards on both
+requests before observing a joined service row. The delivered row list is the
+explicit finite middle request of this example, not a backend cost model. -/
+def jointServiceStep (before : (Nat → Option Nat) × (Nat → Option Nat))
+    (requests : List (Change Nat Nat) × List (Change Nat Nat)) :
+    Except (Nat ⊕ Nat) (((Nat → Option Nat) × (Nat → Option Nat)) × List (Nat × Nat)) :=
+  ((prepareLookupSources (applyChanges requests.1 before.1)
+    (fun _ => applyChanges requests.2 before.2)).mapError Sum.inl).map fun roots =>
+      (roots, [1, 2].filterMap fun key =>
+        (lookupJoinView (fun _ row => row) roots.1 roots.2 key).bind fun row =>
+          row.2.map fun value => (key, value))
+
+/-- Reuse finite reservation for the downstream stage with the same error sum;
+both caches remain private until every source and the final reservation accept. -/
+def jointEndpointStep (_before : List (Nat × Nat)) (rows : List (Nat × Nat)) :
+    Except (Nat ⊕ Nat) (List (Nat × Nat) × List (Nat × Nat)) :=
+  (reserveExpansion (E := Nat) rows []).map fun endpoints => (endpoints, endpoints)
+
+/-- Two persistent source heads share one policy dependency. -/
+def jointServiceRoots : (Nat → Option Nat) × (Nat → Option Nat) :=
+  (replace (fun _ => none) 1 (some 10), replace (fun _ => none) 10 (some 100))
+
+example : (composeProjectionStep jointServiceStep jointEndpointStep
+    (jointServiceRoots, [(1, 100)])
+    ([⟨2, none, some 10⟩], [⟨10, some 100, some 200⟩])).map Prod.snd =
+    .ok [(1, 200), (2, 200)] := rfl
+
+/-- A valid left edit plus a stale right request cannot expose any successor. -/
+example : composeProjectionStep jointServiceStep jointEndpointStep
+    (jointServiceRoots, [(1, 100)])
+    ([⟨2, none, some 10⟩], [⟨10, some 0, some 200⟩]) = .error (.inl 10) := rfl
+
+example : publishProjection (jointServiceRoots, [(1, 100)])
+    ((composeProjectionStep jointServiceStep jointEndpointStep
+      (jointServiceRoots, [(1, 100)])
+      ([⟨2, none, some 10⟩], [⟨10, some 0, some 200⟩])).map Prod.fst) =
+    (jointServiceRoots, [(1, 100)]) := rfl
+
 end Examples.ServiceCollection
