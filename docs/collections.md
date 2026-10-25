@@ -379,3 +379,52 @@ Design review: no second grouping algorithm, cache representation, installer or
 namespace was added. The explicit multiplicity flag follows the existing index
 and projection interface. The necessary list ownership copy is visible in the cost
 boundary; further automatic dependency/algebra discovery remains research work.
+
+### Multivalued grouped joins
+
+`table-group-join` accepts `multiple?: #t` for both classifiers. Each returns a
+finite proper list of admitted group keys. Default classifiers still return one
+group key, including a list-valued key. A pair exists exactly when both rows are
+present and share at least one group; empty memberships contribute no pairs.
+Repeated tags or several shared groups never multiply its projection.
+
+Both existing grouped indexes own membership admission and invalidation. Cold
+multivalued construction uses the existing pair-key backend to coalesce witnesses
+before projection; ordinary single-group construction skips that registry work.
+Warm repair reuses the old/final edited-endpoint inventory and pair registry.
+Finding a match in one bucket is not undone by absence in a later bucket. The
+same projection cache still owns target-key collisions, exact delivered deltas,
+callback identity and all five styles of atomic publication.
+Delivery retains the existing old-owner retraction followed by final insertion;
+an exact replayable delta is not promised to be a minimal edit list.
+
+`make-service-placement-join` exposes the same option. The integrated example
+places checked service Functions onto workers with overlapping cohort lists,
+migrates both sides, retains surviving associations and publishes through FUN/IO.
+Independent Cartesian oracles cover Trie/RationalDict, mixed insertion/deletion,
+empty memberships, duplicate tags and inverse recovery. Other regressions cover
+malformed lists, stale expectations before projection, downstream collision,
+explicit corrected retry, origins and ordinary list-valued keys.
+
+Costs include complete source/index recognition, finite membership admission and
+spine ownership, every encountered matching bucket, logical pair deduplication,
+projection and target installation. Shared groups can repeat bucket visits even
+though they do not repeat a user projection; dense relations can produce a
+Cartesian number of pairs. No sublinear backend, wall-clock or GC bound is claimed.
+Classifiers, keys and callbacks must be stable/pure, logical group and pair
+equality must agree with their backends, and roots must be persistent. Callback
+effects before refusal are not rolled back.
+
+Lean's existing TableProjection namespace now shares a row-local relation model
+and frame/inverse laws between ordinary equality joins and finite-membership joins.
+It proves duplicate-witness invariance, singleton correspondence, preservation of
+any shared cohort and full-refresh equivalence under the complete old/final
+affected-pair inventory premise. Existing reservation/delivery/publication laws
+remain the collision and failure boundary; host recognizers, mutable leaves and
+compiler/GC correctness are not proved.
+
+Design reflection: no new public engine, cache state, namespace or publication
+wrapper was added. The finite multiplicity option follows the existing index and
+projection interfaces; membership validation is shared rather than stacked on
+individual operations. This closes an explicit association-composition unit of
+the proposed collection library's future work, not automatic relation discovery.

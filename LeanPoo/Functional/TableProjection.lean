@@ -401,13 +401,23 @@ theorem prepareLookupSources_ready (left : L) (right : L → Except E R) (next :
     prepareLookupSources (.ok left) right = .ok (left, next) := by
   simp [prepareLookupSources, ready, Except.bind, Except.map]
 
-/-- Explicit finite equijoin observations retain both admitted payloads. Group
-comparison is supplied as a decidable logical equality, never inferred hashing. -/
-def groupJoinView [DecidableEq G] (cl : K → V → G) (cr : I → R → G)
+/-- A stable row-local relation decides one pair observation. Multiplicity of
+witnesses never creates additional identities or reconstructs admitted payloads. -/
+def groupJoinBy (accept : K → V → I → R → Bool)
     (left : K → Option V) (right : I → Option R) (key : K × I) : Option (V × R) :=
   match left key.1, right key.2 with
-  | some l, some r => if cl key.1 l = cr key.2 r then some (l, r) else none
+  | some l, some r => if accept key.1 l key.2 r then some (l, r) else none
   | _, _ => none
+
+/-- Explicit finite equijoin observations retain both admitted payloads. Group
+comparison is supplied as a decidable logical equality, never inferred hashing. -/
+def groupJoinView [DecidableEq G] (cl : K → V → G) (cr : I → R → G) :=
+  groupJoinBy (fun lk lv rk rv => decide (cl lk lv = cr rk rv))
+
+/-- Finite multivalued classification matches on at least one common group.
+Empty lists produce no match; duplicate or reordered witnesses do not add pairs. -/
+def groupJoinKeysView [DecidableEq G] (cl : K → V → List G) (cr : I → R → List G) :=
+  groupJoinBy (fun lk lv rk rv => (cl lk lv).any (fun group => decide (group ∈ cr rk rv)))
 
 /-- Deleted endpoints and unequal groups contribute no pair or user projection. -/
 theorem groupJoinView_missing [DecidableEq G] (cl : K → V → G) (cr : I → R → G)
@@ -415,8 +425,8 @@ theorem groupJoinView_missing [DecidableEq G] (cl : K → V → G) (cr : I → R
     (missing : left key.1 = none ∨ right key.2 = none) :
     groupJoinView cl cr left right key = none := by
   rcases missing with h | h
-  · simp [groupJoinView, h]
-  · cases left key.1 <;> simp [groupJoinView, h]
+  · simp [groupJoinView, groupJoinBy, h]
+  · cases left key.1 <;> simp [groupJoinView, groupJoinBy, h]
 
 /-- A finite reference inventory includes edited endpoints only when their old
 or final pair exists. The runtime obtains this set from old/final group buckets,
@@ -449,6 +459,28 @@ theorem groupJoinAffected_bound [DecidableEq K] [DecidableEq I]
 
 /-- Outside old/final matching buckets, either both endpoints are unchanged or
 both pair observations are absent. This is the selective invalidation invariant. -/
+theorem groupJoinBy_frame (accept : K → V → I → R → Bool)
+    (lb la : K → Option V) (rb ra : I → Option R)
+    (leftKeys : List K) (rightKeys : List I) (affected : List (K × I))
+    (leftFrame : ∀ key, key ∉ leftKeys → lb key = la key)
+    (rightFrame : ∀ key, key ∉ rightKeys → rb key = ra key)
+    (covers : ∀ key, (key.1 ∈ leftKeys ∨ key.2 ∈ rightKeys) →
+      (groupJoinBy accept lb rb key ≠ none ∨ groupJoinBy accept la ra key ≠ none) → key ∈ affected)
+    (key : K × I) (outside : key ∉ affected) :
+    groupJoinBy accept lb rb key = groupJoinBy accept la ra key := by
+  by_cases edited : key.1 ∈ leftKeys ∨ key.2 ∈ rightKeys
+  · have h : ¬ (groupJoinBy accept lb rb key ≠ none ∨ groupJoinBy accept la ra key ≠ none) :=
+      fun live => outside (covers key edited live)
+    have old : groupJoinBy accept lb rb key = none := by
+      exact Classical.byContradiction (fun different => h (Or.inl different))
+    have next : groupJoinBy accept la ra key = none := by
+      exact Classical.byContradiction (fun different => h (Or.inr different))
+    rw [old, next]
+  · have hl : key.1 ∉ leftKeys := fun h => edited (Or.inl h)
+    have hr : key.2 ∉ rightKeys := fun h => edited (Or.inr h)
+    simp only [groupJoinBy, leftFrame key.1 hl, rightFrame key.2 hr]
+
+/-- Single-key grouping uses the same row-local frame as finite membership joins. -/
 theorem groupJoin_frame [DecidableEq G] (cl : K → V → G) (cr : I → R → G)
     (lb la : K → Option V) (rb ra : I → Option R)
     (leftKeys : List K) (rightKeys : List I) (affected : List (K × I))
@@ -457,18 +489,59 @@ theorem groupJoin_frame [DecidableEq G] (cl : K → V → G) (cr : I → R → G
     (covers : ∀ key, (key.1 ∈ leftKeys ∨ key.2 ∈ rightKeys) →
       (groupJoinView cl cr lb rb key ≠ none ∨ groupJoinView cl cr la ra key ≠ none) → key ∈ affected)
     (key : K × I) (outside : key ∉ affected) :
-    groupJoinView cl cr lb rb key = groupJoinView cl cr la ra key := by
-  by_cases edited : key.1 ∈ leftKeys ∨ key.2 ∈ rightKeys
-  · have h : ¬ (groupJoinView cl cr lb rb key ≠ none ∨ groupJoinView cl cr la ra key ≠ none) :=
-      fun live => outside (covers key edited live)
-    have old : groupJoinView cl cr lb rb key = none := by
-      exact Classical.byContradiction (fun different => h (Or.inl different))
-    have next : groupJoinView cl cr la ra key = none := by
-      exact Classical.byContradiction (fun different => h (Or.inr different))
-    rw [old, next]
-  · have hl : key.1 ∉ leftKeys := fun h => edited (Or.inl h)
-    have hr : key.2 ∉ rightKeys := fun h => edited (Or.inr h)
-    simp only [groupJoinView, leftFrame key.1 hl, rightFrame key.2 hr]
+    groupJoinView cl cr lb rb key = groupJoinView cl cr la ra key :=
+  groupJoinBy_frame _ lb la rb ra leftKeys rightKeys affected leftFrame rightFrame covers key outside
+
+/-- Duplicate shared-group witnesses never multiply a joined pair. -/
+theorem groupJoinKeysView_duplicate [DecidableEq G]
+    (cl : K → V → List G) (cr : I → R → List G)
+    (left : K → Option V) (right : I → Option R) :
+    groupJoinKeysView (fun key row => cl key row ++ cl key row)
+      (fun key row => cr key row ++ cr key row) left right =
+      groupJoinKeysView cl cr left right := by
+  funext key
+  cases h : left key.1 <;> cases r : right key.2 <;>
+    simp [groupJoinKeysView, groupJoinBy, h, r, List.any_append]
+
+/-- Singleton lists recover ordinary group equality, including absent endpoints. -/
+theorem groupJoinKeysView_single [DecidableEq G] (cl : K → V → G) (cr : I → R → G)
+    (left : K → Option V) (right : I → Option R) :
+    groupJoinKeysView (fun key row => [cl key row]) (fun key row => [cr key row]) left right =
+      groupJoinView cl cr left right := by
+  funext key
+  cases h : left key.1 <;> cases r : right key.2 <;>
+    simp [groupJoinKeysView, groupJoinView, groupJoinBy, h, r]
+
+/-- A common cohort is sufficient even when other memberships do not match.
+The retained payload is exactly the admitted pair, never a witness-counted copy. -/
+theorem groupJoinKeysView_shared [DecidableEq G]
+    (cl : K → V → List G) (cr : I → R → List G)
+    (left : K → Option V) (right : I → Option R) (key : K × I) (lv : V) (rv : R)
+    (hl : left key.1 = some lv) (hr : right key.2 = some rv)
+    (common : ∃ group ∈ cl key.1 lv, group ∈ cr key.2 rv) :
+    groupJoinKeysView cl cr left right key = some (lv, rv) := by
+  have shared : (cl key.1 lv).any (fun group => decide (group ∈ cr key.2 rv)) = true := by
+    simpa only [List.any_eq_true, decide_eq_true_eq] using common
+  simp [groupJoinKeysView, groupJoinBy, hl, hr, shared]
+
+/-- Multivalued pair repair delegates to the existing selective projection cache.
+The finite affected inventory must include old/final live pairs of edited endpoints. -/
+theorem groupJoinKeys_refresh [DecidableEq K] [DecidableEq I] [DecidableEq G]
+    (cl : K → V → List G) (cr : I → R → List G)
+    (lb la : K → Option V) (rb ra : I → Option R)
+    (leftKeys : List K) (rightKeys : List I) (affected : List (K × I))
+    (project : (K × I) → (V × R) → Except E (Option (L × W)))
+    (cache result : (K × I) → Option (L × W))
+    (leftFrame : ∀ key, key ∉ leftKeys → lb key = la key)
+    (rightFrame : ∀ key, key ∉ rightKeys → rb key = ra key)
+    (covers : ∀ key, (key.1 ∈ leftKeys ∨ key.2 ∈ rightKeys) →
+      (groupJoinKeysView cl cr lb rb key ≠ none ∨ groupJoinKeysView cl cr la ra key ≠ none) → key ∈ affected)
+    (coherent : ∀ key, projectedEntry project (groupJoinKeysView cl cr lb rb) key = .ok (cache key))
+    (ready : refreshEntryCache project (groupJoinKeysView cl cr la ra) affected cache = .ok result) :
+    ∀ key, projectedEntry project (groupJoinKeysView cl cr la ra) key = .ok (result key) := by
+  apply refreshEntryCache_complete project (groupJoinKeysView cl cr lb rb)
+    (groupJoinKeysView cl cr la ra) affected cache result coherent _ ready
+  exact groupJoinBy_frame _ lb la rb ra leftKeys rightKeys affected leftFrame rightFrame covers
 
 /-- A complete finite old/final bucket inventory discharges the frame premise
 of selective refresh. No completeness assumption about unrelated groups is used. -/
@@ -515,6 +588,18 @@ theorem groupJoin_refresh [DecidableEq K] [DecidableEq I] [DecidableEq G]
 
 /-- Both source inverses recover every pair observation, without an inverse
 classifier or an inverse output projection. Error-side keys remain distinguished. -/
+theorem groupJoinBy_inverse [DecidableEq K] [DecidableEq I]
+    [DecidableEq V] [DecidableEq R] (accept : K → V → I → R → Bool)
+    (dl : List (Change K V)) (dr : List (Change I R))
+    (lb la : K → Option V) (rb ra : I → Option R)
+    (hl : applyChanges dl lb = .ok la) (hr : applyChanges dr rb = .ok ra) :
+    (((applyChanges (inverseChanges dl) la).mapError (Sum.inl : K → Sum K I)).bind fun l =>
+      ((applyChanges (inverseChanges dr) ra).mapError (Sum.inr : I → Sum K I)).map
+        fun r => groupJoinBy accept l r) = .ok (groupJoinBy accept lb rb) := by
+  rw [applyChanges_inverse dl lb la hl, applyChanges_inverse dr rb ra hr]
+  rfl
+
+/-- Ordinary equijoins reuse the same source inverse law as membership joins. -/
 theorem groupJoin_inverse [DecidableEq K] [DecidableEq I] [DecidableEq G]
     [DecidableEq V] [DecidableEq R] (cl : K → V → G) (cr : I → R → G)
     (dl : List (Change K V)) (dr : List (Change I R))
@@ -522,9 +607,8 @@ theorem groupJoin_inverse [DecidableEq K] [DecidableEq I] [DecidableEq G]
     (hl : applyChanges dl lb = .ok la) (hr : applyChanges dr rb = .ok ra) :
     (((applyChanges (inverseChanges dl) la).mapError (Sum.inl : K → Sum K I)).bind fun l =>
       ((applyChanges (inverseChanges dr) ra).mapError (Sum.inr : I → Sum K I)).map
-        fun r => groupJoinView cl cr l r) = .ok (groupJoinView cl cr lb rb) := by
-  rw [applyChanges_inverse dl lb la hl, applyChanges_inverse dr rb ra hr]
-  rfl
+        fun r => groupJoinView cl cr l r) = .ok (groupJoinView cl cr lb rb) :=
+  groupJoinBy_inverse _ dl dr lb la rb ra hl hr
 
 /-- Empty finite expansions carry no ownership; nonempty packets retain opaque
 payloads exactly. Unit lets the existing generic entry-cache kernel do the work. -/

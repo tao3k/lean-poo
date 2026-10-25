@@ -317,4 +317,27 @@ example : applyChanges (inverseChanges
       subst bucket
       simp
 
+/-- Worker cohorts overlap service cohorts twice. Joined identity remains the
+service/worker pair; the number and order of common cohorts is unobservable. -/
+def cohortWorkers : Nat → Option (List Nat × Bool) := fun key =>
+  if key = 3 then some ([10, 20, 10], true)
+  else if key = 4 then some ([30], true) else none
+
+example : groupJoinKeysView (fun _ row => row.1) (fun _ row => row.1)
+    cohortServices cohortWorkers (1, 3) = some (([10, 10, 20], 3), ([10, 20, 10], true)) := by decide
+
+/-- A later nonmatching group must not overwrite the surviving first match. -/
+example : groupJoinKeysView (fun _ row => row.1) (fun _ row => row.1)
+    (replace cohortServices 1 (some ([10, 30], 11))) cohortWorkers (1, 3) =
+    some (([10, 30], 11), ([10, 20, 10], true)) := by decide
+
+/-- Empty membership removes all associations without deleting the source row. -/
+example : groupJoinKeysView (fun _ row => row.1) (fun _ row => row.1)
+    (replace cohortServices 1 (some ([], 3))) cohortWorkers (1, 3) = none := by decide
+
+/-- Corrected explicit migration reuses the persistent old source and discovers
+the newly shared cohort, without an inverse projection or a full target diff. -/
+example : groupJoinKeysView (fun _ row => row.1) (fun _ row => row.1)
+    migratedCohortServices cohortWorkers (1, 4) = some (([20, 30, 30], 3), ([30], true)) := by decide
+
 end Examples.ServiceCollection
