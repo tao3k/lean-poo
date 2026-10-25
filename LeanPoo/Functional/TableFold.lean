@@ -327,6 +327,17 @@ def repairGroupFolds [DecidableEq I] (buckets : List I)
     (compute : I → Option A) (cache : I → Option A) : I → Option A :=
   fun bucket => if bucket ∈ buckets then compute bucket else cache bucket
 
+/-- Cache repair requires only an observation frame, independently of how an
+index classifies rows. This is the shared selective-repair boundary. -/
+theorem repairGroupFolds_complete [DecidableEq I] (buckets : List I)
+    (before after : I → Option A)
+    (frame : ∀ bucket, bucket ∉ buckets → before bucket = after bucket) :
+    repairGroupFolds buckets after before = after := by
+  funext bucket
+  by_cases member : bucket ∈ buckets
+  · simp [repairGroupFolds, member]
+  · simp [repairGroupFolds, member, frame bucket member]
+
 /-- Refolding only old/final groups agrees with full regrouping and aggregation. -/
 theorem repairGroupFolds_correct [DecidableEq I]
     (owners : List K) (buckets : List I) (summarize : (K → Option V) → A)
@@ -336,14 +347,10 @@ theorem repairGroupFolds_correct [DecidableEq I]
     repairGroupFolds buckets (foldGroups owners summarize (indexView project after))
       (foldGroups owners summarize (indexView project before)) =
       foldGroups owners summarize (indexView project after) := by
-  funext bucket
-  by_cases h : bucket ∈ buckets
-  · simp [repairGroupFolds, h]
-  · simp only [repairGroupFolds]
-    split
-    · contradiction
-    · unfold foldGroups
-      rw [grouped_bucket_frame buckets project before after covered bucket h]
+  apply repairGroupFolds_complete
+  intro bucket outside
+  unfold foldGroups
+  rw [grouped_bucket_frame buckets project before after covered bucket outside]
 
 /-- A direct target delta over touched groups reconstructs the whole summary.
 No target snapshot discovery or unconditional full target-key inventory is needed. -/
@@ -372,5 +379,71 @@ theorem foldGroups_inverse [DecidableEq K] [DecidableEq V] [DecidableEq I]
       .ok (foldGroups owners summarize (indexView project before)) := by
   rw [applyChanges_inverse edits before after ready]
   rfl
+
+/-- Finite multivalued classification changes no bucket outside the old/final
+membership inventory of changed rows. Empty and duplicate memberships are allowed. -/
+theorem grouped_keys_bucket_frame [DecidableEq I]
+    (buckets : List I) (project : K → V → List I) (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) →
+      ∀ bucket ∈ project key row, bucket ∈ buckets)
+    (bucket : I) (outside : bucket ∉ buckets) :
+    indexKeysView project before bucket = indexKeysView project after bucket := by
+  funext key
+  by_cases same : before key = after key
+  · simp [indexKeysView, same]
+  · have excludes (row : V) (live : before key = some row ∨ after key = some row) :
+        bucket ∉ project key row := fun member => outside (covered key same row live bucket member)
+    have old : indexKeysView project before bucket key = none := by
+      cases h : before key with
+      | none => simp [indexKeysView, h]
+      | some row => simp [indexKeysView, h, excludes row (Or.inl h)]
+    have new : indexKeysView project after bucket key = none := by
+      cases h : after key with
+      | none => simp [indexKeysView, h]
+      | some row => simp [indexKeysView, h, excludes row (Or.inr h)]
+    rw [old, new]
+
+/-- Reusing untouched summaries and refolding touched multivalued buckets agrees
+with full aggregation; no cancellative or commutative aggregate is assumed. -/
+theorem repairGroupFolds_keys_correct [DecidableEq I]
+    (owners : List K) (buckets : List I) (summarize : (K → Option V) → A)
+    (project : K → V → List I) (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) →
+      ∀ bucket ∈ project key row, bucket ∈ buckets) :
+    repairGroupFolds buckets (foldGroups owners summarize (indexKeysView project after))
+      (foldGroups owners summarize (indexKeysView project before)) =
+      foldGroups owners summarize (indexKeysView project after) := by
+  apply repairGroupFolds_complete
+  intro bucket outside
+  unfold foldGroups
+  rw [grouped_keys_bucket_frame buckets project before after covered bucket outside]
+
+/-- The touched multivalued bucket inventory delivers an exact target delta,
+including emptied groups and surviving groups whose aggregate is zero. -/
+theorem foldGroups_keys_delta [DecidableEq I] [DecidableEq A]
+    (owners : List K) (buckets : List I) (unique : buckets.Nodup)
+    (summarize : (K → Option V) → A) (project : K → V → List I)
+    (before after : K → Option V)
+    (covered : ∀ key, before key ≠ after key → ∀ row,
+      (before key = some row ∨ after key = some row) →
+      ∀ bucket ∈ project key row, bucket ∈ buckets) :
+    applyChanges (diffChanges buckets (foldGroups owners summarize (indexKeysView project before))
+      (foldGroups owners summarize (indexKeysView project after)))
+      (foldGroups owners summarize (indexKeysView project before)) =
+      .ok (foldGroups owners summarize (indexKeysView project after)) := by
+  apply diff_complete buckets unique
+  intro bucket outside
+  unfold foldGroups
+  rw [grouped_keys_bucket_frame buckets project before after covered bucket outside]
+
+/-- Duplicate memberships never multiply an owner's contribution. -/
+theorem foldGroups_keys_duplicate [DecidableEq K] [DecidableEq I]
+    (owners : List K) (summarize : (K → Option V) → A)
+    (project : K → V → List I) (primary : K → Option V) :
+    foldGroups owners summarize (indexKeysView (fun key row => project key row ++ project key row) primary) =
+      foldGroups owners summarize (indexKeysView project primary) := by
+  rw [indexKeysView_duplicate]
 
 end LeanPoo.Functional.OrderedDictionary

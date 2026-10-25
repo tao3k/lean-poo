@@ -340,3 +340,42 @@ premises. Host costs include all rows of affected buckets, index preparation,
 validation and public installation; no machine speedup, GC, compiler correctness,
 automatic retraction law or destructive rollback is proved. This advances the
 collection proposal's future work rather than claiming automatic library synthesis.
+
+### Finite multivalued grouped aggregation
+
+`table-group-fold` accepts `multiple?: #t`: classify returns a finite proper
+list of typed cohort keys. Default classification still returns one key, even when
+that key is itself a list. Duplicate memberships contribute once; empty membership
+retains the primary row without contributing to any group. A live zero summary
+remains present, and deleting its last owner removes the group.
+
+The implementation extends the existing grouped index, fold kernel, owned cache,
+exact target delta and five-style publication chain. A shared private admission
+function captures the classifier list spine, checks its keys without normalizing
+Function leaves, and uses standard stable deduplication. It replaces the duplicated
+index checks rather than wrapping each operation. Classifiers, logical keys and
+contributions must remain stable and pure; capturing a spine does not freeze keys.
+
+Warm repair refolds only old/final affected groups. Every surviving row in each
+affected bucket is charged; finite classification, spine copying, key recognition,
+index preparation, whole-root recognition and style installation remain costs.
+There is no constant-time, GC or wall-clock speedup claim. Invalid membership,
+stale origins, final refinement refusal or callback failure exposes no successor;
+the old persistent cache remains available for corrected explicit retry. Inverting
+the delivered target delta restores observations, not information discarded by an
+aggregate.
+
+The service example combines duplicate cohorts, checked Function capacities,
+migration and untouched-group reuse. Regressions cover Trie/RationalDict oracles,
+all five styles, inverse recovery, malformed membership, callback-owned list
+mutation, refinement retry, origin invalidation and list-valued single keys.
+Lean proves the old/final membership frame, selective repair, exact target delta
+and duplicate-membership invariance; finite service examples include zero-valued
+live groups and inverse recovery. These laws assume faithful equality/recognizers,
+finite owner inventories and persistent backend laws. This advances the collection
+proposal's future work and does not prove host callbacks, GC or compiler behavior.
+
+Design review: no second grouping algorithm, cache representation, installer or
+namespace was added. The explicit multiplicity flag follows the existing index
+and projection interface. The necessary list ownership copy is visible in the cost
+boundary; further automatic dependency/algebra discovery remains research work.

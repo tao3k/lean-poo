@@ -264,4 +264,57 @@ example : publishProjection (jointServiceRoots, [(1, 100)])
       ([⟨2, none, some 10⟩], [⟨10, some 0, some 200⟩])).map Prod.fst) =
     (jointServiceRoots, [(1, 100)]) := rfl
 
+/-- Services carry finite cohort memberships and an integer capacity. The first
+service repeats a tag; the second cancels one cohort's capacity without erasing it. -/
+def cohortServices : Nat → Option (List Nat × Int) := fun key =>
+  if key = 1 then some ([10, 10, 20], 3)
+  else if key = 2 then some ([20], -3) else none
+
+/-- Ordered aggregation observes each service owner once per admitted cohort. -/
+def cohortCapacity (rows : Nat → Option (List Nat × Int)) : Int :=
+  [1, 2].foldl (fun total key => total + ((rows key).map Prod.snd).getD 0) 0
+
+/-- Membership migration leaves a new cohort and empties the old one; an empty
+membership list would retain a primary service without contributing anywhere. -/
+def migratedCohortServices := replace cohortServices 1 (some ([20, 30, 30], 3))
+
+example : foldGroups [1, 2] cohortCapacity
+    (indexKeysView (fun _ row => row.1) cohortServices) 10 = some 3 := by decide
+
+/-- A live zero aggregate differs from an absent cohort. -/
+example : foldGroups [1, 2] cohortCapacity
+    (indexKeysView (fun _ row => row.1) cohortServices) 20 = some 0 := by decide
+
+example : foldGroups [1, 2] cohortCapacity
+    (indexKeysView (fun _ row => row.1) migratedCohortServices) 10 = none := by decide
+
+example : foldGroups [1, 2] cohortCapacity
+    (indexKeysView (fun _ row => row.1) migratedCohortServices) 30 = some 3 := by decide
+
+/-- The exact delivered target delta restores the old view when inverted. -/
+example : applyChanges (inverseChanges
+    (diffChanges [10, 20, 30]
+      (foldGroups [1, 2] cohortCapacity (indexKeysView (fun _ row => row.1) cohortServices))
+      (foldGroups [1, 2] cohortCapacity (indexKeysView (fun _ row => row.1) migratedCohortServices))))
+    (foldGroups [1, 2] cohortCapacity
+      (indexKeysView (fun _ row => row.1) migratedCohortServices)) =
+    .ok (foldGroups [1, 2] cohortCapacity
+      (indexKeysView (fun _ row => row.1) cohortServices)) := by
+  apply applyChanges_inverse
+  apply foldGroups_keys_delta
+  · decide
+  · intro key changed row live bucket member
+    by_cases one : key = 1
+    · subst key
+      simp [cohortServices, migratedCohortServices, replace] at live
+      rcases live with live | live <;> subst row <;>
+        simp only [List.mem_cons, List.not_mem_nil, or_false] at member
+      all_goals rcases member with rfl | rfl | rfl <;> simp
+    · simp [cohortServices, migratedCohortServices, replace, one] at live
+      rcases live with ⟨_, live⟩
+      subst row
+      simp only [List.mem_singleton] at member
+      subst bucket
+      simp
+
 end Examples.ServiceCollection
