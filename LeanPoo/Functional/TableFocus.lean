@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableStyle
+import LeanPoo.Functional.TableBatch
 
 /-! Typed key focuses reuse optional dictionary replacement, checked callbacks and
 style ownership. Laws concern observations of persistent finite carriers; no
@@ -117,5 +118,86 @@ theorem focusInstall_stale (style : TableStyle) (current : TableGeneration (K �
     (stale : current.version ≠ expected) :
     installStyle (E := E) style current expected (replace before key value) =
       (current, .error .stale) := installStyle_stale style current expected _ stale
+
+/-- Optional association is not optional replacement: absence retains the original
+binding, while a present request retains its exact payload, even a false value. -/
+def associateOption (request old : Option V) : Option V :=
+  match request with
+  | none => old
+  | some value => some value
+
+/-- Recognition still runs on an absent request; an identity result is not an
+admission shortcut. Source/key admission is a premise of this finite modifier. -/
+def admitAssociation (admit : Option V → Except E Unit) (request old : Option V) :
+    Except E (Option V) :=
+  (admit request).map (fun _ => associateOption request old)
+
+/-- Child refusal retains its exact cause before a useful successor exists. -/
+theorem admitAssociation_refused (admit : Option V → Except E Unit)
+    (request old : Option V) (cause : E) (refused : admit request = .error cause) :
+    admitAssociation admit request old = .error cause := by
+  simp [admitAssociation, refused, Except.map]
+
+/-- Successful association delegates to the existing checked focus update. -/
+theorem admitAssociation_ready (admit : Option V → Except E Unit)
+    (request old : Option V) (ready : admit request = .ok ()) :
+    admitAssociation admit request old = .ok (associateOption request old) := by
+  simp [admitAssociation, ready, Except.map]
+
+omit [DecidableEq K] in
+/-- Absence changes no binding and captures no edit; it is not a read assertion
+against future revisions, just like every other unchanged point request. -/
+theorem association_absent_changes [DecidableEq V] (before : K → Option V) (key : K) :
+    pointChanges before key (associateOption none (before key)) = [] := by
+  simp [associateOption, pointChanges]
+
+/-- Captured association applies exactly its focused observation to the full view. -/
+theorem association_apply [DecidableEq V] (before : K → Option V) (key : K)
+    (request : Option V) :
+    applyChanges (pointChanges before key (associateOption request (before key))) before =
+      .ok (replace before key (associateOption request (before key))) :=
+  pointChanges_apply before key _
+
+/-- Association inherits complete inverse recovery without replaying the request. -/
+theorem association_inverse [DecidableEq V] (before : K → Option V) (key : K)
+    (request : Option V) :
+    applyChanges (inverseChanges (pointChanges before key (associateOption request (before key))))
+      (replace before key (associateOption request (before key))) = .ok before :=
+  pointChanges_inverse before key _
+
+/-- A changed present request refuses the original conflicting key on another base. -/
+theorem association_stale [DecidableEq V] (before current : K → Option V) (key : K)
+    (value : V) (changed : before key ≠ some value) (stale : current key ≠ before key) :
+    applyChanges (pointChanges before key (associateOption (some value) (before key))) current =
+      .error key := pointChanges_stale before current key _ changed stale
+
+/-- The shared point kernel emits at most one edit. Admission, capture, lookup,
+backend writes, whole-root recognition and owner preparation remain charged. -/
+theorem association_edit_bound [DecidableEq V] (before : K → Option V) (key : K)
+    (request : Option V) :
+    (pointChanges before key (associateOption request (before key))).length ≤ 1 :=
+  pointChanges_length before key _
+
+/-- A refused request, including absent requests, leaves each style's owner live. -/
+theorem association_owner_refused (style : TableStyle) (before : K → Option V)
+    (key : K) (admit : Option V → Except E Unit) (request : Option V) (cause : E)
+    (refused : admit request = .error cause) :
+    focusModify style (some before) key (admitAssociation admit request) =
+      (some before, .error (.callback cause)) := by
+  apply focusModify_refused
+  exact admitAssociation_refused admit request (before key) cause refused
+
+/-- An admitted absence returns the identical observation, for every style. -/
+theorem association_absent_result (style : TableStyle) (before : K → Option V)
+    (key : K) (admit : Option V → Except E Unit) (ready : admit none = .ok ()) :
+    (focusModify style (some before) key (admitAssociation admit none)).2 = .ok before := by
+  have same := (focus_optional_laws key).get_put before
+  simp [focusModify, styleStep, admitAssociation, ready, Except.map, associateOption, same]
+
+/-- Linear success retires the predecessor even when the admitted request is absent. -/
+theorem association_absent_linear (before : K → Option V) (key : K)
+    (admit : Option V → Except E Unit) (ready : admit none = .ok ()) :
+    (focusModify .linear (some before) key (admitAssociation admit none)).1 = none := by
+  simp [focusModify, styleStep, admitAssociation, ready, Except.map]
 
 end LeanPoo.Functional.OrderedDictionary

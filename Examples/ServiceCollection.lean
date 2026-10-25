@@ -1,5 +1,6 @@
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableFocus
 import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.TableSelection
@@ -530,5 +531,15 @@ example : checkConstructorRows admitConstructorService [(1, (10, 7)), (1, (20, 8
     .ok [(1, (10, 7)), (1, (20, 8))] := rfl
 example : bulkFirstView [(1, (10, 7)), (1, (20, 8))] 1 = some (10, 7) := rfl
 example : streamView [(1, (10, 7)), (1, (20, 8))] (fun _ => none) 1 = some (20, 8) := rfl
+
+/-- An absent rollout does not remove the deployed callback handle. -/
+example : associateOption (none : Option (Int × Nat)) (some (10, 7)) = some (10, 7) := rfl
+
+/-- A present false request is a stored value, distinct from an absent request. -/
+example : associateOption (some false) (some true) = some false := rfl
+
+/-- Invalid requests preserve the exact refusal even when no write was requested. -/
+example : admitAssociation (E := String) (fun (_ : Option Nat) => .error "stale approval")
+    none (some 7) = .error "stale approval" := rfl
 
 end Examples.ServiceCollection

@@ -717,3 +717,22 @@ termination, physical ownership, inferred backend complexity or runtime/compiler
 correctness is claimed. This is finite collection future work. Design reflection:
 one public boundary reuses raw constructor strategies and owner creation without
 normalization, a namespace, cache or another storage/validation engine.
+
+
+Optional association now delegates the old `.acons/opt` entrypoint to the same
+captured point-update boundary. Absence retains the old binding (unlike replacement,
+where absence removes); present false and opaque Function handles remain values.
+The caller-owned Option shell is copied before any metadata or source recognition.
+All five styles and Gerbil receivers retain generation capture, final refinement/
+index admission and failure retry; successful linear no-ops still retire the source.
+The integrated service action composes Reader/FUN and IO with inverse recovery.
+
+`TableFocus.associateOption` and `admitAssociation` formalize the modifier without
+another installer. Existing point-delta and focus laws prove no-op omission, exact
+installation/inverse, changed-key stale refusal, at most one edit, original-cause
+refusal and linear retirement. Source/key/final-root admission, stable leaves and
+lawful persistent backends are explicit premises. Whole recognition, metadata,
+copying, lookup, construction, GC and allocation remain charged; no runtime lock,
+callback termination or compiler correctness follows. This is finite collection
+future work. Design reflection: remove the unchecked Option branch, share one
+modifier, and preserve the established validation and ownership abstractions.
