@@ -476,3 +476,55 @@ installation remain costs. Warm resolver count is bounded by distinct edited
 keys, but complete backend/admission work is still charged; no wall-clock speedup
 or generally sublinear workflow is asserted. Automatic resolver/dependency
 discovery remains research work within the proposed collection library.
+
+### Demand-driven bounded range cursors
+
+`.range<- root lower upper [lower-inclusive? #t] [upper-inclusive? #t]` returns a
+standard Gerbil Iterator over the same ordered bindings as `.range`. Lower/upper
+are Options: false denotes an unbounded end, while some false can be a real typed
+key. Malformed bounds, non-Boolean inclusion flags and reversed bounds refuse
+during construction. Both Option shells are captured before child predicates or
+comparisons run; logical key immutability remains a caller premise.
+
+`table-order` reuses its declared seek cursor or its existing sort/filter fallback.
+Gerbil `in-coroutine` owns suspended traversal and terminal EOF; no new iterator
+class or scheduler is introduced. Each demand consumes one backend row until
+EOF or the first upper-bound rejection. That boundary row is not returned. Further
+EOF observations perform no backend pull, but still check current descriptor and
+origin revisions. Comparator exceptions retain their original cause; corrected
+retry constructs a fresh cursor over the retained persistent root.
+
+The list-returning `.range` collects this same cursor. All five table/set styles
+and Posh/Classy receivers expose `.range<-` through the existing deferred-observe
+boundary; Set projects elements with the existing iterator mapper. Creating or
+draining a cursor does not consume ownership. Later supported owner publication
+does not rewrite its captured root; origin/descriptor invalidation refuses even
+after EOF. Nested order views and explicit Wrapper transport reuse positioned
+traversal; clients apply table-order to the transported seek capability.
+
+`observe-ledger-range` uses the existing Reader/FUN/IO Observation to hand a
+bounded stream to an application inspector. The inspector can stop early;
+inspection failure suppresses consume, while already executed callback effects
+are not rolled back. Regression controls cover seek/fallback correspondence,
+all boundary flags, no-prefetch and sticky EOF pull counts, captured bound shells,
+comparator failure/retry, nested origins, all styles/receivers, Function identity
+and successful/refused service inspection.
+
+Lean TableOrder reuses the existing finite range-prefix and ordered-window laws.
+One demanded-step equation preserves the original prefix observation and exact
+payload/tail, terminal observations cost zero backend pulls, rejection reads one
+boundary row, and stale revisions refuse before any backend work including EOF.
+Top-level service examples exercise bounded output, rejected boundaries and
+current/stale terminal observations. Faithful ordered backend windows, metadata
+admission, persistent roots and stable pure comparisons are premises, not proofs
+of the Gerbil coroutine implementation, compiler or GC.
+
+Design reflection: the absent bounded streaming capability is added to the
+existing order protocol; eager range selection no longer has a parallel loop.
+Standard coroutine/Iterator and existing guard/mapping abstractions supply the
+mechanism. Seek retains its direct one-row observation rather than gaining a
+redundant deferred wrapper. Fallback sorting still materializes the complete source;
+initial recognition, positioning, metadata checks and boundary comparison are
+charged separately. Partial consumption saves subsequent demands, not initial
+fallback sorting or admission, and no wall-clock speedup is asserted. This is
+finite collection-library future work, not automatic backend/order discovery.

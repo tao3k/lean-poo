@@ -408,4 +408,86 @@ theorem representedShapeUpdates_reuse {S T Edit E : Type}
   apply checkedShapeUpdates_admit_equiv
   exact representedShapeUpdate_preserves carrier valid step preserves
 
+/-- One upper-bounded cursor step uses the existing backend pull. The Boolean
+is the standard iterator's terminal state; no further backend pull follows EOF. -/
+def tableRangeCursorPull (accept : K → Bool) (state : Bool × List (K × V)) :
+    (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if state.1 then ((none, state), 0) else
+    let (entry, rest) := tableCursorPull state.2
+    match entry with
+    | none => ((none, (true, rest)), 1)
+    | some row => if accept row.1 then ((some row, (false, rest)), 1)
+      else ((none, (true, rest)), 1)
+
+/-- Observations reuse the already proved finite range prefix rather than
+introducing a second filtering or sorting semantics. -/
+def tableRangeCursorRows (accept : K → Bool) (state : Bool × List (K × V)) : List (K × V) :=
+  if state.1 then [] else (tableRangePrefix accept state.2).1
+
+/-- Each demanded pull exposes precisely the first row of the existing range
+prefix, with the same remaining observation, including a rejected upper bound. -/
+theorem tableRangeCursor_step (accept : K → Bool) (state : Bool × List (K × V)) :
+    tableRangeCursorRows accept state =
+      (tableRangeCursorPull accept state).1.1.toList ++
+        tableRangeCursorRows accept (tableRangeCursorPull accept state).1.2 := by
+  rcases state with ⟨done, rows⟩
+  cases done <;> cases rows with
+  | nil => rfl
+  | cons row rest => cases h : accept row.1 <;>
+      simp [tableRangeCursorRows, tableRangeCursorPull, tableCursorPull, tableRangePrefix, h]
+
+/-- Materializing a fresh bounded cursor has exactly the existing takeWhile
+observation; positioning, lower-bound and order laws are supplied separately. -/
+theorem tableRangeCursor_materialize (accept : K → Bool) (rows : List (K × V)) :
+    tableRangeCursorRows accept (false, rows) = rows.takeWhile (fun row => accept row.1) :=
+  tableRangePrefix_rows accept rows
+
+/-- The existing ordered-window law connects positioned lazy traversal to the
+full reference filter, preserving row order and opaque payload identity. -/
+theorem tableRangeCursor_window (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    tableRangeCursorRows upper (false, rows.filter (fun row => lower row.1)) =
+      rows.filter (fun row => lower row.1 && upper row.1) :=
+  tableRangeWindow_correct lower upper rows window
+
+/-- A completed cursor returns EOF without revisiting the backend. -/
+theorem tableRangeCursor_done (accept : K → Bool) (rows : List (K × V)) :
+    tableRangeCursorPull accept (true, rows) = ((none, (true, rows)), 0) := rfl
+
+/-- A first rejected upper-bound row is read once, then EOF remains terminal. -/
+theorem tableRangeCursor_reject (accept : K → Bool) (row : K × V) (rest : List (K × V))
+    (rejected : accept row.1 = false) :
+    tableRangeCursorPull accept (false, row :: rest) = ((none, (true, rest)), 1) := by
+  simp [tableRangeCursorPull, tableCursorPull, rejected]
+
+/-- Current admitted payloads and tails are returned unchanged, including opaque
+Function leaves. One backend row is demanded by one successful consumer step. -/
+theorem tableRangeCursor_accept (accept : K → Bool) (row : K × V) (rest : List (K × V))
+    (accepted : accept row.1 = true) :
+    tableRangeCursorPull accept (false, row :: rest) = ((some row, (false, rest)), 1) := by
+  simp [tableRangeCursorPull, tableCursorPull, accepted]
+
+/-- Metadata is checked before even a terminal observation; guard work and source
+admission are separate from the backend pull counter. -/
+def checkedRangeCursorPull (issued current : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    Except Unit (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if issued = current then
+    let step := tableRangeCursorPull accept state
+    (.ok step.1, step.2)
+  else (.error (), 0)
+
+/-- Stale origins refuse without backend work, even after EOF. -/
+theorem checkedRangeCursor_stale (issued current : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) (stale : issued ≠ current) :
+    checkedRangeCursorPull issued current accept state = (.error (), 0) := by
+  simp [checkedRangeCursorPull, stale]
+
+/-- Current metadata forwards the exact cursor step; it never normalizes leaves. -/
+theorem checkedRangeCursor_current (issued : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    checkedRangeCursorPull issued issued accept state =
+      (.ok (tableRangeCursorPull accept state).1, (tableRangeCursorPull accept state).2) := by
+  simp [checkedRangeCursorPull]
+
 end LeanPoo.Functional.OrderedDictionary

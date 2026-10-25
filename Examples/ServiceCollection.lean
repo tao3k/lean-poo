@@ -2,6 +2,7 @@ import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.TableSelection
+import LeanPoo.Functional.TableOrder
 
 /-! Ordered host Iterable observations over source-bound recursive service rows.
 The host hash/interface and iterator laws are premises; no GC/dispatch proof is asserted.
@@ -380,5 +381,25 @@ example : applyChanges
   · intro key outside
     simp only [List.mem_singleton] at outside
     simp [replace, outside]
+
+/-- A finite ordered service stream retains its original capacity payloads. -/
+def capacityWindow : List (Nat × Int) := [(1, 3), (2, 4), (3, 7), (4, 9)]
+
+example : tableRangeCursorPull (fun key => decide (key ≤ 2)) (false, capacityWindow) =
+    ((some (1, 3), (false, [(2, 4), (3, 7), (4, 9)])), 1) := rfl
+
+/-- The first upper-bound rejection is terminal, even with more source rows. -/
+example : tableRangeCursorPull (fun key => decide (key ≤ 2))
+    (false, [(3, (7 : Int)), (4, 9)]) = ((none, (true, [(4, 9)])), 1) := rfl
+
+example : tableRangeCursorRows (fun key => decide (key ≤ 2)) (false, capacityWindow) =
+    [(1, 3), (2, 4)] := rfl
+
+/-- Repeated EOF observes metadata first and performs no backend pull. -/
+example : checkedRangeCursorPull [1, 4] [1, 5] (fun _ : Nat => true)
+    (true, ([] : List (Nat × Int))) = (.error (), 0) := rfl
+
+example : checkedRangeCursorPull [1, 4] [1, 4] (fun _ : Nat => true)
+    (true, ([] : List (Nat × Int))) = (.ok (none, (true, [])), 0) := rfl
 
 end Examples.ServiceCollection
