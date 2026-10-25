@@ -832,3 +832,27 @@ costs are charged; no constant-time or runtime/compiler claim follows. This is
 finite collection future work. Design reflection: remove constructor-identity
 comparison, retain mature structural predicates and derive observation through
 existing queries/guards without another validator, counter, cache or namespace.
+
+### Partial constructors through derived descriptors
+
+Ordered and representation views now use the existing computed-slot protocol for
+`.empty`, matching indexed views. Declaring a view prepares metadata; it does not
+construct a root. A nonempty business refinement can therefore derive an indexed,
+ordered and represented family and construct it from admitted finite rows.
+On first materialization, empty requests perform current revision checks, source
+construction and complete result admission. Failures preserve their original cause;
+supported metadata mutation remains guarded. Successful computed fields retain the
+existing object cache semantics; later collection operations still admit their
+root and current dependencies. No additional cache or approval registry is added.
+
+`CollectionConstructors` in `TableRepresentation.lean` models these independent computations.
+The laws cover finite-construction independence from the partial empty operation,
+source refusal, stale-check precedence, nested conversion order and fresh retry.
+`Examples/ServiceCollection.lean` composes three derived layers with an empty-refusing
+source. These are finite protocol laws, conditional on the supplied checks and
+converters; they do not prove Gerbil's computed-slot evaluator or concurrency.
+
+Design reflection: use a computed field at the existing factory boundary rather
+than add lazy wrapper functions around every collection method. Materializing an
+actual empty root for an explicitly requested algorithm remains necessary and is
+not removed by this change. Construction costs are deferred, not eliminated.

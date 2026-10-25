@@ -585,4 +585,27 @@ example : emptyBindings (A := Nat) (E := String) [] = .ok true ∧
     prepareEmpty (fun (_ : List Nat) => .error "nonempty policy") [] = .error "nonempty policy" :=
   ⟨rfl, rfl⟩
 
+/-- A nonempty indexed ledger can derive ordered and represented constructors
+without ever materializing an invalid empty business value. Function handles stay
+in the finite rows, while their execution is outside this constructor proof. -/
+example :
+    let source : CollectionConstructors String (List (Nat × Nat)) (List (Nat × Nat)) :=
+      ⟨fun _ => .error "nonempty ledger", fun rows =>
+        if rows.isEmpty then .error "nonempty ledger" else .ok rows⟩
+    let indexed := source.derive (fun _ => .ok ()) (fun rows => .ok (rows, 2))
+    let represented := indexed.derive (fun _ => .ok ()) (fun root => .ok (some root))
+    (represented.derive (fun _ => .ok ()) (fun root => .ok root)).fromRows [(1, 7), (2, 8)] =
+      .ok (some ([(1, 7), (2, 8)], 2)) ∧
+    represented.empty () = .error "nonempty ledger" := ⟨rfl, rfl⟩
+
+/-- Current metadata permits a fresh attempt after stale construction refused;
+no successful conversion is fabricated for the old declaration. -/
+example :
+    let source : CollectionConstructors String (List Nat) (List Nat) :=
+      ⟨fun _ => .error "no empty", fun rows => .ok rows⟩
+    (source.derive (fun _ => .error "stale") (fun rows => .ok (some rows))).fromRows [1, 2] =
+      .error "stale" ∧
+    (source.derive (fun _ => .ok ()) (fun rows => .ok (some rows))).fromRows [1, 2] =
+      .ok (some [1, 2]) := ⟨rfl, rfl⟩
+
 end Examples.ServiceCollection

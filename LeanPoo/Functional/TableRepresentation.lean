@@ -596,4 +596,75 @@ theorem marshalCollection_late_refused (admit : A → Except E Unit)
     marshalCollection admit write source before = (after, .error cause) := by
   simp [marshalCollection, ready, failed]
 
+/-- A partial collection family exposes empty and finite-input construction as
+independent computations. Declaring a view does not assert empty membership. -/
+structure CollectionConstructors (E Rows A : Type) where
+  empty : Unit → Except E A
+  fromRows : Rows → Except E A
+
+/-- Existing revision protection and checked conversion are shared by each
+requested constructor. Neither callback is evaluated while the view is derived. -/
+def CollectionConstructors.derive (source : CollectionConstructors E Rows A)
+    (current : Unit → Except E Unit) (encode : A → Except E B) : CollectionConstructors E Rows B where
+  empty := fun _ => (current ()).bind fun _ => (source.empty ()).bind encode
+  fromRows := fun rows => (current ()).bind fun _ => (source.fromRows rows).bind encode
+
+/-- Changing the partial empty constructor cannot change finite construction,
+including through nested representation, index and ordered view derivations. -/
+theorem CollectionConstructors.derive_rows_independent
+    (source : CollectionConstructors E Rows A) (otherEmpty : Unit → Except E A)
+    (current : Unit → Except E Unit) (encode : A → Except E B) :
+    (source.derive current encode).fromRows =
+      (({ source with empty := otherEmpty } : CollectionConstructors E Rows A).derive current encode).fromRows := rfl
+
+/-- Empty construction still returns the original source refusal when requested. -/
+theorem CollectionConstructors.derive_empty_refused
+    (source : CollectionConstructors E Rows A) (current : Unit → Except E Unit)
+    (encode : A → Except E B) (cause : E) (ready : current () = .ok ())
+    (refused : source.empty () = .error cause) :
+    (source.derive current encode).empty () = .error cause := by
+  simp [CollectionConstructors.derive, ready, refused, Except.bind]
+
+/-- A stale declaration refuses before either source construction or conversion. -/
+theorem CollectionConstructors.derive_stale
+    (source : CollectionConstructors E Rows A) (current : Unit → Except E Unit)
+    (encode : A → Except E B) (rows : Rows) (cause : E)
+    (stale : current () = .error cause) :
+    (source.derive current encode).empty () = .error cause ∧
+    (source.derive current encode).fromRows rows = .error cause := by
+  simp [CollectionConstructors.derive, stale, Except.bind]
+
+/-- A successful nonempty construction does not require a lawful empty value. -/
+theorem CollectionConstructors.derive_rows_ready
+    (source : CollectionConstructors E Rows A) (current : Unit → Except E Unit)
+    (encode : A → Except E B) (rows : Rows) (root : A) (result : B)
+    (ready : current () = .ok ()) (built : source.fromRows rows = .ok root)
+    (encoded : encode root = .ok result) :
+    (source.derive current encode).fromRows rows = .ok result := by
+  simp [CollectionConstructors.derive, ready, built, encoded, Except.bind]
+
+/-- Two view layers preserve their source-to-target conversion order and exact
+failure causes. The second layer's revision check precedes the inner request. -/
+theorem CollectionConstructors.derive_rows_chain {C : Type}
+    (source : CollectionConstructors E Rows A)
+    (inner outer : Unit → Except E Unit) (encode : A → Except E B) (next : B → Except E C)
+    (rows : Rows) (innerReady : inner () = .ok ()) (outerReady : outer () = .ok ()) :
+    ((source.derive inner encode).derive outer next).fromRows rows =
+      (source.fromRows rows).bind (fun root => (encode root).bind next) := by
+  cases built : source.fromRows rows <;>
+    simp [CollectionConstructors.derive, innerReady, outerReady, built, Except.bind]
+
+/-- Once metadata is rederived, an old refusal is not retained as a cached
+construction result. Retry uses current checks and the original persistent input. -/
+theorem CollectionConstructors.derive_retry
+    (source : CollectionConstructors E Rows A) (old fresh : Unit → Except E Unit)
+    (encode : A → Except E B) (rows : Rows) (cause : E) (root : A) (result : B)
+    (stale : old () = .error cause) (ready : fresh () = .ok ())
+    (built : source.fromRows rows = .ok root) (encoded : encode root = .ok result) :
+    (source.derive old encode).fromRows rows = .error cause ∧
+    (source.derive fresh encode).fromRows rows = .ok result := by
+  constructor
+  · exact (source.derive_stale old encode rows cause stale).2
+  · exact source.derive_rows_ready fresh encode rows root result ready built encoded
+
 end LeanPoo.Functional.OrderedDictionary
