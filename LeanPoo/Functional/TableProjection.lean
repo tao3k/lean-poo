@@ -649,4 +649,104 @@ theorem expansion_inverse [DecidableEq K] [DecidableEq V]
   rw [applyChanges_inverse edits before after installed]
   rfl
 
+/-- Two existing immutable view transitions share their exact middle delta.
+Neither cache is published until both transitions succeed. This kernel assumes
+the declared descriptor boundary and each view's origin/admission laws; arbitrary
+callbacks, mutable carriers and compiler/GC behavior are outside the model. -/
+def composeProjectionStep (first : S → D → Except E (S × M))
+    (second : T → M → Except E (T × N)) (state : S × T) (delta : D) :
+    Except E ((S × T) × N) :=
+  deliverProjection (first state.1 delta) fun next middle =>
+    (second state.2 middle).map fun result => ((next, result.1), result.2)
+
+/-- Upstream refusal cannot demand a downstream transition or produce a cache. -/
+theorem composeProjectionStep_first_refused
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (state : S × T) (delta : D) (cause : E) (refused : first state.1 delta = .error cause) :
+    composeProjectionStep first second state delta = .error cause := by
+  simp [composeProjectionStep, deliverProjection, refused, Except.bind]
+
+/-- Downstream refusal retains its cause; the prepared upstream cache stays private. -/
+theorem composeProjectionStep_second_refused
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (state : S × T) (delta : D) (next : S) (middle : M) (cause : E)
+    (ready : first state.1 delta = .ok (next, middle))
+    (refused : second state.2 middle = .error cause) :
+    composeProjectionStep first second state delta = .error cause := by
+  simp [composeProjectionStep, deliverProjection, ready, refused, Except.bind, Except.map]
+
+/-- The output is the exact second-stage delta, including an empty origin-bearing
+delta. There is no snapshot discovery or middle delta reconstruction. -/
+theorem composeProjectionStep_ready
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (state : S × T) (delta : D) (next : S) (middle : M) (last : T) (output : N)
+    (a : first state.1 delta = .ok (next, middle))
+    (b : second state.2 middle = .ok (last, output)) :
+    composeProjectionStep first second state delta = .ok ((next, last), output) := by
+  simp [composeProjectionStep, deliverProjection, a, b, Except.bind, Except.map]
+
+/-- Every accepted chain has BOTH successful subordinate transitions, connected
+by the very same delta. This permits per-view semantic laws to compose. -/
+theorem composeProjectionStep_witness
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (state next : S × T) (delta : D) (output : N)
+    (ready : composeProjectionStep first second state delta = .ok (next, output)) :
+    ∃ middle, first state.1 delta = .ok (next.1, middle) ∧
+      second state.2 middle = .ok (next.2, output) := by
+  cases a : first state.1 delta with
+  | error cause => simp [composeProjectionStep, deliverProjection, a, Except.bind] at ready
+  | ok pair =>
+    rcases pair with ⟨up, middle⟩
+    cases b : second state.2 middle with
+    | error cause => simp [composeProjectionStep, deliverProjection, a, b, Except.bind, Except.map] at ready
+    | ok pair =>
+      rcases pair with ⟨down, edits⟩
+      simp [composeProjectionStep, deliverProjection, a, b, Except.bind, Except.map] at ready
+      rcases ready with ⟨rfl, rfl⟩
+      exact ⟨middle, rfl, b⟩
+
+/-- If each accepted view maintains its declared cache invariant, the accepted
+composition maintains both. Recognition alone is not a proof of those premises. -/
+theorem composeProjectionStep_preserves
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (p : S → Prop) (q : T → Prop)
+    (firstLaw : ∀ s d s' m, p s → first s d = .ok (s', m) → p s')
+    (secondLaw : ∀ t m t' n, q t → second t m = .ok (t', n) → q t')
+    (state next : S × T) (delta : D) (output : N) (before : p state.1 ∧ q state.2)
+    (ready : composeProjectionStep first second state delta = .ok (next, output)) :
+    p next.1 ∧ q next.2 := by
+  obtain ⟨middle, a, b⟩ := composeProjectionStep_witness first second state next delta output ready
+  exact ⟨firstLaw _ _ _ _ before.1 a, secondLaw _ _ _ _ before.2 b⟩
+
+/-- The two caches remain connected to the same middle observation, provided
+each existing view faithfully interprets its delivered middle delta. This makes
+the representation/equality premise explicit rather than inferring it from Types. -/
+theorem composeProjectionStep_connected
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (up : S → R) (down : T → R) (revise : R → M → R)
+    (firstLaw : ∀ s d s' m, first s d = .ok (s', m) → up s' = revise (up s) m)
+    (secondLaw : ∀ t m t' n, second t m = .ok (t', n) → down t' = revise (down t) m)
+    (state next : S × T) (delta : D) (output : N) (connected : up state.1 = down state.2)
+    (ready : composeProjectionStep first second state delta = .ok (next, output)) :
+    up next.1 = down next.2 := by
+  obtain ⟨middle, a, b⟩ := composeProjectionStep_witness first second state next delta output ready
+  rw [firstLaw _ _ _ _ a, secondLaw _ _ _ _ b, connected]
+
+/-- Refusal at either stage leaves the published pair unchanged, allowing an
+explicit retry with corrected source edits and the same immutable old caches. -/
+theorem composeProjectionStep_atomic_refusal
+    (first : S → D → Except E (S × M)) (second : T → M → Except E (T × N))
+    (state : S × T) (delta : D) (cause : E)
+    (refused : composeProjectionStep first second state delta = .error cause) :
+    publishProjection state ((composeProjectionStep first second state delta).map Prod.fst) = state := by
+  simp [refused, publishProjection, Except.map]
+
+/-- Selective callback accounting adds the two existing changed-key bounds.
+Whole admission, touched registries, affected buckets and backend work remain
+charged independently; this is not a wall-clock or allocation bound. -/
+theorem composeProjectionStep_callback_bound (first : K → Option V) (second : L → Option W)
+    (keys : List K) (middleKeys : List L) :
+    projectionCalls first keys + projectionCalls second middleKeys ≤ keys.length + middleKeys.length :=
+  Nat.add_le_add (projectionCalls_bound first keys) (projectionCalls_bound second middleKeys)
+
 end LeanPoo.Functional.OrderedDictionary

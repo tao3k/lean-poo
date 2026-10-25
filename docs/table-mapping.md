@@ -1,5 +1,34 @@
 # Checked bulk binding maps
 
+## Composed incremental views
+
+The companion Gerbil `table-projection-compose` connects two unary table views
+through the identical declared middle descriptor. It reuses each existing cache
+and its continuation-bearing exact output delta. No middle/target snapshot diff,
+duplicate registry implementation or additional Function wrapping is introduced.
+`Examples/ServiceCollection.lean` gives finite reservation, collision and unchanged
+publication examples; Gerbil's service example composes multivalued route expansion
+with selective grouped capacity summaries and the existing five-style FUN/IO publisher.
+
+`TableProjection.lean` adds `composeProjectionStep`, using `deliverProjection`.
+Its laws establish both-success witnesses with the same middle delta, connected
+middle observations under per-view fidelity, preservation of each cache invariant,
+unchanged publication on either refusal and additive existing callback bounds.
+The existing guarded installer inverse theorem applies to the delivered final
+delta independently of an inverse user projection. Source inverses restore chain
+observations only under stable pure projection and persistent backend premises.
+
+The host implementation additionally checks descriptor identity, private cache
+ownership, complete metadata/origin validity (including no-op deltas) and holds
+the existing source guards across both stages. Its regression controls cover
+nested chains, coalesced batches, collision/refinement/callback refusal, original
+cause retention, retry, exact Function identity and all five publication styles.
+The model does not prove host callbacks, metadata machinery, physical ownership,
+compiler or GC behavior. Whole admission, affected-bucket refolds, preparation and
+backend operations remain charged; callback bounds are not wall-time claims.
+Binary input synchronization and automatic view discovery remain outside this
+explicit composition unit. This advances the collection proposal's future work.
+
 This closes a concrete collection TODO: `.map/2` was listed but absent from
 `methods.table`, while Trie exposed only its carrier-specific traversal. The new
 standard include `table/mapping.scm` stays inside `clan/poo/table`. This advances

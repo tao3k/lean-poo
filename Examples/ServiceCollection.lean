@@ -200,4 +200,30 @@ example : preparePrefix "count" (fun (rows : List Nat) =>
 example : preparePrefix "count" (fun (_ : List Nat) => Except.ok ())
     (-1) true [1, 2] = .error "count" := rfl
 
+/-- A finite prepared service expansion delivers its exact admitted route rows;
+source installation and origin admission are premises of this example stage. -/
+def expandedServiceStep (_before : List (Nat × Nat)) (rows : List (Nat × Nat)) :
+    Except (String ⊕ Nat) (List (Nat × Nat) × List (Nat × Nat)) := .ok (rows, rows)
+
+/-- Endpoint reservation reuses the existing collision protocol, retaining row
+payloads while mapping route identities to their explicit finite endpoint keys. -/
+def serviceEndpointStep (_before : List (Nat × Nat)) (rows : List (Nat × Nat)) :
+    Except (String ⊕ Nat) (List (Nat × Nat) × List (Nat × Nat)) :=
+  (reserveExpansion (E := String) (rows.map fun row => (row.1 % 10, row.2)) []).map
+    fun endpoints => (endpoints, endpoints)
+
+example : composeProjectionStep expandedServiceStep serviceEndpointStep
+    ([(10, 3)], [(0, 3)]) [(32, 3), (43, 3)] =
+    .ok (([(32, 3), (43, 3)], [(2, 3), (3, 3)]), [(2, 3), (3, 3)]) := rfl
+
+/-- Different routes colliding downstream cannot expose the upstream successor. -/
+example : composeProjectionStep expandedServiceStep serviceEndpointStep
+    ([(10, 3)], [(0, 3)]) [(10, 3), (20, 7)] = .error (.inr 0) := rfl
+
+/-- The unchanged cache pair remains available for corrected explicit retry. -/
+example : publishProjection ([(10, 3)], [(0, 3)])
+    ((composeProjectionStep expandedServiceStep serviceEndpointStep
+      ([(10, 3)], [(0, 3)]) [(10, 3), (20, 7)]).map Prod.fst) =
+    ([(10, 3)], [(0, 3)]) := rfl
+
 end Examples.ServiceCollection
