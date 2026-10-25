@@ -554,4 +554,117 @@ theorem styleStep_prefix_refused (style : TableStyle) (badCount cause : E)
   have denied := preparePrefix_refused badCount cause admit count keepPrefix rows source refused
   simp [styleStep, denied]
 
+/-- The generic finite division uses the existing traversal prefix, with no
+invented empty part. Structural backends may choose a different lawful partition. -/
+def divisionRows (rows : List A) : List (List A) :=
+  if rows.isEmpty then [] else if rows.length = 1 then [rows] else
+    let middle := (rows.length + 1) / 2
+    [rows.take middle, rows.drop middle]
+
+/-- Empty input has no output carriers to admit. -/
+theorem divisionRows_empty : divisionRows ([] : List A) = [] := rfl
+
+/-- A singleton is returned verbatim rather than rebuilt with an empty remainder. -/
+theorem divisionRows_singleton (row : A) : divisionRows [row] = [[row]] := rfl
+
+/-- Ordered concatenation reconstructs the entire source, retaining opaque leaves. -/
+theorem divisionRows_reconstruct (rows : List A) : (divisionRows rows).flatten = rows := by
+  by_cases empty : rows.isEmpty = true
+  · have nil : rows = [] := by simpa using empty
+    subst rows
+    rfl
+  · by_cases single : rows.length = 1
+    · simp [divisionRows, empty, single]
+    · simp [divisionRows, empty, single, List.take_append_drop]
+
+/-- With unique source bindings, reconstruction also excludes duplicate ownership
+across parts. No host equality, comparator or Function equality is required. -/
+theorem divisionRows_unique (rows : List A) (unique : rows.Nodup) :
+    (divisionRows rows).flatten.Nodup := by
+  rw [divisionRows_reconstruct]
+  exact unique
+
+/-- Every output of a nontrivial generic division is nonempty and strictly
+smaller. This supplies a finite descending size measure for explicit recursion. -/
+theorem divisionRows_progress (rows : List A) (part : List A) (two : 2 ≤ rows.length)
+    (member : part ∈ divisionRows rows) : 0 < part.length ∧ part.length < rows.length := by
+  have empty : rows.isEmpty = false := by
+    cases rows with
+    | nil => simp at two
+    | cons head tail => rfl
+  have single : rows.length ≠ 1 := by omega
+  simp only [divisionRows, empty, Bool.false_eq_true, ↓reduceIte, single] at member
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at member
+  rcases member with rfl | rfl <;> simp only [List.length_take, List.length_drop] <;> omega
+
+/-- The existing branch-admission kernel handles nontrivial division. Empty and
+singleton input need no additional output admission or forbidden empty root. -/
+def prepareDivision (admit : List A → Except E Unit) (rows : List A) : Except E (List (List A)) :=
+  (admit rows).bind fun _ =>
+    match divisionRows rows with
+    | [left, right] => (preparePartitionRoots
+        (fun part => (admit part).map fun _ => part) left right).map fun parts => [parts.1, parts.2]
+    | parts => .ok parts
+
+/-- Original-root refusal suppresses partition and output preparation. -/
+theorem prepareDivision_source_refused (admit : List A → Except E Unit) (rows : List A)
+    (cause : E) (refused : admit rows = .error cause) :
+    prepareDivision admit rows = .error cause := by
+  simp [prepareDivision, refused, Except.bind]
+
+/-- A late second-part refusal returns neither part and retains the original cause. -/
+theorem prepareDivision_second_refused (admit : List A → Except E Unit)
+    (rows left right : List A) (cause : E)
+    (source : admit rows = .ok ()) (parts : divisionRows rows = [left, right])
+    (first : admit left = .ok ()) (second : admit right = .error cause) :
+    prepareDivision admit rows = .error cause := by
+  simp [prepareDivision, source, parts, preparePartitionRoots, first, second, Except.bind, Except.map]
+
+/-- Successful complete admission retains exactly the partitioned observations. -/
+theorem prepareDivision_ready (admit : List A → Except E Unit) (rows left right : List A)
+    (source : admit rows = .ok ()) (parts : divisionRows rows = [left, right])
+    (first : admit left = .ok ()) (second : admit right = .ok ()) :
+    prepareDivision admit rows = .ok [left, right] := by
+  simp [prepareDivision, source, parts, preparePartitionRoots, first, second, Except.bind, Except.map]
+
+/-- Variable-cardinality results reuse the existing owner transaction. For empty
+division the first-root fallback is the original admitted empty snapshot. -/
+def styleDivision (style : TableStyle) (state : Option A)
+    (prepare : A → Except E (List A)) : Option A × Except (StyleFailure E) (List A) :=
+  match state with
+  | none => (none, .error .consumed)
+  | some before => match prepare before with
+    | .error cause => (state, .error (.callback cause))
+    | .ok roots =>
+      let installed := styleStep (E := E) style state (fun _ => .ok (roots.headD before))
+      (installed.1, .ok roots)
+
+/-- A consumed owner cannot prepare or revive any output capability. -/
+theorem styleDivision_consumed (style : TableStyle) (prepare : A → Except E (List A)) :
+    styleDivision style none prepare = (none, .error .consumed) := rfl
+
+/-- Every ownership presentation returns exactly the fully prepared list. -/
+theorem styleDivision_observation (style : TableStyle) (before : A)
+    (prepare : A → Except E (List A)) (roots : List A) (ready : prepare before = .ok roots) :
+    (styleDivision style (some before) prepare).2 = .ok roots := by
+  simp [styleDivision, ready]
+
+/-- Failure returns no new capabilities and keeps every predecessor retryable. -/
+theorem styleDivision_refused (style : TableStyle) (before : A)
+    (prepare : A → Except E (List A)) (cause : E) (refused : prepare before = .error cause) :
+    styleDivision style (some before) prepare = (some before, .error (.callback cause)) := by
+  simp [styleDivision, refused]
+
+/-- Empty linear division retires the original capability exactly once. -/
+theorem styleDivision_empty_linear (before : A) (prepare : A → Except E (List A))
+    (ready : prepare before = .ok []) :
+    styleDivision .linear (some before) prepare = (none, .ok []) := by
+  simp [styleDivision, ready, styleStep]
+
+/-- Empty mutable division preserves its observable empty head while succeeding. -/
+theorem styleDivision_empty_mutable (before : A) (prepare : A → Except E (List A))
+    (ready : prepare before = .ok []) :
+    styleDivision .mutable (some before) prepare = (some before, .ok []) := by
+  simp [styleDivision, ready, styleStep]
+
 end LeanPoo.Functional.OrderedDictionary

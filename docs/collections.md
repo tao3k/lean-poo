@@ -576,3 +576,52 @@ and guards. Full family admission, metadata checks, positioning, fallback sortin
 and selected-bucket traversal remain charged. Laziness avoids unrequested pulls;
 it does not imply zero preparation cost or a wall-clock speedup. Automatic index
 selection and backend/order discovery remain collection-library research work.
+
+### Checked finite collection division
+
+`.divide root` returns two optional nonempty parts; `.divide/list root` returns
+the same zero, one or two parts as a list. Empty input returns no carriers.
+A singleton returns the original admitted root, with no manufactured empty
+remainder. Missing parts use false independently of the backend's empty-root
+representation. The protocol requires no key order or comparator.
+
+The shared table boundary admits the original root before invoking a backend.
+Trie exposes its existing structural algorithm as `.divide/key`; public calls
+now pass through ordinary complete admission. Other tables reuse the existing
+partition in visitation order, selecting a ceiling-half prefix. Every complete
+part must satisfy the same table refinement, be nonempty and strictly smaller
+for a nontrivial input; part counts must sum to the original count. Invalid
+structural progress and recognition failures return no part. Count fidelity,
+disjointness and lookup-preserving reconstruction remain backend laws, rather
+than being inferred from method names or counts alone.
+
+Set division delegates that table boundary and checks its existing Set refinement.
+All five styles and Posh/Classy receivers reuse the original multi-result staging
+and one generation installation. For nonempty output, mutable/classy retains the
+input identity as the first part; additional owners are fresh. Linear retires its
+input once, including successful empty division with no successors. Pure/posh
+retains the predecessor. Empty mutable division keeps the original empty head.
+No part or new capability escapes until the whole request and owner installation
+accepts. Refusal preserves the owner for explicit corrected-input retry; external
+callback effects are not rolled back.
+
+The service example composes checked Function ledgers with linear division and
+Reader/FUN/IO consumption. Regressions cover RationalDict/Trie/boxed carriers,
+empty/singleton/multirow inputs, reconstruction, correlated unique/shared indexes,
+Function identity, every style/receiver, late branch refinement, corrected retry,
+invalid backend progress, original exceptions and suppressed IO on refusal.
+Lean's TableSelection reuses finite take/drop and branch admission: exact ordered
+reconstruction, uniqueness, strictly smaller nonempty parts, unchanged output
+observations, original refusal and zero-result ownership. Top-level service
+examples include late second-part refusal and corrected retry.
+
+Design reflection: the old first-element split and raw-empty assumptions were
+replaced at the public boundary; no parallel tree algorithm, namespace or owner
+installer was added. The existing stage now admits an empty result list with the
+same commit rule. Structural backends retain their division strategy; only the
+generic path promises ceiling-half sizes. Complete source/part admission, count
+queries, partition/index preparation and style construction remain costs.
+Strictly decreasing finite sizes justify explicit recursion under faithful backend
+laws, not arbitrary callback termination, physical disjoint ownership, automatic
+parallelism, compiler/GC correctness or wall-clock speedups. This advances the
+proposed collection library's future work without declaring the project complete.

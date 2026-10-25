@@ -433,4 +433,29 @@ example : tableRangeCursorRows (fun _ : Nat => true)
     (false, [(100, [(1, (3 : Int))]), (200, [(2, 4), (3, 7)])]) =
     [(100, [(1, 3)]), (200, [(2, 4), (3, 7)])] := rfl
 
+/-- Divide a finite service ledger in its declared observation order. -/
+example : divisionRows capacityWindow = [[(1, 3), (2, 4)], [(3, 7), (4, 9)]] := rfl
+
+example : (divisionRows capacityWindow).flatten = capacityWindow :=
+  divisionRows_reconstruct capacityWindow
+
+/-- Complete business admission accepts the full ledger and its first half but
+refuses the second half. No admitted first part may escape this failed request. -/
+def admitCapacityDivision (rows : List (Nat × Int)) : Except String Unit :=
+  if rows.length = 2 && rows.any (fun row => row.1 == 3) then .error "division policy" else .ok ()
+
+example : prepareDivision admitCapacityDivision capacityWindow = .error "division policy" := rfl
+
+example : styleDivision .linear (some capacityWindow) (prepareDivision admitCapacityDivision) =
+    (some capacityWindow, .error (.callback "division policy")) := rfl
+
+/-- Corrected smaller input keeps the same admission policy and yields two
+singletons; no empty source representation has to be synthesized. -/
+example : prepareDivision admitCapacityDivision [(1, 3), (2, 4)] =
+    .ok [[(1, 3)], [(2, 4)]] := rfl
+
+/-- Empty successful linear division has zero successor capabilities. -/
+example : styleDivision .linear (some []) (prepareDivision admitCapacityDivision) =
+    (none, .ok []) := rfl
+
 end Examples.ServiceCollection
