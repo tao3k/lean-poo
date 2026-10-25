@@ -738,3 +738,25 @@ copying, lookup, construction, GC and allocation remain charged; no runtime lock
 callback termination or compiler correctness follows. This is finite collection
 future work. Design reflection: remove the unchecked Option branch, share one
 modifier, and preserve the established validation and ownership abstractions.
+
+
+Whole-collection equality now uses one complete-admission boundary before backend
+shortcuts. RationalDict's existing standard Iterator/RBTree algorithm and Trie's
+shared-subtree algorithm remain private structural capabilities; the generic path
+retains two-sided domain checks. Every encountered value decision and backend result
+must be Boolean. Five Table styles and standard receivers reuse the existing
+nonconsuming Set/Table relation reader. Pure roots remain duplicable; no owner is
+invented for them. Source/key/value/origin checks cannot be skipped on identical roots.
+
+The existing `prepareBindingComparison` is generalized over its result type so
+Bool observations reuse all left/right refusal and exact-result laws. `equalViewKeys`
+proves optional-presence soundness, first false/error short-circuiting, finite lookup
+soundness/completeness and full view equality with a covering key sequence. Its
+visited-key bound charges neither hidden recognition nor lookup/callback costs as
+constant. Stable leaves, lawful persistent backend enumeration and reflexive/sound
+payload equality are premises. No joint atomic read of owners, Function extensional
+equality, callback rollback/termination, GC or compiler claim is made. The service
+Reader/FUN/IO example retains failure retry and exact Function identity after undo.
+This is finite collection future work. Design reflection: keep mature backend
+algorithms, remove their public validation bypass and lift the existing relation
+protocol; add no equality/ownership engine or namespace.

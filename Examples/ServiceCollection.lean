@@ -542,4 +542,17 @@ example : associateOption (some false) (some true) = some false := rfl
 example : admitAssociation (E := String) (fun (_ : Option Nat) => .error "stale approval")
     none (some 7) = .error "stale approval" := rfl
 
+/-- Stored false is distinct from an absent service flag. -/
+example : equalBindingOption (E := String) (fun a b : Bool => .ok (a == b))
+    (some false) none = .ok false := rfl
+
+/-- Equality observes opaque callback handles rather than executing them. -/
+example : equalViewKeys (E := String) (fun a b : Nat => .ok (a == b))
+    (fun (_ : Nat) => some 7) (fun _ => some 8) [1, 2] = .ok false := rfl
+
+/-- Complete right admission precedes an otherwise true equality decision. -/
+example : prepareBindingComparison (E := String)
+    (fun rows : List (Nat × Int) => if rows = [(1, -1)] then .error "negative capacity" else .ok ())
+    (fun _ _ => .ok true) [(1, 10)] [(1, -1)] = .error "negative capacity" := rfl
+
 end Examples.ServiceCollection

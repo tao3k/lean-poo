@@ -683,8 +683,8 @@ theorem comparisonSteps_bound (key : K → K → Int) (value : V → V → Excep
 /-- Both complete roots are admitted left-to-right before any comparison action.
 The backend enumeration and comparator laws are explicit external premises. -/
 def prepareBindingComparison (admit : List (K × V) → Except E Unit)
-    (compare : List (K × V) → List (K × V) → Except E Int)
-    (left right : List (K × V)) : Except E Int :=
+    (compare : List (K × V) → List (K × V) → Except E R)
+    (left right : List (K × V)) : Except E R :=
   match admit left with
   | .error cause => .error cause
   | .ok () => match admit right with
@@ -693,14 +693,14 @@ def prepareBindingComparison (admit : List (K × V) → Except E Unit)
 
 /-- Left refusal precedes right admission and all user comparison callbacks. -/
 theorem prepareBindingComparison_left_refused (admit : List (K × V) → Except E Unit)
-    (compare : List (K × V) → List (K × V) → Except E Int)
+    (compare : List (K × V) → List (K × V) → Except E R)
     (left right : List (K × V)) (cause : E) (refused : admit left = .error cause) :
     prepareBindingComparison admit compare left right = .error cause := by
   simp [prepareBindingComparison, refused]
 
 /-- Invalid right tails cannot hide behind an earlier deciding left entry. -/
 theorem prepareBindingComparison_right_refused (admit : List (K × V) → Except E Unit)
-    (compare : List (K × V) → List (K × V) → Except E Int)
+    (compare : List (K × V) → List (K × V) → Except E R)
     (left right : List (K × V)) (cause : E) (ready : admit left = .ok ())
     (refused : admit right = .error cause) :
     prepareBindingComparison admit compare left right = .error cause := by
@@ -708,9 +708,116 @@ theorem prepareBindingComparison_right_refused (admit : List (K × V) → Except
 
 /-- Successful admission preserves the exact result or original failure. -/
 theorem prepareBindingComparison_ready (admit : List (K × V) → Except E Unit)
-    (compare : List (K × V) → List (K × V) → Except E Int)
+    (compare : List (K × V) → List (K × V) → Except E R)
     (left right : List (K × V)) (first : admit left = .ok ()) (second : admit right = .ok ()) :
     prepareBindingComparison admit compare left right = compare left right := by
   simp [prepareBindingComparison, first, second]
+
+/-- Optional presence is checked before the supplied payload equality decision.
+A stored false is a payload, never absence; decisions may preserve a refusal. -/
+def equalBindingOption (same : V → V → Except E Bool) : Option V → Option V → Except E Bool
+  | none, none => .ok true
+  | some a, some b => same a b
+  | _, _ => .ok false
+
+/-- A lawful payload decision establishes exact optional lookup equality. -/
+theorem equalBindingOption_sound (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : Option V)
+    (accepted : equalBindingOption same left right = .ok true) : left = right := by
+  cases left with
+  | none => cases right <;> simp_all [equalBindingOption]
+  | some a => cases right with
+    | none => simp [equalBindingOption] at accepted
+    | some b => exact congrArg some (law a b accepted)
+
+/-- Reflexive payload decisions establish equality without normalizing any leaf. -/
+theorem equalBindingOption_refl (same : V → V → Except E Bool)
+    (law : ∀ a, same a a = .ok true) (value : Option V) :
+    equalBindingOption same value value = .ok true := by
+  cases value <;> simp [equalBindingOption, law]
+
+/-- The finite reference visits a declared covering key sequence and stops at
+its first false decision or refusal. Backend traversal/refinement laws are premises. -/
+def equalViewKeys (same : V → V → Except E Bool) (left right : K → Option V) :
+    List K → Except E Bool
+  | [] => .ok true
+  | key :: rest => match equalBindingOption same (left key) (right key) with
+    | .error cause => .error cause
+    | .ok false => .ok false
+    | .ok true => equalViewKeys same left right rest
+
+/-- A deciding false suppresses later equality actions, rather than accumulating
+truthy values or inspecting an unrelated tail. -/
+theorem equalViewKeys_decided (same : V → V → Except E Bool) (left right : K → Option V)
+    (key : K) (rest : List K) (decided : equalBindingOption same (left key) (right key) = .ok false) :
+    equalViewKeys same left right (key :: rest) = .ok false := by simp [equalViewKeys, decided]
+
+/-- Value refusal keeps the exact first cause; it is not inequality. -/
+theorem equalViewKeys_refused (same : V → V → Except E Bool) (left right : K → Option V)
+    (key : K) (rest : List K) (cause : E)
+    (refused : equalBindingOption same (left key) (right key) = .error cause) :
+    equalViewKeys same left right (key :: rest) = .error cause := by simp [equalViewKeys, refused]
+
+/-- Successful finite equality frames every observed key, including absent ones. -/
+theorem equalViewKeys_sound (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : K → Option V) (keys : List K)
+    (accepted : equalViewKeys same left right keys = .ok true) :
+    ∀ key ∈ keys, left key = right key := by
+  induction keys with
+  | nil => simp
+  | cons key rest ih =>
+    cases hd : equalBindingOption same (left key) (right key) with
+    | error cause => simp [equalViewKeys, hd] at accepted
+    | ok decision => cases decision with
+      | false => simp [equalViewKeys, hd] at accepted
+      | true =>
+        have tail : equalViewKeys same left right rest = .ok true := by
+          simpa [equalViewKeys, hd] using accepted
+        intro query member
+        rcases List.mem_cons.mp member with first | later
+        · subst query; exact equalBindingOption_sound same law _ _ hd
+        · exact ih tail query later
+
+/-- Equal observations are accepted when the supplied value equality is reflexive. -/
+theorem equalViewKeys_complete (same : V → V → Except E Bool)
+    (law : ∀ a, same a a = .ok true) (left right : K → Option V) (keys : List K)
+    (agree : ∀ key ∈ keys, left key = right key) :
+    equalViewKeys same left right keys = .ok true := by
+  induction keys with
+  | nil => rfl
+  | cons key rest ih =>
+    have first : equalBindingOption same (left key) (right key) = .ok true := by
+      rw [agree key (by simp)]; exact equalBindingOption_refl same law _
+    have tail := ih (fun query member => agree query (by simp [member]))
+    simp [equalViewKeys, first, tail]
+
+/-- Covering both finite domains upgrades successful key equality to full
+observation equality. No ordering, new empty root or payload normalization is needed. -/
+theorem equalViewKeys_extensional (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : K → Option V) (keys : List K)
+    (outside : ∀ key, key ∉ keys → left key = none ∧ right key = none)
+    (accepted : equalViewKeys same left right keys = .ok true) : left = right := by
+  funext key
+  by_cases member : key ∈ keys
+  · exact equalViewKeys_sound same law left right keys accepted key member
+  · rcases outside key member with ⟨hl, hr⟩; exact hl.trans hr.symm
+
+/-- Key-decision work only. Source recognition, backend traversal, lookups,
+metadata preparation, payload comparison and runtime allocation remain charged. -/
+def equalitySteps (same : V → V → Except E Bool) (left right : K → Option V) : List K → Nat
+  | [] => 0
+  | key :: rest => 1 + match equalBindingOption same (left key) (right key) with
+    | .ok true => equalitySteps same left right rest
+    | _ => 0
+
+/-- The finite reference examines no more keys than its supplied domain cover. -/
+theorem equalitySteps_bound (same : V → V → Except E Bool) (left right : K → Option V)
+    (keys : List K) : equalitySteps same left right keys ≤ keys.length := by
+  induction keys with
+  | nil => simp [equalitySteps]
+  | cons key rest ih =>
+    cases hd : equalBindingOption same (left key) (right key) with
+    | error cause => simp [equalitySteps, hd]
+    | ok decision => cases decision <;> simp [equalitySteps, hd] <;> omega
 
 end LeanPoo.Functional.OrderedDictionary
