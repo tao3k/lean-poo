@@ -806,3 +806,29 @@ recognition, backend path/lookup, metadata and allocation/GC costs remain charge
 this is not a constant-time/runtime/compiler claim. This is finite collection
 future work. Design reflection: reuse the query/observer chain, remove the public
 bypass, and derive API bindings without another algorithm, cache or namespace.
+
+
+Logical emptiness now observes admitted contents, not the identity of `.empty`.
+The public Table/Set boundary protects source metadata, checks complete business
+membership and requires a Boolean decision. Existing RBTree/Trie predicates remain
+private `.empty/key?` structural capabilities; the generic fallback reuses the
+short-circuit query and never evaluates an empty constructor. Representation,
+order and index views retain their backend delegation under the common boundary.
+All five styles and standard receivers use the existing nonconsuming observer,
+so consumed ownership remains distinct from a valid empty value. Function leaves
+retain identity, including in represented indexed partial ledgers and FUN/IO retry.
+
+The internal Trie/node and grouped-bucket paths retain structural emptiness rather
+than recursively invoking public business admission on temporary values. Primitive
+count remains available to define refinements; treating that primitive as another
+public checked query would introduce an admission cycle. `TableSelection.emptyBindings`
+reuses endpoint queries and proves equivalence with zero finite cardinality;
+`prepareEmpty` proves refusal/ready/backend-law agreement. Structural empty buckets
+can be removed even when empty business roots are forbidden. The observation model
+proves owner preservation and distinguishes consumed ownership from logical emptiness.
+Backend shape/cardinality laws, stable leaves and supported metadata edits remain
+premises. Full recognition, metadata, traversal paths, lookup and allocation/GC
+costs are charged; no constant-time or runtime/compiler claim follows. This is
+finite collection future work. Design reflection: remove constructor-identity
+comparison, retain mature structural predicates and derive observation through
+existing queries/guards without another validator, counter, cache or namespace.

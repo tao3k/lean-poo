@@ -853,4 +853,66 @@ theorem observeEndpoint_preserves (state : Option (List A)) (reverse : Bool) :
     (observeQuery state (endpointBindings (E := E) reverse)).1 = state :=
   observeQuery_preserves state _
 
+/-- Logical emptiness is the absence of an endpoint in the existing query model;
+no empty carrier is constructed and no equality on opaque payloads is needed. -/
+def emptyBindings (rows : List A) : Except E Bool :=
+  (endpointBindings false rows).map Option.isNone
+
+/-- Logical emptiness agrees with the finite source's empty-list observation. -/
+theorem emptyBindings_spec (rows : List A) :
+    emptyBindings (E := E) rows = .ok rows.isEmpty := by
+  cases rows <;> rfl
+
+/-- The primitive cardinality law agrees with emptiness; this does not wrap a
+count primitive used to define a business refinement in recursive admission. -/
+theorem emptyBindings_count (rows : List A) :
+    emptyBindings (E := E) rows = .ok true ↔ rows.length = 0 := by
+  cases rows <;> simp [emptyBindings_spec]
+
+/-- A stored false or opaque handle still witnesses nonemptiness. -/
+theorem emptyBindings_present (head : A) (tail : List A) :
+    emptyBindings (E := E) (head :: tail) = .ok false := rfl
+
+/-- Full source admission precedes the emptiness query, even when a backend can
+recognize an empty root or a first binding immediately. -/
+def prepareEmpty (admit : List A → Except E Unit) (rows : List A) : Except E Bool :=
+  (prepareQuery admit (fun _ => .ok true) rows false).map Option.isNone
+
+/-- Refused business roots keep the exact cause, never a guessed true/false result. -/
+theorem prepareEmpty_refused (admit : List A → Except E Unit) (rows : List A)
+    (cause : E) (refused : admit rows = .error cause) :
+    prepareEmpty admit rows = .error cause := by simp [prepareEmpty, prepareQuery, refused, Except.map]
+
+/-- Successful admission preserves logical emptiness independently of carrier identity. -/
+theorem prepareEmpty_ready (admit : List A → Except E Unit) (rows : List A)
+    (ready : admit rows = .ok ()) : prepareEmpty admit rows = .ok rows.isEmpty := by
+  cases rows <;> simp [prepareEmpty, prepareQuery, ready, queryBindings, Except.map]
+
+/-- A declared fast backend predicate refines the same logical observation only
+under its stated cardinality/shape law; runtime Boolean checks do not infer that law. -/
+theorem prepareEmpty_backend (admit : List A → Except E Unit) (rows : List A)
+    (raw : List A → Bool) (law : raw rows = rows.isEmpty) (ready : admit rows = .ok ()) :
+    prepareEmpty admit rows = .ok (raw rows) := by rw [prepareEmpty_ready admit rows ready, law]
+
+/-- Structural emptiness works for intermediate buckets without business admission;
+a final empty bucket is absent rather than published as an invalid business value. -/
+theorem emptyBindings_intermediate (admit : List A → Except E Unit) (cause : E)
+    (forbidden : admit [] = .error cause) :
+    emptyBindings (A := A) (E := E) [] = .ok true ∧ prepareEmpty admit [] = .error cause := by
+  exact ⟨rfl, prepareEmpty_refused admit [] cause forbidden⟩
+
+/-- Emptiness is the existing nonconsuming query plus Boolean result projection. -/
+def observeEmpty (state : Option (List A)) (admit : List A → Except E Unit) :
+    Option (List A) × Except (StyleFailure E) Bool :=
+  let result := observeQuery state (fun rows => prepareQuery admit (fun _ => .ok true) rows false)
+  (result.1, result.2.map Option.isNone)
+
+/-- Neither success, absence nor refusal can retire or replace an observed owner. -/
+theorem observeEmpty_preserves (state : Option (List A)) (admit : List A → Except E Unit) :
+    (observeEmpty state admit).1 = state := rfl
+
+/-- Consumed ownership is not the same outcome as a valid empty collection. -/
+theorem observeEmpty_consumed (admit : List A → Except E Unit) :
+    observeEmpty none admit = (none, .error .consumed) := rfl
+
 end LeanPoo.Functional.OrderedDictionary

@@ -577,4 +577,12 @@ example : endpointBindings (E := String) true [(1, (10, 7)), (2, (20, 8))] =
 example : prepareQuery (E := String) (fun (_ : List Nat) => .error "invalid source")
     (fun _ => .ok true) [1, 2] true = .error "invalid source" := rfl
 
+/-- A ledger containing a stored false flag is still nonempty. -/
+example : emptyBindings (E := String) [(1, false)] = .ok false := rfl
+
+/-- Structural bucket emptiness and admitted business emptiness are separate. -/
+example : emptyBindings (A := Nat) (E := String) [] = .ok true ∧
+    prepareEmpty (fun (_ : List Nat) => .error "nonempty policy") [] = .error "nonempty policy" :=
+  ⟨rfl, rfl⟩
+
 end Examples.ServiceCollection
