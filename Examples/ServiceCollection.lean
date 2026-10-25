@@ -633,4 +633,19 @@ example : tableLinearRange (fun (key : Int × Bool) => decide (1 ≤ key.1))
     [((-2, false), 7), ((1, false), 8), ((2, true), 9), ((3, false), 10)] =
       ([((1, false), 8), ((2, true), 9)], 4) := rfl
 
+/-- Repeated exact/inexact representation tags schedule one owner per backend
+class, in first-occurrence order, while preserving opaque callback handles. -/
+example : distinctKeyWork (fun (key : Int × Bool) => key.1) []
+    [(1, false), (2, true), (1, true), (3, false), (2, false)] =
+      [(1, false), (2, true), (3, false)] := by decide
+
+/-- Equality-based scheduling changes no grouped observation; classification
+is explicitly over logical keys, rather than arbitrary physical representations. -/
+example (project : Int → Nat → List Nat) (after : Int → Option Nat)
+    (cache : Nat → Int → Option Nat) :
+    reviseIndexKeys ((distinctKeyWork (fun (key : Int × Bool) => key.1) []
+      [(1, false), (2, true), (1, true)]).map Prod.fst) project after cache =
+      reviseIndexKeys [1, 2, 1] project after cache :=
+  reviseIndexKeys_distinctWork _ _ _ _ _
+
 end Examples.ServiceCollection

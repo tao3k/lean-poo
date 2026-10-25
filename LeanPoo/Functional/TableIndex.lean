@@ -626,4 +626,89 @@ theorem publishIndexCaches_style_refused (style : TableStyle) (primary : A)
 
 end CacheAdmission
 
+
+section BackendKeyWork
+variable {R : Type}
+
+/-- Reference work scheduler for a backend's explicit logical key map. It keeps
+first physical representatives; membership checks reuse the backend equivalence.
+This finite list oracle specifies semantics, not the registry's runtime cost. -/
+def distinctKeyWork (logical : R → K) (seen : List K) : List R → List R
+  | [] => []
+  | head :: tail =>
+    if logical head ∈ seen then distinctKeyWork logical seen tail
+    else head :: distinctKeyWork logical (logical head :: seen) tail
+
+/-- Every unvisited backend key class remains represented, and no visited class
+is scheduled again. Physical aliases need not be structurally equal. -/
+theorem distinctKeyWork_mem (logical : R → K) (rows : List R) (seen : List K) (key : K) :
+    key ∈ (distinctKeyWork logical seen rows).map logical ↔
+      key ∈ rows.map logical ∧ key ∉ seen := by
+  induction rows generalizing seen with
+  | nil => simp [distinctKeyWork]
+  | cons head tail ih =>
+    by_cases visited : logical head ∈ seen
+    · simp only [distinctKeyWork, if_pos visited, ih, List.map_cons, List.mem_cons]
+      constructor
+      · intro h; exact ⟨Or.inr h.1, h.2⟩
+      · rintro ⟨same | later, fresh⟩
+        · subst key; exact False.elim (fresh visited)
+        · exact ⟨later, fresh⟩
+    · simp only [distinctKeyWork, if_neg visited, List.map_cons, List.mem_cons, ih]
+      by_cases same : key = logical head <;> simp_all
+
+/-- Exactly one representative per logical class reaches cache construction. -/
+theorem distinctKeyWork_nodup (logical : R → K) (rows : List R) (seen : List K) :
+    ((distinctKeyWork logical seen rows).map logical).Nodup := by
+  induction rows generalizing seen with
+  | nil => simp [distinctKeyWork]
+  | cons head tail ih =>
+    by_cases visited : logical head ∈ seen
+    · simpa [distinctKeyWork, visited] using ih seen
+    · simp only [distinctKeyWork, if_neg visited, List.map_cons, List.nodup_cons]
+      exact ⟨by simp [distinctKeyWork_mem], ih _⟩
+
+/-- Scheduling is bounded by submitted edits. This does not bound backend lookup,
+recognition, allocation, or callback cost; those remain separately charged. -/
+theorem distinctKeyWork_length (logical : R → K) (rows : List R) (seen : List K) :
+    (distinctKeyWork logical seen rows).length ≤ rows.length := by
+  induction rows generalizing seen with
+  | nil => simp [distinctKeyWork]
+  | cons head tail ih =>
+    by_cases visited : logical head ∈ seen
+    · simp only [distinctKeyWork, if_pos visited, List.length_cons]
+      exact Nat.le_trans (ih seen) (Nat.le_succ _)
+    · simpa [distinctKeyWork, visited] using Nat.succ_le_succ (ih (logical head :: seen))
+
+/-- A fresh worklist keeps the first submitted physical representative. -/
+theorem distinctKeyWork_first (logical : R → K) (head : R) (tail : List R) :
+    distinctKeyWork logical [] (head :: tail) =
+      head :: distinctKeyWork logical [logical head] tail := by simp [distinctKeyWork]
+
+/-- Grouped index observations are unchanged by backend-key coalescing, assuming
+primary lookup and classification factor through that explicit logical key. -/
+theorem reviseIndexKeys_distinctWork (logical : R → K) (rows : List R)
+    (project : K → V → List I) (after : K → Option V) (cache : I → K → Option V) :
+    reviseIndexKeys ((distinctKeyWork logical [] rows).map logical) project after cache =
+      reviseIndexKeys (rows.map logical) project after cache := by
+  funext bucket key
+  simp [reviseIndexKeys_lookup, distinctKeyWork_mem]
+
+/-- Coalescing only schedules work AFTER the unchanged sequential installer.
+Every intermediate expectation remains in the input; no delta is squashed. -/
+def installIndexWork [DecidableEq V] (ops : TableCarrier K V A)
+    (edits : List (Change K V)) (before : A) : Except K (A × List K) :=
+  (ops.apply edits before).map fun after =>
+    (after, distinctKeyWork id [] (edits.map Change.key))
+
+/-- An intermediate conflict refuses the whole preparation, even when the edits
+would cancel at the final snapshot. No cache work or successor is returned. -/
+theorem installIndexWork_refused [DecidableEq V] (ops : TableCarrier K V A)
+    (edits : List (Change K V)) (before : A) (cause : K)
+    (refused : ops.apply edits before = .error cause) :
+    installIndexWork ops edits before = .error cause := by
+  simp [installIndexWork, refused, Except.map]
+
+end BackendKeyWork
+
 end LeanPoo.Functional.OrderedDictionary
