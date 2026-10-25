@@ -935,3 +935,27 @@ origin; it does not copy descriptor objects or Function leaves, infer undeclared
 callback dependencies, or prove runtime allocation/GC behavior. Design reflection:
 fix admission at the existing constructor/source boundary, then reuse all existing
 stamp, focus, cursor, delta and ownership checks without per-method wrappers.
+
+### Complete Set reads
+
+Raw Set folds, both visit directions, count, list conversion and membership now
+admit the complete backing carrier and Set refinement before observing results or
+running user callbacks. One shared fold adapter erases Unit payloads; visits discard
+callback results and keep backend direction. Count/list/membership retain their
+specialized delegates inside the existing Set source scope. No Function element
+is normalized during reading, and accumulators have no imposed result descriptor.
+
+The service access fold composes the admitted observation with Reader/FUN/IO.
+Refusal retains its exact cause and suppresses the consumer; callback effects before
+a later refusal are retained. Five styles and receivers expose the same visit family
+through their existing snapshot-bound observation path. Reentrant publication cannot
+rewrite the persistent snapshot currently being traversed.
+
+`SetAlgebra.lean` proves admission-before-read, exact delegation and failure causes,
+ordered fold/Unit erasure and first-callback refusal with consumer suppression.
+Backend enumeration, faithful recognizers, stable leaves and supported metadata
+updates remain premises. These finite future-work laws do not prove arbitrary
+callback termination, effect rollback or runtime costs. Complete admission, backend
+preparation and every crossed public boundary remain charged. Design reflection:
+share the existing fold and observation kernels, retain custom Set delegates, and
+do not bypass their admission protocols merely to remove repeated recognition.

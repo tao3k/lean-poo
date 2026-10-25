@@ -704,4 +704,21 @@ this negative control distinguishes owned capture from borrowing the list spine.
 example : stampMatches (captureOrigins (fun _ : Nat => 2) [0])
     (fun _ => some 0) (fun id => if id = 1 then some 1 else some 0) = true := rfl
 
+/-- A rejected Set never reaches a callback or the consumer, even when the
+callback would itself fail. The admission cause remains the visible failure. -/
+example : (readSetFold [1, 2, 3] (fun _ => Except.error "cohort")
+    (fun (_ : Nat) (_ : Nat) => Except.error "callback") 0).bind
+      (fun _ => Except.error "consumer" : Nat → Except String Nat) = .error "cohort" := rfl
+
+/-- Forward element folds keep the backend order and opaque callback identity. -/
+example {Handle : Type} (callback : Handle) :
+    readSetFold [callback] (fun _ => Except.ok ())
+      (fun handle seen => Except.ok (handle :: seen) : Handle → List Handle → Except String (List Handle)) [] =
+      .ok [callback] := rfl
+
+/-- Unit-valued backing rows add no application, conversion or Function wrapper. -/
+example : ([((1 : Nat), ()), (2, ())].foldlM
+    (fun (acc : List Nat) row => Except.ok (row.1 :: acc) : List Nat → Nat × Unit → Except String (List Nat)) []) =
+      .ok [2, 1] := rfl
+
 end Examples.ServiceCollection

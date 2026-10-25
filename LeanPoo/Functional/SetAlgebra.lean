@@ -575,4 +575,70 @@ theorem prepareSetCombination_ready (left : L) (right : R)
     (prepare : L → R → Except E A) :
     prepareSetCombination (.ok left) (.ok right) prepare = prepare left right := rfl
 
+/-- Set reads check the complete original carrier/refinement before resolving an
+observation. Results have an independent type; reads do not construct a Set root.
+Metadata protection and faithful backend enumeration remain explicit premises. -/
+def admitSetRead (root : A) (admit : A → Except E Unit)
+    (read : A → Except E R) : Except E R :=
+  (admit root).bind fun _ => read root
+
+/-- Refused input suppresses every backend read and callback, retaining its cause. -/
+theorem admitSetRead_refused (root : A) (admit : A → Except E Unit)
+    (read : A → Except E R) (cause : E) (refused : admit root = .error cause) :
+    admitSetRead root admit read = .error cause := by simp [admitSetRead, refused, Except.bind]
+
+/-- Successful admission delegates the exact observation, without cooking leaves. -/
+theorem admitSetRead_ready (root : A) (admit : A → Except E Unit)
+    (read : A → Except E R) (ready : admit root = .ok ()) :
+    admitSetRead root admit read = read root := by simp [admitSetRead, ready, Except.bind]
+
+/-- Backend refusal keeps its original cause, even after successful root admission. -/
+theorem admitSetRead_backend_refused (root : A) (admit : A → Except E Unit)
+    (read : A → Except E R) (cause : E) (ready : admit root = .ok ())
+    (refused : read root = .error cause) :
+    admitSetRead root admit read = .error cause := by rw [admitSetRead_ready root admit read ready, refused]
+
+/-- The finite fold uses the existing ordered monadic fold; opaque accumulators
+and Function handles need neither equality nor an unrestricted fallback Type. -/
+def readSetFold (rows : List K) (admit : List K → Except E Unit)
+    (step : K → R → Except E R) (seed : R) : Except E R :=
+  admitSetRead rows admit (fun keys => keys.foldlM (fun acc key => step key acc) seed)
+
+/-- No callback or consumer follows root refusal, including for an empty stream. -/
+theorem readSetFold_refused (rows : List K) (admit : List K → Except E Unit)
+    (step : K → R → Except E R) (seed : R) (consume : R → Except E B)
+    (cause : E) (refused : admit rows = .error cause) :
+    (readSetFold rows admit step seed).bind consume = .error cause := by
+  simp [readSetFold, admitSetRead, refused, Except.bind]
+
+/-- Successful reads retain the backend's exact traversal and failure order. -/
+theorem readSetFold_order (rows : List K) (admit : List K → Except E Unit)
+    (step : K → R → Except E R) (seed : R) (ready : admit rows = .ok ()) :
+    readSetFold rows admit step seed = rows.foldlM (fun acc key => step key acc) seed :=
+  admitSetRead_ready rows admit _ ready
+
+/-- Removing Unit payloads commutes with ordered folds, including callback failure.
+The same law on reversed backend rows covers the other traversal direction. -/
+theorem foldSetBindings_projection (rows : List (K × Unit))
+    (step : K → R → Except E R) (seed : R) :
+    rows.foldlM (fun acc row => step row.1 acc) seed =
+      (rows.map Prod.fst).foldlM (fun acc key => step key acc) seed := by
+  induction rows generalizing seed with
+  | nil => rfl
+  | cons row rest ih =>
+    simp only [List.map_cons, List.foldlM_cons]
+    cases first : step row.1 seed with
+    | error cause => rfl
+    | ok next => exact ih next
+
+/-- A head callback refusal prevents every suffix callback and later consumer. -/
+theorem readSetFold_head_refused (key : K) (rest : List K)
+    (admit : List K → Except E Unit) (step : K → R → Except E R) (seed : R)
+    (consume : R → Except E B) (cause : E) (ready : admit (key :: rest) = .ok ())
+    (refused : step key seed = .error cause) :
+    (readSetFold (key :: rest) admit step seed).bind consume = .error cause := by
+  rw [readSetFold_order _ admit step seed ready]
+  simp only [List.foldlM_cons, refused]
+  rfl
+
 end LeanPoo.Functional.OrderedDictionary
