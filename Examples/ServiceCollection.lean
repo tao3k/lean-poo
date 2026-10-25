@@ -694,4 +694,14 @@ example (transform : Option Bool → Except String ((Nat → Bool) × Option Nat
     (recognize : Change Nat Bool → (Nat → Bool) → (Nat → Bool) × Except String Unit) :
     focusCapturedModify .linear none 7 transform recognize = (none, .error .consumed) := rfl
 
+/-- Reusing cell zero to name object two cannot detach object one from the
+captured scope. Both objects initially have revision zero; only one later changes. -/
+example : stampMatches (captureOrigins (fun _ : Nat => 1) [0])
+    (fun _ => some 0) (fun id => if id = 1 then some 1 else some 0) = false := rfl
+
+/-- Rereading the reused declaration would accept the replacement's revision;
+this negative control distinguishes owned capture from borrowing the list spine. -/
+example : stampMatches (captureOrigins (fun _ : Nat => 2) [0])
+    (fun _ => some 0) (fun id => if id = 1 then some 1 else some 0) = true := rfl
+
 end Examples.ServiceCollection

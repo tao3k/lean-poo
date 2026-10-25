@@ -101,4 +101,59 @@ theorem checkedChangeCapture_refused (heap later : Cell → V) (event : Borrowed
     checkedChangeCapture heap event recognize = (later, .error cause) := by
   simp [checkedChangeCapture, refused, Except.map]
 
+/-! Declaration buffers are borrowed only during admission. Captured object
+identities are immutable; revisions of those objects remain independently checked.
+The finite-list model does not infer hidden callback dependencies or copy leaves. -/
+section OriginCapture
+variable {Id : Type}
+
+/-- Copy a finite declaration spine before a later metadata getter can reuse it. -/
+def captureOrigins (buffer : Cell → Id) (cells : List Cell) : List Id := cells.map buffer
+
+/-- Capture retains declaration order and multiplicity, with one entry per cell. -/
+theorem captureOrigins_length (buffer : Cell → Id) (cells : List Cell) :
+    (captureOrigins buffer cells).length = cells.length := by simp [captureOrigins]
+
+/-- Explicit and descriptor declarations compose without rereading either buffer. -/
+theorem captureOrigins_append (buffer : Cell → Id) (left right : List Cell) :
+    captureOrigins buffer (left ++ right) =
+      captureOrigins buffer left ++ captureOrigins buffer right := by simp [captureOrigins]
+
+/-- Every originally declared identity remains in the captured dependency scope. -/
+theorem captureOrigins_member (buffer : Cell → Id) (cells : List Cell)
+    (cell : Cell) (member : cell ∈ cells) :
+    buffer cell ∈ captureOrigins buffer cells := List.mem_map.mpr ⟨cell, member, rfl⟩
+
+/-- Borrowed buffer writes change only the buffer component, never the owned scope. -/
+def replaceOriginBuffer (state : (Cell → Id) × List Id) (later : Cell → Id) :
+    (Cell → Id) × List Id := (later, state.2)
+
+/-- Subsequent declaration-buffer reuse cannot change the exact stamp decision. -/
+theorem capturedOrigins_stable (buffer later : Cell → Id) (cells : List Cell)
+    (expected current : Id → Option Nat) :
+    stampMatches (replaceOriginBuffer (buffer, captureOrigins buffer cells) later).2
+      expected current = stampMatches (captureOrigins buffer cells) expected current := rfl
+
+/-- A changed original dependency is refused even if its declaration cell now
+names a different object carrying the same revision as the old snapshot. -/
+theorem capturedOrigins_stale (buffer : Cell → Id) (cells : List Cell)
+    (cell : Cell) (member : cell ∈ cells) (expected current : Id → Option Nat)
+    (changed : expected (buffer cell) ≠ current (buffer cell)) :
+    stampMatches (captureOrigins buffer cells) expected current = false := by
+  cases ready : stampMatches (captureOrigins buffer cells) expected current with
+  | false => rfl
+  | true =>
+    have all : ∀ key ∈ captureOrigins buffer cells, expected key = current key := by
+      simpa [stampMatches, List.all_eq_true] using ready
+    exact False.elim (changed (all _ (captureOrigins_member buffer cells cell member)))
+
+/-- Buffer reuse alone does not invalidate unchanged, explicitly declared objects. -/
+theorem capturedOrigins_fresh (buffer : Cell → Id) (cells : List Cell)
+    (expected current : Id → Option Nat)
+    (unchanged : ∀ key ∈ captureOrigins buffer cells, expected key = current key) :
+    stampMatches (captureOrigins buffer cells) expected current = true := by
+  simpa [stampMatches, List.all_eq_true] using unchanged
+
+end OriginCapture
+
 end LeanPoo.Functional.OrderedDictionary

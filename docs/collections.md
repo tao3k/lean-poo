@@ -917,3 +917,21 @@ Iterator/FUN/IO, representation and index composition. Keep backend equality
 explicit instead of silently replacing numeric aliases with structural equality.
 Persistent keys/rows, lawful numeric ordering, pure converters and current declared
 metadata remain premises; callback side effects are not rolled back.
+
+### Owned dependency declarations
+
+Finite origin-list spines are captured before later descriptor getters execute.
+Object identities, declaration order and duplicates survive caller buffer reuse;
+revision comparison remains the existing `stampMatches` protocol. A getter cannot
+edit already declared objects through supported metadata writes during discovery.
+Subsequent supported edits invalidate captured scopes even when the caller replaced
+an origin with another object at the same revision. Unchanged declared objects
+remain usable. `TableCapture.lean` proves identity coverage, ordered composition,
+copy length, buffer-write stability and fresh/stale decisions; the service example
+includes a negative control showing why rereading the caller buffer is unsound.
+
+This is finite collection future work. Capturing costs one list cell per declared
+origin; it does not copy descriptor objects or Function leaves, infer undeclared
+callback dependencies, or prove runtime allocation/GC behavior. Design reflection:
+fix admission at the existing constructor/source boundary, then reuse all existing
+stamp, focus, cursor, delta and ownership checks without per-method wrappers.
