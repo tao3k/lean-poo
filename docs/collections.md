@@ -671,3 +671,27 @@ runtime/compiler proofs are not claimed. This is finite collection future work.
 Design reflection: one key registry and one existing installer replace pointwise
 business-root construction and Set snapshot rebuilding; no new namespace, ownership
 engine, duplicate validation layer or implicit equality policy is introduced.
+
+
+Ordered whole-collection comparison now shares a complete admission boundary
+between the existing Trie structural comparison and standard ordered Iterators.
+The original union-key convention puts absence before presence; common payloads
+use the caller's exact Integer comparator, which may equate distinct Function
+handles. Raw unordered tables remain unsupported. Explicit order/representation
+views, Set and five nonconsuming styles/receivers delegate the same protocol.
+Pair shells are captured before later pulls; no merge root, alternate tree engine
+or repeated Function wrapper is introduced. `compare-ledger-action` composes
+indexed service snapshots with Reader/FUN/IO; failure suppresses the consumer.
+
+The finite `TableOrder` laws establish reflexivity/reversal under caller comparer
+laws, first deciding key/value and original refusal, exact key-bridge transport,
+complete left/right admission precedence and a bound of the shorter row count on
+paired decisions. Existing `TableObservation` laws cover delegated, stale and
+consumed snapshot observation. Sorted/persistent faithful enumeration and the
+structural capability's order laws remain premises; no arbitrary callback order
+laws, joint atomic read, physical ownership or compiler/runtime correctness is
+inferred. Complete recognition, key/value comparison, fallback sorting/positioning,
+conversion, allocation and GC remain costs. This advances finite collection
+future work. Design reflection: preserve the original comparison meaning and
+reuse one boundary, existing algorithms and snapshot readers, without a namespace
+or a fabricated empty merge result.

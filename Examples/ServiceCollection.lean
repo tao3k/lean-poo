@@ -504,4 +504,19 @@ example : styleStep .linear (some importServiceSeed)
     (prepareStreamImport admitImportedServices (fun _ => .ok importServiceRows)) =
     (some importServiceSeed, .error (.callback "service policy")) := rfl
 
+/-- Compare service capacities explicitly while preserving opaque callback handles;
+zero payload comparison need not imply equal callback identity. -/
+def compareServicePayload (left right : Int × Nat) : Except String Int := .ok (left.1 - right.1)
+
+example : compareBindingRows integerKeyComparer compareServicePayload
+    [(1, (10, 7)), (2, (20, 7))] [(1, (10, 8)), (2, (30, 7)), (3, (40, 8))] = .ok (-10) := rfl
+
+/-- Presence is ordered before inspecting payloads at unrelated keys. -/
+example : compareBindingRows integerKeyComparer (fun (_ _ : Int) => Except.error "not common")
+    [(1, 10)] [(2, 20)] = .ok 1 := rfl
+
+/-- A first value decision shields later callbacks and bounds paired work. -/
+example : comparisonSteps integerKeyComparer compareServicePayload
+    [(1, (10, 7)), (2, (20, 7))] [(1, (11, 8)), (2, (30, 7))] = 1 := rfl
+
 end Examples.ServiceCollection

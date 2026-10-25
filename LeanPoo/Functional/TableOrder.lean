@@ -556,4 +556,161 @@ theorem checkedIndexRangePull_terminal (family backend : List Nat) (accept : K �
   rw [checkedIndexRangePull_current]
   rfl
 
+/-- Compare in declared union-key order, with absence before presence. Payload
+comparison is explicit and may equate distinct values; its original error survives. -/
+def compareBindingRows (key : K → K → Int) (value : V → V → Except E Int) :
+    List (K × V) → List (K × V) → Except E Int
+  | [], [] => .ok 0
+  | [], _ :: _ => .ok (-1)
+  | _ :: _, [] => .ok 1
+  | a :: left, b :: right =>
+    if key a.1 b.1 < 0 then .ok 1 else
+    if 0 < key a.1 b.1 then .ok (-1) else
+      match value a.2 b.2 with
+      | .error cause => .error cause
+      | .ok sign => if sign = 0 then compareBindingRows key value left right else .ok sign
+
+/-- Reflexive comparers give reflexive whole-map observations without an identity
+shortcut that could bypass callback failures or complete input admission. -/
+theorem compareBindingRows_self (key : K → K → Int) (value : V → V → Except E Int)
+    (keySelf : ∀ k, key k k = 0) (valueSelf : ∀ v, value v v = .ok 0) (rows : List (K × V)) :
+    compareBindingRows key value rows rows = .ok 0 := by
+  induction rows with
+  | nil => rfl
+  | cons head tail ih => simp [compareBindingRows, keySelf, valueSelf, ih]
+
+/-- A lower first key means this source is present at the first differing union
+key; no payload comparator or tail traversal can change that decision. -/
+theorem compareBindingRows_present_first (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (lower : key a.1 b.1 < 0) :
+    compareBindingRows key value (a :: left) (b :: right) = .ok 1 := by
+  simp [compareBindingRows, lower]
+
+/-- A value refusal at a common key is not converted to equality or absence. -/
+theorem compareBindingRows_value_refused (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (same : key a.1 b.1 = 0)
+    (cause : E) (refused : value a.2 b.2 = .error cause) :
+    compareBindingRows key value (a :: left) (b :: right) = .error cause := by
+  simp [compareBindingRows, same, refused]
+
+/-- A deciding common payload shields all later rows, retaining the exact Integer
+result, including signs with magnitude greater than one. -/
+theorem compareBindingRows_value_decides (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (same : key a.1 b.1 = 0)
+    (sign : Int) (decided : value a.2 b.2 = .ok sign) (nonzero : sign ≠ 0) :
+    compareBindingRows key value (a :: left) (b :: right) = .ok sign := by
+  simp [compareBindingRows, same, decided, nonzero]
+
+/-- Reversing both comparison arguments negates success and retains original
+refusal, under explicit reversal laws for the supplied pure comparison actions. -/
+theorem compareBindingRows_reverse (key : K → K → Int) (value : V → V → Except E Int)
+    (keyReverse : ∀ a b, key b a = -(key a b))
+    (valueReverse : ∀ a b, value b a = (value a b).map (fun sign => -sign))
+    (left right : List (K × V)) :
+    compareBindingRows key value right left =
+      (compareBindingRows key value left right).map (fun sign => -sign) := by
+  induction left generalizing right with
+  | nil => cases right <;> rfl
+  | cons a left ih =>
+    cases right with
+    | nil => rfl
+    | cons b right =>
+      have kr := keyReverse a.1 b.1
+      by_cases less : key a.1 b.1 < 0
+      · have revPos : 0 < key b.1 a.1 := by omega
+        have revNotLess : ¬ key b.1 a.1 < 0 := by omega
+        simp [compareBindingRows, less, revPos, revNotLess, Except.map]
+      · by_cases more : 0 < key a.1 b.1
+        · have revLess : key b.1 a.1 < 0 := by omega
+          simp [compareBindingRows, less, more, revLess, Except.map]
+        · have zero : key a.1 b.1 = 0 := by omega
+          have revZero : key b.1 a.1 = 0 := by omega
+          rw [compareBindingRows, compareBindingRows]
+          simp only [zero, revZero, show ¬ (0 : Int) < 0 from by decide, ite_false,
+            valueReverse a.2 b.2]
+          cases hv : value a.2 b.2 with
+          | error cause => rfl
+          | ok sign =>
+            by_cases hs : sign = 0
+            · simpa [hs, Except.map] using ih right
+            · simp [hs, Except.map]
+
+/-- Representation transport preserves order and opaque payload identities. It
+reuses the existing key bridge/pullback instead of inferring target numeric order. -/
+theorem compareBindingRows_transport (keys : DictionaryBridge K L) (key : K → K → Int)
+    (value : V → V → Except E Int) (left right : List (K × V)) :
+    compareBindingRows (transportComparer keys key) value
+      (left.map (fun row => (keys.toFields row.1, row.2)))
+      (right.map (fun row => (keys.toFields row.1, row.2))) =
+    compareBindingRows key value left right := by
+  induction left generalizing right with
+  | nil => cases right <;> rfl
+  | cons a left ih =>
+    cases right with
+    | nil => rfl
+    | cons b right => simp [compareBindingRows, transportComparer, keys.from_to, ih]
+
+/-- Count paired decisions only. Full admission, sorting/positioning, backend
+work, conversion, allocation and GC are separately charged, not claimed free. -/
+def comparisonSteps (key : K → K → Int) (value : V → V → Except E Int) :
+    List (K × V) → List (K × V) → Nat
+  | [], _ => 0
+  | _, [] => 0
+  | a :: left, b :: right =>
+    1 + if key a.1 b.1 = 0 then
+      match value a.2 b.2 with
+      | .ok 0 => comparisonSteps key value left right
+      | _ => 0
+    else 0
+
+/-- Even complete equality compares at most the shorter source's row count. -/
+theorem comparisonSteps_bound (key : K → K → Int) (value : V → V → Except E Int)
+    (left right : List (K × V)) : comparisonSteps key value left right ≤ min left.length right.length := by
+  induction left generalizing right with
+  | nil => cases right <;> simp [comparisonSteps]
+  | cons a left ih =>
+    cases right with
+    | nil => simp [comparisonSteps]
+    | cons b right =>
+      have bound := ih right
+      simp only [comparisonSteps, List.length_cons]
+      split
+      · cases hv : value a.2 b.2 with
+        | error cause => simp
+        | ok sign => split <;> omega
+      · omega
+
+/-- Both complete roots are admitted left-to-right before any comparison action.
+The backend enumeration and comparator laws are explicit external premises. -/
+def prepareBindingComparison (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E Int)
+    (left right : List (K × V)) : Except E Int :=
+  match admit left with
+  | .error cause => .error cause
+  | .ok () => match admit right with
+    | .error cause => .error cause
+    | .ok () => compare left right
+
+/-- Left refusal precedes right admission and all user comparison callbacks. -/
+theorem prepareBindingComparison_left_refused (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E Int)
+    (left right : List (K × V)) (cause : E) (refused : admit left = .error cause) :
+    prepareBindingComparison admit compare left right = .error cause := by
+  simp [prepareBindingComparison, refused]
+
+/-- Invalid right tails cannot hide behind an earlier deciding left entry. -/
+theorem prepareBindingComparison_right_refused (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E Int)
+    (left right : List (K × V)) (cause : E) (ready : admit left = .ok ())
+    (refused : admit right = .error cause) :
+    prepareBindingComparison admit compare left right = .error cause := by
+  simp [prepareBindingComparison, ready, refused]
+
+/-- Successful admission preserves the exact result or original failure. -/
+theorem prepareBindingComparison_ready (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E Int)
+    (left right : List (K × V)) (first : admit left = .ok ()) (second : admit right = .ok ()) :
+    prepareBindingComparison admit compare left right = compare left right := by
+  simp [prepareBindingComparison, first, second]
+
 end LeanPoo.Functional.OrderedDictionary
