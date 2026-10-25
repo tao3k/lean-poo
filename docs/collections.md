@@ -856,3 +856,32 @@ Design reflection: use a computed field at the existing factory boundary rather
 than add lazy wrapper functions around every collection method. Materializing an
 actual empty root for an explicitly requested algorithm remains necessary and is
 not removed by this change. Construction costs are deferred, not eliminated.
+
+
+### Whole-primary normalization for ordered and indexed views
+
+Order/index derivation preserves the exact Key and Value Types. Their validators
+can therefore reuse the source validator, then check the complete view. Indexes
+rebuild once from the complete normalized primary; a unique-key swap never needs
+an invalid intermediate indexed root. Unchanged primaries retain the original
+snapshot and caches. Normalizing custom keys still uses the source's own collision,
+comparison and child-error order.
+
+The shared `validate-table` boundary protects receiver/source metadata and performs
+final receiver membership. A computed validator selects source delegation only
+when both child Type identities match. Inherited views with overridden child Types
+retain ordinary normalization; no commutation law is inferred for foreign Types
+or an arbitrary representation isomorphism.
+
+`VariantValidation.tableView` proves guarded-read and child-failure precedence,
+unchanged identity, complete-primary reconstruction, exact index refusal and
+normalized-primary fidelity conditional on a sound identity test and faithful
+builder. It composes with the existing finite `table_positions` wrapper laws.
+Examples cover a rank swap with retained callback handles and forbidden rebuild
+on the unchanged branch. These are finite pure protocol laws, not claims about
+Gerbil's evaluator, hidden callback effects or GC.
+
+Design reflection: reuse the original source normalization and index initializer;
+do not add per-row validation wrappers or a second cache/index implementation.
+Cold rebuild, complete membership and child work remain explicit costs. Reusing an
+unchanged state skips initialization, not current metadata or business admission.

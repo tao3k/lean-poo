@@ -530,4 +530,105 @@ theorem sourceCoverage_or_wrapped (included : Branch → Bool) (branches : List 
     (accepted : orValidate member check missing invalid branches source = .ok checked) : target checked :=
   sourceCoverage_wrapped included branches member member check target missing invalid sound covered source checked accepted
 
+/-- Same-child-Type views normalize their complete primary, then rebuild once.
+The guarded read includes current shape/revision checks. `same` is runtime identity,
+not arbitrary extensional equality; the final admission owns view refinements. -/
+def tableView (read : View → Except Error Primary) (cook : Primary → Except Error Primary)
+    (same : Primary → Primary → Bool) (build : Primary → Except Error View)
+    (admit : View → Except Error Unit) (source : View) : Except Error View :=
+  (read source).bind fun before => (cook before).bind fun after =>
+    (if same before after then .ok source else build after).bind fun result =>
+      (admit result).map fun _ => result
+
+/-- Stale or malformed input refuses before any child validation or cache rebuild. -/
+theorem tableView_read_refused (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (source : View) (cause : Error) (failed : read source = .error cause) :
+    tableView read cook same build admit source = .error cause := by
+  simp [tableView, failed, Except.bind]
+
+/-- A late source child failure preserves its cause and precedes all new indexes. -/
+theorem tableView_cook_refused (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (source : View) (before : Primary) (cause : Error)
+    (ready : read source = .ok before) (failed : cook before = .error cause) :
+    tableView read cook same build admit source = .error cause := by
+  simp [tableView, ready, failed, Except.bind]
+
+/-- Identity reuse does not invoke any builder, including a forbidden empty seed;
+it still checks the actual receiver's complete postcondition. -/
+theorem tableView_unchanged (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (source : View) (before after : Primary) (ready : read source = .ok before)
+    (cooked : cook before = .ok after) (unchanged : same before after = true) :
+    tableView read cook same build admit source = (admit source).map (fun _ => source) := by
+  simp [tableView, ready, cooked, unchanged, Except.bind]
+
+/-- The changed branch receives exactly the complete cooked primary. No prefix
+or point insertion is a prerequisite of successful cache preparation. -/
+theorem tableView_changed (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (source : View) (before after : Primary) (ready : read source = .ok before)
+    (cooked : cook before = .ok after) (changed : same before after = false) :
+    tableView read cook same build admit source =
+      (build after).bind (fun result => (admit result).map (fun _ => result)) := by
+  simp [tableView, ready, cooked, changed, Except.bind]
+
+/-- A successful view retains the complete source validator result, provided
+identity is sound and the existing index builder faithfully exposes its primary.
+This composes with `table_positions` to retain every normalized Function handle. -/
+theorem tableView_primary (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (unchangedSound : ∀ a b, same a b = true → a = b)
+    (buildRead : ∀ primary result, build primary = .ok result → read result = .ok primary)
+    (source result : View) (accepted : tableView read cook same build admit source = .ok result) :
+    ∃ before after, read source = .ok before ∧ cook before = .ok after ∧
+      read result = .ok after ∧ admit result = .ok () := by
+  cases hr : read source with
+  | error cause => simp [tableView, hr, Except.bind] at accepted
+  | ok before =>
+    cases hc : cook before with
+    | error cause => simp [tableView, hr, hc, Except.bind] at accepted
+    | ok after =>
+      cases hs : same before after with
+      | true =>
+        cases ha : admit source with
+        | error cause => simp [tableView, hr, hc, hs, ha, Except.bind, Except.map] at accepted
+        | ok witness =>
+          have equal : source = result := by simpa [tableView, hr, hc, hs, ha, Except.bind, Except.map] using accepted
+          subst result
+          have primaryEqual := unchangedSound before after hs
+          subst after
+          refine ⟨before, before, ?_, ?_, ?_, ?_⟩ <;> simp_all
+      | false =>
+        cases hb : build after with
+        | error cause => simp [tableView, hr, hc, hs, hb, Except.bind] at accepted
+        | ok built =>
+          cases ha : admit built with
+          | error cause => simp [tableView, hr, hc, hs, hb, ha, Except.bind, Except.map] at accepted
+          | ok witness =>
+            have equal : built = result := by simpa [tableView, hr, hc, hs, hb, ha, Except.bind, Except.map] using accepted
+            subst result
+            refine ⟨before, after, ?_, ?_, ?_, ?_⟩
+            · simp_all
+            · simp_all
+            · exact buildRead after built hb
+            · exact ha
+
+/-- A unique-index conflict preserves its exact cause; no partially rebuilt
+view is returned, so the immutable input can be supplied to a fresh retry. -/
+theorem tableView_build_refused (read : View → Except Error Primary)
+    (cook : Primary → Except Error Primary) (same : Primary → Primary → Bool)
+    (build : Primary → Except Error View) (admit : View → Except Error Unit)
+    (source : View) (before after : Primary) (cause : Error) (ready : read source = .ok before)
+    (cooked : cook before = .ok after) (changed : same before after = false)
+    (failed : build after = .error cause) :
+    tableView read cook same build admit source = .error cause := by
+  simp [tableView, ready, cooked, changed, failed, Except.bind]
+
 end LeanPoo.Functional.VariantValidation

@@ -1,3 +1,4 @@
+import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.CacheLookup
 import LeanPoo.Functional.TableBatch
 import LeanPoo.Functional.TableFocus
@@ -607,5 +608,18 @@ example :
       .error "stale" ∧
     (source.derive (fun _ => .ok ()) (fun rows => .ok (some rows))).fromRows [1, 2] =
       .ok (some [1, 2]) := ⟨rfl, rfl⟩
+
+/-- A complete rank swap succeeds without constructing an invalid singleton
+indexed prefix. The second component represents preserved callback handles. -/
+example : VariantValidation.tableView (fun rows => Except.ok rows)
+    (fun (_ : List (Nat × Nat)) => Except.ok [(20, 7), (10, 8)])
+    (fun a b => a == b) (fun rows => if rows.length = 2 then Except.ok rows else .error "partial cohort")
+    (fun rows => if rows.length = 2 then .ok () else .error "partial cohort")
+    [(10, 7), (20, 8)] = (Except.ok [(20, 7), (10, 8)] : Except String (List (Nat × Nat))) := rfl
+
+/-- An unchanged view remains usable even when every rebuild would refuse. -/
+example : VariantValidation.tableView (fun (rows : List Nat) => Except.ok rows)
+    Except.ok (fun _ _ => true) (fun _ => .error "must not rebuild")
+    (fun _ => .ok ()) [1, 2] = (Except.ok [1, 2] : Except String (List Nat)) := rfl
 
 end Examples.ServiceCollection
