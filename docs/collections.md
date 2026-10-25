@@ -695,3 +695,25 @@ conversion, allocation and GC remain costs. This advances finite collection
 future work. Design reflection: preserve the original comparison meaning and
 reuse one boundary, existing algorithms and snapshot readers, without a namespace
 or a fabricated empty merge result.
+
+Checked public list/singleton construction now captures the input spine and Pair
+shells before child admission, passes every admitted occurrence to the existing
+bulk or Trie singleton capability, then recognizes the complete business root.
+The old builders remain the implementation: default foldr retains first-write
+precedence and Gerbil RBTree retains last-write precedence. Order, representation
+and indexed constructors delegate complete roots; no intermediate business-root
+refinement is required. Normalization is still explicit and admitted Function
+leaves keep identity. Fresh five-style factories reuse ordinary owner creation;
+`construct-ledger-action` composes the boundary with Reader/FUN/IO.
+
+The finite `TableBatch` model proves unchanged captured row order/multiplicity,
+leaf/backend/final refusal precedence, preservation of any supplied backend
+observation law and a bound of source length on row checks. Existing stream and
+new default foldr examples distinguish duplicate policies. Physical input capture
+and callbacks are Scheme controls; immutable captured rows, stable leaves and
+persistent backend laws are premises. Full copying/recognition/construction,
+index/owner preparation, allocation and GC remain charged. No arbitrary callback
+termination, physical ownership, inferred backend complexity or runtime/compiler
+correctness is claimed. This is finite collection future work. Design reflection:
+one public boundary reuses raw constructor strategies and owner creation without
+normalization, a namespace, cache or another storage/validation engine.

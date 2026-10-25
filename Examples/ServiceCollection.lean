@@ -519,4 +519,16 @@ example : compareBindingRows integerKeyComparer (fun (_ _ : Int) => Except.error
 example : comparisonSteps integerKeyComparer compareServicePayload
     [(1, (10, 7)), (2, (20, 7))] [(1, (11, 8)), (2, (30, 7))] = 1 := rfl
 
+/-- Constructor admission rejects a later invalid capacity before any backend
+result is exposed, while opaque callback handles remain unchanged in valid rows. -/
+def admitConstructorService (row : Nat × (Int × Nat)) : Except String Unit :=
+  if row.2.1 < 0 then .error "negative capacity" else .ok ()
+
+example : checkConstructorRows admitConstructorService [(1, (10, 7)), (2, (-1, 8))] =
+    .error "negative capacity" := rfl
+example : checkConstructorRows admitConstructorService [(1, (10, 7)), (1, (20, 8))] =
+    .ok [(1, (10, 7)), (1, (20, 8))] := rfl
+example : bulkFirstView [(1, (10, 7)), (1, (20, 8))] 1 = some (10, 7) := rfl
+example : streamView [(1, (10, 7)), (1, (20, 8))] (fun _ => none) 1 = some (20, 8) := rfl
+
 end Examples.ServiceCollection

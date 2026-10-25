@@ -355,4 +355,130 @@ theorem prepareStreamImport_ready {E : Type} (admit : (K → Option V) → Excep
     prepareStreamImport admit read before = .ok (streamView rows before) := by
   simp [prepareStreamImport, ready, readReady, finalReady]
 
+/-- Captured constructor rows are immutable inputs to ordered, non-normalizing
+child admission. Backend construction is not attempted before every row accepts. -/
+def checkConstructorRows (check : A → Except E Unit) : List A → Except E (List A)
+  | [] => .ok []
+  | row :: rest => match check row with
+    | .error cause => .error cause
+    | .ok () => match checkConstructorRows check rest with
+      | .error cause => .error cause
+      | .ok tail => .ok (row :: tail)
+
+/-- Successful admission preserves order, duplicate occurrences and opaque leaves. -/
+theorem checkConstructorRows_identity (check : A → Except E Unit) (rows captured : List A)
+    (ready : checkConstructorRows check rows = .ok captured) : captured = rows := by
+  induction rows generalizing captured with
+  | nil => simpa [checkConstructorRows] using ready.symm
+  | cons row rest ih =>
+    cases hr : check row with
+    | error cause => simp [checkConstructorRows, hr] at ready
+    | ok admittedUnit =>
+      cases ht : checkConstructorRows check rest with
+      | error cause => simp [checkConstructorRows, hr, ht] at ready
+      | ok tail =>
+        have same := ih tail ht
+        simp [checkConstructorRows, hr, ht, same] at ready
+        exact ready.symm
+
+/-- Every source row, even one superseded by a duplicate key, must be admitted. -/
+theorem checkConstructorRows_ready (check : A → Except E Unit) (rows : List A)
+    (admitted : ∀ row ∈ rows, check row = .ok ()) :
+    checkConstructorRows check rows = .ok rows := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    have first := admitted row (by simp)
+    have tail := ih (fun item member => admitted item (by simp [member]))
+    simp [checkConstructorRows, first, tail]
+
+/-- A refused row keeps its original cause and prevents inspecting later entries. -/
+theorem checkConstructorRows_head_refused (check : A → Except E Unit) (row : A)
+    (rest : List A) (cause : E) (refused : check row = .error cause) :
+    checkConstructorRows check (row :: rest) = .error cause := by simp [checkConstructorRows, refused]
+
+/-- Both singleton and list construction select one existing backend strategy;
+whole-root admission runs on the complete result, not on intermediate raw nodes. -/
+def prepareConstructor (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) : Except E B :=
+  match checkConstructorRows check rows with
+  | .error cause => .error cause
+  | .ok captured => match build captured with
+    | .error cause => .error cause
+    | .ok root => match admit root with
+      | .error cause => .error cause
+      | .ok () => .ok root
+
+/-- Invalid input precedes every raw constructor and whole-result recognizer. -/
+theorem prepareConstructor_input_refused (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) (cause : E)
+    (refused : checkConstructorRows check rows = .error cause) :
+    prepareConstructor check build admit rows = .error cause := by simp [prepareConstructor, refused]
+
+/-- The backend receives exactly the original admitted row order and multiplicity. -/
+theorem prepareConstructor_ready (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) (root : B)
+    (checked : checkConstructorRows check rows = .ok rows) (built : build rows = .ok root)
+    (admitted : admit root = .ok ()) : prepareConstructor check build admit rows = .ok root := by
+  simp [prepareConstructor, checked, built, admitted]
+
+/-- Backend refusal is not replaced with a fabricated empty root or another error. -/
+theorem prepareConstructor_backend_refused (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) (cause : E)
+    (checked : checkConstructorRows check rows = .ok rows) (refused : build rows = .error cause) :
+    prepareConstructor check build admit rows = .error cause := by simp [prepareConstructor, checked, refused]
+
+/-- A rejected complete root exposes no successful constructor result. -/
+theorem prepareConstructor_root_refused (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) (root : B) (cause : E)
+    (checked : checkConstructorRows check rows = .ok rows) (built : build rows = .ok root)
+    (refused : admit root = .error cause) : prepareConstructor check build admit rows = .error cause := by
+  simp [prepareConstructor, checked, built, refused]
+
+/-- Successful public construction delegates exactly the existing backend's
+observation law, rather than imposing another duplicate-precedence convention. -/
+theorem prepareConstructor_observation (check : A → Except E Unit) (build : List A → Except E B)
+    (admit : B → Except E Unit) (rows : List A) (root : B) (observe : B → R) (expected : List A → R)
+    (law : ∀ input result, build input = .ok result → observe result = expected input)
+    (success : prepareConstructor check build admit rows = .ok root) : observe root = expected rows := by
+  cases hc : checkConstructorRows check rows with
+  | error cause => simp [prepareConstructor, hc] at success
+  | ok captured =>
+    have same := checkConstructorRows_identity check rows captured hc
+    subst captured
+    cases hb : build rows with
+    | error cause => simp [prepareConstructor, hc, hb] at success
+    | ok result =>
+      cases ha : admit result with
+      | error cause => simp [prepareConstructor, hc, hb, ha] at success
+      | ok admittedUnit =>
+        have eq : result = root := by simpa [prepareConstructor, hc, hb, ha] using success
+        subst root
+        exact law rows result hb
+
+/-- Admission work counts visited source rows only; source/copy/constructor,
+metadata, whole-result recognition, allocation and GC costs are separate. -/
+def constructorChecks (check : A → Except E Unit) : List A → Nat
+  | [] => 0
+  | row :: rest => 1 + match check row with
+    | .error _ => 0
+    | .ok () => constructorChecks check rest
+
+/-- Validation performs at most one admission per input occurrence. -/
+theorem constructorChecks_bound (check : A → Except E Unit) (rows : List A) :
+    constructorChecks check rows ≤ rows.length := by
+  induction rows with
+  | nil => simp [constructorChecks]
+  | cons row rest ih => cases hc : check row <;> simp [constructorChecks, hc] <;> omega
+
+/-- The generic persistent foldr builder preserves its original first occurrence.
+Other backend constructors may have different lawful precedence, which is retained. -/
+def bulkFirstView (rows : List (K × V)) : K → Option V :=
+  rows.foldr (fun row view => replace view row.1 (some row.2)) (fun _ => none)
+
+omit [DecidableEq V] in
+/-- Duplicate keys do not silently switch the generic backend to last-write wins. -/
+theorem bulkFirstView_head (rows : List (K × V)) (key : K) (value : V) :
+    bulkFirstView ((key, value) :: rows) key = some value := by simp [bulkFirstView, replace]
+
 end LeanPoo.Functional.OrderedDictionary
