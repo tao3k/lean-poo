@@ -723,6 +723,8 @@ Optional association now delegates the old `.acons/opt` entrypoint to the same
 captured point-update boundary. Absence retains the old binding (unlike replacement,
 where absence removes); present false and opaque Function handles remain values.
 The caller-owned Option shell is copied before any metadata or source recognition.
+Trie removes its redundant public zipper-update override and inherits the same
+checked delta path, retaining its original persistent insertion/removal algorithms.
 All five styles and Gerbil receivers retain generation capture, final refinement/
 index admission and failure retry; successful linear no-ops still retire the source.
 The integrated service action composes Reader/FUN and IO with inverse recovery.
