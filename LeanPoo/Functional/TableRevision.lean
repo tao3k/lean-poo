@@ -920,4 +920,65 @@ theorem bindingDependencies_count_le (keys : List Id) (retained available : Id �
 
 end MetadataPreparation
 
+
+section TransportOwnership
+variable {R K L : Type} [DecidableEq K] [DecidableEq L]
+
+/-- Target collisions compare SOURCE logical owners. Physical representatives
+remain stored unchanged; equal backend classes need not be structurally equal. -/
+def claimTransportOwner (logical : R → K) (owners : L → Option R)
+    (target : L) (incoming : R) : Except (R × R) (L → Option R) :=
+  match owners target with
+  | none => .ok (replace owners target (some incoming))
+  | some previous => if logical previous = logical incoming
+    then .ok (replace owners target (some incoming)) else .error (previous, incoming)
+
+/-- A fresh target class accepts the exact incoming physical owner. -/
+theorem claimTransportOwner_empty (logical : R → K) (owners : L → Option R)
+    (target : L) (incoming : R) (absent : owners target = none) :
+    claimTransportOwner logical owners target incoming =
+      .ok (replace owners target (some incoming)) := by simp [claimTransportOwner, absent]
+
+/-- Numeric spelling changes do not manufacture collisions between one owner
+and itself. This says nothing about payload or physical inverse checks. -/
+theorem claimTransportOwner_alias (logical : R → K) (owners : L → Option R)
+    (target : L) (previous incoming : R) (present : owners target = some previous)
+    (same : logical previous = logical incoming) :
+    claimTransportOwner logical owners target incoming =
+      .ok (replace owners target (some incoming)) := by simp [claimTransportOwner, present, same]
+
+/-- Distinct source classes retain the original physical conflict pair, even if
+only one was present in either endpoint snapshot of the submitted history. -/
+theorem claimTransportOwner_collision (logical : R → K) (owners : L → Option R)
+    (target : L) (previous incoming : R) (present : owners target = some previous)
+    (different : logical previous ≠ logical incoming) :
+    claimTransportOwner logical owners target incoming = .error (previous, incoming) := by
+  simp [claimTransportOwner, present, different]
+
+/-- Logical injectivity of a declared key bijection supplies safe registry reuse.
+No injectivity of representation tags or arbitrary callbacks is inferred. -/
+theorem claimTransportOwner_bijection (logical : R → K) (keys : Prototype.DictionaryBridge K L)
+    (owners : L → Option R) (previous incoming : R)
+    (present : owners (keys.toFields (logical incoming)) = some previous)
+    (sameTarget : keys.toFields (logical previous) = keys.toFields (logical incoming)) :
+    claimTransportOwner logical owners (keys.toFields (logical incoming)) incoming =
+      .ok (replace owners (keys.toFields (logical incoming)) (some incoming)) :=
+  claimTransportOwner_alias logical owners _ previous incoming present
+    (transport_key_injective keys sameTarget)
+
+omit [DecidableEq K] in
+/-- Re-registering a representation changes no source-owner observations and
+retains all other target classes. Payload handles remain opaque and untouched. -/
+theorem claimTransportOwner_observation (logical : R → K) (owners : L → Option R)
+    (target : L) (previous incoming : R) (present : owners target = some previous)
+    (same : logical previous = logical incoming) :
+    (fun key => (replace owners target (some incoming) key).map logical) =
+      (fun key => (owners key).map logical) := by
+  funext key
+  by_cases selected : key = target
+  · subst key; simp [replace, present, same]
+  · simp [replace, selected]
+
+end TransportOwnership
+
 end LeanPoo.Functional.OrderedDictionary

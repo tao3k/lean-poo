@@ -648,4 +648,18 @@ example (project : Int → Nat → List Nat) (after : Int → Option Nat)
       reviseIndexKeys [1, 2, 1] project after cache :=
   reviseIndexKeys_distinctWork _ _ _ _ _
 
+/-- The same logical service owner may carry different representation tags
+across revision snapshots. Registration preserves the exact incoming tag. -/
+example : claimTransportOwner (fun (key : Int × Bool) => key.1)
+    (fun target : Int => if target = -1 then some (1, false) else none)
+    (-1) (1, true) = .ok (replace
+      (fun target : Int => if target = -1 then some (1, false) else none)
+      (-1) (some (1, true))) := by rfl
+
+/-- A genuinely different logical service cannot steal the same target key;
+the error retains both physical owners for diagnostics and explicit retry. -/
+example : claimTransportOwner (fun (key : Int × Bool) => key.1)
+    (fun target : Int => if target = 1 then some (1, false) else none)
+    1 (-1, true) = .error ((1, false), (-1, true)) := by rfl
+
 end Examples.ServiceCollection
