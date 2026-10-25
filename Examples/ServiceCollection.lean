@@ -402,4 +402,35 @@ example : checkedRangeCursorPull [1, 4] [1, 5] (fun _ : Nat => true)
 example : checkedRangeCursorPull [1, 4] [1, 4] (fun _ : Nat => true)
     (true, ([] : List (Nat × Int))) = (.ok (none, (true, [])), 0) := rfl
 
+/-- The finite catalog exposes a priority index at name 0; other names retain
+their original lookup failure before a backend observer can run. -/
+def servicePriorityIndex (name : Nat) : Except String (List (Nat × Nat)) :=
+  if name = 0 then .ok [(10, 1), (20, 2), (30, 3)] else .error "unknown table index"
+
+example : prepareIndexObservation (.ok ()) servicePriorityIndex
+    (fun _ => (.error "observer ran" : Except String Nat)) 9 =
+    .error "unknown table index" := rfl
+
+/-- Grouped values retain complete admitted shared-owner observations. -/
+def indexedServiceTeams : List (Nat × List (Nat × Int)) :=
+  [(100, [(1, 3), (2, 4)]), (200, [(3, 7)])]
+
+example : checkedIndexRangePull [1, 4] [1, 4] [9] [9] (fun team => decide (team ≤ 100))
+    (false, indexedServiceTeams) =
+    (.ok (some (100, [(1, 3), (2, 4)]), (false, [(200, [(3, 7)])])), 1) := rfl
+
+/-- A sibling declaration changes the family stamp even if this backend is
+unchanged; no further row is pulled, including after successful terminal EOF. -/
+example : checkedIndexRangePull [1, 4] [1, 5] [9] [9] (fun _ : Nat => true)
+    (true, ([] : List (Nat × List (Nat × Int)))) = (.error (), 0) := rfl
+
+/-- Supported publication creates a new persistent index snapshot. An old issued
+cursor retains its original owners; it is never redirected to the new catalog. -/
+example : tableRangeCursorRows (fun _ : Nat => true) (false, indexedServiceTeams) =
+    [(100, [(1, 3), (2, 4)]), (200, [(3, 7)])] := rfl
+
+example : tableRangeCursorRows (fun _ : Nat => true)
+    (false, [(100, [(1, (3 : Int))]), (200, [(2, 4), (3, 7)])]) =
+    [(100, [(1, 3)]), (200, [(2, 4), (3, 7)])] := rfl
+
 end Examples.ServiceCollection

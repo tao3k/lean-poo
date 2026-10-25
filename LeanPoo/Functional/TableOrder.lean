@@ -490,4 +490,70 @@ theorem checkedRangeCursor_current (issued : List Nat) (accept : K → Bool)
       (.ok (tableRangeCursorPull accept state).1, (tableRangeCursorPull accept state).2) := by
   simp [checkedRangeCursorPull]
 
+/-- A named observation admits its owning family before resolving a private
+backend and invoking that backend's operation. No parallel lookup engine is added. -/
+def prepareIndexObservation (admit : Except E Unit) (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) : Except E Result :=
+  admit.bind fun _ => (lookup name).bind observe
+
+/-- Foreign/stale family refusal precedes name resolution and backend work. -/
+theorem prepareIndexObservation_refused (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (cause : E) :
+    prepareIndexObservation (.error cause) lookup observe name = .error cause := rfl
+
+/-- An unknown name retains its original failure without invoking an observer. -/
+theorem prepareIndexObservation_missing (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (cause : E)
+    (missing : lookup name = .error cause) :
+    prepareIndexObservation (.ok ()) lookup observe name = .error cause := by
+  simp [prepareIndexObservation, missing, Except.bind]
+
+/-- A selected current backend receives exactly its admitted persistent root. -/
+theorem prepareIndexObservation_ready (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (backend : Backend)
+    (found : lookup name = .ok backend) :
+    prepareIndexObservation (.ok ()) lookup observe name = observe backend := by
+  simp [prepareIndexObservation, found, Except.bind]
+
+/-- Named bounded iteration composes the owning family's guard with the existing
+backend range guard. The persistent cursor state and payload representation remain
+unchanged; only the explicit family stamp is added at this boundary. -/
+def checkedIndexRangePull (familyIssued familyCurrent backendIssued backendCurrent : List Nat)
+    (accept : K → Bool) (state : Bool × List (K × V)) :
+    Except Unit (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if familyIssued = familyCurrent then
+    checkedRangeCursorPull backendIssued backendCurrent accept state
+  else (.error (), 0)
+
+/-- A changed sibling/source declaration rejects even a current selected backend,
+before any backend pull, including an already exhausted cursor. -/
+theorem checkedIndexRangePull_family_stale
+    (fi fc bi bc : List Nat) (accept : K → Bool) (state : Bool × List (K × V))
+    (stale : fi ≠ fc) :
+    checkedIndexRangePull fi fc bi bc accept state = (.error (), 0) := by
+  simp [checkedIndexRangePull, stale]
+
+/-- A current family does not hide the backend's own stale-origin refusal. -/
+theorem checkedIndexRangePull_backend_stale
+    (family bi bc : List Nat) (accept : K → Bool) (state : Bool × List (K × V))
+    (stale : bi ≠ bc) :
+    checkedIndexRangePull family family bi bc accept state = (.error (), 0) := by
+  simp [checkedIndexRangePull, checkedRangeCursor_stale bi bc accept state stale]
+
+/-- With both scopes current, named observation is exactly the existing bounded
+cursor step. It adds no mapping, sorting or normalization of Function leaves. -/
+theorem checkedIndexRangePull_current (family backend : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    checkedIndexRangePull family family backend backend accept state =
+      (.ok (tableRangeCursorPull accept state).1, (tableRangeCursorPull accept state).2) := by
+  simp [checkedIndexRangePull, checkedRangeCursor_current]
+
+/-- Repeated current EOF checks both scopes but consumes no additional backend row. -/
+theorem checkedIndexRangePull_terminal (family backend : List Nat) (accept : K → Bool)
+    (rest : List (K × V)) :
+    checkedIndexRangePull family family backend backend accept (true, rest) =
+      (.ok (none, (true, rest)), 0) := by
+  rw [checkedIndexRangePull_current]
+  rfl
+
 end LeanPoo.Functional.OrderedDictionary

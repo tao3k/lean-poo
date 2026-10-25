@@ -528,3 +528,51 @@ initial recognition, positioning, metadata checks and boundary comparison are
 charged separately. Partial consumption saves subsequent demands, not initial
 fallback sorting or admission, and no wall-clock speedup is asserted. This is
 finite collection-library future work, not automatic backend/order discovery.
+
+### Deferred named-index observations
+
+Indexed tables now expose `.index-iter<- state name`,
+`.index-seek<- state name lower [inclusive? #t]` and
+`.index-range<- state name lower upper [lower-inclusive? #t] [upper-inclusive? #t]`.
+The first delegates ordinary backend iteration; the latter two require those
+explicit ordered capabilities. Names, bounds, order and backend errors are not
+guessed or coerced. Existing `.index-fold` is also available through every style
+and receiver, alongside point lookup and materialized range observation.
+
+One private with-index continuation now owns name resolution and family admission
+for both old and new queries. Deferred results reuse iterator-map and the backend's
+Iterator, with no cache copy, second sort or payload normalization. Unique indexes
+yield admitted owner keys; grouped indexes yield their persistent source buckets.
+The private complete index-cache root is not exposed.
+
+Every delayed pull checks the complete owning family's revisions, including
+primary and sibling declarations and inherited delta origins. The selected
+backend retains its own order/comparer guard. These scopes are distinct: changing
+an unrelated declaration invalidates a family cursor even when the selected
+backend is unchanged. Terminal EOF never bypasses either required scope.
+Supported publication creates a new immutable snapshot; a previously created
+cursor retains the old root. Changing declarations requires fresh construction.
+
+All five table styles and Posh/Classy receivers use the existing deferred-observe
+boundary. Observation never consumes ownership. observe-indexed-range is a thin
+named-query presentation of the existing bounded Reader/FUN/IO inspector; its
+failure suppresses the consumer, with no rollback of prior callback effects.
+
+Regressions compare lazy/eager ordered observations, unique/grouped outputs and
+folds, retained Function identity, atomic priority swaps/shared-bucket migration,
+inverse recovery, original snapshots, partial/terminal sibling invalidation,
+unknown names, unsupported capabilities, foreign states, styles and service IO.
+Lean TableOrder reuses ordinary range-pull semantics to establish family/backend
+refusal before work, exact current forwarding and terminal zero backend pulls.
+Named selection laws retain admission/lookup/backend failure order. Finite service
+examples show unique/grouped observations and family-stale/selected-current EOF.
+Faithful source stamps, persistent roots, ordered backend laws and pure metadata
+callbacks are premises; compiler/GC and arbitrary external mutation are not proved.
+
+Design reflection: this closes named-index traversal through the existing
+collection observation chain, not a parallel query engine. Three repeated lookup
+blocks were replaced by one continuation; the new cursor helper only delegates
+and guards. Full family admission, metadata checks, positioning, fallback sorting
+and selected-bucket traversal remain charged. Laziness avoids unrequested pulls;
+it does not imply zero preparation cost or a wall-clock speedup. Automatic index
+selection and backend/order discovery remain collection-library research work.
