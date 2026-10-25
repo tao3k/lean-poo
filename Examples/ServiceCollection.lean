@@ -477,7 +477,7 @@ example : queryVisits failingServiceQuery capacityWindow = 1 := rfl
 
 /-- Complete policy refusal precedes predicates and preserves a linear owner. -/
 example : observeQuery (some capacityWindow)
-    (prepareQuery (fun _ => Except.error "policy") serviceQuery) =
+    (fun rows => prepareQuery (fun _ => Except.error "policy") serviceQuery rows false) =
     (some capacityWindow, .error (.callback "policy")) := rfl
 
 /-- A finite revision stream swaps unique service priorities after replacing a
@@ -564,5 +564,17 @@ example : decodeCollection (E := String) (fun token : Nat => .ok [(1, token)])
 example : marshalCollection (E := String) (fun (_ : Nat) => .ok ())
     (fun (_ : Nat) (priorBytes : List Nat) => (priorBytes ++ [2, 1, 10], .error "late codec refusal"))
     7 [] = ([2, 1, 10], .error "late codec refusal") := rfl
+
+/-- A stored false is still a selected endpoint payload. -/
+example : endpointBindings (E := String) false [(1, false), (2, true)] =
+    .ok (some (1, false)) := rfl
+
+/-- Reverse observation retains the final callback handle from the declared order. -/
+example : endpointBindings (E := String) true [(1, (10, 7)), (2, (20, 8))] =
+    .ok (some (2, (20, 8))) := rfl
+
+/-- Complete admission cannot be skipped even for an otherwise immediate endpoint. -/
+example : prepareQuery (E := String) (fun (_ : List Nat) => .error "invalid source")
+    (fun _ => .ok true) [1, 2] true = .error "invalid source" := rfl
 
 end Examples.ServiceCollection

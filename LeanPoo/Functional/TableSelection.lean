@@ -765,21 +765,22 @@ theorem queryVisits_le_length (predicate : A → Except E Bool) (rows : List A) 
 
 /-- Full snapshot admission precedes all short-circuit user predicates. -/
 def prepareQuery (admit : List A → Except E Unit) (predicate : A → Except E Bool)
-    (rows : List A) : Except E (Option A) :=
+    (rows : List A) (reverse : Bool := false) : Except E (Option A) :=
   match admit rows with
   | .error cause => .error cause
-  | .ok () => queryBindings predicate rows
+  | .ok () => queryBindings predicate (if reverse then rows.reverse else rows)
 
 /-- An invalid tail cannot be hidden by an earlier possible match. -/
 theorem prepareQuery_refused (admit : List A → Except E Unit) (predicate : A → Except E Bool)
-    (rows : List A) (cause : E) (refused : admit rows = .error cause) :
-    prepareQuery admit predicate rows = .error cause := by
+    (rows : List A) (cause : E) (refused : admit rows = .error cause) (reverse : Bool := false) :
+    prepareQuery admit predicate rows reverse = .error cause := by
   simp [prepareQuery, refused]
 
 /-- Successful admission leaves the exact predicate/traversal result unchanged. -/
 theorem prepareQuery_ready (admit : List A → Except E Unit) (predicate : A → Except E Bool)
-    (rows : List A) (ready : admit rows = .ok ()) :
-    prepareQuery admit predicate rows = queryBindings predicate rows := by
+    (rows : List A) (ready : admit rows = .ok ()) (reverse : Bool := false) :
+    prepareQuery admit predicate rows reverse =
+      queryBindings predicate (if reverse then rows.reverse else rows) := by
   simp [prepareQuery, ready]
 
 /-- Read-only observation retains ownership on success, absence and refusal.
@@ -799,5 +800,57 @@ theorem observeQuery_preserves (state : Option (List A)) (query : List A → Exc
 /-- No observation can revive consumed ownership. -/
 theorem observeQuery_consumed (query : List A → Except E (Option A)) :
     observeQuery none query = (none, .error .consumed) := rfl
+
+/-- Endpoint observation is the existing first-match query with a true decision,
+using the backend's declared forward or reverse traversal. No order is inferred. -/
+def endpointBindings (reverse : Bool) (rows : List A) : Except E (Option A) :=
+  queryBindings (fun _ => .ok true) (if reverse then rows.reverse else rows)
+
+/-- Constant-true queries expose the first original entry without transforming it. -/
+theorem queryBindings_endpoint (rows : List A) :
+    queryBindings (E := E) (fun _ => .ok true) rows = .ok rows.head? := by
+  cases rows <;> rfl
+
+/-- Forward endpoints retain the declared traversal's exact first payload. -/
+theorem endpointBindings_forward (rows : List A) :
+    endpointBindings (E := E) false rows = .ok rows.head? := by
+  simp [endpointBindings, queryBindings_endpoint]
+
+/-- Reverse endpoints retain the last declared payload, with no numeric comparer. -/
+theorem endpointBindings_reverse (rows : List A) :
+    endpointBindings (E := E) true rows = .ok rows.reverse.head? := by
+  simp [endpointBindings, queryBindings_endpoint]
+
+/-- Either traversal reports absence exactly for an empty source. -/
+theorem endpointBindings_empty_iff (reverse : Bool) (rows : List A) :
+    endpointBindings (E := E) reverse rows = .ok none ↔ rows = [] := by
+  cases reverse <;> simp [endpointBindings, queryBindings_endpoint]
+
+/-- Selected entries occur in the original source; reverse traversal preserves
+membership and opaque Function identities without equality or normalization. -/
+theorem endpointBindings_member (reverse : Bool) (rows : List A) (found : A)
+    (selected : endpointBindings (E := E) reverse rows = .ok (some found)) : found ∈ rows := by
+  have member := (queryBindings_sound (fun _ => (Except.ok true : Except E Bool))
+    (if reverse then rows.reverse else rows) found selected).1
+  cases reverse <;> simpa using member
+
+/-- Endpoints add no extra successful query visits beyond the first entry. Full
+admission, traversal-path and backend lookup/preparation costs remain charged. -/
+theorem endpointBindings_visit_bound (reverse : Bool) (rows : List A) :
+    queryVisits (E := E) (fun _ => .ok true) (if reverse then rows.reverse else rows) ≤ 1 := by
+  generalize (if reverse then rows.reverse else rows) = ordered
+  cases ordered <;> simp [queryVisits]
+
+/-- A declared source-order/representation translation retains the chosen leaf. -/
+theorem endpointBindings_map (translate : A → B) (rows : List A) :
+    endpointBindings (E := E) false (rows.map translate) =
+      (endpointBindings (E := E) false rows).map (Option.map translate) := by
+  cases rows <;> rfl
+
+/-- Read-only endpoint observation preserves every owner, including linear ones,
+on success, absence and refusal; no installation or retirement is introduced. -/
+theorem observeEndpoint_preserves (state : Option (List A)) (reverse : Bool) :
+    (observeQuery state (endpointBindings (E := E) reverse)).1 = state :=
+  observeQuery_preserves state _
 
 end LeanPoo.Functional.OrderedDictionary

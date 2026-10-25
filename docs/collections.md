@@ -781,3 +781,28 @@ asserted. Full recognition, preparation, traversal, child encoding and construct
 remain charged. This is finite collection future work. Design reflection: derive
 IO through existing codecs/constructors and existing style observers/creators, not
 another format, compatibility layer, owner engine or public namespace.
+
+
+Endpoint observations now reuse the existing checked first-match query and guarded
+style reader. Table min/max binding and choice, Set min/max element and choice,
+and all required/optional forms retain full source admission before early exit.
+The public RationalSet shortcut is removed in favor of that same Set boundary;
+underlying RBTree/Trie folds still short-circuit. Set optional choice is named
+`.choose/opt`, consistently with the existing protocol; no compatibility alias is
+added. All five styles and standard receivers observe without installing/retiring
+owners. Empty required queries preserve the ordinary Option failure, while a
+selected false element remains a present payload. Functions keep exact identity.
+
+`TableSelection.endpointBindings` is a constant-true specialization of the existing
+query kernel. The original admission preparation now supports declared reverse
+traversal after admitting the original source. Laws prove first/reverse selection,
+absence exactly for empty input, source membership, pointwise representation
+translation, at most one post-admission query visit, and nonconsuming ownership.
+The service Reader/FUN/IO example uses represented indexed partial roots and late
+refusal/retry without a new empty root or rewrapping a callback. Backend traversal
+laws, stable leaves and supported metadata writes remain premises. Numeric minima
+require a backend's declared ordering; no order/symmetry is inferred. Full source
+recognition, backend path/lookup, metadata and allocation/GC costs remain charged;
+this is not a constant-time/runtime/compiler claim. This is finite collection
+future work. Design reflection: reuse the query/observer chain, remove the public
+bypass, and derive API bindings without another algorithm, cache or namespace.
