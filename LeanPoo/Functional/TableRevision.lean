@@ -927,11 +927,11 @@ variable {R K L : Type} [DecidableEq K] [DecidableEq L]
 /-- Target collisions compare SOURCE logical owners. Physical representatives
 remain stored unchanged; equal backend classes need not be structurally equal. -/
 def claimTransportOwner (logical : R → K) (owners : L → Option R)
-    (target : L) (incoming : R) : Except (R × R) (L → Option R) :=
+    (target : L) (incoming : R) : Except L (L → Option R) :=
   match owners target with
   | none => .ok (replace owners target (some incoming))
   | some previous => if logical previous = logical incoming
-    then .ok (replace owners target (some incoming)) else .error (previous, incoming)
+    then .ok (replace owners target (some incoming)) else .error target
 
 /-- A fresh target class accepts the exact incoming physical owner. -/
 theorem claimTransportOwner_empty (logical : R → K) (owners : L → Option R)
@@ -947,12 +947,12 @@ theorem claimTransportOwner_alias (logical : R → K) (owners : L → Option R)
     claimTransportOwner logical owners target incoming =
       .ok (replace owners target (some incoming)) := by simp [claimTransportOwner, present, same]
 
-/-- Distinct source classes retain the original physical conflict pair, even if
-only one was present in either endpoint snapshot of the submitted history. -/
+/-- Distinct source classes report the offending target key, matching the
+collision payload. Either owner may occur only in one endpoint snapshot. -/
 theorem claimTransportOwner_collision (logical : R → K) (owners : L → Option R)
     (target : L) (previous incoming : R) (present : owners target = some previous)
     (different : logical previous ≠ logical incoming) :
-    claimTransportOwner logical owners target incoming = .error (previous, incoming) := by
+    claimTransportOwner logical owners target incoming = .error target := by
   simp [claimTransportOwner, present, different]
 
 /-- Logical injectivity of a declared key bijection supplies safe registry reuse.

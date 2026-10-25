@@ -657,9 +657,9 @@ example : claimTransportOwner (fun (key : Int × Bool) => key.1)
       (-1) (some (1, true))) := by rfl
 
 /-- A genuinely different logical service cannot steal the same target key;
-the error retains both physical owners for diagnostics and explicit retry. -/
+the collision reports that target key for explicit diagnostic/retry handling. -/
 example : claimTransportOwner (fun (key : Int × Bool) => key.1)
     (fun target : Int => if target = 1 then some (1, false) else none)
-    1 (-1, true) = .error ((1, false), (-1, true)) := by rfl
+    1 (-1, true) = .error 1 := by rfl
 
 end Examples.ServiceCollection
