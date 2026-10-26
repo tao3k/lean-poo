@@ -151,15 +151,14 @@ remain premises; admission recognizes opaque Function leaves without cooking. -/
 def issueSetCursor (issued current : List Nat) (snapshot : A)
     (admit : A → Except E Unit) (enumerate : A → Except E (List (K × Unit))) :
     Except (TableObservationFailure E) (StyleCursor K Unit) :=
-  issueStyleCursor issued current (some snapshot)
-    (fun value => (admit value).bind fun _ => enumerate value)
+  issueTableCursor issued current snapshot admit enumerate
 
 /-- A refused Set cannot issue a cursor or call its backend enumerator. -/
 theorem issueSetCursor_refused (versions : List Nat) (snapshot : A)
     (admit : A → Except E Unit) (enumerate : A → Except E (List (K × Unit)))
     (cause : E) (refused : admit snapshot = .error cause) :
     issueSetCursor versions versions snapshot admit enumerate = .error (.backend cause) := by
-  simp [issueSetCursor, issueStyleCursor, observeStyle, refused, Except.bind,
+  simp [issueSetCursor, issueTableCursor, observeTable, observeStyle, refused, Except.bind,
     Except.mapError, Except.map]
 
 /-- Complete admission retains exact keys and backend order, including false keys. -/
@@ -168,7 +167,7 @@ theorem issueSetCursor_ready (versions : List Nat) (snapshot : A)
     (rows : List (K × Unit)) (accepted : admit snapshot = .ok ())
     (enumerated : enumerate snapshot = .ok rows) :
     issueSetCursor versions versions snapshot admit enumerate = .ok ⟨versions, rows⟩ := by
-  simp [issueSetCursor, issueStyleCursor, observeStyle, accepted, enumerated,
+  simp [issueSetCursor, issueTableCursor, observeTable, observeStyle, accepted, enumerated,
     Except.bind, Except.mapError, Except.map]
 
 /-- Issuance validates revisions before admission or backend enumeration. -/
@@ -176,7 +175,7 @@ theorem issueSetCursor_stale (issued current : List Nat) (snapshot : A)
     (admit : A → Except E Unit) (enumerate : A → Except E (List (K × Unit)))
     (stale : issued ≠ current) :
     issueSetCursor issued current snapshot admit enumerate = .error .stale := by
-  simp [issueSetCursor, issueStyleCursor, observeStyle, stale, Except.map]
+  simp [issueSetCursor, issueTableCursor, observeTable, observeStyle, stale, Except.map]
 
 
 end LeanPoo.Functional.OrderedDictionary

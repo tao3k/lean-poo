@@ -1244,3 +1244,18 @@ value recognition still use the original payload. Existing `observeCapturedBound
 models the corresponding bound discipline. Refusal is exact and opaque leaves
 are retained; arbitrary mutable leaf contents and runtime/producer fidelity remain
 premises, with no effect rollback or universal performance claim.
+
+Default Table `.list<-` and `.iter<-` now admit the complete receiver snapshot
+before backend work. `.list/key` and `.iter/key` retain the standard backend
+algorithms beneath this boundary. Direct cursors check descriptor/child/origin
+stamps before every delayed pull, including EOF, without rescanning per element.
+The existing representation/order/index guards remain authoritative for their
+delayed cursors, with complete public-receiver admission before issuance.
+
+`observeTable` and `issueTableCursor` reuse the existing observation/cursor model.
+Set issuance now specializes the same Table model instead of duplicating it.
+Theorems cover complete refusal, exact accepted results, backend failure and
+metadata refusal; existing pull laws cover zero backend work after invalidation.
+Full recognition and backend costs are charged, with faithful host dispatch and
+persistent roots explicit premises. No arbitrary mutable-leaf, compiler or GC
+correctness claim is made.

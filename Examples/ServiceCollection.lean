@@ -950,4 +950,13 @@ example : (translateCapturedCursorEntry
     (fun value => if value = "invalid" then .error "invalid payload" else .ok value)).bind
     (fun _ => .ok "published") = .error "invalid payload" := rfl
 
+/-- Direct materialization cannot bypass the same complete-root refusal as styles. -/
+example : observeTable [0] [0] (1 : Nat) (fun _ => .error "whole root denied")
+    (fun _ => .ok [((1 : Nat), (10 : Nat))]) = .error (.backend "whole root denied") := rfl
+
+/-- Current direct cursors retain exact order and a stored false payload. -/
+example : issueTableCursor (E := String) [0] [0] () (fun _ => .ok ())
+    (fun _ => .ok [((1 : Nat), false), (2, true)]) =
+    .ok ⟨[0], [(1, false), (2, true)]⟩ := rfl
+
 end Examples.ServiceCollection

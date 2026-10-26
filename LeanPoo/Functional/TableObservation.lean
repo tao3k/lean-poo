@@ -505,4 +505,64 @@ theorem translateCapturedCursorEntry_leaf (read later : Cell → K × V) (cell :
 
 end
 
+
+/-- Complete Table observation uses the same metadata/Except protocol as styles.
+Admission precedes backend observation without normalizing opaque leaves. -/
+def observeTable (issued current : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) :
+    Except (TableObservationFailure E) R :=
+  observeStyle issued current (some snapshot)
+    (some (fun value => (admit value).bind fun _ => query value))
+
+/-- Whole-root refusal suppresses backend list materialization or cursor issuance. -/
+theorem observeTable_refused (versions : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (cause : E)
+    (refused : admit snapshot = .error cause) :
+    observeTable versions versions snapshot admit query = .error (.backend cause) := by
+  simp [observeTable, observeStyle, refused, Except.bind, Except.mapError]
+
+/-- Accepted observation delegates exactly, retaining order and opaque payloads. -/
+theorem observeTable_ready (versions : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R)
+    (accepted : admit snapshot = .ok ()) :
+    observeTable versions versions snapshot admit query =
+      (query snapshot).mapError TableObservationFailure.backend := by
+  simp [observeTable, observeStyle, accepted, Except.bind]
+
+/-- Metadata refusal precedes whole-root recognition and backend work. -/
+theorem observeTable_stale (issued current : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (stale : issued ≠ current) :
+    observeTable issued current snapshot admit query = .error .stale := by
+  simp [observeTable, observeStyle, stale]
+
+/-- A backend refusal retains its cause after successful complete admission. -/
+theorem observeTable_backend_refused (versions : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (cause : E)
+    (accepted : admit snapshot = .ok ()) (refused : query snapshot = .error cause) :
+    observeTable versions versions snapshot admit query = .error (.backend cause) := by
+  simp [observeTable, observeStyle, accepted, refused, Except.bind, Except.mapError]
+
+/-- Issue the existing immutable cursor after complete Table admission. Deferred
+pulls continue to use pullStyleCursor, including zero delegation after invalidation. -/
+def issueTableCursor (issued current : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (enumerate : A → Except E (List (K × V))) :
+    Except (TableObservationFailure E) (StyleCursor K V) :=
+  (observeTable issued current snapshot admit enumerate).map (fun rows => ⟨issued, rows⟩)
+
+/-- Refused issuance exposes no cursor, including for empty or malformed roots. -/
+theorem issueTableCursor_refused (versions : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (enumerate : A → Except E (List (K × V)))
+    (cause : E) (refused : admit snapshot = .error cause) :
+    issueTableCursor versions versions snapshot admit enumerate = .error (.backend cause) := by
+  simp [issueTableCursor, observeTable_refused versions snapshot admit enumerate cause refused, Except.map]
+
+/-- The accepted stream preserves original enumeration without an ownership lookup. -/
+theorem issueTableCursor_ready (versions : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (enumerate : A → Except E (List (K × V)))
+    (rows : List (K × V)) (accepted : admit snapshot = .ok ())
+    (enumerated : enumerate snapshot = .ok rows) :
+    issueTableCursor versions versions snapshot admit enumerate = .ok ⟨versions, rows⟩ := by
+  simp [issueTableCursor, observeTable_ready versions snapshot admit enumerate accepted,
+    enumerated, Except.mapError, Except.map]
+
 end LeanPoo.Functional.OrderedDictionary
