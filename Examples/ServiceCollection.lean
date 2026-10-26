@@ -8,6 +8,7 @@ import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.TableSelection
 import LeanPoo.Functional.TableOrder
 import LeanPoo.Functional.TableObservation
+import LeanPoo.Functional.SetStyle
 
 /-! Ordered host Iterable observations over source-bound recursive service rows.
 The host hash/interface and iterator laws are premises; no GC/dispatch proof is asserted.
@@ -908,5 +909,18 @@ example : (admitTableConstructor
        bulk := fun rows => .ok rows } : TableConstructors Nat (List Nat) String)
     (.singleton 3) (fun _ => .ok ())).bind (fun _ => .ok "consumed") =
     .error "single denied" := rfl
+
+/-- Complete cohort refusal prevents issuance before any grant enumeration. -/
+example : issueSetCursor [0] [0] (1 : Nat)
+    (fun _ => .error "incomplete cohort") (fun _ => .ok [(false, ())]) =
+    .error (.backend "incomplete cohort") := rfl
+
+/-- False is a present grant, not EOF; no payload normalization is performed. -/
+example : pullSetElement (⟨[0], [(false, ())]⟩ : StyleCursor Bool Unit) [0] =
+    (.ok (some false, ⟨[0], []⟩), 1) := rfl
+
+/-- Old exhausted cursors still refuse after a policy change. -/
+example : pullSetElement (⟨[0], []⟩ : StyleCursor Bool Unit) [1] =
+    (.error (), 0) := rfl
 
 end Examples.ServiceCollection

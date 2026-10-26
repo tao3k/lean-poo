@@ -1212,3 +1212,16 @@ admission after refusal. `Examples/ServiceCollection.lean` distinguishes a
 successful singleton from a refused one-entry bulk request. Faithful host
 dispatch and the existing representation/index laws are premises; these finite
 laws do not prove arbitrary callback effects, compiler behavior or runtime GC.
+
+Direct Set observation now uses the same complete admission boundary as other
+Set operations. Set cursor issuance precedes backend iteration; subsequent pulls
+reuse the existing guarded Iterator with captured Set, element, explicit policy
+and backing-table stamps, including repeated EOF. RationalSet inherits checked
+list observation instead of bypassing refinements through a backend shortcut.
+
+`issueSetCursor` and the existing `pullSetElement` in `SetStyle.lean` reuse the existing
+cursor model. They prove admission refusal before enumeration, exact accepted
+order, stale refusal with zero backend pulls, and stale EOF refusal. Fresh cursor
+issuance is the retry boundary. The finite model assumes persistent carriers and
+faithful runtime dispatch; it proves neither host Iterator implementation nor
+arbitrary callback purity or GC behavior.
