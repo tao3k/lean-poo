@@ -923,4 +923,14 @@ example : pullSetElement (⟨[0], [(false, ())]⟩ : StyleCursor Bool Unit) [0] 
 example : pullSetElement (⟨[0], []⟩ : StyleCursor Bool Unit) [1] =
     (.error (), 0) := rfl
 
+/-- A reused producer buffer cannot change the return-time service binding. -/
+example : observeCapturedEntry (E := String) (fun _ : Unit => ((1 : Nat), (10 : Nat))) ()
+    (fun _ => .ok (fun _ => (9, 20))) (fun row => .ok (decide (row.1 ≥ 0))) =
+    .ok (some (1, 10)) := rfl
+
+/-- A malformed payload is refused before a bound could hide its negative key. -/
+example : observeCapturedEntry (fun _ : Unit => ((-1 : Int), "invalid")) ()
+    (fun _ => .error "invalid payload") (fun _ => .ok false) =
+    .error "invalid payload" := rfl
+
 end Examples.ServiceCollection

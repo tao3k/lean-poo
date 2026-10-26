@@ -398,4 +398,63 @@ theorem observeCapturedBounds_range (read later : Cell → K) (lower upper : Opt
       (upper.map (fun cell => ⟨read cell, upperInclusive⟩)) rows) := by
   simp [observeCapturedBounds, Except.bind, Option.map_map, Function.comp_def]
 
+
+section
+variable {Cell K V E : Type}
+
+/-- Capture one producer-owned Pair before admission and bound comparison may
+rewrite the producer's buffer. Opaque leaves remain values in the captured pair;
+external effects are not rolled back. This reuses Except for exact refusal. -/
+def observeCapturedEntry (read : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool) : Except E (Option (K × V)) :=
+  let entry := read cell
+  (admit entry).bind fun _ =>
+    (select entry).map fun keep => if keep then some entry else none
+
+/-- A rejected producer row cannot reach selection, even when it would be hidden
+below the requested bound. Recognition cannot repair the original captured row. -/
+theorem observeCapturedEntry_refused (read : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool) (cause : E)
+    (refused : admit (read cell) = .error cause) :
+    observeCapturedEntry read cell admit select = .error cause := by
+  simp [observeCapturedEntry, refused, Except.bind]
+
+/-- Successful recognition may change the heap, never the binding passed to the
+selector or the binding delivered after its effects. -/
+theorem observeCapturedEntry_ready (read later : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool)
+    (ready : admit (read cell) = .ok later) :
+    observeCapturedEntry read cell admit select =
+      (select (read cell)).map (fun keep => if keep then some (read cell) else none) := by
+  simp [observeCapturedEntry, ready, Except.bind]
+
+/-- An admitted but filtered row returns absence after validation, not before it. -/
+theorem observeCapturedEntry_filtered (read later : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool)
+    (ready : admit (read cell) = .ok later) (hidden : select (read cell) = .ok false) :
+    observeCapturedEntry read cell admit select = .ok none := by
+  simp [observeCapturedEntry, ready, hidden, Except.bind, Except.map]
+
+/-- Comparator exceptions retain their cause and suppress row delivery. -/
+theorem observeCapturedEntry_selection_refused (read later : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool) (cause : E)
+    (ready : admit (read cell) = .ok later) (refused : select (read cell) = .error cause) :
+    observeCapturedEntry read cell admit select = .error cause := by
+  simp [observeCapturedEntry, ready, refused, Except.bind, Except.map]
+
+/-- Delivery preserves the original key and opaque payload after both callbacks. -/
+theorem observeCapturedEntry_delivered (read later : Cell → K × V) (cell : Cell)
+    (admit : (K × V) → Except E (Cell → K × V))
+    (select : (K × V) → Except E Bool)
+    (ready : admit (read cell) = .ok later) (selected : select (read cell) = .ok true) :
+    observeCapturedEntry read cell admit select = .ok (some (read cell)) := by
+  simp [observeCapturedEntry, ready, selected, Except.bind, Except.map]
+
+end
+
 end LeanPoo.Functional.OrderedDictionary

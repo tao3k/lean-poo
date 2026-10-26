@@ -1225,3 +1225,12 @@ order, stale refusal with zero backend pulls, and stale EOF refusal. Fresh curso
 issuance is the retry boundary. The finite model assumes persistent carriers and
 faithful runtime dispatch; it proves neither host Iterator implementation nor
 arbitrary callback purity or GC behavior.
+
+Ordered producer rows are now captured and recognized before lower-bound
+comparison. A comparator may mutate a caller-owned response buffer, but cannot
+replace the delivered key/value shell or repair an invalid row. Filtered rows
+must also pass child admission. `observeCapturedEntry` in `TableObservation.lean`
+proves original-entry delivery, validation-before-selection, filter semantics and
+exact admission/comparator refusal. The finite model captures Pair shells, not
+arbitrary mutable payload internals; persistent carriers, faithful producer
+order, runtime Iterator behavior and external callback effects remain premises.
