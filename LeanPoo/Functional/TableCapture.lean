@@ -279,4 +279,114 @@ theorem constructorRequest_recapture (rows : List (K × V)) :
     (rows.map (fun row => (row.1, row.2))).map (fun row => (row.1, row.2)) = rows := by
   simp
 
+/-- Construction requests retain their operation, including one-element bulk
+requests. Empty construction stays a delayed, independently partial operation. -/
+inductive TableConstructorRequest (Entry : Type) where
+  | empty
+  | singleton (entry : Entry)
+  | bulk (entries : List Entry)
+
+/-- The three existing backend construction entrypoints have separate domains. -/
+structure TableConstructors (Entry Root Error : Type) where
+  empty : Unit → Except Error Root
+  singleton : Entry → Except Error Root
+  bulk : List Entry → Except Error Root
+
+/-- Select by requested API, never by a bulk list's cardinality. -/
+def runTableConstructor (family : TableConstructors Entry Root Error) :
+    TableConstructorRequest Entry → Except Error Root
+  | .empty => family.empty ()
+  | .singleton entry => family.singleton entry
+  | .bulk entries => family.bulk entries
+
+/-- Each representation/index layer translates inputs, delegates that same
+operation, then prepares its complete result. This introduces no second builder. -/
+def mapTableConstructors (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot) :
+    TableConstructors TargetEntry TargetRoot Error where
+  empty := fun _ => (family.empty ()).bind encode
+  singleton := fun entry => (decode entry).bind fun raw => (family.singleton raw).bind encode
+  bulk := fun entries => (entries.mapM decode).bind fun rows => (family.bulk rows).bind encode
+
+/-- Source empty refusal remains observable through a representation/index layer. -/
+theorem mapTableConstructors_empty_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (cause : Error) (refused : family.empty () = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) .empty = .error cause := by
+  simp [runTableConstructor, mapTableConstructors, refused, Except.bind]
+
+/-- Singleton refusal precedes result preparation and never falls back to bulk. -/
+theorem mapTableConstructors_singleton_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (cause : Error)
+    (ready : decode entry = .ok raw) (refused : family.singleton raw = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, refused, Except.bind]
+
+/-- A one-row bulk request retains bulk refusal, even when singleton succeeds. -/
+theorem mapTableConstructors_bulk_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entries : List TargetEntry) (raw : List Entry) (cause : Error)
+    (ready : entries.mapM decode = .ok raw) (refused : family.bulk raw = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.bulk entries) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, refused, Except.bind]
+
+/-- Invalid translated entries suppress the singleton constructor and preparation. -/
+theorem mapTableConstructors_decode_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (cause : Error) (refused : decode entry = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, refused, Except.bind]
+
+/-- Successful singleton construction needs no empty or bulk success assumption. -/
+theorem mapTableConstructors_singleton_ready (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (root : Root) (target : TargetRoot)
+    (ready : decode entry = .ok raw) (built : family.singleton raw = .ok root)
+    (prepared : encode root = .ok target) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .ok target := by
+  simp [runTableConstructor, mapTableConstructors, ready, built, prepared, Except.bind]
+
+/-- Result refinement/index preparation can refuse after construction without
+publishing a partial result or substituting another construction operation. -/
+theorem mapTableConstructors_prepare_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (root : Root) (cause : Error)
+    (ready : decode entry = .ok raw) (built : family.singleton raw = .ok root)
+    (refused : encode root = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, built, refused, Except.bind]
+
+/-- Multiple view layers preserve the original singleton refusal. No bulk/empty
+constructor or downstream preparation is observed on that refused path. -/
+theorem mapTableConstructors_nested_refused (family : TableConstructors Entry Root Error)
+    (decode₁ : MiddleEntry → Except Error Entry) (encode₁ : Root → Except Error MiddleRoot)
+    (decode₂ : TargetEntry → Except Error MiddleEntry) (encode₂ : MiddleRoot → Except Error TargetRoot)
+    (entry : TargetEntry) (middle : MiddleEntry) (raw : Entry) (cause : Error)
+    (ready₂ : decode₂ entry = .ok middle) (ready₁ : decode₁ middle = .ok raw)
+    (refused : family.singleton raw = .error cause) :
+    runTableConstructor (mapTableConstructors (mapTableConstructors family decode₁ encode₁)
+      decode₂ encode₂) (.singleton entry) = .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready₁, ready₂, refused, Except.bind]
+
+/-- The existing complete-root admission remains after the selected constructor.
+Faithful host dispatch, persistence, translation and index laws are premises;
+this is not an implementation-platform or arbitrary-effect verification. -/
+def admitTableConstructor (family : TableConstructors Entry Root Error)
+    (request : TableConstructorRequest Entry) (admit : Root → Except Error Unit) :
+    Except Error Root :=
+  (runTableConstructor family request).bind fun root => (admit root).map fun _ => root
+
+/-- Selected constructor refusal suppresses final recognition and every consumer. -/
+theorem admitTableConstructor_refused (family : TableConstructors Entry Root Error)
+    (request : TableConstructorRequest Entry) (admit : Root → Except Error Unit)
+    (cause : Error) (refused : runTableConstructor family request = .error cause) :
+    admitTableConstructor family request admit = .error cause := by
+  simp [admitTableConstructor, refused, Except.bind]
+
 end LeanPoo.Functional.OrderedDictionary

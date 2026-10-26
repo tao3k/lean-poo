@@ -889,4 +889,24 @@ example : observeCapturedBounds (E := String) (fun _ : Unit => false) (some ()) 
     (fun _ => .ok (fun _ => true)) (fun lower upper => .ok (lower, upper)) =
     .ok (some false, none) := rfl
 
+/-- Empty and bulk policy refusal do not block an available singleton primitive. -/
+example : runTableConstructor
+    (mapTableConstructors
+      ({ empty := fun _ => .error "empty denied", singleton := fun n => .ok n,
+         bulk := fun _ => .error "bulk denied" } : TableConstructors Nat Nat String)
+      (fun n => .ok (n + 1)) (fun n => .ok (n * 2))) (.singleton 3) = .ok 8 := rfl
+
+/-- The same one-entry bulk request must preserve the bulk refusal. -/
+example : runTableConstructor
+    ({ empty := fun _ => .error "empty denied", singleton := fun n => .ok n,
+       bulk := fun _ => .error "bulk denied" } : TableConstructors Nat Nat String)
+    (.bulk [3]) = .error "bulk denied" := rfl
+
+/-- A source singleton refusal cannot be replaced by successful bulk construction. -/
+example : (admitTableConstructor
+    ({ empty := fun _ => .ok [], singleton := fun _ => .error "single denied",
+       bulk := fun rows => .ok rows } : TableConstructors Nat (List Nat) String)
+    (.singleton 3) (fun _ => .ok ())).bind (fun _ => .ok "consumed") =
+    .error "single denied" := rfl
+
 end Examples.ServiceCollection

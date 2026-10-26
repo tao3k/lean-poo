@@ -1196,3 +1196,19 @@ no collection traversal or validation-wrapper layer: prior key recognition now u
 the correct predicate, and its actual cost remains charged. Design reflection:
 reuse the established Set/Table declaration pattern and preserve descriptor identity,
 rather than bypass style admission or widen a requested contract to UInt.
+
+Constructor delegation retains three independent failure domains: empty,
+singleton and bulk. An explicit singleton request calls the source singleton;
+a one-entry bulk request stays bulk. Set reuses its shared method contract
+boundary, while ordered, indexed and represented views use their existing
+source guards and complete-root admission. No view needs an empty root merely
+to derive a descriptor or construct a singleton.
+
+`Functional/TableCapture.lean` models this choice with `TableConstructorRequest`
+and `TableConstructors`. `mapTableConstructors` preserves the selected operation
+through input translation and result preparation. Its theorems cover source,
+decoder and preparation refusal, nested delegation and suppression of downstream
+admission after refusal. `Examples/ServiceCollection.lean` distinguishes a
+successful singleton from a refused one-entry bulk request. Faithful host
+dispatch and the existing representation/index laws are premises; these finite
+laws do not prove arbitrary callback effects, compiler behavior or runtime GC.
