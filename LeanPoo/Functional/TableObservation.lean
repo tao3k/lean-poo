@@ -565,4 +565,34 @@ theorem issueTableCursor_ready (versions : List Nat) (snapshot : A)
   simp [issueTableCursor, observeTable_ready versions snapshot admit enumerate accepted,
     enumerated, Except.mapError, Except.map]
 
+
+/-- The runtime supplies identity tokens for the receiver/snapshot in its dynamic
+admission scope. Detecting an active request is separate from arbitrary callback
+termination; standard parameter restoration and identity fidelity are premises. -/
+def guardTableAdmission (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (admit : Unit → Except E Unit) : Except E Unit :=
+  if request ∈ active then .error failure else admit ()
+
+/-- Reentry refuses without another recognizer call; it is never successful memo. -/
+theorem guardTableAdmission_reentry (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (admit : Unit → Except E Unit) (present : request ∈ active) :
+    guardTableAdmission active request failure admit = .error failure := by
+  simp [guardTableAdmission, present]
+
+/-- A distinct receiver/root still delegates, preserving explicit backing queries. -/
+theorem guardTableAdmission_fresh (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (admit : Unit → Except E Unit) (fresh : request ∉ active) :
+    guardTableAdmission active request failure admit = admit () := by
+  simp [guardTableAdmission, fresh]
+
+/-- A detected admission cycle suppresses backend observation with the exact cause. -/
+theorem observeTable_reentry_refused (versions : List Nat) (snapshot : A)
+    (active : List (Nat × Nat)) (request : Nat × Nat) (failure : E)
+    (admit : Unit → Except E Unit) (query : A → Except E R) (present : request ∈ active) :
+    observeTable versions versions snapshot
+      (fun _ => guardTableAdmission active request failure admit) query =
+      .error (.backend failure) := by
+  apply observeTable_refused
+  exact guardTableAdmission_reentry active request failure admit present
+
 end LeanPoo.Functional.OrderedDictionary

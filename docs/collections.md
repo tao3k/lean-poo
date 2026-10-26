@@ -1249,8 +1249,12 @@ Default Table `.list<-` and `.iter<-` now admit the complete receiver snapshot
 before backend work. `.list/key` and `.iter/key` retain the standard backend
 algorithms beneath this boundary. Direct cursors check descriptor/child/origin
 stamps before every delayed pull, including EOF, without rescanning per element.
-The existing representation/order/index guards remain authoritative for their
-delayed cursors, with complete public-receiver admission before issuance.
+Derived representation/order/index cursors retain their existing admitted-snapshot
+contract, authoritative guards and lazy per-row conversion. Eager whole-image
+recognition is not added at their issuance: it would force callbacks early and
+repeat positioned scans. Trie positioning uses the backend iterator capability
+under its existing caller's admission; default raw-table iteration still checks
+the complete snapshot.
 
 `observeTable` and `issueTableCursor` reuse the existing observation/cursor model.
 Set issuance now specializes the same Table model instead of duplicating it.
@@ -1259,3 +1263,9 @@ metadata refusal; existing pull laws cover zero backend work after invalidation.
 Full recognition and backend costs are charged, with faithful host dispatch and
 persistent roots explicit premises. No arbitrary mutable-leaf, compiler or GC
 correctness claim is made.
+
+A dynamic same-receiver/snapshot admission guard rejects direct reentry before
+another recognizer call. `guardTableAdmission` models identity-token membership;
+its laws prove reentry refusal, fresh delegation and backend suppression. Identity
+fidelity and standard dynamic parameter restoration are premises. Unrestricted
+callback termination or fresh-descriptor recursion is not certified.
