@@ -868,4 +868,25 @@ keys or introducing an encoding conversion. -/
 example : setElementAdmission (fun key : Nat => decide (key < 2 ^ 4)) "new element type"
     [1, 2] = .ok () := rfl
 
+/-- Admission rewrites both caller cells from [2,4] to [4,5], while the
+captured query still observes exactly the original service interval. -/
+example : observeCapturedBounds (E := String)
+    (fun cell : Nat => if cell = 0 then (2 : Int) else 4) (some 0) (some 1)
+    (fun _ => .ok (fun cell => if cell = 0 then 4 else 5))
+    (fun lower upper => .ok (tableRangeRows (fun a b : Int => a - b)
+      (lower.map (fun key => ⟨key, true⟩)) (upper.map (fun key => ⟨key, true⟩))
+      [(1, 10), (2, 20), (3, 30), (4, 40), (5, 50)])) =
+    .ok [(2, 20), (3, 30), (4, 40)] := rfl
+
+/-- Repairing the caller cell cannot authorize an invalid original request or
+run its downstream consumer; a fresh valid request remains the retry boundary. -/
+example : (observeCapturedBounds (fun _ : Unit => (-1 : Int)) (some ()) none
+    (fun _ => .ok (fun _ => 2))
+    (fun lower _ => if lower = some (-1) then .error "invalid bound" else .ok ())).bind (fun _ => .ok "consumed") = .error "invalid bound" := rfl
+
+/-- A false key is present, whereas the opposite absent endpoint is unbounded. -/
+example : observeCapturedBounds (E := String) (fun _ : Unit => false) (some ()) none
+    (fun _ => .ok (fun _ => true)) (fun lower upper => .ok (lower, upper)) =
+    .ok (some false, none) := rfl
+
 end Examples.ServiceCollection

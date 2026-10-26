@@ -337,4 +337,65 @@ theorem checkedComparerPull_current (owner : Nat) (versions : List Nat) (rows : 
     checkedTablePull (owner :: versions) (owner :: versions) rows =
       (.ok (tableCursorPull rows), 1) := checkedTablePull_current _ rows
 
+/-- Capture only endpoint cells before admission/discovery callbacks. Preparation
+may change the caller's cell heap, but observation retains the original keys.
+Opaque key stability and faithful host revision checks remain premises; this does
+not model arbitrary key mutation, threads, compiler behavior or GC. -/
+def observeCapturedBounds (read : Cell → K) (lower upper : Option Cell)
+    (prepare : (Cell → K) → Except E (Cell → K))
+    (query : Option K → Option K → Except E R) : Except E R :=
+  let lo := lower.map read
+  let hi := upper.map read
+  (prepare read).bind (fun _ => query lo hi)
+
+/-- A successful preparation cannot replace either endpoint, even with a changed heap. -/
+theorem observeCapturedBounds_ready (read later : Cell → K) (lower upper : Option Cell)
+    (prepare : (Cell → K) → Except E (Cell → K))
+    (query : Option K → Option K → Except E R) (ready : prepare read = .ok later) :
+    observeCapturedBounds read lower upper prepare query = query (lower.map read) (upper.map read) := by
+  simp [observeCapturedBounds, ready, Except.bind]
+
+/-- Admission refusal precedes bound validation and suppresses query evaluation,
+including empty roots and malformed requests in the host protocol. -/
+theorem observeCapturedBounds_refused (read : Cell → K) (lower upper : Option Cell)
+    (prepare : (Cell → K) → Except E (Cell → K)) (cause : E)
+    (query : Option K → Option K → Except E R) (refused : prepare read = .error cause) :
+    observeCapturedBounds read lower upper prepare query = .error cause := by
+  simp [observeCapturedBounds, refused, Except.bind]
+
+/-- An invalid captured key retains its original failure; preparation cannot
+repair the request by rewriting the caller's endpoint cell. -/
+theorem observeCapturedBounds_query_refused (read later : Cell → K) (lower upper : Option Cell)
+    (prepare : (Cell → K) → Except E (Cell → K)) (cause : E)
+    (query : Option K → Option K → Except E R) (ready : prepare read = .ok later)
+    (refused : query (lower.map read) (upper.map read) = .error cause) :
+    observeCapturedBounds read lower upper prepare query = .error cause := by
+  rw [observeCapturedBounds_ready read later lower upper prepare query ready, refused]
+
+/-- Unboundedness is an absent Option, never a sentinel from the key domain. -/
+theorem observeCapturedBounds_unbounded (read later : Cell → K)
+    (query : Option K → Option K → Except E R) :
+    observeCapturedBounds read none none (fun _ => .ok later) query = query none none := rfl
+
+/-- Style/index handoffs may capture again through identity without changing
+endpoints or invoking preparation a second time. No row scan or key copy is required. -/
+theorem observeCapturedBounds_identity (lower upper : Option K)
+    (prepare : (K → K) → Except E (K → K)) (query : Option K → Option K → Except E R) :
+    observeCapturedBounds id lower upper prepare query =
+      (prepare id).bind (fun _ => query lower upper) := by
+  simp [observeCapturedBounds]
+
+/-- The existing range algorithm keeps endpoint inclusion, ordered rows and opaque
+payloads. Only two endpoint cells are captured; backend positioning costs are unchanged. -/
+theorem observeCapturedBounds_range (read later : Cell → K) (lower upper : Option Cell)
+    (lowerInclusive upperInclusive : Bool) (compare : K → K → Int) (rows : List (K × V)) :
+    observeCapturedBounds (E := E) read lower upper (fun _ => .ok later)
+      (fun lo hi => .ok (tableRangeRows compare
+        (lo.map (fun key => ⟨key, lowerInclusive⟩))
+        (hi.map (fun key => ⟨key, upperInclusive⟩)) rows)) =
+    .ok (tableRangeRows compare
+      (lower.map (fun cell => ⟨read cell, lowerInclusive⟩))
+      (upper.map (fun cell => ⟨read cell, upperInclusive⟩)) rows) := by
+  simp [observeCapturedBounds, Except.bind, Option.map_map, Function.comp_def]
+
 end LeanPoo.Functional.OrderedDictionary

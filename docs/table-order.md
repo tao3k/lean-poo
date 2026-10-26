@@ -334,3 +334,21 @@ law retains the complete range prefix and its pull count. Guard traversal, shape
 admission, host iterator implementation, allocation, callback effects and GC remain
 outside that abstract pull count. The service examples include callback identity,
 inner-origin refusal and refusal after exhaustion.
+
+### Captured query bounds
+
+`observeCapturedBounds` in `TableObservation.lean` captures the two optional
+endpoint values before admission/discovery changes the caller's cell heap. Its
+laws preserve original endpoints, preparation and query refusal, absent endpoints,
+identity handoffs and the existing `tableRangeRows` predicate and inclusion flags.
+Root service examples retain `[2,4]` after a callback writes `[4,5]`, reject an
+invalid original key despite later repair, and distinguish a present false key
+from an absent bound.
+
+Gerbil uses existing `map/option identity` at ordered query, named-index and five
+Table/Set style handoffs. It copies outer Option cells only; keys and Function
+payloads remain opaque and all prior validation and EOF guards remain. The added
+work is constant per handoff with no row scan or new wrapper. These are finite
+future-work ownership laws under stable-key, persistent-root, lawful-comparer and
+faithful-revision premises, not compiler, concurrency, GC or wall-clock proofs.
+Caller-side method lookup before query invocation is outside the capture boundary.
