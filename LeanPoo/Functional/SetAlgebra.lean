@@ -1,6 +1,7 @@
 import LeanPoo.Functional.TableStyle
 import LeanPoo.Functional.TableIndex
 import LeanPoo.Functional.TableProjection
+import LeanPoo.Functional.TableCapture
 
 /-! Finite set algebra is an additional layer over existing Unit-valued tables.
 Backend merge/lookup and persistent write laws remain explicit premises. -/
@@ -640,5 +641,65 @@ theorem readSetFold_head_refused (key : K) (rest : List K)
   rw [readSetFold_order _ admit step seed ready]
   simp only [List.foldlM_cons, refused]
   rfl
+
+/-- Finite image outputs are captured before Elt recognition may reuse response
+cells. Successful recognition exposes exactly the original ordered occurrences. -/
+theorem captureImageOutputs_ready {Cell I E : Type}
+    (buffer later : Cell → I) (slots : List Cell)
+    (prepare : (Cell → I) → Except E (Cell → I)) (recognize : I → Except E Unit)
+    (checks : List Unit) (ready : prepare buffer = .ok later)
+    (accepted : (slots.map buffer).mapM recognize = .ok checks) :
+    captureRequestBatch buffer slots prepare
+      (fun keys => (keys.mapM recognize).map (fun _ => keys)) = .ok (slots.map buffer) := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready]
+  simp [accepted, Except.map]
+
+/-- Repairing the caller's response cannot hide an invalid original member.
+No grouped cache or target publication is reached through the refused list. -/
+theorem captureImageOutputs_refused {Cell I E : Type}
+    (buffer later : Cell → I) (slots : List Cell)
+    (prepare : (Cell → I) → Except E (Cell → I)) (recognize : I → Except E Unit)
+    (cause : E) (ready : prepare buffer = .ok later)
+    (refused : (slots.map buffer).mapM recognize = .error cause) :
+    captureRequestBatch buffer slots prepare
+      (fun keys => (keys.mapM recognize).map (fun _ => keys)) = .error cause := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready]
+  simp [refused, Except.map]
+
+/-- Target membership is computed from the admitted original list, independently
+of later caller-cell contents. Backend equivalence laws remain separate premises. -/
+theorem captureImageOutputs_membership {Cell I E : Type} [DecidableEq I]
+    (buffer later : Cell → I) (slots : List Cell) (key : I)
+    (prepare : (Cell → I) → Except E (Cell → I)) (recognize : I → Except E Unit)
+    (checks : List Unit) (ready : prepare buffer = .ok later)
+    (accepted : (slots.map buffer).mapM recognize = .ok checks) :
+    (captureRequestBatch buffer slots prepare
+      (fun keys => (keys.mapM recognize).map (fun _ => keys))).map
+        (fun keys => decide (key ∈ keys)) = .ok (decide (key ∈ slots.map buffer)) := by
+  rw [captureImageOutputs_ready buffer later slots prepare recognize checks ready accepted]
+  rfl
+
+/-- An invalid original occurrence must refuse before any deduplication strategy,
+even if the backend would identify it with a previously accepted representative. -/
+theorem imageOutputs_refuse_before_coalescing {I R E : Type} (first invalid : I) (rest : List I)
+    (recognize : I → Except E Unit) (coalesce : List I → Except E R)
+    (admit : R → Except E Unit) (cause : E)
+    (accepted : recognize first = .ok ()) (refused : recognize invalid = .error cause) :
+    prepareConstructorRequest (first :: invalid :: rest) recognize coalesce admit = .error cause := by
+  apply prepareConstructorRequest_child_refused
+  simp [List.mapM_cons, accepted, refused, bind, Except.bind]
+
+/-- Empty finite outputs add no element recognition, without inventing a sentinel. -/
+theorem captureImageOutputs_empty {Cell I E : Type} (buffer later : Cell → I)
+    (recognize : I → Except E Unit) :
+    captureRequestBatch buffer [] (fun _ => Except.ok later)
+      (fun keys => (keys.mapM recognize).map (fun _ => keys)) = .ok [] := rfl
+
+/-- Owning only list cells leaves the existing existential image and duplicate
+semantics unchanged. Incremental repair and inverse laws therefore reuse them. -/
+theorem setImage_keys_capture [DecidableEq I] (owners : List K)
+    (project : K → Unit → List I) (primary : K → Option Unit) :
+    setImage owners (indexKeysView (fun key row => (project key row).map id) primary) =
+      setImage owners (indexKeysView project primary) := by simp
 
 end LeanPoo.Functional.OrderedDictionary

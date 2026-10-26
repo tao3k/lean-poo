@@ -828,4 +828,26 @@ example {Handle : Type} (element : Handle × Handle) :
       (fun elements => Except.ok elements : List (Handle × Handle) → Except String (List (Handle × Handle))) =
       .ok [element, element] := rfl
 
+/-- Response-cell reuse during permission recognition cannot add permission 9 to
+an original finite request containing 7 and 8, including duplicate grants. -/
+example : captureRequestBatch (fun cell : Nat => if cell = 0 then 7 else 8) [0, 1, 1]
+    (fun _ => Except.ok (fun _ => 9))
+    (fun keys => (keys.mapM (fun _ => Except.ok () : Nat → Except String Unit)).map (fun _ => keys)) =
+      .ok [7, 8, 8] := rfl
+
+/-- A backend may identify both representations by the numeric key. Elt admission
+still rejects the second original representation before coalescing those keys. -/
+example : prepareConstructorRequest [(true, (1 : Nat)), (false, 1)]
+    (fun entry => if entry.1 then Except.ok () else Except.error "Elt refusal")
+    (fun entries => Except.ok ((entries.map Prod.snd).eraseDups))
+    (fun _ => Except.ok ()) = .error "Elt refusal" := rfl
+
+/-- A refused original membership suppresses both cache installation and consumer,
+even though the recognition-time buffer contains only permitted replacements. -/
+example : (captureRequestBatch (fun _ : Nat => (-1 : Int)) [0]
+    (fun _ => Except.ok (fun _ => 8))
+    (fun keys => (keys.mapM (fun key => if key < 0 then Except.error "invalid permission"
+      else Except.ok ())).map (fun _ => keys))).bind
+    (fun _ => Except.error "consumer" : List Int → Except String Nat) = .error "invalid permission" := rfl
+
 end Examples.ServiceCollection

@@ -1113,3 +1113,43 @@ and backend costs remain charged. These laws do not prove arbitrary mutable-leaf
 runtime/GC or concurrent-heap correctness. Design reflection: share the request
 capture kernel, preserve each representation's leaf semantics, and keep backend
 algorithms and standard contract failure boundaries intact.
+
+### Owned finite Set-image outputs
+
+The multivalued `set-image` boundary now owns the callback's proper output-list
+spine before any target `Elt` predicate runs. Previously a recognizer could reuse
+the response buffer: an original `(7 8 8)` request could publish `(7 8 9)`. One
+standard `map identity` in the existing multiple-output branch prevents that request
+substitution. Single-output mappings already own their private singleton list and
+retain the original path. Elements, including checked Functions and list-valued
+single keys, remain shared opaque leaves.
+
+Every original output occurrence is recognized before backend-equivalent keys are
+coalesced. A recognizer cannot repair an invalid original member by replacing its
+caller cell; an inexact representation rejected by an explicit exact-only Elt
+contract still refuses even when numerically equivalent to an accepted key.
+Type/backend errors and first-failure order remain unchanged. Callback writes to
+the external response buffer are retained, without publishing partial caches or
+consuming a target owner on failure.
+
+Cold indexing and warm touched-key discovery share this same boundary. Existing
+grouped indexes still implement shared witnesses, deleting one owner, last-owner
+retraction, exact target deltas and inverse recovery. The existing permission
+publication example composes all five styles, conflict refusal, a fresh-owner
+retry and inverse target installation through Reader/FUN/IO. Six regressions also
+cover cold/warm malformed responses and Function-wrapper identity.
+
+`SetAlgebra.lean` reuses the existing finite request capture and constructor
+admission laws. It proves original-output delegation, refusal before coalescing,
+original membership, empty output and compatibility with the existing existential
+image semantics. Those image repair/inverse laws remain conditional on faithful
+backends and stable finite mapping observations. This advances the collection
+proposal's future work; it does not prove runtime/GC, arbitrary concurrent writes
+during capture or mutable-leaf correctness.
+
+Each multivalued callback adds one shallow spine cell per emitted occurrence;
+validation still visits all occurrences before deduplication. Existing registry
+capture, source/target admission, indexing and publication costs remain charged.
+No target snapshot diff, cache engine, wrapper layer or namespace is added. Design
+reflection: capture at the existing Elt boundary and reuse grouped-index ownership,
+rather than clone keys or bypass the more specific Set contract.
