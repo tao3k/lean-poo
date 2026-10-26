@@ -178,4 +178,81 @@ theorem issueSetCursor_stale (issued current : List Nat) (snapshot : A)
   simp [issueSetCursor, issueTableCursor, observeTable, observeStyle, stale, Except.map]
 
 
+
+/-- Set admission reuses the Table reentry guard around BOTH backing and refined
+recognition. Identity tokens and dynamic scope restoration are host premises;
+this finite model does not certify termination of arbitrary recognizers. -/
+def guardSetAdmission (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (backing specialized : List (Nat × Nat) → Except E Unit) : Except E Unit :=
+  guardTableAdmission active request failure (fun _ => do
+    backing (request :: active)
+    specialized (request :: active))
+
+/-- A repeated Set request refuses before backing or specialized recognition. -/
+theorem guardSetAdmission_reentry (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (backing specialized : List (Nat × Nat) → Except E Unit)
+    (present : request ∈ active) :
+    guardSetAdmission active request failure backing specialized = .error failure := by
+  simp [guardSetAdmission, guardTableAdmission, present]
+
+/-- Fresh admission exposes the same extended scope to both recognition stages. -/
+theorem guardSetAdmission_fresh (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (backing specialized : List (Nat × Nat) → Except E Unit)
+    (fresh : request ∉ active) :
+    guardSetAdmission active request failure backing specialized =
+      (backing (request :: active)).bind (fun _ => specialized (request :: active)) := by
+  simp [guardSetAdmission, guardTableAdmission, fresh]
+  rfl
+
+/-- A backing refusal suppresses refinement and retains its exact cause. -/
+theorem guardSetAdmission_backing_refused (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure cause : E) (backing specialized : List (Nat × Nat) → Except E Unit)
+    (fresh : request ∉ active) (refused : backing (request :: active) = .error cause) :
+    guardSetAdmission active request failure backing specialized = .error cause := by
+  simp [guardSetAdmission_fresh active request failure backing specialized fresh, refused, Except.bind]
+
+/-- Successful backing recognition delegates the exact specialized result. -/
+theorem guardSetAdmission_backing_ready (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (backing specialized : List (Nat × Nat) → Except E Unit)
+    (fresh : request ∉ active) (accepted : backing (request :: active) = .ok ()) :
+    guardSetAdmission active request failure backing specialized = specialized (request :: active) := by
+  simp [guardSetAdmission_fresh active request failure backing specialized fresh, accepted, Except.bind]
+
+/-- Direct recursive refinement encounters the original request before replaying
+either recognizer. The successful outer backing stage is the only premise. -/
+theorem guardSetAdmission_direct_cycle (active : List (Nat × Nat)) (request : Nat × Nat)
+    (failure : E) (backing nextBacking nextSpecialized : List (Nat × Nat) → Except E Unit)
+    (fresh : request ∉ active) (accepted : backing (request :: active) = .ok ()) :
+    guardSetAdmission active request failure backing
+      (fun scope => guardSetAdmission scope request failure nextBacking nextSpecialized) =
+      .error failure := by
+  rw [guardSetAdmission_backing_ready _ _ _ _ _ fresh accepted]
+  exact guardSetAdmission_reentry _ _ _ _ _ (by simp)
+
+/-- In a mutual cycle, the second fresh receiver is admitted but returning to
+the first receiver/root refuses, without conflating their shared snapshot. -/
+theorem guardSetAdmission_mutual_cycle (active : List (Nat × Nat)) (first second : Nat × Nat)
+    (failure : E) (firstBacking secondBacking nextBacking nextSpecialized : List (Nat × Nat) → Except E Unit)
+    (firstFresh : first ∉ active) (secondFresh : second ∉ first :: active)
+    (firstAccepted : firstBacking (first :: active) = .ok ())
+    (secondAccepted : secondBacking (second :: first :: active) = .ok ()) :
+    guardSetAdmission active first failure firstBacking
+      (fun scope => guardSetAdmission scope second failure secondBacking
+        (fun inner => guardSetAdmission inner first failure nextBacking nextSpecialized)) =
+      .error failure := by
+  rw [guardSetAdmission_backing_ready _ _ _ _ _ firstFresh firstAccepted]
+  rw [guardSetAdmission_backing_ready _ _ _ _ _ secondFresh secondAccepted]
+  exact guardSetAdmission_reentry _ _ _ _ _ (by simp)
+
+/-- The complete observation boundary suppresses reads and downstream consumers
+when the shared Set guard refuses. No rollback of earlier callback effects follows. -/
+theorem observeSetAdmission_refused (versions : List Nat) (snapshot : A)
+    (active : List (Nat × Nat)) (request : Nat × Nat) (failure cause : E)
+    (backing specialized : List (Nat × Nat) → Except E Unit) (query : A → Except E R)
+    (refused : guardSetAdmission active request failure backing specialized = .error cause) :
+    observeTable versions versions snapshot
+      (fun _ => guardSetAdmission active request failure backing specialized) query =
+      .error (.backend cause) :=
+  observeTable_refused _ _ _ _ _ refused
+
 end LeanPoo.Functional.OrderedDictionary

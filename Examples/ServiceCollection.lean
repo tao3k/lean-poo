@@ -959,4 +959,29 @@ example : issueTableCursor (E := String) [0] [0] () (fun _ => .ok ())
     (fun _ => .ok [((1 : Nat), false), (2, true)]) =
     .ok ⟨[0], [(1, false), (2, true)]⟩ := rfl
 
+
+/-- Two service cohorts share snapshot 7. Returning to the first cohort during
+its policy check refuses before grant observation; the second identity is distinct. -/
+example : guardSetAdmission [] (1, 7) "cyclic policy" (fun _ => .ok ())
+    (fun outer => guardSetAdmission outer (2, 7) "cyclic policy" (fun _ => .ok ())
+      (fun inner => guardSetAdmission inner (1, 7) "cyclic policy"
+        (fun _ => .error "must not replay backing") (fun _ => .ok ()))) =
+      .error "cyclic policy" := by rfl
+
+/-- A policy may query an older snapshot of the same cohort without false reentry. -/
+example : guardSetAdmission [(1, 7)] (1, 6) "cyclic policy"
+    (fun _ => .ok ()) (fun _ => .ok ()) = .ok () := by rfl
+
+/-- A rejected policy cannot consume a linear grant owner or install a successor. -/
+example : styleStep .linear (some (7 : Nat)) (fun snapshot => do
+    guardSetAdmission [(1, snapshot)] (1, snapshot) "cyclic policy"
+      (fun _ => .ok ()) (fun _ => .ok ())
+    pure (snapshot + 1)) = (some 7, .error (.callback "cyclic policy")) := by rfl
+
+/-- With the caller's dynamic scope restored, a fresh request keeps the ordinary
+linear ownership law. Scope restoration itself is supplied by Gerbil parameterize. -/
+example : styleStep .linear (some (7 : Nat)) (fun snapshot => do
+    guardSetAdmission [] (1, snapshot) "cyclic policy" (fun _ => .ok ()) (fun _ => .ok ())
+    pure (snapshot + 1)) = (none, .ok 8) := by rfl
+
 end Examples.ServiceCollection
