@@ -802,4 +802,30 @@ example {Handle : Type} (callback : Handle) :
       (fun requests => Except.ok requests : List Handle → Except String (List Handle)) =
         .ok [callback, callback] := rfl
 
+/-- Metadata replaces both key and payload cells after request capture. The
+constructor still receives the initial typed binding, not its later replacement. -/
+example : captureRequestBatch (fun _ : Nat => ((2 : Nat), (20 : Int))) [0]
+    (fun _ => Except.ok (fun _ => ((9 : Nat), (90 : Int))))
+    (fun rows => prepareConstructorRequest rows (fun _ => Except.ok ())
+      (fun accepted => Except.ok accepted) (fun _ => Except.ok ()) :
+      List (Nat × Int) → Except String (List (Nat × Int))) = .ok [(2, 20)] := rfl
+
+/-- Repairing a negative field in caller storage cannot erase the original child
+failure; no constructor or IO consumer can turn that captured request into success. -/
+example : (captureRequestBatch (fun _ : Nat => ((2 : Nat), (-1 : Int))) [0]
+    (fun _ => Except.ok (fun _ => ((2 : Nat), (20 : Int))))
+    (fun rows => prepareConstructorRequest rows
+      (fun row => if row.2 < 0 then Except.error "invalid field" else Except.ok ())
+      (fun accepted => Except.ok accepted) (fun _ => Except.ok ()) :
+      List (Nat × Int) → Except String (List (Nat × Int)))).bind
+    (fun _ => Except.error "consumer" : List (Nat × Int) → Except String Nat) =
+      .error "invalid field" := rfl
+
+/-- Pair-valued Set elements are opaque leaves. Capturing their request list
+preserves element identity instead of treating them as Table binding shells. -/
+example {Handle : Type} (element : Handle × Handle) :
+    captureRequestBatch (fun _ : Nat => element) [0, 0] (fun original => Except.ok original)
+      (fun elements => Except.ok elements : List (Handle × Handle) → Except String (List (Handle × Handle))) =
+      .ok [element, element] := rfl
+
 end Examples.ServiceCollection

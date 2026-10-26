@@ -1,7 +1,8 @@
 import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.TableBatch
 
-/-! Finite borrowed Option-cell capture. Cells model mutable shells; child values
+/-! Captured optional changes and finite constructor requests. Cells model
+mutable shells; child values
 are opaque stable observations. This does not verify Gambit's heap or deep-copy
 mutable leaves. Runtime capture uses the existing Option map and list builder. -/
 namespace LeanPoo.Functional.OrderedDictionary
@@ -211,5 +212,71 @@ theorem captureRequestBatch_deltas [DecidableEq K] [DecidableEq V]
       applyBatches (slots.map buffer) view := by
   rw [captureRequestBatch_ready buffer later slots prepare _ ready]
   exact batchChanges_correct _ view
+
+/-- Complete constructor admission reuses finite child checks and the existing
+backend delegate, then recognizes its complete result. No child normalization or
+backend duplicate resolution is introduced by this request boundary. -/
+def prepareConstructorRequest {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) : Except E R := do
+  let _ ← rows.mapM recognize
+  let root ← construct rows
+  let _ ← admit root
+  pure root
+
+/-- An original invalid occurrence suppresses the backend, even if metadata has
+repaired the caller's mutable Pair after capture. Original causes are preserved. -/
+theorem prepareConstructorRequest_child_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (cause : E)
+    (refused : rows.mapM recognize = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, refused, bind, Except.bind]
+
+/-- The constructor's own failure remains observable after every child accepts. -/
+theorem prepareConstructorRequest_backend_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (cause : E)
+    (ready : rows.mapM recognize = .ok checks) (refused : construct rows = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, ready, refused, bind, Except.bind]
+
+/-- A complete-root refinement can still refuse an otherwise typed private root. -/
+theorem prepareConstructorRequest_root_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (root : R) (cause : E)
+    (ready : rows.mapM recognize = .ok checks) (built : construct rows = .ok root)
+    (refused : admit root = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, ready, built, refused, bind, Except.bind]
+
+/-- A successful constructor returns its exact backend result without rewrapping. -/
+theorem prepareConstructorRequest_ready {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (root : R)
+    (ready : rows.mapM recognize = .ok checks) (built : construct rows = .ok root)
+    (accepted : admit root = .ok ()) :
+    prepareConstructorRequest rows recognize construct admit = .ok root := by
+  simp [prepareConstructorRequest, ready, built, accepted, bind, Except.bind]
+  rfl
+
+/-- Capture both request-cell selection and Pair fields before metadata discovery.
+The existing batch capture supplies immutable pairs; later row-cell reuse cannot
+rewrite them. Keys and values remain opaque shared observations. -/
+theorem captureConstructorRequest_fields {Row R : Type}
+    (spine : Cell → Row) (keys : Row → K) (values : Row → V) (slots : List Cell)
+    (later : Cell → K × V)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (run : List (K × V) → Except E R)
+    (ready : prepare (fun cell => (keys (spine cell), values (spine cell))) = .ok later) :
+    captureRequestBatch (fun cell => (keys (spine cell), values (spine cell))) slots prepare run =
+      run (slots.map (fun cell => (keys (spine cell), values (spine cell)))) :=
+  captureRequestBatch_ready _ later slots prepare run ready
+
+/-- Crossing a second constructor boundary copies only shells: applying identity
+Pair capture twice preserves exact key/value observations and request order. -/
+theorem constructorRequest_recapture (rows : List (K × V)) :
+    (rows.map (fun row => (row.1, row.2))).map (fun row => (row.1, row.2)) = rows := by
+  simp
 
 end LeanPoo.Functional.OrderedDictionary

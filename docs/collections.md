@@ -1075,3 +1075,41 @@ revision/ownership checks and serialized caller-cell capture remain premises.
 Arbitrary simultaneous writes during the copy and callback-effect rollback are
 outside these finite future-work laws. Design reflection: own the existing request
 boundary before callbacks, instead of cloning data or introducing another executor.
+
+### Constructor requests captured before metadata and delegation
+
+`capture-table-bindings` owns a finite request spine and its binding Pair shells.
+The raw Table constructor invokes it before discovering descriptor sources or
+child Types. Existing style factories reuse it before invoking a custom public
+Table constructor. Set factories copy only the outer element list: Pair-valued
+elements are opaque leaves, not binding shells. Original keys, values and checked
+Functions retain identity. The backend still owns duplicate-key precedence,
+bulk/singleton construction and complete-result recognition.
+
+Previously metadata or a custom factory delegate could rewrite caller-owned Pair
+fields before the constructor took its snapshot. Now changing a requested value
+from 20 to 90 cannot alter the captured constructor request. Repairing an original
+invalid occurrence cannot make it acceptable either. Malformed outer requests in
+styles retain the existing guarded delegation order, including stale-factory refusal
+before the downstream list contract. Unexpected delegate/backend errors retain
+their original causes; fresh explicit requests can retry.
+
+The existing `construct-ledger-action` accepts raw descriptors and all existing
+Table/Set style factories through the same Reader/FUN map. The worked indexed
+service scenario composes complete construction, checked Function identity, unique
+index refusal, consumer suppression, retry, atomic swaps and inverse recovery.
+Seven regressions cover metadata interference, invalid original entries, five
+Table/Set factories, Pair-valued Set identity and stale/failure precedence.
+`TableCapture.lean` composes the existing batch capture with finite child/backend/
+root admission, proving failure suppression, exact delegation, original Pair-field
+observations and identity recapture. This advances finite collection future work;
+stable leaves, serialized capture and faithful backend/type protocols are premises.
+
+A crossed public Table constructor boundary copies one list cell and one binding
+Pair shell per valid request entry. Set factories copy only list cells. Private
+captured lists are passed through ordinary delegates; no deep copy, cache or new
+validation-wrapper layer is introduced. Existing recognition, index preparation
+and backend costs remain charged. These laws do not prove arbitrary mutable-leaf,
+runtime/GC or concurrent-heap correctness. Design reflection: share the request
+capture kernel, preserve each representation's leaf semantics, and keep backend
+algorithms and standard contract failure boundaries intact.
