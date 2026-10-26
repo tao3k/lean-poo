@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableRevision
+import LeanPoo.Functional.TableBatch
 
 /-! Finite borrowed Option-cell capture. Cells model mutable shells; child values
 are opaque stable observations. This does not verify Gambit's heap or deep-copy
@@ -155,5 +156,60 @@ theorem capturedOrigins_fresh (buffer : Cell → Id) (cells : List Cell)
   simpa [stampMatches, List.all_eq_true] using unchanged
 
 end OriginCapture
+
+/-- Capture a finite ordered request list before preparation may reuse its cells.
+The buffer models only caller list cells: persistent roots, deltas and owner
+identities are opaque values, not deep-copied or normalized by this boundary. -/
+def captureRequestBatch {A R : Type} (buffer : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R) : Except E R :=
+  let captured := slots.map buffer
+  (prepare buffer).bind (fun _ => run captured)
+
+/-- Preparation failure retains its original cause and suppresses installation. -/
+theorem captureRequestBatch_refused {A R : Type} (buffer : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R)
+    (cause : E) (refused : prepare buffer = .error cause) :
+    captureRequestBatch buffer slots prepare run = .error cause := by
+  simp [captureRequestBatch, refused, Except.bind]
+
+/-- Later caller-cell writes cannot replace an accepted original request. Order,
+repetitions and invalid original requests are all passed to the existing protocol. -/
+theorem captureRequestBatch_ready {A R : Type} (buffer later : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R)
+    (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare run = run (slots.map buffer) := by
+  simp [captureRequestBatch, ready, Except.bind]
+
+/-- Repairing caller cells cannot turn an original installation failure into success. -/
+theorem captureRequestBatch_originalFailure {A R : Type} (buffer later : Cell → A)
+    (slots : List Cell) (prepare : (Cell → A) → Except E (Cell → A))
+    (run : List A → Except E R) (cause : E) (ready : prepare buffer = .ok later)
+    (refused : run (slots.map buffer) = .error cause) :
+    captureRequestBatch buffer slots prepare run = .error cause := by
+  rw [captureRequestBatch_ready buffer later slots prepare run ready, refused]
+
+/-- No deduplication, permutation or root scan is introduced by finite list capture. -/
+theorem captureRequestBatch_count {A : Type} (buffer later : Cell → A) (slots : List Cell) :
+    captureRequestBatch buffer slots (fun _ => Except.ok later)
+      (fun requests => Except.ok requests.length : List A → Except E Nat) = .ok slots.length := by
+  simp [captureRequestBatch, Except.bind]
+
+/-- Concatenation preserves the original batch grouping and repeated requests. -/
+theorem captureRequestBatch_append {A R : Type} (buffer later : Cell → A)
+    (left right : List Cell) (run : List A → Except E R) :
+    captureRequestBatch buffer (left ++ right) (fun _ => .ok later) run =
+      run (left.map buffer ++ right.map buffer) := by
+  simp [captureRequestBatch, Except.bind]
+
+/-- Captured delta batches retain every intermediate old-value expectation; the
+existing batch correctness theorem supplies the exact sequential first conflict. -/
+theorem captureRequestBatch_deltas [DecidableEq K] [DecidableEq V]
+    (buffer later : Cell → List (Change K V)) (slots : List Cell)
+    (prepare : (Cell → List (Change K V)) → Except K (Cell → List (Change K V)))
+    (view : K → Option V) (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare (fun batches => applyChanges (batchChanges batches) view) =
+      applyBatches (slots.map buffer) view := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready]
+  exact batchChanges_correct _ view
 
 end LeanPoo.Functional.OrderedDictionary

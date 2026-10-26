@@ -1039,3 +1039,39 @@ exact delegation and empty/opaque-payload examples. Lawful ordering, faithful ho
 revisions and persistent carriers remain premises; no runtime/GC theorem is claimed.
 Design reflection: share the established comparer boundary and observation kernels,
 keep backend evidence distinct, and add no per-method validation wrappers.
+
+### Owned finite batch requests
+
+`methods.table` now captures `.join/list` roots and `.compose-deltas` requests
+before metadata discovery, recognition or validation can reuse the caller's list
+cells. Style `.join/list` captures right-owner identities before entering the
+existing generation-captured update. One standard `map identity` at each public
+batch boundary owns only the finite spine: persistent roots, delta objects and
+checked Function leaves remain shared. No new namespace, cache, lock or per-method
+validation wrapper is introduced.
+
+Previously a first-root recognizer could replace the caller's second request:
+joining roots containing 10 and 20 could silently install 10 and 90. The same
+interference could change a validated delta batch after origin collection. Capture
+now preserves order, repetitions, later-source join priority, intermediate delta
+expectations and origin lineage. An invalid original root/owner still refuses even
+if the caller list is later repaired; failure leaves update ownership available
+for an explicit fresh batch retry. Existing complete admission and single-commit
+publication remain unchanged.
+
+`join-ledger-action` is the existing Reader/FUN map over this shared join boundary.
+The worked scenario combines checked Function leaves, unique indexes, inverse
+swaps, retractable folds, consumer suppression and policy invalidation. Regressions
+also cover metadata getters, root-recognizer interference, five styles and
+right-owner retention. `TableCapture.lean` reuses ordinary finite list capture and
+the existing batch correctness theorem to prove original-request delegation,
+preparation/installation failure preservation, exact order/count and intermediate
+conflict semantics after caller-buffer reuse.
+
+Capture costs one spine cell per request at each crossed public batch boundary;
+roots and payloads are not copied or normalized. All original recognition, lookup,
+index preparation and conflict costs remain charged. Stable leaves, faithful
+revision/ownership checks and serialized caller-cell capture remain premises.
+Arbitrary simultaneous writes during the copy and callback-effect rollback are
+outside these finite future-work laws. Design reflection: own the existing request
+boundary before callbacks, instead of cloning data or introducing another executor.

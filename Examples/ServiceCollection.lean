@@ -782,4 +782,24 @@ example {Handle : Type} (callback : Handle) :
         (none : Option Handle) (fun _ => Except.ok ()) [(1, callback), (3, callback)]) =
       .ok ([(1, callback)], none, [(3, callback)]) := rfl
 
+/-- A recognizer overwrites cell one with service 90, but the accepted batch
+still contains service 20. This is request-cell ownership, not a deep heap proof. -/
+example : captureRequestBatch (fun cell : Nat => if cell = 0 then 10 else 20) [0, 1]
+    (fun _ => Except.ok (fun _ => 90))
+    (fun requests => Except.ok requests : List Nat → Except String (List Nat)) = .ok [10, 20] := rfl
+
+/-- Replacing an invalid original owner with a valid caller cell cannot suppress
+its protocol refusal or publish a partially prepared result. -/
+example : captureRequestBatch (fun _ : Nat => false) [0]
+    (fun _ => Except.ok (fun _ => true))
+    (fun requests => if requests.all id then Except.ok () else Except.error "foreign owner") =
+      .error "foreign owner" := rfl
+
+/-- Request capture retains repeated references and the exact opaque callback. -/
+example {Handle : Type} (callback : Handle) :
+    captureRequestBatch (fun _ : Nat => callback) [0, 0]
+      (fun original => Except.ok original)
+      (fun requests => Except.ok requests : List Handle → Except String (List Handle)) =
+        .ok [callback, callback] := rfl
+
 end Examples.ServiceCollection
