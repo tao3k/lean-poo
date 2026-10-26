@@ -1153,3 +1153,46 @@ capture, source/target admission, indexing and publication costs remain charged.
 No target snapshot diff, cache engine, wrapper layer or namespace is added. Design
 reflection: capture at the existing Elt boundary and reuse grouped-index ownership,
 rather than clone keys or bypass the more specific Set contract.
+
+### Trie Set element contracts reach the backing key protocol
+
+`TrieSet.` now follows the existing `RationalSet` declaration pattern: its element
+descriptor supplies the backing Table's `Key`, while `Value` remains `Unit`. The
+explicit `UInt` element default preserves the ordinary family and breaks the
+inherited Elt/Table.Key alias cycle. `SimpleTrieSet` keeps its existing public
+constructor and unsigned carrier; no wrapper, namespace or alternative tree is added.
+
+Previously `SimpleTrieSet (UIntN 8)` exposed an eight-bit Elt but retained unrestricted
+UInt backing keys. A bulk request containing 256 could be accepted, while five-style
+derivation refused the mismatched descriptor identities. Now the identical declared
+contract governs bulk/Iterable construction, complete-root recognition, Set algebra,
+codecs, backing key registries and all five existing presentations. Shared-root
+shortcuts still follow complete admission; an out-of-contract raw Trie cannot gain
+admission merely because its unsigned representation is structurally valid.
+
+Supported element rebinding updates the backing key contract through existing
+prototype dependencies. Old factories/owners refuse through their existing revision
+guards; a fresh factory admits only compatible persistent roots, without normalizing
+or copying them. Existing 25 style transfers and failed-update ownership rules are
+unchanged. The multivalued-image example now directly uses the public Trie Set
+factory instead of manually assembling Set<-Table over a typed Table.
+
+The bounded service-permission scenario uses an eight-bit permission Set, a typed
+catalog, shared permission 255, source revision and exact five-style publication.
+Conflicting target owners suppress IO, fresh owners retry, and inverse target deltas
+restore the prior permissions. Six regressions also cover UInt256 bounds, refined
+UInt predicates, codecs, default construction and element rebinding.
+
+`SetAlgebra.lean` proves shared-predicate recognition, finite row/element equivalence,
+complete refusal, explicit contract refinement and read/consumer suppression. The
+service examples demonstrate eight-bit and four-bit admission boundaries. Faithful
+backend enumeration, supported host revision checks and UInt-compatible key
+representations remain premises; arbitrary key encodings and automatic subtype
+inference are outside this parameter-forwarding unit. These are finite future-work
+laws, not compiler/runtime/GC verification.
+
+The change routes the existing declaration to its existing backend slot. It adds
+no collection traversal or validation-wrapper layer: prior key recognition now uses
+the correct predicate, and its actual cost remains charged. Design reflection:
+reuse the established Set/Table declaration pattern and preserve descriptor identity,
+rather than bypass style admission or widen a requested contract to UInt.

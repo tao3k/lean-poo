@@ -850,4 +850,22 @@ example : (captureRequestBatch (fun _ : Nat => (-1 : Int)) [0]
       else Except.ok ())).map (fun _ => keys))).bind
     (fun _ => Except.error "consumer" : List Int → Except String Nat) = .error "invalid permission" := rfl
 
+/-- Eight-bit permission keys admit both boundary values through one shared
+Set/Table contract, while the next unsigned key is rejected before observation. -/
+example : setElementAdmission (fun key : Nat => decide (key < 2 ^ 8)) "permission type"
+    [0, 255] = .ok () := rfl
+example : admitSetRead [1, (256 : Nat)]
+    (setElementAdmission (fun key => decide (key < 2 ^ 8)) "permission type")
+    (fun _ => Except.error "consumer" : List Nat → Except String Unit) = .error "permission type" := rfl
+
+/-- Narrowing a live family requires fresh admission. A previous eight-bit root
+containing key 31 is not a four-bit root merely because both use unsigned storage. -/
+example : setElementAdmission (fun key : Nat => decide (key < 2 ^ 4)) "new element type"
+    [1, 31] = .error "new element type" := rfl
+
+/-- Rebinding the predicate retains already compatible roots without changing
+keys or introducing an encoding conversion. -/
+example : setElementAdmission (fun key : Nat => decide (key < 2 ^ 4)) "new element type"
+    [1, 2] = .ok () := rfl
+
 end Examples.ServiceCollection

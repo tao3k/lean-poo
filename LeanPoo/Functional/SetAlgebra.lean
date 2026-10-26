@@ -702,4 +702,57 @@ theorem setImage_keys_capture [DecidableEq I] (owners : List K)
     setImage owners (indexKeysView (fun key row => (project key row).map id) primary) =
       setImage owners (indexKeysView project primary) := by simp
 
+/-- A finite Set carrier shares its declared element predicate with the backing
+Unit-valued Table key contract. Backend shape/enumeration are separate premises. -/
+def setElementAdmission (element : K → Bool) (cause : E) (keys : List K) : Except E Unit :=
+  if keys.all element then .ok () else .error cause
+
+/-- Accepted roots contain only elements of the selected contract, including
+narrow unsigned contracts; an unrestricted backing key type cannot substitute. -/
+theorem setElementAdmission_complete (element : K → Bool) (cause : E) (keys : List K) :
+    setElementAdmission element cause keys = .ok () ↔ ∀ key ∈ keys, element key = true := by
+  simp [setElementAdmission, List.all_eq_true]
+
+/-- Sharing one descriptor identity yields exactly one recognition contract. -/
+theorem setElementAdmission_key_alias (element key : K → Bool) (cause : E) (keys : List K)
+    (same : key = element) :
+    setElementAdmission key cause keys = setElementAdmission element cause keys := by rw [same]
+
+/-- Unit payloads do not broaden key membership: the backing row traversal and
+Set element traversal inspect the same declared predicate on every key. -/
+theorem setElementAdmission_rows (element : K → Bool) (rows : List (K × Unit)) :
+    rows.all (fun row => element row.1) = (rows.map Prod.fst).all element := by simp [Function.comp_def]
+
+/-- One out-of-contract key refuses the complete root, even when its raw unsigned
+representation is otherwise a valid Trie key. No shared-root shortcut is inferred. -/
+theorem setElementAdmission_outside (element : K → Bool) (cause : E) (keys : List K)
+    (key : K) (listed : key ∈ keys) (outside : element key = false) :
+    setElementAdmission element cause keys = .error cause := by
+  have refused : keys.all element = false := by
+    cases ready : keys.all element with
+    | false => rfl
+    | true =>
+      have accepted := (List.all_eq_true.mp ready) key listed
+      simp [outside] at accepted
+  simp [setElementAdmission, refused]
+
+/-- Explicit contract refinement admits a subset of the former roots. Descriptor
+rebinding does not normalize an old root or silently preserve its old admission. -/
+theorem setElementAdmission_refinement (narrow broad : K → Bool) (cause : E) (keys : List K)
+    (subset : ∀ key, narrow key = true → broad key = true)
+    (accepted : setElementAdmission narrow cause keys = .ok ()) :
+    setElementAdmission broad cause keys = .ok () := by
+  apply (setElementAdmission_complete broad cause keys).mpr
+  intro key listed
+  exact subset key ((setElementAdmission_complete narrow cause keys).mp accepted key listed)
+
+/-- The existing observation gate rejects a widened raw root before any backend
+read/consumer. Supported metadata revision checks remain the existing style guard. -/
+theorem setElementAdmission_read_refused (element : K → Bool) (cause : E) (keys : List K)
+    (key : K) (read : List K → Except E R) (listed : key ∈ keys)
+    (outside : element key = false) :
+    admitSetRead keys (setElementAdmission element cause) read = .error cause := by
+  apply admitSetRead_refused
+  exact setElementAdmission_outside element cause keys key listed outside
+
 end LeanPoo.Functional.OrderedDictionary
