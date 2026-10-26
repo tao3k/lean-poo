@@ -761,4 +761,25 @@ example : (admitComparerUse (some (0, [2, 3])) (1, [2, 3]) "stale comparer"
     (fun _ => Except.ok (7 : Nat)),
     comparerSealCurrent (some (0, [2, 3])) (1, [2, 3])) = (.ok 7, false) := rfl
 
+/-- A manually declared reverse service order uses reference comparison, even
+when a structural shortcut was inherited from a differently ordered backend. -/
+example : observeComparer none (0, [0]) "stale"
+    (some (fun _ => Except.error "wrong backend"))
+    (fun _ => Except.ok (-1 : Int)) = .ok (-1) := rfl
+
+/-- Empty decomposition still refuses a stale policy before pivot lookup and
+consumer publication. The callbacks are unevaluated on this branch. -/
+example : (admitComparerUse (some (0, [0])) (0, [1]) "stale policy"
+    (fun _ => Except.ok (([] : List (Nat × Bool)), (none : Option Bool), ([] : List (Nat × Bool))))).bind
+      (fun _ => Except.error "consumer" : (List (Nat × Bool) × Option Bool × List (Nat × Bool)) → Except String Nat) = .error "stale policy" := rfl
+
+/-- Fresh policy reconstruction delegates the existing two-pass split exactly;
+opaque payloads retain their identity and a downstream refusal remains original. -/
+example {Handle : Type} (callback : Handle) :
+    admitComparerUse (some (1, [1])) (1, [1]) "stale policy"
+      (fun _ => prepareOrderedSplit
+        (fun k : Nat => Except.ok (if k < 2 then (-1 : Int) else 1))
+        (none : Option Handle) (fun _ => Except.ok ()) [(1, callback), (3, callback)]) =
+      .ok ([(1, callback)], none, [(3, callback)]) := rfl
+
 end Examples.ServiceCollection

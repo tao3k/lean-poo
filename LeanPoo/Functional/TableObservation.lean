@@ -278,6 +278,50 @@ theorem admitComparerUse_edited (issued current : ComparerSeal) (stale : E)
     admitComparerUse (some issued) current stale observe = observe () := by
   simp [admitComparerUse, changed]
 
+/-- Reference observation and backend capability are separate. Both callbacks
+retain their own admission laws; only a complete current seal selects a shortcut. -/
+def observeComparer (captured : Option ComparerSeal) (current : ComparerSeal)
+    (stale : E) (backend : Option (Unit → Except E R))
+    (reference : Unit → Except E R) : Except E R :=
+  admitComparerUse captured current stale (fun _ =>
+    if comparerSealCurrent captured current then (backend.getD reference) () else reference ())
+
+/-- A lawful custom protocol keeps its reference result, even when an inherited
+backend shortcut exists. Callback identity does not confer backend authority. -/
+theorem observeComparer_custom (current : ComparerSeal) (stale : E)
+    (backend : Option (Unit → Except E R)) (reference : Unit → Except E R) :
+    observeComparer none current stale backend reference = reference () := rfl
+
+/-- Label edits revoke shortcut eligibility without revoking guarded reference use. -/
+theorem observeComparer_edited (issued current : ComparerSeal) (stale : E)
+    (backend : Option (Unit → Except E R)) (reference : Unit → Except E R)
+    (changed : issued.1 ≠ current.1) :
+    observeComparer (some issued) current stale backend reference = reference () := by
+  simp [observeComparer, admitComparerUse, comparerSealCurrent, changed,
+    show issued ≠ current from fun h => changed (congrArg Prod.fst h)]
+
+/-- Current constructor evidence delegates the original backend and failure cause. -/
+theorem observeComparer_backend (current : ComparerSeal) (stale : E)
+    (backend reference : Unit → Except E R) :
+    observeComparer (some current) current stale (some backend) reference = backend () := by
+  simp [observeComparer, admitComparerUse, comparerSealCurrent]
+
+/-- A missing shortcut preserves reference observation rather than inventing one. -/
+theorem observeComparer_reference (captured : Option ComparerSeal) (current : ComparerSeal)
+    (stale : E) (reference : Unit → Except E R) :
+    observeComparer captured current stale none reference =
+      admitComparerUse captured current stale reference := by
+  simp only [observeComparer, Option.getD_none, ite_self]
+
+/-- Stale declared origins suppress both callbacks, including empty observations. -/
+theorem observeComparer_stale (owner : Nat) (issued current : List Nat) (stale : E)
+    (backend : Option (Unit → Except E R)) (reference : Unit → Except E R)
+    (changed : issued ≠ current) :
+    observeComparer (some (owner, issued)) (owner, current) stale backend reference = .error stale := by
+  apply admitComparerUse_stale
+  · rfl
+  · exact fun h => changed (congrArg Prod.snd h)
+
 /-- The existing cursor guard sees the complete seal, including origin stamps.
 An origin-only change performs no backend pull, including after EOF. -/
 theorem checkedComparerPull_dependencies (owner : Nat) (issued current : List Nat)
