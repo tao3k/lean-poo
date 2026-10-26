@@ -737,3 +737,12 @@ Closed index/order/representation constructors retain that capability as well as
 complete construction and atomic delta installation. Fold bridges now compose
 these whole operations; they do not expand a valid index swap into point writes.
 See [table-fold.md](table-fold.md) for the contract, failure order and finite laws.
+
+The shared construction guard now has an explicit finite `Except` model in
+`TableRepresentation.lean`: preparation precedes revision observation; stale
+families refuse with the supplied cause; current families preserve the exact
+operation outcome. The encountered carrier kernel separately proves admission
+failure, left-inverse refusal and stable roundtrip identity. Scheme regressions
+observe actual callback order, exact thrown causes and recovery after refusal.
+These equations do not prove arbitrary callback termination or dynamic control,
+and code-generation size is not a proof of compiler or wall-clock performance.

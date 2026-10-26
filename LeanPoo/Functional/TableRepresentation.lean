@@ -667,4 +667,87 @@ theorem CollectionConstructors.derive_retry
   · exact (source.derive_stale old encode rows cause stale).2
   · exact source.derive_rows_ready fresh encode rows root result ready built encoded
 
+/-- The encountered carrier check keeps callback failures and inverse refusals
+explicit. Admission observes the output; it cannot replace the returned carrier.
+Callbacks may fail, but arbitrary IO effects or termination are outside this model. -/
+def checkTableCarrier {X Y E : Type} [DecidableEq X] [DecidableEq Y]
+    (forward : X → Except E Y) (backward : Y → Except E X)
+    (admit : Y → Except E Unit) (leftFailure : X → E) (rightFailure : Y → E)
+    (input : X) : Except E Y :=
+  (forward input).bind fun output => (admit output).bind fun _ =>
+    (backward output).bind fun recovered =>
+      if recovered ≠ input then .error (leftFailure input)
+      else (forward recovered).bind fun replay =>
+        if replay ≠ output then .error (rightFailure output) else .ok output
+
+/-- Output admission refuses before either inverse callback is demanded. -/
+theorem checkTableCarrier_admission_failure {X Y E : Type}
+    [DecidableEq X] [DecidableEq Y]
+    (forward : X → Except E Y) (backward : Y → Except E X)
+    (admit : Y → Except E Unit) (leftFailure : X → E) (rightFailure : Y → E)
+    (input : X) (output : Y) (cause : E)
+    (built : forward input = .ok output) (refused : admit output = .error cause) :
+    checkTableCarrier forward backward admit leftFailure rightFailure input = .error cause := by
+  simp [Except.bind, checkTableCarrier, built, refused]
+
+/-- A left-inverse refusal retains the input and precedes the replay check. -/
+theorem checkTableCarrier_left_failure {X Y E : Type}
+    [DecidableEq X] [DecidableEq Y]
+    (forward : X → Except E Y) (backward : Y → Except E X)
+    (admit : Y → Except E Unit) (leftFailure : X → E) (rightFailure : Y → E)
+    (input recovered : X) (output : Y)
+    (built : forward input = .ok output) (admitted : admit output = .ok ())
+    (restored : backward output = .ok recovered) (different : recovered ≠ input) :
+    checkTableCarrier forward backward admit leftFailure rightFailure input =
+      .error (leftFailure input) := by
+  simp [Except.bind, checkTableCarrier, built, admitted, restored, different]
+
+/-- Under stable callback laws the check returns the original output. Neither
+normalization nor cross-call caching follows from these finite equations. -/
+theorem checkTableCarrier_roundtrip {X Y E : Type}
+    [DecidableEq X] [DecidableEq Y]
+    (forward : X → Except E Y) (backward : Y → Except E X)
+    (admit : Y → Except E Unit) (leftFailure : X → E) (rightFailure : Y → E)
+    (input : X) (output : Y)
+    (built : forward input = .ok output) (admitted : admit output = .ok ())
+    (restored : backward output = .ok input) :
+    checkTableCarrier forward backward admit leftFailure rightFailure input = .ok output := by
+  simp [Except.bind, checkTableCarrier, built, admitted, restored]
+
+/-- Prepare every protected participant before reading the captured revision
+family. The action runs only after a successful comparison; callback costs remain
+charged separately, and this does not certify arbitrary mutable leaf data. -/
+def withTableRevisions {E Stamp Result : Type} [DecidableEq Stamp]
+    (prepare : Unit → Except E Unit) (read : Unit → Except E Stamp)
+    (expected : Stamp) (stale : E) (action : Unit → Except E Result) : Except E Result :=
+  (prepare ()).bind fun _ => (read ()).bind fun current =>
+    if current ≠ expected then .error stale else action ()
+
+/-- Recursive-construction or source preparation failure is never hidden by a
+revision comparison or by an action that would otherwise succeed. -/
+theorem withTableRevisions_prepare_failure {E Stamp Result : Type} [DecidableEq Stamp]
+    (prepare : Unit → Except E Unit) (read : Unit → Except E Stamp)
+    (expected : Stamp) (stale cause : E) (action : Unit → Except E Result)
+    (refused : prepare () = .error cause) :
+    withTableRevisions prepare read expected stale action = .error cause := by
+  simp [Except.bind, withTableRevisions, refused]
+
+/-- Stale captures refuse before the operation, retaining the caller's cause. -/
+theorem withTableRevisions_stale {E Stamp Result : Type} [DecidableEq Stamp]
+    (prepare : Unit → Except E Unit) (read : Unit → Except E Stamp)
+    (expected current : Stamp) (stale : E) (action : Unit → Except E Result)
+    (ready : prepare () = .ok ()) (observed : read () = .ok current)
+    (different : current ≠ expected) :
+    withTableRevisions prepare read expected stale action = .error stale := by
+  simp [Except.bind, withTableRevisions, ready, observed, different]
+
+/-- A current family delegates the exact action outcome, including its failure;
+sharing the guard cannot turn a refused operation into a successful publication. -/
+theorem withTableRevisions_current {E Stamp Result : Type} [DecidableEq Stamp]
+    (prepare : Unit → Except E Unit) (read : Unit → Except E Stamp)
+    (expected : Stamp) (stale : E) (action : Unit → Except E Result)
+    (ready : prepare () = .ok ()) (observed : read () = .ok expected) :
+    withTableRevisions prepare read expected stale action = action () := by
+  simp [Except.bind, withTableRevisions, ready, observed]
+
 end LeanPoo.Functional.OrderedDictionary
