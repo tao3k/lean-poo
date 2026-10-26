@@ -211,4 +211,76 @@ theorem mappedTablePull_agrees (translate : K × V → Except E (L × W))
       .ok (tableCursorPull ((row :: rest).map encode)).1 := by
   simp [mappedTablePull_success translate versions row rest (encode row) ready, tableCursorPull]
 
+/-- Runtime weak-map values contain only a subject revision and numeric origin
+stamps. Identity-keyed lookup and faithful, stable host snapshots are premises;
+this datatype does not certify the collector or raw reflective mutation. -/
+abbrev ComparerSeal := Nat × List Nat
+
+/-- An absent constructor seal grants no positioned-backend capability, even if
+public callback fields happen to be identical to another comparer's fields. -/
+def comparerSealCurrent (captured : Option ComparerSeal) (current : ComparerSeal) : Bool :=
+  captured == some current
+
+/-- Known constructors refuse stale metadata before observation. An unsealed
+custom protocol retains reference fallback under its declared ordering laws. -/
+def admitComparerUse (captured : Option ComparerSeal) (current : ComparerSeal)
+    (stale : E) (observe : Unit → Except E R) : Except E R :=
+  if captured.isSome && !comparerSealCurrent captured current then .error stale else observe ()
+
+/-- Constructor identity/revision alone is insufficient: origin stamps must match. -/
+theorem comparerSealCurrent_complete (issued current : ComparerSeal) :
+    comparerSealCurrent (some issued) current = true ↔ issued = current := by
+  simp [comparerSealCurrent]
+
+/-- A copied custom protocol cannot borrow a positioned capability by callback
+identity. Its reference fallback remains an independent, explicit caller contract. -/
+theorem comparerSealCurrent_unsealed (current : ComparerSeal) (sameCallbacks : Bool) :
+    (comparerSealCurrent none current && sameCallbacks) = false := rfl
+
+/-- Origin changes invalidate a seal even when the comparer itself is unchanged. -/
+theorem comparerSealCurrent_dependencies (owner : Nat) (issued current : List Nat)
+    (changed : issued ≠ current) :
+    comparerSealCurrent (some (owner, issued)) (owner, current) = false := by
+  simp [comparerSealCurrent, changed]
+
+/-- Editing constructor metadata also revokes its seal; reverting field content
+is not equivalent to restoring an earlier host revision. -/
+theorem comparerSealCurrent_subject (issued current : Nat) (old next : List Nat)
+    (changed : issued ≠ current) :
+    comparerSealCurrent (some (issued, old)) (current, next) = false := by
+  simp [comparerSealCurrent, changed]
+
+/-- Current seals preserve the exact observation and original callback failure. -/
+theorem admitComparerUse_current (current : ComparerSeal) (stale : E)
+    (observe : Unit → Except E R) :
+    admitComparerUse (some current) current stale observe = observe () := by
+  simp [admitComparerUse, comparerSealCurrent]
+
+/-- No constructor stamp is invented for manually declared fallback protocols. -/
+theorem admitComparerUse_custom (current : ComparerSeal) (stale : E)
+    (observe : Unit → Except E R) :
+    admitComparerUse none current stale observe = observe () := rfl
+
+/-- Stale seals suppress observation even if sorting would compare zero pairs,
+for example on an empty/singleton root or an already exhausted cursor. -/
+theorem admitComparerUse_stale (issued current : ComparerSeal) (stale : E)
+    (observe : Unit → Except E R) (changed : issued ≠ current) :
+    admitComparerUse (some issued) current stale observe = .error stale := by
+  simp [admitComparerUse, comparerSealCurrent, changed]
+
+/-- The existing cursor guard sees the complete seal, including origin stamps.
+An origin-only change performs no backend pull, including after EOF. -/
+theorem checkedComparerPull_dependencies (owner : Nat) (issued current : List Nat)
+    (rows : List (K × V)) (changed : issued ≠ current) :
+    checkedTablePull (owner :: issued) (owner :: current) rows = (.error (), 0) := by
+  apply checkedTablePull_stale
+  intro same
+  exact changed (List.cons.inj same).2
+
+/-- Fresh metadata retains the original row/EOF and one standard backend pull;
+guard work, allocation, scheduling and GC are explicitly outside that counter. -/
+theorem checkedComparerPull_current (owner : Nat) (versions : List Nat) (rows : List (K × V)) :
+    checkedTablePull (owner :: versions) (owner :: versions) rows =
+      (.ok (tableCursorPull rows), 1) := checkedTablePull_current _ rows
+
 end LeanPoo.Functional.OrderedDictionary

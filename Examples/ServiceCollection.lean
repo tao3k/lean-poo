@@ -7,6 +7,7 @@ import LeanPoo.Functional.TableFold
 import LeanPoo.Functional.TableProjection
 import LeanPoo.Functional.TableSelection
 import LeanPoo.Functional.TableOrder
+import LeanPoo.Functional.TableObservation
 
 /-! Ordered host Iterable observations over source-bound recursive service rows.
 The host hash/interface and iterator laws are premises; no GC/dispatch proof is asserted.
@@ -738,5 +739,20 @@ cause, rather than turning it into a metadata or successful aggregate result. -/
 example : prepareFoldOrigins [0, 1] (fun _ : Nat => some 3) (fun _ => some 3)
     "stale policy" (fun _ => Except.error "projection" : Unit → Except String Nat) =
       .error "projection" := rfl
+
+/-- A constructor's own revision is unchanged, but one policy stamp is stale.
+The seal must not authorize zero-comparison or unbounded positioning shortcuts. -/
+example : comparerSealCurrent (some (0, [0, 0])) (0, [0, 1]) = false := rfl
+
+/-- Even an empty result cannot escape stale comparer admission. -/
+example : admitComparerUse (some (0, [0, 0])) (0, [0, 1]) "stale comparer"
+    (fun _ => Except.ok (none : Option Nat)) = .error "stale comparer" := rfl
+
+/-- Exhaustion is guarded using all source stamps, not merely the own revision. -/
+example : checkedTablePull [0, 0, 0] [0, 0, 1] ([] : List (Nat × Bool)) = (.error (), 0) := rfl
+
+/-- A fresh seal preserves original inspection failure without reclassification. -/
+example : admitComparerUse (some (1, [2, 3])) (1, [2, 3]) "stale comparer"
+    (fun _ => Except.error "inspection" : Unit → Except String Nat) = .error "inspection" := rfl
 
 end Examples.ServiceCollection

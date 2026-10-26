@@ -985,3 +985,30 @@ for explicit stable dependencies and faithful host revisions. Hidden callback st
 transitive dependency discovery and runtime/GC correctness are not inferred. Design
 reflection: expose the existing constructor capability and pass its private scope,
 rather than invent source clones or add a second invalidation mechanism.
+
+### Comparer seals include origin stamps
+
+A comparer constructor seal contains its own revision and the numeric version
+snapshot of its captured key/origin scope. Callback-field identity and unchanged
+own revision alone cannot authorize a positioned backend. Known stale constructors
+refuse before new ordering views, transported comparers or backend cursor construction;
+direct comparison shares that boundary. Deferred pulls retain complete checks even
+after EOF. Unsealed custom comparers retain their reference-sort contract, but gain
+no positioned capability merely by copying callback fields.
+
+The service index factory's optional order policy selects ascending backend order
+or explicit reverse fallback. Its revision invalidates both index declarations and
+old style workflows; fresh reconstruction reuses admitted source Function leaves,
+then supports revision, inverse recovery and Reader/FUN/IO observation. Backend
+comparison/equality and immutable-tree laws remain explicit premises.
+
+`TableObservation.lean` proves complete-seal matching, origin/subject refusal,
+manual fallback separation, original callback delegation and zero backend pulls
+on stale metadata, including EOF. Runtime seal values contain only numbers/lists;
+they add no descriptor references to the weak-key registry. This representation
+fact is not a GC correctness proof. Guard/metadata/allocation costs remain charged.
+Design reflection: reuse one comparer admission boundary and existing iterators,
+retain custom reference sorting, and do not treat self revision as dependency proof.
+
+Constructor-owned origin metadata is read-only; supported edits use revisioned
+slots. Raw in-place mutation of returned metadata lists is outside this protocol.
