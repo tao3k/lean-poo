@@ -457,4 +457,52 @@ theorem observeCapturedEntry_delivered (read later : Cell → K × V) (cell : Ce
 
 end
 
+
+section
+variable {Cell K V E L W : Type}
+
+/-- Capture a producer binding before key conversion can replace its heap. Reuse
+translateCursorEntry for conversion order and exact errors; the returned heap is
+an explicit effect witness, not a second translation engine or rollback model. -/
+def translateCapturedCursorEntry (read : Cell → K × V) (cell : Cell)
+    (key : K → Except E (L × (Cell → K × V))) (value : V → Except E W) :
+    Except E (L × W) :=
+  translateCursorEntry (fun input => (key input).map Prod.fst) value (read cell)
+
+/-- A key refusal suppresses value conversion and retains its original cause. -/
+theorem translateCapturedCursorEntry_key_refused (read : Cell → K × V) (cell : Cell)
+    (key : K → Except E (L × (Cell → K × V))) (value : V → Except E W)
+    (cause : E) (refused : key (read cell).1 = .error cause) :
+    translateCapturedCursorEntry read cell key value = .error cause := by
+  simp [translateCapturedCursorEntry, translateCursorEntry, refused, Except.map]
+
+/-- Successful conversion uses the original payload even when the key converter
+returns a rewritten producer heap. Caller-owned Pair shells are not leaf values. -/
+theorem translateCapturedCursorEntry_ready (read later : Cell → K × V) (cell : Cell)
+    (key : K → Except E (L × (Cell → K × V))) (value : V → Except E W)
+    (k : L) (v : W) (hk : key (read cell).1 = .ok (k, later))
+    (hv : value (read cell).2 = .ok v) :
+    translateCapturedCursorEntry read cell key value = .ok (k, v) := by
+  simp [translateCapturedCursorEntry, translateCursorEntry, hk, hv, Except.map]
+
+/-- A key converter cannot repair an invalid original payload by rewriting the
+producer buffer; value refusal still suppresses delivery and downstream consumers. -/
+theorem translateCapturedCursorEntry_value_refused (read later : Cell → K × V) (cell : Cell)
+    (key : K → Except E (L × (Cell → K × V))) (value : V → Except E W)
+    (k : L) (cause : E) (hk : key (read cell).1 = .ok (k, later))
+    (refused : value (read cell).2 = .error cause) :
+    translateCapturedCursorEntry read cell key value = .error cause := by
+  simp [translateCapturedCursorEntry, translateCursorEntry, hk, refused, Except.map]
+
+/-- Identity payload conversion retains an opaque Function or other admitted leaf,
+without any equality, cloning, normalization or purity premise on that leaf. -/
+theorem translateCapturedCursorEntry_leaf (read later : Cell → K × V) (cell : Cell)
+    (key : K → Except E (L × (Cell → K × V))) (k : L)
+    (hk : key (read cell).1 = .ok (k, later)) :
+    translateCapturedCursorEntry read cell key (fun value => .ok value) =
+      .ok (k, (read cell).2) := by
+  simp [translateCapturedCursorEntry, translateCursorEntry, hk, Except.map]
+
+end
+
 end LeanPoo.Functional.OrderedDictionary

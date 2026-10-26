@@ -1234,3 +1234,13 @@ proves original-entry delivery, validation-before-selection, filter semantics an
 exact admission/comparator refusal. The finite model captures Pair shells, not
 arbitrary mutable payload internals; persistent carriers, faithful producer
 order, runtime Iterator behavior and external callback effects remain premises.
+
+Representation Wrapper entries now snapshot both source children before invoking
+either converter. Ordinary iteration, positioned iteration and bulk construction
+share one private entry translator. Seek captures its Option bound before carrier
+and inverse callbacks. `translateCapturedCursorEntry` reuses `translateCursorEntry`
+and models a key conversion that returns a rewritten producer heap: delivery and
+value recognition still use the original payload. Existing `observeCapturedBounds`
+models the corresponding bound discipline. Refusal is exact and opaque leaves
+are retained; arbitrary mutable leaf contents and runtime/producer fidelity remain
+premises, with no effect rollback or universal performance claim.

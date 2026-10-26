@@ -933,4 +933,21 @@ example : observeCapturedEntry (fun _ : Unit => ((-1 : Int), "invalid")) ()
     (fun _ => .error "invalid payload") (fun _ => .ok false) =
     .error "invalid payload" := rfl
 
+/-- Carrier preparation cannot replace an already captured represented seek bound. -/
+example : observeCapturedBounds (E := String) (fun _ : Unit => (-2 : Int)) (some ()) none
+    (fun _ => .ok (fun _ => -9)) (fun lower _ => .ok lower) = .ok (some (-2)) := rfl
+
+/-- Key conversion rewrites its source buffer, but the delivered payload stays 10. -/
+example : translateCapturedCursorEntry (E := String)
+    (fun _ : Unit => ((1 : Int), (10 : Nat))) ()
+    (fun k => .ok (-k, fun _ => (9, 20))) (fun value => .ok value) =
+    .ok (-1, 10) := rfl
+
+/-- Repairing the producer's payload cannot suppress its original refusal. -/
+example : (translateCapturedCursorEntry
+    (fun _ : Unit => ((1 : Int), "invalid")) ()
+    (fun k => .ok (-k, fun _ => (9, "valid")))
+    (fun value => if value = "invalid" then .error "invalid payload" else .ok value)).bind
+    (fun _ => .ok "published") = .error "invalid payload" := rfl
+
 end Examples.ServiceCollection
