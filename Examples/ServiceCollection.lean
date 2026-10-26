@@ -721,4 +721,22 @@ example : ([((1 : Nat), ()), (2, ())].foldlM
     (fun (acc : List Nat) row => Except.ok (row.1 :: acc) : List Nat → Nat × Unit → Except String (List Nat)) []) =
       .ok [2, 1] := rfl
 
+/-- A declared policy remains part of the target fold even when its state was
+initialized independently of the source cache. Converter stamps alone are fresh. -/
+example : prepareFoldOrigins ([0, 1] ++ [2]) (fun _ : Nat => some 0)
+    (fun id => if id = 1 then some 1 else some 0) "stale policy"
+    (fun _ => Except.ok (40 : Nat)) = .error "stale policy" := rfl
+
+/-- Converter-only revision rejects the bridge while the source score remains
+available. This is selective scope invalidation, not a global cache flush. -/
+example : prepareFoldOrigins [0, 1] (fun _ : Nat => some 0)
+    (fun id => if id = 2 then some 1 else some 0) "stale policy"
+    (fun _ => Except.ok (40 : Nat)) = .ok 40 := rfl
+
+/-- Rebuilding captures the current policy stamps and retains the exact callback
+cause, rather than turning it into a metadata or successful aggregate result. -/
+example : prepareFoldOrigins [0, 1] (fun _ : Nat => some 3) (fun _ => some 3)
+    "stale policy" (fun _ => Except.error "projection" : Unit → Except String Nat) =
+      .error "projection" := rfl
+
 end Examples.ServiceCollection

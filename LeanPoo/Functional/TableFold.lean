@@ -1,5 +1,6 @@
 import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.TableIndex
+import LeanPoo.Functional.TableCapture
 
 /-! Complete final-root admission for incremental aggregate publication. This is
 finite future work for explicit persistent carriers and supplied recognizers. -/
@@ -445,5 +446,90 @@ theorem foldGroups_keys_duplicate [DecidableEq K] [DecidableEq I]
     foldGroups owners summarize (indexKeysView (fun key row => project key row ++ project key row) primary) =
       foldGroups owners summarize (indexKeysView project primary) := by
   rw [indexKeysView_duplicate]
+
+section FoldOrigins
+variable {Id Cell : Type}
+
+/-- A declared fold uses the existing stamp admission before preparing a value.
+The caller supplies the stale cause; successful callbacks retain their own causes.
+Scopes are captured finite object identities, not inferred closure dependencies. -/
+def prepareFoldOrigins (scope : List Id) (expected current : Id → Option Nat)
+    (stale : E) (prepare : Unit → Except E A) : Except E A :=
+  ((prepareStamped scope expected current ()).mapError (fun _ => stale)).bind prepare
+
+/-- Current metadata delegates the exact preparation without rebuilding anything. -/
+theorem prepareFoldOrigins_ready (scope : List Id) (expected current : Id → Option Nat)
+    (stale : E) (prepare : Unit → Except E A)
+    (ready : stampMatches scope expected current = true) :
+    prepareFoldOrigins scope expected current stale prepare = prepare () := by
+  simp [prepareFoldOrigins, prepareStamped, ready, Except.mapError, Except.bind]
+
+/-- Stale metadata suppresses preparation, including no-op delta processing. -/
+theorem prepareFoldOrigins_stale (scope : List Id) (expected current : Id → Option Nat)
+    (stale : E) (prepare : Unit → Except E A)
+    (refused : stampMatches scope expected current = false) :
+    prepareFoldOrigins scope expected current stale prepare = .error stale := by
+  simp [prepareFoldOrigins, prepareStamped, refused, Except.mapError, Except.bind]
+
+/-- Duplicate declared dependencies do not alter admission or callback effects. -/
+theorem prepareFoldOrigins_dedup [BEq Id] [LawfulBEq Id] (scope : List Id)
+    (expected current : Id → Option Nat) (stale : E) (prepare : Unit → Except E A) :
+    prepareFoldOrigins scope.eraseDups expected current stale prepare =
+      prepareFoldOrigins scope expected current stale prepare := by
+  simp only [prepareFoldOrigins, prepareStamped, stampMatches_dedup]
+
+/-- A target fold retains its complete source scope, even when initialized without
+passing a source state. Fresh converters cannot hide a stale declared policy. -/
+theorem prepareFoldOrigins_transport_refused (base declared converters : List Id)
+    (expected current : Id → Option Nat) (stale : E) (prepare : Unit → Except E A)
+    (refused : stampMatches declared expected current = false) :
+    prepareFoldOrigins ((base ++ declared) ++ converters) expected current stale prepare =
+      .error stale := by
+  apply prepareFoldOrigins_stale
+  simp [stampMatches_append, refused]
+
+/-- Capturing declaration cells before getters preserves refusal after the caller
+reuses those cells, even for a same-revision replacement object. -/
+theorem prepareFoldOrigins_captured_refused (buffer : Cell → Id) (cells : List Cell)
+    (cell : Cell) (member : cell ∈ cells) (expected current : Id → Option Nat)
+    (changed : expected (buffer cell) ≠ current (buffer cell))
+    (stale : E) (prepare : Unit → Except E A) :
+    prepareFoldOrigins (captureOrigins buffer cells) expected current stale prepare = .error stale :=
+  prepareFoldOrigins_stale _ expected current stale prepare
+    (capturedOrigins_stale buffer cells cell member expected current changed)
+
+/-- Converter-only invalidation refuses the bridge while retaining the unchanged
+source aggregate. Each scope decides independently; there is no global flush. -/
+theorem prepareFoldOrigins_converter_frame (source converters : List Id)
+    (expected current : Id → Option Nat) (value : A) (stale : E)
+    (fresh : stampMatches source expected current = true)
+    (changed : stampMatches converters expected current = false) :
+    (prepareFoldOrigins source expected current stale (fun _ => .ok value) = .ok value) ∧
+    (prepareFoldOrigins (source ++ converters) expected current stale (fun _ => .ok value) =
+      .error stale) := by
+  constructor
+  · exact prepareFoldOrigins_ready source expected current stale _ fresh
+  · apply prepareFoldOrigins_stale
+    simp [stampMatches_append, fresh, changed]
+
+/-- Revisions outside an explicit scope preserve the existing fold value under
+ordinary checked metadata edits. No callback dependencies are automatically added. -/
+theorem prepareFoldOrigins_revision_frame [DecidableEq Id]
+    (edits : List (Change Id Nat)) (before after : Id → Option Nat)
+    (success : applyChanges edits before = .ok after) (scope : List Id)
+    (outside : ∀ edit ∈ edits, edit.key ∉ scope) (value : A) (stale : E) :
+    prepareFoldOrigins scope before after stale (fun _ => .ok value) = .ok value := by
+  apply prepareFoldOrigins_ready
+  have frame := fold_dependency_frame edits before after success scope outside
+  simpa [stampMatches, List.all_eq_true] using (fun key member => (frame key member).symm)
+
+/-- A fresh factory captures current stamps; its callback's failure is unchanged. -/
+theorem prepareFoldOrigins_refresh (scope : List Id) (current : Id → Option Nat)
+    (stale : E) (prepare : Unit → Except E A) :
+    prepareFoldOrigins scope current current stale prepare = prepare () := by
+  apply prepareFoldOrigins_ready
+  simp [stampMatches, List.all_eq_true]
+
+end FoldOrigins
 
 end LeanPoo.Functional.OrderedDictionary

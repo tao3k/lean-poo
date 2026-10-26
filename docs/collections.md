@@ -959,3 +959,29 @@ callback termination, effect rollback or runtime costs. Complete admission, back
 preparation and every crossed public boundary remain charged. Design reflection:
 share the existing fold and observation kernels, retain custom Set delegates, and
 do not bypass their admission protocols merely to remove repeated recognition.
+
+### Explicit origins for ordinary aggregate folds
+
+`table-fold` accepts the same finite explicit origin declaration as grouped folds
+and projections. The shared constructor owns its list spine before descriptor or
+algebra getters run and protects known participants during discovery. The public
+fold exposes its complete scope; representation derivation passes that private
+scope into the target fold rather than treating the source Wrapper identity as a
+substitute for its dependencies. Independently initialized Codomain states therefore
+refuse a revised source policy just as converted states do.
+
+A policy-weighted capacity ledger composes checked callbacks, Tuple/Pair storage,
+XOR key conversion, sparse maintenance, FUN/IO and inverse recovery. Policy revisions
+invalidate dependent scores; independently typed data owners remain usable in all
+five styles. Converter-only revisions preserve the source aggregate. Empty-delta
+origins remain state-specific, and fresh reconstruction captures current revisions.
+All original source/target admission and conversion costs remain; no target refold
+is introduced on paired reuse. Capturing declarations adds one list cell per origin.
+
+`TableFold.lean` composes the existing stamp checker with preparation, proving stale
+suppression, scope propagation, deduplication, captured identity refusal, selective
+revision framing and fresh-callback delegation. These are finite future-work laws
+for explicit stable dependencies and faithful host revisions. Hidden callback state,
+transitive dependency discovery and runtime/GC correctness are not inferred. Design
+reflection: expose the existing constructor capability and pass its private scope,
+rather than invent source clones or add a second invalidation mechanism.
