@@ -990,9 +990,11 @@ rather than invent source clones or add a second invalidation mechanism.
 
 A comparer constructor seal contains its own revision and the numeric version
 snapshot of its captured key/origin scope. Callback-field identity and unchanged
-own revision alone cannot authorize a positioned backend. Known stale constructors
-refuse before new ordering views, transported comparers or backend cursor construction;
-direct comparison shares that boundary. Deferred pulls retain complete checks even
+own revision alone cannot authorize a positioned backend. Unchanged constructor
+subjects with stale origins refuse before new ordering views, transported comparers
+or backend cursor construction. Public-label edits revoke positioning evidence,
+while the original comparison closure retains its private source guard for reference
+sorting. Deferred pulls retain complete checks even
 after EOF. Unsealed custom comparers retain their reference-sort contract, but gain
 no positioned capability merely by copying callback fields.
 

@@ -221,11 +221,13 @@ public callback fields happen to be identical to another comparer's fields. -/
 def comparerSealCurrent (captured : Option ComparerSeal) (current : ComparerSeal) : Bool :=
   captured == some current
 
-/-- Known constructors refuse stale metadata before observation. An unsealed
-custom protocol retains reference fallback under its declared ordering laws. -/
+/-- Unchanged constructor subjects refuse stale origins before observation.
+Edited or unsealed protocols retain reference fallback through their existing
+primitive guard, without positioned-backend evidence. -/
 def admitComparerUse (captured : Option ComparerSeal) (current : ComparerSeal)
     (stale : E) (observe : Unit → Except E R) : Except E R :=
-  if captured.isSome && !comparerSealCurrent captured current then .error stale else observe ()
+  if captured.any (fun issued => issued.1 == current.1) && !comparerSealCurrent captured current
+  then .error stale else observe ()
 
 /-- Constructor identity/revision alone is insufficient: origin stamps must match. -/
 theorem comparerSealCurrent_complete (issued current : ComparerSeal) :
@@ -261,12 +263,20 @@ theorem admitComparerUse_custom (current : ComparerSeal) (stale : E)
     (observe : Unit → Except E R) :
     admitComparerUse none current stale observe = observe () := rfl
 
-/-- Stale seals suppress observation even if sorting would compare zero pairs,
+/-- Stale origins of an unchanged subject suppress observation even if sorting compares zero pairs,
 for example on an empty/singleton root or an already exhausted cursor. -/
 theorem admitComparerUse_stale (issued current : ComparerSeal) (stale : E)
-    (observe : Unit → Except E R) (changed : issued ≠ current) :
+    (observe : Unit → Except E R) (sameSubject : issued.1 = current.1)
+    (changed : issued ≠ current) :
     admitComparerUse (some issued) current stale observe = .error stale := by
-  simp [admitComparerUse, comparerSealCurrent, changed]
+  simp [admitComparerUse, comparerSealCurrent, sameSubject, changed]
+
+/-- Revising public metadata removes positioning evidence, while reference use
+still delegates its existing primitive guard and original failure semantics. -/
+theorem admitComparerUse_edited (issued current : ComparerSeal) (stale : E)
+    (observe : Unit → Except E R) (changed : issued.1 ≠ current.1) :
+    admitComparerUse (some issued) current stale observe = observe () := by
+  simp [admitComparerUse, changed]
 
 /-- The existing cursor guard sees the complete seal, including origin stamps.
 An origin-only change performs no backend pull, including after EOF. -/

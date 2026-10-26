@@ -755,4 +755,10 @@ example : checkedTablePull [0, 0, 0] [0, 0, 1] ([] : List (Nat × Bool)) = (.err
 example : admitComparerUse (some (1, [2, 3])) (1, [2, 3]) "stale comparer"
     (fun _ => Except.error "inspection" : Unit → Except String Nat) = .error "inspection" := rfl
 
+/-- Editing a label permits guarded reference comparison, but cannot restore
+positioning evidence merely because origin revisions remain unchanged. -/
+example : (admitComparerUse (some (0, [2, 3])) (1, [2, 3]) "stale comparer"
+    (fun _ => Except.ok (7 : Nat)),
+    comparerSealCurrent (some (0, [2, 3])) (1, [2, 3])) = (.ok 7, false) := rfl
+
 end Examples.ServiceCollection
