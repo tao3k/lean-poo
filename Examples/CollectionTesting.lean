@@ -118,4 +118,23 @@ example : freshHandle 1 [2] = 3 := rfl
 example : freshHandle 2 [3, 2] = 4 := rfl
 example : freshHandle 1 [1000, 2] ∉ [1000, 2] := freshHandle_not_mem _ _
 #print axioms freshHandle_not_mem
+/-- A zero-budget lazy consumer does not inspect the (possibly failing) tail. -/
+example (next : Nat → Option Nat) : (forceChildren next 0 0).pulls = 0 := rfl
+/-- Exact-budget completion without observed EOF cannot certify minimality. -/
+example : (forceChildren (fun n => some n) 2 0).exhausted = false := rfl
+/-- Dependent packet payloads preserve their selected parent's count. -/
+example : ∀ entry ∈ dependentCandidates [6, 3, 2]
+    (fun count seed => [List.replicate count seed]) 41, entry.2.length = entry.1 := by
+  intro entry member
+  apply dependentCandidates_relation _ _ _ (fun count payload => payload.length = count) _ entry member
+  intro count _ payload selected
+  simp only [List.mem_singleton] at selected
+  subst payload
+  simp
+/-- An earlier successful trial remains protected after observing a later branch. -/
+example : ([true] ++ [false]).all id = false := rfl
+#print axioms forceChildren_bounded
+#print axioms forceChildren_accounting
+#print axioms dependentCandidates_relation
+#print axioms stale_observation_retained
 end Examples.CollectionTesting

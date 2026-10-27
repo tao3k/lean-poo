@@ -1,4 +1,4 @@
-import LeanPoo.Functional.FunctionSignature
+import Std
 
 /-! Descriptor-driven testing and shrinking is finite evidence. The model admits
 only a smaller valid counterexample; it does not prove a sampled property universal,
@@ -338,5 +338,74 @@ theorem freshHandle_not_mem (start : Nat) (used : List Nat) : freshHandle start 
   intro member
   have impossible := freshHandle_gt start used _ member
   omega
+
+/-- A finite observation of a lazy child iterator records only forced values.
+EOF consumes a pull but is not a shrink attempt; no lookahead happens at zero fuel. -/
+structure ForcedChildren (Value : Type) where
+  values : List Value
+  pulls : Nat
+  exhausted : Bool
+
+/-- Pure iterator approximation; arbitrary host callback termination remains a
+premise, while the number of next requests is bounded independently of the tail. -/
+def forceChildren (next : Nat → Option Value) : Nat → Nat → ForcedChildren Value
+  | 0, _ => ⟨[], 0, false⟩
+  | fuel + 1, offset => match next offset with
+    | none => ⟨[], 1, true⟩
+    | some value =>
+      let rest := forceChildren next fuel (offset + 1)
+      ⟨value :: rest.values, rest.pulls + 1, rest.exhausted⟩
+
+/-- No unused iterator element is requested after the specified pull budget. -/
+theorem forceChildren_bounded (next : Nat → Option Value) (fuel offset : Nat) :
+    (forceChildren next fuel offset).pulls ≤ fuel := by
+  induction fuel generalizing offset with
+  | zero => simp [forceChildren]
+  | succ fuel ih =>
+    cases chosen : next offset <;> simp only [forceChildren, chosen]
+    · omega
+    · have bounded := ih (offset + 1); omega
+
+/-- Every returned value corresponds to a pull, and observed EOF is exactly one
+additional pull. This justifies conservative minimality at the budget boundary. -/
+theorem forceChildren_accounting (next : Nat → Option Value) (fuel offset : Nat) :
+    (forceChildren next fuel offset).pulls =
+      (forceChildren next fuel offset).values.length +
+        (if (forceChildren next fuel offset).exhausted then 1 else 0) := by
+  induction fuel generalizing offset with
+  | zero => rfl
+  | succ fuel ih =>
+    cases chosen : next offset <;> simp only [forceChildren, chosen]
+    · rfl
+    · have tail := ih (offset + 1)
+      simp only [List.length_cons]
+      omega
+
+/-- Mapping preserves the original preimage even when the function is lossy. -/
+theorem mapped_candidate_preimage (transform : Input → Output) (parents : List Input)
+    (value : Output) (member : value ∈ parents.map transform) :
+    ∃ original ∈ parents, transform original = value := List.mem_map.mp member
+
+/-- A finite dependent-bind prefix retains each selected parent alongside the
+child proof receipt. The public generated value may hide this private provenance. -/
+def dependentCandidates (parents : List Parent) (select : Parent → Nat → List Child)
+    (seed : Nat) : List (Parent × Child) :=
+  parents.flatMap fun parent => (select parent seed).map (parent, ·)
+
+/-- Every dependent child still satisfies its original parent's domain relation. -/
+theorem dependentCandidates_relation (parents : List Parent) (select : Parent → Nat → List Child)
+    (seed : Nat) (relation : Parent → Child → Prop)
+    (valid : ∀ parent ∈ parents, ∀ child ∈ select parent seed, relation parent child)
+    (entry : Parent × Child) (member : entry ∈ dependentCandidates parents select seed) :
+    relation entry.1 entry.2 := by
+  obtain ⟨parent, present, childMember⟩ := List.mem_flatMap.mp member
+  obtain ⟨child, selected, same⟩ := List.mem_map.mp childMember
+  cases same
+  exact valid parent present child selected
+
+/-- Adding newly observed sources never authorizes an already stale observation. -/
+theorem stale_observation_retained (current : Source → Bool) (past more : List Source)
+    (stale : past.all current = false) : (more ++ past).all current = false := by
+  simp [List.all_append, stale]
 
 end LeanPoo.Functional.PropertyTesting

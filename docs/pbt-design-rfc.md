@@ -5,6 +5,84 @@
 - Targets: Gerbil-POO PR #13 and Lean-POO PR #13.
 - Implementation acceptance: reusable protocol, collection controls and downstream integration are implemented; CI is checked independently for each submitted revision.
 
+## Module ownership and independent-library boundary
+
+The generic library is organized by Gerbil modules, with direct imports rather
+than an `api.ss` forwarding module. The generic sources form a standard subproject at `testing/core/`, with
+`gerbil.pkg` declaring `clan/property-testing` and `defbuild-script` compiling
+its three modules. POO imports them directly by their module identifiers.
+
+| Module | Responsibility | Dependencies |
+| --- | --- | --- |
+| `testing/core/generator.ss` | Invocation-local random sources, unit/map/bind/sequence, lazy value-and-shrink provenance | Gerbil standard library |
+| `testing/core/property.ss` | Explicit domain specifications, finite checks, bounded child consumption, reports and both replay forms | Generic generator module and standard library |
+| `testing/core/model.ss` | Pure model folds, dependency retirement, bounded trace draw, scoped first-difference comparison | Gerbil standard library |
+| `testing/type.ss` | Type-driven derivation, Record contracts, bounded membership, POO source observations, typed reports and Reader/FUN actions | POO and generic modules |
+| `testing/function.ss` | FunctionArguments derivation from checked signatures | POO function/signature modules and testing/type |
+| `testing/generation-graph.ss`, `testing/recursive-generation.ss` | Bounded descriptor graph compilation and safe recursive derivations | POO type/recursive constructions |
+
+Top-level `property-testing.ss`, `function-testing.ss`, `generation-graph.ss` and
+`recursive-generation.ss` are moved, with all importers/build inventories migrated.
+There are no compatibility forwarding files. Existing `support/testing.ss` and
+`t/table-testing.ss` keep their distinct support/test-only ownership.
+
+The generic modules import no POO object, Type, Record, lens or revision APIs.
+Their records are Gerbil structs; domain admission and cost are mandatory caller
+callbacks. POO retains its Record declarations and supplies bounded typed
+admission, normalization and source-current callbacks at the boundary. Generality
+is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
+
+The independent-library acceptance copies the actual generic package metadata, build script,
+three generic modules and `examples/property-kernel.ss` into a temporary standard Gerbil package, compiles
+with `defbuild-script` and runs its compiled suite through `gxtest`. Its official
+GERBIL_PATH contains no POO modules. The gate requires all eight case receipts,
+an error-free result and correct process exit status, under the existing heap
+and timeout limits. This is an independent build/run receipt, not an upstream
+publication. The independent package identifier is `clan/property-testing`;
+the typed derivation modules remain under `clan/poo/testing`.
+
+## Quickcheck and Rackcheck source comparison
+
+The source references are pinned independently of the local compiler:
+
+- [Racket Quickcheck](https://github.com/ifigueroap/racket-quickcheck/tree/0b6902d8d79973ec959f99e56ccba038beca8fe9):
+  `quickcheck/private/generator.rkt` combines return/bind/sequence and splits the
+  random source; `quickcheck/generator.rkt` expands `bind-generators` into that
+  algebra. Ordinary Racket generators do not require Typed Racket.
+- [Rackcheck](https://github.com/Bogdanp/rackcheck/tree/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7):
+  `rackcheck-lib/gen/core.rkt` maps and binds shrink trees, retaining a child random
+  state for dependent regeneration; `gen/base.rkt` builds lazy list shrink trees.
+
+We adopt composition of generated values AND their provenance. A non-injective
+map retains its preimage tree without asking for an inverse. Bind first explores
+parent shrinks, regenerating each dependent child with the same captured child
+seed, then explores that child's own shrinks. Gerbil's standard `in-coroutine` /
+Iterator protocol provides lazy children; no thread, custom stream framework or
+process-global sample cache is introduced. Seed splitting follows the compositional
+idea, not byte-for-byte random sequence compatibility with either Racket library.
+
+A generic generator and its intermediate shrink nodes must honor its declared
+semantic domain; a malformed selector/callback is an error, not a false property.
+The final property specification explicitly admits values and supplies a natural
+measure. POO-specific generation-refusal classification stays in testing/type.
+The kernel never classifies an exception as a passed or falsified property.
+
+Source freshness is rechecked after iterator EOF before certifying exhaustion.
+Zero shrink fuel invokes no shrink callback. A child is pulled only inside the
+budgeted consumer body; no tail lookahead occurs after the final allowed attempt.
+`minimal?` requires observed EOF and certifies only the supplied immediate
+neighborhood. POO-derived raw shrink callbacks keep their finite proper-list
+contract at one boundary; their own preparation cost remains subject to the
+existing graph/search budgets and process guards.
+
+Reports retain observers for all generated trial roots and forced shrink branches,
+including earlier successful trials and rejected candidates. A changed original
+branch cannot become authorized merely because the final witness moved elsewhere.
+Seed replay keeps those observers live throughout rerun, and the new report owns
+only the rerun's observations rather than accumulating replay closure chains.
+Concrete replay performs no draws, selectors or child forcing. Observer accuracy,
+callback purity/termination and runtime PRNG correctness remain explicit premises.
+
 ## Decision
 
 Extend the existing descriptor-driven property-testing protocol with finite,
@@ -31,8 +109,8 @@ elsewhere in the paper is distinct from a pseudo-random test sampler.
 
 | Existing owner | Reused responsibility |
 | --- | --- |
-| `property-testing.ss` | `make-generator`, products, `check-property`, strict/budgeted shrinking, `replay-property`, `property-action` |
-| `generation-graph.ss` / `recursive-generation.ss` | Existing bounded recursive value generation; not replaced by a second recursion engine |
+| `testing/type.ss` | `make-generator`, products, `check-property`, strict/budgeted shrinking, `replay-property`, `property-action` |
+| `testing/generation-graph.ss` / `testing/recursive-generation.ss` | Existing bounded recursive value generation; not replaced by a second recursion engine |
 | `Type`, `List`, `Tuple`, `Union`, `Exactly`, `Enum` | Command and trace membership; no `Any` fallback |
 | Existing table/index protocols | `.delta/opt`, `.apply-delta`, `invert-table-delta`, index observations and supported metadata invalidation |
 | FUN / IO and `:std/test` | Composition, fixture resource lifetime and ordinary suite discovery/checks |
@@ -331,7 +409,7 @@ admission to Gerbil-POO, and execution/discovery to `:std/test`:
 
 ```scheme
 (export collection-model-test)
-(import :std/test :clan/poo/object :clan/poo/property-testing
+(import :std/test :clan/poo/object :clan/poo/testing/type
         (only-in "support/collection-model.ss" Command model with-system))
 
 ;; One standard suite fails on mismatch, stale sources, exhaustion or callback error.
@@ -369,7 +447,7 @@ search. A library mismatch is a failed test; no test should accept `error` or
 
 Extend the existing `LeanPoo.Functional.PropertyTesting` namespace, rather than
 creating a parallel testing namespace. Keep executable Lean controls in top-level
-`Examples/` and `Tests/`; keep Gerbil functions in `property-testing.ss` and the
+`Examples/` and `Tests/`; keep Gerbil functions in `testing/type.ss` and the
 collection adapter in a functionally named `examples/` file. Each `def` documents
 its contract/failure boundary. Split by existing functional boundaries if needed;
 no code file should grow beyond the agreed modularity limit.
@@ -403,7 +481,7 @@ linearizability. Performance acceptance is measured separately.
 | Collection semantics | RationalDict and trie lifecycle plus stale-admission, index-owner, inverse and premature-publication fault injections |
 | Finite Lean laws | `retire_valid`, `retire_sublist`, `retire_deletion`, `drawTrace_sound`, `trace_simulation`, `replayTrace_stale`, `replayTrace_failed` |
 | Concrete collection proofs | Top-level `Examples/CollectionTesting.lean` reuses `applyIndexed` and `inverseChanges`; proves complete two-key enumeration and checks conflict/retry/inverse/old-value/stale outcomes, final primary/index restoration and detection of premature primary publication |
-| Local full workflow | The complete 149-module workflow and linked paired collection benchmark pass under existing limits; 18 focused PBT cases pass |
+| Local full workflow | The complete 149-module workflow and linked paired collection benchmark pass under existing limits; The existing focused PBT cases plus the independent-library cases pass |
 | Published baseline CI | Lean `6bda6ff61fcde59f74cbf3f90723ae25c1f10328`: 17 successful checks; Gerbil `77dd5e6ae33047e0a2755f0be705bd6bf8ec3b99`: 53 successful checks, including single-process acceptance |
 
 The published baseline CI was checked before this follow-up. Every later revision
