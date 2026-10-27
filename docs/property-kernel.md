@@ -55,5 +55,12 @@ observed exhausted immediate neighborhood, not a globally smallest value.
 Seed replay regenerates under the recorded configuration; concrete replay checks
 the retained witness without drawing or shrinking. Mutable callback dependencies
 must be declared through accurate source observers. The isolated regression builds
-the actual generic package and executes eight cases without any POO modules in
+the actual generic package and executes ten cases without any POO modules in
 its package directory, under the existing heap and timeout limits.
+
+Model normalization is an explicit boundary: `check-trace` first prepares the
+entire command list and executes exactly those normalized objects. Its mismatch
+report carries the prepared command. A late domain/precondition refusal or
+normalization exception opens no fixture. `valid-trace?` projects the same
+preparation; do not use it as a substitute for `check-trace`'s own preflight.
+The POO facade supplies already-wrapped commands with identity normalization.

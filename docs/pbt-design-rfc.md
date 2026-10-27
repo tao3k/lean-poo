@@ -35,11 +35,44 @@ is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 The independent-library acceptance copies the actual generic package metadata, build script,
 three generic modules and `examples/property-kernel.ss` into a temporary standard Gerbil package, compiles
 with `defbuild-script` and runs its compiled suite through `gxtest`. Its official
-GERBIL_PATH contains no POO modules. The gate requires all eight case receipts,
+GERBIL_PATH contains no POO modules. The gate requires all ten case receipts,
 an error-free result and correct process exit status, under the existing heap
 and timeout limits. This is an independent build/run receipt, not an upstream
 publication. The independent package identifier is `clan/property-testing`;
 the typed derivation modules remain under `clan/poo/testing`.
+
+## Canonical trace admission and execution
+
+Whole-prefix admission retains its exact normalized command list. The generic
+model previously checked normalized commands but executed the original inputs;
+POO's prevalidated List path concealed that discrepancy. `prepare-trace` now
+reuses the existing model fold to return either the complete prepared list or
+refusal. `valid-trace?` is its Boolean projection. `check-trace` executes and
+reports those same prepared command objects, without another normalization pass.
+An empty prepared list succeeds; refusal is separate from a command whose payload
+is false. No prepared prefix is handed to a fixture after a late rejection.
+
+The typed facade still owns its existing List/Record/Function validation boundary
+and supplies the identity normalizer to generic execution. This preserves nested
+Function wrappers without installing an additional wrapper chain in the kernel.
+Dependency repair uses the same model fold; shrinking and both replay forms use
+the ordinary property runner and fresh scoped fixtures.
+
+`examples/property-kernel.ss` combines shared producers, normalized contracted
+callbacks, dependency repair, a faulty consumer, shrinking and both replays.
+Separate late-domain/normalization-failure controls require zero fixture opens.
+The POO Record regression rejects an invalid callback argument before its body
+and refuses a missing producer before opening a fixture. Callback setup/cleanup
+remains balanced on both success and errors.
+
+Lean's `prepareTrace_sound` proves successful preparation preserves decoded
+order, input length and state-dependent validity. `prepareTrace_identity` covers
+the typed facade's already-normalized path; `prepared_observations` states the
+exact execution handoff. The concrete collection example decodes command codes
+through the existing conflict, inverse, stale and retry lifecycle and refuses a
+malformed final code. These are pure finite laws: truthful normalization, model
+callback purity/termination, runtime wrapping and the fixture simulation premise
+remain separate executable obligations.
 
 ## Quickcheck and Rackcheck source comparison
 
@@ -477,13 +510,14 @@ linearizability. Performance acceptance is measured separately.
 | Typed model and fixture data | `TraceModel`, inherited `TraceGenerator`, `TraceSystem`; examples declare one reusable fixture Record and create fresh instances |
 | State-dependent draws and dependency repair | Shared typed `fold-trace`, bounded generator fold, existing shrink budget/domain gates; invalid-draw, false-command and independent-suffix controls |
 | Fresh resource scope | Distinct fixture identity across trials, shrink probes and both replays; cleanup counters remain balanced after comparison exceptions |
+| Canonical handoff | Exact normalized command identity, one normalization per check, contracted callbacks through repair/replay, and late rejection before fixture effects |
 | First difference | Initial/result/state fault controls reject later steps and count only required observations |
 | Adapter contracts | Malformed actual state, result and observation are Type errors, not counterexamples |
 | Collection semantics | RationalDict and trie lifecycle plus stale-admission, index-owner, inverse and premature-publication fault injections |
 | Finite Lean laws | `retire_valid`, `retire_sublist`, `retire_deletion`, `drawTrace_sound`, `trace_simulation`, `replayTrace_stale`, `replayTrace_failed` |
 | Concrete collection proofs | Top-level `Examples/CollectionTesting.lean` reuses `applyIndexed` and `inverseChanges`; proves complete two-key enumeration and checks conflict/retry/inverse/old-value/stale outcomes, final primary/index restoration and detection of premature primary publication |
 | Local full workflow | The complete 149-module workflow and linked paired collection benchmark pass under existing limits; The existing focused PBT cases plus the independent-library cases pass |
-| Published baseline CI | Lean `6bda6ff61fcde59f74cbf3f90723ae25c1f10328`: 17 successful checks; Gerbil `77dd5e6ae33047e0a2755f0be705bd6bf8ec3b99`: 53 successful checks, including single-process acceptance |
+| Published baseline CI | Lean `7932410a339dadc7d3736e286cbc6750c689d220`: 17 successful checks; Gerbil `4be7c411120cce18436fc35875a62da8e420f16a`: 53 successful checks, including single-process acceptance |
 
 The published baseline CI was checked before this follow-up. Every later revision
 must pass the same CI; that baseline is not evidence for unsubmitted edits. Full

@@ -137,4 +137,22 @@ example : ([true] ++ [false]).all id = false := rfl
 #print axioms forceChildren_accounting
 #print axioms dependentCandidates_relation
 #print axioms stale_observation_retained
+/-- Downstream command codes decode to the existing delta/index workflow.
+The source code and admitted executable commands are different types. -/
+def decodeLifecycle (code : Nat) : Option Command := lifecycle[code]?
+/-- Complete preparation preserves conflict, inverse, stale and retry commands. -/
+example : prepareTrace model decodeLifecycle model.initial (List.range 10) = some lifecycle := rfl
+/-- A late malformed command rejects the whole batch, not an executable prefix. -/
+example : prepareTrace model decodeLifecycle model.initial (List.range 10 ++ [99]) = none := rfl
+/-- Differential observations use the admitted decoded commands unchanged. -/
+example : (prepareTrace model decodeLifecycle model.initial (List.range 10)).map
+    (traceObservations model.advance observe model.initial) =
+      some (traceObservations model.advance observe model.initial lifecycle) :=
+  prepared_observations model decodeLifecycle model.advance observe _ _ _ rfl
+/-- Type-wrapped commands retain their identity at the generic facade boundary. -/
+example : prepareTrace model some model.initial lifecycle = some lifecycle :=
+  prepareTrace_identity model lifecycle model.initial (by decide)
+#print axioms prepareTrace_sound
+#print axioms prepareTrace_identity
+#print axioms prepared_observations
 end Examples.CollectionTesting

@@ -236,6 +236,54 @@ theorem drawTrace_sound (model : TraceModel State Command Reply) (choose : State
           obtain ⟨valid, bound⟩ := ih _ _ tail
           exact ⟨by simp [traceValid, enabled, valid], by simp; omega⟩
 
+/-- Decode and admit a complete finite trace before any fixture is opened.
+Raw and executable commands may have different representations; rejection never
+returns an executable prefix. Host decoder purity/termination are premises. -/
+def prepareTrace (model : TraceModel State Command Reply) (normalize : Raw → Option Command) :
+    State → List Raw → Option (List Command)
+  | _, [] => some []
+  | state, raw :: rest => do
+      let command ← normalize raw
+      if model.enabled state command then
+        let tail ← prepareTrace model normalize (model.advance state command).1 rest
+        pure (command :: tail)
+      else none
+
+/-- Successful preparation preserves every input position, decoded order, and
+state-dependent admission. No consumer can run against its unnormalized input. -/
+theorem prepareTrace_sound (model : TraceModel State Command Reply) (normalize : Raw → Option Command)
+    (raws : List Raw) (state : State) (commands : List Command)
+    (prepared : prepareTrace model normalize state raws = some commands) :
+    traceValid model state commands = true ∧ commands.length = raws.length ∧
+      commands = raws.filterMap normalize := by
+  induction raws generalizing state commands with
+  | nil => simp [prepareTrace] at prepared; subst commands; simp [traceValid]
+  | cons raw rest ih =>
+    cases decoded : normalize raw with
+    | none => simp [prepareTrace, decoded] at prepared
+    | some command =>
+      cases enabled : model.enabled state command with
+      | false => simp [prepareTrace, decoded, enabled] at prepared
+      | true =>
+        cases tail : prepareTrace model normalize (model.advance state command).1 rest with
+        | none => simp [prepareTrace, decoded, enabled, tail] at prepared
+        | some suffix =>
+          simp [prepareTrace, decoded, enabled, tail] at prepared
+          subst commands
+          obtain ⟨valid, size, order⟩ := ih _ _ tail
+          exact ⟨by simp [traceValid, enabled, valid], by simp [size], by simp [decoded, order]⟩
+
+/-- Already normalized valid traces use the identity decoder without changing
+command data. This is the typed facade's existing one-boundary validation path. -/
+theorem prepareTrace_identity (model : TraceModel State Command Reply) (commands : List Command)
+    (state : State) (valid : traceValid model state commands = true) :
+    prepareTrace model some state commands = some commands := by
+  induction commands generalizing state with
+  | nil => rfl
+  | cons command rest ih =>
+    simp only [traceValid, Bool.and_eq_true] at valid
+    simp [prepareTrace, valid.1, ih _ valid.2]
+
 /-- Canonical step replies/observations; expected domain refusals are Reply data. -/
 def traceObservations (step : State → Command → State × Reply) (observe : State → Observation) :
     State → List Command → List (Reply × Observation)
@@ -243,6 +291,15 @@ def traceObservations (step : State → Command → State × Reply) (observe : S
   | state, command :: rest =>
       let next := step state command
       (next.2, observe next.1) :: traceObservations step observe next.1 rest
+
+/-- The observation handoff consumes exactly the successfully prepared list.
+Normalization is not rerun during execution; wrappers are opaque command data. -/
+theorem prepared_observations (model : TraceModel State Command Reply)
+    (normalize : Raw → Option Command) (step : State → Command → State × Reply)
+    (observe : State → Observation) (raws : List Raw) (commands : List Command) (state : State)
+    (prepared : prepareTrace model normalize state raws = some commands) :
+    (prepareTrace model normalize state raws).map (traceObservations step observe state) =
+      some (traceObservations step observe state commands) := by simp [prepared]
 
 /-- An adapter's step simulation lifts to the complete ordered valid trace.
 The relation must account for ownership, generation and every compared index. -/
