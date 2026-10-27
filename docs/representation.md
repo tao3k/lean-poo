@@ -272,7 +272,7 @@ It does not link every optional business module. The core's initialization still
 runs at process bootstrap; only repeated entry-time discovery and dynamic loading
 of already linked dependencies are avoided. Build/link/startup and optional
 module initialization remain charged. This advances the author's shared/lazy
-representation and staged-computation ideas, rather than proving the SDK loader.
+representation and staged-computation ideas, rather than proving the Gerbil standard loader.
 
 Representation's entry-stage laws preserve load/lookup failure order, original
 causes, original arguments and current binding results. A ghost observation of
