@@ -1332,3 +1332,24 @@ One present Option allocation and every retired output are charged separately
 from admission/registry/backend/GC costs; there is no VM speedup, arbitrary
 callback termination or compiler/runtime verification claim. This extends the
 collection proposal's future work using the author's descriptor delegation.
+
+
+### Captured sparse translation expectations
+
+TableCapture's captureTranslatedEdit owns the original optional endpoint before
+old-value admission and conversion. Recorded conversion queries may recycle a
+provider buffer without changing the emitted expected value. Laws preserve
+admission/conversion refusal, absence, exact payload handles and ordinary inverse
+installation. CollectionStyles shows the previous false conflict, ordered repeated
+keys, present false and opaque callable payloads.
+
+Gerbil applies this at the two existing raw-read sites in represented installation
+and sparse fold transport; prefix-overlay Options are already private and reused.
+The capacity-ledger example refines the existing typed value Wrapper alongside its
+source/target refinements. Six regressions use borrowed reads with the original
+independent atomic installer, and exercise five styles, aggregate reuse, FUN/IO
+refusal/retry and inverse recovery. Faithful endpoint/backend observations, stable
+leaves and lawful inverse maps remain premises. A first present endpoint read adds
+one shell; registry, recognition, conversion, allocator and GC costs remain charged.
+This advances the collection proposal's future work, without a runtime/compiler
+verification or VM speedup claim.

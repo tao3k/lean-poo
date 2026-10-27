@@ -915,4 +915,27 @@ example : retireCachedRows (some [(10, 7)])
     (fun _ => (Except.error "eviction-refused" : Except String (Nat × Option (List (Nat × Nat))))) =
       .error "eviction-refused" := rfl
 
+/-- A pure replacement query returning 999 cannot rewrite the old expected 10. -/
+example : captureTranslatedEdit (1 : Nat) (some (10 : Nat))
+    (fun _ => (Except.ok () : Except String Unit))
+    (fun _ => .ok (some 20, some 999)) = .ok ⟨1, some 10, some 20⟩ := rfl
+
+/-- The borrowed expectation would falsely reject that same admitted endpoint. -/
+example : applyChanges [⟨1, some 999, some 20⟩] (fun _ : Nat => some (10 : Nat)) = .error 1 := rfl
+
+/-- Repeated keys keep all intermediate expectations instead of rereading a buffer. -/
+example : (applyChanges [⟨1, some 10, some 20⟩, ⟨1, some 20, some 30⟩]
+    (fun _ : Nat => some (10 : Nat))).map (fun view => view 1) = .ok (some 30) := rfl
+
+/-- False is a present replacement, even when a provider's later response is false. -/
+example : captureTranslatedEdit false (some true)
+    (fun _ => (Except.ok () : Except String Unit))
+    (fun _ => .ok (some false, some false)) = .ok ⟨false, some true, some false⟩ := rfl
+
+/-- Opaque callable expectations retain their original identity across conversion. -/
+example (first second queried : Nat → Nat) :
+    captureTranslatedEdit (1 : Nat) (some first)
+      (fun _ => (Except.ok () : Except String Unit))
+      (fun _ => .ok (some second, some queried)) = .ok ⟨1, some first, some second⟩ := rfl
+
 end LeanPoo.Examples.CollectionStyles

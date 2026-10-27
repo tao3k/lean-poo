@@ -520,4 +520,51 @@ theorem cachedRetractions_inverse [DecidableEq K] [DecidableEq V]
     applyChanges (inverseChanges (cachedRetractions rows)) after = .ok before :=
   applyChanges_inverse _ _ _ ready
 
+/-- Capture the old endpoint value before old-value admission and replacement
+conversion. A conversion may query a backend that recycles the old response shell;
+the recorded later buffer is not the expected value of the emitted edit. Both
+represented installers and sparse fold transfers use this phase boundary. -/
+def captureTranslatedEdit (key : K) (before : Option V)
+    (check : Option V → Except E Unit)
+    (convert : Unit → Except E (Option V × Option V)) : Except E (Change K V) :=
+  let owned := before.map id
+  (check owned).bind fun _ => (convert ()).map fun result =>
+    captureChange id ⟨key, owned, result.1⟩
+
+/-- Successful preparation keeps the original endpoint and converted replacement. -/
+theorem captureTranslatedEdit_ready (key : K) (before after later : Option V) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, later)) = .ok ⟨key, before, after⟩ := by
+  cases before <;> cases after <;> rfl
+
+/-- An original old-value refusal suppresses replacement conversion entirely. -/
+theorem captureTranslatedEdit_check_refused (key : K) (before : Option V) (cause : E)
+    (convert : Unit → Except E (Option V × Option V)) :
+    captureTranslatedEdit key before (fun _ => .error cause) convert = .error cause := rfl
+
+/-- A failing replacement preserves its exact cause and returns no partial edit. -/
+theorem captureTranslatedEdit_conversion_refused (key : K) (before : Option V) (cause : E) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .error cause) = .error cause := rfl
+
+/-- Reused provider responses cannot alter a successfully captured expectation. -/
+theorem captureTranslatedEdit_buffer_independent (key : K) (before after left right : Option V) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, left)) =
+    captureTranslatedEdit key before (fun _ => .ok ()) (fun _ => .ok (after, right)) := rfl
+
+/-- Present false and Function payloads are retained without normalization or
+conversion of the original value. Absence is a separate branch of Option. -/
+theorem captureTranslatedEdit_before (key : K) (before after later : Option V) :
+    (captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, later))).map Change.before = .ok before := by
+  rw [captureTranslatedEdit_ready]; rfl
+
+/-- Once captured edits install, the existing inverse theorem recovers the exact
+original endpoint. Backend observation and equality laws remain premises. -/
+theorem capturedTranslation_inverse [DecidableEq K] [DecidableEq V]
+    (edits : List (Change K V)) (before after : K → Option V)
+    (ready : applyChanges edits before = .ok after) :
+    applyChanges (inverseChanges edits) after = .ok before := applyChanges_inverse _ _ _ ready
+
 end LeanPoo.Functional.OrderedDictionary
