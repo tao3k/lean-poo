@@ -860,6 +860,12 @@ example (edits : List (Change Nat Unit))
 def buildCohort (rows : List Nat) : Except String (List Nat) :=
   if rows.isEmpty || rows.length % 2 != 0 then .error "invalid-cohort" else .ok rows
 
+/-- A constructor lookup replacing its borrowed shell cannot substitute row 9
+for the captured original members 1 and 2 of an existing grouped bucket. -/
+example : seedIndexBucket (fun rows : List (Nat × Nat) => rows)
+    ((some [(9, 90)] : Option (List (Nat × Nat))), (some [(1, 10), (2, 20)]).map id).2 =
+      [(1, 10), (2, 20)] := rfl
+
 /-- Cold construction needs no business empty or singleton intermediate. -/
 example : materializeIndexBucket buildCohort none (some [1, 2]) = .ok (some [1, 2]) := rfl
 

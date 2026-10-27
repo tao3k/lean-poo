@@ -1307,3 +1307,8 @@ projections remain selective, but copying affected old buckets and reconstructin
 all final rows, metadata preparation and validation are explicit costs. These
 finite laws advance collection-library future work, not arbitrary backend,
 callback-termination, deep-copy or VM performance verification.
+
+The scratch seed also captures a provider's optional bucket handle before either
+constructor getter runs. seedIndexBucket establishes original-row delivery and
+independence from later shell replacement; a borrowed Option/getter regression
+checks the host boundary with the existing shared-provider fixture.

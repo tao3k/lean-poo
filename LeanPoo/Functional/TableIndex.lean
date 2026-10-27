@@ -711,6 +711,21 @@ theorem installIndexWork_refused [DecidableEq V] (ops : TableCarrier K V A)
 
 end BackendKeyWork
 
+/-- Seed private grouped work from a captured optional bucket handle. Scratch
+absence supplies no rows, never an empty business-root constructor. -/
+def seedIndexBucket (observe : A → List Row) (original : Option A) : List Row :=
+  original.elim [] observe
+
+/-- A present bucket supplies exactly its original finite observation. -/
+theorem seedIndexBucket_present (observe : A → List Row) (bucket : A) :
+    seedIndexBucket observe (some bucket) = observe bucket := rfl
+
+/-- Reusing the provider's Option shell cannot replace the captured handle before
+constructor lookup. Physical shell capture and stable opaque roots are premises. -/
+theorem seedIndexBucket_captured (observe : A → List Row) (original later : Option A) :
+    seedIndexBucket observe (later, original.map id).2 = seedIndexBucket observe original := by
+  cases original <;> rfl
+
 /-- A grouped bucket is rebuilt from its final finite bindings. Missing work
 reuses the old bucket; empty work deletes it without evaluating a business empty
 constructor. Scratch key-space fidelity and the finite builder laws are premises. -/
