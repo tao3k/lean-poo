@@ -187,3 +187,23 @@ The Gerbil bridge assumes that supported invalidation clears the instance and
 layout together, as implemented by `clear-object-cache!`; raw setters bypass that
 protocol. Existing value-guard/current-cell proofs still apply on the ready path.
 No callback termination, compiler, loader or physical timing theorem is implied.
+
+### Explicit downstream startup and complete consumer traces
+
+The same exported Gerbil service workflow can run through ordinary module
+loading or the standard `exe:` build graph. It uses existing ObjectContract
+refinement and Reader/FUN composition, with an explicit symbolic/indexed access
+choice captured once when the action is created. The one-shot default is symbolic;
+it creates no access-site/vector preparation and still retains ordinary lazy
+value caches. Live recipe revisions use explicit inherited children; `.cc` source
+copies are snapshots and do not imply a live source dependency.
+
+`demandRead_sound` and `demandBatch_sound` lift the existing `readPrepared` laws
+to an arbitrary finite ordered batch, including empty input and the first exact
+refusal. Faithful current cells/evaluation after supported invalidation are
+premises. Different shapes and uncomputed cells retain ordinary evaluation.
+Executable top-level examples cover initial observations, refusal and new-view
+retry. These are source-result laws; they neither prove Gerbil module initialization
+or host process equivalence nor turn operation counts into startup timing bounds.
+The actual module and linked executable must execute the same source lifecycle
+and retain all process-cold/wall/GC controls separately.

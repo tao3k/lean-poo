@@ -91,4 +91,21 @@ example : selectLayoutRead false false false
     (fun _ => (Except.ok (7 : Int) : Except String Int))
     (fun _ => .ok 7) (fun _ => .ok 9) = .ok 9 := rfl
 
+/-- A cold service batch uses ordinary lazy demand, preserving receiver order. -/
+example : demandBatch false totalSite [service 1 0 1 33, service 2 0 2 63]
+    (fun view => match view.fields "total" with
+      | some n => (Except.ok n : Except String Int)
+      | none => .error "missing") = .ok [33, 63] := by rfl
+
+/-- An original refusal stops the complete source batch before later results. -/
+example : demandBatch false totalSite [service 1 0 1 33, service 2 0 2 63]
+    (fun view => if view.owner = 1 then (Except.error "refused" : Except String Int)
+      else .ok 63) = .error "refused" := by rfl
+
+/-- Retrying with current post-revision views observes the new totals. -/
+example : demandBatch false totalSite [service 1 2 3 53, service 2 2 4 103]
+    (fun view => match view.fields "total" with
+      | some n => (Except.ok n : Except String Int)
+      | none => .error "missing") = .ok [53, 103] := by rfl
+
 end LeanPoo.Examples.Representation

@@ -397,4 +397,63 @@ theorem selectLayoutRead_cold_cases (anchored : Bool)
       (if anchored then ordinary () else prepare ()) := by
   cases anchored <;> rfl
 
+/-- An explicit consumer policy; symbolic demand never requests a layout.
+Prepared demand reuses the existing current-cell/fallback protocol. -/
+def demandRead (indexed : Bool) (site : Site) (view : View Value)
+    (ordinary : Unit → Except E Value) : Except E Value :=
+  if indexed then readPrepared site view ordinary else ordinary ()
+
+/-- A ready cell agrees with the current ordinary evaluator. This is an
+invalidation/fidelity premise, never evidence inferred from module caching. -/
+abbrev faithful (site : Site) (view : View Value) (ordinary : Unit → Except E Value) : Prop :=
+  ∀ value, view.fields site.name = some value → ordinary () = .ok value
+
+/-- A faithful current layout and symbolic demand have the same value/refusal.
+The shape can change: mismatch and uncomputed cells retain ordinary fallback. -/
+theorem demandRead_sound (indexed : Bool) (site : Site) (view : View Value)
+    (ordinary : Unit → Except E Value) (current : faithful site view ordinary) :
+    demandRead indexed site view ordinary = ordinary () := by
+  cases indexed with
+  | false => rfl
+  | true =>
+    change readPrepared site view ordinary = ordinary ()
+    by_cases same : site.names = view.names
+    · cases ready : view.fields site.name with
+      | none => exact readPrepared_lazy site view ordinary same ready
+      | some value => rw [readPrepared_current site view ordinary value same ready, current value ready]
+    · exact readPrepared_reshaped site view ordinary same
+
+/-- One complete finite consumer batch stops at the first ordinary refusal.
+Callbacks and module linking are outside this source-level result model. -/
+def demandBatch (indexed : Bool) (site : Site) (views : List (View Value))
+    (ordinary : View Value → Except E Value) : Except E (List Value) :=
+  match views with
+  | [] => .ok []
+  | view :: rest => do
+    let value ← demandRead indexed site view (fun _ => ordinary view)
+    let tail ← demandBatch indexed site rest ordinary
+    pure (value :: tail)
+
+/-- Explicit access selection preserves a whole batch, including empty and
+refused prefixes, when every accepted view has current evaluation evidence. -/
+theorem demandBatch_sound (indexed : Bool) (site : Site) (views : List (View Value))
+    (ordinary : View Value → Except E Value)
+    (current : ∀ view ∈ views, faithful site view (fun _ => ordinary view)) :
+    demandBatch indexed site views ordinary = demandBatch false site views ordinary := by
+  induction views with
+  | nil => rfl
+  | cons view rest ih =>
+    simp only [demandBatch]
+    rw [demandRead_sound indexed site view _ (current view (by simp)),
+        ih (fun item member => current item (by simp [member]))]
+    rfl
+
+/-- A symbolic-only deployment cannot demand an otherwise refused layout. -/
+theorem demandRead_symbolic (site : Site) (view : View Value) (ordinary : Unit → Except E Value) :
+    demandRead false site view ordinary = ordinary () := rfl
+
+/-- No receiver evaluation or preparation is demanded by an empty finite batch. -/
+theorem demandBatch_empty (indexed : Bool) (site : Site) (ordinary : View Value → Except E Value) :
+    demandBatch indexed site [] ordinary = .ok [] := rfl
+
 end LeanPoo.Prototype.Representation
