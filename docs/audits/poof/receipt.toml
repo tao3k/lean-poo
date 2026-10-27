@@ -168,6 +168,7 @@
   "Examples/ClosedPrototypes.lean",
   "Examples/ClosureLayouts.lean",
   "Examples/CollectionStyles.lean",
+  "Examples/CollectionTesting.lean",
   "Examples/ComponentCheckout.lean",
   "Examples/ComponentMembership.lean",
   "Examples/ComponentMigration.lean",

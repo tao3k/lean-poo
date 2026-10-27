@@ -1,9 +1,9 @@
 # RFC: model-driven collection property tests
 
-- Status: proposed; this document specifies the next implementation unit.
+- Status: implemented; finite acceptance and evidence boundaries are recorded below.
 - Date: 2026-10-27.
 - Targets: Gerbil-POO PR #13 and Lean-POO PR #13.
-- Implementation acceptance: not yet completed by this RFC.
+- Implementation acceptance: reusable protocol, collection controls and downstream integration are implemented; CI is checked independently for each submitted revision.
 
 ## Decision
 
@@ -304,9 +304,8 @@ logical handles and ordinary lists, independent of backend mutation algorithms.
 
 ## Downstream Scheme integration
 
-The library additions below are proposed until this RFC's acceptance is complete.
-Users need a Gerbil-POO revision that implements them; existing releases must not
-be described as already providing these exports. Declare the package through the
+The library additions below are implemented on PR #13. Users need a revision
+containing them; older releases must not be described as providing these exports. Declare the package through the
 project's normal Gerbil dependency workflow, with no Lean checkout or special
 load-path/environment variables.
 
@@ -376,22 +375,48 @@ refusal classification remain explicit assumptions. These proofs do not verify
 Gerbil, C++, FFI memory safety, arbitrary callback termination or concurrent
 linearizability. Performance acceptance is measured separately.
 
-## Acceptance checklist and delivery order
+## Verification matrix
 
-- [ ] Reusable trace generation/admission, with typed invalid-draw and bound controls.
-- [ ] Fresh-fixture initial/step/result/state comparison and first-divergence reports.
-- [ ] Dependency-retiring structural and parameter shrinking; independent suffix retention.
-- [ ] Original-cause errors, expected refusal and specification-vs-fixture stale controls.
-- [ ] Seed and concrete-witness replay; old-source refusal before fixture effects.
-- [ ] Complete indexed collection lifecycle on two backends, including failure/retry.
-- [ ] Fault injection demonstrates false witnesses, valid shrinking and exact reproduction.
-- [ ] Standard downstream test example and FUN/IO composition, using the proposed public API.
-- [ ] Finite Lean laws and executable examples, with assumptions stated beside claims.
-- [ ] Focused regressions, the COMPLETE Scheme inventory and COMPLETE Lean checks pass.
-- [ ] Current commits in both PRs have separately verified full CI results.
-- [ ] Resource limits, existing checks and progress remain; no SubAgent or committed raw datasets.
+| Obligation | Implementation / executable evidence |
+| --- | --- |
+| Typed model and fixture data | `TraceModel`, inherited `TraceGenerator`, `TraceSystem`; examples declare one reusable fixture Record and create fresh instances |
+| State-dependent draws and dependency repair | Shared typed `fold-trace`, bounded generator fold, existing shrink budget/domain gates; invalid-draw, false-command and independent-suffix controls |
+| Fresh resource scope | Distinct fixture identity across trials, shrink probes and both replays; cleanup counters remain balanced after comparison exceptions |
+| First difference | Initial/result/state fault controls reject later steps and count only required observations |
+| Adapter contracts | Malformed actual state, result and observation are Type errors, not counterexamples |
+| Collection semantics | RationalDict and trie lifecycle plus stale-admission, index-owner, inverse and premature-publication fault injections |
+| Finite Lean laws | `retire_valid`, `retire_sublist`, `retire_deletion`, `drawTrace_sound`, `trace_simulation`, `replayTrace_stale`, `replayTrace_failed` |
+| Concrete collection proofs | Top-level `Examples/CollectionTesting.lean` reuses `applyIndexed` and `inverseChanges`; proves complete two-key enumeration and checks conflict/retry/inverse/old-value/stale outcomes, final primary/index restoration and detection of premature primary publication |
+| Local full workflow | 149 modules, 1,831 cases and the linked paired collection benchmark pass under existing limits; 14 focused PBT cases pass |
+| Published baseline CI | Lean `6bda6ff61fcde59f74cbf3f90723ae25c1f10328`: 17 successful checks; Gerbil `77dd5e6ae33047e0a2755f0be705bd6bf8ec3b99`: 53 successful checks, including single-process acceptance |
 
-Implement the reusable protocol and negative controls first, then the complete
-collection adapter and downstream integration, then prove/verify the source laws
-and run full acceptance. Only after that should profiling select optimizations.
-This RFC is not itself evidence that any unchecked acceptance item is complete.
+The published baseline CI was checked before this follow-up. Every later revision
+must pass the same CI; that baseline is not evidence for unsubmitted edits. Full
+Lean submission checks and exact-head remote CI remain separate from target proof
+checks. No source law proves a host adapter simulation premise automatically.
+
+The three delayed Gerbil baseline jobs were waiting in GitHub artifact download,
+not running a failing compiler/test. They completed without reruns or changed
+limits. Local `pkg-config-libs "openssl"` uses the selected system `pkg-config`;
+the Nix tool without OpenSSL metadata is distinct from Homebrew's configured tool.
+No library paths are hard-coded to hide that environment distinction.
+
+## Acceptance checklist
+
+- [x] Reusable trace generation/admission, with typed invalid-draw and bound controls.
+- [x] Fresh-fixture initial/step/result/state comparison and first-divergence reports.
+- [x] Dependency-retiring structural and parameter shrinking; independent suffix retention.
+- [x] Original-cause errors, expected refusal and specification-vs-fixture stale controls.
+- [x] Seed and concrete-witness replay; old-source refusal before fixture effects.
+- [x] Complete indexed collection lifecycle on two backends, including failure/retry.
+- [x] Fault injection demonstrates false witnesses, valid shrinking and exact reproduction.
+- [x] Standard downstream test example and FUN/IO composition, using the implemented public API.
+- [x] Finite Lean laws and executable examples, with assumptions stated beside claims.
+- [x] Focused regressions, the COMPLETE Scheme inventory and COMPLETE Lean checks pass.
+- [x] Published baseline commits in both PRs have separately verified full CI results; later revisions retain the same required gate.
+- [x] Resource limits, existing checks and progress remain; no SubAgent or committed raw datasets.
+
+The finite V1 protocol is complete within the stated scope. Keep universal
+correctness claims separate from generated evidence, and verify each submitted
+revision through the unchanged full gates. The matrix identifies reproducible
+checks; it does not turn this document into a replacement for their results.
