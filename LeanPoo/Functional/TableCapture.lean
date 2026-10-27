@@ -1,5 +1,6 @@
 import LeanPoo.Functional.TableRevision
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.Validation
 
 /-! Captured optional changes and finite constructor requests. Cells model
 mutable shells; child values
@@ -388,5 +389,74 @@ theorem admitTableConstructor_refused (family : TableConstructors Entry Root Err
     (cause : Error) (refused : runTableConstructor family request = .error cause) :
     admitTableConstructor family request admit = .error cause := by
   simp [admitTableConstructor, refused, Except.bind]
+
+section RootGroups
+variable {Root Cell Failure : Type}
+
+/-- Recognize an OWNED root group in order, then retain its exact roots. This
+uses the existing validator; it never normalizes roots or reconstructs leaves. -/
+def admitRootGroup (roots : List Root) (admit : Root → Except Failure Unit) : Except Failure (List Root) :=
+  (Validation.traverse admit roots).map (fun _ => roots)
+
+/-- Capture producer cells before recognition. Host capture/opaque persistence
+must faithfully interpret this immutable list; arbitrary callback code is not proved. -/
+def prepareCapturedRoots (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) : Except Failure (List Root) :=
+  let roots := captureOrigins buffer cells
+  admitRootGroup roots admit
+
+/-- Success preserves every original root identity and its exact position. -/
+theorem admitRootGroup_identity (roots checked : List Root) (admit : Root → Except Failure Unit)
+    (ready : admitRootGroup roots admit = .ok checked) : checked = roots := by
+  unfold admitRootGroup at ready
+  cases result : Validation.traverse admit roots <;> simp [result, Except.map] at ready
+  exact ready.symm
+
+/-- Recognizing every original root supplies the same complete group. -/
+theorem admitRootGroup_ready (roots : List Root) (admit : Root → Except Failure Unit)
+    (valid : ∀ root ∈ roots, admit root = .ok ()) :
+    admitRootGroup roots admit = .ok roots := by
+  have all := Validation.traverse_success admit (fun _ => ()) roots valid
+  simp [admitRootGroup, all, Except.map]
+
+/-- First refusal retains its exact cause. No repaired/replaced producer suffix
+is selected after the prefix; the existing ordered traversal owns this rule. -/
+theorem admitRootGroup_refused (prior suffix : List Root) (bad : Root)
+    (admit : Root → Except Failure Unit) (units : List Unit) (cause : Failure)
+    (good : Validation.traverse admit prior = .ok units) (failed : admit bad = .error cause) :
+    admitRootGroup (prior ++ bad :: suffix) admit = .error cause := by
+  simp [admitRootGroup, Validation.traverse_append, good, Validation.traverse, failed,
+    Except.bind, Except.map]
+
+/-- Arbitrary rewrites of the borrowed spine do not rewrite the captured roots.
+Recorded admission outcomes remain parameters; this does not assert callback purity. -/
+theorem capturedRootGroup_buffer_stable (buffer later : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) :
+    admitRootGroup (replaceOriginBuffer (buffer, captureOrigins buffer cells) later).2 admit =
+      prepareCapturedRoots buffer cells admit := rfl
+
+/-- Every successful delivery retains order, cardinality, sharing and opaque
+Function identities, independently of the producer's later buffer contents. -/
+theorem prepareCapturedRoots_identity (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) (checked : List Root)
+    (ready : prepareCapturedRoots buffer cells admit = .ok checked) :
+    checked = captureOrigins buffer cells :=
+  admitRootGroup_identity _ checked admit ready
+
+/-- Snapshot construction owns exactly one spine position per original cell.
+This is a finite work bound, not a byte-allocation or compiler/runtime theorem. -/
+theorem prepareCapturedRoots_length (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) (checked : List Root)
+    (ready : prepareCapturedRoots buffer cells admit = .ok checked) :
+    checked.length = cells.length := by
+  rw [prepareCapturedRoots_identity buffer cells admit checked ready, captureOrigins_length]
+
+/-- The existing zero/one/two division bound survives capture without a scan of
+any root's entries. Callback recognition costs remain separately charged. -/
+theorem captureDivisionRoots_bound (buffer : Cell → Root) (cells : List Cell)
+    (bounded : cells.length ≤ 2) : (captureOrigins buffer cells).length ≤ 2 := by
+  simpa [captureOrigins_length] using bounded
+
+end RootGroups
 
 end LeanPoo.Functional.OrderedDictionary

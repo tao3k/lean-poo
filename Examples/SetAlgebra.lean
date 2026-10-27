@@ -246,4 +246,41 @@ example (style other : TableStyle) :
       (replace (membershipTable original) 1 (membershipBinding false)) = (winner, .error .stale) :=
   membership_install_single_winner style other 3 _ 1 true false
 
+/-- The producer initially supplies two lawful root tokens in this order. -/
+example : prepareCapturedRoots (fun id : Nat => id) [0, 1]
+    (fun _ => (Except.ok () : Except String Unit)) = .ok [0, 1] := rfl
+
+/-- Replacing BOTH borrowed cells does not replace the already captured group. -/
+example : admitRootGroup (replaceOriginBuffer
+    ((fun id : Nat => id), captureOrigins (fun id : Nat => id) [0, 1])
+    (fun _ => 2)).2 (fun _ => (Except.ok () : Except String Unit)) = .ok [0, 1] := rfl
+
+/-- An original late refusal cannot be repaired by replacing the producer cell. -/
+example : admitRootGroup (replaceOriginBuffer
+    ((fun id : Nat => id), captureOrigins (fun id : Nat => id) [0, 1])
+    (fun _ => 2)).2 (fun root => if root = 1 then .error "second-part-refused" else .ok ()) =
+      .error "second-part-refused" := rfl
+
+/-- Failed multi-result preparation retains the linear owner for an explicit retry. -/
+example : styleDivision .linear (some 99) (fun _ =>
+    prepareCapturedRoots (fun id : Nat => id) [0, 1]
+      (fun root => if root = 1 then .error "second-part-refused" else .ok ())) =
+        (some 99, .error (.callback "second-part-refused")) := rfl
+
+/-- A fresh successful attempt publishes the whole original group and retires once. -/
+example : styleDivision .linear (some 99) (fun _ =>
+    prepareCapturedRoots (fun id : Nat => id) [0, 1]
+      (fun _ => (Except.ok () : Except String Unit))) = (none, .ok [0, 1]) := rfl
+
+/-- Root capture does not compare or reconstruct opaque callable values. -/
+example (first second : Nat → Nat) :
+    prepareCapturedRoots (fun cell : Bool => if cell then second else first) [false, true]
+      (fun _ => (Except.ok () : Except String Unit)) = .ok [first, second] := rfl
+
+/-- A fully prepared group still cannot overwrite a competing installed generation. -/
+example (style : TableStyle) :
+    installStyle (E := String) style ⟨8, some 7⟩ 7 0 = (⟨8, some 7⟩, .error .stale) := by
+  apply installStyle_stale
+  decide
+
 end LeanPoo.Examples.SetAlgebra

@@ -915,4 +915,34 @@ theorem observeEmpty_preserves (state : Option (List A)) (admit : List A → Exc
 theorem observeEmpty_consumed (admit : List A → Except E Unit) :
     observeEmpty none admit = (none, .error .consumed) := rfl
 
+/-- Multi-result publication composes existing root capture/admission and the
+existing style transaction; no independent owner/install protocol is introduced. -/
+theorem styleDivision_captured_identity (style : TableStyle) (before : A)
+    (buffer : Cell → A) (cells : List Cell) (admit : A → Except E Unit) (roots : List A)
+    (ready : prepareCapturedRoots buffer cells admit = .ok roots) :
+    (styleDivision style (some before) (fun _ => prepareCapturedRoots buffer cells admit)).2 =
+      .ok (captureOrigins buffer cells) := by
+  rw [styleDivision_observation style before _ roots ready]
+  rw [prepareCapturedRoots_identity buffer cells admit roots ready]
+
+/-- Mutable/classy publish the original first captured root, linear retires once,
+and pure/posh retain the predecessor through the existing styleStep rule. -/
+theorem styleDivision_captured_owner (style : TableStyle) (before : A)
+    (buffer : Cell → A) (cells : List Cell) (admit : A → Except E Unit) (roots : List A)
+    (ready : prepareCapturedRoots buffer cells admit = .ok roots) :
+    (styleDivision style (some before) (fun _ => prepareCapturedRoots buffer cells admit)).1 =
+      (styleStep (E := E) style (some before)
+        (fun _ => .ok ((captureOrigins buffer cells).headD before))).1 := by
+  have same := prepareCapturedRoots_identity buffer cells admit roots ready
+  simp [styleDivision, ready, same]
+
+/-- Any part's refusal preserves every style's old capability and exact cause;
+no result group can escape through the consumer or a later producer rewrite. -/
+theorem styleDivision_captured_refused (style : TableStyle) (before : A)
+    (buffer : Cell → A) (cells : List Cell) (admit : A → Except E Unit) (cause : E)
+    (failed : prepareCapturedRoots buffer cells admit = .error cause) :
+    styleDivision style (some before) (fun _ => prepareCapturedRoots buffer cells admit) =
+      (some before, .error (.callback cause)) :=
+  styleDivision_refused style before _ cause failed
+
 end LeanPoo.Functional.OrderedDictionary
