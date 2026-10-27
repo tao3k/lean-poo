@@ -973,4 +973,16 @@ example (callback replacement : Nat → Nat) :
       (fun rows => Except.ok (rows.foldr (fun row acc => row.2 row.1 + acc) 0)) =
         .ok (callback 1 + (callback 2 + (callback 3 + 0))) := rfl
 
+/-- A readable source does not weaken an inherited ordered receiver contract. -/
+example : observeOrderedTable [1] [1] [2] [2] (10 : Nat)
+    (fun _ => (Except.error "receiver refused" : Except String Unit))
+    (fun n => Except.ok [(n, false)]) = .error (.backend "receiver refused") := by
+  apply observeOrderedTable_refused; rfl
+
+/-- Approved bounded observation keeps the original checked Function opaque. -/
+example (callback : Nat → Nat) : observeOrderedTable [1] [1] [2] [2] callback
+    (fun _ => (Except.ok () : Except String Unit)) (fun f => Except.ok (some f)) =
+      .ok (some callback) := by
+  simp [observeOrderedTable, observeTable, observeStyle, Except.bind, Except.mapError]
+
 end LeanPoo.Examples.CollectionStyles

@@ -595,4 +595,78 @@ theorem observeTable_reentry_refused (versions : List Nat) (snapshot : A)
   apply observeTable_refused
   exact guardTableAdmission_reentry active request failure admit present
 
+/-- Only the exact unchanged constructor receiver can reuse its ordinary
+source admission. Copies and edits require complete receiver admission. The
+constructor's unrefined-view law and faithful identity/revisions are premises. -/
+def orderedReceiverAdmission (sameIdentity : Bool) (constructed current : Nat)
+    (base complete : A → Except E Unit) (snapshot : A) : Except E Unit :=
+  if sameIdentity && (constructed == current) then base snapshot else complete snapshot
+
+/-- The unchanged constructor preserves lazy admission without running a new scan. -/
+theorem orderedReceiverAdmission_original (version : Nat)
+    (base complete : A → Except E Unit) (snapshot : A) :
+    orderedReceiverAdmission true version version base complete snapshot = base snapshot := by
+  simp [orderedReceiverAdmission]
+
+/-- Equal revision numbers cannot authorize a different receiver's refinement. -/
+theorem orderedReceiverAdmission_copy (constructed current : Nat)
+    (base complete : A → Except E Unit) (snapshot : A) :
+    orderedReceiverAdmission false constructed current base complete snapshot = complete snapshot := by
+  simp [orderedReceiverAdmission]
+
+/-- Editing even the original receiver revokes the constructor's reuse evidence. -/
+theorem orderedReceiverAdmission_edited (constructed current : Nat)
+    (base complete : A → Except E Unit) (snapshot : A) (changed : constructed ≠ current) :
+    orderedReceiverAdmission true constructed current base complete snapshot = complete snapshot := by
+  simp [orderedReceiverAdmission, changed]
+
+/-- An ordered derived query retains the source order scope and separately
+admits/attests its actual receiver. This reuses the complete observation gate;
+rows, ordering and cursor algorithms are not reconstructed by the refinement. -/
+def observeOrderedTable (sourceIssued sourceCurrent receiverIssued receiverCurrent : List Nat)
+    (snapshot : A) (admit : A → Except E Unit) (query : A → Except E R) :
+    Except (TableObservationFailure E) R :=
+  if sourceIssued = sourceCurrent then
+    observeTable receiverIssued receiverCurrent snapshot admit query
+  else .error .stale
+
+/-- A stale source refuses before receiver admission or backend work. -/
+theorem observeOrderedTable_source_stale (si sc ri rc : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (stale : si ≠ sc) :
+    observeOrderedTable si sc ri rc snapshot admit query = .error .stale := by
+  simp [observeOrderedTable, stale]
+
+/-- A current original source does not authorize an expired derived receiver. -/
+theorem observeOrderedTable_receiver_stale (source ri rc : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (stale : ri ≠ rc) :
+    observeOrderedTable source source ri rc snapshot admit query = .error .stale := by
+  simpa [observeOrderedTable] using observeTable_stale ri rc snapshot admit query stale
+
+/-- An inherited receiver refusal suppresses positioning, sorting and user IO. -/
+theorem observeOrderedTable_refused (source receiver : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R) (cause : E)
+    (refused : admit snapshot = .error cause) :
+    observeOrderedTable source source receiver receiver snapshot admit query =
+      .error (.backend cause) := by
+  simpa [observeOrderedTable] using observeTable_refused receiver snapshot admit query cause refused
+
+/-- Accepted refinements preserve the exact backend observation and opaque leaves. -/
+theorem observeOrderedTable_ready (source receiver : List Nat) (snapshot : A)
+    (admit : A → Except E Unit) (query : A → Except E R)
+    (accepted : admit snapshot = .ok ()) :
+    observeOrderedTable source source receiver receiver snapshot admit query =
+      (query snapshot).mapError TableObservationFailure.backend := by
+  simpa [observeOrderedTable] using observeTable_ready receiver snapshot admit query accepted
+
+/-- Receiver reentry uses the existing finite admission guard before delegation;
+this does not claim termination of arbitrary recursive user computations. -/
+theorem observeOrderedTable_reentry (source receiver : List Nat) (snapshot : A)
+    (active : List (Nat × Nat)) (request : Nat × Nat) (failure : E)
+    (admit : Unit → Except E Unit) (query : A → Except E R) (present : request ∈ active) :
+    observeOrderedTable source source receiver receiver snapshot
+      (fun _ => guardTableAdmission active request failure admit) query =
+      .error (.backend failure) := by
+  apply observeOrderedTable_refused
+  exact guardTableAdmission_reentry active request failure admit present
+
 end LeanPoo.Functional.OrderedDictionary

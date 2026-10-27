@@ -1396,3 +1396,29 @@ Capture adds O(n) list/Pair shells to finite observations; full admission, sorti
 callbacks, allocation and GC remain charged. No runtime speedup is inferred.
 This advances the collection proposal's future work using the original paper's
 self-delegation discipline, without introducing another capture or sort engine.
+
+### Actual ordered receiver admission
+
+Ordered queries now bind the actual inherited receiver through one shared query
+boundary. Changed/copied receivers run complete non-normalizing admission before
+positioning; retained cursors attest the receiver, its children and declared
+origins through repeated EOF. Bounds retain their original captured values.
+`.range` drains the same cursor without nesting another refinement. The existing
+finite admission guard rejects receiver/root reentry before repeated recognition.
+
+Only exact identity plus an unchanged construction revision authorizes reuse of
+the original view's admission. The original lazy representation and bounded seek
+controls remain intact; full receiver scanning is not imposed on that unchanged
+constructor. `TableObservation.orderedReceiverAdmission` proves original/copy/edit
+selection; `observeOrderedTable` reuses `observeTable` for source and receiver
+staleness, original refusal, successful opaque observations and bounded reentry.
+Existing cursor laws retain no backend delegation after invalidation.
+
+Six integrated regressions and existing bounded service Reader/FUN/IO examples
+cover narrowed invalid tails, approval/refusal/retry, false values, checked
+Functions, five styles, inherited origins and EOF invalidation. Backend and
+representation fidelity, stable leaves, complete dependency declarations and
+faithful identity/revisions remain premises. Arbitrary callback termination,
+object evaluation and host runtime behavior are not proved. Full changed-receiver
+admission, O(d) dependency capture, per-pull guards, conversion and GC remain
+charged; no automatic recognition cache or runtime speedup is claimed.
