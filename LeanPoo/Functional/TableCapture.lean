@@ -459,4 +459,65 @@ theorem captureDivisionRoots_bound (buffer : Cell → Root) (cells : List Cell)
 
 end RootGroups
 
+/-- Own the optional cached row-list handle before eviction. The transition
+records the backend's completed cache and reused response buffer separately;
+its later buffer is never used to decide which original rows to retire. Stable
+cached row lists and faithful Option capture are explicit host premises. -/
+def retireCachedRows (observed : Option (List Row))
+    (evict : Unit → Except E (Cache × Option (List Row))) : Except E (Cache × List Row) :=
+  let captured := observed.map id
+  (evict ()).map fun result => (result.1, captured.getD [])
+
+/-- Successful eviction delivers the complete original row inventory in order. -/
+theorem retireCachedRows_present (rows : List Row) (cache : Cache)
+    (later : Option (List Row)) :
+    retireCachedRows (some rows) (fun _ => (Except.ok (cache, later) : Except E _)) =
+      .ok (cache, rows) := rfl
+
+/-- Absent ownership cannot be invented by a later nonempty provider response. -/
+theorem retireCachedRows_absent (cache : Cache) (later : Option (List Row)) :
+    retireCachedRows none (fun _ => (Except.ok (cache, later) : Except E _)) =
+      .ok (cache, []) := rfl
+
+/-- Provider-buffer reuse changes neither original membership nor row payloads. -/
+theorem retireCachedRows_buffer_independent (old : Option (List Row)) (cache : Cache)
+    (left right : Option (List Row)) :
+    retireCachedRows old (fun _ => (Except.ok (cache, left) : Except E _)) =
+      retireCachedRows old (fun _ => .ok (cache, right)) := rfl
+
+/-- Backend eviction failure retains its original cause, exposing no row delivery.
+External effects of that backend are not rolled back by this finite model. -/
+theorem retireCachedRows_refused (old : Option (List Row)) (cause : E) :
+    retireCachedRows old (fun _ => (Except.error cause : Except E (Cache × Option (List Row)))) =
+      .error cause := rfl
+
+/-- Translate owned rows to the existing ordinary optimistic deletion delta.
+Every expected value is present, even when it is false or an opaque Function. -/
+def cachedRetractions (rows : List (K × V)) : List (Change K V) :=
+  rows.map fun row => ⟨row.1, some row.2, none⟩
+
+/-- Original key order and multiplicity are retained for the ordinary installer. -/
+theorem cachedRetractions_keys (rows : List (K × V)) :
+    (cachedRetractions rows).map Change.key = rows.map Prod.fst := by
+  simp [cachedRetractions, List.map_map, Function.comp_def]
+
+/-- Capture never loses an old expected value or invents an absence expectation. -/
+theorem cachedRetractions_before (rows : List (K × V)) :
+    (cachedRetractions rows).map Change.before = rows.map (fun row => some row.2) := by
+  simp [cachedRetractions, List.map_map, Function.comp_def]
+
+/-- Row delivery costs one deletion per cached row; unchanged source keys require
+no retirement inventory. Recognition, registry, allocator and backend costs remain
+separate, so this is not a VM wall-time theorem. -/
+theorem cachedRetractions_length (rows : List (K × V)) :
+    (cachedRetractions rows).length = rows.length := by simp [cachedRetractions]
+
+/-- Existing inverse installation recovers the exact original target observation
+from a successfully installed captured deletion delta, with no inverse projection. -/
+theorem cachedRetractions_inverse [DecidableEq K] [DecidableEq V]
+    (rows : List (K × V)) (before after : K → Option V)
+    (ready : applyChanges (cachedRetractions rows) before = .ok after) :
+    applyChanges (inverseChanges (cachedRetractions rows)) after = .ok before :=
+  applyChanges_inverse _ _ _ ready
+
 end LeanPoo.Functional.OrderedDictionary

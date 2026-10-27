@@ -893,4 +893,26 @@ example (functions : List (Nat → Nat)) :
     materializeIndexBucket (fun _ : List Nat => (Except.error "unused" : Except String (List (Nat → Nat))))
       (some functions) none = .ok (some functions) := rfl
 
+/-- A recycled empty provider buffer cannot erase either old route from delivery. -/
+example : retireCachedRows (some [(10, 7), (11, 8)])
+    (fun _ => (Except.ok (4, some []) : Except String (Nat × Option (List (Nat × Nat))))) =
+      .ok (4, [(10, 7), (11, 8)]) := rfl
+
+/-- Reading the reused buffer after eviction would incorrectly report no old rows. -/
+example : ((some [] : Option (List (Nat × Nat))).getD []) ≠ [(10, 7), (11, 8)] := by decide
+
+/-- Every captured false key/value becomes a present expected value, then absence. -/
+example : cachedRetractions [(false, false), (true, true)] =
+    [⟨false, some false, none⟩, ⟨true, some true, none⟩] := rfl
+
+/-- Opaque Function payloads retain their exact original handles in expected rows. -/
+example (first second : Nat → Nat) :
+    cachedRetractions [(10, first), (11, second)] =
+      [⟨10, some first, none⟩, ⟨11, some second, none⟩] := rfl
+
+/-- A backend refusal returns no partial successful cache/retirement pair. -/
+example : retireCachedRows (some [(10, 7)])
+    (fun _ => (Except.error "eviction-refused" : Except String (Nat × Option (List (Nat × Nat))))) =
+      .error "eviction-refused" := rfl
+
 end LeanPoo.Examples.CollectionStyles

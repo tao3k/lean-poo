@@ -1312,3 +1312,23 @@ The scratch seed also captures a provider's optional bucket handle before either
 constructor getter runs. seedIndexBucket establishes original-row delivery and
 independence from later shell replacement; a borrowed Option/getter regression
 checks the host boundary with the existing shared-provider fixture.
+
+
+### Captured projection retraction
+
+TableCapture now models a borrowed optional cached row inventory followed by
+backend eviction and provider-buffer reuse. retireCachedRows delivers the original
+ordered rows, preserves absence and backend refusal, and ignores the later buffer.
+cachedRetractions retains exact expected values (including false/opaque Function
+handles), keys and row count; the existing inverse installer recovers a successful
+deletion. CollectionStyles includes the previously empty-buffer counterexample.
+
+Gerbil's shared projection retraction captures only the Option shell using its
+existing helper; cached row lists were already owned at initial admission.
+Single/multivalued projections, exact middle-delta composition and five-style
+FUN/IO publication reuse that boundary. Stable cached rows, lawful persistent
+backends/installers and registered projection dependencies remain premises.
+One present Option allocation and every retired output are charged separately
+from admission/registry/backend/GC costs; there is no VM speedup, arbitrary
+callback termination or compiler/runtime verification claim. This extends the
+collection proposal's future work using the author's descriptor delegation.
