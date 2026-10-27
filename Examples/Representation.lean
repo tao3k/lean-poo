@@ -129,4 +129,30 @@ example : readPrepared totalSite (deferCells (service 2 3 7 33))
 /-- A two-name shape still allocates cells but needs no value-table seeding probes. -/
 example : seedingLookups false ["total", "capacity"] = 0 := rfl
 
+/-- Permuted complete catalogs reuse the prior order without taking old values. -/
+example : shapeMatches ["capacity", "total"] ["total", "capacity"] = true := by decide
+
+/-- An equal-size replacement is rejected; length alone is insufficient. -/
+example : shapeMatches ["capacity", "approval"] ["total", "capacity"] = false := by decide
+
+/-- An old shape still reads the NEW receiver's false, never a former value. -/
+example : (prepareFromHint
+    (⟨2,3,7,["capacity","total"],fun _ => some false⟩ : View Bool)
+    ["total","capacity"]).fields "total" = some false := rfl
+
+/-- Removing a field falls back to the current catalog after a shared revision. -/
+example : (prepareFromHint (service 2 3 7 33) ["total","capacity","approval"]).names =
+    ["total","capacity"] := by decide
+
+/-- Shape reuse composes with ordinary refusal and retry without new admission. -/
+example : demandRead true totalSite
+    (prepareFromHint (deferCells (service 2 3 7 33)) ["capacity","total"])
+    (fun _ => (Except.error "original refusal" : Except String Int)) = .error "original refusal" := by
+  apply demandRead_prepareFromHint
+  intro value cached
+  simp [deferCells] at cached
+
+/-- Only canonical-sort entries are eliminated; complete set checks stay charged. -/
+example : shapeSorts ["capacity","total"] ["total","capacity"] = 0 := by decide
+
 end LeanPoo.Examples.Representation

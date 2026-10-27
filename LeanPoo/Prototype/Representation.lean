@@ -544,4 +544,92 @@ theorem seedingLookups_deferred (names : List String) : seedingLookups false nam
 /-- The eager source path probes once per canonical field, including uncached ones. -/
 theorem seedingLookups_eager (names : List String) : seedingLookups true names = names.length := rfl
 
+/-- The runtime first deduplicates by symbol identity, then compares cardinality
+and every membership. String equality denotes faithful symbol identity here. -/
+def shapeMatches (catalog hint : List String) : Bool :=
+  catalog.length == hint.length && catalog.all (fun name => hint.contains name)
+
+/-- Full membership and cardinality checking cannot retain an extra old field.
+Deduplication is essential: equal lengths alone do not justify this conclusion. -/
+theorem shapeMatches_members (catalog hint : List String) (unique : catalog.Nodup)
+    (matched : shapeMatches catalog hint = true) :
+    ∀ name, name ∈ hint ↔ name ∈ catalog := by
+  have checked := Bool.and_eq_true_iff.mp matched
+  have size : catalog.length = hint.length := by simpa using checked.1
+  have forward : catalog ⊆ hint := by
+    intro name member
+    have := List.all_eq_true.mp checked.2 name member
+    simpa using this
+  intro name
+  constructor
+  · intro member
+    by_cases absent : name ∈ catalog
+    · exact absent
+    apply False.elim
+    have distinct : (name :: catalog).Nodup := List.nodup_cons.mpr ⟨absent, unique⟩
+    have subset : name :: catalog ⊆ hint := by
+      intro key belongs
+      rcases List.mem_cons.mp belongs with rfl | tail
+      · exact member
+      · exact forward tail
+    have bound := distinct.length_le_of_subset subset
+    simp only [List.length_cons] at bound
+    omega
+  · exact fun member => forward member
+
+/-- Reuse only the immutable ordered name vector; fallback canonicalization has
+its own faithful ordering premise. The current receiver supplies ALL cell values. -/
+def prepareFromHint (current : View Value) (hint : List String) : View Value :=
+  { current with names := if shapeMatches current.names hint then hint else current.names }
+
+/-- Choosing a certified old order changes no field presence, including removals. -/
+theorem prepareFromHint_members (current : View Value) (hint : List String)
+    (unique : current.names.Nodup) (name : String) :
+    name ∈ (prepareFromHint current hint).names ↔ name ∈ current.names := by
+  simp only [prepareFromHint]
+  split
+  · next h => exact shapeMatches_members _ _ unique h name
+  · rfl
+
+/-- Immutable shape sharing grants no old owner, revision, allocation or values. -/
+theorem prepareFromHint_identity (current : View Value) (hint : List String) :
+    (prepareFromHint current hint).owner = current.owner ∧
+    (prepareFromHint current hint).revision = current.revision ∧
+    (prepareFromHint current hint).token = current.token ∧
+    (prepareFromHint current hint).fields = current.fields := by exact ⟨rfl, rfl, rfl, rfl⟩
+
+/-- Any accepted old index must name a CURRENT field. No cached offset can
+resurrect a removed name after a failed complete-set match. -/
+theorem prepareFromHint_index (current : View Value) (hint : List String)
+    (unique : current.names.Nodup) (index : Nat) (name : String)
+    (indexed : (prepareFromHint current hint).names[index]? = some name) :
+    name ∈ current.names := by
+  apply (prepareFromHint_members current hint unique name).mp
+  exact List.mem_of_getElem? indexed
+
+/-- Whole-cache fidelity survives shape reuse without copying any old cells. -/
+theorem faithfulCells_prepareFromHint (current : View Value) (hint : List String)
+    (ordinary : String → Except E Value) (faithful : faithfulCells current ordinary) :
+    faithfulCells (prepareFromHint current hint) ordinary := faithful
+
+/-- Exact values/refusals still come from the current ordinary evaluator.
+This composes the existing access law rather than adding another evaluator. -/
+theorem demandRead_prepareFromHint (current : View Value) (hint : List String)
+    (site : Site) (ordinary : Unit → Except E Value)
+    (faithful : ∀ value, current.fields site.name = some value → ordinary () = .ok value) :
+    demandRead true site (prepareFromHint current hint) ordinary = ordinary () := by
+  exact demandRead_sound true site _ ordinary faithful
+
+/-- Count canonical-sort entries only; name capture, deduplication, membership
+probes, vector allocation/seeding, construction and GC are separate costs. -/
+def shapeSorts (catalog hint : List String) : Nat := if shapeMatches catalog hint then 0 else 1
+
+/-- A complete-set match skips sorting/interning even when input order differs. -/
+theorem shapeSorts_hit (catalog hint : List String) (matched : shapeMatches catalog hint = true) :
+    shapeSorts catalog hint = 0 := by simp [shapeSorts, matched]
+
+/-- A changed catalog retains the original canonicalization path. -/
+theorem shapeSorts_miss (catalog hint : List String) (matched : shapeMatches catalog hint = false) :
+    shapeSorts catalog hint = 1 := by simp [shapeSorts, matched]
+
 end LeanPoo.Prototype.Representation

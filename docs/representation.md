@@ -228,3 +228,29 @@ sorting/interning, dense vector allocation/fill, demand reads, possible repeated
 writes, guards and GC stay charged. This is neither constant-time construction
 nor full removal of per-receiver hash storage. Dynamic module initialization and
 compiler behavior are still outside these source laws.
+
+## Certified reuse during static-layout construction
+
+Gerbil's existing access site may supply its previous layout as a construction
+hint. The shape stores its canonical ordered names beside its standard identity
+hash index. After standard identity-based duplicate removal, equal cardinality
+and membership of EVERY current name certify reuse. Reordered/duplicate names
+are harmless; different uninterned symbols, additions and removals take the
+original sort/weak-intern path. The hint never supplies old cells. Eager seeding
+still reads only the current ordinary instance; demand-filled construction keeps
+its private sentinel. Owner/revision/layout guards and ordinary evaluation remain
+unchanged. Supported invalidation discards the receiver layout as before.
+
+The existing Representation model proves full field-set preservation from the
+actual cardinality/membership check (assuming identity-faithful distinct current
+names), current owner/revision/token/field preservation, certified-index presence,
+whole-cache fidelity and composition with the existing value/refusal access law.
+The source cost law counts skipped canonical-sort entries only. Name inventory,
+deduplication, membership checks, vector allocation, seeding, callbacks, GC and
+module loading remain separate costs; no compiler or loader proof is claimed.
+
+This follows the author source's representation/cache distinction in
+`poof.scrbl` (prototype metadata and cache invalidation sections). Standard Gerbil
+`load-module` already owns module initialization and failure caching. Reusing an
+initialized module's recipe does not mean sharing evaluated receiver values.
+Scheme has no dependency on this checkout, and adds no module registry or loader.
