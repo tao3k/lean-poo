@@ -103,4 +103,19 @@ first divergence at command 1, before any later recovery could conceal it. -/
 example : firstDifference
     (traceObservations model.advance observe model.initial lifecycle)
     (traceObservations publishBeforeApproval observe model.initial lifecycle) = some 1 := rfl
+/-- A receipt expects false and replaces it with true, independently of history. -/
+def promote : List (Change Key Bool) := [⟨0, some false, some true⟩]
+/-- An intervening false/true/false sequence restores the expected old value.
+The same receipt remains admissible within an epoch; revision still invalidates it. -/
+def aba : List Command :=
+  [.install 0 [⟨0, none, some false⟩], .install 0 promote,
+   .install 0 (inverseChanges promote), .install 0 promote, .revise,
+   .install 0 (inverseChanges promote), .install 1 (inverseChanges promote)]
+example : (traceObservations model.advance observe model.initial aba).map Prod.fst =
+    [.installed, .installed, .installed, .installed, .revised, .stale, .installed] := rfl
+/-- A high-ID prefix cannot collide with step-derived producer selection anymore. -/
+example : freshHandle 1 [2] = 3 := rfl
+example : freshHandle 2 [3, 2] = 4 := rfl
+example : freshHandle 1 [1000, 2] ∉ [1000, 2] := freshHandle_not_mem _ _
+#print axioms freshHandle_not_mem
 end Examples.CollectionTesting

@@ -302,6 +302,22 @@ backends, including adapters deliberately broken at stale admission, index
 observation, inverse installation and atomic failure. Their reference oracle uses
 logical handles and ordinary lists, independent of backend mutation algorithms.
 
+## Complex executable examples
+
+[`collection-properties.md`](collection-properties.md) explains three runnable
+examples in `examples/collection-properties.ss`: interleaved unique-owner handoff,
+two-round service upgrades with retained receipts, and same-epoch ABA versus
+cross-epoch rejection. Each uses both backends and multiple seeded runs through
+`property-action`, with random suffixes after its required domain prefix.
+
+Known faulty adapters must produce smaller dependency-valid counterexamples and
+reproduce them through both replay paths. Custom-prefix controls additionally
+verify owned scalar commands and fresh producer selection from retained IDs,
+rather than assuming that the trace step number is unused. The corresponding
+`freshHandle_lower`, `freshHandle_gt` and `freshHandle_not_mem` laws extend the
+existing Lean testing model. These are finite design controls, not universal
+runtime correctness or serializability claims.
+
 ## Downstream Scheme integration
 
 The library additions below are implemented on PR #13. Users need a revision
@@ -387,7 +403,7 @@ linearizability. Performance acceptance is measured separately.
 | Collection semantics | RationalDict and trie lifecycle plus stale-admission, index-owner, inverse and premature-publication fault injections |
 | Finite Lean laws | `retire_valid`, `retire_sublist`, `retire_deletion`, `drawTrace_sound`, `trace_simulation`, `replayTrace_stale`, `replayTrace_failed` |
 | Concrete collection proofs | Top-level `Examples/CollectionTesting.lean` reuses `applyIndexed` and `inverseChanges`; proves complete two-key enumeration and checks conflict/retry/inverse/old-value/stale outcomes, final primary/index restoration and detection of premature primary publication |
-| Local full workflow | 149 modules, 1,831 cases and the linked paired collection benchmark pass under existing limits; 14 focused PBT cases pass |
+| Local full workflow | The complete 149-module workflow and linked paired collection benchmark pass under existing limits; 18 focused PBT cases pass |
 | Published baseline CI | Lean `6bda6ff61fcde59f74cbf3f90723ae25c1f10328`: 17 successful checks; Gerbil `77dd5e6ae33047e0a2755f0be705bd6bf8ec3b99`: 53 successful checks, including single-process acceptance |
 
 The published baseline CI was checked before this follow-up. Every later revision

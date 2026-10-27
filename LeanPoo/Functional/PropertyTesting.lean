@@ -305,4 +305,38 @@ theorem replayTrace_failed [DecidableEq Stamp] (stamp : Stamp) (valid evaluate :
     replayTrace stamp stamp valid evaluate commands = some false := by
   simp [replayTrace, admit, domain, failure]
 
+/-- Select a logical producer ID from current retained handles. A trace step
+number is only a lower bound, since a supplied prefix may contain arbitrary IDs. -/
+def freshHandle (start : Nat) (used : List Nat) : Nat :=
+  used.foldl (fun next handle => max next (handle + 1)) start
+
+/-- Fresh selection preserves the caller's monotone lower bound. -/
+theorem freshHandle_lower (start : Nat) (used : List Nat) : start ≤ freshHandle start used := by
+  induction used generalizing start with
+  | nil => exact Nat.le_refl _
+  | cons head tail ih =>
+    change start ≤ freshHandle (max start (head + 1)) tail
+    exact Nat.le_trans (Nat.le_max_left _ _) (ih _)
+
+/-- Every retained producer is strictly below the selected new handle, including
+IDs larger than the current step count and IDs retained across source epochs. -/
+theorem freshHandle_gt (start : Nat) (used : List Nat) (handle : Nat) (member : handle ∈ used) :
+    handle < freshHandle start used := by
+  induction used generalizing start with
+  | nil => simp at member
+  | cons head tail ih =>
+    change handle < freshHandle (max start (head + 1)) tail
+    rcases List.mem_cons.mp member with same | later
+    · subst handle
+      have lower := freshHandle_lower (max start (head + 1)) tail
+      have upper := Nat.le_max_right start (head + 1)
+      omega
+    · exact ih _ later
+
+/-- Selection cannot recreate any still-retained logical producer. -/
+theorem freshHandle_not_mem (start : Nat) (used : List Nat) : freshHandle start used ∉ used := by
+  intro member
+  have impossible := freshHandle_gt start used _ member
+  omega
+
 end LeanPoo.Functional.PropertyTesting
