@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableSelection
+import LeanPoo.Functional.SetStyle
 
 /-! Access-policy algebra composes existing table revisions, inverse recovery,
 styles and service lenses. This advances the collection proposal's future work. -/
@@ -116,5 +117,57 @@ def inventoryView (key : Nat) : Option Nat := if key ∈ [1, 2, 3, 4] then some 
 example : (applyChanges (inverseChanges (diffChanges [1, 2, 3, 4] inventoryView filteredView))
     filteredView).map (fun view => (view 1, view 2, view 3, view 4)) =
     .ok (some 10, some 20, some 30, some 40) := by rfl
+
+
+/-- The broad backing and custom predicate cannot authorize an out-of-range Elt. -/
+example : admitSetContract (fun _ => true) (fun _ => true) id
+    (fun key : Nat => decide (key < 256)) "outside Elt" [1, 256] = .error "outside Elt" := rfl
+
+/-- Empty membership lookup still refuses an invalid request before the backend. -/
+example : (checkSetElement (fun key : Nat => decide (key < 256)) (fun _ => true)
+    "outside Elt" "outside Key" 256).bind (fun _ => Except.ok false) = .error "outside Elt" := rfl
+
+/-- A wider Elt cannot widen the physical backend key domain either. -/
+example : checkSetElement (fun _ : Nat => true) (fun key => decide (key < 16))
+    "outside Elt" "outside Key" 16 = .error "outside Key" := rfl
+
+/-- Two source permissions are normalized before one complete reconstruction. -/
+def permissionRows : List (Nat × Unit) := [(1, ()), (2, ())]
+
+/-- Reuse the existing normalized-key collision model for the chosen backend. -/
+def rebuildPermissions (rows : List (Nat × Unit)) : Except String (List (Nat × Unit)) :=
+  Functional.VariantValidation.map (fun key => .ok key) (fun value => .ok value)
+    (fun a b => decide (a = b)) "collision" rows
+
+/-- Final admission retains the complete two-permission refinement as well as Elt. -/
+def admitPermissions (rows : List (Nat × Unit)) : Except String Unit :=
+  (admitSetContract (fun _ => true) (fun values => decide (values.length = 2))
+    (List.map Prod.fst) (fun key => decide (key < 256)) "permission policy" rows).map (fun _ => ())
+
+example : normalizeSetElements false (fun rows => .ok rows) (fun key => .ok (key + 10))
+    (fun a b => decide (a = b)) rebuildPermissions admitPermissions permissionRows =
+      .ok [(11, ()), (12, ())] := rfl
+
+/-- No-change validation needs neither a key registry nor a business constructor. -/
+example : normalizeSetElements false (fun rows => .ok rows) (fun key => .ok key)
+    (fun a b => decide (a = b)) (fun _ => .error "forbidden constructor")
+    admitPermissions permissionRows = .ok permissionRows := rfl
+
+/-- Aligned descriptors do not run a redundant Elt normalizer or row inspection. -/
+example : normalizeSetElements true (fun _ => .error "unexpected read")
+    (fun _ : Nat => .error "unexpected Elt validation") (fun _ _ => false)
+    (fun _ => .error "unexpected rebuild") admitPermissions permissionRows = .ok permissionRows := rfl
+
+/-- A normalization collision preserves a linear owner for a separate retry. -/
+example : styleStep .linear (some permissionRows)
+    (normalizeSetElements false (fun rows => .ok rows) (fun _ => .ok 0)
+      (fun a b => decide (a = b)) rebuildPermissions admitPermissions) =
+      (some permissionRows, .error (.callback "collision")) := rfl
+
+/-- Retrying from that same immutable source commits one ordinary successor. -/
+example : styleStep .linear (some permissionRows)
+    (normalizeSetElements false (fun rows => .ok rows) (fun key => .ok (key + 10))
+      (fun a b => decide (a = b)) rebuildPermissions admitPermissions) =
+      (none, .ok [(11, ()), (12, ())]) := rfl
 
 end LeanPoo.Examples.SetAlgebra

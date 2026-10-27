@@ -1,4 +1,5 @@
 import LeanPoo.Functional.SetAlgebra
+import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.TableObservation
 
 /-! Set style derivation changes presentation only. Independent update capabilities
@@ -254,5 +255,139 @@ theorem observeSetAdmission_refused (versions : List Nat) (snapshot : A)
       (fun _ => guardSetAdmission active request failure backing specialized) query =
       .error (.backend cause) :=
   observeTable_refused _ _ _ _ _ refused
+
+
+/-- Finite Set admission includes the backing carrier, every independent Elt,
+and the custom receiver refinement. Host enumeration and Type predicates must
+faithfully interpret these pure observations; arbitrary callback termination is not proved. -/
+def admitSetContract (backing custom : A → Bool) (view : A → List K)
+    (element : K → Bool) (failure : E) (value : A) : Except E A :=
+  admitSetRoot backing (fun root => (view root).all element && custom root) failure value
+
+/-- Even a broad custom recognizer cannot drop an individual element obligation. -/
+theorem admitSetContract_success (backing custom : A → Bool) (view : A → List K)
+    (element : K → Bool) (failure : E) (value : A) :
+    admitSetContract backing custom view element failure value = .ok value ↔
+      backing value = true ∧ (∀ key ∈ view value, element key = true) ∧ custom value = true := by
+  simp [admitSetContract, admitSetRoot, Bool.and_eq_true, List.all_eq_true]
+
+/-- A forbidden member refuses before a public observer or owner update. -/
+theorem admitSetContract_bad_element (backing custom : A → Bool) (view : A → List K)
+    (element : K → Bool) (failure : E) (value : A) (key : K)
+    (present : key ∈ view value) (invalid : element key = false) :
+    admitSetContract backing custom view element failure value = .error failure := by
+  have denied : (view value).all element = false := by
+    cases checked : (view value).all element with
+    | false => rfl
+    | true =>
+      have valid := List.all_eq_true.mp checked key present
+      simp [invalid] at valid
+  simp [admitSetContract, admitSetRoot, denied]
+
+/-- An element request is checked against both declared domains before lookup.
+This does not normalize the query or replace an admitted Function handle. -/
+def checkSetElement (element key : K → Bool) (elementFailure keyFailure : E) (value : K) : Except E K :=
+  if element value then
+    if key value then .ok value else .error keyFailure
+  else .error elementFailure
+
+/-- Safe requests retain their exact original representation and both obligations. -/
+theorem checkSetElement_success (element key : K → Bool) (elementFailure keyFailure : E) (value : K) :
+    checkSetElement element key elementFailure keyFailure value = .ok value ↔
+      element value = true ∧ key value = true := by
+  cases he : element value <;> cases hk : key value <;> simp [checkSetElement, he, hk]
+
+/-- Declared Elt refusal retains its cause before the backing domain or query. -/
+theorem checkSetElement_elt_refused (element key : K → Bool) (elementFailure keyFailure : E) (value : K)
+    (query : K → Except E R) (invalid : element value = false) :
+    (checkSetElement element key elementFailure keyFailure value).bind query = .error elementFailure := by
+  simp [checkSetElement, invalid, Except.bind]
+
+/-- A wider Elt cannot suppress backing refusal; no empty-table lookup is needed. -/
+theorem checkSetElement_key_refused (element key : K → Bool) (elementFailure keyFailure : E) (value : K)
+    (query : K → Except E R) (valid : element value = true) (invalid : key value = false) :
+    (checkSetElement element key elementFailure keyFailure value).bind query = .error keyFailure := by
+  simp [checkSetElement, valid, invalid, Except.bind]
+
+/-- The independent Elt stage starts after backing normalization. Reuse the
+existing view normalizer: original-order children, unchanged identity, one complete
+rebuild, and receiver admission. Rebuild includes key-registry collision checking,
+the complete constructor and backing recognition; their interpretation is explicit. -/
+def normalizeSetElements (aliased : Bool) (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit)
+    (source : A) : Except E A :=
+  if aliased then (admit source).map (fun _ => source) else
+    VariantValidation.tableView read
+      (Validation.traverse (VariantValidation.pair check (fun value => .ok value)))
+      same rebuild admit source
+
+/-- Matching descriptor identities invoke neither a second Elt normalizer nor
+a registry/builder; backing validation has already supplied their obligation. -/
+theorem normalizeSetElements_aliased (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit) (source : A) :
+    normalizeSetElements true read check same rebuild admit source =
+      (admit source).map (fun _ => source) := rfl
+
+/-- An unchanged result retains the source without requiring an empty seed,
+a bulk constructor or even a key-registry capability. Final admission still runs. -/
+theorem normalizeSetElements_unchanged (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit)
+    (source : A) (before after : List (K × Unit))
+    (ready : read source = .ok before)
+    (cooked : Validation.traverse (VariantValidation.pair check (fun value => .ok value)) before = .ok after)
+    (unchanged : same before after = true) :
+    normalizeSetElements false read check same rebuild admit source =
+      (admit source).map (fun _ => source) := by
+  exact VariantValidation.tableView_unchanged read _ same rebuild admit source before after ready cooked unchanged
+
+/-- The one complete rebuild receives exactly the normalized rows, including
+returned Function representations, in original validation order. -/
+theorem normalizeSetElements_changed (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit)
+    (source : A) (before after : List (K × Unit))
+    (ready : read source = .ok before)
+    (cooked : Validation.traverse (VariantValidation.pair check (fun value => .ok value)) before = .ok after)
+    (changed : same before after = false) :
+    normalizeSetElements false read check same rebuild admit source =
+      (rebuild after).bind (fun result => (admit result).map (fun _ => result)) := by
+  exact VariantValidation.tableView_changed read _ same rebuild admit source before after ready cooked changed
+
+/-- A child error preserves its cause before registry preparation or construction. -/
+theorem normalizeSetElements_child_refused (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit)
+    (source : A) (before : List (K × Unit)) (cause : E)
+    (ready : read source = .ok before)
+    (failed : Validation.traverse (VariantValidation.pair check (fun value => .ok value)) before = .error cause) :
+    normalizeSetElements false read check same rebuild admit source = .error cause := by
+  exact VariantValidation.tableView_cook_refused read _ same rebuild admit source before cause ready failed
+
+/-- Key collisions or constructor failures retain their precise cause and expose
+no successor; the immutable source remains available to an independent retry. -/
+theorem normalizeSetElements_rebuild_refused (read : A → Except E (List (K × Unit)))
+    (check : K → Except E K) (same : List (K × Unit) → List (K × Unit) → Bool)
+    (rebuild : List (K × Unit) → Except E A) (admit : A → Except E Unit)
+    (source : A) (before after : List (K × Unit)) (cause : E)
+    (ready : read source = .ok before)
+    (cooked : Validation.traverse (VariantValidation.pair check (fun value => .ok value)) before = .ok after)
+    (changed : same before after = false) (failed : rebuild after = .error cause) :
+    normalizeSetElements false read check same rebuild admit source = .error cause := by
+  exact VariantValidation.tableView_build_refused read _ same rebuild admit source before after cause ready cooked changed failed
+
+
+/-- Every cooked position retains its exact Elt validator result, and no original
+occurrence disappears before the backend's collision/rebuild phase. -/
+theorem normalizeSetElements_positions (check : K → Except E K)
+    (before after : List (K × Unit))
+    (cooked : Validation.traverse (VariantValidation.pair check (fun value => .ok value)) before = .ok after) :
+    after.length = before.length ∧
+      ∀ entry ∈ before.zip after, check entry.1.1 = .ok entry.2.1 := by
+  obtain ⟨length, positions⟩ := ContainerValidation.list_positions _ before after cooked
+  exact ⟨length, fun entry member =>
+    (VariantValidation.pair_success check (fun value => .ok value) _ _ |>.mp (positions entry member)).1⟩
 
 end LeanPoo.Functional.OrderedDictionary
