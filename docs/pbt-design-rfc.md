@@ -558,6 +558,14 @@ linearizability. Performance acceptance is measured separately.
 | Local full workflow | The complete 149-module workflow and linked paired collection benchmark pass under existing limits; The existing focused PBT cases plus the independent-library cases pass |
 | Published baseline CI | Lean `7932410a339dadc7d3736e286cbc6750c689d220`: 17 successful checks; Gerbil `4be7c411120cce18436fc35875a62da8e420f16a`: 53 successful checks, including single-process acceptance |
 
+The local full-workflow row records the earlier accepted workflow. In the
+interrupted-shrink follow-up, macOS `just check 2 1 4` stopped at the existing
+90-second `build-shared` executable-construction gate. That is an unpassed local
+build gate, not a falsified property or a paired-performance receipt. The existing
+standard build configuration and limits are retained. Standalone kernel tests,
+Record/FUN regressions, complete compiled-suite execution and exact-head CI are
+reported separately; none substitutes for a missing full-entry receipt.
+
 The published baseline CI was checked before this follow-up. Every later revision
 must pass the same CI; that baseline is not evidence for unsubmitted edits. Full
 Lean submission checks and exact-head remote CI remain separate from target proof
