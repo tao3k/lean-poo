@@ -1,6 +1,7 @@
 import LeanPoo.Functional.SetAlgebra
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.TableObservation
+import LeanPoo.Functional.TableCapture
 
 /-! Set style derivation changes presentation only. Independent update capabilities
 reuse table ownership, and element cursors reuse the original metadata guards. -/
@@ -389,5 +390,106 @@ theorem normalizeSetElements_positions (check : K → Except E K)
   obtain ⟨length, positions⟩ := ContainerValidation.list_positions _ before after cooked
   exact ⟨length, fun entry member =>
     (VariantValidation.pair_success check (fun value => .ok value) _ _ |>.mp (positions entry member)).1⟩
+
+section SetSources
+variable {Id Cell : Type}
+
+/-- The Set receiver and Elt join the OWNED declaration and backing family.
+Capture happens before metadata preparation; cells/opaque leaves are host premises. -/
+def setSources (receiver element : Id) (buffer : Cell → Id) (declared : List Cell)
+    (backing : List Id) : List Id :=
+  [receiver, element] ++ captureOrigins buffer declared ++ backing
+
+/-- Both mandatory Type identities survive, even when no elements are present. -/
+theorem setSources_types (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) :
+    receiver ∈ setSources receiver element buffer declared backing ∧
+      element ∈ setSources receiver element buffer declared backing := by
+  simp [setSources]
+
+/-- Every original origin remains, regardless of later declaration-buffer reuse. -/
+theorem setSources_declared (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (cell : Cell) (present : cell ∈ declared) :
+    buffer cell ∈ setSources receiver element buffer declared backing := by
+  simp only [setSources, List.mem_append]
+  exact Or.inl (Or.inr (captureOrigins_member buffer declared cell present))
+
+/-- Capturing Set metadata never drops backing Key/Value/representation origins. -/
+theorem setSources_backing (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (origin : Id) (present : origin ∈ backing) :
+    origin ∈ setSources receiver element buffer declared backing := by
+  simp [setSources, present]
+
+/-- All four obligations are checked by the existing stamp protocol. -/
+theorem setSources_stamps (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat) :
+    stampMatches (setSources receiver element buffer declared backing) issued current =
+      ((issued receiver == current receiver) && (issued element == current element) &&
+        stampMatches (captureOrigins buffer declared) issued current &&
+        stampMatches backing issued current) := by
+  simp [setSources, stampMatches, List.all_append, Bool.and_assoc]
+
+/-- Changed independent Elt refuses before any recognizer, key query or write. -/
+theorem setSources_elt_stale (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat)
+    (changed : issued element ≠ current element) :
+    stampMatches (setSources receiver element buffer declared backing) issued current = false := by
+  simp [setSources_stamps, changed]
+
+/-- A changed ORIGINAL declaration refuses even when its buffer now names a
+replacement carrying an equal revision. Identity is not inferred from revisions. -/
+theorem setSources_origin_stale (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (cell : Cell) (present : cell ∈ declared)
+    (issued current : Id → Option Nat) (changed : issued (buffer cell) ≠ current (buffer cell)) :
+    stampMatches (setSources receiver element buffer declared backing) issued current = false := by
+  simp [setSources_stamps, capturedOrigins_stale buffer declared cell present issued current changed]
+
+/-- External spine reuse does not rewrite a retained consumer's entire scope. -/
+theorem setSources_buffer_stable (receiver element : Id) (buffer later : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat) (value : A) :
+    prepareStamped (replaceOriginBuffer
+      (buffer, setSources receiver element buffer declared backing) later).2 issued current value =
+      prepareStamped (setSources receiver element buffer declared backing) issued current value := rfl
+
+/-- Stable captured dependencies accept; changes to unrelated replacement objects
+cannot manufacture stale refusal. No user callback is implicitly declared pure. -/
+theorem setSources_fresh (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat)
+    (stable : ∀ origin ∈ setSources receiver element buffer declared backing,
+      issued origin = current origin) (value : A) :
+    prepareStamped (setSources receiver element buffer declared backing) issued current value = .ok value := by
+  have ready : stampMatches (setSources receiver element buffer declared backing) issued current = true := by
+    simpa [stampMatches, List.all_eq_true] using stable
+  simp [prepareStamped, ready]
+
+/-- Existing deduplication of shared origins preserves the complete decision. -/
+theorem setSources_dedup [BEq Id] [LawfulBEq Id] (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat) (value : A) :
+    prepareStamped (setSources receiver element buffer declared backing).eraseDups issued current value =
+      prepareStamped (setSources receiver element buffer declared backing) issued current value := by
+  simp [prepareStamped, stampMatches_dedup]
+
+/-- No continuation executes after stale Elt refusal, including at cursor EOF. -/
+theorem setSources_refused (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat)
+    (changed : issued element ≠ current element) (value : A) (next : A → Except Unit R) :
+    (prepareStamped (setSources receiver element buffer declared backing) issued current value).bind next =
+      .error () := by
+  simp [prepareStamped, setSources_elt_stale receiver element buffer declared backing issued current changed,
+    Except.bind]
+
+/-- The original pure/mutable/linear capability survives refusal; rebuilding a
+fresh factory is an explicit retry rather than retroactive approval of an old one. -/
+theorem setSources_style_refused (receiver element : Id) (buffer : Cell → Id)
+    (declared : List Cell) (backing : List Id) (issued current : Id → Option Nat)
+    (changed : issued element ≠ current element) (style : TableStyle) (value : A)
+    (next : A → Except Unit A) :
+    styleStep style (some value) (fun snapshot =>
+      (prepareStamped (setSources receiver element buffer declared backing) issued current snapshot).bind next) =
+        (some value, .error (.callback ())) := by
+  apply styleStep_failure
+  exact setSources_refused receiver element buffer declared backing issued current changed value next
+
+end SetSources
 
 end LeanPoo.Functional.OrderedDictionary

@@ -170,4 +170,40 @@ example : styleStep .linear (some permissionRows)
       (fun a b => decide (a = b)) rebuildPermissions admitPermissions) =
       (none, .ok [(11, ()), (12, ())]) := rfl
 
+/-- One service receiver, an independent grant Type, a shared policy and backing
+origins. A recycled declaration cell later names 8 instead of policy 7. -/
+def accessSources : List Nat := setSources 0 1 (fun (_ : Unit) => 7) [()] [2, 3]
+
+/-- All declared dependencies were originally at revision zero. -/
+def accessIssued : Nat → Option Nat := fun _ => some 0
+
+/-- Unrelated replacement revisions cannot invalidate the original declaration. -/
+def replacementChanged : Nat → Option Nat := fun id => some (if id = 8 then 1 else 0)
+
+/-- The independent Function Type can change even when the backing is current. -/
+def grantTypeChanged : Nat → Option Nat := fun id => some (if id = 1 then 1 else 0)
+
+/-- The original policy remains watched after the caller recycles its list. -/
+def accessPolicyChanged : Nat → Option Nat := fun id => some (if id = 7 then 1 else 0)
+
+example : accessSources = [0, 1, 7, 2, 3] := rfl
+example : prepareStamped accessSources accessIssued grantTypeChanged original = .error () := rfl
+example : prepareStamped accessSources accessIssued accessPolicyChanged original = .error () := rfl
+
+/-- Accepted Function grants retain their exact callable representation. -/
+example (grant : Nat → Nat) :
+    prepareStamped accessSources accessIssued replacementChanged grant = .ok grant := rfl
+
+/-- Stale preparation cannot call the publication continuation or consume any
+presentation's original owner. Posh/Classy reuse their existing base styles. -/
+example (style : TableStyle) (publish : Membership Nat → Except Unit (Membership Nat)) :
+    styleStep style (some original) (fun snapshot =>
+      (prepareStamped accessSources accessIssued grantTypeChanged snapshot).bind publish) =
+        (some original, .error (.callback ())) := by
+  exact setSources_style_refused 0 1 (fun (_ : Unit) => 7) [()] [2, 3]
+    accessIssued grantTypeChanged (by decide) style original publish
+
+/-- Fresh preparation explicitly binds the new policy snapshot before retry. -/
+example : prepareStamped accessSources accessPolicyChanged accessPolicyChanged original = .ok original := rfl
+
 end LeanPoo.Examples.SetAlgebra
