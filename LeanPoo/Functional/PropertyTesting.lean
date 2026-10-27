@@ -96,4 +96,213 @@ theorem samples_length (draw : Seed → Nat → Value × Seed) (count seed size)
   | zero => rfl
   | succ n ih => simp [samples, ih]
 
+/-- A typed reference protocol. Host descriptor/normalizer fidelity and callback
+termination are separate premises; this finite model has no untyped fallback. -/
+structure TraceModel (State Command Reply : Type) where
+  initial : State
+  enabled : State → Command → Bool
+  advance : State → Command → State × Reply
+
+/-- Whole-prefix validity, including the state produced by each retained command. -/
+def traceValid (model : TraceModel State Command Reply) : State → List Command → Bool
+  | _, [] => true
+  | state, command :: rest =>
+      model.enabled state command && traceValid model (model.advance state command).1 rest
+
+/-- Semantic retirement omits a disabled dependent and continues from the SAME
+state. It never renames handles, invents a producer or generates a new suffix. -/
+def retire (model : TraceModel State Command Reply) : State → List Command → List Command
+  | _, [] => []
+  | state, command :: rest =>
+      if model.enabled state command then
+        command :: retire model (model.advance state command).1 rest
+      else retire model state rest
+
+/-- Every repaired sequence has valid dependencies under the pure model. -/
+theorem retire_valid (model : TraceModel State Command Reply) (commands : List Command) (state : State) :
+    traceValid model state (retire model state commands) = true := by
+  induction commands generalizing state with
+  | nil => rfl
+  | cons command rest ih =>
+    cases enabled : model.enabled state command <;> simp [retire, traceValid, enabled, ih]
+
+/-- Retirement preserves the relative order of surviving commands. -/
+theorem retire_sublist (model : TraceModel State Command Reply) (commands : List Command) (state : State) :
+    (retire model state commands).Sublist commands := by
+  induction commands generalizing state with
+  | nil => exact List.Sublist.refl []
+  | cons command rest ih =>
+    cases enabled : model.enabled state command with
+    | false => simpa [retire, enabled] using (ih state).cons command
+    | true => simpa [retire, enabled] using (ih (model.advance state command).1).cons_cons command
+
+/-- A valid supplied sequence is not rewritten by dependency retirement. -/
+theorem retire_identity (model : TraceModel State Command Reply) (commands : List Command) (state : State)
+    (valid : traceValid model state commands = true) : retire model state commands = commands := by
+  induction commands generalizing state with
+  | nil => rfl
+  | cons command rest ih =>
+    have both : model.enabled state command = true ∧
+        traceValid model (model.advance state command).1 rest = true := by
+      simpa only [traceValid, Bool.and_eq_true] using valid
+    obtain ⟨enabled, tail⟩ := both
+    simp [retire, enabled, ih _ tail]
+
+/-- Positive command cost is exactly length plus the sum of parameter weights. -/
+def traceWeight (weight : Command → Nat) : List Command → Nat
+  | [] => 0
+  | command :: rest => 1 + weight command + traceWeight weight rest
+
+/-- Reference retirement cannot increase the complete shrink measure. -/
+theorem retire_weight (model : TraceModel State Command Reply) (weight : Command → Nat)
+    (commands : List Command) (state : State) :
+    traceWeight weight (retire model state commands) ≤ traceWeight weight commands := by
+  induction commands generalizing state with
+  | nil => exact Nat.le_refl _
+  | cons command rest ih =>
+    cases enabled : model.enabled state command <;> simp only [retire, enabled, Bool.false_eq_true,
+      ↓reduceIte, traceWeight]
+    · have h := ih state; omega
+    · have h := ih (model.advance state command).1; omega
+
+/-- Smaller parameter/deletion proposals remain smaller after dependency retirement. -/
+theorem retire_smaller (model : TraceModel State Command Reply) (weight : Command → Nat)
+    (proposal original : List Command) (state : State)
+    (smaller : traceWeight weight proposal < traceWeight weight original) :
+    traceWeight weight (retire model state proposal) < traceWeight weight original :=
+  Nat.lt_of_le_of_lt (retire_weight model weight proposal state) smaller
+
+/-- Appending independent segments adds their complete parameter/length weights. -/
+theorem traceWeight_append (weight : Command → Nat) (left right : List Command) :
+    traceWeight weight (left ++ right) = traceWeight weight left + traceWeight weight right := by
+  induction left with
+  | nil => simp [traceWeight]
+  | cons command rest ih => simp [traceWeight, ih, Nat.add_assoc]
+
+/-- Deleting any one command and retiring its dependents strictly decreases weight. -/
+theorem retire_deletion (model : TraceModel State Command Reply) (weight : Command → Nat)
+    (before after : List Command) (command : Command) (state : State) :
+    traceWeight weight (retire model state (before ++ after)) <
+      traceWeight weight (before ++ command :: after) := by
+  apply retire_smaller
+  simp only [traceWeight_append, traceWeight]
+  omega
+
+/-- The existing shrink engine preserves a valid false trace within its budget. -/
+theorem shrink_trace_preserves (model : TraceModel State Command Reply) (state : State)
+    (fails : List Command → Bool) (weight : Command → Nat) (fuel : Nat)
+    (witness : List Command) (proposals : List (List Command))
+    (valid : traceValid model state witness = true) (failure : fails witness = true) :
+    let result := (shrink (traceValid model state) fails (traceWeight weight) fuel witness proposals).1
+    traceValid model state result = true ∧ fails result = true ∧
+      traceWeight weight result ≤ traceWeight weight witness :=
+  shrink_preserves _ _ _ _ _ _ valid failure
+
+/-- Draw only a finite prefix. Disabled draws are explicit errors rather than
+silently discarded trials. choose models the observed state-dependent choices. -/
+def drawTrace (model : TraceModel State Command Reply) (choose : State → Nat → Option Command) :
+    Nat → State → Except Unit (List Command)
+  | 0, _ => .ok []
+  | fuel + 1, state =>
+      match choose state fuel with
+      | none => .ok []
+      | some command =>
+          if model.enabled state command then do
+            let rest ← drawTrace model choose fuel (model.advance state command).1
+            pure (command :: rest)
+          else .error ()
+
+/-- Every successful finite draw has valid prefixes and respects its step cap. -/
+theorem drawTrace_sound (model : TraceModel State Command Reply) (choose : State → Nat → Option Command)
+    (fuel : Nat) (state : State) (commands : List Command)
+    (drawn : drawTrace model choose fuel state = .ok commands) :
+    traceValid model state commands = true ∧ commands.length ≤ fuel := by
+  induction fuel generalizing state commands with
+  | zero => simp [drawTrace] at drawn; subst commands; simp [traceValid]
+  | succ fuel ih =>
+    simp only [drawTrace] at drawn
+    cases chosen : choose state fuel with
+    | none => simp [chosen] at drawn; subst commands; simp [traceValid]
+    | some command =>
+      cases enabled : model.enabled state command with
+      | false => simp [chosen, enabled] at drawn
+      | true =>
+        simp only [chosen, enabled, ↓reduceIte] at drawn
+        cases tail : drawTrace model choose fuel (model.advance state command).1 with
+        | error cause => simp [tail, Functor.map, Except.map] at drawn
+        | ok rest =>
+          simp [tail, Functor.map, Except.map] at drawn
+          subst commands
+          obtain ⟨valid, bound⟩ := ih _ _ tail
+          exact ⟨by simp [traceValid, enabled, valid], by simp; omega⟩
+
+/-- Canonical step replies/observations; expected domain refusals are Reply data. -/
+def traceObservations (step : State → Command → State × Reply) (observe : State → Observation) :
+    State → List Command → List (Reply × Observation)
+  | _, [] => []
+  | state, command :: rest =>
+      let next := step state command
+      (next.2, observe next.1) :: traceObservations step observe next.1 rest
+
+/-- An adapter's step simulation lifts to the complete ordered valid trace.
+The relation must account for ownership, generation and every compared index. -/
+theorem trace_simulation (model : TraceModel State Command Reply)
+    (actualStep : Actual → Command → Actual × Reply)
+    (observeModel : State → Observation) (observeActual : Actual → Observation)
+    (related : State → Actual → Prop)
+    (observed : ∀ state actual, related state actual → observeModel state = observeActual actual)
+    (simulation : ∀ state actual command, related state actual → model.enabled state command = true →
+      (model.advance state command).2 = (actualStep actual command).2 ∧
+        related (model.advance state command).1 (actualStep actual command).1)
+    (commands : List Command) (state : State) (actual : Actual)
+    (current : related state actual) (valid : traceValid model state commands = true) :
+    traceObservations model.advance observeModel state commands =
+      traceObservations actualStep observeActual actual commands := by
+  induction commands generalizing state actual with
+  | nil => rfl
+  | cons command rest ih =>
+    have both : model.enabled state command = true ∧
+        traceValid model (model.advance state command).1 rest = true := by
+      simpa only [traceValid, Bool.and_eq_true] using valid
+    obtain ⟨enabled, tail⟩ := both
+    obtain ⟨reply, next⟩ := simulation state actual command current enabled
+    simp only [traceObservations]
+    rw [reply, observed _ _ next, ih _ _ next tail]
+
+/-- The first differing element is reported before later dependent execution. -/
+def firstDifference [DecidableEq Value] : List Value → List Value → Option Nat
+  | [], [] => none
+  | left :: ls, right :: rs => if left = right then (firstDifference ls rs).map Nat.succ else some 0
+  | _, _ => some 0
+
+/-- A complete successful comparison is equivalent to equal finite observations. -/
+theorem firstDifference_none [DecidableEq Value] (left right : List Value) :
+    firstDifference left right = none ↔ left = right := by
+  induction left generalizing right with
+  | nil => cases right <;> simp [firstDifference]
+  | cons value rest ih =>
+    cases right with
+    | nil => simp [firstDifference]
+    | cons other tail =>
+      by_cases same : value = other <;> simp [firstDifference, same, ih]
+
+/-- Concrete replay first reuses stamp admission, then checks the entire witness.
+There is no PRNG input; evaluation remains delayed until both gates succeed. -/
+def replayTrace [DecidableEq Stamp] (captured current : Stamp) (valid evaluate : List Command → Bool)
+    (commands : List Command) : Option Bool :=
+  match admit captured current commands with
+  | none => none
+  | some witness => if valid witness then some (evaluate witness) else none
+
+/-- Specification revisions reject concrete replay before witness execution. -/
+theorem replayTrace_stale [DecidableEq Stamp] (captured current : Stamp)
+    (valid evaluate : List Command → Bool) (commands : List Command) (changed : captured ≠ current) :
+    replayTrace captured current valid evaluate commands = none := by simp [replayTrace, admit, changed]
+
+/-- A current valid false witness reproduces independently of seed selection. -/
+theorem replayTrace_failed [DecidableEq Stamp] (stamp : Stamp) (valid evaluate : List Command → Bool)
+    (commands : List Command) (domain : valid commands = true) (failure : evaluate commands = false) :
+    replayTrace stamp stamp valid evaluate commands = some false := by
+  simp [replayTrace, admit, domain, failure]
+
 end LeanPoo.Functional.PropertyTesting

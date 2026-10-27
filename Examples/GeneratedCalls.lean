@@ -77,4 +77,28 @@ example : LeanPoo.Functional.DeclarativeMetadata.inferDeclared 2
 #print axioms selectedCallCheck_live
 #print axioms emptyCallRow_invoke_refused
 #print axioms inferCallRows_sound
+/-- Logical producers and consumers model fixture-local handles independently
+of actual table receipts, owners or generated host closures. -/
+def handleTrace : TraceModel (List Nat) (Bool × Nat) Bool :=
+  { initial := [], enabled := fun state command => command.1 || state.contains command.2,
+    advance := fun state command =>
+      (if command.1 then command.2 :: state else state, true) }
+
+/-- Removing producer 1 retires its consumer while retaining independent handle 2. -/
+example : retire handleTrace [] [(true, 2), (false, 1), (false, 2)] =
+    [(true, 2), (false, 2)] := by decide
+/-- A supplied invalid dependency is rejected, rather than counted as a passing test. -/
+example : traceValid handleTrace [] [(false, 1)] = false := by decide
+/-- A disabled generator choice is an error even with a positive remaining budget. -/
+example : drawTrace handleTrace (fun _ _ => some (false, 1)) 3 [] = .error () := rfl
+/-- A finite producer draw satisfies the same domain/length admission theorem. -/
+example : traceValid handleTrace [] [(true, 2), (false, 2)] = true := by decide
+/-- Revision admission refuses replay before the witness evaluator is selected. -/
+example : replayTrace [1] [2] (fun (_ : List Nat) => true) (fun _ => false) [3] = none := by decide
+#print axioms retire_valid
+#print axioms retire_sublist
+#print axioms retire_deletion
+#print axioms drawTrace_sound
+#print axioms trace_simulation
+#print axioms replayTrace_stale
 end Examples.GeneratedCalls
