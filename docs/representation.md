@@ -267,7 +267,9 @@ initialization/error memoization and explicit reload remain authoritative;
 business failures are invocation results, and multiple values remain intact.
 
 The existing example executable now links the common POO/FUN/IO foundation and
-dynamically selects the SAME compiled business module/binding as the gxi route.
+dynamically selects the SAME compiled business module/binding as the independently
+built dynamic-entry reference. The official `gerbil test` harness owns the paired
+study; neither reference launches generated interpreter expressions.
 It does not link every optional business module. The core's initialization still
 runs at process bootstrap; only repeated entry-time discovery and dynamic loading
 of already linked dependencies are avoided. Build/link/startup and optional
