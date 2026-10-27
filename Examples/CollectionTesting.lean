@@ -155,4 +155,29 @@ example : prepareTrace model some model.initial lifecycle = some lifecycle :=
 #print axioms prepareTrace_sound
 #print axioms prepareTrace_identity
 #print axioms prepared_observations
+/-- A callback failure follows one confirmed reduction and one refused proposal.
+The pending shorter trace is diagnostic data, not an admitted counterexample. -/
+def interruptedCollection : ShrinkAudit (List Command) String :=
+  auditShrinks 8 [.candidate (lifecycle.take 8), .candidate (lifecycle.take 8),
+    .callbackError (lifecycle.take 7) "approval callback"]
+/-- Completed proposals and the failing returned proposal are all charged. -/
+example : interruptedCollection.attempts = 3 ∧
+    interruptedCollection.interruption = some "approval callback" := by constructor <;> rfl
+/-- The previous confirmed trace survives; an interrupted shorter trace cannot
+masquerade as a successfully evaluated failure. -/
+example : (shrink (traceValid model model.initial) (fun _ => true) List.length 8 lifecycle
+    interruptedCollection.completed).1 = lifecycle.take 8 := rfl
+/-- The established shrink laws also bound finite interrupted collection work. -/
+example :
+    let receipt := auditShrinks 8
+      ([.candidate (lifecycle.take 8), .callbackError (lifecycle.take 7) "approval"] :
+        List (ShrinkEvent (List Command) String))
+    let witness := (shrink (traceValid model model.initial) (fun _ => true) List.length 8 lifecycle
+      receipt.completed).1
+    traceValid model model.initial witness = true ∧ true = true ∧
+      witness.length ≤ lifecycle.length ∧ receipt.attempts ≤ 8 :=
+  interrupted_shrink_preserves _ _ _ _ _ _ (by decide) rfl
+#print axioms auditShrinks_budget
+#print axioms interrupted_shrink_preserves
+#print axioms callback_error_retains
 end Examples.CollectionTesting

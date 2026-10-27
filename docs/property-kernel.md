@@ -55,7 +55,7 @@ observed exhausted immediate neighborhood, not a globally smallest value.
 Seed replay regenerates under the recorded configuration; concrete replay checks
 the retained witness without drawing or shrinking. Mutable callback dependencies
 must be declared through accurate source observers. The isolated regression builds
-the actual generic package and executes ten cases without any POO modules in
+the actual generic package and executes twelve cases without any POO modules in
 its package directory, under the existing heap and timeout limits.
 
 Model normalization is an explicit boundary: `check-trace` first prepares the
@@ -64,3 +64,9 @@ report carries the prepared command. A late domain/precondition refusal or
 normalization exception opens no fixture. `valid-trace?` projects the same
 preparation; do not use it as a substitute for `check-trace`'s own preflight.
 The POO facade supplies already-wrapped commands with identity normalization.
+
+Interrupted shrink reports retain the last confirmed witness and charged work.
+A returned proposal counts even when admission, cost, property or source checks
+fail; EOF and an iterator exception produce no proposal. The error's cause is
+retained, `minimal?` is false, and concrete replay requires a `failed` report.
+A diagnostic reduced value on an `error` or `stale` report is not certified evidence.

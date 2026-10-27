@@ -465,4 +465,71 @@ theorem stale_observation_retained (current : Source → Bool) (past more : List
     (stale : past.all current = false) : (more ++ past).all current = false := by
   simp [List.all_append, stale]
 
+/-- Finite observed events distinguish a returned proposal whose callback failed
+from an iterator exception that produced no proposal. Restarts remain in order. -/
+inductive ShrinkEvent (Value Cause : Type) where
+  | candidate (value : Value)
+  | callbackError (value : Value) (cause : Cause)
+  | iteratorError (cause : Cause)
+
+/-- Only fully evaluated candidates may influence the confirmed witness. The
+receipt also retains charged work and the original first interruption. -/
+structure ShrinkAudit (Value Cause : Type) where
+  completed : List Value
+  attempts : Nat
+  interruption : Option Cause
+
+/-- Observe at most the shared attempt budget and stop at the first exception.
+A failed returned proposal is charged but is never added to completed. -/
+def auditShrinks : Nat → List (ShrinkEvent Value Cause) → ShrinkAudit Value Cause
+  | 0, _ => ⟨[], 0, none⟩
+  | _ + 1, [] => ⟨[], 0, none⟩
+  | fuel + 1, .candidate value :: rest =>
+      let tail := auditShrinks fuel rest
+      ⟨value :: tail.completed, tail.attempts + 1, tail.interruption⟩
+  | _ + 1, .callbackError _ cause :: _ => ⟨[], 1, some cause⟩
+  | _ + 1, .iteratorError cause :: _ => ⟨[], 0, some cause⟩
+
+/-- Every completed candidate is charged, including refused candidates, and the
+first interruption cannot reset the attempt accounting to zero. -/
+theorem auditShrinks_budget (fuel : Nat) (events : List (ShrinkEvent Value Cause)) :
+    (auditShrinks fuel events).completed.length ≤ (auditShrinks fuel events).attempts ∧
+    (auditShrinks fuel events).attempts ≤ fuel := by
+  induction fuel generalizing events with
+  | zero => simp [auditShrinks]
+  | succ fuel ih =>
+    cases events with
+    | nil => simp [auditShrinks]
+    | cons event rest =>
+      cases event with
+      | candidate value =>
+        obtain ⟨charged, bound⟩ := ih rest
+        simp only [auditShrinks, List.length_cons]
+        constructor <;> omega
+      | callbackError value cause => simp [auditShrinks]
+      | iteratorError cause => simp [auditShrinks]
+
+/-- Exception receipts reuse the established admission/descent engine. With a
+valid false initial witness, earlier confirmations survive the interruption;
+error data itself is never treated as a smaller false candidate. -/
+theorem interrupted_shrink_preserves (valid fails : Value → Bool) (measure : Value → Nat)
+    (fuel : Nat) (best : Value) (events : List (ShrinkEvent Value Cause))
+    (domain : valid best = true) (failure : fails best = true) :
+    let receipt := auditShrinks fuel events
+    let witness := (shrink valid fails measure fuel best receipt.completed).1
+    valid witness = true ∧ fails witness = true ∧ measure witness ≤ measure best ∧
+      receipt.attempts ≤ fuel := by
+  obtain ⟨v, f, descent⟩ := shrink_preserves valid fails measure fuel best
+    (auditShrinks fuel events).completed domain failure
+  exact ⟨v, f, descent, (auditShrinks_budget fuel events).2⟩
+
+/-- A callback error consumes its proposal but keeps the previously confirmed
+witness. The unevaluated suffix and failing proposal cannot be installed. -/
+theorem callback_error_retains (valid fails : Value → Bool) (measure : Value → Nat)
+    (fuel : Nat) (best pending : Value) (cause : Cause) (rest : List (ShrinkEvent Value Cause)) :
+    let receipt := auditShrinks (fuel + 1) (.callbackError pending cause :: rest)
+    receipt.attempts = 1 ∧ receipt.interruption = some cause ∧
+      (shrink valid fails measure (fuel + 1) best receipt.completed).1 = best := by
+  simp [auditShrinks, shrink]
+
 end LeanPoo.Functional.PropertyTesting
