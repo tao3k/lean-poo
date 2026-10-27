@@ -21,6 +21,7 @@
     pkgs.just
     pkgs.elan
     pkgs.python3
+    pkgs.pandoc
   ];
 
   dotenv.enable = true;

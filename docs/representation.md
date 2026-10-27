@@ -285,3 +285,31 @@ logical source operations, not OS file probes, image maps, linking, GC or latenc
 Faithful registration, canonical binding identity and supported finite dependency
 initialization remain assumptions. The model does not prove arbitrary initializer
 effects, module cycles, compiler behavior or concurrent loader implementation.
+
+## Bounded descriptor offset history
+
+The source cache now offers explicit capacity one or two in the existing
+`slot-layout` module. The default single-shape record is unchanged; the opt-in
+record retains one extra immutable shape/index pair, never a foreign receiver's
+cells. Gerbil's standard records and existing name hashes remain the mechanisms.
+A general LRU would add hashed lookup and linked-node maintenance to this small
+identity-guard path. The author's efficient implementation Caching subsection
+(`poof` source 9affa8f, lines 1140–1148) describes precisely this finite option.
+
+`Offset` and `Offsets` in `Prototype.Representation` certify each field/index and
+prove two-descriptor warming, current-view false/Function delivery, lazy refusal,
+missing-index clearing and failure-preserved publication. Model strings identify
+symbols injectively, including uninterned symbols; pointer identity must imply
+immutable canonical-shape equality. The existing receiver/revision/layout guard
+and supported finite invalidation discipline remain premises. No receiver value,
+module initialization state or validation approval is granted by a shape hit.
+
+After two successful indexed reads, either descriptor avoids named resolution;
+an unknown third descriptor retains one named lookup. The model proves this
+layout name-to-index probe bound relative to a primary-only site, not a CPU/GC or total-time
+improvement. Scheme's complete paired study includes record preparation, warmed
+switching, three-shape churn and dynamic-module checked service revisions, using
+AB/BA and A/A/B/B across natural/collected histories. Allocation, comparisons,
+construction, seeding, refinement, binding and module costs remain charged.
+Automatic PIC/JIT selection, vector-only storage and arbitrary cold-module
+initialization are separate boundaries; none is declared complete here.

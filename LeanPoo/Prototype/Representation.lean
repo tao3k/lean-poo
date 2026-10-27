@@ -4,7 +4,8 @@ import LeanPoo.Object.CacheInvalidation
 This models source semantics, not the standard RBTree implementation, weak-table
 collector, Scheme compiler or pointer layout. A runtime layout token denotes one
 immutable shape and one receiver's cells; supported edits discard that token.
-Registered finite dependency edges and serialized edits remain prerequisites. -/
+String keys denote symbol identities, including distinct uninterned symbols, not
+display spelling. Registered finite dependency edges and serialized edits remain prerequisites. -/
 namespace LeanPoo.Prototype.Representation
 
 /-- Ordered contributions can repeat a name; replacing the first preserves later methods. -/
@@ -728,4 +729,167 @@ theorem modulePreparation_dynamic (common : List String) :
     (modulePreparation false common).entryDiscoveries = common.eraseDups.length := rfl
 
 end ModuleEntry
+
+/-- A descriptor offset carries no owner, allocation token or evaluated value. -/
+structure Offset (name : String) where
+  names : List String
+  index : Nat
+  indexed : names[index]? = some name
+
+/-- Descriptor identity in Scheme must imply this equality of immutable shapes. -/
+def Offset.resolve (entry : Offset name) (names : List String) : Option Nat :=
+  if entry.names = names then some entry.index else none
+
+/-- Even a reused descriptor offset denotes the requested CURRENT field. -/
+theorem Offset.resolve_sound (entry : Offset name) {names : List String} {index : Nat} (found : entry.resolve names = some index) :
+    names[index]? = some name := by
+  by_cases same : entry.names = names
+  · have equal : entry.index = index := by simpa [Offset.resolve, same] using found
+    subst index
+    exact same ▸ entry.indexed
+  · simp [Offset.resolve, same] at found
+
+/-- Two explicit descriptor entries; no dynamic table or receiver cells are stored. -/
+structure Offsets (name : String) where
+  primary : Option (Offset name) := none
+  secondary : Option (Offset name) := none
+
+/-- An empty entry cannot supply an offset. -/
+def optionalOffset (entry : Option (Offset name)) (names : List String) : Option Nat :=
+  entry.bind (fun value => value.resolve names)
+
+/-- Optional entries retain the same certified name obligation. -/
+theorem optionalOffset_sound (entry : Option (Offset name))
+    (found : optionalOffset entry names = some index) : names[index]? = some name := by
+  cases entry with
+  | none => simp [optionalOffset] at found
+  | some value => exact value.resolve_sound (by simpa [optionalOffset] using found)
+
+/-- Current successful descriptor first, then the one retained previous descriptor. -/
+def Offsets.resolve (cache : Offsets name) (names : List String) : Option Nat :=
+  (optionalOffset cache.primary names).orElse (fun _ => optionalOffset cache.secondary names)
+
+/-- Neither successful descriptor guard authorizes a foreign field index. -/
+theorem Offsets.resolve_sound (cache : Offsets name)
+    (found : cache.resolve names = some index) : names[index]? = some name := by
+  cases first : optionalOffset cache.primary names with
+  | none => exact optionalOffset_sound cache.secondary (by simpa [Offsets.resolve, first] using found)
+  | some value =>
+    have same : value = index := by simpa [Offsets.resolve, first] using found
+    subst index
+    exact optionalOffset_sound cache.primary first
+
+/-- Successful indexed demand replaces the primary entry; equal shapes do not evict
+an unrelated secondary descriptor. An empty primary leaves the secondary intact. -/
+def Offsets.remember (cache : Offsets name) (entry : Offset name) : Offsets name :=
+  { primary := some entry
+    secondary := match cache.primary with
+      | none => cache.secondary
+      | some old => if old.names = entry.names then cache.secondary else some old }
+
+/-- The newly successful descriptor is always available without a name lookup. -/
+@[simp] theorem Offsets.remember_current (cache : Offsets name) (entry : Offset name) :
+    (cache.remember entry).resolve entry.names = some entry.index := by
+  simp [Offsets.resolve, Offsets.remember, optionalOffset, Offset.resolve]
+
+/-- A successful switch retains the preceding different descriptor, not its cells. -/
+theorem Offsets.remember_previous (cache : Offsets name) (old entry : Offset name)
+    (primary : cache.primary = some old) (different : old.names ≠ entry.names) :
+    (cache.remember entry).resolve old.names = some old.index := by
+  have reverse : entry.names ≠ old.names := Ne.symm different
+  simp [Offsets.resolve, Offsets.remember, optionalOffset, Offset.resolve, primary, different, reverse]
+
+/-- The two-shape working set is closed after two successful indexed reads. -/
+theorem Offsets.warm_pair (cache : Offsets name) (a b : Offset name) (different : a.names ≠ b.names) :
+    ((cache.remember a).remember b).resolve a.names = some a.index ∧
+    ((cache.remember a).remember b).resolve b.names = some b.index := by
+  exact ⟨Offsets.remember_previous _ a b rfl different, Offsets.remember_current _ b⟩
+
+/-- Failure retains all offset history; absent indices never become successful hits. -/
+def Offsets.publish (cache : Offsets name) (entry : Option (Offset name))
+    (outcome : Except E Value) : Offsets name :=
+  match outcome with
+  | .error _ => cache
+  | .ok _ => match entry with
+    | none => { cache with primary := none }
+    | some value => cache.remember value
+
+/-- Refused evaluation cannot evict a descriptor or publish a new successful guard. -/
+@[simp] theorem Offsets.publish_error (cache : Offsets name) (entry : Option (Offset name)) (cause : E) :
+    cache.publish entry (Except.error cause : Except E Value) = cache := rfl
+
+/-- A successful unindexed fallback clears only the primary offset. -/
+@[simp] theorem Offsets.publish_absent (cache : Offsets name) (value : Value) :
+    cache.publish none (Except.ok value : Except E Value) = { cache with primary := none } := rfl
+
+/-- Value delivery still reads this view's cells and delegates unknown/uncomputed
+values to the existing lazy evaluator. Pointer/revision admission remains separate. -/
+def readOffsets (cache : Offsets name) (view : View Value)
+    (fallback : Unit → Except E Value) : Except E Value :=
+  match (cache.resolve view.names).bind (cell view) with
+  | some value => .ok value
+  | none => fallback ()
+
+/-- Any recognized descriptor reads current data, including false and Functions. -/
+theorem readOffsets_current (cache : Offsets name) (view : View Value)
+    (fallback : Unit → Except E Value) (found : cache.resolve view.names = some index)
+    (ready : view.fields name = some value) : readOffsets cache view fallback = .ok value := by
+  have indexed := cache.resolve_sound found
+  simp [readOffsets, found, cell, indexed, ready]
+
+/-- A known descriptor cannot turn an uncomputed cell or its original refusal into data. -/
+theorem readOffsets_lazy (cache : Offsets name) (view : View Value)
+    (fallback : Unit → Except E Value) (uncomputed : view.fields name = none) :
+    readOffsets cache view fallback = fallback () := by
+  cases found : cache.resolve view.names with
+  | none => simp [readOffsets, found]
+  | some index =>
+    have indexed := cache.resolve_sound found
+    simp [readOffsets, found, cell, indexed, uncomputed]
+
+/-- Charge only named hash resolutions; two comparisons, storage, preparation,
+guards, allocation and GC remain distinct costs, not a wall-time theorem. -/
+def Offsets.namedWork (cache : Offsets name) (names : List String) : Nat :=
+  if (cache.resolve names).isSome then 0 else 1
+
+/-- A two-shape hit eliminates a name lookup, never the receiver value guard. -/
+theorem Offsets.namedWork_hit (cache : Offsets name) (found : cache.resolve names = some index) :
+    cache.namedWork names = 0 := by simp [Offsets.namedWork, found]
+
+/-- A third unknown shape retains the ordinary single name-resolution fallback. -/
+theorem Offsets.namedWork_miss (cache : Offsets name) (miss : cache.resolve names = none) :
+    cache.namedWork names = 1 := by simp [Offsets.namedWork, miss]
+
+
+/-- A secondary descriptor cannot increase named hash resolutions over the same
+primary-only site; this excludes extra comparisons and storage costs. -/
+theorem Offsets.namedWork_le_primary (cache : Offsets name) (names : List String) :
+    cache.namedWork names ≤ if (optionalOffset cache.primary names).isSome then 0 else 1 := by
+  cases first : optionalOffset cache.primary names with
+  | none =>
+    cases second : optionalOffset cache.secondary names <;>
+      simp [Offsets.namedWork, Offsets.resolve, first, second]
+  | some value => simp [Offsets.namedWork, Offsets.resolve, first]
+
+/-- An unrelated descriptor still executes the original named/lazy fallback. -/
+theorem readOffsets_unknown (cache : Offsets name) (view : View Value)
+    (fallback : Unit → Except E Value) (unknown : cache.resolve view.names = none) :
+    readOffsets cache view fallback = fallback () := by simp [readOffsets, unknown]
+
+
+/-- Returned values/causes agree with the authoritative read whenever ready cells
+are faithful. Observable read hooks separately use the existing selectRead bypass. -/
+theorem readOffsets_equivalent (cache : Offsets name) (view : View Value)
+    (ordinary : Unit → Except E Value)
+    (faithful : ∀ value, view.fields name = some value → ordinary () = .ok value) :
+    readOffsets cache view ordinary = ordinary () := by
+  cases found : cache.resolve view.names with
+  | none => exact readOffsets_unknown cache view ordinary found
+  | some index =>
+    cases ready : view.fields name with
+    | none => exact readOffsets_lazy cache view ordinary ready
+    | some value =>
+      rw [readOffsets_current cache view ordinary found ready]
+      exact (faithful value ready).symm
+
 end LeanPoo.Prototype.Representation

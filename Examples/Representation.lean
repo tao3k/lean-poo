@@ -181,4 +181,49 @@ example : (modulePreparation true ["object","mop","object"]).bootstrapInitialize
 /-- The dynamic reference retains each distinct common dependency's discovery. -/
 example : (modulePreparation false ["object","mop","object"]).entryDiscoveries = 2 := by decide
 
+
+/-- Different service extensions put the common total at different offsets. -/
+def compactOffset : Offset "total" := ⟨["total", "capacity"], 0, rfl⟩
+/-- A policy-bearing service has the same requested field in a different layout. -/
+def policyOffset : Offset "total" := ⟨["policy", "total", "capacity"], 1, rfl⟩
+/-- Two successful demands close this finite descriptor working set. -/
+def serviceOffsets : Offsets "total" :=
+  (({} : Offsets "total").remember compactOffset).remember policyOffset
+
+/-- Alternating known layouts removes both name lookups after warming. -/
+example : serviceOffsets.namedWork compactOffset.names = 0 ∧
+    serviceOffsets.namedWork policyOffset.names = 0 := by decide
+
+/-- A third shape is not admitted by a two-entry history. -/
+example : serviceOffsets.namedWork ["audit", "total"] = 1 := by decide
+
+/-- Revision/owner changes never make old values authoritative at a reused offset. -/
+example : readOffsets serviceOffsets
+    (⟨99, 7, 200, compactOffset.names, fun key => if key = "total" then some false else none⟩ : View Bool)
+    (fun _ => (Except.error "unused" : Except String Bool)) = .ok false := by
+  apply readOffsets_current (index := 0) <;> rfl
+
+/-- Function cells are delivered unchanged, without a decidable equality on functions. -/
+example (f : Nat → Nat) : readOffsets serviceOffsets
+    (⟨99, 8, 201, policyOffset.names, fun key => if key = "total" then some f else none⟩ : View (Nat → Nat))
+    (fun _ => (Except.error "unused" : Except String (Nat → Nat))) = .ok f := by
+  apply readOffsets_current (index := 1) <;> rfl
+
+/-- Uncomputed cells retain the ordinary lazy refusal, even for a known descriptor. -/
+example : readOffsets serviceOffsets
+    (⟨99, 9, 202, policyOffset.names, fun _ => none⟩ : View Nat)
+    (fun _ => (Except.error "original refusal" : Except String Nat)) = .error "original refusal" :=
+  readOffsets_lazy _ _ _ rfl
+
+/-- Failed recomputation preserves the complete prior descriptor history. -/
+example : serviceOffsets.publish (some compactOffset)
+    (Except.error "original refusal" : Except String Nat) = serviceOffsets := rfl
+
+/-- A successful third layout evicts only the older descriptor and can later rewarm. -/
+example : ((serviceOffsets.remember ⟨["audit", "total"], 1, rfl⟩).remember compactOffset).resolve
+    compactOffset.names = some 0 := by decide
+
+/-- Missing-name fallback cannot create a falsely successful primary index. -/
+example : (serviceOffsets.publish none (Except.ok false : Except String Bool)).primary = none := rfl
+
 end LeanPoo.Examples.Representation
