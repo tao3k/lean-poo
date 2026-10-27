@@ -155,4 +155,30 @@ example : demandRead true totalSite
 /-- Only canonical-sort entries are eliminated; complete set checks stay charged. -/
 example : shapeSorts ["capacity","total"] ["total","capacity"] = 0 := by decide
 
+/-- Loading failure stops before binding lookup, retaining the exact cause. -/
+example : enterModule (fun _ => (Except.error "module refused" : Except String Unit))
+    (fun _ => .ok (fun (row : List Int) => .ok row)) [1,2] =
+    ([EntryStage.load], .error "module refused") := rfl
+
+/-- A refreshed runtime binding receives the original argument row. -/
+example : enterModule (fun _ => (Except.ok () : Except String Unit))
+    (fun _ => .ok (fun (row : List Int) => .ok (row, false))) [1,2] =
+    ([EntryStage.load, .resolve, .invoke], .ok ([1,2],false)) := rfl
+
+/-- Standard successful module caching never memoizes business invocation results. -/
+example : enterModule (fun _ => initializedResult (some (.ok ())) (fun _ => .error "unused"))
+    (fun _ => .ok (fun (n : Nat) => (Except.ok (n+1) : Except String Nat))) 3 =
+    ([EntryStage.load, .resolve, .invoke], .ok 4) := rfl
+
+/-- An initialization refusal stays memoized until standard explicit reload. -/
+example : initializedResult (some (.error "original")) (fun _ => (Except.ok () : Except String Unit)) =
+    .error "original" := rfl
+
+/-- Shared dependency bootstrap still performs initialization exactly once. -/
+example : (modulePreparation true ["object","mop","object"]).bootstrapInitializers = 2 ∧
+    (modulePreparation true ["object","mop","object"]).entryDiscoveries = 0 := by decide
+
+/-- The dynamic reference retains each distinct common dependency's discovery. -/
+example : (modulePreparation false ["object","mop","object"]).entryDiscoveries = 2 := by decide
+
 end LeanPoo.Examples.Representation

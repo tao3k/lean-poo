@@ -632,4 +632,100 @@ theorem shapeSorts_hit (catalog hint : List String) (matched : shapeMatches cata
 theorem shapeSorts_miss (catalog hint : List String) (matched : shapeMatches catalog hint = false) :
     shapeSorts catalog hint = 1 := by simp [shapeSorts, matched]
 
+section ModuleEntry
+variable {E Args Value : Type}
+
+/-- Ordered source effects at the explicit runtime-entry boundary. The standard
+loader owns its internal registry/graph; this is only its client protocol. -/
+inductive EntryStage where
+  | load | resolve | invoke
+  deriving DecidableEq, Repr
+
+/-- Load before resolving the current binding, then tail-apply the original row.
+Value may be a product/list denoting all returned values; it is not transformed. -/
+def enterModule (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) (arguments : Args) :
+    List EntryStage × Except E Value :=
+  match load () with
+  | .error cause => ([.load], .error cause)
+  | .ok () => match resolve () with
+    | .error cause => ([.load, .resolve], .error cause)
+    | .ok entry => ([.load, .resolve, .invoke], entry arguments)
+
+/-- A loader refusal cannot resolve or invoke an entry and retains its cause. -/
+theorem enterModule_load_refused (cause : E)
+    (resolve : Unit → Except E (Args → Except E Value)) (arguments : Args) :
+    enterModule (fun _ => .error cause) resolve arguments = ([.load], .error cause) := rfl
+
+/-- A missing binding never runs the consumer and retains its lookup refusal.
+Nonprocedure apply failures remain runtime invocation errors, not this case. -/
+theorem enterModule_resolve_refused (load : Unit → Except E Unit) (cause : E)
+    (arguments : Args) (ready : load () = .ok ()) :
+    enterModule load (fun _ => (Except.error cause : Except E (Args → Except E Value))) arguments =
+      ([.load, .resolve], .error cause) := by simp [enterModule, ready]
+
+/-- Current lookup, not a retained procedure, supplies every invocation/result. -/
+theorem enterModule_current (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) (arguments : Args)
+    (entry : Args → Except E Value) (ready : load () = .ok ()) (current : resolve () = .ok entry) :
+    enterModule load resolve arguments = ([.load, .resolve, .invoke], entry arguments) := by
+  simp [enterModule, ready, current]
+
+/-- Business refusal is an invocation result, not cached as failed initialization. -/
+theorem enterModule_business_refused (arguments : Args) (cause : E) :
+    enterModule (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (fun (_ : Args) => (Except.error cause : Except E Value))) arguments =
+      ([.load, .resolve, .invoke], .error cause) := rfl
+
+/-- Abstract already-published standard-loader result; this is a ghost observation
+of Gerbil's cache, not a second implementation or a Scheme-side module registry. -/
+def initializedResult (cached : Option (Except E Unit)) (initializer : Unit → Except E Unit) : Except E Unit :=
+  match cached with
+  | some result => result
+  | none => initializer ()
+
+/-- Successful standard registration skips reinitialization on repeated requests. -/
+theorem initializedResult_ready (initializer : Unit → Except E Unit) :
+    initializedResult (some (.ok ())) initializer = .ok () := rfl
+
+/-- Initialization errors keep their exact identity until standard explicit reload. -/
+theorem initializedResult_refused (initializer : Unit → Except E Unit) (cause : E) :
+    initializedResult (some (.error cause)) initializer = .error cause := rfl
+
+/-- A fresh/refreshed standard-loader slot performs its own current initialization. -/
+theorem initializedResult_fresh (initializer : Unit → Except E Unit) :
+    initializedResult none initializer = initializer () := rfl
+
+/-- Distinct common dependencies are declared by the standard build closure.
+Prelinking moves their initialization to bootstrap; it does not remove it. -/
+structure ModulePreparation where
+  bootstrapInitializers : Nat
+  entryInitializers : Nat
+  entryDiscoveries : Nat
+  entryDynamicLoads : Nat
+  deriving DecidableEq, Repr
+
+/-- Source counts for a faithful checked dependency closure, not filesystem calls,
+ELF/Mach-O mappings, compiler work or initializer purity/termination proofs. -/
+def modulePreparation (linked : Bool) (common : List String) : ModulePreparation :=
+  let n := common.eraseDups.length
+  if linked then ⟨n, 0, 0, 0⟩ else ⟨0, n, n, n⟩
+
+/-- Both deployment paths initialize every required common dependency once. -/
+theorem modulePreparation_initializers (linked : Bool) (common : List String) :
+    (modulePreparation linked common).bootstrapInitializers +
+      (modulePreparation linked common).entryInitializers = common.eraseDups.length := by
+  cases linked <;> simp [modulePreparation]
+
+/-- Only entry-time per-module discovery/dynamic admissions disappear from the prelinked path.
+The executable image and its build/link/startup costs remain separately charged. -/
+theorem modulePreparation_linked (common : List String) :
+    (modulePreparation true common).entryDiscoveries = 0 ∧
+    (modulePreparation true common).entryDynamicLoads = 0 := by exact ⟨rfl, rfl⟩
+
+/-- Cold ordinary loading still pays its distinct common dependency inventory. -/
+theorem modulePreparation_dynamic (common : List String) :
+    (modulePreparation false common).entryDiscoveries = common.eraseDups.length := rfl
+
+end ModuleEntry
 end LeanPoo.Prototype.Representation

@@ -254,3 +254,32 @@ This follows the author source's representation/cache distinction in
 `load-module` already owns module initialization and failure caching. Reusing an
 initialized module's recipe does not mean sharing evaluated receiver values.
 Scheme has no dependency on this checkout, and adds no module registry or loader.
+
+## Standard runtime entries with a shared foundation
+
+The runtime-entry client is `io.module-action module binding`. It captures a
+private copy of the module path and an explicit canonical runtime identifier,
+without loading the requested business module. The returned Reader-compatible IO
+action accepts the original argument row, delegates to standard `load-module`,
+resolves the CURRENT binding with standard `eval`, and tail-applies it. It adds no
+registry, path search, export-alias inference or retained procedure. Standard
+initialization/error memoization and explicit reload remain authoritative;
+business failures are invocation results, and multiple values remain intact.
+
+The existing example executable now links the common POO/FUN/IO foundation and
+dynamically selects the SAME compiled business module/binding as the gxi route.
+It does not link every optional business module. The core's initialization still
+runs at process bootstrap; only repeated entry-time discovery and dynamic loading
+of already linked dependencies are avoided. Build/link/startup and optional
+module initialization remain charged. This advances the author's shared/lazy
+representation and staged-computation ideas, rather than proving the SDK loader.
+
+Representation's entry-stage laws preserve load/lookup failure order, original
+causes, original arguments and current binding results. A ghost observation of
+published standard-loader readiness distinguishes initialization errors from
+business failures. Finite declared common dependencies count bootstrap and entry
+initializers separately and preserve the total initialization count. Counts denote
+logical source operations, not OS file probes, image maps, linking, GC or latency.
+Faithful registration, canonical binding identity and supported finite dependency
+initialization remain assumptions. The model does not prove arbitrary initializer
+effects, module cycles, compiler behavior or concurrent loader implementation.
