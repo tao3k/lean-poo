@@ -109,7 +109,7 @@ elsewhere in the paper is distinct from a pseudo-random test sampler.
 
 | Existing owner | Reused responsibility |
 | --- | --- |
-| `testing/type.ss` | `make-generator`, products, `check-property`, strict/budgeted shrinking, `replay-property`, `property-action` |
+| `testing/type.ss` | Typed generator/product preparation, Type/source admission, report projection and `property-action`; execution delegates to the generic modules |
 | `testing/generation-graph.ss` / `testing/recursive-generation.ss` | Existing bounded recursive value generation; not replaced by a second recursion engine |
 | `Type`, `List`, `Tuple`, `Union`, `Exactly`, `Enum` | Command and trace membership; no `Any` fallback |
 | Existing table/index protocols | `.delta/opt`, `.apply-delta`, `invert-table-delta`, index observations and supported metadata invalidation |
@@ -145,7 +145,8 @@ checks; pure results alone cannot certify mutable or linear publication.
 ## Proposed public surface
 
 These are proposed signatures, not claims about the currently released API.
-All additions stay in the existing `clan/poo/property-testing` module.
+The typed entrypoints are in `clan/poo/testing/type`; generic execution is
+owned by the directly imported `clan/property-testing` modules above.
 
 ```scheme
 (trace-generator command-type model steps: 64 dependencies: [])

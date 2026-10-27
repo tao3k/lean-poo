@@ -8,17 +8,21 @@ build invokes this same standard build before compiling typed consumers.
 Import the modules you use directly:
 
 ```scheme
+(export arithmetic-test)
 (import :std/test
         (prefix-in :clan/property-testing/generator generator.)
         (prefix-in :clan/property-testing/property property.))
 
+;; Draw and shrink signed integers with one explicit random source.
 (def integers
   (generator.make-generator
     (lambda (random size) (- (random (+ (* 2 size) 1)) size))
     generator.integer-shrinks))
+;; Domain admission and shrink measure are supplied by this application.
 (def integer-domain
   (property.make-specification exact-integer? abs))
 
+;; Standard Gerbil TestSuite discovery owns execution.
 (def arithmetic-test
   (test-suite "integer arithmetic"
     (test-case "addition identity"
