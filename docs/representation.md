@@ -175,3 +175,15 @@ to existing `.ref` before preparing a layout. Three selection laws preserve both
 branches and exact refusal. A concrete regression keeps the receiver layout absent
 after an observed read. The untracked reference retains the original observation-
 status check; omitting that check would make its hot-read comparison unfair.
+
+### Cold hook selection and prepared-layout reuse
+
+`selectLayoutRead` separates ordinary observation/cold pinned-hook reads from a
+live prepared layout and genuinely cold field preparation. Its route and exact
+refusal laws keep both unchosen actions lazy; a cold anchor can retain its opaque
+Function even when unrelated metadata preparation refuses. A non-anchor cannot
+borrow this bypass. Top-level executable examples include refusal and retry.
+The Gerbil bridge assumes that supported invalidation clears the instance and
+layout together, as implemented by `clear-object-cache!`; raw setters bypass that
+protocol. Existing value-guard/current-cell proofs still apply on the ready path.
+No callback termination, compiler, loader or physical timing theorem is implied.

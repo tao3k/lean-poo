@@ -356,4 +356,45 @@ theorem selectRead_unobserved (ordinary optimized : Unit → Except E Value) :
 theorem selectRead_refused (optimized : Unit → Except E Value) (cause : E) :
     selectRead true (fun _ => .error cause) optimized = .error cause := rfl
 
+/-- Select the existing reader before cold layout construction for a pinned
+bootstrap hook. A live prepared layout is reused; invalidation must clear it
+with the instance. The three actions model effects/refusals without running
+unchosen branches or assuming that preparation terminates. -/
+def selectLayoutRead (observed prepared anchored : Bool)
+    (ordinary ready prepare : Unit → Except E Value) : Except E Value :=
+  if observed || (!prepared && anchored) then ordinary ()
+  else if prepared then ready () else prepare ()
+
+/-- Observers retain ordinary demand checks regardless of an available layout. -/
+theorem selectLayoutRead_observed (prepared anchored : Bool)
+    (ordinary ready prepare : Unit → Except E Value) :
+    selectLayoutRead true prepared anchored ordinary ready prepare = ordinary () := by
+  simp [selectLayoutRead]
+
+/-- Cold pinned hooks cannot force unrelated metadata or layout preparation. -/
+theorem selectLayoutRead_anchor (ordinary ready prepare : Unit → Except E Value) :
+    selectLayoutRead false false true ordinary ready prepare = ordinary () := rfl
+
+/-- A supported live layout removes redundant instance preparation, not value guards. -/
+theorem selectLayoutRead_ready (anchored : Bool)
+    (ordinary ready prepare : Unit → Except E Value) :
+    selectLayoutRead false true anchored ordinary ready prepare = ready () := by
+  simp [selectLayoutRead]
+
+/-- Ordinary cold fields still run the guarded preparation protocol. -/
+theorem selectLayoutRead_cold (ordinary ready prepare : Unit → Except E Value) :
+    selectLayoutRead false false false ordinary ready prepare = prepare () := rfl
+
+/-- A failed cold preparation remains the exact refusal, rather than a cached value. -/
+theorem selectLayoutRead_refused (ordinary ready : Unit → Except E Value) (cause : E) :
+    selectLayoutRead false false false ordinary ready (fun _ => .error cause) = .error cause := rfl
+
+/-- Without observation or an available layout, hook identity is the only bypass.
+This does not allow arbitrary cyclic fields to escape guarded construction. -/
+theorem selectLayoutRead_cold_cases (anchored : Bool)
+    (ordinary ready prepare : Unit → Except E Value) :
+    selectLayoutRead false false anchored ordinary ready prepare =
+      (if anchored then ordinary () else prepare ()) := by
+  cases anchored <;> rfl
+
 end LeanPoo.Prototype.Representation

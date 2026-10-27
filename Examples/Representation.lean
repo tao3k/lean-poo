@@ -76,4 +76,19 @@ example (f : Nat → Nat) : readPrepared totalSite
 example : selectRead true (fun _ => (Except.ok (11 : Int) : Except String Int))
     (fun _ => .error "layout must stay lazy") = .ok 11 := rfl
 
+/-- A pinned opaque hook survives unavailable unrelated metadata after invalidation. -/
+example (hook : Nat → Nat) : selectLayoutRead false false true
+    (fun _ => (Except.ok hook : Except String (Nat → Nat)))
+    (fun _ => .error "retired layout") (fun _ => .error "metadata refused") = .ok hook := rfl
+
+/-- The same cold state grants no bypass to a non-anchor field. -/
+example : selectLayoutRead false false false
+    (fun _ => (Except.ok (7 : Int) : Except String Int))
+    (fun _ => .ok 9) (fun _ => .error "metadata refused") = .error "metadata refused" := rfl
+
+/-- Successful retry can prepare the revised value; no old value was installed. -/
+example : selectLayoutRead false false false
+    (fun _ => (Except.ok (7 : Int) : Except String Int))
+    (fun _ => .ok 7) (fun _ => .ok 9) = .ok 9 := rfl
+
 end LeanPoo.Examples.Representation
