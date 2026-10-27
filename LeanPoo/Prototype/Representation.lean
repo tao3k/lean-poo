@@ -456,4 +456,92 @@ theorem demandRead_symbolic (site : Site) (view : View Value) (ordinary : Unit �
 theorem demandBatch_empty (indexed : Bool) (site : Site) (ordinary : View Value → Except E Value) :
     demandBatch indexed site [] ordinary = .ok [] := rfl
 
+/-- A shape can allocate empty memo cells without visiting the ordinary value
+cache. Names, owner and generation remain unchanged; ordinary lookup still owns
+values/evaluation. Empty here means unpromoted, not field absence. -/
+def deferCells (view : View Value) : View Value :=
+  { view with fields := fun _ => none }
+
+/-- Every deferred access uses its ordinary value/refusal, even for an unknown
+shape. Deferred preparation does not turn a cached false into field absence. -/
+theorem readPrepared_deferred (site : Site) (view : View Value) (ordinary : Unit → Except E Value) :
+    readPrepared site (deferCells view) ordinary = ordinary () := by
+  by_cases same : site.names = view.names
+  · exact readPrepared_lazy site (deferCells view) ordinary same rfl
+  · exact readPrepared_reshaped site (deferCells view) ordinary same
+
+/-- Promote one already successful ordinary read. Runtime canonical shapes have
+unique names: the name update denotes its certified single vector position.
+This operation models promotion only, not effects inside ordinary evaluation. -/
+def rememberCell (view : View Value) (name : String) (value : Value) : View Value :=
+  { view with fields := fun key => if key = name then some value else view.fields key }
+
+/-- Promotion grants no new shape or generation authority to an access site. -/
+theorem rememberCell_identity (view : View Value) (name : String) (value : Value) :
+    (rememberCell view name value).owner = view.owner ∧
+    (rememberCell view name value).revision = view.revision ∧
+    (rememberCell view name value).token = view.token ∧
+    (rememberCell view name value).names = view.names := by exact ⟨rfl, rfl, rfl, rfl⟩
+
+/-- Only the promoted memo field changes. Evaluation may independently populate
+other dependency cells; this frame law does not constrain that evaluator. -/
+theorem rememberCell_frame (view : View Value) (name other : String) (value : Value)
+    (different : other ≠ name) :
+    (rememberCell view name value).fields other = view.fields other := by
+  simp [rememberCell, different]
+
+/-- Successful ordinary false/Function values become direct current-cell hits.
+No equality or revalidation of Value is needed, and the old owner is irrelevant. -/
+theorem readPrepared_remembered (site : Site) (view : View Value) (ordinary : Unit → Except E Value)
+    (value : Value) (same : site.names = view.names) :
+    readPrepared site (rememberCell view site.name value) ordinary = .ok value := by
+  apply readPrepared_current site (rememberCell view site.name value) ordinary value same
+  simp [rememberCell]
+
+/-- All present memo cells must agree with the CURRENT ordinary value cache. -/
+abbrev faithfulCells (view : View Value) (ordinary : String → Except E Value) : Prop :=
+  ∀ name value, view.fields name = some value → ordinary name = .ok value
+
+/-- Empty memo cells require no source-value scan or successful source evidence. -/
+theorem faithfulCells_deferred (view : View Value) (ordinary : String → Except E Value) :
+    faithfulCells (deferCells view) ordinary := by
+  intro name value cached
+  simp [deferCells] at cached
+
+/-- A successful named read preserves whole-cache fidelity when promoted.
+Supported invalidation must discard this view when the ordinary source changes. -/
+theorem faithfulCells_remembered (view : View Value) (ordinary : String → Except E Value)
+    (name : String) (value : Value) (current : faithfulCells view ordinary)
+    (successful : ordinary name = .ok value) :
+    faithfulCells (rememberCell view name value) ordinary := by
+  intro key found cached
+  by_cases same : key = name
+  · subst key
+    simp [rememberCell] at cached
+    rw [← cached]
+    exact successful
+  · exact current key found (by simpa [rememberCell, same] using cached)
+
+/-- A whole finite batch over fresh deferred layouts retains ordinary failures
+and demand order, without assuming all source values were materialized. -/
+theorem demandBatch_deferred (site : Site) (views : List (View Value))
+    (ordinary : View Value → Except E Value) :
+    demandBatch true site (views.map deferCells) ordinary =
+      demandBatch false site (views.map deferCells) ordinary := by
+  apply demandBatch_sound
+  intro view member value cached
+  obtain ⟨original, _, rfl⟩ := List.mem_map.mp member
+  simp [deferCells] at cached
+
+/-- Only VALUE-cache seeding lookups are charged here. Canonical shape sorting,
+key inventory, vector allocation/fill, demand reads and GC remain separate work. -/
+def seedingLookups (eager : Bool) (canonicalNames : List String) : Nat :=
+  if eager then canonicalNames.length else 0
+
+/-- Demand-filled layout preparation performs zero ordinary value-table probes. -/
+theorem seedingLookups_deferred (names : List String) : seedingLookups false names = 0 := rfl
+
+/-- The eager source path probes once per canonical field, including uncached ones. -/
+theorem seedingLookups_eager (names : List String) : seedingLookups true names = names.length := rfl
+
 end LeanPoo.Prototype.Representation

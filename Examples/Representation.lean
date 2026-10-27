@@ -108,4 +108,25 @@ example : demandBatch false totalSite [service 1 2 3 53, service 2 2 4 103]
       | some n => (Except.ok n : Except String Int)
       | none => .error "missing") = .ok [53, 103] := by rfl
 
+/-- A warmed false value can remain unpromoted until the first indexed demand. -/
+example : readPrepared totalSite (deferCells
+    (⟨2,3,7,["total","capacity"],fun _ => some false⟩ : View Bool))
+    (fun _ => (Except.ok false : Except String Bool)) = .ok false :=
+  readPrepared_deferred _ _ _
+
+/-- An opaque checked Function is retained exactly after successful promotion. -/
+example (f : Nat → Nat) : readPrepared totalSite
+    (rememberCell (deferCells
+      (⟨2,3,7,["total","capacity"],fun _ => some f⟩ : View (Nat → Nat))) "total" f)
+    (fun _ => (Except.error "unused" : Except String (Nat → Nat))) = .ok f := by
+  apply readPrepared_remembered <;> rfl
+
+/-- Refused demand cannot appear as a newly successful memo cell. -/
+example : readPrepared totalSite (deferCells (service 2 3 7 33))
+    (fun _ => (Except.error "original refusal" : Except String Int)) = .error "original refusal" :=
+  readPrepared_deferred _ _ _
+
+/-- A two-name shape still allocates cells but needs no value-table seeding probes. -/
+example : seedingLookups false ["total", "capacity"] = 0 := rfl
+
 end LeanPoo.Examples.Representation

@@ -207,3 +207,24 @@ retry. These are source-result laws; they neither prove Gerbil module initializa
 or host process equivalence nor turn operation counts into startup timing bounds.
 The actual module and linked executable must execute the same source lifecycle
 and retain all process-cold/wall/GC controls separately.
+
+### Demand-filled receiver cells
+
+The source model now distinguishes ordinary cached values from the promoted
+subset in a receiver layout. `deferCells` keeps the exact owner/generation/shape
+and has no promoted fields. `readPrepared_deferred` preserves any ordinary value
+or original refusal. `rememberCell` denotes writing the certified current index
+of a unique canonical name after a successful read; its identity/frame/fidelity
+laws do not assume Value equality. The opaque Function and present-false examples
+therefore need neither revalidation nor reconstruction. The ordinary evaluator
+may independently populate dependency cells; the promotion frame theorem does
+not claim evaluation is effect-free or rolls back those successful dependencies.
+
+`demandBatch_deferred` lifts this to whole finite batches and exact first-refusal
+semantics. Registered supported invalidation and faithful current cells remain
+premises. `seedingLookups` counts only initial VALUE-table probes: eager seeding
+uses one per canonical name, while deferred creation uses zero. Shape inventory,
+sorting/interning, dense vector allocation/fill, demand reads, possible repeated
+writes, guards and GC stay charged. This is neither constant-time construction
+nor full removal of per-receiver hash storage. Dynamic module initialization and
+compiler behavior are still outside these source laws.
