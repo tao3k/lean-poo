@@ -338,4 +338,22 @@ theorem resolutionWork_shared (site : Site) (view : View Value) (same : site.nam
 theorem resolutionWork_changed (site : Site) (view : View Value) (different : site.names ≠ view.names) :
     resolutionWork site view = 1 := by simp [resolutionWork, different]
 
+/-- Observation selects the existing ordinary read protocol before any lazy
+layout preparation. Both branches remain thunks; no alternate evaluator or
+observation-record engine is introduced by the access policy. -/
+def selectRead (observed : Bool) (ordinary optimized : Unit → Except E Value) : Except E Value :=
+  if observed then ordinary () else optimized ()
+
+/-- Tracked reads bypass all optimized preparation and retain ordinary behavior. -/
+theorem selectRead_observed (ordinary optimized : Unit → Except E Value) :
+    selectRead true ordinary optimized = ordinary () := rfl
+
+/-- Disabled observation retains the existing explicit layout/cell protocol. -/
+theorem selectRead_unobserved (ordinary optimized : Unit → Except E Value) :
+    selectRead false ordinary optimized = optimized () := rfl
+
+/-- Ordinary precheck or evaluator refusal is not replaced by cached data. -/
+theorem selectRead_refused (optimized : Unit → Except E Value) (cause : E) :
+    selectRead true (fun _ => .error cause) optimized = .error cause := rfl
+
 end LeanPoo.Prototype.Representation

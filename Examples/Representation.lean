@@ -72,4 +72,8 @@ example (f : Nat → Nat) : readPrepared totalSite
     (fun _ => (Except.error "unused" : Except String (Nat → Nat))) = .ok f := by
   apply readPrepared_current <;> rfl
 
+/-- Tracked evaluation cannot force a refused layout-preparation branch. -/
+example : selectRead true (fun _ => (Except.ok (11 : Int) : Except String Int))
+    (fun _ => .error "layout must stay lazy") = .ok 11 := rfl
+
 end LeanPoo.Examples.Representation

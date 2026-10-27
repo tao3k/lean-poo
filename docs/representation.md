@@ -149,7 +149,7 @@ invalidation, stable leaves and complete dependency declarations are premises.
 The original stale-owner/revision/token rejection theorems remain unchanged.
 
 Scheme uses the existing slot layout and inline entry, without another namespace
-or result cache. Tracked ready-cell reads reuse bootstrap/read-record delivery,
+or result cache. Tracked reads delegate directly to ordinary `.ref` before vector preparation, preserving bootstrap/read-record delivery,
 including transitive dependencies and stale replay refusal. Checked service
 FUN/IO still performs contract/refine admission on every invocation. Standard
 cached module loading preserves recipe identity; fresh clone/layout preparation
@@ -168,3 +168,10 @@ fresh module expansion/compile/link/initialization performance or the Gerbil
 loader/evaluator implementation. The loader retains its standard registry,
 loading synchronization and error/reload semantics. No host runtime, collector,
 compiler or universal wall-time improvement is proved by these finite laws.
+
+The first paired study found real extra cost for the vector route under active
+read observation. The final `selectRead` policy therefore delegates such accesses
+to existing `.ref` before preparing a layout. Three selection laws preserve both
+branches and exact refusal. A concrete regression keeps the receiver layout absent
+after an observed read. The untracked reference retains the original observation-
+status check; omitting that check would make its hot-read comparison unfair.
