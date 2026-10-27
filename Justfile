@@ -379,6 +379,7 @@ _check-examples:
     {{lean}} Examples/Parameters.lean
     {{lean}} Examples/Representation.lean
     {{lean}} Examples/GeneratedCalls.lean
+    {{lean}} Examples/CollectionTesting.lean
     {{lean}} Examples/RecursiveGenerators.lean
     {{lean}} Examples/PrototypeTypes.lean
     {{lean}} Examples/RowTypes.lean
