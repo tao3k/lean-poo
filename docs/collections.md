@@ -1372,3 +1372,27 @@ Function placements in five styles, collision retry, false and stale origins.
 All original preparation/recognition/candidate/backend/GC costs remain charged;
 no VM speedup, arbitrary callback termination or compiler verification is claimed.
 This advances the author's collection-library future work using descriptor delegation.
+
+### Finite ordered observation capture
+
+Gerbil's fallback `table-order` now owns the finite producer list and Pair shells
+before standard sorting invokes comparisons. Its positioned reverse fold likewise
+captures the materialized source list before user callbacks; fallback folding
+reuses the already captured sort input. Checked Function leaves and persistent
+roots retain identity. Lazy positioned iteration remains on the existing cursor.
+
+`TableCapture.capturedOrder_ready`, `capturedOrder_refused`, `capturedOrder_foldr`
+and `capturedOrder_count` reuse `captureRequestBatch` for original-row delivery,
+exact sorting refusal, reverse folding and cardinality under an explicit ordering
+permutation premise. The examples in `Examples/CollectionStyles.lean` retain
+original false values and opaque callbacks after provider-buffer replacement.
+The Scheme regressions exercise eager/lazy bounds, both reverse-fold paths,
+five-style service inspection and Reader/FUN/IO comparison refusal with retry.
+
+The finite proof assumes faithful producer observations, stable leaves, persistent
+roots and lawful ordering. It does not verify standard sorting, mutable payload
+internals, arbitrary callback termination, a heap model or compiler behavior.
+Capture adds O(n) list/Pair shells to finite observations; full admission, sorting,
+callbacks, allocation and GC remain charged. No runtime speedup is inferred.
+This advances the collection proposal's future work using the original paper's
+self-delegation discipline, without introducing another capture or sort engine.

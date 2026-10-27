@@ -609,4 +609,58 @@ theorem captureJoinPayload_left (left : V) (right : R) (later : Option V) :
       (fun _ => (Except.ok (some right, later) : Except E _))).map (Option.map Prod.fst) =
       .ok (some left) := rfl
 
+/-- A finite ordered observation reuses the existing capture protocol. Sorting
+and consuming receive the original row observations, even when comparison work
+recycles both the producer spine and row cells. Backend fidelity, stable leaves
+and comparator laws remain premises; no heap or sorting implementation is proved. -/
+theorem capturedOrder_ready {R : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (consume : List (K × V) → Except E R) (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare (fun rows => (order rows).bind consume) =
+      (order (slots.map buffer)).bind consume :=
+  captureRequestBatch_ready buffer later slots prepare _ ready
+
+/-- Original sorting refusal suppresses the consumer and preserves its cause. -/
+theorem capturedOrder_refused {R : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (consume : List (K × V) → Except E R) (cause : E)
+    (ready : prepare buffer = .ok later) (refused : order (slots.map buffer) = .error cause) :
+    captureRequestBatch buffer slots prepare (fun rows => (order rows).bind consume) =
+      .error cause := by
+  rw [capturedOrder_ready buffer later slots prepare order consume ready, refused]
+  rfl
+
+/-- A successful ordered fold receives every original sorted row, including false
+and opaque Function leaves; later response cells are not consulted per step. -/
+theorem capturedOrder_foldr {A : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (rows : List (K × V)) (step : K × V → A → A) (seed : A)
+    (ready : prepare buffer = .ok later) (sorted : order (slots.map buffer) = .ok rows) :
+    captureRequestBatch buffer slots prepare
+      (fun observed => (order observed).map (List.foldr step seed)) =
+      .ok (rows.foldr step seed) := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready, sorted]
+  rfl
+
+/-- Reusing a lawful ordering permutation cannot discard an original row. The
+finite length statement is independent of mutable producer list-cell reuse. -/
+theorem capturedOrder_count (buffer later : Cell → K × V) (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V))) (rows : List (K × V))
+    (ready : prepare buffer = .ok later) (sorted : order (slots.map buffer) = .ok rows)
+    (faithful : rows.Perm (slots.map buffer)) :
+    captureRequestBatch buffer slots prepare (fun observed => (order observed).map List.length) =
+      .ok slots.length := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready, sorted]
+  have count : rows.length = slots.length := by
+    simpa using faithful.length_eq
+  change Except.ok rows.length = Except.ok slots.length
+  rw [count]
+
 end LeanPoo.Functional.OrderedDictionary

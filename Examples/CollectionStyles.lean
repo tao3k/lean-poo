@@ -957,4 +957,20 @@ example (service worker queried : Nat → Nat) :
       (fun _ => (Except.ok (some worker, some queried) : Except String _)) =
         .ok (some (service, worker)) := rfl
 
+/-- Sorting preparation can replace all provider cells without replacing the
+original false payloads or dropping any row from the finite observation. -/
+example : captureRequestBatch (fun n : Nat => (n, false)) [3, 1, 2]
+    (fun _ => (Except.ok (fun _ => (99, true)) : Except String _))
+    (fun rows => Except.ok (rows.mergeSort (fun a b => a.1 ≤ b.1))) =
+      .ok [(1, false), (2, false), (3, false)] := by
+  simp [captureRequestBatch, List.mergeSort, Except.bind]
+
+/-- Reverse folding shares the captured finite observation. No Function equality
+or normalization is needed to retain the original callbacks after buffer reuse. -/
+example (callback replacement : Nat → Nat) :
+    captureRequestBatch (fun n : Nat => (n, callback)) [1, 2, 3]
+      (fun _ => (Except.ok (fun _ => (99, replacement)) : Except String _))
+      (fun rows => Except.ok (rows.foldr (fun row acc => row.2 row.1 + acc) 0)) =
+        .ok (callback 1 + (callback 2 + (callback 3 + 0))) := rfl
+
 end LeanPoo.Examples.CollectionStyles
