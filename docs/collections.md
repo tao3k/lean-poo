@@ -1288,3 +1288,22 @@ future work. Finite lawful enumeration, stable opaque leaves and recorded child
 outcomes are premises; there is no deep-copy, arbitrary codec purity, parser,
 termination or VM performance theorem. List/Pair shell allocation, admission and
 metadata preparation remain costs. Scheme remains independently buildable.
+
+
+### Final-state grouped buckets
+
+TableIndex materializeIndexBucket separates unchanged work, empty-group deletion
+and finite nonempty construction. Its laws preserve exact opaque handles,
+constructor refusal and complete final admission without a business empty
+constructor or admission of intermediate groups. CollectionStyles composes
+nonempty/even cohorts, migration, deletion, retry and late failure through the
+existing ordered stageIndexCaches protocol. Existing index-view correctness laws
+still require faithful scratch key-space operations and enumeration.
+
+Gerbil reuses value-parametric key spaces, finite source constructors and the
+shared index publication boundary for cold/warm grouped work. Scratch carriers
+need not be source carriers; unchanged buckets retain identity. Changed-key
+projections remain selective, but copying affected old buckets and reconstructing
+all final rows, metadata preparation and validation are explicit costs. These
+finite laws advance collection-library future work, not arbitrary backend,
+callback-termination, deep-copy or VM performance verification.

@@ -711,4 +711,72 @@ theorem installIndexWork_refused [DecidableEq V] (ops : TableCarrier K V A)
 
 end BackendKeyWork
 
+/-- A grouped bucket is rebuilt from its final finite bindings. Missing work
+reuses the old bucket; empty work deletes it without evaluating a business empty
+constructor. Scratch key-space fidelity and the finite builder laws are premises. -/
+def materializeIndexBucket (build : List Row → Except E A)
+    (original : Option A) (work : Option (List Row)) : Except E (Option A) :=
+  match work with
+  | none => .ok original
+  | some [] => .ok none
+  | some (row :: rest) => (build (row :: rest)).map some
+
+/-- Untouched buckets keep their exact identity, including opaque Functions. -/
+theorem materializeIndexBucket_untouched (build : List Row → Except E A)
+    (original : Option A) : materializeIndexBucket build original none = .ok original := rfl
+
+/-- Removing the final member requires no valid empty business value or builder. -/
+theorem materializeIndexBucket_deleted (build : List Row → Except E A)
+    (original : Option A) : materializeIndexBucket build original (some []) = .ok none := rfl
+
+/-- Only the complete nonempty bucket is passed to the existing constructor. -/
+theorem materializeIndexBucket_ready (build : List Row → Except E A)
+    (original : Option A) (row : Row) (rest : List Row) (bucket : A)
+    (ready : build (row :: rest) = .ok bucket) :
+    materializeIndexBucket build original (some (row :: rest)) = .ok (some bucket) := by
+  simp [materializeIndexBucket, ready, Except.map]
+
+/-- Constructor refusal returns its original cause, without exposing scratch data. -/
+theorem materializeIndexBucket_refused (build : List Row → Except E A)
+    (original : Option A) (row : Row) (rest : List Row) (cause : E)
+    (refused : build (row :: rest) = .error cause) :
+    materializeIndexBucket build original (some (row :: rest)) = .error cause := by
+  simp [materializeIndexBucket, refused, Except.map]
+
+/-- Accepted finite constructors imply each newly materialized business bucket
+satisfies its complete invariant. Intermediate scratch groups need not satisfy it. -/
+theorem materializeIndexBucket_admitted (build : List Row → Except E A)
+    (admit : A → Prop) (law : ∀ rows bucket, build rows = .ok bucket → admit bucket)
+    (original : Option A) (row : Row) (rest : List Row) (bucket : A)
+    (ready : materializeIndexBucket build original (some (row :: rest)) = .ok (some bucket)) :
+    admit bucket := by
+  cases built : build (row :: rest) with
+  | error cause => simp [materializeIndexBucket, built, Except.map] at ready
+  | ok value =>
+    simp [materializeIndexBucket, built, Except.map] at ready
+    subst value
+    exact law _ _ built
+
+/-- Exact final row delivery preserves the existing changed-key index relation.
+This is conditional on faithful scratch enumeration, not a proof of a host tree. -/
+theorem materializeIndexBucket_rows (build : List Row → Except E A)
+    (read : A → List Row) (law : ∀ rows bucket, build rows = .ok bucket → read bucket = rows)
+    (original : Option A) (row : Row) (rest : List Row) (bucket : A)
+    (ready : build (row :: rest) = .ok bucket) :
+    materializeIndexBucket build original (some (row :: rest)) = .ok (some bucket) ∧
+      read bucket = row :: rest := ⟨materializeIndexBucket_ready _ _ _ _ _ ready, law _ _ ready⟩
+
+/-- Preparation charges every affected finite bucket, with no work for untouched
+or deleted buckets. Registry setup, old-bucket copying, admission and backend
+construction costs are additional parameters, not hidden VM speedup claims. -/
+def indexBucketRowWork (work : Option (List Row)) : Nat :=
+  match work with | none => 0 | some rows => rows.length
+
+/-- Unaffected buckets introduce neither finite construction nor row-delivery work. -/
+theorem indexBucketRowWork_untouched : indexBucketRowWork (Row := Row) none = 0 := rfl
+
+/-- Finite reconstruction charges all final rows, not merely the changed keys. -/
+theorem indexBucketRowWork_affected (rows : List Row) :
+    indexBucketRowWork (some rows) = rows.length := rfl
+
 end LeanPoo.Functional.OrderedDictionary

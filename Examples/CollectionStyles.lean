@@ -856,4 +856,35 @@ example (edits : List (Change Nat Unit))
       .ok (setImage permissionOwners (indexKeysView servicePermissions permissionServicesBefore)) :=
   setImage_keys_inverse permissionOwners servicePermissions edits _ _ ready
 
+/-- Nonempty finite cohort construction accepts only the complete even group. -/
+def buildCohort (rows : List Nat) : Except String (List Nat) :=
+  if rows.isEmpty || rows.length % 2 != 0 then .error "invalid-cohort" else .ok rows
+
+/-- Cold construction needs no business empty or singleton intermediate. -/
+example : materializeIndexBucket buildCohort none (some [1, 2]) = .ok (some [1, 2]) := rfl
+
+/-- Removing a complete group does not ask the nonempty builder for an empty value. -/
+example : materializeIndexBucket buildCohort (some [1, 2]) (some []) = .ok none := rfl
+
+/-- Simultaneous migration joins the final cohort instead of admitting odd stages. -/
+example : materializeIndexBucket buildCohort (some [3, 4]) (some [1, 2, 3, 4]) =
+    .ok (some [1, 2, 3, 4]) := rfl
+
+/-- A failed one-row migration refuses; an explicit complete retry succeeds. -/
+example : materializeIndexBucket buildCohort none (some [1]) = .error "invalid-cohort" ∧
+    materializeIndexBucket buildCohort none (some [1, 2]) = .ok (some [1, 2]) := ⟨rfl, rfl⟩
+
+/-- The existing ordered family staging exposes no partial bucket after refusal. -/
+example : stageIndexCaches
+    (Cache := fun _ : Bool => Option (List Nat))
+    (fun name => materializeIndexBucket buildCohort none
+      (some (if name then [3] else [1, 2])))
+    (fun _ _ => (Except.ok () : Except String Unit)) [false, true] =
+      .error "invalid-cohort" := rfl
+
+/-- Unaffected Function payloads retain the exact original bucket handle. -/
+example (functions : List (Nat → Nat)) :
+    materializeIndexBucket (fun _ : List Nat => (Except.error "unused" : Except String (List (Nat → Nat))))
+      (some functions) none = .ok (some functions) := rfl
+
 end LeanPoo.Examples.CollectionStyles
