@@ -2,6 +2,7 @@ import LeanPoo.Functional.SetAlgebra
 import LeanPoo.Functional.VariantValidation
 import LeanPoo.Functional.TableObservation
 import LeanPoo.Functional.TableCapture
+import LeanPoo.Functional.TableFocus
 
 /-! Set style derivation changes presentation only. Independent update capabilities
 reuse table ownership, and element cursors reuse the original metadata guards. -/
@@ -491,5 +492,111 @@ theorem setSources_style_refused (receiver element : Id) (buffer : Cell → Id)
   exact setSources_refused receiver element buffer declared backing issued current changed value next
 
 end SetSources
+
+section MembershipFocus
+variable {K E : Type} [DecidableEq K]
+
+/-- Unit-valued optional bindings are exactly Boolean membership. -/
+def membershipBinding (present : Bool) : Option Unit := if present then some () else none
+
+/-- Presence encoding never confuses a false KEY with absence. -/
+theorem membershipBinding_presence (present : Bool) : (membershipBinding present).isSome = present := by
+  cases present <;> rfl
+
+/-- There is no payload information to lose in an Option Unit focus. -/
+theorem membershipBinding_roundtrip (binding : Option Unit) :
+    membershipBinding binding.isSome = binding := by
+  cases binding with
+  | none => rfl
+  | some value => cases value; rfl
+
+/-- Composing the existing optional lens with Unit presence satisfies all three
+observation laws. Owner identity/retirement remains governed by the base style. -/
+theorem membership_focus_laws (key : K) :
+    Prototype.LensLaws (fun before : K → Option Unit => (before key).isSome)
+      (fun present before => replace before key (membershipBinding present)) := by
+  constructor
+  · intro before
+    rw [membershipBinding_roundtrip]
+    exact (focus_optional_laws key).get_put before
+  · intro before present
+    simp [replace, membershipBinding_presence]
+  · intro before first second
+    exact focusWrite_put_put key (membershipBinding first) (membershipBinding second) before
+
+/-- The membership writer is the same update on the ordinary table view. -/
+theorem membershipTable_write (view : Membership K) (key : K) (present : Bool) :
+    membershipTable (setMembership view key present) =
+      replace (membershipTable view) key (membershipBinding present) := by
+  funext query
+  by_cases same : query = key
+  · subst query; cases present <;> simp [membershipTable, setMembership, replace, membershipBinding]
+  · simp [membershipTable, setMembership, replace, same]
+
+/-- Boolean modification is an adapter to the existing captured focus engine,
+not a second transaction protocol. The callback sees the original membership. -/
+def modifySetMembership (style : TableStyle) (state : Option (K → Option Unit)) (key : K)
+    (transform : Bool → Except E Bool) :
+    Option (K → Option Unit) × Except (StyleFailure E) (K → Option Unit) :=
+  focusModify style state key (fun old => (transform old.isSome).map membershipBinding)
+
+/-- One successful callback hands the exact membership request to the old writer. -/
+theorem modifySetMembership_ready (style : TableStyle) (before : K → Option Unit) (key : K)
+    (transform : Bool → Except E Bool) (present : Bool)
+    (ready : transform (before key).isSome = .ok present) :
+    modifySetMembership style (some before) key transform =
+      focusWrite (E := E) style key (membershipBinding present) (some before) := by
+  cases style <;> simp [modifySetMembership, focusModify, focusWrite, styleStep, ready, Except.map]
+
+/-- A rejected callback preserves its precise cause and the original capability. -/
+theorem modifySetMembership_refused (style : TableStyle) (before : K → Option Unit) (key : K)
+    (transform : Bool → Except E Bool) (cause : E)
+    (refused : transform (before key).isSome = .error cause) :
+    modifySetMembership style (some before) key transform =
+      (some before, .error (.callback cause)) := by
+  apply focusModify_refused
+  simp [refused, Except.map]
+
+/-- Retired capabilities cannot enter a Boolean modifier. -/
+theorem modifySetMembership_consumed (style : TableStyle) (key : K)
+    (transform : Bool → Except E Bool) :
+    modifySetMembership style none key transform = (none, .error .consumed) := rfl
+
+/-- All styles expose the requested Boolean and preserve the rest of the table. -/
+theorem modifySetMembership_result (style : TableStyle) (before : K → Option Unit) (key : K)
+    (transform : Bool → Except E Bool) (present : Bool)
+    (ready : transform (before key).isSome = .ok present) :
+    (modifySetMembership style (some before) key transform).2 =
+      .ok (replace before key (membershipBinding present)) := by
+  rw [modifySetMembership_ready style before key transform present ready, focusWrite_get]
+
+/-- Unrelated admitted Function keys retain exactly their old membership. -/
+theorem modifySetMembership_frame (style : TableStyle) (before : K → Option Unit) (key query : K)
+    (transform : Bool → Except E Bool) (present : Bool)
+    (ready : transform (before key).isSome = .ok present) (different : query ≠ key) :
+    (modifySetMembership style (some before) key transform).2.map (fun after => after query) =
+      .ok (before query) := by
+  rw [modifySetMembership_result style before key transform present ready]
+  simp [Except.map, focusWrite_frame key query _ before different]
+
+/-- Even a Boolean no-op retires a successful linear predecessor. -/
+theorem modifySetMembership_linear (before : K → Option Unit) (key : K)
+    (transform : Bool → Except E Bool) (present : Bool)
+    (ready : transform (before key).isSome = .ok present) :
+    (modifySetMembership .linear (some before) key transform).1 = none := by
+  rw [modifySetMembership_ready .linear before key transform present ready]
+  rfl
+
+/-- Competing membership callbacks still share the old generation comparison:
+a first winner cannot be overwritten or resurrected by a later staged result. -/
+theorem membership_install_single_winner (style other : TableStyle) (version : Nat)
+    (before : K → Option Unit) (key : K) (first second : Bool) :
+    let winner := (installStyle (E := E) style ⟨version, some before⟩ version
+      (replace before key (membershipBinding first))).1
+    installStyle (E := E) other winner version (replace before key (membershipBinding second)) =
+      (winner, .error .stale) :=
+  installStyle_single_winner style other version before _ _
+
+end MembershipFocus
 
 end LeanPoo.Functional.OrderedDictionary

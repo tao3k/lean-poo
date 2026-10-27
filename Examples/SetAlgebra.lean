@@ -206,4 +206,44 @@ example (style : TableStyle) (publish : Membership Nat → Except Unit (Membersh
 /-- Fresh preparation explicitly binds the new policy snapshot before retry. -/
 example : prepareStamped accessSources accessPolicyChanged accessPolicyChanged original = .ok original := rfl
 
+/-- A total Boolean focus can grant an absent permission through the same table
+writer; no Unit payload is part of the public membership observation. -/
+example :
+    (modifySetMembership (E := String) .pure (some (membershipTable original)) 9
+      (fun present => .ok (!present))).2.map (fun after => (after 9).isSome) = .ok true := rfl
+
+/-- Revocation changes one permission, retaining the independent frame key. -/
+example :
+    (modifySetMembership (E := String) .mutable (some (membershipTable original)) 1
+      (fun present => .ok (!present))).2.map (fun after => ((after 1).isSome, (after 5).isSome)) =
+        .ok (false, true) := rfl
+
+/-- False is a legitimate KEY, not an absent Option Unit value. -/
+example :
+    (modifySetMembership (E := String) .linear
+      (some (fun key : Bool => if key then none else some ())) false
+      (fun present => .ok present)).1 = none := rfl
+
+/-- An invalid modifier outcome retains the owner for an explicit retry. -/
+example (style : TableStyle) :
+    modifySetMembership style (some (membershipTable original)) 1
+      (fun _ => .error "approval-refused") =
+        (some (membershipTable original), .error (.callback "approval-refused")) :=
+  modifySetMembership_refused style _ 1 _ _ rfl
+
+/-- The composed service lens keeps its unrelated field through success. -/
+example (style : TableStyle) :
+    (focusServiceModify (E := String) style (some (membershipTable original, 77)) 1
+      (fun old => .ok (membershipBinding (!old.isSome)))).2 =
+        .ok (replace (membershipTable original) 1 none, 77) :=
+  focusServiceModify_frame style _ 77 1 _ none rfl
+
+/-- Reentrant grant publication wins over an earlier staged revocation. -/
+example (style other : TableStyle) :
+    let winner := (installStyle (E := String) style ⟨3, some (membershipTable original)⟩ 3
+      (replace (membershipTable original) 1 (membershipBinding true))).1
+    installStyle (E := String) other winner 3
+      (replace (membershipTable original) 1 (membershipBinding false)) = (winner, .error .stale) :=
+  membership_install_single_winner style other 3 _ 1 true false
+
 end LeanPoo.Examples.SetAlgebra
