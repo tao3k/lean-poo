@@ -1353,3 +1353,22 @@ leaves and lawful inverse maps remain premises. A first present endpoint read ad
 one shell; registry, recognition, conversion, allocator and GC costs remain charged.
 This advances the collection proposal's future work, without a runtime/compiler
 verification or VM speedup claim.
+
+
+### Captured grouped-join payloads
+
+TableCapture captureJoinPayload binds a present left row before a dependent
+lookup. Its recorded right result and later left response buffer are separate;
+laws preserve exact original leaves, absence, present false and original failure.
+CollectionStyles includes the previous numeric duplication counterexample and
+opaque callable identities. Existing grouped-index/view laws retain their
+faithful persistent backend, finite membership and stable-payload premises.
+
+Gerbil uses its existing match destructuring at final-pair construction, with no
+extra Option shell or payload normalization. revise-placement-action composes
+typed source point deltas and the existing joint FUN/IO publisher. Six controls
+cover numeric cold/warm equality, shared-group migration, exact delta/inverse,
+Function placements in five styles, collision retry, false and stale origins.
+All original preparation/recognition/candidate/backend/GC costs remain charged;
+no VM speedup, arbitrary callback termination or compiler verification is claimed.
+This advances the author's collection-library future work using descriptor delegation.

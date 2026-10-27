@@ -567,4 +567,46 @@ theorem capturedTranslation_inverse [DecidableEq K] [DecidableEq V]
     (ready : applyChanges edits before = .ok after) :
     applyChanges (inverseChanges edits) after = .ok before := applyChanges_inverse _ _ _ ready
 
+/-- Bind a present left payload before dependent group/right lookups. The lookup
+records its right result separately from the provider's reused left buffer.
+Persistent roots, faithful lookups and stable payload leaves are premises; no
+additional Option shell or payload normalization is needed at this boundary. -/
+def captureJoinPayload (left : Option V)
+    (lookup : V → Except E (Option R × Option V)) : Except E (Option (V × R)) :=
+  match left with
+  | none => .ok none
+  | some value => (lookup value).map fun result => result.1.map fun right => (value, right)
+
+/-- Absent left rows require neither group lookup nor a projected pair. -/
+theorem captureJoinPayload_left_absent
+    (lookup : V → Except E (Option R × Option V)) :
+    captureJoinPayload none lookup = .ok none := rfl
+
+/-- A matched pair retains the original left payload, not the later read buffer. -/
+theorem captureJoinPayload_present (left : V) (right : R) (later : Option V) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.ok (some right, later) : Except E _)) = .ok (some (left, right)) := rfl
+
+/-- Missing right membership cannot become a pair by changing the left buffer. -/
+theorem captureJoinPayload_right_absent (left : V) (later : Option V) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.ok (none, later) : Except E (Option R × Option V))) = .ok none := rfl
+
+/-- Reusing the response buffer changes neither presence nor either paired leaf. -/
+theorem captureJoinPayload_buffer_independent (left : V) (right : Option R)
+    (before after : Option V) :
+    captureJoinPayload (some left) (fun _ => (Except.ok (right, before) : Except E _)) =
+      captureJoinPayload (some left) (fun _ => .ok (right, after)) := rfl
+
+/-- Lookup/classification failure retains its exact cause and exposes no pair. -/
+theorem captureJoinPayload_refused (left : V) (cause : E) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.error cause : Except E (Option R × Option V))) = .error cause := rfl
+
+/-- An opaque left callable retains identity across unrelated dependent queries. -/
+theorem captureJoinPayload_left (left : V) (right : R) (later : Option V) :
+    (captureJoinPayload (some left)
+      (fun _ => (Except.ok (some right, later) : Except E _))).map (Option.map Prod.fst) =
+      .ok (some left) := rfl
+
 end LeanPoo.Functional.OrderedDictionary

@@ -938,4 +938,23 @@ example (first second queried : Nat → Nat) :
       (fun _ => (Except.ok () : Except String Unit))
       (fun _ => .ok (some second, some queried)) = .ok ⟨1, some first, some second⟩ := rfl
 
+/-- The right read's 20 must not replace the original left 11 of a warm pair. -/
+example : captureJoinPayload (some (11 : Nat))
+    (fun _ => (Except.ok (some (20 : Nat), some 20) : Except String _)) =
+      .ok (some (11, 20)) := rfl
+
+/-- Numeric membership alone would admit the wrong duplicated-right payload. -/
+example : (11 + 20 : Nat) ≠ 20 + 20 := by decide
+
+/-- A present false left row still joins a present true right row. -/
+example : captureJoinPayload (some false)
+    (fun _ => (Except.ok (some true, some true) : Except String _)) =
+      .ok (some (false, true)) := rfl
+
+/-- Function handles stay on their original side of a heterogeneous association. -/
+example (service worker queried : Nat → Nat) :
+    captureJoinPayload (some service)
+      (fun _ => (Except.ok (some worker, some queried) : Except String _)) =
+        .ok (some (service, worker)) := rfl
+
 end LeanPoo.Examples.CollectionStyles
