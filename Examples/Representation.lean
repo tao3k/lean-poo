@@ -58,4 +58,18 @@ example : ((packWith true original).remove "fee").compact = true := by decide
 #print axioms revision_trace
 #print axioms compact_search_bound
 
+/-- Same-shape service switching reuses an offset while the old value guard fails. -/
+example : readPrepared totalSite (service 2 4 20 93)
+    (fun _ => (Except.error "must not evaluate" : Except String Int)) = .ok 93 := by
+  apply readPrepared_current <;> rfl
+
+/-- Symbolic resolution is skipped only for the attested shared shape. -/
+example : resolutionWork totalSite (service 2 4 20 93) = 0 := by rfl
+
+/-- Opaque checked Functions come from the new receiver without Function equality. -/
+example (f : Nat → Nat) : readPrepared totalSite
+    (⟨2,4,20,["total","capacity"],fun _ => some f⟩ : View (Nat → Nat))
+    (fun _ => (Except.error "unused" : Except String (Nat → Nat))) = .ok f := by
+  apply readPrepared_current <;> rfl
+
 end LeanPoo.Examples.Representation

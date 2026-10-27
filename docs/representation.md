@@ -135,3 +135,36 @@ default tree write remains a tree even for small rows. A compact scan bound is
 not a total allocation bound: promotion still pays the standard tree builder.
 This implements the concrete selectable representation protocol. Automatic
 JIT/PIC selection and a universal speedup remain unimplemented qualification work.
+
+## Cross-receiver shape offsets and current cells
+
+`Prototype.Representation.reuseIndex` separates an immutable shape/name offset
+from `read`'s existing owner/revision/layout value guard. `readPrepared` reads only
+the CURRENT view at that offset; an uncomputed cell or mismatched shape retains
+the ordinary lazy fallback and its original refusal. False and opaque Functions
+remain exact values. `resolutionWork` explicitly counts named-map resolutions,
+not guards, object/layout preparation, tracking, evaluator work, allocation or GC.
+Shape pointer fidelity, current receiver-local cells after serialized supported
+invalidation, stable leaves and complete dependency declarations are premises.
+The original stale-owner/revision/token rejection theorems remain unchanged.
+
+Scheme uses the existing slot layout and inline entry, without another namespace
+or result cache. Tracked ready-cell reads reuse bootstrap/read-record delivery,
+including transitive dependencies and stale replay refusal. Checked service
+FUN/IO still performs contract/refine admission on every invocation. Standard
+cached module loading preserves recipe identity; fresh clone/layout preparation
+does not force unrelated business bodies. Parent PROTOTYPE definitions are
+revised through `.putslot!`; parent instance assignments are not inherited values.
+
+The complete existing collection study adds preparation, cold evaluation,
+monomorphic/switching access, tracked reads, shared-parent revision and cached
+module-load consumer phases. Monomorphic/switching references preserve the prior
+untracked inline algorithm; other phases compare ordinary symbolic reads.
+AB/BA, A/A, B/B, natural/collected histories and first/post-GC/full-entry work remain
+charged. Cold layout costs cannot be inferred away from an offset-resolution law.
+
+This does NOT complete full-vector instance storage, automatic PIC/JIT selection,
+fresh module expansion/compile/link/initialization performance or the Gerbil
+loader/evaluator implementation. The loader retains its standard registry,
+loading synchronization and error/reload semantics. No host runtime, collector,
+compiler or universal wall-time improvement is proved by these finite laws.

@@ -249,7 +249,7 @@ theorem read_sound (site : Site) (view : View Value) (current : valid site view)
   have indexed : view.names[site.index]? = some site.name := current.2.2.2 ▸ site.indexed
   simp [read,current,cell,indexed]
 
-/-- Shape sharing alone never authorizes reuse across receivers. -/
+/-- Shape sharing alone never authorizes the old receiver value guard. -/
 theorem reject_owner (site : Site) (view : View Value) (different : site.owner ≠ view.owner) :
     read site view = none := by simp [read,valid,different]
 
@@ -257,7 +257,8 @@ theorem reject_owner (site : Site) (view : View Value) (different : site.owner �
 theorem reject_revision (site : Site) (view : View Value) (different : site.revision ≠ view.revision) :
     read site view = none := by simp [read,valid,different]
 
-/-- Replacing a layout rejects old offsets even if the owner and field set coincide. -/
+/-- Replacing a layout rejects the old value guard, even for equal field sets.
+The separate shape-offset path must read the new receiver-local cells. -/
 theorem reject_layout (site : Site) (view : View Value) (different : site.token ≠ view.token) :
     read site view = none := by simp [read,valid,different]
 
@@ -274,5 +275,67 @@ theorem descendant_revision_rejected (graph : C4.Graph) (changed : List String)
 theorem false_cell (view : View Bool) (index : Nat) (name : String)
     (indexed : view.names[index]? = some name) (present : view.fields name = some false) :
     cell view index = some false := by simp [cell,indexed,present]
+
+/-- Equal immutable shapes certify an offset across receivers, never an old
+receiver's value. Runtime pointer equality must imply this shape equality. -/
+def reuseIndex (site : Site) (view : View Value) : Option Nat :=
+  if site.names = view.names then some site.index else none
+
+/-- A reused offset always denotes the requested name in the CURRENT layout. -/
+theorem reuseIndex_sound (site : Site) (view : View Value)
+    (same : site.names = view.names) : view.names[site.index]? = some site.name :=
+  same ▸ site.indexed
+
+/-- The switched-owner ready-cell path reads this view; an unknown shape or
+uncomputed cell uses the existing lazy fallback. No Value equality is required. -/
+def readPrepared (site : Site) (view : View Value) (fallback : Unit → Except E Value) : Except E Value :=
+  match (reuseIndex site view).bind (cell view) with
+  | some value => .ok value
+  | none => fallback ()
+
+/-- Owner/revision/token can differ: only the current view supplies the value. -/
+theorem readPrepared_current (site : Site) (view : View Value) (fallback : Unit → Except E Value)
+    (value : Value) (same : site.names = view.names) (ready : view.fields site.name = some value) :
+    readPrepared site view fallback = .ok value := by
+  have indexed := reuseIndex_sound site view same
+  simp [readPrepared, reuseIndex, same, cell, indexed, ready]
+
+/-- A known offset does not force an uncomputed body until its ordinary fallback. -/
+theorem readPrepared_lazy (site : Site) (view : View Value) (fallback : Unit → Except E Value)
+    (same : site.names = view.names) (uncomputed : view.fields site.name = none) :
+    readPrepared site view fallback = fallback () := by
+  have indexed := reuseIndex_sound site view same
+  simp [readPrepared, reuseIndex, same, cell, indexed, uncomputed]
+
+/-- A different shape grants no reusable offset or cached value authority. -/
+theorem readPrepared_reshaped (site : Site) (view : View Value) (fallback : Unit → Except E Value)
+    (different : site.names ≠ view.names) : readPrepared site view fallback = fallback () := by
+  simp [readPrepared, reuseIndex, different]
+
+/-- Lazy refusal retains its exact cause; the caller cannot bind a successful value. -/
+theorem readPrepared_refused (site : Site) (view : View Value) (cause : E)
+    (same : site.names = view.names) (uncomputed : view.fields site.name = none) :
+    readPrepared site view (fun _ => .error cause) = .error cause :=
+  readPrepared_lazy site view _ same uncomputed
+
+/-- Stored false is ready data, not an uncomputed cell or a request to retry. -/
+theorem readPrepared_false (site : Site) (view : View Bool) (fallback : Unit → Except E Bool)
+    (same : site.names = view.names) (ready : view.fields site.name = some false) :
+    readPrepared site view fallback = .ok false :=
+  readPrepared_current site view fallback false same ready
+
+/-- Count only name-to-index hash resolutions in the switched-site path. Shape
+checks, value reads, guards, initialization, callback/evaluator and GC costs are
+separate; faithful constant-time shape identity is a runtime premise. -/
+def resolutionWork (site : Site) (view : View Value) : Nat :=
+  if site.names = view.names then 0 else 1
+
+/-- A matching shape removes the name-map resolution, not all access costs. -/
+theorem resolutionWork_shared (site : Site) (view : View Value) (same : site.names = view.names) :
+    resolutionWork site view = 0 := by simp [resolutionWork, same]
+
+/-- Shape mismatch retains one ordinary resolution rather than inventing an offset. -/
+theorem resolutionWork_changed (site : Site) (view : View Value) (different : site.names ≠ view.names) :
+    resolutionWork site view = 1 := by simp [resolutionWork, different]
 
 end LeanPoo.Prototype.Representation
