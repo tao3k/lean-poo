@@ -1,4 +1,5 @@
 import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.TableCapture
 
 /-! Derive table operations from an existing carrier and explicit isomorphisms.
 The construction transfers algorithms; no second balancing/indexing algorithm is assumed. -/
@@ -595,6 +596,83 @@ theorem marshalCollection_late_refused (admit : A → Except E Unit)
     (ready : admit source = .ok ()) (failed : write source before = (after, .error cause)) :
     marshalCollection admit write source before = (after, .error cause) := by
   simp [marshalCollection, ready, failed]
+
+/-- Resolve the existing encoder before enumerating, then capture the finite
+observation before child callbacks. This specializes the existing IO boundary;
+backend fidelity, stable leaves and recorded callback outcomes are premises. -/
+def encodeCapturedCollection (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Except E Wire))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A) : Except E Wire :=
+  encodeCollection admit id (fun root => (resolve ()).bind fun encode =>
+    (observe root).bind fun rows => encode (captureOrigins rows.1 rows.2)) source
+
+/-- Root refusal retains its exact cause before lookup, enumeration or encoding. -/
+theorem encodeCapturedCollection_refused (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Except E Wire))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A) (cause : E)
+    (refused : admit source = .error cause) :
+    encodeCapturedCollection admit resolve observe source = .error cause := by
+  simp [encodeCapturedCollection, encodeCollection, refused]
+
+/-- Method lookup keeps priority over backend observation, including refusal. -/
+theorem encodeCapturedCollection_lookup_refused (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Except E Wire))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A) (cause : E)
+    (ready : admit source = .ok ()) (refused : resolve () = .error cause) :
+    encodeCapturedCollection admit resolve observe source = .error cause := by
+  simp [encodeCapturedCollection, encodeCollection, ready, refused, Except.bind]
+
+/-- Backend observation refusal is preserved before any child encoder runs. -/
+theorem encodeCapturedCollection_observe_refused (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Except E Wire))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A) (cause : E)
+    (encode : List Entry → Except E Wire) (ready : admit source = .ok ())
+    (resolved : resolve () = .ok encode) (refused : observe source = .error cause) :
+    encodeCapturedCollection admit resolve observe source = .error cause := by
+  simp [encodeCapturedCollection, encodeCollection, ready, resolved, refused, Except.bind]
+
+/-- A ready observation delivers exactly the original ordered binding/element
+handles; neither normalization nor arbitrary closure serialization is inferred. -/
+theorem encodeCapturedCollection_ready (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Except E Wire))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A)
+    (encode : List Entry → Except E Wire) (buffer : Cell → Entry) (cells : List Cell)
+    (ready : admit source = .ok ()) (resolved : resolve () = .ok encode)
+    (observed : observe source = .ok (buffer, cells)) :
+    encodeCapturedCollection admit resolve observe source = encode (captureOrigins buffer cells) := by
+  simp [encodeCapturedCollection, encodeCollection, ready, resolved, observed, Except.bind]
+
+/-- Recycling the producer buffer cannot substitute rows after capture. This
+holds for opaque Function handles without equality or purity assumptions on them. -/
+theorem encodeCapturedCollection_buffer_stable (encode : List Entry → Except E Wire)
+    (buffer later : Cell → Entry) (cells : List Cell) :
+    encode (replaceOriginBuffer (buffer, captureOrigins buffer cells) later).2 =
+      encode (captureOrigins buffer cells) := rfl
+
+/-- Port preparation reuses the same captured encoder boundary. Only successful
+preparation starts writes; subsequent output effects belong to the existing codec. -/
+def marshalCapturedCollection (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Port → Port × Except E Unit))
+    (observe : A → Except E ((Cell → Entry) × List Cell))
+    (source : A) (port : Port) : Port × Except E Unit :=
+  match encodeCapturedCollection admit
+      (fun _ => (resolve ()).map fun write rows => .ok (write rows)) observe source with
+  | .error cause => (port, .error cause)
+  | .ok write => write port
+
+/-- A prepared codec's late failure retains its actual prefix and cause, rather
+than rolling back the port or pretending the entire encoding was atomic. -/
+theorem marshalCapturedCollection_late_refused (admit : A → Except E Unit)
+    (resolve : Unit → Except E (List Entry → Port → Port × Except E Unit))
+    (observe : A → Except E ((Cell → Entry) × List Cell)) (source : A)
+    (write : List Entry → Port → Port × Except E Unit)
+    (buffer : Cell → Entry) (cells : List Cell) (before after : Port) (cause : E)
+    (ready : admit source = .ok ()) (resolved : resolve () = .ok write)
+    (observed : observe source = .ok (buffer, cells))
+    (failed : write (captureOrigins buffer cells) before = (after, .error cause)) :
+    marshalCapturedCollection admit resolve observe source before = (after, .error cause) := by
+  simp [marshalCapturedCollection, encodeCapturedCollection, encodeCollection,
+    ready, resolved, observed, Except.bind, Except.map, failed]
 
 /-- A partial collection family exposes empty and finite-input construction as
 independent computations. Declaring a view does not assert empty membership. -/

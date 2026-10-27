@@ -1269,3 +1269,22 @@ another recognizer call. `guardTableAdmission` models identity-token membership;
 its laws prove reentry refusal, fresh delegation and backend suppression. Identity
 fidelity and standard dynamic parameter restoration are premises. Unrestricted
 callback termination or fresh-descriptor recursion is not certified.
+
+
+### Owned encoder observations
+
+TableRepresentation specializes the existing collection IO boundary with finite
+observation capture. Root admission precedes method resolution; resolution
+precedes enumeration; child encoding receives the original ordered element or
+binding handles. Refusal laws retain root, lookup and backend causes. Buffer
+replacement cannot substitute captured rows, including opaque Function values;
+late port refusal retains its emitted prefix. SetAlgebra contains executable
+examples for Table rows, false elements, Function handles and port prefixes.
+
+Gerbil reuses capture-table-bindings and standard map at its shared Table/Set IO
+boundary across JSON, bytes, ports and all five styles. List/Pair codecs and
+constructors remain authoritative. This extends the author's descriptor IO
+future work. Finite lawful enumeration, stable opaque leaves and recorded child
+outcomes are premises; there is no deep-copy, arbitrary codec purity, parser,
+termination or VM performance theorem. List/Pair shell allocation, admission and
+metadata preparation remain costs. Scheme remains independently buildable.

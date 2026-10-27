@@ -1,5 +1,6 @@
 import LeanPoo.Functional.TableSelection
 import LeanPoo.Functional.SetStyle
+import LeanPoo.Functional.TableRepresentation
 
 /-! Access-policy algebra composes existing table revisions, inverse recovery,
 styles and service lenses. This advances the collection proposal's future work. -/
@@ -282,5 +283,27 @@ example (style : TableStyle) :
     installStyle (E := String) style ⟨8, some 7⟩ 7 0 = (⟨8, some 7⟩, .error .stale) := by
   apply installStyle_stale
   decide
+
+/-- Captured table rows keep the first value and second key despite shell reuse. -/
+example : encodeCapturedCollection (fun _ : Unit => (Except.ok () : Except String Unit))
+    (fun _ => .ok (fun rows : List (Nat × Nat) => .ok rows))
+    (fun _ => .ok ((fun cell : Bool => if cell then (2, 20) else (1, 10)), [false, true])) () =
+      .ok [(1, 10), (2, 20)] := rfl
+
+/-- Capturing a present false element retains it; absence is not inferred from truth. -/
+example : captureOrigins (fun bit : Bool => bit) [false, true] = [false, true] := rfl
+
+/-- Child Function handles survive buffer reuse without reconstruction. -/
+example (first second replacement : Nat → Nat) :
+    (replaceOriginBuffer ((fun bit : Bool => if bit then second else first),
+      captureOrigins (fun bit : Bool => if bit then second else first) [false, true])
+      (fun _ => replacement)).2 = [first, second] := rfl
+
+/-- Late port refusal retains the already emitted prefix and original cause. -/
+example : marshalCapturedCollection (fun _ : Unit => (Except.ok () : Except String Unit))
+    (fun _ => .ok (fun _ : List Nat => fun port : List Nat =>
+      (port ++ [2, 1, 10], .error "second-key-refused")))
+    (fun _ => .ok ((fun n : Nat => n), [1, 2])) () [] =
+      ([2, 1, 10], .error "second-key-refused") := rfl
 
 end LeanPoo.Examples.SetAlgebra
