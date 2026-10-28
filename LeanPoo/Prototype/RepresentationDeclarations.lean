@@ -46,6 +46,43 @@ theorem selectDeclarations_excludes (entries : List (String × Value)) (seen : L
       · subst entry; exact fun same => known (same.symm ▸ present)
       · exact ih (head.1 :: seen) (by simp [present]) entry rest
 
+/-- Merge ordered C3 roots by private traversal, then reuse first-name selection.
+The host standard builder exports no private entry handles and captures results. -/
+def mergeCatalogs (compact : Bool) (roots : List (Storage Value)) : Storage Value :=
+  packWith compact (selectDeclarations (roots.flatMap Storage.entries))
+
+/-- A snapshot/append input has the same ordered entries as private traversal.
+Host copying/isolation and standard hash deduplication remain explicit premises. -/
+theorem mergeCatalogs_snapshot (compact : Bool) (roots : List (Storage Value)) :
+    mergeCatalogs compact roots = packWith compact
+      (selectDeclarations (roots.flatMap (fun root => root.entries.map (fun entry => (entry.1, entry.2))))) := by
+  simp [mergeCatalogs]
+
+/-- Cross-root duplicates retain the first descriptor, including false/functions. -/
+theorem mergeCatalogs_first (compact : Bool) (roots : List (Storage Value)) (name : String) :
+    first (mergeCatalogs compact roots).entries name =
+      first (roots.flatMap Storage.entries) name := by
+  simp only [mergeCatalogs, entries_packWith]
+  exact first_selectDeclarations _ [] name (by simp)
+
+/-- Backend policy cannot change merge order, priority or payloads. -/
+theorem mergeCatalogs_policy (roots : List (Storage Value)) :
+    (mergeCatalogs true roots).entries = (mergeCatalogs false roots).entries := by
+  simp [mergeCatalogs, entries_packWith]
+
+/-- Count only public input spine/pair cells versus one private builder spine.
+Deduplication, append copies, output capture, roots, backend storage and GC are
+separate costs; this does not assert total heap allocation or machine time. -/
+def mergeInputCells (direct : Bool) (roots : List (Storage Value)) : Nat :=
+  (if direct then 1 else 2) * (roots.map (fun root => root.entries.length)).sum
+
+/-- Direct input collection saves at least the duplicated input entry-pair stream
+in this accounting, even before omitted baseline append copying is charged. -/
+theorem mergeInputCells_saving (roots : List (Storage Value)) :
+    mergeInputCells false roots - mergeInputCells true roots =
+      (roots.map (fun root => root.entries.length)).sum := by
+  simp [mergeInputCells]; omega
+
 /-- Gerbil foldr checks the rightmost visibility first. Refusal stops before any
 remaining earlier descriptor, and returns no partially visible public directory. -/
 def checkVisibility (hidden : Value → Except E Bool) :
@@ -57,6 +94,13 @@ def checkVisibility (hidden : Value → Except E Bool) :
       | .error cause => .error cause
       | .ok true => .ok rest
       | .ok false => .ok (head :: rest)
+
+/-- Current visibility sees identical ordered descriptors and exact failures under
+both storage policies; merging itself does not invoke metadata callbacks. -/
+theorem mergeCatalogs_visibility (roots : List (Storage Value)) (hidden : Value → Except E Bool) :
+    checkVisibility hidden (mergeCatalogs true roots).entries =
+      checkVisibility hidden (mergeCatalogs false roots).entries := by
+  rw [mergeCatalogs_policy]
 
 /-- A right-hand refusal has precedence over the earlier descriptor's callback. -/
 theorem checkVisibility_tail_refused (hidden : Value → Except E Bool)

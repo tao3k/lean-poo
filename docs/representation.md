@@ -695,3 +695,14 @@ canonical admission and exact refusal. Lean lists are immutable: physical host
 spine isolation is a premise, tested by actual public and retained-continuation
 mutation regressions, not a proved allocator or compiler property. Object payloads
 remain shared and supported source edits retain their ordinary invalidation rules.
+
+Multi-root directory preparation now traverses private storage into one standard
+builder before the existing ordered deduplication/capture. `mergeCatalogs` composes
+those finite operations with first-name selection; proofs establish equivalence
+to snapshot observations, actual first payload, storage-policy independence and
+identical visibility callbacks/errors. `mergeInputCells` counts only input public
+spines/pairs versus one temporary private builder spine: its savings exclude
+append copies, deduplication, output capture, backend storage and GC. It is not a
+total-allocation or machine-time theorem. Standard iteration/copying/persistence,
+symbol identities, registered sources and sequential edits remain host premises.
+Mixed roots, hidden overrides and Function payloads have top-level examples.

@@ -445,4 +445,24 @@ example : publishDeclaredValue 4 5 (.error "validator-refused" : Except String N
 example : publishDeclaredValue 6 6 (.ok 11 : Except String Nat)
     (fun n => .ok (n + 1)) = .ok 12 := rfl
 
+/-- Multiple immutable roots retain first-name priority across mixed backends. -/
+example : (mergeCatalogs true
+    [packWith true [("shared", false), ("a", true)],
+     packWith false [("shared", true), ("b", false)]]).entries =
+      [("shared", false), ("a", true), ("b", false)] := by decide
+
+/-- A hidden first override suppresses its visible shared ancestor after merging. -/
+example : checkVisibility (E := String) (fun (value : Bool × Nat) => .ok value.1)
+    (mergeCatalogs true [packWith false [("value", (true, 1))],
+      packWith true [("value", (false, 2)), ("other", (false, 3))]]).entries =
+        .ok [("other", (false, 3))] := by
+  simp [mergeCatalogs, entries_packWith, selectDeclarations, checkVisibility]
+
+/-- Functions remain actual shared values; the merge never evaluates their bodies. -/
+example (callback : Nat → Nat) : first (mergeCatalogs false
+    [packWith true [("callback", callback)], packWith false [("callback", id)]]).entries
+      "callback" = some callback := by
+  rw [mergeCatalogs_first]
+  simp [entries_packWith, first]
+
 end LeanPoo.Examples.Representation
