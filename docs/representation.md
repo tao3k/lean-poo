@@ -755,3 +755,18 @@ is ordered, discovered sources become registered before definition hooks, and ra
 setters/concurrent edits/undiscovered callback sources remain outside the protocol.
 One-shot closures, family lists and earlier metadata evaluation on failed attempts
 are paid preparation costs, not a free cache or a machine-time theorem.
+
+Direct-parent reflection now has the same ownership discipline as public C3 and
+slot snapshots. `exposeParents` models an owned list with shared parent identities;
+arbitrary replacement of that public view leaves the whole supplied authority
+state unchanged. Host `list-copy` isolation is a tested premise, not a kernel
+allocator or mutable-heap theorem. `checkedParentEdit` composes existing finite
+C3/cycle admission with the ordinary sealed/active mutation boundary; its laws
+cover refusal frames and corrected retry. The frame starts after admission and
+does not roll back C3/getter callback effects. `parentReplacement_rejectsGuard`
+reuses reverse invalidation and revision rejection, including equal-value/shape
+restoration. `parentSpineCells` counts public copies and constructor capture only;
+internal borrowed access avoids a second public copy without removing capture,
+C3, graph, callback or GC costs. Finite valid parent trees and serialized supported
+edits remain premises. This advances scoped invalidation future work rather than
+whole-language tracking or arbitrary raw private-state mutation safety.

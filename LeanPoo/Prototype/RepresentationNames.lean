@@ -245,5 +245,69 @@ theorem obtainRootProjection_refused_frame (heap : Nat → NameCell) (presented 
     Object.publishEdit old (obtainRootProjection heap presented cached admit build authenticate) =
       old := by rw [refused]; rfl
 
-end LeanPoo.Prototype.Representation
+/-- Public direct-parent reflection owns the exported spine. Parent identities
+are shared, not recursively copied; State includes the private graph and caches.
+The host standard list-copy's physical isolation remains an explicit premise. -/
+def exposeParents (parents : List Parent) (state : State) : State × List Parent :=
+  (state, parents.map id)
 
+/-- Snapshot order, repetitions and actual parent identities are unchanged. -/
+theorem exposeParents_value (parents : List Parent) (state : State) :
+    (exposeParents parents state).2 = parents := by simp [exposeParents]
+
+/-- Arbitrary edits/replacement of an owned public view leave ALL authoritative
+state unchanged, including revisions, layouts, cached values and source edges. -/
+theorem exposeParents_frame (parents later : List Parent) (state : State) :
+    (Prod.map id (fun _ => later) (exposeParents parents state)).1 = state := rfl
+
+/-- The shared checked parent setter accepts only admitted finite topology.
+Admission includes existing C3/cycle validation; old is the post-admission state,
+so this is not rollback of validation/getter effects or arbitrary callbacks. -/
+def checkedParentEdit (admitted : Except String (List Parent)) (sealed active : Bool)
+    (old : State) (install : List Parent → State → State) : Except String State := do
+  let parents ← admitted
+  Object.guardedEdit sealed active old (install parents)
+
+/-- A refused topology cannot install parents or clear the supplied source/cache state. -/
+theorem checkedParentEdit_refused_frame (cause : String) (sealed active : Bool)
+    (old : State) (install : List Parent → State → State) :
+    Object.publishEdit old (checkedParentEdit (.error cause) sealed active old install) = old := rfl
+
+/-- Stable admitted input keeps the original sealed-source refusal priority. -/
+theorem checkedParentEdit_sealed (parents : List Parent) (active : Bool)
+    (old : State) (install : List Parent → State → State) :
+    checkedParentEdit (.ok parents) true active old install = .error "sealed prototype" := rfl
+
+/-- Active affected receivers still refuse mutation before installing new topology. -/
+theorem checkedParentEdit_active (parents : List Parent) (old : State)
+    (install : List Parent → State → State) :
+    checkedParentEdit (.ok parents) false true old install =
+      .error "object mutation during computation" := rfl
+
+/-- Corrected topology retries through the same supported installation operation. -/
+theorem checkedParentEdit_retry (parents : List Parent) (old : State)
+    (install : List Parent → State → State) :
+    checkedParentEdit (.ok parents) false false old install = .ok (install parents old) := rfl
+
+/-- Existing reverse invalidation rejects a prior value guard after parent edits,
+even when a replacement restores equal values, shapes or parent identities. -/
+theorem parentReplacement_rejectsGuard (graph : C4.Graph) (changed : List String)
+    (cache : String → Object.RevisionCache Value) (name : String) (site : Site) (view : View Value)
+    (affected : name ∈ Proof.invalidatedNodes graph changed)
+    (oldRevision : site.revision = (cache name).revision)
+    (newRevision : view.revision = (Object.invalidateCaches graph changed cache name).revision) :
+    read site view = none := by
+  apply reject_revision
+  rw [oldRevision, newRevision]
+  exact descendant_revision_rejected graph changed cache name affected
+
+/-- Output list cells only: explicit public snapshots plus constructor flattening.
+C3 traversal, metadata capture, callbacks, weak storage and GC are additional costs. -/
+def parentSpineCells (parents queries constructions : Nat) : Nat := parents * (queries + constructions)
+
+/-- Borrowing private parents internally removes only a redundant public snapshot;
+constructors still pay for their own finite parent-list capture. -/
+theorem parentSpineCells_internal (parents constructions : Nat) :
+    parentSpineCells parents 0 constructions = parents * constructions := by simp [parentSpineCells]
+
+end LeanPoo.Prototype.Representation

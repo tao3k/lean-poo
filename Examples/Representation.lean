@@ -556,4 +556,26 @@ example : editDeclaredSource
   · decide
   · rfl
 
+/-- Duplicate/shared parent identities survive owned reflection in their original order. -/
+example : (exposeParents ["left", "shared", "left"] (9 : Nat)).2 =
+    ["left", "shared", "left"] := rfl
+
+/-- Damaged caller data cannot change retained functions, revisions or graph roots. -/
+example (callback : Nat → Nat) :
+    (Prod.map id (fun _ => ["foreign"])
+      (exposeParents ["service"] (callback, 7, ["service"]))).1 =
+        (callback, 7, ["service"]) := rfl
+
+/-- Invalid C3 order preserves the supplied whole state, without invoking installation. -/
+example : Object.publishEdit (9, 3)
+    (checkedParentEdit (.error "cycle") false false (9, 3)
+      (fun (_ : List String) _ => (99, 4))) = (9, 3) := rfl
+
+/-- Corrected parent replacement uses the same source installation; sealing still wins. -/
+example : checkedParentEdit (.ok ["new"]) false false ((["old"], 3) : List String × Nat)
+    (fun parents old => (parents, old.2 + 1)) = .ok (["new"], 4) := rfl
+
+/-- Four internal reconstructions retain their capture cost without four query copies. -/
+example : parentSpineCells 3 4 4 = 24 ∧ parentSpineCells 3 0 4 = 12 := ⟨rfl, rfl⟩
+
 end LeanPoo.Examples.Representation
