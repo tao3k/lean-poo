@@ -1,6 +1,6 @@
 import LeanPoo.Prototype.Representation
 
-/-! Sparse ordered contribution indices for persistent prototype deletion.
+/-! Sparse ordered indices, private traversal and persistent composition frames.
 The standard RBTree supplies persistent keyed operations; this finite model proves
 the name/ordinal contract, not balancing, pointer sharing or machine-time bounds.
 Ordinals identify contributions, while String keys identify symbols injectively.
@@ -169,5 +169,100 @@ theorem indexedEraseWork_permutation (entries : List (Nat × (String × Value)))
       (entries.filter (fun entry => entry.2.1 == name)).length + 2 := by
   rw [indexedEraseWork, complete.length_eq]
   simp [matchingPositions]
+
+/-- Public snapshots own pairs/spines while sharing each immutable key/payload identity. -/
+def entrySnapshot (entries : List (String × Value)) := entries.map (fun entry => (entry.1, entry.2))
+
+/-- Copying representation containers does not change their ordered observations. -/
+theorem entrySnapshot_value (entries : List (String × Value)) : entrySnapshot entries = entries := by
+  simp [entrySnapshot]
+
+/-- Ordered callbacks may update abstract state or refuse with an arbitrary cause.
+E can itself carry partial effects; no effect rollback is asserted. -/
+def visitEntries (consume : State → String → Value → Except E State)
+    (entries : List (String × Value)) (state : State) : Except E State :=
+  match entries with
+  | [] => .ok state
+  | (name,value) :: tail => match consume state name value with
+    | .error cause => .error cause
+    | .ok next => visitEntries consume tail next
+
+/-- Traversing the private ordered root agrees with the original public-snapshot
+composition for ALL callbacks, including false/Function payloads and refusals. -/
+theorem visitEntries_snapshot (consume : State → String → Value → Except E State)
+    (entries : List (String × Value)) (state : State) :
+    visitEntries consume (entrySnapshot entries) state = visitEntries consume entries state := by
+  rw [entrySnapshot_value]
+
+/-- Callback order composes exactly across declaration/direct-map boundaries. -/
+theorem visitEntries_append (consume : State → String → Value → Except E State)
+    (before after : List (String × Value)) (state : State) :
+    visitEntries consume (before ++ after) state =
+      (visitEntries consume before state).bind (visitEntries consume after) := by
+  induction before generalizing state with
+  | nil => rfl
+  | cons entry tail ih =>
+    rcases entry with ⟨name,value⟩
+    simp only [List.cons_append, visitEntries]
+    cases consume state name value with
+    | error cause => rfl
+    | ok next => exact ih next
+
+/-- The first refusal propagates its exact cause without visiting the suffix. -/
+theorem visitEntries_refused (consume : State → String → Value → Except E State)
+    (name : String) (value : Value) (tail : List (String × Value)) (state : State)
+    (cause : E) (refused : consume state name value = .error cause) :
+    visitEntries consume ((name,value) :: tail) state = .error cause := by
+  simp [visitEntries, refused]
+
+/-- Name-only projection preserves order and duplicates without snapshot pairs. -/
+def entryKeys (entries : List (String × Value)) := entries.map Prod.fst
+
+/-- The specialized projection equals map-car over the owned public snapshot. -/
+theorem entryKeys_snapshot (entries : List (String × Value)) :
+    (entrySnapshot entries).map Prod.fst = entryKeys entries := by
+  rw [entrySnapshot_value]; rfl
+
+/-- Composition shares immutable direct maps and starts a fresh logical cache.
+Parent linearization, descriptor admission and real storage sharing remain host
+premises; this models no raw mutable aliasing or RBTree implementation. -/
+def composeMetadata (slots defaults : Storage Value) :
+    Storage Value × Storage Value × Object.RevisionCache Value :=
+  (slots, defaults, ⟨0, none⟩)
+
+/-- Composition preserves both ordered contribution streams and explicit policies. -/
+theorem composeMetadata_frame (slots defaults : Storage Value) :
+    (composeMetadata slots defaults).1.entries = slots.entries ∧
+    (composeMetadata slots defaults).2.1.entries = defaults.entries ∧
+    (composeMetadata slots defaults).1.compact = slots.compact ∧
+    (composeMetadata slots defaults).2.1.compact = defaults.compact := ⟨rfl,rfl,rfl,rfl⟩
+
+/-- Shared specifications never authorize sharing an already computed value. -/
+theorem composeMetadata_cold (slots defaults : Storage Value) :
+    (composeMetadata slots defaults).2.2.derived = none ∧
+    (composeMetadata slots defaults).2.2.revision = 0 := ⟨rfl,rfl⟩
+
+/-- A persistent successor does not mutate the direct maps retained by composition. -/
+theorem composeMetadata_persistent (slots defaults : Storage Value) (name : String) (value : Value) :
+    ((composeMetadata slots defaults).1.entries, (slots.put name value).entries) =
+      (slots.entries, putFirst slots.entries name value) := by simp [composeMetadata]
+
+/-- Logical exported cons cells only; iterator stacks, callbacks, hash probes,
+construction, retained trees and GC are additional costs. -/
+def snapshotExportCells (entries : Nat) := 2 * entries
+
+/-- Direct traversal exports no pairs/spine; names export only one owned spine. -/
+theorem keysExportCells_saving (entries : Nat) :
+    entries + snapshotExportCells entries = 3 * entries := by
+  simp [snapshotExportCells]; omega
+
+/-- Sharing source maps avoids export cells, not fresh receiver/parent preparation. -/
+def compositionExportCells (slots defaults : Nat) (shared : Bool) :=
+  if shared then 0 else snapshotExportCells slots + snapshotExportCells defaults
+
+/-- Rebuilding via public observations pays both complete export streams. -/
+theorem compositionExportCells_saving (slots defaults : Nat) :
+    compositionExportCells slots defaults false - compositionExportCells slots defaults true =
+      2 * (slots + defaults) := by simp [compositionExportCells, snapshotExportCells, Nat.mul_add]
 
 end LeanPoo.Prototype.Representation

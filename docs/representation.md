@@ -434,3 +434,53 @@ These laws concern one slot's normalized chronological sequence. Faithful Symbol
 identity grouping by the existing standard hash and the unchanged declaration
 preparation/capture order remain host premises, checked by integrated regressions;
 the model does not verify the standard hash implementation itself.
+
+## Ordered prototype traversal and composition sharing
+
+The author's different-representation construction (`poof.scrbl`, lines 980–1031)
+separates equivalent record observations from representation choice and warns
+against recomputing whole dictionaries instead of sharing them. The TODO's
+persistent-map sharing item also applies to POO's own preparation: it previously
+exported owned lists/pairs merely to traverse internal direct specifications, and
+`.+` exported then rebuilt both direct maps. These operations did not need a new
+snapshot or a new receiver's already computed values.
+
+The existing prototype-map module now supplies ordered callbacks and an owned
+name projection over its SAME standard vector/RBTree iterator. Internal assembly
+uses one consumer for normalized declaration maps and direct maps, preserving their
+concatenation order and admission semantics without direct-map export. Public
+reflection still owns its spines/pairs and shares only names/payload identities.
+Composition shares immutable direct slots/defaults, preserving their explicit
+policy, while the normal constructor owns fresh receiver caches and registered
+parent/protocol/descriptor dependencies. Instance assignments remain separate;
+only prototype specification revisions propagate as inherited definitions.
+
+`RepresentationIndex` proves ordered traversal/public-snapshot equivalence for
+arbitrary state/error consumers, concatenation order and exact first refusal.
+Name projection preserves duplicates and identities. Composition retains direct
+contribution observations and policies while starting with an empty logical
+cache. Persistent successors leave the retained source map unchanged. Finite
+export-cell counts exclude iterator state, callbacks, tree construction, C3,
+refinement, metadata, GC and machine time. Faithful standard iteration, persistent
+maps and serialized supported edits remain host premises; no standard tree,
+mutable heap, module loader or compiler verification is asserted.
+
+Five integrated regressions cover declaration re-elaboration, compact/promoted/sparse roots, duplicate and
+same-spelling uninterned names, false/Function identity, callback refusal,
+mutation of public key snapshots, persistent successor isolation, fresh composed
+caches and supported shared-parent revision. The existing reflection/FUN pipeline
+is shared by the composed service example rather than duplicated. Paired current
+strategies charge complete observations; full workflows also charge templates,
+warming, refinement, source revisions, business refusal and retry. This advances
+implementation future work, not whole-paper or arbitrary cold-loading closure.
+
+The final current-strategy study measures the full width-64 composition plus
+observation at -75.59 microseconds collected median, but retains a +2,249.73 wall
+tail. A higher-resolution complete workflow (32 calls/batch, twelve cross-side
+pairs) has -70.33 collected mean with eleven wins/one loss; the adverse tail is
++2.24. CHARGED forced-GC/first-call/full-batch mean is -103.27, with ten wins/two
+losses and a +174.30 tail. Forced GC CPU contributes +10.12 mean microseconds,
+so no universal GC or tail acceleration is claimed. These safe current APIs do
+not prove a previous-revision or arbitrary cold-module-loading speedup. The Scheme
+receipt preserves the initial inconclusive probe, same-side controls and separate
+batch/inclusive costs; raw samples are not committed.

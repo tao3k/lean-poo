@@ -8,6 +8,22 @@ make no claim about collector history or physical allocation performance. -/
 namespace LeanPoo.Examples.Representation
 open Prototype.Representation
 
+/-- Effects visit duplicate keys in source order, independent of snapshot copying. -/
+def traversalRows : List (String × Bool) := [("a",false),("a",true),("b",false)]
+example : visitEntries (fun seen name value => (Except.ok (seen ++ [(name,value)]) :
+    Except String (List (String × Bool)))) (entrySnapshot traversalRows) [] =
+      .ok traversalRows := rfl
+example : entryKeys traversalRows = ["a","a","b"] := rfl
+example : visitEntries (fun (_ : Nat) _ (_ : Bool) => (Except.error false : Except Bool Nat))
+    traversalRows 0 = .error false := rfl
+example (f : Nat → Nat) : visitEntries
+    (fun seen _ value => (Except.ok (value :: seen) : Except String (List (Nat → Nat))))
+    [("callback",f)] [] = .ok [f] := rfl
+example : (composeMetadata (packWith true traversalRows) (packWith true [])).2.2.derived = none := rfl
+/-- Width 64 includes two target contributions and two direct default entries. -/
+example : compositionExportCells 66 2 false = 136 := rfl
+example : compositionExportCells 66 2 true = 0 := rfl
+
 /-- A final-self override cuts 64 opaque inherited builders, retaining its suffix. -/
 def overriddenSpecs : List (Prototype.SlotSpec Int Int) :=
   List.replicate 64 (.computed (fun _ next => 100 + next ())) ++
