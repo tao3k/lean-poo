@@ -105,10 +105,11 @@ class CheckAtomsTests(unittest.TestCase):
         files = [atom['file'] for partition in partitions for atom in partition]
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
-        self.assertEqual(len(files), 347)
+        self.assertEqual(len(files), 348)
         self.assertIn('Examples/TableRevision.lean', files)
         self.assertIn('Examples/CollectionStyles.lean', files)
         self.assertIn('Examples/CollectionTesting.lean', files)
+        self.assertIn('Examples/PropertyGenerators.lean', files)
         self.assertIn('Examples/SetAlgebra.lean', files)
         self.assertIn('Examples/SlotObservation.lean', files)
         bounded = [a for a in atoms if a['command'][0] == 'timeout']

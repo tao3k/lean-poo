@@ -238,6 +238,7 @@
   "Examples/PolicyPublication.lean",
   "Examples/PreparedViews.lean",
   "Examples/ProofReuse.lean",
+  "Examples/PropertyGenerators.lean",
   "Examples/ProtectedDispatch.lean",
   "Examples/PrototypeCore.lean",
   "Examples/PrototypeFunctions.lean",
@@ -440,6 +441,7 @@
   "LeanPoo/Functional/PositiveEquations.lean",
   "LeanPoo/Functional/Presentation.lean",
   "LeanPoo/Functional/ProjectedSelf.lean",
+  "LeanPoo/Functional/PropertyGenerators.lean",
   "LeanPoo/Functional/PropertyTesting.lean",
   "LeanPoo/Functional/ProtocolSelection.lean",
   "LeanPoo/Functional/PrototypeTypeCoverage.lean",
@@ -881,7 +883,7 @@
   "Tests/Trees.lean",
   "Tests/TypedSlots.lean",
   "Tests/ValidationInvariant.lean",
-  "Tests/VerifiedOrder.lean",
+  "Tests/VerifiedOrder.lean"
 ]
 "whole_paper_implemented" = false
 "limits" = [

@@ -70,3 +70,20 @@ A returned proposal counts even when admission, cost, property or source checks
 fail; EOF and an iterator exception produce no proposal. The error's cause is
 retained, `minimal?` is false, and concrete replay requires a `failed` report.
 A diagnostic reduced value on an `error` or `stale` report is not certified evidence.
+
+## Composable generator proof boundary
+
+`LeanPoo.Functional.PropertyTesting` now also has the functionally separated
+`LeanPoo/Functional/PropertyGenerators.lean` module. `weightedChoice_member` and
+`weightedChoice_exists` cover positive-weight membership and all valid finite
+offsets; they do not establish a host random distribution. `scheduledSamples_size`
+and `scheduledSamples_length` retain actual size/trial ownership. The
+`resolveDelayed_budget` law bounds callback requests, conditional on each pure
+step returning. `shrinkProposals_budget` and `shrinkProposals_preserves` charge
+pruned proposals while retaining the last valid false witness.
+
+The top-level `Examples/PropertyGenerators.lean` checks weighted boundaries,
+size schedules, zero fuel and pruned-child accounting. Existing mapped-preimage,
+dependent-selection and stale-observation laws remain the provenance premises.
+These are finite source laws; runtime PRNGs, callbacks and backend representations
+still require their own executable admission. Scheme imports no Lean checkout.
