@@ -724,3 +724,14 @@ when presented heap links cycle. The host `list?` recognizer, weak storage,
 registered sources and sequential edits remain premises. This does not establish
 termination of arbitrary callbacks, allocation/GC behavior or concurrent safety.
 Top-level examples cover cyclic roots, repaired membership and stale ABA reads.
+
+`registerDeclarations` instantiates the existing finite reverse-invalidation graph
+with a new receiver's complete known direct descriptor catalog. Membership gives
+a one-edge descendant before any definition hook is consumed; `editDeclaredSource`
+reuses ordinary transitive preflight. Proofs establish active-owner refusal,
+whole-state preservation and inactive corrected retry. Shared clone catalogs and
+a join have executable examples. The registration-attempt model removes repeated
+known descriptor binds from preparation; resolved type binds, hash-table costs,
+constructor work and GC remain extra. Host weak-edge identity, a fresh receiver,
+finite known catalogs and serialized supported edits are premises. This advances
+scoped invalidation future work, not arbitrary callback-source discovery.

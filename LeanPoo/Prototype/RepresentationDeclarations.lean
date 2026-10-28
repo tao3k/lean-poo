@@ -349,4 +349,65 @@ def visibilityExportCells (count : Nat) (direct : Bool) : Nat :=
 theorem visibilityExportCells_direct (count : Nat) :
     visibilityExportCells count true = 0 ∧ visibilityExportCells count false = 2 * count := ⟨rfl, rfl⟩
 
+/-- Add a fresh receiver's complete finite direct descriptor catalog before hooks.
+The host constructor supplies identity-preserving weak edges; no new graph engine
+or inferred discovery of arbitrary callback sources is modeled. -/
+def registerDeclarations (owner : String) (sources : List String) (graph : C4.Graph) : C4.Graph :=
+  ⟨⟨owner, [sources], false⟩ :: graph.nodes⟩
+
+/-- Every declared source, including a later field or a repeated identity, reaches
+its receiver before any field-definition callback has been evaluated. -/
+theorem registeredDeclaration_reaches (owner source : String) (sources : List String)
+    (graph : C4.Graph) (present : source ∈ sources) :
+    owner ∈ Proof.invalidatedNodes (registerDeclarations owner sources graph) [source] := by
+  apply Proof.mem_invalidated_of_descendant _ [source] source owner 1 (by simp)
+  · exact Proof.Descendant.child Proof.Descendant.self ⟨owner, [sources], false⟩
+      (by simp [registerDeclarations]) (by simpa using present)
+  · simp [registerDeclarations]
+
+/-- Delegate the preflight to the existing full reverse closure and edit boundary.
+Only known registered sources and supported serialized edits are covered. -/
+def editDeclaredSource (graph : C4.Graph) (source : String) (running : String → Bool)
+    (old : State) (edit : State → State) : Except String State :=
+  Object.guardedEdit false ((Proof.invalidatedNodes graph [source]).any running) old edit
+
+/-- An active receiver refuses edits to ANY of its declared descriptors, rather
+than only the prefix already consumed by field-definition hooks. -/
+theorem editDeclaredSource_active (owner source : String) (sources : List String)
+    (graph : C4.Graph) (running : String → Bool) (present : source ∈ sources)
+    (active : running owner = true) (old : State) (edit : State → State) :
+    editDeclaredSource (registerDeclarations owner sources graph) source running old edit =
+      .error "object mutation during computation" := by
+  have reached := registeredDeclaration_reaches owner source sources graph present
+  have blocked : (Proof.invalidatedNodes (registerDeclarations owner sources graph) [source]).any running = true :=
+    List.any_eq_true.mpr ⟨owner, reached, active⟩
+  simp [editDeclaredSource, Object.guardedEdit, blocked]
+
+/-- Refusal preserves the entire source/cache state, not just one current value.
+Earlier host argument/callback effects are outside this publication frame. -/
+theorem editDeclaredSource_frame (owner source : String) (sources : List String)
+    (graph : C4.Graph) (running : String → Bool) (present : source ∈ sources)
+    (active : running owner = true) (old : State) (edit : State → State) :
+    Object.publishEdit old
+      (editDeclaredSource (registerDeclarations owner sources graph) source running old edit) = old := by
+  rw [editDeclaredSource_active owner source sources graph running present active]
+  rfl
+
+/-- After construction, ordinary supported edits and their exact results remain available. -/
+theorem editDeclaredSource_retry (graph : C4.Graph) (source : String)
+    (old : State) (edit : State → State) :
+    editDeclaredSource graph source (fun _ => false) old edit = .ok (edit old) := by
+  simp [editDeclaredSource, Object.guardedEdit]
+
+/-- Registration attempts only: repeated preparation no longer rebinds known
+catalog descriptors. Type-source discovery, hashing, initialization and GC are extra. -/
+def declarationBindingAttempts (fields preparations : Nat) (constructorOwned : Bool) : Nat :=
+  if constructorOwned then fields else fields + fields * preparations
+
+/-- The public declaration path loses precisely its repeated descriptor bindings;
+the earlier cold registration for direct constructors is a necessary paid cost. -/
+theorem declarationBindingAttempts_saved (fields preparations : Nat) :
+    declarationBindingAttempts fields preparations false =
+      declarationBindingAttempts fields preparations true + fields * preparations := rfl
+
 end LeanPoo.Prototype.Representation

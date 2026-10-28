@@ -502,5 +502,30 @@ example : obtainRootProjection (fun _ => ⟨"read", .nil⟩) (.cell 0) none
     (fun _ => .ok ["read"]) (fun names => .ok names.length)
     (fun n => .ok n) = .ok 1 := rfl
 
-end LeanPoo.Examples.Representation
+/-- A later descriptor reaches both cloned catalogs and their shared join. -/
+example : Proof.invalidatedNodes
+    (registerDeclarations "left" ["capacity", "tariff"]
+      (registerDeclarations "right" ["capacity", "tariff"]
+        ⟨[⟨"join", [["left", "right"]], false⟩]⟩)) ["tariff"] =
+      ["tariff", "left", "right", "join"] := by decide
 
+/-- Cold definition callbacks cannot alter the unconsumed catalog suffix. -/
+example : editDeclaredSource
+    (registerDeclarations "service" ["first", "later"] ⟨[]⟩) "later"
+    (fun name => name == "service") (7 : Nat) (fun _ => 99) =
+      .error "object mutation during computation" := by
+  apply editDeclaredSource_active "service" "later" ["first", "later"] ⟨[]⟩
+  · simp
+  · rfl
+
+/-- Repaired construction permits a fresh supported revision without a saved refusal. -/
+example : editDeclaredSource
+    (registerDeclarations "service" ["first", "later"] ⟨[]⟩) "later"
+    (fun _ => false) (7 : Nat) (fun n => n + 1) = .ok 8 := by
+  exact editDeclaredSource_retry _ _ _ _
+
+/-- Three preparations of two declared fields retain only the constructor's two binds. -/
+example : declarationBindingAttempts 2 3 false = 8 ∧
+    declarationBindingAttempts 2 3 true = 2 := ⟨rfl, rfl⟩
+
+end LeanPoo.Examples.Representation
