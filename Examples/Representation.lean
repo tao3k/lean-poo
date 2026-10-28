@@ -373,4 +373,23 @@ example (authority : NamesAuthority Bool) (read : NamesEvidence)
     (changed : read.revision ≠ authority.revision) : namesCurrent authority read = false :=
   namesCurrent_revision authority read changed
 
+/-- One unique current catalog needs no semantic deduplication. -/
+example : selectDeclarations [("callback", false), ("enabled", true)] =
+    [("callback", false), ("enabled", true)] := by decide
+
+/-- All-pass reuse keeps the exact logical root, including a Function payload. -/
+example (f : Nat → Nat) : filteredCatalog (packWith true [("callback", f)]) [("callback", f)] =
+    packWith true [("callback", f)] := filteredCatalog_all_pass _
+
+/-- Partial filtering still retains false payloads in their original order. -/
+example : (filteredCatalog (packWith true [("enabled", false), ("hidden", true)])
+    [("enabled", false)]).entries = [("enabled", false)] := rfl
+
+/-- Sharing an all-pass root cannot authorize a query from an older source revision. -/
+example : finishVisibility 4 5 (.ok [("enabled", false)]) =
+    (.error "object changed during declaration reflection" : Except String (List (String × Bool))) := rfl
+
+/-- Reusing builders does not remove the successful field's concrete value check. -/
+example : catalogRebuilds true true = 0 ∧ (declarationWork false true true).valueChecks = 1 := ⟨rfl,rfl⟩
+
 end LeanPoo.Examples.Representation

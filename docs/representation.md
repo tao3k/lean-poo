@@ -578,3 +578,41 @@ The original per-phase 300-second/1 GiB limits remain. Seven new regressions
 passed independently, and module/example proofs passed at 1 GiB/two threads.
 These full-entry numbers are admission evidence, not a paired old/new compiler
 or whole-check latency claim. Full Lean gate and remote CI are separate evidence.
+
+### Cold-query root and policy-view reuse
+
+`prototype-map-merge-first` reuses a sole distinct immutable catalog; multiple
+roots/duplicates keep ordered first selection. Large policy-only views retain
+standard backend trees and sparse ordinal history, while small backend changes
+still capture entries. Visibility filtering shares an all-pass root and rebuilds
+partial results with the same policy. No cache flag, registry or namespace is
+added. The existing post-callback revision fence still runs before publication.
+
+`RepresentationDeclarations` proves unique first-selection identity, successful
+visibility sublists, equal-retained-length identity and observation-preserving
+filtered roots for arbitrary payloads (including Functions). Logical builder and
+policy-entry-copy counts exclude uniqueness/visibility scans, callbacks, snapshots,
+new wrapper records, initialization, value admission, GC and machine time. Runtime
+regressions exercise sparse policy conversion, immutable successors, reverse
+callback/failure order, hidden overrides and source edits during all-pass reuse.
+
+The macOS full study passed in 75.41 s (inclusive 63.58 s). Isolated directory
+and full visibility collected medians improved by 21.87 / 15.84 us; mixed
+visibility was +0.16 us. Short cold batches still had +56.66 us collected median
+and a +1,483.87 tail. Additional 32-call/twelve-pair cold/full confirmation passed
+in 50.93 s (inclusive 45.84 s): cold collected median -0.89 us, mean +14.37,
+range -24.02 / +84.72 with seven wins/five losses. Charged cold median was -8.75
+but forced GC contributed -6.36 mean us; batch/first costs remained positive.
+This does not prove uniform cold acceleration or explain away the adverse tail.
+
+Confirmation full workflow collected median was -3,526.77 us, charged median
+-3,238.95 us; all twelve pairs improved in both regimes. Natural full workflow
+retained a +9,552.44 tail. The Scheme receipt preserves short/long samples,
+A/A/B/B, non-GC/GC/residual component means and unavailable allocation counters.
+The source-level no-rebuild laws do not imply those wall-time results.
+
+After preserving independent build-entry/progress fixes from upstream Scheme
+commits `688555b` and `3ba1b34`, final local acceptance passed 150 modules /
+1,871 cases: module phase 223.15 s, complete paired entry 12.91 s, whole command
+236.61 s. Query/benchmark source was unchanged by that integration; benchmark
+cohorts above were not resampled. Original checks and resource caps remain.

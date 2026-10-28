@@ -143,4 +143,98 @@ theorem declarationWork_observed_cold :
     declarationWork true true true = ⟨0, 1, 1⟩ ∧
     declarationWork false false false = ⟨1, 1, 1⟩ := ⟨rfl, rfl⟩
 
+/-- With unique keys disjoint from earlier roots, first selection is unchanged. -/
+theorem selectDeclarations_unique (entries : List (String × Value)) (seen : List String)
+    (unique : (entryKeys entries).Nodup)
+    (fresh : ∀ name ∈ entryKeys entries, name ∉ seen) :
+    selectDeclarations entries seen = entries := by
+  induction entries generalizing seen with
+  | nil => rfl
+  | cons head tail ih =>
+    have uniq := List.nodup_cons.mp unique
+    have firstFresh := fresh head.1 (by simp [entryKeys])
+    have restFresh : ∀ name ∈ entryKeys tail, name ∉ head.1 :: seen := by
+      intro name member
+      have old := fresh name (by simp [entryKeys] at member ⊢; exact Or.inr member)
+      have different : name ≠ head.1 := by
+        intro same
+        exact uniq.1 (same ▸ member)
+      simp [different, old]
+    simp only [selectDeclarations, firstFresh, ↓reduceIte]
+    rw [ih (head.1 :: seen) uniq.2 restFresh]
+
+/-- A unique retained root has exactly the effective first-declaration observation. -/
+theorem soleCatalog_reuse (root : Storage Value) (unique : (entryKeys root.entries).Nodup) :
+    (packWith true root.entries).entries = selectDeclarations root.entries := by
+  rw [entries_packWith, selectDeclarations_unique root.entries [] unique]
+  simp
+
+/-- Successful ordered visibility filtering only removes entries. -/
+theorem checkVisibility_sublist (hidden : Value → Except E Bool)
+    (entries accepted : List (String × Value)) (ready : checkVisibility hidden entries = .ok accepted) :
+    accepted.Sublist entries := by
+  induction entries generalizing accepted with
+  | nil => simpa [checkVisibility] using ready
+  | cons head tail ih =>
+    cases tailReady : checkVisibility hidden tail with
+    | error cause => simp [checkVisibility, tailReady] at ready
+    | ok rest =>
+      have sub := ih rest tailReady
+      cases headReady : hidden head.2 with
+      | error cause => simp [checkVisibility, tailReady, headReady] at ready
+      | ok masked =>
+        cases masked with
+        | true =>
+          have same : rest = accepted := by simpa [checkVisibility, tailReady, headReady] using ready
+          subst accepted
+          exact List.Sublist.cons _ sub
+        | false =>
+          have same : head :: rest = accepted := by simpa [checkVisibility, tailReady, headReady] using ready
+          subst accepted
+          exact List.Sublist.cons_cons _ sub
+
+/-- Equal retained count proves all-pass identity, not just equal cardinality. -/
+theorem checkVisibility_all_pass (hidden : Value → Except E Bool)
+    (entries accepted : List (String × Value)) (ready : checkVisibility hidden entries = .ok accepted)
+    (sameLength : accepted.length = entries.length) : accepted = entries :=
+  (checkVisibility_sublist hidden entries accepted ready).eq_of_length sameLength
+
+/-- Reuse an unchanged private root after successful visibility and its revision
+fence. Count equality is used only with the filtering/sublist invariant above. -/
+def filteredCatalog (root : Storage Value) (accepted : List (String × Value)) : Storage Value :=
+  if accepted.length = root.entries.length then root else packWith root.compact accepted
+
+/-- Root sharing preserves every payload and order, including false and Functions. -/
+theorem filteredCatalog_observation (root : Storage Value) (hidden : Value → Except E Bool)
+    (accepted : List (String × Value)) (ready : checkVisibility hidden root.entries = .ok accepted) :
+    (filteredCatalog root accepted).entries = accepted := by
+  unfold filteredCatalog
+  split
+  · exact (checkVisibility_all_pass hidden root.entries accepted ready ‹_›).symm
+  · exact entries_packWith _ _
+
+/-- All-pass filtering shares the root without weakening the post-callback fence. -/
+theorem filteredCatalog_all_pass (root : Storage Value) : filteredCatalog root root.entries = root := by
+  simp [filteredCatalog]
+
+/-- Logical rebuilds, excluding input capture, uniqueness/visibility scans,
+private snapshots, callback work, receiver state and GC. -/
+def catalogRebuilds (soleUnique allVisible : Bool) : Nat :=
+  (if soleUnique then 0 else 1) + (if allVisible then 0 else 1)
+
+/-- The common unique/all-visible cold case avoids both full map builders. -/
+theorem catalogRebuilds_reused : catalogRebuilds true true = 0 := rfl
+
+/-- Partial visibility and multi-root merging still pay the required builders. -/
+theorem catalogRebuilds_partial : catalogRebuilds true false = 1 ∧ catalogRebuilds false false = 2 := ⟨rfl,rfl⟩
+
+/-- Policy-only conversion of a retained large standard tree copies no entry
+stream. This is a source operation count, not a physical zero-allocation claim. -/
+def policyEntryCopies (entries : Nat) (samePolicy sameBackend : Bool) : Nat :=
+  if samePolicy || sameBackend then 0 else entries
+
+/-- Large tree-policy views avoid export/recapture; bounded backend changes pay. -/
+theorem policyEntryCopies_views (entries : Nat) :
+    policyEntryCopies entries false true = 0 ∧ policyEntryCopies entries false false = entries := ⟨rfl,rfl⟩
+
 end LeanPoo.Prototype.Representation
