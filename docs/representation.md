@@ -378,3 +378,59 @@ The author source's purity-by-default caching and explicit flushing discussion
 example combines shared inheritance, owned reflection, false/Function identity,
 live revisions, refinement, exact evidence and module-action/FUN/IO publication.
 The model does not claim original Racket API equivalence or whole-paper closure.
+
+## Super-independent SlotSpec construction
+
+The original TODO explicitly proposes treating methods which ignore super
+specially, including lossy/K-style composition. The existing SlotSpec constructors
+already supply the required distinction: constant, thunk and self ignore super;
+computed remains opaque. The engine previously interpreted every contribution
+into an effective thunk before a later explicit override discarded that thunk.
+It now keeps a private most-specific-first stack in its existing temporary slot
+hash, resetting that stack at those three explicit constructors. Defaults are
+ordinary constant specifications. No body analysis, new cache or compiler is added.
+
+Every incoming specification is still admitted in chronological source order.
+A malformed earlier specification cannot be hidden by a later valid override.
+All retained fields are compiled before invoking ANY compute-slot hook, preserving
+payload capture time across fields. Final-self binding, computed super order,
+lazy missing-super refusal, false/Function identity, original body exceptions and
+failure retry continue through the original evaluator and object/cache engine.
+
+`Prototype.SlotSpec` extends its existing four-constructor model rather than
+introducing another interpretation. General compile/fold equivalence, reset-suffix,
+original validation error order, final-self and opaque-computed laws accompany
+finite retained-length and preparation-work bounds. The preparation counter
+charges source visits and retained reversal cells; interpretation and hash
+iteration are separate. Effective builder requests exclude reused thunk
+procedures. No actual Scheme closure bytes, hash
+complexity, allocator, GC, runtime or compiler correctness is proved. Defaults,
+declaration preparation, prototype traversal, contracts, result observation and
+hooks remain real costs, including in the complete paired workflow.
+
+The Gerbil example reuses the existing shared-service reflection/refinement/FUN
+workflow with additional contributions, rather than copying its publication
+pipeline. The paired reference encodes the same super-independent body as opaque
+computed; the candidate uses explicit self. Both use the CURRENT engine and
+charge fresh metadata in cold operations. This comparison qualifies explicit
+representation choices, not a before/after revision speedup. Single-contribution,
+64-prefix, warmed-cache and complete module/revision/refusal/retry phases retain
+AB/BA and A/A/B/B controls with natural, collected and inclusive post-GC samples.
+
+The local current-encoding study retains a real negative control: single-field
+collected pairs have +0.75 microseconds median and +8.26 mean (range -4.23 to
++47.04). With 64 overwritten contributions, cold collected pairs have -5.38
+median / -4.71 mean, but one adverse tail reaches +2.73. Complete workflow
+collected pairs all improve (-53.99 to -13.68; mean -30.96), as do post-GC
+batch pairs (-60.19 to -6.30; mean -33.56). The separate CHARGED inclusive
+workflow includes forced GC and first invocation: mean -18.13, median -33.76,
+range -95.59 to +138.06, four wins and two losses. Natural workflow differences are
+heavily affected by GC; no stable 769-microsecond gain is inferred. Same-side
+noise remains visible, and these current representations do not establish
+previous-revision constructor costs, faster arbitrary module startup or universal
+policy superiority. See the Scheme receipt for complete scope.
+
+These laws concern one slot's normalized chronological sequence. Faithful Symbol
+identity grouping by the existing standard hash and the unchanged declaration
+preparation/capture order remain host premises, checked by integrated regressions;
+the model does not verify the standard hash implementation itself.

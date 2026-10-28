@@ -1,11 +1,31 @@
 import LeanPoo.Prototype.RepresentationIndex
 import LeanPoo.Prototype.RepresentationNames
+import LeanPoo.Prototype.SlotSpec
 
 /-! A shared-service shape changes across edits, topology replacement and retry.
 These source laws complement executable Gerbil C3/FUN/contract controls; they
 make no claim about collector history or physical allocation performance. -/
 namespace LeanPoo.Examples.Representation
 open Prototype.Representation
+
+/-- A final-self override cuts 64 opaque inherited builders, retaining its suffix. -/
+def overriddenSpecs : List (Prototype.SlotSpec Int Int) :=
+  List.replicate 64 (.computed (fun _ next => 100 + next ())) ++
+    [.self (fun owner => owner * 3), .modify (fun value => value + 3)]
+example : (overriddenSpecs.foldl Prototype.SlotSpec.push []).length = 2 := by decide
+example : Prototype.SlotSpec.compile (overriddenSpecs.foldl Prototype.SlotSpec.push [])
+    2 (fun _ => -1) () = 9 := by decide
+example : Prototype.SlotSpec.preparationWork overriddenSpecs = 68 := by decide
+example : Prototype.SlotSpec.builderWork overriddenSpecs = 66 := by decide
+example : Prototype.SlotSpec.builderWork
+    (overriddenSpecs.foldl Prototype.SlotSpec.push []) = 2 := by decide
+example : Prototype.SlotSpec.prepare (Self := Unit) (α := Int)
+    [.error "malformed", .ok (.constant 7)] = .error "malformed" := rfl
+example (f : Nat → Nat) : Prototype.SlotSpec.compile
+    (Prototype.SlotSpec.push [] (.constant f)) () (fun _ => f) () = f := rfl
+example : Prototype.SlotSpec.compile
+    (Prototype.SlotSpec.push [] (.thunk (fun _ => (Except.error "retry" : Except String Bool))))
+    () (fun _ => .ok false) () = .error "retry" := rfl
 
 /-- A forged cyclic metadata spine is checked against a finite private directory. -/
 def cyclicNames (_ : Nat) : NameCell := ⟨"callback", .cell 0⟩
