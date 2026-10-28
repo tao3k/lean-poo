@@ -265,4 +265,79 @@ theorem compositionExportCells_saving (slots defaults : Nat) :
     compositionExportCells slots defaults false - compositionExportCells slots defaults true =
       2 * (slots + defaults) := by simp [compositionExportCells, snapshotExportCells, Nat.mul_add]
 
+/-- An owned public catalog observation and its authoritative immutable root.
+The host must capture input pairs and keep standard persistent storage private;
+this model does not prove physical non-aliasing in the Scheme collector. -/
+structure CatalogView (Value : Type) where
+  root : Storage Value
+  publicEntries : List (String × Value)
+
+/-- Export the same descriptors in order; payloads are shared, never evaluated. -/
+def exposeCatalog (root : Storage Value) : CatalogView Value :=
+  ⟨root, entrySnapshot root.entries⟩
+
+/-- A client can replace its public list without an edit to the registered source. -/
+def CatalogView.replacePublic (view : CatalogView Value)
+    (entries : List (String × Value)) : CatalogView Value := { view with publicEntries := entries }
+
+/-- Public-list edits leave membership, payloads, policy and layout names intact. -/
+theorem catalog_public_frame (root : Storage Value) (client : List (String × Value)) :
+    ((exposeCatalog root).replacePublic client).root = root ∧
+    entryKeys ((exposeCatalog root).replacePublic client).root.entries = entryKeys root.entries :=
+  ⟨rfl, rfl⟩
+
+/-- Exact snapshot observations include false and function payloads without equality tests. -/
+theorem catalog_snapshot (root : Storage Value) :
+    (exposeCatalog root).publicEntries = root.entries := entrySnapshot_value _
+
+/-- Constructor grammar admission precedes storage capture. The finite Symbol
+pair/list recognizer is a host premise; descriptor elaboration stays lazy. -/
+def captureCatalog (compact : Bool) (admitted : Except E (List (String × Value))) :
+    Except E (Storage Value) := admitted.map (packWith compact)
+
+/-- Grammar refusal preserves the original cause, without constructing a catalog. -/
+theorem captureCatalog_refused (compact : Bool) (cause : E) :
+    captureCatalog compact (.error cause : Except E (List (String × Value))) = .error cause := rfl
+
+/-- Successful capture preserves the complete ordered stream, including duplicates. -/
+theorem captureCatalog_entries (compact : Bool) (entries : List (String × Value)) :
+    (captureCatalog compact (.ok entries) : Except E (Storage Value)).map Storage.entries = .ok entries := by
+  simp [captureCatalog, Except.map, entries_packWith]
+
+/-- Elaborate current descriptors into private scratch state before publication.
+Callbacks must obey the host registered-source protocol; exceptions return no
+partially published state. This is not a rollback of arbitrary external effects. -/
+def prepareCatalog (root : Storage Value) (initial : State)
+    (consume : State → String → Value → Except E State) : Except E (Storage Value × State) :=
+  (visitEntries consume root.entries initial).map (fun state => (root, state))
+
+/-- A descriptor refusal publishes neither scratch metadata nor a replacement root. -/
+theorem prepareCatalog_refused (root : Storage Value) (initial : State)
+    (consume : State → String → Value → Except E State) (cause : E)
+    (refused : visitEntries consume root.entries initial = .error cause) :
+    prepareCatalog root initial consume = .error cause := by
+  simp [prepareCatalog, refused, Except.map]
+
+/-- A corrected retry starts from fresh scratch and retains the authoritative root. -/
+theorem prepareCatalog_retry (root : Storage Value) (initial result : State)
+    (consume : State → String → Value → Except E State)
+    (accepted : visitEntries consume root.entries initial = .ok result) :
+    prepareCatalog root initial consume = .ok (root, result) := by
+  simp [prepareCatalog, accepted, Except.map]
+
+/-- Canonical empty roots retain explicit policy without shared mutable builders. -/
+theorem catalog_empty_policies :
+    (packWith false ([] : List (String × Value))).entries = [] ∧
+    (packWith true ([] : List (String × Value))).entries = [] := by simp
+
+/-- Catalog-root reuse avoids public export cells only. Initial grammar admission,
+descriptor/tree construction, fresh receivers, registration, hooks and GC are
+additional charged costs; physical sharing and machine time remain runtime facts. -/
+def catalogExportCells (entries : Nat) (shared : Bool) := if shared then 0 else snapshotExportCells entries
+
+/-- Reuse removes exactly the public spine/pair export from the recapture strategy. -/
+theorem catalogExportCells_saving (entries : Nat) :
+    catalogExportCells entries false - catalogExportCells entries true = 2 * entries := by
+  simp [catalogExportCells, snapshotExportCells]
+
 end LeanPoo.Prototype.Representation

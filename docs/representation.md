@@ -484,3 +484,49 @@ so no universal GC or tail acceleration is claimed. These safe current APIs do
 not prove a previous-revision or arbitrary cold-module-loading speedup. The Scheme
 receipt preserves the initial inconclusive probe, same-side controls and separate
 batch/inclusive costs; raw samples are not committed.
+
+### Declaration catalog ownership
+
+Declaration membership now uses the existing persistent prototype map, alongside
+direct slots/defaults. Constructor input and reflected catalog entry pairs are
+owned snapshots; public edits cannot change the retained membership, layout names
+or descriptor identity. `.+`/`.cc` share immutable catalog roots and retain fresh
+receiver caches. Descriptor objects stay live registered sources: supported edits
+invalidate owners and re-elaborate current visibility/value constraints.
+
+The constructor rejects malformed finite symbolic catalogs before hooks; capture
+does not evaluate descriptors. Private descriptor preparation propagates its exact
+refusal and publishes no partially successful state; a corrected retry starts with
+fresh scratch. `RepresentationIndex` proves these logical capture, public-view
+frame and preparation laws. Physical pair non-aliasing, faithful standard storage,
+registered-source propagation and serialized edits remain host premises. Empty
+roots retain explicit policy; persistent successors cannot mutate them. Logical
+export savings exclude initial capture, descriptor/tree construction, dependency
+registration, receiver preparation, hooks, GC and machine time.
+
+Integrated Gerbil controls cover input/output tampering, clone sharing, descriptor
+visibility/value invalidation, grammar-before-hook refusal, corrected retry and
+full standard module/refine/FUN-bind publication. Both safe current strategies
+are measured in a matched benchmark including fresh construction and full workflow,
+with same-side controls and charged GC/first-call costs. This advances the author's
+future work without asserting arbitrary module loading or whole-paper closure.
+
+The macOS catalog study uses base Gerbil commit `81732d5` and current safe
+recapture/reuse strategies (64 fields, sixteen calls/batch, six AB/BA pairs,
+four A/A and B/B pairs). The command passed in 43.22 seconds; inclusive study
+was 35.40 seconds. Collected cold catalog median was -80.60 microseconds with
+six wins and no losses. Full publication remained mixed: collected median
+-97.62, range -479.76 / +443.06; charged collection/first/batch median -106.99,
+range -322.08 / +201.41 with five wins/one loss. Natural workflow had only one
+win/five losses despite its negative mean, and large same-side differences;
+this does not establish consistent end-to-end tail or GC acceleration. The
+Scheme receipt retains all phases, controls, component means and adverse tails.
+Negative allocation counters are unavailable data, not measured byte savings.
+The new proof laws concern ordered capture, source frames, refusal/retry and
+logical exported cells, not those timings or a collector/compiler theorem.
+
+Gerbil local acceptance completed with 149 modules / 1,859 cases (192.54 s),
+then the complete paired collection entry (11.55 s), whole command 204.52 s.
+The original per-phase deadlines and heap bounds remain unchanged. Focused Lean
+module/examples also passed at 1 GiB/two threads; the full repository gate and
+remote CI remain distinct evidence from those focused checks.

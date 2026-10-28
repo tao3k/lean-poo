@@ -317,4 +317,32 @@ example : ((serviceOffsets.remember ⟨["audit", "total"], 1, rfl⟩).remember c
 /-- Missing-name fallback cannot create a falsely successful primary index. -/
 example : (serviceOffsets.publish none (Except.ok false : Except String Bool)).primary = none := rfl
 
+/-- A forged reflection entry cannot replace a false descriptor in the real catalog. -/
+example : (((exposeCatalog (packWith true [("enabled", false)] : Storage Bool)).replacePublic
+    [("forged", true)]).root.entries) = [("enabled", false)] := rfl
+
+/-- Function descriptors survive public-view replacement without forcing their bodies. -/
+example (f g : Nat → Nat) :
+    first (((exposeCatalog (packWith false [("callback", f)] : Storage (Nat → Nat))).replacePublic
+      [("callback", g)]).root.entries) "callback" = some f := rfl
+
+/-- Constructor grammar failure is distinct from a later descriptor refusal. -/
+example : captureCatalog true (.error "symbolic specification required" : Except String (List (String × Nat))) =
+    .error "symbolic specification required" := rfl
+
+/-- One refused descriptor prevents publication of an earlier private scratch value. -/
+example : prepareCatalog (packWith false [("first", 1), ("refused", 2)] : Storage Nat) 0
+    (fun state name value => if name = "refused" then .error "descriptor refusal" else .ok (state + value)) =
+      (.error "descriptor refusal" : Except String (Storage Nat × Nat)) := rfl
+
+/-- A fresh retry observes both contributions; no partial result is reused. -/
+example : prepareCatalog (packWith true [("first", 1), ("refused", 2)] : Storage Nat) 0
+    (fun state _ value => .ok (state + value) : Nat → String → Nat → Except String Nat) =
+      .ok (packWith true [("first", 1), ("refused", 2)], 3) := rfl
+
+/-- Sharing an empty root cannot make a persistent successor mutate it. -/
+example : ((packWith false [] : Storage Bool).entries,
+    ((packWith false ([] : List (String × Bool))).put "enabled" false).entries) =
+      ([], [("enabled", false)]) := rfl
+
 end LeanPoo.Examples.Representation
