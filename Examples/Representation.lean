@@ -1,5 +1,6 @@
 import LeanPoo.Prototype.RepresentationIndex
 import LeanPoo.Prototype.RepresentationNames
+import LeanPoo.Prototype.RepresentationDeclarations
 import LeanPoo.Prototype.SlotSpec
 
 /-! A shared-service shape changes across edits, topology replacement and retry.
@@ -344,5 +345,32 @@ example : prepareCatalog (packWith true [("first", 1), ("refused", 2)] : Storage
 example : ((packWith false [] : Storage Bool).entries,
     ((packWith false ([] : List (String × Bool))).put "enabled" false).entries) =
       ([], [("enabled", false)]) := rfl
+
+/-- A hidden most-specific declaration remains selected ahead of a public ancestor. -/
+example : selectDeclarations [("value", true), ("value", false)] = [("value", true)] := by decide
+
+/-- A later getter refusal wins over an earlier getter's own refusal. -/
+example : checkVisibility (fun n => if n = 2 then .error "later" else .error "earlier")
+    [("a", 1), ("b", 2)] = (.error "later" : Except String (List (String × Nat))) := rfl
+
+/-- Observed current preparation is required even when the warm directory was empty. -/
+example : chooseVisible true (some ([] : List (String × Bool)))
+    (fun _ => .error "current refusal") = (.error "current refusal" : Except String (List (String × Bool))) := rfl
+
+/-- Public visibility is not a reusable result of concrete value admission. -/
+example : (declarationWork false true true).valueChecks = 1 := rfl
+
+/-- A source edit between visibility preparation and publication refuses the directory. -/
+example : finishVisibility 7 8 (.ok [("enabled", false)]) =
+    (.error "object changed during declaration reflection" : Except String (List (String × Bool))) := rfl
+
+/-- A corrected retry preserves false without interpreting it as no visible cache. -/
+example : finishVisibility 9 9 (.ok [("enabled", false)]) =
+    (.ok [("enabled", false)] : Except String (List (String × Bool))) := rfl
+
+/-- Existing owner-names evidence rejects a changed source even if field names agree. -/
+example (authority : NamesAuthority Bool) (read : NamesEvidence)
+    (changed : read.revision ≠ authority.revision) : namesCurrent authority read = false :=
+  namesCurrent_revision authority read changed
 
 end LeanPoo.Examples.Representation

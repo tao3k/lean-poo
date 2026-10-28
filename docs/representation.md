@@ -530,3 +530,51 @@ then the complete paired collection entry (11.55 s), whole command 204.52 s.
 The original per-phase deadlines and heap bounds remain unchanged. Focused Lean
 module/examples also passed at 1 GiB/two threads; the full repository gate and
 remote CI remain distinct evidence from those focused checks.
+
+### Effective declaration index and observed membership
+
+This advances the author's purity-by-default / explicit-flush future work. The
+Gerbil receiver now owns a lazy effective catalog and separately prepared visibility
+map, using the existing compact/RBTree prototype map. Source invalidation clears
+this optional field with methods, layouts and reads; fresh clones retain no index.
+First C3 declarations win before visibility, so a hidden override cannot expose a
+public ancestor. Public reflection owns its pairs; descriptor objects remain live
+registered sources. Hidden-inclusive inspection does not demand visibility flags.
+
+Observed requests authenticate owner membership through the existing names issuer
+and retain ordered hidden-field deliveries. This deliberately adds the structural
+owner obligation missing from descriptor-only reflection. Supported source edits
+during metadata callbacks refuse the old query before publication; original getter
+refusals retain precedence, and a corrected retry starts with current sources.
+Unobserved warm point queries reuse metadata only: concrete value/Slot admission
+still runs on every invocation, and refused writes retain the prior source state.
+
+`RepresentationDeclarations` proves first-entry selection, seen-name exclusion,
+right-to-left first refusal, observed cache bypass, explicit cache-fidelity
+refinement, empty-success distinction, revision fencing/retry and logical work
+counts. Existing owner-names evidence proves old-revision rejection. Finite private
+storage, standard indexed lookup, source registration and serialized supported edits
+remain premises; no heap-alias, RBTree balance, GC, compiler or machine-time theorem
+is claimed. Initial merge/capture/map construction, the additional optional object
+field, concrete value checks and public copies remain paid costs, measured in the
+matched cold/hot/observed and complete standard module/FUN/refinement workflow.
+
+The matched macOS index study (base Gerbil `6701463`, width 32, sixteen calls,
+six AB/BA pairs plus four A/A and B/B controls) passed in 79.81 seconds; its
+inclusive study was 67.27 seconds. Collected point/hot median was -9.06 us,
+missing -9.82 us, observed -5.77 us, and full workflow -7,972.91 us with six
+wins/no losses. Cold collected wall was +351.31 us while CPU median was -24.59;
+the adverse wall result and large same-side tails do not qualify stable cold
+improvement. Charged GC/first/batch workflow had median -5,197.92, five wins/
+one loss and range -12,211.25 / +4,013.90. Natural workflow also retained a
++7,098.32 tail. The Scheme receipt includes all phase ranges, controls, component
+means and unavailable allocation counters. These current-strategy measurements
+are separate from finite proof laws and do not establish universal latency,
+physical allocation savings or an arbitrary cold-module-loading speedup.
+
+Final Gerbil acceptance retained all 150 modules / 1,866 cases, with module phase
+245.29 s, complete paired collection entry 19.73 s and whole command 265.64 s.
+The original per-phase 300-second/1 GiB limits remain. Seven new regressions
+passed independently, and module/example proofs passed at 1 GiB/two threads.
+These full-entry numbers are admission evidence, not a paired old/new compiler
+or whole-check latency claim. Full Lean gate and remote CI are separate evidence.

@@ -344,6 +344,7 @@ import LeanPoo.Object.DeclarationOrder
 import LeanPoo.Prototype.Representation
 import LeanPoo.Prototype.RepresentationIndex
 import LeanPoo.Prototype.RepresentationNames
+import LeanPoo.Prototype.RepresentationDeclarations
 
 import LeanPoo.Functional.BuildCache
 
