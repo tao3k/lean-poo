@@ -392,4 +392,15 @@ example : finishVisibility 4 5 (.ok [("enabled", false)]) =
 /-- Reusing builders does not remove the successful field's concrete value check. -/
 example : catalogRebuilds true true = 0 ∧ (declarationWork false true true).valueChecks = 1 := ⟨rfl,rfl⟩
 
+/-- Reverse folding keeps false and Function payloads without input snapshots. -/
+example (f : Nat → Nat) : foldVisibility (fun _ => (.ok false : Except String Bool))
+    [("callback", f)] = .ok [("callback", f)] := rfl
+
+/-- The rightmost failing getter still wins before any earlier visibility check. -/
+example : foldVisibility (fun n => if n = 2 then .error "right" else .error "left")
+    [("a", 1), ("b", 2)] = (.error "right" : Except String (List (String × Nat))) := rfl
+
+/-- Eliminating a 32-entry private export removes 64 logical cells, not GC time. -/
+example : visibilityExportCells 32 true = 0 ∧ visibilityExportCells 32 false = 64 := ⟨rfl,rfl⟩
+
 end LeanPoo.Examples.Representation

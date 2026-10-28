@@ -616,3 +616,23 @@ commits `688555b` and `3ba1b34`, final local acceptance passed 150 modules /
 1,871 cases: module phase 223.15 s, complete paired entry 12.91 s, whole command
 236.61 s. Query/benchmark source was unchanged by that integration; benchmark
 cohorts above were not resampled. Original checks and resource caps remain.
+
+
+The private visibility filter now delegates reverse traversal to Gerbil's standard
+RBTree/vector folds instead of exporting a public snapshot first. The finite
+`foldVisibility_eq` theorem identifies its `Except` reverse fold with the original
+ordered visibility specification, including the original first refusal.
+`visibilityExportCells_direct` counts elimination of the input's owned spine and
+entry pairs only: partial capture, output spines, callbacks, actual heap/GC and
+wall time remain outside that count. Standard storage traversal and serialized
+registered-source changes remain host premises. Public snapshots remain owned,
+and no cache rule or concrete value-admission requirement is weakened.
+
+The paired Gerbil receipt is in `doc/prototype-maps.md` in the independent Scheme
+repository. The longer twelve-pair cold collected mean/max were +0.55/+53.13 us;
+the worst pair had +42.84 us non-GC CPU and +10.29 us residual, with zero batch GC.
+Identical-construction controls also varied. Charged full workflow won 12/12,
+mean -3.55 ms, but collected and natural workflow retained positive wall tails
+despite lower CPU. These measurements are not consequences of the finite theorem
+and do not establish universal wall-time or GC bounds. No raw benchmark archive
+or dependency on this Lean checkout is added to Scheme.

@@ -237,4 +237,38 @@ def policyEntryCopies (entries : Nat) (samePolicy sameBackend : Bool) : Nat :=
 theorem policyEntryCopies_views (entries : Nat) :
     policyEntryCopies entries false true = 0 ∧ policyEntryCopies entries false false = entries := ⟨rfl,rfl⟩
 
+/-- Standard reverse folds read private entries without exporting entry pairs.
+The storage traversal order is a host premise; callbacks keep the same Except
+refusal order as the original visibility specification. -/
+def foldVisibility (hidden : Value → Except E Bool) (entries : List (String × Value)) :
+    Except E (List (String × Value)) :=
+  entries.foldrM (fun entry rest => do
+    let masked ← hidden entry.2
+    pure (if masked then rest else entry :: rest)) []
+
+/-- Direct reverse folding preserves retained order and the exact first refusal. -/
+theorem foldVisibility_eq (hidden : Value → Except E Bool) (entries : List (String × Value)) :
+    foldVisibility hidden entries = checkVisibility hidden entries := by
+  induction entries with
+  | nil => rfl
+  | cons head tail ih =>
+    simp only [foldVisibility, List.foldrM_cons] at ih ⊢
+    rw [ih]
+    cases tailReady : checkVisibility hidden tail with
+    | error cause => simp [checkVisibility, tailReady, bind, Except.bind]
+    | ok rest =>
+      cases headReady : hidden head.2 with
+      | error cause => simp [checkVisibility, tailReady, headReady, bind, Except.bind]
+      | ok masked => cases masked <;> simp [checkVisibility, tailReady, headReady, bind, Except.bind, pure, Except.pure]
+
+/-- Exporting before filtering allocates an owned spine and owned entry pairs;
+direct private folds need neither. Result spines, partial-map capture, callback
+work and GC are deliberately excluded from this logical export-cell count. -/
+def visibilityExportCells (count : Nat) (direct : Bool) : Nat :=
+  if direct then 0 else 2 * count
+
+/-- Direct folds eliminate only the input export, regardless of visibility. -/
+theorem visibilityExportCells_direct (count : Nat) :
+    visibilityExportCells count true = 0 ∧ visibilityExportCells count false = 2 * count := ⟨rfl, rfl⟩
+
 end LeanPoo.Prototype.Representation
