@@ -706,3 +706,11 @@ append copies, deduplication, output capture, backend storage and GC. It is not 
 total-allocation or machine-time theorem. Standard iteration/copying/persistence,
 symbol identities, registered sources and sequential edits remain host premises.
 Mixed roots, hidden overrides and Function payloads have top-level examples.
+
+`checkedKeyEdit` now composes host symbolic-key admission with the existing
+`Object.guardedEdit` and publication boundary. Its laws establish exact grammar
+error precedence, whole-state preservation on refusal, unchanged valid-key sealed/
+active errors and corrected retry. State can include all source roots, caches,
+layout tokens and issued reads; Function values need not be applied. Host Symbol
+recognition, argument evaluation, registered finite invalidation and serialized
+supported edits remain premises, not compiler/collector correctness claims.

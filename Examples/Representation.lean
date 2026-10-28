@@ -465,4 +465,17 @@ example (callback : Nat → Nat) : first (mergeCatalogs false
   rw [mergeCatalogs_first]
   simp [entries_packWith, first]
 
+/-- Refused keys preserve a Function value and revision without invoking it. -/
+example (callback : Nat → Nat) : Object.publishEdit (callback, 7)
+    (checkedKeyEdit (.error "symbol-refused") false false (callback, 7)
+      (fun _ _ => (id, 8))) = (callback, 7) := rfl
+
+/-- Typed-key correction can retry, while valid sealed requests keep refusal. -/
+example : checkedKeyEdit (.ok "capacity") false false (2 : Nat)
+    (fun _ n => n + 1) = .ok 3 := rfl
+
+/-- Bad key admission precedes activity/sealing; their valid-key errors remain exact. -/
+example : checkedKeyEdit (.error "symbol-refused") true true (2 : Nat)
+    (fun _ n => n + 1) = .error "symbol-refused" := rfl
+
 end LeanPoo.Examples.Representation

@@ -386,4 +386,43 @@ theorem captureThenPrepareCatalog_refused_frame (compact : Bool) (cause : String
     Object.publishEdit old
       ((captureThenPrepareCatalog compact (.error cause) old consume).map Prod.snd) = old := rfl
 
+/-- Admit a symbolic key before invoking existing mutation preflight. The host
+core contract supplies the Symbol recognition; no arbitrary input traversals or
+argument-effect rollback are modeled here. -/
+def checkedKeyEdit (admitted : Except String String) (sealed active : Bool)
+    (old : State) (edit : String → State → State) : Except String State := do
+  let name ← admitted
+  Object.guardedEdit sealed active old (edit name)
+
+/-- A grammar refusal precedes sealing/activity checks and cannot call the edit. -/
+theorem checkedKeyEdit_refused (cause : String) (sealed active : Bool)
+    (old : State) (edit : String → State → State) :
+    checkedKeyEdit (.error cause) sealed active old edit = .error cause := rfl
+
+/-- Refused keys preserve the WHOLE old state, including all cache/issuer/layout
+components carried in State. Earlier host argument effects are outside this frame. -/
+theorem checkedKeyEdit_refused_frame (cause : String) (sealed active : Bool)
+    (old : State) (edit : String → State → State) :
+    Object.publishEdit old (checkedKeyEdit (.error cause) sealed active old edit) = old := rfl
+
+/-- A valid key delegates to the original preflight without changing its errors. -/
+theorem checkedKeyEdit_admitted (name : String) (sealed active : Bool)
+    (old : State) (edit : String → State → State) :
+    checkedKeyEdit (.ok name) sealed active old edit =
+      Object.guardedEdit sealed active old (edit name) := rfl
+
+/-- Correcting the key permits a fresh unsealed/inactive edit, not a cached error. -/
+theorem checkedKeyEdit_retry (name : String) (old : State) (edit : String → State → State) :
+    checkedKeyEdit (.ok name) false false old edit = .ok (edit name old) := rfl
+
+/-- Valid symbolic writes keep the same sealed-source refusal. -/
+theorem checkedKeyEdit_sealed (name : String) (active : Bool)
+    (old : State) (edit : String → State → State) :
+    checkedKeyEdit (.ok name) true active old edit = .error "sealed prototype" := rfl
+
+/-- Valid symbolic writes keep active-computation refusal before any mutation. -/
+theorem checkedKeyEdit_active (name : String) (old : State) (edit : String → State → State) :
+    checkedKeyEdit (.ok name) false true old edit =
+      .error "object mutation during computation" := rfl
+
 end LeanPoo.Prototype.Representation
