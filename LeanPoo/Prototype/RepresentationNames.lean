@@ -174,4 +174,76 @@ def namesCopyCells (fields publicQueries newRecords : Nat) := fields * (publicQu
 theorem namesCopyCells_borrowed (fields newRecords : Nat) :
     namesCopyCells fields 0 newRecords = fields * newRecords := by simp [namesCopyCells]
 
+/-- Select the existing root projection. Reuse the finite spine vocabulary with
+String encoding opaque read identities here, not slot labels. A warm exact match
+reauthenticates; only a miss enters the host finite-list admission and builder. -/
+def obtainRootProjection (heap : Nat → NameCell) (presented : NameLink)
+    (cached : Option (List String × Value))
+    (admit : Unit → Except String (List String))
+    (build : List String → Except String Value)
+    (authenticate : Value → Except String Value) : Except String Value :=
+  match cached with
+  | some (saved, value) =>
+      if matchesNameSpine heap presented saved then authenticate value
+      else admit () >>= build
+  | none => admit () >>= build
+
+/-- An exact finite warm match bypasses a repeated grammar scan, never issuance. -/
+theorem obtainRootProjection_hit (heap : Nat → NameCell) (presented : NameLink)
+    (saved : List String) (value : Value) (admit : Unit → Except String (List String))
+    (build : List String → Except String Value) (authenticate : Value → Except String Value)
+    (same : matchesNameSpine heap presented saved = true) :
+    obtainRootProjection heap presented (some (saved, value)) admit build authenticate =
+      authenticate value := by simp [obtainRootProjection, same]
+
+/-- Failed authentication is not replaced by an earlier successful cache verdict. -/
+theorem obtainRootProjection_hit_refused (heap : Nat → NameCell) (presented : NameLink)
+    (saved : List String) (value : Value) (admit : Unit → Except String (List String))
+    (build : List String → Except String Value) (authenticate : Value → Except String Value)
+    (same : matchesNameSpine heap presented saved = true) (cause : String)
+    (refused : authenticate value = .error cause) :
+    obtainRootProjection heap presented (some (saved, value)) admit build authenticate =
+      .error cause := by simp [obtainRootProjection, same, refused]
+
+/-- Cold invalid grammar never reaches entry authentication or graph construction. -/
+theorem obtainRootProjection_cold_refused (heap : Nat → NameCell) (presented : NameLink)
+    (admit : Unit → Except String (List String)) (build : List String → Except String Value)
+    (authenticate : Value → Except String Value) (cause : String)
+    (refused : admit () = .error cause) :
+    obtainRootProjection heap presented none admit build authenticate = .error cause := by
+  simp only [obtainRootProjection, refused]; rfl
+
+/-- Changed, improper or cyclic roots cannot use an old signature to skip admission. -/
+theorem obtainRootProjection_changed_refused (heap : Nat → NameCell) (presented : NameLink)
+    (saved : List String) (value : Value) (admit : Unit → Except String (List String))
+    (build : List String → Except String Value) (authenticate : Value → Except String Value)
+    (different : matchesNameSpine heap presented saved = false) (cause : String)
+    (refused : admit () = .error cause) :
+    obtainRootProjection heap presented (some (saved, value)) admit build authenticate =
+      .error cause := by simp only [obtainRootProjection, different, Bool.false_eq_true, ↓reduceIte, refused]; rfl
+
+/-- The saved private length bounds warm comparison even on a cyclic heap. Host
+proper-list recognition on a cold miss is a separate standard-library premise. -/
+theorem rootProjection_compare_bound (heap : Nat → NameCell) (presented : NameLink)
+    (saved : List String) : nameSpineWork heap presented saved ≤ saved.length + 1 :=
+  nameSpineWork_bound heap presented saved
+
+/-- Correct finite input can rebuild and propagate the exact builder result. -/
+theorem obtainRootProjection_retry (heap : Nat → NameCell) (presented : NameLink)
+    (names : List String) (build : List String → Except String Value)
+    (authenticate : Value → Except String Value) :
+    obtainRootProjection heap presented none (fun _ => .ok names) build authenticate =
+      build names := rfl
+
+/-- Refusal frames the complete post-argument source/cache state. This does not
+undo caller mutations to the exposed root spine or effects of host arguments. -/
+theorem obtainRootProjection_refused_frame (heap : Nat → NameCell) (presented : NameLink)
+    (cached : Option (List String × State)) (old : State)
+    (admit : Unit → Except String (List String)) (build : List String → Except String State)
+    (authenticate : State → Except String State) (cause : String)
+    (refused : obtainRootProjection heap presented cached admit build authenticate = .error cause) :
+    Object.publishEdit old (obtainRootProjection heap presented cached admit build authenticate) =
+      old := by rw [refused]; rfl
+
 end LeanPoo.Prototype.Representation
+

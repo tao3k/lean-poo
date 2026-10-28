@@ -478,4 +478,29 @@ example : checkedKeyEdit (.ok "capacity") false false (2 : Nat)
 example : checkedKeyEdit (.error "symbol-refused") true true (2 : Nat)
     (fun _ n => n + 1) = .error "symbol-refused" := rfl
 
+/-- A genuine identity in a cyclic caller spine is not the saved finite root list. -/
+example : matchesNameSpine (fun _ => ⟨"read", .cell 0⟩) (.cell 0) ["read"] = false := rfl
+
+/-- A damaged warm spine goes through admission and cannot deliver its cached result. -/
+example : obtainRootProjection (fun _ => ⟨"read", .cell 0⟩) (.cell 0)
+    (some (["read"], 9)) (fun _ => .error "list-refused")
+    (fun _ => .ok 12) (fun n => .ok n) = .error "list-refused" := rfl
+
+/-- Restored finite roots take the warm path without another cold scan/build. -/
+example : obtainRootProjection (fun _ => ⟨"read", .nil⟩) (.cell 0)
+    (some (["read"], 9)) (fun _ => .error "cold-scan")
+    (fun _ => .error "build") (fun n => .ok n) = .ok 9 := rfl
+
+/-- Finite membership never bypasses the source revision fence, including ABA. -/
+example : obtainRootProjection (fun _ => ⟨"read", .nil⟩) (.cell 0)
+    (some (["read"], 9)) (fun _ => .ok ["read"])
+    (fun _ => .ok 9) (fun (_ : Nat) => .error "stale slot dependency") =
+      .error "stale slot dependency" := rfl
+
+/-- Corrected cold requests propagate the actual builder result for fresh issuance. -/
+example : obtainRootProjection (fun _ => ⟨"read", .nil⟩) (.cell 0) none
+    (fun _ => .ok ["read"]) (fun names => .ok names.length)
+    (fun n => .ok n) = .ok 1 := rfl
+
 end LeanPoo.Examples.Representation
+

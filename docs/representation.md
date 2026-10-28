@@ -714,3 +714,13 @@ active errors and corrected retry. State can include all source roots, caches,
 layout tokens and issued reads; Function values need not be applied. Host Symbol
 recognition, argument evaluation, registered finite invalidation and serialized
 supported edits remain premises, not compiler/collector correctness claims.
+
+Replay root selection now models a finite caller-spine admission boundary.
+`obtainRootProjection` reuses exact saved roots while authenticating the cached
+records again; changed/cold inputs must pass host proper-list admission before
+graph construction. Laws establish grammar-error precedence, whole-state refusal,
+exact corrected retry and a saved-length-plus-one warm comparison bound even
+when presented heap links cycle. The host `list?` recognizer, weak storage,
+registered sources and sequential edits remain premises. This does not establish
+termination of arbitrary callbacks, allocation/GC behavior or concurrent safety.
+Top-level examples cover cyclic roots, repaired membership and stale ABA reads.
