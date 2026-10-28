@@ -728,6 +728,73 @@ theorem modulePreparation_linked (common : List String) :
 theorem modulePreparation_dynamic (common : List String) :
     (modulePreparation false common).entryDiscoveries = common.eraseDups.length := rfl
 
+/-- Declared test-package allocation; standard make still owns every job. -/
+structure BuildAllocation where
+  packages : Nat
+  backends : Nat
+  deriving DecidableEq, Repr
+
+/-- One GXC process plus its bounded GSC executor capacity per package. This is
+not an OS thread count. The waiting CLI is included in the heap envelope. -/
+def BuildAllocation.slots (allocation : BuildAllocation) : Nat :=
+  allocation.packages * (allocation.backends + 1)
+
+/-- CLI and GXC each have 1 GiB; each GSC has 2 GiB. This is a declared Scheme
+heap envelope, excluding C compiler RSS, mappings and C stacks; it is not a
+collector or OS scheduling theorem. -/
+def BuildAllocation.heapGiB (allocation : BuildAllocation) : Nat := 2 * allocation.slots
+
+/-- Repartition only when two asynchronous backends admit more package VMs.
+Division truncates unused slots; it never expands the original capacity. -/
+def parallelPreparation (allocation : BuildAllocation) : BuildAllocation :=
+  let candidates := allocation.slots / 3
+  if allocation.packages < candidates then ⟨candidates, 2⟩ else allocation
+
+/-- Repartitioning preserves or lowers the previous declared active capacity. -/
+theorem parallelPreparation_slots (allocation : BuildAllocation) :
+    (parallelPreparation allocation).slots ≤ allocation.slots := by
+  unfold parallelPreparation
+  dsimp only
+  split
+  · simpa [BuildAllocation.slots] using Nat.div_mul_le_self allocation.slots 3
+  · exact Nat.le_refl _
+
+/-- More isolated frontends require no larger total declared Scheme heap envelope. -/
+theorem parallelPreparation_heap (allocation : BuildAllocation) :
+    (parallelPreparation allocation).heapGiB ≤ allocation.heapGiB :=
+  Nat.mul_le_mul_left 2 (parallelPreparation_slots allocation)
+
+/-- A selected replacement keeps asynchronous standard backend submission. -/
+theorem parallelPreparation_async (allocation : BuildAllocation)
+    (changed : allocation.packages < allocation.slots / 3) :
+    (parallelPreparation allocation).backends = 2 := by simp [parallelPreparation, changed]
+
+/-- Both standard make's frontend-worker count and its GSC job capacity use the
+same per-package setting. Neither aggregate count grows after repartitioning. -/
+theorem parallelPreparation_workers (allocation : BuildAllocation) :
+    (parallelPreparation allocation).packages * (parallelPreparation allocation).backends ≤
+      allocation.packages * allocation.backends := by
+  unfold parallelPreparation
+  dsimp only
+  split
+  · have capacity : (allocation.slots / 3) * 3 ≤
+        allocation.packages * allocation.backends + allocation.packages := by
+      simpa only [BuildAllocation.slots, Nat.mul_add, Nat.mul_one] using
+        Nat.div_mul_le_self allocation.slots 3
+    change (allocation.slots / 3) * 2 ≤ allocation.packages * allocation.backends
+    omega
+  · exact Nat.le_refl _
+
+/-- Package capacity never decreases. Execution of the unchanged inventory is
+a host xargs/make obligation, checked separately in the real build receipts. -/
+theorem parallelPreparation_packages (allocation : BuildAllocation) :
+    allocation.packages ≤ (parallelPreparation allocation).packages := by
+  unfold parallelPreparation
+  dsimp only
+  split
+  · exact Nat.le_of_lt ‹_›
+  · exact Nat.le_refl _
+
 end ModuleEntry
 
 /-- A descriptor offset carries no owner, allocation token or evaluated value. -/

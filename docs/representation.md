@@ -664,3 +664,13 @@ credentials stay current. A corrected proper-list replacement then invalidates
 both owners once and revokes the old reads. `captureThenPrepareCatalog_refused_frame`
 reuses the existing `Object.publishEdit` boundary to retain the whole abstract
 source/cache state on grammar failure.
+
+The test-package preparation allocation is also modeled in the existing
+representation module. `parallelPreparation` repartitions existing slots toward
+more independent standard-make frontends, retaining two asynchronous backends
+when selected. Its theorems bound declared slots, aggregate workers/backends and
+Scheme heap while preserving package capacity. The 3-by-3 to 4-by-2 example uses
+12 slots and the same 24 GiB declared heap envelope. These are resource accounting
+claims, not physical RSS, GC, OS scheduling or wall-time guarantees; execution of
+the unchanged package inventory is checked by the actual Gerbil build/test
+receipts. The separately authorized 2 GiB root compiler is unchanged.

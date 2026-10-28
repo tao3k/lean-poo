@@ -419,4 +419,14 @@ example (f : Nat → Nat) :
 example : captureThenPrepareCatalog false (.error false : Except Bool (List (String × Nat)))
     (0 : Nat) (fun count _ _ => .ok (count + 1)) = .error false := rfl
 
+/-- Four isolated package VMs and two backends replace 3×3 within 12 slots. -/
+example : parallelPreparation ⟨3,3⟩ = ⟨4,2⟩ := rfl
+
+/-- Both configurations retain the same declared 24 GiB Scheme heap envelope. -/
+example : (BuildAllocation.mk 3 3).heapGiB = 24 ∧
+    (parallelPreparation ⟨3,3⟩).heapGiB = 24 := ⟨rfl,rfl⟩
+
+/-- Small configured capacity is preserved instead of disabling its existing overlap. -/
+example : parallelPreparation ⟨1,3⟩ = ⟨1,3⟩ := rfl
+
 end LeanPoo.Examples.Representation
