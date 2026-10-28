@@ -346,3 +346,35 @@ snapshot export, refinement, invalidation and GC remain real costs. Scheme's
 complete paired hot/cold/reinsert/publication controls include current construction
 and snapshot observation, comparing current supported strategies rather than
 claiming previous-revision constructor equivalence.
+
+## Structural names ownership and selective metadata repair
+
+`Prototype.RepresentationNames` extends the existing Representation namespace.
+It models private canonical names, separately exposed mutable name links and
+existing registered read identity. Symbol identities use injective String keys;
+printed spelling is not an identity oracle. Authentication recurses over the
+finite private sequence, proving at most length + 1 logical link inspections even
+for cyclic or improper presentations. The registered issuer, faithful standard
+list copying and serialized supported edits are premises.
+
+The laws preserve unissued-before-stale refusal and the exact consumer outcome,
+including false, opaque Functions or business errors. Metadata repair changes
+only the live names-record identity: canonical names, preparation parents,
+current value view and existing static access remain unchanged. Restoring old
+contents cannot revive a replaced identity. These are local frame laws, not an
+automatic rewrite of dependent cached graphs; Gerbil rejects those old graphs
+and requires its existing explicit flush before recomputation.
+
+Public export uses standard List.map and owns no authority. Replacing its view
+leaves private names and value reads unchanged. Logical name-copy cells equal
+fields * (public queries + new names records). Internal borrowed enumeration
+adds no public copy, while issuance still pays its snapshot copy. Record closures,
+canonical construction, result pairs, GC and wall time are excluded from this
+source count and remain charged by the paired Gerbil study. No runtime allocator,
+compiler, general mutable-heap isolation or pervasive invalidation is verified.
+
+The author source's purity-by-default caching and explicit flushing discussion
+(`poof.scrbl`, lines 1533–1553) motivates this finite protocol. The Scheme service
+example combines shared inheritance, owned reflection, false/Function identity,
+live revisions, refinement, exact evidence and module-action/FUN/IO publication.
+The model does not claim original Racket API equivalence or whole-paper closure.

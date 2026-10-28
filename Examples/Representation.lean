@@ -1,10 +1,31 @@
 import LeanPoo.Prototype.RepresentationIndex
+import LeanPoo.Prototype.RepresentationNames
 
 /-! A shared-service shape changes across edits, topology replacement and retry.
 These source laws complement executable Gerbil C3/FUN/contract controls; they
 make no claim about collector history or physical allocation performance. -/
 namespace LeanPoo.Examples.Representation
 open Prototype.Representation
+
+/-- A forged cyclic metadata spine is checked against a finite private directory. -/
+def cyclicNames (_ : Nat) : NameCell := ⟨"callback", .cell 0⟩
+example : matchesNameSpine cyclicNames (.cell 0) ["callback"] = false := by decide
+example : nameSpineWork cyclicNames (.cell 0) ["callback", "callback"] = 3 := by decide
+example : matchesNameSpine cyclicNames .invalid ["callback"] = false := rfl
+example : namesCopyCells 64 1 1 = 128 := rfl
+example : namesCopyCells 64 0 0 = 0 := rfl
+
+/-- Repairing structural metadata retains a warmed false cell and preparation ID. -/
+def namesAuthority : NamesAuthority Bool :=
+  ⟨["enabled"],4,17,[3],⟨1,4,99,["enabled"],fun name => if name = "enabled" then some false else none⟩⟩
+/-- The warmed static site retains the original false-valued cell across metadata repair. -/
+def enabledSite : Site := ⟨1,4,99,["enabled"],"enabled",0,rfl⟩
+example : read enabledSite (refreshNames namesAuthority 18).view = some false := by decide
+example : (refreshNames namesAuthority 18).preparation = [3] := rfl
+example : namesCurrent (refreshNames namesAuthority 18)
+    ⟨true,4,17,["enabled"],.cell 0⟩ = false := by decide
+example : (replaceExposedNames (exposeNames namesAuthority) ["client-only"]).1.names =
+    ["enabled"] := rfl
 
 /-- Repeated methods and unrelated fields retain sparse ordinals after deletion. -/
 def indexedMethods : List (Nat × (String × Int)) :=

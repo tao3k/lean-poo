@@ -1,0 +1,177 @@
+import LeanPoo.Prototype.Representation
+
+/-! Owned structural names and bounded authentication of exposed read spines.
+String keys injectively represent symbol identities. Fresh standard list copies,
+the existing registered issuer and serialized supported edits are premises.
+No allocator, collector, arbitrary raw setters or compiler verification is claimed.
+-/
+namespace LeanPoo.Prototype.Representation
+
+/-- A presented name spine may end, point at a pair, or contain a foreign tail. -/
+inductive NameLink where
+  | nil
+  | cell (id : Nat)
+  | invalid
+  deriving DecidableEq
+
+/-- Mutable presented pairs may form cycles; the private saved sequence is finite. -/
+structure NameCell where
+  name : String
+  next : NameLink
+
+/-- Authentication recurses on private names, never on untrusted heap topology. -/
+def matchesNameSpine (heap : Nat → NameCell) (link : NameLink) : List String → Bool
+  | [] => link == .nil
+  | name :: tail => match link with
+    | .cell id => (heap id).name == name && matchesNameSpine heap (heap id).next tail
+    | _ => false
+
+/-- Count inspected links, including the final proper-list termination check. -/
+def nameSpineWork (heap : Nat → NameCell) (link : NameLink) : List String → Nat
+  | [] => 1
+  | name :: tail => match link with
+    | .cell id => if (heap id).name == name then 1 + nameSpineWork heap (heap id).next tail else 1
+    | _ => 1
+
+/-- Even a cyclic or improper presentation cannot exceed the finite saved bound. -/
+theorem nameSpineWork_bound (heap : Nat → NameCell) (link : NameLink) (saved : List String) :
+    nameSpineWork heap link saved ≤ saved.length + 1 := by
+  induction saved generalizing link with
+  | nil => simp [nameSpineWork]
+  | cons name tail ih =>
+    cases link with
+    | nil => simp [nameSpineWork]
+    | invalid => simp [nameSpineWork]
+    | cell id =>
+      simp only [nameSpineWork]
+      split
+      · have bound := ih (heap id).next
+        simp only [List.length_cons]; omega
+      · simp
+
+/-- An unexpected extra cell or improper tail cannot authenticate an empty suffix. -/
+theorem matchesNameSpine_end (heap : Nat → NameCell) (link : NameLink) :
+    matchesNameSpine heap link [] = true ↔ link = .nil := by simp [matchesNameSpine]
+
+/-- Replacing an identity by another symbol, even with equal printed spelling, refuses. -/
+theorem matchesNameSpine_wrong_head (heap : Nat → NameCell) (id : Nat) (name : String)
+    (tail : List String) (different : (heap id).name ≠ name) :
+    matchesNameSpine heap (.cell id) (name :: tail) = false := by
+  simp [matchesNameSpine, different]
+
+/-- Existing issuance authenticates primitive metadata; names add a finite spine. -/
+structure NamesEvidence where
+  registered : Bool
+  revision : Nat
+  identity : Nat
+  saved : List String
+  presented : NameLink
+
+/-- Private canonical names and value layout have separate ownership/lifetimes. -/
+structure NamesAuthority (Value : Type) where
+  names : List String
+  revision : Nat
+  live : Nat
+  preparation : List Nat
+  view : View Value
+
+/-- The saved names belong to issuance, so a later source edit does not forge a birth. -/
+def namesIssued (heap : Nat → NameCell) (read : NamesEvidence) : Bool :=
+  read.registered && matchesNameSpine heap read.presented read.saved
+
+/-- Currentness additionally checks the receiver generation and retained record identity. -/
+def namesCurrent (authority : NamesAuthority Value) (read : NamesEvidence) : Bool :=
+  read.revision == authority.revision && read.identity == authority.live
+
+/-- Trusted issuance captures canonical names before exposing a separate spine.
+The caller supplies a fresh presentation with equal contents, not private cells. -/
+def issueNames (authority : NamesAuthority Value) (presented : NameLink) : NamesEvidence :=
+  ⟨true, authority.revision, authority.live, authority.names, presented⟩
+
+/-- A faithfully copied presentation receives the current generation and exact names. -/
+theorem issueNames_ready (heap : Nat → NameCell) (authority : NamesAuthority Value)
+    (presented : NameLink) (copied : matchesNameSpine heap presented authority.names = true) :
+    namesIssued heap (issueNames authority presented) = true ∧
+    namesCurrent authority (issueNames authority presented) = true := by
+  simp [issueNames, namesIssued, namesCurrent, copied]
+
+/-- A real source revision invalidates old names even when the field set agrees. -/
+theorem namesCurrent_revision (authority : NamesAuthority Value) (read : NamesEvidence)
+    (changed : read.revision ≠ authority.revision) : namesCurrent authority read = false := by
+  simp [namesCurrent, changed]
+
+/-- Preserve unissued-before-stale error order and original consumer failures. -/
+def useNamesEvidence (heap : Nat → NameCell) (authority : NamesAuthority Value)
+    (read : NamesEvidence) (consume : List String → Except String Result) : Except String Result :=
+  if namesIssued heap read then
+    if namesCurrent authority read then consume authority.names else .error "stale slot dependency"
+  else .error "unissued slot dependency"
+
+/-- Corrupt names cannot enter a consumer or be confused with a business refusal. -/
+theorem useNamesEvidence_unissued (heap : Nat → NameCell) (authority : NamesAuthority Value)
+    (read : NamesEvidence) (consume : List String → Except String Result)
+    (bad : namesIssued heap read = false) :
+    useNamesEvidence heap authority read consume = .error "unissued slot dependency" := by
+  simp [useNamesEvidence, bad]
+
+/-- A legitimate old-generation record remains issued but fails before consumer work. -/
+theorem useNamesEvidence_stale (heap : Nat → NameCell) (authority : NamesAuthority Value)
+    (read : NamesEvidence) (consume : List String → Except String Result)
+    (issued : namesIssued heap read = true) (stale : namesCurrent authority read = false) :
+    useNamesEvidence heap authority read consume = .error "stale slot dependency" := by
+  simp [useNamesEvidence, issued, stale]
+
+/-- Admitted observation preserves the exact result, including a refusal or false/Function. -/
+theorem useNamesEvidence_ready (heap : Nat → NameCell) (authority : NamesAuthority Value)
+    (read : NamesEvidence) (consume : List String → Except String Result)
+    (issued : namesIssued heap read = true) (current : namesCurrent authority read = true) :
+    useNamesEvidence heap authority read consume = consume authority.names := by
+  simp [useNamesEvidence, issued, current]
+
+/-- Targeted metadata repair changes only the names-record identity. -/
+def refreshNames (authority : NamesAuthority Value) (fresh : Nat) : NamesAuthority Value :=
+  { authority with live := fresh }
+
+/-- Repair retains canonical membership, preparation parents and current value cells. -/
+theorem refreshNames_frame (authority : NamesAuthority Value) (fresh : Nat) :
+    (refreshNames authority fresh).names = authority.names ∧
+    (refreshNames authority fresh).preparation = authority.preparation ∧
+    (refreshNames authority fresh).view = authority.view := ⟨rfl, rfl, rfl⟩
+
+/-- Repair does not discard a warmed static access site's current receiver/layout. -/
+theorem refreshNames_read (authority : NamesAuthority Value) (fresh : Nat) (site : Site) :
+    read site (refreshNames authority fresh).view = read site authority.view := rfl
+
+/-- A replaced record cannot become current merely because source values agree. -/
+theorem refreshNames_old (authority : NamesAuthority Value) (fresh : Nat) (old : NamesEvidence)
+    (was : old.identity = authority.live) (different : fresh ≠ authority.live) :
+    namesCurrent (refreshNames authority fresh) old = false := by
+  simp [namesCurrent, refreshNames, was, Ne.symm different]
+
+/-- Use the standard finite list map; the exported list does not own authority. -/
+def exposeNames (authority : NamesAuthority Value) : NamesAuthority Value × List String :=
+  (authority, authority.names.map id)
+
+/-- Export preserves order/multiplicity with one logical cell per name. -/
+theorem exposeNames_value (authority : NamesAuthority Value) :
+    (exposeNames authority).2 = authority.names := by
+  simp [exposeNames]
+
+/-- Arbitrary replacement of the caller's owned view cannot alter private state. -/
+def replaceExposedNames (exported : NamesAuthority Value × List String) (later : List String) :=
+  (exported.1, later)
+
+/-- Public mutation leaves both authoritative names and existing value reads unchanged. -/
+theorem replaceExposedNames_frame (authority : NamesAuthority Value) (later : List String) (site : Site) :
+    (replaceExposedNames (exposeNames authority) later).1.names = authority.names ∧
+    read site (replaceExposedNames (exposeNames authority) later).1.view = read site authority.view :=
+  ⟨rfl, rfl⟩
+
+/-- Name-copy cells only; record closures, canonical construction, result pairs and GC are extra. -/
+def namesCopyCells (fields publicQueries newRecords : Nat) := fields * (publicQueries + newRecords)
+
+/-- Warm private enumeration adds no public snapshot; cold issuance still pays its own copy. -/
+theorem namesCopyCells_borrowed (fields newRecords : Nat) :
+    namesCopyCells fields 0 newRecords = fields * newRecords := by simp [namesCopyCells]
+
+end LeanPoo.Prototype.Representation
