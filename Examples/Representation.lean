@@ -528,4 +528,32 @@ example : editDeclaredSource
 example : declarationBindingAttempts 2 3 false = 8 ∧
     declarationBindingAttempts 2 3 true = 2 := ⟨rfl, rfl⟩
 
+/-- Admission keeps descriptor identity and declaration order while capturing types. -/
+example : resolveDeclarationTypes [("first", 3), ("later", 7)]
+    (fun n => if n = 3 then Except.ok "early-type" else Except.ok "later-type") =
+      (Except.ok [("first", (3, "early-type")), ("later", (7, "later-type"))] :
+        Except String (List (String × (Nat × String)))) := rfl
+
+/-- A later metadata failure wins before an earlier definition body could refuse. -/
+example : defineResolvedDeclarations (.error "type-refused") (0 : Nat)
+    (fun _ _ (_ : Nat × String) => .error "definition-refused") = .error "type-refused" := rfl
+
+/-- Successful definitions still observe the preceding private scratch state. -/
+example : defineResolvedDeclarations
+    (.ok [("first", (3, "integer")), ("later", (7, "integer"))]) []
+    (fun prior name (value : Nat × String) =>
+      (Except.ok (prior ++ [(name, value.1, prior.length)]) : Except String _)) =
+      .ok [("first", 3, 0), ("later", 7, 1)] := rfl
+
+/-- Capturing both branches protects the active leaf before older's hook executes. -/
+example : editDeclaredSource
+    (registerResolvedTypes "older" [("capacity", (2, "capacity-type"))]
+      (registerResolvedTypes "newer" [("tariff", (3, "tariff-type"))]
+        ⟨[⟨"receiver", [["newer", "older"]], false⟩]⟩)) "tariff-type"
+    (fun name => name == "receiver") (3 : Nat) (fun _ => 99) =
+      .error "object mutation during computation" := by
+  apply editDeclaredSource_affected _ _ "receiver"
+  · decide
+  · rfl
+
 end LeanPoo.Examples.Representation

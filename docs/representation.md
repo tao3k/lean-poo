@@ -735,3 +735,23 @@ known descriptor binds from preparation; resolved type binds, hash-table costs,
 constructor work and GC remain extra. Host weak-edge identity, a fresh receiver,
 finite known catalogs and serialized supported edits are premises. This advances
 scoped invalidation future work, not arbitrary callback-source discovery.
+
+Declaration elaboration now has two explicit phases across the entire finite C3
+family: resolve and register every descriptor's actual `.type`, then execute the
+existing `.slot.define` sequence on a fresh scratch receiver per catalog. The
+private one-shot actions retain identities only for that attempt. Empty catalogs
+produce no pending action or scratch receiver. The standard ordered map and list
+builder own sequencing/storage; no public namespace, evaluator, loader or registry
+is introduced. Metadata failures now precede all definition effects; after successful
+resolution, original definition errors and incremental scratch visibility remain.
+
+`resolveDeclarationTypes` uses standard monadic mapping; its total-resolution law
+preserves names, descriptor values and order. `defineResolvedDeclarations` reuses
+`visitEntries`, with exact resolution/definition refusal, scratch publication frame
+and admitted fold laws. Captured type identities reuse `registerDeclarations`;
+existing reverse-closure preflight protects active descendants and shared joins.
+The runtime proves no arbitrary getter purity or global snapshot: resolution itself
+is ordered, discovered sources become registered before definition hooks, and raw
+setters/concurrent edits/undiscovered callback sources remain outside the protocol.
+One-shot closures, family lists and earlier metadata evaluation on failed attempts
+are paid preparation costs, not a free cache or a machine-time theorem.

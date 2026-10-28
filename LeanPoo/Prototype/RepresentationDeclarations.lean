@@ -410,4 +410,80 @@ theorem declarationBindingAttempts_saved (fields preparations : Nat) :
     declarationBindingAttempts fields preparations false =
       declarationBindingAttempts fields preparations true + fields * preparations := rfl
 
+/-- Resolve a finite ordered descriptor stream before definition effects. Each
+success retains the actual descriptor and its resolved type identity together. -/
+def resolveDeclarationTypes (entries : List (String × Value))
+    (resolve : Value → Except E String) : Except E (List (String × (Value × String))) :=
+  entries.mapM (fun entry => do
+    let type ← resolve entry.2
+    pure (entry.1, (entry.2, type)))
+
+/-- Total resolution preserves every declaration name, descriptor and order;
+only the resolved type identity is added. No descriptor or Function is executed
+by the mapping itself beyond the explicit resolver. -/
+theorem resolveDeclarationTypes_total (entries : List (String × Value)) (resolve : Value → String) :
+    resolveDeclarationTypes entries (fun value => (Except.ok (resolve value) : Except E String)) =
+      .ok (entries.map (fun entry => (entry.1, (entry.2, resolve entry.2)))) := by
+  induction entries with
+  | nil => rfl
+  | cons head tail ih =>
+      simp only [resolveDeclarationTypes, bind, Except.bind, pure, Except.pure] at ih ⊢
+      rw [List.mapM_cons, ih]
+      rfl
+
+/-- Only complete resolution reaches the existing ordered definition fold.
+The host uses a fresh scratch receiver for each C3 catalog, not a shared cache. -/
+def defineResolvedDeclarations (resolved : Except E (List (String × (Value × String))))
+    (initial : State) (defineSlot : State → String → (Value × String) → Except E State) : Except E State := do
+  let ready ← resolved
+  visitEntries defineSlot ready initial
+
+/-- Metadata refusal precedes all definition callbacks, preserving its exact cause. -/
+theorem defineResolvedDeclarations_refused (cause : E) (initial : State)
+    (defineSlot : State → String → (Value × String) → Except E State) :
+    defineResolvedDeclarations (.error cause) initial defineSlot = .error cause := rfl
+
+/-- Successful admission keeps the existing incremental scratch sequence unchanged. -/
+theorem defineResolvedDeclarations_ready (ready : List (String × (Value × String)))
+    (initial : State) (defineSlot : State → String → (Value × String) → Except E State) :
+    defineResolvedDeclarations (.ok ready) initial defineSlot =
+      visitEntries defineSlot ready initial := rfl
+
+/-- Once types are admitted, the original first definition error still wins.
+There is no publication or rollback claim for arbitrary external callback effects. -/
+theorem defineResolvedDeclarations_definition_refused (ready : List (String × (Value × String)))
+    (initial : State) (defineSlot : State → String → (Value × String) → Except E State)
+    (cause : E) (refused : visitEntries defineSlot ready initial = .error cause) :
+    defineResolvedDeclarations (.ok ready) initial defineSlot = .error cause := refused
+
+/-- A failed type phase cannot install partial scratch metadata. Registration and
+host getter effects before this boundary are deliberately outside this frame. -/
+theorem defineResolvedDeclarations_frame (cause : String) (initial : State)
+    (defineSlot : State → String → (Value × String) → Except String State) :
+    Object.publishEdit initial (defineResolvedDeclarations (.error cause) initial defineSlot) = initial := rfl
+
+/-- Register the captured type identities through the SAME known-source graph.
+Descriptor edges already exist; no additional registry or discovery algorithm. -/
+def registerResolvedTypes (owner : String) (ready : List (String × (Value × String)))
+    (graph : C4.Graph) : C4.Graph := registerDeclarations owner (ready.map (fun entry => entry.2.2)) graph
+
+/-- Later captured types already reach their catalog owner before definitions. -/
+theorem registeredResolvedType_reaches (owner : String)
+    (ready : List (String × (Value × String))) (entry : String × (Value × String))
+    (graph : C4.Graph) (member : entry ∈ ready) :
+    owner ∈ Proof.invalidatedNodes (registerResolvedTypes owner ready graph) [entry.2.2] := by
+  apply registeredDeclaration_reaches
+  exact List.mem_map.mpr ⟨entry, member, rfl⟩
+
+/-- Existing transitive preflight also protects an active child of the catalog
+owner, including joins shared by separately prepared C3 branches. -/
+theorem editDeclaredSource_affected (graph : C4.Graph) (source activeOwner : String)
+    (running : String → Bool) (old : State) (edit : State → State)
+    (reached : activeOwner ∈ Proof.invalidatedNodes graph [source])
+    (active : running activeOwner = true) :
+    editDeclaredSource graph source running old edit = .error "object mutation during computation" := by
+  have blocked : (Proof.invalidatedNodes graph [source]).any running = true :=
+    List.any_eq_true.mpr ⟨activeOwner, reached, active⟩
+  simp [editDeclaredSource, Object.guardedEdit, blocked]
+
 end LeanPoo.Prototype.Representation
