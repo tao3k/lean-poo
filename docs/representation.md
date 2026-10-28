@@ -313,3 +313,36 @@ AB/BA and A/A/B/B across natural/collected histories. Allocation, comparisons,
 construction, seeding, refinement, binding and module costs remain charged.
 Automatic PIC/JIT selection, vector-only storage and arbitrary cold-module
 initialization are separate boundaries; none is declared complete here.
+
+## Indexed persistent contribution deletion
+
+Gerbil's existing prototype map now delegates indexed contribution removal to
+`std/struct/rbtree` instead of filtering and rebuilding the entire map. Private
+name entries retain the first replacement ordinal and every duplicate ordinal.
+Deletion leaves gaps; an independent monotone next ordinal prevents reinsertion
+from overwriting unrelated survivors. Live count controls compact demotion.
+Existing invalidation, shared inheritance and FUN/contract boundaries still own
+publication and refusal.
+
+`Prototype.RepresentationIndex` uses the existing Representation namespace and
+finite ordered payloads. Under `IndexMatches`, deletion by ordinals is equal to
+the original name filter, removes all same-name methods and preserves remaining
+indices. `PositionsBelow` survives removal and advances on append, proving fresh
+insertion after gaps. Remembering positions preserves the first method ordinal
+and grows the logical position count by one per contribution. Scheme stores a
+singleton ordinal directly and allocates position spines only for duplicates.
+False and opaque
+Function payloads require no equality oracle. Symbol identities are injective
+String keys, not display spelling.
+
+For a present name with k contributions, delegated work is k ordered removals,
+one name lookup and one name removal; bounded compact demotion is separate.
+The cost theorem requires a permutation of the canonical matching index: semantic
+membership alone would allow unused extra ordinals. Duplicate insertion preserves
+that permutation while keeping the first replacement ordinal.
+The model does not verify RBTree balancing, sharing, allocator, compiler or wall
+time. Index construction, extra retained/temporary cons cells, ordinal bit costs,
+snapshot export, refinement, invalidation and GC remain real costs. Scheme's
+complete paired hot/cold/reinsert/publication controls include current construction
+and snapshot observation, comparing current supported strategies rather than
+claiming previous-revision constructor equivalence.

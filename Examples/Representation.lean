@@ -1,10 +1,44 @@
-import LeanPoo.Prototype.Representation
+import LeanPoo.Prototype.RepresentationIndex
 
 /-! A shared-service shape changes across edits, topology replacement and retry.
 These source laws complement executable Gerbil C3/FUN/contract controls; they
 make no claim about collector history or physical allocation performance. -/
 namespace LeanPoo.Examples.Representation
 open Prototype.Representation
+
+/-- Repeated methods and unrelated fields retain sparse ordinals after deletion. -/
+def indexedMethods : List (Nat × (String × Int)) :=
+  [(0,("tariff",7)), (1,("enabled",0)), (2,("tariff",8)), (19,("callback",1))]
+
+/-- The name index covers both tariff contributions, independently of other names. -/
+theorem indexedMethods_valid : IndexMatches indexedMethods "tariff" [0,2] := by
+  intro entry present
+  simp [indexedMethods] at present
+  rcases present with rfl | rfl | rfl | rfl <;> simp
+
+example : orderedPayloads (erasePositions indexedMethods [0,2]) =
+    [("enabled",0), ("callback",1)] := by decide
+example : first (orderedPayloads (erasePositions indexedMethods [0,2])) "tariff" = none :=
+  erasePositions_absent _ _ _ indexedMethods_valid
+example : indexedEraseWork (matchingPositions indexedMethods "tariff") = 4 := by decide
+
+/-- Live count two is occupied; a high-water ordinal is required for reinsertion. -/
+example : ([(0,("enabled",false)), (2,("other",true))].map Prod.fst).contains 2 = true := by decide
+example : PositionsBelow indexedMethods 20 := by
+  intro entry present
+  simp [indexedMethods] at present
+  rcases present with rfl | rfl | rfl | rfl <;> decide
+
+/-- Functions are opaque payload identities; no function equality oracle is needed. -/
+example (f g : Nat → Nat) :
+    orderedPayloads (erasePositions [(0,("method",f)), (8,("kept",g))] [0]) = [("kept",g)] := by
+  simp [orderedPayloads, erasePositions]
+
+/-- The existing sealed preflight preserves the original sparse source on refusal. -/
+example (active : Bool) :
+    Object.publishEdit indexedMethods
+      (Object.guardedEdit true active indexedMethods (fun entries => erasePositions entries [0,2])) = indexedMethods :=
+  Object.publishEdit_sealed _ _ _
 
 /-- Persistent direct contributions retain both same-name method contributions. -/
 def original : List (String × Int) := [("capacity",10),("fee",1),("fee",2)]

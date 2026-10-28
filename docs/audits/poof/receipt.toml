@@ -662,6 +662,7 @@
   "LeanPoo/Prototype/RecursiveReindex.lean",
   "LeanPoo/Prototype/RecursiveSemantics.lean",
   "LeanPoo/Prototype/Representation.lean",
+  "LeanPoo/Prototype/RepresentationIndex.lean",
   "LeanPoo/Prototype/SharedCell.lean",
   "LeanPoo/Prototype/SharedCellRefinement.lean",
   "LeanPoo/Prototype/SharedThunk.lean",
