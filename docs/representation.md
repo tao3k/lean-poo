@@ -685,3 +685,13 @@ of checker effects, proof of arbitrary callbacks, host contract correctness or
 concurrent synchronization. Registered-source invalidation and serial supported
 edits remain premises. The Gerbil regression and shared service publication
 example exercise the corresponding actual cache/credential lifecycle.
+
+Checked C3 publication now retains the canonical reference after a successful
+hook, while the Gerbil public query and inherited continuation expose separate
+standard list copies. The existing `InheritedMOP.checkedOrder` model has canonical
+admission, changed-order refusal, original-hook-error and final-cache soundness/
+refusal theorems. `Examples/InheritedHooks.lean` covers diamond reordering, retained
+canonical admission and exact refusal. Lean lists are immutable: physical host
+spine isolation is a premise, tested by actual public and retained-continuation
+mutation regressions, not a proved allocator or compiler property. Object payloads
+remain shared and supported source edits retain their ordinary invalidation rules.

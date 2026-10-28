@@ -81,4 +81,18 @@ example : selectProtocol (fun name => if name = "billing" then none else protoco
 #print axioms selectProtocol_absent
 #print axioms selectProtocol_none
 #print axioms selectProtocol_prefix
+/-- A hook that changes the admitted diamond order cannot publish a C3 cache. -/
+example : cacheCheckedOrder
+    (fun (_ : Unit) _ => .ok ["join", "risk", "billing", "root"]) ()
+    (.ok ["join", "billing", "risk", "root"]) = none := by decide
+
+/-- Inspecting without changing canonical membership retains the standard result. -/
+example : cacheCheckedOrder (identityHook : Hook Unit (List String)) ()
+    (.ok ["join", "billing", "risk", "root"]) =
+      some ["join", "billing", "risk", "root"] := rfl
+
+/-- An original hook refusal is not converted into another order error. -/
+example : checkedOrder (fun (_ : Unit) _ => .error "hook-refused") ()
+    (.ok ["join", "root"]) = .error "hook-refused" := rfl
+
 end LeanPoo.Examples.InheritedHooks
