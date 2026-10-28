@@ -403,4 +403,20 @@ example : foldVisibility (fun n => if n = 2 then .error "right" else .error "lef
 /-- Eliminating a 32-entry private export removes 64 logical cells, not GC time. -/
 example : visibilityExportCells 32 true = 0 ∧ visibilityExportCells 32 false = 64 := ⟨rfl,rfl⟩
 
+/-- A foreign carrier refuses before an otherwise failing elaboration callback. -/
+example : captureThenPrepareCatalog true (.error "proper list required" : Except String (List (String × Bool)))
+    (0 : Nat) (fun _ _ _ => .error "hook must not run") = .error "proper list required" := rfl
+
+/-- Retrying with a finite duplicate catalog preserves Function leaves and order. -/
+example (f : Nat → Nat) :
+    (captureThenPrepareCatalog true (.ok [("callback", f), ("callback", f)] :
+        Except String (List (String × (Nat → Nat))))
+      ([] : List String) (fun seen key _ => .ok (seen ++ [key]))).map
+        (fun result => (result.1.entries, result.2)) =
+      .ok ([("callback", f), ("callback", f)], ["callback", "callback"]) := rfl
+
+/-- The same grammar cause precedes any descriptor effects under either policy. -/
+example : captureThenPrepareCatalog false (.error false : Except Bool (List (String × Nat)))
+    (0 : Nat) (fun count _ _ => .ok (count + 1)) = .error false := rfl
+
 end LeanPoo.Examples.Representation

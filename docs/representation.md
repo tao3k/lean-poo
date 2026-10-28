@@ -636,3 +636,31 @@ mean -3.55 ms, but collected and natural workflow retained positive wall tails
 despite lower CPU. These measurements are not consequences of the finite theorem
 and do not establish universal wall-time or GC bounds. No raw benchmark archive
 or dependency on this Lean checkout is added to Scheme.
+
+
+## Finite carrier admission before representation selection
+
+A source witness found the tree constructor accepting a vector through generic
+iteration, while compact construction refused the same carrier. A producer could
+also run on the tree path despite the constructor's declared finite list grammar.
+The standard `using` / `list?` boundary now admits proper finite lists before
+storage selection, and the C3 catalog merge admits a proper list before filtering
+its roots. Existing opaque roots retain their sharing/conversion path. No generic
+Iterable evaluation, additional map implementation or per-query guard is added.
+
+This is implementation future work guided by the author's representation-
+equivalence argument (`poof.scrbl:980–1031`), not a claim that the paper prescribes
+this host API grammar. Existing `captureCatalog` and `prepareCatalog` are composed
+by `captureThenPrepareCatalog`; theorems prove grammar-error precedence, policy-
+independent observations/failure, and corrected finite-request retry. Standard
+host proper-list/Symbol recognition, immutable storage, registered sources and
+serialized edits remain premises. The finite model does not encode arbitrary
+Scheme cycles, prove the runtime list predicate, roll back argument/callback
+side effects, or assert wall-time/GC bounds.
+
+The retained-cache regression also rejects malformed public source replacements
+before invalidation: source/child revisions, instances, layouts and issued read
+credentials stay current. A corrected proper-list replacement then invalidates
+both owners once and revokes the old reads. `captureThenPrepareCatalog_refused_frame`
+reuses the existing `Object.publishEdit` boundary to retain the whole abstract
+source/cache state on grammar failure.

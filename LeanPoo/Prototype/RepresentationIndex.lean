@@ -340,4 +340,50 @@ theorem catalogExportCells_saving (entries : Nat) :
     catalogExportCells entries false - catalogExportCells entries true = 2 * entries := by
   simp [catalogExportCells, snapshotExportCells]
 
+/-- Compose existing finite grammar capture and lazy descriptor preparation.
+The host's standard proper-list recognizer rejects foreign, improper and cyclic
+carriers BEFORE this finite model or any elaboration callback is entered. -/
+def captureThenPrepareCatalog (compact : Bool) (admitted : Except E (List (String × Value)))
+    (initial : State) (consume : State → String → Value → Except E State) :
+    Except E (Storage Value × State) :=
+  match captureCatalog compact admitted with
+  | .error cause => .error cause
+  | .ok root => prepareCatalog root initial consume
+
+/-- An input grammar refusal cannot invoke the supplied descriptor continuation. -/
+theorem captureThenPrepareCatalog_refused (compact : Bool) (cause : E) (initial : State)
+    (consume : State → String → Value → Except E State) :
+    captureThenPrepareCatalog compact (.error cause) initial consume = .error cause := rfl
+
+/-- Storage policy cannot change admitted observations, callback order or failure.
+This does not extend the input language to arbitrary Iterables or prove the host
+list recognizer, callback termination, physical allocation or machine-time bounds. -/
+theorem captureThenPrepareCatalog_policy (admitted : Except E (List (String × Value)))
+    (initial : State) (consume : State → String → Value → Except E State) :
+    (captureThenPrepareCatalog true admitted initial consume).map
+      (fun result => (result.1.entries, result.2)) =
+    (captureThenPrepareCatalog false admitted initial consume).map
+      (fun result => (result.1.entries, result.2)) := by
+  cases admitted with
+  | error cause => rfl
+  | ok entries =>
+    simp only [captureThenPrepareCatalog, captureCatalog, Except.map, prepareCatalog,
+      entries_packWith]
+    cases visitEntries consume entries initial <;> simp [entries_packWith]
+
+/-- A corrected finite request can retry without weakening grammar admission. -/
+theorem captureThenPrepareCatalog_retry (compact : Bool) (entries : List (String × Value))
+    (initial result : State) (consume : State → String → Value → Except E State)
+    (ready : visitEntries consume entries initial = .ok result) :
+    captureThenPrepareCatalog compact (.ok entries) initial consume =
+      .ok (packWith compact entries, result) := by
+  simp [captureThenPrepareCatalog, captureCatalog, prepareCatalog, Except.map, entries_packWith, ready]
+
+/-- The existing publication boundary retains the caller's whole source/cache
+state on grammar refusal; no revision or credential can be invalidated by it. -/
+theorem captureThenPrepareCatalog_refused_frame (compact : Bool) (cause : String)
+    (old : State) (consume : State → String → Value → Except String State) :
+    Object.publishEdit old
+      ((captureThenPrepareCatalog compact (.error cause) old consume).map Prod.snd) = old := rfl
+
 end LeanPoo.Prototype.Representation
