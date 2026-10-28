@@ -674,3 +674,14 @@ Scheme heap while preserving package capacity. The 3-by-3 to 4-by-2 example uses
 claims, not physical RSS, GC, OS scheduling or wall-time guarantees; execution of
 the unchanged package inventory is checked by the actual Gerbil build/test
 receipts. The separately authorized 2 GiB root compiler is unchanged.
+
+Concrete declaration admission now shares the existing revision fence with
+visibility preparation. `finishVisibility` is generalized over the prepared
+payload; `publishDeclaredValue` composes it with an installer. Theorems establish
+original-error precedence, refusal before installation after successful but stale
+validation, exact stable retry and retention of the post-callback state on refusal.
+Function payloads are covered without invoking their bodies. This is not rollback
+of checker effects, proof of arbitrary callbacks, host contract correctness or
+concurrent synchronization. Registered-source invalidation and serial supported
+edits remain premises. The Gerbil regression and shared service publication
+example exercise the corresponding actual cache/credential lifecycle.

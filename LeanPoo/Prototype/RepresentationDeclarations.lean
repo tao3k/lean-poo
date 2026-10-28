@@ -102,8 +102,8 @@ theorem chooseVisible_empty (prepare : Unit → Except E (List (String × Value)
 
 /-- The post-callback fence runs after descriptor preparation, before publication.
 Its source revision is also bound into the existing owner-names observation. -/
-def finishVisibility (before after : Nat) (prepared : Except String (List (String × Value))) :
-    Except String (List (String × Value)) :=
+def finishVisibility (before after : Nat) (prepared : Except String Value) :
+    Except String Value :=
   match prepared with
   | .error cause => .error cause
   | .ok entries => if before = after then .ok entries else .error "object changed during declaration reflection"
@@ -121,6 +121,40 @@ theorem finishVisibility_stale (before after : Nat) (entries : List (String × V
 /-- A fresh retry with stable current sources preserves the complete prepared directory. -/
 theorem finishVisibility_retry (current : Nat) (entries : List (String × Value)) :
     finishVisibility current current (.ok entries) = .ok entries := by simp [finishVisibility]
+
+/-- The same post-callback fence also closes concrete Slot admission. Only a
+current successful value can reach an installer; this is not effect rollback. -/
+def publishDeclaredValue (before after : Nat) (checked : Except String Value)
+    (install : Value → Except String State) : Except String State :=
+  (finishVisibility before after checked).bind install
+
+/-- An original validation failure outranks a concurrent revision mismatch. -/
+theorem publishDeclaredValue_refused (before after : Nat) (cause : String)
+    (install : Value → Except String State) :
+    publishDeclaredValue before after (.error cause) install = .error cause := rfl
+
+/-- Even successful validation cannot reach installation after source invalidation. -/
+theorem publishDeclaredValue_stale (before after : Nat) (value : Value)
+    (install : Value → Except String State) (changed : before ≠ after) :
+    publishDeclaredValue before after (.ok value) install =
+      .error "object changed during declaration reflection" := by
+  simp [publishDeclaredValue, finishVisibility, changed, Except.bind]
+
+/-- A fresh stable request preserves the exact installed result or original error. -/
+theorem publishDeclaredValue_retry (current : Nat) (value : Value)
+    (install : Value → Except String State) :
+    publishDeclaredValue current current (.ok value) install = install value := by
+  simp [publishDeclaredValue, finishVisibility, Except.bind]
+
+/-- Refused installation retains the post-callback state, not a fictitious
+rollback of earlier user effects. No object publication follows a stale check. -/
+theorem publishDeclaredValue_stale_frame (before after : Nat) (value : Value)
+    (postCallback : State) (install : Value → Except String State)
+    (changed : before ≠ after) :
+    Object.publishEdit postCallback (publishDeclaredValue before after (.ok value) install) =
+      postCallback := by
+  rw [publishDeclaredValue_stale before after value install changed]
+  rfl
 
 /-- Logical work for a successfully selected public field; missing/metadata refusal
 stops before value admission. Construction/capture, standard tree probes, concrete

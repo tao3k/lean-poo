@@ -429,4 +429,20 @@ example : (BuildAllocation.mk 3 3).heapGiB = 24 ∧
 /-- Small configured capacity is preserved instead of disabling its existing overlap. -/
 example : parallelPreparation ⟨1,3⟩ = ⟨1,3⟩ := rfl
 
+/-- A validated Function cannot escape a metadata revision, even when its body
+is retained by identity; no Function application is needed by the fence. -/
+example (callback : Nat → Nat) :
+    publishDeclaredValue 4 5 (.ok callback)
+      (fun f => .ok (f 7)) = .error "object changed during declaration reflection" := by
+  apply publishDeclaredValue_stale
+  decide
+
+/-- A validator's original error wins over stale success diagnostics. -/
+example : publishDeclaredValue 4 5 (.error "validator-refused" : Except String Nat)
+    (fun n => .ok (n + 1)) = .error "validator-refused" := rfl
+
+/-- Repair and fresh admission may install; a refused prior request is not reused. -/
+example : publishDeclaredValue 6 6 (.ok 11 : Except String Nat)
+    (fun n => .ok (n + 1)) = .ok 12 := rfl
+
 end LeanPoo.Examples.Representation
