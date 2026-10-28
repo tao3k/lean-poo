@@ -87,3 +87,16 @@ size schedules, zero fuel and pruned-child accounting. Existing mapped-preimage,
 dependent-selection and stale-observation laws remain the provenance premises.
 These are finite source laws; runtime PRNGs, callbacks and backend representations
 still require their own executable admission. Scheme imports no Lean checkout.
+
+Bind regeneration now reuses invocation-owned SRFI-27 initial-state checkpoints.
+Every regenerated child still receives a fresh source and executes its selector
+and draw; no generated value, sample tree or source observer is memoized. Nested
+binds share only seed preparation. Public source lists remain detached, while
+empty/identical internal owner joins can share immutable lists.
+
+`PropertyGenerators.lean` proves seed-cache content/insertion invariants and
+regeneration equivalence, including variable-length consumed states and first
+failure, under an explicit state-restore law. `checkpointExpansions_le` is an
+operation-count bound. Scheme regressions exercise the installed runtime's
+checkpoint isolation; these laws do not establish PRNG quality, callback
+termination, heap allocation, GC timing or an elapsed-time bound.

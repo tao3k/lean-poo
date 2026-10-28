@@ -18,6 +18,18 @@ theorem mergeSources_current [DecidableEq Source] (current : Source → Bool) (l
     (mergeSources left right).all current = true ↔ left.all current = true ∧ right.all current = true := by
   simp [List.all_eq_true, mergeSources_mem, or_imp, forall_and]
 
+/-- Sharing an already-owned source list retains the same freshness judgment. -/
+theorem mergeSources_shared_current [DecidableEq Source] (current : Source → Bool)
+    (sources : List Source) :
+    (mergeSources sources sources).all current = true ↔ sources.all current = true := by
+  simpa using mergeSources_current current sources sources
+
+/-- An empty owner adds no authority and removes no earlier epoch. -/
+theorem mergeSources_empty_current [DecidableEq Source] (current : Source → Bool)
+    (sources : List Source) :
+    (mergeSources sources []).all current = true ↔ sources.all current = true := by
+  simpa using mergeSources_current current sources []
+
 /-- Select a weighted interval. Zero-weight branches have no possible offset. -/
 def weightedChoice : List (Nat × Value) → Nat → Option Value
   | [], _ => none
@@ -163,5 +175,72 @@ theorem shrinkProposals_preserves (valid fails : Value → Bool) (measure : Valu
           obtain ⟨rv, rf, bounded⟩ := ih candidate rest v f
           exact ⟨rv, rf, Nat.le_trans bounded (Nat.le_of_lt smaller)⟩
         next refused => exact ih best rest domain failure
+
+/-- Reference regeneration expands the same child seed for every visited parent.
+Each child receives an independent initial state and may fail explicitly. -/
+def regenerateSeed (expand : Seed → State) (run : Input → State → Except Error (Value × State))
+    (seed : Seed) : List Input → Except Error (List (Value × State))
+  | [] => .ok []
+  | input :: rest => do
+    let result ← run input (expand seed)
+    let later ← regenerateSeed expand run seed rest
+    pure (result :: later)
+
+/-- Checkpoint replay restores a fresh source state for every child; it never
+threads an earlier child's consumed state into a sibling. -/
+def regenerateCheckpoint (restore : State → State)
+    (run : Input → State → Except Error (Value × State)) (checkpoint : State) :
+    List Input → Except Error (List (Value × State))
+  | [] => .ok []
+  | input :: rest => do
+    let result ← run input (restore checkpoint)
+    let later ← regenerateCheckpoint restore run checkpoint rest
+    pure (result :: later)
+
+/-- Under the standard state-restore law, checkpoint reuse preserves every
+returned value, consumed state and first failure, even for variable-length draws.
+The restore law is an explicit host obligation, exercised by Scheme regression. -/
+theorem regenerateCheckpoint_eq (expand : Seed → State) (restore : State → State)
+    (run : Input → State → Except Error (Value × State)) (seed : Seed) (checkpoint : State)
+    (restored : restore checkpoint = expand seed) (inputs : List Input) :
+    regenerateCheckpoint restore run checkpoint inputs = regenerateSeed expand run seed inputs := by
+  induction inputs with
+  | nil => rfl
+  | cons input rest ih => simp [regenerateCheckpoint, regenerateSeed, restored, ih]
+
+/-- A checkpoint table stores deterministic initial states, never consumed sources. -/
+def cachedSeedState (expand : Seed → State) (cache : Seed → Option State) (seed : Seed) : State :=
+  match cache seed with
+  | some state => state
+  | none => expand seed
+
+/-- Reusing preparation is sound only while every entry names its own seed state. -/
+theorem cachedSeedState_eq (expand : Seed → State) (cache : Seed → Option State)
+    (sound : ∀ seed state, cache seed = some state → state = expand seed) (seed : Seed) :
+    cachedSeedState expand cache seed = expand seed := by
+  cases found : cache seed with
+  | none => simp [cachedSeedState, found]
+  | some state => simpa [cachedSeedState, found] using sound seed state found
+
+/-- Inserting a newly expanded checkpoint preserves the seed/state invariant. -/
+theorem cachedSeedState_insert_sound [DecidableEq Seed] (expand : Seed → State)
+    (cache : Seed → Option State)
+    (sound : ∀ seed state, cache seed = some state → state = expand seed) (seed : Seed) :
+    ∀ key state, (if key = seed then some (expand seed) else cache key) = some state →
+      state = expand key := by
+  intro key state found
+  by_cases same : key = seed
+  · subst key
+    simpa using (Option.some.inj (by simpa using found)).symm
+  · exact sound key state (by simpa [same] using found)
+
+/-- Repeated branch visits require at most one seed expansion per owned bind.
+This is an operation-count bound, not a GC or elapsed-time theorem. -/
+def checkpointExpansions (visits : Nat) : Nat := if visits = 0 then 0 else 1
+
+/-- Zero visits do no work; every positive visit count admits one shared expansion. -/
+theorem checkpointExpansions_le (visits : Nat) : checkpointExpansions visits ≤ visits := by
+  unfold checkpointExpansions
+  split <;> omega
 
 end LeanPoo.Functional.PropertyTesting
