@@ -532,4 +532,127 @@ theorem callback_error_retains (valid fails : Value → Bool) (measure : Value �
       (shrink valid fails measure (fuel + 1) best receipt.completed).1 = best := by
   simp [auditShrinks, shrink]
 
+
+/-- Only effective generated trials contribute labels; shrink probes have no event here. -/
+structure TrialLedger (Label : Type) where
+  attempts : Nat := 0
+  accepted : Nat := 0
+  discarded : Nat := 0
+  labels : List Label := []
+
+/-- A trial either contributes effective coverage or consumes discard budget. -/
+def recordTrial (ledger : TrialLedger Label) (eligible : Bool) (labels : List Label) : TrialLedger Label :=
+  if eligible then { ledger with attempts := ledger.attempts + 1, accepted := ledger.accepted + 1, labels := ledger.labels ++ labels }
+  else { ledger with attempts := ledger.attempts + 1, discarded := ledger.discarded + 1 }
+
+/-- Successful generation accounting is conserved independently of classification. -/
+theorem recordTrial_accounting (ledger : TrialLedger Label) (eligible : Bool) (labels : List Label)
+    (balanced : ledger.attempts = ledger.accepted + ledger.discarded) :
+    (recordTrial ledger eligible labels).attempts =
+      (recordTrial ledger eligible labels).accepted + (recordTrial ledger eligible labels).discarded := by
+  cases eligible <;> simp [recordTrial] <;> omega
+
+/-- Discarded inputs never inflate classification coverage. -/
+theorem discarded_labels (ledger : TrialLedger Label) (labels : List Label) :
+    (recordTrial ledger false labels).labels = ledger.labels := rfl
+
+/-- Coverage thresholds are application admission, not a probability theorem. -/
+def coverageAdmitted [DecidableEq Label] (requested : Nat) (required : List (Label × Nat))
+    (ledger : TrialLedger Label) : Prop :=
+  0 < requested ∧ ledger.accepted = requested ∧ ∀ entry ∈ required, entry.2 ≤ ledger.labels.count entry.1
+
+/-- A run with no effective trials cannot pass, even with empty requirements. -/
+theorem all_discard_refused [DecidableEq Label] (required : List (Label × Nat))
+    (ledger : TrialLedger Label) (empty : ledger.accepted = 0) :
+    ¬ coverageAdmitted requested required ledger := by
+  intro h
+  obtain ⟨positive, enough, _⟩ := h
+  omega
+
+/-- Every admitted run satisfies every declared minimum effective count. -/
+theorem coverage_threshold [DecidableEq Label] {ledger : TrialLedger Label}
+    {required : List (Label × Nat)} {entry : Label × Nat}
+    (admitted : coverageAdmitted requested required ledger)
+    (member : entry ∈ required) : entry.2 ≤ ledger.labels.count entry.1 := admitted.2.2 entry member
+
+/-- Finite event auditing records only generation events, never shrink probes. -/
+def auditTrials (ledger : TrialLedger Label) (events : List (Bool × List Label)) : TrialLedger Label :=
+  events.foldl (fun state event => recordTrial state event.1 event.2) ledger
+
+/-- Each audited generation consumes exactly one trial, regardless of eligibility. -/
+theorem auditTrials_attempts (events : List (Bool × List Label)) (ledger : TrialLedger Label) :
+    (auditTrials ledger events).attempts = ledger.attempts + events.length := by
+  induction events generalizing ledger with
+  | nil => simp [auditTrials]
+  | cons event rest ih =>
+    simp only [auditTrials, List.foldl_cons]
+    rw [show List.foldl (fun state event => recordTrial state event.1 event.2)
+      (recordTrial ledger event.1 event.2) rest = auditTrials (recordTrial ledger event.1 event.2) rest from rfl]
+    rw [ih]
+    cases event.1 <;> simp [recordTrial] <;> omega
+
+/-- A bounded generation prefix cannot consume more than its declared trial budget. -/
+theorem bounded_trials (events : List (Bool × List Label)) (ledger : TrialLedger Label) (budget : Nat) :
+    (auditTrials ledger (events.take budget)).attempts ≤ ledger.attempts + budget := by
+  rw [auditTrials_attempts]
+  exact Nat.add_le_add_left (List.length_take_le _ _) _
+
+/-- Portable replay carries application identity and finite encoded data only. -/
+structure ReplayEnvelope (Identity Encoded : Type) where
+  identity : Identity
+  payload : Encoded
+
+/-- Identity admission precedes application decoding and fixture construction. -/
+def decodeReplay [DecidableEq Identity] (expected : Identity) (decode : Encoded → Option Value)
+    (envelope : ReplayEnvelope Identity Encoded) : Option Value :=
+  if envelope.identity = expected then decode envelope.payload else none
+
+/-- A changed protocol cannot decode an old witness. -/
+theorem replay_identity_refused [DecidableEq Identity] (decode : Encoded → Option Value)
+    (envelope : ReplayEnvelope Identity Encoded) (changed : envelope.identity ≠ expected) :
+    decodeReplay expected decode envelope = none := by simp [decodeReplay, changed]
+
+/-- Codec recovery is conditional on the application's explicit round-trip law. -/
+theorem replay_roundtrip [DecidableEq Identity] (encode : Value → Encoded)
+    (decode : Encoded → Option Value) (law : ∀ value, decode (encode value) = some value)
+    (identity : Identity) (value : Value) :
+    decodeReplay identity decode ⟨identity, encode value⟩ = some value := by
+  simp [decodeReplay, law]
+
+/-- Identity refusal propagates without admitting a fixture result. -/
+theorem replay_refused_before_fixture [DecidableEq Identity] (decode : Encoded → Option Value)
+    (fixture : Value → Option Result) (envelope : ReplayEnvelope Identity Encoded)
+    (changed : envelope.identity ≠ expected) :
+    (decodeReplay expected decode envelope).bind fixture = none := by
+  simp [replay_identity_refused decode envelope changed]
+
+/-- A bounded function is an explicit argument-row to result-tuple table. -/
+def lookupFunction [DecidableEq Input] (table : List (Input × Output)) (input : Input) : Option Output :=
+  match table with
+  | [] => none
+  | (key, value) :: rest => if input = key then some value else lookupFunction rest input
+
+/-- An absent argument row is refused rather than assigned a fallback result. -/
+theorem unknown_function_row [DecidableEq Input] (table : List (Input × Output))
+    (absent : ∀ entry ∈ table, input ≠ entry.1) : lookupFunction table input = none := by
+  induction table with
+  | nil => rfl
+  | cons entry rest ih =>
+    simp only [lookupFunction]
+    rw [if_neg (absent entry (by simp))]
+    apply ih
+    intro row member
+    exact absent row (by simp [member])
+
+/-- Result-only shrinking preserves lookup keys and transforms their selected result. -/
+theorem mapped_function_lookup [DecidableEq Input] (table : List (Input × Output))
+    (transform : Output → Smaller) :
+    lookupFunction (table.map (fun entry => (entry.1, transform entry.2))) input =
+      (lookupFunction table input).map transform := by
+  induction table with
+  | nil => rfl
+  | cons entry rest ih =>
+    simp only [List.map_cons, lookupFunction]
+    split <;> simp_all
+
 end LeanPoo.Functional.PropertyTesting

@@ -100,3 +100,31 @@ failure, under an explicit state-restore law. `checkpointExpansions_le` is an
 operation-count bound. Scheme regressions exercise the installed runtime's
 checkpoint isolation; these laws do not establish PRNG quality, callback
 termination, heap allocation, GC timing or an elapsed-time bound.
+
+## Coverage, portable replay and finite function laws
+
+`Functional.PropertyTesting` now models the next three finite PBT protocols.
+`recordTrial_accounting`, `discarded_labels`, `auditTrials_attempts` and
+`bounded_trials` establish generation accounting. `coverageAdmitted` reads counts
+from the ledger's actual label list; `all_discard_refused` and `coverage_threshold`
+prevent fabricated success from absent effective trials or unmet requirements.
+Per-trial labels are normalized by the Scheme boundary before this finite model.
+Shrinking records no generation event and cannot inflate this ledger.
+
+`replay_identity_refused` and `replay_refused_before_fixture` require identity
+admission before decoding or fixture binding. `replay_roundtrip` is conditional
+on the application's codec law. It does not certify a host reader, serializer,
+callback or stored-code evaluator; the Scheme protocol persists finite data only.
+
+`unknown_function_row` refuses a missing finite argument row without a fallback.
+`mapped_function_lookup` shows that result-only mapping preserves row selection
+and transforms its selected result. Output may itself be a multiple-value tuple.
+`Examples/PropertyGenerators.lean` supplies positive and negative controls.
+Keyword interpretation is represented by explicit row data, not an unproved
+claim of equivalence between unrestricted call languages or effectful procedures.
+
+The generic Gerbil implementation remains independent of Lean and POO. POO owns
+Function validation and descriptor/source revisions; these finite laws guide the
+protocol rather than serving as runtime certificates for arbitrary callbacks.
+This advances the paper's future work; it is not a claim that its Racket code
+already implements these testing protocols.

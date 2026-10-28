@@ -27,3 +27,20 @@ example : regenerateCheckpoint id (fun (n state : Nat) =>
     else .ok (n, state + n)) 5 [3, 2, 1] = .error "refused" := by rfl
 example : checkpointExpansions 0 = 0 := by decide
 example : checkpointExpansions 20 = 1 := by decide
+
+-- Discards do not fabricate coverage; a later effective trial contributes once.
+example : (recordTrial (recordTrial ({} : TrialLedger String) false ["retry"]) true ["retry"]).labels =
+    ["retry"] := by decide
+example : (recordTrial (recordTrial ({} : TrialLedger String) false []) true ["retry"]).accepted = 1 := by decide
+
+-- A changed application identity refuses before decoding a stored witness.
+example : decodeReplay "v2" (fun (n : Nat) => some n)
+    ({ identity := "v1", payload := 4 } : ReplayEnvelope String Nat) = none := by decide
+example : decodeReplay "v1" (fun (n : Nat) => some n)
+    ({ identity := "v1", payload := 4 } : ReplayEnvelope String Nat) = some 4 := by decide
+
+-- Argument rows can include keyword interpretation codes; tuples retain multiple results.
+example : lookupFunction [([1, 7, 2], [4, 5]), ([2], [9, 10])] [1, 7, 2] = some [4, 5] := by decide
+example : lookupFunction [([1, 7, 2], [4, 5]), ([2], [9, 10])] [99] = none := by decide
+example : lookupFunction ([([1], [8, 8])].map
+    (fun entry => (entry.1, entry.2.map (fun n => n / 2)))) [1] = some [4, 4] := by decide
