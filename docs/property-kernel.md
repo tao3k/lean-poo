@@ -128,3 +128,20 @@ Function validation and descriptor/source revisions; these finite laws guide the
 protocol rather than serving as runtime certificates for arbitrary callbacks.
 This advances the paper's future work; it is not a claim that its Racket code
 already implements these testing protocols.
+
+## Standard test admission
+
+`CheckStatus`, `checkedStatus` and `admitCheck` model translation from a finite
+property report to a standard successful/error check. `admitCheck_ok` requires a
+passed report and current sources; `checkedStatus_preserves_nonpass` preserves
+coverage refusal, exhaustion, unsupported generation and callback errors.
+`admitCheck_preserves` retains named argument data and original cause identity.
+`productDomain_sound` and `productDomain_length` model fixed multi-argument domain
+admission, including refusal of missing/extra positions. The new controls live in
+`Examples/PropertyGenerators.lean`.
+
+The Gerbil implementation delegates check registration/location/failure handling
+to `:std/test`; it adds no runner. These laws do not prove the installed CLI's OS
+exit code or turn callback exceptions into property falsifications. Generator
+branches may depend on earlier argument values; per-value type inference remains
+outside the fixed-specification interface.

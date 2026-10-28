@@ -655,4 +655,83 @@ theorem mapped_function_lookup [DecidableEq Input] (table : List (Input × Outpu
     simp only [List.map_cons, lookupFunction]
     split <;> simp_all
 
+
+/-- The report vocabulary is retained when translating into standard unit checks. -/
+inductive CheckStatus where
+  | passed | failed | error | stale | exhausted | unsupported | coverage
+  deriving DecidableEq, Repr
+
+/-- Diagnostic arguments and the original cause are data, not executable callbacks. -/
+structure CheckDiagnostics (Value Cause : Type) where
+  status : CheckStatus
+  current : Bool
+  arguments : List (String × Value)
+  cause : Option Cause
+
+/-- Formerly passing evidence must still be current when a delayed check is asserted. -/
+def checkedStatus (status : CheckStatus) (current : Bool) : CheckStatus :=
+  if status = .passed ∧ current = false then .stale else status
+
+/-- Standard checks have two outcomes; their failure retains the full PBT diagnosis. -/
+def admitCheck (diagnostics : CheckDiagnostics Value Cause) : Except (CheckDiagnostics Value Cause) Unit :=
+  let admitted := { diagnostics with status := checkedStatus diagnostics.status diagnostics.current }
+  if admitted.status = .passed then .ok () else .error admitted
+
+/-- A standard successful check requires both a passed report and live sources. -/
+theorem admitCheck_ok (diagnostics : CheckDiagnostics Value Cause) :
+    admitCheck diagnostics = .ok () ↔ diagnostics.status = .passed ∧ diagnostics.current = true := by
+  cases diagnostics with
+  | mk status current arguments cause =>
+    cases status <;> cases current <;> simp [admitCheck, checkedStatus]
+
+/-- Coverage, exhaustion, unsupported generation and callback errors are not falsification. -/
+theorem checkedStatus_preserves_nonpass (status : CheckStatus) (current : Bool)
+    (nonpass : status ≠ .passed) : checkedStatus status current = status := by
+  simp [checkedStatus, nonpass]
+
+/-- Diagnostics preserve original exception identity and named argument values. -/
+theorem admitCheck_preserves (diagnostics failure : CheckDiagnostics Value Cause)
+    (refused : admitCheck diagnostics = .error failure) :
+    failure.cause = diagnostics.cause ∧ failure.arguments = diagnostics.arguments := by
+  simp only [admitCheck] at refused
+  split at refused
+  · contradiction
+  · cases refused
+    exact ⟨rfl, rfl⟩
+
+/-- Product admission checks exact row shape and every argument's own fixed domain. -/
+def productDomain (domains : List (Value → Bool)) (values : List Value) : Bool :=
+  match domains, values with
+  | [], [] => true
+  | domain :: rest, value :: tail => domain value && productDomain rest tail
+  | _, _ => false
+
+/-- A valid row has no missing/extra positions and satisfies each component domain. -/
+theorem productDomain_sound (domains : List (Value → Bool)) (values : List Value)
+    (accepted : productDomain domains values = true) :
+    domains.length = values.length ∧
+      ∀ entry ∈ domains.zip values, entry.1 entry.2 = true := by
+  induction domains generalizing values with
+  | nil =>
+    cases values with
+    | nil => exact ⟨rfl, by simp⟩
+    | cons value rest => simp [productDomain] at accepted
+  | cons domain rest ih =>
+    cases values with
+    | nil => simp [productDomain] at accepted
+    | cons value tail =>
+      simp only [productDomain, Bool.and_eq_true] at accepted
+      obtain ⟨length, members⟩ := ih tail accepted.2
+      refine ⟨by simp [length], ?_⟩
+      intro entry member
+      simp only [List.zip_cons_cons, List.mem_cons] at member
+      rcases member with rfl | member
+      · exact accepted.1
+      · exact members entry member
+
+/-- The diagnostic binding count matches every admitted generated argument row. -/
+theorem productDomain_length (domains : List (Value → Bool)) (values : List Value)
+    (accepted : productDomain domains values = true) : domains.length = values.length :=
+  (productDomain_sound domains values accepted).1
+
 end LeanPoo.Functional.PropertyTesting

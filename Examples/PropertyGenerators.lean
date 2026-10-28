@@ -44,3 +44,13 @@ example : lookupFunction [([1, 7, 2], [4, 5]), ([2], [9, 10])] [1, 7, 2] = some 
 example : lookupFunction [([1, 7, 2], [4, 5]), ([2], [9, 10])] [99] = none := by decide
 example : lookupFunction ([([1], [8, 8])].map
     (fun entry => (entry.1, entry.2.map (fun n => n / 2)))) [1] = some [4, 4] := by decide
+
+
+-- A delayed standard check cannot admit a stale former pass.
+example : checkedStatus .passed false = .stale := by decide
+example : checkedStatus .coverage true = .coverage := by decide
+example : checkedStatus .exhausted true = .exhausted := by decide
+example : checkedStatus .error true = .error := by decide
+example : productDomain [(fun n : Nat => n < 3), (fun n => n = 5)] [2, 5] = true := by decide
+example : productDomain [(fun n : Nat => n < 3), (fun n => n = 5)] [2, 4] = false := by decide
+example : productDomain [(fun n : Nat => n < 3)] [2, 4] = false := by decide
