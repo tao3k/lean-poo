@@ -172,3 +172,32 @@ example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
 example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
     (fun _ => (.ok (true, 0) : Except String (Bool × Nat)))
     (fun _ => .error (some "property cause")) 0 = .error (some "property cause") := rfl
+
+-- Confirmation source changes prevent encoding/delivery, even with a stable witness.
+example : guardedHandoff (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun _ => (.error "encoder ran" : Except String (Nat × Nat)))
+    (fun _ _ => (.error "port ran" : Except String (Bool × Nat))) 0 = .error none := rfl
+example : guardedHandoff (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok ((), 0) : Except String (Unit × Nat)))
+    (fun _ => (.ok (7, 1) : Except String (Nat × Nat)))
+    (fun _ _ => (.error "port ran" : Except String (Bool × Nat))) 0 = .error none := rfl
+example : guardedHandoff (fun _ : Nat => false)
+    (fun _ => (.error "confirmation ran" : Except String (Unit × Nat)))
+    (fun _ => (.error "encoder ran" : Except String (Nat × Nat)))
+    (fun _ _ => (.error "port ran" : Except String (Bool × Nat))) 0 = .error none := rfl
+
+-- Stable handoff preserves the exact payload; port effects are not a transaction.
+example : guardedHandoff (fun _ : Nat => true)
+    (fun _ => (.ok ((), 0) : Except String (Unit × Nat)))
+    (fun _ => (.ok (7, 0) : Except String (Nat × Nat)))
+    (fun payload state => (.ok (payload + 1, state) : Except String (Nat × Nat))) 0 = .ok (8, 0) := rfl
+example : guardedHandoff (fun _ : Nat => true)
+    (fun _ => (.ok ((), 0) : Except String (Unit × Nat)))
+    (fun _ => (.ok (7, 0) : Except String (Nat × Nat)))
+    (fun _ _ => (.error "partial port write" : Except String (Bool × Nat))) 0 =
+      .error (some "partial port write") := rfl
+example : guardedHandoff (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok ((), 0) : Except String (Unit × Nat)))
+    (fun _ => (.ok (7, 0) : Except String (Nat × Nat)))
+    (fun _ _ => (.ok (true, 1) : Except String (Bool × Nat))) 0 = .error none := rfl

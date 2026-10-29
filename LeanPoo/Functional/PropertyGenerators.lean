@@ -630,4 +630,77 @@ theorem guardedShrinkPolicy_cause (live : State → Bool) (state : State) (cause
     guardedShrinkPolicy live (fun _ => .error cause) evaluate state = .error (some cause) := by
   simp [guardedShrinkPolicy, guardedGeneration_cause live state cause before]
 
+/-- Portable handoff has distinct confirmation, encoding and delivery stages.
+Source state includes the codec and application epochs. Delivery is an abstract
+port action: its effects are not rolled back if its trailing check refuses. -/
+def guardedHandoff (live : State → Bool)
+    (confirm : State → Except Cause (Unit × State))
+    (encode : State → Except Cause (Payload × State))
+    (deliver : Payload → State → Except Cause (Output × State)) (state : State) :
+    Except (Option Cause) (Output × State) :=
+  match guardedGeneration live confirm state with
+  | .error cause => .error cause
+  | .ok (_, confirmed) => match guardedGeneration live encode confirmed with
+    | .error cause => .error cause
+    | .ok (payload, encoded) => guardedGeneration live (deliver payload) encoded
+
+/-- A stale preflight invokes no confirmation, encoder or port action. -/
+theorem guardedHandoff_preflight (live : State → Bool)
+    (confirm : State → Except Cause (Unit × State))
+    (encode : State → Except Cause (Payload × State))
+    (deliver : Payload → State → Except Cause (Output × State)) (state : State)
+    (stale : live state = false) : guardedHandoff live confirm encode deliver state = .error none := by
+  simp [guardedHandoff, guardedGeneration_preflight live confirm state stale]
+
+/-- Reconfirmation may change codec metadata without changing the witness domain;
+its trailing refusal must skip the encoder and every port effect. -/
+theorem guardedHandoff_confirm_revised (live : State → Bool) (state next : State)
+    (encode : State → Except Cause (Payload × State))
+    (deliver : Payload → State → Except Cause (Output × State))
+    (before : live state = true) (after : live next = false) :
+    guardedHandoff live (fun _ => .ok ((), next)) encode deliver state = .error none := by
+  simp [guardedHandoff, guardedGeneration_revised live state next () before after]
+
+/-- Confirmation errors retain their own cause even when later sources are stale. -/
+theorem guardedHandoff_confirm_cause (live : State → Bool) (state : State) (cause : Cause)
+    (encode : State → Except Cause (Payload × State))
+    (deliver : Payload → State → Except Cause (Output × State)) (before : live state = true) :
+    guardedHandoff live (fun _ => .error cause) encode deliver state = .error (some cause) := by
+  simp [guardedHandoff, guardedGeneration_cause live state cause before]
+
+/-- A normally returning stale encoder cannot authorize delivery. -/
+theorem guardedHandoff_encode_revised (live : State → Bool) (state next : State) (payload : Payload)
+    (deliver : Payload → State → Except Cause (Output × State))
+    (before : live state = true) (after : live next = false) :
+    guardedHandoff live (fun _ => .ok ((), state)) (fun _ => .ok (payload, next)) deliver state =
+      .error none := by
+  simp [guardedHandoff, guardedGeneration_state live state state () before before,
+    guardedGeneration_revised live state next payload before after]
+
+/-- An encoding exception remains the original cause, without delivery. -/
+theorem guardedHandoff_encode_cause (live : State → Bool) (state : State) (cause : Cause)
+    (deliver : Payload → State → Except Cause (Output × State)) (before : live state = true) :
+    guardedHandoff live (fun _ => .ok ((), state)) (fun _ => .error cause) deliver state =
+      .error (some cause) := by
+  simp [guardedHandoff, guardedGeneration_state live state state () before before,
+    guardedGeneration_cause live state cause before]
+
+/-- Stable preparation hands the exact payload to the unchanged guarded port action. -/
+theorem guardedHandoff_delivery (live : State → Bool) (state confirmed encoded : State)
+    (payload : Payload) (deliver : Payload → State → Except Cause (Output × State))
+    (before : live state = true) (checked : live confirmed = true) (prepared : live encoded = true) :
+    guardedHandoff live (fun _ => .ok ((), confirmed)) (fun _ => .ok (payload, encoded)) deliver state =
+      guardedGeneration live (deliver payload) encoded := by
+  simp [guardedHandoff, guardedGeneration_state live state confirmed () before checked,
+    guardedGeneration_state live confirmed encoded payload checked prepared]
+
+/-- A port exception is preserved after successful confirmation and encoding.
+The host may already have emitted a prefix: this is not a rollback theorem. -/
+theorem guardedHandoff_delivery_cause (live : State → Bool) (state : State)
+    (payload : Payload) (cause : Cause) (before : live state = true) :
+    guardedHandoff live (fun _ => .ok ((), state)) (fun _ => .ok (payload, state))
+      (fun _ _ => (.error cause : Except Cause (Output × State))) state = .error (some cause) := by
+  simp [guardedHandoff_delivery live state state state payload _ before before before,
+    guardedGeneration_cause live state cause before]
+
 end LeanPoo.Functional.PropertyTesting

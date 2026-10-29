@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P15. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P16. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -731,3 +731,51 @@ No speedup or global effect safety is claimed.
 [Rackcheck](https://docs.racket-lang.org/rackcheck/index.html) supplies the lazy
 generator/property composition comparison. Revision observers are this protocol's
 additional responsibility; this change does not claim Rackcheck implements them.
+
+## P16: source-consistent portable handoff stages
+
+Audit finding: export reconfirmation and encoding shared one codec boundary. A
+property could invalidate codec metadata while leaving its witness domain stable,
+then still invoke that stale codec's encoder. Import likewise consumed an envelope
+before its first provenance preflight, even when the codec or specification was
+already stale. Negative controls reproduced one forbidden encoder invocation and
+an unexpectedly consumed input datum before the fix.
+
+The existing `with-codec` now owns distinct confirmation, encoding and delivery
+stages. A normally returning confirmation checks both application and codec
+provenance before encoding starts. Encoder refusal still precedes every output
+prefix. Import preflights both sources before its first read, then checks the
+bounded envelope read, trailing-data check, decode and concrete-witness admission
+at their existing boundaries. Invalid policy configuration remains first; stale
+preflight now precedes input parsing and identity admission. For current sources,
+identity and trailing-data errors still precede decoder/property callbacks.
+
+No codec registry, port wrapper, serializer or runner is introduced. Standard
+Gerbil ports and the existing explicit data codec retain format identity, payload
+budgets and Function reconstruction. An already stale read leaves input untouched;
+once I/O has started, consumed/emitted bytes are not rolled back. A port or
+callback exception keeps its own cause even if sources also changed. Atomic
+publication, arbitrary reader allocation and concurrent source changes between
+checks remain outside these finite sequential guarantees.
+
+Acceptance covers confirmation invalidation, zero encoder/output effects, stale
+input preflight, original confirmation exceptions, and fresh codec preparation.
+The typed FUN example shrinks a Record with a Function field, retires codec
+metadata during export reconfirmation, retries using a new codec, rejects the old
+codec without consuming input, and reconstructs the checked Function through the
+ordinary Record constructor. Generic coverage/decoder/encoder/corpus tests remain
+unchanged in scope; the isolated generic kernel inventory stays at 55 cases.
+
+Lean composes existing guarded callbacks into confirmation/encoding/delivery.
+Seven laws prove preflight refusal, confirmation source/cause refusal, encoder
+source/cause refusal, exact stable payload handoff and original port causes.
+Controls distinguish skipped later actions from post-delivery refusal. Faithful
+witness confirmation, observer accuracy and callback termination remain premises;
+no host I/O rollback or compiler correctness is asserted.
+
+Export adds one constant codec/context boundary between reconfirmation and encoding;
+import adds guarded read/trailing-data stages. Existing data-copy node/depth budgets
+are unchanged. Observer, serialization and host port costs are not claimed zero,
+and no wall-clock speedup is asserted. This preserves the generator/property
+separation learned from [Rackcheck](https://docs.racket-lang.org/rackcheck/index.html)
+while enforcing this library's additional revision protocol.

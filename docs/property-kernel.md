@@ -320,3 +320,10 @@ entry, including during shrinking. A product field that invalidates any captured
 domain stops before later fields. Reports retain the previous witness and charged
 proposal count; fresh execution is required after revision. Pure stable observers
 and explicitly declared dependencies remain caller obligations.
+
+Portable export rechecks codec and report sources after witness reconfirmation,
+before encoding. Import preflights codec and specification sources before reading:
+a stale prepared codec leaves input untouched. Prepare a new codec after its
+revision changes; old codec instances remain refused. Normal Record constructors
+restore Function wrapping during decode. Once actual port I/O starts, errors may
+leave consumed input or emitted output; source checks do not provide rollback.
