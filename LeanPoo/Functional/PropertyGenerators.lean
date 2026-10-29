@@ -361,4 +361,46 @@ any generation coverage threshold turning that result into a run status. -/
 theorem checkWitness_admitted (evaluate : Unit → Except (Option Cause) Bool) (invalid : Cause) :
     checkWitness (fun _ => .ok true) (fun _ => .ok true) evaluate invalid = evaluate () := rfl
 
+/-- A generator callback returns its value and resulting source/random state.
+A failed stage preserves its original cause; freshness is checked before use
+and after a normal return. No rollback of already executed host effects is claimed. -/
+def guardedGeneration (live : State → Bool) (run : State → Except Cause (Value × State))
+    (state : State) : Except (Option Cause) (Value × State) :=
+  if live state then
+    match run state with
+    | .error cause => .error (some cause)
+    | .ok result => if live result.2 then .ok result else .error none
+  else .error none
+
+/-- An already stale producer does not evaluate its callback. -/
+theorem guardedGeneration_preflight (live : State → Bool)
+    (run : State → Except Cause (Value × State)) (state : State) (stale : live state = false) :
+    guardedGeneration live run state = .error none := by simp [guardedGeneration, stale]
+
+/-- A callback that revises its sources cannot deliver a value to a selector. -/
+theorem guardedGeneration_revised (live : State → Bool) (state next : State) (value : Value)
+    (before : live state = true) (after : live next = false) :
+    guardedGeneration live (fun _ => (.ok (value, next) : Except Cause (Value × State))) state =
+      .error none := by simp [guardedGeneration, before, after]
+
+/-- Exceptions keep their cause even if later source checks would fail. -/
+theorem guardedGeneration_cause (live : State → Bool) (state : State) (cause : Cause)
+    (before : live state = true) :
+    guardedGeneration live (fun _ => (.error cause : Except Cause (Value × State))) state =
+      .error (some cause) := by simp [guardedGeneration, before]
+
+/-- Successful admission changes neither the callback value nor its resulting
+state, including a captured child seed. It does not make any claim of PRNG quality. -/
+theorem guardedGeneration_state (live : State → Bool) (state next : State) (value : Value)
+    (before : live state = true) (after : live next = true) :
+    guardedGeneration live (fun _ => (.ok (value, next) : Except Cause (Value × State))) state =
+      .ok (value, next) := by simp [guardedGeneration, before, after]
+
+/-- Refusing an intermediate stage skips all dependent selection/drawing. -/
+theorem guardedGeneration_refused (live : State → Bool)
+    (run : State → Except Cause (Value × State)) (state : State)
+    (next : Value × State → Except (Option Cause) Other) (cause : Option Cause)
+    (refused : guardedGeneration live run state = .error cause) :
+    (guardedGeneration live run state >>= next) = .error cause := by rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting

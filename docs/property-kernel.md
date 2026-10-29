@@ -249,3 +249,26 @@ precondition/domain refusal skips later callbacks, stale judgments and applicati
 causes remain distinct, and admitted replay returns the property's exact Boolean.
 These assume truthful terminating observers/callbacks; they do not certify arbitrary
 host predicates, codec equivalence, resource cleanup implementations or I/O atomicity.
+
+## Source-current generator callback composition
+
+P11 uses one hygienic `with-sources` form in the existing generic generator
+module. It checks the declared flat observer list before and after normal callback
+return, preserving original exceptions. Producer draw, mapping, dependent selection,
+dependent child drawing, sized/delayed construction and retained sequence packing
+use this same boundary. A selector revision cannot invoke its selected generator;
+a child draw that revises an inherited parent source cannot deliver its result.
+No per-node guard closure, new runner or source registry is introduced.
+
+`guardedGeneration` models a callback's returned value and resulting source/random
+state. Its five laws establish preflight refusal, post-callback revision refusal,
+cause preservation, exact admitted value/state and suppression of dependent stages
+after refusal. Existing source-union laws retain historical branch ownership.
+Accurate pure observers and terminating callbacks remain premises. Effects already
+performed inside a failing callback are not rolled back, and these laws do not
+establish concurrent linearizability, PRNG distribution or host timing guarantees.
+
+The standalone regression matrix exercises seven callback positions. The downstream
+Record/FUN example refuses construction after a selector revision, explicitly
+prepares a fresh sampler, performs actual shrinking, then verifies concrete replay
+performs no draws and seed replay repeats the complete construction schedule.

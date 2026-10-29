@@ -102,3 +102,14 @@ example : checkWitness (fun _ => .ok true) (fun _ => .ok true)
     (fun _ => .ok false) "excluded" = .ok false := rfl
 example : checkWitness (fun _ => .ok true) (fun _ => .error (some "recognizer"))
     (fun _ => .ok false) "excluded" = .error (some "recognizer") := rfl
+
+-- A revision is an intermediate state change, not a later property failure.
+example : guardedGeneration (fun n : Nat => n == 0)
+    (fun _ => (.ok (7, 1) : Except String (Nat × Nat))) 0 = .error none := rfl
+example : (guardedGeneration (fun n : Nat => n == 0)
+    (fun _ => (.ok (7, 1) : Except String (Nat × Nat))) 0 >>=
+      fun pair => (.ok pair.1 : Except (Option String) Nat)) = .error none := rfl
+example : guardedGeneration (fun n : Nat => n < 2)
+    (fun _ => (.ok (7, 1) : Except String (Nat × Nat))) 0 = .ok (7, 1) := rfl
+example : guardedGeneration (fun n : Nat => n == 0)
+    (fun _ => (.error "draw" : Except String (Nat × Nat))) 0 = .error (some "draw") := rfl
