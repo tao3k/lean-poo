@@ -1117,9 +1117,11 @@ Four generic cases compare checking with inspection at budgets 0/1/2, verify liv
 pruning and EOF accounting, strict Boolean source judgments, observer/iterator
 cause identity, and several independently owned pruned proposals. The isolated
 standard-library package executes 79 cases. The Record/Function/FUN workflow
-covers stale evidence, typed mapping's earlier refusal, fresh preparation,
-retained smaller witnesses and both replay forms. Typed mapping refuses before
-returning its stale child (zero charge); a raw returned tombstone consumes one.
+covers stale evidence, identity-sharing delivery, actual mapping's earlier
+refusal, fresh preparation,
+retained smaller witnesses and both replay forms. Actual child mapping refuses before
+returning its stale child (zero charge); identity sharing and raw delivery return
+the tombstone and consume one.
 This distinction is preserved rather than hidden by changing the accounting.
 
 Nine laws added to `PropertyFilters.lean` reuse `ShrinkEvent`, `auditShrinks`,
