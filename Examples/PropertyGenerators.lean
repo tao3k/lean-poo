@@ -120,3 +120,10 @@ example : selectedHashKeys [0, 1, 2] (fun _ => true) 0 = [] := by decide
 example : lookupFunction (hashEntries [1, 3] (fun _ => false)) 1 = some false := by decide
 example : lookupFunction (hashEntries [1, 3] (fun _ => false)) 2 = none := by decide
 example : deleteBlock (hashEntries [1, 2, 3] (fun n => n * 2)) 1 1 = [(1, 2), (3, 6)] := by decide
+
+-- Declared enum order is a simplification policy; equal duplicates use their first rank.
+example : enumChoice [false, true, false] 0 = some false := rfl
+example : enumChoice [false, true, false] 3 = none := rfl
+example : enumRank [false, true, false] false = 0 := rfl
+example : enumRank ["read", "write", "admin"] "write" <
+    enumRank ["read", "write", "admin"] "admin" := by decide

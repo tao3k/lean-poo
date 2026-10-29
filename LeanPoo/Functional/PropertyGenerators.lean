@@ -454,4 +454,49 @@ theorem hashEntries_map (keys : List Key) (value : Key → Value) (transform : V
     (hashEntries keys value).map (fun entry => (entry.1, transform entry.2)) =
       hashEntries keys (fun key => transform (value key)) := by simp [hashEntries, List.map_map]
 
+/-- Finite enumeration keeps declaration positions as the generator preimage. -/
+def enumChoice (domain : List Value) (index : Nat) : Option Value := domain[index]?
+
+/-- A declared simplification rank uses the first equal occurrence, as Enum does. -/
+def enumRank [BEq Value] (domain : List Value) (value : Value) : Nat := domain.idxOf value
+
+/-- Every successfully selected position stays inside the finite domain. -/
+theorem enumChoice_member (domain : List Value) (index : Nat) (value : Value)
+    (selected : enumChoice domain index = some value) : value ∈ domain :=
+  List.mem_of_getElem? selected
+
+/-- Invalid positions refuse rather than inventing a fallback value. -/
+theorem enumChoice_outside (domain : List Value) (index : Nat)
+    (outside : domain.length ≤ index) : enumChoice domain index = none := by
+  simp [enumChoice, List.getElem?_eq_none outside]
+
+/-- Equal duplicates can only lower the canonical rank of a selected position. -/
+theorem enumRank_le_index [BEq Value] [LawfulBEq Value]
+    (domain : List Value) (index : Nat) (value : Value)
+    (selected : enumChoice domain index = some value) : enumRank domain value ≤ index := by
+  induction domain generalizing index with
+  | nil => simp [enumChoice] at selected
+  | cons head tail ih =>
+    cases index with
+    | zero =>
+      have same : head = value := by simpa [enumChoice] using selected
+      subst value
+      simp [enumRank]
+    | succ index =>
+      have tailSelected : enumChoice tail index = some value := by
+        simpa [enumChoice] using selected
+      have lower := ih index tailSelected
+      simp only [enumRank, List.idxOf_cons]
+      split <;> simp only [enumRank] at lower <;> omega
+
+/-- Selecting any earlier position strictly lowers the first-occurrence rank,
+even when the declaration contains equal duplicate payloads. -/
+theorem enumRank_descent [BEq Value] [LawfulBEq Value]
+    (domain : List Value) (best candidate : Value) (index : Nat)
+    (earlier : index < enumRank domain best)
+    (selected : enumChoice domain index = some candidate) :
+    candidate ∈ domain ∧ enumRank domain candidate < enumRank domain best := by
+  exact ⟨enumChoice_member domain index candidate selected,
+    Nat.lt_of_le_of_lt (enumRank_le_index domain index candidate selected) earlier⟩
+
 end LeanPoo.Functional.PropertyTesting

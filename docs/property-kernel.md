@@ -298,3 +298,10 @@ hash lookup time, GC bound or compiler verification is claimed. Accepted domain
 preparation scans at most its explicit key limit; nonzero roots test every key
 and draw at most min(size, domain length) values. Each fresh packed/validated node
 still has work proportional to its retained entries plus callback costs.
+
+Finite declared alternatives use `generator-elements`, for example
+`(generator-elements '(read write admin))`. Its lazy index tree simplifies toward
+earlier declarations without redrawing. Use an explicit natural rank in a generic
+specification. POO `Enum` derivation supplies its existing first-occurrence index
+as that rank, including nested collections and replay. Empty Enum is uninhabited;
+an empty generic alternatives list is a constructor error.
