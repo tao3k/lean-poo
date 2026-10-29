@@ -869,3 +869,28 @@ occupancy fidelity together; refusal/retry laws assume a private candidate and
 faithful canonical names/lookup. The source work model removes one width-sized
 occupancy pass. It does not prove Gerbil vector allocation, callbacks, GC, compiler
 correctness or a wall-clock improvement.
+
+### Evicted inline demand and final-shape publication
+
+A previously warmed site can still point at an uncomputed cell after standard
+HashTable deletion/clear. The preceding hit branch returned ordinary demand
+without rebinding; if demand grew the dynamic shape, the successful read left a
+stale site. A source regression reproduced a correct Function value followed by
+`slot-cache-hit? = #f` instead of the final offset 2.
+
+Cold reads and evicted warm cells now share the existing successful binding path.
+The fast hit reads the current primary vector once; ordinary `.ref` remains the
+evaluator and publisher for demanded values. Recovery captures the shape before demand and
+resolves the final offset when that shape changes. Failure does not publish a new
+guard, successful fallback without an index has no indexed credential, and later source revisions
+still reject old owner/revision/layout/shape credentials. No value cache, loader,
+namespace or new wrapper is introduced.
+
+The FUN Reader example combines two dynamic dependency insertions, deletion,
+exact callback refusal with retained dependencies, Function-valued retry, shared
+diamond revision and explicit false assignment. The finite Lean model proves
+final-site validity/read fidelity, identical cold/warm success publication,
+refusal/unindexed semantics, revision rejection and zero next-read named
+resolution under unchanged guards. Host index fidelity, serialized supported
+mutation, sentinel separation and callback behavior remain premises; these laws
+do not prove GC, allocation, compiler correctness or wall-clock speedup.

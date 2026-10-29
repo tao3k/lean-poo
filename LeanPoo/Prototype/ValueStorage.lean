@@ -277,4 +277,65 @@ def seedPreparationLoopSteps (fused : Bool) (width : Nat) : Nat :=
 theorem seed_population_pass_work (width : Nat) :
     seedPreparationLoopSteps false width = seedPreparationLoopSteps true width + width := rfl
 
+/-- Bind an existing site representation to the final successful receiver view.
+Only guards and the certified offset are retained; primary cells are untouched. -/
+def currentValueSite (view : View Value) (name : String) (index : Nat)
+    (indexed : view.names[index]? = some name) : Site :=
+  ⟨view.owner, view.revision, view.token, view.names, name, index, indexed⟩
+
+/-- Cold demand and an evicted warm cell share this metadata publication step.
+The supplied view is after ordinary evaluation and its primary value writes.
+An error preserves the prior credential and exact cause; no successful site is
+fabricated when the name still has no certified offset. -/
+def finishIndexedDemand (prior : Option Site) (view : View Value) (name : String)
+    (offset : Option { index : Nat // view.names[index]? = some name })
+    (outcome : Except Error Value) : Option Site × Except Error Value :=
+  match outcome with
+  | .error cause => (prior, .error cause)
+  | .ok value => (offset.map (fun found => currentValueSite view name found.val found.property), .ok value)
+
+/-- Refused demand leaves credentials unchanged and preserves the original cause.
+Any earlier dependency effects are represented by the supplied post-demand view. -/
+@[simp] theorem finishIndexedDemand_error (prior : Option Site) (view : View Value) (name : String)
+    (offset : Option { index : Nat // view.names[index]? = some name }) (cause : Error) :
+    finishIndexedDemand prior view name offset (.error cause) = (prior, .error cause) := rfl
+
+/-- No resolved name means no successful indexed guard, even on value success. -/
+@[simp] theorem finishIndexedDemand_unindexed (prior : Option Site) (view : View Value)
+    (name : String) (value : Value) :
+    finishIndexedDemand (Error := Error) prior view name none (.ok value) = (none, .ok value) := rfl
+
+/-- Successful recovery erases the difference between cold and evicted credentials. -/
+theorem finishIndexedDemand_same_success (cold warm : Option Site) (view : View Value) (name : String)
+    (offset : Option { index : Nat // view.names[index]? = some name }) (value : Value) :
+    finishIndexedDemand (Error := Error) cold view name offset (.ok value) =
+      finishIndexedDemand warm view name offset (.ok value) := rfl
+
+/-- The published owner/revision/layout/shape guards describe the FINAL view,
+including a shape grown during re-evaluation of an evicted memo cell. -/
+theorem currentValueSite_valid (view : View Value) (name : String) (index : Nat)
+    (indexed : view.names[index]? = some name) :
+    valid (currentValueSite view name index indexed) view := ⟨rfl, rfl, rfl, rfl⟩
+
+/-- Successful recovery retains the exact primary false/Function value; there is
+no additional copy or write into a site-local value store. -/
+theorem currentValueSite_read (view : View Value) (name : String) (index : Nat)
+    (indexed : view.names[index]? = some name) :
+    read (currentValueSite view name index indexed) view = view.fields name :=
+  read_sound _ _ (currentValueSite_valid view name index indexed)
+
+/-- The next unchanged read needs no named offset resolution after recovery.
+This counts one metadata lookup only, not evaluator/guard/GC or wall-clock work. -/
+theorem currentValueSite_resolution (view : View Value) (name : String) (index : Nat)
+    (indexed : view.names[index]? = some name) :
+    resolutionWork (currentValueSite view name index indexed) view = 0 :=
+  resolutionWork_shared _ _ rfl
+
+/-- A later supported source revision still rejects the recovered credential. -/
+theorem currentValueSite_revised (view : View Value) (name : String) (index : Nat)
+    (indexed : view.names[index]? = some name) (next : View Value)
+    (changed : view.revision ≠ next.revision) :
+    read (currentValueSite view name index indexed) next = none :=
+  reject_revision _ _ changed
+
 end LeanPoo.Prototype.Representation

@@ -654,4 +654,18 @@ example (callback : Nat → Nat) :
     publishSeed (Error := Bool) (publishSeed [some callback] (.error false)) (.ok [none]) = [none] :=
   publishSeed_retry _ _ false
 
+/-- An evicted target is recomputed after an earlier dynamic dependency changes
+its offset. Rebinding the final view immediately makes the exact false visible. -/
+example :
+    let view : View Bool := ⟨4, 7, 9, ["dependency", "target"], fun name =>
+      if name = "target" then some false else none⟩
+    let site := currentValueSite view "target" 1 (by decide)
+    read site view = some false ∧ resolutionWork site view = 0 := by decide
+
+/-- A previously warmed Function site is not replaced by an error credential;
+ordinary demand can later retry and publish from its final certified view. -/
+example (old : Option Site) (view : View (Nat → Nat))
+    (offset : Option { index : Nat // view.names[index]? = some "target" }) :
+    finishIndexedDemand old view "target" offset (.error false) = (old, .error false) := rfl
+
 end LeanPoo.Examples.Representation
