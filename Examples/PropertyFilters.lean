@@ -27,3 +27,22 @@ example : guardedStages (fun epoch : Nat => (mergeSources [0] [1]).all
     (fun source => source != 0 || epoch == 0))
     [(fun _ => (.ok (4, 1) : Except String (Nat × Nat))),
      (fun _ => .error "mapper must not run")] 0 = .error none := rfl
+
+-- A final pruned proposal with a newly obsolete leaf interrupts after one charge.
+example : auditShrinks 1
+    [proposalEvent (Value := Nat) (Cause := String) none (.ok false)] =
+      ⟨[], 1, some none⟩ := rfl
+
+-- Live pruning is charged but supplies no value to shrink/property admission.
+example : proposalValues 2
+    [proposalEvent (Value := Nat) (Cause := String) none (.ok true),
+     proposalEvent (some 0) (.ok true)] = [0] := rfl
+
+-- Observer exceptions retain the original cause, with no false candidate installed.
+example : auditShrinks 1
+    [proposalEvent (Value := Nat) none (.error (some "observer cause"))] =
+      ⟨[], 1, some (some "observer cause")⟩ := rfl
+
+-- False is an ordinary value, distinct from the absent tombstone payload.
+example : proposalValues 1
+    [proposalEvent (Cause := String) (some false) (.ok true)] = [false] := rfl
