@@ -320,4 +320,45 @@ theorem replayStage_refused_before_delivery (before after : Bool)
   rw [refused]
   rfl
 
+/-- Admission consumes one guarded Boolean judgment. A false judgment is a
+concrete-witness refusal; a stale/error judgment retains its distinct cause. -/
+def admitWitness (judgment : Except (Option Cause) Bool) (invalid : Cause)
+    (next : Unit → Except (Option Cause) Value) : Except (Option Cause) Value :=
+  match judgment with
+  | .error cause => .error cause
+  | .ok false => .error (some invalid)
+  | .ok true => next ()
+
+/-- Concrete replay shares precondition/domain/property admission and does not
+perform generation, shrinking or trial classification. Each callback may be
+wrapped in `replayStage`; callbacks and source observers must terminate. -/
+def checkWitness (eligible domain evaluate : Unit → Except (Option Cause) Bool)
+    (invalid : Cause) : Except (Option Cause) Bool :=
+  admitWitness (eligible ()) invalid (fun _ => admitWitness (domain ()) invalid evaluate)
+
+/-- An excluded value cannot enter domain recognition or the property fixture. -/
+theorem checkWitness_ineligible (domain evaluate : Unit → Except (Option Cause) Bool)
+    (invalid : Cause) : checkWitness (fun _ => .ok false) domain evaluate invalid =
+      .error (some invalid) := rfl
+
+/-- A domain refusal cannot execute the property. -/
+theorem checkWitness_outside (evaluate : Unit → Except (Option Cause) Bool) (invalid : Cause) :
+    checkWitness (fun _ => .ok true) (fun _ => .ok false) evaluate invalid =
+      .error (some invalid) := rfl
+
+/-- A changed source in precondition evaluation skips every later callback. -/
+theorem checkWitness_stale (domain evaluate : Unit → Except (Option Cause) Bool)
+    (invalid : Cause) : checkWitness (fun _ => .error none) domain evaluate invalid =
+      .error none := rfl
+
+/-- An application exception in domain evaluation retains its exact cause. -/
+theorem checkWitness_cause (evaluate : Unit → Except (Option Cause) Bool)
+    (invalid cause : Cause) : checkWitness (fun _ => .ok true)
+      (fun _ => .error (some cause)) evaluate invalid = .error (some cause) := rfl
+
+/-- Admitted concrete replay returns the property's Boolean directly, without
+any generation coverage threshold turning that result into a run status. -/
+theorem checkWitness_admitted (evaluate : Unit → Except (Option Cause) Bool) (invalid : Cause) :
+    checkWitness (fun _ => .ok true) (fun _ => .ok true) evaluate invalid = evaluate () := rfl
+
 end LeanPoo.Functional.PropertyTesting

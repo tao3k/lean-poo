@@ -92,3 +92,13 @@ example : (replayStage true false (fun _ => (.ok 4 : Except String Nat)) >>=
     fun n => (.ok (n + 1) : Except (Option String) Nat)) = .error none := rfl
 example : (replayStage true true (fun _ => (.ok 4 : Except String Nat)) >>=
     fun n => (.ok (n + 1) : Except (Option String) Nat)) = .ok 5 := rfl
+
+-- Concrete witnesses retain preconditions and do not re-run coverage admission.
+example : checkWitness (fun _ => .ok false) (fun _ => .ok true)
+    (fun _ => .ok false) "excluded" = .error (some "excluded") := rfl
+example : checkWitness (fun _ => replayStage true false (fun _ => (.ok true : Except String Bool)))
+    (fun _ => .ok true) (fun _ => .ok false) "excluded" = .error none := rfl
+example : checkWitness (fun _ => .ok true) (fun _ => .ok true)
+    (fun _ => .ok false) "excluded" = .ok false := rfl
+example : checkWitness (fun _ => .ok true) (fun _ => .error (some "recognizer"))
+    (fun _ => .ok false) "excluded" = .error (some "recognizer") := rfl

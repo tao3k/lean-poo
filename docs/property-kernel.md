@@ -232,3 +232,20 @@ cleanup. These finite laws assume accurate, terminating observers/callbacks.
 They do not prove arbitrary codec round trips, host port transactionality, thread
 atomicity, parser allocation bounds or process/GC behavior. A host write failure
 can leave partial bytes; durable file installation belongs to its application.
+
+## Shared concrete-witness admission
+
+P10 factors precondition/domain/property execution into the existing property
+module's `check-counterexample`. In-memory and portable replay share it. Every
+callback is guarded separately, so a source revision during precondition checking
+cannot invoke a recognizer or open a property fixture. Portable import accepts an
+explicit `policy:`; its precondition is enforced without generating a trial or
+classifying coverage. Required generation coverage cannot reject a concrete
+Boolean result. Application identity must include the policy interpretation.
+
+`admitWitness` and `checkWitness` in `Functional/PropertyGenerators` compose guarded
+Boolean judgments using the existing `replayStage` result. Finite laws prove
+precondition/domain refusal skips later callbacks, stale judgments and application
+causes remain distinct, and admitted replay returns the property's exact Boolean.
+These assume truthful terminating observers/callbacks; they do not certify arbitrary
+host predicates, codec equivalence, resource cleanup implementations or I/O atomicity.
