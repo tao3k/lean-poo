@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P21. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P22. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -931,3 +931,27 @@ Epoch accuracy, sequential observation, faithful capture and pack/unpack laws ar
 premises. Host copying, arbitrary aliases, callbacks, concurrency, allocation and
 GC are not certified. Joint source walks can remain quadratic in field count;
 there is no constant-time or universal performance claim.
+
+## P22: fixed-product source admission
+
+The generic fixed product knew every field but hid its producer leaves until
+selected bind stages ran. A stale later field could leave `generator-current?`
+true and permit an earlier draw or mapper before refusal. Gerbil now flattens
+known field sources with standard `append-map` once, normalizes them with the
+existing identity observer boundary, and forwards them through fixed products and
+nonempty finite Function result tables. It shares the original bind/map run
+procedure, seed schedule, lazy children and typed bridge. Dynamic unselected
+branches and empty result domains do not gain unrelated ownership.
+
+Six laws added to `PropertyProducts.lean` prove complete-field conjunction,
+preflight suppression from any stale leaf, nested/shared-source equivalence and
+empty independence. The existing stable-order/sum laws still apply to the same
+guarded evaluator. Topology fidelity, stable identities, pure Boolean observers,
+truthful epochs, sequential callbacks and termination are premises. Host observer
+exceptions and copying are runtime regressions; they are not inferred from this
+finite model. No PRNG, GC, concurrency or wall-time theorem is claimed.
+
+The companion independent suite and Record/Function/FUN workflow cover pre-draw
+refusal, exact causes, explicit retry, preserved wrappers, shrinking and both
+replays. All checks and resource bounds remain required. Known-source checking
+adds necessary observer work; this correctness unit makes no speedup claim.

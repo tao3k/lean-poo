@@ -366,3 +366,11 @@ and guarded representation packing, including empty products. Eight laws retain
 order, natural sums, exact causes and downstream refusal. Scheme typed products
 now consume the generic specification boundary rather than a duplicate cost fold;
 captured directories and Record/FUN/replay controls provide the host correspondence.
+
+P22 adds fixed-field source ownership to the same product module. `productSources`
+flattens and deduplicates declared identities; six laws retain the complete field
+conjunction, reject a stale later leaf before any draw/pack, and preserve nested,
+shared and empty-domain judgments. The stable evaluator and its order/sum laws
+remain unchanged. Source observers are pure Boolean functions in these laws;
+runtime exception identity, copying and the unchanged seed/tree schedule have
+separate Scheme regression coverage, not a heap or PRNG proof.
