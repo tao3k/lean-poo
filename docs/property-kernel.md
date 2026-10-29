@@ -374,3 +374,12 @@ shared and empty-domain judgments. The stable evaluator and its order/sum laws
 remain unchanged. Source observers are pure Boolean functions in these laws;
 runtime exception identity, copying and the unchanged seed/tree schedule have
 separate Scheme regression coverage, not a heap or PRNG proof.
+
+P23 adds finite rejection-sampling laws in `PropertyFilters.lean`. The model hands
+the complete rejected-source history to each draw, checks the returned leaf union
+before filtering and carries rejected owners into the next token. Ten laws cover
+refusal, exact causes, zero fuel, retry/acceptance and a local generator-entry
+bound. `filterHistory_pipeline` reuses the guarded stage evaluator to show that
+revising a retired owner suppresses later nested callbacks. Nested generators have
+their own budgets; the bound is not a total callback or host timing bound. Source
+and scope fidelity and callback termination remain explicit host premises.

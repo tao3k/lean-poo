@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P22. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P23. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -955,3 +955,28 @@ The companion independent suite and Record/Function/FUN workflow cover pre-draw
 refusal, exact causes, explicit retry, preserved wrappers, shrinking and both
 replays. All checks and resource bounds remain required. Known-source checking
 adds necessary observer work; this correctness unit makes no speedup claim.
+
+## P23: bounded filter retry ownership
+
+Rejected dynamic branches retained their leaves for final filtering but did not
+pass them into later retry graphs. A later draw could revise an earlier rejected
+owner and still enter a mapper/selector before stale refusal. Gerbil now reuses
+the existing `with-sources observed` around every retry's generation. The quota,
+size, random schedule, accepted tree, tombstones and callback exception identity
+remain unchanged. Related cases are grouped in the existing examples directory;
+the independent library runs 63 cases without POO, and Record/Function/FUN covers
+construction refusal, explicit reprepare, shrinking and both replay paths.
+
+`PropertyFilters.lean` uses the existing PropertyTesting namespace and composes
+`guardedGeneration`, `mergeSources` and `guardedStages`. Ten laws establish stale
+preflight, draw revision/causes, retained rejected and accepted history, zero quota, a retry's
+single token and whole-history handoff, early acceptance, generator-entry count
+bounded by local fuel, and suppression within a resumed nested pipeline. The draw
+explicitly receives the inherited source list; faithful host scope is a premise.
+The cost counts entries into the supplied generator, not physical draws inside
+it: nested filter quotas can multiply. It proves neither observer/PRNG/runtime
+implementation correctness nor callback termination, GC or wall-clock bounds.
+Accurate pure observers, truthful epochs, sequential callbacks and faithful source
+directories remain required. Runtime parameter unwinding and exact exception and
+replay behavior have separate regression coverage. All prior checks and guards
+remain enabled.
