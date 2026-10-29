@@ -40,7 +40,7 @@ is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 The independent-library acceptance copies these five generic source modules and
 `examples/property-kernel.ss` into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 45 case receipts, an error-free result and
+through `gerbil test`. It requires all 55 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
