@@ -312,8 +312,8 @@ improvement. Scheme's complete paired study includes record preparation, warmed
 switching, three-shape churn and dynamic-module checked service revisions, using
 AB/BA and A/A/B/B across natural/collected histories. Allocation, comparisons,
 construction, seeding, refinement, binding and module costs remain charged.
-Automatic PIC/JIT selection, vector-only storage and arbitrary cold-module
-initialization are separate boundaries; none is declared complete here.
+Automatic PIC/JIT selection and arbitrary cold-module initialization remain
+separate boundaries. Authoritative vector value storage is covered below.
 
 ## Indexed persistent contribution deletion
 
