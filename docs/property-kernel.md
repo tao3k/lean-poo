@@ -1,17 +1,16 @@
 # Using the property-testing modules
 
-The generic library is a standard Gerbil project at `testing/core/`. Its
-`gerbil.pkg` declares `clan/property-testing`; it imports no POO modules.
-From that directory, use the ordinary `gerbil build` command. The POO root
-build invokes this same standard build before compiling typed consumers.
+The generic modules live under `testing/property`, within the ordinary POO
+package build. Run `gerbil build` from the package root. They import only the
+Gerbil standard library; typed derivation stays in `testing/type`.
 
 Import the modules you use directly:
 
 ```scheme
 (export arithmetic-test)
 (import :std/test
-        (prefix-in :clan/property-testing/generator generator.)
-        (prefix-in :clan/property-testing/property property.))
+        (prefix-in :clan/poo/testing/property/generator generator.)
+        (prefix-in :clan/poo/testing/property property.))
 
 ;; Draw and shrink signed integers with one explicit random source.
 (def integers
@@ -35,7 +34,7 @@ Import the modules you use directly:
 The example is exported as a normal `*-test` suite for `gerbil test` discovery.
 See `examples/property-kernel.ss` for dependent packets, non-injective maps,
 lazy bounded shrinking, source invalidation and a model with logical handles.
-`testing/core/model.ss` owns model execution and repair; it does not instantiate
+`testing/property/model.ss` owns model execution and repair; it does not instantiate
 a POO object or prescribe an application representation.
 
 POO users import `:clan/poo/testing/type` for descriptor-driven generators and
@@ -272,3 +271,30 @@ The standalone regression matrix exercises seven callback positions. The downstr
 Record/FUN example refuses construction after a selector revision, explicitly
 prepares a fresh sampler, performs actual shrinking, then verifies concrete replay
 performs no draws and seed replay repeats the complete construction schedule.
+
+## Finite-key hash and typed Map generation
+
+P12 adds finite partial maps to the existing tree algebra. `selectedHashKeys`
+models filtering the declared key domain and capping retained entries by size.
+The sublist, size/domain bounds and Nodup laws establish that fixed keys introduce
+no collision. `hashEntries_lookup` distinguishes a present false-like value from
+absence; `hashEntries_delete` commutes structural deletion with retained entries;
+`hashEntries_map` preserves keys under value transformation/wrapping. Existing
+block-deletion, guarded-stage and source-union laws continue to apply.
+
+The Scheme kernel uses Gerbil's ordinary HashTable equality for one-time finite
+domain admission, and `list->hash-table` for fresh materialization. Only retained
+value nodes are drawn; structural deletion does not regenerate them. The typed
+`map-generator` checks representation-preserving key validation, exact value
+sampler descriptor identity and preparation source epochs. Its existing Map
+validator owns nested Function wrapping. The existing currentness hook is forwarded
+through application-derived Record samplers in the downstream example.
+
+Hash packing/lookup correspondence assumes lawful host equality/hash behavior,
+stable key payloads and accurate source observers. Value callbacks and custom
+validators must satisfy their declared contracts and terminate. No arbitrary key
+inference, key mutation/normalization proof, stable hash traversal order, constant
+hash lookup time, GC bound or compiler verification is claimed. Accepted domain
+preparation scans at most its explicit key limit; nonzero roots test every key
+and draw at most min(size, domain length) values. Each fresh packed/validated node
+still has work proportional to its retained entries plus callback costs.

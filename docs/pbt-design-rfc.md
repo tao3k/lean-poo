@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P11. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P12. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -12,16 +12,16 @@ Lean laws. Historical audit identities below remain historical receipts.
 
 ## Module ownership and independent-library boundary
 
-The generic library is organized by Gerbil modules, with direct imports rather
-than an `api.ss` forwarding module. The generic sources form a standard subproject at `testing/core/`, with
-`gerbil.pkg` declaring `clan/property-testing` and `defbuild-script` compiling
-its three modules. POO imports them directly by their module identifiers.
+The generic library uses ordinary modules under `testing/property`, with direct
+imports. The runner is `testing/property.ss`; generator, model, replay and test
+support live in `testing/property/`. The root `defbuild-script` builds them with
+all other package modules. There is no separate package or forwarding facade.
 
 | Module | Responsibility | Dependencies |
 | --- | --- | --- |
-| `testing/core/generator.ss` | Invocation-local random sources, unit/map/bind/sequence, lazy value-and-shrink provenance | Gerbil standard library |
-| `testing/core/property.ss` | Explicit domain specifications, finite checks, bounded child consumption, reports and both replay forms | Generic generator module and standard library |
-| `testing/core/model.ss` | Pure model folds, dependency retirement, bounded trace draw, scoped first-difference comparison | Gerbil standard library |
+| `testing/property/generator.ss` | Invocation-local random sources, unit/map/bind/sequence, lazy value-and-shrink provenance | Gerbil standard library |
+| `testing/property.ss` | Explicit domain specifications, finite checks, bounded child consumption, reports and both replay forms | Generic generator module and standard library |
+| `testing/property/model.ss` | Pure model folds, dependency retirement, bounded trace draw, scoped first-difference comparison | Gerbil standard library |
 | `testing/type.ss` | Type-driven derivation, Record contracts, bounded membership, POO source observations, typed reports and Reader/FUN actions | POO and generic modules |
 | `testing/function.ss` | FunctionArguments derivation from checked signatures | POO function/signature modules and testing/type |
 | `testing/generation-graph.ss`, `testing/recursive-generation.ss` | Bounded descriptor graph compilation and safe recursive derivations | POO type/recursive constructions |
@@ -37,14 +37,14 @@ callbacks. POO retains its Record declarations and supplies bounded typed
 admission, normalization and source-current callbacks at the boundary. Generality
 is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 
-The independent-library acceptance copies the actual generic package metadata, build script,
-three generic modules and `examples/property-kernel.ss` into a temporary standard Gerbil package, compiles
-with `defbuild-script` and runs its compiled suite through `gxtest`. Its official
-GERBIL_PATH contains no POO modules. The gate requires all twelve case receipts,
-an error-free result and correct process exit status, under the existing heap
-and timeout limits. This is an independent build/run receipt, not an upstream
-publication. The independent package identifier is `clan/property-testing`;
-the typed derivation modules remain under `clan/poo/testing`.
+The independent-library acceptance copies these five generic source modules and
+`examples/property-kernel.ss` into a temporary standard Gerbil package, declares
+`clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
+through `gerbil test`. It requires all 45 case receipts, an error-free result and
+correct process exit status under the existing heap and timeout limits. The
+isolated installation has no object, MOP or typed testing modules. Sharing a
+module path does not import parent modules. This demonstrates code dependency
+independence; it is not an upstream publication.
 
 ## Checked actions and interrupted shrink receipts
 
@@ -223,7 +223,7 @@ checks; pure results alone cannot certify mutable or linear publication.
 
 These are proposed signatures, not claims about the currently released API.
 The typed entrypoints are in `clan/poo/testing/type`; generic execution is
-owned by the directly imported `clan/property-testing` modules above.
+owned by the directly imported `clan/poo/testing/property` modules above.
 
 ```scheme
 (trace-generator command-type model steps: 64 dependencies: [])

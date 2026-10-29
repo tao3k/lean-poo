@@ -403,4 +403,55 @@ theorem guardedGeneration_refused (live : State → Bool)
     (refused : guardedGeneration live run state = .error cause) :
     (guardedGeneration live run state >>= next) = .error cause := by rw [refused]; rfl
 
+/-- Finite hash generation considers each declared key once and caps the retained
+subset by size. Ordering is the key-domain order, not host hash iteration order. -/
+def selectedHashKeys (keys : List Key) (choose : Key → Bool) (size : Nat) : List Key :=
+  (keys.filter choose).take size
+
+/-- Selection introduces no key and preserves the declared relative order. -/
+theorem selectedHashKeys_sublist (keys : List Key) (choose : Key → Bool) (size : Nat) :
+    (selectedHashKeys keys choose size).Sublist keys :=
+  (List.take_sublist size _).trans List.filter_sublist
+
+/-- Both size and the admitted finite domain bound the number of value draws. -/
+theorem selectedHashKeys_bounds (keys : List Key) (choose : Key → Bool) (size : Nat) :
+    (selectedHashKeys keys choose size).length ≤ size ∧
+      (selectedHashKeys keys choose size).length ≤ keys.length := by
+  constructor
+  · simpa [selectedHashKeys, List.length_take] using Nat.min_le_left size ((keys.filter choose).length)
+  · exact (selectedHashKeys_sublist keys choose size).length_le
+
+/-- Duplicate-free domain admission makes packing collision-free without
+repeating duplicate searches on every structural/value shrink. -/
+theorem selectedHashKeys_nodup (keys : List Key) (choose : Key → Bool) (size : Nat)
+    (unique : keys.Nodup) : (selectedHashKeys keys choose size).Nodup :=
+  (selectedHashKeys_sublist keys choose size).nodup unique
+
+/-- The finite association model packs one sampled value per retained key.
+Host HashTable equality/hash compatibility and stable keys are explicit premises. -/
+def hashEntries (keys : List Key) (value : Key → Value) : List (Key × Value) :=
+  keys.map (fun key => (key, value key))
+
+/-- Finite lookup preserves present false-like values rather than using them as
+absence. Correspondence to Gerbil's HashTable protocol is a host obligation. -/
+theorem hashEntries_lookup [DecidableEq Key] (keys : List Key) (value : Key → Value) (key : Key) :
+    lookupFunction (hashEntries keys value) key = if key ∈ keys then some (value key) else none := by
+  induction keys with
+  | nil => simp [hashEntries, lookupFunction]
+  | cons head rest ih =>
+    by_cases same : key = head
+    · subst head; simp [hashEntries, lookupFunction]
+    · simpa [hashEntries, lookupFunction, same] using ih
+
+/-- Structural shrinking retains the exact remaining key/value pairs. -/
+theorem hashEntries_delete (keys : List Key) (value : Key → Value) (start width : Nat) :
+    deleteBlock (hashEntries keys value) start width = hashEntries (deleteBlock keys start width) value := by
+  exact deleteBlock_map keys (fun key => (key, value key)) start width
+
+/-- Value transformation changes no key; validated Function wrappers use this
+same representation law under their own validation/observation premises. -/
+theorem hashEntries_map (keys : List Key) (value : Key → Value) (transform : Value → Other) :
+    (hashEntries keys value).map (fun entry => (entry.1, transform entry.2)) =
+      hashEntries keys (fun key => transform (value key)) := by simp [hashEntries, List.map_map]
+
 end LeanPoo.Functional.PropertyTesting

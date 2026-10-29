@@ -113,3 +113,10 @@ example : guardedGeneration (fun n : Nat => n < 2)
     (fun _ => (.ok (7, 1) : Except String (Nat × Nat))) 0 = .ok (7, 1) := rfl
 example : guardedGeneration (fun n : Nat => n == 0)
     (fun _ => (.error "draw" : Except String (Nat × Nat))) 0 = .error (some "draw") := rfl
+
+-- Fixed finite keys distinguish absence from a stored false value.
+example : selectedHashKeys [0, 1, 2] (fun n => n != 1) 1 = [0] := by decide
+example : selectedHashKeys [0, 1, 2] (fun _ => true) 0 = [] := by decide
+example : lookupFunction (hashEntries [1, 3] (fun _ => false)) 1 = some false := by decide
+example : lookupFunction (hashEntries [1, 3] (fun _ => false)) 2 = none := by decide
+example : deleteBlock (hashEntries [1, 2, 3] (fun n => n * 2)) 1 1 = [(1, 2), (3, 6)] := by decide
