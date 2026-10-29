@@ -728,6 +728,25 @@ theorem modulePreparation_linked (common : List String) :
 theorem modulePreparation_dynamic (common : List String) :
     (modulePreparation false common).entryDiscoveries = common.eraseDups.length := rfl
 
+/-- Combine disjoint already-checked common dependency partitions. Compiler
+closure enumeration establishes disjointness; this is only source-level counts. -/
+def addPreparation (left right : ModulePreparation) : ModulePreparation :=
+  ⟨left.bootstrapInitializers + right.bootstrapInitializers,
+   left.entryInitializers + right.entryInitializers,
+   left.entryDiscoveries + right.entryDiscoveries,
+   left.entryDynamicLoads + right.entryDynamicLoads⟩
+
+/-- Extending the standard executable foundation moves admissions out of entry,
+while retaining every initializer and the executable's bootstrap work. -/
+theorem modulePreparation_extension (common extra : List String) :
+    let old := addPreparation (modulePreparation true common) (modulePreparation false extra)
+    let next := addPreparation (modulePreparation true common) (modulePreparation true extra)
+    next.bootstrapInitializers = old.bootstrapInitializers + extra.eraseDups.length ∧
+    next.bootstrapInitializers + next.entryInitializers =
+      old.bootstrapInitializers + old.entryInitializers ∧
+    old.entryDynamicLoads = next.entryDynamicLoads + extra.eraseDups.length := by
+  simp [addPreparation, modulePreparation]
+
 /-- Declared test-package allocation; standard make still owns every job. -/
 structure BuildAllocation where
   packages : Nat

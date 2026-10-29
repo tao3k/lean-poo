@@ -591,4 +591,22 @@ example : precedenceQuery (none : Option (List String)) false (fun _ => .error "
     precedenceQuery (none : Option (List String)) false (fun _ => .ok ["join", "new"]) =
       (1, .ok ["join", "new"]) := ⟨rfl, rfl⟩
 
+/-- Scratch-field construction invalidates a pristine leaf without running a
+walker, while a newly registered child still propagates a false refusal. -/
+example : Object.invalidationAfterCheck "scratch" (.ok (false, []))
+    (fun _ => (Except.error false : Except Bool (List String))) = .ok ["scratch"] ∧
+    Object.invalidationAfterCheck "scratch" (.ok (true, ["shared"]))
+      (fun _ => (Except.error false : Except Bool (List String))) = .error false := ⟨rfl, rfl⟩
+
+/-- Clearing a cached function advances once and retains its original failure. -/
+example (callback : Nat → Nat) :
+    (Object.finishInvalidation (⟨7, some callback⟩ : Object.RevisionCache (Nat → Nat))
+      (Except.error false : Except Bool Unit)).1.revision = 8 := rfl
+
+/-- Prelinking the two value-admission roots moves their discovery, not their
+initializers, out of entry. Physical closure size and mapping cost stay external. -/
+example : (addPreparation
+    (modulePreparation true ["object", "mop"])
+    (modulePreparation true ["object-contract", "object-contract-flow"])).bootstrapInitializers = 4 := by decide
+
 end LeanPoo.Examples.Representation

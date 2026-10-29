@@ -782,3 +782,18 @@ callback termination, host allocation/GC or machine-time improvement. The paired
 C3 workload explicitly charges its diagnostic-context reference's one insertion,
 so its wall-clock result is a strategy comparison rather than a historical cost
 identity.
+
+Pristine-leaf invalidation now has a finite `Object.invalidationAfterCheck` model:
+root preflight supplies the current dependency-table snapshot before selection.
+Faithful absence and an empty traversal law establish equivalence to the existing
+full walker. Newly registered children keep that walker and its exact refusal;
+clear failures retain the already advanced generation, and successful clear
+payloads are discarded at the Unit boundary. Scratch counts distinguish one
+traversal table plus two cells per pending owner from the pristine leaf's zero
+scratch structures. These are source counts, not allocator or collector theorems.
+The existing module-preparation model also proves that extending a disjoint
+checked common foundation moves discovery/admission to bootstrap while conserving
+all initializers. It does not prove arbitrary initializer reordering, linker work,
+Mach-O mappings, filesystem state or an unconditional startup deadline. Paired
+standard-program receipts keep executable bootstrap and whole-process wall/GC
+costs charged; ordinary full `gerbil test` remains a separate admission gate.
