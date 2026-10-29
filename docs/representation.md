@@ -826,3 +826,22 @@ single-authority strategies (standard symbolic hash versus the vector backend),
 not an artificially reconstructed historical timing. Cold/new-shape, preparation,
 hot, refusal/retry and complete shared-service revision workflows retain setup,
 AB/BA, A/A/B/B and GC controls. Raw measurements stay outside Git.
+
+### Unified cell mutation and computed cardinality
+
+Named insertion, certified indexed writes and standard `HashTable` writes share
+one cell setter. A named key outside the original shape grows that same layout;
+it is never silently dropped. Delete, clear, independent copy and new-table
+operations preserve the same presence invariant. A scalar computed-cell count
+makes cardinality independent of declared width; it stores no values. Uncomputed
+cells contribute zero, while false and Function payloads each contribute one.
+Seeded construction and shape growth still pay their preparation/copy cost.
+
+The existing FUN observation example composes lazy demand, a nested write followed
+by an exact callback refusal, retry with a Function, independent copy/clear and
+source invalidation. Failure retains earlier callback effects without installing
+the failed target. Lean proves overwrite/empty/growth/publication cardinality
+laws assuming faithful current offsets, disjoint sentinels and serialized mutation.
+The paired study adds sparse cardinality and this complete observation chain,
+retaining setup, A/A/B/B, AB/BA, GC controls and the preceding workflows. Neither
+a constant-time count nor fewer writes establishes a whole-workflow speedup.

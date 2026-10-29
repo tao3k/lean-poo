@@ -630,4 +630,16 @@ example (site : Site) (view : View Bool) :
 example : finalValueOffset ["target", "fallback"] ["early", "target", "fallback"]
     0 (fun _ => 1) = 1 := by decide
 
+/-- False is present; unrelated uncomputed declarations do not count. -/
+example : populatedCells [none, some false, none] = 1 := by decide
+
+/-- Replacing a false payload by another present value does not increase count. -/
+example : adjustPopulation 3 (some false) (some true) = 3 := by decide
+
+/-- A failed callback may have inserted a shared dependency before refusing its
+own target; its two present cells survive and a later retry adds exactly one. -/
+example : populatedCells (commitCountedCell [some false, some true] [] none
+    (Except.error "refused" : Except String Bool)) = 2 ∧
+    populatedCells (commitCountedCell (Error := String) [some false, some true] [] none (.ok false)) = 3 := by decide
+
 end LeanPoo.Examples.Representation

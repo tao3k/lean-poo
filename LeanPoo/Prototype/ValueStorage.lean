@@ -1,4 +1,5 @@
 import LeanPoo.Prototype.Representation
+import Init.Data.List.Count
 
 /-! One authoritative receiver-local value store behind symbolic and indexed reads.
 Shape/index fidelity, serialized supported mutation and faithful host interpretation
@@ -166,5 +167,57 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   by_cases same : before = current
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
+
+/-- Computed cardinality counts present cells, including false and functions.
+The runtime sentinel must be disjoint from successful values. This is scalar
+metadata over the single primary store, never a second store of values. -/
+def populatedCells (cells : List (Option Value)) : Nat := cells.countP Option.isSome
+
+/-- An overwrite adjusts cardinality only when presence changes. -/
+def adjustPopulation (count : Nat) (old next : Option Value) : Nat :=
+  count + (if next.isSome then 1 else 0) - (if old.isSome then 1 else 0)
+
+/-- Every named/indexed write preserves the exact occupancy invariant. A faithful
+current offset decomposes the primary cells into prefix, current cell and suffix. -/
+theorem populatedCells_overwrite (beforeCells afterCells : List (Option Value)) (old next : Option Value) :
+    populatedCells (beforeCells ++ next :: afterCells) =
+      adjustPopulation (populatedCells (beforeCells ++ old :: afterCells)) old next := by
+  cases old <;> cases next <;>
+    simp [populatedCells, adjustPopulation, List.countP_append] <;> omega
+
+/-- Declared but uncomputed fields do not contribute to cardinality. -/
+@[simp] theorem populatedCells_empty (width : Nat) :
+    populatedCells (List.replicate width (none : Option Value)) = 0 := by
+  simp [populatedCells, List.countP_replicate]
+
+/-- Shape growth inserts empty cells without forcing a callback or changing count.
+The host also preserves symbolic value associations when rearranging offsets. -/
+theorem populatedCells_extend (beforeCells afterCells : List (Option Value)) :
+    populatedCells (beforeCells ++ none :: afterCells) = populatedCells (beforeCells ++ afterCells) := by
+  simp [populatedCells, List.countP_append]
+
+/-- A refused update does not publish its target. The supplied cells are the
+post-callback state: nested successful writes remain visible and counted. -/
+def commitCountedCell (beforeCells afterCells : List (Option Value)) (old : Option Value)
+    (outcome : Except Error Value) : List (Option Value) :=
+  match outcome with
+  | .error _ => beforeCells ++ old :: afterCells
+  | .ok value => beforeCells ++ some value :: afterCells
+
+/-- Failure retains the actual post-callback cardinality, without rollback. -/
+theorem commitCountedCell_refused (beforeCells afterCells : List (Option Value)) (old : Option Value) (cause : Error) :
+    populatedCells (commitCountedCell beforeCells afterCells old (.error cause)) =
+      populatedCells (beforeCells ++ old :: afterCells) := rfl
+
+/-- Successful publication maintains the same invariant as a direct setter. -/
+theorem commitCountedCell_success (beforeCells afterCells : List (Option Value)) (old : Option Value) (value : Value) :
+    populatedCells (commitCountedCell (Error := Error) beforeCells afterCells old (.ok value)) =
+      adjustPopulation (populatedCells (beforeCells ++ old :: afterCells)) old (some value) :=
+  populatedCells_overwrite beforeCells afterCells old (some value)
+
+/-- Source work only: a maintained scalar needs one metadata read; scanning
+requires one cell observation per declared field. Construction/update work stays
+charged separately, and this inequality predicts neither latency nor allocation. -/
+theorem population_read_work (width : Nat) (nonempty : 0 < width) : 1 ≤ width := by omega
 
 end LeanPoo.Prototype.Representation
