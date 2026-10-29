@@ -411,3 +411,8 @@ P28 stages exact natural trace limits before initialization, then delegates to
 the existing bounded draw engine. `PropertyTraces.lean` proves both cap bounds,
 valid prefixes, initialization/early-stop causes and unchanged-size delegation.
 Generic and Record/FUN examples check the host contract boundary and replay.
+
+P29 validates finite outer spines and parameter results before candidate delivery.
+`PropertySequences.lean` reuses guarded callbacks, Except composition and retirement
+to establish source/shape refusal, exact causes and ordered proper results.
+General lazy shrink Iterators and payload graphs keep their existing scope.

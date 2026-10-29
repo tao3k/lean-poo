@@ -3,7 +3,7 @@
 * Preserve the complete gate
 
 ~just check~ enters one Lake environment, builds the complete public library
-once, checks C4's source-owned types, and runs all 342 independent example/contract
+once, checks C4's source-owned types, and runs all canonical independent example/contract
 files with automatically capped workers, alongside four bounded diagnostic
 files and Org documentation after shared preparation. The source commands live in the Justfile; the Python runner
 reads the two canonical recipes through ~just --dump --dump-format json~ and
@@ -12,7 +12,7 @@ CI does not maintain a second file list. Standalone public
 repeated build traversals and six repeated prototype examples.
 
 No unique Lean source, proof, axiom report, or diagnostic check is removed.
-The current gate covers 342 unique example/test files, including the typed
+The current gate covers the complete canonical example/test inventory, including the typed
 requirement corpus. The earlier 104-file inventory remains covered. Existing memory/allocation
 limits, 30-second bounded checks, and the expected two-second unbounded-body
 rejection remain unchanged. This changes orchestration; it does not establish
@@ -840,7 +840,7 @@ one interpreter sample timed out. Both completed prepared samples and the comple
 interpreter sample have identical transcript hashes. Queue controls also retain
 identical transcript hashes, with observed CPU 4.72 s versus 2.77 s. These are local,
 source-bound observations, not unconditional latency guarantees. The full producer,
-all 342 files, diagnostics, supervision, Org and executable checks still must pass.
+all canonical files, diagnostics, supervision, Org and executable checks still must pass.
 The earlier 30-second failures and rejected per-module loading experiment remain
 negative evidence outside Git. A warm shared implementation does not establish a
 cold full-build improvement; preparation and CI transfer costs remain part of the
@@ -855,7 +855,7 @@ builds its Lake module dynlib after ~LeanPoo:shared~; only the fork pressure tes
 loads both, in dependency order. The independently written arithmetic/refusal
 oracles, ~run~, all coverage assertions and ~#eval~ remain in
 ~Tests/GeneralizedFork.lean~ under its original 30-second deadline. The source
-inventory includes the support module; the canonical 342 executable checks are
+inventory includes the support module; the canonical executable checks are
 unchanged. Both loaded files are included in the preparation identity guard.
 
 ~TariffComponent.checkoutMany~ reuses standard ~List.foldlM~ for ordered action

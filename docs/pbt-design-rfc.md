@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P28. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P29. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -41,7 +41,7 @@ The independent-library acceptance copies these five generic source modules and
 `examples/property-kernel.ss` and its ordinary product/filter/scope/size/trace helpers
 into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 83 case receipts, an error-free result and
+through `gerbil test`. It requires all 87 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
@@ -1187,3 +1187,64 @@ Rackcheck's pinned [generator contract](https://github.com/Bogdanp/rackcheck/blo
 requires an exact nonnegative generation size. We retain that contract discipline
 using Gerbil mechanisms; this project's finite model-trace API is an extension,
 not a claim that Rackcheck implements the same state-machine protocol.
+
+
+## P29: finite sequence preparation without prefix salvage
+
+The audit reproduced two silent truncations. `valid-trace?` rejected a dotted
+command spine while `repair-trace` initialized the model and returned its apparent
+proper prefix. A parameter shrinker returning `(0 . bad)` likewise contributed a
+candidate instead of refusing. A third control revised a declared source in the
+first parameter callback: preparation still invoked the second callback before
+the enclosing action eventually returned stale. These are observable preparation
+defects, not inference of hidden dependencies or arbitrary callback termination.
+
+The existing finite sequence policy now owns one spine boundary. `list-deletions`
+uses Gerbil's standard `using`/`list?` contract before length/copy/traversal.
+`data-list-shrinks` obtains structural proposals through that boundary once, then
+uses the existing `with-sources` around each parameter callback and admits its
+returned proper list with `using`. Model shrinking delegates to the same policy;
+it adds no second input-spine check. Independent repair validates its own finite
+input before folding. Model identity and callback procedure contracts stay with
+Gerbil. Valid structural/coordinate ordering and callback invocation counts stay.
+No partial candidate batch is delivered when preparation fails; already performed
+host effects are not rolled back.
+
+Only finite outer spines are constrained. Invalid trace predicates still return
+false, and complete checking refuses before fixture entry. Proper inputs still
+retire invalid/disabled commands according to the existing model policy, preserving
+false command payloads and dependencies. Cyclic payload graphs are not deep-
+traversed by a spine check. General lazy sample shrinkers still accept Iterators,
+including infinite neighborhoods consumed under the unchanged proposal budget.
+A cyclic cdr chain is malformed list data, not such an Iterator. No global eager
+list conversion, compatibility layer, namespace or new shrinking engine is added.
+
+Four generic cases cover improper, cyclic and non-list spines; no initialization
+or prefix effects on refusal; malformed callback outputs; exact causes and charges;
+source revision before the next coordinate; unchanged finite proposal order; and
+bounded lazy Iterator admission. The independent package runs 87 standard cases.
+`examples/generated-traces.ss` keeps new typed evidence separate from the large
+batch module: Record commands with Function fields reject malformed parameter
+batches before candidate repair, retain diagnostic witnesses with zero delivered
+attempts, and replay/retry explicitly. A single codec-parametric Record/FUN fixture
+covers String/Symbol/Bytes, rejects improper/cyclic outputs, interrupts shared-source
+revision before the next parameter, preserves wrapping, and retries/replays valid
+shrinking. Typed packing starts only after the complete finite policy returns.
+
+Nine laws in `PropertySequences.lean` reuse the existing source-checked callback,
+Except bind and dependency retirement: malformed input refusal, exact proper-input
+forwarding, stale preflight, normal revision, original callback cause, malformed
+result refusal, ordered proper-result delivery, suppression of later stages, and
+valid order-preserving dependency repair. The host shape conversion represents
+malformed spines by none; proper empty/false-containing lists remain present data.
+Accurate source observers, faithful normalization and terminating callbacks remain
+premises. This does not prove Gerbil contracts/list?, arbitrary payload graphs,
+callback termination, host GC or wall-clock behavior. All guards and checks stay.
+Shape checks add finite spine walks, and each parameter action walks its active
+source ledger; no zero-cost or timing improvement is claimed. Existing identity
+sharing avoids introducing a separate source wrapper per data carrier.
+
+Rackcheck's pinned [shrink-tree contract](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/shrink-tree.rkt)
+requires stream-shaped general shrink results. We preserve that lazy-protocol
+separation using Gerbil Iterators while enforcing the narrower proper-list
+contract of this project's finite value policy. Revision checks remain our extension.

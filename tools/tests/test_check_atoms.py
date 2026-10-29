@@ -105,7 +105,7 @@ class CheckAtomsTests(unittest.TestCase):
         files = [atom['file'] for partition in partitions for atom in partition]
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
-        self.assertEqual(len(files), 353)
+        self.assertEqual(len(files), 354)
         self.assertIn('Examples/TableRevision.lean', files)
         self.assertIn('Examples/CollectionStyles.lean', files)
         self.assertIn('Examples/CollectionTesting.lean', files)
@@ -113,6 +113,7 @@ class CheckAtomsTests(unittest.TestCase):
         self.assertIn('Examples/PropertyProducts.lean', files)
         self.assertIn('Examples/PropertyFilters.lean', files)
         self.assertIn('Examples/PropertyScopes.lean', files)
+        self.assertIn('Examples/PropertySequences.lean', files)
         self.assertIn('Examples/PropertySizes.lean', files)
         self.assertIn('Examples/PropertyTraces.lean', files)
         self.assertIn('Examples/SetAlgebra.lean', files)
