@@ -962,3 +962,44 @@ history variation. Post-GC mean was +751.26 us, max +942.42 us, six losses.
 Its normalized batch difference included +676.38 us non-GC, +25.32 us GC and
 +5.36 us residual. Recovery's smaller operation count must not stand in for
 this broader result or for a full-service latency guarantee.
+
+### Bounded standard compiler preparation
+
+[BuildPreparation.lean](../LeanPoo/Prototype/BuildPreparation.lean) separates the
+existing build-allocation laws from receiver-layout semantics, retaining the same
+`LeanPoo.Prototype.Representation` namespace. Standard compiler sessions own a
+finite declared import closure; smaller session inventories are a source-count
+optimization, not a replacement module registry or a physical loader theorem.
+The original 25 isolated compile invocations are grouped into four compiler-only
+functional packages. All 149 installed test module identities remain unchanged.
+
+`boundedPreparation_slots` verifies the Just/Gerbil worker policy for every
+configured core count, including the existing one-frontend/one-backend fallback
+for zero/one configured cores. On twelve cores it selects four sessions with two
+backends each. `boundedPreparation_heap_limits` concerns only sums of configured
+heap-limit parameters: it does not estimate live memory or RSS, which also includes
+mappings, C stacks and external compiler allocations. The approved frontend option
+is `max-heap=2G`; it is not a reason to enlarge the heap after another overflow.
+`preparationVisits_mono` and the declaration-flattening law state the finite count
+premises independently of compiler, GC and OS scheduling behavior.
+
+The source-matched macOS project-artifact-empty controls retained the same
+149-module / 2,037-case runtime workload plus three build-declaration checks.
+The complete `just check` entries naturally returned zero in 833.00 s (two compiler
+sessions/five backends) and 725.52 s (four sessions/two backends). The corresponding
+test-build phases were 269.75 / 242.15 s. Unchanged root-library work also varied,
+so the whole observed difference is not attributed to scheduling or claimed as a
+stable tail bound. The four-session build-stage timer sum is 356.04 s, excluding
+launch overhead; it is not a separate build-only wall measurement.
+
+One process retaining the complete source context inventory overflowed first at
+1G and later at the explicitly authorized 2G. The implementation therefore scopes
+existing standard caches by compiler-package lifetime rather than clearing private
+expander state or introducing an extra cache. Repeated build admission produced
+zero compilation jobs. Included-source timestamp controls rebuilt only their two
+registered targets, with successful focused runtime regressions. Original include
+contents/timestamps were restored. TERM and resistant-KILL controls left no recorded
+descendants; successful application checks still require natural exit and normal
+unloading. These are finite source/configuration results, not verification of
+Lean's C++ implementation, the Scheme compiler, macOS validation policy or physical
+wall-clock latency. Cold dyld admission remains an independently observed limit.

@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P19. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P26. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -38,9 +38,10 @@ admission, normalization and source-current callbacks at the boundary. Generalit
 is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 
 The independent-library acceptance copies these five generic source modules and
-`examples/property-kernel.ss` into a temporary standard Gerbil package, declares
+`examples/property-kernel.ss` and its ordinary product/filter/scope/size helpers
+into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 55 case receipts, an error-free result and
+through `gerbil test`. It requires all 75 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
@@ -882,3 +883,213 @@ promise reuse. It does not prove the host promise runtime, callback termination,
 concurrent forcing, hidden mutation, GC or constant-time preparation. Constructor
 failure occurs during demand before the property, rather than being rewritten as
 falsification. General Type synthesis remains outside the declared algorithm.
+
+## P20: scoped differential observations under fixed declarations
+
+Direct typed `check-trace` previously could return a match after its fixture
+changed the model declaration midway through execution. The typed boundary now
+captures model/schema/Type owners, then adds fixture/schema/State owners without
+refreshing old stamps. Existing preparation, step, observation, validation,
+comparison and factory-return stages share one checked action. The generic model
+fold and caller-owned cleanup remain unchanged; actual State can still evolve.
+
+`PropertyTraces.lean` reuses guardedGeneration in the existing PropertyTesting
+namespace, with eight finite laws covering preflight, revision refusal at each
+stage, exact callback causes and stable match/mismatch preservation. The new
+module avoids extending the already large generator algebra file. Scope cleanup
+is covered by Scheme regressions, not a theorem about the host continuation
+runtime. The real indexed-collection example composes state-dependent traces,
+FUN, stale rejection, explicit preparation retry and seed replay.
+
+Epoch accuracy, sequential observation, termination and a faithful fixture/model
+relation are premises. Hidden heap changes, concurrent linearizability, backend
+rollback and wall-time/GC guarantees are not established. Each callback checks a
+finite ledger; wrappers are prepared once per trace. All existing checks and
+resource limits remain required.
+Fixture declaration ownership ends with active use, allowing normal resource
+retirement during teardown; model declarations stay checked through factory
+return. Executable teardown controls preserve this scope distinction.
+
+## P21: shared typed-product observation
+
+Typed product measures duplicated the generic product fold and could invoke a
+later field after an earlier source revision. Value-only shrinking could likewise
+continue to pack/later children, and an uncopied child directory could diverge
+from the already captured draw tree. Gerbil now captures child topology once,
+reuses the generic product specification and checked specification-weight, and
+shares that currentness with unpack, raw shrinking and retained-tree packing.
+A common owner also protects zero-field products; obsolete products cannot acquire
+fresh epochs just by opening another core view. Actual payloads remain caller-owned.
+
+`PropertyProducts.lean` uses the existing PropertyTesting namespace and guarded
+stages, with eight laws for preflight/field refusal, exact causes, empty ownership,
+packing refusal, stable field order and the original natural sum. Regressions and
+Record/Function/FUN examples cover directory edits, parent/child revisions, explicit
+preparation retry, retained wrappers and both replay paths. The source inventory
+and example shard admission include the new module without dropping older checks.
+
+Epoch accuracy, sequential observation, faithful capture and pack/unpack laws are
+premises. Host copying, arbitrary aliases, callbacks, concurrency, allocation and
+GC are not certified. Joint source walks can remain quadratic in field count;
+there is no constant-time or universal performance claim.
+
+## P22: fixed-product source admission
+
+The generic fixed product knew every field but hid its producer leaves until
+selected bind stages ran. A stale later field could leave `generator-current?`
+true and permit an earlier draw or mapper before refusal. Gerbil now flattens
+known field sources with standard `append-map` once, normalizes them with the
+existing identity observer boundary, and forwards them through fixed products and
+nonempty finite Function result tables. It shares the original bind/map run
+procedure, seed schedule, lazy children and typed bridge. Dynamic unselected
+branches and empty result domains do not gain unrelated ownership.
+
+Six laws added to `PropertyProducts.lean` prove complete-field conjunction,
+preflight suppression from any stale leaf, nested/shared-source equivalence and
+empty independence. The existing stable-order/sum laws still apply to the same
+guarded evaluator. Topology fidelity, stable identities, pure Boolean observers,
+truthful epochs, sequential callbacks and termination are premises. Host observer
+exceptions and copying are runtime regressions; they are not inferred from this
+finite model. No PRNG, GC, concurrency or wall-time theorem is claimed.
+
+The companion independent suite and Record/Function/FUN workflow cover pre-draw
+refusal, exact causes, explicit retry, preserved wrappers, shrinking and both
+replays. All checks and resource bounds remain required. Known-source checking
+adds necessary observer work; this correctness unit makes no speedup claim.
+
+## P23: bounded filter retry ownership
+
+Rejected dynamic branches retained their leaves for final filtering but did not
+pass them into later retry graphs. A later draw could revise an earlier rejected
+owner and still enter a mapper/selector before stale refusal. Gerbil now reuses
+the existing `with-sources observed` around every retry's generation. The quota,
+size, random schedule, accepted tree, tombstones and callback exception identity
+remain unchanged. Related cases are grouped in the existing examples directory;
+the independent library runs 63 cases without POO, and Record/Function/FUN covers
+construction refusal, explicit reprepare, shrinking and both replay paths.
+
+`PropertyFilters.lean` uses the existing PropertyTesting namespace and composes
+`guardedGeneration`, `mergeSources` and `guardedStages`. Ten laws establish stale
+preflight, draw revision/causes, retained rejected and accepted history, zero quota, a retry's
+single token and whole-history handoff, early acceptance, generator-entry count
+bounded by local fuel, and suppression within a resumed nested pipeline. The draw
+explicitly receives the inherited source list; faithful host scope is a premise.
+The cost counts entries into the supplied generator, not physical draws inside
+it: nested filter quotas can multiply. It proves neither observer/PRNG/runtime
+implementation correctness nor callback termination, GC or wall-clock bounds.
+Accurate pure observers, truthful epochs, sequential callbacks and faithful source
+directories remain required. Runtime parameter unwinding and exact exception and
+replay behavior have separate regression coverage. All prior checks and guards
+remain enabled.
+
+## P24: transient checked-action scope
+
+The audit reproduced a replay mapper executing after its draw retired a source
+from a previously rejected shrink branch. Later normal trials and generator
+inspection had the same outer-action-only gap. Gerbil now installs a transient
+check through the existing `with-current` form and the generator module's standard
+parameter-backed `with-generation-check`. Nested draw/map/selection and iterator
+boundaries observe it, including when retained source ownership is empty.
+
+Checks run outer-to-inner and unwind through ordinary return, exceptions and the
+existing refusal continuation. They never enter sample source metadata: a checker
+may read its run's mutable ledger, so retaining it there would introduce recursive
+observation; retaining prior replay checkers would accumulate old reports. The
+actual producer/node ownership and seed/tree protocols remain unchanged. Generic
+and Record/Function/FUN controls cover refusal before reconstruction, fresh retry,
+original causes, nested/paused iteration and stable work across twelve replays.
+
+`PropertyScopes.lean`, in the existing PropertyTesting namespace, composes the
+existing guarded product/stages with transient source identities and the evolving
+new-run ledger. Nine laws prove nested/empty admission, stale stage suppression,
+cause preservation, empty/stable observation and exact new-ledger publication
+without adding the transient directory. Pure accurate observers, faithful ledgers
+and host dynamic scope, sequential callbacks and termination are premises. Runtime
+continuations, parameter restoration, aliases, Function wrapping, heap retention
+and timing are separate executable obligations, not inferred from the model.
+All checks and heap/deadline budgets remain. Active scope checks add work; no
+constant-time, universal performance or arbitrary-continuation claim is made.
+
+
+## P25: size control retains known input ownership
+
+Audit of Rackcheck's `gen:sized`, `gen:resize` and `gen:scale` confirmed the
+existing size algebra. Our revision-aware extension had a distinct implementation
+hole: scale delegates to a statically known input but exposed only its explicit
+owner. With that input retired, both scale and its enclosing fixed product
+reported current; an earlier sibling draw and scale callback each ran once before
+refusal. This is not a missing Rackcheck feature or a dynamic selection boundary.
+
+Scale now reuses the exact sized/resize run procedure and merges the known input
+leaves at construction, using existing source identity sharing. There is no new
+wrapper per retained sample, random draw, size schedule or shrink regeneration.
+Resize, map, fixed product, finite Function tables and shrink controls preserve
+these leaves. A genuinely open sized selector does not acquire unselected branches.
+
+Four independent generic cases cover all static compositions, explicit and input
+owners, normal callback revision, original exception identity, invalid natural
+sizes, nested callback order, identical seeds, retained shrinking, and zero-count
+inspection. The independent standard-library package now executes 71 cases.
+The Record/FUN example combines scaled counts and Function fields, failure
+minimization, concrete replay without regeneration, seed replay, and stale refusal
+before sibling preparation. Function wrappers remain owned by Record admission.
+
+The eight laws in `PropertySizes.lean` establish pure resize/scale algebra,
+exact delegated value/seed, and guarded preflight, revision, cause and admitted
+execution. Total natural transformations are the pure algebra's premise; they do
+not license fusing effectful Scheme callbacks. Explicit internal resize may exceed
+the outer trial size: no new blanket bound is introduced. Existing process,
+heap, generation, shrinking and inspection budgets are unchanged. No termination,
+host PRNG quality, GC or wall-clock speedup is proved. Existing `mergeSources`
+sharing avoids another ownership mechanism. At P25 construction reused the sized run
+closure in a replacement generation descriptor; P26 below consolidates that
+metadata into the sized constructor. No timing improvement is claimed.
+
+
+## P26: mandatory collection ownership under size selection
+
+The next audit reproduced a cardinality-dependent hole: an element generator
+whose owner was already stale could be used to construct a nonempty List producer
+that still reported current. Its enclosing fixed product ran an earlier sibling
+draw once and used the random source twice before refusing. A positive minimum
+always uses the element; this is not the intentional independence of an unselected
+branch or empty result.
+
+`generator-sized` now accepts `sources:` through the same observer-list boundary
+as `make-generator` and `make-tree-generator`. Common leaves are validated, copied
+and identity-deduplicated before selection. Dynamic branches still add only their
+selected leaves. `generator-scale` delegates directly to that constructor,
+removing P25's replacement generation descriptor. `generator-list` supplies element
+leaves exactly when `min-length` is positive. String and Symbol inherit the same
+behavior through their existing map composition. No separate carrier validators,
+new generator representation, random schedule, namespace or retry system is added.
+
+Size zero still produces the positive minimum, so it still needs those leaves.
+With minimum zero, an actual empty result draws no element and acquires no element
+owner. If that optional producer selects a nonempty result, its existing dynamic
+selection boundary checks the selected element before drawing it. Arbitrary
+unselected weighted/delayed branches, handwritten node ownership and mutable
+payload aliases keep their documented boundaries.
+
+Four generic cases cover nonempty List/String/Symbol preflight (including an
+unstarted product prefix), empty selection, copied/deduplicated explicit source
+lists, invalid metadata, identical seeds, retained minimum lengths and shrinking
+without element redraw. The independent package runs 75 ordinary std/test cases.
+A Record/FUN workflow generates bounded nonempty payloads with a wrapped Function,
+shrinks both cardinality and element values, performs concrete/seed replay, refuses
+stale work before preparing a sibling handler, and explicitly prepares a fresh
+revision while the old sampler/report remain rejected.
+
+Eight additional laws in `PropertySizes.lean` establish the bounded length offset,
+positive-minimum participation, size-zero behavior, exact source selection,
+conjunctive authority, stale preflight and preservation of an admitted result/state.
+Random offsets satisfying their bound, pure accurate source observers and
+terminating callbacks are premises. These are not PRNG-quality, host heap/GC,
+concurrency or wall-clock proofs. Existing process and search limits are unchanged.
+Source lists are captured once; runtime retains the existing flat source checks
+and shrinking trees. Removing the replacement descriptor is not a timing claim.
+
+Rackcheck's pinned [base generator implementation](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/base.rkt)
+selects a length once, retains element trees and derives mapped carriers from
+that list protocol. We reuse that decomposition. Positive minimums and revision
+observers are our explicit extension; no cross-language random-seed parity is claimed.

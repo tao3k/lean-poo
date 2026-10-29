@@ -430,6 +430,21 @@ example : (BuildAllocation.mk 3 3).heapGiB = 24 ∧
 /-- Small configured capacity is preserved instead of disabling its existing overlap. -/
 example : parallelPreparation ⟨1,3⟩ = ⟨1,3⟩ := rfl
 
+/-- Four bounded standard compiler sessions and two backends each keep the
+same twelve active capacities as the preceding isolated package arrangement. -/
+example : boundedPreparation 12 = ⟨4,2⟩ ∧
+    (boundedPreparation 12).slots = (BuildAllocation.mk 4 2).slots := ⟨rfl,rfl⟩
+
+/-- The approved frontend ceiling and unchanged CLI/backend ceilings fit the
+existing root phase's configured sum. This is not a process RSS measurement. -/
+example : heapLimitSum (boundedPreparation 12) 1 2 2 =
+    heapLimitSum ⟨1,12⟩ 2 2 2 := rfl
+
+/-- Four bounded sessions prepare the same distinct common import closure;
+all twenty-five logical test packages remain in the declared inventory. -/
+example : preparationVisits 25 ["compiler", "make", "poo", "make"] = 75 ∧
+    preparationVisits 4 ["compiler", "make", "poo", "make"] = 12 := by decide
+
 /-- A validated Function cannot escape a metadata revision, even when its body
 is retained by identity; no Function application is needed by the fence. -/
 example (callback : Nat → Nat) :

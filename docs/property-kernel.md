@@ -351,3 +351,53 @@ entries. Source admission stays with the existing guards. The Gerbil layer reuse
 `defonce`, typed products and first-match signatures; it does not cache generated
 values or substitute unsupported Types. See the RFC for sequential promise and
 finite-Type proof premises.
+
+P20 places revision-bound differential step laws in `PropertyTraces.lean`, under
+the existing PropertyTesting namespace. `guardedTraceStep` preserves reference,
+actual and comparison order, refuses revised declarations before downstream
+stages, and retains exact exceptions and stable match/mismatch judgments. Scheme
+regressions separately verify fixture cleanup and the real indexed-collection
+FUN/retry workflow. These are finite epoch/observation laws, not host heap,
+continuation, rollback or concurrency certification.
+
+P21 moves finite shared product observation laws into `PropertyProducts.lean`.
+`guardedProduct` composes the existing field evaluator with an owner preflight
+and guarded representation packing, including empty products. Eight laws retain
+order, natural sums, exact causes and downstream refusal. Scheme typed products
+now consume the generic specification boundary rather than a duplicate cost fold;
+captured directories and Record/FUN/replay controls provide the host correspondence.
+
+P22 adds fixed-field source ownership to the same product module. `productSources`
+flattens and deduplicates declared identities; six laws retain the complete field
+conjunction, reject a stale later leaf before any draw/pack, and preserve nested,
+shared and empty-domain judgments. The stable evaluator and its order/sum laws
+remain unchanged. Source observers are pure Boolean functions in these laws;
+runtime exception identity, copying and the unchanged seed/tree schedule have
+separate Scheme regression coverage, not a heap or PRNG proof.
+
+P23 adds finite rejection-sampling laws in `PropertyFilters.lean`. The model hands
+the complete rejected-source history to each draw, checks the returned leaf union
+before filtering and carries rejected owners into the next token. Ten laws cover
+refusal, exact causes, zero fuel, retry/acceptance and a local generator-entry
+bound. `filterHistory_pipeline` reuses the guarded stage evaluator to show that
+revising a retired owner suppresses later nested callbacks. Nested generators have
+their own budgets; the bound is not a total callback or host timing bound. Source
+and scope fidelity and callback termination remain explicit host premises.
+
+P24 adds `PropertyScopes.lean`: a transient replay directory authorizes checked
+stages while the run's explicit ledger alone becomes new ownership. Nine laws
+cover joint/nested checks, refusal, exact causes and stable/empty publication.
+The model reuses guarded products and stages; it does not certify Gerbil control
+transfer or parameter implementation. Runtime controls verify earlier-trial,
+inspection and replay interruption, restored scope, no added sample source leaf
+and unchanged observer work over twelve replays. User-captured continuations and
+payload aliases retain their standard host lifetime obligations.
+
+Size control: P25 retains known input sources without changing size algebra,
+random state or retained trees. See `Examples/PropertySizes.lean` and the companion
+Record/FUN example; dynamic sized selection still owns only selected branches.
+
+P26 closes mandatory collection sources at the existing size selector. Positive
+minimums preflight element leaves; optional empty selection does not claim them.
+`PropertySizes.lean` models bounded lengths and authority while Record/FUN
+regressions check retained shrinking, wrapped Functions and explicit revision retry.
