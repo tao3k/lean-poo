@@ -642,4 +642,16 @@ example : populatedCells (commitCountedCell [some false, some true] [] none
     (Except.error "refused" : Except String Bool)) = 2 ∧
     populatedCells (commitCountedCell (Error := String) [some false, some true] [] none (.ok false)) = 3 := by decide
 
+/-- Sparse seeded false and Function-valued cells retain exact observations;
+occupancy is generated with the cells rather than a later value scan. -/
+example (callback : Nat → Nat) :
+    (seedPrimaryCells ["callback", "unused"]
+      (fun name => if name = "callback" then some callback else none)).1 = [some callback, none] := by
+  simp [seedPrimaryCells_values]
+
+/-- A refused candidate cannot replace a live callback; retry may replace it. -/
+example (callback : Nat → Nat) :
+    publishSeed (Error := Bool) (publishSeed [some callback] (.error false)) (.ok [none]) = [none] :=
+  publishSeed_retry _ _ false
+
 end LeanPoo.Examples.Representation

@@ -845,3 +845,27 @@ laws assuming faithful current offsets, disjoint sentinels and serialized mutati
 The paired study adds sparse cardinality and this complete observation chain,
 retaining setup, A/A/B/B, AB/BA, GC controls and the preceding workflows. Neither
 a constant-time count nor fewer writes establishes a whole-workflow speedup.
+
+### Direct vector seeding
+
+Seeded construction now allocates its final receiver-local vector once and fills
+it through the existing indexed setter. It no longer allocates a temporary value
+list, copies that list to a vector, then scans the vector for occupancy. Empty
+construction remains lazy and does not perform a seed pass. Sparse object
+initialization still uses the existing entry writes; it is not replaced by an
+eager scan of every declaration. Unknown-field growth uses the same seeded
+constructor before installing its new shape/cells/count.
+
+Ordered explicit entries still override initial values, with the last entry
+winning; false and Function payloads retain identity. Construction refusal does
+not replace the caller's existing store, and independent retry remains possible.
+The FUN observation chain now grows its shape again after callback refusal and
+Function-valued retry, checking the rebound site against the same primary store.
+The paired suite retains all preceding scenarios and controls and adds independent
+sparse-seed construction/copy/clear, including setup and source independence.
+
+`seedPrimaryCells_values` and `seedPrimaryCells_population` prove finite cell and
+occupancy fidelity together; refusal/retry laws assume a private candidate and
+faithful canonical names/lookup. The source work model removes one width-sized
+occupancy pass. It does not prove Gerbil vector allocation, callbacks, GC, compiler
+correctness or a wall-clock improvement.

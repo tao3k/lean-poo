@@ -220,4 +220,59 @@ requires one cell observation per declared field. Construction/update work stays
 charged separately, and this inequality predicts neither latency nor allocation. -/
 theorem population_read_work (width : Nat) (nonempty : 0 < width) : 1 ≤ width := by omega
 
+/-- Seed one authoritative store and its scalar occupancy in one traversal.
+Names are the already admitted canonical shape, not a second value cache. The
+runtime writes these resolved cells directly into its final fresh vector. -/
+def seedPrimaryCells (names : List String) (resolve : String → Option Value) :
+    List (Option Value) × Nat :=
+  match names with
+  | [] => ([], 0)
+  | name :: rest =>
+      let seeded := seedPrimaryCells rest resolve
+      let value := resolve name
+      (value :: seeded.1, seeded.2 + if value.isSome then 1 else 0)
+
+/-- Fused preparation preserves every exact resolved cell, including false and
+Function payloads. The host supplies finite canonical names and faithful lookup. -/
+theorem seedPrimaryCells_values (names : List String) (resolve : String → Option Value) :
+    (seedPrimaryCells names resolve).1 = names.map resolve := by
+  induction names with
+  | nil => rfl
+  | cons name rest ih => simp [seedPrimaryCells, ih]
+
+/-- The count produced during seeding equals a separate scan's result, without
+requiring that scan at runtime. Uncomputed declarations contribute zero. -/
+theorem seedPrimaryCells_population (names : List String) (resolve : String → Option Value) :
+    (seedPrimaryCells names resolve).2 = populatedCells (seedPrimaryCells names resolve).1 := by
+  induction names with
+  | nil => rfl
+  | cons name rest ih =>
+      simp [seedPrimaryCells, populatedCells, List.countP_cons] at ih ⊢
+      exact ih
+
+/-- A refused seed does not publish a replacement for an already live store.
+The candidate is built privately; prior callback effects are not rolled back. -/
+def publishSeed (current : List (Option Value))
+    (candidate : Except Error (List (Option Value))) : List (Option Value) :=
+  match candidate with
+  | .error _ => current
+  | .ok cells => cells
+
+/-- Failure leaves the existing value authority available for independent retry. -/
+@[simp] theorem publishSeed_refused (current : List (Option Value)) (cause : Error) :
+    publishSeed current (.error cause) = current := rfl
+
+/-- A later successful preparation publishes exactly its own computed cells. -/
+theorem publishSeed_retry (current cells : List (Option Value)) (cause : Error) :
+    publishSeed (Error := Error) (publishSeed current (.error cause)) (.ok cells) = cells := rfl
+
+/-- Source traversal accounting only: fusing seeding and occupancy eliminates
+one width-sized count pass. Allocation, mutation dispatch and GC remain external. -/
+def seedPreparationCellVisits (fused : Bool) (width : Nat) : Nat :=
+  if fused then width else width + width
+
+/-- Exactly the separate count traversal disappears from this source work model. -/
+theorem seed_population_pass_work (width : Nat) :
+    seedPreparationCellVisits false width = seedPreparationCellVisits true width + width := rfl
+
 end LeanPoo.Prototype.Representation
