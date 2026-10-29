@@ -82,3 +82,13 @@ example : configurationLimit none none = none := by decide
 example : deleteBlock [11, 99, 22] 1 1 = [11, 22] := by decide
 example : deleteBlock [11, 99, 22] 2 1 = [11, 99] := by decide
 example : deleteBlock [11, 99, 22] 0 3 = ([] : List Nat) := by decide
+
+-- Codec/domain revisions refuse before delivery; callback causes remain exact.
+example : replayStage false true (fun _ => (.ok 4 : Except String Nat)) = .error none := rfl
+example : replayStage true false (fun _ => (.ok 4 : Except String Nat)) = .error none := rfl
+example : replayStage true false (fun _ => (.error "decode" : Except String Nat)) =
+    .error (some "decode") := rfl
+example : (replayStage true false (fun _ => (.ok 4 : Except String Nat)) >>=
+    fun n => (.ok (n + 1) : Except (Option String) Nat)) = .error none := rfl
+example : (replayStage true true (fun _ => (.ok 4 : Except String Nat)) >>=
+    fun n => (.ok (n + 1) : Except (Option String) Nat)) = .ok 5 := rfl

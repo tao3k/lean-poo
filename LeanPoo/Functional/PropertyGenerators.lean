@@ -281,4 +281,43 @@ theorem retainedSources_keep_deleted [DecidableEq Source] (original retained : L
     (source : Source) (observed : source ∈ original) : source ∈ mergeSources original retained := by
   exact (mergeSources_mem source original retained).2 (Or.inl observed)
 
+/-- A replay stage checks provenance before a callback, preserves its exception,
+and checks provenance again after a normal return. `none` means stale;
+`some cause` retains the application exception. Observers and callbacks are
+assumed terminating. This finite model makes no host port-rollback claim. -/
+def replayStage (before after : Bool) (action : Unit → Except Cause Value) :
+    Except (Option Cause) Value :=
+  if before then
+    match action () with
+    | .error cause => .error (some cause)
+    | .ok value => if after then .ok value else .error none
+  else .error none
+
+/-- Refusal before the callback does not depend on its result. -/
+theorem replayStage_preflight (after : Bool) (action : Unit → Except Cause Value) :
+    replayStage false after action = .error none := rfl
+
+/-- A callback exception survives a later provenance change with the same cause. -/
+theorem replayStage_cause (after : Bool) (cause : Cause) :
+    replayStage true after (fun _ => (.error cause : Except Cause Value)) =
+      .error (some cause) := rfl
+
+/-- A normally returning encoder or decoder cannot authorize stale data. -/
+theorem replayStage_stale (value : Value) :
+    replayStage true false (fun _ => (.ok value : Except Cause Value)) = .error none := rfl
+
+/-- Source-current preparation preserves the exact returned value. -/
+theorem replayStage_current (value : Value) :
+    replayStage true true (fun _ => (.ok value : Except Cause Value)) = .ok value := rfl
+
+/-- Preparation refusal skips the delivery/property continuation. Delivery here
+is an abstract action, not a transaction over an operating-system port. -/
+theorem replayStage_refused_before_delivery (before after : Bool)
+    (prepare : Unit → Except Cause Value)
+    (deliver : Value → Except (Option Cause) Other) (cause : Option Cause)
+    (refused : replayStage before after prepare = .error cause) :
+    (replayStage before after prepare >>= deliver) = .error cause := by
+  rw [refused]
+  rfl
+
 end LeanPoo.Functional.PropertyTesting

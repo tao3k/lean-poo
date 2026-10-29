@@ -212,3 +212,23 @@ bounds; `deleteBlock_sublist` proves retained order and membership;
 retains historical observer identities. Callback purity/termination and the
 host's allocation/runtime behavior remain explicit premises. No global minimum
 is promised. Typed value-only batch preparation retains its existing search cap.
+
+## Source-consistent portable replay stages
+
+P9 uses `replayStage` in `Functional/PropertyGenerators` to model the existing
+codec/domain observer brackets. `none` denotes a stale refusal; `some cause`
+retains the exact application exception. `replayStage_preflight` refuses without
+evaluating the callback; `replayStage_cause` preserves exceptions despite a later
+revision; `replayStage_stale` rejects a normally returned stale value;
+`replayStage_current` preserves an admitted value; and
+`replayStage_refused_before_delivery` skips the next stage after any preparation
+failure. Scheme applies those boundaries separately to encoding, decoding and
+property execution, reusing the existing runner and typed sampler snapshots.
+
+The downstream Record example restores nested Function fields through ordinary
+construction and refuses revisions before property effects. Regression controls
+also cover zero output prefix on preparation refusal, callback cause identity and
+cleanup. These finite laws assume accurate, terminating observers/callbacks.
+They do not prove arbitrary codec round trips, host port transactionality, thread
+atomicity, parser allocation bounds or process/GC behavior. A host write failure
+can leave partial bytes; durable file installation belongs to its application.
