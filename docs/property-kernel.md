@@ -161,3 +161,23 @@ Scheme regressions exercise mixed Unicode/byte replay with the existing codec
 identity/currentness and byte-budget refusal. These laws do not prove PRNG
 uniformity, symbol interning, callback termination, arbitrary mutation purity,
 or Gerbil's write/read implementation. This advances the paper's future work.
+
+## Bounded generator inspection
+
+P6 uses the existing Gerbil property module and typed sampler bridge. It observes
+one owned random source and the existing lazy sample tree without running any
+property or contributing coverage. Flat path events distinguish admitted roots,
+decreasing children, domain refusals, nondecrease and pruned proposals. Count,
+depth and one global proposal quota bound observations. Shared `next-proposal`
+charges returned tombstones and stale-after-return values; EOF/throws are free.
+Cutoffs leave neighborhoods unforced, so truncation is conservative, not minimality.
+
+`inspectionAdmission_sound` proves domain membership and descent without a
+falsity premise. `inspectionWalk_budget`, `inspectionWalk_zero`,
+`inspectionWalk_depth_zero`, `inspectionWalk_depth`, and `inspectionEvents_budget`
+prove finite worklist bounds and expansion independence. The depth annotation
+abstracts the host path length minus its root index. Refused/tombstone proposals
+have empty expansions. These are finite protocol laws, not a verification of
+callback termination, PRNG distribution, or Gerbil iterators. Host interruption,
+source guards, independent compilation and dependent packet replay are regressions.
+This advances the paper's future work without a new execution framework.

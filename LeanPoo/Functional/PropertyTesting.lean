@@ -794,4 +794,85 @@ theorem dataCarrier_domain (valid : Value → Prop) (packedValid : Carrier → P
     (values : List Value) (members : ∀ value ∈ values, valid value) :
     packedValid (pack values) := law values members
 
+/-- Shrink inspection uses domain/descent gates without executing a property. -/
+def inspectionAdmission (valid : Value → Bool) (measure : Value → Nat)
+    (parent candidate : Value) : Bool := valid candidate && decide (measure candidate < measure parent)
+
+/-- An expandable diagnostic child belongs to its domain and strictly descends. -/
+theorem inspectionAdmission_sound (valid : Value → Bool) (measure : Value → Nat)
+    (parent candidate : Value) (accepted : inspectionAdmission valid measure parent candidate = true) :
+    valid candidate = true ∧ measure candidate < measure parent := by
+  simpa [inspectionAdmission, Bool.and_eq_true] using accepted
+
+/-- Pure depth abstraction of a finite proposal worklist. Refused/tombstone nodes
+have an empty expansion. The host's lazy iterator only materializes the prefix
+charged by this fuel; this model does not certify callback termination. -/
+def inspectionWalk (limit : Nat) : Nat → List (Nat × Value) → (Value → List Value) → List (Nat × Value)
+  | 0, _, _ => []
+  | _ + 1, [], _ => []
+  | fuel + 1, (depth, value) :: rest, expand =>
+    (depth, value) :: inspectionWalk limit fuel
+      (if depth < limit then (expand value).map (fun child => (depth + 1, child)) ++ rest else rest) expand
+
+/-- Every emitted proposal spends one token, including refused candidates. -/
+theorem inspectionWalk_budget (limit fuel : Nat) (work : List (Nat × Value)) (expand : Value → List Value) :
+    (inspectionWalk limit fuel work expand).length ≤ fuel := by
+  induction fuel generalizing work with
+  | zero => simp [inspectionWalk]
+  | succ fuel ih =>
+    cases work with
+    | nil => simp [inspectionWalk]
+    | cons entry rest =>
+      rcases entry with ⟨depth, value⟩
+      simp only [inspectionWalk, List.length_cons]
+      exact Nat.succ_le_succ (ih _)
+
+/-- Zero proposal fuel observes no descendants or expansion callbacks. -/
+theorem inspectionWalk_zero (limit : Nat) (work : List (Nat × Value)) (expand : Value → List Value) :
+    inspectionWalk limit 0 work expand = [] := rfl
+
+/-- At depth zero the result is independent of the expansion callback. -/
+theorem inspectionWalk_depth_zero (fuel : Nat) (work : List (Nat × Value)) (left right : Value → List Value) :
+    inspectionWalk 0 fuel work left = inspectionWalk 0 fuel work right := by
+  induction fuel generalizing work with
+  | zero => rfl
+  | succ fuel ih =>
+    cases work with
+    | nil => rfl
+    | cons entry rest =>
+      rcases entry with ⟨depth, value⟩
+      simp [inspectionWalk, ih]
+
+/-- Every observed descendant stays inside the explicit depth bound. -/
+theorem inspectionWalk_depth (limit fuel : Nat) (work : List (Nat × Value)) (expand : Value → List Value)
+    (bounded : ∀ entry ∈ work, entry.1 ≤ limit) :
+    ∀ entry ∈ inspectionWalk limit fuel work expand, entry.1 ≤ limit := by
+  induction fuel generalizing work with
+  | zero => simp [inspectionWalk]
+  | succ fuel ih =>
+    cases work with
+    | nil => simp [inspectionWalk]
+    | cons entry rest =>
+      rcases entry with ⟨depth, value⟩
+      simp only [inspectionWalk, List.mem_cons]
+      intro observed member
+      rcases member with rfl | member
+      · exact bounded _ (by simp)
+      · apply ih _ ?_ observed member
+        intro next present
+        split at present
+        · rename_i deeper
+          simp only [List.mem_append, List.mem_map] at present
+          rcases present with ⟨child, _, rfl⟩ | present
+          · omega
+          · exact bounded _ (by simp [present])
+        · exact bounded _ (by simp [present])
+
+/-- Root events plus proposal events occupy at most count + budget entries. -/
+theorem inspectionEvents_budget (roots : List Value) (count budget : Nat)
+    (draws : roots.length ≤ count) (proposals : List Value) (charged : proposals.length ≤ budget) :
+    (roots ++ proposals).length ≤ count + budget := by
+  simp only [List.length_append]
+  omega
+
 end LeanPoo.Functional.PropertyTesting

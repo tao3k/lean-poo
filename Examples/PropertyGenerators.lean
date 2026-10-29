@@ -62,3 +62,11 @@ example : scalarCode 0x10f7ff = 0x10ffff := by decide
 example : intervalValue 0 255 = 255 := by decide
 example : dataLength 4 0 0 0 = 4 := by decide
 example : intervalValue 97 0 = 97 := by decide
+
+-- Inspection refuses nondecreasing/out-of-domain proposals and bounds cyclic neighborhoods.
+example : inspectionAdmission (fun n : Nat => n < 10) id 8 4 = true := by decide
+example : inspectionAdmission (fun n : Nat => n < 10) id 8 8 = false := by decide
+example : inspectionAdmission (fun n : Nat => n < 3) id 8 4 = false := by decide
+example : inspectionWalk 2 3 [(0, 4)] (fun n : Nat => [n]) = [(0, 4), (1, 4), (2, 4)] := by decide
+example : inspectionWalk 0 3 [(0, 4)] (fun n : Nat => [n]) = [(0, 4)] := by decide
+example : inspectionWalk 99 0 [(0, 4)] (fun n : Nat => [n]) = [] := by decide
