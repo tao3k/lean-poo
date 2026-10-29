@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P19. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P20. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -882,3 +882,29 @@ promise reuse. It does not prove the host promise runtime, callback termination,
 concurrent forcing, hidden mutation, GC or constant-time preparation. Constructor
 failure occurs during demand before the property, rather than being rewritten as
 falsification. General Type synthesis remains outside the declared algorithm.
+
+## P20: scoped differential observations under fixed declarations
+
+Direct typed `check-trace` previously could return a match after its fixture
+changed the model declaration midway through execution. The typed boundary now
+captures model/schema/Type owners, then adds fixture/schema/State owners without
+refreshing old stamps. Existing preparation, step, observation, validation,
+comparison and factory-return stages share one checked action. The generic model
+fold and caller-owned cleanup remain unchanged; actual State can still evolve.
+
+`PropertyTraces.lean` reuses guardedGeneration in the existing PropertyTesting
+namespace, with eight finite laws covering preflight, revision refusal at each
+stage, exact callback causes and stable match/mismatch preservation. The new
+module avoids extending the already large generator algebra file. Scope cleanup
+is covered by Scheme regressions, not a theorem about the host continuation
+runtime. The real indexed-collection example composes state-dependent traces,
+FUN, stale rejection, explicit preparation retry and seed replay.
+
+Epoch accuracy, sequential observation, termination and a faithful fixture/model
+relation are premises. Hidden heap changes, concurrent linearizability, backend
+rollback and wall-time/GC guarantees are not established. Each callback checks a
+finite ledger; wrappers are prepared once per trace. All existing checks and
+resource limits remain required.
+Fixture declaration ownership ends with active use, allowing normal resource
+retirement during teardown; model declarations stay checked through factory
+return. Executable teardown controls preserve this scope distinction.

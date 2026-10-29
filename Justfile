@@ -381,6 +381,7 @@ _check-examples:
     {{lean}} Examples/GeneratedCalls.lean
     {{lean}} Examples/CollectionTesting.lean
     {{lean}} Examples/PropertyGenerators.lean
+    {{lean}} Examples/PropertyTraces.lean
     {{lean}} Examples/RecursiveGenerators.lean
     {{lean}} Examples/PrototypeTypes.lean
     {{lean}} Examples/RowTypes.lean

@@ -351,3 +351,11 @@ entries. Source admission stays with the existing guards. The Gerbil layer reuse
 `defonce`, typed products and first-match signatures; it does not cache generated
 values or substitute unsupported Types. See the RFC for sequential promise and
 finite-Type proof premises.
+
+P20 places revision-bound differential step laws in `PropertyTraces.lean`, under
+the existing PropertyTesting namespace. `guardedTraceStep` preserves reference,
+actual and comparison order, refuses revised declarations before downstream
+stages, and retains exact exceptions and stable match/mismatch judgments. Scheme
+regressions separately verify fixture cleanup and the real indexed-collection
+FUN/retry workflow. These are finite epoch/observation laws, not host heap,
+continuation, rollback or concurrency certification.
