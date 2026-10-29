@@ -703,4 +703,79 @@ theorem guardedHandoff_delivery_cause (live : State → Bool) (state : State)
   simp [guardedHandoff_delivery live state state state payload _ before before before,
     guardedGeneration_cause live state cause before]
 
+/-- Rebuilt dependent nodes keep the old origin plus newly inspected parent/child leaves. -/
+def rebuiltSources [DecidableEq Source] (original parent child : List Source) : List Source :=
+  mergeSources (mergeSources original parent) child
+
+/-- Rebuilding never forgets an observed source or invents a new one. -/
+theorem rebuiltSources_mem [DecidableEq Source] (source : Source) (original parent child : List Source) :
+    source ∈ rebuiltSources original parent child ↔
+      source ∈ original ∨ source ∈ parent ∨ source ∈ child := by
+  simp [rebuiltSources, mergeSources_mem, or_assoc]
+
+/-- A fresh regenerated branch cannot compensate for an invalid old origin. -/
+theorem rebuiltSources_current [DecidableEq Source] (current : Source → Bool)
+    (original parent child : List Source) :
+    (rebuiltSources original parent child).all current = true ↔
+      original.all current = true ∧ parent.all current = true ∧ child.all current = true := by
+  simp only [rebuiltSources, mergeSources_current, and_assoc]
+
+/-- Separately retained descendants continue to refuse the original stale epoch. -/
+theorem rebuiltSources_stale [DecidableEq Source] (current : Source → Bool)
+    (original parent child : List Source) (stale : original.all current = false) :
+    (rebuiltSources original parent child).all current = false := by
+  cases outcome : (rebuiltSources original parent child).all current with
+  | false => rfl
+  | true =>
+    have owned := (rebuiltSources_current current original parent child).mp outcome
+    simp [stale] at owned
+
+/-- One resumed standard iterator pull has the same guarded callback semantics.
+`none` is EOF; returning EOF still requires a successful trailing source check. -/
+def guardedPull (sources : List Source) (live : State → Source → Bool)
+    (resume : State → Except Cause (Option Value × State)) (state : State) :
+    Except (Option Cause) (Option Value × State) :=
+  guardedGeneration (fun state => sources.all (live state)) resume state
+
+/-- A stale paused iterator cannot resume its producer or selector effects. -/
+theorem guardedPull_preflight (sources : List Source) (live : State → Source → Bool)
+    (resume : State → Except Cause (Option Value × State)) (state : State)
+    (stale : sources.all (live state) = false) :
+    guardedPull sources live resume state = .error none := by
+  exact guardedGeneration_preflight _ resume state stale
+
+/-- A source revision during EOF cannot certify exhaustion of a shrink neighborhood. -/
+theorem guardedPull_eof_revised (sources : List Source) (live : State → Source → Bool)
+    (state next : State) (before : sources.all (live state) = true)
+    (after : sources.all (live next) = false) :
+    guardedPull sources live (fun _ => (.ok (none, next) : Except Cause (Option Value × State))) state =
+      .error none := by
+  exact guardedGeneration_revised _ state next none before after
+
+/-- A pull exception keeps its exact cause rather than becoming stale EOF. -/
+theorem guardedPull_cause (sources : List Source) (live : State → Source → Bool)
+    (state : State) (cause : Cause) (before : sources.all (live state) = true) :
+    guardedPull sources live (fun _ => (.error cause : Except Cause (Option Value × State))) state =
+      .error (some cause) := by
+  exact guardedGeneration_cause _ state cause before
+
+/-- Successful guarded pulls preserve the exact yielded value or EOF and state. -/
+theorem guardedPull_stable (sources : List Source) (live : State → Source → Bool)
+    (state next : State) (value : Option Value) (before : sources.all (live state) = true)
+    (after : sources.all (live next) = true) :
+    guardedPull sources live (fun _ => (.ok (value, next) : Except Cause (Option Value × State))) state =
+      .ok (value, next) := by
+  exact guardedGeneration_state _ state next value before after
+
+/-- With no owned/inherited observers the ordinary iterator loop is equivalent;
+source-free fast paths never mean that a merely currently-true guard is immutable. -/
+theorem guardedPull_empty (live : State → Source → Bool)
+    (resume : State → Except Cause (Option Value × State)) (state : State) :
+    guardedPull [] live resume state =
+      match resume state with
+      | .error cause => .error (some cause)
+      | .ok result => .ok result := by
+  unfold guardedPull guardedGeneration
+  cases resume state <;> rfl
+
 end LeanPoo.Functional.PropertyTesting

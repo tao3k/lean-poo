@@ -201,3 +201,19 @@ example : guardedHandoff (fun epoch : Nat => epoch == 0)
     (fun _ => (.ok ((), 0) : Except String (Unit × Nat)))
     (fun _ => (.ok (7, 0) : Except String (Nat × Nat)))
     (fun _ _ => (.ok (true, 1) : Except String (Bool × Nat))) 0 = .error none := rfl
+
+-- A retained descendant cannot acquire fresh authority by selecting another branch.
+example : rebuiltSources [1] [2] [3, 1] = [1, 2, 3] := by decide
+example : (rebuiltSources [1] [2] [3]).all (fun n => n != 1) = false := by decide
+
+-- Every resumed iterator step checks currentness before effects and at EOF.
+example : guardedPull [1] (fun epoch : Nat => fun _ => epoch == 0)
+    (fun _ => (.error "producer ran" : Except String (Option Nat × Nat))) 1 = .error none := rfl
+example : guardedPull [1] (fun epoch : Nat => fun _ => epoch == 0)
+    (fun _ => (.ok (none, 1) : Except String (Option Nat × Nat))) 0 = .error none := rfl
+example : guardedPull [1] (fun epoch : Nat => fun _ => epoch == 0)
+    (fun _ => (.error "pull cause" : Except String (Option Nat × Nat))) 0 = .error (some "pull cause") := rfl
+example : guardedPull [1] (fun epoch : Nat => fun _ => epoch == 0)
+    (fun _ => (.ok (some 8, 0) : Except String (Option Nat × Nat))) 0 = .ok (some 8, 0) := rfl
+example : guardedPull ([] : List Nat) (fun _ : Nat => fun _ => false)
+    (fun _ => (.ok (some 8, 1) : Except String (Option Nat × Nat))) 0 = .ok (some 8, 1) := rfl

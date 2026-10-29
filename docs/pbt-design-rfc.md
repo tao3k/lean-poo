@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P16. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P17. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -779,3 +779,60 @@ are unchanged. Observer, serialization and host port costs are not claimed zero,
 and no wall-clock speedup is asserted. This preserves the generator/property
 separation learned from [Rackcheck](https://docs.racket-lang.org/rackcheck/index.html)
 while enforcing this library's additional revision protocol.
+
+## P17: source-owned resumable shrink traversal
+
+Audit finding: standard value shrink factories checked their source leaves only
+when a coroutine first started. A paused iterator could resume producer effects
+after its source changed. Combinators could detect stale results after that extra
+pull, while dependent bind reconstruction could omit the originally selected
+child's source leaves on a separately retained smaller node. Negative controls
+reproduced an unchecked next value, an extra producer effect and a descendant
+that incorrectly reported its old origin as current.
+
+One private `for-sources` form now composes the existing `with-sources` boundary
+with Gerbil's ordinary Iterator protocol. It guards factory evaluation and every
+`next!`, including EOF. Value generation, mapping, bind, filtering, sequence
+coordinates and finite-function tables use the same form. No new public DSL,
+iterator implementation, coroutine framework, scheduler or source registry is
+added. If both owned and inherited source lists are empty, the form lowers to the
+standard `for` loop directly; a currently true observer never qualifies for that
+fast path merely because of its current truth value.
+
+Bind nodes merge original/parent/selected-child leaves before admission and pass
+that flat ownership to parent regeneration and child shrinking. Mapped descendants
+retain the enclosing observed leaves. Retained subtrees cannot drop old authority
+by selecting a fresh branch, including when lifted through the ordinary typed
+`from-generator` bridge into a separate FUN run. Fresh invocation may capture a
+new epoch; old retained nodes and old replay remain refused. Unvisited alternative
+branches are not scanned or added. Advanced handwritten sample producers still
+must declare accurate source leaves on their own nodes.
+
+Regressions cover paused primitive and map/filter/bind/sequence/function traversal,
+original iterator causes after source mutation, historical bind ownership and
+fresh invocation. The Record/Function/FUN example retains a smaller dependent
+subtree, rejects it after the original branch changes, then regenerates, shrinks
+and replays under the new epoch. Existing seed checkpoints, parent-before-child
+order, zero-fuel behavior, EOF checks, proposal accounting and corpus tests remain
+in the full workflow. Independent generic acceptance stays at 55 kernel cases;
+additional public workflow and typed cases run under the standard suite.
+
+Lean reuses source unions and guarded callback transitions. Eight laws establish
+rebuilt membership/currentness/stale refusal and per-pull preflight, EOF refusal,
+exact exception/value preservation and the source-empty fast path. Accurate pure
+observers, faithful host callback interpretation and termination remain premises.
+This is sequential resume admission, not concurrent linearizability, coroutine
+runtime verification or arbitrary closure dependency inference.
+
+Guarded pulls add before/after source walks and reuse the existing inherited
+context-sharing fast path. Source identity deduplication retains all distinct
+captured epochs, never deduplicating by Boolean truth. Origin lists may grow with
+visited reconstruction ancestry; this is not an O(1) source-check or host-heap
+bound. Source-free data keep the standard loop; no wall-clock improvement is
+claimed. Proposal budgets count returned composed proposals; an interrupted pull
+that returns no proposal cannot certify a minimum. Existing heap/deadline guards
+still bound arbitrary callback work.
+
+[Rackcheck bind](https://docs.racket-lang.org/rackcheck/index.html) provides the
+parent-first lazy tree comparison. Original child seeds and regeneration order
+are unchanged; source ownership is our additional explicit protocol.

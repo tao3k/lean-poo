@@ -327,3 +327,10 @@ a stale prepared codec leaves input untouched. Prepare a new codec after its
 revision changes; old codec instances remain refused. Normal Record constructors
 restore Function wrapping during decode. Once actual port I/O starts, errors may
 leave consumed input or emitted output; source checks do not provide rollback.
+
+Lazy child iterators may be paused, but each resumed pull still checks its owned
+sources before producer effects and after normal return, including EOF. A retained
+`bind` descendant carries the original branch's source leaves as well as its new
+branch. Lifting it into a new typed sampler cannot refresh those epochs. Generate
+a new root when sources change. The implementation reuses standard Iterator/for
+and the existing source boundary; source-free traversal keeps its direct loop.
