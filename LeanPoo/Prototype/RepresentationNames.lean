@@ -310,4 +310,46 @@ constructors still pay for their own finite parent-list capture. -/
 theorem parentSpineCells_internal (parents constructions : Nat) :
     parentSpineCells parents 0 constructions = parents * constructions := by simp [parentSpineCells]
 
+/-- Finite admitted C3 cache demand. A valid explicit diagnostic context retains
+standard traversal preparation; default warm demand needs no active-set table.
+The cold resolver is the existing checked C3 engine, not a new ordering algorithm. -/
+def precedenceQuery (saved : Option (List Parent)) (diagnostic : Bool)
+    (resolve : Unit → Except String (List Parent)) : Nat × Except String (List Parent) :=
+  (if saved.isSome && !diagnostic then 0 else 1,
+   match saved with | some order => .ok order | none => resolve ())
+
+/-- The former unconditional preparation has exactly the same returned outcome.
+Valid finite diagnostic inputs and the host table operations are premises. -/
+theorem precedenceQuery_outcome (saved : Option (List Parent)) (diagnostic : Bool)
+    (resolve : Unit → Except String (List Parent)) :
+    (precedenceQuery saved diagnostic resolve).2 =
+      (match saved with | some order => .ok order | none => resolve ()) := rfl
+
+/-- A default warm hit returns the original checked order without calling the
+resolver or preparing a traversal table. Public snapshot copying is separate. -/
+theorem precedenceQuery_hit (order : List Parent)
+    (resolve : Unit → Except String (List Parent)) :
+    precedenceQuery (some order) false resolve = (0, .ok order) := rfl
+
+/-- Explicit diagnostic context keeps preparation even when the order is cached. -/
+theorem precedenceQuery_diagnostic (order : List Parent)
+    (resolve : Unit → Except String (List Parent)) :
+    precedenceQuery (some order) true resolve = (1, .ok order) := rfl
+
+/-- Invalidated or initially cold receivers run the same resolver, preserving its
+exact error or checked result. No stale order or failed admission is retained. -/
+theorem precedenceQuery_cold (diagnostic : Bool)
+    (resolve : Unit → Except String (List Parent)) :
+    precedenceQuery none diagnostic resolve = (1, resolve ()) := by
+  simp [precedenceQuery]
+
+/-- Only redundant traversal preparation is removed: an arbitrary finite demand
+batch saves one preparation per default warm hit. Snapshot/C3/hook/GC costs remain. -/
+theorem precedenceQuery_batch (orders : List (List Parent))
+    (resolve : Unit → Except String (List Parent)) :
+    (orders.map (fun order => (precedenceQuery (some order) false resolve).1)).sum = 0 := by
+  induction orders with
+  | nil => rfl
+  | cons order tail ih => simpa only [List.map_cons, List.sum_cons, precedenceQuery_hit, Nat.zero_add] using ih
+
 end LeanPoo.Prototype.Representation

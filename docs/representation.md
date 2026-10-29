@@ -770,3 +770,15 @@ internal borrowed access avoids a second public copy without removing capture,
 C3, graph, callback or GC costs. Finite valid parent trees and serialized supported
 edits remain premises. This advances scoped invalidation future work rather than
 whole-language tracking or arbitrary raw private-state mutation safety.
+
+The finite `RepresentationNames.precedenceQuery` model distinguishes an admitted
+warm C3 order from a cold/invalidated receiver, and the default context from valid
+explicit diagnostic heads. Its outcome, warm-hit, diagnostic, cold/refusal/retry
+and finite batch laws show that moving the cache test before traversal preparation
+preserves the checked resolver result and removes only redundant active-table
+preparations. The Gerbil engine still owns C4 ordering, hooks and invalidation;
+standard public list copying remains charged. This does not prove arbitrary
+callback termination, host allocation/GC or machine-time improvement. The paired
+C3 workload explicitly charges its diagnostic-context reference's one insertion,
+so its wall-clock result is a strategy comparison rather than a historical cost
+identity.

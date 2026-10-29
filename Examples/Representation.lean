@@ -578,4 +578,17 @@ example : checkedParentEdit (.ok ["new"]) false false ((["old"], 3) : List Strin
 /-- Four internal reconstructions retain their capture cost without four query copies. -/
 example : parentSpineCells 3 4 4 = 24 ∧ parentSpineCells 3 0 4 = 12 := ⟨rfl, rfl⟩
 
+/-- Repeated/shared C3 identities and Function-bearing service state require no
+new admission on default warm demand; this does not erase public snapshot cost. -/
+example : precedenceQuery (some ["join", "billing", "risk", "shared"]) false
+    (fun _ => .error "must remain lazy") =
+      (0, .ok ["join", "billing", "risk", "shared"]) := rfl
+
+/-- A source revision clears the cache: a false-like refusal cannot resurrect
+an older admitted order, and a corrected resolver may retry through the same path. -/
+example : precedenceQuery (none : Option (List String)) false (fun _ => .error "refused") =
+    (1, .error "refused") ∧
+    precedenceQuery (none : Option (List String)) false (fun _ => .ok ["join", "new"]) =
+      (1, .ok ["join", "new"]) := ⟨rfl, rfl⟩
+
 end LeanPoo.Examples.Representation
