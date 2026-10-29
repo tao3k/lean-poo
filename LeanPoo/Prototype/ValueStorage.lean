@@ -266,13 +266,15 @@ def publishSeed (current : List (Option Value))
 theorem publishSeed_retry (current cells : List (Option Value)) (cause : Error) :
     publishSeed (Error := Error) (publishSeed current (.error cause)) (.ok cells) = cells := rfl
 
-/-- Source traversal accounting only: fusing seeding and occupancy eliminates
-one width-sized count pass. Allocation, mutation dispatch and GC remain external. -/
-def seedPreparationCellVisits (fused : Bool) (width : Nat) : Nat :=
+/-- Explicit loop iterations only: the old seed traversal and separate count
+traversal each visit the width. The fused setter still checks old-cell presence
+and updates metadata; its primitive reads/writes, allocation and GC are not
+charged by this deliberately partial traversal model. -/
+def seedPreparationLoopSteps (fused : Bool) (width : Nat) : Nat :=
   if fused then width else width + width
 
 /-- Exactly the separate count traversal disappears from this source work model. -/
 theorem seed_population_pass_work (width : Nat) :
-    seedPreparationCellVisits false width = seedPreparationCellVisits true width + width := rfl
+    seedPreparationLoopSteps false width = seedPreparationLoopSteps true width + width := rfl
 
 end LeanPoo.Prototype.Representation
