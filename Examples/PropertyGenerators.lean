@@ -127,3 +127,23 @@ example : enumChoice [false, true, false] 3 = none := rfl
 example : enumRank [false, true, false] false = 0 := rfl
 example : enumRank ["read", "write", "admin"] "write" <
     enumRank ["read", "write", "admin"] "admin" := by decide
+
+/-- A finite producer/consumer model with parity-sensitive independent noise. -/
+private def traceBlocks : TraceModel (Bool × Nat) Nat Unit where
+  initial := (false, 0)
+  enabled := fun state command => if command == 1 then !state.1 else if command == 2 then state.1 else true
+  advance := fun state command =>
+    ((if command == 1 then (true, state.2) else if command == 0 then (state.1, state.2 + 1) else state), ())
+
+/-- A consumer fault survives zero or two noise commands, but not one. -/
+private def parityFault (commands : List Nat) : Bool :=
+  commands.contains 2 && ((commands.filter (· == 0)).length % 2 == 0)
+
+example : repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 0 2 = [1, 2] := by decide
+example : parityFault [0, 0, 1, 2] = true ∧ parityFault [0, 1, 2] = false ∧
+    parityFault [1, 2] = true := by decide
+example : repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 2 1 = [0, 0] := by decide
+example : traceValid traceBlocks traceBlocks.initial
+    (repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 0 2) = true := by decide
+example : traceWeight (fun _ => 0) (repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 0 2) <
+    traceWeight (fun _ => 0) [0, 0, 1, 2] := by decide

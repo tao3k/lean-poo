@@ -499,4 +499,54 @@ theorem enumRank_descent [BEq Value] [LawfulBEq Value]
   exact ⟨enumChoice_member domain index candidate selected,
     Nat.lt_of_le_of_lt (enumRank_le_index domain index candidate selected) earlier⟩
 
+/-- Dependency repair after a retained block deletion uses the same retirement. -/
+def repairedBlock (model : TraceModel State Command Reply) (state : State)
+    (commands : List Command) (start width : Nat) : List Command :=
+  retire model state (deleteBlock commands start width)
+
+/-- Block retirement cannot introduce or reorder retained command identities. -/
+theorem repairedBlock_sublist (model : TraceModel State Command Reply) (state : State)
+    (commands : List Command) (start width : Nat) :
+    (repairedBlock model state commands start width).Sublist commands :=
+  (retire_sublist model _ state).trans (deleteBlock_sublist commands start width)
+
+/-- Every retained block proposal satisfies all state-dependent preconditions. -/
+theorem repairedBlock_valid (model : TraceModel State Command Reply) (state : State)
+    (commands : List Command) (start width : Nat) :
+    traceValid model state (repairedBlock model state commands start width) = true :=
+  retire_valid model _ state
+
+/-- Repair may retire more commands, but cannot undo a block's length decrease. -/
+theorem repairedBlock_length (model : TraceModel State Command Reply) (state : State)
+    (commands : List Command) (start width : Nat) (within : start + width ≤ commands.length) :
+    (repairedBlock model state commands start width).length + width ≤ commands.length := by
+  have repaired := (retire_sublist model (deleteBlock commands start width) state).length_le
+  have deleted := deleteBlock_length commands start width within
+  change (retire model state (deleteBlock commands start width)).length + width ≤ commands.length
+  omega
+
+/-- Every command has positive structural cost, independently of parameter weight. -/
+theorem traceWeight_length (weight : Command → Nat) (commands : List Command) :
+    commands.length ≤ traceWeight weight commands := by
+  induction commands with
+  | nil => simp [traceWeight]
+  | cons head tail ih => simp only [List.length_cons, traceWeight]; omega
+
+/-- Nonempty block deletion and dependency retirement strictly lower total cost. -/
+theorem repairedBlock_smaller (model : TraceModel State Command Reply) (state : State)
+    (weight : Command → Nat) (commands : List Command) (start width : Nat)
+    (within : start + width ≤ commands.length) (positive : 0 < width) :
+    traceWeight weight (repairedBlock model state commands start width) < traceWeight weight commands := by
+  apply retire_smaller
+  have first := congrArg (traceWeight weight) (List.take_append_drop start commands)
+  have second := congrArg (traceWeight weight) (List.take_append_drop width (commands.drop start))
+  simp only [traceWeight_append] at first second
+  have middle := traceWeight_length weight ((commands.drop start).take width)
+  have length : ((commands.drop start).take width).length = width := by
+    simp only [List.length_take, List.length_drop]
+    omega
+  simp only [deleteBlock, traceWeight_append]
+  simp only [List.drop_drop] at second
+  omega
+
 end LeanPoo.Functional.PropertyTesting

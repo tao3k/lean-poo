@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P13. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P14. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -637,3 +637,47 @@ source checks retain the existing lazy tree and budget costs.
 [Rackcheck's finite-choice generator](https://docs.racket-lang.org/rackcheck/index.html)
 also supplies shrinking. Its removal-of-previous-choices policy differs from our
 explicit declaration-order policy; byte-for-byte tree parity is not claimed.
+
+## P14: dependency-repaired block trace shrinking
+
+Audit finding: the typed trace sampler enumerated only single-command deletions
+and separately rebuilt parameter coordinates. A failure requiring zero or two
+independent noise commands can disappear after every single deletion, so that
+neighborhood can stop before a smaller valid witness is reachable. This is a
+concrete missing structural neighborhood, not a promise of global minimality.
+
+`testing/property/model` now exports `shrink-trace model commands shrink`. It
+composes the existing `data-list-shrinks` policy with `repair-trace`: aligned blocks
+halve to single positions, then parameter-coordinate proposals follow; each raw
+candidate is normalized and dependency-repaired once. The typed `trace-generator`
+uses this function with its existing prepared model and raw parameter callback.
+There is no separate block algorithm, identity search, handle renaming or fixture
+execution. Generic downstream code uses the same function. Callback errors retain
+their original cause, and empty proposals remain successful candidate sequences.
+
+The existing runner still owns membership, strict cost descent, retained failure,
+source checks, zero-fuel behavior and replay. Repair can retire more dependents;
+strict descent is guaranteed for nonempty structural deletions with natural
+parameter weights. Parameter replacements still require the runner's cost check.
+The normalizer must be stable and preserve the intended command interpretation;
+Lean's retirement laws model already-normalized commands, not arbitrary decoder
+effects. Parameter callbacks and normalizers remain terminating premises.
+
+Acceptance includes a single-deletion control that cannot cross a parity barrier,
+the block policy reducing to the required producer/consumer pair, dependency
+retirement, parameter normalization errors, balanced scoped fixtures, zero-budget
+no-shrink behavior, FUN execution, seed/concrete replay and old-source refusal.
+The generic isolated suite now executes 50 cases. Existing real collection model
+fault injections and their dependency/replay regressions remain in the full check.
+
+Lean composes existing block and retirement laws to prove valid dependency order,
+retained-sublist identity, at least the deleted block's length decrease, and strict
+complete trace-weight decrease. The concrete parity model matches the executable
+control. No arbitrary callback, runtime scheduler or host-GC theorem is claimed.
+
+The value-only callback boundary still materializes a finite proper candidate
+list. For length N, structural proposals are counted by `list-deletion-count N 0`;
+repairs traverse retained prefixes, and parameter proposal costs are additional.
+We do not claim lazy preparation, linear wall-clock complexity, all possible
+subsequences, or a globally minimal witness. The supplied neighborhood becomes
+stronger without changing fuel accounting or inventing another shrink runner.

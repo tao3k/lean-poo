@@ -305,3 +305,11 @@ earlier declarations without redrawing. Use an explicit natural rank in a generi
 specification. POO `Enum` derivation supplies its existing first-occurrence index
 as that rank, including nested collections and replay. Empty Enum is uninhabited;
 an empty generic alternatives list is a constructor error.
+
+Generic model users supply `(shrink-trace model commands shrink-command)` from
+`:clan/poo/testing/property/model` as their ordinary generator's shrink callback.
+It shares collection block/coordinate proposals, then repairs dependent commands.
+POO `trace-generator` uses the same policy automatically. No draws or actual
+fixture transitions run during candidate preparation; model callbacks remain
+explicit and finite. The runner still checks each repaired proposal's domain,
+strictly smaller measure and falsification before accepting it.
