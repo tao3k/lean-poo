@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P18. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P19. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -856,3 +856,29 @@ retained source refusal and downstream Record/Function/FUN/replay composition.
 They do not prove host callbacks, PRNG quality, physical sharing, allocation or GC.
 Each coordinate still packs the full product and checks declared sources; removal
 of suffix regeneration is not a constant-time or universal speedup claim.
+
+## P19: call-input demand and derivation reuse
+
+The typed Gerbil call generator previously eagerly prepared every declared input
+Type, even a completely shadowed case-lambda clause or an absent rest suffix.
+An unused constructor exception could therefore refuse an otherwise supported
+call language. It now captures input identities immediately and derives only the
+supplied fields of the structurally selected first clause, using the project's
+existing `defonce` / Gerbil promises. Successful derivation is shared across
+occurrences, shrinking and replay; actual sample values are never cached. Selected
+unsupported Types still fail with their exact cause and no Any/branch fallback.
+
+`demandInput` / `demandInputs` and eight laws in `PropertyGenerators.lean` model
+identity lookup, successful reuse, exact errors, demand locality, empty rows,
+repeated fields, stopping after refusal and preserving earlier cache entries.
+The existing signature-selection laws determine the actual demanded row. Source
+currentness remains a separate necessary guard: unforced declared Types remain
+parent dependencies, and demanded children retain their transitive sample guards.
+Regression controls and a keyword/optional/rest/multiple-return Function workflow
+compose Record configuration, FUN, shrinking, concrete/seed replay and fresh retry.
+
+This models finite sequential demand under faithful descriptor identity and
+promise reuse. It does not prove the host promise runtime, callback termination,
+concurrent forcing, hidden mutation, GC or constant-time preparation. Constructor
+failure occurs during demand before the property, rather than being rewritten as
+falsification. General Type synthesis remains outside the declared algorithm.

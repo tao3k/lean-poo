@@ -839,4 +839,79 @@ theorem retainedProductStep_descent (roots : List Value) (measure : Value → Na
       have h := ih index (by simpa using within) (by simpa using smaller)
       simpa using Nat.add_lt_add_left h (measure head)
 
+/-- Demand one supplied input by descriptor identity. Successful preparation is
+reused; a missing entry invokes only that descriptor's derivation. Source guards
+remain outside this finite promise model, as in `guardedGeneration`. -/
+def demandInput [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) : Except Cause (Value × List (Key × Value)) :=
+  match prepared.lookup key with
+  | some value => .ok (value, prepared)
+  | none => match derive key with
+    | .error cause => .error cause
+    | .ok value => .ok (value, (key, value) :: prepared)
+
+/-- Prepare exactly the selected, supplied input row in order. Prior successful
+entries survive a later refusal; no unselected or omitted Type is demanded. -/
+def demandInputs [DecidableEq Key] (derive : Key → Except Cause Value)
+    (inputs : List Key) (prepared : List (Key × Value)) :
+    Except Cause (List Value) × List (Key × Value) :=
+  match inputs with
+  | [] => (.ok [], prepared)
+  | key :: rest => match demandInput derive key prepared with
+    | .error cause => (.error cause, prepared)
+    | .ok (value, next) =>
+      let (result, final) := demandInputs derive rest next
+      (result.map (value :: ·), final)
+
+/-- A dormant cached input never invokes its constructor again. -/
+theorem demandInput_cached [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) (value : Value)
+    (cached : prepared.lookup key = some value) :
+    demandInput derive key prepared = .ok (value, prepared) := by
+  simp [demandInput, cached]
+
+/-- A selected unsupported input keeps the exact cause; no Type fallback exists. -/
+theorem demandInput_error [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) (cause : Cause)
+    (missing : prepared.lookup key = none) (refused : derive key = .error cause) :
+    demandInput derive key prepared = .error cause := by
+  simp [demandInput, missing, refused]
+
+/-- Successful demand retains the exact generator and makes it reusable. -/
+theorem demandInput_prepared [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) (value : Value)
+    (missing : prepared.lookup key = none) (admitted : derive key = .ok value) :
+    demandInput derive key prepared = .ok (value, (key, value) :: prepared) := by
+  simp [demandInput, missing, admitted]
+
+/-- Demand depends only on this descriptor, never another declared input's hook. -/
+theorem demandInput_local [DecidableEq Key] (left right : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) (same : left key = right key) :
+    demandInput left key prepared = demandInput right key prepared := by
+  simp [demandInput, same]
+
+/-- A call with no supplied fields cannot force any generator. -/
+theorem demandInputs_empty [DecidableEq Key] (derive : Key → Except Cause Value)
+    (prepared : List (Key × Value)) : demandInputs derive [] prepared = (.ok [], prepared) := rfl
+
+/-- Repeated positional/optional/keyword/rest occurrences share one preparation. -/
+theorem demandInputs_repeated [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (value : Value) (admitted : derive key = .ok value) :
+    demandInputs derive [key, key] [] = (.ok [value, value], [(key, value)]) := by
+  simp [demandInputs, demandInput, admitted, Except.map]
+
+/-- Failure suppresses all later constructor demands and preserves earlier entries. -/
+theorem demandInputs_stop [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (rest : List Key) (prepared : List (Key × Value)) (cause : Cause)
+    (missing : prepared.lookup key = none) (refused : derive key = .error cause) :
+    demandInputs derive (key :: rest) prepared = (.error cause, prepared) := by
+  simp [demandInputs, demandInput_error derive key prepared cause missing refused]
+
+/-- A retained successful promise can be reused without even a viable constructor. -/
+theorem demandInputs_cached_single [DecidableEq Key] (derive : Key → Except Cause Value)
+    (key : Key) (prepared : List (Key × Value)) (value : Value)
+    (cached : prepared.lookup key = some value) :
+    demandInputs derive [key] prepared = (.ok [value], prepared) := by
+  simp [demandInputs, demandInput_cached derive key prepared value cached, Except.map]
+
 end LeanPoo.Functional.PropertyTesting

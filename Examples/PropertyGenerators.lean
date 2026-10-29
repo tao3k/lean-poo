@@ -223,3 +223,13 @@ example : retainedProductStep [2, 7, 9] 0 0 41 = ([0, 7, 9], 41) := rfl
 example : (retainedProductStep [2, 7, 9] 0 0 41).1[2]? = some 9 := rfl
 example : retainedProductStep ([] : List Nat) 0 3 41 = ([], 41) := rfl
 example : ((retainedProductStep [2, 7, 9] 0 0 41).1.map id).sum < [2, 7, 9].sum := by decide
+
+-- Only supplied descriptor identities are demanded; cached inputs are reused.
+example : demandInputs (fun key : Nat => if key == 1 then (.ok 7 : Except String Nat)
+    else .error "unselected Type") [1, 1] [] = (.ok [7, 7], [(1, 7)]) := rfl
+example : demandInputs (fun _ : Nat => (.error "omitted Type" : Except String Nat)) [] [] =
+    (.ok [], []) := rfl
+example : demandInputs (fun _ : Nat => (.error "selected Type" : Except String Nat)) [2, 1] [] =
+    (.error "selected Type", []) := rfl
+example : demandInputs (fun _ : Nat => (.error "must not force" : Except String Nat)) [1] [(1, 7)] =
+    (.ok [7], [(1, 7)]) := rfl
