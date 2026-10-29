@@ -62,7 +62,7 @@ theorem parallelPreparation_workers (allocation : BuildAllocation) :
   · exact Nat.le_refl _
 
 /-- Package capacity never decreases. Execution of the unchanged inventory is
-a host xargs/make obligation, checked separately in the real build receipts. -/
+a standard build/runner obligation, checked separately in the real build receipts. -/
 theorem parallelPreparation_packages (allocation : BuildAllocation) :
     allocation.packages ≤ (parallelPreparation allocation).packages := by
   unfold parallelPreparation
@@ -80,8 +80,8 @@ def boundedPreparation (cores : Nat) : BuildAllocation :=
   else if cores < 12 then ⟨3, max 1 (cores / 3 - 1)⟩
   else ⟨4, max 1 (cores / 4 - 1)⟩
 
-/-- Standard concurrent packages are capped by the four declared functional
-parts; their active capacity stays within configured cores, apart from the
+/-- Standard concurrent packages are capped at four Just workers; queued
+functional parts do not enlarge this capacity. Active capacity stays within cores, apart from the
 existing unavoidable frontend/backend pair on a zero/one-core configuration. -/
 theorem boundedPreparation_slots (cores : Nat) :
     (boundedPreparation cores).slots ≤ max 2 cores := by
@@ -128,5 +128,13 @@ standard make remains responsible for rejecting duplicate output identities. -/
 theorem declaredBuildUnits_count (groups : List (List String)) :
     (declaredBuildUnits groups).length = (groups.map List.length).sum := by
   simp [declaredBuildUnits, List.length_flatten]
+
+/-- Reordering finite declared groups preserves every compile target and its
+multiplicity. This is inventory preservation, not equivalence of arbitrary
+effectful compiler callbacks or a theorem about their execution time. -/
+theorem declaredBuildUnits_perm {left right : List (List String)}
+    (order : left.Perm right) :
+    (declaredBuildUnits left).Perm (declaredBuildUnits right) := by
+  simpa only [declaredBuildUnits] using order.flatten
 
 end LeanPoo.Prototype.Representation
