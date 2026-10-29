@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P27. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P28. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -38,10 +38,10 @@ admission, normalization and source-current callbacks at the boundary. Generalit
 is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 
 The independent-library acceptance copies these five generic source modules and
-`examples/property-kernel.ss` and its ordinary product/filter/scope/size helpers
+`examples/property-kernel.ss` and its ordinary product/filter/scope/size/trace helpers
 into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 79 case receipts, an error-free result and
+through `gerbil test`. It requires all 83 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
@@ -1139,3 +1139,49 @@ Rackcheck's pinned [filtering tree implementation](https://github.com/Bogdanp/ra
 filters lazy branches. Our already-established bounded protocol keeps charged
 tombstones so filtering cannot hide work. Source refusal and terminal accounting
 are our extension, not a claim that Rackcheck mandates revision observers.
+
+
+## P28: exact bounded model draw configuration
+
+The generic trace draw accepted non-natural steps and size directly as iterator
+bounds. Before repair, steps `-1` and `1/2` each generated a command and invoked
+initialization instead of refusing. Gerbil's standard range iterator intentionally
+supports reverse and fractional ranges; it cannot supply this protocol's natural
+step contract. Infinite bounds could also bypass the promised finite quota. This
+is an implementation admission gap, not unrestricted callback termination.
+
+`draw-trace` now uses Gerbil's existing parameter contracts for model identity,
+draw/random procedures and exact natural limits. A shared private `trace-limit?`
+serves both dimensions. Invalid configuration refuses before model initialization
+or command callbacks. The same for/fold owns state and command order, the original
+size is passed unchanged, and at most `min(steps,size)` draws may succeed. No
+coercion, fallback limit, new framework, namespace, scheduler or PRNG owner is added.
+A valid zero cap retains initialization once, including its original exceptions,
+then performs no draw; this preserves the existing model initialization semantics.
+Explicit stop still omits its unused payload. Disabled/invalid commands and
+non-Boolean continuation judgments remain errors, never silently dropped inputs.
+
+Four generic cases cover negative, fractional, inexact, NaN/infinite and malformed
+limits in both dimensions; callable/model admission before effects; exact caps,
+large natural limits capped by a small size, original callback size/state order,
+false command payloads, early stop and exact initializer/draw causes. The independent
+standard-library suite now executes 83 cases. A typed Record command with a wrapped
+Function exercises state-dependent open/use generation, invalid size-policy refusal
+before initialization, zero command cap, FUN differential fixture cleanup,
+dependency-preserving minimization and both replay forms. The same action can retry
+with a valid configuration; generation and concrete replay keep their distinct costs.
+
+Nine laws in `PropertyTraces.lean` stage validated limits and initialization over
+the existing `drawTrace` engine: invalid admission, original initializer cause,
+zero steps/size, unchanged-size delegation, explicit stop, disabled command refusal,
+valid prefixes bounded by both limits, and exact enabled payload delivery. An
+absent validated configuration models refusal; accepted limits are Nat values.
+Runtime contract fidelity, normalized/faithful choices and callback termination
+remain premises. These laws do not prove Gerbil contracts/compiler/iterators,
+PRNG quality, arbitrary callback termination, host GC or wall-clock speedups.
+The typed steps ceiling and all process, heap and search limits remain unchanged.
+
+Rackcheck's pinned [generator contract](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/core.rkt)
+requires an exact nonnegative generation size. We retain that contract discipline
+using Gerbil mechanisms; this project's finite model-trace API is an extension,
+not a claim that Rackcheck implements the same state-machine protocol.
