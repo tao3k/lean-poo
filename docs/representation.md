@@ -13,8 +13,8 @@ in the original representation TODO; they are not a new claim of a complete MOP.
 It stores ordered contributions and a first-name index. Persistent updates copy
 balanced-tree paths, preserve later same-name methods and append new names. Input
 and reflection list spines/entry pairs are owned; values and SlotSpecs are shared.
-`prototype-map-remove` removes all direct contributions for a name, rebuilding the
-order tree. There is no logarithmic removal or deep-value immutability claim.
+`prototype-map-remove` uses private ordinal indices and standard persistent RBTree
+deletion, preserving survivor order. Deep-value immutability is not implied.
 
 The actual `object.ss` constructor, defaults, setters, `.putslot!`, `.putdefault!`
 and `.cc` use these snapshots. `.cc` shares unaffected tree paths and rebinds
@@ -24,14 +24,15 @@ formulas to the new receiver; it does not retain an evaluated parent instance.
 `slot-layout.ss` weakly interns a sorted unique symbolic shape. Symbol identities,
 including uninterned names, determine its process-local order. No serial number
 is a disk format or cross-process identity. Each live shape shares its name/index
-mapping; each receiver owns its vector cells. Ordinary lookup retains the existing
-hash interface. The vector is prepared only by an explicit `object-layout` or
-`.ref/inline` access, and successful ordinary reads keep it coherent. This is an
-opt-in representation protocol, not a claim that every hash instance was replaced.
+mapping; each receiver owns its primary vector cells. Ordinary lookup uses the
+standard HashTable interface over those cells. Instance preparation allocates
+uncomputed cells without forcing bodies; `object-layout` exposes the SAME store,
+and inline sites retain only guards/offsets. Source/provenance metadata still uses
+its existing tables. There is no auxiliary value cache or per-site seeding flag.
 
 A caller creates `make-slot-cache 'total`, then uses `.ref/inline receiver site`.
 The site retains one owner, revision, layout and certified index, never a separate
-cached result. Every hit requires exact owner/revision/layout identity. Equal
+cached result. Every hit requires exact owner/revision/layout AND shape identity. Equal
 shapes on distinct receivers cannot share cells. Supported parent, protocol,
 declaration, slot, default, topology and instance edits invalidate existing values,
 compiled methods, ordering, reflection AND layout through the same registered
@@ -43,7 +44,7 @@ explicit instance assignment; these are separate existing protocols.
 
 ## Integrated acceptance
 
-`t/representation-test.ss` exercises persistent snapshots, duplicate method order,
+`t/representations/representation-test.ss` exercises persistent snapshots, duplicate method order,
 uninterned symbols, live shape sharing, receiver switching, shared-parent diamonds,
 computed values, insert/delete/default/topology changes, failed edits, cycles and
 retry. `examples/representation-service.ss` composes checked ObjectContract/refine
@@ -57,9 +58,9 @@ controls live in top-level `Examples/Representation.lean`.
 
 The proofs model source-level behavior. They do not verify the RBTree library,
 weak table, collector, compiler or physical vector implementation. Token identity
-must denote a fixed shape and receiver-local cells. All dependencies must be
-registered; supported edits/evaluation are serialized. Raw generated struct setters,
-raw instance-hash mutations and unregistered callback dependencies bypass the
+denotes receiver-local cells; the separate shape stamp rejects changed offsets.
+All dependencies must be registered; supported edits/evaluation are serialized.
+Raw generated struct setters, raw primary-store mutations and unregistered callback dependencies bypass the
 protocol. No host process termination, concurrent atomicity, retained-function
 revocation or speed/allocation improvement is claimed.
 
@@ -158,14 +159,14 @@ revised through `.putslot!`; parent instance assignments are not inherited value
 
 The complete existing collection study adds preparation, cold evaluation,
 monomorphic/switching access, tracked reads, shared-parent revision and cached
-module-load consumer phases. Monomorphic/switching references preserve the prior
-untracked inline algorithm; other phases compare ordinary symbolic reads.
+module-load consumer phases. Ordinary symbolic reads and current inline reads
+use the same value authority; no preceding evaluator is copied into the study.
 AB/BA, A/A, B/B, natural/collected histories and first/post-GC/full-entry work remain
 charged. Cold layout costs cannot be inferred away from an offset-resolution law.
 
-This does NOT complete full-vector instance storage, automatic PIC/JIT selection,
+Primary vector storage is implemented. Automatic PIC/JIT selection,
 fresh module expansion/compile/link/initialization performance or the Gerbil
-loader/evaluator implementation. The loader retains its standard registry,
+loader/evaluator implementation remain separate boundaries. The loader retains its standard registry,
 loading synchronization and error/reload semantics. No host runtime, collector,
 compiler or universal wall-time improvement is proved by these finite laws.
 
@@ -222,11 +223,11 @@ not claim evaluation is effect-free or rolls back those successful dependencies.
 
 `demandBatch_deferred` lifts this to whole finite batches and exact first-refusal
 semantics. Registered supported invalidation and faithful current cells remain
-premises. `seedingLookups` counts only initial VALUE-table probes: eager seeding
-uses one per canonical name, while deferred creation uses zero. Shape inventory,
-sorting/interning, dense vector allocation/fill, demand reads, possible repeated
-writes, guards and GC stay charged. This is neither constant-time construction
-nor full removal of per-receiver hash storage. Dynamic module initialization and
+premises. `seedingLookups` describes direct constructor inputs: supplied values
+use one probe per canonical name, while empty creation uses zero. It is not a
+per-site object policy. Shape inventory, sorting/interning, dense vector
+allocation/fill, demand reads, guards and GC stay charged. This is neither
+constant-time construction nor removal of all metadata hashes. Dynamic module initialization and
 compiler behavior are still outside these source laws.
 
 ## Certified reuse during static-layout construction
@@ -236,9 +237,9 @@ hint. The shape stores its canonical ordered names beside its standard identity
 hash index. After standard identity-based duplicate removal, equal cardinality
 and membership of EVERY current name certify reuse. Reordered/duplicate names
 are harmless; different uninterned symbols, additions and removals take the
-original sort/weak-intern path. The hint never supplies old cells. Eager seeding
-still reads only the current ordinary instance; demand-filled construction keeps
-its private sentinel. Owner/revision/layout guards and ordinary evaluation remain
+original sort/weak-intern path. The hint never supplies old cells. Fresh primary
+cells contain current source assignments or the private uncomputed sentinel.
+Owner/revision/layout/shape guards and ordinary evaluation remain
 unchanged. Supported invalidation discards the receiver layout as before.
 
 The existing Representation model proves full field-set preservation from the
