@@ -343,6 +343,7 @@ import LeanPoo.Functional.AssociationBindings
 import LeanPoo.Object.DeclarationOrder
 
 import LeanPoo.Prototype.Representation
+import LeanPoo.Prototype.ValueStorage
 import LeanPoo.Prototype.RepresentationIndex
 import LeanPoo.Prototype.RepresentationNames
 import LeanPoo.Prototype.RepresentationDeclarations

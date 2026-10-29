@@ -675,6 +675,7 @@
   "LeanPoo/Prototype/SlotSpec.lean",
   "LeanPoo/Prototype/Target.lean",
   "LeanPoo/Prototype/Types.lean",
+  "LeanPoo/Prototype/ValueStorage.lean",
   "LeanPoo/Slots.lean",
   "Tests/AccountMigration.lean",
   "Tests/AlternativeCombination.lean",
@@ -883,7 +884,7 @@
   "Tests/Trees.lean",
   "Tests/TypedSlots.lean",
   "Tests/ValidationInvariant.lean",
-  "Tests/VerifiedOrder.lean"
+  "Tests/VerifiedOrder.lean",
 ]
 "whole_paper_implemented" = false
 "limits" = [

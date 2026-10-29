@@ -2,8 +2,8 @@ import LeanPoo.Object.CacheInvalidation
 
 /-! Persistent ordered specifications and guarded receiver-local vector layouts.
 This models source semantics, not the standard RBTree implementation, weak-table
-collector, Scheme compiler or pointer layout. A runtime layout token denotes one
-immutable shape and one receiver's cells; supported edits discard that token.
+collector, Scheme compiler or pointer layout. A site retains a receiver layout token and an independent immutable shape
+guard. Source edits discard the layout; internal memo growth can replace its shape.
 String keys denote symbol identities, including distinct uninterned symbols, not
 display spelling. Registered finite dependency edges and serialized edits remain prerequisites. -/
 namespace LeanPoo.Prototype.Representation

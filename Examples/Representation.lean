@@ -1,3 +1,4 @@
+import LeanPoo.Prototype.ValueStorage
 import LeanPoo.Prototype.RepresentationIndex
 import LeanPoo.Prototype.RepresentationNames
 import LeanPoo.Prototype.RepresentationDeclarations
@@ -608,5 +609,25 @@ initializers, out of entry. Physical closure size and mapping cost stay external
 example : (addPreparation
     (modulePreparation true ["object", "mop"])
     (modulePreparation true ["object-contract"])).bootstrapInitializers = 3 := by decide
+
+/-- A successful false result is one primary value, visible to either reader. -/
+example (view : View Bool) (evaluate : Unit → Except String Bool) :
+    primaryRead (commitPrimary (Error := String) view "enabled" (.ok false)).1
+      "enabled" evaluate = .ok false := primaryRead_committed _ _ _ _
+
+/-- Failed callback evaluation retains exact state for independent retry. -/
+example (view : View (Nat → Nat)) (later : Except Bool (Nat → Nat)) :
+    commitPrimary (commitPrimary view "callback" (.error false)).1 "callback" later =
+      commitPrimary view "callback" later := commitPrimary_retry _ _ _ _
+
+/-- Clearing cells keeps lazy demand and the original callback refusal. -/
+example (site : Site) (view : View Bool) :
+    demandRead true site (deferCells view)
+      (fun _ => primaryRead (deferCells view) site.name (fun _ => Except.error false)) =
+      Except.error false := demandRead_cleared _ _ _ _
+
+/-- A dependency inserted before the target shifts its offset during evaluation. -/
+example : finalValueOffset ["target", "fallback"] ["early", "target", "fallback"]
+    0 (fun _ => 1) = 1 := by decide
 
 end LeanPoo.Examples.Representation

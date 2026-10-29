@@ -797,3 +797,31 @@ all initializers. It does not prove arbitrary initializer reordering, linker wor
 Mach-O mappings, filesystem state or an unconditional startup deadline. Paired
 standard-program receipts keep executable bootstrap and whole-process wall/GC
 costs charged; ordinary full `gerbil test` remains a separate admission gate.
+
+## Authoritative vector value storage
+
+The Gerbil value backend now advances the author's static-instance representation
+proposal: one receiver-local vector is the value authority, exposed through the
+compiler's existing `HashTable` interface. Ordinary lookup, cache-only lookup,
+printing and serialization observe the same cells as inline sites. Shape indices
+remain shared metadata; compiled methods, explicit source assignments and issued
+read provenance retain their distinct existing tables. This is removal of the
+per-receiver hash *value cache*, not removal of every hash in POO.
+
+`ValueStorage.lean` reuses the existing `View`, `Site`, `rememberCell` and demand
+semantics. It proves ordinary/indexed observation agreement without a separate
+hash/vector fidelity assumption, exact successful values, publication-frame and
+refusal/retry laws, clearing/demand, final-shape offset soundness and refusal before
+route dispatch. Evaluation may already have memoized dependencies or produced
+effects: the publication laws are not callback rollback laws. Host shape/index
+fidelity, sentinel separation, trusted constructors and serialized supported edits
+remain premises. Neither compiler correctness nor physical memory/GC/time follows
+from these finite source laws.
+
+The operation model removes one value write from the former dual publication.
+Its total-work bound explicitly charges preparation; it does not infer a wall
+clock win from fewer writes. The Scheme qualification compares two current
+single-authority strategies (standard symbolic hash versus the vector backend),
+not an artificially reconstructed historical timing. Cold/new-shape, preparation,
+hot, refusal/retry and complete shared-service revision workflows retain setup,
+AB/BA, A/A/B/B and GC controls. Raw measurements stay outside Git.
