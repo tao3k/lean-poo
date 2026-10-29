@@ -970,13 +970,14 @@ existing build-allocation laws from receiver-layout semantics, retaining the sam
 `LeanPoo.Prototype.Representation` namespace. Standard compiler sessions own a
 finite declared import closure; smaller session inventories are a source-count
 optimization, not a replacement module registry or a physical loader theorem.
-The original 25 isolated compile invocations are grouped into four compiler-only
+The original 25 isolated compile invocations are grouped into bounded compiler-only
 functional packages. All 149 installed test module identities remain unchanged.
 
 `boundedPreparation_slots` verifies the Just/Gerbil worker policy for every
 configured core count, including the existing one-frontend/one-backend fallback
 for zero/one configured cores. On twelve cores it selects four sessions with two
-backends each. `boundedPreparation_heap_limits` concerns only sums of configured
+backends each, independently of how many functional parts are queued.
+`boundedPreparation_heap_limits` concerns only sums of configured
 heap-limit parameters: it does not estimate live memory or RSS, which also includes
 mappings, C stacks and external compiler allocations. The approved frontend option
 is `max-heap=2G`; it is not a reason to enlarge the heap after another overflow.
@@ -1003,3 +1004,14 @@ descendants; successful application checks still require natural exit and normal
 unloading. These are finite source/configuration results, not verification of
 Lean's C++ implementation, the Scheme compiler, macOS validation policy or physical
 wall-clock latency. Cold dyld admission remains an independently observed limit.
+
+Six functional compiler parts are now queued behind the same four-worker bound;
+the largest collection and contract contexts are split without widening the VM
+ceiling. `declaredBuildUnits_perm` proves preservation of target multiplicity under
+group reordering. The source-matched 149-module / 2,052-case control naturally
+exited in 742.39 s, with test compilation 211.17 s under its original 300-second
+limit. The full test phase still took 376.02 s. Thus this control admits the
+bounded compile workflow, not a stable whole-entry speedup over the older cohort.
+Two short first-load samples showed dyld mapping/`fcntl` waits, not evidence that
+all test time has that cause. These remain executable receipts and host premises,
+separate from the finite inventory and configured-capacity proofs.

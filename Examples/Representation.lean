@@ -440,10 +440,17 @@ existing root phase's configured sum. This is not a process RSS measurement. -/
 example : heapLimitSum (boundedPreparation 12) 1 2 2 =
     heapLimitSum ⟨1,12⟩ 2 2 2 := rfl
 
-/-- Four bounded sessions prepare the same distinct common import closure;
+/-- Six bounded sessions prepare the same distinct common import closure;
 all twenty-five logical test packages remain in the declared inventory. -/
 example : preparationVisits 25 ["compiler", "make", "poo", "make"] = 75 ∧
-    preparationVisits 4 ["compiler", "make", "poo", "make"] = 12 := by decide
+    preparationVisits 6 ["compiler", "make", "poo", "make"] = 18 := by decide
+
+/-- Queuing one bounded part before another changes preparation order while
+retaining all declared units, including repeated units within a part. -/
+example (types contracts collections : List String) :
+    (declaredBuildUnits [types, contracts, collections]).Perm
+      (declaredBuildUnits [contracts, types, collections]) :=
+  declaredBuildUnits_perm (List.Perm.swap _ _ _)
 
 /-- A validated Function cannot escape a metadata revision, even when its body
 is retained by identity; no Function application is needed by the fence. -/

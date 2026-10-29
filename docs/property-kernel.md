@@ -401,3 +401,8 @@ P26 closes mandatory collection sources at the existing size selector. Positive
 minimums preflight element leaves; optional empty selection does not claim them.
 `PropertySizes.lean` models bounded lengths and authority while Record/FUN
 regressions check retained shrinking, wrapped Functions and explicit revision retry.
+
+P27 closes the shrink consumer admission boundary for returned filtered proposals,
+including the last budget token. Existing audit accounting distinguishes charged
+source refusal from unreturned iterator errors; settled real values alone reach
+shrinking admission. `PropertyFilters.lean` gives the finite event/source laws.

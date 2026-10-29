@@ -141,4 +141,80 @@ theorem filterHistory_pipeline [DecidableEq Source] (live : State → Source →
       simp [after] at old
   exact guardedStages_revised _ state next value rest before obsolete
 
+/-- A returned proposal is observed before classification. None is a charged
+pruned node, not a value to pass to domain, measure or property callbacks. -/
+def proposalEvent (proposal : Option Value) (admission : Except (Option Cause) Bool) :
+    ShrinkEvent (Option Value) (Option Cause) :=
+  match admission with
+  | .error cause => .callbackError proposal cause
+  | .ok fresh => if fresh then .candidate proposal else .callbackError proposal none
+
+/-- Reuse the existing finite accounting, projecting only settled real values
+into the established shrinking engine. Tombstones retain their charges. -/
+def proposalValues (fuel : Nat) (events : List (ShrinkEvent (Option Value) (Option Cause))) :
+    List Value := (auditShrinks fuel events).completed.filterMap id
+
+/-- Even the final refused proposal is charged and interrupts rather than
+publishing a completed negative scan. The suffix is not part of the receipt. -/
+theorem proposalEvent_stale (fuel : Nat) (proposal : Option Value)
+    (rest : List (ShrinkEvent (Option Value) (Option Cause))) :
+    auditShrinks (fuel + 1) (proposalEvent proposal (.ok false) :: rest) =
+      ⟨[], 1, some none⟩ := rfl
+
+/-- A source-observer exception preserves its exact cause and returned charge. -/
+theorem proposalEvent_cause (fuel : Nat) (proposal : Option Value) (cause : Option Cause)
+    (rest : List (ShrinkEvent (Option Value) (Option Cause))) :
+    auditShrinks (fuel + 1) (proposalEvent proposal (.error cause) :: rest) =
+      ⟨[], 1, some cause⟩ := rfl
+
+/-- Live pruning contributes no value callback or prospective witness. -/
+theorem proposalValues_pruned (fuel : Nat)
+    (rest : List (ShrinkEvent (Option Value) (Option Cause))) :
+    proposalValues (fuel + 1) (proposalEvent none (.ok true) :: rest) =
+      proposalValues fuel rest := rfl
+
+/-- Skipping a pruned payload never skips the one returned proposal charge. -/
+theorem proposalEvent_pruned_charge (fuel : Nat)
+    (rest : List (ShrinkEvent (Option Value) (Option Cause))) :
+    (auditShrinks (fuel + 1) (proposalEvent none (.ok true) :: rest)).attempts =
+      (auditShrinks fuel rest).attempts + 1 := rfl
+
+/-- A settled value is forwarded unchanged to ordinary shrinking admission. -/
+theorem proposalValues_value (fuel : Nat) (value : Value)
+    (rest : List (ShrinkEvent (Option Value) (Option Cause))) :
+    proposalValues (fuel + 1) (proposalEvent (some value) (.ok true) :: rest) =
+      value :: proposalValues fuel rest := rfl
+
+/-- No supplied event is consumed when the finite consumer budget is zero.
+This is a stream-model law, not a host iterator termination theorem. -/
+theorem proposalValues_zero (events : List (ShrinkEvent (Option Value) (Option Cause))) :
+    proposalValues 0 events = [] ∧ (auditShrinks 0 events).attempts = 0 := ⟨rfl, rfl⟩
+
+/-- Rejected, invalid and interrupted proposals share the same attempt bound. -/
+theorem proposalEvent_budget (fuel : Nat)
+    (events : List (ShrinkEvent (Option Value) (Option Cause))) :
+    (auditShrinks fuel events).attempts ≤ fuel := (auditShrinks_budget fuel events).2
+
+/-- Only settled real values may replace a valid false witness; the existing
+admission engine proves validity, falsity and descent even after interruption. -/
+theorem proposalValues_preserve (valid fails : Value → Bool) (measure : Value → Nat)
+    (fuel : Nat) (best : Value) (events : List (ShrinkEvent (Option Value) (Option Cause)))
+    (domain : valid best = true) (failure : fails best = true) :
+    let witness := (shrink valid fails measure fuel best (proposalValues fuel events)).1
+    valid witness = true ∧ fails witness = true ∧ measure witness ≤ measure best :=
+  shrink_preserves valid fails measure fuel best (proposalValues fuel events) domain failure
+
+/-- Earlier live metadata cannot mask a newly observed obsolete branch. -/
+theorem proposalEvent_new_stale [DecidableEq Source] (live : Source → Bool)
+    (past observed : List Source) (proposal : Option Value) (stale : observed.all live = false) :
+    proposalEvent (Cause := Cause) proposal (.ok ((mergeSources past observed).all live)) =
+      .callbackError proposal none := by
+  have obsolete : (mergeSources past observed).all live = false := by
+    cases fresh : (mergeSources past observed).all live with
+    | false => rfl
+    | true =>
+      have both := (mergeSources_current live past observed).mp fresh
+      simp [stale] at both
+  simp [proposalEvent, obsolete]
+
 end LeanPoo.Functional.PropertyTesting

@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P26. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P27. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -41,7 +41,7 @@ The independent-library acceptance copies these five generic source modules and
 `examples/property-kernel.ss` and its ordinary product/filter/scope/size helpers
 into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 75 case receipts, an error-free result and
+through `gerbil test`. It requires all 79 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
@@ -1093,3 +1093,49 @@ Rackcheck's pinned [base generator implementation](https://github.com/Bogdanp/ra
 selects a length once, retains element trees and derives mapped carriers from
 that list protocol. We reuse that decomposition. Positive minimums and revision
 observers are our explicit extension; no cross-language random-seed parity is claimed.
+
+
+## P27: observed proposal admission before terminal publication
+
+The shrink-consumer audit reproduced a terminal-budget inconsistency. A returned
+filtered tombstone with a newly stale leaf was charged and recorded, but the scan
+skipped value classification and published `failed` when its last token ran out.
+The report already had `current = false`. Inspection of the same tree correctly
+returned `stale`. Handwritten trees had declared accurate node leaves; consumer
+admission, not hidden callback inference, was missing.
+
+The scan now admits newly observed leaves through the existing `with-current`
+action before classifying any proposal or publishing quota exhaustion. Both live
+and pruned nodes share that boundary. No new tree representation, source registry,
+runner, namespace or retry policy is added. A returned proposal is charged once
+before refusal; EOF and iterator exceptions still produce no proposal to charge.
+Zero fuel forces no factory or iterator. Exact exhaustion still performs no EOF
+lookahead and does not claim local minimality. Original observer/iterator causes
+are preserved, and the in-flight proposal never replaces a confirmed witness.
+
+Four generic cases compare checking with inspection at budgets 0/1/2, verify live
+pruning and EOF accounting, strict Boolean source judgments, observer/iterator
+cause identity, and several independently owned pruned proposals. The isolated
+standard-library package executes 79 cases. The Record/Function/FUN workflow
+covers stale evidence, identity-sharing delivery, actual mapping's earlier
+refusal, fresh preparation,
+retained smaller witnesses and both replay forms. Actual child mapping refuses before
+returning its stale child (zero charge); identity sharing and raw delivery return
+the tombstone and consume one.
+This distinction is preserved rather than hidden by changing the accounting.
+
+Nine laws added to `PropertyFilters.lean` reuse `ShrinkEvent`, `auditShrinks`,
+source union and the existing shrinking engine. They establish terminal refusal,
+exact cause/charge, live pruning without value admission, unchanged real values,
+zero fuel, attempt bounds, preservation of a valid false witness, and refusal of
+new stale leaves despite earlier live metadata. `Option.none` is the pruned tag;
+`some false` remains an ordinary value. The model covers finite observed events
+and accurate pure source observers. It does not prove host callback termination,
+iterator/continuation implementation, PRNG quality, global minimality or GC/time.
+The runtime adds the existing flat admission checks at the missing consumer
+stage; no performance improvement is claimed. All resource and search limits stay.
+
+Rackcheck's pinned [filtering tree implementation](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/shrink-tree.rkt)
+filters lazy branches. Our already-established bounded protocol keeps charged
+tombstones so filtering cannot hide work. Source refusal and terminal accounting
+are our extension, not a claim that Rackcheck mandates revision observers.
