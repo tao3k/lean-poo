@@ -70,3 +70,10 @@ example : inspectionAdmission (fun n : Nat => n < 3) id 8 4 = false := by decide
 example : inspectionWalk 2 3 [(0, 4)] (fun n : Nat => [n]) = [(0, 4), (1, 4), (2, 4)] := by decide
 example : inspectionWalk 0 3 [(0, 4)] (fun n : Nat => [n]) = [(0, 4)] := by decide
 example : inspectionWalk 99 0 [(0, 4)] (fun n : Nat => [n]) = [] := by decide
+
+-- Default test/debug integration keeps configuration revisions and refusal evidence.
+example : configuredCheck (⟨.passed, true, [("input", 4)], none⟩ : CheckDiagnostics Nat String) 1 2 ≠ .ok () := by simp [configuredCheck_ok]
+example : configuredCheck (⟨.passed, true, [("input", 4)], none⟩ : CheckDiagnostics Nat String) 2 2 = .ok () := by simp [configuredCheck_ok]
+example : debugDelivery false (fun n : Nat => n + 1) 4 = (4, none) := by decide
+example : configurationLimit (some 20) none = some 20 := by decide
+example : configurationLimit none none = none := by decide

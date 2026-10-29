@@ -1,5 +1,10 @@
 # RFC: model-driven collection property tests
 
+Current finite acceptance includes P0–P7. The companion Gerbil RFC owns the
+current developer interface; [property-kernel.md](property-kernel.md) maps its
+standard test/debug integration, bounded diagnostics and configuration guards to
+Lean laws. Historical audit identities below remain historical receipts.
+
 - Status: implemented; finite acceptance and evidence boundaries are recorded below.
 - Date: 2026-10-27.
 - Targets: Gerbil-POO PR #13 and Lean-POO PR #13.

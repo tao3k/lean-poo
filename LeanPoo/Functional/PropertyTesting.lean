@@ -875,4 +875,47 @@ theorem inspectionEvents_budget (roots : List Value) (count budget : Nat)
   simp only [List.length_append]
   omega
 
+/-- Reader configuration is an explicit revision source for a property action. -/
+def configuredCheck (diagnostics : CheckDiagnostics Value Cause) (snapshot observed : Nat) :
+    Except (CheckDiagnostics Value Cause) Unit :=
+  admitCheck { diagnostics with current := diagnostics.current && decide (snapshot = observed) }
+
+/-- A successful-looking callback cannot pass after its configuration changed. -/
+theorem configuredCheck_ok (diagnostics : CheckDiagnostics Value Cause) (snapshot observed : Nat) :
+    configuredCheck diagnostics snapshot observed = .ok () ↔
+      diagnostics.status = .passed ∧ diagnostics.current = true ∧ snapshot = observed := by
+  simp [configuredCheck, admitCheck_ok, Bool.and_eq_true]
+
+/-- Configuration refusal retains the original cause and named argument evidence. -/
+theorem configuredCheck_preserves (diagnostics failure : CheckDiagnostics Value Cause) (snapshot observed : Nat)
+    (refused : configuredCheck diagnostics snapshot observed = .error failure) :
+    failure.cause = diagnostics.cause ∧ failure.arguments = diagnostics.arguments := by
+  exact admitCheck_preserves { diagnostics with current := diagnostics.current && decide (snapshot = observed) } failure refused
+
+/-- Debug rendering observes a completed report without replacing its result.
+The renderer is assumed to return; host I/O and formatter termination are not proved. -/
+def debugDelivery (enabled : Bool) (render : Report → Output) (report : Report) : Report × Option Output :=
+  (report, if enabled then some (render report) else none)
+
+/-- Rendering cannot manufacture a passing report from failure/refusal data. -/
+theorem debugDelivery_report (enabled : Bool) (render : Report → Output) (report : Report) :
+    (debugDelivery enabled render report).1 = report := rfl
+
+/-- Disabling rendering leaves the rendering callback outside the resulting expression. -/
+theorem debugDelivery_disabled (render : Report → Output) (report : Report) :
+    debugDelivery false render report = (report, none) := rfl
+
+/-- Fixed sizes supply their own natural bound; procedural sizes require an explicit bound. -/
+def configurationLimit (fixed explicit : Option Nat) : Option Nat := explicit.orElse (fun _ => fixed)
+
+/-- An explicit bound is retained rather than replaced by a default. -/
+theorem configurationLimit_explicit (fixed : Option Nat) (limit : Nat) :
+    configurationLimit fixed (some limit) = some limit := rfl
+
+/-- No missing procedural size bound is silently replaced by an unbounded domain. -/
+theorem configurationLimit_procedure : configurationLimit none none = none := rfl
+
+/-- Ordinary fixed-size defaults preserve the existing runner's finite bound. -/
+theorem configurationLimit_fixed (size : Nat) : configurationLimit (some size) none = some size := rfl
+
 end LeanPoo.Functional.PropertyTesting

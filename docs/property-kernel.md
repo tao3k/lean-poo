@@ -181,3 +181,21 @@ have empty expansions. These are finite protocol laws, not a verification of
 callback termination, PRNG distribution, or Gerbil iterators. Host interruption,
 source guards, independent compilation and dependent packet replay are regressions.
 This advances the paper's future work without a new execution framework.
+
+## Default POO property checks and debug actions
+
+The Scheme developer workflow now uses the existing `support/testing` standard
+checks, PropertyConfiguration Record, property Reader/FUN action and DDT renderer.
+There is no extra test runner or import-time generation. Record field validation
+and finite runner validation keep distinct ownership. The configuration itself
+is now a revision source, so a successful callback cannot admit an edited run.
+
+`configuredCheck_ok` requires a passed/current report and equal configuration
+revisions. `configuredCheck_preserves` retains original cause and named arguments
+on refusal. Existing `productDomain_sound`/check admission laws cover fixed named
+Type products. `configurationLimit_explicit`, `configurationLimit_fixed`, and
+`configurationLimit_procedure` state finite-bound selection without inventing an
+implicit bound for procedural sizes. `debugDelivery_report` and
+`debugDelivery_disabled` preserve the original report and bypass the renderer
+when disabled. The renderer-return premise does not certify host I/O; DDT's
+formatter/I/O behavior and Gerbil CLI exit propagation are outside these proofs.
