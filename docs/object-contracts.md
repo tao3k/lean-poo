@@ -11,7 +11,7 @@ all type-system TODOs are closed.
 
 | Responsibility | Gerbil | Lean |
 | --- | --- | --- |
-| Ordered refusal accumulation | `object-diagnostics` `diagnostic-all` | `ObjectDiagnostics.all`, `all_nil_iff`, `all_append` |
+| Ordered refusal accumulation | `object-contract` `diagnostic-all` | `ObjectDiagnostics.all`, `all_nil_iff`, `all_append` |
 | Gated phases | `diagnostic-then` | `andThen`, refusal/acceptance/associativity laws |
 | Finite shape and optional ancestry | `ObjectContract.` | `ObjectContract.View`, `Contract`, `diagnose_nil_iff` |
 | Required field semantics | existing Type recognizers and diagnostics | `required_semantics_iff` under an explicit checker law |
@@ -104,7 +104,7 @@ APIs, an authenticated receipt system or a proof of effect rollback.
 
 ## Nested Function validation and bound publication
 
-The companion `object-contract-validation` now distinguishes structural recognition
+The companion `object-contract` now distinguishes structural recognition
 from explicit validation. It recursively validates declared ObjectContract fields,
 reuses existing Function wrappers and receiver-bound inherited specifications on a
 fresh object, then checks full diagnostics and refinement on the checked root. No change retains exact identity; Function wrapping changes the candidate.
@@ -787,3 +787,12 @@ after a valid callback result. The already normalized ledger is not validated ag
 by that consumer. This closes the concrete collection validation protocol, while the
 original incremental/isomorphism-aware collection-library TODO remains open. No
 performance or compiler/runtime correctness claim follows from this change.
+
+Gerbil now owns diagnostics, field wrapping, refinement and `checked-action` in
+its single `object-contract` module. The generic Reader protocol is exported by
+FUN. This changes source ownership, not the mathematical admission operation:
+`checkedAction_refused` and `checkedAction_accepted` still state the exact failure
+and normalized-value behavior, while the existing diagnostic phase laws retain
+ordered refusal. Gerbil regression suites exercise the directly migrated public
+imports, higher-order wrappers, multiple results and exception identities. These
+Lean laws do not certify the Gerbil module loader or compiler.

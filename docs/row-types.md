@@ -76,7 +76,7 @@ other Types. Mutual recursive type equations and general equirecursive inference
 remain outside this protocol. Function-valued positive fields are still wrapped
 and checked when called; finite unfolding proves no host callback termination.
 
-`recursive-types.ss` uses the existing Interaction map/request/solve interface.
+`types/relation.ss` uses the existing Interaction map/request/solve interface.
 One request decreases the numeric unfolding depth, and substitution copies only
 checked finite syntax. Shared work is charged during parsing, substitution,
 unfolding, row normalization, subtype comparison, inference and compilation. No

@@ -603,10 +603,10 @@ example (callback : Nat → Nat) :
     (Object.finishInvalidation (⟨7, some callback⟩ : Object.RevisionCache (Nat → Nat))
       (Except.error false : Except Bool Unit)).1.revision = 8 := rfl
 
-/-- Prelinking the two value-admission roots moves their discovery, not their
+/-- Prelinking the unified value-admission root moves its discovery, not its
 initializers, out of entry. Physical closure size and mapping cost stay external. -/
 example : (addPreparation
     (modulePreparation true ["object", "mop"])
-    (modulePreparation true ["object-contract", "object-contract-flow"])).bootstrapInitializers = 4 := by decide
+    (modulePreparation true ["object-contract"])).bootstrapInitializers = 3 := by decide
 
 end LeanPoo.Examples.Representation
