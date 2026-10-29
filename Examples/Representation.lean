@@ -668,4 +668,19 @@ example (old : Option Site) (view : View (Nat → Nat))
     (offset : Option { index : Nat // view.names[index]? = some "target" }) :
     finishIndexedDemand old view "target" offset (.error false) = (old, .error false) := rfl
 
+/-- Insertion around an uncomputed cell preserves Function identity and false
+occupancy; restoring the old segments recovers exactly the prior sparse store. -/
+example (callback : Nat → Nat) :
+    growPrimaryCells [some callback, none] [some callback] (some callback) =
+      [some callback, none, some callback, some callback] ∧
+    populatedCells (growPrimaryCells [some false, none] [some true] (some false)) = 3 := by
+  simp [growPrimaryCells, populatedCells]
+
+/-- Eviction does not invalidate a still-current credential. A later source
+revision remains a hard refusal, even if its shape and values are restored. -/
+example (view : View Bool) (site : Site) (current : valid site view) :
+    finishIndexedDemand (Error := String) (some site) view site.name
+      (some ⟨site.index, current.2.2.2 ▸ site.indexed⟩) (.ok false) =
+      (some site, .ok false) := finishIndexedDemand_keep site view current false
+
 end LeanPoo.Examples.Representation

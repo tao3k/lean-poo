@@ -338,4 +338,50 @@ theorem currentValueSite_revised (view : View Value) (name : String) (index : Na
     read (currentValueSite view name index indexed) next = none :=
   reject_revision _ _ changed
 
+/-- A still-valid site rebound to the same certified offset is identical.
+Proof irrelevance removes the implementation's proof witness. -/
+theorem currentValueSite_existing (site : Site) (view : View Value)
+    (current : valid site view) :
+    currentValueSite view site.name site.index (current.2.2.2 ▸ site.indexed) = site := by
+  rcases site with ⟨owner, revision, token, names, name, index, indexed⟩
+  rcases current with ⟨ho, hr, ht, hn⟩
+  cases ho; cases hr; cases ht; cases hn
+  rfl
+
+/-- Successful demand may retain an already-current guard: credential and value
+are identical, while primary cells remain the only value authority. -/
+theorem finishIndexedDemand_keep (site : Site) (view : View Value)
+    (current : valid site view) (value : Value) :
+    finishIndexedDemand (Error := Error) (some site) view site.name
+      (some ⟨site.index, current.2.2.2 ▸ site.indexed⟩) (.ok value) =
+      (some site, .ok value) := by
+  simp only [finishIndexedDemand, Option.map_some, currentValueSite_existing site view current]
+
+/-- Canonical single-key insertion splits the old vector at the new key's
+certified offset. Bulk copies preserve both segments; none is an uncomputed cell.
+Canonical ordering and faithful standard vector copying are refinement premises. -/
+def growPrimaryCells (before after : List (Option Value)) (value : Option Value) :=
+  before ++ value :: after
+
+/-- Removing the inserted position restores all original cells, including gaps. -/
+theorem growPrimaryCells_restore (before after : List (Option Value)) (value : Option Value) :
+    (growPrimaryCells before after value).take before.length ++
+      (growPrimaryCells before after value).drop (before.length + 1) = before ++ after := by
+  simp [growPrimaryCells, List.drop_append]
+
+/-- Occupancy transfers without scanning old cells: only the inserted cell can
+add one present value. False and functions are ordinary some payloads. -/
+theorem growPrimaryCells_population (before after : List (Option Value)) (value : Option Value) :
+    populatedCells (growPrimaryCells before after value) =
+      populatedCells (before ++ after) + (if value.isSome then 1 else 0) := by
+  cases value <;> simp [growPrimaryCells, populatedCells, List.countP_append] <;> omega
+
+/-- Count old-value named probes only. Bulk copies still visit all old cells;
+shape preparation, allocation and physical GC costs remain outside this count. -/
+def growthNamedProbes (bulk : Bool) (width : Nat) : Nat := if bulk then 0 else width
+
+/-- Bulk copying removes name probes, not all preparation work or wall time. -/
+theorem growthNamedProbes_saved (width : Nat) :
+    growthNamedProbes false width = growthNamedProbes true width + width := by simp [growthNamedProbes]
+
 end LeanPoo.Prototype.Representation

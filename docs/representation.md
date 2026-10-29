@@ -894,3 +894,63 @@ refusal/unindexed semantics, revision rejection and zero next-read named
 resolution under unchanged guards. Host index fidelity, serialized supported
 mutation, sentinel separation and callback behavior remain premises; these laws
 do not prove GC, allocation, compiler correctness or wall-clock speedup.
+
+
+### Sparse growth and retained recovery guards
+
+Single-key growth now uses the existing canonical weak shape table and Gerbil's
+standard `vector-copy!` for the two old segments. It skips redundant duplicate-name
+filtering and per-old-cell HashTable lookups/setters. The private candidate keeps
+the old occupancy count, admits the inserted cell through the ordinary setter,
+and publishes shape/cells/count only after preparation succeeds. False, functions
+and uncomputed cells retain their exact identity; copying a table still owns its
+own cells. Canonical symbolic order and serialized supported mutation are premises.
+
+After successful demand, a guard checked again after the callback survives
+when it still names this owner/revision/layout/shape. A negative control with explicit
+nested rebinding through the public site API rejects elision based only on the
+pre-callback hit; the final implementation checks the post-callback guard. Cold or changed-shape sites still bind the final certified offset;
+refusal preserves the original exception and prior credential. Lean proves
+credential identity, exact recovery of the old sparse segments, occupancy transfer
+and elimination of old-value named probes. Bulk copies still visit all old cells;
+these source laws do not establish a wall-clock or physical-GC improvement.
+
+The existing paired engine retains the complete recovery workflow and all A/A,
+B/B, AB/BA and GC controls. Added growth and guard-eviction phases charge fresh
+preparation or ordinary demand respectively. Value workloads now live beside the
+existing representation workloads, keeping the measurement engine below 1,000
+lines without adding a runtime module or another cache.
+
+The final frozen Slot cohort atop 366d175 passed the first post-build complete
+standard check: 149 modules / 2,004 cases, including the isolated stdlib-only
+55-case control. The test process took 252.23 s (82.55 s user, 7.02 s system);
+collection and generator checks took 22.90 s and 4.10 s. The test deadline stays
+300 s with 1-GiB heap; workload and negative controls are unchanged. This run
+included four bounded two-second read-only stack samples, so its duration is a
+diagnostic receipt, not an uninstrumented before/after speedup measurement.
+
+At separated startup observations, the main process had used 2.47 s CPU after
+45 s elapsed and 4.27 s after 114 s. All three startup samples were dominated by
+`___dynamic_load` / `dlopen` / `mapSegments` / `fcntl`; the later independent-package
+control sample waited in `__select`. These samples distinguish loader/process
+waiting from POO evaluation and GC; they neither attribute every unsampled second
+nor establish a cold-loading bound. No security policy, loader or resource limit
+is changed. Lean's complete 20-phase check passed in 103.48 s.
+
+The uninstrumented fixed paired entry completed in 124.41 s (standard root
+preparation 19.51 s, executable startup 2.84 s, official test runner 101.02 s).
+Both complete offset and value-storage studies passed with every existing pair,
+workload and control retained. Recovery candidate-minus-current-hash natural
+mean was +24.87 us, empirical upper tail/max +29.68 us, all six losses; A/A mean
++0.48 us and B/B -3.33 us. Post-GC recovery mean was +24.77 us, max +27.19 us.
+The batch component's normalized non-GC difference was +23.31 us, GC zero and
+wall residual approximately zero (the existing component denominator is 17;
+this is not a causal per-operation construction profile). Fresh-store-plus-growth
+natural mean was +7.57 us; unchanged-guard eviction/demand +0.360 us. The former
+includes preparation and cannot be subtracted from recovery to isolate growth.
+
+These measurements expose a remaining systematic non-GC recovery cost; they do
+not close the vector/hash latency gap. The historical +30.62/+33.42 us recovery
+mean/tail used a different process/GC history, so the apparent reduction is not
+claimed as a controlled before/after speedup. No result is justified by reduced
+allocation alone. Raw paired observations and stack traces stay outside Git.
