@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P20. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P21. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -908,3 +908,26 @@ resource limits remain required.
 Fixture declaration ownership ends with active use, allowing normal resource
 retirement during teardown; model declarations stay checked through factory
 return. Executable teardown controls preserve this scope distinction.
+
+## P21: shared typed-product observation
+
+Typed product measures duplicated the generic product fold and could invoke a
+later field after an earlier source revision. Value-only shrinking could likewise
+continue to pack/later children, and an uncopied child directory could diverge
+from the already captured draw tree. Gerbil now captures child topology once,
+reuses the generic product specification and checked specification-weight, and
+shares that currentness with unpack, raw shrinking and retained-tree packing.
+A common owner also protects zero-field products; obsolete products cannot acquire
+fresh epochs just by opening another core view. Actual payloads remain caller-owned.
+
+`PropertyProducts.lean` uses the existing PropertyTesting namespace and guarded
+stages, with eight laws for preflight/field refusal, exact causes, empty ownership,
+packing refusal, stable field order and the original natural sum. Regressions and
+Record/Function/FUN examples cover directory edits, parent/child revisions, explicit
+preparation retry, retained wrappers and both replay paths. The source inventory
+and example shard admission include the new module without dropping older checks.
+
+Epoch accuracy, sequential observation, faithful capture and pack/unpack laws are
+premises. Host copying, arbitrary aliases, callbacks, concurrency, allocation and
+GC are not certified. Joint source walks can remain quadratic in field count;
+there is no constant-time or universal performance claim.

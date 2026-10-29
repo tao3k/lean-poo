@@ -359,3 +359,10 @@ stages, and retains exact exceptions and stable match/mismatch judgments. Scheme
 regressions separately verify fixture cleanup and the real indexed-collection
 FUN/retry workflow. These are finite epoch/observation laws, not host heap,
 continuation, rollback or concurrency certification.
+
+P21 moves finite shared product observation laws into `PropertyProducts.lean`.
+`guardedProduct` composes the existing field evaluator with an owner preflight
+and guarded representation packing, including empty products. Eight laws retain
+order, natural sums, exact causes and downstream refusal. Scheme typed products
+now consume the generic specification boundary rather than a duplicate cost fold;
+captured directories and Record/FUN/replay controls provide the host correspondence.

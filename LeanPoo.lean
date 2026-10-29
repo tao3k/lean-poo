@@ -35,6 +35,7 @@ import LeanPoo.Functional.KeywordCoverage
 import LeanPoo.Functional.RawArguments
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.PropertyGenerators
+import LeanPoo.Functional.PropertyProducts
 import LeanPoo.Functional.PropertyTraces
 import LeanPoo.Functional.RecursiveGeneration
 import LeanPoo.Functional.PrototypeTypes
