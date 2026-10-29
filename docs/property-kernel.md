@@ -392,3 +392,7 @@ transfer or parameter implementation. Runtime controls verify earlier-trial,
 inspection and replay interruption, restored scope, no added sample source leaf
 and unchanged observer work over twelve replays. User-captured continuations and
 payload aliases retain their standard host lifetime obligations.
+
+Size control: P25 retains known input sources without changing size algebra,
+random state or retained trees. See `Examples/PropertySizes.lean` and the companion
+Record/FUN example; dynamic sized selection still owns only selected branches.

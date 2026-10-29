@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P24. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P25. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1008,3 +1008,38 @@ continuations, parameter restoration, aliases, Function wrapping, heap retention
 and timing are separate executable obligations, not inferred from the model.
 All checks and heap/deadline budgets remain. Active scope checks add work; no
 constant-time, universal performance or arbitrary-continuation claim is made.
+
+
+## P25: size control retains known input ownership
+
+Audit of Rackcheck's `gen:sized`, `gen:resize` and `gen:scale` confirmed the
+existing size algebra. Our revision-aware extension had a distinct implementation
+hole: scale delegates to a statically known input but exposed only its explicit
+owner. With that input retired, both scale and its enclosing fixed product
+reported current; an earlier sibling draw and scale callback each ran once before
+refusal. This is not a missing Rackcheck feature or a dynamic selection boundary.
+
+Scale now reuses the exact sized/resize run procedure and merges the known input
+leaves at construction, using existing source identity sharing. There is no new
+wrapper per retained sample, random draw, size schedule or shrink regeneration.
+Resize, map, fixed product, finite Function tables and shrink controls preserve
+these leaves. A genuinely open sized selector does not acquire unselected branches.
+
+Four independent generic cases cover all static compositions, explicit and input
+owners, normal callback revision, original exception identity, invalid natural
+sizes, nested callback order, identical seeds, retained shrinking, and zero-count
+inspection. The independent standard-library package now executes 71 cases.
+The Record/FUN example combines scaled counts and Function fields, failure
+minimization, concrete replay without regeneration, seed replay, and stale refusal
+before sibling preparation. Function wrappers remain owned by Record admission.
+
+The eight laws in `PropertySizes.lean` establish pure resize/scale algebra,
+exact delegated value/seed, and guarded preflight, revision, cause and admitted
+execution. Total natural transformations are the pure algebra's premise; they do
+not license fusing effectful Scheme callbacks. Explicit internal resize may exceed
+the outer trial size: no new blanket bound is introduced. Existing process,
+heap, generation, shrinking and inspection budgets are unchanged. No termination,
+host PRNG quality, GC or wall-clock speedup is proved. Existing `mergeSources`
+sharing avoids another ownership mechanism. Construction reuses the sized run
+closure, allocates a replacement generation descriptor and merges source leaves;
+runtime uses the existing admission checks. No timing improvement is claimed.
