@@ -1174,7 +1174,9 @@ with a valid configuration; generation and concrete replay keep their distinct c
 Nine laws in `PropertyTraces.lean` stage validated limits and initialization over
 the existing `drawTrace` engine: invalid admission, original initializer cause,
 zero steps/size, unchanged-size delegation, explicit stop, disabled command refusal,
-valid prefixes bounded by both limits, and exact enabled payload delivery. An
+valid prefixes bounded by both limits, and exact enabled payload delivery. The
+existing remaining-fuel argument remains a finite observation index, allowing
+different random choices at an unchanged logical state while size stays fixed. An
 absent validated configuration models refusal; accepted limits are Nat values.
 Runtime contract fidelity, normalized/faithful choices and callback termination
 remain premises. These laws do not prove Gerbil contracts/compiler/iterators,
