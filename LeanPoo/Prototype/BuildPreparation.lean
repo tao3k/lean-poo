@@ -137,4 +137,88 @@ theorem declaredBuildUnits_perm {left right : List (List String)}
     (declaredBuildUnits left).Perm (declaredBuildUnits right) := by
   simpa only [declaredBuildUnits] using order.flatten
 
+/-- Ordered fixture-free cases reuse the standard state monad and List.mapM.
+A refusal is a retained result, so the following case still receives the current
+state. Independence from module context and absence of hooks/import effects are
+premises of this finite model, not inferred properties of Scheme callbacks. -/
+def observeSuiteCases {α β ε σ : Type} (modules : List (List (List α)))
+    (run : α → StateM σ (Except ε β)) (initial : σ) : List (Except ε β) × σ :=
+  (modules.flatten.flatten.mapM run) initial
+
+/-- Coalescing fixture-free module boundaries preserves all ordered results and
+final case state, including the state after a failure and later-case execution.
+It does not justify coalescing modules with hooks or context-sensitive callbacks. -/
+theorem observeSuiteCases_regroup {α β ε σ : Type} (modules : List (List (List α)))
+    (run : α → StateM σ (Except ε β)) (initial : σ) :
+    observeSuiteCases [modules.flatten] run initial = observeSuiteCases modules run initial := by
+  simp [observeSuiteCases]
+
+/-- Clock observations at public process/progress boundaries. Ticks are exact;
+the host clock and faithful delivery of these observations remain premises. -/
+structure CheckPhaseTimes where
+  started : Nat
+  testStarted : Nat
+  harnessStarted : Nat
+  harnessFinished : Nat
+  reported : Nat
+  testExited : Nat
+  eof : Nat
+  finished : Nat
+  deriving DecidableEq, Repr
+
+/-- Missing/reversed boundaries cannot be repaired by clamping elapsed time. -/
+def CheckPhaseTimes.Valid (times : CheckPhaseTimes) : Prop :=
+  times.started ≤ times.testStarted ∧ times.testStarted ≤ times.harnessStarted ∧
+  times.harnessStarted ≤ times.harnessFinished ∧ times.harnessFinished ≤ times.reported ∧
+  times.reported ≤ times.testExited ∧ times.testExited ≤ times.eof ∧ times.eof ≤ times.finished
+
+instance (times : CheckPhaseTimes) : Decidable times.Valid := inferInstanceAs (Decidable (_ ∧ _))
+
+/-- Build, import/init, test execution, report, post-report exit, studies and reap
+windows are observations; none is automatically an exclusive dyld/GC cost. -/
+def CheckPhaseTimes.intervals (times : CheckPhaseTimes) : List Nat :=
+  [times.testStarted - times.started, times.harnessStarted - times.testStarted,
+   times.harnessFinished - times.harnessStarted, times.reported - times.harnessFinished,
+   times.testExited - times.reported, times.eof - times.testExited, times.finished - times.eof]
+
+/-- All admitted windows telescope to the complete command; no residual is
+dropped merely because it occurred after the last successful case. -/
+theorem CheckPhaseTimes.total (times : CheckPhaseTimes) (valid : times.Valid) :
+    times.intervals.sum = times.finished - times.started := by
+  simp only [CheckPhaseTimes.intervals, List.sum_cons, List.sum_nil]
+  unfold CheckPhaseTimes.Valid at valid
+  omega
+
+/-- Preserve the observed admission order: incomplete execution refuses first,
+then missing clocks, then nonmonotone observations. No success is fabricated. -/
+def admitCheckTimes (times : Option CheckPhaseTimes) (modules begun passed : Nat) :
+    Except String (List Nat) :=
+  if 0 < modules ∧ 0 < begun ∧ begun = passed then
+    match times with
+    | none => .error "missing check phase"
+    | some times => if times.Valid then .ok times.intervals else .error "nonmonotone check observation"
+  else .error "incomplete check observation"
+
+/-- An admitted receipt has complete case delivery and a partition of the full
+observed lifetime. This is not authentication of IO origin or a latency bound. -/
+theorem admitCheckTimes_complete (candidate : Option CheckPhaseTimes) (modules begun passed : Nat)
+    (spans : List Nat) (accepted : admitCheckTimes candidate modules begun passed = .ok spans) :
+    ∃ times, candidate = some times ∧ times.Valid ∧
+      spans.sum = times.finished - times.started ∧ begun = passed ∧ 0 < modules ∧ 0 < begun := by
+  unfold admitCheckTimes at accepted
+  by_cases counts : 0 < modules ∧ 0 < begun ∧ begun = passed
+  · rw [ite_eq_left counts] at accepted
+    cases candidate with
+    | none => cases accepted
+    | some times =>
+      change (if times.Valid then Except.ok times.intervals else Except.error "nonmonotone check observation") = .ok spans at accepted
+      by_cases valid : times.Valid
+      · rw [ite_eq_left valid] at accepted
+        cases accepted
+        exact ⟨times, rfl, valid, times.total valid, counts.2.2, counts.1, counts.2.1⟩
+      · rw [ite_eq_right valid] at accepted
+        cases accepted
+  · rw [ite_eq_right counts] at accepted
+    cases accepted
+
 end LeanPoo.Prototype.Representation

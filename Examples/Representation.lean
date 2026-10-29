@@ -452,6 +452,14 @@ example (types contracts collections : List String) :
       (declaredBuildUnits [contracts, types, collections]) :=
   declaredBuildUnits_perm (List.Perm.swap _ _ _)
 
+/-- Exact tick accounting includes both post-report cleanup and final reap. -/
+example : admitCheckTimes (some ⟨100,110,130,190,200,210,220,230⟩) 4 8 8 =
+    .ok [10,20,60,10,10,10,10] := rfl
+
+/-- Empty/missing observations never qualify merely because a tool printed OK. -/
+example : admitCheckTimes none 0 0 0 = .error "incomplete check observation" ∧
+    admitCheckTimes none 1 1 1 = .error "missing check phase" := ⟨rfl, rfl⟩
+
 /-- A validated Function cannot escape a metadata revision, even when its body
 is retained by identity; no Function application is needed by the fence. -/
 example (callback : Nat → Nat) :
@@ -704,5 +712,10 @@ example (view : View Bool) (site : Site) (current : valid site view) :
     finishIndexedDemand (Error := String) (some site) view site.name
       (some ⟨site.index, current.2.2.2 ▸ site.indexed⟩) (.ok false) =
       (some site, .ok false) := finishIndexedDemand_keep site view current false
+
+-- A refused middle case retains its state update and cannot erase the last case.
+example : observeSuiteCases ([[[1, 2]], [[3]]] : List (List (List Nat)))
+    (fun n seen => (if n = 2 then Except.error "refused" else Except.ok n, seen ++ [n]))
+    ([] : List Nat) = ([.ok 1, .error "refused", .ok 3], [1, 2, 3]) := rfl
 
 end LeanPoo.Examples.Representation

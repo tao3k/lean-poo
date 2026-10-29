@@ -864,3 +864,22 @@ chain as complete stateful actions, including the first error and its exact stat
 prefix for arbitrary services, units and ledgers. A paired experiment showed no
 reliable CPU reduction from that helper alone, so it is not reported as a speedup.
 Compilation and expected-data sharing are distinct from changing runtime semantics.
+
+* Complete Scheme check observations and fixture-free suite boundaries
+
+~Prototype.Representation.CheckPhaseTimes~ models exact monotone clock
+boundaries for build, import/init, cases, reporting, post-report exit, later
+studies and child reap. ~CheckPhaseTimes.total~ proves their sum is the complete
+observed lifetime. ~admitCheckTimes_complete~ admits only complete case delivery
+and ordered boundaries; absent clocks and incomplete execution retain distinct
+failure outcomes. These laws assume faithful IO observations and clock ticks;
+they do not authenticate transcripts or establish compiler, dyld, GC or latency
+bounds. Process wall/user/system receipts remain independent evidence.
+
+~observeSuiteCases_regroup~ uses standard ~List.mapM~ and ~StateM~ to preserve the
+entire ordered result list and final case state when fixture-free module
+boundaries are coalesced, including state after failure and later-case execution. Independence from module context and absence of module hooks or
+other import effects are explicit premises. The Gerbil control uses actual
+standard TestHarness objects to retain the failing cause identity and later
+execution. This finite law does not authorize regrouping arbitrary Scheme
+modules or deleting checks. All existing Lean/resource gates remain unchanged.

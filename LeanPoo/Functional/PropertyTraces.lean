@@ -89,4 +89,88 @@ theorem guardedTraceStep_stable {Cause : Type u} (live : State → Bool) (state 
     guardedGeneration_state live prepared observed actual second third,
     guardedGeneration_state live observed final matched third last]
 
+/-- An admitted host configuration contains exact natural steps and size.
+None models configuration refusal before initialization; original callback causes
+remain distinct from that refusal. Choice receives the unchanged declared size and the existing remaining-fuel
+observation index; repeated logical states need not make identical choices. -/
+def configuredDraw (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (initial : Unit → Except Cause State)
+    (disabled : Cause) (limits : Option (Nat × Nat)) : Except (Option Cause) (List Command) :=
+  match limits with
+  | none => .error none
+  | some (steps, size) => match initial () with
+    | .error cause => .error (some cause)
+    | .ok state => match drawTrace model (fun state fuel => choose state size fuel) (min steps size) state with
+      | .error _ => .error (some disabled)
+      | .ok commands => .ok commands
+
+/-- Invalid limits cannot depend on initialization or command callbacks. -/
+theorem configuredDraw_refused (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (initial : Unit → Except Cause State) (disabled : Cause) :
+    configuredDraw model choose initial disabled none = .error none := rfl
+
+/-- A valid configuration preserves the initializer's original error. -/
+theorem configuredDraw_initial_cause (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (cause disabled : Cause) (steps size : Nat) :
+    configuredDraw model choose (fun _ => .error cause) disabled (some (steps, size)) =
+      .error (some cause) := rfl
+
+/-- Zero steps preserves successful initialization and draws no commands. -/
+theorem configuredDraw_zero_steps (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (state : State) (disabled : Cause) (size : Nat) :
+    configuredDraw model choose (fun _ => .ok state) disabled (some (0, size)) = .ok [] := by
+  simp [configuredDraw, drawTrace]
+
+/-- Size zero bounds drawing even with a positive command cap. -/
+theorem configuredDraw_zero_size (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (state : State) (disabled : Cause) (steps : Nat) :
+    configuredDraw model choose (fun _ => .ok state) disabled (some (steps, 0)) = .ok [] := by
+  simp [configuredDraw, drawTrace]
+
+/-- Every draw receives the original size, not a decreasing residual budget.
+The existing pure draw engine owns the state transition and ordered prefix. -/
+theorem configuredDraw_delegates (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (state : State) (disabled : Cause) (steps size : Nat) :
+    configuredDraw model choose (fun _ => .ok state) disabled (some (steps, size)) =
+      match drawTrace model (fun state fuel => choose state size fuel) (min steps size) state with
+      | .error _ => .error (some disabled)
+      | .ok commands => .ok commands := rfl
+
+/-- An explicit stop returns an empty suffix without command admission. -/
+theorem configuredDraw_stop (model : TraceModel State Command Reply)
+    (state : State) (disabled : Cause) (steps size : Nat) :
+    configuredDraw model (fun _ _ _ => none) (fun _ => .ok state) disabled (some (steps, size)) =
+      .ok [] := by
+  cases cap : min steps size <;> simp [configuredDraw, cap, drawTrace]
+
+/-- A disabled command is refused rather than silently omitted or advanced. -/
+theorem configuredDraw_disabled (model : TraceModel State Command Reply)
+    (state : State) (command : Command) (disabled : Cause) (notEnabled : model.enabled state command = false) :
+    configuredDraw model (fun _ _ _ => some command) (fun _ => .ok state) disabled (some (1, 1)) =
+      .error (some disabled) := by
+  simp [configuredDraw, drawTrace, notEnabled]
+
+/-- A successful generated prefix respects both independent caps and every
+model precondition. Host normalization and accurate choice are premises. -/
+theorem configuredDraw_sound (model : TraceModel State Command Reply)
+    (choose : State → Nat → Nat → Option Command) (initial : Unit → Except Cause State)
+    (state : State) (disabled : Cause) (steps size : Nat) (commands : List Command)
+    (initialized : initial () = .ok state)
+    (drawn : configuredDraw model choose initial disabled (some (steps, size)) = .ok commands) :
+    traceValid model state commands = true ∧ commands.length ≤ steps ∧ commands.length ≤ size := by
+  cases generated : drawTrace model (fun state fuel => choose state size fuel) (min steps size) state with
+  | error cause => simp [configuredDraw, initialized, generated] at drawn
+  | ok values =>
+    have same : values = commands := by simpa [configuredDraw, initialized, generated] using drawn
+    subst values
+    obtain ⟨valid, bound⟩ := drawTrace_sound model (fun state fuel => choose state size fuel) _ state commands generated
+    exact ⟨valid, Nat.le_trans bound (Nat.min_le_left _ _), Nat.le_trans bound (Nat.min_le_right _ _)⟩
+
+/-- An enabled one-command result preserves the exact command payload. -/
+theorem configuredDraw_single (model : TraceModel State Command Reply)
+    (state : State) (command : Command) (disabled : Cause) (enabled : model.enabled state command = true) :
+    configuredDraw model (fun _ _ _ => some command) (fun _ => .ok state) disabled (some (1, 1)) =
+      .ok [command] := by
+  simp [configuredDraw, drawTrace, enabled, Functor.map, Except.map]
+
 end LeanPoo.Functional.PropertyTesting

@@ -406,3 +406,8 @@ P27 closes the shrink consumer admission boundary for returned filtered proposal
 including the last budget token. Existing audit accounting distinguishes charged
 source refusal from unreturned iterator errors; settled real values alone reach
 shrinking admission. `PropertyFilters.lean` gives the finite event/source laws.
+
+P28 stages exact natural trace limits before initialization, then delegates to
+the existing bounded draw engine. `PropertyTraces.lean` proves both cap bounds,
+valid prefixes, initialization/early-stop causes and unchanged-size delegation.
+Generic and Record/FUN examples check the host contract boundary and replay.
