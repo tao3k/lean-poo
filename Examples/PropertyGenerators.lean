@@ -217,3 +217,9 @@ example : guardedPull [1] (fun epoch : Nat => fun _ => epoch == 0)
     (fun _ => (.ok (some 8, 0) : Except String (Option Nat × Nat))) 0 = .ok (some 8, 0) := rfl
 example : guardedPull ([] : List Nat) (fun _ : Nat => fun _ => false)
     (fun _ => (.ok (some 8, 1) : Except String (Option Nat × Nat))) 0 = .ok (some 8, 1) := rfl
+
+-- Independent products retain sibling payloads and the exact draw checkpoint.
+example : retainedProductStep [2, 7, 9] 0 0 41 = ([0, 7, 9], 41) := rfl
+example : (retainedProductStep [2, 7, 9] 0 0 41).1[2]? = some 9 := rfl
+example : retainedProductStep ([] : List Nat) 0 3 41 = ([], 41) := rfl
+example : ((retainedProductStep [2, 7, 9] 0 0 41).1.map id).sum < [2, 7, 9].sum := by decide

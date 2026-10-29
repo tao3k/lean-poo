@@ -778,4 +778,65 @@ theorem guardedPull_empty (live : State → Source → Bool)
   unfold guardedPull guardedGeneration
   cases resume state <;> rfl
 
+/-- An independent product proposal replaces one retained preimage. Its external
+draw state is passed through unchanged; dependent regeneration remains `bind`. -/
+def retainedProductStep (roots : List Value) (index : Nat) (child : Value) (state : State) :
+    List Value × State := (roots.set index child, state)
+
+/-- Coordinate shrinking cannot change the admitted fixed product width. -/
+theorem retainedProductStep_length (roots : List Value) (index : Nat) (child : Value) (state : State) :
+    (retainedProductStep roots index child state).1.length = roots.length := by
+  simp [retainedProductStep]
+
+/-- An in-range proposal installs exactly the chosen retained child. -/
+theorem retainedProductStep_selected (roots : List Value) (index : Nat) (child : Value)
+    (state : State) (within : index < roots.length) :
+    (retainedProductStep roots index child state).1[index]? = some child := by
+  simp [retainedProductStep, within]
+
+/-- Every other coordinate keeps its actual preimage, not a regenerated equal value. -/
+theorem retainedProductStep_sibling (roots : List Value) (index other : Nat) (child : Value)
+    (state : State) (different : index ≠ other) :
+    (retainedProductStep roots index child state).1[other]? = roots[other]? := by
+  simp [retainedProductStep, List.getElem?_set_ne different]
+
+/-- Carrier mapping commutes with replacing a retained coordinate. -/
+theorem retainedProductStep_map (roots : List Value) (pack : Value → Other)
+    (index : Nat) (child : Value) (state : State) :
+    (retainedProductStep (roots.map pack) index (pack child) state).1 =
+      (retainedProductStep roots index child state).1.map pack := by
+  simp [retainedProductStep]
+
+/-- Independent coordinate updates commute; neither replaces an unrelated field. -/
+theorem retainedProductStep_commute (roots : List Value) (left right : Nat)
+    (first second : Value) (state : State) (different : left ≠ right) :
+    retainedProductStep (retainedProductStep roots left first state).1 right second state =
+      retainedProductStep (retainedProductStep roots right second state).1 left first state := by
+  simp only [retainedProductStep, List.set_comm first second different]
+
+/-- Repeated observation does not draw, initialize or advance a sibling's state. -/
+theorem retainedProductStep_state (roots : List Value) (index : Nat) (child : Value) (state : State) :
+    (retainedProductStep roots index child state).2 = state := rfl
+
+/-- An empty product has no coordinate to replace. -/
+theorem retainedProductStep_empty (index : Nat) (child : Value) (state : State) :
+    retainedProductStep [] index child state = ([], state) := by
+  simp [retainedProductStep]
+
+/-- The existing sum measure strictly decreases when the selected preimage does.
+The supplied child relation remains the generator's explicit responsibility. -/
+theorem retainedProductStep_descent (roots : List Value) (measure : Value → Nat)
+    (index : Nat) (child : Value) (state : State) (within : index < roots.length)
+    (smaller : measure child < measure roots[index]) :
+    ((retainedProductStep roots index child state).1.map measure).sum < (roots.map measure).sum := by
+  simp only [retainedProductStep]
+  induction roots generalizing index with
+  | nil => simp at within
+  | cons head tail ih =>
+    cases index with
+    | zero => simpa using Nat.add_lt_add_right smaller (tail.map measure).sum
+    | succ index =>
+      have h := ih index (by simpa using within) (by simpa using smaller)
+      simpa using Nat.add_lt_add_left h (measure head)
+
 end LeanPoo.Functional.PropertyTesting
