@@ -71,4 +71,67 @@ theorem guardedSize_admitted (live : State → Bool)
       guardedGeneration live (draw effective) next := by
   simp [guardedSize, guardedGeneration, before, after]
 
+/-- The bounded length offset is chosen once. The random implementation remains
+an explicit premise; no uniform-distribution assertion is required here. -/
+def collectionWidth (minimum offset : Nat) : Nat := minimum + offset
+
+/-- Every admitted length lies between the declared inclusive bounds. -/
+theorem collectionWidth_bounds (minimum maximum size offset : Nat)
+    (bounds : minimum ≤ maximum) (chosen : offset ≤ min size (maximum - minimum)) :
+    minimum ≤ collectionWidth minimum offset ∧ collectionWidth minimum offset ≤ maximum := by
+  simp only [collectionWidth]
+  have upper := Nat.le_trans chosen (Nat.min_le_right size (maximum - minimum))
+  omega
+
+/-- Positive minimum forces an element, regardless of the chosen offset. -/
+theorem collectionWidth_positive (minimum offset : Nat) (positive : 0 < minimum) :
+    0 < collectionWidth minimum offset := by simp [collectionWidth]; omega
+
+/-- Size zero admits only the minimum, preserving nonempty lower bounds. -/
+theorem collectionWidth_zero_size (minimum maximum offset : Nat)
+    (chosen : offset ≤ min 0 (maximum - minimum)) :
+    collectionWidth minimum offset = minimum := by simp [collectionWidth] at *; omega
+
+/-- Common collection leaves contain element ownership exactly when every
+admitted result uses an element. Optional selection acquires leaves later. -/
+def collectionSources (minimum : Nat) (elements : List Source) : List Source :=
+  if minimum = 0 then [] else elements
+
+/-- Mandatory collections retain exactly their declared element sources. -/
+theorem collectionSources_positive (minimum : Nat) (elements : List Source)
+    (positive : 0 < minimum) : collectionSources minimum elements = elements := by
+  simp [collectionSources, Nat.ne_of_gt positive]
+
+/-- An empty-capable producer does not claim unselected element ownership. -/
+theorem collectionSources_optional (elements : List Source) :
+    collectionSources 0 elements = [] := rfl
+
+/-- A sized producer's explicit owner and common element leaves jointly admit.
+Source identity union uses the existing generator law rather than nested guards. -/
+theorem collectionSources_current [DecidableEq Source] (live : Source → Bool)
+    (owner elements : List Source) (minimum : Nat) :
+    (mergeSources owner (collectionSources minimum elements)).all live = true ↔
+      owner.all live = true ∧ (collectionSources minimum elements).all live = true :=
+  mergeSources_current live owner (collectionSources minimum elements)
+
+/-- An obsolete mandatory source suppresses the length stage and all dependent
+work. Already performed callback effects are outside the rollback claim. -/
+theorem collectionSources_stale (live : State → Source → Bool) (elements : List Source)
+    (minimum : Nat) (state : State) (positive : 0 < minimum)
+    (stale : elements.all (live state) = false)
+    (run : State → Except Cause (Value × State)) :
+    guardedGeneration (fun current => (collectionSources minimum elements).all (live current))
+      run state = .error none := by
+  apply guardedGeneration_preflight
+  simpa [collectionSources_positive minimum elements positive] using stale
+
+/-- Common source capture cannot alter a successful pure run's returned state. -/
+theorem collectionSources_admitted (live : State → Source → Bool)
+    (elements : List Source) (minimum : Nat) (state next : State) (value : Value)
+    (before : (collectionSources minimum elements).all (live state) = true)
+    (after : (collectionSources minimum elements).all (live next) = true) :
+    guardedGeneration (fun current => (collectionSources minimum elements).all (live current))
+      (fun _ => (.ok (value, next) : Except Cause (Value × State))) state = .ok (value, next) := by
+  exact guardedGeneration_state _ state next value before after
+
 end LeanPoo.Functional.PropertyTesting

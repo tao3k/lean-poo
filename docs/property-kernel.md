@@ -396,3 +396,8 @@ payload aliases retain their standard host lifetime obligations.
 Size control: P25 retains known input sources without changing size algebra,
 random state or retained trees. See `Examples/PropertySizes.lean` and the companion
 Record/FUN example; dynamic sized selection still owns only selected branches.
+
+P26 closes mandatory collection sources at the existing size selector. Positive
+minimums preflight element leaves; optional empty selection does not claim them.
+`PropertySizes.lean` models bounded lengths and authority while Record/FUN
+regressions check retained shrinking, wrapped Functions and explicit revision retry.

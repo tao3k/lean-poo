@@ -17,3 +17,13 @@ example : guardedSize (fun epoch : Nat => epoch == 0)
     (fun _ _ => (.error "scale cause" : Except String (Nat × Nat)))
     (fun _ _ => (.error "draw cause" : Except String (Nat × Nat)))
     8 0 = .error (some "scale cause") := rfl
+
+-- Size zero still needs the mandatory element; it does not erase that owner.
+example : collectionWidth 1 0 = 1 := rfl
+example : guardedGeneration
+    (fun epoch : Nat => (collectionSources 1 [0]).all (fun _ => epoch == 0))
+    (fun _ => (.error "length draw must not run" : Except String (Nat × Nat)))
+    1 = .error none := rfl
+
+-- Optional empty selection adds no source authority from an unused element.
+example : (collectionSources 0 [0]).all (fun _ => false) = true := rfl

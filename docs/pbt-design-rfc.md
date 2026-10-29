@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P25. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P26. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -38,9 +38,10 @@ admission, normalization and source-current callbacks at the boundary. Generalit
 is parametric; it is not a fallback to an unconstrained POO `Any` descriptor.
 
 The independent-library acceptance copies these five generic source modules and
-`examples/property-kernel.ss` into a temporary standard Gerbil package, declares
+`examples/property-kernel.ss` and its ordinary product/filter/scope/size helpers
+into a temporary standard Gerbil package, declares
 `clan/poo/testing`, and compiles with `defbuild-script`. The compiled suite runs
-through `gerbil test`. It requires all 55 case receipts, an error-free result and
+through `gerbil test`. It requires all 75 case receipts, an error-free result and
 correct process exit status under the existing heap and timeout limits. The
 isolated installation has no object, MOP or typed testing modules. Sharing a
 module path does not import parent modules. This demonstrates code dependency
@@ -1040,6 +1041,55 @@ not license fusing effectful Scheme callbacks. Explicit internal resize may exce
 the outer trial size: no new blanket bound is introduced. Existing process,
 heap, generation, shrinking and inspection budgets are unchanged. No termination,
 host PRNG quality, GC or wall-clock speedup is proved. Existing `mergeSources`
-sharing avoids another ownership mechanism. Construction reuses the sized run
-closure, allocates a replacement generation descriptor and merges source leaves;
-runtime uses the existing admission checks. No timing improvement is claimed.
+sharing avoids another ownership mechanism. At P25 construction reused the sized run
+closure in a replacement generation descriptor; P26 below consolidates that
+metadata into the sized constructor. No timing improvement is claimed.
+
+
+## P26: mandatory collection ownership under size selection
+
+The next audit reproduced a cardinality-dependent hole: an element generator
+whose owner was already stale could be used to construct a nonempty List producer
+that still reported current. Its enclosing fixed product ran an earlier sibling
+draw once and used the random source twice before refusing. A positive minimum
+always uses the element; this is not the intentional independence of an unselected
+branch or empty result.
+
+`generator-sized` now accepts `sources:` through the same observer-list boundary
+as `make-generator` and `make-tree-generator`. Common leaves are validated, copied
+and identity-deduplicated before selection. Dynamic branches still add only their
+selected leaves. `generator-scale` delegates directly to that constructor,
+removing P25's replacement generation descriptor. `generator-list` supplies element
+leaves exactly when `min-length` is positive. String and Symbol inherit the same
+behavior through their existing map composition. No separate carrier validators,
+new generator representation, random schedule, namespace or retry system is added.
+
+Size zero still produces the positive minimum, so it still needs those leaves.
+With minimum zero, an actual empty result draws no element and acquires no element
+owner. If that optional producer selects a nonempty result, its existing dynamic
+selection boundary checks the selected element before drawing it. Arbitrary
+unselected weighted/delayed branches, handwritten node ownership and mutable
+payload aliases keep their documented boundaries.
+
+Four generic cases cover nonempty List/String/Symbol preflight (including an
+unstarted product prefix), empty selection, copied/deduplicated explicit source
+lists, invalid metadata, identical seeds, retained minimum lengths and shrinking
+without element redraw. The independent package runs 75 ordinary std/test cases.
+A Record/FUN workflow generates bounded nonempty payloads with a wrapped Function,
+shrinks both cardinality and element values, performs concrete/seed replay, refuses
+stale work before preparing a sibling handler, and explicitly prepares a fresh
+revision while the old sampler/report remain rejected.
+
+Eight additional laws in `PropertySizes.lean` establish the bounded length offset,
+positive-minimum participation, size-zero behavior, exact source selection,
+conjunctive authority, stale preflight and preservation of an admitted result/state.
+Random offsets satisfying their bound, pure accurate source observers and
+terminating callbacks are premises. These are not PRNG-quality, host heap/GC,
+concurrency or wall-clock proofs. Existing process and search limits are unchanged.
+Source lists are captured once; runtime retains the existing flat source checks
+and shrinking trees. Removing the replacement descriptor is not a timing claim.
+
+Rackcheck's pinned [base generator implementation](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/base.rkt)
+selects a length once, retains element trees and derives mapped carriers from
+that list protocol. We reuse that decomposition. Positive minimums and revision
+observers are our explicit extension; no cross-language random-seed parity is claimed.
