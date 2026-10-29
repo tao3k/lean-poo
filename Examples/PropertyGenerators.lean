@@ -54,3 +54,11 @@ example : checkedStatus .error true = .error := by decide
 example : productDomain [(fun n : Nat => n < 3), (fun n => n = 5)] [2, 5] = true := by decide
 example : productDomain [(fun n : Nat => n < 3), (fun n => n = 5)] [2, 4] = false := by decide
 example : productDomain [(fun n : Nat => n < 3)] [2, 4] = false := by decide
+
+-- Unicode boundary controls and fixed byte widths match the generic data families.
+example : scalarCode 0xd7ff = 0xd7ff := by decide
+example : scalarCode 0xd800 = 0xe000 := by decide
+example : scalarCode 0x10f7ff = 0x10ffff := by decide
+example : intervalValue 0 255 = 255 := by decide
+example : dataLength 4 0 0 0 = 4 := by decide
+example : intervalValue 97 0 = 97 := by decide

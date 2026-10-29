@@ -734,4 +734,64 @@ theorem productDomain_length (domains : List (Value → Bool)) (values : List Va
     (accepted : productDomain domains values = true) : domains.length = values.length :=
   (productDomain_sound domains values accepted).1
 
+/-- Finite offset generation represents the interval used by characters and octets. -/
+def intervalValue (lower offset : Nat) : Nat := lower + offset
+
+/-- Draws stay inside their explicit inclusive interval, without rejection retries. -/
+theorem intervalValue_bounds (lower upper offset : Nat)
+    (ordered : lower ≤ upper) (bounded : offset ≤ upper - lower) :
+    lower ≤ intervalValue lower offset ∧ intervalValue lower offset ≤ upper := by
+  simp only [intervalValue]
+  omega
+
+/-- Shrinking an interval offset preserves membership and strictly decreases rank. -/
+theorem intervalValue_shrink (lower upper offset smaller : Nat)
+    (ordered : lower ≤ upper) (bounded : offset ≤ upper - lower) (decreases : smaller < offset) :
+    lower ≤ intervalValue lower smaller ∧ intervalValue lower smaller ≤ upper ∧
+      intervalValue lower smaller < intervalValue lower offset := by
+  simp only [intervalValue]
+  omega
+
+/-- Unicode scalar ranks exclude the surrogate gap while preserving order. -/
+def scalarCode (rank : Nat) : Nat := if rank < 0xd800 then rank else rank + 0x800
+
+/-- Every bounded scalar rank becomes a valid Unicode scalar, including both boundaries. -/
+theorem scalarCode_valid (rank : Nat) (bounded : rank < 0x10f800) :
+    scalarCode rank ≤ 0x10ffff ∧ (scalarCode rank < 0xd800 ∨ 0xdfff < scalarCode rank) := by
+  unfold scalarCode
+  split <;> omega
+
+/-- Scalar rank reduction cannot cross into the surrogate gap or reverse ordering. -/
+theorem scalarCode_strict (left right : Nat) (smaller : left < right) :
+    scalarCode left < scalarCode right := by
+  unfold scalarCode
+  split <;> split <;> omega
+
+/-- Sequence generation admits a required prefix plus a bounded size-controlled suffix. -/
+def dataLength (minimum _size _capacity offset : Nat) : Nat := minimum + offset
+
+/-- Required byte widths remain valid even at generator size zero. -/
+theorem dataLength_bounds (minimum size capacity offset : Nat)
+    (bounded : offset ≤ min size capacity) :
+    minimum ≤ dataLength minimum size capacity offset ∧
+      dataLength minimum size capacity offset ≤ minimum + capacity := by
+  simp only [dataLength]
+  have := (Nat.le_min.mp bounded).2
+  omega
+
+/-- A fixed width selects exactly that width regardless of the size hint. -/
+theorem dataLength_fixed (minimum size offset : Nat) (bounded : offset ≤ min size 0) :
+    dataLength minimum size 0 offset = minimum := by
+  simp only [dataLength]
+  simp at bounded
+  omega
+
+/-- Carrier mappings preserve domain membership under their stated representation law.
+This is conditional: it does not certify Gerbil's runtime encoders or reader. -/
+theorem dataCarrier_domain (valid : Value → Prop) (packedValid : Carrier → Prop)
+    (pack : List Value → Carrier)
+    (law : ∀ values, (∀ value ∈ values, valid value) → packedValid (pack values))
+    (values : List Value) (members : ∀ value ∈ values, valid value) :
+    packedValid (pack values) := law values members
+
 end LeanPoo.Functional.PropertyTesting

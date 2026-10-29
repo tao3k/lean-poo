@@ -145,3 +145,19 @@ to `:std/test`; it adds no runner. These laws do not prove the installed CLI's O
 exit code or turn callback exceptions into property falsifications. Generator
 branches may depend on earlier argument values; per-value type inference remains
 outside the fixed-specification interface.
+
+## Reusable data family laws
+
+The independent Gerbil algebra now supplies bounded integers, Unicode scalar
+characters, octets, lists, strings, symbols and byte vectors. POO String, Symbol,
+Bytes and BytesN reuse it; there is no Char descriptor invented for this feature.
+`intervalValue_bounds` and `intervalValue_shrink` prove explicit interval admission
+and decreasing offsets. `scalarCode_valid` and `scalarCode_strict` prove surrogate
+exclusion and monotone scalar decoding. `dataLength_bounds` and `dataLength_fixed`
+prove suffix bounds and size-zero fixed widths. `dataCarrier_domain` states the
+representation obligation explicitly, rather than certifying runtime packers.
+
+Scheme regressions exercise mixed Unicode/byte replay with the existing codec
+identity/currentness and byte-budget refusal. These laws do not prove PRNG
+uniformity, symbol interning, callback termination, arbitrary mutation purity,
+or Gerbil's write/read implementation. This advances the paper's future work.
