@@ -383,6 +383,7 @@ _check-examples:
     {{lean}} Examples/PropertyGenerators.lean
     {{lean}} Examples/PropertyProducts.lean
     {{lean}} Examples/PropertyFilters.lean
+    {{lean}} Examples/PropertyScopes.lean
     {{lean}} Examples/PropertyTraces.lean
     {{lean}} Examples/RecursiveGenerators.lean
     {{lean}} Examples/PrototypeTypes.lean

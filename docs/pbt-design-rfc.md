@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P23. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P24. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -980,3 +980,31 @@ Accurate pure observers, truthful epochs, sequential callbacks and faithful sour
 directories remain required. Runtime parameter unwinding and exact exception and
 replay behavior have separate regression coverage. All prior checks and guards
 remain enabled.
+
+## P24: transient checked-action scope
+
+The audit reproduced a replay mapper executing after its draw retired a source
+from a previously rejected shrink branch. Later normal trials and generator
+inspection had the same outer-action-only gap. Gerbil now installs a transient
+check through the existing `with-current` form and the generator module's standard
+parameter-backed `with-generation-check`. Nested draw/map/selection and iterator
+boundaries observe it, including when retained source ownership is empty.
+
+Checks run outer-to-inner and unwind through ordinary return, exceptions and the
+existing refusal continuation. They never enter sample source metadata: a checker
+may read its run's mutable ledger, so retaining it there would introduce recursive
+observation; retaining prior replay checkers would accumulate old reports. The
+actual producer/node ownership and seed/tree protocols remain unchanged. Generic
+and Record/Function/FUN controls cover refusal before reconstruction, fresh retry,
+original causes, nested/paused iteration and stable work across twelve replays.
+
+`PropertyScopes.lean`, in the existing PropertyTesting namespace, composes the
+existing guarded product/stages with transient source identities and the evolving
+new-run ledger. Nine laws prove nested/empty admission, stale stage suppression,
+cause preservation, empty/stable observation and exact new-ledger publication
+without adding the transient directory. Pure accurate observers, faithful ledgers
+and host dynamic scope, sequential callbacks and termination are premises. Runtime
+continuations, parameter restoration, aliases, Function wrapping, heap retention
+and timing are separate executable obligations, not inferred from the model.
+All checks and heap/deadline budgets remain. Active scope checks add work; no
+constant-time, universal performance or arbitrary-continuation claim is made.

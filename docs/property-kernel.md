@@ -383,3 +383,12 @@ bound. `filterHistory_pipeline` reuses the guarded stage evaluator to show that
 revising a retired owner suppresses later nested callbacks. Nested generators have
 their own budgets; the bound is not a total callback or host timing bound. Source
 and scope fidelity and callback termination remain explicit host premises.
+
+P24 adds `PropertyScopes.lean`: a transient replay directory authorizes checked
+stages while the run's explicit ledger alone becomes new ownership. Nine laws
+cover joint/nested checks, refusal, exact causes and stable/empty publication.
+The model reuses guarded products and stages; it does not certify Gerbil control
+transfer or parameter implementation. Runtime controls verify earlier-trial,
+inspection and replay interruption, restored scope, no added sample source leaf
+and unchanged observer work over twelve replays. User-captured continuations and
+payload aliases retain their standard host lifetime obligations.
