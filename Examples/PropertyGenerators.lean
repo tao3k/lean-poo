@@ -147,3 +147,28 @@ example : traceValid traceBlocks traceBlocks.initial
     (repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 0 2) = true := by decide
 example : traceWeight (fun _ => 0) (repairedBlock traceBlocks traceBlocks.initial [0, 0, 1, 2] 0 2) <
     traceWeight (fun _ => 0) [0, 0, 1, 2] := by decide
+
+-- Source revisions at a product boundary prevent every later field effect.
+example : guardedStages (fun epoch : Nat => epoch == 0)
+    [(fun _ => (.ok (true, 1) : Except String (Bool × Nat))),
+     (fun _ => .error "later field ran")] 0 = .error none := rfl
+example : guardedStages (fun epoch : Nat => epoch == 0)
+    [(fun _ => (.ok (true, 0) : Except String (Bool × Nat))),
+     (fun _ => .ok (false, 1)), (fun _ => .error "third field ran")] 0 = .error none := rfl
+example : guardedStages (fun _ : Nat => true)
+    [(fun _ => (.error "field cause" : Except String (Bool × Nat))),
+     (fun _ => .error "later field ran")] 0 = .error (some "field cause") := rfl
+
+-- Stale policy results refuse regardless of the Boolean; stable exclusions skip evaluation.
+example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (true, 1) : Except String (Bool × Nat)))
+    (fun _ => .error (some "property ran")) 0 = .error none := rfl
+example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ => .error (some "property ran")) 0 = .error none := rfl
+example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 0) : Except String (Bool × Nat)))
+    (fun _ => .error (some "property ran")) 0 = .ok (true, 0) := rfl
+example : guardedShrinkPolicy (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (true, 0) : Except String (Bool × Nat)))
+    (fun _ => .error (some "property cause")) 0 = .error (some "property cause") := rfl

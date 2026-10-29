@@ -313,3 +313,10 @@ POO `trace-generator` uses the same policy automatically. No draws or actual
 fixture transitions run during candidate preparation; model callbacks remain
 explicit and finite. The runner still checks each repaired proposal's domain,
 strictly smaller measure and falsification before accepting it.
+
+Policy preconditions and each fixed product field are separate source-checked
+stages. A precondition that revises a declared dependency stops before property
+entry, including during shrinking. A product field that invalidates any captured
+domain stops before later fields. Reports retain the previous witness and charged
+proposal count; fresh execution is required after revision. Pure stable observers
+and explicitly declared dependencies remain caller obligations.

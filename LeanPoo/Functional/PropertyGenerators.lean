@@ -549,4 +549,85 @@ theorem repairedBlock_smaller (model : TraceModel State Command Reply) (state : 
   simp only [List.drop_drop] at second
   omega
 
+/-- Ordered product callbacks reuse the same before/after source boundary.
+A refused stage never evaluates any callback in the remaining product. -/
+def guardedStages (live : State → Bool) :
+    List (State → Except Cause (Value × State)) → State → Except (Option Cause) (List Value × State)
+  | [], state => .ok ([], state)
+  | run :: rest, state =>
+      match guardedGeneration live run state with
+      | .error cause => .error cause
+      | .ok (value, next) => match guardedStages live rest next with
+        | .error cause => .error cause
+        | .ok (values, final) => .ok (value :: values, final)
+
+/-- A normal return that invalidates any captured field source stops the product. -/
+theorem guardedStages_revised (live : State → Bool) (state next : State) (value : Value)
+    (rest : List (State → Except Cause (Value × State)))
+    (before : live state = true) (after : live next = false) :
+    guardedStages live ((fun _ => .ok (value, next)) :: rest) state = .error none := by
+  simp [guardedStages, guardedGeneration_revised live state next value before after]
+
+/-- A field callback's exception survives without observing or evaluating its tail. -/
+theorem guardedStages_cause (live : State → Bool) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Value × State))) (before : live state = true) :
+    guardedStages live ((fun _ => .error cause) :: rest) state = .error (some cause) := by
+  simp [guardedStages, guardedGeneration_cause live state cause before]
+
+/-- Refusal at an arbitrary successful prefix remains refusal after composition. -/
+theorem guardedStages_prefix (live : State → Bool)
+    (left right : List (State → Except Cause (Value × State))) (state : State)
+    (cause : Option Cause) (refused : guardedStages live left state = .error cause) :
+    guardedStages live (left ++ right) state = .error cause := by
+  induction left generalizing state with
+  | nil => simp [guardedStages] at refused
+  | cons run rest ih =>
+    cases first : guardedGeneration live run state with
+    | error error => simpa [guardedStages, first] using refused
+    | ok pair =>
+      obtain ⟨value, next⟩ := pair
+      cases tail : guardedStages live rest next with
+      | ok result => simp [guardedStages, first, tail] at refused
+      | error error =>
+        have same : error = cause := by simpa [guardedStages, first, tail] using refused
+        subst error
+        simp [guardedStages, first, ih next tail]
+
+/-- Shrinking interprets a stable exclusion as non-falsification; source refusal
+is distinct and must occur before a property callback can run. -/
+def guardedShrinkPolicy (live : State → Bool)
+    (eligible : State → Except Cause (Bool × State))
+    (evaluate : State → Except (Option Cause) (Bool × State)) (state : State) :
+    Except (Option Cause) (Bool × State) :=
+  match guardedGeneration live eligible state with
+  | .error cause => .error cause
+  | .ok (allowed, next) => if allowed then evaluate next else .ok (true, next)
+
+/-- Both true and false policy returns refuse if their source epoch changed. -/
+theorem guardedShrinkPolicy_revised (live : State → Bool) (state next : State)
+    (allowed : Bool) (evaluate : State → Except (Option Cause) (Bool × State))
+    (before : live state = true) (after : live next = false) :
+    guardedShrinkPolicy live (fun _ => .ok (allowed, next)) evaluate state = .error none := by
+  simp [guardedShrinkPolicy, guardedGeneration_revised live state next allowed before after]
+
+/-- Stable exclusion skips the property without becoming a smaller false witness. -/
+theorem guardedShrinkPolicy_excluded (live : State → Bool) (state next : State)
+    (evaluate : State → Except (Option Cause) (Bool × State))
+    (before : live state = true) (after : live next = true) :
+    guardedShrinkPolicy live (fun _ => .ok (false, next)) evaluate state = .ok (true, next) := by
+  simp [guardedShrinkPolicy, guardedGeneration_state live state next false before after]
+
+/-- Stable admission leaves the property result and its original cause unchanged. -/
+theorem guardedShrinkPolicy_admitted (live : State → Bool) (state next : State)
+    (evaluate : State → Except (Option Cause) (Bool × State))
+    (before : live state = true) (after : live next = true) :
+    guardedShrinkPolicy live (fun _ => .ok (true, next)) evaluate state = evaluate next := by
+  simp [guardedShrinkPolicy, guardedGeneration_state live state next true before after]
+
+/-- A policy exception cannot be reinterpreted as exclusion or falsification. -/
+theorem guardedShrinkPolicy_cause (live : State → Bool) (state : State) (cause : Cause)
+    (evaluate : State → Except (Option Cause) (Bool × State)) (before : live state = true) :
+    guardedShrinkPolicy live (fun _ => .error cause) evaluate state = .error (some cause) := by
+  simp [guardedShrinkPolicy, guardedGeneration_cause live state cause before]
+
 end LeanPoo.Functional.PropertyTesting

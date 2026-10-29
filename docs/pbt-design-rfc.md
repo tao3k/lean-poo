@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P14. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P15. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -681,3 +681,53 @@ repairs traverse retained prefixes, and parameter proposal costs are additional.
 We do not claim lazy preparation, linear wall-clock complexity, all possible
 subsequences, or a globally minimal witness. The supplied neighborhood becomes
 stronger without changing fuel accounting or inventing another shrink runner.
+
+## P15: source-consistent policy and product admission
+
+Audit finding: shrink admission wrapped the policy precondition and property as
+one action. A precondition that returned true after revising a declared source
+could therefore enter the property before the outer stale check. Fixed products
+similarly checked sources around the aggregate predicate/measure, allowing later
+field effects after an earlier field invalidated their captured specification.
+Negative controls reproduced all three forbidden downstream calls before repair.
+These are sequential source-admission defects, not unrestricted effect inference.
+
+The existing hygienic `with-current` form now brackets shrink eligibility before
+property entry, reusing the run's own nonlocal stale exit. Stable exclusion remains
+non-falsification and adds no generation coverage. Products reuse that same form
+around each field predicate and weight, checking every captured domain source
+between callbacks. Gerbil's standard `map-in-order` supplies ordered measurement;
+there is no new callback framework, namespace or source cache. Generator, root,
+shrink and concrete replay retain their existing owners and reports.
+
+A refusal never installs the in-flight proposal. Its already returned attempt
+remains charged, the previous confirmed witness survives, no minimum is certified,
+and callback exception identity is retained even if the source also changed.
+Fresh execution may capture revised sources; seed replay of stale reports may not.
+Already executed callback effects are not rolled back. Observers must be accurate,
+pure and terminating; each application must declare its mutable dependencies.
+
+Regressions cover true/false stale eligibility, cross-field recognition and
+measurement invalidation, skipped later callbacks, original policy exceptions,
+retained witness/attempt accounting, stable exclusions and unchanged coverage.
+The FUN/Record example revises shared policy rules during shrinking, rejects the
+old report, then prepares a new execution that shrinks and replays successfully.
+The isolated generic suite now runs 55 cases without POO modules.
+
+Lean composes the existing guarded state callback model into ordered product
+stages and a shrink-policy judgment. Seven laws cover immediate and arbitrary
+prefix refusal, original causes, stale Boolean policy returns, stable exclusion
+and admitted evaluation. Concrete controls use effect markers for forbidden
+later fields/properties. These finite laws require a faithful host interpretation;
+they do not prove arbitrary source observers or concurrent atomicity.
+
+With N product fields, successful full recognition/measurement adds two aggregate
+source checks per visited callback, each checking up to N domains. This may cost
+O(N²) observer calls; arbitrary observers offer no invalidation notification that
+would justify caching a once-true result. Host callback and observer costs remain
+explicit, and all existing runtime limits and proposal budgets remain unchanged.
+No speedup or global effect safety is claimed.
+
+[Rackcheck](https://docs.racket-lang.org/rackcheck/index.html) supplies the lazy
+generator/property composition comparison. Revision observers are this protocol's
+additional responsibility; this change does not claim Rackcheck implements them.
