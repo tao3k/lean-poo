@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P17. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P18. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -836,3 +836,23 @@ still bound arbitrary callback work.
 [Rackcheck bind](https://docs.racket-lang.org/rackcheck/index.html) provides the
 parent-first lazy tree comparison. Original child seeds and regeneration order
 are unchanged; source ownership is our additional explicit protocol.
+
+## P18: independent product retention
+
+Gerbil's independent product implementation used dependent bind during shrinking,
+redrawing a suffix after an earlier coordinate changed. A stateful draw control
+reproduced `(2 1)` shrinking to `(0 2)`. The implementation now captures original
+roots with the unchanged seed schedule and reuses the existing `sample-sequence`
+policy at fixed width. Lists and finite-key hashes share root capture directly;
+finite Function tables retain unaffected result rows. Explicit dependent bind is
+unchanged. Rackcheck's tuple examples and separate bind contract motivate this
+distinction; the revision protocol remains project-specific.
+
+`retainedProductStep` and eight laws in `PropertyGenerators.lean` prove width,
+selected and sibling preimages, map commutation, independent update commutation,
+unchanged external draw state, empty products and sum-measure strict descent.
+Scheme controls check twelve seed schedules, draw counts, repeated traversal,
+retained source refusal and downstream Record/Function/FUN/replay composition.
+They do not prove host callbacks, PRNG quality, physical sharing, allocation or GC.
+Each coordinate still packs the full product and checks declared sources; removal
+of suffix regeneration is not a constant-time or universal speedup claim.

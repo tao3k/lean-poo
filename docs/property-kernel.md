@@ -334,3 +334,12 @@ sources before producer effects and after normal return, including EOF. A retain
 branch. Lifting it into a new typed sampler cannot refresh those epochs. Generate
 a new root when sources change. The implementation reuses standard Iterator/for
 and the existing source boundary; source-free traversal keeps its direct loop.
+
+P18 separates retained independent products from dependent bind regeneration.
+`retainedProductStep` proves that replacing one coordinate preserves every other
+preimage, width and external draw state; mapping commutes with replacement,
+distinct replacements commute, and a smaller child decreases the sum measure.
+The Gerbil implementation reuses its existing `sample-sequence` and root capture,
+with seed/draw controls and typed Record/Function/FUN replay examples. These are
+finite structural laws under faithful host representation, not GC/allocation or
+arbitrary callback theorems.

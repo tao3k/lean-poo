@@ -954,3 +954,11 @@ not close the vector/hash latency gap. The historical +30.62/+33.42 us recovery
 mean/tail used a different process/GC history, so the apparent reduction is not
 claimed as a controlled before/after speedup. No result is justified by reduced
 allocation alone. Raw paired observations and stack traces stay outside Git.
+
+The broader service workflow also remains unqualified for a speedup: natural
+candidate-minus-hash mean +1,299.18 us, maximum +4,647.25 us, three losses in six;
+A/A and B/B means were -1,110.67 and -1,070.97 us, demonstrating substantial
+history variation. Post-GC mean was +751.26 us, max +942.42 us, six losses.
+Its normalized batch difference included +676.38 us non-GC, +25.32 us GC and
++5.36 us residual. Recovery's smaller operation count must not stand in for
+this broader result or for a full-service latency guarantee.
