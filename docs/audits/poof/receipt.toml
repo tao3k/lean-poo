@@ -603,6 +603,7 @@
   "LeanPoo/Prototype/AVLSemantics.lean",
   "LeanPoo/Prototype/BinaryTree.lean",
   "LeanPoo/Prototype/BinaryTreeSemantics.lean",
+  "LeanPoo/Prototype/BuildPreparation.lean",
   "LeanPoo/Prototype/C3.lean",
   "LeanPoo/Prototype/C3CacheCoherence.lean",
   "LeanPoo/Prototype/C3DAG.lean",
