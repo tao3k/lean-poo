@@ -243,4 +243,42 @@ theorem checkpointExpansions_le (visits : Nat) : checkpointExpansions visits ≤
   unfold checkpointExpansions
   split <;> omega
 
+/-- Delete a contiguous block while retaining the actual elements on both sides. -/
+def deleteBlock (values : List Value) (start width : Nat) : List Value :=
+  values.take start ++ values.drop (start + width)
+
+/-- A bounded block deletion has the exact structural cost decrease. -/
+theorem deleteBlock_length (values : List Value) (start width : Nat)
+    (within : start + width ≤ values.length) :
+    (deleteBlock values start width).length + width = values.length := by
+  simp only [deleteBlock, List.length_append, List.length_take, List.length_drop]
+  omega
+
+/-- Minimum lengths and strict descent hold for every emitted nonempty block. -/
+theorem deleteBlock_bounds (values : List Value) (start width minimum : Nat)
+    (within : start + width ≤ values.length) (positive : 0 < width)
+    (allowed : width ≤ values.length - minimum) (inhabited : minimum ≤ values.length) :
+    minimum ≤ (deleteBlock values start width).length ∧
+      (deleteBlock values start width).length < values.length := by
+  have := deleteBlock_length values start width within
+  omega
+
+/-- Structural deletion introduces no new elements and preserves their order. -/
+theorem deleteBlock_sublist (values : List Value) (start width : Nat) :
+    (deleteBlock values start width).Sublist values := by
+  unfold deleteBlock
+  have suffix := List.drop_sublist width (values.drop start)
+  simpa only [List.drop_drop, List.take_append_drop] using
+    (List.Sublist.refl (values.take start)).append suffix
+
+/-- Applying deletion to retained preimages commutes with mapping a carrier. -/
+theorem deleteBlock_map (values : List Value) (pack : Value → Other) (start width : Nat) :
+    deleteBlock (values.map pack) start width = (deleteBlock values start width).map pack := by
+  simp [deleteBlock, List.map_take, List.map_drop]
+
+/-- A deleted branch's historical observers remain part of descendant ownership. -/
+theorem retainedSources_keep_deleted [DecidableEq Source] (original retained : List Source)
+    (source : Source) (observed : source ∈ original) : source ∈ mergeSources original retained := by
+  exact (mergeSources_mem source original retained).2 (Or.inl observed)
+
 end LeanPoo.Functional.PropertyTesting

@@ -77,3 +77,8 @@ example : configuredCheck (⟨.passed, true, [("input", 4)], none⟩ : CheckDiag
 example : debugDelivery false (fun n : Nat => n + 1) 4 = (4, none) := by decide
 example : configurationLimit (some 20) none = some 20 := by decide
 example : configurationLimit none none = none := by decide
+
+-- Middle/tail deletions preserve endpoints and map the retained objects only.
+example : deleteBlock [11, 99, 22] 1 1 = [11, 22] := by decide
+example : deleteBlock [11, 99, 22] 2 1 = [11, 99] := by decide
+example : deleteBlock [11, 99, 22] 0 3 = ([] : List Nat) := by decide

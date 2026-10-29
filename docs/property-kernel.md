@@ -199,3 +199,16 @@ implicit bound for procedural sizes. `debugDelivery_report` and
 `debugDelivery_disabled` preserve the original report and bypass the renderer
 when disabled. The renderer-return premise does not certify host I/O; DDT's
 formatter/I/O behavior and Gerbil CLI exit propagation are outside these proofs.
+
+## Retained collection deletion
+
+P8 replaces length-driven payload regeneration and typed empty/tail-only removal
+with one retained sample-sequence policy. Aligned blocks halve to singleton
+positions; only List/nullable carriers permit deletion. Pack callbacks remap
+retained values while every originally visited source remains observed.
+`deleteBlock_length` and `deleteBlock_bounds` prove exact length decrease/minimum
+bounds; `deleteBlock_sublist` proves retained order and membership;
+`deleteBlock_map` preserves mapped preimages; `retainedSources_keep_deleted`
+retains historical observer identities. Callback purity/termination and the
+host's allocation/runtime behavior remain explicit premises. No global minimum
+is promised. Typed value-only batch preparation retains its existing search cap.
