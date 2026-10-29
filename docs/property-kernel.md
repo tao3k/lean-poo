@@ -343,3 +343,11 @@ The Gerbil implementation reuses its existing `sample-sequence` and root capture
 with seed/draw controls and typed Record/Function/FUN replay examples. These are
 finite structural laws under faithful host representation, not GC/allocation or
 arbitrary callback theorems.
+
+P19 models supplied call-input demand with `demandInput` and `demandInputs`.
+Successful descriptor preparation is reused; omitted/shadowed inputs are not
+forced, and the first selected failure retains its exact cause and earlier cache
+entries. Source admission stays with the existing guards. The Gerbil layer reuses
+`defonce`, typed products and first-match signatures; it does not cache generated
+values or substitute unsupported Types. See the RFC for sequential promise and
+finite-Type proof premises.
