@@ -147,20 +147,26 @@ structure Scheduled (spec : Declaration Key Value) where
   edgeLower : ∀ key dep, dep ∈ spec.reads key → resolver.rank dep < resolver.rank key
   known : ∀ key, (spec.footprint key).unknown = false
 
-/-- Transfer a checked schedule across a revision with the same complete read
-footprint. Resolver bodies and base values may change; their closure is rebuilt
-at the retained ranks. This does not reuse resolved values. -/
-def Scheduled.rebase {old spec : Declaration Key Value} (prior : Scheduled old)
-    (reads : ∀ key, spec.reads key = old.reads key)
+/-- Removing read edges preserves a checked rank. Literal replacement can
+therefore retain the parent's order without running the topological sort again.
+Resolver bodies and their closed instance values are still rebuilt. -/
+def Scheduled.restrict {old spec : Declaration Key Value} (prior : Scheduled old)
+    (reads : ∀ key dep, dep ∈ spec.reads key → dep ∈ old.reads key)
     (known : ∀ key, (spec.footprint key).unknown = false) : Scheduled spec where
   order := prior.order
   resolver := ⟨prior.resolver.rank, by
     intro key left right lower
     apply spec.locality key (known key)
     intro dep member
-    exact lower dep (prior.edgeLower key dep (by simpa [reads key] using member))⟩
-  edgeLower := by intro key dep member; exact prior.edgeLower key dep (by simpa [reads key] using member)
+    exact lower dep (prior.edgeLower key dep (reads key dep member))⟩
+  edgeLower := by intro key dep member; exact prior.edgeLower key dep (reads key dep member)
   known := known
+
+/-- Equal footprints are the special case of edge restriction. -/
+def Scheduled.rebase {old spec : Declaration Key Value} (prior : Scheduled old)
+    (reads : ∀ key, spec.reads key = old.reads key)
+    (known : ∀ key, (spec.footprint key).unknown = false) : Scheduled spec :=
+  prior.restrict (by intro key dep member; simpa [reads key] using member) known
 
 theorem Scheduled.rebase_order {old spec : Declaration Key Value} (prior : Scheduled old)
     (reads known) : (prior.rebase (spec := spec) reads known).order = prior.order := rfl

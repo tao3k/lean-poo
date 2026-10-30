@@ -167,10 +167,69 @@ private def contractRefusal : Bool :=
   | .error _ => false
   | .ok object => !(LeanPoo.Functional.ObjectContract.diagnose contract object []).isEmpty
 
+/-- Compare actual materializations with the full canonical preparation path.
+Includes empty/literal prefixes, duplicate writes, inherited edits, inventory
+changes, defaults, changed dependencies, and rejected topology. -/
+private def revisionPreparation : Bool :=
+  match prepareDefinition (Key := Key) (Value := Value) "PreparedBase" program with
+  | .error _ => false
+  | .ok prior =>
+    let revisions : List (Builder Key Value PUnit) := [pure ⟨⟩,
+      Builder.value .seed 7,
+      (do Builder.value .seed 7; Builder.value .seed 9),
+      (do Builder.value .seed 7
+          Builder.field .seed (.extend (.pure fun _ value => value.map (· + 10)))),
+      Builder.default .seed 20,
+      Builder.value .other 30,
+      Builder.derived .result ((· + 1) <$> Expr.need .other),
+      Builder.value .result 99]
+    revisions.all fun revision =>
+      let declaration := Builder.build revision
+      let node : C4.Node := {name := "PreparedChild",parentOrders := [[prior.plan.root]]}
+      let canonical := Template.prepare (prior.source.add node declaration) node.name
+      let shared := prior.prepareExtension node declaration
+      match canonical,shared with
+      | .ok reference,.ok ready =>
+        match reference.build,ready.build with
+        | .ok (expected,_),.ok (actual,evaluated) =>
+          actual.plan.root == node.name && actual.plan.precedence == reference.plan.precedence &&
+          actual.slotNames == expected.slotNames &&
+          [Key.seed,.result,.other].all (fun key => actual.read key == expected.read key) &&
+          evaluated.length == ready.graph.keys.eraseDups.length &&
+          evaluated.eraseDups.length == evaluated.length &&
+          ((actual.template.source.declaration node.name).isSome)
+        | _,_ => false
+      | _,_ => false
+
+private def literalScheduleRestriction : Bool :=
+  match prepareDefinition (Key := Key) (Value := Value) "LiteralParent" program with
+  | .error _ => false
+  | .ok prior =>
+    let declaration := Builder.build (Builder.value .result 99)
+    let node : C4.Node := {name := "LiteralChild",parentOrders := [[prior.plan.root]]}
+    match prior.prepareExtension node declaration with
+    | .error _ => false
+    | .ok ready =>
+      (prior.graph.reads .result == [.seed]) && (ready.graph.reads .result).isEmpty &&
+      (prior.rebaseSchedule? ready.graph).isSome && ready.scheduled.order == prior.scheduled.order
+
+private def revisionTopologyRefusal : Bool :=
+  match prepareDefinition (Key := Key) (Value := Value) "TopologyBase" program with
+  | .error _ => false
+  | .ok prior =>
+    match prior.prepareExtension {name := "MissingParent",parentOrders := [["absent"]]} {} with
+    | .error (.topology _) => true
+    | _ => false
+
 open Lean in
 run_cmd do
   for declaration in [``Instance.reference,``Instance.read_reference,``Instance.slotNames_exact,
       ``Source.schema_declaration, ``Source.add_prepared_frame,
+      ``Template.metadata_resolve_sound, ``Template.code_source,
+      ``LeanPoo.Object.Plan.resolve_prefix, ``LeanPoo.allSlots_empty_prefix,
+      ``LeanPoo.Object.CompiledPlan.overlay, ``LeanPoo.Object.CompiledPlan.retarget,
+      ``LeanPoo.Prototype.SlotSpec.withParent_eq,
+      ``LeanPoo.Functional.GeneralizedGraph.Scheduled.restrict,
       ``LeanPoo.Functional.ConstructionCache.Execution.compile,
       ``LeanPoo.Functional.ConstructionCache.Cache.reference,
       ``LeanPoo.Functional.ConstructionCache.Partial.step_reused_builder_independent] do
@@ -185,7 +244,10 @@ def run : IO Unit := do
       ("one-evaluation-per-field",actualEvaluations),("typed-contract",contractChecks),("strict-duplicates",strictChecks),
       ("disjoint-families-delayed-super",joinedInheritance),("schedule-revision",scheduleRevision),
       ("shared-dependency-evaluated-once",sharedDependency),("changed-edges-reject-reuse",changedEdges),
-      ("contract-rejects-forged-projection",contractRefusal)] do
+      ("contract-rejects-forged-projection",contractRefusal),
+      ("shared-preparation-canonical-parity",revisionPreparation),
+      ("shared-preparation-topology-refusal",revisionTopologyRefusal),
+      ("literal-removal-retains-checked-rank",literalScheduleRestriction)] do
     unless passed do throw (IO.userError s!"dataflow object failed: {name}")
     IO.println s!"DATAFLOW-OBJECT-OK {name}"
 end DataflowObjectExample

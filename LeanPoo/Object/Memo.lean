@@ -50,8 +50,7 @@ private def Declaration.localMethod {Key : Type u} {Value : Key → Type v}
       (fun key => Prototype.Method (Self Key Value) (Option (Value key))))
     (key : Key) (spec : SlotPayload Key Value key) :
     Prototype.Method (Self Key Value) (Option (Value key)) :=
-  Prototype.Method.compose spec.toMethod
-    ((inherited.get? key).getD Prototype.Method.identity)
+  spec.withParent ((inherited.get? key).getD Prototype.Method.identity)
 
 private def Declaration.compileLocalMethods {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -187,7 +186,10 @@ private theorem compileTablesFor_method_getD
         | some declaration =>
             simp only
             rw [Declaration.compileLocalMethods_get?]
-            cases declaration.slot key <;> rfl
+            cases declaration.slot key with
+            | none => rfl
+            | some spec => simp only [Option.getD_some, Declaration.localMethod,
+                Prototype.SlotSpec.withParent_eq]
   simpa using go names ({}, {})
 
 /-- The compiled tables give the same open-recursive result as the canonical
@@ -313,6 +315,61 @@ theorem CompiledPlan.resolve_sound {Key : Type u} {Value : Key → Type v}
     (member : key ∈ compiled.keys) (self : Self Key Value) :
     compiled.resolve key self = compiled.plan.resolve key self := by
   simp [CompiledPlan.resolve, compiled.sound key member]
+
+/-- Rebind an existing open method table to a newly validated plan only when
+every open-self resolution agrees. This shares preparation, never instance cells. -/
+def CompiledPlan.retarget {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (compiled : CompiledPlan Key Value) (plan : Plan Key Value)
+    (equivalent : ∀ key self, compiled.plan.resolve key self = plan.resolve key self) :
+    CompiledPlan Key Value where
+  plan := plan
+  keys := compiled.keys
+  effective := compiled.effective
+  sound := by
+    intro key member
+    rw [compiled.sound key member]
+    congr 1
+    funext self
+    exact equivalent key self
+
+/-- Patch just the direct writes of a default-free C4 prefix. Duplicate writes
+all inherit the original parent table; the last direct write wins. Untouched
+methods retain their existing persistent table entries. -/
+def CompiledPlan.overlay {Key : Type u} {Value : Key → Type v}
+    [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (compiled : CompiledPlan Key Value) (plan : Plan Key Value)
+    (declaration : Declaration Key Value)
+    (equation : ∀ key self, plan.resolve key self = match declaration.slot key with
+      | none => compiled.plan.resolve key self
+      | some method => method.toMethod self (fun _ => compiled.plan.resolve key self)) :
+    CompiledPlan Key Value :=
+  let convert := fun key (method : SlotPayload Key Value key) =>
+    match method with
+    | .constant value => fun _ => value
+    | .thunk value => fun _ => value ()
+    | .self compute => compute
+    | .computed compute => fun self => compute self (fun _ => compiled.resolve key self)
+  { plan
+    keys := compiled.keys
+    effective := declaration.slots.foldl (fun table entry =>
+      table.insert entry.key (convert entry.key entry.value)) compiled.effective
+    sound := by
+      intro key member
+      rw [Entry.foldMap_get?_lookup]
+      cases found : Entry.lookup declaration.slots key with
+      | none =>
+        simp only []
+        rw [compiled.sound key member]
+        congr 1
+        funext self
+        simpa [Declaration.slot, found] using (equation key self).symm
+      | some method =>
+        simp only []
+        congr 1
+        funext self
+        cases method <;> simpa [convert, Prototype.SlotSpec.toMethod, Prototype.SlotSpec.eval,
+          compiled.resolve_sound key member, Declaration.slot, found] using (equation key self).symm }
 
 /-- Tie a fresh lazy self table while reusing the compiled open methods. -/
 def CompiledPlan.instantiate {Key : Type u} {Value : Key → Type v}
