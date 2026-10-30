@@ -253,4 +253,62 @@ theorem guardedMeasure_refused (live : State → Bool) (base : Nat)
     (refused : guardedMeasure live base fields state = .error cause) :
     (guardedMeasure live base fields state >>= later) = .error cause := by rw [refused]; rfl
 
+/-- Reference fixed-product schedule. Each field receives the parent seed and
+its suffix receives the child seed. `split` abstracts the existing two draws;
+faithful SRFI-27 checkpoints and pure finite draws remain host premises. -/
+def drawProduct (split : Seed → Seed × Seed) (draw : Field → Seed → Value) :
+    List Field → Seed → List Value × Seed
+  | [], seed => ([], seed)
+  | field :: rest, seed =>
+    let seeds := split seed
+    let result := drawProduct split draw rest seeds.2
+    (draw field seeds.1 :: result.1, result.2)
+
+/-- Tail-position accumulation keeps retained field values and the continuation
+seed without constructing an executable bind/map spine. Source refusal still
+uses guardedProduct; this definition models only an admitted stable schedule. -/
+def drawProductRev (split : Seed → Seed × Seed) (draw : Field → Seed → Value) :
+    List Field → Seed → List Value → List Value × Seed
+  | [], seed, before => (before.reverse, seed)
+  | field :: rest, seed, before =>
+    let seeds := split seed
+    drawProductRev split draw rest seeds.2 (draw field seeds.1 :: before)
+
+/-- Every accumulator preserves both field order and the exact continuation seed. -/
+theorem drawProductRev_acc (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    drawProductRev split draw fields seed before =
+      (before.reverse ++ (drawProduct split draw fields seed).1,
+        (drawProduct split draw fields seed).2) := by
+  induction fields generalizing seed before with
+  | nil => simp [drawProductRev, drawProduct]
+  | cons field rest ih =>
+    simp [drawProductRev, drawProduct, ih, List.reverse_cons, List.append_assoc]
+
+/-- Empty accumulation implements the original split schedule exactly. -/
+theorem drawProductRev_eq (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) :
+    drawProductRev split draw fields seed [] = drawProduct split draw fields seed := by
+  simp [drawProductRev_acc]
+
+/-- Every admitted field contributes exactly one retained value, including width zero. -/
+theorem drawProduct_length (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) :
+    (drawProduct split draw fields seed).1.length = fields.length := by
+  induction fields generalizing seed with
+  | nil => rfl
+  | cons field rest ih => simp [drawProduct, ih]
+
+/-- Accumulation neither drops nor duplicates fields, irrespective of their values. -/
+theorem drawProductRev_length (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    (drawProductRev split draw fields seed before).1.length = before.length + fields.length := by
+  simp [drawProductRev_acc, drawProduct_length]
+
+/-- Suffix replay starts at the same seed even with a nonempty accumulator. -/
+theorem drawProductRev_seed (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    (drawProductRev split draw fields seed before).2 = (drawProduct split draw fields seed).2 := by
+  rw [drawProductRev_acc]
+
 end LeanPoo.Functional.PropertyTesting

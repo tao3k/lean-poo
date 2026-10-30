@@ -56,3 +56,15 @@ example : guardedAll (fun _ : Nat => true)
 example : guardedAll (fun epoch : Nat => epoch == 0)
     [(fun _ => (.ok (false, 1) : Except String (Bool × Nat))),
      (fun _ => .error "later input must not run")] 0 = .error none := rfl
+
+-- The parent seed labels each field; the child seed advances the suffix.
+example : drawProductRev (fun seed : Nat => (seed + 10, seed + 1))
+    (fun field seed : Nat => field + seed) [1, 2, 3] 0 [] = ([11, 13, 15], 3) := rfl
+
+-- An empty product consumes no split and keeps its continuation seed.
+example : drawProductRev (fun _ : Nat => (99, 100))
+    (fun field seed : Nat => field + seed) [] 7 [] = ([], 7) := rfl
+
+-- Equal payloads do not erase distinct field positions or replay seeds.
+example : drawProductRev (fun seed : Nat => (seed, seed + 1))
+    (fun _ _ : Nat => 5) [0, 0, 0] 0 [8] = ([8, 5, 5, 5], 3) := rfl
