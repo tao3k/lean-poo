@@ -512,11 +512,13 @@ source observers, serial terminating callbacks and faithful host scope are premi
 these laws do not prove arbitrary field computations or concurrent snapshots.
 
 P41 admits fixed-product topology before preparation, captures every known child
-identity before factories, and draws retained roots iteratively. Standard Gerbil
+identity before factories, and retains the established bind/checkpoint draw.
+An iterative Scheme candidate did not pass full-workflow GC cost acceptance and
+is excluded from production. Standard Gerbil
 contracts and the existing checked-action scope own refusal; Lists, finite Maps,
 functions and typed products reuse the same sequence constructor. The independent
 stdlib-only acceptance now requires 115 cases. PropertyProducts adds drawProduct
-and its tail-position accumulator, with five laws for reference equivalence,
+and an equivalent finite accumulator specification, with five laws for reference equivalence,
 field order/length and exact continuation seeds. Existing guarded-product laws
 suppress later factories after revision. Top-level controls cover width zero and
 duplicate values. Finite lists, faithful source clocks/seed splitting, serial
