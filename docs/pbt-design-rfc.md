@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P32. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P33. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1395,3 +1395,55 @@ remains the structural reference; registered source inheritance is this project'
 extension. Active ancestor walks add bounded-by-context checking work; no timing
 or zero-cost improvement is claimed. Process and search limits, complete checks
 and current-head CI remain unchanged.
+
+## P33: sound short-circuit admission of supplied Function call fields
+
+The audit found a value-admission defect in the project's `FunctionArguments`
+recognizer. `(FunctionArguments (Function [Integer] [Integer]))` accepted the raw
+row `("bad")`, while the real checked Function rejected that call with TypeError.
+The field conjunction was evaluated and then discarded by a trailing let-body
+`#t`. Positional validation also used eager `map`: an early false predicate could
+still run a later throwing predicate and replace ordinary refusal with its error.
+
+`testing/function.ss` now returns the actual field conjunction and uses Gerbil's
+runtime `andmap` for the paired positional Type/value walk. It is the standard
+short-circuit traversal in `src/gerbil/runtime/util.ss`, not another evaluator.
+Each supplied positional/optional/rest/keyword field uses the existing source
+boundary. A false field stops later predicates; an exception remains exact; a
+registered revision refuses before the next field. There is no fallback Type,
+new namespace, shape search, value-based clause backtracking or default evaluation.
+Selection/encoding/decoding still use the runtime signature protocol, so ordered
+case-lambda first match and keyword/escaped-literal interpretation are unchanged.
+This guards the project's finite supplied-field walk, not arbitrary operations
+inside a user Type predicate or unrelated Type implementations.
+
+Six ordinary cases in the existing representation suite cover required/optional/
+rest rejection, keyword ordering/omission and escaped literals, inherited producer
+sources, shadowed clauses and exact errors, invalid generated rows rejected before
+the property, and complex service integration. Real checked Function wrapping is
+an independent rejection control. `service-admission-tests` extends the existing
+signature-service example: explicit input domains, optional callback Lists and
+keywords compose with actual service defaults, checked nested Functions and FUN.
+The correct service passes; a host implementation discrepancy supplies a typed
+witness that shrinks and supports concrete and seed replay. PropertyConfiguration
+remains the standard Record. No generic-kernel dependency or runner is added; the
+independent standard-library package remains 97 cases.
+
+Eight `guardedAll` laws extend the existing PropertyProducts module with the
+source-checked Boolean fold: empty admission, stale preflight, exact false/true
+head behavior, revision refusal, original causes, equivalence to `List.all` for
+fresh pure outcomes, and suppression of subsequent stages after refusal. Source
+scope fidelity, fixed ordered supplied fields, accurate pure observers and
+terminating predicate calls remain premises. A domain rejection is not a false
+property witness; host contracts, arbitrary Type callbacks, termination, GC and
+wall-clock behavior are not verified by these laws. Omitted inputs do no predicate
+work; active supplied-field source checks still have their ledger cost. No timing
+improvement is claimed.
+
+The [Rackcheck filter structure](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/shrink-tree.rkt)
+short-circuits before constructing accepted descendants; the Gerbil standard
+conjunction expresses the corresponding finite field-admission policy here.
+The 1G source-interpreter aggregate-module load failed before suite execution and
+is not counted as acceptance. The focused compiled suite runs through the standard
+CLI with the same 1G/90-second gate; complete checks run without its focused filter.
+Process, depth, search, node and proposal limits remain unchanged.

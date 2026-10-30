@@ -33,3 +33,13 @@ example : productSources [[0, 1], productSources [[1], [2]]] = [0, 1, 2] := rfl
 
 -- An empty finite function domain has no result producer to observe.
 example : (productSources ([] : List (List Nat))).all (fun _ => false) = true := rfl
+
+-- An ordinary bad input must stay false; the next input cannot replace it by an error.
+example : guardedAll (fun _ : Nat => true)
+    [(fun state => (.ok (false, state) : Except String (Bool × Nat))),
+     (fun _ => .error "later input must not run")] 0 = .ok (false, 0) := rfl
+
+-- A predicate that revises its source cannot publish either normal Boolean result.
+example : guardedAll (fun epoch : Nat => epoch == 0)
+    [(fun _ => (.ok (false, 1) : Except String (Bool × Nat))),
+     (fun _ => .error "later input must not run")] 0 = .error none := rfl

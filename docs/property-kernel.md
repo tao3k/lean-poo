@@ -433,3 +433,12 @@ reports are checked under the parent after child scope unwinding. `nestedActions
 reuses `guardedThen`, and report publication reuses `guardedGeneration`. Accurate
 pure observers, serial callbacks and faithful host scope encoding remain premises;
 host continuation/cleanup and transactional port behavior are not verified.
+
+
+PBT RFC P33 adds eight guardedAll laws in PropertyProducts. False field admission
+is an observable result that stops the tail; true continues with the actual
+state, stale sources refuse and original callback exceptions remain exact. Fresh
+pure outcomes agree with List.all. Examples/PropertyProducts.lean includes a
+false-head/throwing-tail control and a revised false result. These finite laws
+assume faithful supplied-field order and host scope encoding; they do not verify
+Gerbil contracts, arbitrary Type predicates, termination or runtime performance.

@@ -140,4 +140,70 @@ theorem productSources_empty (live : Source → Bool) [DecidableEq Source] :
     (productSources ([] : List (List Source))).all live = true := by
   rfl
 
+/-- Supplied-field recognition is a source-checked Boolean conjunction, not an
+eager batch whose false result is discarded. The fixed ordered field topology
+and faithful host predicate/scope encoding remain premises. -/
+def guardedAll (live : State → Bool) :
+    List (State → Except Cause (Bool × State)) → State → Except (Option Cause) (Bool × State)
+  | [], state => if live state then .ok (true, state) else .error none
+  | first :: rest, state =>
+      match guardedGeneration live first state with
+      | .error cause => .error cause
+      | .ok (false, after) => .ok (false, after)
+      | .ok (true, after) => guardedAll live rest after
+
+/-- No supplied fields means true under the caller's admitted source scope. -/
+theorem guardedAll_empty (live : State → Bool) (state : State) (fresh : live state = true) :
+    guardedAll (Cause := Cause) live [] state = .ok (true, state) := by simp [guardedAll, fresh]
+
+/-- Obsolete scopes invoke no field predicates, even for empty rows. -/
+theorem guardedAll_preflight (live : State → Bool) (state : State)
+    (fields : List (State → Except Cause (Bool × State))) (stale : live state = false) :
+    guardedAll live fields state = .error none := by
+  cases fields <;> simp [guardedAll, guardedGeneration, stale]
+
+/-- Ordinary membership refusal is returned as false and never reaches the tail. -/
+theorem guardedAll_false (live : State → Bool) (state after : State)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (fresh : live after = true) :
+    guardedAll live ((fun _ => .ok (false, after)) :: rest) state = .ok (false, after) := by
+  simp [guardedAll, guardedGeneration, before, fresh]
+
+/-- A true supplied field passes only its actual state to the remaining fields. -/
+theorem guardedAll_true (live : State → Bool) (state after : State)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (fresh : live after = true) :
+    guardedAll live ((fun _ => .ok (true, after)) :: rest) state = guardedAll live rest after := by
+  simp [guardedAll, guardedGeneration, before, fresh]
+
+/-- Source revision outranks a normal predicate result, whether true or false. -/
+theorem guardedAll_revised (live : State → Bool) (state after : State) (accepted : Bool)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (stale : live after = false) :
+    guardedAll live ((fun _ => .ok (accepted, after)) :: rest) state = .error none := by
+  simp [guardedAll, guardedGeneration, before, stale]
+
+/-- Predicate exceptions remain exact rather than being coerced into false. -/
+theorem guardedAll_cause (live : State → Bool) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Bool × State))) (before : live state = true) :
+    guardedAll live ((fun _ => .error cause) :: rest) state = .error (some cause) := by
+  simp [guardedAll, guardedGeneration, before]
+
+/-- Fresh pure field outcomes agree with the standard Boolean all fold. -/
+theorem guardedAll_values (live : State → Bool) (state : State) (values : List Bool)
+    (fresh : live state = true) :
+    guardedAll live (values.map (fun value => fun next => (.ok (value, next) : Except Cause (Bool × State)))) state =
+      .ok (values.all id, state) := by
+  induction values with
+  | nil => simp [guardedAll, fresh]
+  | cons value rest ih =>
+    cases value <;> simp [guardedAll, guardedGeneration, fresh, ih]
+
+/-- A refused field sequence cannot enter a later declaration/property stage. -/
+theorem guardedAll_refused (live : State → Bool)
+    (fields : List (State → Except Cause (Bool × State))) (state : State)
+    (cause : Option Cause) (later : Bool × State → Except (Option Cause) Output)
+    (refused : guardedAll live fields state = .error cause) :
+    (guardedAll live fields state >>= later) = .error cause := by rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
