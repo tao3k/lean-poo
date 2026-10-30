@@ -479,3 +479,12 @@ construction are removed. Seven regressions, the shared Record/Function FUN
 preparation/retry example and six finite ledger laws cover refusal, identity,
 shrinking and replay. Undiscovered dependencies, concurrent global snapshots and
 callback termination remain explicit boundaries. See P37 in the PBT RFC for costs.
+
+
+P38 binds constructor-produced samplers to their Type declaration and makes sampler
++ actual descriptor mandatory revision owners. Relabeling an inherited bounded
+parser is refused; use a fresh constructor and explicit projection. Trace model
+and List metadata are captured at construction through the existing source guard.
+Eight new cases, a Record/Function schema-migration FUN example and six finite
+binding/source laws cover preparation, diagnostics, compositions and portable replay.
+No per-value wrapping or extra generator call is introduced; see P38 in the RFC.

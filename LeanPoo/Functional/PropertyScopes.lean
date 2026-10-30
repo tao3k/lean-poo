@@ -317,6 +317,65 @@ theorem captureRevision_fresh [DecidableEq Source] (current : Source → Nat)
   · exact fresh
   · simpa [revisionsCurrent] using fresh
 
+/-- A typed sampler always owns its identity and actual declaration; additional
+application dependencies can extend but cannot erase these two participants. -/
+def samplerOwners [DecidableEq Source] (owner descriptor : Source) (dependencies : List Source) : List Source :=
+  mergeSources [owner, descriptor] dependencies
+
+/-- Constructor binding is checked as preparation data, without invoking a tree
+factory or a value predicate. A mismatch is a configuration error, not falsity. -/
+def prepareSampler [DecidableEq Source] (owner bound actual : Source)
+    (dependencies : List Source) : Except Unit (List Source) :=
+  if bound = actual then .ok (samplerOwners owner actual dependencies) else .error ()
+
+/-- Only the two mandatory identities and explicitly declared owners participate. -/
+theorem samplerOwners_mem [DecidableEq Source] (source owner descriptor : Source) (dependencies : List Source) :
+    source ∈ samplerOwners owner descriptor dependencies ↔
+      source = owner ∨ source = descriptor ∨ source ∈ dependencies := by
+  simp [samplerOwners, mergeSources_mem, or_assoc]
+
+/-- Freshness includes both mandatory owners even when dependencies are replaced. -/
+theorem samplerOwners_current [DecidableEq Source] (live : Source → Bool)
+    (owner descriptor : Source) (dependencies : List Source) :
+    (samplerOwners owner descriptor dependencies).all live = true ↔
+      live owner = true ∧ live descriptor = true ∧ dependencies.all live = true := by
+  change (mergeSources [owner, descriptor] dependencies).all live = true ↔ _
+  rw [mergeSources_current]
+  simp [Bool.and_eq_true, and_assoc]
+
+/-- No dependency list can hide a changed actual Type from the prepared sampler. -/
+theorem samplerOwners_descriptor_stale [DecidableEq Source] (live : Source → Bool)
+    (owner descriptor : Source) (dependencies : List Source) (stale : live descriptor = false) :
+    (samplerOwners owner descriptor dependencies).all live = false := by
+  cases observed : (samplerOwners owner descriptor dependencies).all live with
+  | false => rfl
+  | true =>
+    have required := (samplerOwners_current live owner descriptor dependencies).mp observed
+    simp [stale] at required
+
+/-- Ordinary construction and same-declaration derivation admit the same owners. -/
+theorem prepareSampler_same [DecidableEq Source] (owner descriptor : Source) (dependencies : List Source) :
+    prepareSampler owner descriptor descriptor dependencies = .ok (samplerOwners owner descriptor dependencies) := by
+  simp [prepareSampler]
+
+/-- Inherited protocols cannot relabel their constructor's declaration. -/
+theorem prepareSampler_changed [DecidableEq Source] (owner bound actual : Source)
+    (dependencies : List Source) (different : bound ≠ actual) :
+    prepareSampler owner bound actual dependencies = .error () := by
+  simp [prepareSampler, different]
+
+/-- Successful preparation preserves the declaration binding and mandatory identities. -/
+theorem prepareSampler_sound [DecidableEq Source] (owner bound actual : Source)
+    (dependencies owners : List Source) (admitted : prepareSampler owner bound actual dependencies = .ok owners) :
+    bound = actual ∧ owner ∈ owners ∧ actual ∈ owners := by
+  unfold prepareSampler at admitted
+  split at admitted
+  · rename_i matching
+    cases admitted
+    exact ⟨matching, (samplerOwners_mem owner owner actual dependencies).mpr (Or.inl rfl),
+      (samplerOwners_mem actual owner actual dependencies).mpr (Or.inr (Or.inl rfl))⟩
+  · contradiction
+
 /-- Error interpretation reuses the same guarded callback boundary. An original
 failure is diagnostic data: neither a secondary error nor refusal can replace it.
 Classifier statuses are required to belong to the host's non-passing vocabulary;

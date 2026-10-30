@@ -3,6 +3,15 @@ import LeanPoo.Functional.PropertyScopes
 /-! Transient replay owners and new-run publication are distinct directories. -/
 open LeanPoo.Functional.PropertyTesting
 
+-- An inherited integer grammar cannot become a distinct exact-value declaration.
+example : prepareSampler (0 : Nat) 1 2 [] = .error () := rfl
+
+-- Explicit construction binds the new declaration and retains its actual Type.
+example : prepareSampler (0 : Nat) 2 2 [] = .ok [0, 2] := rfl
+
+-- Replacing optional dependencies with an empty list cannot hide a retired Type.
+example : (samplerOwners (0 : Nat) 1 []).all (fun source => source != 1) = false := by decide
+
 -- A known sibling retains epoch zero even if a factory tries to capture epoch one.
 example : captureRevision [(0, 0), (1, 0)] 1 1 = [(0, 0), (1, 0)] := by decide
 

@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P37. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P38. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1668,3 +1668,70 @@ that abstraction style through existing Gerbil checked actions to the POO-specif
 Type discovery extension. It does not assert missing recursive Type metadata
 features in Rackcheck, add a second runner, change draw/seed order or force omitted
 Function inputs. No speedup is claimed from metadata deduplication alone.
+
+
+## P38: constructor-bound typed sampler declarations and mandatory owners
+
+Two soundness reproductions selected this unit. Relabeling an automatic Integer
+sampler as `(Exactly 999)` preserved its old bounded acceptance hook: the property
+ran once and returned `passed` for a value outside that declaration. Separately,
+replacing `sources` with an empty list hid a real descriptor revision and permitted
+a pass. The trace variant was also reproduced: changing a model's Command after
+construction let a List-of-Integer sampler publish string commands and pass while
+membership in its declared Type was false.
+
+The existing private GeneratorRecord now stores the constructor's `bound-descriptor`
+as Type metadata. The shared `generator-sources` preparation boundary checks its
+identity against the actual descriptor and always contributes sampler + actual
+Type before additional dependencies. Producer bridging, products, Map preparation,
+inspection and portable import already use that boundary. No per-value predicate,
+extra generation-factory call, new namespace or wrapper per consumer is added.
+Bounded recursive acceptance remains intact: blindly adding a universal Type
+predicate would reintroduce unsafe/unbounded membership checking.
+
+A different descriptor requires a fresh `make-generator`, `from-generator` or
+controlled `generator` construction. The example uses an explicit value projection
+and normal Record initialization, rather than relabeling an inherited parser/tree.
+Same-descriptor draw/shrink overrides retain their existing fallback semantics.
+The binding is constructor-owned protocol metadata, not a new user tuning field;
+this is not a security proof against forging private metadata or untruthful custom
+acceptance hooks. Hidden callback dependencies remain the application's obligation.
+
+Trace's compiled model/List acceptance now captures its existing declaration
+sources through `snapshot`/`source-guard` at construction, outside lazy slot
+initialization. This matches products, Maps and recursive graph ownership. Model,
+List or captured metadata revisions retire the old sampler even before its first
+run and even if optional dependencies are replaced. Fresh `trace-generator`
+construction establishes the new protocol. Source precedence and ordinary callback
+exception behavior remain unchanged; a fresh declaration mismatch is a preparation
+error, while an already retired protocol retains normal stale refusal.
+
+Seven `sampler-binding-test` cases cover raw/recursive/trace retargeting, mandatory
+revision observations during draw/property/measure/shrink/labels, pre-read refusal,
+no generator invocation during concrete import, products/Maps/Function inputs,
+trace declaration changes, and lawful callback overrides with both replay modes.
+The existing generated-products example adds a complete service schema migration:
+strict Record inheritance, a projected region field, retained Function wrapping,
+Reader/FUN report delivery, shrinking, both replay forms, target revision rejection
+and explicit retry. There are eight new standard cases overall. The independent
+stdlib-only kernel remains unchanged at 109 cases.
+
+Six laws in PropertyScopes use the existing source union:
+mandatory owner membership/currentness, descriptor refusal independent of optional
+dependencies, equal-binding admission, unequal-binding rejection, and preservation
+of binding/required identities after successful preparation. Top-level negative and
+fresh-construction controls accompany them. These finite identity/observer laws
+assume faithful constructor metadata, truthful bounded acceptance hooks, accurate
+source clocks and serial terminating callbacks. They do not prove arbitrary user
+predicates, host heap immutability, universal subtyping or concurrent snapshots.
+
+Rackcheck's pinned property executor consumes a generator together with the
+property's argument bindings; its retained shrink-tree algebra does not
+implicitly convert one application declaration into another. This unit preserves
+that compositional separation in the POO Type extension, rather than introducing
+a second validator or assuming Racket has this mutable descriptor protocol.
+The metadata field and preparation identity/source reads have costs; no timing or
+allocation speedup is claimed. Existing random schedules, lazy trees, generator
+factories, source failure priorities and all process/heap/depth/proposal caps remain
+unchanged. Concrete import still reads no input before failed preparation and
+performs no draws or child forcing. Port failures still have no rollback guarantee.
