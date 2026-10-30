@@ -883,3 +883,11 @@ other import effects are explicit premises. The Gerbil control uses actual
 standard TestHarness objects to retain the failing cause identity and later
 execution. This finite law does not authorize regrouping arbitrary Scheme
 modules or deleting checks. All existing Lean/resource gates remain unchanged.
+
+~observeSuiteCases_regroup_between~ applies that same model to a selected
+adjacent functional group, retaining untouched prefix and suffix modules. The
+example includes a refused middle case with state passed to later cases. Its
+scope remains fixture-free ordered case execution, not initialization or
+wall-clock equivalence. Gerbil's collection-delta and coordinator-recovery
+grouping retains every Suite and case; its mixed cold observations do not
+establish stable latency improvement or a population tail bound.

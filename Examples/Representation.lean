@@ -718,4 +718,13 @@ example : observeSuiteCases ([[[1, 2]], [[3]]] : List (List (List Nat)))
     (fun n seen => (if n = 2 then Except.error "refused" else Except.ok n, seen ++ [n]))
     ([] : List Nat) = ([.ok 1, .error "refused", .ok 3], [1, 2, 3]) := rfl
 
+/-- A functional group can merge between unrelated suites without moving either
+neighbor, losing a refused case, or resetting the subsequent case state. -/
+example :
+    let run := fun (n : Nat) (seen : List Nat) =>
+      (if n = 2 then Except.error "refused" else Except.ok n, seen ++ [n])
+    observeSuiteCases ([[[0]]] ++ [[[[1]], [[2, 3]]].flatten] ++ [[[4]]]) run [] =
+      observeSuiteCases ([[[0]]] ++ [[[1]], [[2, 3]]] ++ [[[4]]]) run [] := by
+  exact observeSuiteCases_regroup_between _ _ _ _ _
+
 end LeanPoo.Examples.Representation

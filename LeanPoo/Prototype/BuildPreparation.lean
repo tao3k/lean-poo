@@ -153,6 +153,16 @@ theorem observeSuiteCases_regroup {α β ε σ : Type} (modules : List (List (Li
     observeSuiteCases [modules.flatten] run initial = observeSuiteCases modules run initial := by
   simp [observeSuiteCases]
 
+/-- Merge only an adjacent functional group, retaining the untouched prefix and
+suffix. Ordered results and final state are preserved even when earlier cases
+refuse. As above, module fixtures and initialization effects are excluded. -/
+theorem observeSuiteCases_regroup_between {α β ε σ : Type}
+    (before group after : List (List (List α)))
+    (run : α → StateM σ (Except ε β)) (initial : σ) :
+    observeSuiteCases (before ++ [group.flatten] ++ after) run initial =
+      observeSuiteCases (before ++ group ++ after) run initial := by
+  simp [observeSuiteCases, List.flatten_append]
+
 /-- Clock observations at public process/progress boundaries. Ticks are exact;
 the host clock and faithful delivery of these observations remain premises. -/
 structure CheckPhaseTimes where
