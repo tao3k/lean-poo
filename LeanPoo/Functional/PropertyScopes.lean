@@ -539,4 +539,80 @@ theorem classifyFailure_nonpassing (live : State → Bool)
         simp [classifyFailure, guardedGeneration, fresh, returned, later, allowed.1, allowed.2]
 
 
+/-- Standard assertion admission consumes actual report authority. Rendering is
+arbitrary data: only a present passed report and fresh source checks before/after
+rendering can pass. Missing execution and original nonpassing causes stay failures.
+Host exception delivery is represented by the error projection, not verified here. -/
+def admitRendering (present : Bool) (actual : CheckDiagnostics Value Cause)
+    (live : State → Bool) (render : State → Except Cause (Rendered × State)) (state : State) :
+    Except (CheckStatus × Option Cause) Unit :=
+  if !present then .error (if actual.status = .passed then .error else actual.status, actual.cause)
+  else if actual.status = .passed then
+    match guardedGeneration (fun before => actual.current && live before) render state with
+    | .error none => .error (.stale, actual.cause)
+    | .error (some cause) => .error (.error, some cause)
+    | .ok _ => .ok ()
+  else .error (actual.status, actual.cause)
+
+/-- Diagnostic data cannot manufacture an execution, even when it claims passed. -/
+theorem admitRendering_missing (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (render : State → Except Cause (Rendered × State)) (state : State) :
+    admitRendering false actual live render state ≠ .ok () := by
+  simp [admitRendering]
+
+/-- Rendering cannot promote falsification, exhaustion, error or coverage refusal. -/
+theorem admitRendering_nonpass (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (render : State → Except Cause (Rendered × State)) (state : State)
+    (refused : actual.status ≠ .passed) :
+    admitRendering true actual live render state = .error (actual.status, actual.cause) := by
+  simp [admitRendering, refused]
+
+/-- Invalid report authority suppresses even the renderer's first action. -/
+theorem admitRendering_preflight (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (render : State → Except Cause (Rendered × State)) (state : State)
+    (passed : actual.status = .passed) (stale : (actual.current && live state) = false) :
+    admitRendering true actual live render state = .error (.stale, actual.cause) := by
+  simp [admitRendering, passed, guardedGeneration, stale]
+
+/-- A normal renderer return cannot publish success after retiring report sources. -/
+theorem admitRendering_revised (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (state after : State) (value : Rendered) (passed : actual.status = .passed)
+    (before : (actual.current && live state) = true) (later : (actual.current && live after) = false) :
+    admitRendering true actual live (fun _ => .ok (value, after)) state = .error (.stale, actual.cause) := by
+  simp [admitRendering, passed, guardedGeneration, before, later]
+
+/-- Arbitrary rendered status/cause fields do not alter valid report admission. -/
+theorem admitRendering_stable (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (state after : State) (value : Rendered) (passed : actual.status = .passed)
+    (before : (actual.current && live state) = true) (later : (actual.current && live after) = true) :
+    admitRendering true actual live (fun _ => .ok (value, after)) state = .ok () := by
+  simp [admitRendering, passed, guardedGeneration, before, later]
+
+/-- A renderer exception remains its precise cause and is never passing evidence. -/
+theorem admitRendering_cause (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (state : State) (cause : Cause) (passed : actual.status = .passed)
+    (before : (actual.current && live state) = true) :
+    admitRendering (Rendered := Rendered) true actual live (fun _ => .error cause) state =
+      .error (.error, some cause) := by
+  simp [admitRendering, passed, guardedGeneration, before]
+
+/-- Success requires actual execution, nominal passage and current sources;
+no condition is discharged by the diagnostic payload returned by rendering. -/
+theorem admitRendering_authority (present : Bool) (actual : CheckDiagnostics Value Cause)
+    (live : State → Bool) (render : State → Except Cause (Rendered × State)) (state : State)
+    (success : admitRendering present actual live render state = .ok ()) :
+    present = true ∧ actual.status = .passed ∧ actual.current = true ∧ live state = true := by
+  cases available : present with
+  | false => simp [admitRendering, available] at success
+  | true =>
+    by_cases passed : actual.status = .passed
+    · have fresh : (actual.current && live state) = true := by
+        cases checked : actual.current && live state with
+        | false => simp [admitRendering, available, passed, guardedGeneration, checked] at success
+        | true => rfl
+      have components : actual.current = true ∧ live state = true := by
+        cases before : actual.current <;> cases now : live state <;> simp_all
+      exact ⟨rfl, passed, components.1, components.2⟩
+    · simp [admitRendering, available, passed] at success
+
 end LeanPoo.Functional.PropertyTesting

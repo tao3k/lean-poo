@@ -124,3 +124,17 @@ example : observeDeclaration (Cause := String) (fun _ source : Nat => source + 3
 -- An aliased declaration cannot replace the first observation with a new epoch.
 example : observeDeclaration (Cause := String) (fun epoch _ : Nat => epoch)
     [(0, 0)] (fun _ => .ok (0, 1)) 0 = .error none := rfl
+
+-- A renderer may claim passed while the actual report is falsified.
+example : admitRendering true
+    (⟨.failed, true, [], some "original"⟩ : CheckDiagnostics Nat String)
+    (fun _ : Nat => true) (fun s => .ok ((CheckStatus.passed, "invented"), s)) 0 =
+      .error (.failed, some "original") := rfl
+
+-- Retiring authority during an otherwise successful renderer refuses publication.
+example : admitRendering true (⟨.passed, true, [], none⟩ : CheckDiagnostics Nat String)
+    (fun s : Nat => s == 0) (fun _ => .ok (CheckStatus.passed, 1)) 0 = .error (.stale, none) := rfl
+
+-- Missing execution is not authorized by diagnostics that happen to say passed.
+example : admitRendering false (⟨.passed, true, [], none⟩ : CheckDiagnostics Nat String)
+    (fun _ : Nat => true) (fun s => .ok (CheckStatus.passed, s)) 0 = .error (.error, none) := rfl

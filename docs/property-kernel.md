@@ -525,3 +525,17 @@ duplicate values. Finite lists, faithful source clocks/seed splitting, serial
 terminating callbacks and host tail calls remain premises; no wall-clock or PRNG
 quality theorem is claimed. The companion paired entry measures preparation,
 drawing and full check/replay workflows with natural/post-GC and A/A controls.
+
+P42 fixes standard test success forged through a diagnostic formatter. Admission
+now requires an actual kernel execution, nominal passage and current sources
+before/after rendering. Formatting runs under the existing inherited checked-action
+scope; metadata cannot replace protected status/cause. Typed preparation refusals
+supply a static refusal receipt and cannot manufacture execution. Original failure
+causes outrank secondary formatting faults; passing renderer/observer exceptions
+remain exact. Seven admitRendering laws cover missing/nonpassing reports, stale
+preflight, retirement, stable payloads, precise exceptions and necessary authority.
+They model admission and protected fields, not arbitrary UI fields or host TestResult
+machinery. Accurate sources, faithful report metadata and serial terminating
+callbacks remain premises. The independent suite now requires 121 cases; the
+standard negative fixture requires eleven failures. A Record/Function FUN example
+combines shrinking, both replays, forged/stale rendering and explicit retry.

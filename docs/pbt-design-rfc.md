@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P41. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P42. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. P39 extends inherited typed-fixture declaration scope; P40 unifies
@@ -12,6 +12,9 @@ drawing. PropertyProducts proves exact field order/length and continuation-seed
 equivalence; the independent companion library now requires 115 cases. The
 Scheme iterative candidate is not admitted after GC cost acceptance; the existing
 bind/checkpoint draw remains the production strategy.
+P42 separates actual report admission from arbitrary diagnostic rendering.
+PropertyScopes adds seven finite presence/status/source laws; the independent
+companion suite now requires 121 cases and eleven CLI refusals.
 Historical audit identities below remain historical receipts.
 
 - Status: implemented; finite acceptance and evidence boundaries are recorded below.
