@@ -11,6 +11,43 @@ def scopeCurrent (live : State → Source → Bool) (transient : List Source)
     (snapshot : State × List Source) : Bool :=
   transient.all (live snapshot.1) && snapshot.2.all (live snapshot.1)
 
+/-- Leaving a fixture restores the enclosing declaration ledger, preserving the
+actual state and its revisions. It neither refreshes stamps nor rolls back effects. -/
+def restoreDeclarations (declarations : List Source) (snapshot : State × List Source) :
+    State × List Source := (snapshot.1, declarations)
+
+/-- Scope restoration preserves the actual state, including callback revisions. -/
+theorem restoreDeclarations_state (declarations : List Source) (snapshot : State × List Source) :
+    (restoreDeclarations declarations snapshot).1 = snapshot.1 := rfl
+
+/-- Restoring a scope twice cannot refresh any declaration identity. -/
+theorem restoreDeclarations_idempotent (declarations : List Source) (snapshot : State × List Source) :
+    restoreDeclarations declarations (restoreDeclarations declarations snapshot) =
+      restoreDeclarations declarations snapshot := rfl
+
+/-- Fixture-only revisions cease to matter after use; enclosing declarations and
+transient ancestors still authorize teardown. No fixture stamp is recaptured. -/
+theorem scopeCurrent_restored (live : State → Source → Bool) (outer declarations : List Source)
+    (snapshot : State × List Source) :
+    scopeCurrent live outer (restoreDeclarations declarations snapshot) =
+      (outer.all (live snapshot.1) && declarations.all (live snapshot.1)) := rfl
+
+/-- Retiring an enclosing model declaration cannot be repaired by fixture exit. -/
+theorem scopeCurrent_restored_stale (live : State → Source → Bool)
+    (outer declarations : List Source) (snapshot : State × List Source)
+    (stale : declarations.all (live snapshot.1) = false) :
+    scopeCurrent live outer (restoreDeclarations declarations snapshot) = false := by
+  simp [scopeCurrent_restored, stale]
+
+/-- Stable model and ancestor declarations permit cleanup regardless of the old
+fixture ledger. Its objects do not escape into subsequent declaration authority. -/
+theorem scopeCurrent_restored_current (live : State → Source → Bool)
+    (outer declarations : List Source) (snapshot : State × List Source)
+    (ancestors : outer.all (live snapshot.1) = true)
+    (models : declarations.all (live snapshot.1) = true) :
+    scopeCurrent live outer (restoreDeclarations declarations snapshot) = true := by
+  simp [scopeCurrent_restored, ancestors, models]
+
 /-- Existing guarded stages run under the joint scope. Identity publication
 returns the actual ledger rather than adding the transient directory to it. -/
 def scopedStages (live : State → Source → Bool) (transient : List Source)

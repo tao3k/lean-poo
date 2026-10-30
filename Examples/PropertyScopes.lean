@@ -97,3 +97,17 @@ example : nestedActions (fun epoch : Nat => epoch == 0) (fun _ => true)
 example : guardedGeneration (fun _ : Nat => true)
     (fun _ => (.ok ("child-stale", 1) : Except String (String × Nat))) 0 =
       .ok ("child-stale", 1) := rfl
+
+-- State 1 retires only fixture source 1. Leaving use retains model source 0.
+example : scopeCurrent (fun epoch source : Nat => source == 0 || epoch == 0) []
+    (restoreDeclarations [0] (1, [0, 1])) = true := rfl
+
+-- Restoring ownership never restores state 0 or repairs a retired model source.
+example : scopedStages (Cause := String) (Value := Nat)
+    (fun epoch source : Nat => source != 0 || epoch == 0) []
+    [fun _ => .error "cleanup's nested generation must not run"]
+    (restoreDeclarations [0] (1, [0, 1])) = .error none := rfl
+
+-- Even after fixture exit an inherited parent scope remains mandatory.
+example : scopeCurrent (fun _ source : Nat => source != 2) [2]
+    (restoreDeclarations [0] (1, [0, 1])) = false := rfl

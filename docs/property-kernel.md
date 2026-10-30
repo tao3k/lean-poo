@@ -488,3 +488,14 @@ and List metadata are captured at construction through the existing source guard
 Eight new cases, a Record/Function schema-migration FUN example and six finite
 binding/source laws cover preparation, diagnostics, compositions and portable replay.
 No per-value wrapping or extra generator call is introduced; see P38 in the RFC.
+
+P39 gives typed differential execution one inherited declaration scope. Nested
+checked operations observe model and active fixture Type revisions immediately,
+including standalone `check-trace` use. The existing scope is restored before
+teardown: fixture-only retirement is allowed, while model revisions still refuse
+nested cleanup work and factory return. `restoreDeclarations` preserves actual
+state and original declaration identities; five laws and top-level controls cover
+restoration, idempotence and stale/current admission. Existing nested-action laws
+supply suppression of unstarted work. These are finite serial observer laws under
+faithful host scope and terminating callbacks, not rollback or evaluator proofs.
+See P39 in the Scheme RFC and the generated-traces service retry example.
