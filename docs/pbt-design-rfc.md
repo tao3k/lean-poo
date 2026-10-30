@@ -1,9 +1,13 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P38. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P40. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
-Lean laws. Historical audit identities below remain historical receipts.
+Lean laws. P39 extends inherited typed-fixture declaration scope; P40 unifies
+first-observation typed trace preparation and preserves earlier epochs across
+computed fields and Record normalization. PropertyScopes supplies finite serial
+observer laws, not arbitrary callback/evaluator or concurrency verification.
+Historical audit identities below remain historical receipts.
 
 - Status: implemented; finite acceptance and evidence boundaries are recorded below.
 - Date: 2026-10-27.
