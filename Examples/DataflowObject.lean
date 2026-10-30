@@ -231,6 +231,8 @@ run_cmd do
       ``LeanPoo.Prototype.SlotSpec.withParent_eq,
       ``LeanPoo.Functional.GeneralizedGraph.Scheduled.restrict,
       ``LeanPoo.Functional.ConstructionCache.Execution.compile,
+      ``LeanPoo.Functional.ConstructionCache.Partial.finish_state,
+      ``LeanPoo.Functional.ConstructionCache.Partial.indexed_get?,
       ``LeanPoo.Functional.ConstructionCache.Cache.reference,
       ``LeanPoo.Functional.ConstructionCache.Partial.step_reused_builder_independent] do
     for dependency in ← collectAxioms declaration do
