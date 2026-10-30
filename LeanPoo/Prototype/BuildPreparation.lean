@@ -163,6 +163,32 @@ theorem observeSuiteCases_regroup_between {α β ε σ : Type}
       observeSuiteCases (before ++ group ++ after) run initial := by
   simp [observeSuiteCases, List.flatten_append]
 
+/-- Exact source observations for an explicitly declared build footprint. The
+caller must include compiler identity, flags and transitive build inputs; this
+model neither discovers dependencies nor assumes a cryptographic hash injective. -/
+def sameBuildInputs {α : Type} (required : List String) (before after : String → α) : Prop :=
+  ∀ file ∈ required, before file = after file
+
+/-- Revising only inputs outside the library footprint preserves its exact key
+observations. This says nothing about omitting the revised tests: their own build
+and complete execution remain separate acceptance obligations. -/
+theorem sameBuildInputs_private_revision {α : Type} (required : List String)
+    (before after : String → α) (changed : List String)
+    (separate : ∀ file ∈ required, file ∉ changed)
+    (stable : ∀ file, file ∉ changed → before file = after file) :
+    sameBuildInputs required before after := by
+  intro file needed
+  exact stable file (separate file needed)
+
+/-- A changed required input rejects reuse, even if that input is a test-directory
+build helper. Directory labels alone cannot establish dependency independence. -/
+theorem sameBuildInputs_required_revision {α : Type} (required : List String)
+    (before after : String → α) (file : String)
+    (needed : file ∈ required) (changed : before file ≠ after file) :
+    ¬ sameBuildInputs required before after := by
+  intro same
+  exact changed (same file needed)
+
 /-- Clock observations at public process/progress boundaries. Ticks are exact;
 the host clock and faithful delivery of these observations remain premises. -/
 structure CheckPhaseTimes where

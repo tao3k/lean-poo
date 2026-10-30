@@ -727,4 +727,20 @@ example :
       observeSuiteCases ([[[0]]] ++ [[[1]], [[2, 3]]] ++ [[[4]]]) run [] := by
   exact observeSuiteCases_regroup_between _ _ _ _ _
 
+/-- Nested test bodies can change without invalidating the library footprint;
+the top-level build helper and shared fixtures remain required library inputs. -/
+example : sameBuildInputs ["build.ss", "t/build.ss", "t/table-testing.ss"]
+    (fun (_ : String) => 0) (fun file => if file = "t/collection-order/table-order/observations.scm" then 1 else 0) := by
+  intro file needed
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at needed
+  rcases needed with rfl | rfl | rfl <;> decide
+
+/-- Revising the root-imported helper refuses library reuse even though it lives
+under t/. No test execution or artifact authenticity is inferred from this law. -/
+example : ¬ sameBuildInputs ["build.ss", "t/build.ss", "t/table-testing.ss"]
+    (fun (_ : String) => 0) (fun file => if file = "t/build.ss" then 1 else 0) := by
+  apply sameBuildInputs_required_revision _ _ _ "t/build.ss"
+  · decide
+  · decide
+
 end LeanPoo.Examples.Representation

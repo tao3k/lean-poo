@@ -1015,3 +1015,13 @@ bounded compile workflow, not a stable whole-entry speedup over the older cohort
 Two short first-load samples showed dyld mapping/`fcntl` waits, not evidence that
 all test time has that cause. These remain executable receipts and host premises,
 separate from the finite inventory and configured-capacity proofs.
+
+`sameBuildInputs_private_revision` proves that changes disjoint from an explicit
+library dependency footprint preserve its exact input observations.
+`sameBuildInputs_required_revision` rejects reuse after any required input changes.
+The Scheme CI key uses GitHub's standard `hashFiles`: nested test packages are
+excluded, then top-level `t/*.ss` fixtures/build helpers are retained, excluding
+only the source-only `t/build-test.ss`. Root `build.ss` imports `t/build.ss`, so
+excluding all of `t/` would be unsound. These proofs assume a complete dependency
+footprint; they do not authenticate restored artifacts or prove hash collision
+resistance. Independent test compilation and all complete checks remain required.
