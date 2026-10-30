@@ -757,4 +757,24 @@ example : (ProcessCounters.mk 6 2).cpu - (ProcessCounters.mk 2 1).cpu =
 example : (ProcessCounters.mk 2 1).Valid ∧ (ProcessCounters.mk 3 3).Valid ∧
     ¬ (2 - 1 ≤ 3 - 3) := by simp [ProcessCounters.Valid]
 
+/-- Three ordinary compiler contexts avoid an optional engine; one context still
+pays for it. This is exclusive preparation work, not a macOS latency estimate. -/
+example : optionalPreparation 5 42 [false, false, true, false] = 62 ∧
+    4 * (5 + 42) = 62 + 3 * 42 := by decide
+
+/-- Additional row/lookup/stub work may exceed preparation savings. This model
+deliberately rejects the full-workflow improvement in that case. -/
+example : optionalWorkflowWork 5 42 [false, false, true, false] 10 127 = 199 ∧
+    4 * (5 + 42) + 10 = 198 := by decide
+
+/-- A failed optional initializer is invisible before a property request. -/
+example : optionalModuleEntry (Args := List String) (Value := Bool) none
+    (fun _ => Except.error "initialization refused")
+    (fun _ => Except.error "missing entry") = ([], Except.ok none) := rfl
+
+/-- False stays present and a symbolic keyword row reaches the selected entry. -/
+example : optionalModuleEntry (E := String) (Value := Bool) (some ["name:", "marker:", "#!rest", "value"])
+    (fun _ => .ok ()) (fun _ => .ok (fun row => .ok (decide (row.length = 0)))) =
+      ([.load, .resolve, .invoke], .ok (some false)) := rfl
+
 end LeanPoo.Examples.Representation

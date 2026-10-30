@@ -1033,3 +1033,29 @@ that inconsistency instead of clamping a negative difference. The exact theorem
 does not verify floating-point accounting or identify wall-minus-CPU residuals as
 dyld time. TestModule fixtures and the existing process observer retain actual
 preparation, execution, EOF and natural-exit observations independently.
+
+### Optional dependency preparation
+
+Ordinary Gerbil DDT/assertion helpers need not initialize the typed property
+engine. Their optional operations reuse the existing IO `module-action` and
+standard `compose`, while Gerbil continues to own initialization, synchronization
+and retained module failures. No procedure/result cache or second loader is added.
+The author source's shared delayed dictionary construction (`poof.scrbl:980–1008`)
+motivates avoiding unused work; it does not prescribe a module-loading algorithm.
+
+`optionalModuleEntry` models this explicit demand boundary. A dormant request
+performs no load/resolve/invoke stages. A selected request preserves the exact
+argument row, current binding and business result, including a present false
+value. Initialization and binding failures preserve their causes and stop later
+stages. Optional initialization effects intentionally occur at demand; these laws
+do not equate arbitrary eager and delayed global initializer side effects.
+
+`optionalPreparation_partition` counts exclusive preparation avoided in compiler
+contexts that never request the optional engine. A complete test suite may still
+need it through another dependency. `optionalWorkflowWork_le_iff` therefore also
+charges additional routing: closures, argument rows, current-binding resolution
+and any standard loader-entry admission. Complete declared work decreases exactly
+when this routing fits within the preparation saved. The example with routing
+127 against savings 126 deliberately rejects an improvement. These are finite
+source-work laws in one abstract unit, not physical allocation, GC, compiler or
+macOS wall-clock proofs. Fixed-source full-entry controls qualify those separately.

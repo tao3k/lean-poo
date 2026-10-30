@@ -679,6 +679,46 @@ theorem enterModule_business_refused (arguments : Args) (cause : E) :
       (fun _ => .ok (fun (_ : Args) => (Except.error cause : Except E Value))) arguments =
       ([.load, .resolve, .invoke], .error cause) := rfl
 
+/-- A dormant optional API stores an ordinary IO action, not a loaded procedure.
+On demand it delegates the unchanged argument row to the existing entry protocol.
+Initialization side effects intentionally occur at demand, not at helper import. -/
+def optionalModuleEntry (request : Option Args) (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    List EntryStage × Except E (Option Value) :=
+  match request with
+  | none => ([], .ok none)
+  | some arguments =>
+    let result := enterModule load resolve arguments
+    (result.1, result.2.map some)
+
+/-- Ordinary helpers do not inspect readiness, resolve a binding or initialize
+the optional engine, even when that engine would refuse initialization. -/
+theorem optionalModuleEntry_dormant (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    optionalModuleEntry none load resolve = ([], .ok none) := rfl
+
+/-- Once selected, the same argument row and current entry retain their original
+value or business refusal. Optionality adds no fallback or result cache. -/
+theorem optionalModuleEntry_current (arguments : Args) (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) (entry : Args → Except E Value)
+    (ready : load () = .ok ()) (current : resolve () = .ok entry) :
+    optionalModuleEntry (some arguments) load resolve =
+      ([.load, .resolve, .invoke], (entry arguments).map some) := by
+  simp [optionalModuleEntry, enterModule_current load resolve arguments entry ready current]
+
+/-- A demanded initializer refusal preserves its cause and blocks all entry work. -/
+theorem optionalModuleEntry_refused (arguments : Args) (cause : E)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    optionalModuleEntry (some arguments) (fun _ => .error cause) resolve =
+      ([.load], .error cause) := rfl
+
+/-- Successful initialization does not turn a missing/currently refused binding
+into an empty optional result: preserve the cause and never invoke an entry. -/
+theorem optionalModuleEntry_resolve_refused (arguments : Args) (cause : E) :
+    optionalModuleEntry (some arguments) (fun _ => .ok ())
+      (fun _ => (Except.error cause : Except E (Args → Except E Value))) =
+      ([.load, .resolve], .error cause) := rfl
+
 /-- Abstract already-published standard-loader result; this is a ghost observation
 of Gerbil's cache, not a second implementation or a Scheme-side module registry. -/
 def initializedResult (cached : Option (Except E Unit)) (initializer : Unit → Except E Unit) : Except E Unit :=
