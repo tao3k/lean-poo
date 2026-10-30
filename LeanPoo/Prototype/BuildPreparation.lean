@@ -189,6 +189,28 @@ theorem sameBuildInputs_required_revision {α : Type} (required : List String)
   intro same
   exact changed (same file needed)
 
+/-- Abstract cumulative CPU counters in one common unit. These exact laws do
+not verify Gambit's floating-point measurements or assign wall residuals to dyld. -/
+structure ProcessCounters where
+  cpu : Nat
+  gcCpu : Nat
+  deriving DecidableEq, Repr
+
+/-- GC work is included in total process CPU, rather than an additional cost. -/
+def ProcessCounters.Valid (stats : ProcessCounters) : Prop := stats.gcCpu ≤ stats.cpu
+
+/-- Subtract only counters admitted as monotone in both GC and non-GC work.
+Valid individual snapshots and monotone total CPU alone do not justify this
+partition: an inconsistent delta must be rejected, never clamped to zero. -/
+theorem ProcessCounters.delta_partition (before after : ProcessCounters)
+    (beforeValid : before.Valid) (afterValid : after.Valid)
+    (gcMonotone : before.gcCpu ≤ after.gcCpu)
+    (nonGcMonotone : before.cpu - before.gcCpu ≤ after.cpu - after.gcCpu) :
+    after.cpu - before.cpu = (after.gcCpu - before.gcCpu) +
+      ((after.cpu - after.gcCpu) - (before.cpu - before.gcCpu)) := by
+  unfold ProcessCounters.Valid at beforeValid afterValid
+  omega
+
 /-- Clock observations at public process/progress boundaries. Ticks are exact;
 the host clock and faithful delivery of these observations remain premises. -/
 structure CheckPhaseTimes where

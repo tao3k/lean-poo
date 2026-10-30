@@ -1025,3 +1025,11 @@ only the source-only `t/build-test.ss`. Root `build.ss` imports `t/build.ss`, so
 excluding all of `t/` would be unsound. These proofs assume a complete dependency
 footprint; they do not authenticate restored artifacts or prove hash collision
 resistance. Independent test compilation and all complete checks remain required.
+
+`ProcessCounters.delta_partition` separates cumulative GC and non-GC CPU in one
+abstract common unit. It requires monotonicity of both components; two individually
+valid cumulative snapshots need not form a valid transition. Scheme controls reject
+that inconsistency instead of clamping a negative difference. The exact theorem
+does not verify floating-point accounting or identify wall-minus-CPU residuals as
+dyld time. TestModule fixtures and the existing process observer retain actual
+preparation, execution, EOF and natural-exit observations independently.

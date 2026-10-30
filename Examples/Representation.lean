@@ -743,4 +743,18 @@ example : ¬ sameBuildInputs ["build.ss", "t/build.ss", "t/table-testing.ss"]
   · decide
   · decide
 
+/-- Case work separates a GC delta from non-GC CPU without attributing either
+term to module initialization or external loader waiting. -/
+example : (ProcessCounters.mk 6 2).cpu - (ProcessCounters.mk 2 1).cpu =
+    ((ProcessCounters.mk 6 2).gcCpu - (ProcessCounters.mk 2 1).gcCpu) +
+      (((ProcessCounters.mk 6 2).cpu - (ProcessCounters.mk 6 2).gcCpu) -
+       ((ProcessCounters.mk 2 1).cpu - (ProcessCounters.mk 2 1).gcCpu)) :=
+  ProcessCounters.delta_partition ⟨2, 1⟩ ⟨6, 2⟩
+    (by simp [ProcessCounters.Valid]) (by simp [ProcessCounters.Valid])
+    (by decide) (by decide)
+
+/-- Two valid cumulative snapshots can still describe an invalid CPU partition. -/
+example : (ProcessCounters.mk 2 1).Valid ∧ (ProcessCounters.mk 3 3).Valid ∧
+    ¬ (2 - 1 ≤ 3 - 3) := by simp [ProcessCounters.Valid]
+
 end LeanPoo.Examples.Representation
