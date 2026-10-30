@@ -442,3 +442,13 @@ pure outcomes agree with List.all. Examples/PropertyProducts.lean includes a
 false-head/throwing-tail control and a revised false result. These finite laws
 assume faithful supplied-field order and host scope encoding; they do not verify
 Gerbil contracts, arbitrary Type predicates, termination or runtime performance.
+
+
+P34 protects typed sampler factory preparation and aggregate component measures
+through the existing shared source boundary. Map key validation also inherits its
+active ancestor. A revised first value cannot trigger another Map/trace weight or
+later product binding. `map-service-tests` in the collection-properties example
+combines two fixed-key service Records, nested Function wrapping, shrink refusal,
+FUN delivery, fresh retry and both replay modes. Six regression cases and six
+`guardedMeasure` laws cover exact totals, early refusal and original causes;
+logical weights do not prove runtime costs. See P34 in the PBT RFC for premises.

@@ -3,6 +3,19 @@ import LeanPoo.Functional.PropertyProducts
 /-! Parent-owner, field-refusal and empty-product observation controls. -/
 open LeanPoo.Functional.PropertyTesting
 
+-- Two Map entries contribute cardinality two and natural weights two and three.
+example : guardedMeasure (fun _ : Nat => true) 2
+    [(fun state => (.ok (2, state) : Except String (Nat × Nat))),
+     (fun state => .ok (3, state))] 0 = .ok (7, 0) := rfl
+
+-- The second callback and aggregate total are unavailable after the first revision.
+example : guardedMeasure (fun epoch : Nat => epoch == 0) 2
+    [(fun _ => (.ok (2, 1) : Except String (Nat × Nat))),
+     (fun _ => .error "later weight must not run")] 0 = .error none := rfl
+
+-- Empty Maps have zero weight without invoking a scalar measure.
+example : guardedMeasure (Cause := String) (fun _ : Nat => true) 0 [] 0 = .ok (0, 0) := rfl
+
 example : guardedProduct (fun epoch : Nat => epoch == 0)
     [(fun _ => (.ok (2, 1) : Except String (Nat × Nat))),
      (fun _ => .error "later field must not run")]

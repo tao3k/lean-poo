@@ -206,4 +206,51 @@ theorem guardedAll_refused (live : State → Bool)
     (refused : guardedAll live fields state = .error cause) :
     (guardedAll live fields state >>= later) = .error cause := by rw [refused]; rfl
 
+/-- An aggregate's fixed structural weight plus its observed field weights.
+This is a logical shrink measure, not a runtime cost model. -/
+def guardedMeasure (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State) :
+    Except (Option Cause) (Nat × State) :=
+  guardedProduct live fields (fun values next => .ok (base + values.sum, next)) state
+
+/-- Stale preparation cannot enter any component measure. -/
+theorem guardedMeasure_preflight (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State)
+    (stale : live state = false) : guardedMeasure live base fields state = .error none :=
+  guardedProduct_preflight live fields _ state stale
+
+/-- A revision in one measure suppresses all remaining measures and the total. -/
+theorem guardedMeasure_revised (live : State → Bool) (base : Nat)
+    (state next : State) (value : Nat) (rest : List (State → Except Cause (Nat × State)))
+    (before : live state = true) (after : live next = false) :
+    guardedMeasure live base ((fun _ => .ok (value, next)) :: rest) state = .error none :=
+  guardedProduct_field_revised live state next value rest _ before after
+
+/-- A measure exception retains its original cause even if its owner changed. -/
+theorem guardedMeasure_cause (live : State → Bool) (base : Nat) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Nat × State))) (before : live state = true) :
+    guardedMeasure live base ((fun _ => .error cause) :: rest) state = .error (some cause) :=
+  guardedProduct_field_cause live state cause rest _ before
+
+/-- An empty aggregate retains its structural weight and performs no field call. -/
+theorem guardedMeasure_empty {Cause : Type u} (live : State → Bool) (base : Nat) (state : State)
+    (fresh : live state = true) :
+    guardedMeasure (Cause := Cause) live base [] state = .ok (base, state) := by
+  simp [guardedMeasure, guardedProduct, guardedStages, guardedGeneration, fresh]
+
+/-- Stable components yield exactly the original cardinality-plus-sum measure. -/
+theorem guardedMeasure_values {Cause : Type u} (live : State → Bool) (base : Nat) (state : State)
+    (values : List Nat) (fresh : live state = true) :
+    guardedMeasure (Cause := Cause) live base
+      (values.map (fun value => fun _ => .ok (value, state))) state = .ok (base + values.sum, state) := by
+  simp [guardedMeasure, guardedProduct, fresh,
+    guardedStages_constant live state values fresh, guardedGeneration]
+
+/-- Refused aggregate observation cannot continue into shrinking or reporting. -/
+theorem guardedMeasure_refused (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State)
+    (cause : Option Cause) (later : Nat × State → Except (Option Cause) Output)
+    (refused : guardedMeasure live base fields state = .error cause) :
+    (guardedMeasure live base fields state >>= later) = .error cause := by rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
