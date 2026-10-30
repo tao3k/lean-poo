@@ -170,6 +170,7 @@ private def contractRefusal : Bool :=
 open Lean in
 run_cmd do
   for declaration in [``Instance.reference,``Instance.read_reference,``Instance.slotNames_exact,
+      ``Source.schema_declaration, ``Source.add_prepared_frame,
       ``LeanPoo.Functional.ConstructionCache.Execution.compile,
       ``LeanPoo.Functional.ConstructionCache.Cache.reference,
       ``LeanPoo.Functional.ConstructionCache.Partial.step_reused_builder_independent] do

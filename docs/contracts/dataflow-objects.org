@@ -24,6 +24,14 @@ ownership remain part of the definition. It does not introduce another evaluator
 | Public observation | Dataflow.Instance | Dependent indexed values, exact-source closure proof and declared inventory |
 | Admission | Existing Functional.ObjectContract | Structural and domain obligations over the actual instance |
 
+The source retains a =PreparedDeclaration= per node: its raw typed declaration,
+its lowered metadata and an exact equality proof. Adding a node constructs this
+owner once and shares the old owners. =Source.schema_declaration= proves that
+every cached lookup, including outside the graph, is the lowering of the actual
+raw declaration. =Source.add_prepared_frame= preserves every other owner.
+This prevents each C4 lookup and later structural revision from rebuilding all
+old slot metadata. Values and admission results remain instance-specific.
+
 * Execution and revision
 
 A template compiles actual C4-selected code. Replaced inherited code is pruned
@@ -80,7 +88,7 @@ error order, actual once-per-field work, structural Contract admission, duplicat
 slot/default refusal, disjoint families with delayed super, schedule revision,
 shared dependency work, changed-edge refusal and forged-projection refusal
 (the current-self control covers parent preservation together).
-Six declarations are audited against only propext, Classical.choice and Quot.sound.
+Eight declarations are audited against only propext, Classical.choice and Quot.sound.
 The native controls and Lean example are included in the existing full gate.
 
 =just benchmark-dataflow= runs the fixed same-cohort legacy compiled-thunk and

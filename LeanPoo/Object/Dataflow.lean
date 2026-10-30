@@ -70,20 +70,48 @@ def Declaration.metadata (declaration : Declaration Key Value) :
     value := .pure fun _ => .ok entry.value
     decideEq := entry.decideEq }
 
+/-- One declaration owns its lowered metadata for its whole immutable lifetime.
+Source extension shares previous owners rather than lowering their fields again. -/
+structure PreparedDeclaration (Key : Type) (Value : Key → Type) where
+  source : Declaration Key Value
+  code : Object.Declaration Key (fun key => GeneralizedGraph.Code Key Value key)
+  aligned : code = source.metadata
+
+def Declaration.prepare (declaration : Declaration Key Value) : PreparedDeclaration Key Value :=
+  ⟨declaration,declaration.metadata,rfl⟩
+
 structure Source (Key : Type) (Value : Key → Type) where
   graph : C4.Graph
-  declaration : String → Option (Declaration Key Value)
+  prepared : String → Option (PreparedDeclaration Key Value)
 
 def Source.empty : Source Key Value := ⟨⟨[]⟩,fun _ => none⟩
 
+def Source.declaration (source : Source Key Value) (name : String) : Option (Declaration Key Value) :=
+  (source.prepared name).map PreparedDeclaration.source
+
 def Source.schema (source : Source Key Value) :
     Schema Key (fun key => GeneralizedGraph.Code Key Value key) :=
-  ⟨source.graph,fun name => (source.declaration name).map Declaration.metadata⟩
+  ⟨source.graph,fun name => (source.prepared name).map PreparedDeclaration.code⟩
+
+/-- The retained code is the lowering of this exact raw declaration, including
+unknown-name lookup. No node label or sampled result authorizes a cache hit. -/
+theorem Source.schema_declaration (source : Source Key Value) (name : String) :
+    source.schema.declaration name = (source.declaration name).map Declaration.metadata := by
+  cases found : source.prepared name with
+  | none => simp [schema,declaration,found]
+  | some prepared => simp [schema,declaration,found,prepared.aligned]
 
 def Source.add (source : Source Key Value) (node : C4.Node) (declaration : Declaration Key Value) :
     Source Key Value :=
+  let prepared := declaration.prepare
   ⟨⟨source.graph.nodes ++ [node]⟩,
-    fun query => if query == node.name then some declaration else source.declaration query⟩
+    fun query => if query == node.name then some prepared else source.prepared query⟩
+
+/-- An extension preserves the exact prepared owner of every other node. -/
+theorem Source.add_prepared_frame (source : Source Key Value) (node : C4.Node)
+    (declaration : Declaration Key Value) (name : String) (different : name ≠ node.name) :
+    (source.add node declaration).prepared name = source.prepared name := by
+  simp [add,different]
 
 
 variable [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -318,8 +346,8 @@ def Instance.defineFrom (first : Instance Key Value) (name : String)
     (others : List (Instance Key Value)) (program : Builder Key Value PUnit) :
     Except (Error Key) (Instance Key Value) := do
   let (graph,declaration) ← (mergeDeclarationGraphs
-    (first.template.source.graph,first.template.source.declaration)
-    (others.map fun object => (object.template.source.graph,object.template.source.declaration)))
+    (first.template.source.graph,first.template.source.prepared)
+    (others.map fun object => (object.template.source.graph,object.template.source.prepared)))
     |>.mapError Error.schema
   let source : Source Key Value := ⟨graph,declaration⟩
   let parents := first.plan.root :: others.map (·.plan.root)
@@ -333,8 +361,8 @@ def Instance.defineStrictFrom (first : Instance Key Value) (name : String)
   let declaration ← StrictBuilder.build program
   -- A checked program's result is a literal declaration; no second builder runs.
   let (graph,lookup) ← (mergeDeclarationGraphs
-    (first.template.source.graph,first.template.source.declaration)
-    (others.map fun object => (object.template.source.graph,object.template.source.declaration)))
+    (first.template.source.graph,first.template.source.prepared)
+    (others.map fun object => (object.template.source.graph,object.template.source.prepared)))
     |>.mapError Error.schema
   let source : Source Key Value := ⟨graph,lookup⟩
   let parents := first.plan.root :: others.map (·.plan.root)
