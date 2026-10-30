@@ -539,3 +539,14 @@ machinery. Accurate sources, faithful report metadata and serial terminating
 callbacks remain premises. The independent suite now requires 121 cases; the
 standard negative fixture requires eleven failures. A Record/Function FUN example
 combines shrinking, both replays, forged/stale rendering and explicit retry.
+
+P43 admits finite function observations through one existing checked-action
+boundary. Domain/table export and exact-row calls inherit current caller authority
+in addition to the retained table owner. Fresh scopes do not renew old receipts;
+they may independently reuse a still-current table. Seven observeFunction and
+callFunction laws cover parent/owner preflight, stable payloads, post-action
+retirement, original exceptions and exact/missing rows. Top-level controls reuse
+the same table under obsolete and fresh callers. The independent Scheme suite
+requires 127 cases; the Record/Function FUN example includes shrinking, both replay
+forms and portable handoff. These are finite protocol laws, not verification of
+arbitrary callbacks, Scheme dynamic scope or runtime concurrency.
