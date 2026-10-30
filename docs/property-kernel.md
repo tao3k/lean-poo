@@ -563,3 +563,14 @@ exercises failed encoding, obsolete codec refusal and same-budget fresh replay.
 The bounds concern logical copy units and individual admitted destination width;
 faithful finite cost profiles, host allocation and parser/encoder behavior remain
 premises. No GC, byte-heap, timing or Scheme runtime verification is claimed.
+
+P45's PropertyNumbers supplies the standard Rat model for bounded exact-ratio
+drawing and canonical value shrinking. Ten laws cover key equality, zero-denominator
+refusal, normalized pair round trips, numerator/denominator bounds, zero/integral
+profiles and strict candidate descent with alias rejection. Symbolic top-level
+examples avoid proof-producing arithmetic decisions over literal ratios. Numeric
+fixtures run in the companion Scheme suite, now 139 independent cases. The typed
+Rational bridge reuses from-generator and the same value policy; recursive carriers
+and a Record/List/Function FUN service cover shrink/replay/source retirement. Float,
+Real and Number remain explicit-sampler boundaries. Faithful Scheme arithmetic,
+exactification and codecs are premises; this is not IEEE, PRNG or bit-cost proof.

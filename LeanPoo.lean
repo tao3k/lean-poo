@@ -40,6 +40,7 @@ import LeanPoo.Functional.PropertyFilters
 import LeanPoo.Functional.PropertyScopes
 import LeanPoo.Functional.PropertySequences
 import LeanPoo.Functional.PropertyReplay
+import LeanPoo.Functional.PropertyNumbers
 import LeanPoo.Functional.PropertySizes
 import LeanPoo.Functional.PropertyTraces
 import LeanPoo.Functional.RecursiveGeneration

@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P44. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P45. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. P39 extends inherited typed-fixture declaration scope; P40 unifies
@@ -31,6 +31,15 @@ admission and exact admitted results/errors. The standard companion copier uses
 Gerbil's forward vector-fold/index; isolated acceptance requires 132 cases plus a
 contracted Record/FUN corpus retry. Host readers, encoders, allocator bytes and GC
 remain outside these logical-credit proofs; no wall-clock improvement is claimed.
+
+P45 adds bounded exact-ratio Rational generation. PropertyNumbers reuses standard
+Rat normalization with ten laws for canonical keys, pair refusal/recovery, bounds,
+zero/integral profiles and strict value descent. Independent acceptance requires
+139 cases; recursive typed carriers and a Record/List/Function FUN service exercise
+shrinking, pair corpus replay, old-source refusal and corrected fresh preparation.
+The Scheme Rational descriptor still includes finite inexact values, but default
+drawing is exact. No Float/Real/Number fallback or IEEE coverage is asserted.
+Host exact arithmetic/exactification, codec fidelity and random ranges are premises.
 
 - Status: implemented; finite acceptance and evidence boundaries are recorded below.
 - Date: 2026-10-27.
