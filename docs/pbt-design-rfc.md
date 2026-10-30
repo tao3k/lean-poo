@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P30. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P31. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1298,3 +1298,49 @@ Registered revision checks are this project's extension, not a claimed missing
 Rackcheck feature. Every newly protected action walks its active observer ledger;
 no timing or zero-cost improvement is claimed. Existing resource limits and the
 complete local/remote checks remain the acceptance gate for this revision.
+
+## P31: source-consistent scalar stages in recursive derivation
+
+The recursive carrier audit reproduced late refusal in the existing interpreter:
+while admitting a two-field Tuple, the first custom leaf predicate revised its
+registered owner. The parser still called both leaf predicates and both measures
+before `run` finally refused stale. After the fix the same control calls one
+predicate and zero measures. This concerns declared graph dependencies, not
+inference of hidden mutation or a new recursive Type semantics.
+
+`testing/recursive-generation.ss` now scopes its existing graph check with
+`with-generation-check` during bridge preparation and each recursive observation.
+Primitive membership, weight, scalar shrink and bridge construction reuse
+`with-sources`. A revision therefore stops before measurement, a sibling request
+or a later bridge. The checker retains POO's `GenerationRefusal(stale)` category
+for direct callers; outer property scopes retain their own nonlocal refusal.
+Original exceptions bypass trailing checks unchanged. The transient checker is
+not retained in sample nodes; existing graph observers still own returned trees.
+The Interaction program, solver, source stamps, natural quota accounting,
+carrier packing and retained-tree shrinking are unchanged. No second evaluator,
+source registry, compatibility path or namespace is introduced.
+
+Four regression cases cover direct admission/measurement/shrink, measure revision,
+exact measure/shrink exceptions, and distinct scalar bridges sharing one owner.
+The Record/FUN example `source-tree-tests` in `examples/recursive-trees.ss` shares
+one strict Record leaf across List, Pair, Maybe and Tuple carriers. Its Function
+field keeps call validation. Declared predicate/measure revisions prevent the
+property from running; a fresh action shrinks an intentionally false service claim
+and exercises seed and concrete replay. Old reports keep their captured authority.
+The independent generic package remains 92 cases; no POO dependency is added.
+
+Eight `checkLeaf` laws in `RecursiveGeneration.lean` reuse `guardedThen` rather
+than modeling another interpreter: stale preflight, predicate revision, ordinary
+membership refusal, original predicate/measure causes, measure revision, exact
+fresh weight/state publication, and suppression of later continuations. Existing
+finite grammar/depth/node laws remain unchanged. Faithful host stage encoding,
+accurate pure graph observers, natural measure admission and serial terminating
+callbacks are premises. Guards operate between callbacks, not inside arbitrary
+caller code or Type contract evaluation. Host GC, unwinding, arbitrary termination,
+concurrent mutation and wall-clock behavior are outside these laws.
+
+The implementation retains Rackcheck's [predicate-before-subtree and lazy mapping structure](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/shrink-tree.rkt),
+using Gerbil's existing scoped checks for this project's registered revisions.
+Source checking adds active-ledger/graph walks at primitive boundaries; no
+zero-cost or timing improvement is claimed. No process, search, observation,
+depth, node or proposal limit is widened, and complete local/CI gates remain.

@@ -83,3 +83,12 @@ combines mutually recursive Message/Batch descriptors, shared children, safe
 service evaluation, Reader/FUN testing, counterexample shrinking and replay.
 General recursive carrier laws, arbitrary closure synthesis and type inference
 remain open. This closes the supported automatic finite-data protocol.
+
+
+PBT RFC P31 adds eight `checkLeaf` laws to the existing RecursiveGeneration
+namespace. Membership and natural measurement compose the existing guarded
+callback protocol; ordinary refusal, stale sources and exact exceptions remain
+distinct. Refusal suppresses later grammar continuations; accepted fresh leaves
+retain their exact weight/state. The grammar interpreter and its quota/depth
+proofs are unchanged. Host stage fidelity, pure accurate observers and serial
+terminating callbacks remain premises; Scheme cleanup/GC are not proved here.

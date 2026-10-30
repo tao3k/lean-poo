@@ -43,4 +43,16 @@ def fails (entries : List Entry) : Bool := decide (2 ≤ entries.length)
 example : (LeanPoo.Functional.PropertyTesting.shrink (check tree 6 [(0, 5)]) fails List.length
     8 trace [[], trace, leaf, []]).1 = leaf := by decide
 example : check tree 6 [(0, 5)] leaf = true ∧ fails leaf = true := by decide
+-- A leaf predicate revises its graph; even an accepted result cannot be measured.
+example : checkLeaf (fun epoch : Nat => epoch == 0)
+    (fun (_ : Bool) _ => (.ok (true, 1) : Except String (Bool × Nat)))
+    (fun _ _ => .error "measure must not run") false 0 = .error none := rfl
+
+-- Ordinary refusal stays distinct from accepted weight zero.
+example : checkLeaf (fun _ : Nat => true)
+    (fun (_ : Bool) epoch => (.ok (false, epoch) : Except String (Bool × Nat)))
+    (fun _ _ => .error "outside scalar must not be measured") false 0 = .ok (none, 0) := rfl
+example : checkLeaf (fun _ : Nat => true)
+    (fun (_ : Bool) epoch => (.ok (true, epoch) : Except String (Bool × Nat)))
+    (fun _ epoch => .ok (0, epoch)) false 0 = .ok (some 0, 0) := rfl
 end Examples.RecursiveGenerators

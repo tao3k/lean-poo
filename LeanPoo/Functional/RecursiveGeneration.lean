@@ -1,4 +1,5 @@
 import LeanPoo.Functional.PropertyTesting
+import LeanPoo.Functional.PropertyScopes
 import LeanPoo.Prototype.Recursive
 
 /-! Guarded finite descriptor generation. A grammar lists the permitted ordered
@@ -214,5 +215,78 @@ theorem replay_choices (grammar : Grammar) (left right : Choose Seed) (fuel pend
   have equal : left = right := funext fun root => funext fun depth =>
     funext fun quota => funext fun initial => same root depth quota initial
   rw [equal]
+
+/-- Scalar admission and natural weight observation reuse the PBT action scope.
+A rejected scalar supplies no derivation; only admitted fresh values can be
+measured. Host predicate/measure fidelity and serial termination are premises. -/
+def checkLeaf (live : State → Bool)
+    (member : Value → State → Except Cause (Bool × State))
+    (measure : Value → State → Except Cause (Nat × State)) (value : Value) (state : State) :
+    Except (Option Cause) (Option Nat × State) :=
+  PropertyTesting.guardedThen live (member value) (fun accepted after =>
+    if accepted then
+      match measure value after with
+      | .error cause => .error cause
+      | .ok (weight, final) => .ok (some weight, final)
+    else .ok (none, after)) state
+
+/-- An obsolete graph enters neither membership nor measurement. -/
+theorem checkLeaf_preflight (live : State → Bool)
+    (member : Value → State → Except Cause (Bool × State))
+    (measure : Value → State → Except Cause (Nat × State)) (value : Value) (state : State)
+    (stale : live state = false) : checkLeaf live member measure value state = .error none := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, stale]
+
+/-- A predicate revision cannot reach measurement or the next grammar request. -/
+theorem checkLeaf_member_revised (live : State → Bool) (state after : State)
+    (value : Value) (accepted : Bool) (measure : Value → State → Except Cause (Nat × State))
+    (before : live state = true) (stale : live after = false) :
+    checkLeaf live (fun _ _ => .ok (accepted, after)) measure value state = .error none := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before, stale]
+
+/-- Normal membership refusal is not an exception or a falsifying property. -/
+theorem checkLeaf_outside (live : State → Bool) (state after : State) (value : Value)
+    (measure : Value → State → Except Cause (Nat × State))
+    (before : live state = true) (fresh : live after = true) :
+    checkLeaf live (fun _ _ => .ok (false, after)) measure value state = .ok (none, after) := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before, fresh]
+
+/-- Predicate exceptions retain their exact cause without invoking measurement. -/
+theorem checkLeaf_member_cause (live : State → Bool) (state : State) (value : Value) (cause : Cause)
+    (measure : Value → State → Except Cause (Nat × State)) (before : live state = true) :
+    checkLeaf live (fun _ _ => .error cause) measure value state = .error (some cause) := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before]
+
+/-- Measurement errors remain the original errors, never alternative selection. -/
+theorem checkLeaf_measure_cause (live : State → Bool) (state after : State)
+    (value : Value) (cause : Cause) (before : live state = true) (fresh : live after = true) :
+    checkLeaf live (fun _ _ => .ok (true, after)) (fun _ _ => .error cause) value state =
+      .error (some cause) := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before, fresh]
+
+/-- A revised measure cannot publish a partially observed scalar derivation. -/
+theorem checkLeaf_measure_revised (live : State → Bool) (state middle after : State)
+    (value : Value) (weight : Nat) (before : live state = true)
+    (fresh : live middle = true) (stale : live after = false) :
+    checkLeaf (Cause := Cause) live (fun _ _ => .ok (true, middle))
+      (fun _ _ => .ok (weight, after)) value state = .error none := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before, fresh, stale]
+
+/-- Fresh scalar admission retains its exact weight and resulting state. -/
+theorem checkLeaf_present (live : State → Bool) (state middle after : State)
+    (value : Value) (weight : Nat) (before : live state = true)
+    (fresh : live middle = true) (current : live after = true) :
+    checkLeaf (Cause := Cause) live (fun _ _ => .ok (true, middle))
+      (fun _ _ => .ok (weight, after)) value state = .ok (some weight, after) := by
+  simp [checkLeaf, PropertyTesting.guardedThen, PropertyTesting.guardedGeneration, before, fresh, current]
+
+/-- Refusal suppresses every later sibling/request continuation of the interpreter. -/
+theorem checkLeaf_refused (live : State → Bool)
+    (member : Value → State → Except Cause (Bool × State))
+    (measure : Value → State → Except Cause (Nat × State)) (value : Value) (state : State)
+    (cause : Option Cause) (later : Option Nat × State → Except (Option Cause) Output)
+    (refused : checkLeaf live member measure value state = .error cause) :
+    (checkLeaf live member measure value state >>= later) = .error cause := by
+  rw [refused]; rfl
 
 end LeanPoo.Functional.RecursiveGeneration
