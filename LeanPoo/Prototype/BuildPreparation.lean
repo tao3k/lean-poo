@@ -279,4 +279,48 @@ theorem admitCheckTimes_complete (candidate : Option CheckPhaseTimes) (modules b
   · rw [ite_eq_right counts] at accepted
     cases accepted
 
+/-- Each compiler context pays its common closure and demands an optional
+exclusive closure only when used. Weights must come from the standard compiler's
+actual dependency observation; these are source work units, not elapsed time. -/
+def optionalPreparation (common extra : Nat) (requests : List Bool) : Nat :=
+  (requests.map (fun requested => common + if requested then extra else 0)).sum
+
+/-- Removing an eager optional edge saves exactly the unused contexts' exclusive
+preparation. Shared dependencies belong in `common`, not in `extra`. In particular,
+a complete workflow that requests the feature everywhere saves no work here. -/
+theorem optionalPreparation_partition (common extra : Nat) (requests : List Bool) :
+    requests.length * (common + extra) = optionalPreparation common extra requests +
+      (requests.filter (! ·)).length * extra := by
+  induction requests with
+  | nil => simp [optionalPreparation]
+  | cons requested rest ih =>
+    cases requested <;>
+      simp [optionalPreparation, Nat.add_mul] at * <;> omega
+
+/-- Demand-driven preparation never enlarges the same declared context work. -/
+theorem optionalPreparation_le (common extra : Nat) (requests : List Bool) :
+    optionalPreparation common extra requests ≤ requests.length * (common + extra) := by
+  rw [optionalPreparation_partition]
+  omega
+
+/-- Complete source work includes unchanged execution plus the additional IO
+routing. The caller must budget action closures, argument rows, current-binding
+lookup and any extra standard loader-stub admissions; metadata savings alone are insufficient.
+All terms use one declared cost unit, not an inferred physical/GC time bound. -/
+def optionalWorkflowWork (common extra : Nat) (requests : List Bool)
+    (execution routing : Nat) : Nat :=
+  optionalPreparation common extra requests + execution + routing
+
+/-- A demand-driven boundary improves the declared complete workflow exactly
+when avoided preparation pays for its additional routing. This is also the
+negative control: fewer eager dependencies cannot justify an unbounded wrapper. -/
+theorem optionalWorkflowWork_le_iff (common extra : Nat) (requests : List Bool)
+    (execution routing : Nat) :
+    optionalWorkflowWork common extra requests execution routing ≤
+      requests.length * (common + extra) + execution ↔
+      routing ≤ (requests.filter (! ·)).length * extra := by
+  have balance := optionalPreparation_partition common extra requests
+  unfold optionalWorkflowWork
+  omega
+
 end LeanPoo.Prototype.Representation
