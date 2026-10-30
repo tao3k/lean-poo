@@ -232,4 +232,70 @@ theorem nestedReport_diagnostic (parent : State → Bool) (state after : State)
     guardedGeneration parent (fun _ => (.ok (diagnostic, after) : Except Cause (Value × State))) state =
       .ok (diagnostic, after) := guardedGeneration_state parent state after diagnostic before fresh
 
+/-- Error interpretation reuses the same guarded callback boundary. An original
+failure is diagnostic data: neither a secondary error nor refusal can replace it.
+Classifier statuses are required to belong to the host's non-passing vocabulary;
+malformed classifier outputs are rejected by the host before report publication. -/
+def classifyFailure (live : State → Bool)
+    (classify : State → Except Secondary (CheckStatus × State)) (original : Cause) (state : State) :
+    CheckStatus × Cause :=
+  match guardedGeneration live classify state with
+  | .error none => (.stale, original)
+  | .error (some _) => (.error, original)
+  | .ok (status, _) => (status, original)
+
+/-- Obsolete authority suppresses classification and refuses the original failure. -/
+theorem classifyFailure_preflight (live : State → Bool)
+    (classify : State → Except Secondary (CheckStatus × State)) (original : Cause) (state : State)
+    (stale : live state = false) :
+    classifyFailure live classify original state = (.stale, original) := by
+  simp [classifyFailure, guardedGeneration_preflight live classify state stale]
+
+/-- A normally returning classifier cannot publish a status after revising sources. -/
+theorem classifyFailure_revised {Secondary : Type} (live : State → Bool)
+    (original : Cause) (state after : State) (status : CheckStatus)
+    (fresh : live state = true) (stale : live after = false) :
+    classifyFailure (Secondary := Secondary) live (fun _ => .ok (status, after)) original state =
+      (.stale, original) := by
+  simp [classifyFailure, guardedGeneration_revised live state after status fresh stale]
+
+/-- A classifier exception reports an error with the first cause, not its own. -/
+theorem classifyFailure_secondary (live : State → Bool) (original : Cause)
+    (secondary : Secondary) (state : State) (fresh : live state = true) :
+    classifyFailure live (fun _ => .error secondary) original state = (.error, original) := by
+  simp [classifyFailure, guardedGeneration_cause live state secondary fresh]
+
+/-- Stable classification preserves its exact status and original diagnostic cause. -/
+theorem classifyFailure_stable {Secondary : Type} (live : State → Bool) (original : Cause)
+    (state after : State) (status : CheckStatus) (before : live state = true) (fresh : live after = true) :
+    classifyFailure (Secondary := Secondary) live (fun _ => .ok (status, after)) original state =
+      (status, original) := by
+  simp [classifyFailure, guardedGeneration_state live state after status before fresh]
+
+/-- Every possible classification outcome keeps the first failure identity. -/
+theorem classifyFailure_original (live : State → Bool)
+    (classify : State → Except Secondary (CheckStatus × State)) (original : Cause) (state : State) :
+    (classifyFailure live classify original state).2 = original := by
+  unfold classifyFailure
+  split <;> rfl
+
+/-- A lawful error classifier never manufactures passing or falsified evidence. -/
+theorem classifyFailure_nonpassing (live : State → Bool)
+    (classify : State → Except Secondary (CheckStatus × State)) (original : Cause) (state : State)
+    (lawful : ∀ before status after, classify before = .ok (status, after) →
+      status ≠ .passed ∧ status ≠ .failed) :
+    (classifyFailure live classify original state).1 ≠ .passed ∧
+      (classifyFailure live classify original state).1 ≠ .failed := by
+  cases fresh : live state with
+  | false => simp [classifyFailure, guardedGeneration, fresh]
+  | true =>
+    cases returned : classify state with
+    | error secondary => simp [classifyFailure, guardedGeneration, fresh, returned]
+    | ok result =>
+      obtain ⟨status, after⟩ := result
+      have allowed := lawful state status after returned
+      cases later : live after <;>
+        simp [classifyFailure, guardedGeneration, fresh, returned, later, allowed.1, allowed.2]
+
+
 end LeanPoo.Functional.PropertyTesting

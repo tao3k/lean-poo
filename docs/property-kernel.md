@@ -452,3 +452,12 @@ combines two fixed-key service Records, nested Function wrapping, shrink refusal
 FUN delivery, fresh retry and both replay modes. Six regression cases and six
 `guardedMeasure` laws cover exact totals, early refusal and original causes;
 logical weights do not prove runtime costs. See P34 in the PBT RFC for premises.
+
+
+P35 closes terminal error-classification admission through the shared checked
+source action. A classifier that revises its owner cannot publish a normal refusal
+or start obsolete nested effects; secondary exceptions retain the original cause.
+Six generic cases (103 independent cases total), the Record/Function recipe-retry
+FUN example and six `classifyFailure` laws cover classification, inspection,
+confirmed shrink progress and replay. See P35 in the PBT RFC for precise premises;
+this does not extend the domains, budgets or termination guarantees.

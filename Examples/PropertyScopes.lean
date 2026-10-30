@@ -3,6 +3,21 @@ import LeanPoo.Functional.PropertyScopes
 /-! Transient replay owners and new-run publication are distinct directories. -/
 open LeanPoo.Functional.PropertyTesting
 
+-- Recipe replacement during error interpretation retires the normal status.
+example : classifyFailure (Secondary := String) (fun epoch : Nat => epoch == 0)
+    (fun _ => .ok (.unsupported, 1)) "service unavailable" 0 =
+      (.stale, "service unavailable") := rfl
+
+-- A secondary classification exception never overwrites the service failure.
+example : classifyFailure (fun _ : Nat => true)
+    (fun _ => (.error "classifier failed" : Except String (CheckStatus × Nat)))
+    "service unavailable" 0 = (.error, "service unavailable") := rfl
+
+-- Explicit fresh preparation may classify again under the new recipe epoch.
+example : classifyFailure (Secondary := String) (fun epoch : Nat => epoch == 1)
+    (fun epoch => .ok (.unsupported, epoch)) "service unavailable" 1 =
+      (.unsupported, "service unavailable") := rfl
+
 -- Source 0 belongs only to the prior run. Its revision still suppresses mapping,
 -- although the newly observed source 1 remains live.
 example : scopedStages (fun epoch source : Nat => source != 0 || epoch == 0) [0]
