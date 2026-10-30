@@ -5,8 +5,10 @@ namespace LeanPoo.Object
 
 universe u v
 
-/-- Allocate one memoizing thunk per declared slot using the caller's method
-resolver. The recursive table ties the final self exactly once. -/
+/-- Legacy recursive thunk-table encoding. Lean lowers the recursive local
+`table` to a function: dependency lookup can rebuild the table. This does not
+establish shared call-by-need evaluation. Inspectable finite dependency programs
+should use `Object.Dataflow`, whose actual materialized state has a closure proof. -/
 private partial def Plan.buildThunks {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (_plan : Plan Key Value) (keys : List Key)
@@ -21,7 +23,7 @@ private partial def Plan.buildThunks {Key : Type u} {Value : Key → Type v}
           | none => none))) {}
   table
 
-/-- Executable object with a shared lazy value cell for each declared key. -/
+/-- Legacy executable object backed by recursive thunk-table lookup. -/
 inductive ResolutionMode where
   | onDemand
   | compiled
@@ -34,7 +36,7 @@ structure Memoized (Key : Type u) (Value : Key → Type v)
   thunks : Std.DHashMap Key (fun key => Thunk (Option (Value key)))
   mode : ResolutionMode := .onDemand
 
-/-- Instantiate the C4 plan into a shared call-by-need object. -/
+/-- Instantiate the legacy C4 thunk-table object. See `Object.Dataflow` for checked materialization. -/
 def Plan.memoize {Key : Type u} {Value : Key → Type v}
     [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Plan Key Value) : Memoized Key Value :=

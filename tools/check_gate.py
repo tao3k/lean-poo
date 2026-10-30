@@ -184,13 +184,13 @@ def main():
     emit(f'CHECK-GATE-START jobs={jobs}')
     atoms = atom_checks(jobs, os.environ.get('LEAN_POO_ATOM_RECEIPT'))
     results = execute(
-        [('library', ['lake', 'build', 'LeanPoo', 'LeanPoo:shared', 'Examples.Support.GeneralizedFork:dynlib', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale']),
+        [('library', ['lake', 'build', 'LeanPoo', 'LeanPoo:shared', 'Examples.Support.GeneralizedFork:dynlib', 'Examples', 'indexedRegistryScale', 'scopedTransactionScale', 'keyIndexScale', 'cachedPreparationScale', 'contextSlotScale', 'resultIndexScale', 'cyclicClosureScale', 'closureLayoutScale', 'hybridClosureScale', 'dataflowObject']),
          ('supervision', ['python3', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-p', 'test_*.py'])],
         [('types', ['lean', '-j', '2', 'LeanPoo/C4/Types.lean']),
          *[(name, command) for name, command in atoms if name.startswith('shard-')],
          ('diagnostics', ['just', '--set', 'lean', 'lean', '_check-diagnostics']),
          ('docs', ['just', 'check-docs']),
-         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index'])],
+         ('native', ['just', '_check-native-registry', '_check-native-scoped', '_check-native-key-index', '_check-native-cached', '_check-native-context', '_check-native-result-index', '_check-native-dataflow'])],
         [(name, command) for name, command in atoms if name in ('scc', 'stress')],
         check_workers=shard_concurrency(jobs)[0])
     after = resource.getrusage(resource.RUSAGE_CHILDREN)

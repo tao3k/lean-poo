@@ -45,3 +45,15 @@ root = "Benchmarks.ClosureLayoutScale"
 [[lean_exe]]
 name = "hybridClosureScale"
 root = "Benchmarks.HybridClosureScale"
+
+[[lean_exe]]
+name = "dataflowObject"
+root = "Examples.DataflowObject"
+
+[[lean_exe]]
+name = "dataflowShapeScale"
+root = "Benchmarks.DataflowShapeScale"
+
+[[lean_exe]]
+name = "legacyThunkShapeScale"
+root = "Benchmarks.LegacyThunkShapeScale"
