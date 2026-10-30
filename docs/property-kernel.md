@@ -470,3 +470,12 @@ service corpus Reader/FUN example, and two whole-execution scope laws cover refu
 original causes, cleanup, non-retention, fresh retry and replay. The existing codec
 and port boundaries remain: no arbitrary callback interruption or I/O rollback.
 See P36 in the PBT RFC for proof premises and costs.
+
+
+P37 captures recursive graph revisions at first discovery, including already
+known siblings and returned sampler dependencies. Shared source admission now
+serves discovery and runtime; late re-snapshotting and repeated sampler-spine
+construction are removed. Seven regressions, the shared Record/Function FUN
+preparation/retry example and six finite ledger laws cover refusal, identity,
+shrinking and replay. Undiscovered dependencies, concurrent global snapshots and
+callback termination remain explicit boundaries. See P37 in the PBT RFC for costs.

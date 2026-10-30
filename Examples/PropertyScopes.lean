@@ -3,6 +3,19 @@ import LeanPoo.Functional.PropertyScopes
 /-! Transient replay owners and new-run publication are distinct directories. -/
 open LeanPoo.Functional.PropertyTesting
 
+-- A known sibling retains epoch zero even if a factory tries to capture epoch one.
+example : captureRevision [(0, 0), (1, 0)] 1 1 = [(0, 0), (1, 0)] := by decide
+
+-- Discovering another owner cannot make a previously changed source current.
+example : revisionsCurrent (fun _ : Nat => 1) (captureRevision [(0, 0)] 1 1) = false := by decide
+
+-- An early factory revises the already discovered sibling; its later factory is skipped.
+example : guardedStages
+    (fun state : Nat × List (Nat × Nat) => revisionsCurrent (fun _ => state.1) state.2)
+    [(fun _ => (.ok (9, (1, [(0, 0), (1, 0)])) : Except String (Nat × (Nat × List (Nat × Nat))))),
+     (fun _ => .error "later factory must not run")]
+    (0, [(0, 0), (1, 0)]) = .error none := rfl
+
 -- A decoder's own node has no sources, but inherited codec authority stops its mapper.
 example : scopedStages (fun epoch source : Nat => source != 0 || epoch == 0) [0]
     [(fun _ => (.ok (9, (1, [])) : Except String (Nat × (Nat × List Nat)))),

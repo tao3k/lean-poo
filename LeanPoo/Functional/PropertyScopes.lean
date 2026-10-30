@@ -262,6 +262,61 @@ theorem scopedStages_empty_child [DecidableEq Source] (live : State → Source �
     simp [scopeCurrent, List.all_eq_true, mergeSources_mem]
   simp only [scopedStages, guards]
 
+/-- Discovery records a source's first revision. Repeated edges share that
+snapshot rather than silently authorizing a newer epoch. Identity hashing in the
+host implements this finite association-list semantics. -/
+def captureRevision [DecidableEq Source] (ledger : List (Source × Nat))
+    (source : Source) (revision : Nat) : List (Source × Nat) :=
+  if source ∈ ledger.map Prod.fst then ledger else (source, revision) :: ledger
+
+/-- Currentness observes every registered revision; new callbacks cannot replace
+the ledger. Opaque sampler admission remains an additional host predicate. -/
+def revisionsCurrent (current : Source → Nat) (ledger : List (Source × Nat)) : Bool :=
+  ledger.all (fun stamp => stamp.2 == current stamp.1)
+
+/-- A known source keeps its exact old revision and ledger position. -/
+theorem captureRevision_existing [DecidableEq Source] (ledger : List (Source × Nat))
+    (source : Source) (revision : Nat) (known : source ∈ ledger.map Prod.fst) :
+    captureRevision ledger source revision = ledger := by simp [captureRevision, known]
+
+/-- A newly discovered identity is captured once at its current frontier. -/
+theorem captureRevision_new [DecidableEq Source] (ledger : List (Source × Nat))
+    (source : Source) (revision : Nat) (unknown : source ∉ ledger.map Prod.fst) :
+    captureRevision ledger source revision = (source, revision) :: ledger := by
+  simp [captureRevision, unknown]
+
+/-- Each registration adds at most one metadata entry, even with shared edges. -/
+theorem captureRevision_length [DecidableEq Source] (ledger : List (Source × Nat))
+    (source : Source) (revision : Nat) :
+    (captureRevision ledger source revision).length ≤ ledger.length + 1 := by
+  unfold captureRevision
+  split <;> simp_all
+
+/-- Distinct source identities stay distinct under arbitrary rediscovery. -/
+theorem captureRevision_unique [DecidableEq Source] (ledger : List (Source × Nat))
+    (source : Source) (revision : Nat) (unique : (ledger.map Prod.fst).Nodup) :
+    ((captureRevision ledger source revision).map Prod.fst).Nodup := by
+  unfold captureRevision
+  split <;> simp_all
+
+/-- Neither revisiting a known source nor adding a new one repairs stale history. -/
+theorem captureRevision_stale [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (source : Source) (revision : Nat)
+    (stale : revisionsCurrent current ledger = false) :
+    revisionsCurrent current (captureRevision ledger source revision) = false := by
+  unfold captureRevision
+  split <;> simp_all [revisionsCurrent]
+
+/-- A fresh first observation extends a fresh ledger without changing old epochs. -/
+theorem captureRevision_fresh [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (source : Source)
+    (fresh : revisionsCurrent current ledger = true) :
+    revisionsCurrent current (captureRevision ledger source (current source)) = true := by
+  unfold captureRevision
+  split
+  · exact fresh
+  · simpa [revisionsCurrent] using fresh
+
 /-- Error interpretation reuses the same guarded callback boundary. An original
 failure is diagnostic data: neither a secondary error nor refusal can replace it.
 Classifier statuses are required to belong to the host's non-passing vocabulary;

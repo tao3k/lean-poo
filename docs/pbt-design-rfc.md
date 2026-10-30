@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P36. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P37. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1606,3 +1606,65 @@ may consume input: no transactional I/O or rollback is claimed. Explicit format
 identity, data budgets, lazy forcing, random schedules and all existing process,
 heap, proposal and recursion limits remain unchanged. Extra observer checks retain
 their cost; suppressed callbacks alone are not a wall-clock performance proof.
+
+
+## P37: first-observation snapshots during recursive descriptor discovery
+
+The audit reproduced an accepted mixed preparation: the first custom `.generator`
+changed an already discovered, unvisited sibling descriptor; the sibling's epoch
+was then captured only when visited. Both factories ran and the property returned
+`passed`. Previously declared sampler dependencies had the same late-snapshot
+hole. Runtime bridge checks could refuse changes to earlier Types but could not
+recover the earlier epochs that discovery never retained.
+
+Graph discovery now owns one identity-deduplicated ledger. `intern` captures each
+Type at its first discovered edge; each returned sampler and explicit dependency
+is registered once before another factory runs. Rediscovery never updates an
+owned epoch. The shared `graph-sources-current?` predicate checks both revisions
+and opaque sampler hooks during discovery and evaluation. A temporary standard
+`with-generation-check` scope and the existing `with-sources` action protect custom
+factories and their nested checked work; the checker is not stored on the graph.
+Original callback causes escape unchanged. A stale preparation publishes no sampler
+or replayable witness; factory side effects are not rolled back.
+
+The evaluator reuses the original graph stamps instead of taking a second late
+snapshot. Its scalar sampler list is prepared once using Gerbil's `filter-map`,
+removing the per-observation vector-to-list/map work of the previous hook scan.
+The official runtime utility is reused, not reimplemented. Existing graph,
+carrier, fixed-point, source and FUN protocols retain their ownership.
+
+Seven standard `discovery-test` cases cover known sibling changes, earlier declared
+dependencies, opaque refusal/errors, original factory causes, inherited producer
+sources, deduplicated shared identities and runtime refusal. The complex
+`preparation-tree-tests` example composes shared Record leaves, Function fields,
+Tuple/Pair carriers and automatic property Reader/FUN preparation. Both a sibling
+revision and a shared dependency revision refuse before later work. Explicit retry
+then shrinks a real typed witness, preserves Function wrapping, supports both replay
+modes, rejects old reports and can reprepare after another owner revision. The
+generic stdlib-only kernel is unchanged and still requires all 109 cases.
+
+Six `captureRevision` laws in PropertyScopes establish first-capture preservation,
+new-source registration, the one-entry growth bound, identity uniqueness, the
+impossibility of refreshing a stale ledger and preservation of fresh ledgers.
+Existing guarded-stage laws supply callback refusal/exception semantics. Top-level
+examples show an early revision suppressing the later factory. The finite model
+assumes truthful identity/revision observations, serial terminating factories and
+faithful host scope/ledger implementation; host hash equality, callbacks, GC and
+wall-clock behavior remain executable or explicit premises.
+
+This is a first-observation discipline, not an eager scan of hidden dependencies.
+A Type below an undiscovered edge, or a dependency first declared by a returning
+factory, is captured when discovered. Hidden closure state, concurrent atomic
+snapshots and arbitrary factory termination are not inferred. Descriptor/edge,
+depth, node and search caps remain unchanged. Registration uses the standard
+identity table; each controlled action checks the growing unique-source ledger
+and captured sampler hooks. For D descriptor actions and final A owners/S samplers,
+those checks can cost O(D*(A+S)), excluding nested actions and callback costs. The
+ledger growth law is not a constant-time hashing, allocation or timing theorem.
+
+Rackcheck's pinned generator/property sources retain compositional generation and
+use standard dynamic parameter lifetime for callback ownership. This unit applies
+that abstraction style through existing Gerbil checked actions to the POO-specific
+Type discovery extension. It does not assert missing recursive Type metadata
+features in Rackcheck, add a second runner, change draw/seed order or force omitted
+Function inputs. No speedup is claimed from metadata deduplication alone.
