@@ -803,4 +803,14 @@ example : observeSuiteCases [[[1, 0, 2]]]
       ((if input = 0 then Except.error "refused" else .ok (input % 2 == 0)), state + 1)) 0 =
       ([.ok false, .error "refused", .ok true], 3) := rfl
 
+/-- One missing rank extends the canonical directory without changing old cells. -/
+example : extendShapeRanks 2 [0, 1, 3, 4] = [0, 1, 2, 3, 4] := rfl
+
+/-- A reordered request with one additional identity passes the complete guard. -/
+example : ([3, 0, 2, 1] : List Nat).Perm (2 :: [0, 1, 3]) :=
+  checkedShapeExtension [0, 1, 3] [3, 0, 2, 1] 2 (by decide) (by decide) rfl (by decide)
+
+/-- Equal growth cardinality cannot disguise a removed key and two new ones. -/
+example : ([0, 1, 8, 9] : List Nat).filter (fun n => decide (n ∉ [0, 1, 2])) ≠ [8] := by decide
+
 end LeanPoo.Examples.Representation

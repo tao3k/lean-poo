@@ -1,5 +1,31 @@
 # Persistent prototype maps and guarded slot layouts
 
+## Certified one-key shape extension
+
+The Gerbil representation now extends an immutable ordered shape by locating its
+first successor with standard `find`, reading the successor's existing index and
+using standard prefix/suffix operations. Dynamic delegation and constructor hints
+share the same interning boundary, without a transition cache or second value
+store. A hinted request must contain exactly one unknown name and one additional
+unique identity; replacement-plus-addition is not an extension.
+
+`RepresentationIndex.extendShapeRanks_cut` relates first-success index location
+to the prefix operation. The accompanying permutation, length, uniqueness,
+strict-order and segment-restoration laws cover every finite distinct rank list.
+`checkedShapeExtension` proves the complete cardinality/unknown-name guard;
+`shapeExtension_comparisons` bounds rank comparisons by the old width plus one.
+Injective stable symbol ranks and faithful standard primitives remain host
+premises. Existing primary-cell and occupancy laws govern the vector copies.
+
+The shared-service example exercises delegated false/Function cells, exact
+failure/retry, read replay, revision rejection and checked FUN publication. The
+standard paired Gerbil study qualifies current hinted versus complete preparation:
+all six one-key pairs improve in natural, collected and post-GC regimes. Complete
+workflow tails remain variable, including adverse natural and charged post-GC
+observations; neither these finite laws nor a median improvement proves a host
+latency/GC bound or a faster first dynamic-module load. See the executable
+project's representation notes for the complete compact receipt and controls.
+
 This implements the representation protocol acceptance target from TODO.md. The
 Racket paper's “Different instance representation” uses balanced maps and delayed
 sharing; “Same instance representation, different prototype representation” makes

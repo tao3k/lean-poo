@@ -425,4 +425,130 @@ theorem checkedKeyEdit_active (name : String) (old : State) (edit : String → S
     checkedKeyEdit (.ok name) false true old edit =
       .error "object mutation during computation" := rfl
 
+/-- Serial ranks represent distinct symbol identities, never printed spelling.
+The host's immutable sorted directory is split by standard prefix operations. -/
+def extendShapeRanks (key : Nat) (ranks : List Nat) : List Nat :=
+  ranks.takeWhile (· < key) ++ key :: ranks.dropWhile (· < key)
+
+/-- Standard first-success lookup and its certified old index locate the same
+cut as the mathematical prefix, including offset zero and an absent successor. -/
+theorem extendShapeRanks_cut (key : Nat) (ranks : List Nat) :
+    extendShapeRanks key ranks =
+      ranks.take (ranks.findIdx (key ≤ ·)) ++ key :: ranks.drop (ranks.findIdx (key ≤ ·)) := by
+  induction ranks with
+  | nil => rfl
+  | cons head tail ih =>
+    by_cases before : head < key
+    · have stop : ¬ key ≤ head := by omega
+      simpa [extendShapeRanks, List.findIdx_cons, before, stop] using congrArg (List.cons head) ih
+    · have stop : key ≤ head := by omega
+      simp [extendShapeRanks, List.findIdx_cons, before, stop]
+
+/-- Extension adds exactly the requested identity and retains every old one. -/
+theorem extendShapeRanks_perm (key : Nat) (ranks : List Nat) :
+    (extendShapeRanks key ranks).Perm (key :: ranks) := by
+  simpa [extendShapeRanks] using
+    (List.perm_middle (a := key) (l₁ := ranks.takeWhile (· < key))
+      (l₂ := ranks.dropWhile (· < key)))
+
+/-- One-key growth has exactly one additional vector position. -/
+theorem extendShapeRanks_length (key : Nat) (ranks : List Nat) :
+    (extendShapeRanks key ranks).length = ranks.length + 1 := by
+  simpa using (extendShapeRanks_perm key ranks).length_eq
+
+/-- Already-present keys are excluded by the existing symbolic index guard. -/
+theorem extendShapeRanks_unique (key : Nat) (ranks : List Nat)
+    (unique : ranks.Nodup) (absent : key ∉ ranks) :
+    (extendShapeRanks key ranks).Nodup :=
+  (extendShapeRanks_perm key ranks).nodup_iff.mpr (List.nodup_cons.mpr ⟨absent, unique⟩)
+
+/-- Restoring the two untouched segments removes only the new position. -/
+theorem extendShapeRanks_restore (key : Nat) (ranks : List Nat) :
+    (extendShapeRanks key ranks).take (ranks.takeWhile (· < key)).length ++
+      (extendShapeRanks key ranks).drop ((ranks.takeWhile (· < key)).length + 1) = ranks := by
+  have over : (ranks.takeWhile (· < key)).drop
+      ((ranks.takeWhile (· < key)).length + 1) = [] := List.drop_eq_nil_of_le (by omega)
+  simp [extendShapeRanks, List.drop_append, over]
+
+/-- The canonical rank order is preserved without invoking a complete sort.
+Faithful, injective host serial ranks and immutable source names are premises. -/
+theorem extendShapeRanks_ordered (key : Nat) (ranks : List Nat)
+    (ordered : ranks.Pairwise (· < ·)) (absent : key ∉ ranks) :
+    (extendShapeRanks key ranks).Pairwise (· < ·) := by
+  induction ranks with
+  | nil => simp [extendShapeRanks]
+  | cons head tail ih =>
+    obtain ⟨first, rest⟩ := List.pairwise_cons.mp ordered
+    have notHead : key ≠ head := by intro same; apply absent; simp [same]
+    have notTail : key ∉ tail := fun member => absent (by simp [member])
+    by_cases before : head < key
+    · simp only [extendShapeRanks, List.takeWhile_cons, List.dropWhile_cons,
+        decide_eq_true before, ↓reduceIte, List.cons_append]
+      apply List.pairwise_cons.mpr
+      refine ⟨?_, ih rest notTail⟩
+      intro other member
+      have inExtended : other ∈ extendShapeRanks key tail := member
+      have inOriginal := (extendShapeRanks_perm key tail).mem_iff.mp inExtended
+      rcases List.mem_cons.mp inOriginal with same | old
+      · simpa [same] using before
+      · exact first other old
+    · have less : key < head := by omega
+      simp only [extendShapeRanks, List.takeWhile_cons, List.dropWhile_cons,
+        decide_eq_false before]
+      apply List.pairwise_cons.mpr
+      refine ⟨?_, ordered⟩
+      intro other member
+      rcases List.mem_cons.mp member with same | old
+      · simpa [same] using less
+      · exact Nat.lt_trans less (first other old)
+
+/-- Prefix comparisons examine at most the old width plus the stopping cell.
+Directory hashing, index construction, vector copies and GC remain charged. -/
+theorem shapeExtension_comparisons (key : Nat) (ranks : List Nat) :
+    (ranks.takeWhile (· < key)).length + 1 ≤ ranks.length + 1 := by
+  have bounded := (List.takeWhile_sublist (p := fun n => decide (n < key)) (l := ranks)).length_le
+  omega
+
+/-- Cardinality alone is insufficient. Exactly one unknown identity plus the
+two distinct inventories certifies a strict extension, including every old key. -/
+theorem checkedShapeExtension (old next : List Nat) (key : Nat)
+    (oldUnique : old.Nodup) (nextUnique : next.Nodup)
+    (size : next.length = old.length + 1)
+    (unknown : next.filter (fun n => decide (n ∉ old)) = [key]) :
+    next.Perm (key :: old) := by
+  have fresh : key ∈ next ∧ key ∉ old := by
+    have present : key ∈ next.filter (fun n => decide (n ∉ old)) := by rw [unknown]; simp
+    simpa using List.mem_filter.mp present
+  have subset : next ⊆ key :: old := by
+    intro n member
+    by_cases prior : n ∈ old
+    · simp [prior]
+    · have found : n ∈ next.filter (fun n => decide (n ∉ old)) := by simp [member, prior]
+      rw [unknown] at found
+      exact List.mem_cons.mpr (Or.inl (by simpa using found))
+  have retained : old ⊆ next := by
+    intro n member
+    by_cases missing : n ∈ next
+    · exact missing
+    exfalso
+    have reduced : next ⊆ key :: old.erase n := by
+      intro x hx
+      rcases List.mem_cons.mp (subset hx) with same | prior
+      · simp [same]
+      · have different : x ≠ n := fun same => missing (same ▸ hx)
+        exact List.mem_cons_of_mem _ ((List.mem_erase_of_ne different).mpr prior)
+    have bound := nextUnique.length_le_of_subset reduced
+    have erased : (old.erase n).length = old.length - 1 := by rw [List.length_erase]; simp [member]
+    have positive := List.length_pos_of_mem member
+    simp only [List.length_cons] at bound
+    omega
+  apply (List.perm_ext_iff_of_nodup nextUnique (List.nodup_cons.mpr ⟨fresh.2, oldUnique⟩)).mpr
+  intro n
+  constructor
+  · intro member; exact subset member
+  · intro member
+    rcases List.mem_cons.mp member with same | prior
+    · simpa [same] using fresh.1
+    · exact retained prior
+
 end LeanPoo.Prototype.Representation
