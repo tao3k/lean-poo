@@ -232,6 +232,36 @@ theorem nestedReport_diagnostic (parent : State → Bool) (state after : State)
     guardedGeneration parent (fun _ => (.ok (diagnostic, after) : Except Cause (Value × State))) state =
       .ok (diagnostic, after) := guardedGeneration_state parent state after diagnostic before fresh
 
+/-- Every action in a nested handoff observes both codec and application scope.
+This is an equality of whole finite stage executions, not just final admission.
+Observers are pure and total; the host still preserves its ordered error checks. -/
+theorem scopedStages_inherit [DecidableEq Source] (live : State → Source → Bool)
+    (outer inner : List Source)
+    (stages : List ((State × List Source) → Except Cause (Value × (State × List Source))))
+    (snapshot : State × List Source) :
+    scopedStages live (mergeSources outer inner) stages snapshot =
+      guardedProduct (fun state => scopeCurrent live outer state && scopeCurrent live inner state)
+        stages (fun values state => .ok (values, state)) snapshot := by
+  have guards : scopeCurrent live (mergeSources outer inner) =
+      (fun state => scopeCurrent live outer state && scopeCurrent live inner state) := by
+    funext state
+    apply Bool.eq_iff_iff.mpr
+    simpa only [Bool.and_eq_true] using scopeCurrent_join live outer inner state
+  simp only [scopedStages, guards]
+
+/-- A nested action with no additional transient owner keeps the entire parent
+authority. Empty child ownership cannot authorize work beneath a retired codec. -/
+theorem scopedStages_empty_child [DecidableEq Source] (live : State → Source → Bool)
+    (outer : List Source)
+    (stages : List ((State × List Source) → Except Cause (Value × (State × List Source))))
+    (snapshot : State × List Source) :
+    scopedStages live (mergeSources outer []) stages snapshot = scopedStages live outer stages snapshot := by
+  have guards : scopeCurrent live (mergeSources outer []) = scopeCurrent live outer := by
+    funext state
+    apply Bool.eq_iff_iff.mpr
+    simp [scopeCurrent, List.all_eq_true, mergeSources_mem]
+  simp only [scopedStages, guards]
+
 /-- Error interpretation reuses the same guarded callback boundary. An original
 failure is diagnostic data: neither a secondary error nor refusal can replace it.
 Classifier statuses are required to belong to the host's non-passing vocabulary;

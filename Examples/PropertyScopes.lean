@@ -3,6 +3,20 @@ import LeanPoo.Functional.PropertyScopes
 /-! Transient replay owners and new-run publication are distinct directories. -/
 open LeanPoo.Functional.PropertyTesting
 
+-- A decoder's own node has no sources, but inherited codec authority stops its mapper.
+example : scopedStages (fun epoch source : Nat => source != 0 || epoch == 0) [0]
+    [(fun _ => (.ok (9, (1, [])) : Except String (Nat × (Nat × List Nat)))),
+     (fun _ => .error "nested packing must not run")] (0, []) = .error none := rfl
+
+-- Codec and application ownership both participate throughout nested decoding.
+example : scopedStages (Cause := String) (fun _ _ : Nat => true)
+    (mergeSources [0] [1]) [fun state => .ok (9, state)] (0, []) = .ok ([9], (0, [])) := rfl
+
+-- An original decoder exception bypasses delivery and retains its identity.
+example : scopedStages (fun epoch source : Nat => source != 0 || epoch == 0) [0]
+    [(fun _ => (.error "original decoder cause" : Except String (Nat × (Nat × List Nat)))),
+     (fun _ => .error "delivery must not run")] (0, []) = .error (some "original decoder cause") := rfl
+
 -- Recipe replacement during error interpretation retires the normal status.
 example : classifyFailure (Secondary := String) (fun epoch : Nat => epoch == 0)
     (fun _ => .ok (.unsupported, 1)) "service unavailable" 0 =

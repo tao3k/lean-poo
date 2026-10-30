@@ -461,3 +461,12 @@ Six generic cases (103 independent cases total), the Record/Function recipe-retr
 FUN example and six `classifyFailure` laws cover classification, inspection,
 confirmed shrink progress and replay. See P35 in the PBT RFC for precise premises;
 this does not extend the domains, budgets or termination guarantees.
+
+
+P36 makes the portable codec's own check an inherited checked-action scope.
+Nested generation/domain/handoff work cannot continue after codec or application
+source retirement. Six generic regressions (109 isolated cases total), the typed
+service corpus Reader/FUN example, and two whole-execution scope laws cover refusal,
+original causes, cleanup, non-retention, fresh retry and replay. The existing codec
+and port boundaries remain: no arbitrary callback interruption or I/O rollback.
+See P36 in the PBT RFC for proof premises and costs.
