@@ -1,0 +1,99 @@
+#+TITLE: Source-bound materialized field objects
+
+* Problem and ownership
+
+The legacy =Object.Memoized= local recursive =table= in =Plan.buildThunks=
+is a recursive Lean function, not a heap knot. Generated native C calls the
+whole table builder from the self-lookup callback. Each dependency can therefore
+allocate another table. Compiling effective methods or caching reflected names
+does not establish sharing of field results. The old comments claiming one
+shared table have been corrected; arbitrary callbacks are not silently replaced.
+
+=Object.Dataflow= makes finite typed field dependencies explicit through the
+existing Functional =Computation= language. It is an object construction API:
+C4 inheritance, typed slots, defaults, delayed super and independent family
+ownership remain part of the definition. It does not introduce another evaluator.
+
+| Stage | Owner | Retained state |
+|-------+-------+----------------|
+| Declaration | Dataflow Builder / StrictBuilder | Typed literals and inspectable inherited fragments |
+| Source | Existing C4 graph and shared declaration merger | Exact node ownership and parent order |
+| Template | GeneralizedFragments and GeneralizedGraph | Effective field programs, dependency order and rank |
+| Executable preparation | ConstructionCache.Execution | Indexed resolvers and ordered dependency lists with all-key source equations |
+| Instance construction | Existing ConstructionCache | Actual materialized values, completed membership, evaluated/reused work records |
+| Public observation | Dataflow.Instance | Dependent indexed values, exact-source closure proof and declared inventory |
+| Admission | Existing Functional.ObjectContract | Structural and domain obligations over the actual instance |
+
+* Execution and revision
+
+A template compiles actual C4-selected code. Replaced inherited code is pruned
+before dependency analysis using =GeneralizedFragments.compile=. Dependencies
+without a provider become explicit absence nodes; they never acquire a reflected
+field name. Cycles and unknown opaque footprints refuse preparation.
+
+Construction uses the existing ranked materializer. Its transient state now
+uses a dependent hash table, with a kernel proof that indexed lookup has the
+same meaning as each prior =setSlot= update. Completed and supported keys use
+hash sets with exact list-membership equivalences. Work records prepend and
+reverse once. A shared dependency is materialized once and read from that state.
+
+The prepared Execution contains source-aligned resolver and dependency tables.
+Instance construction does not reanalyze the field AST or repeatedly scan source
+support for each resolver. The resulting instance table is a fixed point of the
+exact compiled graph. =Instance.reference= identifies it with the ranked closure
+by uniqueness; =read_reference= and =slotNames_exact= connect actual reads and
+reflection to that source. These are statements about runtime-owned values,
+not user-supplied labels or detached metadata.
+
+Revision checks the complete ordered support and dependency lists before reusing
+a schedule. Literal values and bodies may change. Each revised instance still
+materializes fresh values; previous instance values remain unchanged. A changed
+edge rejects schedule reuse and triggers checked scheduling. Reuse of values
+requires the existing ConstructionCache exact-resolver/invalidation premises;
+schedule identity alone never authorizes it.
+
+Under the hash-table backend assumptions, the intended materialization work is
+proportional to finite support, dependency edges and actual field program work.
+This is not a kernel machine-time bound. C4 preparation, dependency scheduling,
+list-based reflection checks, arbitrary pure callbacks and hash collisions have
+separate costs. The native cohort retains these costs in its full lifecycle.
+
+* Type and semantic boundary
+
+Every key fixes its value type. Computation's existential intermediate value
+families put inspectable programs and their templates in Type 1. ObjectContract
+Carrier and declarative predicates are universe polymorphic so admission uses
+the actual object. Ordinary IO still returns Type 0; native drivers pattern-match
+on pure prepared results rather than coercing or erasing typed objects.
+
+This API admits statically inspectable finite DAGs. Conditional programs use a
+conservative union of branch dependencies. It does not infer an arbitrary opaque
+callback's read set, admit general recursion, guarantee dynamic branch cycles
+are harmless, or equate every legacy partial callback with a finite program.
+No unsafe reference cycle or new axiom supplies its fixed-point equation.
+
+* Checks and downstream acceptance
+
+=just check-dataflow= builds and runs 13 native controls: current-self revision,
+parent preservation, missing input, cycle refusal, dead-parent pruning, topology
+error order, actual once-per-field work, structural Contract admission, duplicate
+slot/default refusal, disjoint families with delayed super, schedule revision,
+shared dependency work, changed-edge refusal and forged-projection refusal
+(the current-self control covers parent preservation together).
+Six declarations are audited against only propext, Classical.choice and Quot.sound.
+The native controls and Lean example are included in the existing full gate.
+
+=just benchmark-dataflow= runs the fixed same-cohort legacy compiled-thunk and
+materialized algorithms under 120-second process limits. The saved
+[[file:../performance/dataflow-algorithm-study.json][algorithm evidence]] includes every observation and executable/source identity.
+The first pair overlapped a semantic executable build and is retained as a
+non-isolated diagnostic. Two later alternating pairs have no task-owned build
+or test overlap. These records establish algorithm-study behavior; they do not
+establish Cedar application latency, Rust replay parity or remote CI acceptance.
+
+Cedar adoption is one all-domain migration: Policy, banking tools, controller
+release, pipeline source, lakehouse location, protection, disclosure, admission
+handoff and lineage. Preserve captured-template semantics, inherited self,
+Contract refusal order, all Case outputs and Rust replay. The application gate
+must compare the unchanged full Case catalog before any claim of closure.
+PR #8 remains open without auto-merge while that downstream work is pending.

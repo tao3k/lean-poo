@@ -276,6 +276,7 @@ check-example: check-compose
 # 120s / 2GiB / heartbeat limits remain; the other ordinary proofs stay parallel.
 [private]
 _check-examples:
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Examples/DataflowObject.lean
     timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Examples/SlotObservation.lean
     {{lean}} Examples/PrototypeCore.lean
     {{lean}} Examples/DictionaryRecords.lean
@@ -808,3 +809,18 @@ _check-native-result-index:
     .lake/build/bin/resultIndexScale indexed cycle uniform 8 32 17
     .lake/build/bin/resultIndexScale list tail collision 8 32 17
     .lake/build/bin/resultIndexScale indexed tail collision 8 32 17
+
+# Native source-bound field closure and negative controls.
+[private]
+_check-native-dataflow:
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/dataflowObject
+
+check-dataflow:
+    lake build dataflowObject
+    just _check-native-dataflow
+
+# Fixed algorithm cohort, separate from all application acceptance gates.
+benchmark-dataflow:
+    lake build legacyThunkShapeScale dataflowShapeScale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/legacyThunkShapeScale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/dataflowShapeScale

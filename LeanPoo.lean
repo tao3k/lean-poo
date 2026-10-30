@@ -184,6 +184,7 @@ import LeanPoo.Slots
 import LeanPoo.Object.Memo
 import LeanPoo.Object.StrictBuilder
 import LeanPoo.Object.Definition
+import LeanPoo.Object.Dataflow
 import LeanPoo.Object.Nested
 import LeanPoo.Object.SpecificationComposition
 import LeanPoo.Object.SharedFamily

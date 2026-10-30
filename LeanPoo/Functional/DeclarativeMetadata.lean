@@ -5,6 +5,7 @@ import LeanPoo.Functional.Validation
 Elaboration uses existing dispatch edits; invocation uses the supplied existing
 call operation. This advances generalized-prototype future work. -/
 namespace LeanPoo.Functional.DeclarativeMetadata
+universe u
 
 /-- Qualifiers remain in the actual typed Method body (including existing
 standard/qualified/simple contributions), rather than a second descriptive tag. -/
@@ -119,7 +120,7 @@ theorem Formula.check_ok_iff (formula : Formula Atom) (meaning : Atom → Prop) 
   · rintro ⟨evidence, _⟩; exact evidence.valid
   · intro valid; exact ⟨⟨valid⟩, by simp [check, valid]⟩
 
-structure Predicate (Value : Type) where
+structure Predicate (Value : Type u) where
   name : String
   holds : Value → Prop
   decide : DecidablePred holds

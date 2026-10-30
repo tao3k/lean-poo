@@ -4,6 +4,7 @@ import LeanPoo.Functional.DeclarativeMetadata
 /-! Finite structural value contracts over an explicitly supplied object view.
 This models recognizers/diagnostics, not a Scheme runtime or subtype inference. -/
 namespace LeanPoo.Functional.ObjectContract
+universe u
 open ObjectDiagnostics
 /-- Field-specific diagnostics retain an explicit path; raw user values are absent. -/
 inductive Issue (Key Detail : Type) where
@@ -20,14 +21,14 @@ structure Field (Key Value Detail : Type) where
 /-- Object observation is an adapter premise. Names enumerate actual public slots;
 lookup distinguishes absence from a stored false/null value. Prototype checking
 is supplied by the existing object protocol, rather than inferred from shape. -/
-structure View (Carrier Key Value : Type) where
+structure View (Carrier : Type u) (Key Value : Type) where
   isObject : Carrier → Bool
   prototype : Carrier → Bool
   names : Carrier → List Key
   lookup : Carrier → Key → Option Value
 /-- Strict inventory rejects extra names; delegation leaves inventory policy to
 explicit whole-value constraints. At least one constraint is required in Scheme. -/
-structure Contract (Carrier Key Value Detail : Type) where
+structure Contract (Carrier : Type u) (Key Value Detail : Type) where
   view : View Carrier Key Value
   fields : List (Field Key Value Detail)
   strict : Bool
