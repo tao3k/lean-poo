@@ -425,3 +425,11 @@ last-stage revision, fresh result/state preservation and suppression of later
 stages. `Examples/PropertyScopes.lean` exercises false and tuple values. Faithful
 host stage/state encoding, pure observers and serial terminating callbacks remain
 premises; host cleanup is tested in Gerbil rather than proved by these laws.
+
+
+PBT RFC P32 adds eight nested admission/publication laws to `PropertyScopes.lean`.
+Primitive actions require ancestor and local authority; terminal diagnostic
+reports are checked under the parent after child scope unwinding. `nestedActions`
+reuses `guardedThen`, and report publication reuses `guardedGeneration`. Accurate
+pure observers, serial callbacks and faithful host scope encoding remain premises;
+host continuation/cleanup and transactional port behavior are not verified.

@@ -160,4 +160,76 @@ theorem guardedThen_refused (live : State → Bool)
     (guardedThen live first next state >>= later) = .error cause := by
   rw [refused]; rfl
 
+/-- Primitive actions inherit both ancestor authority and the child domain.
+Terminal diagnostic reports have a separate parent-only publication boundary. -/
+def nestedActions (parent child : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State) :
+    Except (Option Cause) (Output × State) :=
+  guardedThen (fun state => parent state && child state) first next state
+
+/-- A fresh child cannot authorize callbacks beneath an obsolete parent. -/
+theorem nestedActions_parent_stale (parent child : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State)
+    (stale : parent state = false) : nestedActions parent child first next state = .error none := by
+  apply guardedThen_preflight
+  simp [stale]
+
+/-- Ancestor freshness does not remove the child's own admission requirement. -/
+theorem nestedActions_local_stale (parent child : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State)
+    (stale : child state = false) : nestedActions parent child first next state = .error none := by
+  apply guardedThen_preflight
+  simp [stale]
+
+/-- Parent revision stops later fields, packing and portable stages. -/
+theorem nestedActions_parent_revised (parent child : State → Bool) (state after : State)
+    (value : Value) (next : Value → State → Except Cause (Output × State))
+    (before : parent state = true) (own : child state = true) (stale : parent after = false) :
+    nestedActions parent child (fun _ => .ok (value, after)) next state = .error none := by
+  apply guardedThen_revised
+  · simp [before, own]
+  · simp [stale]
+
+/-- A child revision still suppresses the continuation when the parent stays live. -/
+theorem nestedActions_local_revised (parent child : State → Bool) (state after : State)
+    (value : Value) (next : Value → State → Except Cause (Output × State))
+    (before : parent state = true) (own : child state = true) (stale : child after = false) :
+    nestedActions parent child (fun _ => .ok (value, after)) next state = .error none := by
+  apply guardedThen_revised
+  · simp [before, own]
+  · simp [stale]
+
+/-- Thrown callback causes are not replaced by trailing source checks. -/
+theorem nestedActions_cause (parent child : State → Bool) (state : State) (cause : Cause)
+    (next : Value → State → Except Cause (Output × State))
+    (before : parent state = true) (own : child state = true) :
+    nestedActions parent child (fun _ => .error cause) next state = .error (some cause) := by
+  apply guardedThen_cause
+  simp [before, own]
+
+/-- Fresh nested execution leaves values and state unchanged. -/
+theorem nestedActions_present (parent child : State → Bool) (state middle after : State)
+    (value : Value) (output : Output) (p₀ : parent state = true) (l₀ : child state = true)
+    (p₁ : parent middle = true) (l₁ : child middle = true)
+    (p₂ : parent after = true) (l₂ : child after = true) :
+    nestedActions (Cause := Cause) parent child (fun _ => .ok (value, middle))
+      (fun _ _ => .ok (output, after)) state = .ok (output, after) := by
+  apply guardedThen_present <;> simp_all
+
+/-- Even an early child diagnostic return must pass ancestor publication. -/
+theorem nestedReport_parent_revised (parent : State → Bool) (state after : State)
+    (diagnostic : Value) (before : parent state = true) (stale : parent after = false) :
+    guardedGeneration parent (fun _ => (.ok (diagnostic, after) : Except Cause (Value × State))) state =
+      .error none := guardedGeneration_revised parent state after diagnostic before stale
+
+/-- A valid ancestor may receive any child diagnostic status. No child-current
+check is re-entered at this boundary, so child refusal cannot call its own guard. -/
+theorem nestedReport_diagnostic (parent : State → Bool) (state after : State)
+    (diagnostic : Value) (before : parent state = true) (fresh : parent after = true) :
+    guardedGeneration parent (fun _ => (.ok (diagnostic, after) : Except Cause (Value × State))) state =
+      .ok (diagnostic, after) := guardedGeneration_state parent state after diagnostic before fresh
+
 end LeanPoo.Functional.PropertyTesting

@@ -36,3 +36,13 @@ example : guardedThen (fun _ : Nat => true)
 example : guardedThen (fun epoch : Nat => epoch == 0)
     (fun _ => (.ok (false, 0) : Except String (Bool × Nat)))
     (fun _ _ => .ok (true, 1)) 0 = .error none := rfl
+
+-- A child domain remains locally fresh; ancestor revision still blocks packing.
+example : nestedActions (fun epoch : Nat => epoch == 0) (fun _ => true)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ _ => (.error "packing must not run" : Except String (Nat × Nat))) 0 = .error none := rfl
+
+-- A diagnostic is allowed under a live parent without re-running its local guard.
+example : guardedGeneration (fun _ : Nat => true)
+    (fun _ => (.ok ("child-stale", 1) : Except String (String × Nat))) 0 =
+      .ok ("child-stale", 1) := rfl

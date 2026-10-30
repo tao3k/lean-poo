@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P31. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P32. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. Historical audit identities below remain historical receipts.
@@ -1344,3 +1344,54 @@ using Gerbil's existing scoped checks for this project's registered revisions.
 Source checking adds active-ledger/graph walks at primitive boundaries; no
 zero-cost or timing improvement is claimed. No process, search, observation,
 depth, node or proposal limit is widened, and complete local/CI gates remain.
+
+## P32: ancestor admission through nested domains, products and replay
+
+The scope audit reproduced late refusal across otherwise valid child protocols:
+a typed product's first shrink callback ended its enclosing specification, but
+the product still packed two results and invoked the second field shrink before
+the outer run reported stale. The fixed control performs zero packs and zero
+later shrinks. Parent sources here are explicitly declared; hidden mutation,
+universal callback termination and arbitrary carrier-law discovery are not gaps.
+
+The existing `with-current` action form now uses `with-sources` to inherit active
+producer leaves and run-local checks before/after each domain action. Product
+representation/value-shrink callbacks and portable codec stages reuse that same
+boundary. No context objects, callback registries, runner or alternative module
+interface are introduced. Existing local currentness, causes and natural budgets
+remain. A valid child cannot refresh an obsolete ancestor's authority.
+
+Execution and inspection additionally check normal child report publication
+outside their local catch/finish scopes. An early local stale/error report must
+unwind its own checker before the ancestor is observed; otherwise that check can
+be bypassed or recursively call its own refusal. Child diagnostic reports remain
+data: a live ancestor may receive a child's stale diagnostic, while an obsolete
+ancestor stops the enclosing action before subsequent user effects. A thrown
+action exception retains its exact cause; converting an exception into a child
+report does not bypass the parent's normal-return admission.
+
+Five independent cases cover producer-owned product measures, simultaneous
+parent/child refusal in checks and inspection with balanced cleanup, reconfirm/
+encode/decode refusal before later work or port writes, exact codec exceptions,
+and finite fresh nesting with empty products. The independent library runs 97
+standard cases. `examples/generated-products.ss` keeps typed product examples
+out of the already large batch module: shared Record/Function leaves compose
+through FUN, refuse before packing, preserve wrapping, and shrink/replay after
+fresh preparation. Separate controls cover unpack, per-field measure and pack.
+All use the existing standard TestSuite and modules; no test runner is added.
+
+Eight additional laws in `PropertyScopes.lean` reuse `guardedThen` and
+`guardedGeneration`: parent/local preflight, parent/local revision suppression,
+original callback causes, exact fresh values/state, ancestor refusal on a child
+report return, and parent-valid diagnostic delivery. The last boundary observes
+only the ancestor; it does not re-enter the terminated child's checker. These
+are serial callback laws under accurate pure observer and faithful scope-unwind
+premises. They do not prove host continuations, resource cleanup, callback
+termination, GC, arbitrary mutation or concurrent linearizability. Codec I/O is
+still nontransactional: failures during a write may leave partial bytes.
+
+Rackcheck's [lazy mapping/filter composition](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/shrink-tree.rkt)
+remains the structural reference; registered source inheritance is this project's
+extension. Active ancestor walks add bounded-by-context checking work; no timing
+or zero-cost improvement is claimed. Process and search limits, complete checks
+and current-head CI remain unchanged.
