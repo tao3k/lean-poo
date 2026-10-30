@@ -138,3 +138,15 @@ example : admitRendering true (⟨.passed, true, [], none⟩ : CheckDiagnostics 
 -- Missing execution is not authorized by diagnostics that happen to say passed.
 example : admitRendering false (⟨.passed, true, [], none⟩ : CheckDiagnostics Nat String)
     (fun _ : Nat => true) (fun s => .ok (CheckStatus.passed, s)) 0 = .error (.error, none) := rfl
+
+-- A retained finite service table cannot bypass the retired caller's epoch.
+example : callFunction (fun epoch : Nat => epoch == 0) (fun _ => true)
+    "unknown request" [(0, [4, 5]), (1, [8, 9])] 0 1 = .error none := rfl
+
+-- The same immutable table is usable under a separately authorized fresh caller.
+example : callFunction (fun _ : Nat => true) (fun _ => true)
+    "unknown request" [(0, [4, 5]), (1, [8, 9])] 0 1 = .ok ([4, 5], 1) := rfl
+
+-- Refreshing the caller still cannot manufacture a value for an absent raw row.
+example : callFunction (fun _ : Nat => true) (fun _ => true)
+    "unknown request" [(0, [4, 5]), (1, [8, 9])] 2 1 = .error (some "unknown request") := rfl

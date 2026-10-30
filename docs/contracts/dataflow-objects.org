@@ -47,18 +47,48 @@ reverse once. A shared dependency is materialized once and read from that state.
 
 The prepared Execution contains source-aligned resolver and dependency tables.
 Instance construction does not reanalyze the field AST or repeatedly scan source
-support for each resolver. The resulting instance table is a fixed point of the
-exact compiled graph. =Instance.reference= identifies it with the ranked closure
+support for each resolver. The instance takes ownership of the materializer's actual field index instead
+of allocating a second table and copying every field. =materializePartial= is
+the same construction loop used by the ordinary =materialize/start= interfaces;
+=finish= still checks complete support before publication. =finish_state= and
+=indexed_get?= prove the published entries are exactly that closed state,
+including absence. No reference-closure evaluator reconstructs these values.
+The resulting instance table is a fixed point of the exact compiled graph. =Instance.reference= identifies it with the ranked closure
 by uniqueness; =read_reference= and =slotNames_exact= connect actual reads and
 reflection to that source. These are statements about runtime-owned values,
 not user-supplied labels or detached metadata.
 
-Revision checks the complete ordered support and dependency lists before reusing
-a schedule. Literal values and bodies may change. Each revised instance still
-materializes fresh values; previous instance values remain unchanged. A changed
-edge rejects schedule reuse and triggers checked scheduling. Reuse of values
-requires the existing ConstructionCache exact-resolver/invalidation premises;
-schedule identity alone never authorizes it.
+Fresh structural revisions still add a real node and run C4 validation. For a
+fresh, default-free prefix with the certified parent precedence, =resolve_prefix=
+proves the exact new open-self meaning from the complete declaration frame.
+=CompiledPlan.overlay= persistently updates only direct methods; duplicate direct
+writes all inherit the parent table and the last direct write wins. New fields,
+defaults or other topology retain the canonical preparation path.
+
+Empty prefixes additionally use =allSlots_empty_prefix=: no second inventory
+scan, method table, field-code index, dependency analysis, schedule or execution
+table is allocated. The new template retains its actual new plan/source and
+shares preparation only. Literal overlays use the new node's existing
+=PreparedDeclaration.code= owner, avoiding a second lowering of that declaration. Each instance still executes fresh materialization.
+
+Direct replacement lowers to a constant method. =SlotSpec.withParent= specializes
+non-inheriting method forms at preparation time and has an exact composition law;
+the overlay drops inherited closures for constant, thunk and self methods. This
+avoids resolving a parent code chain merely to discard it. Computed methods keep
+their delayed inherited semantics.
+
+The template's metadata invariant states exact plan binding and complete inventory;
+=CompiledPlan.sound= certifies every retained method for every open self.
+=Template.code_source= links the actual graph code to that exact plan. Requiring
+storage identity with a newly allocated hash table would prevent valid persistent
+sharing without strengthening these semantic guarantees.
+
+Schedule reuse checks complete ordered support and that every new read edge was
+already present. =Scheduled.restrict= proves retained ranks are valid when literal
+replacement removes dependencies. New edges trigger checked scheduling; opaque
+footprints still refuse preparation. Existing values and admission results are
+never reused on this basis. Literal prefixes still rebuild the selected graph
+code/execution indexes; their cost remains visible in the application receipts.
 
 Under the hash-table backend assumptions, the intended materialization work is
 proportional to finite support, dependency edges and actual field program work.
@@ -82,13 +112,15 @@ No unsafe reference cycle or new axiom supplies its fixed-point equation.
 
 * Checks and downstream acceptance
 
-=just check-dataflow= builds and runs 13 native controls: current-self revision,
+=just check-dataflow= builds and runs 16 native controls: current-self revision,
 parent preservation, missing input, cycle refusal, dead-parent pruning, topology
 error order, actual once-per-field work, structural Contract admission, duplicate
 slot/default refusal, disjoint families with delayed super, schedule revision,
 shared dependency work, changed-edge refusal and forged-projection refusal
-(the current-self control covers parent preservation together).
-Eight declarations are audited against only propext, Classical.choice and Quot.sound.
+(the current-self control covers parent preservation together). Three further
+controls cover full-preparation parity across eight revision shapes, topology
+refusal and rank reuse after literal edge removal.
+The source-binding, revision, specialization and construction declarations are audited against only propext, Classical.choice and Quot.sound.
 The native controls and Lean example are included in the existing full gate.
 
 =just benchmark-dataflow= runs the fixed same-cohort legacy compiled-thunk and

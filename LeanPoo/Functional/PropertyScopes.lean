@@ -615,4 +615,72 @@ theorem admitRendering_authority (present : Bool) (actual : CheckDiagnostics Val
       exact ⟨rfl, passed, components.1, components.2⟩
     · simp [admitRendering, available, passed] at success
 
+/-- Finite function observations inherit call-site authority without storing it
+in the retained table. The shared action gate also owns table/domain export. -/
+def observeFunction (parent owner : State → Bool)
+    (observe : State → Except Cause (Value × State)) (state : State) :=
+  guardedGeneration (fun snapshot => parent snapshot && owner snapshot) observe state
+
+/-- An obsolete caller cannot reach a table observation, even with a live table. -/
+theorem observeFunction_parent_refused (parent owner : State → Bool)
+    (observe : State → Except Cause (Value × State)) (state : State)
+    (stale : parent state = false) :
+    observeFunction parent owner observe state = .error none := by
+  simp [observeFunction, guardedGeneration, stale]
+
+/-- A fresh caller cannot authorize a table whose retained owner is obsolete. -/
+theorem observeFunction_owner_refused (parent owner : State → Bool)
+    (observe : State → Except Cause (Value × State)) (state : State)
+    (stale : owner state = false) :
+    observeFunction parent owner observe state = .error none := by
+  simp [observeFunction, guardedGeneration, stale]
+
+/-- Current observation preserves the exact payload and continuation state. -/
+theorem observeFunction_stable (parent owner : State → Bool)
+    (state after : State) (value : Value)
+    (before : (parent state && owner state) = true)
+    (later : (parent after && owner after) = true) :
+    observeFunction parent owner (fun _ => (.ok (value, after) : Except Cause (Value × State))) state =
+      .ok (value, after) := by
+  simp [observeFunction, guardedGeneration, before, later]
+
+/-- Retirement before normal return cannot publish a successful observation. -/
+theorem observeFunction_revised (parent owner : State → Bool)
+    (state after : State) (value : Value)
+    (before : (parent state && owner state) = true) (later : parent after = false) :
+    observeFunction parent owner (fun _ => (.ok (value, after) : Except Cause (Value × State))) state =
+      .error none := by
+  simp [observeFunction, guardedGeneration, before, later]
+
+/-- Callback failure is kept exactly; source admission does not replace its cause. -/
+theorem observeFunction_cause (parent owner : State → Bool)
+    (state : State) (cause : Cause) (before : (parent state && owner state) = true) :
+    observeFunction parent owner (fun _ => (.error cause : Except Cause (Value × State))) state =
+      .error (some cause) := by
+  simp [observeFunction, guardedGeneration, before]
+
+/-- Finite dispatch reuses the established exact-row lookup, with an explicit
+missing-row failure rather than a fallback output or unconstrained result type. -/
+def callFunction [DecidableEq Input] (parent owner : State → Bool) (missing : Cause)
+    (table : List (Input × Output)) (input : Input) (state : State) :=
+  observeFunction parent owner (fun snapshot =>
+    match lookupFunction table input with
+    | none => .error missing
+    | some value => .ok (value, snapshot)) state
+
+/-- Fresh dispatch returns precisely the existing table's selected result. -/
+theorem callFunction_known [DecidableEq Input] (parent owner : State → Bool) (missing : Cause)
+    (table : List (Input × Output)) (input : Input) (state : State) (value : Output)
+    (fresh : (parent state && owner state) = true) (found : lookupFunction table input = some value) :
+    callFunction parent owner missing table input state = .ok (value, state) := by
+  simp [callFunction, observeFunction, guardedGeneration, fresh, found]
+
+/-- Missing finite rows stay errors under a fresh caller, never generated defaults. -/
+theorem callFunction_unknown [DecidableEq Input] (parent owner : State → Bool) (missing : Cause)
+    (table : List (Input × Output)) (input : Input) (state : State)
+    (fresh : (parent state && owner state) = true)
+    (absent : ∀ entry ∈ table, input ≠ entry.1) :
+    callFunction parent owner missing table input state = .error (some missing) := by
+  simp [callFunction, observeFunction, guardedGeneration, fresh, unknown_function_row table absent]
+
 end LeanPoo.Functional.PropertyTesting

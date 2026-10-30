@@ -386,6 +386,8 @@ _check-examples:
     {{lean}} Examples/PropertyFilters.lean
     {{lean}} Examples/PropertyScopes.lean
     {{lean}} Examples/PropertySequences.lean
+    {{lean}} Examples/PropertyReplay.lean
+    {{lean}} Examples/PropertyNumbers.lean
     {{lean}} Examples/PropertySizes.lean
     {{lean}} Examples/PropertyTraces.lean
     {{lean}} Examples/RecursiveGenerators.lean

@@ -56,6 +56,19 @@ def SlotSpec.eval (spec : SlotSpec Self α) (self : Self)
 def SlotSpec.toMethod (spec : SlotSpec Self α) : Method Self α :=
   fun self inherited => spec.eval self inherited
 
+/-- Specialize at preparation time. Non-inheriting specifications do not
+retain the parent method closure; computed methods keep delayed super. -/
+def SlotSpec.withParent (spec : SlotSpec Self α) (parent : Method Self α) : Method Self α :=
+  match spec with
+  | .constant value => fun _ _ => value
+  | .thunk value => fun _ _ => value ()
+  | .self compute => fun self _ => compute self
+  | .computed compute => fun self inherited => compute self (fun _ => parent self inherited)
+
+theorem SlotSpec.withParent_eq (spec : SlotSpec Self α) (parent : Method Self α) :
+    spec.withParent parent = Method.compose spec.toMethod parent := by
+  cases spec <;> rfl
+
 /-- The common inherited-value modifier represented by the computed form. -/
 def SlotSpec.modify (f : α → α) : SlotSpec Self α :=
   .computed (fun _ next => f (next ()))
