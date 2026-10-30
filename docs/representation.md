@@ -1059,3 +1059,25 @@ when this routing fits within the preparation saved. The example with routing
 127 against savings 126 deliberately rejects an improvement. These are finite
 source-work laws in one abstract unit, not physical allocation, GC, compiler or
 macOS wall-clock proofs. Fixed-source full-entry controls qualify those separately.
+
+## Suite-local syntax and interrupted build outputs
+
+Gerbil's standard `test-suite` expands to a `TestSuite` whose body is already a
+lexical lambda (`std/test/unit.ss`). Six test-private macro groups now live in
+that body: fq, polynomial, trie, parameters, support and type checks. No extra
+wrapper or loader is needed. Shared table-testing syntax and six class/structure
+metadata owners remain required. The standard module inventory regression checks
+that the six eliminated transformer images are absent after full imports.
+
+`observeSuiteCases_expansion` preserves ordered case outcomes and state when the
+before/after case functions agree. `modulePreparation_lexical` counts precisely
+the eliminated distinct names, retaining all required images. These laws assume
+faithful expansion and unchanged runtime behavior; they do not verify the compiler,
+initializer effects, dyld, GC or physical elapsed time.
+
+An interrupted backend can leave make's interface/static freshness markers while
+its runtime object is missing. Failed test-package preparation therefore invokes
+standard `gerbil clean` through the same declarations, retaining the original
+failure status. `BuildOutputs.invalidate_requires_build` and the missing-runtime
+negative control separate invalidating freshness from repairing an object. Only
+subsequent successful builds and natural, error-free test exits admit the result.

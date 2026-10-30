@@ -777,4 +777,30 @@ example : optionalModuleEntry (E := String) (Value := Bool) (some ["name:", "mar
     (fun _ => .ok ()) (fun _ => .ok (fun row => .ok (decide (row.length = 0)))) =
       ([.load, .resolve, .invoke], .ok (some false)) := rfl
 
+/-- Only the six checked suite helpers leave the import closure. Shared syntax
+and class metadata remain required; there is no operating-system timing claim. -/
+example :
+    (modulePreparation false (["runtime", "shared-syntax", "class-metadata"] ++
+      ["fq~1", "polynomial~1", "trie~1", "parameters~1", "support~1", "type~1"])).entryDynamicLoads =
+      (modulePreparation false ["runtime", "shared-syntax", "class-metadata"]).entryDynamicLoads + 6 :=
+  (modulePreparation_lexical _ _ (by decide)).2.2
+
+/-- Interrupted backend work can leave a fresh marker. Standard clean requests
+recompilation without pretending to repair the missing runtime image itself. -/
+example : (BuildOutputs.mk true false).needsBuild = false ∧
+    (BuildOutputs.mk true false).invalidate.needsBuild = true ∧
+    (BuildOutputs.mk true false).invalidate.runtimeReady = false := by decide
+
+/-- Overlap is not a second image and does not satisfy the removal premise. -/
+example : ¬ (["runtime", "class-metadata"] ++ ["class-metadata"]).Nodup ∧
+    (modulePreparation false (["runtime", "class-metadata"] ++ ["class-metadata"])).entryDynamicLoads = 2 := by
+  decide
+
+/-- The existing suite observer keeps false, refusal and the later retry, with
+all three state transitions. Lexical expansion may not discard the middle case. -/
+example : observeSuiteCases [[[1, 0, 2]]]
+    (fun (input state : Nat) =>
+      ((if input = 0 then Except.error "refused" else .ok (input % 2 == 0)), state + 1)) 0 =
+      ([.ok false, .error "refused", .ok true], 3) := rfl
+
 end LeanPoo.Examples.Representation

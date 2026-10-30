@@ -769,6 +769,21 @@ theorem modulePreparation_linked (common : List String) :
 theorem modulePreparation_dynamic (common : List String) :
     (modulePreparation false common).entryDiscoveries = common.eraseDups.length := rfl
 
+/-- After faithful lexical expansion, disjoint unused transformer images can
+leave the import closure. Required runtime/type metadata remains in `required`.
+This exact source-count law requires a checked inventory and unchanged runtime
+behavior; it does not authorize removing arbitrary initializer effects. -/
+theorem modulePreparation_lexical (required eliminated : List String)
+    (distinct : (required ++ eliminated).Nodup) :
+    (modulePreparation false (required ++ eliminated)).entryInitializers =
+        (modulePreparation false required).entryInitializers + eliminated.length ∧
+    (modulePreparation false (required ++ eliminated)).entryDiscoveries =
+        (modulePreparation false required).entryDiscoveries + eliminated.length ∧
+    (modulePreparation false (required ++ eliminated)).entryDynamicLoads =
+        (modulePreparation false required).entryDynamicLoads + eliminated.length := by
+  simp [modulePreparation, uniquePreparationNames _ distinct,
+    uniquePreparationNames _ (List.nodup_append.mp distinct).1]
+
 /-- Combine disjoint already-checked common dependency partitions. Compiler
 closure enumeration establishes disjointness; this is only source-level counts. -/
 def addPreparation (left right : ModulePreparation) : ModulePreparation :=

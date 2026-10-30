@@ -153,6 +153,61 @@ theorem observeSuiteCases_regroup {α β ε σ : Type} (modules : List (List (Li
     observeSuiteCases [modules.flatten] run initial = observeSuiteCases modules run initial := by
   simp [observeSuiteCases]
 
+/-- Lexical expansion may remove transformer metadata only when every case keeps
+its complete state/result behavior. Existing module/suite boundaries and ordered
+refusals are preserved; this premise does not verify the Gerbil expander. -/
+theorem observeSuiteCases_expansion {α β ε σ : Type} (modules : List (List (List α)))
+    (before after : α → StateM σ (Except ε β))
+    (same : ∀ input state, before input state = after input state) (initial : σ) :
+    observeSuiteCases modules before initial = observeSuiteCases modules after initial := by
+  have equal : before = after := by funext input state; exact same input state
+  rw [equal]
+
+/-- A checked distinct image inventory already has the standard deduplicated
+form. This counts declared names, not paths, mappings or operating-system work. -/
+theorem uniquePreparationNames (names : List String) (distinct : names.Nodup) :
+    names.eraseDups = names := by
+  induction names with
+  | nil => rfl
+  | cons name rest ih =>
+    have hd := List.nodup_cons.mp distinct
+    have filtered : rest.filter (fun other => !other == name) = rest := by
+      apply List.filter_eq_self.mpr
+      intro other member
+      have different : other ≠ name := fun same => hd.1 (same ▸ member)
+      simp [different]
+    rw [List.eraseDups_cons, filtered, ih hd.2]
+
+/-- Abstract observations of standard make's declared outputs and runtime
+admission. A fresh interface/static marker alone does not certify its backend
+image. This is a ghost state, not a Scheme-side cache or output registry. -/
+structure BuildOutputs where
+  declaredFresh : Bool
+  runtimeReady : Bool
+  deriving DecidableEq, Repr
+
+/-- Standard clean invalidates declared freshness; it need not erase every
+numbered runtime object. Successful cleanup is a premise of this transition. -/
+def BuildOutputs.invalidate (outputs : BuildOutputs) : BuildOutputs :=
+  { outputs with declaredFresh := false }
+
+/-- The existing make freshness decision must request compilation again. -/
+def BuildOutputs.needsBuild (outputs : BuildOutputs) : Bool := !outputs.declaredFresh
+
+/-- Cleaning after refused preparation prevents reusing a surviving marker. -/
+theorem BuildOutputs.invalidate_requires_build (outputs : BuildOutputs) :
+    outputs.invalidate.needsBuild = true := rfl
+
+/-- Invalidating the marker is not evidence that a runtime image was repaired. -/
+theorem BuildOutputs.invalidate_runtime (outputs : BuildOutputs) :
+    outputs.invalidate.runtimeReady = outputs.runtimeReady := rfl
+
+/-- A cache hit and missing runtime image can coexist after interrupted output.
+Loader/test receipts must therefore remain independent of make's freshness test. -/
+theorem BuildOutputs.fresh_not_runtime :
+    ∃ outputs : BuildOutputs, outputs.needsBuild = false ∧ outputs.runtimeReady = false :=
+  ⟨⟨true, false⟩, rfl, rfl⟩
+
 /-- Merge only an adjacent functional group, retaining the untouched prefix and
 suffix. Ordered results and final state are preserved even when earlier cases
 refuse. As above, module fixtures and initialization effects are excluded. -/
