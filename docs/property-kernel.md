@@ -550,3 +550,16 @@ the same table under obsolete and fresh callers. The independent Scheme suite
 requires 127 cases; the Record/Function FUN example includes shrinking, both replay
 forms and portable handoff. These are finite protocol laws, not verification of
 arbitrary callbacks, Scheme dynamic scope or runtime concurrency.
+
+P44 covers portable data-copy preparation in PropertyReplay. Each vector first
+spends its root, then requires destination width to fit the remaining child-node
+credits and nonempty children to have positive depth. Eight laws prove shared
+accounting, minimum cost, necessary preflight, refusal before allocation, empty
+admission, exact admitted action/error preservation and the width bound. Top-level
+examples include exact-fit and one-short budgets. The Scheme counterpart uses
+official forward vector-fold/index without full source/result lists. Five generic
+controls raise isolated acceptance to 132 cases; a contracted Record/FUN service
+exercises failed encoding, obsolete codec refusal and same-budget fresh replay.
+The bounds concern logical copy units and individual admitted destination width;
+faithful finite cost profiles, host allocation and parser/encoder behavior remain
+premises. No GC, byte-heap, timing or Scheme runtime verification is claimed.

@@ -1,6 +1,6 @@
 # RFC: model-driven collection property tests
 
-Current finite acceptance includes P0–P43. The companion Gerbil RFC owns the
+Current finite acceptance includes P0–P44. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
 Lean laws. P39 extends inherited typed-fixture declaration scope; P40 unifies
@@ -23,6 +23,14 @@ refusal, stable results, retirement, original errors and present/absent rows.
 The companion's independent suite requires 127 cases, with contracted Record/FUN
 retry, shrinking and portable replay. Runtime dynamic-scope fidelity, truthful
 observers and finite serial terminating actions remain premises.
+
+P44 closes portable vector copying before destination allocation/child inspection.
+PropertyReplay adds eight finite credit/preparation laws in the existing namespace:
+shared accounting, minimum width, necessary preflight, width/depth refusal, empty
+admission and exact admitted results/errors. The standard companion copier uses
+Gerbil's forward vector-fold/index; isolated acceptance requires 132 cases plus a
+contracted Record/FUN corpus retry. Host readers, encoders, allocator bytes and GC
+remain outside these logical-credit proofs; no wall-clock improvement is claimed.
 
 - Status: implemented; finite acceptance and evidence boundaries are recorded below.
 - Date: 2026-10-27.
