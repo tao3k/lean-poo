@@ -47,8 +47,13 @@ reverse once. A shared dependency is materialized once and read from that state.
 
 The prepared Execution contains source-aligned resolver and dependency tables.
 Instance construction does not reanalyze the field AST or repeatedly scan source
-support for each resolver. The resulting instance table is a fixed point of the
-exact compiled graph. =Instance.reference= identifies it with the ranked closure
+support for each resolver. The instance takes ownership of the materializer's actual field index instead
+of allocating a second table and copying every field. =materializePartial= is
+the same construction loop used by the ordinary =materialize/start= interfaces;
+=finish= still checks complete support before publication. =finish_state= and
+=indexed_get?= prove the published entries are exactly that closed state,
+including absence. No reference-closure evaluator reconstructs these values.
+The resulting instance table is a fixed point of the exact compiled graph. =Instance.reference= identifies it with the ranked closure
 by uniqueness; =read_reference= and =slotNames_exact= connect actual reads and
 reflection to that source. These are statements about runtime-owned values,
 not user-supplied labels or detached metadata.
@@ -63,7 +68,8 @@ defaults or other topology retain the canonical preparation path.
 Empty prefixes additionally use =allSlots_empty_prefix=: no second inventory
 scan, method table, field-code index, dependency analysis, schedule or execution
 table is allocated. The new template retains its actual new plan/source and
-shares preparation only. Each instance still executes fresh materialization.
+shares preparation only. Literal overlays use the new node's existing
+=PreparedDeclaration.code= owner, avoiding a second lowering of that declaration. Each instance still executes fresh materialization.
 
 Direct replacement lowers to a constant method. =SlotSpec.withParent= specializes
 non-inheriting method forms at preparation time and has an exact composition law;

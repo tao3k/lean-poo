@@ -103,17 +103,20 @@ theorem Source.schema_declaration (source : Source Key Value) (name : String) :
   | none => simp [schema,declaration,found]
   | some prepared => simp [schema,declaration,found,prepared.aligned]
 
-def Source.add (source : Source Key Value) (node : C4.Node) (declaration : Declaration Key Value) :
+def Source.addPrepared (source : Source Key Value) (node : C4.Node)
+    (prepared : PreparedDeclaration Key Value) :
     Source Key Value :=
-  let prepared := declaration.prepare
   ⟨⟨source.graph.nodes ++ [node]⟩,
     fun query => if query == node.name then some prepared else source.prepared query⟩
+
+def Source.add (source : Source Key Value) (node : C4.Node) (declaration : Declaration Key Value) :
+    Source Key Value := source.addPrepared node declaration.prepare
 
 /-- An extension preserves the exact prepared owner of every other node. -/
 theorem Source.add_prepared_frame (source : Source Key Value) (node : C4.Node)
     (declaration : Declaration Key Value) (name : String) (different : name ≠ node.name) :
     (source.add node declaration).prepared name = source.prepared name := by
-  simp [add,different]
+  simp [add,addPrepared,different]
 
 
 variable [DecidableEq Key] [BEq Key] [LawfulBEq Key] [Hashable Key]
@@ -287,7 +290,8 @@ prefixes share the complete prepared graph/schedule/execution. Every path still
 validates the new topology and binds the complete inventory to the new source. -/
 def Template.prepareExtension (prior : Template Key Value) (node : C4.Node)
     (declaration : Declaration Key Value) : Except (Error Key) (Template Key Value) :=
-  let source := prior.source.add node declaration
+  let prepared := declaration.prepare
+  let source := prior.source.addPrepared node prepared
   match built : Object.compile source.schema node.name with
   | .error error => .error (.topology error)
   | .ok plan =>
@@ -300,14 +304,14 @@ def Template.prepareExtension (prior : Template Key Value) (node : C4.Node)
       if fresh : node.name ∉ prior.plan.precedence then
         if order : plan.precedence = node.name :: prior.plan.precedence then
           have selected : plan.schema.declaration node.name = some declaration.metadata := by
-            simp [aligned, source, Source.schema, Source.add, Declaration.prepare]
+            simp [aligned, source, Source.schema, Source.addPrepared, prepared, Declaration.prepare]
           have frame : ∀ name ∈ prior.plan.precedence,
               plan.schema.declaration name = prior.plan.schema.declaration name := by
             intro name member
             have different : name ≠ node.name := by
               intro same; exact fresh (same ▸ member)
             rw [aligned, prior.sourceAligned]
-            simp [source, Source.schema, Source.add, different]
+            simp [source, Source.schema, Source.addPrepared, different]
           have equation := fun key self => plan.resolve_prefix prior.plan node.name
             declaration.metadata order selected
             (by simp [Declaration.metadata, List.isEmpty_iff.mp defaults]) frame key self
@@ -330,7 +334,7 @@ def Template.prepareExtension (prior : Template Key Value) (node : C4.Node)
               prior.graph,prior.graphAligned,prior.scheduled,prior.execution⟩
           | _ :: _ =>
             if inventory : prior.metadata.keys = LeanPoo.allSlots plan then
-              let metadata := prior.metadata.overlay plan declaration.metadata (by
+              let metadata := prior.metadata.overlay plan prepared.code (by
                 intro key self; rw [metadataPlan]; exact equation key self)
               let graph := compileGraph metadata
               match prior.rebaseSchedule? graph with
@@ -362,24 +366,20 @@ theorem Instance.reference (object : Instance Key Value) :
 many instances; every start executes its resolvers once in the checked order. -/
 def Template.build (ready : Template Key Value) :
     Except (Error Key) (Instance Key Value × List Key) :=
-  match ConstructionCache.start ready.scheduled
-      (ready.execution.guarded (fun _ => true)) with
+  match ConstructionCache.materializePartial ready.scheduled
+      (ready.execution.guarded (fun _ => true)) (fun _ => none) with
   | .error error => .error (.construction error)
-  | .ok cache =>
-    let values := tabulate ready.graph.keys cache.closed.raw
-    have reference := ready.scheduled.unique cache.closed
-    have same : (fun key => (values.get? key).join) = cache.closed.raw := by
-      funext key
-      rw [tabulate_get?]
-      by_cases active : key ∈ ready.graph.keys
-      · simp [active]
-      · have base : ready.graph.base key = none := by rw [ready.graphAligned]; rfl
-        have closed := ready.scheduled.resolver.closed key
-        change ready.graph.resolve key ready.scheduled.closed.raw = ready.scheduled.closed.raw key at closed
-        have absent : ready.scheduled.closed.raw key = none := by
-          simpa [GeneralizedGraph.Declaration.resolve,active,base] using closed.symm
-        simpa [active,reference] using absent.symm
-    .ok (⟨ready,values,by rw [same]; exact cache.closed.fixed⟩,cache.evaluated)
+  | .ok materialized => match finished : materialized.finish ready.scheduled with
+    | .error error => .error (.construction error)
+    | .ok cache =>
+      have same : (fun key => (materialized.entries.get? key).join) = cache.closed.raw := by
+        rw [materialized.finish_state ready.scheduled cache finished]
+        funext key
+        have indexed := materialized.indexed_get? ready.scheduled key
+        have base : ready.graph.base key = none := by rw [ready.graphAligned]; rfl
+        rw [base] at indexed
+        cases found : materialized.entries.get? key <;> simpa [found] using indexed.symm
+      .ok (⟨ready,materialized.entries,by rw [same]; exact cache.closed.fixed⟩,cache.evaluated)
 
 /-- The ordinary entrypoint uses the same materializer as observed construction. -/
 def Template.instantiate (ready : Template Key Value) : Except (Error Key) (Instance Key Value) :=

@@ -205,14 +205,37 @@ def Partial.finish (prior : Partial scheduled) : Except (Failure Key BuildError)
     .ok ⟨⟨prior.state,by rw [same]; exact scheduled.closed.fixed⟩,prior.evaluatedRev.reverse,prior.reusedRev.reverse⟩
   else .error .incomplete
 
-def materialize (builder : Builder spec BuildError) (reuse : Reuse scheduled) :
-    Except (Failure Key BuildError) (Cache spec) :=
-  let rec go (prior : Partial scheduled) : List Key → Except (Failure Key BuildError) (Cache spec)
-    | [] => prior.finish scheduled
+/-- The materializer's actual indexed state remains available to owners that
+publish typed field tables. Finishing still checks complete support. -/
+def materializePartial (builder : Builder spec BuildError) (reuse : Reuse scheduled) :
+    Except (Failure Key BuildError) (Partial scheduled) :=
+  let rec go (prior : Partial scheduled) : List Key → Except (Failure Key BuildError) (Partial scheduled)
+    | [] => .ok prior
     | key :: rest => match prior.step scheduled builder reuse key with
       | .error error => .error error
       | .ok next => go next rest
   go (Partial.empty scheduled) scheduled.order
+
+def materialize (builder : Builder spec BuildError) (reuse : Reuse scheduled) :
+    Except (Failure Key BuildError) (Cache spec) := do
+  let state ← materializePartial scheduled builder reuse
+  state.finish scheduled
+
+/-- Successful finishing publishes the actual constructed state. -/
+theorem Partial.finish_state (prior : Partial scheduled) (cache : Cache spec)
+    (finished : prior.finish (BuildError := BuildError) scheduled = .ok cache) :
+    cache.closed.raw = prior.state := by
+  unfold Partial.finish at finished
+  split at finished
+  · cases finished; rfl
+  · contradiction
+
+/-- Public lookup equation for the materializer-owned index, including absence. -/
+theorem Partial.indexed_get? (prior : Partial scheduled) (key : Key) :
+    prior.state key = (prior.entries.get? key).getD (spec.base key) := by
+  rw [prior.indexed]
+  unfold indexedState
+  cases prior.entries.get? key <;> rfl
 
 /-- Cold construction uses the same materializer without any retained slots. -/
 def start (builder : Builder spec BuildError) : Except (Failure Key BuildError) (Cache spec) :=
