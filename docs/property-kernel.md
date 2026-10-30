@@ -499,3 +499,14 @@ restoration, idempotence and stale/current admission. Existing nested-action law
 supply suppression of unstarted work. These are finite serial observer laws under
 faithful host scope and terminating callbacks, not rollback or evaluator proofs.
 See P39 in the Scheme RFC and the generated-traces service retry example.
+
+P40 unifies first-observation preparation for typed trace generation, admission,
+repair and differential checking. Earlier Type stamps are captured before each
+later computed field, retained across ordinary Record normalization, and preserved
+by the sampler's existing currentness hook. Gerbil dynamic scope restores fixture
+ownership while retaining model authority. `observeDeclaration` reuses guarded
+execution and first-revision capture: five laws cover preflight, later revision,
+exact callback causes, stable capture and resulting ledger currentness. Top-level
+controls exhibit a mixed-epoch rejection and stable/aliased declarations. Accurate
+source observers, serial terminating callbacks and faithful host scope are premises;
+these laws do not prove arbitrary field computations or concurrent snapshots.

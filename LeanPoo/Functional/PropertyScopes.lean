@@ -354,6 +354,66 @@ theorem captureRevision_fresh [DecidableEq Source] (current : Source → Nat)
   · exact fresh
   · simpa [revisionsCurrent] using fresh
 
+/-- One computed declaration read checks all earlier stamps before and after
+its callback, then captures the returned identity at its first observed revision.
+The host validates Type identities separately; discovery never refreshes history. -/
+def observeDeclaration [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (Source × State))
+    (state : State) : Except (Option Cause) (Source × (State × List (Source × Nat))) :=
+  (guardedGeneration (fun before => revisionsCurrent (current before) ledger) read state).map
+    (fun result => (result.1,
+      (result.2, captureRevision ledger result.1 (current result.2 result.1))))
+
+/-- Already stale metadata prevents even the next computed field from running. -/
+theorem observeDeclaration_preflight [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (Source × State)) (state : State)
+    (stale : revisionsCurrent (current state) ledger = false) :
+    observeDeclaration current ledger read state = .error none := by
+  simp [observeDeclaration, Except.map, guardedGeneration_preflight (fun before => revisionsCurrent (current before) ledger) read state stale]
+
+/-- A later getter cannot retire an earlier field and then capture fresh authority. -/
+theorem observeDeclaration_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state after : State) (source : Source)
+    (fresh : revisionsCurrent (current state) ledger = true)
+    (stale : revisionsCurrent (current after) ledger = false) :
+    observeDeclaration (Cause := Cause) current ledger (fun _ => .ok (source, after)) state =
+      .error none := by
+  simp [observeDeclaration, Except.map, guardedGeneration_revised (fun before => revisionsCurrent (current before) ledger) state after source fresh stale]
+
+/-- An original computed-field exception remains exact; no new stamp is installed. -/
+theorem observeDeclaration_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state : State) (cause : Cause)
+    (fresh : revisionsCurrent (current state) ledger = true) :
+    observeDeclaration current ledger (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeDeclaration, Except.map, guardedGeneration_cause (fun before => revisionsCurrent (current before) ledger) state cause fresh]
+
+/-- Stable preparation records the returned identity and actual state exactly. -/
+theorem observeDeclaration_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state after : State) (source : Source)
+    (fresh : revisionsCurrent (current state) ledger = true)
+    (later : revisionsCurrent (current after) ledger = true) :
+    observeDeclaration (Cause := Cause) current ledger (fun _ => .ok (source, after)) state =
+      .ok (source, (after, captureRevision ledger source (current after source))) := by
+  simp [observeDeclaration, Except.map, guardedGeneration_state (fun before => revisionsCurrent (current before) ledger) state after source fresh later]
+
+/-- Admission after a successful read includes both earlier fields and the new
+one. It does not claim atomic concurrent reads or callback termination. -/
+theorem observeDeclaration_current [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (Source × State)) (state after : State)
+    (source : Source) (captured : List (Source × Nat))
+    (success : observeDeclaration current ledger read state = .ok (source, (after, captured))) :
+    revisionsCurrent (current after) captured = true := by
+  unfold observeDeclaration guardedGeneration at success
+  split at success
+  · split at success
+    · contradiction
+    · split at success
+      · cases success
+        apply captureRevision_fresh
+        assumption
+      · contradiction
+  · contradiction
+
 /-- A typed sampler always owns its identity and actual declaration; additional
 application dependencies can extend but cannot erase these two participants. -/
 def samplerOwners [DecidableEq Source] (owner descriptor : Source) (dependencies : List Source) : List Source :=

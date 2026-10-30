@@ -111,3 +111,16 @@ example : scopedStages (Cause := String) (Value := Nat)
 -- Even after fixture exit an inherited parent scope remains mandatory.
 example : scopeCurrent (fun _ source : Nat => source != 2) [2]
     (restoreDeclarations [0] (1, [0, 1])) = false := rfl
+
+-- Reading State retires previously observed Command source 0. Capturing State
+-- after that read must not grant fresh authority to the earlier Command.
+example : observeDeclaration (Cause := String) (fun epoch source : Nat => if source == 0 then epoch else 0)
+    [(0, 0)] (fun _ => .ok (1, 1)) 0 = .error none := rfl
+
+-- A stable later field captures its own revision while retaining the old stamp.
+example : observeDeclaration (Cause := String) (fun _ source : Nat => source + 3)
+    [(0, 3)] (fun _ => .ok (1, 9)) 0 = .ok (1, (9, [(1, 4), (0, 3)])) := rfl
+
+-- An aliased declaration cannot replace the first observation with a new epoch.
+example : observeDeclaration (Cause := String) (fun epoch _ : Nat => epoch)
+    [(0, 0)] (fun _ => .ok (0, 1)) 0 = .error none := rfl
