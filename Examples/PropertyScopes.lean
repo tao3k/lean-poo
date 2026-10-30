@@ -21,3 +21,18 @@ example : scopedStages (Cause := String) (Value := Nat) (fun _ _ : Nat => false)
 example : scopedStages (fun _ _ : Nat => true) [0]
     [(fun _ => (.error "exact callback" : Except String (Nat × (Nat × List Nat)))),
      (fun _ => .error "later callback")] (0, []) = .error (some "exact callback") := rfl
+
+-- Initialization changes the source epoch: no dependent draw/actual effect runs.
+example : guardedThen (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ _ => (.error "draw must not run" : Except String (Bool × Nat))) 0 = .error none := rfl
+
+-- A model's two-value transition can feed the actual comparison without loss.
+example : guardedThen (fun _ : Nat => true)
+    (fun _ => (.ok ((1, false), 0) : Except String ((Nat × Bool) × Nat)))
+    (fun result epoch => .ok (result.2, epoch)) 0 = .ok (false, 0) := rfl
+
+-- A later observer revision suppresses publication even after a fresh first stage.
+example : guardedThen (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 0) : Except String (Bool × Nat)))
+    (fun _ _ => .ok (true, 1)) 0 = .error none := rfl

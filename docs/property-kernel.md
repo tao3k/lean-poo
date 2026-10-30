@@ -416,3 +416,12 @@ P29 validates finite outer spines and parameter results before candidate deliver
 `PropertySequences.lean` reuses guarded callbacks, Except composition and retirement
 to establish source/shape refusal, exact causes and ordered proper results.
 General lazy shrink Iterators and payload graphs keep their existing scope.
+
+
+P30 extends the existing `PropertyScopes.lean` with `guardedThen`, composing
+`guardedGeneration` for dependent model/fixture actions. Seven laws cover stale
+preflight, first-stage revision, original exceptions, exact continuation,
+last-stage revision, fresh result/state preservation and suppression of later
+stages. `Examples/PropertyScopes.lean` exercises false and tuple values. Faithful
+host stage/state encoding, pure observers and serial terminating callbacks remain
+premises; host cleanup is tested in Gerbil rather than proved by these laws.

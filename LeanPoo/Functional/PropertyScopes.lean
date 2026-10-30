@@ -94,4 +94,70 @@ theorem scopedStages_scopes_agree (live : State → Source → Bool) (left right
   rw [scopedStages_publish live left before after value leftBefore leftAfter,
       scopedStages_publish live right before after value rightBefore rightAfter]
 
+/-- Two dependent model/fixture actions reuse the ordinary callback guard. The
+second action receives the actual first value and state; no intermediate result
+is authorized after revision. Serial terminating actions and pure observers are
+premises. This is not a proof of host stack unwinding or concurrent publication. -/
+def guardedThen (live : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State) :
+    Except (Option Cause) (Output × State) :=
+  match guardedGeneration live first state with
+  | .error cause => .error cause
+  | .ok (value, after) => guardedGeneration live (next value) after
+
+/-- Preflight refusal suppresses both actions, including empty trace setup. -/
+theorem guardedThen_preflight (live : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State)
+    (stale : live state = false) : guardedThen live first next state = .error none := by
+  simp [guardedThen, guardedGeneration, stale]
+
+/-- A revised initializer/draw/observer cannot enter the dependent action. -/
+theorem guardedThen_revised (live : State → Bool) (state after : State) (value : Value)
+    (next : Value → State → Except Cause (Output × State))
+    (before : live state = true) (stale : live after = false) :
+    guardedThen live (fun _ => .ok (value, after)) next state = .error none := by
+  simp [guardedThen, guardedGeneration, before, stale]
+
+/-- Original causes survive without running the second callback or a post-check. -/
+theorem guardedThen_cause (live : State → Bool) (state : State) (cause : Cause)
+    (next : Value → State → Except Cause (Output × State)) (before : live state = true) :
+    guardedThen live (fun _ => .error cause) next state = .error (some cause) := by
+  simp [guardedThen, guardedGeneration, before]
+
+/-- Fresh first results, including false-like values and tuples, are forwarded
+exactly to the dependent action's own guard. -/
+theorem guardedThen_continue (live : State → Bool) (state after : State) (value : Value)
+    (next : Value → State → Except Cause (Output × State))
+    (before : live state = true) (fresh : live after = true) :
+    guardedThen live (fun _ => .ok (value, after)) next state =
+      guardedGeneration live (next value) after := by
+  simp [guardedThen, guardedGeneration, before, fresh]
+
+/-- A normal second action that revises the source cannot publish its result. -/
+theorem guardedThen_last_revised (live : State → Bool) (state middle after : State)
+    (value : Value) (output : Output) (before : live state = true)
+    (fresh : live middle = true) (stale : live after = false) :
+    guardedThen (Cause := Cause) live (fun _ => .ok (value, middle))
+      (fun _ _ => .ok (output, after)) state = .error none := by
+  simp [guardedThen, guardedGeneration, before, fresh, stale]
+
+/-- Finite fresh execution retains values and the final actual state exactly. -/
+theorem guardedThen_present (live : State → Bool) (state middle after : State)
+    (value : Value) (output : Output) (before : live state = true)
+    (fresh : live middle = true) (current : live after = true) :
+    guardedThen (Cause := Cause) live (fun _ => .ok (value, middle))
+      (fun _ _ => .ok (output, after)) state = .ok (output, after) := by
+  simp [guardedThen, guardedGeneration, before, fresh, current]
+
+/-- Suppression composes: a refused pair cannot reach any later trace stage. -/
+theorem guardedThen_refused (live : State → Bool)
+    (first : State → Except Cause (Value × State))
+    (next : Value → State → Except Cause (Output × State)) (state : State)
+    (cause : Option Cause) (later : Output × State → Except (Option Cause) Other)
+    (refused : guardedThen live first next state = .error cause) :
+    (guardedThen live first next state >>= later) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
