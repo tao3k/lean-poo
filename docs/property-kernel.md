@@ -663,3 +663,22 @@ RFC for the reproduced factory failure, regression suite and cost boundary.
 action between pure epoch checks: returning true after retiring a known owner
 cannot authorize a later metadata read. The executable control also bounds
 observer calls so a mistaken recursive checker fails instead of looping.
+
+## Shared declaration snapshot admission
+
+All typed snapshots now observe actual declaration, bound declaration and sources
+in order, capturing each participant at first observation. Explicit dependencies
+are captured before callbacks. One pure transient checker and the existing hash
+retention policy serve bridges, checks, diagnostics, products and Maps; neither
+checker nor mutable ledger is exported on sample trees. Existing binding and
+original getter errors are preserved. The shared Record/Function service batch
+exercises FUN, shrinking, portable replay and explicit new-action retry.
+
+`captureSources` and `observeSamplerSources` in PropertyScopes model finite
+registration, actual/bound equality and dependency admission using existing
+observeMap/guardedGeneration. Nine laws preserve first stamps, stale refusal,
+freshness, finite metadata bounds, binding mismatch, original causes and stable
+publication. Finite examples distinguish false causes from stale state and
+retargeting. Host clocks, metadata interpretation, dynamic scope and termination
+remain premises. Hidden dependencies, arbitrary payload freezing, concurrency and
+physical performance remain outside these source/model laws; see P50 of the RFC.

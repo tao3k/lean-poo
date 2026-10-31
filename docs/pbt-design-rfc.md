@@ -1993,3 +1993,58 @@ optional sampler hook, with no extra per-value factory/checker stack. The two-Ty
 metadata bound is not a byte/time bound for arbitrary dependencies or callbacks.
 No latency improvement is claimed. No upstream changes, new namespace, scheduler,
 resource-limit changes or acceptance reductions are introduced.
+
+## P50: shared sampler declaration snapshots
+
+The audit reproduced a shared late-capture defect beyond explicit Map factories:
+`.sources` could revise the Type previously returned by `.descriptor`, then the
+old snapshot registered its new epoch and a direct bridge invoked draw successfully.
+The same path served checks, diagnostics and products. This is a finite declaration
+admission defect, not a request for unrestricted Type inference or deep freezing.
+
+`generator-sources` now reads actual declaration, bound declaration and finite
+sources in that order under the existing source boundary. An internal retention
+callback records each identity immediately. Identity retargeting still fails with
+the original binding error before dependencies are read. Returned source spines
+are copied; malformed declarations remain errors. `snapshot` freezes explicit
+request dependencies, captures known owners before getters and uses the same
+`retain-source-stamps!` identity-hash policy as products and Maps. Repeated/aliased
+identities retain their first stamp. Its transient checker reads only epochs,
+never sampler metadata or observer hooks, and is not retained on trees/reports.
+
+Map preparation now uses that shared capture before valid raw sampler declarations
+are admitted as a GeneratorRecord. Missing declarations retain ordinary Record
+errors. No separate per-entry snapshot implementation or validation wrapper is
+added. Original getter exceptions, including false, propagate unchanged; failed
+preparation does not roll back effects. A fresh snapshot/bridge is required to
+retry. Existing root/child source limits and generation/shrink budgets are unchanged.
+
+Controls cover direct bridge, inspection, property check, product and finite Map
+entrypoints. A bound getter retiring the actual Type cannot reach sources. Tests
+also cover explicit dependency-spine mutation, original causes, alias/self sources,
+nested source reads without recursive checking and fresh retry. The existing service
+value generator is extracted once as `service-value-generator`; both Map services
+and `service-batch-action` reuse its Record/Function construction. The shared-field
+batch refuses obsolete source preparation, then freshly runs through FUN, shrinks,
+retains Function wrappers, replays seed/concrete/corpus data, rejects a later Type
+revision and retries with a newly prepared action.
+
+`PropertyScopes.lean` adds nine finite laws for source-list registration and sampler
+preparation: stale history cannot be repaired, fresh capture stays fresh, added
+identities are bounded by declaration count, known identities keep exact stamps,
+failed declaration reads suppress dependencies, binding mismatch stays distinct,
+later dependencies cannot renew an earlier Type, original causes remain exact and
+stable preparation publishes the closed source set. Examples distinguish early
+bound failure, stale versus false causes, aliases and stable source capture.
+Clock fidelity, standard dynamic-scope behavior, faithful metadata and callback
+termination remain premises; no compiler/runtime or concurrent atomicity proof is
+claimed. Raw dependency payloads are not deep-frozen and hidden callback dependencies
+are not inferred. This advances the paper's future-work direction.
+
+The finite owner ledger uses standard identity hashing. Clock checks visit its
+unique entries; registration adds at most one identity per declared occurrence.
+These are preparation bookkeeping bounds, not callback-time, byte or wall-clock
+bounds. Draw/shrink retain their existing tree protocol; no transient checker is
+retained and no latency improvement is claimed. The independent generic library
+remains POO-free at 148 cases. No upstream, namespace, scheduler, resource-limit
+or complete-acceptance changes are required.

@@ -769,4 +769,120 @@ theorem mapObserver_revised (current : State → Source → Nat) (ledger : List 
       (fun _ => .ok (true, after)) state = .error none :=
   guardedGeneration_revised (fun before => revisionsCurrent (current before) ledger) state after true fresh stale
 
+/-- Register a finite declared source list using the existing first-version rule. -/
+def captureSources [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) : List Source → List (Source × Nat)
+  | [] => ledger
+  | source :: rest => captureSources current (captureRevision ledger source (current source)) rest
+
+/-- Later source registration never repairs an obsolete earlier declaration. -/
+theorem captureSources_stale [DecidableEq Source] (current : Source → Nat)
+    (sources : List Source) (ledger : List (Source × Nat))
+    (stale : revisionsCurrent current ledger = false) :
+    revisionsCurrent current (captureSources current ledger sources) = false := by
+  induction sources generalizing ledger with
+  | nil => exact stale
+  | cons source rest ih => exact ih _ (captureRevision_stale current ledger source (current source) stale)
+
+/-- Stable finite source discovery preserves all prior epochs and admission. -/
+theorem captureSources_fresh [DecidableEq Source] (current : Source → Nat)
+    (sources : List Source) (ledger : List (Source × Nat))
+    (fresh : revisionsCurrent current ledger = true) :
+    revisionsCurrent current (captureSources current ledger sources) = true := by
+  induction sources generalizing ledger with
+  | nil => exact fresh
+  | cons source rest ih => exact ih _ (captureRevision_fresh current ledger source fresh)
+
+/-- Source bookkeeping adds at most one entry per declaration, including aliases. -/
+theorem captureSources_cost [DecidableEq Source] (current : Source → Nat)
+    (sources : List Source) (ledger : List (Source × Nat)) :
+    (captureSources current ledger sources).length ≤ ledger.length + sources.length := by
+  induction sources generalizing ledger with
+  | nil => simp [captureSources]
+  | cons source rest ih =>
+    have bound := ih (captureRevision ledger source (current source))
+    have added := captureRevision_length ledger source (current source)
+    simp only [captureSources, List.length_cons]
+    omega
+
+/-- Rediscovering only known participants cannot replace any captured stamp. -/
+theorem captureSources_known [DecidableEq Source] (current : Source → Nat)
+    (sources : List Source) (ledger : List (Source × Nat))
+    (known : ∀ source ∈ sources, source ∈ ledger.map Prod.fst) :
+    captureSources current ledger sources = ledger := by
+  induction sources with
+  | nil => rfl
+  | cons source rest ih =>
+    rw [captureSources, captureRevision_existing ledger source (current source) (known source (by simp))]
+    exact ih (fun item member => known item (by simp [member]))
+
+/-- The sampler's actual/bound declarations precede its finite sources getter.
+Known request owners are in ledger before any read; binding equality is explicit. -/
+def observeSamplerSources [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state : State) :
+    Except (Option Cause) (Source × (State × List (Source × Nat))) :=
+  match observeMap current ledger actual bound state with
+  | .error cause => .error cause
+  | .ok ((a, b), (next, captured)) =>
+    if a = b then
+      (guardedGeneration (fun before => revisionsCurrent (current before) captured) sources next).map
+        (fun result => (a, (result.2, captureSources (current result.2) captured result.1)))
+    else .error (some mismatch)
+
+/-- Failed declaration reads prevent the sources getter and later bridge binding. -/
+theorem observeSamplerSources_declaration_error [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state : State) (cause : Option Cause)
+    (failed : observeMap current ledger actual bound state = .error cause) :
+    observeSamplerSources current ledger mismatch actual bound sources state = .error cause := by
+  simp [observeSamplerSources, failed]
+
+/-- Retargeting still gives the original binding error before reading dependencies. -/
+theorem observeSamplerSources_mismatch [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state next : State) (a b : Source)
+    (prepared : observeMap current ledger actual bound state = .ok ((a, b), (next, captured)))
+    (different : a ≠ b) :
+    observeSamplerSources current ledger mismatch actual bound sources state = .error (some mismatch) := by
+  simp [observeSamplerSources, prepared, different]
+
+/-- A sources getter cannot retire the actual/bound Type and then capture new stamps. -/
+theorem observeSamplerSources_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (state next after : State) (a : Source) (extra : List Source)
+    (prepared : observeMap current ledger actual bound state = .ok ((a, a), (next, captured)))
+    (fresh : revisionsCurrent (current next) captured = true)
+    (stale : revisionsCurrent (current after) captured = false) :
+    observeSamplerSources current ledger mismatch actual bound (fun _ => .ok (extra, after)) state = .error none := by
+  simp [observeSamplerSources, prepared, guardedGeneration_revised
+    (fun before => revisionsCurrent (current before) captured) next after extra fresh stale, Except.map]
+
+/-- False and other original dependency-getter exceptions remain exact causes. -/
+theorem observeSamplerSources_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch cause : Cause)
+    (actual bound : State → Except Cause (Source × State)) (state next : State) (a : Source)
+    (prepared : observeMap current ledger actual bound state = .ok ((a, a), (next, captured)))
+    (fresh : revisionsCurrent (current next) captured = true) :
+    observeSamplerSources current ledger mismatch actual bound (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeSamplerSources, prepared, guardedGeneration_cause
+    (fun before => revisionsCurrent (current before) captured) next cause fresh, Except.map]
+
+/-- Stable metadata publishes precisely the first declaration and closed source set. -/
+theorem observeSamplerSources_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (state next after : State) (a : Source) (extra : List Source)
+    (prepared : observeMap current ledger actual bound state = .ok ((a, a), (next, captured)))
+    (fresh : revisionsCurrent (current next) captured = true)
+    (later : revisionsCurrent (current after) captured = true) :
+    observeSamplerSources current ledger mismatch actual bound (fun _ => .ok (extra, after)) state =
+      .ok (a, (after, captureSources (current after) captured extra)) := by
+  simp [observeSamplerSources, prepared, guardedGeneration_state
+    (fun before => revisionsCurrent (current before) captured) next after extra fresh later, Except.map]
+
 end LeanPoo.Functional.PropertyTesting

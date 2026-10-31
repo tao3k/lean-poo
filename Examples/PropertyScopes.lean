@@ -171,3 +171,24 @@ example : observeMap (Cause := Bool) (fun _ source : Nat => source) [(2, 2)]
 -- Returning true after a source edit is still refused before the next metadata read.
 example : guardedGeneration (Cause := Bool) (fun epoch : Nat => revisionsCurrent (fun _ => epoch) [(0, 0)])
     (fun _ => .ok (true, 1)) 0 = .error none := rfl
+
+-- Sources metadata cannot renew the Type already read from the sampler.
+example : observeSamplerSources (fun epoch source : Nat => if source == 0 then epoch else 0)
+    [(2, 0)] "binding" (fun state => .ok (0, state)) (fun state => .ok (0, state))
+    (fun _ => .ok ([3], 1)) 0 = .error none := rfl
+-- A bound getter retiring the Type skips even a deliberately failing sources getter.
+example : observeSamplerSources (fun epoch source : Nat => if source == 0 then epoch else 0)
+    [(2, 0)] "binding" (fun state => .ok (0, state)) (fun _ => .ok (0, 1))
+    (fun _ => .error "must not run") 0 = .error none := rfl
+-- Identity retargeting is distinct from a version failure.
+example : observeSamplerSources (fun _ _ : Nat => 0) [(2, 0)] "binding"
+    (fun state => .ok (0, state)) (fun state => .ok (1, state))
+    (fun _ => .error "must not run") 0 = .error (some "binding") := rfl
+-- Alias entries retain one original stamp, including the already observed Type.
+example : observeSamplerSources (fun _ _ : Nat => 0) [(2, 0)] "binding"
+    (fun state => .ok (0, state)) (fun state => .ok (0, state))
+    (fun state => .ok ([3, 0, 3], state)) 0 = .ok (0, (0, [(3, 0), (0, 0), (2, 0)])) := rfl
+-- An original false cause cannot be mistaken for stale metadata.
+example : observeSamplerSources (fun _ _ : Nat => 0) [(2, 0)] false
+    (fun state => .ok (0, state)) (fun state => .ok (0, state))
+    (fun _ => .error false) 0 = .error (some false) := rfl
