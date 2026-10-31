@@ -761,3 +761,12 @@ explicit fresh input. Revision/exception behavior and nested Function wrapping
 remain with their existing owners. Eleven finite Lean laws model request/source/
 framing order, assuming faithful host port operations rather than proving the
 reader or I/O rollback. See [P58](pbt-design-rfc.md#p58-portable-handoff-request-admission-and-physical-framing).
+
+
+P59 closes static trace request admission before computed declarations and
+fixture acquisition. Standard Gerbil contracts cover generic/typed check requests,
+typed finite limits/dependencies and trace-property binding. Existing model folds,
+source checks, Record/Function wrapping and FUN delivery remain the execution
+owners. Eleven finite Lean laws reuse Boolean admission and guarded preparation;
+callback arity, termination and host cleanup are premises. See
+[P59](pbt-design-rfc.md#p59-trace-request-admission-before-declarations-and-fixture-scope).

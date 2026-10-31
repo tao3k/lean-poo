@@ -118,3 +118,25 @@ example : admitFixture true (fun _ : Nat => true) true 1
 example : admitFixture "scope" (fun _ : Nat => true) true 1
     (fun raw state => (.ok (raw + 1, state + 1) : Except String (Nat × Nat)))
     (fun value state => .ok (value == 9, state + 1)) 7 0 = .ok (false, 2) := rfl
+
+-- Static bounds reject both sides; the legal empty and maximum requests survive.
+example : traceStepLimit (-1) = false := rfl
+example : traceStepLimit 65537 = false := rfl
+example : traceStepLimit 0 = true := rfl
+example : traceStepLimit 65536 = true := rfl
+
+-- No source or fixture preparation occurs after a static request refusal.
+example : admitWitness (.ok (traceStepLimit (-1))) "configuration"
+    (fun _ => guardedGeneration (fun _ : Nat => true)
+      (fun _ => (.error "must not prepare" : Except String (Bool × Nat))) 0) =
+        .error (some "configuration") := rfl
+
+-- Valid configuration preserves a legitimate false comparison and resulting state.
+example : admitWitness (.ok true) "configuration"
+    (fun _ => guardedGeneration (fun _ : Nat => true)
+      (fun _ => (.ok (false, 1) : Except String (Bool × Nat))) 0) = .ok (false, 1) := rfl
+
+-- A thrown false cause still differs from the successful false mismatch.
+example : admitWitness (.ok true) true
+    (fun _ => guardedGeneration (fun _ : Nat => true)
+      (fun _ => (.error false : Except Bool (Bool × Nat))) 0) = .error (some false) := rfl

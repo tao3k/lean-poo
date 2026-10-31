@@ -330,4 +330,74 @@ theorem repairedTracePrefix_empty_smaller (weight : Command → Nat) (commands :
   simp only [traceWeight]
   omega
 
+/-- The typed trace front door admits exact integer steps in its existing finite
+range. Host recognition of fixnums and callable arity are executable premises. -/
+def traceStepLimit (steps : Int) : Bool := decide (0 ≤ steps ∧ steps ≤ 65536)
+
+/-- Zero steps remains a legal empty-trace request, not a refusal sentinel. -/
+theorem traceStepLimit_zero : traceStepLimit 0 = true := rfl
+
+/-- The existing upper endpoint is admitted without widening its range. -/
+theorem traceStepLimit_maximum : traceStepLimit 65536 = true := rfl
+
+/-- Negative steps refuse independently of model state or callback behavior. -/
+theorem traceStepLimit_negative (steps : Int) (negative : steps < 0) :
+    traceStepLimit steps = false := by
+  simp [traceStepLimit]; omega
+
+/-- Oversized steps likewise refuse rather than silently clamping. -/
+theorem traceStepLimit_oversized (steps : Int) (large : 65536 < steps) :
+    traceStepLimit steps = false := by
+  simp [traceStepLimit]; omega
+
+/-- Reuse the existing Boolean admission judgment before source observations:
+invalid shape/callable configuration cannot prepare metadata or open a fixture. -/
+theorem traceRequest_invalid (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    admitWitness (.ok false) invalid (fun _ => guardedGeneration live prepare state) =
+      .error (some invalid) := rfl
+
+/-- Invalid finite bounds use the same refusal, before source or metadata work. -/
+theorem traceRequest_limit (steps : Int) (bad : traceStepLimit steps = false)
+    (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    admitWitness (.ok (traceStepLimit steps)) invalid
+      (fun _ => guardedGeneration live prepare state) = .error (some invalid) := by
+  rw [bad]; rfl
+
+/-- Valid static configuration forwards preparation to its original source owner. -/
+theorem traceRequest_valid (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    admitWitness (.ok true) invalid (fun _ => guardedGeneration live prepare state) =
+      guardedGeneration live prepare state := rfl
+
+/-- Static validity does not authorize an already obsolete source. -/
+theorem traceRequest_stale (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State)
+    (stale : live state = false) :
+    admitWitness (.ok true) invalid (fun _ => guardedGeneration live prepare state) =
+      .error none := by simp [admitWitness, guardedGeneration, stale]
+
+/-- A well-configured callback retains its original exception, including false. -/
+theorem traceRequest_cause (invalid cause : Cause) (live : State → Bool)
+    (state : State) (before : live state = true) :
+    admitWitness (.ok true) invalid
+      (fun _ => guardedGeneration live (fun _ => (.error cause : Except Cause (Value × State))) state) =
+        .error (some cause) := by simp [admitWitness, guardedGeneration, before]
+
+/-- Preparation cannot deliver a value after retiring its own declarations. -/
+theorem traceRequest_revised (invalid : Cause) (live : State → Bool)
+    (state next : State) (value : Value) (before : live state = true) (after : live next = false) :
+    admitWitness (.ok true) invalid
+      (fun _ => guardedGeneration live (fun _ => (.ok (value, next) : Except Cause (Value × State))) state) =
+        .error none := by simp [admitWitness, guardedGeneration, before, after]
+
+/-- Successful preparation preserves both its value and state exactly; it does
+not change first-difference semantics or infer callback correctness. -/
+theorem traceRequest_state (invalid : Cause) (live : State → Bool)
+    (state next : State) (value : Value) (before : live state = true) (after : live next = true) :
+    admitWitness (.ok true) invalid
+      (fun _ => guardedGeneration live (fun _ => (.ok (value, next) : Except Cause (Value × State))) state) =
+        .ok (value, next) := by simp [admitWitness, guardedGeneration, before, after]
+
 end LeanPoo.Functional.PropertyTesting

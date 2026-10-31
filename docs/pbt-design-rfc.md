@@ -2560,3 +2560,50 @@ failures. Consumed input, partial output and callback effects are not rolled bac
 `peek-char` may perform underlying I/O. Existing heap/time guards remain necessary.
 This continues the RFC's finite future-work protocol, not a claim that the original
 paper supplies a portable handoff or host-I/O proof.
+
+
+## P59: trace request admission before declarations and fixture scope
+
+The complete trace front door had two reproduced admission defects. A generic
+`check-trace` request with a nonprocedure equality callback initialized its model
+twice and opened/closed a fixture before failing. A typed `trace-generator` with
+negative steps forced computed Command metadata before rejecting configuration.
+These are static request errors; they should not acquire an application resource
+or evaluate declarations. This is distinct from a valid callback throwing during
+execution, which must retain its original cause and ordinary scope cleanup.
+
+The existing generic model entry now uses Gerbil contracts for the model, proper
+command spine and equality callback, alongside its existing fixture/preparation
+contracts. The typed trace generator admits command/model carriers, exact bounded
+steps and a proper dependency spine before entering `with-trace-model`. The same
+0–65536 step bound is preserved, with no clamping. Typed `check-trace` replaces
+manual callable checks with the same standard parameter mechanism; `trace-property`
+checks its model/fixture/equality binding immediately instead of deferring a static
+error until after a property generator has drawn. `valid-trace?` still returns
+false for an invalid trace, and domain mismatch, Boolean mismatch, stale sources
+and callback exceptions retain their existing owners. No guard framework, new
+namespace, wrapper chain or fixture scheduler is introduced.
+
+Four generic regression cases cover all configuration dimensions before any model,
+normalizer, preparation or fixture action; no cleanup for an unacquired fixture;
+exact false/object callback causes with balanced acquired scope; and fresh empty
+traces/false commands. The independent compiled stdlib-only acceptance grows from
+191 to 195 cases. Three typed cases cover malformed limits/dependency spines before
+computed metadata, binding/check configuration without declaration reads, and a
+Record/Function service carried through dependency-aware generation, FUN delivery,
+shrinking, seeded/concrete replay, old-source refusal and fresh corrected retry.
+The oracle's reply is independent of the checked implementation Function. Invalid
+binding performs zero draws or fixture actions; valid mismatches still open and
+clean each acquired fixture once.
+
+`PropertyTraces.traceStepLimit` records the existing finite integer interval.
+Eleven Lean laws reuse `admitWitness` and `guardedGeneration` for static refusal,
+valid forwarding, both limit boundaries, stale preparation, revision during normal
+return, exact callback causes and exact result/state preservation. Top-level
+examples distinguish successful false mismatch from thrown false and reject both
+out-of-range endpoints. Host procedure recognition/arity, fixnum representation,
+truthful source observers, terminating callbacks and actual fixture cleanup remain
+executable premises. These laws do not prove callback purity, host contracts or
+resource rollback. This is finite RFC future-work protocol completion, not an
+extension into the original paper's compiler/runtime validation. Existing full
+checks, negative controls and resource limits remain unchanged.
