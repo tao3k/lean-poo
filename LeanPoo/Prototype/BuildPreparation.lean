@@ -378,4 +378,66 @@ theorem optionalWorkflowWork_le_iff (common extra : Nat) (requests : List Bool)
   unfold optionalWorkflowWork
   omega
 
+/-- Gambit's documented guard when single-host generation was requested.
+Zero leaves the request unbounded; exceeding a positive label limit selects
+multiple C hosts. This models policy, not correctness of a C compiler. -/
+def singleHostEnabled (limit labels : Nat) : Bool := decide (limit = 0 ∨ labels ≤ limit)
+
+/-- The default zero limit does not bound the size of a requested host graph. -/
+theorem singleHostEnabled_unbounded (labels : Nat) : singleHostEnabled 0 labels = true := by
+  simp [singleHostEnabled]
+
+/-- A strict positive cutoff rejects exactly the oversized single host. -/
+theorem singleHostEnabled_exceeded (limit labels : Nat)
+    (positive : 0 < limit) (large : limit < labels) : singleHostEnabled limit labels = false := by
+  simp [singleHostEnabled]; omega
+
+/-- Small modules retain the requested optimized layout without a blanket change. -/
+theorem singleHostEnabled_small (limit labels : Nat) (small : labels ≤ limit) :
+    singleHostEnabled limit labels = true := by simp [singleHostEnabled, small]
+
+/-- A positive admitted limit certifies the actual label bound. -/
+theorem singleHostEnabled_bound (limit labels : Nat) (positive : 0 < limit)
+    (accepted : singleHostEnabled limit labels = true) : labels ≤ limit := by
+  simp only [singleHostEnabled, decide_eq_true_eq] at accepted
+  omega
+
+/-- The declared within-host ordered-label-pair potential. It is a structural
+metric, not a claim that GCC spends one instruction or byte per pair. -/
+def hostPairPotential (labels : Nat) : Nat := labels * labels
+
+/-- Splitting a graph removes cross-host label pairs from this local potential.
+Actual host partitioning belongs to the standard backend and is a host premise. -/
+theorem hostPairPotential_split (left right : Nat) :
+    hostPairPotential left + hostPairPotential right ≤ hostPairPotential (left + right) := by
+  simp only [hostPairPotential, Nat.add_mul, Nat.mul_add]
+  omega
+
+/-- Routing is charged explicitly: partitioning improves this declared metric
+only when its extra boundary cost fits the removed cross-host pairs. This is
+not a wall-clock prediction or a complexity theorem about GCC. -/
+theorem hostPairPotential_routing (left right routing : Nat) :
+    hostPairPotential left + hostPairPotential right + routing ≤
+      hostPairPotential (left + right) ↔ routing ≤ 2 * left * right := by
+  simp only [hostPairPotential, Nat.add_mul, Nat.mul_add, Nat.mul_comm right left,
+    Nat.mul_assoc, Nat.two_mul]
+  omega
+
+/-- Complete child CPU includes work from descendants not yet reaped. Units are
+nonnegative logical ticks; parallel CPU and wall clocks are separate quantities. -/
+def totalChildCpu (reaped outstanding : Nat) : Nat := reaped + outstanding
+
+/-- A terminated process-tree receipt can be only a lower bound, never a complete
+CPU decomposition unless outstanding descendants have all been accounted for. -/
+theorem reportedChildCpu_lower (reaped outstanding : Nat) :
+    reaped ≤ totalChildCpu reaped outstanding := by simp [totalChildCpu]
+
+/-- The completed/reaped case admits exact accounting. -/
+theorem reportedChildCpu_complete (reaped : Nat) : totalChildCpu reaped 0 = reaped := by
+  simp [totalChildCpu]
+
+/-- Zero collected CPU cannot certify idle waiting while work remains uncollected. -/
+theorem reportedChildCpu_not_idle (outstanding : Nat) (busy : 0 < outstanding) :
+    0 < totalChildCpu 0 outstanding := by simpa [totalChildCpu] using busy
+
 end LeanPoo.Prototype.Representation

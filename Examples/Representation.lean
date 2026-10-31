@@ -813,4 +813,20 @@ example : ([3, 0, 2, 1] : List Nat).Perm (2 :: [0, 1, 3]) :=
 /-- Equal growth cardinality cannot disguise a removed key and two new ones. -/
 example : ([0, 1, 8, 9] : List Nat).filter (fun n => decide (n ∉ [0, 1, 2])) ≠ [8] := by decide
 
+/-- The measured large module exceeds the targeted standard cutoff. -/
+example : singleHostEnabled 4096 5044 = false := by decide
+
+/-- A copied, larger cutoff would leave that same module unbounded in practice. -/
+example : singleHostEnabled 10000 5044 = true := by decide
+
+/-- Partition routing must fit the actual saved local potential. -/
+example : hostPairPotential 2000 + hostPairPotential 3044 + 100 ≤
+    hostPairPotential 5044 := (hostPairPotential_routing 2000 3044 100).2 (by decide)
+
+/-- A tiny partition cannot pay an arbitrary boundary cost. -/
+example : ¬ (hostPairPotential 1 + hostPairPotential 1 + 3 ≤ hostPairPotential 2) := by decide
+
+/-- A killed receipt with no collected child ticks need not describe idle work. -/
+example : totalChildCpu 0 30 = 30 := rfl
+
 end LeanPoo.Examples.Representation

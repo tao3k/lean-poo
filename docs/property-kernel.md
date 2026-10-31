@@ -574,3 +574,19 @@ Rational bridge reuses from-generator and the same value policy; recursive carri
 and a Record/List/Function FUN service cover shrink/replay/source retirement. Float,
 Real and Number remain explicit-sampler boundaries. Faithful Scheme arithmetic,
 exactification and codecs are premises; this is not IEEE, PRNG or bit-cost proof.
+
+
+The companion independent-build host policy keeps the same 139 cases and standard
+build/test entrypoints. `BuildPreparation.singleHostEnabled_bound` and the zero,
+small and exceeded laws formalize Gambit's positive cutoff policy.
+`hostPairPotential_split` measures only within-host ordered label pairs;
+`hostPairPotential_routing` explicitly requires saved potential to cover routing.
+The zero/4096/10000 controls and a routing counterexample are in the top-level
+`Examples/Representation.lean`. `reportedChildCpu_lower`, `_complete` and
+`_not_idle` prevent treating an unreaped descendant receipt as idle wall time.
+Existing `observeSuiteCases_regroup` and `observeSuiteCases_expansion` retain
+ordered results and state under faithful per-case behavior. They do not certify
+compiler semantics, C allocation, GC time, OS scheduling or a wall-clock bound.
+Fixed-source AB/BA artifact-cold controls all completed within the unchanged
+60-second limit, but the optimized 58.56-second tail prevents a stable latency
+claim. Companion documentation retains every result and the diagnostic scopes.
