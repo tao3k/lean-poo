@@ -1948,7 +1948,9 @@ Value identity before Type validation and the next getter. A shared private
 `retain-source-stamps!` uses the product factory's existing identity hash policy;
 rediscovery never replaces old stamps. The transient checker reads only epochs.
 The sampler observer is captured once and invoked at explicit checked actions,
-so it cannot recursively enter itself through that checker. There is one retained
+so it cannot recursively enter itself through that checker. The retained guard
+rechecks epochs after a successful observer result; a true result cannot authorize
+a source the observer itself retired. The no-hook path keeps one epoch pass. There is one retained
 Map guard and the transient checker is not copied into trees or reports.
 
 The existing generic finite-domain constructor still owns key shape/duplicates/
@@ -1977,7 +1979,9 @@ The independent generic package stays at 148 cases; it does not import POO.
 `PropertyScopes.lean` composes the existing `observeDeclaration`/`captureRevision`
 protocol as `observeMap`: preflight refusal, first/second-read errors, Value retiring
 Key, original error causes, stable exact publication and a bound of two added
-metadata identities. Alias and fresh-epoch examples retain the same ledger. Exact
+metadata identities. `mapObserver_revised` additionally rejects an observer that
+returns true after changing a known owner. Alias and fresh-epoch examples retain
+the same ledger. Exact
 host source clocks, faithful metadata/validation, terminating callbacks and the
 existing observer discipline remain premises. These finite source/model laws
 advance the paper's future work; they do not prove concurrent atomicity, compiler

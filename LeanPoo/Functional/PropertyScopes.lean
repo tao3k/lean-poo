@@ -760,4 +760,13 @@ theorem observeMap_capture_cost [DecidableEq Source] (ledger : List (Source × N
   have second := captureRevision_length (captureRevision ledger k kr) v vr
   omega
 
+/-- A true sampler observer cannot authorize metadata after retiring an owner.
+The observer is an action between pure epoch checks, not its own live predicate. -/
+theorem mapObserver_revised (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (state after : State) (fresh : revisionsCurrent (current state) ledger = true)
+    (stale : revisionsCurrent (current after) ledger = false) :
+    guardedGeneration (Cause := Cause) (fun before => revisionsCurrent (current before) ledger)
+      (fun _ => .ok (true, after)) state = .error none :=
+  guardedGeneration_revised (fun before => revisionsCurrent (current before) ledger) state after true fresh stale
+
 end LeanPoo.Functional.PropertyTesting

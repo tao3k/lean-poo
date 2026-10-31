@@ -167,3 +167,7 @@ example : observeMap (fun _ source : Nat => source) [(2, 2)]
 example : observeMap (Cause := Bool) (fun _ source : Nat => source) [(2, 2)]
     (fun state => .ok (0, state)) (fun state => .ok (0, state)) 0 =
       .ok ((0, 0), (0, [(0, 0), (2, 2)])) := rfl
+
+-- Returning true after a source edit is still refused before the next metadata read.
+example : guardedGeneration (Cause := Bool) (fun epoch : Nat => revisionsCurrent (fun _ => epoch) [(0, 0)])
+    (fun _ => .ok (true, 1)) 0 = .error none := rfl

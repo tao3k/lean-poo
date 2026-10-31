@@ -658,3 +658,8 @@ source clocks, faithful host interpretation and callback termination remain
 premises. Existing scope/tree laws govern unwind and replay; these are not
 compiler, concurrent atomicity or wall-clock performance proofs. See P49 of the
 RFC for the reproduced factory failure, regression suite and cost boundary.
+
+`mapObserver_revised` additionally treats the optional sampler observer as an
+action between pure epoch checks: returning true after retiring a known owner
+cannot authorize a later metadata read. The executable control also bounds
+observer calls so a mistaken recursive checker fails instead of looping.
