@@ -81,3 +81,12 @@ source checks, Record/Function wrapping and FUN delivery remain the execution
 owners. Eleven finite Lean laws reuse Boolean admission and guarded preparation;
 callback arity, termination and host cleanup are premises. See
 [P59](pbt-design-rfc.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
+
+
+P60 captures typed trace ingress before computed metadata and registers explicit
+owners in the existing first-observation ledger. Validation, repair, checking and
+generation reuse the existing Record, source and FUN protocols. Caller spine edits
+cannot retarget commands or dependency identities; payloads remain shared. Eight
+finite Lean laws model the original request handoff and guarded preparation;
+faithful host copying/observers and callback termination remain premises. See
+[P60](pbt-design-rfc.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).

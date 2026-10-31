@@ -400,4 +400,82 @@ theorem traceRequest_state (invalid : Cause) (live : State → Bool)
       (fun _ => guardedGeneration live (fun _ => (.ok (value, next) : Except Cause (Value × State))) state) =
         .ok (value, next) := by simp [admitWitness, guardedGeneration, before, after]
 
+/-- Capture the ingress request once, before declaration preparation can change
+caller state. Request may pair an optional command row with explicit owner IDs.
+Host shallow-copy fidelity and truthful revision observers remain premises. -/
+def guardedTraceRequest (capture : State → Request) (live : State → Bool)
+    (prepare : State → Except Cause (Prepared × State))
+    (execute : Request → Prepared → State → Except Cause (Output × State)) (state : State) :
+    Except (Option Cause) (Output × State) :=
+  let owned := capture state
+  match guardedGeneration live prepare state with
+  | .error cause => .error cause
+  | .ok (prepared, next) => guardedGeneration live (execute owned prepared) next
+
+/-- Obsolete authority cannot enter declaration preparation or execution. Pure
+capture may still occur; this is not a claim of zero host allocation. -/
+theorem guardedTraceRequest_stale (capture : State → Request) (live : State → Bool)
+    (prepare : State → Except Cause (Prepared × State))
+    (execute : Request → Prepared → State → Except Cause (Output × State)) (state : State)
+    (stale : live state = false) :
+    guardedTraceRequest capture live prepare execute state = .error none := by
+  simp [guardedTraceRequest, guardedGeneration, stale]
+
+/-- Metadata exceptions retain their exact cause before any trailing source test. -/
+theorem guardedTraceRequest_prepare_cause (capture : State → Request) (live : State → Bool)
+    (cause : Cause) (execute : Request → Prepared → State → Except Cause (Output × State))
+    (state : State) (before : live state = true) :
+    guardedTraceRequest capture live (fun _ => .error cause) execute state =
+      .error (some cause) := by simp [guardedTraceRequest, guardedGeneration, before]
+
+/-- An explicit owner retired by metadata cannot authorize execution or a sampler. -/
+theorem guardedTraceRequest_prepare_revised (capture : State → Request) (live : State → Bool)
+    (prepared : Prepared) (execute : Request → Prepared → State → Except Cause (Output × State))
+    (state next : State) (before : live state = true) (after : live next = false) :
+    guardedTraceRequest capture live (fun _ => .ok (prepared, next)) execute state = .error none := by
+  simp [guardedTraceRequest, guardedGeneration, before, after]
+
+/-- A normal metadata return hands off the ORIGINAL request, not a new reading of
+its edited state. None, empty rows, duplicates and false payloads remain distinct. -/
+theorem guardedTraceRequest_handoff (capture : State → Request) (live : State → Bool)
+    (prepared : Prepared) (execute : Request → Prepared → State → Except Cause (Output × State))
+    (state next : State) (before : live state = true) (after : live next = true) :
+    guardedTraceRequest capture live (fun _ => .ok (prepared, next)) execute state =
+      guardedGeneration live (execute (capture state) prepared) next := by
+  simp [guardedTraceRequest, guardedGeneration, before, after]
+
+/-- Later observations are irrelevant when two captures agree at ingress. This
+applies equally to the command row and the explicit dependency directory. -/
+theorem guardedTraceRequest_ingress (left right : State → Request) (live : State → Bool)
+    (prepare : State → Except Cause (Prepared × State))
+    (execute : Request → Prepared → State → Except Cause (Output × State)) (state : State)
+    (same : left state = right state) :
+    guardedTraceRequest left live prepare execute state =
+      guardedTraceRequest right live prepare execute state := by
+  simp [guardedTraceRequest, same]
+
+/-- Execution exceptions are not converted into a mismatch or new preparation. -/
+theorem guardedTraceRequest_execute_cause (capture : State → Request) (live : State → Bool)
+    (prepared : Prepared) (cause : Cause) (state next : State)
+    (before : live state = true) (after : live next = true) :
+    guardedTraceRequest capture live (fun _ => .ok (prepared, next))
+      (fun _ _ _ => (.error cause : Except Cause (Output × State))) state = .error (some cause) := by
+  simp [guardedTraceRequest, guardedGeneration, before, after]
+
+/-- An action that retires its captured owners cannot deliver its normal result. -/
+theorem guardedTraceRequest_execute_revised (capture : State → Request) (live : State → Bool)
+    (prepared : Prepared) (output : Output) (state next final : State)
+    (a : live state = true) (b : live next = true) (c : live final = false) :
+    guardedTraceRequest capture live (fun _ => .ok (prepared, next))
+      (fun _ _ _ => (.ok (output, final) : Except Cause (Output × State))) state = .error none := by
+  simp [guardedTraceRequest, guardedGeneration, a, b, c]
+
+/-- A successful request preserves its action's exact output and final state. -/
+theorem guardedTraceRequest_state (capture : State → Request) (live : State → Bool)
+    (prepared : Prepared) (output : Output) (state next final : State)
+    (a : live state = true) (b : live next = true) (c : live final = true) :
+    guardedTraceRequest capture live (fun _ => .ok (prepared, next))
+      (fun _ _ _ => (.ok (output, final) : Except Cause (Output × State))) state = .ok (output, final) := by
+  simp [guardedTraceRequest, guardedGeneration, a, b, c]
+
 end LeanPoo.Functional.PropertyTesting

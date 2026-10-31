@@ -2622,3 +2622,62 @@ executable premises. These laws do not prove callback purity, host contracts or
 resource rollback. This is finite RFC future-work protocol completion, not an
 extension into the original paper's compiler/runtime validation. Existing full
 checks, negative controls and resource limits remain unchanged.
+
+
+## P60: owned trace ingress and first-observed explicit dependencies
+
+The audit reproduced a shared ingress ownership defect across typed validation,
+repair, execution and generation. A computed Command declaration could replace
+`(1 2)` with `(99 2)` before the model saw the commands. A computed declaration
+could also replace an explicit dependency owner in the caller's list; retiring
+the originally supplied owner then left the old sampler current. P59's properness
+checks admitted a shape, but did not yet capture that admitted request before
+computed declarations. The frozen baseline uses direct lazy declarations and
+checks that caller rows/owners are unchanged immediately before API entry; effects
+while constructing an already initialized Record are outside this boundary. Record
+normalization may observe a getter more than once, without changing the captured
+request or its first owner epochs. This is an actual protocol gap, not unrestricted payload
+isolation or a new mutable-heap verification requirement.
+
+The existing typed entries now capture the outer command/dependency spine before
+`with-trace-model`. Validation retains malformed ingress as false; repair retains
+its ordinary contract refusal after the POO model/Type boundary. Checking captures
+its already admitted proper row before Record normalization. Empty proper rows
+remain valid and false command payloads are not refusal sentinels. Computed metadata
+cannot repair an originally malformed request into an admitted one, or redirect an
+admitted row by replacement, truncation or a newly introduced caller-side cycle.
+
+`with-trace-model` accepts optional initial owners and uses the SAME first-
+observation ledger and transient source check. Generation supplies the copied
+explicit dependency row there before any model field is read. Source retirement
+during metadata refuses before the next getter; original callback exceptions still
+escape unchanged. The normal no-extra-owner form is a syntax expansion, not a new
+runtime guard layer. The final sampler retains the original declared identities,
+so unrelated substitute revisions do not invalidate it and original-owner revisions
+do. Retry is explicit new preparation; an old report never refreshes its stamps.
+
+Six typed regression cases cover all ingress operations, edited/cyclic caller
+aliases, initially malformed inputs repaired by metadata, owner replacement and
+truncation, source retirement between getters, exact false/object causes and scope
+unwinding. The complex Record/Function example stages private command rows and
+uses the ordinary trace sampler and FUN property action. Metadata truncates only
+the application's staging alias; the protocol executes its captured row, revealing
+the faulty consumer instead of passing an incomplete trace. Dependency-aware
+shrinking reaches open/use, nested Function contracts survive, concrete/seeded
+replays agree, substitute-owner edits remain harmless, original-owner retirement
+rejects replay before fixture opening, and fresh corrected preparation passes.
+The property protects its generated witness by staging a shallow copy; PBT does
+not claim that arbitrary property callbacks may mutate their own witnesses safely.
+The independent generic library remains at 196 cases with no POO dependency.
+
+`PropertyTraces.guardedTraceRequest` reuses `guardedGeneration`. Eight laws establish
+stale preflight, exact metadata/execution causes, retirement refusal, original-
+request handoff, ingress extensionality and exact successful result/state. Top-level
+examples distinguish None from empty/false data, preserve duplicate owner IDs,
+refuse retired authority and retain false exceptions. Faithful host shallow copying,
+pure model/source observers and terminating callbacks remain premises. Payloads
+are shared; there is no deep snapshot, concurrent linearizability, rollback or
+compiler/runtime proof. Capture costs one outer-spine copy per admitted typed
+request; metadata and epoch registration remain with their existing owners. No
+wall-clock speedup is inferred. Existing complete acceptance and resource limits
+remain unchanged. This continues the RFC's finite future-work protocol.

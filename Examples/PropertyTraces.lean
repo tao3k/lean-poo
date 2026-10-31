@@ -140,3 +140,39 @@ example : admitWitness (.ok true) "configuration"
 example : admitWitness (.ok true) true
     (fun _ => guardedGeneration (fun _ : Nat => true)
       (fun _ => (.error false : Except Bool (Bool × Nat))) 0) = .error (some false) := rfl
+
+-- Metadata replaces the caller's command row, but execution retains ingress.
+example : guardedTraceRequest (fun state : Nat => if state == 0 then [1, 2] else [99])
+    (fun _ => true) (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun row _ state => .ok (row, state)) 0 = .ok ([1, 2], 1) := rfl
+
+-- An invalid input is not repaired by metadata into an accepted empty row.
+example : guardedTraceRequest
+    (fun state : Nat => if state == 0 then none else some ([] : List Nat))
+    (fun _ => true) (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun row _ state => match row with
+      | none => .error "invalid request"
+      | some commands => .ok (commands, state)) 0 = .error (some "invalid request") := rfl
+
+-- A valid empty row and its false payload are retained as ordinary request data.
+example : guardedTraceRequest (fun _ : Nat => some ([] : List Bool))
+    (fun _ => true) (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun row _ state => .ok (row, state)) 0 = .ok (some [], 1) := rfl
+example : guardedTraceRequest (fun _ : Nat => some [false])
+    (fun _ => true) (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun row _ state => .ok (row, state)) 0 = .ok (some [false], 1) := rfl
+
+-- Owner substitution cannot retarget the prepared request's identity directory.
+example : guardedTraceRequest (fun state : Nat => if state == 0 then [7, 7] else [8])
+    (fun _ => true) (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun owners _ state => .ok (owners, state)) 0 = .ok ([7, 7], 1) := rfl
+
+-- Retiring an original owner blocks delivery before execution.
+example : guardedTraceRequest (fun _ : Nat => [7]) (fun state => state == 0)
+    (fun _ => (.ok ((), 1) : Except String (Unit × Nat)))
+    (fun _ _ _ => (.error "must not execute" : Except String (Bool × Nat))) 0 = .error none := rfl
+
+-- A false metadata exception remains an exception even when its owner retires.
+example : guardedTraceRequest (fun _ : Nat => [7]) (fun state => state == 0)
+    (fun _ => (.error false : Except Bool (Unit × Nat)))
+    (fun _ _ state => .ok (false, state)) 0 = .error (some false) := rfl
