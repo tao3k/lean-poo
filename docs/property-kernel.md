@@ -743,3 +743,11 @@ receipt identity. PropertyTraces.admitFixture and fixtureReceipt supply ten laws
 separating lifecycle errors, stale sources and actual callback causes. Host
 sequential scope/counter fidelity is assumed; concurrent and continuation reentry
 are outside these laws. See [the RFC](pbt-design-rfc.md#p56-fixture-lifetime-admission-before-typed-preparation).
+
+P57 closes fixed-width product row admission and finite child/packing ownership.
+PropertyProducts.captureProductRow / prepareProductRow establish shape before
+consumers; productCoordinate / finiteProductCoordinate reuse finiteShrinkStage and
+guardedStages for ordered packing/refusal. Eleven laws retain empty/false-data
+separation and exact width/order. Faithful host shallow copying and user-defined
+Type/representation laws are premises, not inferred heap or compiler proofs. See
+[the RFC](pbt-design-rfc.md#p57-fixed-product-row-and-finite-expansion-ownership).

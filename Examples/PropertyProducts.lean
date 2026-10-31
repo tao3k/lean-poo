@@ -68,3 +68,26 @@ example : drawProductRev (fun _ : Nat => (99, 100))
 -- Equal payloads do not erase distinct field positions or replay seeds.
 example : drawProductRev (fun seed : Nat => (seed, seed + 1))
     (fun _ _ : Nat => 5) [0, 0, 0] 0 [8] = ([8, 5, 5, 5], 3) := rfl
+
+-- A two-field product cannot silently measure one captured field.
+example : prepareProductRow "shape" 2 (some [4])
+    (fun values => (.ok values.length : Except (Option String) Nat)) = .error (some "shape") := rfl
+
+-- An empty row is data, while malformed input is refused even at width zero.
+example : captureProductRow (Value := Bool) 0 (some []) = some [] := rfl
+example : captureProductRow (Value := Bool) 0 none = none := rfl
+example : captureProductRow 1 (some [false]) = some [false] := rfl
+
+-- Three heterogeneous labels retain their prefix/suffix through each replacement.
+example : productCoordinate ["left"] "replacement" ["flag"] = ["left", "replacement", "flag"] := rfl
+
+-- A malformed child batch skips a packer whose execution would raise another cause.
+example : finiteProductCoordinate (fun _ : Nat => true) "shape"
+    (fun _ state => (.ok (none, state) : Except String (Option (List Nat) × Nat)))
+    (fun _ _ => (.error "forbidden pack" : Except String (Nat × Nat))) [] [6] 4 0 =
+      .error (some "shape") := rfl
+
+-- Source retirement still takes precedence before a returned child list is packed.
+example : finiteProductCoordinate (fun epoch : Nat => epoch == 0) "shape"
+    (fun _ _ => (.ok (some [0], 1) : Except String (Option (List Nat) × Nat)))
+    (fun _ _ => (.error "forbidden pack" : Except String (Nat × Nat))) [] [6] 4 0 = .error none := rfl

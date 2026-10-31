@@ -1,9 +1,108 @@
-import LeanPoo.Functional.PropertyGenerators
+import LeanPoo.Functional.PropertySequences
 
 /-! Shared finite product observation. Field callbacks and representation packing
 use the existing guarded stages; faithful captured topology is a host premise. -/
 namespace LeanPoo.Functional.PropertyTesting
 universe u
+
+/-- Capture a proper fixed-width row; none represents a malformed host spine.
+The immutable list models a faithful shallow copy, not arbitrary payload copying. -/
+def captureProductRow (width : Nat) (input : Option (List Value)) : Option (List Value) :=
+  input.filter (fun values => values.length == width)
+
+/-- A captured row always has exactly the declared field count. -/
+theorem captureProductRow_width (width : Nat) (input : Option (List Value)) (values : List Value)
+    (captured : captureProductRow width input = some values) : values.length = width := by
+  cases input with
+  | none => simp [captureProductRow] at captured
+  | some row =>
+    simp only [captureProductRow, Option.filter] at captured
+    split at captured <;> simp_all
+
+/-- Well-shaped rows keep their exact values and order. -/
+theorem captureProductRow_exact (values : List Value) :
+    captureProductRow values.length (some values) = some values := by simp [captureProductRow]
+
+/-- A wrong-width row cannot be salvaged as a shorter zipped prefix. -/
+theorem captureProductRow_refused (width : Nat) (values : List Value) (wrong : values.length ≠ width) :
+    captureProductRow width (some values) = none := by simp [captureProductRow, wrong]
+
+/-- Empty products distinguish a present empty row from malformed false data. -/
+theorem captureProductRow_empty : captureProductRow (Value := Value) 0 (some []) = some [] ∧
+    captureProductRow (Value := Value) 0 none = none := by simp [captureProductRow]
+
+/-- Error-valued consumers never enter a field after malformed decomposition. -/
+def prepareProductRow (invalid : Cause) (width : Nat) (input : Option (List Value))
+    (consume : List Value → Except (Option Cause) Output) : Except (Option Cause) Output :=
+  match captureProductRow width input with
+  | none => .error (some invalid)
+  | some row => consume row
+
+/-- Shape refusal skips measuring, shrinking and representation effects alike. -/
+theorem prepareProductRow_refused (invalid : Cause) (width : Nat) (input : Option (List Value))
+    (consume : List Value → Except (Option Cause) Output)
+    (refused : captureProductRow width input = none) :
+    prepareProductRow invalid width input consume = .error (some invalid) := by
+  simp [prepareProductRow, refused]
+
+/-- A fixed-width successful row enters its existing consumer unchanged. -/
+theorem prepareProductRow_exact (invalid : Cause) (row : List Value)
+    (consume : List Value → Except (Option Cause) Output) :
+    prepareProductRow invalid row.length (some row) consume = consume row := by
+  simp [prepareProductRow, captureProductRow_exact]
+
+/-- Reconstruct a coordinate in original order from a reversed visited prefix.
+Scheme materialization copies suffix pairs and folds cons over the prefix, so
+no packer receives the private remaining-coordinate spine. -/
+def productCoordinate (before : List Value) (replacement : Value) (after : List Value) : List Value :=
+  before.reverse ++ replacement :: after
+
+/-- Every packed coordinate preserves the product's width. -/
+theorem productCoordinate_length (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).length = before.length + 1 + after.length := by
+  simp [productCoordinate]; omega
+
+/-- A replacement does not modify the still-unvisited suffix values. -/
+theorem productCoordinate_suffix (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).drop (before.length + 1) = after := by
+  simp [productCoordinate, List.drop_append]
+
+/-- The accumulated prefix retains its original order. -/
+theorem productCoordinate_prefix (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).take before.length = before.reverse := by
+  simp [productCoordinate]
+
+/-- One finite child batch is admitted before any of its packing actions. The
+existing guarded stages retain interleaved packing effects and source checks. -/
+def finiteProductCoordinate (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state : State) :
+    Except (Option Cause) (List Output × State) :=
+  match finiteShrinkStage live invalid shrink value state with
+  | .error cause => .error cause
+  | .ok (children, next) => guardedStages live
+      (children.map (fun child => pack (productCoordinate before child after))) next
+
+/-- Invalid/stale child batches cannot invoke even the first packer. -/
+theorem finiteProductCoordinate_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state : State) (cause : Option Cause)
+    (refused : finiteShrinkStage live invalid shrink value state = .error cause) :
+    finiteProductCoordinate live invalid shrink pack before after value state = .error cause := by
+  simp [finiteProductCoordinate, refused]
+
+/-- A packing error never publishes an already materialized partial batch. -/
+theorem finiteProductCoordinate_pack_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state next : State) (children : List Value)
+    (cause : Option Cause)
+    (prepared : finiteShrinkStage live invalid shrink value state = .ok (children, next))
+    (refused : guardedStages live (children.map (fun child => pack (productCoordinate before child after))) next =
+      .error cause) : finiteProductCoordinate live invalid shrink pack before after value state = .error cause := by
+  simp [finiteProductCoordinate, prepared, refused]
 
 /-- A common owner protects even zero fields. Each field is checked before/after
 execution, and packing cannot run after a refusal. -/

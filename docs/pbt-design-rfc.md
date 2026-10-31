@@ -2443,3 +2443,72 @@ observers, receipt identity and terminating callbacks remain premises. Arbitrary
 concurrent access, call/cc reentry, host evaluator verification and user-caught
 exceptions outside the protocol are not proved. Resource guards and full checks
 are unchanged; no latency or allocation improvement is claimed by these laws.
+
+## P57: fixed product row and finite expansion ownership
+
+The audit reproduced three defects in the value-level product path. An improper
+child neighborhood invoked the packer once before refusing its tail. A two-field
+product whose unpacker returned one value measured only that prefix, invoking
+one child and returning four instead of refusing the decomposition. A packer
+editing its temporary row changed a subsequent child argument from six to 99.
+The retained product tree already owned its rows; the finite view did not share
+that preparation discipline. These are concrete protocol gaps, not inference of
+arbitrary representation inverses or automatic proofs of user callbacks.
+
+The generic product specification now captures one proper row of exactly its
+fixed width before admission or measurement callbacks. Gerbil list? establishes
+properness before std/list/list's length=n? checks width; that standard helper
+alone also treats an improper terminal atom as an end, so it is not a replacement
+for list?. Invalid membership remains false, and invalid explicit measurement is
+an error before field effects. Empty rows remain valid data at width zero; a
+false row is invalid, while a row containing a permitted false payload is valid.
+
+Typed product measurement delegates to that same generic owner. Finite shrinking
+admits and copies its unpacked row before child or packer calls. A single private
+finite-shrink-children boundary validates/copies every finite POO child spine;
+products invoke it after their existing checked child action, and ordinary raw
+sampler lifting uses it after the inherited source action. Source refusal and
+original causes therefore retain their existing priority. Generic user shrinkers
+still accept Iterators; their explicitly budgeted infinite neighborhoods remain
+supported. No generic iterator is eagerly converted into a finite list.
+
+Every product packer receives a private complete outer row. The existing reversed
+prefix is reconstructed with standard foldl/cons and a copied suffix, avoiding
+another reversed-prefix list. Thus consuming a pack argument cannot change the
+remaining coordinates. Constructor identity, field order, per-coordinate callback
+order, interleaved packing and source gates stay with their original owners.
+Malformed child lists cannot publish prefixes; a later error still discards the
+returned batch, without rolling back already performed callback effects. A producer
+retaining an alias to its returned candidate spine cannot change an already
+prepared typed iterator's next candidate. Payloads themselves are not deep-copied;
+mutable semantic data and callback dependencies retain their source obligations.
+
+This follows the pinned Rackcheck retained-product/shrink-tree direction and the
+author's compositional representation discipline. It reuses the project product,
+Type, Record and FUN protocols plus standard Gerbil list operations. No second
+product engine, public adapter, runner, namespace or upstream change is introduced.
+The pure fixed-width checks occur once at the operation's owning boundary rather
+than validating every packed field through another wrapper. Snapshot copying has
+linear spine cost; these correctness controls make no wall-time speedup claim.
+
+Four generic cases cover malformed/short/long rows, zero fields, false payloads,
+measurement snapshots and exact source/cause refusal. All earlier 181 cases remain,
+raising the independent stdlib-only compiled acceptance to 185. Eight typed cases
+cover invalid finite child batches before packing, decomposition failure before
+any field work, staging-cache and consuming-packer edits, paused producer aliases,
+exact causes and source retirement. The complex consuming-product-sampler example
+composes UInt, Integer and Bool fields with a Record/Function carrier. Its standard
+reverse! packer is valid on private rows. The ordinary finite and retained views
+agree on the minimal witness, attempt count and shrink steps through FUN/corpus
+export, seeded/concrete/portable replay, old-source refusal and fresh corrected
+preparation. Function argument contracts remain checked on each witness.
+
+PropertyProducts.lean reuses PropertySequences.finiteShrinkStage and the existing
+guardedStages. Eleven laws establish exact-width row capture, empty/invalid
+separation, refusal before consumers, original-row forwarding, coordinate width,
+prefix/suffix order and no finite batch after child or packing refusal. Examples
+cover unequal widths, false payloads, malformed children and source retirement.
+Faithful standard shallow copying, sequential source binding, terminating callbacks
+and the application's Type/pack/unpack laws remain premises. These are not host
+heap alias proofs, automatic isomorphism discovery, concurrency verification or
+compiler/runtime validation. Existing complete checks and resource limits remain.
