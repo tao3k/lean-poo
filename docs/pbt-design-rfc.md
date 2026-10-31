@@ -1771,3 +1771,66 @@ allocation speedup is claimed. Existing random schedules, lazy trees, generator
 factories, source failure priorities and all process/heap/depth/proposal caps remain
 unchanged. Concrete import still reads no input before failed preparation and
 performs no draws or child forcing. Port failures still have no rollback guarantee.
+
+## P46: bounded tagged Sum derivation and retained branch identity
+
+The audit found a concrete gap in the existing finite container algebra: Sum had
+validation, wrapping and serialization, but automatic PBT derivation required a
+custom scalar generator. Union/Or support did not supply tagged construction or
+preserve distinct labels sharing one payload Type. This extends the existing
+finite derivation protocol; it does not add unrestricted Type inference.
+
+`type.ss` now gives the existing Sum constructor the nominal `Sum.` carrier
+prototype. Existing fields, validation and serialization remain on that constructor;
+recognition does not guess from arbitrary slot names or printed declarations.
+Explicit `.generator` overrides retain precedence. The existing generation graph
+owns ordered `(tag . child-index)` alternatives, while shared payload Types still
+have one graph identity. Only depth/node-feasible branches participate in drawing.
+A Sum record contributes one constructor node; a recursive Sum edge is a concrete
+carrier, unlike an unguarded transparent Union alias. Empty/no-feasible branches
+report controlled exhaustion under the existing limits.
+
+Preparation reads the effective `variants` directory, captures its epoch before
+reading tags, and discovers each payload Type before reading another branch.
+The shared edge-discovery action reserves descriptor fuel before a metadata
+getter and interns its returned Type immediately. The finite, distinct symbolic
+tag spine is copied; source checks surround metadata callbacks. Neither the old
+`types` snapshot nor a later revision may refresh already captured authority.
+Malformed catalogs are preparation errors; no branch resampling hides failures.
+
+Construction uses the descriptor's existing `make` method once per emitted value.
+Its result must retain the selected tag and exact payload. Constructor/getter
+callbacks retain original errors and source checks between stages. Inspection
+checks a known tag before reading payload and uses only that captured branch; it
+retains the original carrier without invoking `make` again. Both retained-tree
+and value-only shrinking keep the tag and child provenance. No tag switching,
+payload redraw, arbitrary Function synthesis or extra validator chain is added.
+The existing scalar/Record protocols retain Function wrappers.
+
+`examples/recursive-trees.ss` exposes `JournalCommand`, `JournalObservation`,
+`journal-observation` and `tagged-journal-tests`. A normal Record/FUN action compares
+credit/debit/clear journals with an implementation that ignores debit. The
+regression reduces this fault to one debit of one, replays its seed and integer/
+symbol corpus, refuses retired directory ownership, then prepares the corrected
+service. Additional controls cover shared payload nodes, recursive Sum/List
+carriers, empty/depth/node limits, unknown labels without payload reads, exact
+constructor errors, changed constructor output, nested Record/Function payloads,
+metadata invalidation and descriptor-budget refusal before later getters.
+
+`PropertySequences.lean` proves ordered feasible-branch membership, residual node
+bounds, tag/payload shrink provenance, preservation of strict measure descent,
+unknown-tag getter suppression, original getter errors and successful tagged
+inspection. Top-level `Examples/PropertySequences.lean` covers shared-node labels
+and forbidden getters. Existing recursive-evaluation, source-snapshot and retained
+sample laws supply the enclosing protocol assumptions. These are finite source
+laws, not proofs of Scheme execution, PRNG distribution, arbitrary callback
+termination, concurrent mutation or macOS loading time. Accurate revision clocks,
+faithful metadata/callback interpretation and the existing ownership discipline
+remain premises. This advances the paper's future-work direction.
+
+Preparation visits one edge per declared tag, with the existing descriptor quota;
+choosing or looking up a tag scans at most the captured finite directory. Payload
+inspection and shrinking retain their existing search/proposal/node budgets.
+These operation counts do not imply constant lookup cost, allocation bounds or a
+wall-clock speedup. No upstream changes, runner, namespace or resource-limit
+changes are required; the independent generic package remains POO-free.
