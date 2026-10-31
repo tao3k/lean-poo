@@ -683,4 +683,81 @@ theorem callFunction_unknown [DecidableEq Input] (parent owner : State → Bool)
     callFunction parent owner missing table input state = .error (some missing) := by
   simp [callFunction, observeFunction, guardedGeneration, fresh, unknown_function_row table absent]
 
+/-- A Map factory observes Key then Value using the existing first-stamp ledger.
+Known request owners are supplied before either read, including empty-key Maps. -/
+def observeMap [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (key value : State → Except Cause (Source × State))
+    (state : State) : Except (Option Cause) ((Source × Source) × (State × List (Source × Nat))) :=
+  match observeDeclaration current ledger key state with
+  | .error cause => .error cause
+  | .ok (k, (afterKey, captured)) =>
+    (observeDeclaration current captured value afterKey).map (fun result => ((k, result.1), result.2))
+
+/-- A stale request prevents both metadata getters, independently of key count. -/
+theorem observeMap_preflight [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (key value : State → Except Cause (Source × State))
+    (state : State) (stale : revisionsCurrent (current state) ledger = false) :
+    observeMap current ledger key value state = .error none := by
+  simp [observeMap, observeDeclaration_preflight current ledger key state stale]
+
+/-- A failed first read cannot invoke Value or bind a partial Map factory. -/
+theorem observeMap_key_error [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (key value : State → Except Cause (Source × State))
+    (state : State) (cause : Option Cause)
+    (failed : observeDeclaration current ledger key state = .error cause) :
+    observeMap current ledger key value state = .error cause := by
+  simp [observeMap, failed]
+
+/-- Any failure of the second read is propagated without refreshing the first. -/
+theorem observeMap_value_error [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (key value : State → Except Cause (Source × State))
+    (state afterKey : State) (k : Source) (cause : Option Cause)
+    (first : observeDeclaration current ledger key state = .ok (k, (afterKey, captured)))
+    (second : observeDeclaration current captured value afterKey = .error cause) :
+    observeMap current ledger key value state = .error cause := by
+  simp [observeMap, first, second, Except.map]
+
+/-- Editing Key inside Value refuses even if Value itself could be captured anew. -/
+theorem observeMap_value_revises [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (key : State → Except Cause (Source × State))
+    (state afterKey afterValue : State) (k v : Source)
+    (first : observeDeclaration current ledger key state = .ok (k, (afterKey, captured)))
+    (stale : revisionsCurrent (current afterValue) captured = false) :
+    observeMap (Cause := Cause) current ledger key (fun _ => .ok (v, afterValue)) state = .error none := by
+  apply observeMap_value_error current ledger captured key _ state afterKey k none first
+  exact observeDeclaration_revised current captured afterKey afterValue v
+    (observeDeclaration_current current ledger key state afterKey k captured first) stale
+
+/-- Original second-getter errors remain exact, including false-valued causes. -/
+theorem observeMap_value_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (key : State → Except Cause (Source × State))
+    (state afterKey : State) (k : Source) (cause : Cause)
+    (first : observeDeclaration current ledger key state = .ok (k, (afterKey, captured))) :
+    observeMap current ledger key (fun _ => .error cause) state = .error (some cause) := by
+  apply observeMap_value_error current ledger captured key _ state afterKey k (some cause) first
+  exact observeDeclaration_cause current captured afterKey cause
+    (observeDeclaration_current current ledger key state afterKey k captured first)
+
+/-- Stable readings publish exactly the two effective Types and original ledger. -/
+theorem observeMap_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state afterKey afterValue : State) (k v : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (keyLive : revisionsCurrent (current afterKey) ledger = true)
+    (valueLive : revisionsCurrent (current afterValue)
+      (captureRevision ledger k (current afterKey k)) = true) :
+    observeMap (Cause := Cause) current ledger (fun _ => .ok (k, afterKey))
+      (fun _ => .ok (v, afterValue)) state = .ok ((k, v), (afterValue,
+        captureRevision (captureRevision ledger k (current afterKey k)) v (current afterValue v))) := by
+  simp [observeMap, observeDeclaration_stable current ledger state afterKey k before keyLive,
+    observeDeclaration_stable current (captureRevision ledger k (current afterKey k)) afterKey afterValue v
+      (captureRevision_fresh (current afterKey) ledger k keyLive) valueLive, Except.map]
+
+/-- One Map preparation adds at most two identities, sharing aliases and roots. -/
+theorem observeMap_capture_cost [DecidableEq Source] (ledger : List (Source × Nat))
+    (k v : Source) (kr vr : Nat) :
+    (captureRevision (captureRevision ledger k kr) v vr).length ≤ ledger.length + 2 := by
+  have first := captureRevision_length ledger k kr
+  have second := captureRevision_length (captureRevision ledger k kr) v vr
+  omega
+
 end LeanPoo.Functional.PropertyTesting

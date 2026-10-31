@@ -1931,3 +1931,61 @@ neighborhood laws remain interpretation premises. These finite model laws do not
 prove Gerbil intern tables, the compiler, PRNG distribution or physical memory and
 latency. This advances the paper's future-work direction. No upstream code,
 module framework, namespace, runner, resource limit or acceptance check changes.
+
+## P49: first-observation admission for explicit Map factories
+
+The concentrated audit reproduced a concrete preparation defect: a Map Value
+getter could revise the previously read Key Type, after which `map-generator`
+captured the new revision and invoked both key validators. The old factory
+therefore admitted authority it had already observed becoming obsolete. This is
+an explicit factory defect, not a request for arbitrary Type inference. Self-
+mutation of the object currently computing a slot was already forbidden by the
+object guard and retains its original error; it is not claimed as a new gap.
+
+Map preparation now copies caller-owned key/dependency spines before callbacks,
+captures known request owners before validation, and records each effective Key/
+Value identity before Type validation and the next getter. A shared private
+`retain-source-stamps!` uses the product factory's existing identity hash policy;
+rediscovery never replaces old stamps. The transient checker reads only epochs.
+The sampler observer is captured once and invoked at explicit checked actions,
+so it cannot recursively enter itself through that checker. There is one retained
+Map guard and the transient checker is not copied into trees or reports.
+
+The existing generic finite-domain constructor still owns key shape/duplicates/
+quota admission before application key validators. Those validators still must
+preserve key identity. Original callback exceptions, including false, propagate
+unchanged even when a callback also invalidates a source. Revisions refuse before
+a later getter, binding or key validator; empty domains retain all owners. A fresh
+factory is the only retry path. Failed preparation does not roll back user effects
+or renew an earlier sampler/report.
+
+The existing Record/Function/FUN service example now exports `map-service-action`
+for a declared directory; `map-service-tests` reuses it. Its deterministic two-key
+tree and typed sampler share the original Map guard instead of losing Key authority
+behind a custom generation recipe. The regression first refuses a directory whose
+Value getter revises Key, then freshly prepares a failing service, shrinks values
+while retaining Function wrappers, replays seed/concrete/corpus witnesses, rejects
+a later Key revision and explicitly prepares a new report. No fixture parser or
+new framework is involved.
+
+The sampler suite is moved intact to `t/representations/property-testing/samplers.scm`,
+with standard `extra-inputs` tracking. All old cases remain, and controls cover
+effective-Type ordering, known roots/dependencies, sampler-validation side effects,
+request-spine mutation, false exceptions, observer re-entry and fresh repair.
+The independent generic package stays at 148 cases; it does not import POO.
+
+`PropertyScopes.lean` composes the existing `observeDeclaration`/`captureRevision`
+protocol as `observeMap`: preflight refusal, first/second-read errors, Value retiring
+Key, original error causes, stable exact publication and a bound of two added
+metadata identities. Alias and fresh-epoch examples retain the same ledger. Exact
+host source clocks, faithful metadata/validation, terminating callbacks and the
+existing observer discipline remain premises. These finite source/model laws
+advance the paper's future work; they do not prove concurrent atomicity, compiler
+execution or physical performance.
+
+Preparation checks traverse the finite unique owner ledger; source registration
+uses the existing hash policy. The retained guard has that closed ledger and one
+optional sampler hook, with no extra per-value factory/checker stack. The two-Type
+metadata bound is not a byte/time bound for arbitrary dependencies or callbacks.
+No latency improvement is claimed. No upstream changes, new namespace, scheduler,
+resource-limit changes or acceptance reductions are introduced.

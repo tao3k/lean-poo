@@ -150,3 +150,20 @@ example : callFunction (fun _ : Nat => true) (fun _ => true)
 -- Refreshing the caller still cannot manufacture a value for an absent raw row.
 example : callFunction (fun _ : Nat => true) (fun _ => true)
     "unknown request" [(0, [4, 5]), (1, [8, 9])] 2 1 = .error (some "unknown request") := rfl
+
+-- Value cannot retire the already captured Key while keeping an unrelated root live.
+example : observeMap (Cause := Bool)
+    (fun epoch source : Nat => if source == 0 then epoch else 0) [(2, 0)]
+    (fun state => .ok (0, state)) (fun _ => .ok (1, 1)) 0 = .error none := rfl
+-- A fresh retry deliberately captures the new Key epoch; it never renews the old factory.
+example : observeMap (Cause := Bool)
+    (fun epoch source : Nat => if source == 0 then epoch else 0) [(2, 0)]
+    (fun state => .ok (0, state)) (fun state => .ok (1, state)) 1 =
+      .ok ((0, 1), (1, [(1, 0), (0, 1), (2, 0)])) := rfl
+-- False remains an original callback cause, distinct from stale refusal.
+example : observeMap (fun _ source : Nat => source) [(2, 2)]
+    (fun state => .ok (0, state)) (fun _ => .error false) 0 = .error (some false) := rfl
+-- Shared Key/Value keeps one source epoch rather than two captures.
+example : observeMap (Cause := Bool) (fun _ source : Nat => source) [(2, 2)]
+    (fun state => .ok (0, state)) (fun state => .ok (0, state)) 0 =
+      .ok ((0, 0), (0, [(0, 0), (2, 2)])) := rfl

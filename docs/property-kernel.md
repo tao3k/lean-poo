@@ -640,3 +640,21 @@ carrier examples cover empty and sensitive spellings. Host conversion, source
 clocks and termination remain premises; this does not verify the compiler, intern
 storage or physical performance. Existing generator-tree/source-scope laws supply
 the enclosing lazy/replay protocol. See P48 of the RFC for executable controls.
+
+## Explicit Map factory admission
+
+The Map preparation pipeline now composes first-observation source capture across
+known request participants, effective Key and Value, and binding/key validation.
+Request spines are frozen before callbacks. The product factory shares the same
+identity-hash retention primitive. The existing service Map tree carries the
+original guard into typed FUN, retained shrinking, concrete/seed/corpus replay
+and explicit fresh retry.
+
+`observeMap` in PropertyScopes composes `observeDeclaration`: stale preflight,
+first/second-read errors, a later Value edit of Key, exact original causes, stable
+publication and at most two added metadata identities. Finite examples distinguish
+stale refusal from false causes and old authority from fresh retry. Accurate
+source clocks, faithful host interpretation and callback termination remain
+premises. Existing scope/tree laws govern unwind and replay; these are not
+compiler, concurrent atomicity or wall-clock performance proofs. See P49 of the
+RFC for the reproduced factory failure, regression suite and cost boundary.
