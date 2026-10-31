@@ -2574,11 +2574,11 @@ execution, which must retain its original cause and ordinary scope cleanup.
 
 The existing generic model entry now uses Gerbil contracts for the model, proper
 command spine and equality callback, alongside its existing fixture/preparation
-contracts. The typed trace generator admits command/model carriers, exact bounded
+contracts. The typed trace generator admits exact bounded
 steps and a proper dependency spine before entering `with-trace-model`. The same
 0–65536 step bound is preserved, with no clamping. Typed `check-trace` replaces
 manual callable checks with the same standard parameter mechanism; `trace-property`
-checks its model/fixture/equality binding immediately instead of deferring a static
+checks its fixture/equality binding immediately instead of deferring a static
 error until after a property generator has drawn. `valid-trace?` still returns
 false for an invalid trace, and domain mismatch, Boolean mismatch, stale sources
 and callback exceptions retain their existing owners. No guard framework, new
@@ -2591,7 +2591,10 @@ the interpreted request refused. Gerbil's official MOP places `:pair` under
 The existing parameter/using contracts therefore use the existing standard `proper-list?`
 predicate contract across finite sequence, specification, product, trace and
 dependency boundaries. This retains an explicit properness judgment without a
-new list implementation or wrapper. A compiled literal regression covers repair,
+new list implementation or wrapper. POO model/descriptor validation stays in
+`with-trace-model`, preserving its TypeError rather than duplicating it with a
+carrier contract; static callback/spine/budget failures use ContractViolation.
+A compiled literal regression covers repair,
 raw sequence shrinking and specification preparation before callbacks. The
 existing finite-sequence Lean laws apply under truthful host shape recognition;
 this is executable optimizer-path acceptance, not compiler verification.
