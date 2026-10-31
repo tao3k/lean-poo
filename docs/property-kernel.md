@@ -574,3 +574,22 @@ Rational bridge reuses from-generator and the same value policy; recursive carri
 and a Record/List/Function FUN service cover shrink/replay/source retirement. Float,
 Real and Number remain explicit-sampler boundaries. Faithful Scheme arithmetic,
 exactification and codecs are premises; this is not IEEE, PRNG or bit-cost proof.
+
+
+## Bounded tagged operation generation
+
+The Scheme automatic generator now recognizes the existing Sum constructor through
+its nominal Sum. prototype. Its finite tag directory is source-owned; payload Types
+may be shared without collapsing labels. The recursive graph supplies depth/node
+feasibility and shrinking retains the selected tag. The journal example in
+`examples/recursive-trees.ss` uses a Record/FUN action, seed replay and a data-only
+codec to reduce an ignored debit to a single debit of one.
+
+`eligibleTaggedBranches_order` and `eligibleTaggedBranches_sound` preserve captured
+order and finite cost. `taggedBranch_total_budget` reserves the carrier node.
+`taggedCandidates_member` and `taggedCandidates_descent` retain labels, child
+provenance and strict cost decrease. `inspectTagged_unknown`,
+`inspectTagged_read_error` and `inspectTagged_success` formalize label-first
+inspection and original failures. Host getters, source clocks and the bounded
+recursive interpreter remain explicit interpretation premises; these laws do not
+prove the Scheme compiler or physical execution costs.

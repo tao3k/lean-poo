@@ -88,4 +88,90 @@ theorem finiteSequenceInput_repair (model : TraceModel State Command Reply)
       (retire model state commands).Sublist commands :=
   ⟨rfl, retire_valid model commands state, retire_sublist model commands state⟩
 
+/-- Sum alternatives retain labels separately from shared payload node identities.
+Only branches with a finite witness inside the residual allowance are selectable. -/
+def eligibleTaggedBranches (branches : List (Tag × Nat)) (cost : Nat → Option Nat)
+    (available : Nat) : List (Tag × Nat) :=
+  branches.filter (fun branch => (cost branch.2).any (fun needed => decide (needed ≤ available)))
+
+/-- Filtering preserves declaration order, including distinct labels sharing a node. -/
+theorem eligibleTaggedBranches_order (branches : List (Tag × Nat)) (cost : Nat → Option Nat)
+    (available : Nat) : (eligibleTaggedBranches branches cost available).Sublist branches :=
+  List.filter_sublist
+
+/-- Every selectable alternative has an original label/node pair and affordable cost. -/
+theorem eligibleTaggedBranches_sound (branches : List (Tag × Nat)) (cost : Nat → Option Nat)
+    (available node : Nat) (tag : Tag)
+    (chosen : (tag, node) ∈ eligibleTaggedBranches branches cost available) :
+    (tag, node) ∈ branches ∧ ∃ needed, cost node = some needed ∧ needed ≤ available := by
+  obtain ⟨member, fits⟩ := List.mem_filter.mp chosen
+  refine ⟨member, ?_⟩
+  cases found : cost node with
+  | none => simp [found] at fits
+  | some needed => exact ⟨needed, rfl, by simpa [found] using fits⟩
+
+/-- Empty or entirely uninhabited declarations provide no branch to sample. -/
+theorem eligibleTaggedBranches_empty (cost : Nat → Option Nat) (available : Nat) :
+    eligibleTaggedBranches ([] : List (Tag × Nat)) cost available = [] := rfl
+
+/-- Reserving the Sum root leaves enough quota for every selected child. -/
+theorem taggedBranch_total_budget (remaining needed : Nat) (positive : 0 < remaining)
+    (fits : needed ≤ remaining - 1) : 1 + needed ≤ remaining := by omega
+
+/-- Payload shrinking retains its captured label; no redispatch or redraw occurs. -/
+def taggedCandidates (tag : Tag) (payloads : List Value) : List (Tag × Value) :=
+  payloads.map (fun value => (tag, value))
+
+/-- Both the label and payload provenance survive each proposed shrink. -/
+theorem taggedCandidates_member (tag label : Tag) (payloads : List Value) (value : Value) :
+    (label, value) ∈ taggedCandidates tag payloads ↔ label = tag ∧ value ∈ payloads := by
+  simp only [taggedCandidates, List.mem_map, Prod.mk.injEq]
+  constructor
+  · rintro ⟨candidate, member, same, rfl⟩
+    exact ⟨same.symm, member⟩
+  · rintro ⟨rfl, member⟩
+    exact ⟨value, member, rfl, rfl⟩
+
+/-- Adding the fixed carrier-root cost cannot manufacture or hide strict descent. -/
+theorem taggedCandidates_descent (measure : Value → Nat) (original smaller : Value) :
+    1 + measure smaller < 1 + measure original ↔ measure smaller < measure original := by omega
+
+/-- Read the payload only after its label identifies a captured branch. The host
+interpretation supplies truthful getters and bounded, source-current inspection. -/
+def inspectTagged [DecidableEq Tag] (branches : List (Tag × Nat)) (tag : Tag)
+    (read : Unit → Except Cause Value) (inspect : Nat → Value → Except Cause (Option Output)) :
+    Except Cause (Option (Tag × Output)) :=
+  match lookupFunction branches tag with
+  | none => .ok none
+  | some node => do
+    let value ← read ()
+    let child ← inspect node value
+    pure (child.map (fun payload => (tag, payload)))
+
+/-- Unknown labels cannot invoke a payload getter or branch inspector. -/
+theorem inspectTagged_unknown [DecidableEq Tag] (branches : List (Tag × Nat)) (tag : Tag)
+    (read : Unit → Except Cause Value) (inspect : Nat → Value → Except Cause (Option Output))
+    (missing : lookupFunction branches tag = none) :
+    inspectTagged branches tag read inspect = .ok none := by simp [inspectTagged, missing]
+
+/-- Getter failures preserve their exact cause and suppress payload inspection. -/
+theorem inspectTagged_read_error [DecidableEq Tag] (branches : List (Tag × Nat)) (tag : Tag)
+    (node : Nat) (cause : Cause) (inspect : Nat → Value → Except Cause (Option Output))
+    (selected : lookupFunction branches tag = some node) :
+    inspectTagged branches tag (fun _ => .error cause) inspect = .error cause := by
+  simp only [inspectTagged, selected]
+  rfl
+
+/-- Successful inspection retains the selected label even with shared child nodes. -/
+theorem inspectTagged_success [DecidableEq Tag] (branches : List (Tag × Nat)) (tag : Tag)
+    (node : Nat) (value : Value) (payload : Output)
+    (inspect : Nat → Value → Except Cause (Option Output))
+    (selected : lookupFunction branches tag = some node)
+    (accepted : inspect node value = .ok (some payload)) :
+    inspectTagged branches tag (fun _ => .ok value) inspect = .ok (some (tag, payload)) := by
+  simp only [inspectTagged, selected]
+  change (inspect node value).map (fun child => child.map (fun item => (tag, item))) = _
+  rw [accepted]
+  rfl
+
 end LeanPoo.Functional.PropertyTesting
