@@ -102,3 +102,7 @@ See [P62](pbt-design-rfc.md#p62-ordered-fixed-carrier-edge-discovery).
 P63 shares opaque sampler constructor/source admission between recursive graphs
 and typed bridges before optional availability metadata. See
 [P63](pbt-design-rfc.md#p63-shared-opaque-sampler-admission-before-optional-metadata).
+
+P64 shares the core's strict Boolean source contract across graph participants,
+direct typed checks and cached guards; malformed replies cannot authorize later
+work. See [P64](pbt-design-rfc.md#p64-strict-boolean-source-admission-across-typed-composition).

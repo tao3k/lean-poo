@@ -470,4 +470,69 @@ theorem prepareOpaqueLeaf_refused [DecidableEq Source] (current : State → Sour
     (prepareOpaqueLeaf current ledger mismatch actual bound sources available state >>= tail) = .error cause := by
   rw [failed]; rfl
 
+/-- The core source-observer contract admits only actual Booleans. None denotes
+any non-Boolean host datum, not false authority or absence of an optional hook. -/
+def sourceReply (malformed : Cause) : Option Bool → Except Cause Bool
+  | none => .error malformed
+  | some value => .ok value
+
+/-- Check pure terminating observer callbacks in order after epoch admission.
+Absent hooks contribute no callback. A false epoch/reply short-circuits; malformed
+replies and original exceptions remain errors rather than truthy authorization. -/
+def checkSourceObservers (malformed : Cause) (epochs : Bool) :
+    List (Unit → Except Cause (Option Bool)) → Except Cause Bool
+  | [] => .ok epochs
+  | read :: rest => if epochs then do
+      let reply ← read ()
+      let admitted ← sourceReply malformed reply
+      if admitted then checkSourceObservers malformed true rest else .ok false
+    else .ok false
+
+/-- Boolean replies keep their exact value, including false. -/
+theorem sourceReply_boolean (malformed : Cause) (value : Bool) :
+    sourceReply malformed (some value) = .ok value := rfl
+
+/-- Hook absence retains epoch admission without adding a callback. -/
+theorem checkSourceObservers_empty (malformed : Cause) (epochs : Bool) :
+    checkSourceObservers malformed epochs [] = .ok epochs := rfl
+
+/-- Captured retirement skips every hook, including deliberately throwing ones. -/
+theorem checkSourceObservers_stale (malformed : Cause)
+    (hooks : List (Unit → Except Cause (Option Bool))) :
+    checkSourceObservers malformed false hooks = .ok false := by
+  cases hooks <;> rfl
+
+/-- Original callback exceptions are not rewritten as malformed/stale replies. -/
+theorem checkSourceObservers_cause (malformed cause : Cause)
+    (rest : List (Unit → Except Cause (Option Bool))) :
+    checkSourceObservers malformed true ((fun _ => .error cause) :: rest) = .error cause := rfl
+
+/-- A malformed participant cannot be hidden by later true or absent hooks. -/
+theorem checkSourceObservers_malformed (malformed : Cause)
+    (rest : List (Unit → Except Cause (Option Bool))) :
+    checkSourceObservers malformed true ((fun _ => .ok none) :: rest) = .error malformed := rfl
+
+/-- False retains retirement semantics and suppresses the remaining callbacks. -/
+theorem checkSourceObservers_false (malformed : Cause)
+    (rest : List (Unit → Except Cause (Option Bool))) :
+    checkSourceObservers malformed true ((fun _ => .ok (some false)) :: rest) = .ok false := rfl
+
+/-- A true participant authorizes only continuation to the existing tail. -/
+theorem checkSourceObservers_true (malformed : Cause)
+    (rest : List (Unit → Except Cause (Option Bool))) :
+    checkSourceObservers malformed true ((fun _ => .ok (some true)) :: rest) =
+      checkSourceObservers malformed true rest := rfl
+
+/-- Over the valid Boolean domain the strict protocol is exactly finite
+conjunction, preserving normal source behavior and participant order. -/
+theorem checkSourceObservers_booleans (malformed : Cause) (replies : List Bool) :
+    checkSourceObservers malformed true (replies.map (fun reply => fun _ => .ok (some reply))) =
+      .ok (replies.all id) := by
+  induction replies with
+  | nil => rfl
+  | cons reply rest ih =>
+    cases reply with
+    | false => rfl
+    | true => exact ih
+
 end LeanPoo.Functional.PropertyTesting

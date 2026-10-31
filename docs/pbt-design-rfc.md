@@ -2815,3 +2815,49 @@ It does not discover hidden callback dependencies, prove arbitrary Type predicat
 or model effects before a factory returns. Bookkeeping remains one declared-source
 traversal with first-identity retention; no wall-clock improvement is claimed.
 The finite future-work scope, complete checks and resource limits are unchanged.
+
+## P64: strict Boolean source admission across typed composition
+
+The audit reproduced a source-judgment inconsistency: an opaque .current? hook
+returning a symbol was accepted as truthy while compiling a recursive graph. A
+later factory ran, and the returned graph reported current when an additional
+participant masked that malformed reply. The generic core already required an
+actual Boolean. The frozen public generator probe previously returned accepted /
+current and recorded one later factory. This is an admission defect, not a demand
+to prove callback purity, discover hidden sources or synthesize arbitrary Types.
+
+Graph participant checks and the typed direct checker now call the EXISTING core
+boolean-result primitive. The already cached bound hook in source-guard uses the
+core live? operation. There is no new validator, observer wrapper, cache or module.
+Every present participant is checked before conjunction can discard its reply;
+empty sampler alternatives still own their observer obligations. Captured epoch
+refusal precedes hooks, absent hooks remain true, false replies remain stale, and
+malformed replies are errors rather than source retirement or property failures.
+Original hook exceptions, including thrown false, escape unchanged. Hook purity
+with respect to semantic source state and termination remain explicit premises.
+
+Six regression cases cover malformed numeric/symbol/list/object replies before
+and during later factory preparation, inhabited and empty leaves, cached guards,
+epoch-first short-circuiting, explicit typed sampler failure before draw/property,
+false-versus-exception distinctions and scope restoration, and unchanged source-free
+seeded generation. The complex shared Record/Function service composes Tuple/List/
+Pair through FUN: malformed observation stops before later construction; external
+correction permits explicit preparation, decreasing shrinking and concrete/seeded
+replay; malformed/false observation and later epoch retirement reject old receipts;
+a corrected service passes after fresh preparation. Nested Function wrappers remain
+in force. Correcting a reply never rewrites an old error report into a valid witness.
+
+Eight PropertyPreparation laws model strict reply admission and ordered finite
+observer conjunction: valid Boolean preservation, empty/missing hooks, stale epoch
+priority, original causes, malformed reply refusal, false short-circuiting, true
+continuation and equivalence to conjunction over the valid Boolean domain. Top-level
+examples show malformed replies at either position, epoch refusal before a throwing
+hook and false exceptions distinct from valid false data. Non-Boolean host values
+are one explicitly rejected class; they are never cast to a catch-all Type. These
+are finite protocol proofs under faithful host dispatch, accurate clocks, pure
+observers and terminating callbacks, not compiler/runtime verification. An explicitly supplied prepared recipe retains its existing replayable flag;
+invalid current authority still refuses actual replay. Automatic preparation
+failure retains its non-replayable report. Normal observer identities, invocation
+sites and PRNG schedules are retained. No elapsed-
+time claim follows from a Boolean contract check; complete checks and all resource
+limits remain unchanged within the RFC's finite future-work scope.

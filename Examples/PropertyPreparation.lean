@@ -135,3 +135,18 @@ example : prepareOpaqueLeaf (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] "binding"
 example : prepareOpaqueLeaf (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] true
     (fun state => .ok (0, state)) (fun state => .ok (0, state)) (fun state => .ok ([], state))
     (fun _ => (.error false : Except Bool (Bool × Nat))) 0 = .error (some false) := rfl
+
+-- A malformed hook remains an error even when the next participant is true.
+example : checkSourceObservers "boolean required" true
+    [(fun _ => .ok none), (fun _ => .ok (some true))] = .error "boolean required" := rfl
+-- A valid prefix cannot turn a later malformed reply into current authority.
+example : checkSourceObservers "boolean required" true
+    [(fun _ => .ok (some true)), (fun _ => .ok none)] = .error "boolean required" := rfl
+-- A false epoch skips the hook entirely, preserving retirement priority.
+example : checkSourceObservers "boolean required" false
+    [(fun _ => .error "must not enter")] = .ok false := rfl
+-- False callback data short-circuits without entering a later malformed hook.
+example : checkSourceObservers "boolean required" true
+    [(fun _ => .ok (some false)), (fun _ => .ok none)] = .ok false := rfl
+-- A thrown false cause differs from a valid false reply.
+example : checkSourceObservers true true [(fun _ => .error false)] = .error false := rfl
