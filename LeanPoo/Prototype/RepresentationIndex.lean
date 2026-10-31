@@ -551,4 +551,70 @@ theorem checkedShapeExtension (old next : List Nat) (key : Nat)
     · simpa [same] using fresh.1
     · exact retained prior
 
+/-- A certified removal reuses the old canonical order. Serial ranks stand for
+symbol identity; duplicate/reordered requests do not change membership. -/
+def narrowShapeRanks (requested old : List Nat) : List Nat :=
+  old.filter (fun rank => decide (rank ∈ requested))
+
+/-- Filtering keeps exactly requested old identities, never a replacement key. -/
+@[simp] theorem narrowShapeRanks_mem (requested old : List Nat) (rank : Nat) :
+    rank ∈ narrowShapeRanks requested old ↔ rank ∈ old ∧ rank ∈ requested := by
+  simp [narrowShapeRanks]
+
+/-- An already ordered descriptor remains ordered without invoking a full sort. -/
+theorem narrowShapeRanks_ordered (requested old : List Nat)
+    (ordered : old.Pairwise (· < ·)) : (narrowShapeRanks requested old).Pairwise (· < ·) :=
+  ordered.filter _
+
+/-- Unique old identities remain unique; no spelling-based key comparison enters. -/
+theorem narrowShapeRanks_unique (requested old : List Nat) (unique : old.Nodup) :
+    (narrowShapeRanks requested old).Nodup := unique.filter _
+
+/-- Complete subset admission is essential: this certifies the entire requested
+inventory, not just its size. Mixed replacement must use general construction. -/
+theorem narrowShapeRanks_perm (requested old : List Nat) (unique : requested.Nodup)
+    (oldUnique : old.Nodup) (subset : requested ⊆ old) :
+    (narrowShapeRanks requested old).Perm requested := by
+  apply (List.perm_ext_iff_of_nodup (narrowShapeRanks_unique _ _ oldUnique) unique).mpr
+  intro rank
+  simp only [narrowShapeRanks_mem]
+  exact ⟨And.right, fun present => ⟨subset present, present⟩⟩
+
+/-- No retained key may be silently lost or duplicated during index rebuilding. -/
+theorem narrowShapeRanks_length (requested old : List Nat) (unique : requested.Nodup)
+    (oldUnique : old.Nodup) (subset : requested ⊆ old) :
+    (narrowShapeRanks requested old).length = requested.length :=
+  (narrowShapeRanks_perm _ _ unique oldUnique subset).length_eq
+
+/-- Any complete canonical construction of this inventory has the same directory.
+This supplies the connection from sorted subset filtering to ordinary lookup. -/
+theorem narrowShapeRanks_eq_canonical (requested old canonical : List Nat)
+    (unique : requested.Nodup) (oldUnique : old.Nodup) (subset : requested ⊆ old)
+    (oldOrdered : old.Pairwise (· < ·)) (ordered : canonical.Pairwise (· < ·))
+    (inventory : canonical.Perm requested) : narrowShapeRanks requested old = canonical := by
+  exact List.Perm.eq_of_pairwise (le := (· < ·))
+    (fun _ _ _ _ ab ba => by omega) (narrowShapeRanks_ordered _ _ oldOrdered)
+    ordered ((narrowShapeRanks_perm _ _ unique oldUnique subset).trans inventory.symm)
+
+/-- Successive removals commute at the identity-directory level. This does not
+commute user effects or authorize reuse of old receiver values/credentials. -/
+theorem narrowShapeRanks_commute (left right old : List Nat) :
+    narrowShapeRanks left (narrowShapeRanks right old) =
+      narrowShapeRanks right (narrowShapeRanks left old) := by
+  simp [narrowShapeRanks, List.filter_filter, Bool.and_comm]
+
+/-- Complete declared preparation charges hint acquisition, request admission,
+old-directory filtering, and the shared deduplication/index/value work. These
+are caller-supplied logical units, not a GC, hash, allocation or wall-clock law. -/
+def narrowShapeWork (hint admission filtering common : Nat) : Nat :=
+  hint + admission + filtering + common
+
+/-- A retained order is beneficial only when its complete preparation fits the
+avoided sort. A/A controls and full workflows must measure this premise. -/
+theorem narrowShapeWork_le_iff (hint admission filtering common sorting : Nat) :
+    narrowShapeWork hint admission filtering common ≤ sorting + common ↔
+      hint + admission + filtering ≤ sorting := by
+  unfold narrowShapeWork
+  omega
+
 end LeanPoo.Prototype.Representation

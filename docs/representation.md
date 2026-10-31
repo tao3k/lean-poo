@@ -1107,3 +1107,26 @@ standard `gerbil clean` through the same declarations, retaining the original
 failure status. `BuildOutputs.invalidate_requires_build` and the missing-runtime
 negative control separate invalidating freshness from repairing an object. Only
 subsequent successful builds and natural, error-free test exits admit the result.
+
+## Static-shape subset preparation
+
+The companion `make-slot-layout` now filters its old immutable directory only
+when every requested distinct identity belongs to it and the inventory shrinks.
+It reuses Gerbil's existing deduplication membership table, full weak interner
+and fresh value seeding. Mixed replacements preserve the general fallback.
+`RepresentationIndex.narrowShapeRanks_mem`, `_ordered`, `_unique`, `_perm`,
+`_length`, `_eq_canonical` and `_commute` connect this guarded construction to
+ordinary canonical lookup; in particular cardinality alone cannot authorize it.
+`narrowShapeWork_le_iff` requires hint acquisition, admission and filtering to
+fit the avoided sort, with common allocation/index/seeding charged on both sides.
+Existing `readPrepared_reshaped`, `commitPrimary_error` and successful current-cell
+laws govern old-offset refusal, failed forcing and exact Function/false values.
+Top-level `Examples/Representation.lean` includes empty, reordered, replacement
+and expensive-hint negative controls. The Gerbil shared service uses FUN map,
+refinement, source removal, old-read rejection and restoration with fresh cells.
+These finite laws assume faithful symbol identities, standard container behavior
+and registered serialized edits; they do not prove a compiler, GC or latency.
+The fixed-source full paired study retained A/A, B/B and all GC regimes. Natural
+and collected service tails still varied; removing full-sort calls alone is not
+a demonstrated uniform wall-clock improvement. See companion representation
+notes for every regime and the significant same-side control ranges.

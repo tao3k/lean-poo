@@ -829,4 +829,22 @@ example : ¬ (hostPairPotential 1 + hostPairPotential 1 + 3 ≤ hostPairPotentia
 /-- A killed receipt with no collected child ticks need not describe idle work. -/
 example : totalChildCpu 0 30 = 30 := rfl
 
+/-- Reordered duplicate requests retain old identity order, not request order. -/
+example : narrowShapeRanks [5, 1, 5] [0, 1, 2, 3, 4, 5] = [1, 5] := by decide
+
+/-- An empty target is an empty descriptor, regardless of the retained old shape. -/
+example : narrowShapeRanks [] [0, 1, 2, 3] = [] := by decide
+
+/-- Smaller cardinality alone does not certify replacement membership. -/
+example : ¬ ([1, 9] : List Nat) ⊆ [0, 1, 2, 3] := by decide
+
+/-- Restoring metadata order does not authorize an old offset at the narrowed view. -/
+example : narrowShapeRanks [1, 3] [0, 1, 2, 3] ≠ [0, 1, 2, 3] := by decide
+
+/-- Savings must pay for acquiring a hint as well as admission/filtering. -/
+example : narrowShapeWork 10 4 8 20 ≤ 50 + 20 := by decide
+
+/-- An expensive old descriptor cannot be treated as free preparation. -/
+example : ¬ narrowShapeWork 100 4 8 20 ≤ 50 + 20 := by decide
+
 end LeanPoo.Examples.Representation
