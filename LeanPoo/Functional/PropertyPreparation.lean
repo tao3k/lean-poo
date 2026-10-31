@@ -138,7 +138,8 @@ theorem prepareConfiguredBridge_present (live : State → Bool)
   rw [prepareConfiguredBridge_continue live state middle options _ fallback before ready]
   simp [prepareBridge, guardedGeneration_state live middle final (some value) ready after]
 
-/-- Refused preparation cannot enter any later publication/consumer function. -/
+/-- Refused preparation cannot enter a success publication/consumer function.
+Application consumption of an error report is a separate IO operation. -/
 theorem prepareConfiguredBridge_refused (live : State → Bool)
     (read : State → Except Cause (Options × State))
     (factory : Options → State → Except Cause (Option Value × State))

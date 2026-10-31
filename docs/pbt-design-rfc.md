@@ -2163,5 +2163,16 @@ mutable-epoch checks. This is future-work source/model verification, not a proof
 of compiler/runtime correctness, arbitrary effects or concurrent atomicity.
 
 The generic generator algebra, budgets, resource limits and complete acceptance
-suite are unchanged. Pure owner checks occur only during preparation; fewer
+suite are unchanged. Additional transient owner checks occur only during preparation; fewer
 configuration reads are not a measured wall-clock performance claim.
+
+Reader source discovery preserves stable declaration failures through the same
+private report runner as direct checks. The existing Option carrier retains an
+original false cause without rerunning the failing getter, wrapping a substitute
+sampler or skipping the consumer's ordinary error report. If the getter also
+retired known authority, its original exception escapes before configuration;
+no later configuration getter runs. This distinguishes original exceptions from
+normal stale returns without refreshing epochs. The established Schema migration
+regression and exact-cause/one-delivery controls cover this report boundary.
+The preparation model's monadic consumer is a success continuation; application
+consumption of an error report remains a separate, existing IO operation.
