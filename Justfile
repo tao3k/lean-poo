@@ -385,6 +385,7 @@ _check-examples:
     {{lean}} Examples/PropertyProducts.lean
     {{lean}} Examples/PropertyFilters.lean
     {{lean}} Examples/PropertyScopes.lean
+    {{lean}} Examples/PropertyPreparation.lean
     {{lean}} Examples/PropertySequences.lean
     {{lean}} Examples/PropertyReplay.lean
     {{lean}} Examples/PropertyNumbers.lean

@@ -2048,3 +2048,60 @@ bounds. Draw/shrink retain their existing tree protocol; no transient checker is
 retained and no latency improvement is claimed. The independent generic library
 remains POO-free at 148 cases. No upstream, namespace, scheduler, resource-limit
 or complete-acceptance changes are required.
+
+## P51: closed bridge and specification preparation
+
+The audit reproduced a post-snapshot admission gap: a generation getter retired
+the captured Type, yet generator-core invoked its returned factory and published
+a stale bridge. Attaching a guard only to later value pulls did not protect the
+preparation callbacks already executed. This closes a concrete typed preparation
+path rather than expanding the inference domain.
+
+A private `with-source-stamps` form now reuses the existing dynamic generation
+check and source boundary for both discovery and preparation. It reads only the
+stamp variable and never invokes metadata or source hooks from its checker.
+`sampler-generation` checks generation metadata, owned-factory return, raw draw
+binding and source-hook binding in order. Stable factory #f remains the legitimate
+raw opt-out; a retired #f return cannot enter fallback. Present trees containing
+false data remain distinct from opt-out. Exceptions, including false causes,
+escape unchanged. Scope exit restores the caller and does not roll back effects.
+
+`prepare-sampler` binds generation then domain from the same captured stamps for
+checks and diagnostics; it does not take a permissive second snapshot. Domain
+measure binding is checked before later hook metadata. A check's known requested
+Type is registered before its sampler descriptor getter; identity mismatch still
+refuses before later declarations. Invalid false requests remain Type errors,
+not absent-authority sentinels. Product preparation uses the same binder discipline.
+There is no new public interface, namespace, parser, cache or wrapper chain.
+
+The construction scope also protects nested pulls using the existing core protocol.
+An obsolete factory cannot enter a nested generic producer. Arbitrary direct host
+side effects or callback termination are not controlled or rolled back. Completed
+generators retain their ordinary explicit source guard, not the transient checker;
+normal draws, shrinking and replay keep their existing generic owner.
+
+`service-factory-action` in the existing collection example reuses the Record/
+Function producer and accepts an owned tree recipe. The complex regression retires
+a declared owner before a bounded probe and verifies no producer/Function binding
+runs. A fresh recipe finds and shrinks the deliberately faulty service, retains
+wrappers, replays seed/concrete/corpus witnesses, refuses later retirement without
+extra factory/producer effects and explicitly prepares a corrected passing service.
+Controls also cover getter/factory ordering, raw opt-out, false data, nested pulls,
+exact causes, expected-Type admission and scope release. Existing tests remain.
+
+`PropertyPreparation.lean` imports the established scope/generation laws under the
+same Functional.PropertyTesting namespace. Eight finite laws cover stale preflight,
+retiring factories, exact causes, owned result selection, legitimate fallback,
+fallback retirement/error and suppression of later metadata. Top-level examples
+distinguish absent trees, false values, false causes and fresh authority. The new
+files avoid further growing PropertyScopes and are part of the normal library and
+complete example checks. Accurate clocks, faithful host binding/metadata, standard
+dynamic scope and terminating callbacks remain explicit premises. These are
+source/model laws advancing the paper's future work, not compiler, concurrency,
+arbitrary effect or physical performance proofs.
+
+Checks/diagnostics share one declaration snapshot. Pure epoch checks run at
+preparation stage boundaries over its finite owner set; no transient frame is
+stored or added to hot execution. Operation counts do not imply a wall-clock
+speedup. The independent generic package remains at 148 cases and imports no POO.
+No upstream, scheduler, resource-limit or full-acceptance changes are introduced.

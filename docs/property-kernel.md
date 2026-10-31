@@ -682,3 +682,20 @@ publication. Finite examples distinguish false causes from stale state and
 retargeting. Host clocks, metadata interpretation, dynamic scope and termination
 remain premises. Hidden dependencies, arbitrary payload freezing, concurrency and
 physical performance remain outside these source/model laws; see P50 of the RFC.
+
+## Checked bridge/domain preparation
+
+Generation metadata and its owned factory, raw fallback and domain measure/hook
+binding now share the captured stamp authority. Checks/diagnostics do not reread
+a fresh declaration snapshot between these stages. Pure transient checks protect
+nested core pulls but are released before ordinary execution. Optional factory
+opt-out, false data and original false causes remain distinct. The deferred
+Record/Function/FUN recipe example covers probe refusal, replay and fresh repair.
+
+PropertyPreparation is a separate functional module in the existing namespace,
+imported by LeanPoo and the complete top-level example gate. Its eight laws reuse
+guardedGeneration/guardedStages for checked owned selection, fallback, exact causes
+and later-stage suppression. Host clock/binding fidelity, dynamic scope and
+termination remain premises. Arbitrary direct host effects, compiler execution,
+concurrent atomicity and physical performance remain outside this finite model.
+See P51 of the RFC for executable controls and source ownership.

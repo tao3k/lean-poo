@@ -38,6 +38,7 @@ import LeanPoo.Functional.PropertyGenerators
 import LeanPoo.Functional.PropertyProducts
 import LeanPoo.Functional.PropertyFilters
 import LeanPoo.Functional.PropertyScopes
+import LeanPoo.Functional.PropertyPreparation
 import LeanPoo.Functional.PropertySequences
 import LeanPoo.Functional.PropertyReplay
 import LeanPoo.Functional.PropertyNumbers
