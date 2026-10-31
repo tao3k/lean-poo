@@ -2105,3 +2105,63 @@ preparation stage boundaries over its finite owner set; no transient frame is
 stored or added to hot execution. Operation counts do not imply a wall-clock
 speedup. The independent generic package remains at 148 cases and imports no POO.
 No upstream, scheduler, resource-limit or full-acceptance changes are introduced.
+
+## P52: Reader configuration and initial request admission
+
+The audit reproduced a library-owned admission gap: a Reader policy getter
+retired its known Type, but the later seed getter and draw still ran and the
+report passed. Direct caller argument evaluation remains outside admission;
+this fix addresses configuration getters invoked by property-action itself.
+Automatic generator construction had the analogous window before the initial
+request dependency snapshot. These are preparation-order bugs, not expansions
+of inference or of the callback effect model.
+
+property-action now copies declared dependency identities when constructing the
+Reader recipe, then captures their current epochs with the configuration, Type
+and supplied sampler at each invocation, before any configuration getter. One
+private configuration-options reader uses the existing dynamic .slot?/.ref
+protocol and checked source boundary. It reads size once, preserves optional
+bare-object defaults, size zero, explicit scheduled-size limits and invalid false
+policies, and returns ordinary keyword arguments through standard apply. There
+is no replacement configuration class, new public protocol, namespace or runner.
+The existing Map sampler's dynamic presence test also uses .slot? rather than
+literal-name .has? syntax; shape contracts still belong to the existing Record.
+
+check-property freezes its dependency spine and captures known request owners
+before selecting an automatic generator. That authority protects generator
+construction, metadata discovery and bridge binding; a later snapshot cannot
+refresh a retired owner or erase one by replacing the caller's list spine. The
+existing generic core boundary also suppresses nested producer pulls after
+retirement. Final captured authority still belongs to the existing sampler/report.
+No transient preparation checker is retained during trials or consumer IO.
+
+A configuration exception escapes unchanged, including a false cause, before a
+report/consumer exists. Once check-property starts, its existing preparation
+report semantics remain: stale/error/exhausted are distinct and incomplete runs
+are non-replayable. No effects are rolled back. Explicit fresh invocation captures
+new epochs; it is not an automatic retry and cannot authorize an old report.
+
+The downstream collection-properties example composes existing service recipes,
+Record/Function contracts and FUN: an obsolete configuration stops all producers
+and delivery, a corrected invocation finds and shrinks a wrapped faulty service,
+seed/concrete replay reproduce it, later configuration revision refuses the old
+report, and an explicitly corrected recipe passes. Regression controls cover
+known Type/sampler/dependency retirement, exact causes, single configuration reads,
+optional defaults, dependency-spine mutation, nested automatic-generation probes,
+non-replayable refusal and scope release before consumer effects.
+
+PropertyPreparation.lean composes the existing guardedGeneration and prepareBridge
+models as prepareConfiguredBridge. Seven laws prove stale preflight, configuration
+retirement, exact causes, option/state forwarding, factory retirement, stable
+publication and suppression of a later consumer. Top-level examples include false
+options/causes, exact state threading, stale opt-out and explicit fresh authority.
+Accurate declared identity/epoch tracking, pure observers, terminating callbacks
+and faithful sequential host/dynamic-scope binding remain premises. The paper's
+prototype-composition model and RFC-pinned Rackcheck gen:map/gen:bind motivate
+composition through existing values and shrink trees; they do not specify POO
+mutable-epoch checks. This is future-work source/model verification, not a proof
+of compiler/runtime correctness, arbitrary effects or concurrent atomicity.
+
+The generic generator algebra, budgets, resource limits and complete acceptance
+suite are unchanged. Pure owner checks occur only during preparation; fewer
+configuration reads are not a measured wall-clock performance claim.

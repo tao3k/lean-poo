@@ -699,3 +699,12 @@ and later-stage suppression. Host clock/binding fidelity, dynamic scope and
 termination remain premises. Arbitrary direct host effects, compiler execution,
 concurrent atomicity and physical performance remain outside this finite model.
 See P51 of the RFC for executable controls and source ownership.
+
+Reader configuration and automatic Type generation now share first-observation
+request admission (P52). Dependency identities are copied before callbacks;
+standard dynamic slot reads and the existing preparation scope refuse retirement
+without retaining a transient checker during execution. Configuration errors
+precede report creation; automatic-generation errors retain existing typed report
+semantics. Application argument evaluation and consumer IO remain application-owned.
+The prepareConfiguredBridge model composes the existing configuration guard and
+owned/raw bridge laws; it does not prove host binding or concurrent effects.

@@ -73,4 +73,79 @@ theorem preparation_tail_refused (live : State → Bool) (state next : State) (m
     guardedStages live ((fun _ => .ok (metadata, next)) :: rest) state = .error none :=
   guardedStages_revised live state next metadata rest before after
 
+/-- Reader configuration feeds the existing bridge under one captured live
+predicate. Options are ordinary values, never replacement authority. The resulting
+value is prepared metadata; trial execution and consumer IO are outside this scope. -/
+def prepareConfiguredBridge (live : State → Bool)
+    (read : State → Except Cause (Options × State))
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State)) (state : State) :
+    Except (Option Cause) (Value × State) :=
+  match guardedGeneration live read state with
+  | .error cause => .error cause
+  | .ok (options, next) => prepareBridge live (factory options) (fallback options) next
+
+/-- An obsolete request performs no configuration or bridge preparation. -/
+theorem prepareConfiguredBridge_stale (live : State → Bool)
+    (read : State → Except Cause (Options × State))
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State)) (state : State)
+    (stale : live state = false) :
+    prepareConfiguredBridge live read factory fallback state = .error none := by
+  simp [prepareConfiguredBridge, guardedGeneration_preflight live read state stale]
+
+/-- Configuring a different option value cannot refresh retired request owners. -/
+theorem prepareConfiguredBridge_revised (live : State → Bool) (state next : State) (options : Options)
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = false) :
+    prepareConfiguredBridge live (fun _ => .ok (options, next)) factory fallback state = .error none := by
+  simp [prepareConfiguredBridge, guardedGeneration_revised live state next options before after]
+
+/-- An original configuration exception, including false, bypasses later stages. -/
+theorem prepareConfiguredBridge_cause (live : State → Bool) (state : State) (cause : Cause)
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State)) (before : live state = true) :
+    prepareConfiguredBridge live (fun _ => .error cause) factory fallback state = .error (some cause) := by
+  simp [prepareConfiguredBridge, guardedGeneration_cause live state cause before]
+
+/-- Stable configuration is read once and passed exactly to the existing bridge. -/
+theorem prepareConfiguredBridge_continue (live : State → Bool) (state next : State) (options : Options)
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = true) :
+    prepareConfiguredBridge live (fun _ => .ok (options, next)) factory fallback state =
+      prepareBridge live (factory options) (fallback options) next := by
+  simp [prepareConfiguredBridge, guardedGeneration_state live state next options before after]
+
+/-- A subsequent automatic factory is still governed by the initial live predicate. -/
+theorem prepareConfiguredBridge_factory_revised (live : State → Bool)
+    (state middle final : State) (options : Options) (candidate : Option Value)
+    (fallback : Options → State → Except Cause (Value × State))
+    (before : live state = true) (ready : live middle = true) (after : live final = false) :
+    prepareConfiguredBridge live (fun _ => .ok (options, middle))
+      (fun _ _ => .ok (candidate, final)) fallback state = .error none := by
+  rw [prepareConfiguredBridge_continue live state middle options _ fallback before ready]
+  exact prepareBridge_revised live middle final candidate (fallback options) ready after
+
+/-- Stable configuration and owned trees preserve the final result and actual state. -/
+theorem prepareConfiguredBridge_present (live : State → Bool)
+    (state middle final : State) (options : Options) (value : Value)
+    (fallback : Options → State → Except Cause (Value × State))
+    (before : live state = true) (ready : live middle = true) (after : live final = true) :
+    prepareConfiguredBridge live (fun _ => .ok (options, middle))
+      (fun _ _ => .ok (some value, final)) fallback state = .ok (value, final) := by
+  rw [prepareConfiguredBridge_continue live state middle options _ fallback before ready]
+  simp [prepareBridge, guardedGeneration_state live middle final (some value) ready after]
+
+/-- Refused preparation cannot enter any later publication/consumer function. -/
+theorem prepareConfiguredBridge_refused (live : State → Bool)
+    (read : State → Except Cause (Options × State))
+    (factory : Options → State → Except Cause (Option Value × State))
+    (fallback : Options → State → Except Cause (Value × State)) (state : State)
+    (cause : Option Cause) (consume : Value × State → Except (Option Cause) Output)
+    (refused : prepareConfiguredBridge live read factory fallback state = .error cause) :
+    (prepareConfiguredBridge live read factory fallback state >>= consume) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
