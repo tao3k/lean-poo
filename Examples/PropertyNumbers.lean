@@ -28,3 +28,13 @@ example (best : Rat) : best ∉ rationalCandidates best [0, 1] [0, 1, 3] :=
 example (best candidate : Rat) (member : candidate ∈ rationalCandidates best [0, 1] [0, 1, 3]) :
     rationalWeight candidate < rationalWeight best :=
   rationalCandidates_descent best candidate [0, 1] [0, 1, 3] member
+
+-- Nonzero and negative-only domains have admitted anchors distinct from zero.
+example : integerRangeAnchor (some 8000) (some 8007) = 8000 := rfl
+example : integerRangeAnchor none (some (-10)) = -10 := rfl
+example : integerRangeWindow (some 8000) (some 8007) 3 = (8000, 8003) := rfl
+
+-- Both signs use the same magnitude policy without proposing an invalid zero.
+example : integerRangeCandidates 8000 8007 = [8000, 8003, 8006] := rfl
+example : integerRangeCandidates (-10) (-17) = [-10, -13, -16] := rfl
+example : integerRangeCandidates 7 7 = [] := integerRangeCandidates_anchor 7

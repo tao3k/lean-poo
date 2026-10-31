@@ -112,4 +112,124 @@ theorem rationalCandidates_same_refused (best : Rat) (numerators : List Int) (de
   have strict := rationalCandidates_descent best best numerators denominatorOffsets member
   omega
 
+/-- Exact optional integer bounds; none denotes an omitted endpoint. -/
+def integerInRange (lower upper : Option Int) (value : Int) : Prop :=
+  (match lower with | none => True | some bound => bound ≤ value) ∧
+  (match upper with | none => True | some bound => value ≤ bound)
+
+/-- The nearest-to-zero endpoint, under nonempty interval admission. -/
+def integerRangeAnchor (lower upper : Option Int) : Int :=
+  if 0 < lower.getD 0 then lower.getD 0
+  else if upper.getD 0 < 0 then upper.getD 0 else 0
+
+/-- A nonempty declared interval admits its anchor, including half-unbounded ones. -/
+theorem integerRangeAnchor_valid (lower upper : Option Int) (witness : Int)
+    (nonempty : integerInRange lower upper witness) :
+    integerInRange lower upper (integerRangeAnchor lower upper) := by
+  cases lower <;> cases upper <;> simp_all [integerInRange, integerRangeAnchor] <;> omega
+
+/-- Size clips a finite draw window around the admitted anchor. -/
+def integerRangeWindow (lower upper : Option Int) (size : Nat) : Int × Int :=
+  let anchor := integerRangeAnchor lower upper
+  (match lower with | none => anchor - size | some bound => max bound (anchor - size),
+   match upper with | none => anchor + size | some bound => min bound (anchor + size))
+
+/-- No admitted interval can yield an empty draw window. -/
+theorem integerRangeWindow_anchor (lower upper : Option Int) (size : Nat) (witness : Int)
+    (nonempty : integerInRange lower upper witness) :
+    (integerRangeWindow lower upper size).1 ≤ integerRangeAnchor lower upper ∧
+      integerRangeAnchor lower upper ≤ (integerRangeWindow lower upper size).2 := by
+  have admitted := integerRangeAnchor_valid lower upper witness nonempty
+  cases lower <;> cases upper <;> simp_all [integerRangeWindow, integerInRange] <;> omega
+
+/-- Primitive inclusive-window draws stay in the declared domain and size segment. -/
+theorem integerRangeWindow_sound (lower upper : Option Int) (size : Nat) (value : Int)
+    (lo : (integerRangeWindow lower upper size).1 ≤ value)
+    (hi : value ≤ (integerRangeWindow lower upper size).2) :
+    integerInRange lower upper value ∧
+      integerRangeAnchor lower upper - size ≤ value ∧ value ≤ integerRangeAnchor lower upper + size := by
+  cases lower <;> cases upper <;> simp_all [integerRangeWindow, integerInRange] <;> omega
+
+/-- A size-zero admitted draw is exactly the anchor, not an out-of-domain zero. -/
+theorem integerRangeWindow_zero (lower upper : Option Int) (value : Int)
+    (lo : (integerRangeWindow lower upper 0).1 ≤ value)
+    (hi : value ≤ (integerRangeWindow lower upper 0).2) :
+    value = integerRangeAnchor lower upper := by
+  have bounded := integerRangeWindow_sound lower upper 0 value lo hi
+  omega
+
+/-- Window width is at most twice size, independently of endpoint bit widths. -/
+theorem integerRangeWindow_width (lower upper : Option Int) (size : Nat) :
+    (integerRangeWindow lower upper size).2 - (integerRangeWindow lower upper size).1 ≤ 2 * (size : Int) := by
+  cases lower <;> cases upper <;> simp_all [integerRangeWindow] <;> omega
+
+/-- Positive-distance integer-shrinks is the existing zero/half/predecessor policy. -/
+def rangeMagnitudeShrinks (distance : Nat) : List Nat :=
+  if distance = 0 then [] else [0, distance / 2, distance - 1].eraseDups
+
+/-- Every existing magnitude proposal strictly reduces its positive rank. -/
+theorem rangeMagnitudeShrinks_descent (distance smaller : Nat)
+    (member : smaller ∈ rangeMagnitudeShrinks distance) : smaller < distance := by
+  by_cases zero : distance = 0
+  · simp [rangeMagnitudeShrinks, zero] at member
+  · have choices : smaller = 0 ∨ smaller = distance / 2 ∨ smaller = distance - 1 := by
+      simpa [rangeMagnitudeShrinks, zero] using member
+    rcases choices with rfl | rfl | rfl
+    · omega
+    · exact Nat.div_lt_self (by omega) (by decide)
+    · omega
+
+/-- Reconstruct a value from anchor, polarity and natural distance. -/
+def integerAt (anchor : Int) (negative : Bool) (distance : Nat) : Int :=
+  if negative then anchor - distance else anchor + distance
+
+/-- Reconstruction has exactly the intended natural-valued measure. -/
+theorem integerAt_distance (anchor : Int) (negative : Bool) (distance : Nat) :
+    (integerAt anchor negative distance - anchor).natAbs = distance := by
+  have offset : integerAt anchor negative distance - anchor =
+      if negative then -(distance : Int) else (distance : Int) := by
+    cases negative <;> simp only [integerAt, Bool.false_eq_true, ite_false, ite_true] <;> omega
+  rw [offset]
+  cases negative <;> simp
+
+/-- Exact sign/magnitude decomposition preserves the original exact integer. -/
+theorem integerAt_split (anchor value : Int) :
+    integerAt anchor (decide (value < anchor)) (value - anchor).natAbs = value := by
+  by_cases negative : value < anchor
+  · have cast := Int.ofNat_natAbs_of_nonpos (a := value - anchor) (by omega)
+    simp only [integerAt, negative, decide_true, ite_true]
+    omega
+  · have cast := Int.ofNat_natAbs_of_nonneg (a := value - anchor) (by omega)
+    simp only [integerAt, negative, decide_false, Bool.false_eq_true, ite_false]
+    omega
+
+/-- Moving toward an admitted anchor cannot leave the closed integer interval. -/
+theorem integerAt_segment (lower upper : Option Int) (anchor : Int) (negative : Bool)
+    (distance smaller : Nat) (anchorValid : integerInRange lower upper anchor)
+    (originalValid : integerInRange lower upper (integerAt anchor negative distance))
+    (closer : smaller ≤ distance) : integerInRange lower upper (integerAt anchor negative smaller) := by
+  cases negative <;> cases lower <;> cases upper <;> simp_all [integerInRange, integerAt] <;> omega
+
+/-- Shift the existing magnitude neighborhood without filtering or resampling. -/
+def integerRangeCandidates (anchor value : Int) : List Int :=
+  (rangeMagnitudeShrinks (value - anchor).natAbs).map
+    (integerAt anchor (decide (value < anchor)))
+
+/-- Every actual translated proposal stays in the interval and strictly decreases. -/
+theorem integerRangeCandidates_sound (lower upper : Option Int) (value candidate : Int)
+    (valid : integerInRange lower upper value)
+    (member : candidate ∈ integerRangeCandidates (integerRangeAnchor lower upper) value) :
+    integerInRange lower upper candidate ∧
+      (candidate - integerRangeAnchor lower upper).natAbs < (value - integerRangeAnchor lower upper).natAbs := by
+  obtain ⟨smaller, child, rfl⟩ := List.mem_map.mp member
+  have descent := rangeMagnitudeShrinks_descent _ smaller child
+  refine ⟨integerAt_segment lower upper _ _ _ smaller
+    (integerRangeAnchor_valid lower upper value valid) ?_ (Nat.le_of_lt descent), ?_⟩
+  · simpa only [integerAt_split] using valid
+  · simpa only [integerAt_distance] using descent
+
+/-- An anchor is a terminal value; zero size never invents a shrink toward zero. -/
+theorem integerRangeCandidates_anchor (anchor : Int) : integerRangeCandidates anchor anchor = [] := by
+  simp [integerRangeCandidates, rangeMagnitudeShrinks]
+
 end LeanPoo.Functional.PropertyTesting

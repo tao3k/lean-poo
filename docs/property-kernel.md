@@ -608,3 +608,19 @@ provenance and strict cost decrease. `inspectTagged_unknown`,
 inspection and original failures. Host getters, source clocks and the bounded
 recursive interpreter remain explicit interpretation premises; these laws do not
 prove the Scheme compiler or physical execution costs.
+
+## Exact integer carrier derivation
+
+The generic kernel's size-limited interval generator is shared by IntegerRange,
+UIntN, IntN and Z/ automatic derivation. It shrinks distance from the nearest
+admitted anchor along the original segment. Existing source scopes retire captured
+bounds, retained children and reports; no refresh is hidden inside replay.
+
+`PropertyNumbers.lean` proves anchor admission, inclusive-window soundness and
+nonemptiness, the size-zero result, width at most twice size, sign/distance
+reconstruction and strict domain-preserving shrink descent. The positive/negative
+examples include nonzero anchors. Exact arithmetic, faithful descriptor metadata,
+truthful source clocks and the existing random-source contract remain premises.
+These finite laws do not establish PRNG distribution, physical bignum cost or a
+Scheme/compiler refinement. See P47 of the PBT RFC for failure and empty-domain
+semantics, typed Record/Function examples and the independent generic boundary.
