@@ -114,3 +114,24 @@ example : discoverCarrierEdge (fun _ : Nat => fun _ : Nat => 0) [(1, 0)] "quota"
 -- A false exception remains an original callback cause, not stale refusal.
 example : discoverCarrierEdge (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] true 1
     (fun _ => (.error false : Except Bool (Nat × Nat))) 0 = .error (some false) := rfl
+
+-- Source 2 is first observed before availability retires it; both classifications refuse.
+example (availability : Bool) : prepareOpaqueLeaf
+    (fun epoch : Nat => fun id : Nat => if id == 2 then epoch else 0)
+    [(0, 0), (1, 0)] "binding" (fun state => .ok (0, state)) (fun state => .ok (0, state))
+    (fun state => .ok ([2], state))
+    (fun _ => (.ok (availability, 1) : Except String (Bool × Nat))) 0 = .error none := by
+  cases availability <;> rfl
+-- False availability is an admitted empty leaf with its original source ledger.
+example : prepareOpaqueLeaf (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] "binding"
+    (fun state => .ok (0, state)) (fun state => .ok (0, state)) (fun state => .ok ([2], state))
+    (fun state => (.ok (false, state) : Except String (Bool × Nat))) 0 =
+    .ok (0, false, (0, [(2, 0), (0, 0)])) := rfl
+-- Binding mismatch refuses before a deliberately throwing optional getter.
+example : prepareOpaqueLeaf (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] "binding"
+    (fun state => .ok (0, state)) (fun state => .ok (1, state)) (fun state => .ok ([], state))
+    (fun _ => (.error "must not read" : Except String (Bool × Nat))) 0 = .error (some "binding") := rfl
+-- A thrown false cause is distinct from empty availability and stale refusal.
+example : prepareOpaqueLeaf (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] true
+    (fun state => .ok (0, state)) (fun state => .ok (0, state)) (fun state => .ok ([], state))
+    (fun _ => (.error false : Except Bool (Bool × Nat))) 0 = .error (some false) := rfl

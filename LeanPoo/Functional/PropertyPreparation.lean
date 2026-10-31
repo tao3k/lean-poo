@@ -381,4 +381,93 @@ theorem discoverCarrierEdge_capture_cost [DecidableEq Source] (ledger : List (So
     (captureRevision ledger child epoch).length ≤ ledger.length + 1 :=
   captureRevision_length ledger child epoch
 
+/-- Optional opaque-leaf metadata is downstream of the existing constructor
+binding/source protocol. Availability is its normalized Boolean classification;
+false denotes an empty leaf, not an exception or a source refusal. -/
+def prepareOpaqueLeaf [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State))
+    (available : State → Except Cause (Bool × State)) (state : State) :
+    Except (Option Cause) (Source × Bool × (State × List (Source × Nat))) :=
+  match observeSamplerSources current ledger mismatch actual bound sources state with
+  | .error cause => .error cause
+  | .ok (descriptor, (next, captured)) =>
+    (guardedGeneration (fun before => revisionsCurrent (current before) captured) available next).map
+      (fun result => (descriptor, result.1, (result.2, captured)))
+
+/-- Binding/source refusal skips all optional metadata and later work. -/
+theorem prepareOpaqueLeaf_admission_error [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State))
+    (available : State → Except Cause (Bool × State)) (state : State) (cause : Option Cause)
+    (failed : observeSamplerSources current ledger mismatch actual bound sources state = .error cause) :
+    prepareOpaqueLeaf current ledger mismatch actual bound sources available state = .error cause := by
+  simp [prepareOpaqueLeaf, failed]
+
+/-- Optional metadata cannot enter under already retired captured dependencies. -/
+theorem prepareOpaqueLeaf_stale [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State))
+    (available : State → Except Cause (Bool × State)) (state next : State) (descriptor : Source)
+    (ready : observeSamplerSources current ledger mismatch actual bound sources state =
+      .ok (descriptor, (next, captured))) (stale : revisionsCurrent (current next) captured = false) :
+    prepareOpaqueLeaf current ledger mismatch actual bound sources available state = .error none := by
+  simp [prepareOpaqueLeaf, ready, guardedGeneration_preflight
+    (fun before => revisionsCurrent (current before) captured) available next stale, Except.map]
+
+/-- Availability cannot retire an admitted dependency and capture its new epoch. -/
+theorem prepareOpaqueLeaf_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state next final : State)
+    (descriptor : Source) (availability : Bool)
+    (ready : observeSamplerSources current ledger mismatch actual bound sources state =
+      .ok (descriptor, (next, captured))) (before : revisionsCurrent (current next) captured = true)
+    (after : revisionsCurrent (current final) captured = false) :
+    prepareOpaqueLeaf current ledger mismatch actual bound sources (fun _ => .ok (availability, final)) state =
+      .error none := by
+  simp [prepareOpaqueLeaf, ready, guardedGeneration_revised
+    (fun before => revisionsCurrent (current before) captured) next final availability before after, Except.map]
+
+/-- Original metadata exceptions, including false, retain exact identity. -/
+theorem prepareOpaqueLeaf_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch cause : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state next : State) (descriptor : Source)
+    (ready : observeSamplerSources current ledger mismatch actual bound sources state =
+      .ok (descriptor, (next, captured))) (before : revisionsCurrent (current next) captured = true) :
+    prepareOpaqueLeaf current ledger mismatch actual bound sources (fun _ => .error cause) state =
+      .error (some cause) := by
+  simp [prepareOpaqueLeaf, ready, guardedGeneration_cause
+    (fun before => revisionsCurrent (current before) captured) next cause before, Except.map]
+
+/-- Stable optional metadata keeps the original declaration, actual returned state
+and SAME captured ledger. Neither true nor false availability refreshes epochs. -/
+theorem prepareOpaqueLeaf_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger captured : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State)) (state next final : State)
+    (descriptor : Source) (availability : Bool)
+    (ready : observeSamplerSources current ledger mismatch actual bound sources state =
+      .ok (descriptor, (next, captured))) (before : revisionsCurrent (current next) captured = true)
+    (after : revisionsCurrent (current final) captured = true) :
+    prepareOpaqueLeaf current ledger mismatch actual bound sources (fun _ => .ok (availability, final)) state =
+      .ok (descriptor, availability, (final, captured)) := by
+  simp [prepareOpaqueLeaf, ready, guardedGeneration_state
+    (fun before => revisionsCurrent (current before) captured) next final availability before after, Except.map]
+
+/-- A refused leaf cannot invoke a later factory or successful publication. -/
+theorem prepareOpaqueLeaf_refused [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (mismatch : Cause)
+    (actual bound : State → Except Cause (Source × State))
+    (sources : State → Except Cause (List Source × State))
+    (available : State → Except Cause (Bool × State)) (state : State) (cause : Option Cause)
+    (tail : Source × Bool × (State × List (Source × Nat)) → Except (Option Cause) Value)
+    (failed : prepareOpaqueLeaf current ledger mismatch actual bound sources available state = .error cause) :
+    (prepareOpaqueLeaf current ledger mismatch actual bound sources available state >>= tail) = .error cause := by
+  rw [failed]; rfl
+
 end LeanPoo.Functional.PropertyTesting

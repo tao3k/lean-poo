@@ -98,3 +98,7 @@ See [P61](pbt-design-rfc.md#p61-first-observed-function-input-declarations).
 P62 routes fixed recursive carrier fields through ordered edge discovery: quota
 precedes metadata, and each returned Type is captured before the next getter.
 See [P62](pbt-design-rfc.md#p62-ordered-fixed-carrier-edge-discovery).
+
+P63 shares opaque sampler constructor/source admission between recursive graphs
+and typed bridges before optional availability metadata. See
+[P63](pbt-design-rfc.md#p63-shared-opaque-sampler-admission-before-optional-metadata).

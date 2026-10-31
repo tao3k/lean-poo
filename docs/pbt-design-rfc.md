@@ -2765,3 +2765,53 @@ restoration and terminating callbacks remain premises. Edge fuel bounds discover
 occurrences and registration cardinality, not arbitrary getter cost or latency.
 This continues the finite future-work protocol; full checks and process limits
 remain unchanged, and no compiler/runtime or unversioned-heap proof is claimed.
+
+## P63: shared opaque sampler admission before optional metadata
+
+The audit reproduced an opaque-leaf source-order defect. A custom sampler declared
+an owner in sources, then its delayed .inhabited? getter retired that owner. The
+recursive compiler inspected availability before registering the sampler/dependencies,
+so it captured the newer epoch and returned current. The frozen public generator
+probe starts with owner revision/read count zero and previously accepted-current.
+Construction-side effects before a factory returns remain outside this observation.
+
+The existing generator-sources implementation now lives in generation-graph and
+is imported by the typed bridge through the standard module system. Graph leaves
+use that SAME constructor binding and first-observation protocol before optional
+metadata: sampler identity, actual/bound Type identities, then declared source
+spine and objects. The recursive compiler no longer separately reads sources after
+availability, and scalar dispatch no longer reads descriptor before sampler capture.
+There is no second validator, registry, cache, guard chain or namespace. Generated
+errors for constructor mismatch use the shared binding protocol; original callback
+exceptions retain exact identity, including false after a source change.
+
+False availability still means an empty alternative. Such a leaf keeps its source
+obligations, contributes no finite inhabitant and is never drawn to retry another
+branch. True availability and absence of the optional field retain their prior
+meaning. Shared identities still compile once, descriptor occurrence budgets and
+PRNG schedules are unchanged, and runtime trees keep the original captured epochs.
+Explicit fresh construction can retry; existing reports cannot renew authority.
+
+Six regression cases cover source retirement in optional metadata, actual/bound
+retargeting before optional reads, malformed source declarations, exact exceptions
+and scope restoration, source-owning empty alternatives without draws, and a
+shared Record/Function service through Tuple/List/Pair. The service reveals its
+owner only through the returned sampler. Initial preparation stops after that
+sampler's metadata, before a later factory. Fresh FUN preparation derives the
+shared leaf once, shrinks the service fault, preserves nested Function contracts,
+agrees on concrete/seeded replay, rejects obsolete receipts and admits a corrected
+service on explicit retry. The independent generic library keeps its POO-free
+module boundary.
+
+Six PropertyPreparation laws compose existing observeSamplerSources and
+guardedGeneration: admission refusal skips metadata, stale preflight skips it,
+retirement refuses publication, exact metadata causes survive, stable preparation
+keeps declaration/state/ledger, and refused preparation cannot enter later work.
+Top-level examples distinguish false availability, false exceptions and stale
+refusal, and reject binding mismatch before a throwing optional getter. The model
+is conditional on the existing constructor/source admission result, faithful host
+revision clocks, normalized availability classification and terminating callbacks.
+It does not discover hidden callback dependencies, prove arbitrary Type predicates
+or model effects before a factory returns. Bookkeeping remains one declared-source
+traversal with first-identity retention; no wall-clock improvement is claimed.
+The finite future-work scope, complete checks and resource limits are unchanged.
