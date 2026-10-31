@@ -736,3 +736,10 @@ coordinates; eight laws establish ordered forwarding, exact refusal/cause handli
 no partial batches and independence from ambient input replacement. Faithful Scheme
 list-copy and source binding remain premises; these laws do not prove pair allocation
 or unrestricted mutable payload isolation. See [the RFC](pbt-design-rfc.md#p55-owned-finite-sequence-preparation).
+
+P56 places one-use fixture lifetime admission before raw/typed preparation.
+The existing generic model module owns the active use count, transient check and
+receipt identity. PropertyTraces.admitFixture and fixtureReceipt supply ten laws
+separating lifecycle errors, stale sources and actual callback causes. Host
+sequential scope/counter fidelity is assumed; concurrent and continuation reentry
+are outside these laws. See [the RFC](pbt-design-rfc.md#p56-fixture-lifetime-admission-before-typed-preparation).

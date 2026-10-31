@@ -91,3 +91,30 @@ example : shrink (fun commands => traceValid resourceModel false commands)
 -- One original observation and six returned proposals require seven oracle
 -- entries. Actual fixture cleanup remains the scoped host caller's obligation.
 example : 1 + (auditShrinks 64 resourceRefusalEvents).attempts = 7 := rfl
+
+-- Closed scopes skip a deliberately failing metadata action entirely.
+example : admitFixture "scope" (fun _ : Nat => true) false 0
+    (fun _ _ => (.error "forbidden metadata" : Except String (Nat × Nat)))
+    (fun _ _ => (.error "forbidden run" : Except String (Bool × Nat))) () 0 = .error (some "scope") := rfl
+
+-- An active second use cannot prepare a different raw fixture.
+example : admitFixture "scope" (fun _ : Nat => true) true 2
+    (fun _ _ => (.error "forbidden metadata" : Except String (Nat × Nat)))
+    (fun _ _ => (.error "forbidden run" : Except String (Bool × Nat))) () 0 = .error (some "scope") := rfl
+
+-- Caught duplicate refusal cannot authorize an earlier receipt at final delivery.
+example : fixtureReceipt 2 true = false := rfl
+example : fixtureReceipt 1 false = false := rfl
+
+-- Type retirement during preparation prevents any actual operation.
+example : admitFixture "scope" (fun epoch : Nat => epoch == 0) true 1
+    (fun _ _ => (.ok (7, 1) : Except String (Nat × Nat)))
+    (fun _ _ => (.error "forbidden run" : Except String (Bool × Nat))) () 0 = .error none := rfl
+
+-- False thrown causes remain distinct from a legitimate false mismatch value.
+example : admitFixture true (fun _ : Nat => true) true 1
+    (fun _ _ => (.error false : Except Bool (Nat × Nat)))
+    (fun _ state => .ok (false, state)) () 0 = .error (some false) := rfl
+example : admitFixture "scope" (fun _ : Nat => true) true 1
+    (fun raw state => (.ok (raw + 1, state + 1) : Except String (Nat × Nat)))
+    (fun value state => .ok (value == 9, state + 1)) 7 0 = .ok (false, 2) := rfl

@@ -2379,3 +2379,67 @@ host allocation, concurrent mutation or compiler/runtime verification. The added
 model snapshot costs a linear shallow copy per preparation; no wall-time or
 allocation improvement is inferred from these correctness controls. Existing
 complete checks, watchdogs and heap limits remain unchanged.
+
+## P56: fixture lifetime admission before typed preparation
+
+The scoped differential protocol had two concrete admission defects. A typed
+callback retained after check-trace returned read a later raw fixture's computed
+State twice before the generic layer refused its closed use. Separately, a
+with-system function could catch the second-use exception and return the first
+observation; the generic layer then published that observation as a valid report.
+These violate the existing one-use scoped fixture contract. They are not a demand
+for unrestricted continuation safety, concurrent fixture use or rollback.
+
+Generic check-trace now accepts prepare-system: (default identity). Gerbil's
+ordinary procedure contract admits that hook before model initialization. The
+existing callback owner counts each active invocation before entering preparation;
+closed and repeated calls refuse before inspecting the raw value. Final delivery
+requires exactly one invocation and the actual observation's identity. Catching a
+repeated-use error cannot reset the count or authorize an earlier receipt.
+
+The same callback installs one existing with-generation-check scope. A caught
+reentrant attempt interrupts the next checked boundary, including nested generator
+pulls, post-preparation admission and subsequent observation/step actions. No
+lifetime observer is retained by the report or generated tree. A normally completed
+scope keeps its historical observation; later closed calls merely refuse and do
+not change it. Constructor, preparation and actual callback exceptions retain
+their original causes when they escape, including false. Source retirement remains
+stale; misuse is an error, never a false property or shrinkable counterexample.
+
+Typed check-trace extracts its existing Record/TraceSystem preparation into one
+named function. Its with-system wrapper now establishes only the prior dynamic
+source binding and invokes the generic callback. Consequently lifetime admission
+precedes retain/getter/validation/initial-state work. The original parameterized
+fixture ownership still spans preparation AND execution, then restores model
+ownership before application teardown. This relocates the original work rather
+than adding a second validator or per-field lifetime wrapper. FUN actions and
+the ordinary trace-property Boolean projection continue through this same owner.
+
+The pinned Rackcheck map/bind/with-shrink algebra still owns generator composition
+and retained trees. This fixture extension belongs to our stated model-driven PBT
+future work, not a Racket source-epoch mechanism. Gerbil's standard annotated
+keyword/default argument syntax and dynamic parameters supply the implementation;
+no upstream change, runner, namespace, registry or framework is introduced.
+
+Seven independent cases cover procedure preflight, closed callbacks after success
+and failure, caught duplicates, preparation/observation/step reentry, interruption
+of nested production, exact false/object causes, source retirement, omitted use,
+substituted receipts and malformed prepared fixtures. All 174 previous cases remain;
+the independent stdlib-only compiled library now requires 181. Two typed examples
+cover raw computed getters and a complete Record/Function/FUN chain: misuse produces
+an error with zero shrink attempts, fresh faulty fixtures shrink to a valid
+producer/consumer trace, wrappers remain checked, seed/concrete replay reproduces
+failure, a closed callback cannot retire live evidence, explicit source revision
+refuses old reports and fresh corrected preparation passes with balanced cleanup.
+
+PropertyTraces.lean adds admitFixture through the existing guardedGeneration and
+fixtureReceipt over the scope's use count and observed identity relation. Ten laws
+prove closed/repeated/stale preflight refusal, exact preparation/run causes, source
+retirement before actual effects, normalized fixture/state forwarding and irreversible
+refusal of earlier receipts after further attempts. Top-level examples distinguish
+false payloads/causes, stale sources, substituted receipts and forbidden metadata.
+Faithful sequential counters, standard dynamic-scope unwinding, accurate source
+observers, receipt identity and terminating callbacks remain premises. Arbitrary
+concurrent access, call/cc reentry, host evaluator verification and user-caught
+exceptions outside the protocol are not proved. Resource guards and full checks
+are unchanged; no latency or allocation improvement is claimed by these laws.

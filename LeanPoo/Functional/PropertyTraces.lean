@@ -173,6 +173,87 @@ theorem configuredDraw_single (model : TraceModel State Command Reply)
       .ok [command] := by
   simp [configuredDraw, drawTrace, enabled, Functor.map, Except.map]
 
+/-- One active use is admitted before fixture metadata preparation. The captured
+use count is incremented by the host scope on every active attempt, even if the
+caller catches its refusal. Preparation and actual execution retain the existing
+source guard, value/state forwarding and exact exception causes. -/
+def admitFixture (refusal : Cause) (live : State → Bool) (active : Bool) (uses : Nat)
+    (prepare : Raw → State → Except Cause (Prepared × State))
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw) (state : State) :
+    Except (Option Cause) (Report × State) :=
+  if active && (uses == 1) then
+    match guardedGeneration live (prepare raw) state with
+    | .error cause => .error cause
+    | .ok (prepared, next) => guardedGeneration live (run prepared) next
+  else .error (some refusal)
+
+/-- A closed callback cannot even enter raw fixture preparation. -/
+theorem admitFixture_closed (refusal : Cause) (live : State → Bool) (uses : Nat)
+    (prepare : Raw → State → Except Cause (Prepared × State))
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw) (state : State) :
+    admitFixture refusal live false uses prepare run raw state = .error (some refusal) := by simp [admitFixture]
+
+/-- A repeated active attempt skips all preparation and actual fixture effects. -/
+theorem admitFixture_reused (refusal : Cause) (live : State → Bool) (active : Bool) (uses : Nat)
+    (prepare : Raw → State → Except Cause (Prepared × State))
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw) (state : State)
+    (reused : uses ≠ 1) : admitFixture refusal live active uses prepare run raw state = .error (some refusal) := by
+  simp [admitFixture, reused]
+
+/-- Lifetime admission never replaces a stale source with fresh preparation. -/
+theorem admitFixture_stale (refusal : Cause) (live : State → Bool)
+    (prepare : Raw → State → Except Cause (Prepared × State))
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw) (state : State)
+    (stale : live state = false) : admitFixture refusal live true 1 prepare run raw state = .error none := by
+  simp [admitFixture, guardedGeneration_preflight live (prepare raw) state stale]
+
+/-- Metadata exceptions retain their exact cause; the actual run is unreachable. -/
+theorem admitFixture_prepare_cause (refusal : Cause) (live : State → Bool) (state : State) (cause : Cause)
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw)
+    (before : live state = true) :
+    admitFixture refusal live true 1 (fun _ _ => .error cause) run raw state = .error (some cause) := by
+  simp [admitFixture, guardedGeneration_cause live state cause before]
+
+/-- A normal preparation that retires a captured Type cannot begin actual work. -/
+theorem admitFixture_prepare_revised (refusal : Cause) (live : State → Bool) (state next : State) (prepared : Prepared)
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw)
+    (before : live state = true) (after : live next = false) :
+    admitFixture refusal live true 1 (fun _ _ => .ok (prepared, next)) run raw state = .error none := by
+  simp [admitFixture, guardedGeneration_revised live state next prepared before after]
+
+/-- Successful preparation passes its exact normalized fixture and state onward. -/
+theorem admitFixture_forward (refusal : Cause) (live : State → Bool) (state next : State) (prepared : Prepared)
+    (run : Prepared → State → Except Cause (Report × State)) (raw : Raw)
+    (before : live state = true) (after : live next = true) :
+    admitFixture refusal live true 1 (fun _ _ => .ok (prepared, next)) run raw state =
+      guardedGeneration live (run prepared) next := by
+  simp [admitFixture, guardedGeneration_state live state next prepared before after]
+
+/-- An actual fixture failure is neither a mismatch nor a lifecycle refusal. -/
+theorem admitFixture_run_cause (refusal : Cause) (live : State → Bool) (state next : State) (prepared : Prepared)
+    (cause : Cause) (raw : Raw) (before : live state = true) (after : live next = true) :
+    admitFixture refusal live true 1 (fun _ _ => .ok (prepared, next))
+      (fun _ _ => (.error cause : Except Cause (Report × State))) raw state = .error (some cause) := by
+  rw [admitFixture_forward refusal live state next prepared _ raw before after]
+  exact guardedGeneration_cause live next cause after
+
+/-- Scope delivery requires one active invocation and the exact observed receipt.
+The host supplies identity equality; semantic field equality is insufficient. -/
+def fixtureReceipt (uses : Nat) (sameReceipt : Bool) : Bool := (uses == 1) && sameReceipt
+
+/-- Exactly one call may deliver its own receipt, including a mismatch report. -/
+theorem fixtureReceipt_once (sameReceipt : Bool) : fixtureReceipt 1 sameReceipt = sameReceipt := rfl
+
+/-- An earlier valid receipt cannot hide a caught duplicate or reentrant attempt. -/
+theorem fixtureReceipt_reused (uses : Nat) (sameReceipt : Bool) (reused : uses ≠ 1) :
+    fixtureReceipt uses sameReceipt = false := by simp [fixtureReceipt, reused]
+
+/-- Further attempts cannot rehabilitate a scope whose use counter already exceeds one. -/
+theorem fixtureReceipt_monotone_refusal (uses extra : Nat) (sameReceipt : Bool) (reused : 2 ≤ uses) :
+    fixtureReceipt (uses + extra) sameReceipt = false := by
+  apply fixtureReceipt_reused
+  omega
+
 /-- Finite semantic prefix of the lazy trace neighborhood. Only demanded raw
 proposals are repaired; the actual Iterator/PRNG implementation remains a premise. -/
 def repairedTracePrefix (model : TraceModel State Command Reply) (state : State)
