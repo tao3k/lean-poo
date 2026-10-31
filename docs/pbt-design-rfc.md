@@ -2324,3 +2324,58 @@ Faithful standard iteration, accurate sources, pure/terminating model transition
 normalization and fixture simulation remain premises. This advances the paper's
 future work; it is not compiler/runtime verification or a universal callback-cost
 bound. No upstream source, scheduler, namespace or resource limit is changed.
+
+## P55: owned finite sequence preparation
+
+The audit reproduced a split preparation boundary in the existing finite value
+policy. With input (4 6), a first parameter callback changing the caller's second
+pair caused the next callback to receive 99 and emitted (0 99), although the
+structural phase had already captured (4 6). A model initializer could likewise
+change the commands that repair/preflight subsequently processed. Truncating or
+cycling the caller's spine could make a previously admitted finite input cease
+to be the input actually traversed. This is framework-owned spine preparation,
+not automatic discovery of mutable payload dependencies or arbitrary termination.
+
+Both finite value policies now use one private deletion algorithm over an owned
+spine. list-deletions and data-list-shrinks each admit and copy their input once
+with Gerbil using/list? and list-copy. The latter's structural and parameter phases
+read that same copy; no additional candidate validation wrappers or strategy
+selector is introduced. The common model fold similarly copies before initial,
+accept, normalize, enabled or advance callbacks. repair-trace, valid-trace? and
+check-trace share that fold, so the actual fixture sees the preflighted commands.
+Malformed initial spines still refuse before effects, and malformed parameter
+spines still refuse the entire finite neighborhood without salvaging prefixes.
+
+Rackcheck's pinned make-shrink-tree / gen:with-shrink composition retains the
+value whose neighborhood is being described; its ordinary immutable Racket list
+spines do not have Scheme's pair-edit window. Our existing mutable Scheme input
+boundary therefore owns its spine explicitly, while keeping the same generator,
+source checks and runner. This follows the project's FUN/IO separation: preparation
+owns finite data and composition; the actual fixture owns effectful cleanup.
+No new framework, namespace, upstream compiler change or deep-copy mechanism is
+needed. Returned candidates may share private snapshot tails, as before; neither
+exclusive ownership between candidates nor arbitrary host-heap immutability is
+claimed. Command payload identities and declared source obligations are unchanged.
+
+Six independent cases cover value edits, truncation, improper/cyclic caller tails,
+paused deletion iterators, all five model preparation hooks, differential checking,
+shallow payload identity and source/exception precedence. All 168 earlier generic
+cases remain, raising the independently compiled library to 174. A complex typed
+example combines Record commands containing checked Function fields, preparation,
+finite shrinking, scoped differential fixtures and the existing FUN debug action.
+It shrinks to the faulty command, retains Function wrappers, replays seeded and
+concrete witnesses, refuses old evidence after owner revision and explicitly
+prepares a corrected passing run with balanced cleanup.
+
+PropertySequences.lean adds finiteSequenceParameters using the existing guarded
+finiteShrinkStage. Eight laws prove empty behavior, head/tail refusal without
+partial publication, exact causes, retirement precedence, malformed refusal,
+one batch per captured coordinate and fixed coordinate order despite state
+replacement. Top-level examples include ambient list replacement, malformed later
+batches, false values/causes and retirement. Accurate standard spine copying,
+sequential terminating callbacks, faithful source observers and immutable/shared
+payload discipline remain premises. This advances the paper's future work, not
+host allocation, concurrent mutation or compiler/runtime verification. The added
+model snapshot costs a linear shallow copy per preparation; no wall-time or
+allocation improvement is inferred from these correctness controls. Existing
+complete checks, watchdogs and heap limits remain unchanged.

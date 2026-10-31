@@ -88,6 +88,104 @@ theorem finiteSequenceInput_repair (model : TraceModel State Command Reply)
       (retire model state commands).Sublist commands :=
   ⟨rfl, retire_valid model commands state, retire_sublist model commands state⟩
 
+/-- Consume an owned finite input snapshot in order. Callback state may change,
+but it never supplies the next coordinate. Each result retains whole-spine and
+source admission; an error publishes no partial parameter batch. Faithful host
+spine copying is a premise, not a theorem about Scheme pair allocation. -/
+def finiteSequenceParameters (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Output) × State)) :
+    List Value → State → Except (Option Cause) (List (List Output) × State)
+  | [], state => .ok ([], state)
+  | value :: rest, state =>
+      match finiteShrinkStage live invalid shrink value state with
+      | .error cause => .error cause
+      | .ok (children, next) => match finiteSequenceParameters live invalid shrink rest next with
+        | .error cause => .error cause
+        | .ok (tail, final) => .ok (children :: tail, final)
+
+/-- Empty snapshots invoke no parameter stage and retain the exact state. -/
+theorem finiteSequenceParameters_nil (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Output) × State)) (state : State) :
+    finiteSequenceParameters live invalid shrink [] state = .ok ([], state) := rfl
+
+/-- First-stage refusal skips every later coordinate and publishes no prefix. -/
+theorem finiteSequenceParameters_head_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Output) × State))
+    (value : Value) (rest : List Value) (state : State) (cause : Option Cause)
+    (refused : finiteShrinkStage live invalid shrink value state = .error cause) :
+    finiteSequenceParameters live invalid shrink (value :: rest) state = .error cause := by
+  simp [finiteSequenceParameters, refused]
+
+/-- A later failure discards the already prepared head batch as well. -/
+theorem finiteSequenceParameters_tail_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Output) × State))
+    (value : Value) (rest : List Value) (state next : State) (children : List Output)
+    (cause : Option Cause)
+    (head : finiteShrinkStage live invalid shrink value state = .ok (children, next))
+    (tail : finiteSequenceParameters live invalid shrink rest next = .error cause) :
+    finiteSequenceParameters live invalid shrink (value :: rest) state = .error cause := by
+  simp [finiteSequenceParameters, head, tail]
+
+/-- Retirement inside a callback interrupts before reading another snapshot item. -/
+theorem finiteSequenceParameters_revised (live : State → Bool) (invalid : Cause)
+    (value : Value) (rest : List Value) (state next : State) (children : Option (List Output))
+    (before : live state = true) (after : live next = false) :
+    finiteSequenceParameters live invalid (fun _ _ => .ok (children, next))
+      (value :: rest) state = .error none :=
+  finiteSequenceParameters_head_refused live invalid _ value rest state none
+    (finiteShrinkStage_revised live invalid children value state next before after)
+
+/-- A thrown cause remains distinct from source retirement, including false. -/
+theorem finiteSequenceParameters_cause (live : State → Bool) (invalid cause : Cause)
+    (value : Value) (rest : List Value) (state : State) (before : live state = true) :
+    finiteSequenceParameters (Output := Output) live invalid (fun _ _ => .error cause)
+      (value :: rest) state = .error (some cause) :=
+  finiteSequenceParameters_head_refused live invalid _ value rest state (some cause)
+    (finiteShrinkStage_cause live invalid cause value state before)
+
+/-- A proper first result cannot turn a malformed later batch into a prefix. -/
+theorem finiteSequenceParameters_malformed (live : State → Bool) (invalid : Cause)
+    (value : Value) (rest : List Value) (state next : State)
+    (before : live state = true) (after : live next = true) :
+    finiteSequenceParameters (Output := Output) live invalid (fun _ _ => .ok (none, next))
+      (value :: rest) state = .error (some invalid) :=
+  finiteSequenceParameters_head_refused live invalid _ value rest state (some invalid)
+    (finiteShrinkStage_malformed live invalid value state next before after)
+
+/-- Successful preparation has exactly one batch per owned input coordinate. -/
+theorem finiteSequenceParameters_length (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Output) × State))
+    (values : List Value) (state final : State) (batches : List (List Output))
+    (success : finiteSequenceParameters live invalid shrink values state = .ok (batches, final)) :
+    batches.length = values.length := by
+  induction values generalizing state batches with
+  | nil => simp [finiteSequenceParameters] at success; obtain ⟨rfl, _⟩ := success; rfl
+  | cons value rest ih =>
+    cases head : finiteShrinkStage live invalid shrink value state with
+    | error cause => simp [finiteSequenceParameters, head] at success
+    | ok prepared =>
+      obtain ⟨children, next⟩ := prepared
+      cases tail : finiteSequenceParameters live invalid shrink rest next with
+      | error cause => simp [finiteSequenceParameters, head, tail] at success
+      | ok prepared =>
+        obtain ⟨remaining, last⟩ := prepared
+        simp [finiteSequenceParameters, head, tail] at success
+        obtain ⟨rfl, rfl⟩ := success
+        simpa using congrArg Nat.succ (ih next remaining tail)
+
+/-- Even callbacks which replace an entire ambient list cannot change the
+captured coordinate order. The callbacks here return one mapped child each;
+their state changes compose normally, without rereading an ambient input. -/
+theorem finiteSequenceParameters_snapshot (invalid : Cause) (project : Value → Output)
+    (revise : State → State) (values : List Value) (state : State) :
+    finiteSequenceParameters (fun _ => true) invalid
+      (fun value state => .ok (some [project value], revise state)) values state =
+      .ok (values.map (fun value => [project value]), values.foldl (fun state _ => revise state) state) := by
+  induction values generalizing state with
+  | nil => rfl
+  | cons value rest ih =>
+    simp [finiteSequenceParameters, finiteShrinkStage, guardedGeneration, ih]
+
 /-- Sum alternatives retain labels separately from shared payload node identities.
 Only branches with a finite witness inside the residual allowance are selectable. -/
 def eligibleTaggedBranches (branches : List (Tag × Nat)) (cost : Nat → Option Nat)

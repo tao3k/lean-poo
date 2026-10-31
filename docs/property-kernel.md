@@ -729,3 +729,10 @@ and draw, use both orders, and assert bounded repair/parameter work, not elapsed
 speed. repairedTracePrefix proves finite prefix agreement, dependency validity,
 origin retention and the repair-count budget under faithful iteration/model laws.
 It does not bound a user callback's own allocation or prove runtime implementation.
+
+P55: finite sequence preparation owns a shallow input snapshot before callbacks.
+PropertySequences.finiteSequenceParameters composes finiteShrinkStage over captured
+coordinates; eight laws establish ordered forwarding, exact refusal/cause handling,
+no partial batches and independence from ambient input replacement. Faithful Scheme
+list-copy and source binding remain premises; these laws do not prove pair allocation
+or unrestricted mutable payload isolation. See [the RFC](pbt-design-rfc.md#p55-owned-finite-sequence-preparation).

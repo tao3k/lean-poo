@@ -46,3 +46,26 @@ private def spellingOf : KeywordSpelling → List Nat
 example : spellingCandidates KeywordSpelling.mk (fun _ => [[], [32, 58]]) spellingOf
     (.mk [0, 1114111]) = [.mk [], .mk [32, 58]] := rfl
 example : (spellingCandidates KeywordSpelling.mk (fun _ => []) spellingOf (.mk [])).length = 0 := rfl
+
+-- A callback replaces an entire ambient input, but captured coordinates survive.
+example : finiteSequenceParameters (fun _ : List Nat => true) "shape"
+    (fun value _ => (.ok (some [value], [99]) : Except String (Option (List Nat) × List Nat)))
+    [4, 6] [4, 6] = .ok ([[4], [6]], [99]) := rfl
+
+-- A finite malformed second result discards the first prepared batch entirely.
+example : finiteSequenceParameters (fun _ : Nat => true) "shape"
+    (fun value state => (.ok (if value = 6 then none else some [value], state + 1) :
+      Except String (Option (List Nat) × Nat))) [4, 6] 0 = .error (some "shape") := rfl
+
+-- The false payload is data; it is independent of a false thrown cause.
+example : finiteSequenceParameters (fun _ : Nat => true) false
+    (fun _ state => (.ok (some [false], state + 1) : Except Bool (Option (List Bool) × Nat)))
+    [4, 6] 0 = .ok ([[false], [false]], 2) := rfl
+example : finiteSequenceParameters (fun _ : Nat => true) true
+    (fun value state => (if value = 6 then .error false else .ok (some [value], state + 1) :
+      Except Bool (Option (List Nat) × Nat))) [4, 6] 0 = .error (some false) := rfl
+
+-- A changed source skips every later coordinate even if its result is malformed.
+example : finiteSequenceParameters (fun epoch : Nat => epoch == 0) "shape"
+    (fun _ _ => (.ok (none, 1) : Except String (Option (List Bool) × Nat))) [4, 6] 0 =
+      .error none := rfl
