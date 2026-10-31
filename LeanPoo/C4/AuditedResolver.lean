@@ -192,7 +192,7 @@ def linearizeAudited (graph : Graph) (root : String) : Except Error (List String
 /-- Successful auditing returns the exact result of each existing compiler. -/
 theorem linearizeAudited_accepts_mode (success : linearizeAudited graph root = .ok output)
     (checked : Bool) : LinearizeState.linearizeWith graph root checked = .ok output := by
-  unfold linearizeAudited LinearizeState.linearizeWith at *
+  unfold linearizeAudited LinearizeState.linearizeWith LinearizeState.linearizeIndexed at *
   cases indexed : (LinearizeState.nodeIndex graph)[root]? with
   | none => simp [Std.HashMap.get?_eq_getElem?, indexed, bind, Except.bind] at success
   | some node =>
@@ -223,7 +223,7 @@ theorem linearizeAudited_accepts_mode (success : linearizeAudited graph root = .
 compiler with the same output, starting from its own empty cache. -/
 theorem linearizeAudited_checked_complete (success : linearizeChecked graph root = .ok output) :
     linearizeAudited graph root = .ok output := by
-  unfold linearizeChecked LinearizeState.linearizeWith at success
+  unfold linearizeChecked LinearizeState.linearizeWith LinearizeState.linearizeIndexed at success
   unfold linearizeAudited
   cases indexed : (LinearizeState.nodeIndex graph)[root]? with
   | none => simp [Std.HashMap.get?_eq_getElem?, indexed, bind, Except.bind] at success

@@ -1,9 +1,18 @@
 name = "LeanPoo"
 version = "0.1.1"
 defaultTargets = ["LeanPoo"]
+weakLeanArgs = ["-j2", "-M2048"]
 
 [[lean_lib]]
 name = "LeanPoo"
+
+[[lean_lib]]
+name = "Examples"
+roots = ["Examples.Support.GeneralizedFork", "Examples.Support.ComponentRounds", "Examples.Support.JointTopology", "Examples.Support.JointReceipts", "Examples.Support.RecursiveTopology", "Examples.Support.RecursiveApprovals"]
+
+[[lean_exe]]
+name = "c4Scale"
+root = "Benchmarks.C4Scale"
 
 [[lean_exe]]
 name = "indexedRegistryScale"
@@ -28,3 +37,27 @@ root = "Benchmarks.ContextSlotScale"
 [[lean_exe]]
 name = "resultIndexScale"
 root = "Benchmarks.ResultIndexScale"
+
+[[lean_exe]]
+name = "cyclicClosureScale"
+root = "Benchmarks.CyclicClosureScale"
+
+[[lean_exe]]
+name = "closureLayoutScale"
+root = "Benchmarks.ClosureLayoutScale"
+
+[[lean_exe]]
+name = "hybridClosureScale"
+root = "Benchmarks.HybridClosureScale"
+
+[[lean_exe]]
+name = "dataflowObject"
+root = "Examples.DataflowObject"
+
+[[lean_exe]]
+name = "dataflowShapeScale"
+root = "Benchmarks.DataflowShapeScale"
+
+[[lean_exe]]
+name = "legacyThunkShapeScale"
+root = "Benchmarks.LegacyThunkShapeScale"

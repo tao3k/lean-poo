@@ -68,3 +68,35 @@ these guides explain reusable library contracts.
 Add API guidance and usage to the matching capability module. A new capability
 area gets its own module and a navigation row here. Keep executable scenarios
 in Examples and source-bound evidence in the reference study and receipts.
+
+* Research extension
+
+[[file:contracts/generalized-prototypes.org][Generalized prototype protocol]] separates raw storage, cooked self and fragments, with explicit inheritance, lens, representation and closure contracts.
+
+[[file:contracts/generalized-components.org][Mounted generalized components]] joins local closure witnesses, preserves local fragment orders and retains the left public interface under certified right replacement.
+
+[[file:contracts/generalized-dependencies.org][Directional generalized dependencies]] indexes downstream closure by an explicit upstream view and admits reuse only with equality evidence for that dependency.
+
+[[file:contracts/generalized-chain.org][Multi-level generalized dependencies]] sequences typed closure admission and selected-view refresh along finite heterogeneous chains, with whole closure obtained by nested existing dependent mounting.
+
+[[file:contracts/generalized-fork.org][Shared upstream and exact joins]] reuses independent component closure and selected dependency refresh for explicitly declared fork/join shapes, with exact paired join indices and full-interface preservation.
+
+[[file:contracts/generalized-context.org][Shared context through multiple joins]] composes fork input projections and admits contextual joins using the complete new context/branch key, with a reusable seven-component Functional workflow.
+
+[[file:contracts/generalized-revision.org][Scoped policy revision]] pairs actual configuration with dependency metadata, reuses compatible raw closure while recooking public methods, and composes a ten-component Functional publication.
+
+[[file:contracts/generalized-mop.org][Automatic generalized construction and checked MOP]] closes finite declarations using inferred locality and existing ranked resolution, exposes actual policy metadata, proves transitive invalidation/reuse conditions and publishes complete checked graph/dispatch migrations. Future-work extension.
+
+[[file:contracts/inherited-mop.org][Inherited generalized fragments and MOP]] compiles ordered typed replacement/extension/conditional fragments into analyzed computations, proves delayed-inheritance correspondence, and publishes source C3/closure/dispatch/approval as one checked version. Includes a prioritized future-work gap audit.
+
+[[file:contracts/staged-publication.org][Materialized construction and heterogeneous family publication]] executes cached graph refresh with exact-source certificates, bypasses clean builders, and jointly admits dependent DispatchTable signatures. Universal fixed-point/reference, skip, call-frame and atomic-refusal laws qualify the future-work path.
+
+[[file:contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
+
+[[file:contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
+
+[[file:contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+[[file:contracts/cyclic-costs.org][Costed cyclic closure]] adds a proved array/worklist refinement, V+E queue budget, backend-parameterized primitive prices, exact dependency-index reuse and paired complete-path measurements.
+
+[[file:contracts/closure-layouts.org][Representation and allocation contracts]] add byte/write and chunked-queue refinements, operational frame/peak bounds, explicit layout/copy/primitive ledgers, finite policy selection, complex workloads and a separate Gerbil implementation with count-parity evidence.

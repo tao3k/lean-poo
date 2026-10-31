@@ -1,0 +1,150 @@
+#+TITLE: Declarative method, type and logic metadata — future work
+
+* Scope and source
+
+The pinned source at lines 1807–1827 proposes method-combination metadata,
+type information and logical constraints as future work. This extension advances
+that proposal. The original thirteen concrete construction families and
+~whole_paper_implemented=false~ stay unchanged.
+
+[[file:../../LeanPoo/Functional/DeclarativeMetadata.lean][DeclarativeMetadata]] reuses dispatch edits, heterogeneous generic families and
+existing invocation operations. [[file:../../LeanPoo/Functional/ServiceMetadata.lean][ServiceMetadata]] composes these with materialized
+graph construction, cooking and exact-candidate staged publication.
+
+* Executable declarations
+
+~Declaration~ contains a name, actual specializer path and actual typed method
+body. Replacement, contribution, guarded registration and removal compile directly
+to existing ~DispatchExtension.Edit~ operations. Combination qualifiers remain in
+the existing typed method bodies, including quote's simple contributions and
+around wrappers; there is no separate qualifier label to diverge from execution.
+~install_append~ proves ordered batch composition including first failures.
+~compile_named~ proves exact parity for adapters of existing method builders.
+~family~ supplies declaration-driven edits to the existing family constructor.
+
+~ServiceBundle~ now obtains its actual edits from declarations. Quote reuses its
+existing policy-specific builder; reservation and cancellation have directly
+named declarations. The existing seed/combination/cooking/negative-watch behavior
+is retained. ~declared_origin~ binds every published or warmed generic to that
+exact declaration list, policy and cooked construction.
+
+* Typed contracts and logical formulas
+
+Input and output carriers are actual Lean types. ~Predicate~ contains a named
+refinement proposition and executable decision procedure. ~Contract~ adds input
+and output refinements, typed relational atoms and a finite formula. Formulas
+support truth, atoms, conjunction, disjunction, implication and negation.
+~Formula.check_ok_iff~ proves soundness and completeness for the supplied decidable
+atom meanings. An ~Evidence~ value contains a kernel proof of the interpreted
+formula, indexed by those exact meanings.
+
+~Contract.invoke~ calls the supplied existing operation and retains its exact
+result/state equality with proofs of input, output and relational obligations.
+The invocation order is input check, underlying call, output check, logical check.
+Universal acceptance/completeness and input/source/output/logic refusal laws cover
+all such operations. No tentative state is returned on rejection. An inner
+~Except~ result remains distinct from outer dispatch/admission errors; the chosen
+output refinement may reject it without misidentifying it as an outer error.
+
+* Combined service scenario
+
+A release combines existing business approval with a formula over the actual
+candidate's quote ceiling, reservation/capacity relation, cancellation/invoice
+relation and distinct method names. The same ~StagedPublication~ operation admits
+or refuses the whole graph/interface/family. This is a stricter quote-level rule
+than the existing graph budget. ~release_quote_bound~ and
+~release_reserve_linked~ project the actual interpreted proofs.
+
+~reserve~ checks a positive-unit contract around actual staged invocation, including
+refreshing all candidate-bound approvals after warming the family. Accepted
+receipts retain the new approved snapshot. ~reservation_conservation~ applies to
+every accepted checked call, while ~reserve_construction~ proves that request,
+materialized raw values and evaluated/reused construction traces stay unchanged.
+Release probe equalities alone do not establish arbitrary-call contracts.
+
+[[file:../../Examples/ServiceMetadata.lean][Example]] combines a three-node invoice revision with twelve retained builders,
+reservation contracts, quote-ceiling refusal and policy recooking with fifteen
+retained nodes and a builder which refuses all work. [[file:../../Tests/DeclarativeMetadata.lean][Independent controls]] check
+56 truth-table cases, mixed contribution/guard/removal/arity operations, exact
+contract rejection order, and 1296 typed reservation attempts across sixteen
+input/policy settings. Independent arithmetic predicts capacity and results;
+accepted calls are repeated on actual approved warm snapshots. Additional controls
+exercise ceiling refusals, zero-work policy changes, third-generic negative-watch
+refusals and retention of a previously warmed reservation cache.
+
+* Boundaries
+
+This is finite typed declaration elaboration and decidable refinement checking,
+not dependent type inference for an untyped language. Atom predicates and method
+bodies are supplied typed programs; decisions must be explicit. There is no
+arbitrary theorem prover, inferred host effect model or unrestricted reflective
+MOP. Existing descriptor/codec construction remains available separately; this
+extension does not automatically synthesize descriptors or change carriers.
+[[file:lossy-migration.org][Lossy cooking and explicit typed carrier migration]] extend this path separately.
+No external-effect rollback or cyclic equation solver is claimed.
+
+* Native Scheme expression protocol and wrapper laws
+
+The companion Scheme implementation uses existing POO prototypes and generic
+methods, following its ~fun.ss~ and ~io.ss~. Declaration compilation remains
+DispatchExtension compilation; Predicate inherits the native Type protocol;
+Formula composes short-circuit decisions; Contract binds existing invocations
+through ~.wrap~. CyclicPublication binds wrappers once per cooked candidate and
+shares them across cache-only successors. Revisions rebuild captures from the
+new cooked view. Runtime checks are not dependent kernel evidence.
+
+~Contract.wrap~ erases an accepted receipt into the existing result/state carrier.
+~wrap_accepts~ preserves the exact result and state for every accepted call;
+~wrap_source~ preserves inner rejection as an outer source error. The publication
+adapter's ~publish_refuses~ retains the exact previous state for every failure.
+These laws model pure invocation/value publication. They do not verify Scheme
+code generation, arbitrary mutable callbacks or the runtime.
+
+Scheme's ServiceMetadata example uses its existing ten-node Boolean graph and
+heterogeneous quote/reserve/cancel declarations. Lean's fifteen-node selective
+construction and proof-bearing cache admission remain a distinct boundary.
+
+* Composition through joint post-invocation admission
+
+The Scheme GenericFamily.Model and StagedPublication.Model protocols now bind
+native declaration elaboration, cold-seed construction, completed-candidate
+negative checks, contracts and exact-successor joint admission. Only result-only
+probes are used inside admission; their tentative caches do not escape.
+This is the finite positive specialization; selective graph construction is not
+implied by this runtime protocol.
+
+~Snapshot.invoke_refused~ proves that even a successful generic invocation returns
+no snapshot when admission rejects its actual successor. ~Snapshot.invoke_other~
+proves exact preservation of every other heterogeneous generic after successful
+admission. ~ServiceMetadata.reserve_other~ transports this law through the outer
+reservation contract; ~reserve_negative~ proves absence on every actual returned
+generic after contract and joint approval, with its current definition.
+
+The executable ServiceMetadata example now admits the first quote cache, refuses
+a successful reservation at a joint budget of one, then admits the same request
+at a budget of two while preserving the quote cache. This models the Scheme
+ServiceBundle scenario with Lean's existing selectively built graph; the graph
+representations and quote combination policies are not claimed identical.
+
+* Selective Scheme construction and measured scope
+
+The companion implementation now supplies native Computation/Declaration/Builder
+protocols for finite inspectable DAGs and specializes the same staged model through
+~.construct / .refresh~ hooks. Source snapshots compare exact program/base identities;
+changed support/order is conservative, and dependency-ordered invalidation covers
+presence observations and every branch. Clean slots, including error/absence, are
+retained without invoking builders. Program/base objects and callbacks must remain
+pure and stable; this is not a proof of arbitrary Scheme callbacks or code generation.
+
+~ConstructionCache.Partial.step_reused_builder_independent~ formalizes that clean
+work is independent even of a refusing builder. ~GeneralizedGraph.Scheduled.invalidates_reader~
+propagates a shared dependency's invalidation to each reader. The ServiceBundle
+example adds shared input 60 after the invoice adjustment: 11 rebuilt, 4 retained,
+quote 134, reservation (65,true), invoice 51, under a guarded builder.
+
+Scheme's shared settlement example matches the component arithmetic and skip
+controls while reusing its existing C4 quote combination. Its source/scheduling and
+cache preparation costs are measured alongside full family/metadata reconstruction;
+per-service method reconstruction is not claimed selective. New raw benchmark data
+stays under ignored build output, with historical receipts preserved losslessly in
+one compressed archive and concise evidence summaries in repository documentation.

@@ -60,6 +60,46 @@ check-merge: check-types
         LeanPoo.Functional.RecursiveHandling \
         LeanPoo.Functional.RecursiveDispatch \
         LeanPoo.Functional.ReceiptAdmission \
+        LeanPoo.Prototype.GeneralizedPrototype \
+        LeanPoo.Prototype.GeneralizedInheritance \
+        LeanPoo.Prototype.GeneralizedComponents \
+        LeanPoo.Prototype.GeneralizedDependencies \
+        LeanPoo.Prototype.GeneralizedChain \
+        LeanPoo.Prototype.GeneralizedFork \
+        LeanPoo.Prototype.GeneralizedContext \
+        LeanPoo.Prototype.GeneralizedRevision \
+        LeanPoo.Functional.GeneralizedGraph \
+        LeanPoo.Functional.GeneralizedMOP \
+        LeanPoo.Functional.GeneralizedFragments \
+        LeanPoo.Functional.InheritedMOP \
+        LeanPoo.Functional.ConstructionCache \
+        LeanPoo.Functional.GenericFamily \
+        LeanPoo.Functional.StagedPublication \
+        LeanPoo.Functional.ServiceBundle \
+        LeanPoo.Functional.DeclarativeMetadata \
+        LeanPoo.Functional.ContractFamily \
+        LeanPoo.Functional.ServiceMetadata \
+        LeanPoo.Functional.ProjectedSelf \
+        LeanPoo.Functional.CarrierMigration \
+        LeanPoo.Functional.AccountMigration \
+        LeanPoo.Prototype.FiniteClosure \
+        LeanPoo.Functional.PositiveEquations \
+        LeanPoo.Functional.CyclicPublication \
+        LeanPoo.Functional.CyclicAccess \
+        LeanPoo.Functional.IncrementalClosure \
+        LeanPoo.Functional.ChunkedClosure \
+        LeanPoo.Functional.QueueSelection \
+        LeanPoo.Functional.ClosureLifecycle \
+        LeanPoo.Functional.ClosureConstruction \
+        LeanPoo.Functional.HybridClosure \
+        LeanPoo.Functional.ClosureCosts \
+        LeanPoo.Functional.ClosureScenarios \
+        LeanPoo.Functional.ClosurePolicy \
+        LeanPoo.Functional.InheritedSettlement \
+        LeanPoo.Functional.ConstructionWorkflow \
+        LeanPoo.Functional.PolicyPublication \
+        LeanPoo.Functional.SharedSettlement \
+        LeanPoo.Prototype.GeneralizedTariff \
         LeanPoo.Functional.RecordEvolution \
         LeanPoo.Functional.OrderedDictionary \
         LeanPoo.Functional.MetadataFamily \
@@ -229,10 +269,15 @@ check-proof-reuse:
 
 # Elaborate user-facing usage examples.
 check-example: check-compose
+    lake build Examples
     just --set lean "{{lean}}" _check-examples
 
+# ComponentRounds shares the existing exclusive deadline phase. Its original
+# 120s / 2GiB / heartbeat limits remain; the other ordinary proofs stay parallel.
 [private]
 _check-examples:
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Examples/DataflowObject.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Examples/SlotObservation.lean
     {{lean}} Examples/PrototypeCore.lean
     {{lean}} Examples/DictionaryRecords.lean
     {{lean}} Examples/MutableState.lean
@@ -268,6 +313,99 @@ _check-examples:
     {{lean}} Examples/PrototypeFunctions.lean
     {{lean}} Examples/RecordPrototype.lean
     {{lean}} Examples/LensPrototype.lean
+    {{lean}} Examples/GeneralizedService.lean
+    {{lean}} Examples/GeneralizedCheckout.lean
+    {{lean}} Examples/ComponentCheckout.lean
+    {{lean}} Examples/DependentCheckout.lean
+    {{lean}} Examples/ChainedCheckout.lean
+    {{lean}} Examples/ForkedCheckout.lean
+    {{lean}} Examples/SharedSettlement.lean
+    {{lean}} Examples/PolicyPublication.lean
+    {{lean}} Examples/ConstructionWorkflow.lean
+    {{lean}} Examples/BuildCache.lean
+    {{lean}} Examples/InheritedSettlement.lean
+    {{lean}} Examples/ServiceBundle.lean
+    {{lean}} Examples/ServiceMetadata.lean
+    {{lean}} Examples/ContractFamily.lean
+    {{lean}} Examples/AlignedServices.lean
+    {{lean}} Examples/InheritedHooks.lean
+    {{lean}} Examples/MetaBootstrap.lean
+    {{lean}} Examples/RecursiveMetaprotocol.lean
+    {{lean}} Examples/DeclaredMethods.lean
+    {{lean}} Examples/TypedMethodDeclarations.lean
+    {{lean}} Examples/RawArguments.lean
+    {{lean}} Examples/MethodCompilation.lean
+    {{lean}} Examples/CatalogReflection.lean
+    {{lean}} Examples/DeclaredPrototypes.lean
+    {{lean}} Examples/ClosedPrototypes.lean
+    {{lean}} Examples/FeedbackServices.lean
+    {{lean}} Examples/SharedFeedback.lean
+    {{lean}} Examples/CachedFeedback.lean
+    {{lean}} Examples/ComponentServices.lean
+    {{lean}} Examples/ServiceRevisions.lean
+    {{lean}} Examples/ComponentMembership.lean
+    {{lean}} Examples/ComponentMigration.lean
+    timeout --signal=TERM --kill-after=3s 120s {{lean}} -M 2048 -T 10000000 Examples/ComponentRounds.lean
+    {{lean}} Examples/ComponentRequests.lean
+    {{lean}} Examples/ApprovalRevision.lean
+    {{lean}} Examples/SharedApprovals.lean
+    {{lean}} Examples/JointComponentPublication.lean
+    {{lean}} Examples/JointRounds.lean
+    {{lean}} Examples/JointTopology.lean
+    {{lean}} Examples/JointAdmission.lean
+    {{lean}} Examples/JointInstallation.lean
+    {{lean}} Examples/JointReceipts.lean
+    {{lean}} Examples/JointCompetition.lean
+    {{lean}} Examples/JointGenerations.lean
+    {{lean}} Examples/JointRestaging.lean
+    {{lean}} Examples/JointCoordination.lean
+    {{lean}} Examples/ObjectContracts.lean
+    {{lean}} Examples/ContainerContracts.lean
+    {{lean}} Examples/VariantContracts.lean
+    {{lean}} Examples/OptionalContracts.lean
+    {{lean}} Examples/ClassContracts.lean
+    {{lean}} Examples/ComputedContracts.lean
+    {{lean}} Examples/RecursiveContracts.lean
+    {{lean}} Examples/RecursiveRevisions.lean
+    {{lean}} Examples/RecursiveMigrations.lean
+    {{lean}} Examples/RecursiveTopologies.lean
+    {{lean}} Examples/RecursiveStaging.lean
+    {{lean}} Examples/RecursiveRestaging.lean
+    {{lean}} Examples/RecursivePublication.lean
+    {{lean}} Examples/RecursiveApprovals.lean
+    {{lean}} Examples/RecursiveCompetition.lean
+    {{lean}} Examples/RecursiveSubmissions.lean
+    {{lean}} Examples/RecursiveRecovery.lean
+    {{lean}} Examples/RecursiveCoordination.lean
+    {{lean}} Examples/Parameters.lean
+    {{lean}} Examples/Representation.lean
+    {{lean}} Examples/GeneratedCalls.lean
+    {{lean}} Examples/CollectionTesting.lean
+    {{lean}} Examples/PropertyGenerators.lean
+    {{lean}} Examples/PropertyProducts.lean
+    {{lean}} Examples/PropertyFilters.lean
+    {{lean}} Examples/PropertyScopes.lean
+    {{lean}} Examples/PropertyPreparation.lean
+    {{lean}} Examples/PropertySequences.lean
+    {{lean}} Examples/PropertyReplay.lean
+    {{lean}} Examples/PropertyNumbers.lean
+    {{lean}} Examples/PropertySizes.lean
+    {{lean}} Examples/PropertyTraces.lean
+    {{lean}} Examples/RecursiveGenerators.lean
+    {{lean}} Examples/PrototypeTypes.lean
+    {{lean}} Examples/RowTypes.lean
+    {{lean}} Examples/ContractChecks.lean
+    {{lean}} Examples/ServiceCollection.lean
+    {{lean}} Examples/TableRevision.lean
+    {{lean}} Examples/CollectionStyles.lean
+    {{lean}} Examples/SetAlgebra.lean
+    {{lean}} Examples/AccountMigration.lean
+    {{lean}} Examples/CyclicAccess.lean
+    {{lean}} Examples/ClosureLayouts.lean
+    {{lean}} Examples/AdaptiveAccess.lean
+    {{lean}} Examples/SelectedAccess.lean
+    {{lean}} Examples/LifecycleAccess.lean
+    {{lean}} Examples/ReshapedAccess.lean
     {{lean}} Examples/FirstClassObject.lean
     {{lean}} Examples/FirstClassRecord.lean
     {{lean}} Examples/MethodDictionary.lean
@@ -344,6 +482,7 @@ _check-contracts:
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean
+    {{lean}} Tests/C4Prepared.lean
     {{lean}} Tests/ComputedDefault.lean
     {{lean}} Tests/MapDeclaration.lean
     {{lean}} Tests/CompiledMemo.lean
@@ -474,6 +613,27 @@ _check-contracts:
     {{lean}} Tests/DeclarationBuilder.lean
     {{lean}} Tests/FocusedSpecification.lean
     {{lean}} Tests/SkewExtension.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedPrototype.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedComponents.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedDependencies.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedChain.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/GeneralizedFork.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/SharedSettlement.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/PolicyPublication.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ConstructionWorkflow.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/InheritedSettlement.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ConstructionCache.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ServiceBundle.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/DeclarativeMetadata.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/AccountMigration.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/PositiveEquations.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/CyclicAccess.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/IncrementalClosure.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ClosureCosts.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/HybridClosure.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/QueueSelection.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ClosureLifecycle.lean
+    timeout --signal=TERM --kill-after=3s 30s {{lean}} -M 2048 -T 10000000 Tests/ClosureConstruction.lean
     {{lean}} Tests/SpecificationFocus.lean
     {{lean}} Tests/SpecificationComposition.lean
     {{lean}} Tests/SharedFamily.lean
@@ -495,7 +655,8 @@ check-po: check-example check-tests check-docs
 # Parse every maintained Org page, including the root and directory indexes.
 check-docs:
     python3 tools/audit_poof.py --check
-    emacs --batch -Q --eval '(progn (require (quote org-element)) (dolist (file (append (list "README.org" "Examples/README.org" "Tests/README.org" "Benchmarks/README.org") (directory-files-recursively "docs" "\\.org$"))) (with-temp-buffer (insert-file-contents file) (org-mode) (org-element-parse-buffer))) (princ "ORG-OK"))'
+    python3 -m unittest tools.tests.org_reader -v
+    python3 tools/check_docs.py
 
 # Execute the reviewed original Racket blocks and compare all 24 Lean observations.
 # A versioned source fixture removes the reference-checkout dependency in CI.
@@ -524,8 +685,8 @@ benchmark-schema-merge:
 
 # Measure C4 traversal on deep and wide finite inheritance graphs.
 benchmark-c4:
-    lake build LeanPoo.C4.Linearize
-    {{lean}} --run Benchmarks/C4Scale.lean
+    lake build c4Scale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/c4Scale
 
 # Compare demand-driven, one-pass, and proof-backed indexed method resolution.
 benchmark-memoization:
@@ -652,3 +813,18 @@ _check-native-result-index:
     .lake/build/bin/resultIndexScale indexed cycle uniform 8 32 17
     .lake/build/bin/resultIndexScale list tail collision 8 32 17
     .lake/build/bin/resultIndexScale indexed tail collision 8 32 17
+
+# Native source-bound field closure and negative controls.
+[private]
+_check-native-dataflow:
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/dataflowObject
+
+check-dataflow:
+    lake build dataflowObject
+    just _check-native-dataflow
+
+# Fixed algorithm cohort, separate from all application acceptance gates.
+benchmark-dataflow:
+    lake build legacyThunkShapeScale dataflowShapeScale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/legacyThunkShapeScale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/dataflowShapeScale

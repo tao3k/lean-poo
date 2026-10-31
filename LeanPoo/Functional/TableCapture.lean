@@ -1,0 +1,666 @@
+import LeanPoo.Functional.TableRevision
+import LeanPoo.Functional.TableBatch
+import LeanPoo.Functional.Validation
+
+/-! Captured optional changes and finite constructor requests. Cells model
+mutable shells; child values
+are opaque stable observations. This does not verify Gambit's heap or deep-copy
+mutable leaves. Runtime capture uses the existing Option map and list builder. -/
+namespace LeanPoo.Functional.OrderedDictionary
+
+variable {K Cell V E : Type}
+
+/-- Producer-owned optional cells may be reused between emissions. None denotes
+absence; a present cell can contain false or an opaque checked callback handle. -/
+structure BorrowedChange (K Cell : Type) where
+  key : K
+  before : Option Cell
+  after : Option Cell
+
+/-- Read both borrowed shells into an owned immutable change BEFORE validation. -/
+def captureChange (heap : Cell → V) (event : BorrowedChange K Cell) : Change K V :=
+  ⟨event.key, event.before.map heap, event.after.map heap⟩
+
+/-- Emission snapshots may differ even when the same cells are reused. -/
+def captureEvents (events : List ((Cell → V) × BorrowedChange K Cell)) : List (Change K V) :=
+  events.map (fun observed => captureChange observed.1 observed.2)
+
+/-- Capture retains the original key and its position. -/
+theorem captureChange_key (heap : Cell → V) (event : BorrowedChange K Cell) :
+    (captureChange heap event).key = event.key := rfl
+
+/-- A present false/Function payload is retained as the exact observed child. -/
+theorem captureChange_payload (heap : Cell → V) (key : K) (old next : Cell) :
+    captureChange heap ⟨key, some old, some next⟩ =
+      ⟨key, some (heap old), some (heap next)⟩ := rfl
+
+/-- Every emitted event remains, including repeated keys and cancelling writes. -/
+theorem captureEvents_length (events : List ((Cell → V) × BorrowedChange K Cell)) :
+    (captureEvents events).length = events.length := by simp [captureEvents]
+
+/-- Ordered composition neither rereads old shells nor discards expectations. -/
+theorem captureEvents_append (a b : List ((Cell → V) × BorrowedChange K Cell)) :
+    captureEvents (a ++ b) = captureEvents a ++ captureEvents b := by simp [captureEvents]
+
+/-- The emitted key sequence is preserved independently of shell reuse. -/
+theorem captureEvents_keys (events : List ((Cell → V) × BorrowedChange K Cell)) :
+    (captureEvents events).map Change.key = events.map (fun observed => observed.2.key) := by
+  simp [captureEvents, List.map_map, Function.comp_def, captureChange]
+
+/-- A minimal shell/owned-history state makes producer writes explicit. The
+reference history uses append; it does not model the runtime list-builder cost. -/
+abbrev ChangeCaptureState (K Cell V : Type) := (Cell → V) × List (Change K V)
+
+/-- Only the borrowed heap changes; already captured events retain their leaves. -/
+def overwriteChangeShell [DecidableEq Cell] (state : ChangeCaptureState K Cell V)
+    (cell : Cell) (value : V) : ChangeCaptureState K Cell V :=
+  (fun query => if query = cell then value else state.1 query, state.2)
+
+/-- Snapshot one emission before the producer regains control. -/
+def emitChange (state : ChangeCaptureState K Cell V) (event : BorrowedChange K Cell) :
+    ChangeCaptureState K Cell V :=
+  (state.1, state.2 ++ [captureChange state.1 event])
+
+/-- Future producer mutation cannot rewrite the captured prefix or latest event. -/
+theorem emitChange_owned [DecidableEq Cell] (state : ChangeCaptureState K Cell V)
+    (event : BorrowedChange K Cell) (cell : Cell) (value : V) :
+    (overwriteChangeShell (emitChange state event) cell value).2 =
+      state.2 ++ [captureChange state.1 event] := rfl
+
+/-- Replay has the SAME complete success or first-conflict result after shell
+reuse. The installer never receives the mutable shell heap. -/
+theorem captured_replay_stable [DecidableEq K] [DecidableEq V] [DecidableEq Cell]
+    (state : ChangeCaptureState K Cell V) (cell : Cell) (value : V)
+    (before : K → Option V) :
+    applyChanges (overwriteChangeShell state cell value).2 before =
+      applyChanges state.2 before := rfl
+
+/-- Reversal retains the same owned payloads after unrelated producer writes. -/
+theorem captured_inverse_stable [DecidableEq Cell] (state : ChangeCaptureState K Cell V)
+    (cell : Cell) (value : V) :
+    inverseChanges (overwriteChangeShell state cell value).2 = inverseChanges state.2 := rfl
+
+/-- A recognizer may affect its external heap. Its result can expose only the
+pre-recognition captured change; callback effects are explicitly retained. -/
+def checkedChangeCapture (heap : Cell → V) (event : BorrowedChange K Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) :
+    (Cell → V) × Except E (Change K V) :=
+  let captured := captureChange heap event
+  let (later, result) := recognize captured heap
+  (later, result.map (fun _ => captured))
+
+/-- Successful recognition cannot substitute a value read from a later shell. -/
+theorem checkedChangeCapture_ready (heap later : Cell → V) (event : BorrowedChange K Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit)
+    (ready : recognize (captureChange heap event) heap = (later, .ok ())) :
+    checkedChangeCapture heap event recognize = (later, .ok (captureChange heap event)) := by
+  simp [checkedChangeCapture, ready, Except.map]
+
+/-- Failed admission returns its exact cause and no partial event. External
+recognizer effects are not rolled back or misrepresented as object publication. -/
+theorem checkedChangeCapture_refused (heap later : Cell → V) (event : BorrowedChange K Cell)
+    (recognize : Change K V → (Cell → V) → (Cell → V) × Except E Unit) (cause : E)
+    (refused : recognize (captureChange heap event) heap = (later, .error cause)) :
+    checkedChangeCapture heap event recognize = (later, .error cause) := by
+  simp [checkedChangeCapture, refused, Except.map]
+
+/-! Declaration buffers are borrowed only during admission. Captured object
+identities are immutable; revisions of those objects remain independently checked.
+The finite-list model does not infer hidden callback dependencies or copy leaves. -/
+section OriginCapture
+variable {Id : Type}
+
+/-- Copy a finite declaration spine before a later metadata getter can reuse it. -/
+def captureOrigins (buffer : Cell → Id) (cells : List Cell) : List Id := cells.map buffer
+
+/-- Capture retains declaration order and multiplicity, with one entry per cell. -/
+theorem captureOrigins_length (buffer : Cell → Id) (cells : List Cell) :
+    (captureOrigins buffer cells).length = cells.length := by simp [captureOrigins]
+
+/-- Explicit and descriptor declarations compose without rereading either buffer. -/
+theorem captureOrigins_append (buffer : Cell → Id) (left right : List Cell) :
+    captureOrigins buffer (left ++ right) =
+      captureOrigins buffer left ++ captureOrigins buffer right := by simp [captureOrigins]
+
+/-- Every originally declared identity remains in the captured dependency scope. -/
+theorem captureOrigins_member (buffer : Cell → Id) (cells : List Cell)
+    (cell : Cell) (member : cell ∈ cells) :
+    buffer cell ∈ captureOrigins buffer cells := List.mem_map.mpr ⟨cell, member, rfl⟩
+
+/-- Borrowed buffer writes change only the buffer component, never the owned scope. -/
+def replaceOriginBuffer (state : (Cell → Id) × List Id) (later : Cell → Id) :
+    (Cell → Id) × List Id := (later, state.2)
+
+/-- Subsequent declaration-buffer reuse cannot change the exact stamp decision. -/
+theorem capturedOrigins_stable (buffer later : Cell → Id) (cells : List Cell)
+    (expected current : Id → Option Nat) :
+    stampMatches (replaceOriginBuffer (buffer, captureOrigins buffer cells) later).2
+      expected current = stampMatches (captureOrigins buffer cells) expected current := rfl
+
+/-- A changed original dependency is refused even if its declaration cell now
+names a different object carrying the same revision as the old snapshot. -/
+theorem capturedOrigins_stale (buffer : Cell → Id) (cells : List Cell)
+    (cell : Cell) (member : cell ∈ cells) (expected current : Id → Option Nat)
+    (changed : expected (buffer cell) ≠ current (buffer cell)) :
+    stampMatches (captureOrigins buffer cells) expected current = false := by
+  cases ready : stampMatches (captureOrigins buffer cells) expected current with
+  | false => rfl
+  | true =>
+    have all : ∀ key ∈ captureOrigins buffer cells, expected key = current key := by
+      simpa [stampMatches, List.all_eq_true] using ready
+    exact False.elim (changed (all _ (captureOrigins_member buffer cells cell member)))
+
+/-- Buffer reuse alone does not invalidate unchanged, explicitly declared objects. -/
+theorem capturedOrigins_fresh (buffer : Cell → Id) (cells : List Cell)
+    (expected current : Id → Option Nat)
+    (unchanged : ∀ key ∈ captureOrigins buffer cells, expected key = current key) :
+    stampMatches (captureOrigins buffer cells) expected current = true := by
+  simpa [stampMatches, List.all_eq_true] using unchanged
+
+end OriginCapture
+
+/-- Capture a finite ordered request list before preparation may reuse its cells.
+The buffer models only caller list cells: persistent roots, deltas and owner
+identities are opaque values, not deep-copied or normalized by this boundary. -/
+def captureRequestBatch {A R : Type} (buffer : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R) : Except E R :=
+  let captured := slots.map buffer
+  (prepare buffer).bind (fun _ => run captured)
+
+/-- Preparation failure retains its original cause and suppresses installation. -/
+theorem captureRequestBatch_refused {A R : Type} (buffer : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R)
+    (cause : E) (refused : prepare buffer = .error cause) :
+    captureRequestBatch buffer slots prepare run = .error cause := by
+  simp [captureRequestBatch, refused, Except.bind]
+
+/-- Later caller-cell writes cannot replace an accepted original request. Order,
+repetitions and invalid original requests are all passed to the existing protocol. -/
+theorem captureRequestBatch_ready {A R : Type} (buffer later : Cell → A) (slots : List Cell)
+    (prepare : (Cell → A) → Except E (Cell → A)) (run : List A → Except E R)
+    (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare run = run (slots.map buffer) := by
+  simp [captureRequestBatch, ready, Except.bind]
+
+/-- Repairing caller cells cannot turn an original installation failure into success. -/
+theorem captureRequestBatch_originalFailure {A R : Type} (buffer later : Cell → A)
+    (slots : List Cell) (prepare : (Cell → A) → Except E (Cell → A))
+    (run : List A → Except E R) (cause : E) (ready : prepare buffer = .ok later)
+    (refused : run (slots.map buffer) = .error cause) :
+    captureRequestBatch buffer slots prepare run = .error cause := by
+  rw [captureRequestBatch_ready buffer later slots prepare run ready, refused]
+
+/-- No deduplication, permutation or root scan is introduced by finite list capture. -/
+theorem captureRequestBatch_count {A : Type} (buffer later : Cell → A) (slots : List Cell) :
+    captureRequestBatch buffer slots (fun _ => Except.ok later)
+      (fun requests => Except.ok requests.length : List A → Except E Nat) = .ok slots.length := by
+  simp [captureRequestBatch, Except.bind]
+
+/-- Concatenation preserves the original batch grouping and repeated requests. -/
+theorem captureRequestBatch_append {A R : Type} (buffer later : Cell → A)
+    (left right : List Cell) (run : List A → Except E R) :
+    captureRequestBatch buffer (left ++ right) (fun _ => .ok later) run =
+      run (left.map buffer ++ right.map buffer) := by
+  simp [captureRequestBatch, Except.bind]
+
+/-- Captured delta batches retain every intermediate old-value expectation; the
+existing batch correctness theorem supplies the exact sequential first conflict. -/
+theorem captureRequestBatch_deltas [DecidableEq K] [DecidableEq V]
+    (buffer later : Cell → List (Change K V)) (slots : List Cell)
+    (prepare : (Cell → List (Change K V)) → Except K (Cell → List (Change K V)))
+    (view : K → Option V) (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare (fun batches => applyChanges (batchChanges batches) view) =
+      applyBatches (slots.map buffer) view := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready]
+  exact batchChanges_correct _ view
+
+/-- Complete constructor admission reuses finite child checks and the existing
+backend delegate, then recognizes its complete result. No child normalization or
+backend duplicate resolution is introduced by this request boundary. -/
+def prepareConstructorRequest {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) : Except E R := do
+  let _ ← rows.mapM recognize
+  let root ← construct rows
+  let _ ← admit root
+  pure root
+
+/-- An original invalid occurrence suppresses the backend, even if metadata has
+repaired the caller's mutable Pair after capture. Original causes are preserved. -/
+theorem prepareConstructorRequest_child_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (cause : E)
+    (refused : rows.mapM recognize = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, refused, bind, Except.bind]
+
+/-- The constructor's own failure remains observable after every child accepts. -/
+theorem prepareConstructorRequest_backend_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (cause : E)
+    (ready : rows.mapM recognize = .ok checks) (refused : construct rows = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, ready, refused, bind, Except.bind]
+
+/-- A complete-root refinement can still refuse an otherwise typed private root. -/
+theorem prepareConstructorRequest_root_refused {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (root : R) (cause : E)
+    (ready : rows.mapM recognize = .ok checks) (built : construct rows = .ok root)
+    (refused : admit root = .error cause) :
+    prepareConstructorRequest rows recognize construct admit = .error cause := by
+  simp [prepareConstructorRequest, ready, built, refused, bind, Except.bind]
+
+/-- A successful constructor returns its exact backend result without rewrapping. -/
+theorem prepareConstructorRequest_ready {A R : Type} (rows : List A)
+    (recognize : A → Except E Unit) (construct : List A → Except E R)
+    (admit : R → Except E Unit) (checks : List Unit) (root : R)
+    (ready : rows.mapM recognize = .ok checks) (built : construct rows = .ok root)
+    (accepted : admit root = .ok ()) :
+    prepareConstructorRequest rows recognize construct admit = .ok root := by
+  simp [prepareConstructorRequest, ready, built, accepted, bind, Except.bind]
+  rfl
+
+/-- Capture both request-cell selection and Pair fields before metadata discovery.
+The existing batch capture supplies immutable pairs; later row-cell reuse cannot
+rewrite them. Keys and values remain opaque shared observations. -/
+theorem captureConstructorRequest_fields {Row R : Type}
+    (spine : Cell → Row) (keys : Row → K) (values : Row → V) (slots : List Cell)
+    (later : Cell → K × V)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (run : List (K × V) → Except E R)
+    (ready : prepare (fun cell => (keys (spine cell), values (spine cell))) = .ok later) :
+    captureRequestBatch (fun cell => (keys (spine cell), values (spine cell))) slots prepare run =
+      run (slots.map (fun cell => (keys (spine cell), values (spine cell)))) :=
+  captureRequestBatch_ready _ later slots prepare run ready
+
+/-- Crossing a second constructor boundary copies only shells: applying identity
+Pair capture twice preserves exact key/value observations and request order. -/
+theorem constructorRequest_recapture (rows : List (K × V)) :
+    (rows.map (fun row => (row.1, row.2))).map (fun row => (row.1, row.2)) = rows := by
+  simp
+
+/-- Construction requests retain their operation, including one-element bulk
+requests. Empty construction stays a delayed, independently partial operation. -/
+inductive TableConstructorRequest (Entry : Type) where
+  | empty
+  | singleton (entry : Entry)
+  | bulk (entries : List Entry)
+
+/-- The three existing backend construction entrypoints have separate domains. -/
+structure TableConstructors (Entry Root Error : Type) where
+  empty : Unit → Except Error Root
+  singleton : Entry → Except Error Root
+  bulk : List Entry → Except Error Root
+
+/-- Select by requested API, never by a bulk list's cardinality. -/
+def runTableConstructor (family : TableConstructors Entry Root Error) :
+    TableConstructorRequest Entry → Except Error Root
+  | .empty => family.empty ()
+  | .singleton entry => family.singleton entry
+  | .bulk entries => family.bulk entries
+
+/-- Each representation/index layer translates inputs, delegates that same
+operation, then prepares its complete result. This introduces no second builder. -/
+def mapTableConstructors (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot) :
+    TableConstructors TargetEntry TargetRoot Error where
+  empty := fun _ => (family.empty ()).bind encode
+  singleton := fun entry => (decode entry).bind fun raw => (family.singleton raw).bind encode
+  bulk := fun entries => (entries.mapM decode).bind fun rows => (family.bulk rows).bind encode
+
+/-- Source empty refusal remains observable through a representation/index layer. -/
+theorem mapTableConstructors_empty_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (cause : Error) (refused : family.empty () = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) .empty = .error cause := by
+  simp [runTableConstructor, mapTableConstructors, refused, Except.bind]
+
+/-- Singleton refusal precedes result preparation and never falls back to bulk. -/
+theorem mapTableConstructors_singleton_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (cause : Error)
+    (ready : decode entry = .ok raw) (refused : family.singleton raw = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, refused, Except.bind]
+
+/-- A one-row bulk request retains bulk refusal, even when singleton succeeds. -/
+theorem mapTableConstructors_bulk_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entries : List TargetEntry) (raw : List Entry) (cause : Error)
+    (ready : entries.mapM decode = .ok raw) (refused : family.bulk raw = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.bulk entries) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, refused, Except.bind]
+
+/-- Invalid translated entries suppress the singleton constructor and preparation. -/
+theorem mapTableConstructors_decode_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (cause : Error) (refused : decode entry = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, refused, Except.bind]
+
+/-- Successful singleton construction needs no empty or bulk success assumption. -/
+theorem mapTableConstructors_singleton_ready (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (root : Root) (target : TargetRoot)
+    (ready : decode entry = .ok raw) (built : family.singleton raw = .ok root)
+    (prepared : encode root = .ok target) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .ok target := by
+  simp [runTableConstructor, mapTableConstructors, ready, built, prepared, Except.bind]
+
+/-- Result refinement/index preparation can refuse after construction without
+publishing a partial result or substituting another construction operation. -/
+theorem mapTableConstructors_prepare_refused (family : TableConstructors Entry Root Error)
+    (decode : TargetEntry → Except Error Entry) (encode : Root → Except Error TargetRoot)
+    (entry : TargetEntry) (raw : Entry) (root : Root) (cause : Error)
+    (ready : decode entry = .ok raw) (built : family.singleton raw = .ok root)
+    (refused : encode root = .error cause) :
+    runTableConstructor (mapTableConstructors family decode encode) (.singleton entry) =
+      .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready, built, refused, Except.bind]
+
+/-- Multiple view layers preserve the original singleton refusal. No bulk/empty
+constructor or downstream preparation is observed on that refused path. -/
+theorem mapTableConstructors_nested_refused (family : TableConstructors Entry Root Error)
+    (decode₁ : MiddleEntry → Except Error Entry) (encode₁ : Root → Except Error MiddleRoot)
+    (decode₂ : TargetEntry → Except Error MiddleEntry) (encode₂ : MiddleRoot → Except Error TargetRoot)
+    (entry : TargetEntry) (middle : MiddleEntry) (raw : Entry) (cause : Error)
+    (ready₂ : decode₂ entry = .ok middle) (ready₁ : decode₁ middle = .ok raw)
+    (refused : family.singleton raw = .error cause) :
+    runTableConstructor (mapTableConstructors (mapTableConstructors family decode₁ encode₁)
+      decode₂ encode₂) (.singleton entry) = .error cause := by
+  simp [runTableConstructor, mapTableConstructors, ready₁, ready₂, refused, Except.bind]
+
+/-- The existing complete-root admission remains after the selected constructor.
+Faithful host dispatch, persistence, translation and index laws are premises;
+this is not an implementation-platform or arbitrary-effect verification. -/
+def admitTableConstructor (family : TableConstructors Entry Root Error)
+    (request : TableConstructorRequest Entry) (admit : Root → Except Error Unit) :
+    Except Error Root :=
+  (runTableConstructor family request).bind fun root => (admit root).map fun _ => root
+
+/-- Selected constructor refusal suppresses final recognition and every consumer. -/
+theorem admitTableConstructor_refused (family : TableConstructors Entry Root Error)
+    (request : TableConstructorRequest Entry) (admit : Root → Except Error Unit)
+    (cause : Error) (refused : runTableConstructor family request = .error cause) :
+    admitTableConstructor family request admit = .error cause := by
+  simp [admitTableConstructor, refused, Except.bind]
+
+section RootGroups
+variable {Root Cell Failure : Type}
+
+/-- Recognize an OWNED root group in order, then retain its exact roots. This
+uses the existing validator; it never normalizes roots or reconstructs leaves. -/
+def admitRootGroup (roots : List Root) (admit : Root → Except Failure Unit) : Except Failure (List Root) :=
+  (Validation.traverse admit roots).map (fun _ => roots)
+
+/-- Capture producer cells before recognition. Host capture/opaque persistence
+must faithfully interpret this immutable list; arbitrary callback code is not proved. -/
+def prepareCapturedRoots (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) : Except Failure (List Root) :=
+  let roots := captureOrigins buffer cells
+  admitRootGroup roots admit
+
+/-- Success preserves every original root identity and its exact position. -/
+theorem admitRootGroup_identity (roots checked : List Root) (admit : Root → Except Failure Unit)
+    (ready : admitRootGroup roots admit = .ok checked) : checked = roots := by
+  unfold admitRootGroup at ready
+  cases result : Validation.traverse admit roots <;> simp [result, Except.map] at ready
+  exact ready.symm
+
+/-- Recognizing every original root supplies the same complete group. -/
+theorem admitRootGroup_ready (roots : List Root) (admit : Root → Except Failure Unit)
+    (valid : ∀ root ∈ roots, admit root = .ok ()) :
+    admitRootGroup roots admit = .ok roots := by
+  have all := Validation.traverse_success admit (fun _ => ()) roots valid
+  simp [admitRootGroup, all, Except.map]
+
+/-- First refusal retains its exact cause. No repaired/replaced producer suffix
+is selected after the prefix; the existing ordered traversal owns this rule. -/
+theorem admitRootGroup_refused (prior suffix : List Root) (bad : Root)
+    (admit : Root → Except Failure Unit) (units : List Unit) (cause : Failure)
+    (good : Validation.traverse admit prior = .ok units) (failed : admit bad = .error cause) :
+    admitRootGroup (prior ++ bad :: suffix) admit = .error cause := by
+  simp [admitRootGroup, Validation.traverse_append, good, Validation.traverse, failed,
+    Except.bind, Except.map]
+
+/-- Arbitrary rewrites of the borrowed spine do not rewrite the captured roots.
+Recorded admission outcomes remain parameters; this does not assert callback purity. -/
+theorem capturedRootGroup_buffer_stable (buffer later : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) :
+    admitRootGroup (replaceOriginBuffer (buffer, captureOrigins buffer cells) later).2 admit =
+      prepareCapturedRoots buffer cells admit := rfl
+
+/-- Every successful delivery retains order, cardinality, sharing and opaque
+Function identities, independently of the producer's later buffer contents. -/
+theorem prepareCapturedRoots_identity (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) (checked : List Root)
+    (ready : prepareCapturedRoots buffer cells admit = .ok checked) :
+    checked = captureOrigins buffer cells :=
+  admitRootGroup_identity _ checked admit ready
+
+/-- Snapshot construction owns exactly one spine position per original cell.
+This is a finite work bound, not a byte-allocation or compiler/runtime theorem. -/
+theorem prepareCapturedRoots_length (buffer : Cell → Root) (cells : List Cell)
+    (admit : Root → Except Failure Unit) (checked : List Root)
+    (ready : prepareCapturedRoots buffer cells admit = .ok checked) :
+    checked.length = cells.length := by
+  rw [prepareCapturedRoots_identity buffer cells admit checked ready, captureOrigins_length]
+
+/-- The existing zero/one/two division bound survives capture without a scan of
+any root's entries. Callback recognition costs remain separately charged. -/
+theorem captureDivisionRoots_bound (buffer : Cell → Root) (cells : List Cell)
+    (bounded : cells.length ≤ 2) : (captureOrigins buffer cells).length ≤ 2 := by
+  simpa [captureOrigins_length] using bounded
+
+end RootGroups
+
+/-- Own the optional cached row-list handle before eviction. The transition
+records the backend's completed cache and reused response buffer separately;
+its later buffer is never used to decide which original rows to retire. Stable
+cached row lists and faithful Option capture are explicit host premises. -/
+def retireCachedRows (observed : Option (List Row))
+    (evict : Unit → Except E (Cache × Option (List Row))) : Except E (Cache × List Row) :=
+  let captured := observed.map id
+  (evict ()).map fun result => (result.1, captured.getD [])
+
+/-- Successful eviction delivers the complete original row inventory in order. -/
+theorem retireCachedRows_present (rows : List Row) (cache : Cache)
+    (later : Option (List Row)) :
+    retireCachedRows (some rows) (fun _ => (Except.ok (cache, later) : Except E _)) =
+      .ok (cache, rows) := rfl
+
+/-- Absent ownership cannot be invented by a later nonempty provider response. -/
+theorem retireCachedRows_absent (cache : Cache) (later : Option (List Row)) :
+    retireCachedRows none (fun _ => (Except.ok (cache, later) : Except E _)) =
+      .ok (cache, []) := rfl
+
+/-- Provider-buffer reuse changes neither original membership nor row payloads. -/
+theorem retireCachedRows_buffer_independent (old : Option (List Row)) (cache : Cache)
+    (left right : Option (List Row)) :
+    retireCachedRows old (fun _ => (Except.ok (cache, left) : Except E _)) =
+      retireCachedRows old (fun _ => .ok (cache, right)) := rfl
+
+/-- Backend eviction failure retains its original cause, exposing no row delivery.
+External effects of that backend are not rolled back by this finite model. -/
+theorem retireCachedRows_refused (old : Option (List Row)) (cause : E) :
+    retireCachedRows old (fun _ => (Except.error cause : Except E (Cache × Option (List Row)))) =
+      .error cause := rfl
+
+/-- Translate owned rows to the existing ordinary optimistic deletion delta.
+Every expected value is present, even when it is false or an opaque Function. -/
+def cachedRetractions (rows : List (K × V)) : List (Change K V) :=
+  rows.map fun row => ⟨row.1, some row.2, none⟩
+
+/-- Original key order and multiplicity are retained for the ordinary installer. -/
+theorem cachedRetractions_keys (rows : List (K × V)) :
+    (cachedRetractions rows).map Change.key = rows.map Prod.fst := by
+  simp [cachedRetractions, List.map_map, Function.comp_def]
+
+/-- Capture never loses an old expected value or invents an absence expectation. -/
+theorem cachedRetractions_before (rows : List (K × V)) :
+    (cachedRetractions rows).map Change.before = rows.map (fun row => some row.2) := by
+  simp [cachedRetractions, List.map_map, Function.comp_def]
+
+/-- Row delivery costs one deletion per cached row; unchanged source keys require
+no retirement inventory. Recognition, registry, allocator and backend costs remain
+separate, so this is not a VM wall-time theorem. -/
+theorem cachedRetractions_length (rows : List (K × V)) :
+    (cachedRetractions rows).length = rows.length := by simp [cachedRetractions]
+
+/-- Existing inverse installation recovers the exact original target observation
+from a successfully installed captured deletion delta, with no inverse projection. -/
+theorem cachedRetractions_inverse [DecidableEq K] [DecidableEq V]
+    (rows : List (K × V)) (before after : K → Option V)
+    (ready : applyChanges (cachedRetractions rows) before = .ok after) :
+    applyChanges (inverseChanges (cachedRetractions rows)) after = .ok before :=
+  applyChanges_inverse _ _ _ ready
+
+/-- Capture the old endpoint value before old-value admission and replacement
+conversion. A conversion may query a backend that recycles the old response shell;
+the recorded later buffer is not the expected value of the emitted edit. Both
+represented installers and sparse fold transfers use this phase boundary. -/
+def captureTranslatedEdit (key : K) (before : Option V)
+    (check : Option V → Except E Unit)
+    (convert : Unit → Except E (Option V × Option V)) : Except E (Change K V) :=
+  let owned := before.map id
+  (check owned).bind fun _ => (convert ()).map fun result =>
+    captureChange id ⟨key, owned, result.1⟩
+
+/-- Successful preparation keeps the original endpoint and converted replacement. -/
+theorem captureTranslatedEdit_ready (key : K) (before after later : Option V) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, later)) = .ok ⟨key, before, after⟩ := by
+  cases before <;> cases after <;> rfl
+
+/-- An original old-value refusal suppresses replacement conversion entirely. -/
+theorem captureTranslatedEdit_check_refused (key : K) (before : Option V) (cause : E)
+    (convert : Unit → Except E (Option V × Option V)) :
+    captureTranslatedEdit key before (fun _ => .error cause) convert = .error cause := rfl
+
+/-- A failing replacement preserves its exact cause and returns no partial edit. -/
+theorem captureTranslatedEdit_conversion_refused (key : K) (before : Option V) (cause : E) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .error cause) = .error cause := rfl
+
+/-- Reused provider responses cannot alter a successfully captured expectation. -/
+theorem captureTranslatedEdit_buffer_independent (key : K) (before after left right : Option V) :
+    captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, left)) =
+    captureTranslatedEdit key before (fun _ => .ok ()) (fun _ => .ok (after, right)) := rfl
+
+/-- Present false and Function payloads are retained without normalization or
+conversion of the original value. Absence is a separate branch of Option. -/
+theorem captureTranslatedEdit_before (key : K) (before after later : Option V) :
+    (captureTranslatedEdit key before (fun _ => (Except.ok () : Except E Unit))
+      (fun _ => .ok (after, later))).map Change.before = .ok before := by
+  rw [captureTranslatedEdit_ready]; rfl
+
+/-- Once captured edits install, the existing inverse theorem recovers the exact
+original endpoint. Backend observation and equality laws remain premises. -/
+theorem capturedTranslation_inverse [DecidableEq K] [DecidableEq V]
+    (edits : List (Change K V)) (before after : K → Option V)
+    (ready : applyChanges edits before = .ok after) :
+    applyChanges (inverseChanges edits) after = .ok before := applyChanges_inverse _ _ _ ready
+
+/-- Bind a present left payload before dependent group/right lookups. The lookup
+records its right result separately from the provider's reused left buffer.
+Persistent roots, faithful lookups and stable payload leaves are premises; no
+additional Option shell or payload normalization is needed at this boundary. -/
+def captureJoinPayload (left : Option V)
+    (lookup : V → Except E (Option R × Option V)) : Except E (Option (V × R)) :=
+  match left with
+  | none => .ok none
+  | some value => (lookup value).map fun result => result.1.map fun right => (value, right)
+
+/-- Absent left rows require neither group lookup nor a projected pair. -/
+theorem captureJoinPayload_left_absent
+    (lookup : V → Except E (Option R × Option V)) :
+    captureJoinPayload none lookup = .ok none := rfl
+
+/-- A matched pair retains the original left payload, not the later read buffer. -/
+theorem captureJoinPayload_present (left : V) (right : R) (later : Option V) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.ok (some right, later) : Except E _)) = .ok (some (left, right)) := rfl
+
+/-- Missing right membership cannot become a pair by changing the left buffer. -/
+theorem captureJoinPayload_right_absent (left : V) (later : Option V) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.ok (none, later) : Except E (Option R × Option V))) = .ok none := rfl
+
+/-- Reusing the response buffer changes neither presence nor either paired leaf. -/
+theorem captureJoinPayload_buffer_independent (left : V) (right : Option R)
+    (before after : Option V) :
+    captureJoinPayload (some left) (fun _ => (Except.ok (right, before) : Except E _)) =
+      captureJoinPayload (some left) (fun _ => .ok (right, after)) := rfl
+
+/-- Lookup/classification failure retains its exact cause and exposes no pair. -/
+theorem captureJoinPayload_refused (left : V) (cause : E) :
+    captureJoinPayload (some left)
+      (fun _ => (Except.error cause : Except E (Option R × Option V))) = .error cause := rfl
+
+/-- An opaque left callable retains identity across unrelated dependent queries. -/
+theorem captureJoinPayload_left (left : V) (right : R) (later : Option V) :
+    (captureJoinPayload (some left)
+      (fun _ => (Except.ok (some right, later) : Except E _))).map (Option.map Prod.fst) =
+      .ok (some left) := rfl
+
+/-- A finite ordered observation reuses the existing capture protocol. Sorting
+and consuming receive the original row observations, even when comparison work
+recycles both the producer spine and row cells. Backend fidelity, stable leaves
+and comparator laws remain premises; no heap or sorting implementation is proved. -/
+theorem capturedOrder_ready {R : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (consume : List (K × V) → Except E R) (ready : prepare buffer = .ok later) :
+    captureRequestBatch buffer slots prepare (fun rows => (order rows).bind consume) =
+      (order (slots.map buffer)).bind consume :=
+  captureRequestBatch_ready buffer later slots prepare _ ready
+
+/-- Original sorting refusal suppresses the consumer and preserves its cause. -/
+theorem capturedOrder_refused {R : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (consume : List (K × V) → Except E R) (cause : E)
+    (ready : prepare buffer = .ok later) (refused : order (slots.map buffer) = .error cause) :
+    captureRequestBatch buffer slots prepare (fun rows => (order rows).bind consume) =
+      .error cause := by
+  rw [capturedOrder_ready buffer later slots prepare order consume ready, refused]
+  rfl
+
+/-- A successful ordered fold receives every original sorted row, including false
+and opaque Function leaves; later response cells are not consulted per step. -/
+theorem capturedOrder_foldr {A : Type} (buffer later : Cell → K × V)
+    (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V)))
+    (rows : List (K × V)) (step : K × V → A → A) (seed : A)
+    (ready : prepare buffer = .ok later) (sorted : order (slots.map buffer) = .ok rows) :
+    captureRequestBatch buffer slots prepare
+      (fun observed => (order observed).map (List.foldr step seed)) =
+      .ok (rows.foldr step seed) := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready, sorted]
+  rfl
+
+/-- Reusing a lawful ordering permutation cannot discard an original row. The
+finite length statement is independent of mutable producer list-cell reuse. -/
+theorem capturedOrder_count (buffer later : Cell → K × V) (slots : List Cell)
+    (prepare : (Cell → K × V) → Except E (Cell → K × V))
+    (order : List (K × V) → Except E (List (K × V))) (rows : List (K × V))
+    (ready : prepare buffer = .ok later) (sorted : order (slots.map buffer) = .ok rows)
+    (faithful : rows.Perm (slots.map buffer)) :
+    captureRequestBatch buffer slots prepare (fun observed => (order observed).map List.length) =
+      .ok slots.length := by
+  rw [captureRequestBatch_ready buffer later slots prepare _ ready, sorted]
+  have count : rows.length = slots.length := by
+    simpa using faithful.length_eq
+  change Except.ok rows.length = Except.ok slots.length
+  rw [count]
+
+end LeanPoo.Functional.OrderedDictionary

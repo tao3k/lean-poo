@@ -143,6 +143,36 @@ theorem Entry.toMap_get? {Key : Type u} {Payload : Key → Type w}
   rw [Entry.foldToMap_get?]
   simp
 
+/-- Materialize a finite dependent function once. Values at duplicate keys
+agree by construction; missing keys remain explicit. -/
+def tabulate {K : Type u} {P : K → Type v} [BEq K] [Hashable K]
+    (keys : List K) (value : (key : K) → P key) : Std.DHashMap K P :=
+  keys.foldl (fun table key => table.insert key (value key)) {}
+
+private theorem tabulate_fold_get? {K : Type u} {P : K → Type v}
+    [DecidableEq K] [BEq K] [LawfulBEq K] [Hashable K]
+    (keys : List K) (table : Std.DHashMap K P) (value : (key : K) → P key) (key : K) :
+    (keys.foldl (fun table next => table.insert next (value next)) table).get? key =
+      if key ∈ keys then some (value key) else table.get? key := by
+  induction keys generalizing table with
+  | nil => simp
+  | cons next rest ih =>
+    simp only [List.foldl_cons]
+    rw [ih]
+    by_cases present : key ∈ rest
+    · simp [present]
+    · by_cases same : next = key
+      · subst next; simp [present]
+      · have reverse : key ≠ next := fun equality => same equality.symm
+        simp [present,same,reverse,Std.DHashMap.get?_insert]
+
+theorem tabulate_get? {K : Type u} {P : K → Type v}
+    [DecidableEq K] [BEq K] [LawfulBEq K] [Hashable K]
+    (keys : List K) (value : (key : K) → P key) (key : K) :
+    (tabulate keys value).get? key = if key ∈ keys then some (value key) else none := by
+  simpa [tabulate] using tabulate_fold_get? keys ({} : Std.DHashMap K P) value key
+
+
 /-- Replacing an existing key keeps its declaration position. -/
 def Entry.replace {Key : Type u} {Payload : Key → Type w}
     [DecidableEq Key] (entries : List (Entry Key Payload))
@@ -315,31 +345,34 @@ def Schema.mergeDisjoint (left right : Schema Key Value) :
 name collision in schema/node order is reported; validation of duplicates
 within one graph stays with C4. Each node keeps its original declaration
 owner. Names outside every graph retain the final schema's lookup behavior
-from repeated pairwise merges. -/
-def Schema.mergeDisjointMany (first : Schema Key Value)
-    (others : List (Schema Key Value)) :
-    Except SchemaMergeError (Schema Key Value) := do
-  let fallback := others.foldl (fun _ schema => schema) first
+from repeated pairwise merges.
+
+Batch namespace ownership is independent of the declaration language.
+Both ordinary slots and typed dependency programs share this merger. -/
+def mergeDeclarationGraphs {Decl : Type w}
+    (first : C4.Graph × (String → Option Decl))
+    (others : List (C4.Graph × (String → Option Decl))) :
+    Except SchemaMergeError (C4.Graph × (String → Option Decl)) := do
+  let fallback := others.foldl (fun _ source => source) first
   let (_, reversed, owners) ← (first :: others).foldlM
-    (fun (seen, reversed, owners) schema => do
-      let (reversed, owners) ← schema.graph.nodes.foldlM
+    (fun (seen, reversed, owners) source => do
+      let (reversed, owners) ← source.1.nodes.foldlM
         (fun (reversed, owners) node => do
-        if seen.contains node.name then
-          throw (.duplicateNode node.name)
-        return (node :: reversed,
-          owners.insert node.name schema.declaration))
-        (reversed, owners)
-      let seen := schema.graph.nodes.foldl
-        (fun names node => names.insert node.name) seen
-      return (seen, reversed, owners))
-    (({} : Std.HashSet String), ([] : List C4.Node),
-      ({} : Std.HashMap String (String → Option (Declaration Key Value))))
-  return {
-    graph := { nodes := reversed.reverse }
-    declaration := fun name =>
-      match owners.get? name with
-      | some owner => owner name
-      | none => fallback.declaration name }
+        if seen.contains node.name then throw (.duplicateNode node.name)
+        return (node :: reversed,owners.insert node.name source.2)) (reversed,owners)
+      let seen := source.1.nodes.foldl (fun names node => names.insert node.name) seen
+      return (seen,reversed,owners))
+    (({} : Std.HashSet String),([] : List C4.Node),
+      ({} : Std.HashMap String (String → Option Decl)))
+  return (⟨reversed.reverse⟩,fun name => match owners.get? name with
+    | some owner => owner name
+    | none => fallback.2 name)
+
+def Schema.mergeDisjointMany (first : Schema Key Value)
+    (others : List (Schema Key Value)) : Except SchemaMergeError (Schema Key Value) := do
+  let (graph,declaration) ← mergeDeclarationGraphs (first.graph,first.declaration)
+    (others.map fun source => (source.graph,source.declaration))
+  return ⟨graph,declaration⟩
 
 /-- Persistently revise one existing prototype declaration. -/
 def Schema.reviseDeclaration (schema : Schema Key Value) (name : String)

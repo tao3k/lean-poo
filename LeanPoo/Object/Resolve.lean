@@ -1,4 +1,5 @@
 import LeanPoo.Object.Schema
+import LeanPoo.C4.Prepared
 
 /-!
 The evaluation order follows Gerbil-POO object.ss: defaults first, then
@@ -8,7 +9,7 @@ is kept as a thunk so an overriding method can leave it unevaluated.
 
 namespace LeanPoo.Object
 
-universe u v
+universe u v w
 
 /-- A validated precedence order can be shared by many slot lookups. -/
 structure Plan (Key : Type u) (Value : Key → Type v) where
@@ -36,6 +37,21 @@ def compile (schema : Schema Key Value) (root : String) :
   match result : C4.linearize schema.graph root with
   | .error error => .error error
   | .ok precedence => .ok ⟨schema, root, precedence, result⟩
+
+/-- Compile a plan from the same graph-owned preparation used by other roots
+and consumers. The original complete result, including errors, is preserved. -/
+def compilePrepared (schema : Schema Key Value) (prepared : C4.Prepared schema.graph)
+    (root : String) : Except C4.Error (Plan Key Value) :=
+  match result : prepared.at root with
+  | .error error => .error error
+  | .ok precedence => .ok ⟨schema, root, precedence, prepared.at_eq root ▸ result⟩
+
+theorem compilePrepared_eq (schema : Schema Key Value)
+    (prepared : C4.Prepared schema.graph) (root : String) :
+    compilePrepared schema prepared root = compile schema root := by
+  have same := prepared.at_eq root
+  unfold compilePrepared compile
+  split <;> split <;> simp_all
 
 /-- Change a declaration while retaining the validated C4 order. The graph
 and root are unchanged, so no second linearization is needed. -/
@@ -207,6 +223,48 @@ theorem Plan.resolve_eq_compileSlot (plan : Plan Key Value) (key : Key)
     plan.resolve key self = plan.compileSlot key self := by
   unfold Plan.resolve
   rw [plan.compileSlotForward_eq]
+
+private theorem Schema.foldr_frame {Key : Type u} {Value : Key → Type v} {α : Type w}
+    (next prior : Schema Key Value) (names : List String)
+    (step : Schema Key Value → String → α → α)
+    (stepFrame : ∀ node, next.declaration node = prior.declaration node →
+      step next node = step prior node) (seed : α)
+    (frame : ∀ node ∈ names, next.declaration node = prior.declaration node) :
+    names.foldr (step next) seed = names.foldr (step prior) seed := by
+  induction names with
+  | nil => rfl
+  | cons node rest ih =>
+    simp only [List.foldr_cons]
+    rw [stepFrame node (frame node (by simp)), ih (by
+      intro node member; exact frame node (by simp [member]))]
+
+/-- Adding a most-specific declaration with no defaults preserves the parent
+base and composes only the new direct method. The frame covers the complete
+validated parent precedence, not a sampled key or nominal template identity. -/
+theorem Plan.resolve_prefix (next prior : Plan Key Value) (name : String)
+    (declaration : Declaration Key Value)
+    (order : next.precedence = name :: prior.precedence)
+    (head : next.schema.declaration name = some declaration)
+    (defaults : declaration.defaults = [])
+    (frame : ∀ node ∈ prior.precedence,
+      next.schema.declaration node = prior.schema.declaration node)
+    (key : Key) (self : Self Key Value) :
+    next.resolve key self = match declaration.slot key with
+      | none => prior.resolve key self
+      | some method => method.toMethod self (fun _ => prior.resolve key self) := by
+  have bases := Schema.foldr_frame next.schema prior.schema prior.precedence (fun schema => schema.defaultStep key)
+    (by intro node same; funext inherited; simp [Schema.defaultStep, same])
+    (none : Option (Value key)) frame
+  have methods := Schema.foldr_frame next.schema prior.schema prior.precedence (α := Prototype.Method (Self Key Value) (Option (Value key)))
+    (fun schema => schema.methodStep key)
+    (by intro node same; unfold Schema.methodStep; rw [same])
+    (Prototype.Method.identity : Prototype.Method (Self Key Value) (Option (Value key))) frame
+  rw [next.resolve_eq_compileSlot, next.compileSlot_apply, order]
+  simp only [List.foldr_cons, Schema.defaultStep, Schema.methodStep, head]
+  simp only [Declaration.default, defaults, Entry.lookup, List.foldl_nil]
+  rw [bases, methods]
+  rw [prior.resolve_eq_compileSlot, prior.compileSlot_apply]
+  cases declaration.slot key <;> rfl
 
 /-- Require a resolved slot; optional probing remains available via resolve. -/
 def Plan.ref (plan : Plan Key Value) (key : Key)

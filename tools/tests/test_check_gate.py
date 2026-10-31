@@ -8,10 +8,64 @@ import subprocess
 import tempfile
 import unittest
 
-from tools.check_gate import GIB, choose_jobs, execute
+from tools.check_gate import GIB, atom_checks, choose_jobs, execute, shard_concurrency
+from tools.check_atoms import atom_phase, load_atoms, select_atoms
 
 
 class CheckGateTests(unittest.TestCase):
+    def test_supervised_units_cover_the_complete_inventory_once(self):
+        inventory = load_atoms()
+        units = atom_checks(4, '/tmp/atom-receipt')
+        self.assertEqual([name for name, _ in units],
+                         [f'shard-{index}' for index in range(12)] + ['scc', 'stress'])
+        selected = []
+        receipts = []
+        for name, command in units:
+            selected.extend(command[command.index('--files') + 1:command.index('--receipt')])
+            receipts.append(command[command.index('--receipt') + 1])
+            self.assertEqual(command[command.index('--jobs') + 1],
+                             '1' if name == 'scc' else '2')
+        self.assertCountEqual(selected, [a['file'] for a in inventory])
+        self.assertEqual(len(selected), len(set(selected)))
+        self.assertEqual(len(set(receipts)), len(units))
+        for index, (_, command) in enumerate(units[:12]):
+            files = command[command.index('--files') + 1:command.index('--receipt')]
+            self.assertEqual(files, [a['file'] for a in select_atoms(inventory, index, 12)
+                                     if atom_phase(a) == 'atoms'])
+        scc = units[12][1]
+        self.assertEqual(scc[scc.index('--files') + 1:scc.index('--receipt')],
+                         ['Examples/ComponentRounds.lean'])
+        stress = units[13][1]
+        self.assertEqual(set(stress[stress.index('--files') + 1:stress.index('--receipt')]),
+                         {a['file'] for a in inventory if a['command'][0] == 'timeout'
+                          and a['file'] != 'Examples/ComponentRounds.lean'})
+
+    def test_shards_share_the_worker_budget_instead_of_multiplying_it(self):
+        for jobs in (1, 2, 3, 4, 8, 14):
+            active, workers = shard_concurrency(jobs)
+            self.assertGreaterEqual(active, 1)
+            self.assertGreaterEqual(workers, 1)
+            self.assertLessEqual(active * workers, jobs)
+            for name, command in atom_checks(jobs):
+                self.assertEqual(int(command[command.index('--jobs') + 1]),
+                                 workers if name.startswith('shard-') else
+                                 (min(2, jobs) if name == 'stress' else 1))
+
+    def test_exclusive_checks_wait_and_still_run_after_a_check_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / 'ordinary-finished'
+            ordinary = f'from pathlib import Path; Path({str(marker)!r}).touch(); raise SystemExit(9)'
+            completed = Path(temporary) / 'scc-finished'
+            scc = (f'from pathlib import Path; assert Path({str(marker)!r}).exists(); '
+                   f'Path({str(completed)!r}).touch(); raise SystemExit(7)')
+            exclusive = f'from pathlib import Path; assert Path({str(completed)!r}).exists()'
+            with contextlib.redirect_stdout(io.StringIO()):
+                results = execute([], [('ordinary', [sys.executable, '-c', ordinary])],
+                                  [('scc', [sys.executable, '-c', scc]),
+                                   ('stress', [sys.executable, '-c', exclusive])])
+            self.assertEqual([(r['name'], r['returncode']) for r in results],
+                             [('ordinary', 9), ('scc', 7), ('stress', 0)])
+
     def test_auto_workers_obey_cpu_and_memory_caps(self):
         self.assertEqual(choose_jobs(12, 32 * GIB), 14)
         self.assertEqual(choose_jobs(12, 24 * GIB), 10)
@@ -27,7 +81,8 @@ class CheckGateTests(unittest.TestCase):
             marker = Path(temporary) / 'launched'
             with contextlib.redirect_stdout(io.StringIO()):
                 results = execute([('failed-build', [sys.executable, '-c', 'raise SystemExit(7)'])],
-                                  [('must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])])
+                                  [('must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])],
+                                  [('deferred-must-not-run', [sys.executable, '-c', f'open({str(marker)!r},"w").close()'])])
             self.assertEqual([r['returncode'] for r in results], [7])
             self.assertFalse(marker.exists())
 
@@ -64,6 +119,20 @@ class CheckGateTests(unittest.TestCase):
                 results = execute(preparations, [('checks', [sys.executable, '-c', verify])])
             self.assertEqual([r['returncode'] for r in results], [0, 0, 0, 0])
 
+    def test_signal_defers_unwinding_until_executor_boundary(self):
+        import signal
+        from tools import check_gate
+        try:
+            # A signal may arrive inside Thread.start; the handler must return.
+            check_gate.stop_children(signal.SIGTERM, None)
+            self.assertTrue(check_gate.STOPPING.is_set())
+            with self.assertRaises(SystemExit) as stopped:
+                execute([], [])
+            self.assertEqual(stopped.exception.code, 143)
+        finally:
+            check_gate.STOPPING.clear()
+            check_gate.STOP_SIGNAL = signal.SIGTERM
+
     def test_interruption_stops_active_phase_processes(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / 'waiting.py'
@@ -84,8 +153,8 @@ class CheckGateTests(unittest.TestCase):
                     if parent.poll() is not None:
                         self.fail('Gate exited before actual phase output')
                 parent.terminate()
-                parent.communicate(timeout=5)
-                self.assertEqual(parent.returncode, 143)
+                output, _ = parent.communicate(timeout=5)
+                self.assertEqual(parent.returncode, 143, output)
                 for pid in marker.read_text().splitlines():
                     with self.assertRaises(ProcessLookupError):
                         os.kill(int(pid), 0)

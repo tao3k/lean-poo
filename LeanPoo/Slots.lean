@@ -33,6 +33,47 @@ def allSlots [BEq Key] [LawfulBEq Key] [Hashable Key]
     (({} : Std.HashSet Key), [])
   reversed.reverse
 
+/-- An empty most-specific declaration adds no inventory work. The proof uses
+the complete C4 declaration frame, so revisions can retain the inventory
+without scanning and allocating a second hash set. -/
+theorem allSlots_empty_prefix [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (next prior : Object.Plan Key Value) (name : String)
+    (order : next.precedence = name :: prior.precedence)
+    (head : next.schema.declaration name = some Object.Declaration.empty)
+    (frame : ∀ node ∈ prior.precedence,
+      next.schema.declaration node = prior.schema.declaration node) :
+    allSlots next = allSlots prior := by
+  let step := fun (schema : Object.Schema Key Value)
+      (state : Std.HashSet Key × List Key) (name : String) =>
+    let keys := match schema.declaration name with
+      | none => []
+      | some declaration => declaration.directKeys
+    keys.foldl (fun (seen, reversed) key =>
+      if seen.contains key then (seen, reversed)
+      else (seen.insert key, key :: reversed)) state
+  have go (names : List String) (state : Std.HashSet Key × List Key)
+      (covered : ∀ node ∈ names,
+        next.schema.declaration node = prior.schema.declaration node) :
+      names.foldl (step next.schema) state = names.foldl (step prior.schema) state := by
+    induction names generalizing state with
+    | nil => rfl
+    | cons node rest ih =>
+      simp only [List.foldl_cons]
+      have same : step next.schema state node = step prior.schema state node := by
+        simp only [step, covered node (by simp)]
+      rw [same, ih]
+      intro node member
+      exact covered node (by simp [member])
+  change ((next.precedence.reverse.foldl (step next.schema) ({},[])).2).reverse =
+    ((prior.precedence.reverse.foldl (step prior.schema) ({},[])).2).reverse
+  rw [order, List.reverse_cons, List.foldl_append]
+  simp only [List.foldl_cons, List.foldl_nil]
+  have emptyStep (state) : step next.schema state name = state := by
+    simp [step, head, Object.Declaration.empty, Object.Declaration.directKeys]
+  rw [emptyStep, go]
+  intro node member
+  exact frame node (List.mem_reverse.mp member)
+
 /-- Sort the finite declared key set without imposing a global order on Key. -/
 def allSlotsSorted [BEq Key] [LawfulBEq Key] [Hashable Key]
     (plan : Object.Plan Key Value) (lessEq : Key → Key → Bool) : List Key :=
