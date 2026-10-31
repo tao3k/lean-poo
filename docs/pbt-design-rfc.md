@@ -2681,3 +2681,46 @@ compiler/runtime proof. Capture costs one outer-spine copy per admitted typed
 request; metadata and epoch registration remain with their existing owners. No
 wall-clock speedup is inferred. Existing complete acceptance and resource limits
 remain unchanged. This continues the RFC's finite future-work protocol.
+
+## P61: first-observed Function input declarations
+
+The audit found a preparation defect, rather than a missing generator domain:
+a delayed nested signature keyword getter could revise its enclosing Function.
+The old FunctionArguments sampler then captured the new epoch and returned current.
+The frozen reproduction checks revision/read count 0 immediately before public
+`generator` entry; the old result was revision 1 / accepted-current. Effects during
+caller-side initialized object construction are outside this boundary.
+
+FunctionArguments now captures the Function before its signature getter, clauses
+before clause metadata, and each returned positional/optional/keyword/rest Type
+before the next getter. It reuses the typed source ledger and action scope through
+normal module imports. Field spines and keyword entry pairs are copied at discovery;
+known identities never renew their first epoch. The existing early keyword-mode
+pass and ordered clause semantics remain. Metadata callback causes, including
+thrown false and MOP's self-mutation error, keep their original precedence.
+
+One source guard on the existing shape generator carries the completed epochs
+through bind, the standard 128-entry LRU, products and lazy child promises. There is
+no second cache, signature clone, replacement parser, or per-consumer wrapper.
+Shadowed and omitted children stay unforced; output Types and optional defaults
+are not inspected to generate supplied inputs. A cached layout cannot acquire new
+authority by a hit or by clearing a sampler's public dependency list. Fresh retry
+requires explicit new preparation, while old reports remain obsolete.
+
+Six regression cases cover Function/clause retirement, earlier positional and
+keyword Type retirement, exact callback causes and dynamic-scope restoration,
+dormant inputs in ordered signatures and cached-layout renewal refusal. The complex
+service example combines nested Function callbacks, List inputs, optional/keyword
+shapes, a FUN action, shrinking, concrete/seeded replay, retirement and explicit
+corrected retry. Existing unsupported-domain failures remain explicit.
+
+Eight finite Lean laws in PropertyPreparation model guarded discovery, exact
+causes, first-observation retention, stale cached work, bookkeeping cardinality and
+refusal before construction. Top-level examples include duplicate input IDs,
+false causes, obsolete layouts and explicit renewal. Source clocks, faithful
+shallow copying, standard MOP behavior and terminating callbacks are premises.
+Unversioned mutation of hidden metadata aliases and concurrent heap isolation are
+not proved. The size bound counts retained identities, not elapsed time or total
+hash-table work. This is the RFC's finite future-work protocol, not a claim about
+the compiler/runtime or completion of unrestricted recursive/type generation.
+All full acceptance checks and resource limits remain unchanged.

@@ -226,4 +226,78 @@ theorem declaration_publish (live : State → Source → Bool) (outer : List Sou
   rw [declaration_order live outer initial middle final first second _ before ready after]
   exact guardedGeneration_state _ final final [first, second] after after
 
+/-- Read one finite Function declaration row under the already captured epochs,
+then retain newly discovered clause/input identities. No child generator is run.
+The host supplies faithful terminating metadata reads and revision counters. -/
+def observeFunctionInputs [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat))
+    (read : State → Except Cause (List Source × State)) (state : State) :
+    Except (Option Cause) (List Source × (State × List (Source × Nat))) :=
+  (guardedGeneration (fun before => revisionsCurrent (current before) ledger) read state).map
+    (fun result => (result.1, (result.2, captureSources (current result.2) ledger result.1)))
+
+/-- A stale Function/clause/input skips the next getter, not merely child draws. -/
+theorem observeFunctionInputs_stale [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (List Source × State)) (state : State)
+    (stale : revisionsCurrent (current state) ledger = false) :
+    observeFunctionInputs current ledger read state = .error none := by
+  simp [observeFunctionInputs, guardedGeneration_preflight (fun before => revisionsCurrent (current before) ledger) read state stale, Except.map]
+
+/-- A computed field cannot retire a known participant and capture its new epoch. -/
+theorem observeFunctionInputs_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state next : State) (row : List Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = false) :
+    observeFunctionInputs (Cause := Cause) current ledger (fun _ => .ok (row, next)) state = .error none := by
+  simp [observeFunctionInputs, guardedGeneration_revised (fun before => revisionsCurrent (current before) ledger) state next row before after, Except.map]
+
+/-- Original metadata errors, including false, retain precedence over retirement. -/
+theorem observeFunctionInputs_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state : State) (cause : Cause)
+    (before : revisionsCurrent (current state) ledger = true) :
+    observeFunctionInputs current ledger (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeFunctionInputs, guardedGeneration_cause (fun before => revisionsCurrent (current before) ledger) state cause before, Except.map]
+
+/-- Stable discovery preserves exact row order and records each first observation. -/
+theorem observeFunctionInputs_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state next : State) (row : List Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) :
+    observeFunctionInputs (Cause := Cause) current ledger (fun _ => .ok (row, next)) state =
+      .ok (row, (next, captureSources (current next) ledger row)) := by
+  simp [observeFunctionInputs, guardedGeneration_state (fun before => revisionsCurrent (current before) ledger) state next row before after, Except.map]
+
+/-- A later metadata field cannot repair retirement by rediscovering declarations.
+This applies equally to a cached layout or an unforced optional child. -/
+theorem functionInputs_retained_refusal [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source) (state : State)
+    (draw : State → Except Cause (Value × State))
+    (stale : revisionsCurrent (current state) ledger = false) :
+    guardedGeneration (fun before => revisionsCurrent (current before)
+      (captureSources (current state) ledger row)) draw state = .error none := by
+  exact guardedGeneration_preflight _ draw state (captureSources_stale _ row ledger stale)
+
+/-- Captured metadata bookkeeping is bounded by returned identities, not trials
+or cached-layout hits. This is a ledger-size bound, not a runtime latency claim. -/
+theorem functionInputs_capture_cost [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source) :
+    (captureSources current ledger row).length ≤ ledger.length + row.length :=
+  captureSources_cost current row ledger
+
+/-- Repeated known declarations do not refresh epochs even if callbacks advanced
+state; only explicit fresh preparation can establish a new initial ledger. -/
+theorem functionInputs_known [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source)
+    (known : ∀ source ∈ row, source ∈ ledger.map Prod.fst) :
+    captureSources current ledger row = ledger := captureSources_known current row ledger known
+
+/-- Refused metadata acquisition cannot enter subsequent generator construction. -/
+theorem observeFunctionInputs_refused [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (List Source × State))
+    (state : State) (cause : Option Cause)
+    (build : List Source × (State × List (Source × Nat)) → Except (Option Cause) Value)
+    (refused : observeFunctionInputs current ledger read state = .error cause) :
+    (observeFunctionInputs current ledger read state >>= build) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting

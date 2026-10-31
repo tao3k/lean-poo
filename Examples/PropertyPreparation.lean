@@ -79,3 +79,25 @@ example : guardedProduct (scopeCurrent (fun _ source : Nat => source != 9) [9])
     ([] : List ((Nat × List Nat) → Except String (Nat × (Nat × List Nat))))
     (fun _ _ => (.error "must not construct" : Except String (Nat × (Nat × List Nat))))
     (0, []) = .error none := rfl
+
+-- A nested signature getter revises Function identity 0 before publishing input 2.
+example : observeFunctionInputs (fun epoch : Nat => fun id : Nat => if id == 0 then epoch else 0)
+    [(0, 0), (1, 0)] (fun _ => (.ok ([2], 1) : Except String (List Nat × Nat))) 0 =
+    .error none := rfl
+-- Stable discovery owns an input before a later metadata getter may revise it.
+example : observeFunctionInputs (fun epoch : Nat => fun id : Nat => if id == 2 then epoch else 0)
+    [(0, 0), (1, 0)] (fun _ => (.ok ([2, 2], 0) : Except String (List Nat × Nat))) 0 =
+    .ok ([2, 2], (0, [(2, 0), (0, 0), (1, 0)])) := rfl
+-- Reobserving that same input after retirement cannot renew its stamp.
+example : observeFunctionInputs (fun epoch : Nat => fun id : Nat => if id == 2 then epoch else 0)
+    [(0, 0), (1, 0), (2, 0)] (fun _ => (.ok ([2], 1) : Except String (List Nat × Nat))) 0 =
+    .error none := rfl
+-- A stale cached layout refuses before its deliberately failing child factory.
+example : guardedGeneration (fun epoch : Nat => revisionsCurrent (fun _ : Nat => epoch) [(2, 0)])
+    (fun _ => (.error "child must stay lazy" : Except String (Bool × Nat))) 1 = .error none := rfl
+-- False metadata exceptions remain distinct from stale refusal.
+example : observeFunctionInputs (fun _ : Nat => fun _ : Nat => 0) [(0, 0)]
+    (fun _ => (.error false : Except Bool (List Nat × Nat))) 0 = .error (some false) := rfl
+-- Fresh explicit preparation may own the new epoch; old captures stay obsolete.
+example : observeFunctionInputs (fun epoch : Nat => fun _ : Nat => epoch) [(0, 1)]
+    (fun _ => (.ok ([], 1) : Except String (List Nat × Nat))) 1 = .ok ([], (1, [(0, 1)])) := rfl

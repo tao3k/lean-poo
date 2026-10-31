@@ -90,3 +90,7 @@ cannot retarget commands or dependency identities; payloads remain shared. Eight
 finite Lean laws model the original request handoff and guarded preparation;
 faithful host copying/observers and callback termination remain premises. See
 [P60](pbt-design-rfc.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).
+
+P61 guards FunctionArguments metadata from its first Function/clause/input Type
+observation and carries that authority through cached layouts and lazy children.
+See [P61](pbt-design-rfc.md#p61-first-observed-function-input-declarations).
