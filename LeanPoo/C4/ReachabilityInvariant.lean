@@ -340,7 +340,7 @@ theorem linearizeWith_complete (trace : GraphTrace graph root output tail)
     cases trace with
     | node found _ _ _ _ => exact ⟨_, (nodeIndex_lookup graph root).trans found⟩
   obtain ⟨node, indexed⟩ := found
-  unfold linearizeWith
+  unfold linearizeWith linearizeIndexed
   simp only [indexed, Option.isNone_some, Bool.false_eq_true, ↓reduceIte]
   change (do
     (Graph.mk (reachableNodes graph root)).validate

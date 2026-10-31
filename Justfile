@@ -482,6 +482,7 @@ _check-contracts:
     {{lean}} Tests/C4SuffixOrder.lean
     {{lean}} Tests/C4Ranked.lean
     {{lean}} Tests/C4Traversal.lean
+    {{lean}} Tests/C4Prepared.lean
     {{lean}} Tests/ComputedDefault.lean
     {{lean}} Tests/MapDeclaration.lean
     {{lean}} Tests/CompiledMemo.lean
@@ -684,8 +685,8 @@ benchmark-schema-merge:
 
 # Measure C4 traversal on deep and wide finite inheritance graphs.
 benchmark-c4:
-    lake build LeanPoo.C4.Linearize
-    {{lean}} --run Benchmarks/C4Scale.lean
+    lake build c4Scale
+    timeout --signal=TERM --kill-after=3s 120s .lake/build/bin/c4Scale
 
 # Compare demand-driven, one-pass, and proof-backed indexed method resolution.
 benchmark-memoization:

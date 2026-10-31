@@ -11,6 +11,10 @@ name = "Examples"
 roots = ["Examples.Support.GeneralizedFork", "Examples.Support.ComponentRounds", "Examples.Support.JointTopology", "Examples.Support.JointReceipts", "Examples.Support.RecursiveTopology", "Examples.Support.RecursiveApprovals"]
 
 [[lean_exe]]
+name = "c4Scale"
+root = "Benchmarks.C4Scale"
+
+[[lean_exe]]
 name = "indexedRegistryScale"
 root = "Benchmarks.IndexedRegistryScale"
 

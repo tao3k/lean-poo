@@ -5,6 +5,17 @@ incremental proof reuse. It implements the functional prototype construction
 described in [[https://github.com/metareflection/poof][POOF]] with Lean's types, functions, and thunks. Its C4
 linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
 
+=C4.prepare graph= owns one shared node index and a finite, lazy, dependently
+keyed table of complete root results. =Prepared.at_eq= proves equality with
+ordinary C4 for arbitrary graphs/roots, including the original errors. Only a
+requested root's reachable subgraph is validated. Repeated root requests share
+their thunk; distinct roots can still repeat internal parent resolution. The
+temporary resolver table is released rather than retained separately for every
+root. Keep this preparation within the immutable graph owner's lifetime.
+=just benchmark-c4= runs the existing deep/wide scale study as a bounded native
+executable and compares complete original/prepared results, including cold
+preparation. Its focused times do not establish application latency or RSS.
+
 The reviewed Lean-native constructive path is implemented and checked, including
 Order/BST/AVL, source/Lean differential checks, C3 object composition, runtime
 descriptors and mutable hash slots. [[file:docs/contracts/recursive-objects.org][Safe recursive objects]] have sound/complete

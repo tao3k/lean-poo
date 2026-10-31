@@ -156,7 +156,7 @@ theorem resolveNode_checked_ordinary (success : resolveNode index root name tabl
 No finite graph evidence or name-uniqueness premise is required. -/
 theorem linearizeChecked_ordinary (success : linearizeChecked graph root = .ok output) :
     linearize graph root = .ok output := by
-  unfold linearizeChecked linearize LinearizeState.linearizeWith at *
+  unfold linearizeChecked linearize LinearizeState.linearizeWith LinearizeState.linearizeIndexed at *
   cases indexed : (nodeIndex graph)[root]? with
   | none => simp only [Std.HashMap.get?_eq_getElem?, indexed, Option.isNone_none, ↓reduceIte, bind, Except.bind] at success
             cases success
