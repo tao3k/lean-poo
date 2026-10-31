@@ -149,4 +149,81 @@ theorem prepareConfiguredBridge_refused (live : State → Bool)
     (prepareConfiguredBridge live read factory fallback state >>= consume) = .error cause := by
   rw [refused]; rfl
 
+/-- A freshly returned specification must be live at its first observation;
+its constructor cannot authorize the final generator by supplying a stale domain. -/
+theorem declaration_new_source_refused (live : State → Source → Bool)
+    (outer captured : List Source) (state next : State) (added : Source) (domain : Value)
+    (rest : List ((State × List Source) → Except Cause (Value × (State × List Source))))
+    (build : List Value → (State × List Source) → Except Cause (Output × (State × List Source)))
+    (before : scopeCurrent live outer (state, captured) = true) (stale : live next added = false) :
+    guardedProduct (scopeCurrent live outer)
+      ((fun _ => .ok (domain, (next, added :: captured))) :: rest) build (state, captured) = .error none := by
+  apply guardedProduct_field_revised _ _ _ _ _ _ before
+  simp [scopeCurrent, stale]
+
+/-- Registering more declarations cannot repair the retirement of an earlier
+captured domain. Faithful construction preserves the old prefix of the ledger. -/
+theorem declaration_retained_sources_refuse (live : State → Source → Bool)
+    (outer captured added : List Source) (state next : State) (domain : Value)
+    (rest : List ((State × List Source) → Except Cause (Value × (State × List Source))))
+    (build : List Value → (State × List Source) → Except Cause (Output × (State × List Source)))
+    (before : scopeCurrent live outer (state, captured) = true)
+    (stale : captured.all (live next) = false) :
+    guardedProduct (scopeCurrent live outer)
+      ((fun _ => .ok (domain, (next, captured ++ added))) :: rest) build (state, captured) = .error none := by
+  apply guardedProduct_field_revised _ _ _ _ _ _ before
+  simp [scopeCurrent, List.all_append, stale]
+
+/-- Two ordered specification constructors pass their exact domain values and
+actual final ledger to the existing generator-construction guard, exactly once. -/
+theorem declaration_order (live : State → Source → Bool) (outer : List Source)
+    (initial middle final : State × List Source) (first second : Value)
+    (build : List Value → (State × List Source) → Except Cause (Output × (State × List Source)))
+    (before : scopeCurrent live outer initial = true)
+    (ready : scopeCurrent live outer middle = true) (after : scopeCurrent live outer final = true) :
+    guardedProduct (scopeCurrent live outer)
+      [(fun _ => .ok (first, middle)), (fun _ => .ok (second, final))] build initial =
+      guardedGeneration (scopeCurrent live outer) (build [first, second]) final := by
+  simp [guardedProduct, guardedStages, before,
+    guardedGeneration_state _ initial middle first before ready,
+    guardedGeneration_state _ middle final second ready after]
+
+/-- Construction exceptions preserve their exact cause after stable ordered
+specification preparation. This includes a false-like cause and skips success IO. -/
+theorem declaration_build_cause (live : State → Source → Bool) (outer : List Source)
+    (initial middle final : State × List Source) (first second : Value) (cause : Cause)
+    (before : scopeCurrent live outer initial = true)
+    (ready : scopeCurrent live outer middle = true) (after : scopeCurrent live outer final = true) :
+    guardedProduct (scopeCurrent live outer)
+      [(fun _ => .ok (first, middle)), (fun _ => .ok (second, final))]
+      (fun _ _ => (.error cause : Except Cause (Output × (State × List Source)))) initial =
+      .error (some cause) := by
+  rw [declaration_order live outer initial middle final first second _ before ready after]
+  exact guardedGeneration_cause _ final cause after
+
+/-- A normally returned generator is refused if its construction retires a
+captured specification. A later successful check cannot be entered with it. -/
+theorem declaration_build_revised (live : State → Source → Bool) (outer : List Source)
+    (initial middle final retired : State × List Source) (first second : Value) (generator : Output)
+    (before : scopeCurrent live outer initial = true)
+    (ready : scopeCurrent live outer middle = true) (after : scopeCurrent live outer final = true)
+    (stale : scopeCurrent live outer retired = false) :
+    guardedProduct (Cause := Cause) (scopeCurrent live outer)
+      [(fun _ => .ok (first, middle)), (fun _ => .ok (second, final))]
+      (fun _ _ => .ok (generator, retired)) initial = .error none := by
+  rw [declaration_order live outer initial middle final first second _ before ready after]
+  exact guardedGeneration_revised _ final retired generator after stale
+
+/-- Prepared domains retain their real final ledger, not the transient checker
+or inherited directory. Host dynamic-scope restoration remains a separate premise. -/
+theorem declaration_publish (live : State → Source → Bool) (outer : List Source)
+    (initial middle final : State × List Source) (first second : Value)
+    (before : scopeCurrent live outer initial = true)
+    (ready : scopeCurrent live outer middle = true) (after : scopeCurrent live outer final = true) :
+    guardedProduct (Cause := Cause) (scopeCurrent live outer)
+      [(fun _ => .ok (first, middle)), (fun _ => .ok (second, final))]
+      (fun values state => .ok (values, state)) initial = .ok ([first, second], final) := by
+  rw [declaration_order live outer initial middle final first second _ before ready after]
+  exact guardedGeneration_state _ final final [first, second] after after
+
 end LeanPoo.Functional.PropertyTesting

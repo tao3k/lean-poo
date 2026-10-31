@@ -52,3 +52,30 @@ example : prepareConfiguredBridge (fun epoch : Nat => epoch == 1)
     (fun state => (.ok (false, state) : Except String (Bool × Nat)))
     (fun options state => .ok (some options, state))
     (fun _ _ => .error "unused") 1 = .ok (false, 1) := rfl
+
+-- A specification first observed as stale cannot authorize any generator.
+example : guardedProduct (scopeCurrent (fun epoch source : Nat => source != 0 || epoch == 0) [])
+    [(fun _ => (.ok (7, (1, [0])) : Except String (Nat × (Nat × List Nat))))]
+    (fun _ _ => (.error "must not construct" : Except String (Bool × (Nat × List Nat))))
+    (0, []) = .error none := rfl
+-- A later specification retires a captured predecessor, then supplies another owner.
+example : guardedProduct (scopeCurrent (fun epoch source : Nat => source != 0 || epoch == 0) [])
+    [(fun _ => (.ok (7, (0, [0])) : Except String (Nat × (Nat × List Nat)))),
+     (fun _ => .ok (8, (1, [0, 1])))]
+    (fun _ _ => (.error "must not construct" : Except String (Bool × (Nat × List Nat))))
+    (0, []) = .error none := rfl
+-- Domains arrive in declaration order, with the actual evolving captured directory.
+example : guardedProduct (scopeCurrent (fun _ _ : Nat => true) [9])
+    [(fun _ => (.ok (7, (1, [0])) : Except String (Nat × (Nat × List Nat)))),
+     (fun _ => .ok (8, (2, [1, 0])))]
+    (fun domains state => .ok (domains, state)) (0, []) = .ok ([7, 8], (2, [1, 0])) := rfl
+-- Original construction causes are separate from source refusal and false data.
+example : guardedProduct (scopeCurrent (fun _ _ : Nat => true) [])
+    [(fun _ => (.ok (false, (0, [0])) : Except Bool (Bool × (Nat × List Nat))))]
+    (fun _ _ => (.error false : Except Bool (Nat × (Nat × List Nat))))
+    (0, []) = .error (some false) := rfl
+-- Even a zero-argument declaration keeps its inherited preparation authority.
+example : guardedProduct (scopeCurrent (fun _ source : Nat => source != 9) [9])
+    ([] : List ((Nat × List Nat) → Except String (Nat × (Nat × List Nat))))
+    (fun _ _ => (.error "must not construct" : Except String (Nat × (Nat × List Nat))))
+    (0, []) = .error none := rfl

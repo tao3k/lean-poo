@@ -708,3 +708,14 @@ precede report creation; automatic-generation errors retain existing typed repor
 semantics. Application argument evaluation and consumer IO remain application-owned.
 The prepareConfiguredBridge model composes the existing configuration guard and
 owned/raw bridge laws; it does not prove host binding or concurrent effects.
+
+P53 gives both named-property forms one ordered specification-construction owner.
+Previously a generator expression could retire a known domain and still enter a
+nested producer before execute refused its eventual report. Fixed domain builders
+now precede construction under the existing checked action scope; ordinary bind
+still owns dependent draws and shrinking. Construction errors precede a run, retain
+their original causes and use standard TestResult behavior in the assertion form.
+Six PropertyPreparation laws reuse guardedProduct/scopeCurrent for growing
+source ledgers, ordered values, exact causes and publication. These finite laws
+assume faithful sequential host binding and pure declared source observers; they
+do not authorize undiscovered sources or promise effect rollback.

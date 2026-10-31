@@ -2176,3 +2176,73 @@ normal stale returns without refreshing epochs. The established Schema migration
 regression and exact-cause/one-delivery controls cover this report boundary.
 The preparation model's monadic consumer is a success continuation; application
 consumption of an error report remains a separate, existing IO operation.
+
+## P53: ordered named-property declaration preparation
+
+The audit found a concrete gap in the public named-property forms: a generator
+expression retired its already known specification and then ran a nested producer.
+The final report was stale, but the obsolete producer had already executed. The
+same window covered later fixed specification expressions in multiargument
+properties. These expressions are invoked inside a library-generated declaration,
+not ordinary caller arguments evaluated before an explicit check-property call.
+
+One shared call-with-specifications combinator now owns ordered fixed declaration
+preparation in the existing generic property module. It admits a proper list of
+constructor procedures, copies its spine, evaluates each constructor once with
+standard map-in-order, and registers the returned specification immediately.
+Already captured specifications authorize each later constructor and the final
+construction callback. Newly returned stale or malformed domains refuse before
+any next callback. The existing with-current / with-sources / dynamic generation
+checks also interrupt nested producer pulls. The combinator returns its callback's
+exact values, including multiple values and false; there is no new carrier class,
+registry, PRNG, namespace, framework or per-value validation wrapper.
+
+Both define-property forms use this owner. The one-argument report form explicitly
+prepares its fixed specification before the generator expression. The standard
+assertion form prepares all fixed specifications in declaration order, constructs
+the product specification and existing bind-generators tree once, then leaves the
+preparation scope before checking. Dependent child generator expressions remain
+inside the original bind tree, evaluated only when their preceding values exist;
+no eager second runner or different split/shrink schedule is introduced. Property
+names, named diagnostics, ordinary options, effective coverage and replay retain
+their existing owners. Empty declarations use the same checked preparation path.
+
+Construction exceptions, including false causes, escape unchanged. A normal return
+that retires a captured domain raises stale property preparation before a run has
+started; the library does not fabricate replayable evidence for an unconstructed
+generator. The std/test form records that failure through Gerbil's ordinary
+TestResult/nonlocal-exit mechanism. Negative assertion controls use a fresh standard
+TestCase and inspect its exact result/cause; they do not contaminate outer results,
+ignore unexpected errors, spawn another CLI or replace the complete acceptance.
+Fresh explicit invocation prepares new domains, while old reports retain their
+original observers and still refuse retirement.
+
+Ten generic controls cover malformed/stale declarations, later-specification and
+generator invalidation with nested probes, original false/object causes, ordered
+single evaluation, multiple values, input-spine ownership, single/multiargument
+macros, dependent trial counts, zero arguments, scope release, shrinking and three
+replay forms. The independent stdlib-only library includes these same cases.
+The collection-properties example composes a named declaration with existing typed
+service generators, Record/Function wrapping and FUN Reader mapping. It rejects
+an obsolete factory before production/delivery, freshly shrinks a faulty service,
+replays seed/concrete/portable witnesses without rerunning its declaration factory,
+rejects old evidence and explicitly prepares a corrected passing service.
+
+The RFC-pinned Rackcheck gen:bind retains dependent child construction and its
+child random checkpoint in the shrink tree. That remains our existing bind owner;
+this unit fixes declaration preparation rather than replacing that algebra.
+The author's modular prototype construction likewise motivates composition through
+existing operations, not an additional testing runtime. Mutable-domain admission
+is our stated future-work protocol, not a claim about a Racket epoch mechanism.
+
+PropertyPreparation.lean reuses guardedProduct and scopeCurrent instead of adding
+another evaluator. Six laws establish first-observed source refusal, retention of
+old authority as declarations grow, exact ordered state/value forwarding, original
+construction causes, refusal after construction retirement and publication of the
+actual ledger without transient directories. Top-level examples include evolving
+owner sets, stale new declarations, false causes and zero-argument ancestor checks.
+Premises remain finite sequential terminating callbacks, accurate declared source
+observers and faithful host scope/ledger binding. Sources not yet returned by a
+constructor cannot be discovered inside it. Direct caller argument evaluation,
+arbitrary host effects, rollback and compiler/runtime verification remain outside
+these laws. No resource limit or complete check is removed or broadened.
