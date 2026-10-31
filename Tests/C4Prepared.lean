@@ -1,9 +1,15 @@
 import LeanPoo.C4.Prepared
+import LeanPoo.Object.Resolve
 
 open LeanPoo.C4
 
 example (graph : Graph) (prepared : Prepared graph) (root : String) :
     prepared.at root = linearize graph root := prepared.at_eq root
+
+example (schema : LeanPoo.Object.Schema String (fun _ => Nat))
+    (prepared : Prepared schema.graph) (root : String) :
+    LeanPoo.Object.compilePrepared schema prepared root = LeanPoo.Object.compile schema root :=
+  LeanPoo.Object.compilePrepared_eq schema prepared root
 
 private def graphs : List Graph := [
   { nodes := [{ name := "A" }, { name := "A" }, { name := "Root" }] },
@@ -25,11 +31,17 @@ private def graphs : List Graph := [
 #eval show IO Unit from do
   for graph in graphs do
     let prepared := prepare graph
+    let schema : LeanPoo.Object.Schema String (fun _ => Nat) :=
+      { graph, declaration := fun _ => none }
     -- Interleave roots and revisit both successes and errors. Unreachable
     -- duplicate declarations must not reject an otherwise valid root.
     for root in ["Root", "Missing", "A", "Root", "B", "Missing"] do
       unless reprStr (prepared.at root) == reprStr (linearize graph root) do
         throw (IO.userError s!"prepared C4 changed complete result at {root}")
+      let planned := (LeanPoo.Object.compilePrepared schema prepared root).map (·.precedence)
+      unless reprStr planned == reprStr (linearize graph root) do
+        throw (IO.userError s!"prepared object plan changed complete result at {root}")
   IO.println "C4-PREPARED-OK 42 complete success/error replays"
 
 #print axioms Prepared.at_eq
+#print axioms LeanPoo.Object.compilePrepared_eq

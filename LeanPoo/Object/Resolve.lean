@@ -1,4 +1,5 @@
 import LeanPoo.Object.Schema
+import LeanPoo.C4.Prepared
 
 /-!
 The evaluation order follows Gerbil-POO object.ss: defaults first, then
@@ -36,6 +37,21 @@ def compile (schema : Schema Key Value) (root : String) :
   match result : C4.linearize schema.graph root with
   | .error error => .error error
   | .ok precedence => .ok ⟨schema, root, precedence, result⟩
+
+/-- Compile a plan from the same graph-owned preparation used by other roots
+and consumers. The original complete result, including errors, is preserved. -/
+def compilePrepared (schema : Schema Key Value) (prepared : C4.Prepared schema.graph)
+    (root : String) : Except C4.Error (Plan Key Value) :=
+  match result : prepared.at root with
+  | .error error => .error error
+  | .ok precedence => .ok ⟨schema, root, precedence, prepared.at_eq root ▸ result⟩
+
+theorem compilePrepared_eq (schema : Schema Key Value)
+    (prepared : C4.Prepared schema.graph) (root : String) :
+    compilePrepared schema prepared root = compile schema root := by
+  have same := prepared.at_eq root
+  unfold compilePrepared compile
+  split <;> split <;> simp_all
 
 /-- Change a declaration while retaining the validated C4 order. The graph
 and root are unchanged, so no second linearization is needed. -/

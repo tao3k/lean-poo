@@ -12,6 +12,10 @@ requested root's reachable subgraph is validated. Repeated root requests share
 their thunk; distinct roots can still repeat internal parent resolution. The
 temporary resolver table is released rather than retained separately for every
 root. Keep this preparation within the immutable graph owner's lifetime.
+=Object.compilePrepared= uses that same table for the root Plan instead of
+linearizing the root again. Its universal =compilePrepared_eq= proves equality
+of the complete original Plan/error result; schema, declarations and validity
+witness remain bound to the actual graph. No second cache is introduced.
 =just benchmark-c4= runs the existing deep/wide scale study as a bounded native
 executable and compares complete original/prepared results, including cold
 preparation. Its focused times do not establish application latency or RSS.

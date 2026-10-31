@@ -37,6 +37,8 @@ private def shared (shape : String) (graph : Graph) : IO Unit := do
   unless reprStr actual == reprStr reference do
     throw (IO.userError "shared C4 changed complete result")
   IO.println s!"C4-PREPARED-SCALE shape={shape} nodes={names.length} requests={requests.length} ordinary_ns={ordinary-start} prepare_and_replay_ns={finished-ordinary} equal=true"
+  IO.println s!"measurement: c4.{shape}.nodes{names.length}.ordinary {ordinary-start} ns"
+  IO.println s!"measurement: c4.{shape}.nodes{names.length}.prepared {finished-ordinary} ns"
 
 def main : IO Unit := do
   for count in [32, 64, 128, 256] do
