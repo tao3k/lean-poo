@@ -94,3 +94,7 @@ faithful host copying/observers and callback termination remain premises. See
 P61 guards FunctionArguments metadata from its first Function/clause/input Type
 observation and carries that authority through cached layouts and lazy children.
 See [P61](pbt-design-rfc.md#p61-first-observed-function-input-declarations).
+
+P62 routes fixed recursive carrier fields through ordered edge discovery: quota
+precedes metadata, and each returned Type is captured before the next getter.
+See [P62](pbt-design-rfc.md#p62-ordered-fixed-carrier-edge-discovery).

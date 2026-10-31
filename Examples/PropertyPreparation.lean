@@ -101,3 +101,16 @@ example : observeFunctionInputs (fun _ : Nat => fun _ : Nat => 0) [(0, 0)]
 -- Fresh explicit preparation may own the new epoch; old captures stay obsolete.
 example : observeFunctionInputs (fun epoch : Nat => fun _ : Nat => epoch) [(0, 1)]
     (fun _ => (.ok ([], 1) : Except String (List Nat × Nat))) 1 = .ok ([], (1, [(0, 1)])) := rfl
+
+-- Zero edge budget skips even an explicitly throwing getter.
+example : discoverCarrierEdge (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] "quota" 0
+    (fun _ => (.error "must not read" : Except String (Nat × Nat))) 0 = .error (some "quota") := rfl
+-- First left-edge observation precedes the right getter's revision of that Type.
+example : discoverCarrierEdge (fun epoch : Nat => fun id : Nat => if id == 1 then epoch else 0)
+    [(0, 0), (1, 0)] "quota" 1 (fun _ => (.ok (2, 1) : Except String (Nat × Nat))) 0 = .error none := rfl
+-- A repeated shared Type still consumes an occurrence without duplicating stamps.
+example : discoverCarrierEdge (fun _ : Nat => fun _ : Nat => 0) [(1, 0)] "quota" 2
+    (fun state => (.ok (1, state) : Except String (Nat × Nat))) 0 = .ok (1, (0, 1, [(1, 0)])) := rfl
+-- A false exception remains an original callback cause, not stale refusal.
+example : discoverCarrierEdge (fun _ : Nat => fun _ : Nat => 0) [(0, 0)] true 1
+    (fun _ => (.error false : Except Bool (Nat × Nat))) 0 = .error (some false) := rfl

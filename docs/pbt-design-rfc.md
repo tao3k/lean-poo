@@ -2724,3 +2724,44 @@ not proved. The size bound counts retained identities, not elapsed time or total
 hash-table work. This is the RFC's finite future-work protocol, not a claim about
 the compiler/runtime or completion of unrestricted recursive/type generation.
 All full acceptance checks and resource limits remain unchanged.
+
+## P62: ordered fixed-carrier edge discovery
+
+The source audit reproduced two related defects in the finite recursive graph:
+Pair evaluated both child getters before registering either child; its right
+computed declaration could therefore revise the left Type and the resulting
+sampler still returned current. List also evaluated its child getter after the
+remaining descriptor occurrence budget was zero. Both probes use lazy declarations
+and confirm zero getter calls/unchanged owner revisions before public generator
+entry. Caller-side initialized-object effects are outside this observation.
+
+List, Pair, Maybe and OrFalse now use one local ordered field traversal through
+the existing discover action, as Sum's named branches already do. Each edge checks
+remaining occurrence fuel before its getter, brackets the getter with the existing
+source scope, then interns/captures the returned identity before the next field.
+No alternate graph, cache, validation wrapper or dispatcher is introduced. Dynamic
+Tuple/Union rows keep their existing directory admission and ordered traversal.
+Repeated/shared identities still spend occurrence fuel and occupy one graph node;
+edge order, PRNG schedule, carrier packing and lazy shrinking are unchanged.
+
+Five regression cases cover earlier-Type retirement before factories, unary and
+Pair quota boundaries, exact false/object exceptions and scope restoration,
+repeated/shared identity accounting, and an integrated Record/Function service.
+The service shares a Pair through Tuple/List and its Record leaf through Maybe;
+a computed right edge retires the first-observed left Type. Initial preparation
+returns a non-replayable stale report without opening any leaf factory. Explicit
+fresh preparation uses the completed metadata, derives the shared leaf once,
+shrinks a real service fault, preserves nested Function contracts, agrees on
+concrete/seeded replay, refuses old reports after dependency revision and retries
+through the same FUN action. Reusing a new attempt never renews old receipts.
+
+Eight finite PropertyPreparation laws reuse guardedGeneration and captureRevision:
+zero-fuel getter suppression, stale preflight, original exceptions, post-getter
+retirement refusal, exact stable state/fuel/identity, shared occurrence accounting,
+current first-observation capture and bounded ledger growth. Top-level examples
+exercise exhausted throwing getters, sibling retirement, aliasing and false causes.
+Faithful revision clocks, sequential supported edits, standard dynamic-scope
+restoration and terminating callbacks remain premises. Edge fuel bounds discovery
+occurrences and registration cardinality, not arbitrary getter cost or latency.
+This continues the finite future-work protocol; full checks and process limits
+remain unchanged, and no compiler/runtime or unversioned-heap proof is claimed.

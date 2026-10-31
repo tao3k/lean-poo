@@ -300,4 +300,85 @@ theorem observeFunctionInputs_refused [DecidableEq Source] (current : State → 
     (observeFunctionInputs current ledger read state >>= build) = .error cause := by
   rw [refused]; rfl
 
+/-- A fixed carrier edge spends occurrence fuel before its metadata callback,
+then records the returned Type at first observation. Shared IDs still spend fuel.
+Host callbacks terminate and source revisions faithfully describe supported edits. -/
+def discoverCarrierEdge [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat)
+    (read : State → Except Cause (Source × State)) (state : State) :
+    Except (Option Cause) (Source × (State × Nat × List (Source × Nat))) :=
+  match fuel with
+  | 0 => .error (some quota)
+  | rest + 1 =>
+    (guardedGeneration (fun before => revisionsCurrent (current before) ledger) read state).map
+      (fun result => (result.1, (result.2, rest,
+        captureRevision ledger result.1 (current result.2 result.1))))
+
+/-- Exhausted discovery never evaluates a computed child declaration. -/
+theorem discoverCarrierEdge_empty [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause)
+    (read : State → Except Cause (Source × State)) (state : State) :
+    discoverCarrierEdge current ledger quota 0 read state = .error (some quota) := rfl
+
+/-- Available fuel does not authorize a getter under obsolete captured epochs. -/
+theorem discoverCarrierEdge_stale [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat)
+    (read : State → Except Cause (Source × State)) (state : State)
+    (stale : revisionsCurrent (current state) ledger = false) :
+    discoverCarrierEdge current ledger quota (fuel + 1) read state = .error none := by
+  simp [discoverCarrierEdge, guardedGeneration_preflight
+    (fun before => revisionsCurrent (current before) ledger) read state stale, Except.map]
+
+/-- Original exceptions, including false, bypass normal post-return refusal. -/
+theorem discoverCarrierEdge_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota cause : Cause) (fuel : Nat) (state : State)
+    (before : revisionsCurrent (current state) ledger = true) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .error cause) state =
+      .error (some cause) := by
+  simp [discoverCarrierEdge, guardedGeneration_cause
+    (fun before => revisionsCurrent (current before) ledger) state cause before, Except.map]
+
+/-- A later Pair field cannot retire its earlier captured sibling and publish. -/
+theorem discoverCarrierEdge_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = false) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state = .error none := by
+  simp [discoverCarrierEdge, guardedGeneration_revised
+    (fun before => revisionsCurrent (current before) ledger) state next child before after, Except.map]
+
+/-- Stable discovery returns the exact child, actual state and one fewer edge. -/
+theorem discoverCarrierEdge_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state =
+      .ok (child, (next, fuel, captureRevision ledger child (current next child))) := by
+  simp [discoverCarrierEdge, guardedGeneration_state
+    (fun before => revisionsCurrent (current before) ledger) state next child before after, Except.map]
+
+/-- Shared child occurrences spend edge fuel without refreshing the old epoch. -/
+theorem discoverCarrierEdge_shared [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) (known : child ∈ ledger.map Prod.fst) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state =
+      .ok (child, (next, fuel, ledger)) := by
+  rw [discoverCarrierEdge_stable current ledger quota fuel state next child before after,
+    captureRevision_existing ledger child (current next child) known]
+
+/-- Capturing a child makes it current for the next field while retaining all
+prior authority; it never validates the child's generator or recursive payload. -/
+theorem discoverCarrierEdge_current [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (child : Source) (before : revisionsCurrent current ledger = true) :
+    revisionsCurrent current (captureRevision ledger child (current child)) = true :=
+  captureRevision_fresh current ledger child before
+
+/-- Registration grows by at most one identity per edge, independently of sharing.
+This bounds ledger cardinality, not callback runtime or hash-table latency. -/
+theorem discoverCarrierEdge_capture_cost [DecidableEq Source] (ledger : List (Source × Nat))
+    (child : Source) (epoch : Nat) :
+    (captureRevision ledger child epoch).length ≤ ledger.length + 1 :=
+  captureRevision_length ledger child epoch
+
 end LeanPoo.Functional.PropertyTesting
