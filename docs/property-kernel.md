@@ -719,3 +719,13 @@ Six PropertyPreparation laws reuse guardedProduct/scopeCurrent for growing
 source ledgers, ordered values, exact causes and publication. These finite laws
 assume faithful sequential host binding and pure declared source observers; they
 do not authorize undiscovered sources or promise effect rollback.
+
+P54 routes generated model traces through the existing owned lazy tree protocol.
+The finite value-neighborhood API still validates whole batches; the generated
+trace no longer calls it before returning a single budgeted proposal. Sequence
+nodes supply only the current neighborhood, and the ordinary generator restarts
+from confirmed repaired commands. The paired counter controls include construction
+and draw, use both orders, and assert bounded repair/parameter work, not elapsed
+speed. repairedTracePrefix proves finite prefix agreement, dependency validity,
+origin retention and the repair-count budget under faithful iteration/model laws.
+It does not bound a user callback's own allocation or prove runtime implementation.

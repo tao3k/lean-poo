@@ -2246,3 +2246,81 @@ observers and faithful host scope/ledger binding. Sources not yet returned by a
 constructor cannot be discovered inside it. Direct caller argument evaluation,
 arbitrary host effects, rollback and compiler/runtime verification remain outside
 these laws. No resource limit or complete check is removed or broadened.
+
+## P54: demand-driven dependency-repaired trace trees
+
+The audit reproduced unused framework work on the normal typed trace path: an
+eight-command trace with shrink-budget one called all eight parameter shrinkers
+and repaired the entire finite structural batch before returning its first
+proposal. The accepted witness was already the empty trace. An exception in an
+unused parameter callback could therefore prevent that budgeted witness entirely.
+The value-only finite-list API itself is an explicit contract, not this gap; the
+normal generated trace was incorrectly routed exclusively through that eager path.
+
+The existing generic model module now exports trace-generator, a thin composition
+of draw-trace and the ordinary generator constructor. The established core owns
+iteration, source leaves, proposal charging and restart from confirmed values.
+Its standard current?/sources options pass unchanged through a plain Scheme rest
+forwarder with Gerbil using contracts; no second option parser or domain namespace
+is introduced. No constructor invokes model initialization or generation callbacks.
+
+One private trace-neighborhood uses sample-sequence's existing aligned deletions
+and coordinate policy. A command exposes a finite, validated and owned parameter
+spine, but allocates sample nodes only as its standard iterator is pulled. Each
+requested sequence proposal is dependency-repaired once before yielding. Unused
+neighborhoods invoke neither parameter callbacks nor repair; initial construction
+still prepares a linear number of command nodes. After confirmation, the ordinary
+value-generator tree rebuilds the next neighborhood from the REPAIRED commands,
+not from raw nodes whose orphan dependents were removed. The raw sample-sequence
+is only one neighborhood layer; it is not retained as the accepted trace's origin.
+
+Typed trace-generator reuses that owned generic tree through make-generator's
+existing generation field, while preserving its public draw/shrink/measure views,
+Record contracts and declaration guard. An explicit derived draw/shrink method
+continues to own a new callback protocol through the established ownership check;
+the earlier default tree cannot silently override it. shrink-trace remains the
+finite, all-or-nothing value-neighborhood operation. Its existing malformed-list
+and pre-repair refusal controls are retained unchanged. These two contracts share
+existing sequence algorithms; there is no legacy strategy selector or new runner.
+
+Returned proposals keep the existing charge-before-admission rule. A failure during
+repair or a parameter factory has not returned a proposal, so it adds no attempt;
+previous returned structural proposals remain charged and confirmed progress is
+retained. Exact false/object exceptions remain distinct from falsity and stale
+sources. Paused iterators reject retirement before additional repair or producers.
+A fresh factory may capture a new epoch; old reports/trees stay refused. Budget
+cutoff does not probe EOF and cannot claim local minimality. A reached parameter
+callback still owes a finite proper list; its own allocation/termination is not
+bounded solely by the proposal counter. Existing process guards remain necessary.
+
+Ten independent controls cover zero/one budgets, identical seeded draws and finite
+neighborhood order, restart after orphan retirement, malformed demanded lists,
+exact causes, repair interruption, paused/fresh ownership, constructor contracts,
+and complete shrinking/replay against a first-difference fixture. Paired value/tree
+controls run both orders at sizes 1, 8 and 128 with the same seed/model/property and
+construction boundary: one requested proposal makes zero parameter calls in the
+tree path, rather than one per original command. Initialization counts expose one
+repair rather than the complete structural batch. These are work-count controls,
+not wall-clock or GC speed claims. All 158 earlier independent cases remain and
+the independent compiled receipt now requires exactly 168 cases.
+
+Two typed controls cover zero/one budgets, nested command Function wrapping,
+retired Type ownership and explicit callback overrides. The collection request
+example composes the owned trace with a constant checked Function dispatcher,
+Record packing, the existing product tree and FUN delivery. Real Trie indexed
+deltas exercise inverse failures, old-value/index conflicts, source refresh and
+stale tickets from the established lifecycle. A failing request shrinks without
+orphan handles, retains wrappers, replays seed/concrete/portable witnesses, refuses
+old ownership and explicitly prepares a corrected fresh passing request. The
+reference oracle and actual indexed backend remain separate existing algorithms.
+
+PropertyTraces.lean adds repairedTracePrefix using only take, map and the existing
+retire. Nine finite laws prove eager-prefix agreement, repair-count budget, zero
+demand, candidate validity and origin order, independence of unvisited parameter
+suffixes, full-deletion selection and strict structural measure decrease. Examples
+exercise orphan retirement and restarting from repaired commands. Existing guarded
+action and interrupted-shrink laws continue to own source and exception semantics.
+Faithful standard iteration, accurate sources, pure/terminating model transitions,
+normalization and fixture simulation remain premises. This advances the paper's
+future work; it is not compiler/runtime verification or a universal callback-cost
+bound. No upstream source, scheduler, namespace or resource limit is changed.

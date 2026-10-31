@@ -173,4 +173,80 @@ theorem configuredDraw_single (model : TraceModel State Command Reply)
       .ok [command] := by
   simp [configuredDraw, drawTrace, enabled, Functor.map, Except.map]
 
+/-- Finite semantic prefix of the lazy trace neighborhood. Only demanded raw
+proposals are repaired; the actual Iterator/PRNG implementation remains a premise. -/
+def repairedTracePrefix (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (proposals : List (List Command)) : List (List Command) :=
+  (proposals.take budget).map (retire model state)
+
+/-- Demand and repair commute for the finite observable prefix. No unvisited
+parameter neighborhood must be constructed to obtain that same prefix. -/
+theorem repairedTracePrefix_agrees (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (proposals : List (List Command)) :
+    repairedTracePrefix model state budget proposals = (proposals.map (retire model state)).take budget := by
+  induction budget generalizing proposals with
+  | zero => rfl
+  | succ budget ih =>
+    cases proposals with
+    | nil => rfl
+    | cons head tail =>
+      change retire model state head :: repairedTracePrefix model state budget tail =
+        retire model state head :: (tail.map (retire model state)).take budget
+      exact congrArg (List.cons _) (ih tail)
+
+/-- One completed repair per returned proposal, bounded by the existing budget. -/
+theorem repairedTracePrefix_budget (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (proposals : List (List Command)) :
+    (repairedTracePrefix model state budget proposals).length ≤ budget := by
+  simp only [repairedTracePrefix, List.length_map, List.length_take]
+  exact Nat.min_le_left _ _
+
+/-- No requested proposal performs any repair, even with a nonempty neighborhood. -/
+theorem repairedTracePrefix_zero (model : TraceModel State Command Reply) (state : State)
+    (proposals : List (List Command)) : repairedTracePrefix model state 0 proposals = [] := rfl
+
+/-- Each demanded repaired candidate retains valid producer/consumer dependencies. -/
+theorem repairedTracePrefix_valid (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (proposals : List (List Command)) (candidate : List Command)
+    (member : candidate ∈ repairedTracePrefix model state budget proposals) :
+    traceValid model state candidate = true := by
+  obtain ⟨raw, _, rfl⟩ := List.mem_map.mp member
+  exact retire_valid model raw state
+
+/-- Repair never invents or reorders a command in its corresponding raw proposal. -/
+theorem repairedTracePrefix_origin (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (proposals : List (List Command)) (candidate : List Command)
+    (member : candidate ∈ repairedTracePrefix model state budget proposals) :
+    ∃ raw ∈ proposals, candidate.Sublist raw := by
+  obtain ⟨raw, selected, rfl⟩ := List.mem_map.mp member
+  exact ⟨raw, List.mem_of_mem_take selected, retire_sublist model raw state⟩
+
+/-- A sufficient structural prefix makes later parameter proposals irrelevant. -/
+theorem repairedTracePrefix_tail (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (structural parameters : List (List Command)) (enough : budget ≤ structural.length) :
+    repairedTracePrefix model state budget (structural ++ parameters) =
+      repairedTracePrefix model state budget structural := by
+  simp only [repairedTracePrefix, List.take_append_of_le_length enough]
+
+/-- Replacing an unvisited parameter suffix cannot alter the result or repair count. -/
+theorem repairedTracePrefix_parameters (model : TraceModel State Command Reply) (state : State)
+    (budget : Nat) (structural left right : List (List Command)) (enough : budget ≤ structural.length) :
+    repairedTracePrefix model state budget (structural ++ left) =
+      repairedTracePrefix model state budget (structural ++ right) := by
+  rw [repairedTracePrefix_tail model state budget structural left enough,
+      repairedTracePrefix_tail model state budget structural right enough]
+
+/-- Full deletion is the first structural candidate and needs no parameter proposal. -/
+theorem repairedTracePrefix_full_deletion (model : TraceModel State Command Reply) (state : State)
+    (parameters : List (List Command)) :
+    repairedTracePrefix model state 1 ([] :: parameters) = [[]] := rfl
+
+/-- That full-deletion candidate strictly decreases any nonempty trace's natural
+structural-plus-parameter measure. Falsity is still checked by the existing runner. -/
+theorem repairedTracePrefix_empty_smaller (weight : Command → Nat) (commands : List Command)
+    (nonempty : 0 < commands.length) : traceWeight weight [] < traceWeight weight commands := by
+  have lower := traceWeight_length weight commands
+  simp only [traceWeight]
+  omega
+
 end LeanPoo.Functional.PropertyTesting
