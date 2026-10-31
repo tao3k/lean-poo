@@ -2512,3 +2512,51 @@ Faithful standard shallow copying, sequential source binding, terminating callba
 and the application's Type/pack/unpack laws remain premises. These are not host
 heap alias proofs, automatic isomorphism discovery, concurrency verification or
 compiler/runtime validation. Existing complete checks and resource limits remain.
+
+
+## P58: portable handoff request admission and physical framing
+
+The audit found three actual handoff defects: an explicit `#!eof` could hide
+pending input (`#!eof 99`) from the second reader call; an invalid property could
+consume input and call the decoder before rejection; and a wrong-direction output
+port could reconfirm a witness and invoke its encoder before failing. These are
+request/framing defects, not a request for a new serialization framework.
+
+The existing generic replay module exposes its standard record recognizer
+`codec?`. Generic and typed read/write requests use Gerbil parameter contracts to
+reject malformed configuration before source observers, computed POO metadata,
+property callbacks or port operations. For valid configuration the existing
+codec-before-domain source priority remains. No new Type wrapper, registry or
+namespace is introduced, and the version-one envelope is unchanged.
+
+After admitting the envelope, the standard reader and `peek-char` run under
+separate existing source boundaries. Reader EOF must also be physical EOF before
+decoding. Ordinary whitespace, comments and datum comments retain standard reader
+semantics; a terminal `#!eof` at physical end remains accepted. Any pending input
+after that terminator is refused. Source retirement during the reader's normal
+return precedes physical probing and result interpretation; original callback
+exceptions remain exact, including a false exception.
+
+Six independent generic cases cover admission without observers, export without
+reconfirmation, hidden suffixes, standard reader trivia/false witnesses, cursor-
+observed source retirement and exact decoder causes/fresh retries. The independent
+compiled stdlib-only suite now has 191 cases, retaining all earlier 185. Two typed
+cases check computed-metadata exclusion and a heterogeneous UInt/Integer/Bool
+Record with a wrapped Function. Its consuming product sampler feeds the existing
+FUN property action, shrinking, portable export and import. Invalid configuration
+can retry on the same untouched port; malformed framing requires explicit fresh
+input. Revision retirement rejects old reports/codecs before input consumption;
+fresh preparation rejects old identities before decoding and admits the corrected
+service. Nested Function contracts survive reconstruction.
+
+`PropertyReplay.admitReplayRequest` and `replayInputEnd` add eleven laws for static
+admission, ordered logical/physical EOF, source retirement, exact causes, final
+state forwarding and refusal before decoding. Top-level Lean examples include
+hidden suffixes, stale sources and false causes. The model assumes faithful host
+port observations, pure observers and terminating callbacks. It does not verify
+the Scheme reader grammar, allocator, compiler or runtime. Port predicates check
+direction/type only: closed ports and later device failures remain host I/O
+failures. Consumed input, partial output and callback effects are not rolled back;
+`peek-char` may perform underlying I/O. Existing heap/time guards remain necessary.
+This continues the RFC's finite future-work protocol, not a claim that the original
+paper supplies a portable handoff or host-I/O proof.

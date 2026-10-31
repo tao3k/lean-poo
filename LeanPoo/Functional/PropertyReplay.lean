@@ -91,4 +91,103 @@ theorem admitReplayVector_width (remaining depth width : Nat)
     exact bounds.1
   · simp [admitReplayVector, ready] at success
 
+/-- Pure request admission precedes source observers, callbacks and host I/O. -/
+def admitReplayRequest (valid : Bool) (invalid : Cause)
+    (action : State → Except (Option Cause) Value) (state : State) :
+    Except (Option Cause) Value :=
+  if valid then action state else .error (some invalid)
+
+/-- Reader EOF and physical EOF are distinct observations. Each host action has
+its own existing source boundary; normal source retirement precedes classification.
+Faithful port observations and terminating host actions are explicit premises. -/
+def replayInputEnd (live : State → Bool) (invalid : Cause)
+    (read peek : State → Except Cause (Bool × State)) (state : State) :
+    Except (Option Cause) (Unit × State) :=
+  match guardedGeneration live read state with
+  | .error cause => .error cause
+  | .ok (false, _) => .error (some invalid)
+  | .ok (true, next) =>
+    match guardedGeneration live peek next with
+    | .error cause => .error cause
+    | .ok (false, _) => .error (some invalid)
+    | .ok (true, after) => .ok ((), after)
+
+/-- Invalid static configuration cannot enter the supplied action. -/
+theorem admitReplayRequest_invalid (invalid : Cause)
+    (action : State → Except (Option Cause) Value) (state : State) :
+    admitReplayRequest false invalid action state = .error (some invalid) := rfl
+
+/-- Valid static configuration preserves the exact action result. -/
+theorem admitReplayRequest_valid (invalid : Cause)
+    (action : State → Except (Option Cause) Value) (state : State) :
+    admitReplayRequest true invalid action state = action state := rfl
+
+/-- Stale input preparation skips both host observations. -/
+theorem replayInputEnd_stale (live : State → Bool) (invalid : Cause)
+    (read peek : State → Except Cause (Bool × State)) (state : State)
+    (stale : live state = false) :
+    replayInputEnd live invalid read peek state = .error none := by
+  simp [replayInputEnd, guardedGeneration, stale]
+
+/-- A real trailing datum refuses before the physical probe. -/
+theorem replayInputEnd_datum (live : State → Bool) (invalid : Cause)
+    (peek : State → Except Cause (Bool × State)) (state next : State)
+    (before : live state = true) (after : live next = true) :
+    replayInputEnd live invalid (fun _ => .ok (false, next)) peek state =
+      .error (some invalid) := by
+  simp [replayInputEnd, guardedGeneration, before, after]
+
+/-- An explicit reader EOF cannot hide remaining physical input. -/
+theorem replayInputEnd_pending (live : State → Bool) (invalid : Cause)
+    (state next after : State) (a : live state = true) (b : live next = true)
+    (c : live after = true) :
+    replayInputEnd live invalid (fun _ => .ok (true, next))
+      (fun _ => .ok (false, after)) state = .error (some invalid) := by
+  simp [replayInputEnd, guardedGeneration, a, b, c]
+
+/-- Two successful EOF observations retain the final host state. -/
+theorem replayInputEnd_complete (live : State → Bool) (invalid : Cause)
+    (state next after : State) (a : live state = true) (b : live next = true)
+    (c : live after = true) :
+    replayInputEnd live invalid (fun _ => .ok (true, next))
+      (fun _ => .ok (true, after)) state = .ok ((), after) := by
+  simp [replayInputEnd, guardedGeneration, a, b, c]
+
+/-- Reader exceptions retain their original cause, including a false cause. -/
+theorem replayInputEnd_read_cause (live : State → Bool) (invalid cause : Cause)
+    (peek : State → Except Cause (Bool × State)) (state : State)
+    (before : live state = true) :
+    replayInputEnd live invalid (fun _ => .error cause) peek state = .error (some cause) := by
+  simp [replayInputEnd, guardedGeneration, before]
+
+/-- Reader source retirement skips the physical probe even after normal EOF. -/
+theorem replayInputEnd_read_revised (live : State → Bool) (invalid : Cause)
+    (peek : State → Except Cause (Bool × State)) (state next : State)
+    (before : live state = true) (after : live next = false) :
+    replayInputEnd live invalid (fun _ => .ok (true, next)) peek state = .error none := by
+  simp [replayInputEnd, guardedGeneration, before, after]
+
+/-- Physical probe exceptions remain exact after successful reader admission. -/
+theorem replayInputEnd_peek_cause (live : State → Bool) (invalid cause : Cause)
+    (state next : State) (before : live state = true) (after : live next = true) :
+    replayInputEnd live invalid (fun _ => .ok (true, next))
+      (fun _ => .error cause) state = .error (some cause) := by
+  simp [replayInputEnd, guardedGeneration, before, after]
+
+/-- Probe source retirement precedes interpreting its returned physical flag. -/
+theorem replayInputEnd_peek_revised (live : State → Bool) (invalid : Cause)
+    (state next after : State) (flag : Bool) (a : live state = true)
+    (b : live next = true) (c : live after = false) :
+    replayInputEnd live invalid (fun _ => .ok (true, next))
+      (fun _ => .ok (flag, after)) state = .error none := by
+  simp [replayInputEnd, guardedGeneration, a, b, c]
+
+/-- Refused framing cannot enter decoding or any dependent property action. -/
+theorem replayInputEnd_refused (live : State → Bool) (invalid : Cause)
+    (read peek : State → Except Cause (Bool × State)) (state : State)
+    (decode : Unit × State → Except (Option Cause) Value) (cause : Option Cause)
+    (refused : replayInputEnd live invalid read peek state = .error cause) :
+    (replayInputEnd live invalid read peek state >>= decode) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
