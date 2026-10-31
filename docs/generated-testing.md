@@ -106,3 +106,7 @@ and typed bridges before optional availability metadata. See
 P64 shares the core's strict Boolean source contract across graph participants,
 direct typed checks and cached guards; malformed replies cannot authorize later
 work. See [P64](pbt-design-rfc.md#p64-strict-boolean-source-admission-across-typed-composition).
+
+P65 reuses generic failure classification for typed initialization: secondary
+observation/classification cannot erase the primary cause or enter consumer IO.
+See [P65](pbt-design-rfc.md#p65-shared-primary-cause-ownership-during-typed-preparation-failure).

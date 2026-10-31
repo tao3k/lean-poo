@@ -2861,3 +2861,48 @@ failure retains its non-replayable report. Normal observer identities, invocatio
 sites and PRNG schedules are retained. No elapsed-
 time claim follows from a Boolean contract check; complete checks and all resource
 limits remain unchanged within the RFC's finite future-work scope.
+
+## P65: shared primary-cause ownership during typed preparation failure
+
+The audit reproduced a typed error-reporting defect. An owned generation factory
+raised a primary exception after its opaque observer became unavailable. The
+initialization catch queried that observer again; a secondary exception escaped
+and replaced the primary, so no report reached the caller. The frozen public
+check-property probe recorded the secondary identity and zero draws/properties.
+The generic kernel already protected primary causes during status classification.
+
+The existing failure-status function is now exported through its ordinary generic
+module and reused by typed initialization. No duplicate classifier, record, guard,
+catch hierarchy or namespace is introduced. The typed handler passes the same
+primary cause into its existing report builder regardless of classifier/observer
+failure. Confirmed source retirement keeps stale status; unavailable or malformed
+secondary observation gives error with the original cause. Existing bounded,
+unsupported and core-interruption precedence remains. Reports created before a
+generic execution exists keep replayable false, zero trial/shrink progress and no
+property witness. Consumer IO stays outside this error-classification boundary.
+
+Six regression cases cover delayed metadata and owned-factory failures with false
+and object primary/secondary causes, malformed secondary Boolean replies, false
+hooks and epoch-first retirement, existing controlled statuses/core interruptions,
+exactly one FUN delivery and unchanged consumer exceptions, and an integrated
+callback service. The service reuses ServiceSignature and its FunctionArguments
+sampler, nested Function/List inputs, optional/keyword arguments, a checked target,
+and the original supplied core. Injected binding failure produces one non-replayable
+primary-cause report; explicit correction permits decreasing shrinking and concrete/
+seeded replay of a real service fault. A later owner revision refuses old receipts;
+a fresh corrected service passes. Older error reports retain their original cause
+and never become falsifying witnesses. Source/metadata fields that fail static
+request admission remain outside this initialization-report boundary.
+
+Eight initializationFailure laws compose the existing classifyFailure model at
+one fixed diagnostic context: primary identity and absent execution, interruption
+and epoch precedence, observer/classifier errors, false observation, stable status
+and non-passing outcomes under a lawful classifier. Top-level examples distinguish
+false causes, secondary exceptions, skipped callbacks and bounded exhaustion.
+The typed generation-status classifier and source observation are pure at this
+context; host dispatch, record field fidelity, source accuracy, callback termination
+and FUN/IO delivery remain premises rather than a Scheme runtime proof. The model
+retains original diagnostic identity; it does not roll back failed preparation or
+arbitrary consumer effects. No elapsed-time improvement is claimed. The independent
+library remains POO-free, and complete checks/resource limits are unchanged within
+the RFC's finite future-work scope.

@@ -535,4 +535,88 @@ theorem checkSourceObservers_booleans (malformed : Cause) (replies : List Bool) 
     | false => rfl
     | true => exact ih
 
+/-- Initialization errors reuse classifyFailure at one fixed diagnostic context.
+Epochs/opaque observation describe the state AFTER the primary failure. The typed
+classifier and observer are pure and terminating, so trailing observation has the
+same judgment. The false flag records that no generic execution report was created. -/
+def initializationFailure (epochs interrupted : Bool)
+    (observe : Unit → Except Secondary Bool) (classify : Cause → Except Secondary CheckStatus)
+    (original : Cause) : (CheckStatus × Cause) × Bool :=
+  if interrupted then ((.stale, original), false)
+  else (classifyFailure (fun _ : Unit => epochs) (fun _ => do
+    let active ← observe ()
+    if active then
+      let status ← classify original
+      pure (status, ())
+    else pure (.stale, ())) original (), false)
+
+/-- Every outcome retains the primary identity and has no replayable execution. -/
+theorem initializationFailure_receipt (epochs interrupted : Bool)
+    (observe : Unit → Except Secondary Bool) (classify : Cause → Except Secondary CheckStatus)
+    (original : Cause) :
+    (initializationFailure epochs interrupted observe classify original).1.2 = original ∧
+    (initializationFailure epochs interrupted observe classify original).2 = false := by
+  unfold initializationFailure
+  split
+  · exact ⟨rfl, rfl⟩
+  · exact ⟨classifyFailure_original _ _ original (), rfl⟩
+
+/-- An existing core interruption retains stale precedence and skips observers. -/
+theorem initializationFailure_interrupted (epochs : Bool)
+    (observe : Unit → Except Secondary Bool) (classify : Cause → Except Secondary CheckStatus)
+    (original : Cause) :
+    initializationFailure epochs true observe classify original = ((.stale, original), false) := rfl
+
+/-- Confirmed epoch retirement skips opaque observation and classification. -/
+theorem initializationFailure_epochs (observe : Unit → Except Secondary Bool)
+    (classify : Cause → Except Secondary CheckStatus) (original : Cause) :
+    initializationFailure false false observe classify original = ((.stale, original), false) := rfl
+
+/-- A secondary observer exception cannot replace the original factory failure. -/
+theorem initializationFailure_observer (secondary : Secondary)
+    (classify : Cause → Except Secondary CheckStatus) (original : Cause) :
+    initializationFailure true false (fun _ => .error secondary) classify original =
+      ((.error, original), false) := rfl
+
+/-- A confirmed false hook remains stale and never invokes the classifier. -/
+theorem initializationFailure_false (classify : Cause → Except Secondary CheckStatus) (original : Cause) :
+    initializationFailure true false (fun _ => .ok false) classify original =
+      ((.stale, original), false) := rfl
+
+/-- Secondary classifier errors also keep the original failure identity. -/
+theorem initializationFailure_classifier (secondary : Secondary) (original : Cause) :
+    initializationFailure true false (fun _ => .ok true) (fun _ => .error secondary) original =
+      ((.error, original), false) := rfl
+
+/-- Stable observation and classification keep the existing status vocabulary. -/
+theorem initializationFailure_classified (status : CheckStatus) (original : Cause) :
+    initializationFailure (Secondary := Secondary) true false (fun _ => .ok true) (fun _ => .ok status) original =
+      ((status, original), false) := rfl
+
+/-- A lawful typed error classifier cannot turn initialization failure into a
+passing property or a falsifying witness, even when observation itself fails. -/
+theorem initializationFailure_nonpassing (epochs interrupted : Bool)
+    (observe : Unit → Except Secondary Bool) (classify : Cause → Except Secondary CheckStatus)
+    (original : Cause)
+    (lawful : ∀ status, classify original = .ok status → status ≠ .passed ∧ status ≠ .failed) :
+    (initializationFailure epochs interrupted observe classify original).1.1 ≠ .passed ∧
+      (initializationFailure epochs interrupted observe classify original).1.1 ≠ .failed := by
+  cases interrupted with
+  | true => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
+  | false =>
+    cases epochs with
+    | false => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
+    | true =>
+      unfold initializationFailure classifyFailure guardedGeneration
+      dsimp
+      cases observed : observe () with
+      | error secondary => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
+      | ok active =>
+        cases active with
+        | false => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
+        | true =>
+          cases classified : classify original with
+          | error secondary => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
+          | ok status => exact lawful status classified
+
 end LeanPoo.Functional.PropertyTesting

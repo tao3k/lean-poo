@@ -150,3 +150,19 @@ example : checkSourceObservers "boolean required" true
     [(fun _ => .ok (some false)), (fun _ => .ok none)] = .ok false := rfl
 -- A thrown false cause differs from a valid false reply.
 example : checkSourceObservers true true [(fun _ => .error false)] = .error false := rfl
+
+-- The observer's false exception cannot erase an original object-like cause.
+example : initializationFailure true false (fun _ => .error false)
+    (fun _ : Nat => .ok .unsupported) 7 = ((.error, 7), false) := rfl
+-- A false primary cause stays present when a different secondary error occurs.
+example : initializationFailure true false (fun _ => .error "secondary")
+    (fun _ : Bool => .ok .error) false = ((.error, false), false) := rfl
+-- A retired epoch suppresses a deliberately failing observer and classifier.
+example : initializationFailure false false (fun _ => .error "must not observe")
+    (fun _ : Nat => .error "must not classify") 7 = ((.stale, 7), false) := rfl
+-- Existing bounded outcomes keep their status while retaining the primary cause.
+example : initializationFailure (Secondary := String) true false (fun _ => .ok true)
+    (fun _ : Nat => .ok .exhausted) 7 = ((.exhausted, 7), false) := rfl
+-- Diagnostic classifier failure never manufactures a property counterexample.
+example : initializationFailure true false (fun _ => .ok true)
+    (fun _ : Nat => .error "classifier") 7 = ((.error, 7), false) := rfl
