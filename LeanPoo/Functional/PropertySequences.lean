@@ -174,4 +174,57 @@ theorem inspectTagged_success [DecidableEq Tag] (branches : List (Tag × Nat)) (
   rw [accepted]
   rfl
 
+/-- Text carriers map the same spelling neighborhood through one representation. -/
+def spellingCandidates (pack : Spelling → Carrier) (shrink : Spelling → List Spelling)
+    (unpack : Carrier → Spelling) (value : Carrier) : List Carrier :=
+  (shrink (unpack value)).map pack
+
+/-- A faithful standard codec recovers every proposed spelling in the same order. -/
+theorem spellingCandidates_decode (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (roundtrip : ∀ text, unpack (pack text) = text)
+    (shrink : Spelling → List Spelling) (value : Carrier) :
+    (spellingCandidates pack shrink unpack value).map unpack = shrink (unpack value) := by
+  simp [spellingCandidates, List.map_map, Function.comp_def, roundtrip]
+
+/-- Mapping does not resample, drop or duplicate proposals. -/
+theorem spellingCandidates_length (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (shrink : Spelling → List Spelling) (value : Carrier) :
+    (spellingCandidates pack shrink unpack value).length = (shrink (unpack value)).length := by
+  simp [spellingCandidates]
+
+/-- Every materialized proposal has an original spelling, not another carrier. -/
+theorem spellingCandidates_origin (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (shrink : Spelling → List Spelling) (value candidate : Carrier)
+    (member : candidate ∈ spellingCandidates pack shrink unpack value) :
+    ∃ text ∈ shrink (unpack value), pack text = candidate := List.mem_map.mp member
+
+/-- Strict content ranking survives representation conversion without new checks. -/
+theorem spellingCandidates_descent (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (roundtrip : ∀ text, unpack (pack text) = text)
+    (weight : Spelling → Nat) (shrink : Spelling → List Spelling)
+    (strict : ∀ text child, child ∈ shrink text → weight child < weight text)
+    (value candidate : Carrier)
+    (member : candidate ∈ spellingCandidates pack shrink unpack value) :
+    weight (unpack candidate) < weight (unpack value) := by
+  obtain ⟨text, child, rfl⟩ := spellingCandidates_origin pack unpack shrink value candidate member
+  rw [roundtrip]
+  exact strict _ _ child
+
+/-- Declared alphabets/length domains survive when the codec and source shrinker do. -/
+theorem spellingCandidates_domain (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (roundtrip : ∀ text, unpack (pack text) = text)
+    (allowed : Spelling → Prop) (shrink : Spelling → List Spelling)
+    (preserves : ∀ text child, allowed text → child ∈ shrink text → allowed child)
+    (value candidate : Carrier) (valid : allowed (unpack value))
+    (member : candidate ∈ spellingCandidates pack shrink unpack value) : allowed (unpack candidate) := by
+  obtain ⟨text, child, rfl⟩ := spellingCandidates_origin pack unpack shrink value candidate member
+  rw [roundtrip]
+  exact preserves _ _ valid child
+
+/-- The empty spelling stays terminal when its underlying neighborhood is empty. -/
+theorem spellingCandidates_terminal (pack : Spelling → Carrier) (unpack : Carrier → Spelling)
+    (shrink : Spelling → List Spelling) (value : Carrier)
+    (terminal : shrink (unpack value) = []) : spellingCandidates pack shrink unpack value = [] := by
+  simp [spellingCandidates, terminal]
+
 end LeanPoo.Functional.PropertyTesting

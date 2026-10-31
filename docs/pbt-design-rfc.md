@@ -1882,3 +1882,52 @@ the existing random-source contract. These are finite source/model laws advancin
 the paper's future work, not proofs of Scheme execution, PRNG distribution or
 wall-clock performance. The width bound is not a constant-time bignum arithmetic
 claim. All existing checks and resource limits remain unchanged.
+
+## P48: one spelling protocol for text carriers and keyword call values
+
+The concentrated audit found that the existing Keyword Type had validation and
+standard string conversion but no automatic PBT derivation. FunctionArguments
+therefore could not derive ordinary Keyword arguments or Keyword-valued declared
+parameters. This closes an existing finite data path; it does not infer arbitrary
+predicates or synthesize unrestricted callbacks.
+
+The generic module adds `generator-keyword` by mapping the existing string tree
+through Gerbil's `string->keyword`. It shares size, alphabet/length bounds, seed
+splits, lazy children and source ownership with String/Symbol generation. The
+POO data profile selects one representation pair using standard `defvalues` and
+`compose`, then uses one character/byte-list generator and shrink policy for
+String, Symbol, Keyword, Bytes and fixed BytesN. It allocates no conversion lookup
+table and installs no extra validation chain. Representation conversion occurs
+once per materialized node; the original list tree retains child provenance.
+
+Empty spellings, whitespace, colons, NUL and Unicode scalars remain data. A Keyword
+value does not become an omitted argument or a keyword declaration. Existing
+FunctionArguments owns escaping and optional/keyword/rest interpretation; this
+unit supplies the missing value generator instead of duplicating its parser.
+Shrinking retains the carrier and the existing content rank; equal-length character
+shrinks can decrease content, while empty spellings are terminal. Wrong carriers
+fail the existing Type/Function boundary. Source checks, callback errors and
+stale report refusal retain their existing semantics. Fresh preparation after
+revision is explicit. Opaque/refined Types still require explicit generators;
+this does not add JSON inference, arbitrary interning policy or an eval mechanism.
+
+Generic controls compare seeded string/keyword spellings, test constrained
+alphabets and lengths, sensitive Unicode and empty data, and replay an empty
+minimal failure. Independent admission now requires 148 cases. Typed regressions
+exercise strict spelling shrink rank and shared Keyword leaves in Tuple/List/Pair/
+OrFalse/Sum. `examples/generated-products.ss` exports `keyword-routing-action`:
+a Record with Keyword fields and wrapped Function flows through a declared
+keyword parameter and FUN. The fault confuses an empty spelling with omission;
+the test detects it, preserves wrappers, replays seed/concrete/corpus witnesses,
+rejects a retired descriptor and admits a fresh corrected action. A separate
+FunctionArguments control composes ordinary/optional/keyword/rest Keyword values.
+
+`PropertySequences.lean` proves six representation laws: spelling recovery in
+order, neighborhood cardinality, proposal origin, strict rank descent, declared
+domain preservation and terminal neighborhoods. Top-level examples use a distinct
+carrier with empty and reader-sensitive spellings. Faithful standard conversion,
+terminating callbacks, accurate source clocks and the existing character/list
+neighborhood laws remain interpretation premises. These finite model laws do not
+prove Gerbil intern tables, the compiler, PRNG distribution or physical memory and
+latency. This advances the paper's future-work direction. No upstream code,
+module framework, namespace, runner, resource limit or acceptance check changes.

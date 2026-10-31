@@ -37,3 +37,12 @@ example : inspectTagged [("credit", 0), ("debit", 0)] "retired"
 -- Shared grammar nodes still publish the originally selected operation label.
 example : inspectTagged [("credit", 0), ("debit", 0)] "debit"
     (fun _ => (.ok 7 : Except String Nat)) (fun _ n => .ok (some (n + 1))) = .ok (some ("debit", 8)) := rfl
+
+-- A distinct keyword carrier preserves empty and reader-sensitive spellings.
+private inductive KeywordSpelling where
+  | mk : List Nat → KeywordSpelling
+private def spellingOf : KeywordSpelling → List Nat
+  | .mk text => text
+example : spellingCandidates KeywordSpelling.mk (fun _ => [[], [32, 58]]) spellingOf
+    (.mk [0, 1114111]) = [.mk [], .mk [32, 58]] := rfl
+example : (spellingCandidates KeywordSpelling.mk (fun _ => []) spellingOf (.mk [])).length = 0 := rfl

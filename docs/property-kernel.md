@@ -624,3 +624,19 @@ truthful source clocks and the existing random-source contract remain premises.
 These finite laws do not establish PRNG distribution, physical bignum cost or a
 Scheme/compiler refinement. See P47 of the PBT RFC for failure and empty-domain
 semantics, typed Record/Function examples and the independent generic boundary.
+
+## Text carrier spelling preservation
+
+Keyword now shares the generic string/list shrink tree and the typed data
+representation boundary with String/Symbol/Bytes/BytesN. FunctionArguments retains
+its own positional/keyword escape interpretation. The keyword-routing example
+combines a wrapped Function field, Record data, FUN, portable replay and fresh
+preparation after descriptor revision.
+
+The six `spellingCandidates_*` laws in `PropertySequences.lean` preserve ordered
+recovery, proposal count/origin, strict rank descent, declared spelling domains
+and terminal neighborhoods under a faithful representation pair. The separate
+carrier examples cover empty and sensitive spellings. Host conversion, source
+clocks and termination remain premises; this does not verify the compiler, intern
+storage or physical performance. Existing generator-tree/source-scope laws supply
+the enclosing lazy/replay protocol. See P48 of the RFC for executable controls.
