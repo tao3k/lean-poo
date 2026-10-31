@@ -2584,11 +2584,23 @@ false for an invalid trace, and domain mismatch, Boolean mismatch, stale sources
 and callback exceptions retain their existing owners. No guard framework, new
 namespace, wrapper chain or fixture scheduler is introduced.
 
-Four generic regression cases cover all configuration dimensions before any model,
+The compiled regression also exposed a representation distinction at a known
+improper command literal: the optimized call selected the unchecked entry while
+the interpreted request refused. Gerbil's official MOP places `:pair` under
+`:list`; that carrier fact is insufficient for PBT's proper finite-spine law.
+The existing parameter/using contracts therefore use the existing standard `proper-list?`
+predicate contract across finite sequence, specification, product, trace and
+dependency boundaries. This retains an explicit properness judgment without a
+new list implementation or wrapper. A compiled literal regression covers repair,
+raw sequence shrinking and specification preparation before callbacks. The
+existing finite-sequence Lean laws apply under truthful host shape recognition;
+this is executable optimizer-path acceptance, not compiler verification.
+
+Five generic regression cases cover all configuration dimensions before any model,
 normalizer, preparation or fixture action; no cleanup for an unacquired fixture;
 exact false/object callback causes with balanced acquired scope; and fresh empty
 traces/false commands. The independent compiled stdlib-only acceptance grows from
-191 to 195 cases. Three typed cases cover malformed limits/dependency spines before
+191 to 196 cases. Three typed cases cover malformed limits/dependency spines before
 computed metadata, binding/check configuration without declaration reads, and a
 Record/Function service carried through dependency-aware generation, FUN delivery,
 shrinking, seeded/concrete replay, old-source refusal and fresh corrected retry.
