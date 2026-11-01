@@ -847,4 +847,14 @@ example : narrowShapeWork 10 4 8 20 ≤ 50 + 20 := by decide
 /-- An expensive old descriptor cannot be treated as free preparation. -/
 example : ¬ narrowShapeWork 100 4 8 20 ≤ 50 + 20 := by decide
 
+/-- Invalid finite-row admission precedes even a refusing initializer. -/
+example : admittedModuleEntry (.error "invalid" : Except String (List Nat))
+    (fun _ => .error "initializer") (fun _ => .ok (fun row => .ok row)) =
+    ([], .error "invalid") := rfl
+
+/-- The owned original row supplies the current entry, preserving every payload. -/
+example : admittedModuleEntry (.ok [7, 0]) (fun _ => (.ok () : Except String Unit))
+    (fun _ => .ok (fun row => .ok (row, row.length))) =
+    ([.load, .resolve, .invoke], .ok ([7, 0], 2)) := rfl
+
 end LeanPoo.Examples.Representation

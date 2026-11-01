@@ -654,6 +654,41 @@ def enterModule (load : Unit → Except E Unit)
     | .error cause => ([.load, .resolve], .error cause)
     | .ok entry => ([.load, .resolve, .invoke], entry arguments)
 
+/-- Admit a captured finite request before invoking the existing module protocol. -/
+def admittedModuleEntry (capture : Except E Args) (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) : List EntryStage × Except E Value :=
+  match capture with
+  | .error cause => ([], .error cause)
+  | .ok row => enterModule load resolve row
+
+/-- Finite-row admission refuses before any initialization, lookup or invocation. -/
+theorem admittedModuleEntry_refused (cause : E) (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    admittedModuleEntry (.error cause) load resolve = ([], .error cause) := rfl
+
+/-- An owned row delegates unchanged to the existing standard-loader client law.
+Faithful shallow copying and finite-list recognition are host premises. -/
+theorem admittedModuleEntry_captured (row : Args) (load : Unit → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    admittedModuleEntry (.ok row) load resolve = enterModule load resolve row := rfl
+
+/-- Captured false/Function payloads are values of Args, with no deep conversion. -/
+theorem admittedModuleEntry_current (row : Args) (entry : Args → Except E Value) :
+    admittedModuleEntry (.ok row) (fun _ => .ok ()) (fun _ => .ok entry) =
+      ([.load, .resolve, .invoke], entry row) := rfl
+
+/-- Capturing a row does not replace the loader's original failure cause. -/
+theorem admittedModuleEntry_load_refused (row : Args) (cause : E)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    admittedModuleEntry (.ok row) (fun _ => .error cause) resolve =
+      ([.load], .error cause) := rfl
+
+/-- Lookup failure remains distinct from invalid ingress or business refusal. -/
+theorem admittedModuleEntry_lookup_refused (row : Args) (cause : E) :
+    admittedModuleEntry (.ok row) (fun _ => .ok ())
+      (fun _ => (.error cause : Except E (Args → Except E Value))) =
+      ([.load, .resolve], .error cause) := rfl
+
 /-- A loader refusal cannot resolve or invoke an entry and retains its cause. -/
 theorem enterModule_load_refused (cause : E)
     (resolve : Unit → Except E (Args → Except E Value)) (arguments : Args) :

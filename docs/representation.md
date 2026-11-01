@@ -284,6 +284,21 @@ Scheme has no dependency on this checkout, and adds no module registry or loader
 
 ## Standard runtime entries with a shared foundation
 
+Runtime call rows now use the same finite-boundary discipline as owned shape
+catalogs. Gerbil's standard `list?` rejects improper/cyclic rows before loading;
+`list-copy` owns only the spine before initialization and current-binding lookup.
+Payloads remain shared, including false and wrapped Functions. The current binding
+and every returned value remain authoritative; initialization/lookup/business
+refusals are propagated unchanged. This extends the article's future work rather
+than claiming a new requirement of its concrete Racket construction.
+
+`admittedModuleEntry` reuses `enterModule`: refused admission has no entry stages,
+and captured requests retain its ordered effects and exact outcome. Faithful
+host recognition/copying and terminating callbacks are premises. The finite model
+does not certify Gerbil evaluation, loader internals or concurrent list mutation.
+Admission and copying cost linear work in row length and allocate a fresh spine;
+the benchmark charges these costs instead of claiming a free safety improvement.
+
 The runtime-entry client is `io.module-action module binding`. It captures a
 private copy of the module path and an explicit canonical runtime identifier,
 without loading the requested business module. The returned Reader-compatible IO
