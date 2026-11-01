@@ -240,3 +240,15 @@ example : prepareObserverBinding (Hook := Nat) (fun _ : Nat => true) "not callab
     (fun _ => .ok (none, 0)) 0 = .ok (none, 0) := rfl
 example : prepareObserverBinding (fun _ : Nat => true) "not callable"
     (fun _ => .ok (some (some 7), 1)) 0 = .ok (some 7, 1) := rfl
+
+-- A known constant overflow wins before source checks or failing metadata.
+example : prepareInspection
+    (propertyRequestReady [some 0, some 0, some 1] (some 1) (some 2) false true)
+    "configuration" (fun _ : Nat => false)
+    (fun _ => (.error "must not prepare" : Except String (Nat × Nat))) 0 =
+      .error (some "configuration") := rfl
+-- A valid zero envelope preserves the exact metadata exception, including false.
+example : prepareInspection
+    (propertyRequestReady [some 0, some 0, some 0] (some 1) (some 0) false true)
+    true (fun _ : Nat => true)
+    (fun _ => (.error false : Except Bool (Nat × Nat))) 0 = .error (some false) := rfl

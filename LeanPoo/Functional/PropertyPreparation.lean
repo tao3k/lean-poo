@@ -1,5 +1,6 @@
 import LeanPoo.Functional.PropertyScopes
 import LeanPoo.Functional.PropertyReplay
+import LeanPoo.Functional.PropertySizes
 
 /-! Checked owned-tree preparation and raw fallback. Live is a pure predicate over
 captured owner epochs; callbacks obey the existing core interaction protocol.
@@ -769,14 +770,14 @@ theorem prepareReportDiagnostics_fresh [DecidableEq Name]
       .ok (true, diagnosticBindings (names state) row, state) := by
   simp [prepareReportDiagnostics, valid]
 
-/-- Static run controls are normalized exact integers. Controls include seed,
-shrink fuel and the mandatory finite size bound; hooks represent recognition
-only, never callback execution. Scheduled sizes need no constant-size integer. -/
+/-- Static run controls are normalized exact integers ordered as seed, shrink
+fuel and the final finite size bound. Hooks represent recognition only, never
+callback execution. Constant sizes must fit; schedules keep runtime admission. -/
 def propertyRequestReady (controls : List (Option Int)) (cases size : Option Int)
     (scheduled hooks : Bool) : Bool :=
   inspectionReady controls hooks true &&
     (match cases with | none => false | some n => decide (0 < n)) &&
-    (scheduled || inspectionReady [size] true true)
+    propertySizeReady size controls.getLast?.join scheduled
 
 /-- Zero effective cases are a malformed run request, not a vacuous pass. -/
 theorem propertyRequestReady_zero (controls : List (Option Int)) (size : Option Int)

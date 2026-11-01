@@ -3378,3 +3378,66 @@ compose admission into the retained producer tree, rather than redraw or validat
 an already completed aggregate. This unit changes neither that seed discipline
 nor the existing lazy shrinking policy. All checks, heaps, compiler completion
 and cancellation behavior remain unchanged.
+
+## P75: joint admission of constant size and declared limit
+
+A constant `size: 2 size-limit: 1` is already known to exceed its finite envelope,
+but the named property still evaluated both declarations before returning a
+trial-one runtime error. A typed probe also read sampler source metadata, whose
+raised false replaced the configuration error. This is a decidable request
+relation at the existing P68 preparation boundary, not inference about arbitrary
+size callbacks.
+
+`prepare-property-check` now checks that a recognized constant fits its recognized
+finite limit. Gerbil still owns keyword/default binding; one existing constructor
+serves direct checks, both named declarations, typed checks and FUN execution.
+No option parser, record, namespace, wrapper or source observer is added. Defaults
+remain the constant itself; zero size/cap and equality with the cap are legal.
+No generator/specification/source/size/classifier callback runs during this pure
+request check. Invalid constants keep the ordinary configuration-error category.
+
+Named declarations refuse before their specification/generator expressions.
+Direct typed checks retain their existing non-replayable preparation error with
+trial zero, no actual trial size and no reporting-metadata reads. Valid-request
+metadata exceptions, including false, remain exact. Reader/FUN retains its prior
+known-owner capture and configuration-getter precedence; the new relation is
+checked after those options are normalized, before the owned factory binds.
+Caller argument evaluation and explicitly constructed samplers stay caller-owned.
+
+Scheduled sizes are recognized as procedures, never invoked or compared to the
+cap during preparation. Their explicit finite cap is still mandatory. The existing
+runtime natural-value and bound checks, actual trial-size diagnostics, original
+callback causes, source checks, discard/coverage and both replay paths remain.
+No runtime check or resource limit is removed.
+
+Three independent cases cover impossible constant pairs (including large exact
+integers) without observers/classifiers, inclusive/default/zero bounds with replay,
+and lazy scheduled preparation with unchanged runtime overflow and false causes.
+The existing named-report and standard-TestCase invalid-request matrices gain the
+same bound relation. Two typed cases verify zero sampler/report-metadata effects
+on overflow and exact metadata causes for legal constants. All previous cases
+remain; the isolated package requires 219 cases.
+
+The existing nested Function/List service example now refuses both an unbounded
+schedule and an impossible constant before factory binding. A repaired constant
+retains genuine shrinking, concrete/seed replay and Function wrapping; a subsequent
+bounded schedule still works, old source epochs refuse, and fresh corrected
+preparation passes. It reuses the same Record configuration and FUN action rather
+than adding a separate service/test framework.
+
+Eight new pure laws in PropertySizes characterize the exact inclusive constant
+interval, absent/negative limits, malformed constants, overflow, zero, schedules
+and monotonic cap enlargement. The existing propertyRequestReady now uses that
+predicate with the normalized final size-limit control; its preparation/source
+laws remain the sole composed gate. Four top-level size examples and two composed
+preparation examples distinguish static overflow, source refusal and exact false
+causes. Faithful keyword normalization, pure kind recognition, accurate observers,
+existing payload laws and terminating sequential callbacks are premises. No
+unrestricted callback inference, host/compiler verification or latency claim is
+made. This advances the paper's future work.
+
+The pinned Rackcheck size combinators separate sized selection and explicit resize
+from generator execution. This unit follows that separation while keeping our
+own finite cap and source-bound request protocol explicit; it does not attribute
+our additional admission rules to Racket. Complete checks, original heaps,
+natural compiler/test completion and cancellation behavior are unchanged.

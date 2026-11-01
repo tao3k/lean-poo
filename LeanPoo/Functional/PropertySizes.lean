@@ -134,4 +134,60 @@ theorem collectionSources_admitted (live : State → Source → Bool)
       (fun _ => (.ok (value, next) : Except Cause (Value × State))) state = .ok (value, next) := by
   exact guardedGeneration_state _ state next value before after
 
+/-- A constant size has a decidable relation to its declared finite cap.
+Scheduled sizes have no known constant value: only their cap is admitted here;
+actual callback results still pass the existing guarded runtime boundary. -/
+def propertySizeReady (size limit : Option Int) (scheduled : Bool) : Bool :=
+  match limit with
+  | none => false
+  | some bound => decide (0 ≤ bound) &&
+      (scheduled || match size with
+        | none => false
+        | some value => decide (0 ≤ value ∧ value ≤ bound))
+
+/-- Neither constants nor schedules can omit the normalized finite limit. -/
+theorem propertySizeReady_missing (size : Option Int) (scheduled : Bool) :
+    propertySizeReady size none scheduled = false := rfl
+
+/-- A negative cap refuses without inspecting a scheduled callback's result. -/
+theorem propertySizeReady_negative (size : Option Int) (bound : Int) (scheduled : Bool)
+    (negative : bound < 0) : propertySizeReady size (some bound) scheduled = false := by
+  have bad : ¬ 0 ≤ bound := by omega
+  simp [propertySizeReady, bad]
+
+/-- Malformed constant values cannot borrow the scheduled-size interpretation. -/
+theorem propertySizeReady_malformed (limit : Option Int) :
+    propertySizeReady none limit false = false := by
+  cases limit <;> simp [propertySizeReady]
+
+/-- Known overflow is rejected before any source, declaration or draw stage. -/
+theorem propertySizeReady_overflow (size bound : Int) (over : bound < size) :
+    propertySizeReady (some size) (some bound) false = false := by
+  have bad : ¬ (0 ≤ size ∧ size ≤ bound) := by omega
+  simp [propertySizeReady, bad]
+
+/-- Admitted constants are exactly the inclusive natural interval under the cap. -/
+theorem propertySizeReady_constant (size bound : Int) :
+    propertySizeReady (some size) (some bound) false = true ↔ 0 ≤ size ∧ size ≤ bound := by
+  simp [propertySizeReady]
+  omega
+
+/-- Zero size and zero cap are present values, not missing configuration. -/
+theorem propertySizeReady_zero (bound : Int) :
+    propertySizeReady (some 0) (some bound) false = decide (0 ≤ bound) := by
+  simp [propertySizeReady]
+
+/-- Preparing a schedule requires only its cap, never a fabricated constant draw. -/
+theorem propertySizeReady_scheduled (size : Option Int) (bound : Int) :
+    propertySizeReady size (some bound) true = decide (0 ≤ bound) := by
+  simp [propertySizeReady]
+
+/-- Increasing an admitted cap cannot invalidate a previously legal constant size. -/
+theorem propertySizeReady_monotone (size lower upper : Int)
+    (ready : propertySizeReady (some size) (some lower) false = true)
+    (larger : lower ≤ upper) : propertySizeReady (some size) (some upper) false = true := by
+  have bounds := (propertySizeReady_constant size lower).mp ready
+  apply (propertySizeReady_constant size upper).mpr
+  omega
+
 end LeanPoo.Functional.PropertyTesting

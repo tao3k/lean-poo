@@ -27,3 +27,12 @@ example : guardedGeneration
 
 -- Optional empty selection adds no source authority from an unused element.
 example : (collectionSources 0 [0]).all (fun _ => false) = true := rfl
+
+-- Zero is a valid constant under an explicitly present zero cap.
+example : propertySizeReady (some 0) (some 0) false = true := rfl
+-- Equality with the upper bound remains inclusive.
+example : propertySizeReady (some 4) (some 4) false = true := rfl
+-- Known overflow is a static refusal, before any size or source callback.
+example : propertySizeReady (some 5) (some 4) false = false := rfl
+-- A schedule has no known constant result during preparation.
+example : propertySizeReady none (some 4) true = true := rfl
