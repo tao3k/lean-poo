@@ -16,6 +16,11 @@ def withSlotScope (lookup : Receiver → Name → Value) (self : Receiver)
 theorem withSlotScope_read (lookup : Receiver → Name → Value) (self : Receiver) (name : Name) :
     withSlotScope lookup self (fun fields => fields name) = lookup self name := rfl
 
+/-- A literal body never consults the receiver reader. This does not classify
+arbitrary syntax or make a claim about effectful user macro expansion. -/
+theorem withSlotScope_literal (lookup : Receiver → Name → Value) (self : Receiver)
+    (value : Result) : withSlotScope lookup self (fun _ => value) = value := rfl
+
 /-- A callable field receives the same complete argument without rebinding self. -/
 theorem withSlotScope_call (lookup : Receiver → Name → Argument → Result)
     (self : Receiver) (name : Name) (argument : Argument) :
@@ -76,6 +81,36 @@ theorem withSlotBindings_cons [DecidableEq Name] (read : Name → Value)
     withSlotBindings read (binding :: rest) fields body =
       withSlotBindings read rest
         (fun name => if name = binding.1 then read binding.2 else fields name) body := rfl
+
+/-- The old shared receiver scope, each distinct alias transformer and each
+method receiver rebind count once. Recognition, expansion of other syntax and
+all runtime/compiler/GC costs are excluded from this logical construction count. -/
+def literalSlotScopeWork (aliases : Nat) (literalBodies : List Bool) (direct : Bool) : Nat :=
+  if direct then
+    1 + aliases + (literalBodies.filter (fun literal => !literal)).length
+  else 1 + aliases + literalBodies.length
+
+/-- Every object retains shared aliases; only self-quoting method bodies omit
+unused receiver rebindings. Recognition is outside this logical scope count. -/
+theorem literalSlotScopeWork_le (aliases : Nat) (literalBodies : List Bool) :
+    literalSlotScopeWork aliases literalBodies true ≤ literalSlotScopeWork aliases literalBodies false := by
+  simp only [literalSlotScopeWork, ↓reduceIte, Bool.false_eq_true]
+  exact Nat.add_le_add_left (List.length_filter_le _ _) _
+
+/-- Exactly one receiver rebind is removed per recognized self-quoting body.
+The shared scope and alias transformers are retained on both sides. -/
+theorem literalSlotScopeWork_savings (aliases : Nat) (literalBodies : List Bool) :
+    literalSlotScopeWork aliases literalBodies false =
+      literalSlotScopeWork aliases literalBodies true + (literalBodies.filter id).length := by
+  have lengths : literalBodies.length =
+      (literalBodies.filter (fun literal => !literal)).length + (literalBodies.filter id).length := by
+    induction literalBodies with
+    | nil => rfl
+    | cons literal rest ih =>
+      cases literal <;> simp_all [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+  simp only [literalSlotScopeWork, Bool.false_eq_true, ↓reduceIte]
+  rw [lengths]
+  simp only [Nat.add_assoc]
 
 /-- Whole-fold lowering preserves arbitrary bodies, not just successful reads. -/
 theorem withSlotBindings_recursive [DecidableEq Name] (read : Name → Value)

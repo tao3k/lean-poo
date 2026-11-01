@@ -5,6 +5,7 @@ import LeanPoo.Object.DeclarationOrder
 import LeanPoo.Functional.InferenceReports
 import LeanPoo.Functional.FunctionSignature
 import LeanPoo.Functional.RecursiveTypes
+import LeanPoo.Object.SlotSyntax
 
 /-! Checked positional prefixes compose with the existing delayed slot semantics.
 The executable Gerbil fixture additionally tests actual C3, macro hygiene, generic
@@ -817,6 +818,30 @@ example : retainIndexedSlotIdentifiers (fun id : String × Nat => id.1) []
 /-- A fresh spelling avoids every previous full-identifier equality candidate. -/
 example : matchingSlotIdentifiers (fun id : String × Nat => id.1) ("next", 3)
     [("rate", 1), ("rate", 2), ("limit", 1)] = [] := by decide
+
+/-- Self-quoting lowering keeps the self recipe and ignores alias readers. -/
+example (read : Nat → String → Int) (fields : String → Int) :
+    (Prototype.SlotSpec.self (fun self => withSlotScope read self (fun selected =>
+      withSlotBindings selected [("quote", "left"), ("quote", "right")] fields (fun _ => 7))) :
+      Prototype.SlotSpec Nat Int) = .self (fun _ => 7) :=
+  Object.literalSelfSlot_scope_eq _ _ _ _
+
+/-- Dropping unused scopes preserves false rather than selecting the parent. -/
+example (read : Unit → String → Bool) (fields : String → Bool) :
+    (Prototype.SlotSpec.self (fun self => withSlotScope read self (fun selected =>
+      withSlotBindings selected [("lambda", "missing")] fields (fun _ => false))) :
+      Prototype.SlotSpec Unit Bool).eval () (fun _ => true) = false := by
+  simp [Prototype.SlotSpec.eval, withSlotScope, withSlotBindings_unused]
+
+/-- This counts eliminated syntax-scope constructors, not nanoseconds or bytes. -/
+example : literalSlotScopeWork 3 [true, true] false - literalSlotScopeWork 3 [true, true] true = 2 := rfl
+
+/-- Mixed methods retain shared aliases and rebind only their dynamic bodies. -/
+example : literalSlotScopeWork 4 [true, false, true, false] true = 7 := rfl
+
+#print axioms Object.literalSelfSlot_scope_eq
+#print axioms literalSlotScopeWork_le
+#print axioms literalSlotScopeWork_savings
 
 #print axioms retainIndexedSlotIdentifiers_eq
 #print axioms matchingSlotIdentifiers_length_le
