@@ -936,4 +936,48 @@ theorem prepareSourceGuard_reply (request : State → List (Source × Nat))
       (fun result => result.1 clock) = reply := by
   simp [prepareSourceGuard, fresh, Except.bind]
 
+/-- Capture finite preparation fields before rendering can change the source
+state. Host cloning owns the directory and entry pairs; payload identities remain
+shared. Faithful shallow copying and finite admitted fields are premises. -/
+def captureRefusal (fields : State → List (Key × Payload))
+    (render : State → Except Cause (Rendered × State)) (state : State) :
+    List (Key × Payload) × Except Cause (Rendered × State) :=
+  (fields state, render state)
+
+/-- Any later callback outcome leaves the initial captured directory unchanged. -/
+theorem captureRefusal_fields (fields : State → List (Key × Payload))
+    (render : State → Except Cause (Rendered × State)) (state : State) :
+    (captureRefusal fields render state).1 = fields state := rfl
+
+/-- Rendering retains its precise result or exception independently of capture. -/
+theorem captureRefusal_render (fields : State → List (Key × Payload))
+    (render : State → Except Cause (Rendered × State)) (state : State) :
+    (captureRefusal fields render state).2 = render state := rfl
+
+/-- An original rendering cause, including false, accompanies the initial fields. -/
+theorem captureRefusal_cause (fields : State → List (Key × Payload))
+    (state : State) (cause : Cause) :
+    captureRefusal fields (fun _ => (.error cause : Except Cause (Rendered × State))) state =
+      (fields state, .error cause) := rfl
+
+/-- Changing the caller's state cannot retarget the already captured fields. -/
+theorem captureRefusal_changed (fields : State → List (Key × Payload))
+    (state next : State) (value : Rendered) :
+    captureRefusal (Cause := Cause) fields (fun _ => .ok (value, next)) state =
+      (fields state, .ok (value, next)) := rfl
+
+/-- Two unrelated renderers share no authority over the captured directory. -/
+theorem captureRefusal_noninterference (fields : State → List (Key × Payload))
+    (first second : State → Except Cause (Rendered × State)) (state : State) :
+    (captureRefusal fields first state).1 = (captureRefusal fields second state).1 := rfl
+
+/-- Captured presentation still cannot manufacture a missing execution. The
+existing assertion owner alone selects status/cause and authorization. -/
+theorem captureRefusal_missing (fields : State → List (Key × Payload))
+    (actual : CheckDiagnostics Value Cause) (live : State → Bool)
+    (render : State → Except Cause (Rendered × State)) (state : State) :
+    (captureRefusal fields render state).1 = fields state ∧
+      admitRendering false actual live render state ≠ .ok () :=
+  ⟨rfl, admitRendering_missing actual live render state⟩
+
 end LeanPoo.Functional.PropertyTesting

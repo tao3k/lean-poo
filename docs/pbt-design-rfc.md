@@ -3498,3 +3498,60 @@ Design review kept the change at the existing action owner rather than adding
 validation to each reader/writer stage. Complete checks, heap limits, natural
 compiler/test completion and cancellation behavior remain unchanged. No timing
 improvement is claimed.
+
+## P77: captured preparation refusals across diagnostic rendering
+
+The audit reproduced a break in P42's original-cause guarantee. With no kernel
+execution, `require-passed` admitted a finite symbolic `refusal:` alist and retained
+its caller-owned directory. A formatter could replace one field with a symbol and
+then raise a secondary cause. Fallback traversal subsequently raised a host
+RuntimeException rather than the standard TestError carrying the preparation
+cause and the separate rendering fault. This is a library-owned presentation
+boundary, not a request to sandbox arbitrary Scheme effects.
+
+The existing assertion owner now captures the fallback directory AND each field
+pair with one ordinary map before invoking the formatter. Header selection uses
+that same captured receipt; there is no new record, wrapper, runner, namespace or
+second renderer. Copies are shallow: payload identities, including false causes,
+Function values and mutable domain objects, remain shared under their declared
+ownership laws. The boundary admits a finite symbolic alist before copying it;
+malformed/cyclic initial requests still refuse before any formatter callback.
+
+Only fallback ownership changes. A present current passed report still follows
+its original source checks and error behavior. Missing execution never passes;
+canonical status/cause cannot be replaced by display fields. A valid formatter's
+returned display fields still take precedence over fallback details. A malformed
+return or thrown rendering cause keeps the original refusal, and the secondary
+fault remains `diagnostic-cause`. No property, generation, shrinking or replay is
+repeated for diagnostic delivery. User effects and nested mutable payload writes
+are not rolled back or deep-copied.
+
+Three generic regression cases exercise field-pair edits, improper/cyclic spine
+edits, exact primary and secondary identities, payload identity, malformed alias
+returns, valid replacement display fields and pre-callback request rejection.
+The isolated standard-library package requires 227 cases; all previous cases stay.
+A complex existing Record/Map/Function service uses a FUN-produced preparation
+refusal, corrupts its supplied presentation fields and throws while rendering,
+and verifies the standard TestError still retains the preparation phase and both
+causes. Correct configuration starts a fresh run, really shrinks the service
+state, preserves nested Function contracts and both replay paths, rejects an old
+source epoch, and admits an explicitly freshly prepared retry.
+
+Six finite laws extend the existing PropertyScopes model: initial-field retention,
+exact rendering result/cause, unchanged fields after state changes, renderer
+noninterference and composition with the existing missing-execution assertion
+rule. Three top-level examples retain field order, duplicate display names, false
+data and false causes. Faithful host shallow allocation, finite admitted fields,
+source-observer laws, terminating sequential callbacks and standard TestError
+transport are premises. These laws do not prove host mutation/exception machinery,
+arbitrary concurrent writes, or immutability of shared payloads. This advances
+the paper's future work.
+
+The Rackcheck/Quickcheck comparison retains the existing generator/tree algebra;
+this unit closes our P42 standard-test ownership guarantee rather than claiming a
+missing Racket feature or changing its shrinking policy. Gerbil's existing module,
+map, error class and :std/test boundary own delivery. Design review deliberately
+kept capture at the one assertion boundary rather than adding copy/validation
+wrappers to typed reports or FUN consumers. Complete checks, original heaps,
+natural compiler/test completion and cancellation behavior remain unchanged.
+No latency or universal allocation improvement is claimed.

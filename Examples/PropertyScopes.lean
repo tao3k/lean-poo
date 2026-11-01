@@ -207,3 +207,16 @@ example : (prepareSourceGuard (fun epoch : Nat => [(0, epoch)])
 example : prepareSourceGuard (Source := Nat) (fun _ : Nat => [])
     (fun _ => (.error false : Except Bool (Option (Unit → Except Bool Bool) × Nat))) 0 =
     .error false := rfl
+
+-- A normal renderer can replace its source fields; captured diagnostics stay put.
+example : captureRefusal (fun state : Nat => [("phase", state)])
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat))) 0 =
+      ([("phase", 0)], .ok (false, 1)) := rfl
+-- Thrown false is retained as a cause, not absence of a rendering error.
+example : captureRefusal (fun _ : Nat => [("cause", false)])
+    (fun _ => (.error false : Except Bool (Bool × Nat))) 0 =
+      ([("cause", false)], .error false) := rfl
+-- Field order and duplicate names stay structural data, not verdict authority.
+example : (captureRefusal (fun _ : Nat => [("detail", 1), ("detail", 2)])
+    (fun _ => (.error "renderer" : Except String (Unit × Nat))) 0).1 =
+      [("detail", 1), ("detail", 2)] := rfl
