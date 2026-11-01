@@ -28,6 +28,10 @@ successes/errors, and =compilePrepared_eq= preserves the complete Plan result.
 In SharedSettlement, a declaration-local transparency boundary avoids expanding
 an executable protocol during constructor injectivity generation; its full
 constructor proofs remain and generated native C is byte-identical.
+PrototypeTypes soundness similarly uses constructor reduction and symbolic
+atom-equality/widening evidence rather than exhaustive atom-pair simplification.
+These proof-compilation changes preserve the checker, theorem statements,
+constructor laws and generated native C; they do not weaken type admission.
 =just benchmark-c4= runs the existing deep/wide scale study as a bounded native
 executable and compares complete original/prepared results, including cold
 preparation. Its focused times do not establish application latency or RSS.

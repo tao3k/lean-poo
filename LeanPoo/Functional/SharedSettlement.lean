@@ -32,6 +32,7 @@ def reserveBuilder (refuse : Bool) (key : Int × Int) : Except String (Closed (r
 def taxBuilder (refuse : Bool) (key : Int × Int) : Except String (Closed (taxFamily key) tax base) :=
   build "tax" tax refuse (10*key.1+key.2)
 
+attribute [local irreducible] reserveFamily firstFork in
 structure Early (key : Int) where
   root : Closed (family key) pricing base
   branches : firstFork.Publication root.interface
@@ -68,7 +69,7 @@ def finalBuilder (refuse : Bool) (key : FinalKey) : Except String (Closed (final
 -- Avoid expanding a complete executable protocol while deriving injectivity
 -- for unequal dependent fields. The kernel and subsequent clients keep the
 -- original definition and the complete generated constructor laws.
-attribute [local irreducible] finalFamily in
+attribute [local irreducible] finalFamily laterFork in
 structure Publication (key : Int) where
   early : Early key
   later : laterFork.Publication early.closed.interface

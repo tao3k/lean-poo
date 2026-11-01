@@ -174,7 +174,10 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
   | succ fuel ih =>
     simp only [check, Bool.or_eq_true] at accepted
     rcases accepted with accepted | empty
-    · cases a <;> cases b <;> try simp only at accepted
+    -- Constructor reduction needs no simplifier search across the product of
+    -- type constructors. Atom inclusion below consumes its Boolean evidence
+    -- symbolically rather than enumerating every source/target atom pair.
+    · cases a <;> cases b <;> try dsimp only at accepted
       all_goals try { contradiction }
       all_goals try { exact .top _ }
       all_goals try { exact .list (ih _ _ accepted) }
@@ -242,8 +245,14 @@ theorem check_sound (fuel : Nat) (a b : Ty) (accepted : check fuel a b = true) :
           simpa only [Bool.and_eq_true] using accepted
         exact .function (all₂_sound _ ih _ _ both.1) (all₂_sound _ ih _ _ both.2)
       case atom.atom a b =>
-        cases a <;> cases b <;> simp_all
-        all_goals first | exact .refl _ | exact .uint
+        simp only [Bool.or_eq_true] at accepted
+        rcases accepted with equal | widening
+        · have same : a = b := of_decide_eq_true equal
+          subst b
+          exact .refl _
+        · have both : a = .uint ∧ b = .integer := of_decide_eq_true widening
+          rcases both with ⟨rfl, rfl⟩
+          exact .uint
     · simp only [Bool.and_eq_true] at empty
       exact .empty empty.1
 
