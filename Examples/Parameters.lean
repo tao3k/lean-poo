@@ -840,8 +840,25 @@ example : literalSlotScopeWork 3 [true, true] false - literalSlotScopeWork 3 [tr
 example : literalSlotScopeWork 4 [true, false, true, false] true = 7 := rfl
 
 #print axioms Object.literalSelfSlot_scope_eq
+/-- A literal computed method neither selects a failing parent nor changes kind. -/
+example (read : Unit → String → Bool) (fields : String → Bool) :
+    (Prototype.SlotSpec.computed (fun self _ => withSlotScope read self (fun selected =>
+      withSlotBindings selected [("next", "missing")] fields (fun _ => (.ok false : Except String Bool)))) :
+      Prototype.SlotSpec Unit (Except String Bool)).eval () (fun _ => .error "parent forced") = .ok false := by
+  simp [Prototype.SlotSpec.eval, withSlotScope, withSlotBindings_unused]
+
+#print axioms Object.literalComputedSlot_scope_eq
 #print axioms literalSlotScopeWork_le
 #print axioms literalSlotScopeWork_savings
+/-- Classification of four bodies can cost more than omitting one rebind. -/
+example : literalSlotScopeCost 3 [true, false, false, false] 1 1 false <
+    literalSlotScopeCost 3 [true, false, false, false] 1 1 true := by decide
+
+/-- Dense literals can pay for classification under explicitly supplied prices. -/
+example : literalSlotScopeCost 3 [true, true, true, true] 2 1 true ≤
+    literalSlotScopeCost 3 [true, true, true, true] 2 1 false := by decide
+
+#print axioms literalSlotScopeCost_admission
 
 #print axioms retainIndexedSlotIdentifiers_eq
 #print axioms matchingSlotIdentifiers_length_le

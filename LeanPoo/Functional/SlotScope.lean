@@ -112,6 +112,24 @@ theorem literalSlotScopeWork_savings (aliases : Nat) (literalBodies : List Bool)
   rw [lengths]
   simp only [Nat.add_assoc]
 
+/-- Charge both retained scopes and the new per-body classification/validation.
+Prices are supplied premises, not measurements of a host compiler or collector. -/
+def literalSlotScopeCost (aliases : Nat) (literalBodies : List Bool)
+    (scopePrice classificationPrice : Nat) (direct : Bool) : Nat :=
+  scopePrice * literalSlotScopeWork aliases literalBodies direct +
+    if direct then classificationPrice * literalBodies.length else 0
+
+/-- Removing scopes pays only when their savings cover all new classification.
+Fewer scope constructors alone do not imply lower complete preparation cost. -/
+theorem literalSlotScopeCost_admission (aliases : Nat) (literalBodies : List Bool)
+    (scopePrice classificationPrice : Nat) :
+    literalSlotScopeCost aliases literalBodies scopePrice classificationPrice true ≤
+      literalSlotScopeCost aliases literalBodies scopePrice classificationPrice false ↔
+    classificationPrice * literalBodies.length ≤ scopePrice * (literalBodies.filter id).length := by
+  simp only [literalSlotScopeCost, Bool.false_eq_true, ↓reduceIte, Nat.add_zero]
+  rw [literalSlotScopeWork_savings, Nat.mul_add]
+  exact Nat.add_le_add_iff_left
+
 /-- Whole-fold lowering preserves arbitrary bodies, not just successful reads. -/
 theorem withSlotBindings_recursive [DecidableEq Name] (read : Name → Value)
     (bindings : List (Name × Name)) (fields : Name → Value) (body : (Name → Value) → Result) :
