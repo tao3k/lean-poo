@@ -325,4 +325,78 @@ theorem spellingCandidates_terminal (pack : Spelling → Carrier) (unpack : Carr
     (terminal : shrink (unpack value) = []) : spellingCandidates pack shrink unpack value = [] := by
   simp [spellingCandidates, terminal]
 
+/-- A finite hash directory is admitted before declaration getters or producer
+binding. `none` represents an improper host spine; equality agrees with the
+chosen Gerbil HashTable. Payload identity and host copying are premises. -/
+def prepareHashDomain [DecidableEq Key] (invalid duplicate : Cause)
+    (input : Option (List Key)) (limit : Nat) : Except (Option Cause) (List Key) :=
+  finiteSequenceInput invalid input fun keys =>
+    if keys.length ≤ limit then
+      if keys.Nodup then .ok keys else .error (some duplicate)
+    else .error (some invalid)
+
+/-- Malformed topology cannot invoke any later metadata or factory continuation. -/
+theorem prepareHashDomain_malformed [DecidableEq Key] (invalid duplicate : Cause) (limit : Nat) :
+    prepareHashDomain (Key := Key) invalid duplicate none limit = .error (some invalid) := rfl
+
+/-- The declared finite budget is checked before uniqueness or application work. -/
+theorem prepareHashDomain_oversized [DecidableEq Key] (invalid duplicate : Cause)
+    (keys : List Key) (limit : Nat) (over : ¬ keys.length ≤ limit) :
+    prepareHashDomain invalid duplicate (some keys) limit = .error (some invalid) := by
+  simp [prepareHashDomain, finiteSequenceInput, over]
+
+/-- Equal keys are rejected, rather than silently overwriting a generated row. -/
+theorem prepareHashDomain_duplicate [DecidableEq Key] (invalid duplicate : Cause)
+    (keys : List Key) (limit : Nat) (fits : keys.length ≤ limit) (repeated : ¬ keys.Nodup) :
+    prepareHashDomain invalid duplicate (some keys) limit = .error (some duplicate) := by
+  simp [prepareHashDomain, finiteSequenceInput, fits, repeated]
+
+/-- Valid directories preserve order and exact entries; preparation does not normalize. -/
+theorem prepareHashDomain_valid [DecidableEq Key] (invalid duplicate : Cause)
+    (keys : List Key) (limit : Nat) (fits : keys.length ≤ limit) (unique : keys.Nodup) :
+    prepareHashDomain invalid duplicate (some keys) limit = .ok keys := by
+  simp [prepareHashDomain, finiteSequenceInput, fits, unique]
+
+/-- Every admitted directory satisfies both the finite budget and uniqueness. -/
+theorem prepareHashDomain_sound [DecidableEq Key] (invalid duplicate : Cause)
+    (input : Option (List Key)) (limit : Nat) (keys : List Key)
+    (accepted : prepareHashDomain invalid duplicate input limit = .ok keys) :
+    input = some keys ∧ keys.length ≤ limit ∧ keys.Nodup := by
+  cases input with
+  | none => simp [prepareHashDomain, finiteSequenceInput] at accepted
+  | some original =>
+    simp only [prepareHashDomain, finiteSequenceInput] at accepted
+    split at accepted <;> rename_i fits
+    · split at accepted <;> rename_i unique
+      · cases accepted
+        exact ⟨rfl, fits, unique⟩
+      · cases accepted
+    · cases accepted
+
+/-- A refused directory suppresses arbitrary later declarations and their effects. -/
+theorem prepareHashDomain_refused [DecidableEq Key] (invalid duplicate : Cause)
+    (input : Option (List Key)) (limit : Nat) (cause : Option Cause)
+    (prepare : List Key → Except (Option Cause) Output)
+    (refused : prepareHashDomain invalid duplicate input limit = .error cause) :
+    (prepareHashDomain invalid duplicate input limit).bind prepare = .error cause := by
+  rw [refused]
+  rfl
+
+/-- Reusing an admitted directory binds each producer independently, without
+changing the key declaration or authorizing one producer through another. -/
+theorem prepareHashDomain_bind [DecidableEq Key] (invalid duplicate : Cause)
+    (keys : List Key) (limit : Nat) (fits : keys.length ≤ limit) (unique : keys.Nodup)
+    (prepare : List Key → Except (Option Cause) Output) :
+    (prepareHashDomain invalid duplicate (some keys) limit).bind prepare = prepare keys := by
+  rw [prepareHashDomain_valid invalid duplicate keys limit fits unique]
+  rfl
+
+/-- Later source/factory failures retain their exact cause after successful admission. -/
+theorem prepareHashDomain_binding_cause [DecidableEq Key] (invalid duplicate : Cause)
+    (keys : List Key) (limit : Nat) (fits : keys.length ≤ limit) (unique : keys.Nodup)
+    (cause : Option Cause) :
+    (prepareHashDomain invalid duplicate (some keys) limit).bind
+      (fun _ => (.error cause : Except (Option Cause) Output)) = .error cause := by
+  exact prepareHashDomain_bind invalid duplicate keys limit fits unique _
+
 end LeanPoo.Functional.PropertyTesting

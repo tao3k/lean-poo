@@ -3210,3 +3210,55 @@ This unit changes neither that seed schedule nor the existing shrink tree. The
 additional revision/metadata protocol is this project's finite future-work
 extension. Advanced handwritten sample producers and consumer-owned source
 admission retain their existing contract; they are not redefined as this defect.
+
+## P72: prepared finite hash directories before typed declaration binding
+
+A public Map probe with one key and `domain-limit: 0` refused only after one
+computed Key read and two generation-factory metadata reads. This violates the
+existing request-before-preparation ordering: an invalid finite directory must
+not execute declarations or replace its own error with an unrelated factory cause.
+This is a finite protocol defect, not unrestricted Type inference.
+
+`testing/property/generator` now owns `prepare-hash-generator`: it checks finite
+shape, a natural key limit and uniqueness using Gerbil HashTable equality, then
+captures the ordered key spine. The result is an ordinary higher-order constructor
+for value generators. The existing `generator-hash` delegates to it; typed Map
+prepares it before snapshots/computed declarations and binds it later under the
+same source guard. No duplicate key-validation algorithm, cache, runtime wrapper,
+namespace, registry, PRNG or test framework is added. Each binding still has its
+own producer authority; each draw has fresh selected rows and retained trees.
+Payload keys retain their existing caller-owned immutability/source obligations.
+
+Malformed topology, invalid/exceeded limits and duplicate keys are ordinary
+preparation errors. Valid requests retain the original source checks, exact
+callback exceptions, key-representation rule, Function wrapping, shrinking and
+replay. Empty directories fit a zero limit but still bind typed declarations and
+retain mandatory Map value-source authority. Prepared key-directory reuse never
+refreshes retired source epochs. Static request refusal precedes subsequent
+metadata, including malformed metadata, as it already does at other public PBT
+boundaries.
+
+Three independent-library cases cover invalid directories, owned topology and
+independent producer binding, plus direct/prepared full checks, shrinking, seeded
+and concrete replay, and stale refusal without another draw. The isolated package
+now requires exactly 208 cases. Typed regressions suppress Key/factory/hook reads
+on invalid requests and retain empty-Map source authority. A complex existing
+collection example composes Record, wrapped Function fields and FUN delivery:
+budget refusal, explicit repaired preparation, real shrinking, both replay forms,
+old-report rejection and fresh-source retry use the same normal workflow.
+
+Eight finite Lean laws in PropertySequences prove malformed/budget/duplicate
+refusal, exact valid-directory preservation, bounded unique results, suppression
+of later continuations, reusable binding and unchanged later failure causes.
+Five top-level examples cover oversized/duplicate/empty/Boolean directories and
+stale binding. Accurate host list recognition/copying, equality/hash agreement,
+key stability, pure revision observers and terminating sequential callbacks are
+premises. These laws do not certify hash collision complexity, host allocation,
+compiler/runtime behavior or wall-clock speedup. This advances the paper's future
+work. Existing heaps, cancellation, complete checks and natural compiler/test
+completion remain unchanged.
+
+The Racket comparison remains the pinned Rackcheck `gen:bind`/shrink-tree algebra
+and Quickcheck's sequence/binding separation: preparation builds reusable ordinary
+combinators; execution alone owns randomness and retained sample provenance. This
+unit changes neither the seed splitting schedule nor the existing shrink policy.

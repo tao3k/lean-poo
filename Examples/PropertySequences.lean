@@ -69,3 +69,21 @@ example : finiteSequenceParameters (fun _ : Nat => true) true
 example : finiteSequenceParameters (fun epoch : Nat => epoch == 0) "shape"
     (fun _ _ => (.ok (none, 1) : Except String (Option (List Bool) × Nat))) [4, 6] 0 =
       .error none := rfl
+
+-- A finite key budget refuses before any declaration continuation.
+example : (prepareHashDomain "bounds" "duplicate" (some [1, 2]) 1).bind
+    (fun _ => (.error (some "must not bind") : Except (Option String) Nat)) =
+      .error (some "bounds") := rfl
+-- Equal keys never silently overwrite one another.
+example : prepareHashDomain "bounds" "duplicate" (some [1, 1]) 2 =
+    .error (some "duplicate") := rfl
+-- Empty directories are valid at zero budget and preserve later false data.
+example : (prepareHashDomain (Key := Nat) "bounds" "duplicate" (some []) 0).bind
+    (fun _ => (.ok false : Except (Option String) Bool)) = .ok false := rfl
+-- The same declaration can bind independent producers without renewing authority.
+example : (prepareHashDomain "bounds" "duplicate" (some [false, true]) 2).bind
+    (fun keys => (.ok (keys, 7) : Except (Option String) (List Bool × Nat))) =
+      .ok ([false, true], 7) := rfl
+-- A later stale refusal remains distinct from an ordinary false cause.
+example : (prepareHashDomain false true (some [1]) 1).bind
+    (fun _ => (.error none : Except (Option Bool) Nat)) = .error none := rfl
