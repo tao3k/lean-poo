@@ -1,9 +1,97 @@
 import LeanPoo.Functional.PropertySequences
 
-/-! Portable-copy preparation after the container root has spent its node.
-Child costs include their own root and any nested/compact payload units. Accurate
-cost profiles and host vector/port behavior are premises, not verified here. -/
+/-! Portable authority and bounded-copy preparation. Boolean source judgments
+share their owner with typed preparation; child costs include roots and compact
+payloads. Faithful source normalization, pure observers, cost profiles and host
+vector/port behavior are premises, not verified here. -/
 namespace LeanPoo.Functional.PropertyTesting
+
+/-- The core source-observer contract admits only actual Booleans. None denotes
+any non-Boolean host datum, not false authority or absence of an optional hook. -/
+def sourceReply (malformed : Cause) : Option Bool → Except Cause Bool
+  | none => .error malformed
+  | some value => .ok value
+
+/-- Codec authority precedes application authority. Observers are pure at each
+state: none is a malformed host reply, false is ordinary source retirement. -/
+def replayAuthority (malformed staleCodec staleContext : Cause)
+    (codec context : State → Except Cause (Option Bool)) (state : State) : Except Cause Unit := do
+  let first ← codec state
+  let live ← sourceReply malformed first
+  if !live then .error staleCodec else do
+    let second ← context state
+    let live ← sourceReply malformed second
+    if live then .ok () else .error staleContext
+
+/-- Both normal boundaries use the same authority judgment. Callback exceptions
+bypass the trailing check unchanged; a rejected normal result is not published.
+Effects already performed by the action are not rolled back. -/
+def checkedReplayAction (malformed staleCodec staleContext : Cause)
+    (codec context : State → Except Cause (Option Bool))
+    (action : State → Except Cause (Value × State)) (state : State) : Except Cause (Value × State) :=
+  match replayAuthority malformed staleCodec staleContext codec context state with
+  | .error cause => .error cause
+  | .ok () => match action state with
+    | .error cause => .error cause
+    | .ok result => match replayAuthority malformed staleCodec staleContext codec context result.2 with
+      | .error cause => .error cause
+      | .ok () => .ok result
+
+/-- Malformed codec replies suppress application observation, not just delivery. -/
+theorem replayAuthority_malformed_codec (bad staleCodec staleContext : Cause)
+    (context : State → Except Cause (Option Bool)) (state : State) :
+    replayAuthority bad staleCodec staleContext (fun _ => .ok none) context state = .error bad := rfl
+
+/-- A false codec still has the original codec-first stale diagnostic. -/
+theorem replayAuthority_false_codec (bad staleCodec staleContext : Cause)
+    (context : State → Except Cause (Option Bool)) (state : State) :
+    replayAuthority bad staleCodec staleContext (fun _ => .ok (some false)) context state = .error staleCodec := rfl
+
+/-- Observer exceptions, even a cause representing Scheme false, remain exact. -/
+theorem replayAuthority_codec_cause (bad staleCodec staleContext cause : Cause)
+    (context : State → Except Cause (Option Bool)) (state : State) :
+    replayAuthority bad staleCodec staleContext (fun _ => .error cause) context state = .error cause := rfl
+
+/-- A live codec cannot authorize a malformed application reply. -/
+theorem replayAuthority_malformed_context (bad staleCodec staleContext : Cause) (state : State) :
+    replayAuthority bad staleCodec staleContext (fun _ => .ok (some true)) (fun _ => .ok none) state = .error bad := rfl
+
+/-- False context authority retains its distinct stale-context diagnostic. -/
+theorem replayAuthority_false_context (bad staleCodec staleContext : Cause) (state : State) :
+    replayAuthority bad staleCodec staleContext (fun _ => .ok (some true))
+      (fun _ => .ok (some false)) state = .error staleContext := rfl
+
+/-- Any refused preflight skips the action, regardless of its latent exception. -/
+theorem checkedReplayAction_refused (bad staleCodec staleContext cause : Cause)
+    (codec context : State → Except Cause (Option Bool))
+    (action : State → Except Cause (Value × State)) (state : State)
+    (refused : replayAuthority bad staleCodec staleContext codec context state = .error cause) :
+    checkedReplayAction bad staleCodec staleContext codec context action state = .error cause := by
+  simp [checkedReplayAction, refused]
+
+/-- An admitted callback's own exception bypasses any later observer failure. -/
+theorem checkedReplayAction_cause (bad staleCodec staleContext cause : Cause)
+    (codec context : State → Except Cause (Option Bool)) (state : State)
+    (admitted : replayAuthority bad staleCodec staleContext codec context state = .ok ()) :
+    checkedReplayAction bad staleCodec staleContext codec context
+      (fun _ => (.error cause : Except Cause (Value × State))) state = .error cause := by
+  simp [checkedReplayAction, admitted]
+
+/-- A changed normal return is refused at the same trailing authority boundary. -/
+theorem checkedReplayAction_trailing (bad staleCodec staleContext cause : Cause)
+    (codec context : State → Except Cause (Option Bool)) (state next : State) (value : Value)
+    (before : replayAuthority bad staleCodec staleContext codec context state = .ok ())
+    (after : replayAuthority bad staleCodec staleContext codec context next = .error cause) :
+    checkedReplayAction bad staleCodec staleContext codec context (fun _ => .ok (value, next)) state = .error cause := by
+  simp [checkedReplayAction, before, after]
+
+/-- Stable authority preserves the callback value and final state without rewriting. -/
+theorem checkedReplayAction_stable (bad staleCodec staleContext : Cause)
+    (codec context : State → Except Cause (Option Bool)) (state next : State) (value : Value)
+    (before : replayAuthority bad staleCodec staleContext codec context state = .ok ())
+    (after : replayAuthority bad staleCodec staleContext codec context next = .ok ()) :
+    checkedReplayAction bad staleCodec staleContext codec context (fun _ => .ok (value, next)) state = .ok (value, next) := by
+  simp [checkedReplayAction, before, after]
 
 /-- A vector needs room for every child root and, unless empty, a child depth. -/
 def replayVectorReady (remaining depth width : Nat) : Bool :=

@@ -3441,3 +3441,60 @@ from generator execution. This unit follows that separation while keeping our
 own finite cap and source-bound request protocol explicit; it does not attribute
 our additional admission rules to Racket. Complete checks, original heaps,
 natural compiler/test completion and cancellation behavior are unchanged.
+
+## P76: shared Boolean source admission during portable replay
+
+The audit reproduced a concrete diagnostic inconsistency: a codec currentness
+observer returning the symbol `malformed` raised `stale replay codec`. The generic
+and typed generator protocols already distinguish false source retirement from
+malformed non-Boolean observations. This is not a request to infer hidden sources
+or prove arbitrary codec callbacks: the portable boundary was coercing the same
+explicit observer contract differently.
+
+The existing `with-codec` action now calls the core `live?` operation for codec
+and context observation. There is no additional wrapper, record, observer registry,
+module or port implementation. The same boundary serves export reconfirmation,
+encoding and writing, import reading/copying/decoding, and nested checked actions.
+Codec-first ordering remains. True permits the next stage; false retains the
+existing codec/context stale error; a non-Boolean reply raises the existing core
+`source observer must return a boolean` Error. Observer exceptions remain exact,
+including a thrown false. An action exception still bypasses its trailing check:
+malformed authority discovered after a normal return cannot replace an exception
+already raised by that action. A trailing refusal does not roll back effects.
+
+Five generic regression cases cover malformed numeric/symbol/list/vector replies,
+zero writes and unconsumed input on preflight refusal, false-versus-exception
+identity, malformed replies after encoding/decoding, codec-before-context priority,
+and nested generator refusal with dynamic-scope restoration. The isolated
+standard-library package now requires 224 cases. Existing codec, corpus, source,
+shrinking and replay tests remain unchanged in scope.
+
+The existing Record/Map/Function service example uses its FUN-produced failed
+report, retained shrinking and both in-memory replay paths. Malformed codec
+observation refuses export without bytes and import without consuming the port.
+An explicit correction permits retry on the same input; reconstructed Function
+fields retain their contracts. False codec authority remains stale, and later
+Type revision rejects the old report before fresh preparation. Typed facade
+report/source snapshot ordering stays unchanged; this unit does not move those
+observations ahead of or behind generic codec preflight.
+
+The Lean sourceReply definition moves to the already imported PropertyReplay
+module so typed preparation and portable authority share one Boolean judgment;
+its name, namespace and existing laws remain. Nine new finite laws characterize
+ordered codec/context admission, malformed and false replies, exact observer and
+action causes, skipped actions, trailing refusal and stable publication. Five
+top-level examples include a throwing skipped context, exact false causes,
+post-decode malformed authority and fresh false-data recovery. Faithful host
+normalization, pure terminating source observers, declared codec round-trip laws,
+standard dynamic scope and finite sequential actions remain premises. No port
+transaction, arbitrary callback purity, concurrency, runtime or compiler proof is
+claimed. This advances the paper's future work.
+
+The pinned Rackcheck core uses Boolean predicate contracts independently of
+its map/bind combinators. We retain that separation through Gerbil's existing
+module and callback contracts and the project's already shared `live?` judgment;
+our revision-bound portable corpus protocol is not attributed to Racket.
+Design review kept the change at the existing action owner rather than adding
+validation to each reader/writer stage. Complete checks, heap limits, natural
+compiler/test completion and cancellation behavior remain unchanged. No timing
+improvement is claimed.

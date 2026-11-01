@@ -56,3 +56,23 @@ example : replayInputEnd (fun state : Nat => state == 0) "trailing"
 -- False callback causes are tagged exceptions, never successful false witnesses.
 example : replayInputEnd (fun _ : Nat => true) true
     (fun _ => .error false) (fun _ => .ok (true, 0)) 0 = .error (some false) := rfl
+
+-- Malformed codec authority wins before a throwing context or decoder runs.
+example : checkedReplayAction "malformed" "codec stale" "context stale"
+    (fun _ : Nat => .ok none) (fun _ => .error "must not observe")
+    (fun _ => (.error "must not decode" : Except String (Bool × Nat))) 0 = .error "malformed" := rfl
+-- False is retirement; throwing false remains a separate exact cause.
+example : replayAuthority true true true (fun _ : Nat => .error false)
+    (fun _ => .ok (some true)) 0 = .error false := rfl
+-- Normal decoding can change the codec reply; that value is never published.
+example : checkedReplayAction "malformed" "codec stale" "context stale"
+    (fun state : Nat => .ok (if state = 0 then some true else none))
+    (fun _ => .ok (some true)) (fun _ => .ok (false, 1)) 0 = .error "malformed" := rfl
+-- Failed delivery preserves its own false cause rather than consulting a trailer.
+example : checkedReplayAction true true true
+    (fun _ : Nat => .ok (some true)) (fun _ => .ok (some true))
+    (fun _ => (.error false : Except Bool (Bool × Nat))) 0 = .error false := rfl
+-- A fresh lawful attempt preserves false data and its exact state.
+example : checkedReplayAction "malformed" "codec stale" "context stale"
+    (fun _ : Nat => .ok (some true)) (fun _ => .ok (some true))
+    (fun _ => .ok (false, 1)) 0 = .ok (false, 1) := rfl

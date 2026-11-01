@@ -472,12 +472,6 @@ theorem prepareOpaqueLeaf_refused [DecidableEq Source] (current : State → Sour
     (prepareOpaqueLeaf current ledger mismatch actual bound sources available state >>= tail) = .error cause := by
   rw [failed]; rfl
 
-/-- The core source-observer contract admits only actual Booleans. None denotes
-any non-Boolean host datum, not false authority or absence of an optional hook. -/
-def sourceReply (malformed : Cause) : Option Bool → Except Cause Bool
-  | none => .error malformed
-  | some value => .ok value
-
 /-- Check pure terminating observer callbacks in order after epoch admission.
 Absent hooks contribute no callback. A false epoch/reply short-circuits; malformed
 replies and original exceptions remain errors rather than truthy authorization. -/
