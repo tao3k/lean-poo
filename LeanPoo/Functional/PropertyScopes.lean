@@ -885,4 +885,55 @@ theorem observeSamplerSources_stable [DecidableEq Source] (current : State → S
   simp [observeSamplerSources, prepared, guardedGeneration_state
     (fun before => revisionsCurrent (current before) captured) next after extra fresh later, Except.map]
 
+/-- Bind a closed guard before metadata can edit its request. Immutable lists
+model faithful fresh host stamp pairs; owner clocks remain live at invocation.
+Only a callable observer is represented by some; malformed presence is an exact
+binding error, not none. No mutable payload or concurrent-heap theorem is claimed. -/
+def prepareSourceGuard (request : State → List (Source × Nat))
+    (bind : State → Except Cause (Option (Unit → Except Cause Bool) × State))
+    (state : State) : Except Cause (((Source → Nat) → Except Cause Bool) × State) :=
+  let owned := request state
+  match bind state with
+  | .error cause => .error cause
+  | .ok (hook, next) => .ok ((fun clock => if revisionsCurrent clock owned then
+      match hook with | none => .ok true | some observe => observe ()
+      else .ok false), next)
+
+/-- Exact binding failures skip every observation, including false host causes. -/
+theorem prepareSourceGuard_error (request : State → List (Source × Nat))
+    (state : State) (cause : Cause) :
+    prepareSourceGuard request (fun _ => .error cause) state = .error cause := rfl
+
+/-- Metadata changes cannot renew the captured request or its declared epochs. -/
+theorem prepareSourceGuard_captured (request : State → List (Source × Nat))
+    (state next : State) (clock : Source → Nat)
+    (hook : Option (Unit → Except Cause Bool))
+    (stale : revisionsCurrent clock (request state) = false) :
+    (prepareSourceGuard request (fun _ => .ok (hook, next)) state).bind
+      (fun result => result.1 clock) = .ok false := by
+  simp [prepareSourceGuard, stale, Except.bind]
+
+/-- An absent hook contributes no callback and returns exactly the epoch verdict. -/
+theorem prepareSourceGuard_absent (request : State → List (Source × Nat))
+    (state next : State) (clock : Source → Nat) :
+    (prepareSourceGuard (Cause := Cause) request (fun _ => .ok (none, next)) state).bind
+      (fun result => result.1 clock) = .ok (revisionsCurrent clock (request state)) := by
+  cases h : revisionsCurrent clock (request state) <;> simp [prepareSourceGuard, h, Except.bind]
+
+/-- A valid false observer is ordinary retirement, never malformed absence. -/
+theorem prepareSourceGuard_false (request : State → List (Source × Nat))
+    (state next : State) (clock : Source → Nat) :
+    (prepareSourceGuard (Cause := Cause) request
+      (fun _ => .ok (some (fun _ => .ok false), next)) state).bind
+      (fun result => result.1 clock) = .ok false := by
+  simp [prepareSourceGuard, Except.bind]
+
+/-- Fresh observers keep their exact original result and cause. -/
+theorem prepareSourceGuard_reply (request : State → List (Source × Nat))
+    (state next : State) (clock : Source → Nat) (reply : Except Cause Bool)
+    (fresh : revisionsCurrent clock (request state) = true) :
+    (prepareSourceGuard request (fun _ => .ok (some (fun _ => reply), next)) state).bind
+      (fun result => result.1 clock) = reply := by
+  simp [prepareSourceGuard, fresh, Except.bind]
+
 end LeanPoo.Functional.PropertyTesting

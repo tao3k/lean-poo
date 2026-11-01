@@ -3114,3 +3114,54 @@ is no claim of arbitrary callback rollback, compiler/runtime verification or
 latency improvement. This advances the paper's future work. Existing failure
 categories, complete checks, heap/compile guards and unbounded semantic-test
 execution are retained.
+
+## P70: shared dependent declarations and closed source observers
+
+The report-producing `testing/property` declaration now accepts the existing
+binding syntax of `testing/property/test`:
+
+```scheme
+(property.define-property packet
+  ((count count-generator count-domain)
+   (payload (payload-generator count) payload-domain))
+  (= count (length payload)))
+```
+
+Specifications are fixed declarations, prepared once in order before generation;
+they cannot refer to values not yet drawn. Generator expressions may depend on
+previous bindings. Hygienic expansion uses the existing `bind-generators`, product
+specification and request admission. Parent shrinking rebuilds dependent suffixes
+with captured seeds; independent coordinate shrinking keeps its original policy.
+Seed and concrete replay consume the same retained report. The standard test
+macro delegates to this declaration and adds only `do-check!`, authoritative
+`require-passed` and named diagnostics. There is no additional interpreter, loop,
+PRNG owner, replay recipe, namespace or runtime wrapper chain. The original
+single-value report declaration remains its distinct, supported form.
+
+Closed typed source observers now own a fresh stamp spine and stamp pairs BEFORE
+reading optional hook metadata. They preserve supplied epochs, owner identities,
+order and contradictory duplicates; they do not resnapshot or renew authority.
+The private epoch fold is shared with the intentionally growing discovery ledger.
+Absent `.current?` means no additional callback; a present value must be a
+procedure. A procedure returning false still means stale, and exceptions retain
+identity (including a raised false). Invocation checks epochs before calling the
+hook. Standard procedure/list contracts, `map`, `every` and the existing dynamic
+source scope implement this boundary. Mutable generated payloads remain shared.
+
+Regressions compare named dependent declarations to explicit bind composition,
+including counterexamples, attempt counts and seeded/concrete replay; cover
+option admission before declarations and standard test delivery; and reject
+snapshot alias renewal, malformed present hooks, conflicting stamps, changed
+metadata and callback causes. A Record/Function service example composes through
+FUN, shrinks dependent services, preserves Function wrapping, rejects old reports
+and explicitly rebinds fresh authority for retry. The independent generic package
+exercises the same declaration without importing POO.
+
+Eight finite Lean laws cover shared preparation/delivery, dependent candidate
+order, captured pre-metadata epochs, binding errors, absent hooks, false replies
+and exact observer results. Existing dependent-domain and retained-source laws
+continue to apply. Fresh host stamp copies, hygienic expansion, accurate declared
+epochs, pure observers and terminating sequential callbacks are premises. These
+are finite protocol proofs, not Scheme compiler/runtime verification, arbitrary
+mutation isolation, concurrent publication or latency claims. This advances the
+paper's future work. All checks and existing resource limits remain unchanged.

@@ -91,3 +91,11 @@ example : finiteProductCoordinate (fun _ : Nat => true) "shape"
 example : finiteProductCoordinate (fun epoch : Nat => epoch == 0) "shape"
     (fun _ _ => (.ok (some [0], 1) : Except String (Option (List Nat) × Nat)))
     (fun _ _ => (.error "forbidden pack" : Except String (Nat × Nat))) [] [6] 4 0 = .error none := rfl
+
+-- Shrinking either parent regenerates only a child satisfying its own length.
+example : dependentCandidates [0, 2] (fun count seed => [List.replicate count seed]) 7 =
+    [(0, []), (2, [7, 7])] := rfl
+
+-- The assertion boundary receives exactly the shared declaration's receipt.
+example : deliverDeclaration (fun seed : Nat => (.ok (seed, [2, 2]) : Except String (Nat × List Nat)))
+    (fun receipt => .ok receipt) 42 = .ok (42, [2, 2]) := rfl

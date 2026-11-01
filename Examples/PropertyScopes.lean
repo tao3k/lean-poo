@@ -192,3 +192,18 @@ example : observeSamplerSources (fun _ _ : Nat => 0) [(2, 0)] "binding"
 example : observeSamplerSources (fun _ _ : Nat => 0) [(2, 0)] false
     (fun state => .ok (0, state)) (fun state => .ok (0, state))
     (fun _ => .error false) 0 = .error (some false) := rfl
+
+-- Metadata advances to epoch one but the closed observer still owns epoch zero.
+example : (prepareSourceGuard (fun epoch : Nat => [(0, epoch)])
+    (fun _ => (.ok (none, 1) : Except String (Option (Unit → Except String Bool) × Nat))) 0).bind
+    (fun result => result.1 (fun _ => 1)) = .ok false := rfl
+
+-- Explicit re-preparation captures the new epoch; it never repairs the old guard.
+example : (prepareSourceGuard (fun epoch : Nat => [(0, epoch)])
+    (fun _ => (.ok (none, 1) : Except String (Option (Unit → Except String Bool) × Nat))) 1).bind
+    (fun result => result.1 (fun _ => 1)) = .ok true := rfl
+
+-- A present false cause is an exact error, not the absent-observer success path.
+example : prepareSourceGuard (Source := Nat) (fun _ : Nat => [])
+    (fun _ => (.error false : Except Bool (Option (Unit → Except Bool Bool) × Nat))) 0 =
+    .error false := rfl

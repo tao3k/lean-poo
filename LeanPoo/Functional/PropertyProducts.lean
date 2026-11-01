@@ -410,4 +410,33 @@ theorem drawProductRev_seed (split : Seed → Seed × Seed) (draw : Field → Se
     (drawProductRev split draw fields seed before).2 = (drawProduct split draw fields seed).2 := by
   rw [drawProductRev_acc]
 
+/-- The report declaration and std/test delivery share one prepared execution.
+Delivery cannot alter the declaration's generator, dependent tree or replay seed;
+faithful hygienic macro expansion and host delivery remain explicit premises. -/
+def deliverDeclaration (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) : Except Cause Output :=
+  (prepare config).bind deliver
+
+/-- Preparation failures skip assertion/diagnostic delivery and keep exact causes. -/
+theorem deliverDeclaration_refused (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) (cause : Cause)
+    (refused : prepare config = .error cause) :
+    deliverDeclaration prepare deliver config = .error cause := by
+  simp [deliverDeclaration, refused, Except.bind]
+
+/-- Successful shared preparation gives the existing boundary the same receipt. -/
+theorem deliverDeclaration_receipt (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) (report : Report)
+    (prepared : prepare config = .ok report) :
+    deliverDeclaration prepare deliver config = deliver report := by
+  simp [deliverDeclaration, prepared, Except.bind]
+
+/-- A finite dependent declaration keeps exactly the same candidate order and
+captured seed as explicit bind composition; no independent shrinking exists. -/
+theorem dependentCandidates_append (left right : List Parent)
+    (select : Parent → Nat → List Child) (seed : Nat) :
+    dependentCandidates (left ++ right) select seed =
+      dependentCandidates left select seed ++ dependentCandidates right select seed := by
+  simp [dependentCandidates]
+
 end LeanPoo.Functional.PropertyTesting
