@@ -1,4 +1,4 @@
-import LeanPoo.C4.Linearize
+import LeanPoo.C4.Prepared
 import LeanPoo.Prototype.SlotSpec
 
 /-!
@@ -322,6 +322,9 @@ def Declaration.fromFunction [DecidableEq Key]
 structure Schema (Key : Type u) (Value : Key → Type v) where
   graph : C4.Graph
   declaration : String → Option (Declaration Key Value)
+  /-- The original constructor and later roots consume the same graph-owned
+  resolver. A declaration-only revision retains it; a new graph uses its own. -/
+  preparation : Thunk (C4.Prepared graph) := Thunk.mk fun _ => C4.prepare graph
 
 inductive SchemaMergeError where
   | duplicateNode (name : String)
@@ -372,7 +375,7 @@ def Schema.mergeDisjointMany (first : Schema Key Value)
     (others : List (Schema Key Value)) : Except SchemaMergeError (Schema Key Value) := do
   let (graph,declaration) ← mergeDeclarationGraphs (first.graph,first.declaration)
     (others.map fun source => (source.graph,source.declaration))
-  return ⟨graph,declaration⟩
+  return { graph, declaration }
 
 /-- Persistently revise one existing prototype declaration. -/
 def Schema.reviseDeclaration (schema : Schema Key Value) (name : String)
@@ -384,5 +387,19 @@ def Schema.reviseDeclaration (schema : Schema Key Value) (name : String)
     .ok { schema with declaration := fun query =>
       if query == name then some (update ((schema.declaration name).getD Declaration.empty))
       else schema.declaration query }
+
+/-- Method-only edits preserve the actual resolver owner, not just equal root
+answers. Changing graph metadata must construct a graph-indexed owner anew. -/
+theorem Schema.reviseDeclaration_preserves_preparation
+    (schema revised : Schema Key Value) (name : String)
+    (update : Declaration Key Value → Declaration Key Value)
+    (success : schema.reviseDeclaration name update = .ok revised) :
+    ∃ same : revised.graph = schema.graph,
+      same ▸ revised.preparation = schema.preparation := by
+  unfold Schema.reviseDeclaration at success
+  split at success
+  · cases success
+  · cases success
+    exact ⟨rfl, rfl⟩
 
 end LeanPoo.Object

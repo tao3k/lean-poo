@@ -3,6 +3,10 @@ import LeanPoo.Object.Resolve
 
 open LeanPoo.C4
 
+example (schema : LeanPoo.Object.Schema String (fun _ => Nat)) (root : String) :
+    (LeanPoo.Object.compile schema root).map (·.precedence) = linearize schema.graph root :=
+  LeanPoo.Object.compile_precedence schema root
+
 example (graph : Graph) (prepared : Prepared graph) (root : String) :
     prepared.at root = linearize graph root := prepared.at_eq root
 
@@ -41,6 +45,9 @@ private def graphs : List Graph := [
       let planned := (LeanPoo.Object.compilePrepared schema prepared root).map (·.precedence)
       unless reprStr planned == reprStr (linearize graph root) do
         throw (IO.userError s!"prepared object plan changed complete result at {root}")
+      let built := (LeanPoo.Object.compile schema root).map (·.precedence)
+      unless reprStr built == reprStr (linearize graph root) do
+        throw (IO.userError s!"original object owner changed complete result at {root}")
   IO.println "C4-PREPARED-OK 42 complete success/error replays"
 
 -- Ordinary C4 accepts this crossing suffix, while the canonical audit rejects
@@ -71,3 +78,5 @@ example (prepared : Prepared graph) (root : String)
 
 #print axioms Prepared.at_eq
 #print axioms LeanPoo.Object.compilePrepared_eq
+#print axioms LeanPoo.Object.compile_precedence
+#print axioms LeanPoo.Object.Schema.reviseDeclaration_preserves_preparation

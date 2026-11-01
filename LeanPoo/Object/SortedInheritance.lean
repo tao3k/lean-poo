@@ -106,7 +106,7 @@ def apply {Key : Type u} {Value : Key → Type v}
     match constrainGraph source.plan.schema.graph source.plan.precedence required with
     | .error error => .error error
     | .ok graph =>
-      let schema := { source.plan.schema with graph := graph }
+      let schema := { graph, declaration := source.plan.schema.declaration }
       match LeanPoo.mixC4 schema
           { name, parentOrders := [source.plan.root] :: required.map (fun (first, second) => [first, second]) }
           Declaration.empty with

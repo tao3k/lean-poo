@@ -19,6 +19,15 @@ complete equality for arbitrary graphs/roots. =Object.compilePrepared= uses the
 same preparation for the actual Plan. =Prepared.retain= accepts an already proved
 graph/root result so existing Plan witnesses avoid redundant work. Keep all
 preparation within the immutable graph owner's lifetime.
+=Object.Schema.preparation= now owns that resolver before the original
+=Object.compile= runs. The resulting Plan retains the same Schema, so later
+roots consume its existing ancestor metadata rather than preparing again.
+Declaration-only revisions preserve this exact owner; graph edits construct
+a new graph-indexed owner. =Object.compile_precedence= preserves all original
+successes/errors, and =compilePrepared_eq= preserves the complete Plan result.
+In SharedSettlement, a declaration-local transparency boundary avoids expanding
+an executable protocol during constructor injectivity generation; its full
+constructor proofs remain and generated native C is byte-identical.
 =just benchmark-c4= runs the existing deep/wide scale study as a bounded native
 executable and compares complete original/prepared results, including cold
 preparation. Its focused times do not establish application latency or RSS.

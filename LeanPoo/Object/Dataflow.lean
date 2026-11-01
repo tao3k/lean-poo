@@ -93,7 +93,7 @@ def Source.declaration (source : Source Key Value) (name : String) : Option (Dec
 
 def Source.schema (source : Source Key Value) :
     Schema Key (fun key => GeneralizedGraph.Code Key Value key) :=
-  ⟨source.graph,fun name => (source.prepared name).map PreparedDeclaration.code⟩
+  { graph := source.graph, declaration := fun name => (source.prepared name).map PreparedDeclaration.code }
 
 /-- The retained code is the lowering of this exact raw declaration, including
 unknown-name lookup. No node label or sampled result authorizes a cache hit. -/

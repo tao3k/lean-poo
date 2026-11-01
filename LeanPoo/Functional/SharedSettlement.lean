@@ -65,6 +65,10 @@ def finalFamily (key : FinalKey) := family (finalWeight key)
 def finalBuilder (refuse : Bool) (key : FinalKey) : Except String (Closed (finalFamily key) settlement base) :=
   build "settlement" settlement refuse (finalWeight key)
 
+-- Avoid expanding a complete executable protocol while deriving injectivity
+-- for unequal dependent fields. The kernel and subsequent clients keep the
+-- original definition and the complete generated constructor laws.
+attribute [local irreducible] finalFamily in
 structure Publication (key : Int) where
   early : Early key
   later : laterFork.Publication early.closed.interface

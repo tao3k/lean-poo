@@ -34,9 +34,23 @@ inductive LookupError (Key : Type u) where
 /-- Compile C4 topology once, as object.ss does during instantiation. -/
 def compile (schema : Schema Key Value) (root : String) :
     Except C4.Error (Plan Key Value) :=
-  match result : C4.linearize schema.graph root with
+  match result : schema.preparation.get.at root with
   | .error error => .error error
-  | .ok precedence => .ok ⟨schema, root, precedence, result⟩
+  | .ok precedence => .ok ⟨schema, root, precedence,
+      (schema.preparation.get.at_eq root).symm.trans result⟩
+
+/-- Resolver ownership changes neither successful precedence nor original
+errors, for every schema and root, including malformed graphs. -/
+theorem compile_precedence (schema : Schema Key Value) (root : String) :
+    (compile schema root).map (·.precedence) = C4.linearize schema.graph root := by
+  unfold compile
+  split
+  · rename_i error found
+    change Except.error error = _
+    exact found.symm.trans (schema.preparation.get.at_eq root)
+  · rename_i precedence found
+    change Except.ok precedence = _
+    exact found.symm.trans (schema.preparation.get.at_eq root)
 
 /-- Compile a plan from the same graph-owned preparation used by other roots
 and consumers. The original complete result, including errors, is preserved. -/
@@ -49,7 +63,7 @@ def compilePrepared (schema : Schema Key Value) (prepared : C4.Prepared schema.g
 theorem compilePrepared_eq (schema : Schema Key Value)
     (prepared : C4.Prepared schema.graph) (root : String) :
     compilePrepared schema prepared root = compile schema root := by
-  have same := prepared.at_eq root
+  have same := (prepared.at_eq root).trans (schema.preparation.get.at_eq root).symm
   unfold compilePrepared compile
   split <;> split <;> simp_all
 
@@ -96,7 +110,7 @@ def Plan.reviseSpecification (plan : Plan Key Value) (name : String)
           parentOrders := specification.parentOrders
           suffix := specification.suffix }
       else current
-    compile { revised with graph := { nodes } } plan.root
+    compile { graph := { nodes }, declaration := revised.declaration } plan.root
 
 /-- Apply ordered declaration edits to one plan. Every intermediate edit
 retains the same validated topology; callers instantiate only the final plan. -/
@@ -287,11 +301,11 @@ theorem resolve_compiled (plan : Plan Key Value) (key : Key)
   unfold resolve compile
   split
   · rename_i error result
-    have impossible := plan.valid.symm.trans result
+    have impossible := plan.valid.symm.trans ((plan.schema.preparation.get.at_eq _).symm.trans result)
     cases impossible
   · rename_i precedence result
     have same : precedence = plan.precedence := by
-      injection plan.valid.symm.trans result with equality
+      injection plan.valid.symm.trans ((plan.schema.preparation.get.at_eq _).symm.trans result) with equality
       exact equality.symm
     subst precedence
     rfl
