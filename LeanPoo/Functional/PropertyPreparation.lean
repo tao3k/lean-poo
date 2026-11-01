@@ -1,4 +1,5 @@
 import LeanPoo.Functional.PropertyScopes
+import LeanPoo.Functional.PropertyReplay
 
 /-! Checked owned-tree preparation and raw fallback. Live is a pure predicate over
 captured owner epochs; callbacks obey the existing core interaction protocol.
@@ -618,5 +619,79 @@ theorem initializationFailure_nonpassing (epochs interrupted : Bool)
           cases classified : classify original with
           | error secondary => exact And.intro (by intro bad; cases bad) (by intro bad; cases bad)
           | ok status => exact lawful status classified
+
+/-- Static inspection controls normalize exact integers to some and all other
+host values to none. The public call supplies five controls; callbacks are only
+recognized as callable, without invoking them or inferring termination. -/
+def inspectionReady (controls : List (Option Int)) (labels classifier : Bool) : Bool :=
+  labels && classifier && controls.all (fun value => match value with
+    | none => false
+    | some number => decide (0 ≤ number))
+
+/-- A malformed control is rejected even when all other controls are valid. -/
+theorem inspectionReady_malformed (controls : List (Option Int)) (labels classifier : Bool)
+    (bad : none ∈ controls) : inspectionReady controls labels classifier = false := by
+  cases labels <;> cases classifier <;> simp [inspectionReady]
+  exact ⟨none, bad, rfl⟩
+
+/-- Admission certifies every normalized integer's nonnegative bound. -/
+theorem inspectionReady_nonnegative (controls : List (Option Int)) (labels classifier : Bool)
+    (ready : inspectionReady controls labels classifier = true)
+    (number : Int) (member : some number ∈ controls) : 0 ≤ number := by
+  have all : controls.all (fun value => match value with
+      | none => false | some number => decide (0 ≤ number)) = true := by
+    cases labels <;> cases classifier <;> simpa [inspectionReady] using ready
+  have h := List.all_eq_true.mp all (some number) member
+  simpa using h
+
+/-- Zero draws, size, depth and fuel remain lawful diagnostic requests. -/
+theorem inspectionReady_zero : inspectionReady [some 0, some 0, some 0, some 0, some 0] true true = true := rfl
+
+/-- Callback recognition never authorizes a noncallable label function. -/
+theorem inspectionReady_labels (controls : List (Option Int)) (classifier : Bool) :
+    inspectionReady controls false classifier = false := by simp [inspectionReady]
+
+/-- One existing static admission boundary precedes the existing source guard.
+The finite preparation action models sampler metadata/factory/binding, not the
+inspector traversal, its callback termination, host effects or elapsed runtime. -/
+def prepareInspection (valid : Bool) (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    Except (Option Cause) (Value × State) :=
+  admitReplayRequest valid invalid (guardedGeneration live prepare) state
+
+/-- An invalid request cannot observe sources or execute metadata preparation. -/
+theorem prepareInspection_invalid (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    prepareInspection false invalid live prepare state = .error (some invalid) := rfl
+
+/-- Valid requests preserve the original guarded preparation exactly. -/
+theorem prepareInspection_valid (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State) :
+    prepareInspection true invalid live prepare state = guardedGeneration live prepare state := rfl
+
+/-- Static errors precede stale authority; valid stale requests skip preparation. -/
+theorem prepareInspection_stale (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State)
+    (stale : live state = false) :
+    prepareInspection true invalid live prepare state = .error none :=
+  guardedGeneration_preflight live prepare state stale
+
+/-- A valid request's original metadata cause bypasses trailing classification. -/
+theorem prepareInspection_cause {Value : Type _} (invalid cause : Cause) (live : State → Bool) (state : State)
+    (before : live state = true) :
+    prepareInspection (Value := Value) true invalid live (fun _ => .error cause) state = .error (some cause) :=
+  guardedGeneration_cause live state cause before
+
+/-- A normal metadata return cannot publish after retiring captured owners. -/
+theorem prepareInspection_revised (invalid : Cause) (live : State → Bool)
+    (state next : State) (value : Value) (before : live state = true) (after : live next = false) :
+    prepareInspection true invalid live (fun _ => .ok (value, next)) state = .error none :=
+  guardedGeneration_revised live state next value before after
+
+/-- Stable preparation keeps the exact prepared value and resulting state. -/
+theorem prepareInspection_stable (invalid : Cause) (live : State → Bool)
+    (state next : State) (value : Value) (before : live state = true) (after : live next = true) :
+    prepareInspection true invalid live (fun _ => .ok (value, next)) state = .ok (value, next) :=
+  guardedGeneration_state live state next value before after
 
 end LeanPoo.Functional.PropertyTesting

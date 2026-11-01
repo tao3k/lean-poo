@@ -166,3 +166,17 @@ example : initializationFailure (Secondary := String) true false (fun _ => .ok t
 -- Diagnostic classifier failure never manufactures a property counterexample.
 example : initializationFailure true false (fun _ => .ok true)
     (fun _ : Nat => .error "classifier") 7 = ((.error, 7), false) := rfl
+
+-- Invalid count admission wins even over a stale source or throwing metadata.
+example : prepareInspection false "invalid controls" (fun _ : Nat => false)
+    (fun _ => (.error "must not prepare" : Except String (Bool × Nat))) 0 =
+    .error (some "invalid controls") := rfl
+-- Inexact/fractional/Boolean controls normalize to none, never an implicit bound.
+example : inspectionReady [some 0, none, some 20, some 0, some 0] true true = false := rfl
+-- Negative fuel is rejected, while unbounded exact seed magnitude is admitted.
+example : inspectionReady [some 1267650600228229401496703205376, some 0, some 0, some 0, some 0]
+    true true = true := rfl
+example : inspectionReady [some 0, some 4, some 4, some 1, some (-1)] true true = false := rfl
+-- A legal zero-draw inspection still cannot renew an old source snapshot.
+example : prepareInspection true "invalid controls" (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat))) 0 = .error none := rfl

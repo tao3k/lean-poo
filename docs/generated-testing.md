@@ -110,3 +110,7 @@ work. See [P64](pbt-design-rfc.md#p64-strict-boolean-source-admission-across-typ
 P65 reuses generic failure classification for typed initialization: secondary
 observation/classification cannot erase the primary cause or enter consumer IO.
 See [P65](pbt-design-rfc.md#p65-shared-primary-cause-ownership-during-typed-preparation-failure).
+
+P66 admits diagnostic controls before typed preparation, sharing the generic
+request check without changing legal zero budgets or preparation exceptions.
+See [P66](pbt-design-rfc.md#p66-diagnostic-request-admission-before-typed-preparation).

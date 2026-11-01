@@ -2906,3 +2906,45 @@ retains original diagnostic identity; it does not roll back failed preparation o
 arbitrary consumer effects. No elapsed-time improvement is claimed. The independent
 library remains POO-free, and complete checks/resource limits are unchanged within
 the RFC's finite future-work scope.
+
+## P66: diagnostic request admission before typed preparation
+
+The audit reproduced a diagnostic ordering defect through the public typed
+inspect-generator entry: count -1 still forced a computed generation getter. Its
+exception replaced the configuration refusal, with one metadata evaluation and no
+legitimate inspection. Static diagnostic requests must be admitted before source
+observation, descriptor discovery, owned factories or raw binding.
+
+The existing generic configuration conjunction now has one exported module owner,
+check-inspection-request. Both generic inspection and the typed bridge call it;
+there is no new request record, wrapper stack, namespace, scheduler or observer
+registry. It recognizes exact nonnegative seed/count/size/depth/proposal-budget
+values and callable label/classifier hooks without invoking them. The same ordinary
+Error and message remain the request failure. Zero count and zero traversal fuel
+are legal; arbitrary-size exact seeds remain legal. This preserves the deliberate
+difference from Rackcheck's pinned gen/core.rkt contract-out, whose sample count
+is positive: we follow its contract-before-execution separation, not its API or
+random schedule. PBT remains future work beyond the author's concrete constructs.
+
+Five regression cases cover every numeric control with negative, fractional,
+inexact and wrong-type values; malformed callbacks in both layers; zero controls
+with no draws/labels; exact false/object preparation causes and stale sources; and
+a complete callback-service workflow. The latter inspects bounded FunctionArguments
+with optional/keyword parameters and nested List/Function callbacks, compares
+wrapped calls, then runs FUN-delivered failure shrinking and seeded/concrete replay.
+Owner revision invalidates the old diagnostic and witness; a fresh corrected
+service passes. Static rejection performs no metadata or source callbacks, while
+valid preparation errors remain ordinary exceptions and execution retains existing
+inspection status, budget and cause behavior. This adds no property evaluation to
+the diagnostic engine: the example explicitly supplies a label callback.
+
+Ten Lean laws normalize exact integers into optional Int controls, establish
+nonnegative/malformed/callable admission and legal zero budgets, and compose the
+existing admitReplayRequest and guardedGeneration boundaries. Invalid requests skip
+all preparation, valid requests keep the original guarded result, stale/revised
+sources refuse, and original causes and stable results remain exact. Top-level
+examples include a large exact seed and stale authority behind an invalid request.
+Faithful host normalization, callable recognition, source accuracy, callback
+termination and standard FUN/IO delivery remain premises; this is not a proof of
+Gerbil expansion/runtime, elapsed cost or arbitrary effect rollback. All complete
+checks and process resource limits remain unchanged. No latency claim is made.
