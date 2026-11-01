@@ -8,6 +8,7 @@ import LeanPoo.Prototype.SlotSpec
 These source laws complement executable Gerbil C3/FUN/contract controls; they
 make no claim about collector history or physical allocation performance. -/
 namespace LeanPoo.Examples.Representation
+open LeanPoo LeanPoo.Object
 open Prototype.Representation
 
 /-- Effects visit duplicate keys in source order, independent of snapshot copying. -/
@@ -881,5 +882,30 @@ example : checkedLayoutPreparation (.ok [some "callback", some "callback", none]
 /-- Retrying an exact false/Function directory preserves its original key row. -/
 example : checkedLayoutPreparation (.ok [some "disabled", some "callback"])
     (fun keys => (.ok keys : Except String (List String))) = .ok ["disabled", "callback"] := rfl
+
+/-- Observed dependencies extend source edges without changing the object set. -/
+def externalSources : C4.Graph := ⟨[
+  ⟨"rates", [], false⟩, ⟨"unused", [], false⟩,
+  ⟨"owner", [], false⟩, ⟨"invoice", [["owner"]], false⟩]⟩
+
+/-- Only explicitly registered sources participate in the original pure policy. -/
+example : (invalidateCaches externalSources ["rates"]
+    (fun _ => (⟨0, some false⟩ : RevisionCache Bool)) "invoice").derived = some false := by decide
+
+/-- Captured rate reads reach the shared invoice through the existing path. -/
+example : (invalidateCaches (registerSlotSources externalSources "owner" ["rates", "rates", "owner"])
+    ["rates"] (fun _ => (⟨0, some false⟩ : RevisionCache Bool)) "invoice").derived = none := by decide
+
+/-- Duplicate captured edges still advance an affected receiver exactly once. -/
+example : (invalidateCaches (registerSlotSources externalSources "owner" ["rates", "rates"])
+    ["rates"] (fun _ => (⟨7, some false⟩ : RevisionCache Bool)) "invoice").revision = 8 := by decide
+
+/-- An unobserved branch retains its original false-valued cache. -/
+example : (invalidateCaches (registerSlotSources externalSources "owner" ["rates"])
+    ["unused"] (fun _ => (⟨0, some false⟩ : RevisionCache Bool)) "invoice").derived = some false := by decide
+
+/-- A false-like original cause outranks an epoch failure; no edges publish. -/
+example : withSlotDependencies externalSources "owner"
+    (.error false : Except Bool (Nat × List String)) (.error true) (fun _ => .ok ()) = .error false := rfl
 
 end LeanPoo.Examples.Representation

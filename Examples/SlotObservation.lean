@@ -60,3 +60,11 @@ example : 100 * 4 + 30 * (4 + 1 + 2 * 1) + 5 * (4 + 1 + 2 * 1 + 2) ≤
 both primitive-price hypotheses of the universal bound hold. -/
 example : ¬ (1 * 4 + 0 * (4 + 1 + 2 * 1) + 100 * (4 + 1 + 2 * 1 + 50) ≤
     3 * (1 * 3) + 2 * (0 * 4)) := by decide
+
+/-- Nested recording retains duplicate parent roots without changing callbacks. -/
+example : (recordCapturedReads (⟨some [1], [7], [8]⟩ : ReadScope (List Nat) Nat Nat)
+    [2, 2] (· ++ ·)).frame = some [1, 2, 2] := rfl
+
+/-- An existing unique-root collector retains its own identity policy. -/
+example : (recordCapturedReads (⟨some [1], [7], [8]⟩ : ReadScope (List Nat) Nat Nat)
+    [2, 2] (fun before roots => (before ++ roots).eraseDups)).frame = some [1, 2] := by decide

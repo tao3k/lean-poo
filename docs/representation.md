@@ -1201,3 +1201,52 @@ The executable service checks refusal with a warm diamond, unchanged evidence,
 false/Function retry, canonical shape reuse and shared revision through FUN and
 refinement. Paired hash/vector complete workflows charge construction and refusal
 on both sides; their observed wall/GC costs do not follow from these semantic laws.
+
+### Explicit observation-backed Slot dependencies
+
+`with-slot-dependencies` is an opt-in higher-order Slot computation. It runs the
+action once using the existing read collector, checks the owner's revision, then
+admits the WHOLE authenticated read graph before adding source edges through
+`depend-on-object!`. The existing replay scope keeps those sources protected
+through registration and final admission. Empty captures skip replay. Successful
+values, including false and Function identities, are unchanged. Exceptions from
+the action retain their original cause before any later freshness check.
+
+`Object.CacheInvalidation.registerSlotSources` models the same addition of known
+external edges, retaining old edges and the object universe. General laws connect
+captured edges and old transitive paths to ordinary cache invalidation. Further
+laws model capture/epoch/admission failure, exact value delivery and the empty
+fast path. A logical update-attempt bound excludes capture, complete graph
+validation, hashes, allocation and GC. String identities must faithfully denote
+host receivers; read authentication, faithful weak registration, sequential
+publication and callback termination are premises.
+
+This explicitly advances the author's cache-invalidation future work. It leaves
+pure-by-default slots intact and does not discover arbitrary callback state or
+make the whole language reactive. Undelivered getters, raw runtime mutations,
+concurrent heap transactions and automatic removal of old conditional edges
+remain outside this operation. Earlier edges stay conservative, matching the
+existing parent/protocol revision discipline.
+
+The Scheme service example combines two diamond services, an external selected
+rate directory, transitive aggregation through FUN, ObjectContract refinement,
+false/Function preservation, unobserved-branch reuse, shared once-only revision,
+old-credential refusal, business failure, repair and route switching. Its manual
+reference declares all possible providers. Client-visible results agree; the
+reference deliberately recomputes on an unused provider revision. Lean examples
+show the original pure policy, the added transitive path, duplicate-edge single
+revision and unaffected-branch frame, without claiming compiler verification.
+
+Successful nested capture also records its ORIGINAL roots back into the parent
+collector through the same frame-recording boundary as ordinary delivery. It
+retains occurrences or the caller's unique-root policy without repeating observer
+callbacks or prechecks. A rejected first attempt kept invalidation edges but lost
+parent roots: two real deliveries produced zero outer roots. The final regression
+requires two observer calls and two ordinary/one unique parent roots. Four scope
+laws and two examples state the corresponding parent-frame/callback invariants.
+
+The graph model describes state after application work effects. Source-work or
+whole-read preflight refusal adds no registration in that invocation; earlier
+callback/nested effects are not rolled back. An exceptional host allocation or
+registration failure may retain conservative edges, while returning no Slot
+value. No heap transaction or arbitrary callback-effect discovery is promised.

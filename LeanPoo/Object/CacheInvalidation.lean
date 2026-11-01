@@ -129,4 +129,149 @@ theorem invalidateCaches_leaf (graph : C4.Graph) (root : String)
   funext name
   simp [invalidateCaches, closure]
 
+/-- Add captured external source names to the existing finite dependency graph.
+This is a source-edge graph, not a request to change C3 inheritance. Duplicate
+and older edges are conservative; host weak tables implement membership updates. -/
+def registerSlotSources (graph : C4.Graph) (owner : String) (sources : List String) : C4.Graph :=
+  let external := sources.filter (· != owner)
+  if external = [] then graph else
+    ⟨graph.nodes.map (fun node => if node.name = owner then
+      { node with parentOrders := node.parentOrders ++ [external] } else node)⟩
+
+/-- Empty and receiver-local observations do not create source edges. -/
+theorem registerSlotSources_local (graph : C4.Graph) (owner : String)
+    (sources : List String) (localOnly : ∀ source ∈ sources, source = owner) :
+    registerSlotSources graph owner sources = graph := by
+  have empty : sources.filter (· != owner) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro source present
+    simp [localOnly source present]
+  simp [registerSlotSources, empty]
+
+/-- Registering captured sources never adds or removes an object identity. -/
+theorem registerSlotSources_names (graph : C4.Graph) (owner : String) (sources : List String) :
+    (registerSlotSources graph owner sources).nodes.map C4.Node.name = graph.nodes.map C4.Node.name := by
+  unfold registerSlotSources
+  dsimp only
+  split
+  · rfl
+  · simp only [List.map_map]
+    apply List.map_congr_left
+    intro node _
+    dsimp only [Function.comp_apply]
+    split <;> rfl
+
+/-- Every old dependency remains registered, including conditional earlier reads. -/
+theorem registerSlotSources_old_edge (graph : C4.Graph) (owner : String) (sources : List String)
+    (node : C4.Node) (member : node ∈ graph.nodes) (source : String)
+    (edge : source ∈ node.parentOrders.flatten) :
+    ∃ next ∈ (registerSlotSources graph owner sources).nodes,
+      next.name = node.name ∧ source ∈ next.parentOrders.flatten := by
+  unfold registerSlotSources
+  dsimp only
+  split
+  · exact ⟨node, member, rfl, edge⟩
+  · let next := if node.name = owner then
+      { node with parentOrders := node.parentOrders ++ [sources.filter (· != owner)] } else node
+    refine ⟨next, List.mem_map.mpr ⟨node, member, rfl⟩, ?_, ?_⟩
+    · dsimp [next]; split <;> rfl
+    · dsimp [next]; split <;> simp_all
+
+/-- A captured non-self source creates an actual one-edge invalidation path. -/
+theorem registerSlotSources_path (graph : C4.Graph) (owner source : String) (sources : List String)
+    (node : C4.Node) (member : node ∈ graph.nodes) (named : node.name = owner)
+    (captured : source ∈ sources) (different : source ≠ owner) :
+    Proof.Descendant (registerSlotSources graph owner sources) source 1 owner := by
+  have present : source ∈ sources.filter (· != owner) := by simp [captured, different]
+  have nonempty : sources.filter (· != owner) ≠ [] := by
+    intro empty; rw [empty] at present; simp at present
+  let next : C4.Node := { node with parentOrders := node.parentOrders ++ [sources.filter (· != owner)] }
+  have nextMember : next ∈ (registerSlotSources graph owner sources).nodes := by
+    simp only [registerSlotSources, nonempty, ↓reduceIte]
+    exact List.mem_map.mpr ⟨node, member, by simp [named, next]⟩
+  have edge : source ∈ next.parentOrders.flatten := by simp [next, present]
+  have path := Proof.Descendant.child (Proof.Descendant.self :
+    Proof.Descendant (registerSlotSources graph owner sources) source 0 source) next nextMember edge
+  simpa [next, named] using path
+
+/-- Source registration preserves every old transitive path. -/
+theorem registerSlotSources_descendant (graph : C4.Graph) (owner : String) (sources : List String)
+    {origin target : String} {steps : Nat} (path : Proof.Descendant graph origin steps target) :
+    Proof.Descendant (registerSlotSources graph owner sources) origin steps target := by
+  induction path with
+  | self => exact .self
+  | child path node member edge ih =>
+    obtain ⟨next, nextMember, named, nextEdge⟩ := registerSlotSources_old_edge graph owner sources node member _ edge
+    simpa [named] using Proof.Descendant.child ih next nextMember nextEdge
+
+/-- A faithful captured external edge clears the ordinary derived cache on edit.
+The owner is an existing finite node; no new evaluator or cache is introduced. -/
+theorem registeredSlotSource_cleared (graph : C4.Graph) (owner source : String) (sources : List String)
+    (node : C4.Node) (member : node ∈ graph.nodes) (named : node.name = owner)
+    (captured : source ∈ sources) (different : source ≠ owner)
+    (cache : String → RevisionCache Value) :
+    (invalidateCaches (registerSlotSources graph owner sources) [source] cache owner).derived = none := by
+  have width := congrArg List.length (registerSlotSources_names graph owner sources)
+  simp only [List.length_map] at width
+  apply invalidateCaches_descendant _ _ cache source owner 1 (by simp)
+    (registerSlotSources_path graph owner source sources node member named captured different)
+  rw [width]
+  cases shape : graph.nodes with
+  | nil => simp [shape] at member
+  | cons first rest => simp
+
+/-- The graph denotes host state after work effects; those effects are not rolled
+back. Whole capture admission precedes this invocation's registration. Source exceptions, including
+false-like causes, are never replaced by a later epoch or stale-read refusal. -/
+def withSlotDependencies (graph : C4.Graph) (owner : String)
+    (capture : Except Cause (Value × List String)) (epoch : Except Cause Unit)
+    (admit : List String → Except Cause Unit) : Except Cause (Value × C4.Graph) := do
+  let (value, sources) ← capture
+  let _ ← epoch
+  if sources = [] then pure (value, graph) else
+    let _ ← admit sources
+    pure (value, registerSlotSources graph owner sources)
+
+/-- Failed work performs no later admission or registration and keeps its cause. -/
+theorem withSlotDependencies_source_error (graph : C4.Graph) (owner : String) (cause : Cause)
+    (epoch : Except Cause Unit) (admit : List String → Except Cause Unit) :
+    withSlotDependencies graph owner (.error cause : Except Cause (Value × List String)) epoch admit =
+      .error cause := rfl
+
+/-- A retired owner refuses even a callback-free result before publishing it. -/
+theorem withSlotDependencies_epoch_error (graph : C4.Graph) (owner : String)
+    (value : Value) (sources : List String) (cause : Cause) (admit : List String → Except Cause Unit) :
+    withSlotDependencies graph owner (.ok (value, sources)) (.error cause) admit = .error cause := rfl
+
+/-- A stale captured graph cannot publish a partial set of source edges. -/
+theorem withSlotDependencies_refused (graph : C4.Graph) (owner : String) (value : Value)
+    (sources : List String) (nonempty : sources ≠ []) (cause : Cause)
+    (admit : List String → Except Cause Unit) (refused : admit sources = .error cause) :
+    withSlotDependencies graph owner (.ok (value, sources)) (.ok ()) admit = .error cause := by
+  simp [withSlotDependencies, nonempty, refused, bind, Except.bind]
+
+/-- Successful admission retains the exact value and installs only declared reads. -/
+theorem withSlotDependencies_ok (graph : C4.Graph) (owner : String) (value : Value)
+    (sources : List String) (nonempty : sources ≠ [])
+    (admit : List String → Except Cause Unit) (ready : admit sources = .ok ()) :
+    withSlotDependencies graph owner (.ok (value, sources)) (.ok ()) admit =
+      .ok (value, registerSlotSources graph owner sources) := by
+  simp [withSlotDependencies, nonempty, ready, bind, Except.bind]
+  rfl
+
+/-- No getter reads means no replay preparation or new edges. -/
+theorem withSlotDependencies_empty (graph : C4.Graph) (owner : String) (value : Value)
+    (admit : List String → Except Cause Unit) :
+    withSlotDependencies graph owner (.ok (value, [])) (.ok ()) admit = .ok (value, graph) := rfl
+
+/-- Logical weak-edge update attempts, excluding capture, full read admission,
+projection preparation, hashing, allocation and GC. Repeated receivers count. -/
+def slotSourceRegistrationWork (owner : String) (sources : List String) : Nat :=
+  (sources.filter (· != owner)).length
+
+/-- Self-edge suppression never needs more updates than the captured read row. -/
+theorem slotSourceRegistrationWork_le (owner : String) (sources : List String) :
+    slotSourceRegistrationWork owner sources ≤ sources.length := by
+  exact List.length_filter_le _ _
+
 end LeanPoo.Object

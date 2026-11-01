@@ -109,4 +109,34 @@ theorem readScope_cost_bound (disabled deliveries captures lookup binding tag fi
       Nat.mul_le_mul_left deliveries (Nat.add_le_add_left delivery_price lookup)
   exact Nat.add_le_add_right (Nat.add_le_add disabled_bound delivery_bound) _
 
+/-- A successful nested capture records already-delivered reads into the parent
+frame. The supplied record operation implements that frame's existing occurrence
+or unique-root policy; it cannot invoke observers or change their identities. -/
+def recordCapturedReads (scope : ReadScope Frame Observer Check) (roots : List Read)
+    (record : Frame → List Read → Frame) : ReadScope Frame Observer Check :=
+  { scope with frame := scope.frame.map (fun frame => record frame roots) }
+
+/-- Parent observers keep their exact order and identities; none are replayed. -/
+theorem recordCapturedReads_observers (scope : ReadScope Frame Observer Check) (roots : List Read)
+    (record : Frame → List Read → Frame) :
+    (recordCapturedReads scope roots record).observers = scope.observers := rfl
+
+/-- Registration does not replace prechecks from the enclosing dynamic scope. -/
+theorem recordCapturedReads_prechecks (scope : ReadScope Frame Observer Check) (roots : List Read)
+    (record : Frame → List Read → Frame) :
+    (recordCapturedReads scope roots record).prechecks = scope.prechecks := rfl
+
+/-- Without an outer collector, recording cannot manufacture one. -/
+theorem recordCapturedReads_no_frame (observers : List Observer) (checks : List Check)
+    (roots : List Read) (record : Frame → List Read → Frame) :
+    recordCapturedReads (⟨none, observers, checks⟩ : ReadScope Frame Observer Check) roots record =
+      ⟨none, observers, checks⟩ := rfl
+
+/-- Ordinary capture preserves original order and repeated occurrences. Unique
+capture instead supplies its own existing identity-deduplication operation. -/
+theorem recordCapturedReads_append (before roots : List Read) (observers : List Observer)
+    (checks : List Check) :
+    (recordCapturedReads (⟨some before, observers, checks⟩ : ReadScope (List Read) Observer Check)
+      roots (· ++ ·)).frame = some (before ++ roots) := rfl
+
 end LeanPoo.Object
