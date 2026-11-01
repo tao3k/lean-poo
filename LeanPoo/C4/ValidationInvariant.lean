@@ -33,6 +33,38 @@ private theorem scanNames_complete (unique : (nodes.map Node.name).Nodup)
       simp only [List.map_cons, List.mem_cons, Std.HashSet.contains_insert, Bool.or_eq_true, beq_iff_eq]
       simp only [eq_comm (a := node.name) (b := name), or_assoc, or_left_comm]
 
+/-- The existing hash scan certifies declaration uniqueness without a quadratic
+pairwise name check. The certificate also excludes names already in the seed. -/
+theorem scanNames_sound (success : scanNames nodes seen = .ok complete) :
+    (nodes.map Node.name).Nodup ∧
+      ∀ node ∈ nodes, seen.contains node.name = false := by
+  induction nodes generalizing seen with
+  | nil => exact ⟨by simp, by simp⟩
+  | cons node rest ih =>
+    cases present : seen.contains node.name with
+    | true =>
+      simp only [scanNames, List.forIn_cons, present, ↓reduceIte] at success
+      contradiction
+    | false =>
+      have scanned : scanNames rest (seen.insert node.name) = .ok complete := by
+        simpa only [scanNames, List.forIn_cons, present, Bool.false_eq_true,
+          ↓reduceIte, bind, Except.bind, pure, Except.pure] using success
+      obtain ⟨unique, fresh⟩ := ih scanned
+      have absent : node.name ∉ rest.map Node.name := by
+        intro member
+        obtain ⟨next, member, same⟩ := List.mem_map.mp member
+        have impossible := fresh next member
+        simp [same] at impossible
+      refine ⟨List.nodup_cons.mpr ⟨absent, unique⟩, ?_⟩
+      intro next member
+      rcases List.mem_cons.mp member with same | member
+      · subst next; exact present
+      · have absent := fresh next member
+        have components : (node.name == next.name) = false ∧
+            seen.contains next.name = false := by
+          simpa only [Std.HashSet.contains_insert, Bool.or_eq_false_iff] using absent
+        exact components.2
+
 private theorem forIn_unit_complete (items : List α) (action : α → Except Error (ForInStep PUnit))
     (success : ∀ item ∈ items, action item = .ok (.yield PUnit.unit)) :
     forIn items PUnit.unit (fun item _ => action item) = (Except.ok PUnit.unit : Except Error PUnit) := by

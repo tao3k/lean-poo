@@ -80,3 +80,9 @@ example (prepared : Prepared graph) (root : String)
 #print axioms LeanPoo.Object.compilePrepared_eq
 #print axioms LeanPoo.Object.compile_precedence
 #print axioms LeanPoo.Object.Schema.reviseDeclaration_preserves_preparation
+
+-- The hash-scan certificate is independent of any graph/root preparation.
+example (success : scanNames nodes seen = .ok complete) :
+    (nodes.map Node.name).Nodup := (scanNames_sound success).1
+
+#print axioms scanNames_sound

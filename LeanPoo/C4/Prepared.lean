@@ -62,11 +62,13 @@ def prepare (graph : Graph) : Prepared graph :=
   let index := LinearizeState.nodeIndex graph
   -- Select the complete builder before its root fold. A conditional inside
   -- the root factory is duplicated by specialization into each insertion.
-  if unique : (graph.nodes.map Node.name).Nodup then
+  match scanned : scanNames graph.nodes {} with
+  | .ok _ =>
+    let unique := (scanNames_sound scanned).1
     let shared := Thunk.mk fun _ => prepareAncestors graph index rfl
     fromFactory graph fun root =>
       Thunk.mk fun _ => preparedRoot graph index rfl unique shared root
-  else
+  | .error _ =>
     fromFactory graph fun root =>
       Thunk.mk fun _ => indexedResult graph index rfl root
 

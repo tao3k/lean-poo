@@ -8,11 +8,14 @@ linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https:
 =C4.prepare graph= retains complete root results lazily and shares one canonical
 ancestor metadata table across roots. Its first valid root demand prepares the
 finite declared graph; completed ancestor/suffix entries are shared thereafter.
-Canonical ancestor traces plus one declaration-uniqueness check derive the
-original reachable-only validation; successful roots need no repeated graph
+Canonical ancestor traces plus the existing hash-based declaration-name scan
+derive the original reachable-only validation; successful roots need no repeated graph
 scan. Duplicate declarations and audit failures use the ordinary compiler,
 preserving ordinary successes that checked C4 rejects and complete original
 error order. Failed branches publish no partial table.
+=scanNames_sound= certifies uniqueness and seed freshness. Preparation consumes
+that certificate directly instead of mapping names into a quadratic pairwise
+=Nodup= decision; the proof is erased from native execution.
 This trades first-root whole-graph preparation and retained metadata for repeated
 root work; include that cost for single-root consumers. =Prepared.at_eq= proves
 complete equality for arbitrary graphs/roots. =Object.compilePrepared= uses the
@@ -34,7 +37,8 @@ These proof-compilation changes preserve the checker, theorem statements,
 constructor laws and generated native C; they do not weaken type admission.
 =just benchmark-c4= runs the existing deep/wide scale study as a bounded native
 executable and compares complete original/prepared results, including cold
-preparation. Its focused times do not establish application latency or RSS.
+preparation. Independent missing-root demands at 256/1024/4096 nodes separately
+exercise name/index/root preparation without ancestor computation. Its focused times do not establish application latency or RSS.
 
 The reviewed Lean-native constructive path is implemented and checked, including
 Order/BST/AVL, source/Lean differential checks, C3 object composition, runtime
