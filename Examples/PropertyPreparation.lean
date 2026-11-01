@@ -192,3 +192,15 @@ example : prepareReportDiagnostics (fun _ : Nat => ["input", "input"])
 example : prepareReportDiagnostics (fun _ : Nat => ["input"])
     [7] "invalid" (fun _ => .ok (false, 2)) 0 =
     .ok (false, some [("input", 7)], 2) := by simp [prepareReportDiagnostics, diagnosticBindings]
+
+-- An invalid run cannot reach the declaration's original callback exception.
+example : prepareInspection (propertyRequestReady [some (-1), some 10, some 4] (some 1) none true true)
+    "invalid request" (fun _ : Nat => true)
+    (fun _ => (.error "must not construct" : Except String (Bool × Nat))) 0 =
+    .error (some "invalid request") := rfl
+-- A procedure-valued size still requires an explicit finite upper bound.
+example : propertyRequestReady [some 42, some 10, none] (some 1) none true true = false := rfl
+-- Valid bounded preparation preserves false as the exact original cause.
+example : prepareInspection (propertyRequestReady [some 42, some 10, some 4] (some 1) none true true)
+    true (fun _ : Nat => true) (fun _ => (.error false : Except Bool (Bool × Nat))) 0 =
+    .error (some false) := rfl

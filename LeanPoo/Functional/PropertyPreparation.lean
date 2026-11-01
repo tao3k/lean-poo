@@ -769,4 +769,64 @@ theorem prepareReportDiagnostics_fresh [DecidableEq Name]
       .ok (true, diagnosticBindings (names state) row, state) := by
   simp [prepareReportDiagnostics, valid]
 
+/-- Static run controls are normalized exact integers. Controls include seed,
+shrink fuel and the mandatory finite size bound; hooks represent recognition
+only, never callback execution. Scheduled sizes need no constant-size integer. -/
+def propertyRequestReady (controls : List (Option Int)) (cases size : Option Int)
+    (scheduled hooks : Bool) : Bool :=
+  inspectionReady controls hooks true &&
+    (match cases with | none => false | some n => decide (0 < n)) &&
+    (scheduled || inspectionReady [size] true true)
+
+/-- Zero effective cases are a malformed run request, not a vacuous pass. -/
+theorem propertyRequestReady_zero (controls : List (Option Int)) (size : Option Int)
+    (scheduled hooks : Bool) : propertyRequestReady controls (some 0) size scheduled hooks = false := by
+  simp [propertyRequestReady]
+
+/-- Malformed exact controls cannot enter declaration preparation. -/
+theorem propertyRequestReady_malformed (controls : List (Option Int))
+    (cases size : Option Int) (scheduled hooks : Bool) (bad : none ∈ controls) :
+    propertyRequestReady controls cases size scheduled hooks = false := by
+  simp [propertyRequestReady, inspectionReady_malformed controls hooks true bad]
+
+/-- A scheduled size does not waive the finite declared upper bound. -/
+theorem propertyRequestReady_scheduled_missing_bound (seed fuel cases : Int) (hooks : Bool) :
+    propertyRequestReady [some seed, some fuel, none] (some cases) none true hooks = false := by
+  simp [propertyRequestReady, inspectionReady]
+
+/-- Recognized callbacks and a bounded schedule need no fabricated constant size. -/
+theorem propertyRequestReady_schedule :
+    propertyRequestReady [some 0, some 0, some 4] (some 1) none true true = true := rfl
+
+/-- Static recognition rejects noncallable hooks or malformed policy/name records. -/
+theorem propertyRequestReady_hooks (controls : List (Option Int)) (cases size : Option Int)
+    (scheduled : Bool) : propertyRequestReady controls cases size scheduled false = false := by
+  simp [propertyRequestReady, inspectionReady]
+
+/-- Invalid configuration precedes every fixed/dependent declaration and observer.
+The existing preparation gate is reused; no new runner or state carrier is needed. -/
+theorem propertyRequest_invalid (controls : List (Option Int)) (cases size : Option Int)
+    (scheduled hooks : Bool) (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State)
+    (bad : propertyRequestReady controls cases size scheduled hooks = false) :
+    prepareInspection (propertyRequestReady controls cases size scheduled hooks)
+      invalid live prepare state = .error (some invalid) := by
+  simp [bad, prepareInspection, admitReplayRequest]
+
+/-- Valid static options retain the same dynamic source/factory admission. -/
+theorem propertyRequest_valid (controls : List (Option Int)) (cases size : Option Int)
+    (scheduled hooks : Bool) (invalid : Cause) (live : State → Bool)
+    (prepare : State → Except Cause (Value × State)) (state : State)
+    (ready : propertyRequestReady controls cases size scheduled hooks = true) :
+    prepareInspection (propertyRequestReady controls cases size scheduled hooks)
+      invalid live prepare state = guardedGeneration live prepare state := by
+  simp [ready, prepareInspection_valid]
+
+/-- Ordinary valid-request preparation errors keep exact identity, even false. -/
+theorem propertyRequest_cause (invalid cause : Cause) (live : State → Bool) (state : State)
+    (before : live state = true) :
+    prepareInspection (propertyRequestReady [some 0, some 0, some 4] (some 1) none true true)
+      invalid live (fun _ => (.error cause : Except Cause (Value × State))) state = .error (some cause) := by
+  exact prepareInspection_cause invalid cause live state before
+
 end LeanPoo.Functional.PropertyTesting

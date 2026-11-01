@@ -3000,3 +3000,66 @@ A downstream suite can prepare its renderer before any assertion observations:
 
 The formatter does not run a generator or authorize a passed assertion. Reuse
 with another report always observes that report's own authority.
+
+## P68: shared static run admission before declaration preparation
+
+The public report-producing define-property form accepted seed -1 only after
+executing its specification and generator expressions (two observed effects).
+The standard assertion form had the same window. Typed checks also deferred
+policy, name and size-limit admission until after sampler metadata and binding;
+a metadata exception could replace the static configuration refusal. These
+library-owned preparation actions are distinct from ordinary caller argument
+evaluation. Request validation must precede them, rather than turn malformed
+configuration into a replayable run or resample it.
+
+prepare-property-check in the existing generic property module binds the original
+keyword/default signature through Gerbil itself, admits static controls, and
+returns an ordinary callable check. It invokes no size/source/policy/classifier
+callback while preparing. The direct check-property function, both declaration
+macros and the typed/FUN runner reuse this owner. The typed partial configuration
+conjunction and late generic preparation are removed; dependency/property shape
+checks remain at their own boundary. No option parser, new namespace, request
+record, alternate runner, wrapper chain, PRNG or compatibility path is added.
+Actual generators/specifications are admitted when the prepared check is invoked.
+Each invocation retains the existing execute implementation and its fresh random
+source, visited-source ledger, trial counters, coverage and shrink state.
+
+Static controls remain exact nonnegative seed/shrink/size-limit values with a
+positive case count. Constant sizes are exact nonnegative integers; procedure
+sizes still require an explicit finite size-limit. Policy/name and observer/error
+classifier recognition reuse existing contracts without executing callbacks.
+Preparation refusal is an ordinary configuration error before declaration effects.
+Valid-request metadata causes, source retirement, Boolean property failures,
+coverage, shrinking and both replay forms retain their existing owners. A prepared
+check captures configuration, not source epochs or a completed report: source
+admission still occurs for each supplied producer/specification and every action.
+
+Three independent regressions cover the complete invalid-options matrix before
+named expressions, standard TestCase refusal before fixed/dependent builders, and
+callback-free preparation followed by independent shrink/replay runs. Existing
+false-cause and declaration-retirement controls also remain. Isolated acceptance
+increases from 200 to 203 cases. Two typed controls cover zero metadata/observer
+work for malformed size-limit/policy/name and a nested Function/List service using
+Record PropertyConfiguration, FUN, a bounded size schedule, failed-then-fresh
+configuration, shrinking, both replays, old-owner refusal and corrected execution.
+The named-row diagnostic cases move to existing product examples to keep scope
+examples below 1000 lines; module inventory and registration order are unchanged.
+
+Eight finite Lean laws reuse inspectionReady, prepareInspection and the existing
+admitReplayRequest/guardedGeneration gates. They cover zero cases, malformed exact
+controls, mandatory scheduled-size bounds, legal bounded schedules, hook admission,
+invalid-before-preparation, valid-request equivalence and original causes. Three
+top-level examples include invalid seed before a failing builder and false causes.
+Faithful host keyword binding/normalization, contract recognition, source accuracy,
+terminating callbacks and standard FUN/IO delivery remain premises. This advances
+the paper's future work; it does not prove the Gerbil compiler/runtime, PRNG
+quality, arbitrary effect rollback or performance. All complete checks and fixed
+compiler/heap guards remain; tests have no fixed wall deadline.
+
+A downstream suite may bind a request once with ordinary module imports:
+
+```scheme
+(import (prefix-in :clan/poo/testing/property p.))
+(def run-request (p.prepare-property-check seed: 42 cases: 100 size: 20))
+;; Each (run-request generation property specification) starts a fresh run.
+```
