@@ -3318,3 +3318,63 @@ Rackcheck's pinned `gen:symbol` composes its string generator with
 symbol generator here. Portable handoff remains this project's explicit extension;
 we do not attribute our codec/source protocol to Racket. Generation, retained
 shrink trees and seed splitting are unchanged.
+
+## P74: first-observed finite Function result tuples
+
+Two public probes exposed late aggregate admission. A first result producer
+returned an invalid scalar, yet the next row still ran and threw false, replacing
+the tuple-protocol error. A later draw could also change a previously returned
+tuple spine before the final table copied it: the first row changed from `(7)`
+to `(99)`. This is the finite table's ordered result boundary, not unrestricted
+procedure inference or a promise to freeze arbitrary generated payloads.
+
+The generic generator now maps one private tuple recognizer/copier over the
+result producer before building the existing fixed product. Each normal result
+must be a proper finite list and its spine is owned before the next draw.
+`function-tree` receives only that checked product and no longer repeats a full
+shape scan and tuple copy for every assembled table. This uses the existing
+`generator-map` and `generator-sequence` algebra, without another protocol, public
+namespace, sampler class, iterator, random-source owner or compatibility path.
+
+Ordinary malformed tuples retain `finite function results must be value tuples`,
+now with the first offending tuple as irritant rather than a completed aggregate.
+Original draw exceptions, including raised false, remain exact. Source retirement
+still wins after a normally returned draw and before tuple admission. Empty tuples
+mean zero return values; a tuple containing false remains present data. Malformed
+lazy children still fail before returning a proposal and therefore do not acquire
+a proposal charge. Existing raw keyword rows, call forwarding and multiple-value
+delivery stay with the standard finite-function procedure. Empty input directories
+invoke no result producer; the outer generator keeps its own source admission.
+
+This captures stored result tuple spines only. Mutable payload objects and hidden
+preimage values retain their declared immutability/source obligations; mapping
+does not deep-freeze an advanced producer's original tree. Coordinate shrinking
+continues to retain unchanged product siblings and their first-observed sources.
+Seed splitting, supplied result neighborhoods and portable table restoration are
+unchanged. No wall-clock or universal allocation improvement is claimed.
+
+Four independent cases cover early malformed/cyclic/improper tuple refusal,
+shallow spine ownership with payload identity, source/cause/charged-proposal
+priority, and seed-state equality, real shrinking, both replays and portable
+finite-table restoration. All previous cases remain; the isolated package now
+requires 216 cases. A complex Record/Function/FUN service deliberately produces
+an invalid first result and a later false cause, repairs explicitly, shrinks a
+real finite dispatch table, validates Tuple wire data, restores wrapped Function
+fields and rejects old source epochs before fresh retry.
+
+Eight finite Lean laws in PropertyProducts reuse `finiteSequenceParameters` for
+the same ordered guarded traversal. They prove empty-row behavior, first refusal,
+first tuple retention, no partial table on tail failure, head lookup, exact table
+length and complete key/order preservation. Five top-level examples distinguish
+malformed results, false causes, source retirement, captured false data and
+zero-value tuples. Faithful shallow host copying, the fixed product invariant,
+accurate source observers, declared payload laws and terminating sequential
+callbacks remain premises. These are finite protocol proofs, not verification of
+Gerbil/Gambit, arbitrary mutable preimages or unrestricted Function behavior.
+This advances the paper's future work.
+
+The pinned Rackcheck `gen:bind` and shrink-tree mapping remain the source model:
+compose admission into the retained producer tree, rather than redraw or validate
+an already completed aggregate. This unit changes neither that seed discipline
+nor the existing lazy shrinking policy. All checks, heaps, compiler completion
+and cancellation behavior remain unchanged.

@@ -99,3 +99,25 @@ example : dependentCandidates [0, 2] (fun count seed => [List.replicate count se
 -- The assertion boundary receives exactly the shared declaration's receipt.
 example : deliverDeclaration (fun seed : Nat => (.ok (seed, [2, 2]) : Except String (Nat × List Nat)))
     (fun receipt => .ok receipt) 42 = .ok (42, [2, 2]) := rfl
+
+-- An invalid first tuple wins before a later row can throw false.
+example : prepareFunctionTable (fun _ : Nat => true) true
+    (fun row state => (if row = 0 then .ok (none, state) else .error false :
+      Except Bool (Option (List Bool) × Nat))) [0, 1] 0 = .error (some true) := rfl
+-- A draw's original false exception remains distinct from malformed tuple data.
+example : prepareFunctionTable (fun _ : Nat => true) true
+    (fun _ _ => (.error false : Except Bool (Option (List Bool) × Nat))) [0, 1] 0 =
+      .error (some false) := rfl
+-- Retirement after the draw precedes classification of its malformed result.
+example : prepareFunctionTable (fun epoch : Nat => epoch == 0) "tuple"
+    (fun _ _ => (.ok (none, 1) : Except String (Option (List Bool) × Nat))) [0, 1] 0 =
+      .error none := rfl
+-- Later producer state cannot rewrite an already captured false return value.
+example : prepareFunctionTable (fun _ : Nat => true) "tuple"
+    (fun (_ : Nat) (state : Nat) => (.ok (some [state != 0], state + 1) :
+      Except String (Option (List Bool) × Nat))) [10, 20] 0 =
+      .ok ([(10, [false]), (20, [true])], 2) := rfl
+-- A proper empty result tuple delivers zero values, rather than declining a row.
+example : prepareFunctionTable (fun _ : Nat => true) "tuple"
+    (fun _ state => (.ok (some [], state + 1) : Except String (Option (List Bool) × Nat))) [10] 0 =
+      .ok ([(10, [])], 1) := rfl

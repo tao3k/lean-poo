@@ -439,4 +439,106 @@ theorem dependentCandidates_append (left right : List Parent)
       dependentCandidates left select seed ++ dependentCandidates right select seed := by
   simp [dependentCandidates]
 
+/-- Finite function tables reuse the ordered, guarded finite-result traversal.
+Each tuple is captured before the next row stage; immutable lists model faithful
+host shallow copying, not freezing payloads or hidden generator preimages. -/
+def prepareFunctionTable (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state : State) :
+    Except (Option Cause) (List (Input × List Output) × State) :=
+  match finiteSequenceParameters live invalid draw rows state with
+  | .error cause => .error cause
+  | .ok (tuples, next) => .ok (rows.zip tuples, next)
+
+/-- Empty directories perform no row draws; the outer generator still owns its
+separate explicit source admission. -/
+theorem prepareFunctionTable_empty (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State)) (state : State) :
+    prepareFunctionTable live invalid draw [] state = .ok ([], state) := rfl
+
+/-- A malformed/stale/throwing first row suppresses every subsequent draw. -/
+theorem prepareFunctionTable_head_refused (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state : State) (cause : Option Cause)
+    (refused : finiteShrinkStage live invalid draw row state = .error cause) :
+    prepareFunctionTable live invalid draw (row :: rest) state = .error cause := by
+  simp [prepareFunctionTable, finiteSequenceParameters, refused]
+
+/-- Later row state cannot replace the tuple already captured for the head. -/
+theorem prepareFunctionTable_head (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next final : State)
+    (tuple : List Output) (tail : List (List Output))
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .ok (tail, final)) :
+    prepareFunctionTable live invalid draw (row :: rest) state =
+      .ok ((row, tuple) :: rest.zip tail, final) := by
+  simp [prepareFunctionTable, finiteSequenceParameters, head, after]
+
+/-- An error in a later row publishes no partial table and keeps its exact cause. -/
+theorem prepareFunctionTable_tail_refused (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next : State) (tuple : List Output)
+    (cause : Option Cause)
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .error cause) :
+    prepareFunctionTable live invalid draw (row :: rest) state = .error cause := by
+  simp [prepareFunctionTable, finiteSequenceParameters, head, after]
+
+/-- First-row lookup retains its admitted tuple regardless of later state changes. -/
+theorem prepareFunctionTable_head_lookup [DecidableEq Input] (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next final : State)
+    (tuple : List Output) (tail : List (List Output))
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .ok (tail, final)) :
+    (prepareFunctionTable live invalid draw (row :: rest) state).map
+      (fun result => lookupFunction result.1 row) = .ok (some tuple) := by
+  rw [prepareFunctionTable_head live invalid draw row rest state next final tuple tail head after]
+  change (Except.ok (lookupFunction ((row, tuple) :: rest.zip tail) row) :
+    Except (Option Cause) (Option (List Output))) = .ok (some tuple)
+  simp [lookupFunction]
+
+/-- Successful generation supplies exactly one tuple per declared argument row. -/
+theorem prepareFunctionTable_length (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state final : State) (table : List (Input × List Output))
+    (accepted : prepareFunctionTable live invalid draw rows state = .ok (table, final)) :
+    table.length = rows.length := by
+  cases sequence : finiteSequenceParameters live invalid draw rows state with
+  | error cause => simp [prepareFunctionTable, sequence] at accepted
+  | ok result =>
+    rcases result with ⟨tuples, next⟩
+    simp only [prepareFunctionTable, sequence] at accepted
+    have same := finiteSequenceParameters_length live invalid draw rows state next tuples sequence
+    cases accepted
+    simp [List.length_zip, same]
+
+/-- Equal tuple/row widths keep every key in declaration order during assembly. -/
+theorem functionTable_zip_keys (rows : List Input) (tuples : List (List Output))
+    (same : tuples.length = rows.length) : (rows.zip tuples).map Prod.fst = rows := by
+  induction rows generalizing tuples with
+  | nil => cases tuples <;> simp_all
+  | cons row rest ih =>
+    cases tuples with
+    | nil => simp at same
+    | cons tuple tail =>
+      have widths : tail.length = rest.length := by simpa using same
+      simpa using congrArg (List.cons row) (ih tail widths)
+
+/-- Admitted tables preserve the complete finite input language, without fallback keys. -/
+theorem prepareFunctionTable_keys (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state final : State) (table : List (Input × List Output))
+    (accepted : prepareFunctionTable live invalid draw rows state = .ok (table, final)) :
+    table.map Prod.fst = rows := by
+  cases sequence : finiteSequenceParameters live invalid draw rows state with
+  | error cause => simp [prepareFunctionTable, sequence] at accepted
+  | ok result =>
+    rcases result with ⟨tuples, next⟩
+    simp only [prepareFunctionTable, sequence] at accepted
+    have same := finiteSequenceParameters_length live invalid draw rows state next tuples sequence
+    cases accepted
+    exact functionTable_zip_keys rows tuples same
+
 end LeanPoo.Functional.PropertyTesting
