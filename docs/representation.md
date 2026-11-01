@@ -284,6 +284,21 @@ Scheme has no dependency on this checkout, and adds no module registry or loader
 
 ## Standard runtime entries with a shared foundation
 
+Cycle diagnostics also require ownership of their individual receiver/slot pairs.
+Gerbil formerly copied only the outer path, allowing a handler to edit a public
+entry and erase a still-active outer guard. `Object/Instantiation` now models
+private guard cells and separate public diagnostic cells. Disjointness and a
+diagnostic-only write footprint preserve all active keys and reuse `guardSlot`'s
+cycle-before-callback law. Pair payloads retain the original receiver/slot keys;
+chronological order includes repeated occurrences. Host fresh allocation and
+dynamic parameter restoration remain executable premises, not compiler proofs.
+
+`cycleDiagnosticCells` counts the diagnostic outer/pair cells on the error branch
+only. Normal reads incur no new copying; key creation, comparisons, exception
+objects, callbacks and physical allocator/GC costs are excluded from that logical
+count. Standard Scheme paired controls separately charge complete report creation
+and the checked hash/vector cache workflow with repair and shared invalidation.
+
 The client now hands the standard loader an independent path string per admitted
 call. Gerbil's public missing-module diagnostic can expose its supplied path;
 editing that diagnostic must not retarget a retained action during repair/retry.

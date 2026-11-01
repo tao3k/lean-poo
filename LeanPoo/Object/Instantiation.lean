@@ -60,4 +60,57 @@ theorem guardSlot_cycle [DecidableEq Key] (active : List Key) (key : Key)
 theorem guardSlot_fresh [DecidableEq Key] (active : List Key) (key : Key)
     (compute : List Key → Except String Value) (fresh : key ∉ active) :
     guardSlot active key compute = compute (key :: active) := by simp [guardSlot, fresh]
+/-- Private guard pairs are heap cells; their payloads identify receiver/slot keys.
+Public diagnostic copies need separate cell identities, not just an outer list. -/
+def guardKeys (heap : Nat → Key) (cells : List Nat) : List Key := cells.map heap
+
+/-- Editing only disjoint diagnostic cells preserves the whole private guard.
+Fresh pair allocation and the write footprint are standard-host premises. -/
+theorem guardKeys_diagnostic_frame (before after : Nat → Key) (active exposed : List Nat)
+    (separate : ∀ id, id ∈ active → id ∉ exposed)
+    (writes : ∀ id, id ∉ exposed → after id = before id) :
+    guardKeys after active = guardKeys before active := by
+  apply List.map_congr_left
+  intro id present
+  exact writes id (separate id present)
+
+/-- Caller edits of owned diagnostics cannot change cycle-versus-fresh dispatch. -/
+theorem guardSlot_diagnostic_frame [DecidableEq Key] (before after : Nat → Key)
+    (active exposed : List Nat) (key : Key) (compute : List Key → Except String Value)
+    (separate : ∀ id, id ∈ active → id ∉ exposed)
+    (writes : ∀ id, id ∉ exposed → after id = before id) :
+    guardSlot (guardKeys after active) key compute =
+      guardSlot (guardKeys before active) key compute := by
+  rw [guardKeys_diagnostic_frame before after active exposed separate writes]
+
+/-- A still-active key refuses without invoking its body after diagnostic edits. -/
+theorem guardSlot_diagnostic_cycle [DecidableEq Key] (before after : Nat → Key)
+    (active exposed : List Nat) (key : Key) (compute : List Key → Except String Value)
+    (separate : ∀ id, id ∈ active → id ∉ exposed)
+    (writes : ∀ id, id ∉ exposed → after id = before id)
+    (repeated : key ∈ guardKeys before active) :
+    guardSlot (guardKeys after active) key compute = .error "cyclic slot" := by
+  rw [guardSlot_diagnostic_frame before after active exposed key compute separate writes]
+  exact guardSlot_cycle _ _ _ repeated
+
+/-- Error-only snapshot construction retains chronological key order. -/
+def cycleDiagnostic (active : List Key) (key : Key) : List Key := (key :: active).reverse
+
+/-- Receiver/slot payload identities and occurrence order survive the snapshot. -/
+theorem cycleDiagnostic_order (active : List Key) (key : Key) :
+    cycleDiagnostic active key = active.reverse ++ [key] := by
+  simp [cycleDiagnostic]
+
+/-- Count diagnostic spine and pair cells only; guard comparisons, the new key,
+callbacks, exception objects, allocation/GC and wall time are separate costs. -/
+def cycleDiagnosticCells (cyclic : Bool) (depth : Nat) : Nat :=
+  if cyclic then (depth + 1) + (depth + 1) else 0
+
+/-- Successful demand introduces no diagnostic copying work. -/
+theorem cycleDiagnosticCells_hot (depth : Nat) : cycleDiagnosticCells false depth = 0 := rfl
+
+/-- A cycle pays one outer cell and one independent pair per reported entry. -/
+theorem cycleDiagnosticCells_error (depth : Nat) :
+    cycleDiagnosticCells true depth = (depth + 1) + (depth + 1) := rfl
+
 end LeanPoo.Object

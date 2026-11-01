@@ -1,8 +1,25 @@
 import LeanPoo.Object.SlotObservation
+import LeanPoo.Object.Instantiation
 
 /-! Finite observation-scope controls for collection preparation. Host dynamic
 binding, callback termination and physical GC remain executable obligations. -/
 open LeanPoo.Object
+
+/-- Owned public cells can change without erasing an active receiver/slot key. -/
+example : guardSlot
+    (guardKeys (fun id => if id = 10 then (0, "edited") else ((7 : Nat), "value")) [0])
+    (7, "value") (fun _ => .ok (99 : Nat)) = .error "cyclic slot" := by simp [guardSlot, guardKeys]
+
+/-- Without pair separation, changing a reported cell can bypass cycle refusal. -/
+example : guardSlot (guardKeys (fun _ => (0, "edited")) [0]) ((7 : Nat), "value")
+    (fun _ => .ok (99 : Nat)) = .ok 99 := by simp [guardSlot, guardKeys]
+
+/-- The public report keeps the original occurrence order, including repetition. -/
+example : cycleDiagnostic ([(7, "b"), (7, "a")] : List (Nat × String)) (7, "a") =
+    [(7, "a"), (7, "b"), (7, "a")] := rfl
+
+/-- Depth two copies three diagnostic pairs and three outer cells, only on error. -/
+example : cycleDiagnosticCells true 2 = 6 ∧ cycleDiagnosticCells false 2 = 0 := by decide
 
 /-- A shared capture frame and ordered prechecks survive nested observers. -/
 example :
