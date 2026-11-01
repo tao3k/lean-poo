@@ -908,4 +908,16 @@ example : (invalidateCaches (registerSlotSources externalSources "owner" ["rates
 example : withSlotDependencies externalSources "owner"
     (.error false : Except Bool (Nat × List String)) (.error true) (fun _ => .ok ()) = .error false := rfl
 
+/-- Three read occurrences of one source need one logical weak-edge write. -/
+example : (distinctSlotSources "owner" ["rates", "rates", "owner", "rates"]).length = 1 ∧
+    slotSourceRegistrationWork "owner" ["rates", "rates", "owner", "rates"] = 3 := by decide
+
+/-- Deduplicated registration preserves the whole shared invoice cache state. -/
+example : invalidateCaches
+    (registerSlotSources externalSources "owner" (distinctSlotSources "owner" ["rates", "rates", "owner"]))
+    ["rates", "unused"] (fun _ => (⟨7, some false⟩ : RevisionCache Bool)) =
+    invalidateCaches (registerSlotSources externalSources "owner" ["rates", "rates", "owner"])
+    ["rates", "unused"] (fun _ => (⟨7, some false⟩ : RevisionCache Bool)) :=
+  distinctSlotSources_invalidate_eq _ _ _ _ _
+
 end LeanPoo.Examples.Representation

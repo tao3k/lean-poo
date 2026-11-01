@@ -225,12 +225,13 @@ back. Whole capture admission precedes this invocation's registration. Source ex
 false-like causes, are never replaced by a later epoch or stale-read refusal. -/
 def withSlotDependencies (graph : C4.Graph) (owner : String)
     (capture : Except Cause (Value × List String)) (epoch : Except Cause Unit)
-    (admit : List String → Except Cause Unit) : Except Cause (Value × C4.Graph) := do
+    (admit : List String → Except Cause Unit)
+    (registration : List String → List String := id) : Except Cause (Value × C4.Graph) := do
   let (value, sources) ← capture
   let _ ← epoch
   if sources = [] then pure (value, graph) else
     let _ ← admit sources
-    pure (value, registerSlotSources graph owner sources)
+    pure (value, registerSlotSources graph owner (registration sources))
 
 /-- Failed work performs no later admission or registration and keeps its cause. -/
 theorem withSlotDependencies_source_error (graph : C4.Graph) (owner : String) (cause : Cause)
@@ -273,5 +274,160 @@ def slotSourceRegistrationWork (owner : String) (sources : List String) : Nat :=
 theorem slotSourceRegistrationWork_le (owner : String) (sources : List String) :
     slotSourceRegistrationWork owner sources ≤ sources.length := by
   exact List.length_filter_le _ _
+
+/-- Distinct external receiver identities represented by the existing traversal
+set. Host enumeration order is irrelevant to weak-edge membership. -/
+def distinctSlotSources (owner : String) (sources : List String) : List String :=
+  (sources.filter (· != owner)).eraseDups
+
+/-- Deduplication preserves exactly the external source set, never read admission. -/
+theorem mem_distinctSlotSources (owner source : String) (sources : List String) :
+    source ∈ distinctSlotSources owner sources ↔ source ∈ sources ∧ source ≠ owner := by
+  simp [distinctSlotSources]
+
+/-- Observe source edges independently of duplicate parent rows or enumeration. -/
+private def sourceParent (graph : C4.Graph) (parent child : String) : Prop :=
+  ∃ node ∈ graph.nodes, node.name = child ∧ parent ∈ node.parentOrders.flatten
+
+/-- Concrete registration adds exactly the external captured membership. -/
+private theorem sourceParent_registered (graph : C4.Graph) (owner parent child : String)
+    (sources : List String) :
+    sourceParent (registerSlotSources graph owner sources) parent child ↔
+      ∃ node ∈ graph.nodes, node.name = child ∧
+        (parent ∈ node.parentOrders.flatten ∨
+          (node.name = owner ∧ parent ∈ sources ∧ parent ≠ owner)) := by
+  unfold sourceParent registerSlotSources
+  dsimp only
+  split
+  · rename_i empty
+    constructor
+    · rintro ⟨node, member, named, edge⟩
+      exact ⟨node, member, named, .inl edge⟩
+    · rintro ⟨node, member, named, edge | ⟨_, captured, different⟩⟩
+      · exact ⟨node, member, named, edge⟩
+      · have present : parent ∈ sources.filter (· != owner) := by simp [captured, different]
+        simp [empty] at present
+  · constructor
+    · rintro ⟨next, member, named, edge⟩
+      obtain ⟨node, originalMember, rfl⟩ := List.mem_map.mp member
+      by_cases owned : node.name = owner
+      · simp only [owned, ↓reduceIte] at named edge
+        refine ⟨node, originalMember, by simpa [owned] using named, ?_⟩
+        simpa [owned] using edge
+      · simp only [owned, ↓reduceIte] at named edge
+        exact ⟨node, originalMember, named, .inl edge⟩
+    · rintro ⟨node, member, named, edge⟩
+      let next := if node.name = owner then
+        { node with parentOrders := node.parentOrders ++ [sources.filter (· != owner)] } else node
+      refine ⟨next, List.mem_map.mpr ⟨node, member, rfl⟩, ?_, ?_⟩
+      · dsimp [next]; split <;> exact named
+      · dsimp [next]
+        split
+        · rename_i owned
+          simpa [owned] using edge
+        · rename_i external
+          simpa [external] using edge
+
+/-- The traversal's distinct receiver set changes no source edge. All read
+credentials still undergo the original ordered admission separately. -/
+theorem distinctSlotSources_parent_iff (graph : C4.Graph) (owner parent child : String)
+    (sources : List String) :
+    sourceParent (registerSlotSources graph owner (distinctSlotSources owner sources)) parent child ↔
+      sourceParent (registerSlotSources graph owner sources) parent child := by
+  simp only [sourceParent_registered, mem_distinctSlotSources, and_assoc, and_self]
+
+/-- Transport a finite path through equal source-edge observations. -/
+private theorem sourceParent_descendant {left right : C4.Graph}
+    (edges : ∀ parent child, sourceParent left parent child ↔ sourceParent right parent child)
+    {origin target : String} {steps : Nat} (path : Proof.Descendant left origin steps target) :
+    Proof.Descendant right origin steps target := by
+  induction path with
+  | self => exact .self
+  | child path node member edge ih =>
+    have registered : sourceParent left _ node.name := ⟨node, member, rfl, edge⟩
+    obtain ⟨next, nextMember, named, nextEdge⟩ := (edges _ _).mp registered
+    simpa [named] using Proof.Descendant.child ih next nextMember nextEdge
+
+/-- Receiver deduplication preserves every transitive source path in both directions. -/
+theorem distinctSlotSources_descendant_iff (graph : C4.Graph) (owner : String)
+    (sources : List String) (origin target : String) (steps : Nat) :
+    Proof.Descendant (registerSlotSources graph owner (distinctSlotSources owner sources)) origin steps target ↔
+      Proof.Descendant (registerSlotSources graph owner sources) origin steps target := by
+  constructor
+  · exact sourceParent_descendant (fun parent child => distinctSlotSources_parent_iff graph owner parent child sources)
+  · exact sourceParent_descendant (fun parent child => (distinctSlotSources_parent_iff graph owner parent child sources).symm)
+
+/-- Distinct writes preserve complete cache/revision observations, including
+unaffected owners, shared joins, conservative old edges and multiple edits. -/
+theorem distinctSlotSources_invalidate_eq (graph : C4.Graph) (owner : String)
+    (sources changed : List String) (cache : String → RevisionCache Value) :
+    invalidateCaches (registerSlotSources graph owner (distinctSlotSources owner sources)) changed cache =
+      invalidateCaches (registerSlotSources graph owner sources) changed cache := by
+  have before := congrArg List.length (registerSlotSources_names graph owner sources)
+  have after := congrArg List.length (registerSlotSources_names graph owner (distinctSlotSources owner sources))
+  simp only [List.length_map] at before after
+  funext name
+  have membership : name ∈ Proof.invalidatedNodes
+      (registerSlotSources graph owner (distinctSlotSources owner sources)) changed ↔
+      name ∈ Proof.invalidatedNodes (registerSlotSources graph owner sources) changed := by
+    simp only [Proof.mem_invalidated_iff_bounded_descendant, before, after,
+      distinctSlotSources_descendant_iff]
+  simp only [invalidateCaches, membership]
+
+/-- A length bound for the standard finite deduplication operation. -/
+private theorem sourceDedup_length (sources : List String) :
+    sources.eraseDups.length ≤ sources.length := by
+  match sources with
+  | [] => simp
+  | first :: rest =>
+    rw [List.eraseDups_cons]
+    simp only [List.length_cons]
+    exact Nat.succ_le_succ (Nat.le_trans (sourceDedup_length _) (List.length_filter_le _ _))
+termination_by sources.length
+decreasing_by exact Nat.lt_succ_of_le (List.length_filter_le _ _)
+
+/-- Distinct registration cannot exceed per-read weak-table writes. This excludes
+capture, issuance/route checks, graph traversal, hash cost, allocation and GC. -/
+theorem distinctSlotSources_work_le (owner : String) (sources : List String) :
+    (distinctSlotSources owner sources).length ≤ slotSourceRegistrationWork owner sources :=
+  sourceDedup_length _
+
+/-- A repeated receiver/key footprint still creates the same invalidation path. -/
+theorem distinctSlotSource_cleared (graph : C4.Graph) (owner source : String)
+    (sources : List String) (node : C4.Node) (member : node ∈ graph.nodes)
+    (named : node.name = owner) (captured : source ∈ sources) (different : source ≠ owner)
+    (cache : String → RevisionCache Value) :
+    (invalidateCaches (registerSlotSources graph owner (distinctSlotSources owner sources))
+      [source] cache owner).derived = none :=
+  registeredSlotSource_cleared graph owner source _ node member named
+    ((mem_distinctSlotSources owner source sources).mpr ⟨captured, different⟩) different cache
+
+/-- Empty and self-only footprints retain the original graph after deduplication. -/
+theorem distinctSlotSources_local (graph : C4.Graph) (owner : String)
+    (sources : List String) (localOnly : ∀ source ∈ sources, source = owner) :
+    registerSlotSources graph owner (distinctSlotSources owner sources) = graph := by
+  apply registerSlotSources_local
+  intro source member
+  exact localOnly source ((mem_distinctSlotSources owner source sources).mp member).1
+
+/-- Receiver deduplication acts only after full read admission. A rejected key or
+epoch cannot be hidden by another current key from the same receiver. -/
+theorem withSlotDependencies_distinct_refused (graph : C4.Graph) (owner : String)
+    (value : Value) (sources : List String) (nonempty : sources ≠ []) (cause : Cause)
+    (admit : List String → Except Cause Unit) (refused : admit sources = .error cause) :
+    withSlotDependencies graph owner (.ok (value, sources)) (.ok ()) admit
+      (distinctSlotSources owner) = .error cause := by
+  simp [withSlotDependencies, nonempty, refused, bind, Except.bind]
+
+/-- Successful full admission retains the exact value and all external edges,
+while registering each receiver through the existing traversal's set. -/
+theorem withSlotDependencies_distinct_ok (graph : C4.Graph) (owner : String)
+    (value : Value) (sources : List String) (nonempty : sources ≠ [])
+    (admit : List String → Except Cause Unit) (ready : admit sources = .ok ()) :
+    withSlotDependencies graph owner (.ok (value, sources)) (.ok ()) admit
+      (distinctSlotSources owner) =
+      .ok (value, registerSlotSources graph owner (distinctSlotSources owner sources)) := by
+  simp [withSlotDependencies, nonempty, ready, bind, Except.bind]
+  rfl
 
 end LeanPoo.Object

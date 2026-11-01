@@ -1250,3 +1250,22 @@ whole-read preflight refusal adds no registration in that invocation; earlier
 callback/nested effects are not rolled back. An exceptional host allocation or
 registration failure may retain conservative edges, while returning no Slot
 value. No heap transaction or arbitrary callback-effect discovery is promised.
+
+One-shot captures now reuse the existing authenticated traversal without creating
+a projection cache owner or weak lookup entry for a newly allocated root list.
+Retained public replay still uses its existing projection. Registration iterates
+the traversal's existing distinct receiver set; it does not build a second set.
+Issuance preflight, every ordered route/freshness check, parent-frame recording
+and final revalidation remain unchanged. Distinct receivers never substitute for
+validating distinct keys or credentials from different epochs of one receiver.
+
+`distinctSlotSources` models that finite set under faithful receiver identities.
+The edge-membership and path equivalence laws prove equality of the COMPLETE
+invalidation result, including unchanged receivers, shared joins and revisions.
+Its write count is bounded by the former per-read registration attempts. The
+existing publication model separates full-row admission from post-admission
+registration selection, proving a stale key cannot be hidden by deduplication.
+The length bound charges logical weak writes only: it is not an allocation, GC,
+hash-table worst-case or wall-clock theorem. One-shot projection elimination is
+a host implementation refinement using the same DFS, not language/compiler
+verification or a claim that captured reads are permanently current.
