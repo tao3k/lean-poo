@@ -857,4 +857,20 @@ example : admittedModuleEntry (.ok [7, 0]) (fun _ => (.ok () : Except String Uni
     (fun _ => .ok (fun row => .ok (row, row.length))) =
     ([.load, .resolve, .invoke], .ok ([7, 0], 2)) := rfl
 
+/-- A reported load failure preserves its path text and original cause. -/
+example : enterModuleAt "service" (.ok [false])
+    (fun path => (.error ("missing", path) : Except (String × String) Unit))
+    (fun _ => .ok (fun row => .ok row)) =
+    ([.load], .error ("missing", "service")) := rfl
+
+/-- Repair dispatches through the retained path, keeping false and all results. -/
+example : enterModuleAt "service" (.ok [false])
+    (fun path => if path = "service" then (.ok () : Except String Unit) else .error "retargeted")
+    (fun _ => .ok (fun row => .ok (row, 2))) =
+    ([.load, .resolve, .invoke], .ok ([false], (2 : Nat))) := by
+  simp [enterModuleAt, admittedModuleEntry, enterModule]
+
+/-- A warm-loader hit still pays for the eight-character path handoff. -/
+example : pathHandoffCells "services" true = 8 := rfl
+
 end LeanPoo.Examples.Representation

@@ -689,6 +689,57 @@ theorem admittedModuleEntry_lookup_refused (row : Args) (cause : E) :
       (fun _ => (.error cause : Except E (Args → Except E Value))) =
       ([.load, .resolve], .error cause) := rfl
 
+/-- Retain an immutable path observation and delegate only after row admission.
+The host must hand the loader an equal but independently mutable string; this
+finite client model does not prove copying, loader internals or diagnostic APIs. -/
+def enterModuleAt (path : String) (request : Except E Args)
+    (load : String → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :=
+  admittedModuleEntry request (fun _ => load path) resolve
+
+/-- Refused rows expose no path to the loader or downstream callbacks. -/
+theorem enterModuleAt_refused (path : String) (cause : E)
+    (load : String → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    enterModuleAt path (.error cause) load resolve = ([], .error cause) := rfl
+
+/-- A successful handoff uses the retained path and the current binding. -/
+theorem enterModuleAt_current (path : String) (row : Args)
+    (load : String → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value))
+    (entry : Args → Except E Value) (ready : load path = .ok ())
+    (current : resolve () = .ok entry) :
+    enterModuleAt path (.ok row) load resolve =
+      ([.load, .resolve, .invoke], entry row) := by
+  simp [enterModuleAt, admittedModuleEntry, enterModule, ready, current]
+
+/-- Initializer errors retain their exact cause, without a replacement lookup. -/
+theorem enterModuleAt_load_refused (path : String) (row : Args) (cause : E)
+    (load : String → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value))
+    (refused : load path = .error cause) :
+    enterModuleAt path (.ok row) load resolve = ([.load], .error cause) := by
+  simp [enterModuleAt, admittedModuleEntry, enterModule, refused]
+
+/-- Equal handoff text refines the same client protocol; reference separation
+is a host premise, not a property of immutable Lean strings. -/
+theorem enterModuleAt_copy (retained handed : String) (same : handed = retained)
+    (request : Except E Args) (load : String → Except E Unit)
+    (resolve : Unit → Except E (Args → Except E Value)) :
+    enterModuleAt handed request load resolve = enterModuleAt retained request load resolve := by
+  rw [same]
+
+/-- Count only copied path characters at invocation, not bytes/RSS or row copies. -/
+def pathHandoffCells (path : String) (admitted : Bool) : Nat :=
+  if admitted then path.length else 0
+
+/-- Admission refusal skips the loader handoff allocation. -/
+theorem pathHandoffCells_refused (path : String) : pathHandoffCells path false = 0 := rfl
+
+/-- Each admitted invocation pays for one full path copy, including warm loads. -/
+theorem pathHandoffCells_admitted (path : String) :
+    pathHandoffCells path true = path.length := rfl
+
 /-- A loader refusal cannot resolve or invoke an entry and retains its cause. -/
 theorem enterModule_load_refused (cause : E)
     (resolve : Unit → Except E (Args → Except E Value)) (arguments : Args) :

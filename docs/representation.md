@@ -284,6 +284,21 @@ Scheme has no dependency on this checkout, and adds no module registry or loader
 
 ## Standard runtime entries with a shared foundation
 
+The client now hands the standard loader an independent path string per admitted
+call. Gerbil's public missing-module diagnostic can expose its supplied path;
+editing that diagnostic must not retarget a retained action during repair/retry.
+`enterModuleAt` fixes the requested path value, composes finite row admission and
+retains load/current-lookup/invocation order and original errors. Equal text and
+independent mutable host storage remain explicit standard-copy premises; these
+laws do not verify the loader or separation of Gambit heap objects.
+
+`pathHandoffCells` charges one full path's characters even for warm hits and zero
+for rejected ingress. It excludes factory path copying, row capture, allocation,
+GC and OS latency. Gerbil's complete-call paired controls include those practical
+costs, and its one-shot FUN repair example mutates real standard error payloads.
+This advances the article's cache/representation future work; automatic JIT or
+unrestricted module/registry mutation is not classified as an implementation gap.
+
 Runtime call rows now use the same finite-boundary discipline as owned shape
 catalogs. Gerbil's standard `list?` rejects improper/cyclic rows before loading;
 `list-copy` owns only the spine before initialization and current-binding lookup.
