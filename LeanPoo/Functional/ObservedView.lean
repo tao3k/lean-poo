@@ -85,14 +85,14 @@ theorem ContextSlot.observeProject_retained (slot : ContextSlot ready) (context 
       some ⟨context, data.observeProject keys included expose Public derive⟩ := by
   simp [ContextSlot.observeProject, saved]
 
-theorem ContextSlot.observeProject_hit [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.observeProject_hit [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (context : Context) (data : Snapshot ready context) (saved : slot.retained = some ⟨context, data⟩)
     (keys : List Key) (included : ∀ key ∈ keys, key ∈ source) (expose : ∀ c key, Value c key → Observed c key) (Public) (derive) :
     ((slot.observeProject keys included expose Public derive).read context).2.2 = true := by
   rw [ContextSlot.read_hit _ context (data.observeProject keys included expose Public derive)
     (slot.observeProject_retained context data saved keys included expose Public derive)]
 
-theorem ContextSlot.observeProject_consume [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.observeProject_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (keys : List Key) (included : ∀ key ∈ keys, key ∈ source) (expose : ∀ c key, Value c key → Observed c key) (Public) (derive)
     {Output : Context → Type y} (construct : ∀ c data, Public c data → Output c) (context : Context) :
     ((slot.observeProject keys included expose Public derive).consume construct context).1 =

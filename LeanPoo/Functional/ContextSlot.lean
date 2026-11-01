@@ -7,6 +7,9 @@ universe u v w x
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
 variable {keys : List Key} {Claim : ∀ c, Results Value c keys → Prop}
 
+local instance (priority := 5) [BEq Context] [LawfulBEq Context] : DecidableEq Context :=
+  instDecidableEqOfLawfulBEq
+
 /-- Built data with both exact factory alignment and its joint analytic proof. -/
 def Snapshot (ready : Certified keys Claim) (context : Context) :=
   {data : Results Value context keys // data = build ready.factories context ∧ Claim context data}
@@ -21,15 +24,18 @@ def ContextSlot.empty (ready : Certified keys Claim) : ContextSlot ready := ⟨n
 /-- Read at exactly this context. A hit casts retained data along context equality
 without building factories; a miss builds once and replaces the previous pair.
 The Bool reports reuse of dependency data, not of the output constructor. -/
-def ContextSlot.read [DecidableEq Context] {ready : Certified keys Claim}
+@[inline] def ContextSlot.read [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context) : Snapshot ready context × ContextSlot ready × Bool :=
   match slot.retained with
   | some ⟨previous, data⟩ =>
-    -- Standard checked identity shortcut: distinct owners still use the full
-    -- structural decision. The logical context/factory alignment is unchanged.
+    -- Computational equality stays in the caller's lawful BEq algorithm.
+    -- Proof-oriented DecidableEq can eagerly traverse recursive negative tails.
+    -- Equal independent owners adopt the current context for later identity hits.
     letI : Decidable (previous = context) :=
-      withPtrEqDecEq previous context (fun _ => inferInstance)
-    if same : previous = context then (same ▸ data, slot, true)
+      withPtrEqDecEq previous context (fun _ => instDecidableEqOfLawfulBEq previous context)
+    if same : previous = context then
+      let aligned := same ▸ data
+      (aligned, ⟨some ⟨context, aligned⟩⟩, true)
     else
       let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
       (fresh, ⟨some ⟨context, fresh⟩⟩, false)
@@ -39,7 +45,7 @@ def ContextSlot.read [DecidableEq Context] {ready : Certified keys Claim}
 
 /-- The complete slot, data and reuse flag retain the original structural
 reference semantics. The standard native identity shortcut adds no authority. -/
-theorem ContextSlot.read_reference [DecidableEq Context] {ready : Certified keys Claim}
+theorem ContextSlot.read_reference [BEq Context] [LawfulBEq Context] [DecidableEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context) :
     slot.read context =
       match slot.retained with
@@ -51,21 +57,26 @@ theorem ContextSlot.read_reference [DecidableEq Context] {ready : Certified keys
       | none =>
         let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
         (fresh, ⟨some ⟨context, fresh⟩⟩, false) := by
-  cases saved : slot.retained with
-  | none => simp [ContextSlot.read, saved]
+  rcases slot with ⟨retained⟩
+  cases retained with
+  | none => rfl
   | some pair =>
     rcases pair with ⟨previous, data⟩
-    by_cases same : previous = context <;> simp [ContextSlot.read, saved, same]
+    by_cases same : previous = context
+    · subst context
+      simp [ContextSlot.read]
+    · simp [ContextSlot.read, same]
 
 /-- An exact-context hit returns the retained tuple and unchanged slot. -/
-theorem ContextSlot.read_hit [DecidableEq Context] {ready : Certified keys Claim}
+theorem ContextSlot.read_hit [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context) (data : Snapshot ready context)
     (retained : slot.retained = some ⟨context, data⟩) :
     slot.read context = (data, slot, true) := by
-  simp [ContextSlot.read, retained]
+  rcases slot with ⟨stored⟩
+  simp_all [ContextSlot.read]
 
 /-- A miss replaces the slot with exactly the requested context and built data. -/
-theorem ContextSlot.read_miss [DecidableEq Context] {ready : Certified keys Claim}
+theorem ContextSlot.read_miss [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context)
     (absent : ∀ previous data, slot.retained = some ⟨previous, data⟩ → previous ≠ context) :
     (slot.read context).2.2 = false ∧
@@ -77,13 +88,13 @@ theorem ContextSlot.read_miss [DecidableEq Context] {ready : Certified keys Clai
     simp [ContextSlot.read, stored, absent previous data stored]
 
 /-- Every read has exactly the uncached built data, at its dependent context. -/
-theorem ContextSlot.read_value [DecidableEq Context] {ready : Certified keys Claim}
+theorem ContextSlot.read_value [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context) :
     (slot.read context).1.val = build ready.factories context := (slot.read context).1.property.1
 
 /-- Consume cached dependency data and its analytic proof. The constructor runs
 on hits as well as misses; it receives no stale context or family evidence. -/
-def ContextSlot.consume [DecidableEq Context] {ready : Certified keys Claim}
+@[inline] def ContextSlot.consume [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) {Output : Context → Type x}
     (construct : ∀ c data, Claim c data → Output c) (context : Context) :
     Output context × ContextSlot ready × Bool :=
@@ -91,7 +102,7 @@ def ContextSlot.consume [DecidableEq Context] {ready : Certified keys Claim}
   (construct context data.val data.property.2, next, reused)
 
 /-- Cached and uncached proof-aware consumers produce the same output. -/
-theorem ContextSlot.consume_value [DecidableEq Context] {ready : Certified keys Claim}
+theorem ContextSlot.consume_value [BEq Context] [LawfulBEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) {Output : Context → Type x}
     (construct : ∀ c data, Claim c data → Output c) (context : Context) :
     (slot.consume construct context).1 = ready.consume construct context := by
@@ -110,7 +121,7 @@ def ContextSlot.rebind {left : Certified keys Claim} (slot : ContextSlot left)
   Certified.ext left right same ▸ slot
 
 /-- Explicit rebinding preserves proof-aware consumer outputs. -/
-theorem ContextSlot.rebind_consume [DecidableEq Context] {left : Certified keys Claim}
+theorem ContextSlot.rebind_consume [BEq Context] [LawfulBEq Context] {left : Certified keys Claim}
     (slot : ContextSlot left) (right : Certified keys Claim) (same : left.factories = right.factories)
     {Output : Context → Type x} (construct : ∀ c data, Claim c data → Output c) (context : Context) :
     ((slot.rebind right same).consume construct context).1 = (slot.consume construct context).1 := by

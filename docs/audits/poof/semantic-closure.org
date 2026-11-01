@@ -283,3 +283,13 @@ snapshot. Existing family indices, joint Claims, hit/miss and eviction laws rema
 The native shortcut relies on Lean's standard runtime primitive; it introduces
 no new kernel axiom or claim of Scheme/whole-machine equivalence. Re-audit retains
 all original paper scope/status decisions, including future cache proposals.
+
+
+The context-owner adoption follow-up manually rechecks all fourteen context
+modules, their view/dictionary/constraint/request/Contract clients and native
+controls. Computational BEq requires its exact LawfulBEq proof. The complete
+reference theorem permits an arbitrary reference DecidableEq; family, Claim,
+constructor, error and eviction semantics remain unchanged. Native owner adoption,
+short-circuit order and erased intermediate tuples are implementation evidence,
+not whole-machine refinement or a universal speedup. All 45 requirement statuses
+remain unchanged. The standard checked identity primitive remains a host premise.

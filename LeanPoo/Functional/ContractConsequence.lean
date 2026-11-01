@@ -46,13 +46,13 @@ theorem ContextSlot.entails_retained (slot : ContextSlot ready) (context : Conte
     (slot.entails Next derive).retained = some ⟨context, data.entails Next derive⟩ := by
   simp [ContextSlot.entails, saved]
 
-theorem ContextSlot.entails_hit [DecidableEq Context] (slot : ContextSlot ready) (context : Context)
+theorem ContextSlot.entails_hit [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready) (context : Context)
     (data : Snapshot ready context) (saved : slot.retained = some ⟨context, data⟩) (Next) (derive) :
     ((slot.entails Next derive).read context).2.2 = true := by
   rw [ContextSlot.read_hit _ context (data.entails Next derive)
     (slot.entails_retained context data saved Next derive)]
 
-theorem ContextSlot.entails_consume [DecidableEq Context] (slot : ContextSlot ready) (Next)
+theorem ContextSlot.entails_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready) (Next)
     (derive : ∀ c data, Claim c data → Next c data) {Output : Context → Type x}
     (construct : ∀ c data, Next c data → Output c) (context : Context) :
     ((slot.entails Next derive).consume construct context).1 =

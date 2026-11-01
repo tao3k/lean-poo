@@ -40,7 +40,7 @@ def Cache.empty (code : Computation Context Key Value Result) (provider : Provid
 
 /-- Results include errors and retain their exact execution equation and success
 contract. On a hit, the certified slot returns the retained observation directly. -/
-def Cache.read [DecidableEq Context] (cache : Cache code provider Claim) (context : Context) :
+def Cache.read [BEq Context] [LawfulBEq Context] (cache : Cache code provider Claim) (context : Context) :
     {outcome : Except (ComputationError Key) (Result context) //
       outcome = code.evaluate provider context ∧ OutcomeValid Claim context outcome} ×
       Cache code provider Claim × Bool :=
@@ -48,7 +48,7 @@ def Cache.read [DecidableEq Context] (cache : Cache code provider Claim) (contex
   (⟨data.val.1, congrArg Prod.fst data.property.1, data.property.2⟩,
     {cache with slot := next}, reused)
 
-theorem Cache.read_result [DecidableEq Context] (cache : Cache code provider Claim) (context : Context) :
+theorem Cache.read_result [BEq Context] [LawfulBEq Context] (cache : Cache code provider Claim) (context : Context) :
     (cache.read context).1.val = code.evaluate provider context := (cache.read context).1.property.1
 
 /-- No new body execution or analytic admission runs during proved rebinding.
@@ -61,7 +61,7 @@ def Cache.rebind (cache : Cache code provider Claim) (next : Provider Context Ke
     · exact funext same
     · rfl)⟩
 
-private theorem slot_rebind_reused [DecidableEq Context]
+private theorem slot_rebind_reused [BEq Context] [LawfulBEq Context]
     {keys : List Key} {Joint : ∀ c, Results Value c keys → Prop}
     {left : Certified keys Joint} (slot : ContextSlot left) (right : Certified keys Joint)
     (same : left.factories = right.factories) (context : Context) :
@@ -72,7 +72,7 @@ private theorem slot_rebind_reused [DecidableEq Context]
 
 /-- Proved rebinding preserves the exact context-hit decision, as well as data
 and its contract. A retained hot result is not recomputed by the migration. -/
-theorem Cache.rebind_read_reused [DecidableEq Context] (cache : Cache code provider Claim)
+theorem Cache.rebind_read_reused [BEq Context] [LawfulBEq Context] (cache : Cache code provider Claim)
     (next : Provider Context Key Value) (same : ∀ c, code.evaluate provider c = code.evaluate next c)
     (context : Context) :
     ((cache.rebind next same).read context).2.2 = (cache.read context).2.2 := by
@@ -80,7 +80,7 @@ theorem Cache.rebind_read_reused [DecidableEq Context] (cache : Cache code provi
   dsimp only
   exact slot_rebind_reused _ _ _ context
 
-theorem Cache.rebind_read_result [DecidableEq Context] (cache : Cache code provider Claim)
+theorem Cache.rebind_read_result [BEq Context] [LawfulBEq Context] (cache : Cache code provider Claim)
     (next : Provider Context Key Value) (same : ∀ c, code.evaluate provider c = code.evaluate next c)
     (context : Context) :
     ((cache.rebind next same).read context).1.val = (cache.read context).1.val := by

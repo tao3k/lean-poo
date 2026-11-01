@@ -802,6 +802,10 @@ _check-native-context:
     .lake/build/bin/contextSlotScale cached miss 16 4 32
     .lake/build/bin/contextSlotScale uncached blocks 16 4 32
     .lake/build/bin/contextSlotScale cached blocks 16 4 32
+    .lake/build/bin/contextSlotScale structural same 128 8
+    .lake/build/bin/contextSlotScale structural equal 128 8
+    .lake/build/bin/contextSlotScale structural miss 128 8
+    .lake/build/bin/contextSlotScale structural-reference 128 8
 
 # Native named-value lookup controls; no timing threshold.
 _check-native-result-index:

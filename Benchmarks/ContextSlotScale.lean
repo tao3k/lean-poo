@@ -113,7 +113,47 @@ private def structuralMain (args : List String) : IO Unit := do
     IO.println s!"measurement: poo.context.structural.{mode}.sample{sample+1} {elapsed[sample]!} ns"
   IO.println s!"CONTEXT-STRUCTURAL-OK mode={mode} size={size} reads={reads} warmup=1 samples=3 checksum={expected.toNat} hits={expectedHits}"
 
+-- Independent uncached floor for the same alternating structural factory work.
+-- Existing structural reads, parameters and recorded samples remain unchanged.
+@[noinline] private def referenceStructuralReads
+    (ready : Certified (Value := StructuralValue) [()] (fun _ _ => True))
+    (base changed : List Nat) (reads : Nat) : IO (UInt64 × UInt64) := do
+  let warm := ready.consume (fun _ data _ => data.1) base
+  let state ← IO.mkRef (warm, (0 : UInt64))
+  for i in List.range reads do
+    let (warm, total) ← state.get
+    let context := if i % 2 == 0 then changed else base
+    let output := ready.consume (fun _ data _ => data.1) context
+    state.set (warm, UInt64.add total output)
+  state.get
+
+private def structuralReferenceMain (args : List String) : IO Unit := do
+  let [sizeText, readsText] := args | throw (IO.userError "reference size reads required")
+  let some size := sizeText.toNat? | throw (IO.userError "invalid size")
+  let some reads := readsText.toNat? | throw (IO.userError "invalid reads")
+  unless size > 0 && reads > 0 do throw (IO.userError "invalid reference parameters")
+  let base := List.range size
+  let changed := size :: base
+  let ready : Certified (Value := StructuralValue) [()] (fun _ _ => True) :=
+    ⟨(structuralPayload, PUnit.unit), fun _ => True.intro⟩
+  let baseSum := UInt64.ofNat (size * (size - 1) / 2)
+  let expected := baseSum * UInt64.ofNat reads + UInt64.ofNat (size * ((reads + 1) / 2))
+  let check := fun result => result == (baseSum, expected)
+  unless check (← referenceStructuralReads ready base changed reads) do
+    throw (IO.userError "uncached structural warmup mismatch")
+  let mut elapsed := #[]
+  for _ in List.range 3 do
+    let start ← IO.monoNanosNow
+    let result ← referenceStructuralReads ready base changed reads
+    let duration := (← IO.monoNanosNow) - start
+    unless check result do throw (IO.userError "uncached structural scalar mismatch")
+    elapsed := elapsed.push duration
+  for sample in List.range elapsed.size do
+    IO.println s!"measurement: poo.context.structural-reference.miss.sample{sample+1} {elapsed[sample]!} ns"
+  IO.println s!"CONTEXT-STRUCTURAL-REFERENCE-OK size={size} reads={reads} warmup=1 samples=3 checksum={expected.toNat} hits=0"
+
 def main (args : List String) : IO Unit :=
   match args with
   | "structural" :: rest => structuralMain rest
+  | "structural-reference" :: rest => structuralReferenceMain rest
   | _ => scalarMain args
