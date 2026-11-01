@@ -180,3 +180,15 @@ example : inspectionReady [some 0, some 4, some 4, some 1, some (-1)] true true 
 -- A legal zero-draw inspection still cannot renew an old source snapshot.
 example : prepareInspection true "invalid controls" (fun epoch : Nat => epoch == 0)
     (fun _ => (.ok (false, 1) : Except String (Bool × Nat))) 0 = .error none := rfl
+
+-- A report getter may replace caller names; rendering still uses the captured row.
+example : prepareReportDiagnostics (fun state : Nat => if state == 0 then ["input"] else ["changed"])
+    [false] "invalid" (fun _ => .ok (true, 1)) 0 =
+    .ok (true, some [("input", false)], 1) := by simp [prepareReportDiagnostics, diagnosticBindings]
+-- Static duplicate rejection wins over an otherwise observable metadata failure.
+example : prepareReportDiagnostics (fun _ : Nat => ["input", "input"])
+    [1, 2] "invalid" (fun _ => .error "getter must not run") 0 = .error "invalid" := by simp [prepareReportDiagnostics]
+-- Stale authority remains stale even when the finite row is perfectly named.
+example : prepareReportDiagnostics (fun _ : Nat => ["input"])
+    [7] "invalid" (fun _ => .ok (false, 2)) 0 =
+    .ok (false, some [("input", 7)], 2) := by simp [prepareReportDiagnostics, diagnosticBindings]

@@ -2948,3 +2948,55 @@ Faithful host normalization, callable recognition, source accuracy, callback
 termination and standard FUN/IO delivery remain premises; this is not a proof of
 Gerbil expansion/runtime, elapsed cost or arbitrary effect rollback. All complete
 checks and process resource limits remain unchanged. No latency claim is made.
+
+## P67: prepared named diagnostics across report observation
+
+The audit reproduced a presentation ownership defect: report-diagnostics admitted
+caller-owned binding names, then report-current? could invoke a source observer
+which rewrote those names. A request for `declared` consequently rendered
+`retargeted`. The typed facade also read computed `execution` metadata before
+admitting the binding directory; preparation-only reports ignored invalid names.
+
+The existing generic property module now owns prepare-report-diagnostics. It
+admits a finite, unique symbolic directory and copies its spine once, returning
+an ordinary reusable formatter. report-diagnostics delegates to it; the typed
+facade prepares it before reading computed report metadata and passes a completed
+execution directly to the same formatter. Standard :std/test consumers can bind
+this formatter once and reuse it without a POO dependency. This follows the
+existing higher-order FUN style; there is no new namespace, report record, source
+cache, authority protocol or additional value wrapper. Generated payloads remain
+shared. Empty or width-mismatched rows remain ordinary data, never truncated zip
+bindings. A prepared formatter captures names, not report status or currentness.
+
+Four independent regressions cover cyclic caller edits during observation,
+reusable vector/false binding, stale standard assertions, malformed/duplicate
+requests before observers, exact historical causes and unmatched rows. Independent
+acceptance increases from 196 to 200 cases. Two typed service cases reject invalid
+names before computed report reads and combine inherited getters, FunctionArguments,
+nested List/Function service calls, Record PropertyConfiguration, FUN delivery,
+failure shrinking and both replay forms. No callback exception becomes a false
+property, no stale report becomes passing, and historical failures remain readable.
+
+Eight finite Lean laws model full-row binding and capture-before-observe: invalid
+names skip observation, old names survive state revision, original causes and
+false currentness remain exact, empty/mismatched rows remain undecorated and fresh
+invocations capture fresh names. Executable examples include a false payload,
+duplicate rejection and an observer replacing the caller directory. Faithful
+finite host copying, symbol recognition, observer accuracy, callback termination
+and existing FUN/IO/standard-test delivery remain premises. This advances the
+paper's future work, not compiler/runtime verification. All complete checks,
+compiler guards and process resource limits remain unchanged; no timing claim.
+
+A downstream suite can prepare its renderer before any assertion observations:
+
+```scheme
+(import :std/test
+        (prefix-in :clan/poo/testing/property p.)
+        (prefix-in :clan/poo/testing/property/test property.))
+(def render-request (p.prepare-report-diagnostics '(request)))
+;; Inside an ordinary test-case, report is the existing completed kernel report.
+;; (property.check-property report diagnostics: render-request)
+```
+
+The formatter does not run a generator or authorize a passed assertion. Reuse
+with another report always observes that report's own authority.

@@ -694,4 +694,79 @@ theorem prepareInspection_stable (invalid : Cause) (live : State → Bool)
     prepareInspection true invalid live (fun _ => .ok (value, next)) state = .ok (value, next) :=
   guardedGeneration_state live state next value before after
 
+/-- Named rendering decorates only a complete nonempty row; absent or malformed
+rows remain unlabelled data. Symbol recognition and finite copying are host premises. -/
+def diagnosticBindings (names : List Name) (row : List Value) : Option (List (Name × Value)) :=
+  if names.isEmpty || names.length != row.length then none else some (names.zip row)
+
+/-- Capture the admitted directory before report metadata/currentness observation.
+The Boolean observation is still authority: binding names cannot turn stale into pass. -/
+def prepareReportDiagnostics [DecidableEq Name] (names : State → List Name)
+    (row : List Value) (invalid : Cause)
+    (observe : State → Except Cause (Bool × State)) (state : State) :
+    Except Cause (Bool × Option (List (Name × Value)) × State) :=
+  let owned := names state
+  if owned.Nodup then
+    match observe state with
+    | .error cause => .error cause
+    | .ok (current, next) => .ok (current, diagnosticBindings owned row, next)
+  else .error invalid
+
+/-- Invalid directories reject before invoking any observation action. -/
+theorem prepareReportDiagnostics_invalid [DecidableEq Name]
+    (names : State → List Name) (row : List Value) (invalid : Cause)
+    (observe : State → Except Cause (Bool × State)) (state : State)
+    (bad : ¬ (names state).Nodup) :
+    prepareReportDiagnostics names row invalid observe state = .error invalid := by
+  simp [prepareReportDiagnostics, bad]
+
+/-- Rendering uses the original names even when observation changes caller state. -/
+theorem prepareReportDiagnostics_observed [DecidableEq Name]
+    (names : State → List Name) (row : List Value) (invalid : Cause)
+    (observe : State → Except Cause (Bool × State)) (state next : State) (current : Bool)
+    (valid : (names state).Nodup) (done : observe state = .ok (current, next)) :
+    prepareReportDiagnostics names row invalid observe state =
+      .ok (current, diagnosticBindings (names state) row, next) := by
+  simp [prepareReportDiagnostics, valid, done]
+
+/-- Ordinary observation exceptions retain the exact original cause. -/
+theorem prepareReportDiagnostics_cause [DecidableEq Name]
+    (names : State → List Name) (row : List Value) (invalid cause : Cause)
+    (observe : State → Except Cause (Bool × State)) (state : State)
+    (valid : (names state).Nodup) (failed : observe state = .error cause) :
+    prepareReportDiagnostics names row invalid observe state = .error cause := by
+  simp [prepareReportDiagnostics, valid, failed]
+
+/-- Fresh names do not authorize an obsolete report. -/
+theorem prepareReportDiagnostics_stale [DecidableEq Name]
+    (names : State → List Name) (row : List Value) (invalid : Cause)
+    (observe : State → Except Cause (Bool × State)) (state next : State)
+    (valid : (names state).Nodup) (stale : observe state = .ok (false, next)) :
+    prepareReportDiagnostics names row invalid observe state =
+      .ok (false, diagnosticBindings (names state) row, next) :=
+  prepareReportDiagnostics_observed names row invalid observe state next false valid stale
+
+/-- An omitted directory leaves values, including false payloads, undecorated. -/
+theorem diagnosticBindings_empty (row : List Value) :
+    diagnosticBindings ([] : List Name) row = none := by simp [diagnosticBindings]
+
+/-- A mismatched row cannot be partially labelled or silently truncated by zip. -/
+theorem diagnosticBindings_mismatch (names : List Name) (row : List Value)
+    (different : names.length ≠ row.length) : diagnosticBindings names row = none := by
+  simp [diagnosticBindings, different]
+
+/-- Complete rows preserve every declared name and corresponding payload in order. -/
+theorem diagnosticBindings_complete (names : List Name) (row : List Value)
+    (nonempty : names ≠ []) (width : names.length = row.length) :
+    diagnosticBindings names row = some (names.zip row) := by
+  simp [diagnosticBindings, nonempty, width]
+
+/-- A fresh later invocation captures its own directory, not a prior report's. -/
+theorem prepareReportDiagnostics_fresh [DecidableEq Name]
+    (names : State → List Name) (row : List Value) (invalid : Cause) (state : State)
+    (valid : (names state).Nodup) :
+    prepareReportDiagnostics names row invalid (fun s => .ok (true, s)) state =
+      .ok (true, diagnosticBindings (names state) row, state) := by
+  simp [prepareReportDiagnostics, valid]
+
 end LeanPoo.Functional.PropertyTesting
