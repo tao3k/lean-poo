@@ -190,4 +190,81 @@ theorem replayInputEnd_refused (live : State → Bool) (invalid : Cause)
     (replayInputEnd live invalid read peek state >>= decode) = .error cause := by
   rw [refused]; rfl
 
+/-- Tokens are the symbols/keywords encountered by a faithful finite data walk.
+Only stable interned identities enter the existing request/action boundary;
+the host copier never repairs a fresh identity by interning its spelling. -/
+def admitReplayTokens (interned : Token → Bool) (tokens : List Token) (invalid : Cause)
+    (action : State → Except (Option Cause) Value) (state : State) :
+    Except (Option Cause) Value :=
+  admitReplayRequest (tokens.all interned) invalid action state
+
+/-- Every encountered token is stable after successful token admission. -/
+theorem replayTokens_sound (interned : Token → Bool) (tokens : List Token)
+    (ready : tokens.all interned = true) (token : Token) (member : token ∈ tokens) :
+    interned token = true := by
+  exact List.all_eq_true.mp ready token member
+
+/-- Nesting cannot hide a fresh token: the complete encountered directory refuses. -/
+theorem replayTokens_uninterned (interned : Token → Bool) (tokens : List Token)
+    (token : Token) (member : token ∈ tokens) (fresh : interned token = false) :
+    tokens.all interned = false := by
+  cases ready : tokens.all interned with
+  | false => rfl
+  | true => have accepted := replayTokens_sound interned tokens ready token member
+            simp [fresh] at accepted
+
+/-- Identity and payload token directories share the same conjunctive rule. -/
+theorem replayTokens_append (interned : Token → Bool) (identity payload : List Token) :
+    (identity ++ payload).all interned = (identity.all interned && payload.all interned) := by
+  simp
+
+/-- Refused token data cannot enter allocation, output delivery or decoding. -/
+theorem admitReplayTokens_refused (interned : Token → Bool) (tokens : List Token)
+    (invalid : Cause) (action : State → Except (Option Cause) Value) (state : State)
+    (refused : tokens.all interned = false) :
+    admitReplayTokens interned tokens invalid action state = .error (some invalid) := by
+  simp [admitReplayTokens, refused, admitReplayRequest]
+
+/-- Stable tokens preserve the exact existing action, without normalizing values. -/
+theorem admitReplayTokens_preserves (interned : Token → Bool) (tokens : List Token)
+    (invalid : Cause) (action : State → Except (Option Cause) Value) (state : State)
+    (ready : tokens.all interned = true) :
+    admitReplayTokens interned tokens invalid action state = action state := by
+  simp [admitReplayTokens, ready, admitReplayRequest]
+
+/-- Empty token directories preserve ordinary data, including false witnesses. -/
+theorem admitReplayTokens_empty (interned : Token → Bool) (invalid : Cause)
+    (action : State → Except (Option Cause) Value) (state : State) :
+    admitReplayTokens interned [] invalid action state = action state := rfl
+
+/-- Valid data retain stale refusal and exact callback errors as distinct results. -/
+theorem admitReplayTokens_cause (interned : Token → Bool) (tokens : List Token)
+    (invalid : Cause) (cause : Option Cause) (state : State)
+    (ready : tokens.all interned = true) :
+    admitReplayTokens interned tokens invalid
+      (fun _ => (.error cause : Except (Option Cause) Value)) state = .error cause := by
+  exact admitReplayTokens_preserves interned tokens invalid _ state ready
+
+/-- Standard reader/writer identity is a premise for interned host tokens. Under
+that premise a portable directory retains every identity and its original order. -/
+theorem replayTokens_roundtrip (interned : Token → Bool) (roundtrip : Token → Token)
+    (stable : ∀ token, interned token = true → roundtrip token = token)
+    (tokens : List Token) (ready : tokens.all interned = true) :
+    tokens.map roundtrip = tokens := by
+  have same : tokens.map roundtrip = tokens.map id := by
+    apply List.map_congr_left
+    intro token member
+    exact stable token (replayTokens_sound interned tokens ready token member)
+  simpa using same
+
+/-- A failing identity-sensitive property cannot become passing solely through
+standard serialization of admitted tokens. Other codec laws remain explicit. -/
+theorem replayTokens_failure (interned : Token → Bool) (roundtrip : Token → Token)
+    (stable : ∀ token, interned token = true → roundtrip token = token)
+    (tokens : List Token) (ready : tokens.all interned = true)
+    (property : List Token → Bool) (failed : property tokens = false) :
+    property (tokens.map roundtrip) = false := by
+  rw [replayTokens_roundtrip interned roundtrip stable tokens ready]
+  exact failed
+
 end LeanPoo.Functional.PropertyTesting

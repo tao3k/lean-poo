@@ -3262,3 +3262,59 @@ The Racket comparison remains the pinned Rackcheck `gen:bind`/shrink-tree algebr
 and Quickcheck's sequence/binding separation: preparation builds reusable ordinary
 combinators; execution alone owns randomness and retained sample provenance. This
 unit changes neither the seed splitting schedule nor the existing shrink policy.
+
+## P73: stable symbol and keyword identities in portable replay
+
+A public probe exported failed witnesses containing an uninterned symbol and an
+uninterned keyword. Both envelopes were accepted, but reading either created a
+new identity: the same identity-sensitive property then returned true. A fresh
+symbol was also accepted as codec identity, although its own written identity
+could not round-trip. These are defects in the existing finite portable grammar,
+not a request to serialize arbitrary Scheme objects or infer pointer identity.
+
+The existing private copier now uses Gerbil's `interned-symbol?` and
+`interned-keyword?`, whose runtime definitions explicitly exclude uninterned
+tokens. One boundary serves codec identity construction, encoded payloads and
+imported envelopes. Unsupported tokens keep the ordinary `nonportable replay
+datum` error and original datum irritant. There is no silent conversion to an
+interned spelling: two distinct application handles may have the same spelling.
+No new codec format, parser, wrapper, public PBT namespace or registry is added.
+
+A codec identity containing a fresh token refuses at construction. An encoded
+payload containing one refuses before entering the write stage; witness
+reconfirmation still precedes encoding as before. An imported fresh token refuses
+before framing completion, decoding, domain admission or property execution.
+Input may already be consumed, and ordinary I/O failures may still leave partial
+output; this does not add a port transaction. Existing node/depth credits, source
+checks, exception identity and Boolean false data remain unchanged.
+
+Four independent cases cover nested identity rejection, export without output
+bytes, import without decoder/domain effects, and exact identity preservation
+for interned reader-sensitive spellings (including empty spellings). The existing
+copy/budget cases move intact from the near-thousand-line property-scopes example
+to the ordinary property-replay example module. Both standard root and isolated
+build declarations share that module. No PBT interface module changes namespace;
+the isolated library now requires all 212 cases.
+
+The complex Record/Function/FUN service example keeps an uninterned application
+handle in memory, shrinks a real failed service, rejects an unsafe raw-handle
+codec, and retries with an explicit finite logical ID. Ordinary Type validation
+checks the wire Tuple and reconstructs the Record/Function value. Source epochs
+refuse old reports/codecs after handle replacement; fresh preparation can export
+and replay again. Applications own this logical-ID mapping and its lifetime.
+
+Nine finite Lean laws in PropertyReplay prove token-directory membership,
+uninterned refusal, identity/payload conjunction, action suppression, exact valid
+and empty admission, preserved callback causes, conditional reader/writer identity,
+and preservation of a failed identity-sensitive property. Five top-level examples
+instantiate fresh symbol/keyword refusal, false data, false causes and stale
+refusal. Faithful finite traversal/copying, the standard interned-token round-trip
+law, explicit codec laws, pure source observers and terminating sequential actions
+remain premises. Reader allocation, arbitrary handles, compiler/runtime behavior
+and wall-clock performance are not certified. This advances the paper's future work.
+
+Rackcheck's pinned `gen:symbol` composes its string generator with
+`string->symbol` (base.rkt lines 322-327), consistent with the existing interned
+symbol generator here. Portable handoff remains this project's explicit extension;
+we do not attribute our codec/source protocol to Racket. Generation, retained
+shrink trees and seed splitting are unchanged.

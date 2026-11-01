@@ -2,6 +2,24 @@ import LeanPoo.Functional.PropertyReplay
 
 open LeanPoo.Functional.PropertyTesting
 
+-- A fresh symbol in a nested directory skips every writer/decoder continuation.
+example : admitReplayTokens id [true, false] "nonportable"
+    (fun _ : Nat => (.error (some "must not decode") : Except (Option String) Bool)) 0 =
+      .error (some "nonportable") := rfl
+-- A fresh keyword is refused by the same rule, without silently interning it.
+example : admitReplayTokens (fun token : Nat => token < 2) [0, 2] false
+    (fun _ : Nat => (.ok true : Except (Option Bool) Bool)) 0 = .error (some false) := rfl
+-- Empty token directories preserve false data and the existing action state.
+example : admitReplayTokens id [] "nonportable"
+    (fun state : Nat => (.ok (false, state + 1) : Except (Option String) (Bool × Nat))) 0 =
+      .ok (false, 1) := rfl
+-- Admitted interned tokens retain the original callback's false cause.
+example : admitReplayTokens id [true, true] true
+    (fun _ : Nat => (.error (some false) : Except (Option Bool) Bool)) 0 = .error (some false) := rfl
+-- Old epoch refusal is still distinct from a nonportable-token error.
+example : admitReplayTokens id [true] "nonportable"
+    (fun _ : Nat => (.error none : Except (Option String) Bool)) 0 = .error none := rfl
+
 -- An impossible width cannot reach destination allocation or child admission.
 example : admitReplayVector 7 4 64
     (fun _ => (.error "nonportable first child" : Except String Nat)) = .error none := rfl
