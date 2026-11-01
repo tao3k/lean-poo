@@ -51,18 +51,24 @@ private def preparedRoot (graph : Graph) (index : Std.HashMap String Node)
       exact (linearize_unique_complete trace
         (LinearizeState.reachableUnique_of_global unique)).symm⟩
 
-def prepare (graph : Graph) : Prepared graph :=
-  let index := LinearizeState.nodeIndex graph
-  let shared := Thunk.mk fun _ => prepareAncestors graph index rfl
-  let make : (root : String) → PreparedResult graph root :=
-    if unique : (graph.nodes.map Node.name).Nodup then
-      fun root => Thunk.mk fun _ => preparedRoot graph index rfl unique shared root
-    else
-      fun root => Thunk.mk fun _ => indexedResult graph index rfl root
+private def fromFactory (graph : Graph) (make : (root : String) → PreparedResult graph root) :
+    Prepared graph :=
   let roots := graph.nodes.foldl (fun roots node =>
     if roots.contains node.name then roots else roots.insert node.name (make node.name))
       ({} : Std.DHashMap String (PreparedResult graph))
   ⟨roots, make⟩
+
+def prepare (graph : Graph) : Prepared graph :=
+  let index := LinearizeState.nodeIndex graph
+  -- Select the complete builder before its root fold. A conditional inside
+  -- the root factory is duplicated by specialization into each insertion.
+  if unique : (graph.nodes.map Node.name).Nodup then
+    let shared := Thunk.mk fun _ => prepareAncestors graph index rfl
+    fromFactory graph fun root =>
+      Thunk.mk fun _ => preparedRoot graph index rfl unique shared root
+  else
+    fromFactory graph fun root =>
+      Thunk.mk fun _ => indexedResult graph index rfl root
 
 /-- Retain an already proved exact result, such as an existing Object Plan.
 The certificate binds both the graph and root; names alone cannot seed a table. -/
