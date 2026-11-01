@@ -43,5 +43,31 @@ private def graphs : List Graph := [
         throw (IO.userError s!"prepared object plan changed complete result at {root}")
   IO.println "C4-PREPARED-OK 42 complete success/error replays"
 
+-- Ordinary C4 accepts this crossing suffix, while the canonical audit rejects
+-- it. Shared preparation must keep the exact ordinary success, not narrow it.
+private def crossing : Graph := { nodes := [
+  { name := "A" }, { name := "B" },
+  { name := "P", parentOrders := [["A", "B"]] },
+  { name := "S", parentOrders := [["A"]], suffix := true },
+  { name := "Root", parentOrders := [["P", "S"]] }] }
+#guard reprStr ((prepare crossing).at "Root") == reprStr (Except.ok ["Root", "P", "B", "S", "A"] : Except Error (List String))
+#guard (linearizeAudited crossing "Root").toOption.isNone
+
+example (prepared : Prepared graph) (root : String)
+    (result : Except Error (List String)) (bound : result = linearize graph root) :
+    (prepared.retain root result bound).at root = result :=
+  (prepared.retain root result bound).at_eq root |>.trans bound.symm
+
+-- Reverse declarations and begin with the deepest root: shared ancestors must
+-- not depend on topological source order or successful previous root requests.
+#eval show IO Unit from do
+  for graph in graphs ++ [crossing] do
+    for candidate in [graph, { nodes := graph.nodes.reverse }] do
+      let prepared := prepare candidate
+      for root in ["Root", "A", "B", "Missing", "Root"] do
+        unless reprStr (prepared.at root) == reprStr (linearize candidate root) do
+          throw (IO.userError s!"shared ancestor result/order changed at {root}")
+  IO.println "C4-ANCESTOR-OK 80 reordered/fallback/complete-result replays"
+
 #print axioms Prepared.at_eq
 #print axioms LeanPoo.Object.compilePrepared_eq
