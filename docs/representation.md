@@ -1175,3 +1175,29 @@ The fixed-source full paired study retained A/A, B/B and all GC regimes. Natural
 and collected service tails still varied; removing full-sort calls alone is not
 a demonstrated uniform wall-clock improvement. See companion representation
 notes for every regime and the significant same-side control ranges.
+
+### Finite symbolic layout construction
+
+`RepresentationIndex.decodeLayoutNames` admits finite host leaf recognitions
+before existing layout preparation. Its successful result retains exact key order
+and duplicates; `checkedLayoutPreparation` delegates canonicalization/seeding to
+its original consumer. Six laws cover valid rows, invalid leaves, row refusal,
+preparation refusal, exact delegation and the old published-state frame. Examples
+in the top-level `Examples/Representation.lean` include duplicate prefixes and a
+corrected false/Function directory.
+
+This closes a reproduced Gerbil constructor boundary: a numeric name reached an
+unchecked symbolic hash and terminated the standard test process (signal 11,
+exit 139). The corrected constructor uses standard `using`/`list?` before traversal
+and Symbol admission in the existing `delete-duplicates/hash` key projection.
+The source-value constructor includes declared, seed and override keys and gives
+the hash qualification the same grammar. No new index, cache, registry or reader
+wrapper is modeled or implemented.
+
+Finite list/Symbol recognition, injective host key identity, standard collection
+fidelity and candidate-local preparation are premises. This is not a proof of
+Gambit memory safety, physical allocation or unrestricted concurrent mutation.
+The executable service checks refusal with a warm diamond, unchanged evidence,
+false/Function retry, canonical shape reuse and shared revision through FUN and
+refinement. Paired hash/vector complete workflows charge construction and refusal
+on both sides; their observed wall/GC costs do not follow from these semantic laws.

@@ -617,4 +617,63 @@ theorem narrowShapeWork_le_iff (hint admission filtering common sorting : Nat) :
   unfold narrowShapeWork
   omega
 
+/-- Finite host name recognition before any symbolic index operation. `none`
+represents a rejected leaf, not an absent Slot value. The host list recognizer
+must reject improper/cyclic spines before supplying this finite model. -/
+def decodeLayoutNames : List (Option String) → Except String (List String)
+  | [] => .ok []
+  | none :: _ => .error "symbolic slot required"
+  | some key :: rest => (decodeLayoutNames rest).map (key :: ·)
+
+/-- Valid input preserves exact order and duplicate identities for the existing
+canonicalizer; admission does not implement another shape/index algorithm. -/
+theorem decodeLayoutNames_valid (keys : List String) :
+    decodeLayoutNames (keys.map some) = .ok keys := by
+  induction keys with
+  | nil => rfl
+  | cons key rest ih => simp [decodeLayoutNames, ih, Except.map]
+
+/-- A bad leaf refuses after any valid leading, without inspecting its suffix. -/
+theorem decodeLayoutNames_invalid (leading : List String) (suffix : List (Option String)) :
+    decodeLayoutNames (leading.map some ++ none :: suffix) = .error "symbolic slot required" := by
+  induction leading with
+  | nil => rfl
+  | cons key rest ih => simp [decodeLayoutNames, ih, Except.map]
+
+/-- One admission boundary precedes all shape preparation, seeding and publish
+work. Host copying, identity-preserving Symbol recognition and faithful standard
+HashTable/contract execution remain premises, not compiler/runtime theorems. -/
+def checkedLayoutPreparation (row : Except String (List (Option String)))
+    (prepare : List String → Except String α) : Except String α := do
+  let leaves ← row
+  let keys ← decodeLayoutNames leaves
+  prepare keys
+
+/-- Improper/cyclic row refusal precedes every index/seed preparation effect. -/
+theorem checkedLayoutPreparation_row_refused (cause : String)
+    (prepare : List String → Except String α) :
+    checkedLayoutPreparation (.error cause) prepare = .error cause := rfl
+
+/-- A rejected key cannot invoke preparation, even behind valid duplicates. -/
+theorem checkedLayoutPreparation_key_refused (leading : List String)
+    (suffix : List (Option String)) (prepare : List String → Except String α) :
+    checkedLayoutPreparation (.ok (leading.map some ++ none :: suffix)) prepare =
+      .error "symbolic slot required" := by
+  simp [checkedLayoutPreparation, decodeLayoutNames_invalid, bind, Except.bind]
+
+/-- A corrected request delegates exact keys and preserves the original outcome. -/
+theorem checkedLayoutPreparation_valid (keys : List String)
+    (prepare : List String → Except String α) :
+    checkedLayoutPreparation (.ok (keys.map some)) prepare = prepare keys := by
+  simp [checkedLayoutPreparation, decodeLayoutNames_valid, bind, Except.bind]
+
+/-- No failed grammar result can replace any previously published receiver state. -/
+theorem checkedLayoutPreparation_refused_frame (leading : List String)
+    (suffix : List (Option String)) (old : State)
+    (prepare : List String → Except String State) :
+    Object.publishEdit old
+      (checkedLayoutPreparation (.ok (leading.map some ++ none :: suffix)) prepare) = old := by
+  rw [checkedLayoutPreparation_key_refused]
+  rfl
+
 end LeanPoo.Prototype.Representation

@@ -873,4 +873,13 @@ example : enterModuleAt "service" (.ok [false])
 /-- A warm-loader hit still pays for the eight-character path handoff. -/
 example : pathHandoffCells "services" true = 8 := rfl
 
+/-- A bad tail cannot reach seeding despite a valid duplicate prefix. -/
+example : checkedLayoutPreparation (.ok [some "callback", some "callback", none])
+    (fun keys => (.ok keys.length : Except String Nat)) = .error "symbolic slot required" := by
+  exact checkedLayoutPreparation_key_refused ["callback", "callback"] [] _
+
+/-- Retrying an exact false/Function directory preserves its original key row. -/
+example : checkedLayoutPreparation (.ok [some "disabled", some "callback"])
+    (fun keys => (.ok keys : Except String (List String))) = .ok ["disabled", "callback"] := rfl
+
 end LeanPoo.Examples.Representation
