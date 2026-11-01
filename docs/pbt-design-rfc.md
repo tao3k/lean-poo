@@ -3016,9 +3016,9 @@ prepare-property-check in the existing generic property module binds the origina
 keyword/default signature through Gerbil itself, admits static controls, and
 returns an ordinary callable check. It invokes no size/source/policy/classifier
 callback while preparing. The direct check-property function, both declaration
-macros and the typed/FUN runner reuse this owner. The typed partial configuration
-conjunction and late generic preparation are removed; dependency/property shape
-checks remain at their own boundary. No option parser, new namespace, request
+macros and the typed/FUN runner reuse this owner. The typed runner retains its established immediate argument refusal boundary;
+remaining generic configuration errors use its existing non-replayable preparation
+report. Complete request admission now precedes sampler metadata in either case. No option parser, new namespace, request
 record, alternate runner, wrapper chain, PRNG or compatibility path is added.
 Actual generators/specifications are admitted when the prepared check is invoked.
 Each invocation retains the existing execute implementation and its fresh random
@@ -3028,7 +3028,9 @@ Static controls remain exact nonnegative seed/shrink/size-limit values with a
 positive case count. Constant sizes are exact nonnegative integers; procedure
 sizes still require an explicit finite size-limit. Policy/name and observer/error
 classifier recognition reuse existing contracts without executing callbacks.
-Preparation refusal is an ordinary configuration error before declaration effects.
+Generic/named refusal is an ordinary configuration error before declaration effects.
+Typed/FUN retains its immediate argument errors and existing non-replayable error
+reports for policy/name/size-limit refusal, without sampler/source callbacks.
 Valid-request metadata causes, source retirement, Boolean property failures,
 coverage, shrinking and both replay forms retain their existing owners. A prepared
 check captures configuration, not source epochs or a completed report: source
