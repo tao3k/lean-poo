@@ -8,9 +8,11 @@ linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https:
 =C4.prepare graph= retains complete root results lazily and shares one canonical
 ancestor metadata table across roots. Its first valid root demand prepares the
 finite declared graph; completed ancestor/suffix entries are shared thereafter.
-Every root keeps its original reachable-only validation. Audit failures use the
-ordinary compiler, preserving ordinary successes that checked C4 rejects and
-complete original error order. Failed branches publish no partial table.
+Canonical ancestor traces plus one declaration-uniqueness check derive the
+original reachable-only validation; successful roots need no repeated graph
+scan. Duplicate declarations and audit failures use the ordinary compiler,
+preserving ordinary successes that checked C4 rejects and complete original
+error order. Failed branches publish no partial table.
 This trades first-root whole-graph preparation and retained metadata for repeated
 root work; include that cost for single-root consumers. =Prepared.at_eq= proves
 complete equality for arbitrary graphs/roots. =Object.compilePrepared= uses the

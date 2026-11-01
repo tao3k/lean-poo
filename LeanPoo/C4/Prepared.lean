@@ -1,4 +1,5 @@
 import LeanPoo.C4.AuditedResolver
+import LeanPoo.C4.ValidationInvariant
 
 namespace LeanPoo.C4
 
@@ -29,31 +30,35 @@ private def prepareAncestors (graph : Graph)
         (LinearizeState.resolveAuditedNode_acceptance before.property (same ▸ done)).2.2⟩)
     ⟨{}, LinearizeState.MetadataInvariant.empty graph⟩
 
-/-- Preserve the original reachable-only validation before consulting shared
-ancestors. Failed audits use the original compiler, never an audit diagnostic. -/
+private def indexedResult (graph : Graph) (index : Std.HashMap String Node)
+    (same : index = LinearizeState.nodeIndex graph) (root : String) :
+    { result : Except Error (List String) // result = linearize graph root } :=
+  ⟨LinearizeState.linearizeIndexed graph index root false, by subst index; rfl⟩
+
+/-- A canonical ancestor derivation and declaration uniqueness derive the
+original reachable validation. No second reachability/name scan is executed.
+Unaccepted branches retain the exact ordinary compiler and original errors. -/
 private def preparedRoot (graph : Graph) (index : Std.HashMap String Node)
-    (same : index = LinearizeState.nodeIndex graph) (shared : Thunk (SharedTable graph))
+    (same : index = LinearizeState.nodeIndex graph)
+    (unique : (graph.nodes.map Node.name).Nodup) (shared : Thunk (SharedTable graph))
     (root : String) : { result : Except Error (List String) // result = linearize graph root } :=
-  if (index.get? root).isNone then ⟨linearize graph root, rfl⟩ else
-  let names := LinearizeState.reachable graph index root
-  let namesSet := names.foldl (fun seen name => seen.insert name) ({} : Std.HashSet String)
-  let nodes := graph.nodes.filter (fun node => namesSet.contains node.name)
-  match validated : (Graph.mk nodes).validate with
-  | .error _ => ⟨linearize graph root, rfl⟩
-  | .ok _ =>
-    let ready := shared.get
-    match found : LinearizeState.lookup ready.val root with
-    | none => ⟨linearize graph root, rfl⟩
-    | some entry => ⟨.ok entry.precedence, by
-        have trace := ready.property.tail root entry found
-        apply (linearize_complete trace _).symm
-        simpa only [nodes, namesSet, names, same, LinearizeState.reachableNodes] using validated⟩
+  if (index.get? root).isNone then indexedResult graph index same root else
+  let ready := shared.get
+  match found : LinearizeState.lookup ready.val root with
+  | none => indexedResult graph index same root
+  | some entry => ⟨.ok entry.precedence, by
+      have trace := ready.property.tail root entry found
+      exact (linearize_unique_complete trace
+        (LinearizeState.reachableUnique_of_global unique)).symm⟩
 
 def prepare (graph : Graph) : Prepared graph :=
   let index := LinearizeState.nodeIndex graph
   let shared := Thunk.mk fun _ => prepareAncestors graph index rfl
-  let make : (root : String) → PreparedResult graph root := fun root =>
-    Thunk.mk fun _ => preparedRoot graph index rfl shared root
+  let make : (root : String) → PreparedResult graph root :=
+    if unique : (graph.nodes.map Node.name).Nodup then
+      fun root => Thunk.mk fun _ => preparedRoot graph index rfl unique shared root
+    else
+      fun root => Thunk.mk fun _ => indexedResult graph index rfl root
   let roots := graph.nodes.foldl (fun roots node =>
     if roots.contains node.name then roots else roots.insert node.name (make node.name))
       ({} : Std.DHashMap String (PreparedResult graph))
