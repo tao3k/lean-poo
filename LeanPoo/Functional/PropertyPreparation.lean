@@ -911,4 +911,62 @@ theorem prepareOwnedBridge_fallback_revised (live : State → Bool) (state next 
   rw [prepareOwnedBridge_decline live state next raw recognize _ before middle declined]
   exact guardedGeneration_revised live next last value middle after
 
+/-- Optional observer metadata has three finite cases: absent, malformed present,
+and callable present. Guard the read before classifying it, sharing the existing
+stage semantics. Hook is a faithfully recognized host procedure identity; its
+invocation and pure epoch-ledger extension remain separate existing stages. -/
+def prepareObserverBinding (live : State → Bool) (invalid : Cause)
+    (read : State → Except Cause (Option (Option Hook) × State)) (state : State) :
+    Except (Option Cause) (Option Hook × State) :=
+  match guardedGeneration live read state with
+  | .error cause => .error cause
+  | .ok (none, next) => .ok (none, next)
+  | .ok (some none, _) => .error (some invalid)
+  | .ok (some (some hook), next) => .ok (some hook, next)
+
+/-- Stale preflight skips hook metadata and every later declaration action. -/
+theorem prepareObserverBinding_stale (live : State → Bool) (invalid : Cause)
+    (read : State → Except Cause (Option (Option Hook) × State)) (state : State)
+    (stale : live state = false) : prepareObserverBinding live invalid read state = .error none := by
+  simp [prepareObserverBinding, guardedGeneration_preflight live read state stale]
+
+/-- Normally returned retirement outranks even malformed present metadata. -/
+theorem prepareObserverBinding_revised (live : State → Bool) (invalid : Cause)
+    (state next : State) (raw : Option (Option Hook))
+    (before : live state = true) (after : live next = false) :
+    prepareObserverBinding live invalid (fun _ => .ok (raw, next)) state = .error none := by
+  simp [prepareObserverBinding, guardedGeneration_revised live state next raw before after]
+
+/-- Throws retain their original cause, including a faithfully encoded false. -/
+theorem prepareObserverBinding_cause (live : State → Bool) (invalid cause : Cause)
+    (state : State) (before : live state = true) :
+    prepareObserverBinding (Hook := Hook) live invalid (fun _ => .error cause) state = .error (some cause) := by
+  simp [prepareObserverBinding, guardedGeneration_cause live state cause before]
+
+/-- Absence is valid opt-out and preserves the actual state after metadata. -/
+theorem prepareObserverBinding_absent (live : State → Bool) (invalid : Cause)
+    (state next : State) (before : live state = true) (after : live next = true) :
+    prepareObserverBinding (Hook := Hook) live invalid (fun _ => .ok (none, next)) state = .ok (none, next) := by
+  simp [prepareObserverBinding, guardedGeneration_state live state next (none : Option (Option Hook)) before after]
+
+/-- A present non-procedure can never impersonate absent metadata. -/
+theorem prepareObserverBinding_malformed (live : State → Bool) (invalid : Cause)
+    (state next : State) (before : live state = true) (after : live next = true) :
+    prepareObserverBinding (Hook := Hook) live invalid (fun _ => .ok (some none, next)) state = .error (some invalid) := by
+  simp [prepareObserverBinding, guardedGeneration_state live state next (some none : Option (Option Hook)) before after]
+
+/-- A callable identity is neither invoked nor wrapped while reading metadata. -/
+theorem prepareObserverBinding_callable (live : State → Bool) (invalid : Cause)
+    (state next : State) (hook : Hook) (before : live state = true) (after : live next = true) :
+    prepareObserverBinding live invalid (fun _ => .ok (some (some hook), next)) state = .ok (some hook, next) := by
+  simp [prepareObserverBinding, guardedGeneration_state live state next (some (some hook)) before after]
+
+/-- Refusal suppresses any key/value getter, core factory or other continuation. -/
+theorem prepareObserverBinding_refused (live : State → Bool) (invalid : Cause)
+    (read : State → Except Cause (Option (Option Hook) × State)) (state : State)
+    (nextAction : Option Hook × State → Except (Option Cause) Output) (cause : Option Cause)
+    (refused : prepareObserverBinding live invalid read state = .error cause) :
+    (prepareObserverBinding live invalid read state).bind nextAction = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting

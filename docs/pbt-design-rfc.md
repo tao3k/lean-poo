@@ -3165,3 +3165,48 @@ epochs, pure observers and terminating sequential callbacks are premises. These
 are finite protocol proofs, not Scheme compiler/runtime verification, arbitrary
 mutation isolation, concurrent publication or latency claims. This advances the
 paper's future work. All checks and existing resource limits remain unchanged.
+
+## P71: shared observer binding before Map declarations
+
+The remaining duplicate observer reader in `map-generator` treated a present
+false `.current?` value as absence. Construction still failed later at the core
+bridge, but only AFTER a computed Key getter had executed. The public probe
+recorded `refused key-reads 1`; this is an observable preparation-order defect,
+not missing generation or a new research requirement.
+
+One private `source-observer` now serves closed `source-guard` preparation and
+the Map factory's growing discovery ledger. It returns the original callable or
+absence, using existing `with-sources` and `require-value` before the next field.
+No additional observer wrapper, cache, iteration policy or namespace is added.
+The Map guard keeps its epoch-before/hook/epoch-after ordering and the ledger
+still closes over first-observed declarations. Callable false results remain
+stale; malformed Boolean replies remain errors. A metadata exception preserves
+its exact cause, including raised false, while normal retirement during the
+getter precedes malformed-result classification. Noncallable presence now
+refuses before Key, Value, core factories, key validators or drawing.
+
+`map-service-action` accepts an optional existing value sampler through the same
+factory. Its default and existing callers retain their behavior. The complex
+Record/Function/FUN example repairs malformed inherited metadata, prepares a
+complete two-entry service directory, shrinks both services without losing
+Function wrappers, replays the failure, rejects the retired report, and explicitly
+prepares fresh authority for retry. Four preparation regressions cover malformed
+presence, exact getter causes and retirement priority, callable false/non-Boolean
+replies, old-root refusal and fresh retry. The independent generic kernel remains
+unchanged at 205 cases; all existing checks/resources stay in place.
+
+Seven finite Lean laws in PropertyPreparation classify absent, malformed-present
+and callable-present metadata AFTER the existing guarded read. They prove stale
+preflight, retirement priority, exact causes, unchanged absence/callable receipts,
+malformed refusal and suppression of all later continuations. Five top-level
+examples instantiate those distinctions. Host recognition of procedure identity,
+accurate pure observers, first-observation capture, standard dynamic scope and
+terminating sequential callbacks remain premises. No arbitrary callback rollback,
+compiler/runtime proof or timing improvement is claimed.
+
+The Racket comparison reuses pinned Rackcheck `gen:bind` (core.rkt lines 98-108):
+its retained child random state remains the model for dependency regeneration.
+This unit changes neither that seed schedule nor the existing shrink tree. The
+additional revision/metadata protocol is this project's finite future-work
+extension. Advanced handwritten sample producers and consumer-owned source
+admission retain their existing contract; they are not redefined as this defect.

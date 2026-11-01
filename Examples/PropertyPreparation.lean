@@ -220,3 +220,23 @@ example : prepareOwnedBridge (fun _ : Nat => true)
     (fun state => (.ok (1, state) : Except String (Nat × Nat)))
     (fun _ => (.ok (some false) : Except String (Option Bool)))
     (fun _ => .error "must not bind") 0 = .ok (false, 0) := rfl
+
+-- Present false is malformed metadata, not the absent-observer path.
+example : prepareObserverBinding (Hook := Nat) (fun _ : Nat => true) "not callable"
+    (fun _ => .ok (some none, 0)) 0 = .error (some "not callable") := rfl
+
+-- A malformed result cannot invoke a deliberately failing Key getter.
+example : (prepareObserverBinding (Hook := Nat) (fun _ : Nat => true) "not callable"
+    (fun _ => .ok (some none, 0)) 0).bind
+    (fun _ => (.error (some "Key must not run") : Except (Option String) Nat)) =
+    .error (some "not callable") := rfl
+
+-- Retirement during metadata wins before malformed-value classification.
+example : prepareObserverBinding (Hook := Nat) (fun epoch : Nat => epoch == 0) "not callable"
+    (fun _ => .ok (some none, 1)) 0 = .error none := rfl
+
+-- Absence and a callable identity keep distinct, exact binding receipts.
+example : prepareObserverBinding (Hook := Nat) (fun _ : Nat => true) "not callable"
+    (fun _ => .ok (none, 0)) 0 = .ok (none, 0) := rfl
+example : prepareObserverBinding (fun _ : Nat => true) "not callable"
+    (fun _ => .ok (some (some 7), 1)) 0 = .ok (some 7, 1) := rfl
