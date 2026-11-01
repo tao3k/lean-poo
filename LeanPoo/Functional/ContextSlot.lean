@@ -25,6 +25,10 @@ def ContextSlot.read [DecidableEq Context] {ready : Certified keys Claim}
     (slot : ContextSlot ready) (context : Context) : Snapshot ready context × ContextSlot ready × Bool :=
   match slot.retained with
   | some ⟨previous, data⟩ =>
+    -- Standard checked identity shortcut: distinct owners still use the full
+    -- structural decision. The logical context/factory alignment is unchanged.
+    letI : Decidable (previous = context) :=
+      withPtrEqDecEq previous context (fun _ => inferInstance)
     if same : previous = context then (same ▸ data, slot, true)
     else
       let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
@@ -32,6 +36,26 @@ def ContextSlot.read [DecidableEq Context] {ready : Certified keys Claim}
   | none =>
     let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
     (fresh, ⟨some ⟨context, fresh⟩⟩, false)
+
+/-- The complete slot, data and reuse flag retain the original structural
+reference semantics. The standard native identity shortcut adds no authority. -/
+theorem ContextSlot.read_reference [DecidableEq Context] {ready : Certified keys Claim}
+    (slot : ContextSlot ready) (context : Context) :
+    slot.read context =
+      match slot.retained with
+      | some ⟨previous, data⟩ =>
+        if same : previous = context then (same ▸ data, slot, true)
+        else
+          let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
+          (fresh, ⟨some ⟨context, fresh⟩⟩, false)
+      | none =>
+        let fresh : Snapshot ready context := ⟨build ready.factories context, rfl, ready.valid context⟩
+        (fresh, ⟨some ⟨context, fresh⟩⟩, false) := by
+  cases saved : slot.retained with
+  | none => simp [ContextSlot.read, saved]
+  | some pair =>
+    rcases pair with ⟨previous, data⟩
+    by_cases same : previous = context <;> simp [ContextSlot.read, saved, same]
 
 /-- An exact-context hit returns the retained tuple and unchanged slot. -/
 theorem ContextSlot.read_hit [DecidableEq Context] {ready : Certified keys Claim}

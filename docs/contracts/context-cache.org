@@ -19,6 +19,14 @@ uncached proof-aware consumer. Carry nextSlot into the next call. Returning to
 an evicted context is a miss. Context equality requires ~DecidableEq Context~;
 executable callers must provide a computable instance.
 
+Native reads use Lean's standard checked =withPtrEqDecEq= shortcut before the
+structural decision. The same immutable context owner can return its retained
+dependent snapshot without traversing the context or allocating comparison
+closures. Independent equal owners still execute the complete supplied decision;
+changed owners miss normally. =read_reference= proves the entire original tuple
+of data, next slot and reuse flag, not only a projected payload. Family alignment,
+joint Claims, eviction and output-constructor execution remain unchanged.
+
 #+begin_src lean
 import LeanPoo.Functional.ContextSlot
 open LeanPoo.Functional LeanPoo.Functional.Requirements

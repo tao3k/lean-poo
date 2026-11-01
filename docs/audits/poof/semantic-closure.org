@@ -273,3 +273,13 @@ overrides and sixteen actual graph/constraint migrations. This closes typed
 Lean constructor correspondence. General Scheme compilation, dynamic closure
 reflection/serialization, unrestricted unsafe fixed-point/IO equivalence and
 machine-level time/allocation bounds remain outside the declared theorem scope.
+
+* Checked exact-context identity optimization
+
+The ContextSlot implementation uses standard =withPtrEqDecEq= for the same
+immutable context owner, retaining the full structural decision for independent
+owners. =read_reference= preserves the entire original result tuple and dependent
+snapshot. Existing family indices, joint Claims, hit/miss and eviction laws remain.
+The native shortcut relies on Lean's standard runtime primitive; it introduces
+no new kernel axiom or claim of Scheme/whole-machine equivalence. Re-audit retains
+all original paper scope/status decisions, including future cache proposals.
