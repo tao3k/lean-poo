@@ -3065,3 +3065,52 @@ A downstream suite may bind a request once with ordinary module imports:
 (def run-request (p.prepare-property-check seed: 42 cases: 100 size: 20))
 ;; Each (run-request generation property specification) starts a fresh run.
 ```
+
+## P69: owned factory result admission before subsequent binding
+
+The bridge audit reproduced a wrong-phase effect: an owned factory returned #t,
+yet generator-core still read the later .current? getter before reporting the
+invalid result. An exception in that getter could replace the factory protocol
+failure. P51 already promises a checked factory result followed by hook binding;
+this is a concrete missing postcondition, not unrestricted callback inference.
+
+The private checked-generation boundary in testing/type now returns only #f or
+the exact generic generator. The existing make-generator constructor and
+sampler-generation binder share it. It retains the original ordinary `generic
+generator required` error and introduces no wrapper, normalization or observation.
+Only #f opts out to raw binding; a generator producing false remains present.
+The factory's existing source postcheck precedes result recognition, so retirement
+still wins and original exceptions (including false causes) bypass recognition.
+Valid bridges, raw fallback and typed error/stale report classification retain
+their existing semantics. Error classification may still observe declared source
+hooks under the existing classifier; it is not further factory/binding work.
+
+Product and recursive scalar bridge preparation now use the already imported
+standard map-in-order, giving explicit stop-before-next-binding order. There is
+no new namespace, carrier class, cache, graph implementation or hot-draw check.
+Core generation, retained shrink trees, PRNG ownership and replay remain unchanged.
+A checked optional constructor value retains identity; from-generator still
+requires a present generator and does not acquire an opt-out interpretation.
+
+Three bridge regressions cover malformed result kinds before raw/hook getters,
+constructor consistency, exact factory exceptions and source-retirement priority,
+and product/Map/recursive combinations refusing without later binding, drawing or
+packing. Existing #f opt-out and false-payload controls remain. A complex collection
+service example uses Record/Function fields and the existing service-factory-action
+through FUN: malformed factory error without a run, explicit fresh retry, real
+shrinking, seeded/concrete/portable replay, retained Function wrapping, old-owner
+refusal and a corrected passing service. These are POO bridge cases; the independent
+generic library stays at 203 cases and acquires no POO dependency. Registration
+and compiler module counts are unchanged.
+
+Eight finite Lean laws extend the existing PropertyPreparation bridge model with
+a pure raw-result recognizer. They prove refinement to prepareBridge for typed
+results, stale preflight, source-postcheck priority, original causes, malformed
+result refusal, present owned values, opt-out handoff and fallback retirement.
+Top-level examples distinguish malformed presence, source retirement and present
+false data. Faithful runtime recognition, accurate epoch observers, terminating
+callbacks, standard ordered traversal and FUN/IO delivery remain premises. There
+is no claim of arbitrary callback rollback, compiler/runtime verification or
+latency improvement. This advances the paper's future work. Existing failure
+categories, complete checks, heap/compile guards and unbounded semantic-test
+execution are retained.

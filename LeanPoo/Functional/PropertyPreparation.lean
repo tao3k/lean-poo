@@ -829,4 +829,86 @@ theorem propertyRequest_cause (invalid cause : Cause) (live : State → Bool) (s
       invalid live (fun _ => (.error cause : Except Cause (Value × State))) state = .error (some cause) := by
   exact prepareInspection_cause invalid cause live state before
 
+/-- Raw owned-factory results are recognized only after the factory's source
+postcondition. Invalid present values are errors; only decoded none selects raw
+binding. Recognition is pure, faithful host postcondition admission is a premise. -/
+def prepareOwnedBridge (live : State → Bool)
+    (factory : State → Except Cause (Raw × State))
+    (recognize : Raw → Except Cause (Option Value))
+    (fallback : State → Except Cause (Value × State)) (state : State) :
+    Except (Option Cause) (Value × State) :=
+  match guardedGeneration live factory state with
+  | .error cause => .error cause
+  | .ok (raw, next) =>
+    match recognize raw with
+    | .error cause => .error (some cause)
+    | .ok none => guardedGeneration live fallback next
+    | .ok (some value) => .ok (value, next)
+
+/-- Already typed factories refine the existing bridge without changing results. -/
+theorem prepareOwnedBridge_identity (live : State → Bool)
+    (factory : State → Except Cause (Option Value × State))
+    (fallback : State → Except Cause (Value × State)) (state : State) :
+    prepareOwnedBridge live factory Except.ok fallback state = prepareBridge live factory fallback state := by
+  unfold prepareOwnedBridge prepareBridge
+  cases guardedGeneration live factory state with
+  | error cause => rfl
+  | ok result =>
+    rcases result with ⟨candidate, next⟩
+    cases candidate <;> rfl
+
+/-- Stale preparation invokes neither the factory, recognizer nor raw binder. -/
+theorem prepareOwnedBridge_stale (live : State → Bool)
+    (factory : State → Except Cause (Raw × State)) (recognize : Raw → Except Cause (Option Value))
+    (fallback : State → Except Cause (Value × State)) (state : State) (stale : live state = false) :
+    prepareOwnedBridge live factory recognize fallback state = .error none := by
+  simp [prepareOwnedBridge, guardedGeneration_preflight live factory state stale]
+
+/-- Factory retirement wins even when the returned raw value would be malformed. -/
+theorem prepareOwnedBridge_revised (live : State → Bool) (state next : State) (raw : Raw)
+    (recognize : Raw → Except Cause (Option Value)) (fallback : State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = false) :
+    prepareOwnedBridge live (fun _ => .ok (raw, next)) recognize fallback state = .error none := by
+  simp [prepareOwnedBridge, guardedGeneration_revised live state next raw before after]
+
+/-- A callback exception bypasses recognition and retains its exact identity. -/
+theorem prepareOwnedBridge_cause (live : State → Bool) (state : State) (cause : Cause)
+    (recognize : Raw → Except Cause (Option Value)) (fallback : State → Except Cause (Value × State))
+    (before : live state = true) :
+    prepareOwnedBridge live (fun _ => .error cause) recognize fallback state = .error (some cause) := by
+  simp [prepareOwnedBridge, guardedGeneration_cause live state cause before]
+
+/-- A malformed present result cannot enter raw fallback or later binding. -/
+theorem prepareOwnedBridge_invalid (live : State → Bool) (state next : State) (raw : Raw)
+    (invalid : Cause) (recognize : Raw → Except Cause (Option Value))
+    (fallback : State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = true) (bad : recognize raw = .error invalid) :
+    prepareOwnedBridge live (fun _ => .ok (raw, next)) recognize fallback state = .error (some invalid) := by
+  simp [prepareOwnedBridge, guardedGeneration_state live state next raw before after, bad]
+
+/-- A recognized tree retains its value, including false, and resulting state. -/
+theorem prepareOwnedBridge_owned (live : State → Bool) (state next : State) (raw : Raw) (value : Value)
+    (recognize : Raw → Except Cause (Option Value)) (fallback : State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = true) (valid : recognize raw = .ok (some value)) :
+    prepareOwnedBridge live (fun _ => .ok (raw, next)) recognize fallback state = .ok (value, next) := by
+  simp [prepareOwnedBridge, guardedGeneration_state live state next raw before after, valid]
+
+/-- Declining hands the actual next state to the same guarded raw binder. -/
+theorem prepareOwnedBridge_decline (live : State → Bool) (state next : State) (raw : Raw)
+    (recognize : Raw → Except Cause (Option Value)) (fallback : State → Except Cause (Value × State))
+    (before : live state = true) (after : live next = true) (declined : recognize raw = .ok none) :
+    prepareOwnedBridge live (fun _ => .ok (raw, next)) recognize fallback state =
+      guardedGeneration live fallback next := by
+  simp [prepareOwnedBridge, guardedGeneration_state live state next raw before after, declined]
+
+/-- Valid opt-out cannot escape source retirement during raw binding. -/
+theorem prepareOwnedBridge_fallback_revised (live : State → Bool) (state next last : State)
+    (raw : Raw) (value : Value) (recognize : Raw → Except Cause (Option Value))
+    (before : live state = true) (middle : live next = true) (after : live last = false)
+    (declined : recognize raw = .ok none) :
+    prepareOwnedBridge live (fun _ => .ok (raw, next)) recognize (fun _ => .ok (value, last)) state =
+      .error none := by
+  rw [prepareOwnedBridge_decline live state next raw recognize _ before middle declined]
+  exact guardedGeneration_revised live next last value middle after
+
 end LeanPoo.Functional.PropertyTesting

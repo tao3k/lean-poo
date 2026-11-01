@@ -204,3 +204,19 @@ example : propertyRequestReady [some 42, some 10, none] (some 1) none true true 
 example : prepareInspection (propertyRequestReady [some 42, some 10, some 4] (some 1) none true true)
     true (fun _ : Nat => true) (fun _ => (.error false : Except Bool (Bool × Nat))) 0 =
     .error (some false) := rfl
+
+-- A malformed present result cannot reach a deliberately failing raw binder.
+example : prepareOwnedBridge (fun _ : Nat => true)
+    (fun state => (.ok (2, state) : Except String (Nat × Nat)))
+    (fun _ => (.error "invalid generator" : Except String (Option Bool)))
+    (fun _ => .error "must not bind") 0 = .error (some "invalid generator") := rfl
+-- Source retirement remains stale before malformed-result recognition.
+example : prepareOwnedBridge (fun state : Nat => state == 0)
+    (fun _ => (.ok (2, 1) : Except String (Nat × Nat)))
+    (fun _ => (.error "invalid generator" : Except String (Option Bool)))
+    (fun _ => .error "must not bind") 0 = .error none := rfl
+-- A present generator producing false is not the raw opt-out sentinel.
+example : prepareOwnedBridge (fun _ : Nat => true)
+    (fun state => (.ok (1, state) : Except String (Nat × Nat)))
+    (fun _ => (.ok (some false) : Except String (Option Bool)))
+    (fun _ => .error "must not bind") 0 = .ok (false, 0) := rfl
