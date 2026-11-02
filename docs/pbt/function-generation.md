@@ -8,14 +8,14 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
-- [P19: call-input demand and derivation reuse](#p19-call-input-demand-and-derivation-reuse)
-- [P33: sound short-circuit admission of supplied Function call fields](#p33-sound-short-circuit-admission-of-supplied-function-call-fields)
-- [P61: first-observed Function input declarations](#p61-first-observed-function-input-declarations)
-- [P74: first-observed finite Function result tuples](#p74-first-observed-finite-function-result-tuples)
-- [P78: captured finite Function call requests](#p78-captured-finite-function-call-requests)
-- [P85: first-return ownership of Function call declarations](#p85-first-return-ownership-of-function-call-declarations)
+- [Call-input demand and derivation reuse](#call-input-demand-and-derivation-reuse)
+- [Sound short-circuit admission of supplied Function call fields](#sound-short-circuit-admission-of-supplied-function-call-fields)
+- [First-observed Function input declarations](#first-observed-function-input-declarations)
+- [First-observed finite Function result tuples](#first-observed-finite-function-result-tuples)
+- [Captured finite Function call requests](#captured-finite-function-call-requests)
+- [First-return ownership of Function call declarations](#first-return-ownership-of-function-call-declarations)
 
-## P19: call-input demand and derivation reuse
+## Call-input demand and derivation reuse
 
 The typed Gerbil call generator previously eagerly prepared every declared input
 Type, even a completely shadowed case-lambda clause or an absent rest suffix.
@@ -41,7 +41,7 @@ concurrent forcing, hidden mutation, GC or constant-time preparation. Constructo
 failure occurs during demand before the property, rather than being rewritten as
 falsification. General Type synthesis remains outside the declared algorithm.
 
-## P33: sound short-circuit admission of supplied Function call fields
+## Sound short-circuit admission of supplied Function call fields
 
 The audit found a value-admission defect in the project's `FunctionArguments`
 recognizer. `(FunctionArguments (Function [Integer] [Integer]))` accepted the raw
@@ -94,7 +94,7 @@ CLI with the same 1G/90-second gate; complete checks run without its focused fil
 Process, depth, search, node and proposal limits remain unchanged.
 
 
-## P61: first-observed Function input declarations
+## First-observed Function input declarations
 
 The audit found a preparation defect, rather than a missing generator domain:
 a delayed nested signature keyword getter could revise its enclosing Function.
@@ -137,7 +137,7 @@ hash-table work. This is the RFC's finite future-work protocol, not a claim abou
 the compiler/runtime or completion of unrestricted recursive/type generation.
 All full acceptance checks and resource limits remain unchanged.
 
-## P74: first-observed finite Function result tuples
+## First-observed finite Function result tuples
 
 Two public probes exposed late aggregate admission. A first result producer
 returned an invalid scalar, yet the next row still ran and threw false, replacing
@@ -197,7 +197,7 @@ an already completed aggregate. This unit changes neither that seed discipline
 nor the existing lazy shrinking policy. All checks, heaps, compiler completion
 and cancellation behavior remain unchanged.
 
-## P78: captured finite Function call requests
+## Captured finite Function call requests
 
 The audit reproduced a request-ownership defect through public function-apply.
 The caller supplied `(declared)` to a table containing declared and retargeted
@@ -233,7 +233,7 @@ with payload identity, and shared direct/procedure behavior for empty rows, zero
 and multiple values, raw keywords, false/object causes and stale tables. The cases
 join the existing PropertyProducts example module and ordinary kernel suite;
 there is no new runner/module inventory. The isolated standard-library package
-requires 231 cases. Existing P43 inherited-scope and P74 result-tuple tests remain.
+requires 231 cases. Existing [inherited authority for finite function observations](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/function-generation.md#inherited-authority-for-finite-function-observations) inherited-scope and [First-observed finite Function result tuples](function-generation.md#first-observed-finite-function-result-tuples) result-tuple tests remain.
 
 The existing finite-service Record/Function example composes FUN preparation,
 first-row malformed-result refusal, real shrinking, seed/concrete replay and
@@ -257,15 +257,15 @@ unrestricted concurrent-mutation proof is claimed. This advances future work.
 
 The Rackcheck/Quickcheck map/bind comparison remains the abstraction reference:
 retain the same finite value/tree and ownership boundary rather than introduce
-another executor. This unit closes our P43 finite-call request boundary, not a
-missing Racket feature. The explicit P35 rule that invalid classification symbols
+another executor. This unit closes our [inherited authority for finite function observations](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/function-generation.md#inherited-authority-for-finite-function-observations) finite-call request boundary, not a
+missing Racket feature. The explicit [Source-consistent error classification and terminal diagnostics](diagnostics.md#source-consistent-error-classification-and-terminal-diagnostics) rule that invalid classification symbols
 are API errors was audited and retained as a design boundary. Complete checks,
 original heaps, natural compiler/test completion and cancellation stay unchanged.
 
-## P85: first-return ownership of Function call declarations
+## First-return ownership of Function call declarations
 
 The next audit checked call generation alongside dependency shrinking and replay.
-P45 owned declarations before LATER metadata getters, but its read action returned
+[bounded exact-ratio generation and canonical shrinking](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/function-generation.md#bounded-exact-ratio-generation-and-canonical-shrinking) owned declarations before LATER metadata getters, but its read action returned
 through inherited source observers before signatures/input/keyword/rest owners
 were registered. A supported .set! revision at that exact boundary produced
 `changed=#t accepted-current=#t`. A complex optional/keyword CaseFunction probe

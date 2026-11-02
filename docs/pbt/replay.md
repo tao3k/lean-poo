@@ -9,12 +9,12 @@ be checked separately. The finite laws retain their stated runtime premises.
 On this page:
 
 - [Revisions, failures and replay](#revisions-failures-and-replay)
-- [P15: source-consistent policy and product admission](#p15-source-consistent-policy-and-product-admission)
-- [P16: source-consistent portable handoff stages](#p16-source-consistent-portable-handoff-stages)
-- [P36: local portable-handoff authority reaches nested checked actions](#p36-local-portable-handoff-authority-reaches-nested-checked-actions)
-- [P58: portable handoff request admission and physical framing](#p58-portable-handoff-request-admission-and-physical-framing)
-- [P73: stable symbol and keyword identities in portable replay](#p73-stable-symbol-and-keyword-identities-in-portable-replay)
-- [P76: shared Boolean source admission during portable replay](#p76-shared-boolean-source-admission-during-portable-replay)
+- [Source-consistent policy and product admission](#source-consistent-policy-and-product-admission)
+- [Source-consistent portable handoff stages](#source-consistent-portable-handoff-stages)
+- [Local portable-handoff authority reaches nested checked actions](#local-portable-handoff-authority-reaches-nested-checked-actions)
+- [Portable handoff request admission and physical framing](#portable-handoff-request-admission-and-physical-framing)
+- [Stable symbol and keyword identities in portable replay](#stable-symbol-and-keyword-identities-in-portable-replay)
+- [Shared Boolean source admission during portable replay](#shared-boolean-source-admission-during-portable-replay)
 
 ## Revisions, failures and replay
 
@@ -42,7 +42,7 @@ commands may be printed/read with standard Scheme tooling for explicit reproduct
 no versioned JSON, full benchmark datasets or archives are committed. Replaying on
 changed code is a new experiment and cannot inherit an old report's authority.
 
-## P15: source-consistent policy and product admission
+## Source-consistent policy and product admission
 
 Audit finding: shrink admission wrapped the policy precondition and property as
 one action. A precondition that returned true after revising a declared source
@@ -92,7 +92,7 @@ No speedup or global effect safety is claimed.
 generator/property composition comparison. Revision observers are this protocol's
 additional responsibility; this change does not claim Rackcheck implements them.
 
-## P16: source-consistent portable handoff stages
+## Source-consistent portable handoff stages
 
 Audit finding: export reconfirmation and encoding shared one codec boundary. A
 property could invalidate codec metadata while leaving its witness domain stable,
@@ -140,7 +140,7 @@ and no wall-clock speedup is asserted. This preserves the generator/property
 separation learned from [Rackcheck](https://docs.racket-lang.org/rackcheck/index.html)
 while enforcing this library's additional revision protocol.
 
-## P36: local portable-handoff authority reaches nested checked actions
+## Local portable-handoff authority reaches nested checked actions
 
 A codec encoder could retire its registered source, invoke a nested generator's
 mapper once, and only then refuse export. The application correctly received an
@@ -191,7 +191,7 @@ heap, proposal and recursion limits remain unchanged. Extra observer checks reta
 their cost; suppressed callbacks alone are not a wall-clock performance proof.
 
 
-## P58: portable handoff request admission and physical framing
+## Portable handoff request admission and physical framing
 
 The audit found three actual handoff defects: an explicit `#!eof` could hide
 pending input (`#!eof 99`) from the second reader call; an invalid property could
@@ -239,7 +239,7 @@ This continues the RFC's finite future-work protocol, not a claim that the origi
 paper supplies a portable handoff or host-I/O proof.
 
 
-## P73: stable symbol and keyword identities in portable replay
+## Stable symbol and keyword identities in portable replay
 
 A public probe exported failed witnesses containing an uninterned symbol and an
 uninterned keyword. Both envelopes were accepted, but reading either created a
@@ -295,7 +295,7 @@ symbol generator here. Portable handoff remains this project's explicit extensio
 we do not attribute our codec/source protocol to Racket. Generation, retained
 shrink trees and seed splitting are unchanged.
 
-## P76: shared Boolean source admission during portable replay
+## Shared Boolean source admission during portable replay
 
 The audit reproduced a concrete diagnostic inconsistency: a codec currentness
 observer returning the symbol `malformed` raised `stale replay codec`. The generic

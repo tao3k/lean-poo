@@ -18,31 +18,31 @@ On this page:
 
 ## Earlier acceptance summary
 
-Current finite acceptance includes P0–P45. The companion Gerbil RFC owns the
+Current finite acceptance includes the finite protocol features. The companion Gerbil RFC owns the
 current developer interface; [property-kernel.md](../property-kernel.md) maps its
 standard test/debug integration, bounded diagnostics and configuration guards to
-Lean laws. P39 extends inherited typed-fixture declaration scope; P40 unifies
+Lean laws. [inherited declaration scope for typed differential fixtures](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/model-traces.md#inherited-declaration-scope-for-typed-differential-fixtures) extends inherited typed-fixture declaration scope; [first-observation typed trace declaration preparation](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/model-traces.md#first-observation-typed-trace-declaration-preparation) unifies
 first-observation typed trace preparation and preserves earlier epochs across
 computed fields and Record normalization. PropertyScopes supplies finite serial
 observer laws, not arbitrary callback/evaluator or concurrency verification.
-P41 extends fixed products with finite constructor admission and retained
+[finite fixed-product preparation and retained trees](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/data-generation.md#finite-fixed-product-preparation-and-retained-trees) extends fixed products with finite constructor admission and retained
 drawing. PropertyProducts proves exact field order/length and continuation-seed
 equivalence; the independent companion library now requires 115 cases. The
 Scheme iterative candidate is not admitted after GC cost acceptance; the existing
 bind/checkpoint draw remains the production strategy.
-P42 separates actual report admission from arbitrary diagnostic rendering.
+[authoritative standard assertions and checked diagnostic rendering](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/diagnostics.md#authoritative-standard-assertions-and-checked-diagnostic-rendering) separates actual report admission from arbitrary diagnostic rendering.
 PropertyScopes adds seven finite presence/status/source laws; the independent
 companion suite now requires 121 cases and eleven CLI refusals.
 Historical audit identities below remain historical receipts.
 
-P43 closes inherited authority on retained finite function observation. Seven
+[inherited authority for finite function observations](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/function-generation.md#inherited-authority-for-finite-function-observations) closes inherited authority on retained finite function observation. Seven
 PropertyScopes laws reuse guardedGeneration and exact-row lookup for parent/owner
 refusal, stable results, retirement, original errors and present/absent rows.
 The companion's independent suite requires 127 cases, with contracted Record/FUN
 retry, shrinking and portable replay. Runtime dynamic-scope fidelity, truthful
 observers and finite serial terminating actions remain premises.
 
-P44 closes portable vector copying before destination allocation/child inspection.
+[portable vector copy preparation and shared resource credits](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/data-generation.md#portable-vector-copy-preparation-and-shared-resource-credits) closes portable vector copying before destination allocation/child inspection.
 PropertyReplay adds eight finite credit/preparation laws in the existing namespace:
 shared accounting, minimum width, necessary preflight, width/depth refusal, empty
 admission and exact admitted results/errors. The standard companion copier uses
@@ -50,7 +50,7 @@ Gerbil's forward vector-fold/index; isolated acceptance requires 132 cases plus 
 contracted Record/FUN corpus retry. Host readers, encoders, allocator bytes and GC
 remain outside these logical-credit proofs; no wall-clock improvement is claimed.
 
-P45 adds bounded exact-ratio Rational generation. PropertyNumbers reuses standard
+[bounded exact-ratio generation and canonical shrinking](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/function-generation.md#bounded-exact-ratio-generation-and-canonical-shrinking) adds bounded exact-ratio Rational generation. PropertyNumbers reuses standard
 Rat normalization with ten laws for canonical keys, pair refusal/recovery, bounds,
 zero/integral profiles and strict value descent. Independent acceptance requires
 139 cases; recursive typed carriers and a Record/List/Function FUN service exercise

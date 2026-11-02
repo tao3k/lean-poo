@@ -8,20 +8,20 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
-- [P31: source-consistent scalar stages in recursive derivation](#p31-source-consistent-scalar-stages-in-recursive-derivation)
-- [P37: first-observation snapshots during recursive descriptor discovery](#p37-first-observation-snapshots-during-recursive-descriptor-discovery)
-- [P38: constructor-bound typed sampler declarations and mandatory owners](#p38-constructor-bound-typed-sampler-declarations-and-mandatory-owners)
-- [P46: bounded tagged Sum derivation and retained branch identity](#p46-bounded-tagged-sum-derivation-and-retained-branch-identity)
-- [P49: first-observation admission for explicit Map factories](#p49-first-observation-admission-for-explicit-map-factories)
-- [P50: shared sampler declaration snapshots](#p50-shared-sampler-declaration-snapshots)
-- [P62: ordered fixed-carrier edge discovery](#p62-ordered-fixed-carrier-edge-discovery)
-- [P63: shared opaque sampler admission before optional metadata](#p63-shared-opaque-sampler-admission-before-optional-metadata)
-- [P72: prepared finite hash directories before typed declaration binding](#p72-prepared-finite-hash-directories-before-typed-declaration-binding)
-- [P79: bounded known carrier directories before edge observation](#p79-bounded-known-carrier-directories-before-edge-observation)
-- [P80: first-observed Sum metadata and bounded tag directories](#p80-first-observed-sum-metadata-and-bounded-tag-directories)
-- [P81: shared sampler declarations owned at first return](#p81-shared-sampler-declarations-owned-at-first-return)
+- [Source-consistent scalar stages in recursive derivation](#source-consistent-scalar-stages-in-recursive-derivation)
+- [First-observation snapshots during recursive descriptor discovery](#first-observation-snapshots-during-recursive-descriptor-discovery)
+- [Constructor-bound typed sampler declarations and mandatory owners](#constructor-bound-typed-sampler-declarations-and-mandatory-owners)
+- [Bounded tagged Sum derivation and retained branch identity](#bounded-tagged-sum-derivation-and-retained-branch-identity)
+- [First-observation admission for explicit Map factories](#first-observation-admission-for-explicit-map-factories)
+- [Shared sampler declaration snapshots](#shared-sampler-declaration-snapshots)
+- [Ordered fixed-carrier edge discovery](#ordered-fixed-carrier-edge-discovery)
+- [Shared opaque sampler admission before optional metadata](#shared-opaque-sampler-admission-before-optional-metadata)
+- [Prepared finite hash directories before typed declaration binding](#prepared-finite-hash-directories-before-typed-declaration-binding)
+- [Bounded known carrier directories before edge observation](#bounded-known-carrier-directories-before-edge-observation)
+- [First-observed Sum metadata and bounded tag directories](#first-observed-sum-metadata-and-bounded-tag-directories)
+- [Shared sampler declarations owned at first return](#shared-sampler-declarations-owned-at-first-return)
 
-## P31: source-consistent scalar stages in recursive derivation
+## Source-consistent scalar stages in recursive derivation
 
 The recursive carrier audit reproduced late refusal in the existing interpreter:
 while admitting a two-field Tuple, the first custom leaf predicate revised its
@@ -67,7 +67,7 @@ Source checking adds active-ledger/graph walks at primitive boundaries; no
 zero-cost or timing improvement is claimed. No process, search, observation,
 depth, node or proposal limit is widened, and complete local/CI gates remain.
 
-## P37: first-observation snapshots during recursive descriptor discovery
+## First-observation snapshots during recursive descriptor discovery
 
 The audit reproduced an accepted mixed preparation: the first custom `.generator`
 changed an already discovered, unvisited sibling descriptor; the sibling's epoch
@@ -129,7 +129,7 @@ features in Rackcheck, add a second runner, change draw/seed order or force omit
 Function inputs. No speedup is claimed from metadata deduplication alone.
 
 
-## P38: constructor-bound typed sampler declarations and mandatory owners
+## Constructor-bound typed sampler declarations and mandatory owners
 
 Two soundness reproductions selected this unit. Relabeling an automatic Integer
 sampler as `(Exactly 999)` preserved its old bounded acceptance hook: the property
@@ -195,7 +195,7 @@ factories, source failure priorities and all process/heap/depth/proposal caps re
 unchanged. Concrete import still reads no input before failed preparation and
 performs no draws or child forcing. Port failures still have no rollback guarantee.
 
-## P46: bounded tagged Sum derivation and retained branch identity
+## Bounded tagged Sum derivation and retained branch identity
 
 The audit found a concrete gap in the existing finite container algebra: Sum had
 validation, wrapping and serialization, but automatic PBT derivation required a
@@ -258,7 +258,7 @@ These operation counts do not imply constant lookup cost, allocation bounds or a
 wall-clock speedup. No upstream changes, runner, namespace or resource-limit
 changes are required; the independent generic package remains POO-free.
 
-## P49: first-observation admission for explicit Map factories
+## First-observation admission for explicit Map factories
 
 The concentrated audit reproduced a concrete preparation defect: a Map Value
 getter could revise the previously read Key Type, after which `map-generator`
@@ -320,7 +320,7 @@ metadata bound is not a byte/time bound for arbitrary dependencies or callbacks.
 No latency improvement is claimed. No upstream changes, new namespace, scheduler,
 resource-limit changes or acceptance reductions are introduced.
 
-## P50: shared sampler declaration snapshots
+## Shared sampler declaration snapshots
 
 The audit reproduced a shared late-capture defect beyond explicit Map factories:
 `.sources` could revise the Type previously returned by `.descriptor`, then the
@@ -375,7 +375,7 @@ retained and no latency improvement is claimed. The independent generic library
 remains POO-free at 148 cases. No upstream, namespace, scheduler, resource-limit
 or complete-acceptance changes are required.
 
-## P62: ordered fixed-carrier edge discovery
+## Ordered fixed-carrier edge discovery
 
 The source audit reproduced two related defects in the finite recursive graph:
 Pair evaluated both child getters before registering either child; its right
@@ -416,7 +416,7 @@ occurrences and registration cardinality, not arbitrary getter cost or latency.
 This continues the finite future-work protocol; full checks and process limits
 remain unchanged, and no compiler/runtime or unversioned-heap proof is claimed.
 
-## P63: shared opaque sampler admission before optional metadata
+## Shared opaque sampler admission before optional metadata
 
 The audit reproduced an opaque-leaf source-order defect. A custom sampler declared
 an owner in sources, then its delayed .inhabited? getter retired that owner. The
@@ -466,7 +466,7 @@ or model effects before a factory returns. Bookkeeping remains one declared-sour
 traversal with first-identity retention; no wall-clock improvement is claimed.
 The finite future-work scope, complete checks and resource limits are unchanged.
 
-## P72: prepared finite hash directories before typed declaration binding
+## Prepared finite hash directories before typed declaration binding
 
 A public Map probe with one key and `domain-limit: 0` refused only after one
 computed Key read and two generation-factory metadata reads. This violates the
@@ -518,7 +518,7 @@ and Quickcheck's sequence/binding separation: preparation builds reusable ordina
 combinators; execution alone owns randomness and retained sample provenance. This
 unit changes neither the seed splitting schedule nor the existing shrink policy.
 
-## P79: bounded known carrier directories before edge observation
+## Bounded known carrier directories before edge observation
 
 The audit reproduced two first-observation holes in Tuple/Union/Or discovery.
 An inherited checked action rewrote the returned child-list spine during its
@@ -586,7 +586,7 @@ list-copy, for-each and map-in-order serve the implementation; the graph's exist
 registry and controlled recursive evaluator retain all runtime ownership. Complete
 checks, original heaps, natural compiler/test completion and cancellation stay.
 
-## P80: first-observed Sum metadata and bounded tag directories
+## First-observed Sum metadata and bounded tag directories
 
 The next audit reproduced a first-observation gap in the existing tagged Sum
 compiler: a checked inherited observer changed a returned `(first second)` tag
@@ -607,7 +607,7 @@ Types are guessed, and no payload getter runs when the entire tag width exceeds
 remaining occurrence fuel.
 
 The graph's private own-directory operation serves both this tag admission and
-P79 known Type rows. It replaces the earlier inline proper-list/width/copy steps,
+[Bounded known carrier directories before edge observation](type-discovery.md#bounded-known-carrier-directories-before-edge-observation) known Type rows. It replaces the earlier inline proper-list/width/copy steps,
 with an optional semantic grammar predicate; it adds no runtime wrapper, registry,
 public interface or namespace. Invalid Sum grammar retains the existing message;
 valid over-width rows now refuse with descriptors before child effects. Accepted
@@ -643,7 +643,7 @@ executor or per-container validation chain is introduced. Existing complete chec
 2 GiB main/1 GiB isolated limits and cancellation remain; compilation and semantic
 tests retain their already authorized natural-completion behavior.
 
-## P81: shared sampler declarations owned at first return
+## Shared sampler declarations owned at first return
 
 The global PBT audit next traced the common generator-sources boundary used by
 explicit bridges, automatic recursive graphs, products and finite Maps. Its

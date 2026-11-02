@@ -10,13 +10,13 @@ On this page:
 
 - [Canonical trace admission and execution](#canonical-trace-admission-and-execution)
 - [Stepwise differential execution](#stepwise-differential-execution)
-- [P14: dependency-repaired block trace shrinking](#p14-dependency-repaired-block-trace-shrinking)
-- [P20: scoped differential observations under fixed declarations](#p20-scoped-differential-observations-under-fixed-declarations)
-- [P30: source-consistent generic model actions](#p30-source-consistent-generic-model-actions)
-- [P54: demand-driven dependency-repaired trace trees](#p54-demand-driven-dependency-repaired-trace-trees)
-- [P59: trace request admission before declarations and fixture scope](#p59-trace-request-admission-before-declarations-and-fixture-scope)
-- [P60: owned trace ingress and first-observed explicit dependencies](#p60-owned-trace-ingress-and-first-observed-explicit-dependencies)
-- [P70: shared dependent declarations and closed source observers](#p70-shared-dependent-declarations-and-closed-source-observers)
+- [Dependency-repaired block trace shrinking](#dependency-repaired-block-trace-shrinking)
+- [Scoped differential observations under fixed declarations](#scoped-differential-observations-under-fixed-declarations)
+- [Source-consistent generic model actions](#source-consistent-generic-model-actions)
+- [Demand-driven dependency-repaired trace trees](#demand-driven-dependency-repaired-trace-trees)
+- [Trace request admission before declarations and fixture scope](#trace-request-admission-before-declarations-and-fixture-scope)
+- [Owned trace ingress and first-observed explicit dependencies](#owned-trace-ingress-and-first-observed-explicit-dependencies)
+- [Shared dependent declarations and closed source observers](#shared-dependent-declarations-and-closed-source-observers)
 
 ## Canonical trace admission and execution
 
@@ -77,7 +77,7 @@ unchanged to the existing `error` report; catching everything as conflict, false
 or success is prohibited. Failed operations must leave the observed old state
 and usable ownership unchanged before any retry is admitted.
 
-## P14: dependency-repaired block trace shrinking
+## Dependency-repaired block trace shrinking
 
 Audit finding: the typed trace sampler enumerated only single-command deletions
 and separately rebuilt parameter coordinates. A failure requiring zero or two
@@ -121,7 +121,7 @@ We do not claim lazy preparation, linear wall-clock complexity, all possible
 subsequences, or a globally minimal witness. The supplied neighborhood becomes
 stronger without changing fuel accounting or inventing another shrink runner.
 
-## P20: scoped differential observations under fixed declarations
+## Scoped differential observations under fixed declarations
 
 Direct typed `check-trace` previously could return a match after its fixture
 changed the model declaration midway through execution. The typed boundary now
@@ -147,7 +147,7 @@ Fixture declaration ownership ends with active use, allowing normal resource
 retirement during teardown; model declarations stay checked through factory
 return. Executable teardown controls preserve this scope distinction.
 
-## P30: source-consistent generic model actions
+## Source-consistent generic model actions
 
 The audit reproduced a missed action boundary, rather than expanding the model's
 research scope: an ordinary source-owned generator called `draw-trace`, whose
@@ -197,7 +197,7 @@ Rackcheck feature. Every newly protected action walks its active observer ledger
 no timing or zero-cost improvement is claimed. Existing resource limits and the
 complete local/remote checks remain the acceptance gate for this revision.
 
-## P54: demand-driven dependency-repaired trace trees
+## Demand-driven dependency-repaired trace trees
 
 The audit reproduced unused framework work on the normal typed trace path: an
 eight-command trace with shrink-budget one called all eight parameter shrinkers
@@ -275,7 +275,7 @@ normalization and fixture simulation remain premises. This advances the paper's
 future work; it is not compiler/runtime verification or a universal callback-cost
 bound. No upstream source, scheduler, namespace or resource limit is changed.
 
-## P59: trace request admission before declarations and fixture scope
+## Trace request admission before declarations and fixture scope
 
 The complete trace front door had two reproduced admission defects. A generic
 `check-trace` request with a nonprocedure equality callback initialized its model
@@ -337,13 +337,13 @@ extension into the original paper's compiler/runtime validation. Existing full
 checks, negative controls and resource limits remain unchanged.
 
 
-## P60: owned trace ingress and first-observed explicit dependencies
+## Owned trace ingress and first-observed explicit dependencies
 
 The audit reproduced a shared ingress ownership defect across typed validation,
 repair, execution and generation. A computed Command declaration could replace
 `(1 2)` with `(99 2)` before the model saw the commands. A computed declaration
 could also replace an explicit dependency owner in the caller's list; retiring
-the originally supplied owner then left the old sampler current. P59's properness
+the originally supplied owner then left the old sampler current. [Trace request admission before declarations and fixture scope](model-traces.md#trace-request-admission-before-declarations-and-fixture-scope)'s properness
 checks admitted a shape, but did not yet capture that admitted request before
 computed declarations. The frozen baseline uses direct lazy declarations and
 checks that caller rows/owners are unchanged immediately before API entry; effects
@@ -395,7 +395,7 @@ request; metadata and epoch registration remain with their existing owners. No
 wall-clock speedup is inferred. Existing complete acceptance and resource limits
 remain unchanged. This continues the RFC's finite future-work protocol.
 
-## P70: shared dependent declarations and closed source observers
+## Shared dependent declarations and closed source observers
 
 The report-producing `testing/property` declaration now accepts the existing
 binding syntax of `testing/property/test`:

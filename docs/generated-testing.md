@@ -64,53 +64,53 @@ host defaults/body errors propagate. A declared keyword API uses Gerbil's standa
 positional keyword values. Source callback dependencies must be declared.
 
 
-P58 closes portable handoff configuration and physical framing admission.
+[Portable handoff request admission and physical framing](pbt/replay.md#portable-handoff-request-admission-and-physical-framing) closes portable handoff configuration and physical framing admission.
 Gerbil parameter contracts run before observers/computed metadata; standard
 reader EOF and a separately guarded physical EOF probe precede decoding. Invalid
 requests leave caller ports untouched; malformed input may be consumed and needs
 explicit fresh input. Revision/exception behavior and nested Function wrapping
 remain with their existing owners. Eleven finite Lean laws model request/source/
 framing order, assuming faithful host port operations rather than proving the
-reader or I/O rollback. See [P58](pbt/replay.md#p58-portable-handoff-request-admission-and-physical-framing).
+reader or I/O rollback. See [Portable handoff request admission and physical framing](pbt/replay.md#portable-handoff-request-admission-and-physical-framing).
 
 
-P59 closes static trace request admission before computed declarations and
+[Trace request admission before declarations and fixture scope](pbt/model-traces.md#trace-request-admission-before-declarations-and-fixture-scope) closes static trace request admission before computed declarations and
 fixture acquisition. Standard Gerbil contracts cover generic/typed check requests,
 typed finite limits/dependencies and trace-property binding. Existing model folds,
 source checks, Record/Function wrapping and FUN delivery remain the execution
 owners. Eleven finite Lean laws reuse Boolean admission and guarded preparation;
 callback arity, termination and host cleanup are premises. See
-[P59](pbt/model-traces.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
+[Trace request admission before declarations and fixture scope](pbt/model-traces.md#trace-request-admission-before-declarations-and-fixture-scope).
 
 
-P60 captures typed trace ingress before computed metadata and registers explicit
+[Owned trace ingress and first-observed explicit dependencies](pbt/model-traces.md#owned-trace-ingress-and-first-observed-explicit-dependencies) captures typed trace ingress before computed metadata and registers explicit
 owners in the existing first-observation ledger. Validation, repair, checking and
 generation reuse the existing Record, source and FUN protocols. Caller spine edits
 cannot retarget commands or dependency identities; payloads remain shared. Eight
 finite Lean laws model the original request handoff and guarded preparation;
 faithful host copying/observers and callback termination remain premises. See
-[P60](pbt/model-traces.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).
+[Owned trace ingress and first-observed explicit dependencies](pbt/model-traces.md#owned-trace-ingress-and-first-observed-explicit-dependencies).
 
-P61 guards FunctionArguments metadata from its first Function/clause/input Type
+[First-observed Function input declarations](pbt/function-generation.md#first-observed-function-input-declarations) guards FunctionArguments metadata from its first Function/clause/input Type
 observation and carries that authority through cached layouts and lazy children.
-See [P61](pbt/function-generation.md#p61-first-observed-function-input-declarations).
+See [First-observed Function input declarations](pbt/function-generation.md#first-observed-function-input-declarations).
 
-P62 routes fixed recursive carrier fields through ordered edge discovery: quota
+[Ordered fixed-carrier edge discovery](pbt/type-discovery.md#ordered-fixed-carrier-edge-discovery) routes fixed recursive carrier fields through ordered edge discovery: quota
 precedes metadata, and each returned Type is captured before the next getter.
-See [P62](pbt/type-discovery.md#p62-ordered-fixed-carrier-edge-discovery).
+See [Ordered fixed-carrier edge discovery](pbt/type-discovery.md#ordered-fixed-carrier-edge-discovery).
 
-P63 shares opaque sampler constructor/source admission between recursive graphs
+[Shared opaque sampler admission before optional metadata](pbt/type-discovery.md#shared-opaque-sampler-admission-before-optional-metadata) shares opaque sampler constructor/source admission between recursive graphs
 and typed bridges before optional availability metadata. See
-[P63](pbt/type-discovery.md#p63-shared-opaque-sampler-admission-before-optional-metadata).
+[Shared opaque sampler admission before optional metadata](pbt/type-discovery.md#shared-opaque-sampler-admission-before-optional-metadata).
 
-P64 shares the core's strict Boolean source contract across graph participants,
+[Strict Boolean source admission across typed composition](pbt/generator-control.md#strict-boolean-source-admission-across-typed-composition) shares the core's strict Boolean source contract across graph participants,
 direct typed checks and cached guards; malformed replies cannot authorize later
-work. See [P64](pbt/generator-control.md#p64-strict-boolean-source-admission-across-typed-composition).
+work. See [Strict Boolean source admission across typed composition](pbt/generator-control.md#strict-boolean-source-admission-across-typed-composition).
 
-P65 reuses generic failure classification for typed initialization: secondary
+[Shared primary-cause ownership during typed preparation failure](pbt/preparation.md#shared-primary-cause-ownership-during-typed-preparation-failure) reuses generic failure classification for typed initialization: secondary
 observation/classification cannot erase the primary cause or enter consumer IO.
-See [P65](pbt/preparation.md#p65-shared-primary-cause-ownership-during-typed-preparation-failure).
+See [Shared primary-cause ownership during typed preparation failure](pbt/preparation.md#shared-primary-cause-ownership-during-typed-preparation-failure).
 
-P66 admits diagnostic controls before typed preparation, sharing the generic
+[Diagnostic request admission before typed preparation](pbt/diagnostics.md#diagnostic-request-admission-before-typed-preparation) admits diagnostic controls before typed preparation, sharing the generic
 request check without changing legal zero budgets or preparation exceptions.
-See [P66](pbt/diagnostics.md#p66-diagnostic-request-admission-before-typed-preparation).
+See [Diagnostic request admission before typed preparation](pbt/diagnostics.md#diagnostic-request-admission-before-typed-preparation).

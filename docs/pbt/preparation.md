@@ -8,18 +8,18 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
-- [P34: inherited typed preparation and aggregate measurement](#p34-inherited-typed-preparation-and-aggregate-measurement)
-- [P51: closed bridge and specification preparation](#p51-closed-bridge-and-specification-preparation)
-- [P52: Reader configuration and initial request admission](#p52-reader-configuration-and-initial-request-admission)
-- [P53: ordered named-property declaration preparation](#p53-ordered-named-property-declaration-preparation)
-- [P56: fixture lifetime admission before typed preparation](#p56-fixture-lifetime-admission-before-typed-preparation)
-- [P65: shared primary-cause ownership during typed preparation failure](#p65-shared-primary-cause-ownership-during-typed-preparation-failure)
-- [P68: shared static run admission before declaration preparation](#p68-shared-static-run-admission-before-declaration-preparation)
-- [P69: owned factory result admission before subsequent binding](#p69-owned-factory-result-admission-before-subsequent-binding)
-- [P71: shared observer binding before Map declarations](#p71-shared-observer-binding-before-map-declarations)
-- [P75: joint admission of constant size and declared limit](#p75-joint-admission-of-constant-size-and-declared-limit)
+- [Inherited typed preparation and aggregate measurement](#inherited-typed-preparation-and-aggregate-measurement)
+- [Closed bridge and specification preparation](#closed-bridge-and-specification-preparation)
+- [Reader configuration and initial request admission](#reader-configuration-and-initial-request-admission)
+- [Ordered named-property declaration preparation](#ordered-named-property-declaration-preparation)
+- [Fixture lifetime admission before typed preparation](#fixture-lifetime-admission-before-typed-preparation)
+- [Shared primary-cause ownership during typed preparation failure](#shared-primary-cause-ownership-during-typed-preparation-failure)
+- [Shared static run admission before declaration preparation](#shared-static-run-admission-before-declaration-preparation)
+- [Owned factory result admission before subsequent binding](#owned-factory-result-admission-before-subsequent-binding)
+- [Shared observer binding before Map declarations](#shared-observer-binding-before-map-declarations)
+- [Joint admission of constant size and declared limit](#joint-admission-of-constant-size-and-declared-limit)
 
-## P34: inherited typed preparation and aggregate measurement
+## Inherited typed preparation and aggregate measurement
 
 A registered ancestor can become obsolete during a typed sampler factory, a Map
 key validator or a scalar measure. Refusing only after the whole aggregate is too
@@ -65,7 +65,7 @@ an explicit extension, not a missing Rackcheck guarantee. No performance claim i
 made from callback counts alone.
 
 
-## P51: closed bridge and specification preparation
+## Closed bridge and specification preparation
 
 The audit reproduced a post-snapshot admission gap: a generation getter retired
 the captured Type, yet generator-core invoked its returned factory and published
@@ -122,7 +122,7 @@ stored or added to hot execution. Operation counts do not imply a wall-clock
 speedup. The independent generic package remains at 148 cases and imports no POO.
 No upstream, scheduler, resource-limit or full-acceptance changes are introduced.
 
-## P52: Reader configuration and initial request admission
+## Reader configuration and initial request admission
 
 The audit reproduced a library-owned admission gap: a Reader policy getter
 retired its known Type, but the later seed getter and draw still ran and the
@@ -193,7 +193,7 @@ regression and exact-cause/one-delivery controls cover this report boundary.
 The preparation model's monadic consumer is a success continuation; application
 consumption of an error report remains a separate, existing IO operation.
 
-## P53: ordered named-property declaration preparation
+## Ordered named-property declaration preparation
 
 The audit found a concrete gap in the public named-property forms: a generator
 expression retired its already known specification and then ran a nested producer.
@@ -263,7 +263,7 @@ constructor cannot be discovered inside it. Direct caller argument evaluation,
 arbitrary host effects, rollback and compiler/runtime verification remain outside
 these laws. No resource limit or complete check is removed or broadened.
 
-## P56: fixture lifetime admission before typed preparation
+## Fixture lifetime admission before typed preparation
 
 The scoped differential protocol had two concrete admission defects. A typed
 callback retained after check-trace returned read a later raw fixture's computed
@@ -327,7 +327,7 @@ concurrent access, call/cc reentry, host evaluator verification and user-caught
 exceptions outside the protocol are not proved. Resource guards and full checks
 are unchanged; no latency or allocation improvement is claimed by these laws.
 
-## P65: shared primary-cause ownership during typed preparation failure
+## Shared primary-cause ownership during typed preparation failure
 
 The audit reproduced a typed error-reporting defect. An owned generation factory
 raised a primary exception after its opaque observer became unavailable. The
@@ -372,7 +372,7 @@ arbitrary consumer effects. No elapsed-time improvement is claimed. The independ
 library remains POO-free, and complete checks/resource limits are unchanged within
 the RFC's finite future-work scope.
 
-## P68: shared static run admission before declaration preparation
+## Shared static run admission before declaration preparation
 
 The public report-producing define-property form accepted seed -1 only after
 executing its specification and generator expressions (two observed effects).
@@ -437,12 +437,12 @@ A downstream suite may bind a request once with ordinary module imports:
 ;; Each (run-request generation property specification) starts a fresh run.
 ```
 
-## P69: owned factory result admission before subsequent binding
+## Owned factory result admission before subsequent binding
 
 The bridge audit reproduced a wrong-phase effect: an owned factory returned #t,
 yet generator-core still read the later .current? getter before reporting the
 invalid result. An exception in that getter could replace the factory protocol
-failure. P51 already promises a checked factory result followed by hook binding;
+failure. [Closed bridge and specification preparation](preparation.md#closed-bridge-and-specification-preparation) already promises a checked factory result followed by hook binding;
 this is a concrete missing postcondition, not unrestricted callback inference.
 
 The private checked-generation boundary in testing/type now returns only #f or
@@ -486,7 +486,7 @@ latency improvement. This advances the paper's future work. Existing failure
 categories, complete checks, heap/compile guards and unbounded semantic-test
 execution are retained.
 
-## P71: shared observer binding before Map declarations
+## Shared observer binding before Map declarations
 
 The remaining duplicate observer reader in `map-generator` treated a present
 false `.current?` value as absence. Construction still failed later at the core
@@ -531,13 +531,13 @@ additional revision/metadata protocol is this project's finite future-work
 extension. Advanced handwritten sample producers and consumer-owned source
 admission retain their existing contract; they are not redefined as this defect.
 
-## P75: joint admission of constant size and declared limit
+## Joint admission of constant size and declared limit
 
 A constant `size: 2 size-limit: 1` is already known to exceed its finite envelope,
 but the named property still evaluated both declarations before returning a
 trial-one runtime error. A typed probe also read sampler source metadata, whose
 raised false replaced the configuration error. This is a decidable request
-relation at the existing P68 preparation boundary, not inference about arbitrary
+relation at the existing [Shared static run admission before declaration preparation](preparation.md#shared-static-run-admission-before-declaration-preparation) preparation boundary, not inference about arbitrary
 size callbacks.
 
 `prepare-property-check` now checks that a recognized constant fits its recognized

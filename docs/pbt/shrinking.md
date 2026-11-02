@@ -10,10 +10,10 @@ On this page:
 
 - [Checked actions and interrupted shrink receipts](#checked-actions-and-interrupted-shrink-receipts)
 - [Dependency-preserving sequence shrinking](#dependency-preserving-sequence-shrinking)
-- [P17: source-owned resumable shrink traversal](#p17-source-owned-resumable-shrink-traversal)
-- [P82: finite POO shrink neighborhoods captured before returning checks](#p82-finite-poo-shrink-neighborhoods-captured-before-returning-checks)
-- [P83: generic data-list candidate capture with contract failure precedence](#p83-generic-data-list-candidate-capture-with-contract-failure-precedence)
-- [P84: shared finite parameter ownership in lazy dependency shrinking](#p84-shared-finite-parameter-ownership-in-lazy-dependency-shrinking)
+- [Source-owned resumable shrink traversal](#source-owned-resumable-shrink-traversal)
+- [Finite POO shrink neighborhoods captured before returning checks](#finite-poo-shrink-neighborhoods-captured-before-returning-checks)
+- [Generic data-list candidate capture with contract failure precedence](#generic-data-list-candidate-capture-with-contract-failure-precedence)
+- [Shared finite parameter ownership in lazy dependency shrinking](#shared-finite-parameter-ownership-in-lazy-dependency-shrinking)
 
 ## Checked actions and interrupted shrink receipts
 
@@ -85,7 +85,7 @@ these costs; the shrink attempt budget does not prove callback execution time,
 byte allocation or globally minimal counterexamples. No hidden unbounded search
 or replacement scheduler is introduced.
 
-## P17: source-owned resumable shrink traversal
+## Source-owned resumable shrink traversal
 
 Audit finding: standard value shrink factories checked their source leaves only
 when a coroutine first started. A paused iterator could resume producer effects
@@ -142,9 +142,9 @@ still bound arbitrary callback work.
 parent-first lazy tree comparison. Original child seeds and regeneration order
 are unchanged; source ownership is our additional explicit protocol.
 
-## P82: finite POO shrink neighborhoods captured before returning checks
+## Finite POO shrink neighborhoods captured before returning checks
 
-The audit followed finite proposal ownership beyond P57 product rows. A raw UInt
+The audit followed finite proposal ownership beyond [Fixed product row and finite expansion ownership](data-generation.md#fixed-product-row-and-finite-expansion-ownership) product rows. A raw UInt
 sampler returned `(0)`; a returning inherited observer rewrote that spine to `(1)`
 before sampler-children copied it. The reproduced child was `candidate=(1)`.
 Products had the same checked-call/copy order, and recursive leaf shrinking had
@@ -202,9 +202,9 @@ Gerbil list-copy do the concrete work. Complete checks, 2 GiB main/1 GiB isolate
 limits and process cancellation are unchanged, as is authorized natural compiler
 and test completion. These are finite future-work constructions.
 
-## P83: generic data-list candidate capture with contract failure precedence
+## Generic data-list candidate capture with contract failure precedence
 
-P82's remaining generic finite-list audit reproduced `candidates=((1))` after a
+[Finite POO shrink neighborhoods captured before returning checks](shrinking.md#finite-poo-shrink-neighborhoods-captured-before-returning-checks)'s remaining generic finite-list audit reproduced `candidates=((1))` after a
 callback returned `(0)` and a returning observer rewrote that spine. The common
 data-list-shrinks policy validated the row only after with-sources returned. This
 affected coordinate replacement before later coordinates or model repair; input
@@ -268,17 +268,17 @@ Record and FUN serve the downstream example. Complete checks, 2 GiB main/1 GiB
 isolated guards and cancellation remain unchanged, with authorized natural
 compiler and test completion. No performance improvement is claimed.
 
-## P84: shared finite parameter ownership in lazy dependency shrinking
+## Shared finite parameter ownership in lazy dependency shrinking
 
 The audit traced draw/repair/seed replay through the existing model generator.
-P83 fixed the eager list policy, but trace-command still copied its returned
+[Generic data-list candidate capture with contract failure precedence](shrinking.md#generic-data-list-candidate-capture-with-contract-failure-precedence) fixed the eager list policy, but trace-command still copied its returned
 parameter list after a returning checked observer. The minimal baseline produced
 `trace-neighborhood=(() (1))` from the declared `(0)` parameter. A typed dependent
 Record/Function probe retained open/use dependencies but incorrectly minimized its
 use amount to 1 instead of 0. These are supported lazy-trace parameter boundaries,
 not unrestricted dependency inference or a new replay authority.
 
-The P83 finite admission implementation is now one named generator-module
+The [Generic data-list candidate capture with contract failure precedence](shrinking.md#generic-data-list-candidate-capture-with-contract-failure-precedence) finite admission implementation is now one named generator-module
 operation, finite-shrink-children. data-list-shrinks and the model's demanded
 trace-command factory call that SAME owner. It preserves one shallow copy per
 finite parameter row, original using exceptions, standard multiple values and
@@ -301,7 +301,7 @@ spines after first return, false command duplicates, stored contract refusal aft
 observer repair, preservation of structural progress before malformed refusal,
 raw/observer false and object causes, source retirement and exact charges before
 parameter failure. Budgets 0/1/2 distinguish no parameter demand, structural-only
-demand and one accepted parameter, with exact factory/attempt counts. P83's
+demand and one accepted parameter, with exact factory/attempt counts. [Generic data-list candidate capture with contract failure precedence](shrinking.md#generic-data-list-candidate-capture-with-contract-failure-precedence)'s
 infinite-Iterator budget controls remain intact. Isolated acceptance increases
 from 235 to 239 cases, still without POO imports or another test entrypoint.
 

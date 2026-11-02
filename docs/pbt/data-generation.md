@@ -8,18 +8,18 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
-- [P13: declared finite enumeration simplification](#p13-declared-finite-enumeration-simplification)
-- [P18: independent product retention](#p18-independent-product-retention)
-- [P21: shared typed-product observation](#p21-shared-typed-product-observation)
-- [P22: fixed-product source admission](#p22-fixed-product-source-admission)
-- [P28: exact bounded model draw configuration](#p28-exact-bounded-model-draw-configuration)
-- [P29: finite sequence preparation without prefix salvage](#p29-finite-sequence-preparation-without-prefix-salvage)
-- [P47: automatic exact integer carrier profiles](#p47-automatic-exact-integer-carrier-profiles)
-- [P48: one spelling protocol for text carriers and keyword call values](#p48-one-spelling-protocol-for-text-carriers-and-keyword-call-values)
-- [P55: owned finite sequence preparation](#p55-owned-finite-sequence-preparation)
-- [P57: fixed product row and finite expansion ownership](#p57-fixed-product-row-and-finite-expansion-ownership)
+- [Declared finite enumeration simplification](#declared-finite-enumeration-simplification)
+- [Independent product retention](#independent-product-retention)
+- [Shared typed-product observation](#shared-typed-product-observation)
+- [Fixed-product source admission](#fixed-product-source-admission)
+- [Exact bounded model draw configuration](#exact-bounded-model-draw-configuration)
+- [Finite sequence preparation without prefix salvage](#finite-sequence-preparation-without-prefix-salvage)
+- [Automatic exact integer carrier profiles](#automatic-exact-integer-carrier-profiles)
+- [One spelling protocol for text carriers and keyword call values](#one-spelling-protocol-for-text-carriers-and-keyword-call-values)
+- [Owned finite sequence preparation](#owned-finite-sequence-preparation)
+- [Fixed product row and finite expansion ownership](#fixed-product-row-and-finite-expansion-ownership)
 
-## P13: declared finite enumeration simplification
+## Declared finite enumeration simplification
 
 Finite Enum values previously had no shrink candidates and zero measure. A
 nested collection could reduce its shape but could not simplify an Enum field.
@@ -55,7 +55,7 @@ source checks retain the existing lazy tree and budget costs.
 also supplies shrinking. Its removal-of-previous-choices policy differs from our
 explicit declaration-order policy; byte-for-byte tree parity is not claimed.
 
-## P18: independent product retention
+## Independent product retention
 
 Gerbil's independent product implementation used dependent bind during shrinking,
 redrawing a suffix after an earlier coordinate changed. A stateful draw control
@@ -75,7 +75,7 @@ They do not prove host callbacks, PRNG quality, physical sharing, allocation or 
 Each coordinate still packs the full product and checks declared sources; removal
 of suffix regeneration is not a constant-time or universal speedup claim.
 
-## P21: shared typed-product observation
+## Shared typed-product observation
 
 Typed product measures duplicated the generic product fold and could invoke a
 later field after an earlier source revision. Value-only shrinking could likewise
@@ -98,7 +98,7 @@ premises. Host copying, arbitrary aliases, callbacks, concurrency, allocation an
 GC are not certified. Joint source walks can remain quadratic in field count;
 there is no constant-time or universal performance claim.
 
-## P22: fixed-product source admission
+## Fixed-product source admission
 
 The generic fixed product knew every field but hid its producer leaves until
 selected bind stages ran. A stale later field could leave `generator-current?`
@@ -122,7 +122,7 @@ refusal, exact causes, explicit retry, preserved wrappers, shrinking and both
 replays. All checks and resource bounds remain required. Known-source checking
 adds necessary observer work; this correctness unit makes no speedup claim.
 
-## P28: exact bounded model draw configuration
+## Exact bounded model draw configuration
 
 The generic trace draw accepted non-natural steps and size directly as iterator
 bounds. Before repair, steps `-1` and `1/2` each generated a command and invoked
@@ -170,7 +170,7 @@ using Gerbil mechanisms; this project's finite model-trace API is an extension,
 not a claim that Rackcheck implements the same state-machine protocol.
 
 
-## P29: finite sequence preparation without prefix salvage
+## Finite sequence preparation without prefix salvage
 
 The audit reproduced two silent truncations. `valid-trace?` rejected a dotted
 command spine while `repair-trace` initialized the model and returned its apparent
@@ -230,7 +230,7 @@ requires stream-shaped general shrink results. We preserve that lazy-protocol
 separation using Gerbil Iterators while enforcing the narrower proper-list
 contract of this project's finite value policy. Revision checks remain our extension.
 
-## P47: automatic exact integer carrier profiles
+## Automatic exact integer carrier profiles
 
 The concentrated audit reproduced a missing derivation path for existing
 `IntegerRange`, `UIntN`, `IntN` and `Z/` descriptors. They required handwritten
@@ -278,7 +278,7 @@ the paper's future work, not proofs of Scheme execution, PRNG distribution or
 wall-clock performance. The width bound is not a constant-time bignum arithmetic
 claim. All existing checks and resource limits remain unchanged.
 
-## P48: one spelling protocol for text carriers and keyword call values
+## One spelling protocol for text carriers and keyword call values
 
 The concentrated audit found that the existing Keyword Type had validation and
 standard string conversion but no automatic PBT derivation. FunctionArguments
@@ -327,7 +327,7 @@ prove Gerbil intern tables, the compiler, PRNG distribution or physical memory a
 latency. This advances the paper's future-work direction. No upstream code,
 module framework, namespace, runner, resource limit or acceptance check changes.
 
-## P55: owned finite sequence preparation
+## Owned finite sequence preparation
 
 The audit reproduced a split preparation boundary in the existing finite value
 policy. With input (4 6), a first parameter callback changing the caller's second
@@ -382,7 +382,7 @@ model snapshot costs a linear shallow copy per preparation; no wall-time or
 allocation improvement is inferred from these correctness controls. Existing
 complete checks, watchdogs and heap limits remain unchanged.
 
-## P57: fixed product row and finite expansion ownership
+## Fixed product row and finite expansion ownership
 
 The audit reproduced three defects in the value-level product path. An improper
 child neighborhood invoked the packer once before refusing its tail. A two-field

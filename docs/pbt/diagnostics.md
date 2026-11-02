@@ -8,12 +8,12 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
-- [P35: source-consistent error classification and terminal diagnostics](#p35-source-consistent-error-classification-and-terminal-diagnostics)
-- [P66: diagnostic request admission before typed preparation](#p66-diagnostic-request-admission-before-typed-preparation)
-- [P67: prepared named diagnostics across report observation](#p67-prepared-named-diagnostics-across-report-observation)
-- [P77: captured preparation refusals across diagnostic rendering](#p77-captured-preparation-refusals-across-diagnostic-rendering)
+- [Source-consistent error classification and terminal diagnostics](#source-consistent-error-classification-and-terminal-diagnostics)
+- [Diagnostic request admission before typed preparation](#diagnostic-request-admission-before-typed-preparation)
+- [Prepared named diagnostics across report observation](#prepared-named-diagnostics-across-report-observation)
+- [Captured preparation refusals across diagnostic rendering](#captured-preparation-refusals-across-diagnostic-rendering)
 
-## P35: source-consistent error classification and terminal diagnostics
+## Source-consistent error classification and terminal diagnostics
 
 Audit reproduced a completed `unsupported` report whose `report-current?` was
 already false: the original draw threw, the error classifier revised its own
@@ -75,7 +75,7 @@ limits are unchanged. Classification source checks have a cost; no wall-clock
 speedup is inferred from suppressed callbacks.
 
 
-## P66: diagnostic request admission before typed preparation
+## Diagnostic request admission before typed preparation
 
 The audit reproduced a diagnostic ordering defect through the public typed
 inspect-generator entry: count -1 still forced a computed generation getter. Its
@@ -117,7 +117,7 @@ termination and standard FUN/IO delivery remain premises; this is not a proof of
 Gerbil expansion/runtime, elapsed cost or arbitrary effect rollback. All complete
 checks and process resource limits remain unchanged. No latency claim is made.
 
-## P67: prepared named diagnostics across report observation
+## Prepared named diagnostics across report observation
 
 The audit reproduced a presentation ownership defect: report-diagnostics admitted
 caller-owned binding names, then report-current? could invoke a source observer
@@ -169,9 +169,9 @@ A downstream suite can prepare its renderer before any assertion observations:
 The formatter does not run a generator or authorize a passed assertion. Reuse
 with another report always observes that report's own authority.
 
-## P77: captured preparation refusals across diagnostic rendering
+## Captured preparation refusals across diagnostic rendering
 
-The audit reproduced a break in P42's original-cause guarantee. With no kernel
+The audit reproduced a break in [authoritative standard assertions and checked diagnostic rendering](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/diagnostics.md#authoritative-standard-assertions-and-checked-diagnostic-rendering)'s original-cause guarantee. With no kernel
 execution, `require-passed` admitted a finite symbolic `refusal:` alist and retained
 its caller-owned directory. A formatter could replace one field with a symbol and
 then raise a secondary cause. Fallback traversal subsequently raised a host
@@ -218,7 +218,7 @@ arbitrary concurrent writes, or immutability of shared payloads. This advances
 the paper's future work.
 
 The Rackcheck/Quickcheck comparison retains the existing generator/tree algebra;
-this unit closes our P42 standard-test ownership guarantee rather than claiming a
+this unit closes our [authoritative standard assertions and checked diagnostic rendering](https://github.com/tao3k/gerbil-poo/blob/feat/positive-closure-costs/doc/pbt/diagnostics.md#authoritative-standard-assertions-and-checked-diagnostic-rendering) standard-test ownership guarantee rather than claiming a
 missing Racket feature or changing its shrinking policy. Gerbil's existing module,
 map, error class and :std/test boundary own delivery. Design review deliberately
 kept capture at the one assertion boundary rather than adding copy/validation
