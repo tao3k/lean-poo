@@ -154,3 +154,18 @@ example : observeFiniteChildren true (fun _ : Nat => some [0])
     (fun _ => true) (fun _ => .error false) 0 = .error (some false) := rfl
 example : observeFiniteChildren "invalid" (fun _ : Nat => some ([] : List Nat))
     (fun _ => true) (fun state => .ok ((), state)) 0 = .ok ([], 0) := rfl
+
+-- A later observer spelling cannot replace the captured coordinate candidate.
+example : observeListCoordinate "contract" (fun state : Nat => some [state])
+    (fun _ => true) (fun _ => .ok ((), 1)) [8] [9] 0 = .ok ([[8, 0, 9]], 1) := rfl
+-- Stored contract refusal retains observer-cause priority, including false.
+example : observeListCoordinate true (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => true) (fun _ => .error false) [8] [9] 0 = .error (some false) := rfl
+-- Retirement outranks malformed input and suppresses coordinate construction.
+example : observeListCoordinate "contract" (fun _ : Nat => (none : Option (List Nat)))
+    (fun state => state = 0) (fun _ => .ok ((), 1)) [8] [9] 0 = .error none := rfl
+-- False proposals, duplicates and an empty neighborhood retain distinct shapes.
+example : observeListCoordinate "contract" (fun _ : Nat => some [false, false])
+    (fun _ => true) (fun state => .ok ((), state)) [] [] 0 = .ok ([[false], [false]], 0) := rfl
+example : observeListCoordinate "contract" (fun _ : Nat => some ([] : List Nat))
+    (fun _ => true) (fun state => .ok ((), state)) [8] [9] 0 = .ok ([], 0) := rfl

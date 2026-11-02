@@ -3865,3 +3865,69 @@ existing lazy tree, checked packer and replay algebra. Record, FUN and standard
 Gerbil list-copy do the concrete work. Complete checks, 2 GiB main/1 GiB isolated
 limits and process cancellation are unchanged, as is authorized natural compiler
 and test completion. These are finite future-work constructions.
+
+## P83: generic data-list candidate capture with contract failure precedence
+
+P82's remaining generic finite-list audit reproduced `candidates=((1))` after a
+callback returned `(0)` and a returning observer rewrote that spine. The common
+data-list-shrinks policy validated the row only after with-sources returned. This
+affected coordinate replacement before later coordinates or model repair; input
+snapshot ownership alone did not own each returned finite neighborhood.
+
+The same coordinate action now captures a proper returned list with Gerbil
+list-copy. For malformed output it uses the original using/proper-list? contract
+under with-catch to retain the actual standard exception without raising it yet.
+Standard multiple values carry the owned row or stored refusal through the SAME
+with-sources action. Only after its returning source checks does the caller raise
+the stored contract exception or reconstruct candidates with the existing map.
+There is no new record, wrapper, registry, public API or namespace. The input
+parameter is named items so it does not shadow Scheme's values primitive.
+
+This preserves stale and observer-exception priority over malformed output. Raw
+shrinker exceptions, including false, occur outside the contract-only catch and
+retain their original cause without a trailing check replacing it. A post-return
+repair of malformed caller data cannot repair its captured admission; replacement,
+improper and cyclic edits of a previously proper spine cannot retarget proposals.
+Order, multiplicity and payload identity remain, including false payloads and a
+legal empty neighborhood. Only spines are owned, never arbitrary mutable payloads,
+callback state or external effects.
+
+Four standard-library cases cover those edits, full prefix/suffix substitution,
+shared payload identity, stored standard contract errors after observer repair,
+source retirement, body/observer false and object causes, and exact later-coordinate
+suppression. A genuinely infinite generic Iterator is checked at budgets 0, 1 and
+3: only the requested proposals are pulled, the factory remains unused at zero,
+and rejected nondecreasing candidates still spend the original counter. Generic
+Iterator APIs, list-deletions laziness, structural ordering, rank admission and the
+runner's budget/restart machinery are unchanged. data-list-shrinks retains its
+existing finite/eager immediate-neighborhood contract; this change does not make
+an arbitrary Iterator admissible as a finite coordinate result. Independent
+standard-library acceptance increases from 231 to 235 cases, without POO imports.
+
+The existing generated-products TestSuite adds a complete Record/Function batch
+via FUN property-action. Structural deletions and data-list coordinate shrinking
+reduce a failing two-service batch to the originally returned zero service despite
+a returning observer substituting a different service. Function validation,
+concrete replay, seed replay after explicit closure-data repair, old-owner refusal
+and fresh corrected retry all reuse existing protocols. No second test runner or
+module inventory is added.
+
+Seven PropertyProducts laws compose the existing observeFiniteChildren boundary
+with ordered prefix/value/suffix reconstruction. They prove refusal suppression,
+exact retained row mapping, one result per captured occurrence, complete candidate
+width, snapshot equivalence, original cause precedence and an empty neighborhood.
+Five top-level examples distinguish retargeting, malformed/observer priority,
+retirement, false duplicates and empty output. The normalized invalid cause denotes
+the stored standard contract exception; its constructor/backtrace implementation
+is not verified. Host shape recognition, faithful shallow copying, accurate source
+observers and terminating sequential callbacks remain premises. Candidate-count
+laws are not a GC/RSS or latency bound, callback termination proof, concurrent
+mutation proof or Gerbil/Gambit/compiler verification. This continues the paper's
+finite future-work construction.
+
+The author/Racket composition reference is retained: own finite data at its one
+producer boundary, then use existing map, model repair and retained tree algebra.
+Gerbil using, with-catch, values/let-values and list-copy implement that boundary;
+Record and FUN serve the downstream example. Complete checks, 2 GiB main/1 GiB
+isolated guards and cancellation remain unchanged, with authorized natural
+compiler and test completion. No performance improvement is claimed.

@@ -678,4 +678,68 @@ theorem observeFiniteChildren_refused (invalid : Cause) (returned : State → Op
     (observeFiniteChildren invalid returned live observe state >>= consume) = .error cause := by
   rw [failed]; rfl
 
+/-- Rebuild one data-list coordinate only after the existing finite capture/source
+boundary succeeds. Prefix and suffix denote the caller's already owned input row;
+only their spines are reconstructed, never arbitrary mutable payloads. -/
+def observeListCoordinate (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) : Except (Option Cause) (List (List Value) × State) :=
+  (observeFiniteChildren invalid returned live observe state).map
+    (fun result => (result.1.map (fun value => before ++ value :: after), result.2))
+
+/-- Any capture/observer refusal suppresses every rebuilt coordinate candidate. -/
+theorem observeListCoordinate_refused (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) (cause : Option Cause)
+    (failed : observeFiniteChildren invalid returned live observe state = .error cause) :
+    observeListCoordinate invalid returned live observe before after state = .error cause := by
+  simp [observeListCoordinate, failed, Except.map]
+
+/-- Original order, duplicates and false payloads reach exactly one ordered map. -/
+theorem observeListCoordinate_retained (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after row : List Value) (state next : State)
+    (captured : returned state = some row) (fresh : live state = true) (later : live next = true) :
+    observeListCoordinate invalid returned live (fun _ => .ok ((), next)) before after state =
+      .ok (row.map (fun value => before ++ value :: after), next) := by
+  simp [observeListCoordinate, observeFiniteChildren_retained invalid returned live state next row
+    captured fresh later, Except.map]
+
+/-- Coordinate reconstruction emits exactly one result for each captured proposal;
+this is a cardinality bound, not permission to skip the runner's attempt counter. -/
+theorem listCoordinate_count (before after row : List Value) :
+    (row.map (fun value => before ++ value :: after)).length = row.length := by simp
+
+/-- Every rebuilt candidate retains the complete fixed prefix and suffix width. -/
+theorem listCoordinate_width (before after row candidate : List Value)
+    (member : candidate ∈ row.map (fun value => before ++ value :: after)) :
+    candidate.length = before.length + 1 + after.length := by
+  obtain ⟨value, _, same⟩ := List.mem_map.mp member
+  subst candidate
+  simp [List.length_append, Nat.add_comm, Nat.add_left_comm]
+
+/-- A returning observer cannot repair the original malformed-row decision or
+replace an original successful row by changing its later source spelling. -/
+theorem observeListCoordinate_snapshot (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) :
+    observeListCoordinate invalid returned live observe before after state =
+      observeListCoordinate invalid (fun _ => returned state) live observe before after state := by
+  simp only [observeListCoordinate, observeFiniteChildren]
+
+/-- An original observer cause outranks any stored contract refusal. -/
+theorem observeListCoordinate_cause (invalid cause : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after : List Value) (state : State) (fresh : live state = true) :
+    observeListCoordinate invalid returned live (fun _ => .error cause) before after state =
+      .error (some cause) := by
+  exact observeListCoordinate_refused invalid returned live _ before after state (some cause)
+    (observeFiniteChildren_cause invalid cause returned live state fresh)
+
+/-- A legal empty neighborhood performs no candidate reconstruction. -/
+theorem observeListCoordinate_empty (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after : List Value) (state next : State)
+    (captured : returned state = some []) (fresh : live state = true) (later : live next = true) :
+    observeListCoordinate invalid returned live (fun _ => .ok ((), next)) before after state =
+      .ok ([], next) := by
+  simpa using observeListCoordinate_retained invalid returned live before after [] state next captured fresh later
+
 end LeanPoo.Functional.PropertyTesting
