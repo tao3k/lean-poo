@@ -176,3 +176,19 @@ example : guardedTraceRequest (fun _ : Nat => [7]) (fun state => state == 0)
 example : guardedTraceRequest (fun _ : Nat => [7]) (fun state => state == 0)
     (fun _ => (.error false : Except Bool (Unit × Nat)))
     (fun _ _ state => .ok (false, state)) 0 = .error (some false) := rfl
+
+-- Zero remaining demand suppresses even a throwing observer/unused producer.
+example : observeTraceParameters 0 "contract" (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => false) (fun _ => .error "must not observe") (fun n => n + 1) 0 = .ok ([], 0) := rfl
+-- Ordered first-return parameters, not the observer's later spelling, feed repair.
+example : observeTraceParameters 1 "contract" (fun state : Nat => some [state, 7])
+    (fun _ => true) (fun _ => .ok ((), 1)) (fun n => [n]) 0 = .ok ([[0]], 1) := rfl
+-- False remains an exact cause even when the captured neighborhood is malformed.
+example : observeTraceParameters 1 true (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => true) (fun _ => .error false) (fun n => [n]) 0 = .error (some false) := rfl
+-- A retired source cannot deliver any repaired parameter candidate.
+example : observeTraceParameters 1 "contract" (fun _ : Nat => some [0])
+    (fun state => state = 0) (fun _ => .ok ((), 1)) (fun n => [n]) 0 = .error none := rfl
+-- Repeated false commands retain distinct ordered proposal occurrences.
+example : observeTraceParameters 2 "contract" (fun _ : Nat => some [false, false])
+    (fun _ => true) (fun state => .ok ((), state)) (fun b => [b]) 0 = .ok ([[false], [false]], 0) := rfl

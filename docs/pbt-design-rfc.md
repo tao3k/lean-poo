@@ -3931,3 +3931,68 @@ Gerbil using, with-catch, values/let-values and list-copy implement that boundar
 Record and FUN serve the downstream example. Complete checks, 2 GiB main/1 GiB
 isolated guards and cancellation remain unchanged, with authorized natural
 compiler and test completion. No performance improvement is claimed.
+
+## P84: shared finite parameter ownership in lazy dependency shrinking
+
+The audit traced draw/repair/seed replay through the existing model generator.
+P83 fixed the eager list policy, but trace-command still copied its returned
+parameter list after a returning checked observer. The minimal baseline produced
+`trace-neighborhood=(() (1))` from the declared `(0)` parameter. A typed dependent
+Record/Function probe retained open/use dependencies but incorrectly minimized its
+use amount to 1 instead of 0. These are supported lazy-trace parameter boundaries,
+not unrestricted dependency inference or a new replay authority.
+
+The P83 finite admission implementation is now one named generator-module
+operation, finite-shrink-children. data-list-shrinks and the model's demanded
+trace-command factory call that SAME owner. It preserves one shallow copy per
+finite parameter row, original using exceptions, standard multiple values and
+source/observer-cause priority. The duplicated lazy-side validation/copy is removed.
+This is an ordinary function in the existing module, imported with only-in;
+there is no new namespace, module registry, framework or callback record.
+
+The operation still runs only when the existing sequence requests that parameter
+neighborhood. Structural proposals precede parameters, repair occurs once per
+requested returned trace, and unvisited parameters/repairs stay unvisited. Failed
+parameter acquisition has not returned a proposal; previously yielded structural
+proposals keep their charges. The runner's domain, strict rank, restart, source
+and attempt-budget owners are unchanged. Generic arbitrary Iterator callbacks are
+not routed through this explicitly finite boundary. Empty rows, false commands,
+ordered duplicates and shared payload identities remain data; mutable command
+fields and undeclared callback effects remain caller obligations.
+
+Four independent standard-library cases cover replaced/improper/cyclic caller
+spines after first return, false command duplicates, stored contract refusal after
+observer repair, preservation of structural progress before malformed refusal,
+raw/observer false and object causes, source retirement and exact charges before
+parameter failure. Budgets 0/1/2 distinguish no parameter demand, structural-only
+demand and one accepted parameter, with exact factory/attempt counts. P83's
+infinite-Iterator budget controls remain intact. Isolated acceptance increases
+from 235 to 239 cases, still without POO imports or another test entrypoint.
+
+The existing generated-traces suite adds a complete open/use service with shared
+handle keys, Record command fields and Function wrapping. Its faulty system lives
+inside the existing scoped differential fixture. Returning observers substitute a
+use amount of 1, while the captured original amount 0 is repaired and accepted as
+a strictly smaller failing trace. The open/use dependency survives; Function input
+checks, concrete/seed replay, old-owner rejection, fresh corrected retry and equal
+fixture open/close counts all use trace-generator, trace-property and FUN.
+
+Eight finite PropertyTraces laws compose observeFiniteChildren with demand and
+ordered prefix repair: zero demand suppresses this stage, capture refusal skips
+repair, retained rows keep order, completed prefix repair is budget-bounded, pure
+repair commutes with prefix selection, malformed errors retain their source gate,
+original causes keep priority, and retirement suppresses publication. Five top-level
+examples cover zero demand, a retargeted spelling, false causes, retirement and
+false duplicates. Existing repairedTracePrefix laws continue to describe actual
+finite model repair. The new normalized-return model assumes faithful host list
+recognition/copying, pure repair and accurate sequential source observations;
+primitive exception construction, arbitrary callback termination, mutable payload
+freezing, concurrent mutation and Gerbil/Gambit/compiler verification are outside
+its claim. This advances the paper's finite future work, not a latency/GC/RSS proof.
+
+The author's ordered composition and the Racket retained-tree comparison guide
+one producer boundary followed by existing sequence/repair/replay operations.
+Gerbil using, with-catch, values and list-copy implement it; Record and FUN express
+the typed application. Complete checks, 2 GiB main/1 GiB isolated limits and
+cancellation remain, with the already authorized natural compiler/test completion.
+No full benchmark artifact, versioned JSON or upstream change is introduced.

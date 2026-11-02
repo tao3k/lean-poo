@@ -1,4 +1,4 @@
-import LeanPoo.Functional.PropertyGenerators
+import LeanPoo.Functional.PropertyProducts
 
 /-! Finite revision-bound differential observations. State includes the declared
 model/fixture epochs; host scope cleanup and callback termination are premises. -/
@@ -477,5 +477,90 @@ theorem guardedTraceRequest_state (capture : State → Request) (live : State �
     guardedTraceRequest capture live (fun _ => .ok (prepared, next))
       (fun _ _ _ => (.ok (output, final) : Except Cause (Output × State))) state = .ok (output, final) := by
   simp [guardedTraceRequest, guardedGeneration, a, b, c]
+
+/-- Demand a bounded prefix from a captured finite parameter neighborhood. Zero
+remaining demand never invokes this stage's producer/observer/repair. Positive
+demand reuses the shared finite-capture refusal order, then repairs only the
+requested prefix. Repair is pure here; host callbacks and normalization are premises. -/
+def observeTraceParameters (budget : Nat) (invalid : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (repair : Command → Result) (state : State) :
+    Except (Option Cause) (List Result × State) :=
+  if budget = 0 then .ok ([], state)
+  else (observeFiniteChildren invalid returned live observe state).map
+    (fun result => ((result.1.take budget).map repair, result.2))
+
+/-- No remaining parameter demand means no producer, observer or repair work. -/
+theorem observeTraceParameters_zero (invalid : Cause) (returned : State → Option (List Command))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (repair : Command → Result) (state : State) :
+    observeTraceParameters 0 invalid returned live observe repair state = .ok ([], state) := by
+  simp [observeTraceParameters]
+
+/-- Capturing/refusing one demanded neighborhood cannot enter any repair. -/
+theorem observeTraceParameters_refused (budget : Nat) (invalid : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (repair : Command → Result) (state : State)
+    (cause : Option Cause) (positive : budget ≠ 0)
+    (failed : observeFiniteChildren invalid returned live observe state = .error cause) :
+    observeTraceParameters budget invalid returned live observe repair state = .error cause := by
+  simp [observeTraceParameters, positive, failed, Except.map]
+
+/-- Positive demand repairs precisely the ordered prefix of the first-return row. -/
+theorem observeTraceParameters_retained (budget : Nat) (invalid : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool) (repair : Command → Result)
+    (state next : State) (row : List Command) (positive : budget ≠ 0)
+    (captured : returned state = some row) (fresh : live state = true) (later : live next = true) :
+    observeTraceParameters budget invalid returned live (fun _ => .ok ((), next)) repair state =
+      .ok ((row.take budget).map repair, next) := by
+  simp [observeTraceParameters, positive, observeFiniteChildren_retained invalid returned live state next row
+    captured fresh later, Except.map]
+
+/-- At most one completed repair per demanded parameter proposal. This counts
+returned proposals rather than granting credit for a refused producer call. -/
+theorem traceParameter_prefix_budget (budget : Nat) (row : List Command) (repair : Command → Result) :
+    ((row.take budget).map repair).length ≤ budget := by
+  simp only [List.length_map, List.length_take]
+  exact Nat.min_le_left _ _
+
+/-- Repair of the requested prefix agrees with taking that prefix after pure
+repair, without requiring the implementation to visit the unused suffix. -/
+theorem traceParameter_prefix_agrees (budget : Nat) (row : List Command) (repair : Command → Result) :
+    (row.take budget).map repair = (row.map repair).take budget := by
+  induction budget generalizing row with
+  | zero => rfl
+  | succ budget ih =>
+    cases row with
+    | nil => rfl
+    | cons head tail =>
+      change repair head :: (tail.take budget).map repair = repair head :: (tail.map repair).take budget
+      exact congrArg (List.cons _) (ih tail)
+
+/-- Malformed neighborhoods keep their stored contract error after normal source observation. -/
+theorem observeTraceParameters_invalid (budget : Nat) (invalid : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool) (repair : Command → Result)
+    (state next : State) (positive : budget ≠ 0) (bad : returned state = none)
+    (fresh : live state = true) (later : live next = true) :
+    observeTraceParameters budget invalid returned live (fun _ => .ok ((), next)) repair state =
+      .error (some invalid) := by
+  exact observeTraceParameters_refused budget invalid returned live _ repair state (some invalid) positive
+    (observeFiniteChildren_invalid invalid returned live state next bad fresh later)
+
+/-- Original observer causes retain priority over malformed captured parameters. -/
+theorem observeTraceParameters_cause (budget : Nat) (invalid cause : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool) (repair : Command → Result)
+    (state : State) (positive : budget ≠ 0) (fresh : live state = true) :
+    observeTraceParameters budget invalid returned live (fun _ => .error cause) repair state =
+      .error (some cause) := by
+  exact observeTraceParameters_refused budget invalid returned live _ repair state (some cause) positive
+    (observeFiniteChildren_cause invalid cause returned live state fresh)
+
+/-- Retirement blocks repair/publication, even for a malformed parameter return. -/
+theorem observeTraceParameters_revised (budget : Nat) (invalid : Cause)
+    (returned : State → Option (List Command)) (live : State → Bool) (repair : Command → Result)
+    (state next : State) (positive : budget ≠ 0) (fresh : live state = true) (stale : live next = false) :
+    observeTraceParameters budget invalid returned live (fun _ => .ok ((), next)) repair state = .error none := by
+  exact observeTraceParameters_refused budget invalid returned live _ repair state none positive
+    (observeFiniteChildren_revised invalid returned live state next fresh stale)
 
 end LeanPoo.Functional.PropertyTesting
