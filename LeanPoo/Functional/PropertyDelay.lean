@@ -109,4 +109,60 @@ theorem resumedDelayed_unbounded (step : State → Sum Value State) (limit : Nat
     resumedDelayed step limit retained saved none state = restoredDelayed step limit retained saved state := by
   simp [resumedDelayed, delayMeet_unbounded_right]
 
+/-- Each suspended sample layer preserves its saved limit and forwards the caller.
+Only callback-bearing sample layers participate; pure deletions have no callback. -/
+def delayPathAllowance : List (Option Nat) → Option Nat → Option Nat
+  | [], incoming => incoming
+  | saved :: layers, incoming => delayMeet saved (delayPathAllowance layers incoming)
+
+/-- Combining finite composition paths neither renews nor spends a credit. -/
+theorem delayPathAllowance_append (outer inner : List (Option Nat)) (incoming : Option Nat) :
+    delayPathAllowance (outer ++ inner) incoming =
+      delayPathAllowance outer (delayPathAllowance inner incoming) := by
+  induction outer with
+  | nil => rfl
+  | cons saved layers ih => simp [delayPathAllowance, ih]
+
+/-- The current caller retains authority through every mapped or product layer. -/
+theorem delayPathAllowance_meet (layers : List (Option Nat)) (incoming : Option Nat) :
+    delayPathAllowance layers incoming = delayMeet (delayPathAllowance layers none) incoming := by
+  induction layers with
+  | nil => rfl
+  | cons saved layers ih =>
+    simp only [delayPathAllowance, ih]
+    exact (delayMeet_assoc saved (delayPathAllowance layers none) incoming).symm
+
+/-- No finite composition path can erase an exhausted incoming caller. -/
+theorem delayPathAllowance_zero (layers : List (Option Nat)) :
+    delayPathAllowance layers (some 0) = some 0 := by
+  rw [delayPathAllowance_meet]
+  cases delayPathAllowance layers none <;> simp [delayMeet]
+
+/-- The existing force interpreter needs no second evaluator for composition. -/
+def composedDelayed (step : State → Sum Value State) (limit : Nat)
+    (retained : Option Nat) (layers : List (Option Nat)) (incoming : Option Nat)
+    (state : State) : Option Value × Nat :=
+  restoredDelayed step limit retained (delayPathAllowance layers incoming) state
+
+/-- Collapsing the finite path recovers exactly the single-resume protocol. -/
+theorem composedDelayed_collapse (step : State → Sum Value State) (limit : Nat)
+    (retained incoming : Option Nat) (layers : List (Option Nat)) (state : State) :
+    composedDelayed step limit retained layers incoming state =
+      resumedDelayed step limit retained (delayPathAllowance layers none) incoming state := by
+  simp only [composedDelayed, resumedDelayed, delayPathAllowance_meet layers incoming]
+
+/-- Arbitrarily many finite sample layers cannot increase incoming force credits. -/
+theorem composedDelayed_incoming_budget (step : State → Sum Value State) (limit incoming : Nat)
+    (retained : Option Nat) (layers : List (Option Nat)) (state : State) :
+    (composedDelayed step limit retained layers (some incoming) state).2 ≤ incoming := by
+  rw [composedDelayed_collapse]
+  exact resumedDelayed_incoming_budget step limit incoming retained _ state
+
+/-- A zero-credit caller skips the constructor at every finite composition depth. -/
+theorem composedDelayed_zero (step : State → Sum Value State) (limit : Nat)
+    (retained : Option Nat) (layers : List (Option Nat)) (state : State) :
+    composedDelayed step limit retained layers (some 0) state = (none, 0) := by
+  rw [composedDelayed_collapse]
+  exact resumedDelayed_zero step limit retained _ state
+
 end LeanPoo.Functional.PropertyTesting

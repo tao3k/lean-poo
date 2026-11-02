@@ -10,6 +10,7 @@ On this page:
 
 - [Retained delayed-construction depth during dependency rebuilding](#retained-delayed-construction-depth-during-dependency-rebuilding)
 - [Incoming delay allowance across suspended dependency cursors](#incoming-delay-allowance-across-suspended-dependency-cursors)
+- [Compositional delay allowance through sample layers](#compositional-delay-allowance-through-sample-layers)
 
 - [Generation and domain admission](#generation-and-domain-admission)
 - [Bounded filter retry ownership](#bounded-filter-retry-ownership)
@@ -413,3 +414,50 @@ adding wrappers to each generator operation or replacing the coroutine would
 spread the same policy across the algebra. The original prototype fixed-point
 construction remains unchanged; bounded PBT construction is an engineering
 extension, not an unimplemented requirement of the author's fixed-point section.
+
+## Compositional delay allowance through sample layers
+
+A direct bind cursor is insufficient when another sample coroutine encloses it.
+The audit mapped the existing two-candidate dependency: its first pull returned
+12; resuming under zero remaining caller credits returned 10 and forced the next
+constructor once. The outer map restored its earlier dynamic context before the
+inner bind could observe the new caller. This is a reproduced violation of our
+explicit delayed-depth protocol, not a demand for unrestricted callback analysis.
+
+The existing private numeric relay is now constructed by one `sample-iterator`
+combinator. Value policies, map, bind, filter, retained products and finite Function
+sample factories all use that entry before restoring a producer continuation.
+Each layer transfers the incoming meet to the next, rather than relying on the
+innermost bind to rediscover a lost dynamic binding. There is one delegate per
+callback-bearing sample iterator, no additional per-yield wrapper or new public
+protocol. Pure structural deletions invoke no user callbacks and retain the
+standard coroutine directly. Child factories remain lazy, including zero-budget
+checking; PRNG splitting/checkpoints and candidate order are unchanged.
+
+Five generic regression groups cover map/filter/product/Function/value-policy
+composition: zero-credit refusal without extra construction, sufficient credit
+with exact order and EOF, original false/object causes, source refusal before
+exhaustion, and zero-budget demand plus seed/concrete replay. First pulls occur
+outside assertion handlers, and the enclosing handler spans the entire standard
+coroutine lifetime. The existing Record/Function/FUN service workflow now packs
+checked records inside the mapped/filtered dependency before pausing. It covers
+exhaustion, explicit sufficient-depth preparation, seed/concrete/portable replay,
+source retirement and a freshly prepared corrected property.
+
+PropertyDelay models a finite path of saved optional allowances. Path append and
+meet/collapse laws reduce composition to the existing single-resume protocol;
+force counts stay below the incoming finite limit and zero suppresses construction.
+The interpreter remains resolveDelayed. Three top-level fixtures cover exhausted,
+sufficient and regrouped paths. Faithful numeric transfer at every host sample
+layer, serial Iterator use and terminating individual callbacks are premises.
+These are neither host-continuation/GC proofs nor cumulative force budgets over
+independent shrink attempts. Existing source checks and all resource limits remain.
+
+Design reflection: Rackcheck's pinned core bind maps and joins retained shrink
+trees rather than adding a second executor. The author's fixed-point appendix
+similarly separates eager and delayed construction explicitly. We retain these
+compositional boundaries: move the existing numeric transfer to the common sample
+constructor instead of patching each higher-level container with its own policy.
+Gerbil still owns coroutine suspension, EOF, interface dispatch and exception
+handler lifetime. The explicit PBT depth protocol is this project's extension;
+no upstream compiler/runtime changes or original-paper completeness claim follow.

@@ -26,3 +26,12 @@ example : resumedDelayed (fun _ : Nat => (Sum.inl 0 : Sum Nat Nat))
 -- A two-stage constructor still cannot renew the incoming caller's single credit.
 example : resumedDelayed (fun state : Nat => if state = 0 then Sum.inr 1 else Sum.inl 7)
     2 (some 3) (some 3) (some 1) 0 = (none, 1) := rfl
+
+-- Map/filter/product scopes forward the current caller before restoring saved limits.
+example : composedDelayed (fun _ : Nat => (Sum.inl 0 : Sum Nat Nat))
+    1 (some 3) [none, some 4, some 3] (some 0) 0 = (none, 0) := rfl
+-- One sufficient credit still permits the same branch through all sample layers.
+example : composedDelayed (fun _ : Nat => (Sum.inl 0 : Sum Nat Nat))
+    1 (some 3) [none, some 4, some 3] (some 1) 0 = (some 0, 1) := rfl
+-- Grouping the same path into a product and a mapping cannot renew its allowance.
+example : delayPathAllowance ([some 3, none] ++ [some 4]) (some 1) = some 1 := rfl
