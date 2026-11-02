@@ -4,7 +4,7 @@ import LeanPoo.Functional.ObservedView
 namespace LeanPoo.Functional.Requirements
 universe u v w x y
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
-variable {Observed : Context → Key → Type x} [DecidableEq Key] [DecidableEq Context]
+variable {Observed : Context → Key → Type x} [DecidableEq Key] [BEq Context] [LawfulBEq Context]
 variable {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
 variable {ready : Certified source Claim}
 

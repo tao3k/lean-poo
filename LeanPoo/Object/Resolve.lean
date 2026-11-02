@@ -1,4 +1,5 @@
 import LeanPoo.Object.Schema
+import LeanPoo.C4.Prepared
 
 /-!
 The evaluation order follows Gerbil-POO object.ss: defaults first, then
@@ -8,7 +9,7 @@ is kept as a thunk so an overriding method can leave it unevaluated.
 
 namespace LeanPoo.Object
 
-universe u v
+universe u v w
 
 /-- A validated precedence order can be shared by many slot lookups. -/
 structure Plan (Key : Type u) (Value : Key → Type v) where
@@ -33,9 +34,38 @@ inductive LookupError (Key : Type u) where
 /-- Compile C4 topology once, as object.ss does during instantiation. -/
 def compile (schema : Schema Key Value) (root : String) :
     Except C4.Error (Plan Key Value) :=
-  match result : C4.linearize schema.graph root with
+  match result : schema.preparation.get.at root with
   | .error error => .error error
-  | .ok precedence => .ok ⟨schema, root, precedence, result⟩
+  | .ok precedence => .ok ⟨schema, root, precedence,
+      (schema.preparation.get.at_eq root).symm.trans result⟩
+
+/-- Resolver ownership changes neither successful precedence nor original
+errors, for every schema and root, including malformed graphs. -/
+theorem compile_precedence (schema : Schema Key Value) (root : String) :
+    (compile schema root).map (·.precedence) = C4.linearize schema.graph root := by
+  unfold compile
+  split
+  · rename_i error found
+    change Except.error error = _
+    exact found.symm.trans (schema.preparation.get.at_eq root)
+  · rename_i precedence found
+    change Except.ok precedence = _
+    exact found.symm.trans (schema.preparation.get.at_eq root)
+
+/-- Compile a plan from the same graph-owned preparation used by other roots
+and consumers. The original complete result, including errors, is preserved. -/
+def compilePrepared (schema : Schema Key Value) (prepared : C4.Prepared schema.graph)
+    (root : String) : Except C4.Error (Plan Key Value) :=
+  match result : prepared.at root with
+  | .error error => .error error
+  | .ok precedence => .ok ⟨schema, root, precedence, prepared.at_eq root ▸ result⟩
+
+theorem compilePrepared_eq (schema : Schema Key Value)
+    (prepared : C4.Prepared schema.graph) (root : String) :
+    compilePrepared schema prepared root = compile schema root := by
+  have same := (prepared.at_eq root).trans (schema.preparation.get.at_eq root).symm
+  unfold compilePrepared compile
+  split <;> split <;> simp_all
 
 /-- Change a declaration while retaining the validated C4 order. The graph
 and root are unchanged, so no second linearization is needed. -/
@@ -80,7 +110,7 @@ def Plan.reviseSpecification (plan : Plan Key Value) (name : String)
           parentOrders := specification.parentOrders
           suffix := specification.suffix }
       else current
-    compile { revised with graph := { nodes } } plan.root
+    compile { graph := { nodes }, declaration := revised.declaration } plan.root
 
 /-- Apply ordered declaration edits to one plan. Every intermediate edit
 retains the same validated topology; callers instantiate only the final plan. -/
@@ -208,6 +238,48 @@ theorem Plan.resolve_eq_compileSlot (plan : Plan Key Value) (key : Key)
   unfold Plan.resolve
   rw [plan.compileSlotForward_eq]
 
+private theorem Schema.foldr_frame {Key : Type u} {Value : Key → Type v} {α : Type w}
+    (next prior : Schema Key Value) (names : List String)
+    (step : Schema Key Value → String → α → α)
+    (stepFrame : ∀ node, next.declaration node = prior.declaration node →
+      step next node = step prior node) (seed : α)
+    (frame : ∀ node ∈ names, next.declaration node = prior.declaration node) :
+    names.foldr (step next) seed = names.foldr (step prior) seed := by
+  induction names with
+  | nil => rfl
+  | cons node rest ih =>
+    simp only [List.foldr_cons]
+    rw [stepFrame node (frame node (by simp)), ih (by
+      intro node member; exact frame node (by simp [member]))]
+
+/-- Adding a most-specific declaration with no defaults preserves the parent
+base and composes only the new direct method. The frame covers the complete
+validated parent precedence, not a sampled key or nominal template identity. -/
+theorem Plan.resolve_prefix (next prior : Plan Key Value) (name : String)
+    (declaration : Declaration Key Value)
+    (order : next.precedence = name :: prior.precedence)
+    (head : next.schema.declaration name = some declaration)
+    (defaults : declaration.defaults = [])
+    (frame : ∀ node ∈ prior.precedence,
+      next.schema.declaration node = prior.schema.declaration node)
+    (key : Key) (self : Self Key Value) :
+    next.resolve key self = match declaration.slot key with
+      | none => prior.resolve key self
+      | some method => method.toMethod self (fun _ => prior.resolve key self) := by
+  have bases := Schema.foldr_frame next.schema prior.schema prior.precedence (fun schema => schema.defaultStep key)
+    (by intro node same; funext inherited; simp [Schema.defaultStep, same])
+    (none : Option (Value key)) frame
+  have methods := Schema.foldr_frame next.schema prior.schema prior.precedence (α := Prototype.Method (Self Key Value) (Option (Value key)))
+    (fun schema => schema.methodStep key)
+    (by intro node same; unfold Schema.methodStep; rw [same])
+    (Prototype.Method.identity : Prototype.Method (Self Key Value) (Option (Value key))) frame
+  rw [next.resolve_eq_compileSlot, next.compileSlot_apply, order]
+  simp only [List.foldr_cons, Schema.defaultStep, Schema.methodStep, head]
+  simp only [Declaration.default, defaults, Entry.lookup, List.foldl_nil]
+  rw [bases, methods]
+  rw [prior.resolve_eq_compileSlot, prior.compileSlot_apply]
+  cases declaration.slot key <;> rfl
+
 /-- Require a resolved slot; optional probing remains available via resolve. -/
 def Plan.ref (plan : Plan Key Value) (key : Key)
     (self : Self Key Value) : Except (LookupError Key) (Value key) :=
@@ -229,11 +301,11 @@ theorem resolve_compiled (plan : Plan Key Value) (key : Key)
   unfold resolve compile
   split
   · rename_i error result
-    have impossible := plan.valid.symm.trans result
+    have impossible := plan.valid.symm.trans ((plan.schema.preparation.get.at_eq _).symm.trans result)
     cases impossible
   · rename_i precedence result
     have same : precedence = plan.precedence := by
-      injection plan.valid.symm.trans result with equality
+      injection plan.valid.symm.trans ((plan.schema.preparation.get.at_eq _).symm.trans result) with equality
       exact equality.symm
     subst precedence
     rfl

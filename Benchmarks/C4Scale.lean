@@ -1,4 +1,4 @@
-import LeanPoo.C4.Linearize
+import LeanPoo.C4.Prepared
 
 open LeanPoo.C4
 
@@ -22,7 +22,42 @@ private def sample (shape : String) (graph : Graph) (root : String) : IO Unit :=
   let elapsedUs := ((← IO.monoNanosNow) - started) / 1000
   IO.println s!"shape={shape} nodes={graph.nodes.length} elapsed_us={elapsedUs} precedence={order.length}"
 
+@[noinline] private def execute (run : String → Except Error (List String))
+    (roots : List String) : IO (List (Except Error (List String))) := pure (roots.map run)
+
+private def shared (shape : String) (graph : Graph) : IO Unit := do
+  let names := graph.nodes.map Node.name
+  let requests := names ++ names
+  let start ← IO.monoNanosNow
+  let reference ← execute (linearize graph) requests
+  let ordinary ← IO.monoNanosNow
+  let prepared := prepare graph
+  let actual ← execute prepared.at requests
+  let finished ← IO.monoNanosNow
+  unless reprStr actual == reprStr reference do
+    throw (IO.userError "shared C4 changed complete result")
+  IO.println s!"C4-PREPARED-SCALE shape={shape} nodes={names.length} requests={requests.length} ordinary_ns={ordinary-start} prepare_and_replay_ns={finished-ordinary} equal=true"
+  IO.println s!"measurement: c4.{shape}.nodes{names.length}.ordinary {ordinary-start} ns"
+  IO.println s!"measurement: c4.{shape}.nodes{names.length}.prepared {finished-ordinary} ns"
+
+/-- Missing-root demand isolates graph preparation from ancestor computation.
+The same workload is used with the frozen and candidate preparation algorithms. -/
+private def independent (count : Nat) : IO Unit := do
+  let graph : Graph := { nodes := (List.range count).map fun index => { name := s!"N{index}" } }
+  let start ← IO.monoNanosNow
+  let actual ← execute (prepare graph).at ["Missing"]
+  let elapsed := (← IO.monoNanosNow) - start
+  unless reprStr actual == reprStr [linearize graph "Missing"] do
+    throw (IO.userError "independent preparation changed missing-root result")
+  IO.println s!"C4-INDEPENDENT-SCALE nodes={count} prepare_and_missing_ns={elapsed} equal=true"
+  IO.println s!"measurement: c4.independent.nodes{count}.prepared {elapsed} ns"
+
 def main : IO Unit := do
   for count in [32, 64, 128, 256] do
     sample "chain" (chain count) (toString (count - 1))
     sample "fanIn" (fanIn count) "Root"
+    shared "chain" (chain count)
+    shared "fanIn" (fanIn count)
+
+  for count in [256, 1024, 4096] do
+    independent count

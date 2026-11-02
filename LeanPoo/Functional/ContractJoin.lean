@@ -46,14 +46,14 @@ theorem ContextSlot.conjoin_retained (slot : ContextSlot ready) (context : Conte
     (slot.conjoin other same).retained = some ⟨context, data.conjoin other same⟩ := by
   simp [ContextSlot.conjoin, saved]
 
-theorem ContextSlot.conjoin_hit [DecidableEq Context] (slot : ContextSlot ready) (context : Context)
+theorem ContextSlot.conjoin_hit [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready) (context : Context)
     (data : Snapshot ready context) (saved : slot.retained = some ⟨context, data⟩)
     (other : Certified keys Right) (same : ready.factories = other.factories) :
     ((slot.conjoin other same).read context).2.2 = true := by
   rw [ContextSlot.read_hit _ context (data.conjoin other same)
     (slot.conjoin_retained context data saved other same)]
 
-theorem ContextSlot.conjoin_consume [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.conjoin_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (other : Certified keys Right) (same : ready.factories = other.factories)
     {Output : Context → Type x} (construct : ∀ c data, Left c data ∧ Right c data → Output c)
     (context : Context) :

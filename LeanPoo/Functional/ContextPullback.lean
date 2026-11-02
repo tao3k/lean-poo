@@ -9,7 +9,7 @@ universe u v w x y
 variable {Context : Type u} {Outer : Type x} {Key : Type v}
 variable {Value : Context → Key → Type w} {keys : List Key}
 variable {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
-variable [DecidableEq Context]
+variable [BEq Context] [LawfulBEq Context]
 
 /-- Read at the complete context of the fixed base family. The projection is
 executed once here; outer fields cannot change this family's dependencies. -/

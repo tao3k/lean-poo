@@ -107,6 +107,15 @@ def check : IO Unit := do
 #guard (match Functional.DispatchExtension.check blank [.shape []] with
   | .error conflict => match conflict.violation with | .arity _ => true | _ => false
   | .ok _ => false)
+-- Costed observation must preserve the independent reference for both watches.
+#guard (observedCounted blank (.call ⟨"Invoice", "Card", 10⟩)).1 == reference blank (.call ⟨"Invoice", "Card", 10⟩)
+#guard (observedCounted blank (.shape [["Invoice"], ["Card"]])).2 == 0
+#guard cacheComparisons (List.replicate 8 [["Other"]]) [["Missing"]] == 8
+#print axioms selectCounted_cached
+#print axioms observedCounted_result
+#guard (rememberRecent (List.replicate 12 [["Other"]]) [["New"]]).length == 8
+#print axioms remembered_comparisons
+#print axioms cacheComparisons_capacity
 #print axioms guard_ok_iff
 #print axioms Revision.cacheSound
 #print axioms Violation.firstMethod_origin

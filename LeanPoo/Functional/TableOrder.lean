@@ -1,0 +1,920 @@
+import LeanPoo.Functional.TableIndex
+import LeanPoo.Functional.TableRepresentation
+
+/-! Explicit comparator transport and finite ordered range observations. Sorting
+is supplied by the host library under the stated ordering laws; no seek cost or
+runtime/GC claim follows from these extensional proofs. -/
+namespace LeanPoo.Functional.OrderedDictionary
+open Prototype (DictionaryBridge)
+variable {K L V : Type}
+
+/-- The host comparer must agree with its declared key relation and strict order.
+Structural equality is the default; quotient-like backends supply their own lawful
+equivalence. Reflexivity/symmetry/transitivity of that relation are separate premises. -/
+structure TableComparerLaws (compare : K → K → Int)
+    (equivalent : K → K → Prop := Eq) : Prop where
+  sign : ∀ a b, compare a b = -1 ∨ compare a b = 0 ∨ compare a b = 1
+  zero : ∀ a b, compare a b = 0 ↔ equivalent a b
+  reverse : ∀ a b, compare a b = -(compare b a)
+  trans : ∀ a b c, compare a b < 0 → compare b c < 0 → compare a c < 0
+
+/-- Normalize numeric comparison to the standard tree's three signs rather than
+returning an arbitrary (possibly bignum) subtraction as its protocol result. -/
+def integerKeyComparer (a b : Int) : Int :=
+  if a = b then 0 else if a < b then -1 else 1
+
+/-- Arbitrarily large keys still produce a bounded comparison result. This is a
+semantic sign theorem, not a proof about the compiler's fixnum representation. -/
+theorem integerKeyComparer_sign (a b : Int) :
+    integerKeyComparer a b = -1 ∨ integerKeyComparer a b = 0 ∨ integerKeyComparer a b = 1 := by
+  unfold integerKeyComparer
+  split
+  · simp
+  · split <;> simp
+
+/-- Normalizing signs preserves exact equality and never identifies distinct keys. -/
+theorem integerKeyComparer_zero (a b : Int) : integerKeyComparer a b = 0 ↔ a = b := by
+  unfold integerKeyComparer
+  by_cases same : a = b
+  · simp [same]
+  · simp [same]; split <;> simp
+
+/-- Normalizing signs preserves the strict numeric order used by both split sides. -/
+theorem integerKeyComparer_negative (a b : Int) : integerKeyComparer a b < 0 ↔ a < b := by
+  unfold integerKeyComparer
+  by_cases same : a = b
+  · subst b; simp
+  · by_cases less : a < b <;> simp [same, less]
+
+/-- Explicit pullback compares target keys by their source representations. -/
+def transportComparer (keys : DictionaryBridge K L) (compare : K → K → Int) : L → L → Int :=
+  fun a b => compare (keys.fromFields a) (keys.fromFields b)
+
+/-- Source ordering, including negative representations, is preserved exactly. -/
+theorem transportComparer_apply (keys : DictionaryBridge K L) (compare : K → K → Int) (a b : K) :
+    transportComparer keys compare (keys.toFields a) (keys.toFields b) = compare a b := by
+  simp [transportComparer, keys.from_to]
+
+/-- A genuine isomorphism transports all required order laws. -/
+theorem transportComparer_laws (keys : DictionaryBridge K L) (compare : K → K → Int)
+    (laws : TableComparerLaws compare) : TableComparerLaws (transportComparer keys compare) where
+  sign a b := laws.sign _ _
+  zero a b := by
+    simp only [transportComparer, laws.zero]
+    constructor
+    · intro h; simpa only [keys.to_from] using congrArg keys.toFields h
+    · intro h; rw [h]
+  reverse a b := laws.reverse _ _
+  trans a b c := laws.trans _ _ _
+
+/-- An optional endpoint separates unboundedness from every admitted key value. -/
+structure TableBound (K : Type) where
+  key : K
+  inclusive : Bool
+
+/-- Lower and upper signs use the same comparer, including open equal endpoints. -/
+def withinTableRange (compare : K → K → Int) (lower upper : Option (TableBound K)) (key : K) : Bool :=
+  (match lower with
+   | none => true
+   | some bound => if bound.inclusive then decide (compare key bound.key ≥ 0)
+                   else decide (compare key bound.key > 0)) &&
+  (match upper with
+   | none => true
+   | some bound => if bound.inclusive then decide (compare key bound.key ≤ 0)
+                   else decide (compare key bound.key < 0))
+
+/-- Range observations filter an ordered enumeration without changing row payloads. -/
+def tableRangeRows (compare : K → K → Int) (lower upper : Option (TableBound K))
+    (rows : List (K × V)) : List (K × V) :=
+  rows.filter (fun row => withinTableRange compare lower upper row.1)
+
+/-- Bound transport keeps endpoint inclusion independent of its representation. -/
+def transportTableBound (keys : DictionaryBridge K L) (bound : TableBound K) : TableBound L :=
+  ⟨keys.toFields bound.key, bound.inclusive⟩
+
+/-- A mapped key is accepted by exactly the same interval as its source key. -/
+theorem withinTableRange_transport (keys : DictionaryBridge K L) (compare : K → K → Int)
+    (lower upper : Option (TableBound K)) (key : K) :
+    withinTableRange (transportComparer keys compare) (lower.map (transportTableBound keys))
+      (upper.map (transportTableBound keys)) (keys.toFields key) =
+    withinTableRange compare lower upper key := by
+  cases lower <;> cases upper <;>
+    simp [withinTableRange, transportTableBound, transportComparer, keys.from_to]
+
+/-- Isomorphic range selection commutes with mapping while preserving opaque rows. -/
+theorem tableRangeRows_transport (keys : DictionaryBridge K L) (compare : K → K → Int)
+    (lower upper : Option (TableBound K)) (rows : List (K × V)) :
+    tableRangeRows (transportComparer keys compare) (lower.map (transportTableBound keys))
+      (upper.map (transportTableBound keys)) (rows.map (fun row => (keys.toFields row.1, row.2))) =
+    (tableRangeRows compare lower upper rows).map (fun row => (keys.toFields row.1, row.2)) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    simp only [List.map_cons, tableRangeRows, List.filter_cons, withinTableRange_transport]
+    split <;> simp_all [tableRangeRows]
+
+/-- Range filtering preserves the host sort's strict key order. -/
+theorem tableRangeRows_ordered (compare : K → K → Int) (lower upper : Option (TableBound K))
+    (rows : List (K × V)) (ordered : rows.Pairwise (fun a b => compare a.1 b.1 < 0)) :
+    (tableRangeRows compare lower upper rows).Pairwise (fun a b => compare a.1 b.1 < 0) :=
+  ordered.filter _
+
+/-- Every returned binding has both original payload identity and accepted bounds. -/
+theorem tableRangeRows_member (compare : K → K → Int) (lower upper : Option (TableBound K))
+    (rows : List (K × V)) (row : K × V) :
+    row ∈ tableRangeRows compare lower upper rows ↔
+      row ∈ rows ∧ withinTableRange compare lower upper row.1 = true := by
+  simp [tableRangeRows]
+
+/-- A reversed interval fails before enumeration; equal open endpoints are allowed. -/
+def checkedTableRange (compare : K → K → Int) (lower upper : Option (TableBound K))
+    (rows : List (K × V)) : Except Unit (List (K × V)) :=
+  match lower, upper with
+  | some lo, some hi => if compare lo.key hi.key > 0 then .error ()
+                       else .ok (tableRangeRows compare lower upper rows)
+  | _, _ => .ok (tableRangeRows compare lower upper rows)
+
+/-- Reversed bounds have a distinct refusal, never an apparently empty success. -/
+theorem checkedTableRange_reversed (compare : K → K → Int) (lo hi : TableBound K)
+    (rows : List (K × V)) (reversed : compare lo.key hi.key > 0) :
+    checkedTableRange compare (some lo) (some hi) rows = .error () := by
+  simp [checkedTableRange, reversed]
+
+/-- Extensional recovery of an index enumeration recovers every range observation. -/
+theorem tableRangeRows_restore (compare : K → K → Int) (lower upper : Option (TableBound K))
+    (before restored : List (K × V)) (recovered : restored = before) :
+    tableRangeRows compare lower upper restored = tableRangeRows compare lower upper before := by rw [recovered]
+
+
+/-- The loop's observable prefix and actual number of iterator pulls, including
+EOF or the first rejected upper-bound entry. Backend positioning is separate. -/
+def tableRangePrefix (accept : K → Bool) : List (K × V) → List (K × V) × Nat
+  | [] => ([], 1)
+  | row :: rest => if accept row.1 then
+      let next := tableRangePrefix accept rest
+      (row :: next.1, next.2 + 1)
+    else ([], 1)
+
+/-- Prefix execution is the standard takeWhile observation, without payload maps. -/
+theorem tableRangePrefix_rows (accept : K → Bool) (rows : List (K × V)) :
+    (tableRangePrefix accept rows).1 = rows.takeWhile (fun row => accept row.1) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih => simp [tableRangePrefix, List.takeWhile_cons, ih]; split <;> rfl
+
+/-- A range consumes exactly its returned rows plus one boundary/EOF pull. -/
+theorem tableRangePrefix_pulls (accept : K → Bool) (rows : List (K × V)) :
+    (tableRangePrefix accept rows).2 = (tableRangePrefix accept rows).1.length + 1 := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    cases h : accept row.1 <;> simp [tableRangePrefix, h, ih, Nat.add_assoc]
+
+/-- An ordered backend must justify this finite window partition. The skipped
+prefix fails the lower bound, the hits pass both, and the suffix fails upper.
+This is an explicit backend law, not inferred from a method name or comparator. -/
+structure TableRangeWindow (lower upper : K → Bool) (rows : List (K × V)) where
+  before : List (K × V)
+  hits : List (K × V)
+  after : List (K × V)
+  partition : rows = before ++ hits ++ after
+  before_lower : ∀ row ∈ before, lower row.1 = false
+  hits_lower : ∀ row ∈ hits, lower row.1 = true
+  hits_upper : ∀ row ∈ hits, upper row.1 = true
+  after_lower : ∀ row ∈ after, lower row.1 = true
+  after_upper : ∀ row ∈ after, upper row.1 = false
+
+/-- The reference full filter returns exactly the certified contiguous window. -/
+theorem tableRangeWindow_filter (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    rows.filter (fun row => lower row.1 && upper row.1) = window.hits := by
+  conv =>
+    lhs
+    rw [window.partition]
+  rw [List.filter_append, List.filter_append]
+  have before : window.before.filter (fun row => lower row.1 && upper row.1) = [] := by
+    apply List.filter_eq_nil_iff.mpr; intro row member; simp [window.before_lower row member]
+  have hits : window.hits.filter (fun row => lower row.1 && upper row.1) = window.hits := by
+    apply List.filter_eq_self.mpr; intro row member
+    simp [window.hits_lower row member, window.hits_upper row member]
+  have after : window.after.filter (fun row => lower row.1 && upper row.1) = [] := by
+    apply List.filter_eq_nil_iff.mpr; intro row member; simp [window.after_upper row member]
+  simp [before, hits, after]
+
+/-- A lawful positioned cursor skips exactly the lower-rejected prefix. -/
+theorem tableRangeWindow_seek (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    rows.filter (fun row => lower row.1) = window.hits ++ window.after := by
+  conv =>
+    lhs
+    rw [window.partition]
+  rw [List.filter_append, List.filter_append]
+  have before : window.before.filter (fun row => lower row.1) = [] :=
+    List.filter_eq_nil_iff.mpr (by intro row member; simp [window.before_lower row member])
+  have hits : window.hits.filter (fun row => lower row.1) = window.hits :=
+    List.filter_eq_self.mpr window.hits_lower
+  have after : window.after.filter (fun row => lower row.1) = window.after :=
+    List.filter_eq_self.mpr window.after_lower
+  simp [before, hits, after]
+
+/-- Early stop after a lawful seek equals the complete reference filter. -/
+theorem tableRangeWindow_correct (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    (tableRangePrefix upper (rows.filter (fun row => lower row.1))).1 =
+      rows.filter (fun row => lower row.1 && upper row.1) := by
+  rw [tableRangeWindow_seek lower upper rows window, tableRangePrefix_rows,
+      tableRangeWindow_filter lower upper rows window]
+  rw [List.takeWhile_append_of_pos window.hits_upper]
+  have rest : window.after.takeWhile (fun row => upper row.1) = [] := by
+    cases h : window.after with
+    | nil => rfl
+    | cons row tail =>
+      have reject := window.after_upper row (by rw [h]; simp)
+      simp [reject]
+  simp [rest]
+
+/-- Prefix pruning is safe when every covered key is below the seek boundary.
+This is the interval law used when a Trie skips a preceding branch/subtree. -/
+theorem tableSeek_skip_prefix (rows : List (Nat × V)) (limit boundary : Nat)
+    (covered : ∀ row ∈ rows, row.1 < limit) (beyond : limit ≤ boundary) :
+    rows.filter (fun row => decide (boundary ≤ row.1)) = [] := by
+  apply List.filter_eq_nil_iff.mpr
+  intro row member
+  have h := covered row member
+  intro accepted
+  have reaches : boundary ≤ row.1 := of_decide_eq_true accepted
+  omega
+
+/-- With a backend-specific height-bounded positioning certificate, the total
+abstract work is bounded by that height plus output and one sentinel pull.
+No theorem here assigns a constant cost to a coroutine, recognition or GC. -/
+theorem tableRangePrefix_work (height positionCost : Nat) (bounded : positionCost ≤ height + 1)
+    (accept : K → Bool) (rows : List (K × V)) :
+    positionCost + (tableRangePrefix accept rows).2 ≤
+      height + (tableRangePrefix accept rows).1.length + 2 := by
+  rw [tableRangePrefix_pulls]
+  omega
+
+/-- One finite backend pull returns the original row and unmodified tail, or EOF.
+This models observation, not the host coroutine implementation. -/
+def tableCursorPull (rows : List (K × V)) : Option (K × V) × List (K × V) :=
+  match rows with
+  | [] => (none, [])
+  | row :: rest => (some row, rest)
+
+/-- A delayed observation checks the captured origin revisions before pulling.
+The work component counts backend pulls only; guards, shape checks and GC are separate. -/
+def checkedTablePull (issued current : List Nat) (rows : List (K × V)) :
+    Except Unit (Option (K × V) × List (K × V)) × Nat :=
+  if issued = current then (.ok (tableCursorPull rows), 1) else (.error (), 0)
+
+/-- Current metadata preserves the original payload, tail and single backend pull. -/
+theorem checkedTablePull_current (issued : List Nat) (rows : List (K × V)) :
+    checkedTablePull issued issued rows = (.ok (tableCursorPull rows), 1) := by
+  simp [checkedTablePull]
+
+/-- Refusal suppresses the backend pull and exposes no row or advanced tail. -/
+theorem checkedTablePull_stale (issued current : List Nat) (rows : List (K × V))
+    (stale : issued ≠ current) :
+    checkedTablePull issued current rows = (.error (), 0) := by
+  simp [checkedTablePull, stale]
+
+/-- EOF never bypasses revision checking, including observations after exhaustion. -/
+theorem checkedTablePull_eof (issued current : List Nat) :
+    checkedTablePull (K := K) (V := V) issued current [] =
+      if issued = current then (.ok (none, []), 1) else (.error (), 0) := by
+  simp [checkedTablePull, tableCursorPull]
+
+/-- Passing outer metadata guards delegates exactly the same single backend pull.
+A stale outer origin prevents delegation even when the inner origin is current. -/
+theorem checkedTablePull_nested (outerIssued outerCurrent innerIssued innerCurrent : List Nat)
+    (rows : List (K × V)) :
+    (if outerIssued = outerCurrent then checkedTablePull innerIssued innerCurrent rows
+      else (.error (), 0)) =
+    (if outerIssued = outerCurrent ∧ innerIssued = innerCurrent
+      then (.ok (tableCursorPull rows), 1) else (.error (), 0)) := by
+  by_cases outer : outerIssued = outerCurrent <;>
+    by_cases inner : innerIssued = innerCurrent <;> simp [checkedTablePull, outer, inner]
+
+/-- Identity iterator mapping leaves the complete finite range and its pull count
+unchanged. This is the law for composing order views without re-enumerating rows;
+no constant bound is assigned to the number of metadata guards. -/
+theorem tableRangePrefix_identity (accept : K → Bool) (rows : List (K × V)) :
+    tableRangePrefix accept (rows.map id) = tableRangePrefix accept rows := by simp
+
+/-- Reference admission checks every intermediate carrier before proceeding.
+A shape refusal is distinct from the original update error. -/
+def checkedShapeUpdates {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state : S) : List Edit → Except E S
+  | [] => if valid state then .ok state else .error refusal
+  | edit :: rest => if valid state then
+      match step state edit with
+      | .error cause => .error cause
+      | .ok next => checkedShapeUpdates valid refusal step next rest
+    else .error refusal
+
+/-- Shape-preserving persistent updates permit one initial admission. Errors are
+preserved exactly; this law assumes immutable roots and admitted edit arguments.
+It does not certify an arbitrary backend or the Gerbil implementation. -/
+theorem checkedShapeUpdates_reuse {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (state : S) (admitted : valid state = true) (edits : List Edit) :
+    checkedShapeUpdates valid refusal step state edits = edits.foldlM step state := by
+  induction edits generalizing state with
+  | nil => simp [checkedShapeUpdates, admitted]; rfl
+  | cons edit rest ih =>
+    simp only [checkedShapeUpdates, admitted, ↓reduceIte, List.foldlM_cons]
+    cases h : step state edit with
+    | error cause => rfl
+    | ok next => exact ih next (preserves state edit next admitted h)
+
+/-- The optimized chain admits an arbitrary initial carrier before using closure. -/
+def admittedShapeUpdates {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state : S) (edits : List Edit) : Except E S :=
+  if valid state then edits.foldlM step state else .error refusal
+
+/-- Initial rejection and every update error coincide for all inputs, not only
+already admitted snapshots. A backend preservation law is still required. -/
+theorem checkedShapeUpdates_admit_equiv {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (state : S) (edits : List Edit) :
+    checkedShapeUpdates valid refusal step state edits =
+      admittedShapeUpdates valid refusal step state edits := by
+  cases h : valid state with
+  | true => simpa [admittedShapeUpdates, h] using
+      checkedShapeUpdates_reuse valid refusal step preserves state h edits
+  | false => cases edits <;> simp [checkedShapeUpdates, admittedShapeUpdates, h]
+
+/-- Successful checked chains always return an admitted root, including retries. -/
+theorem checkedShapeUpdates_valid {S Edit E : Type} (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S) (state next : S) (edits : List Edit)
+    (success : checkedShapeUpdates valid refusal step state edits = .ok next) :
+    valid next = true := by
+  induction edits generalizing state with
+  | nil =>
+    simp only [checkedShapeUpdates] at success
+    split at success <;> simp_all
+  | cons edit rest ih =>
+    simp only [checkedShapeUpdates] at success
+    split at success
+    · cases h : step state edit with
+      | error cause => simp [h] at success
+      | ok intermediate => exact ih intermediate (by simpa [h] using success)
+    · simp_all
+
+/-- Work charged by replaying a growing prefix of n nodes at every insertion. -/
+def repeatedShapeWork : Nat → Nat
+  | 0 => 0
+  | n + 1 => repeatedShapeWork n + 2 * n + 1
+
+/-- Prefix replay has quadratic validation work; initial admission reuse removes
+this term. Actual backend update, guard, allocation and GC costs remain separate. -/
+theorem repeatedShapeWork_square (n : Nat) : repeatedShapeWork n = n * n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => simp [repeatedShapeWork, ih, Nat.mul_add, Nat.add_mul]; omega
+
+/-- A persistent backend's shape law transfers through an explicit carrier
+isomorphism. Typed edit admission and immutability remain caller premises. -/
+theorem representedShapeUpdate_preserves {S T Edit E : Type}
+    (carrier : Prototype.DictionaryBridge S T) (valid : S → Bool)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (target : T) (edit : Edit) (next : T)
+    (admitted : valid (carrier.fromFields target) = true)
+    (success : (step (carrier.fromFields target) edit).map carrier.toFields = .ok next) :
+    valid (carrier.fromFields next) = true := by
+  cases result : step (carrier.fromFields target) edit with
+  | error cause => simp [result, Except.map] at success
+  | ok source =>
+    simp [result, Except.map] at success
+    subst next
+    simpa [carrier.from_to] using preserves _ edit source admitted result
+
+/-- Reuse the existing admitted-update theorem for a represented carrier,
+retaining initial admission, all step errors and complete update order. -/
+theorem representedShapeUpdates_reuse {S T Edit E : Type}
+    (carrier : Prototype.DictionaryBridge S T) (valid : S → Bool) (refusal : E)
+    (step : S → Edit → Except E S)
+    (preserves : ∀ state edit next, valid state = true →
+      step state edit = .ok next → valid next = true)
+    (target : T) (edits : List Edit) :
+    checkedShapeUpdates (fun t => valid (carrier.fromFields t)) refusal
+        (fun t edit => (step (carrier.fromFields t) edit).map carrier.toFields) target edits =
+      admittedShapeUpdates (fun t => valid (carrier.fromFields t)) refusal
+        (fun t edit => (step (carrier.fromFields t) edit).map carrier.toFields) target edits := by
+  apply checkedShapeUpdates_admit_equiv
+  exact representedShapeUpdate_preserves carrier valid step preserves
+
+/-- One upper-bounded cursor step uses the existing backend pull. The Boolean
+is the standard iterator's terminal state; no further backend pull follows EOF. -/
+def tableRangeCursorPull (accept : K → Bool) (state : Bool × List (K × V)) :
+    (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if state.1 then ((none, state), 0) else
+    let (entry, rest) := tableCursorPull state.2
+    match entry with
+    | none => ((none, (true, rest)), 1)
+    | some row => if accept row.1 then ((some row, (false, rest)), 1)
+      else ((none, (true, rest)), 1)
+
+/-- Observations reuse the already proved finite range prefix rather than
+introducing a second filtering or sorting semantics. -/
+def tableRangeCursorRows (accept : K → Bool) (state : Bool × List (K × V)) : List (K × V) :=
+  if state.1 then [] else (tableRangePrefix accept state.2).1
+
+/-- Each demanded pull exposes precisely the first row of the existing range
+prefix, with the same remaining observation, including a rejected upper bound. -/
+theorem tableRangeCursor_step (accept : K → Bool) (state : Bool × List (K × V)) :
+    tableRangeCursorRows accept state =
+      (tableRangeCursorPull accept state).1.1.toList ++
+        tableRangeCursorRows accept (tableRangeCursorPull accept state).1.2 := by
+  rcases state with ⟨done, rows⟩
+  cases done <;> cases rows with
+  | nil => rfl
+  | cons row rest => cases h : accept row.1 <;>
+      simp [tableRangeCursorRows, tableRangeCursorPull, tableCursorPull, tableRangePrefix, h]
+
+/-- Materializing a fresh bounded cursor has exactly the existing takeWhile
+observation; positioning, lower-bound and order laws are supplied separately. -/
+theorem tableRangeCursor_materialize (accept : K → Bool) (rows : List (K × V)) :
+    tableRangeCursorRows accept (false, rows) = rows.takeWhile (fun row => accept row.1) :=
+  tableRangePrefix_rows accept rows
+
+/-- The existing ordered-window law connects positioned lazy traversal to the
+full reference filter, preserving row order and opaque payload identity. -/
+theorem tableRangeCursor_window (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    tableRangeCursorRows upper (false, rows.filter (fun row => lower row.1)) =
+      rows.filter (fun row => lower row.1 && upper row.1) :=
+  tableRangeWindow_correct lower upper rows window
+
+/-- A completed cursor returns EOF without revisiting the backend. -/
+theorem tableRangeCursor_done (accept : K → Bool) (rows : List (K × V)) :
+    tableRangeCursorPull accept (true, rows) = ((none, (true, rows)), 0) := rfl
+
+/-- A first rejected upper-bound row is read once, then EOF remains terminal. -/
+theorem tableRangeCursor_reject (accept : K → Bool) (row : K × V) (rest : List (K × V))
+    (rejected : accept row.1 = false) :
+    tableRangeCursorPull accept (false, row :: rest) = ((none, (true, rest)), 1) := by
+  simp [tableRangeCursorPull, tableCursorPull, rejected]
+
+/-- Current admitted payloads and tails are returned unchanged, including opaque
+Function leaves. One backend row is demanded by one successful consumer step. -/
+theorem tableRangeCursor_accept (accept : K → Bool) (row : K × V) (rest : List (K × V))
+    (accepted : accept row.1 = true) :
+    tableRangeCursorPull accept (false, row :: rest) = ((some row, (false, rest)), 1) := by
+  simp [tableRangeCursorPull, tableCursorPull, accepted]
+
+/-- Metadata is checked before even a terminal observation; guard work and source
+admission are separate from the backend pull counter. -/
+def checkedRangeCursorPull (issued current : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    Except Unit (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if issued = current then
+    let step := tableRangeCursorPull accept state
+    (.ok step.1, step.2)
+  else (.error (), 0)
+
+/-- Stale origins refuse without backend work, even after EOF. -/
+theorem checkedRangeCursor_stale (issued current : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) (stale : issued ≠ current) :
+    checkedRangeCursorPull issued current accept state = (.error (), 0) := by
+  simp [checkedRangeCursorPull, stale]
+
+/-- Current metadata forwards the exact cursor step; it never normalizes leaves. -/
+theorem checkedRangeCursor_current (issued : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    checkedRangeCursorPull issued issued accept state =
+      (.ok (tableRangeCursorPull accept state).1, (tableRangeCursorPull accept state).2) := by
+  simp [checkedRangeCursorPull]
+
+/-- A named observation admits its owning family before resolving a private
+backend and invoking that backend's operation. No parallel lookup engine is added. -/
+def prepareIndexObservation (admit : Except E Unit) (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) : Except E Result :=
+  admit.bind fun _ => (lookup name).bind observe
+
+/-- Foreign/stale family refusal precedes name resolution and backend work. -/
+theorem prepareIndexObservation_refused (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (cause : E) :
+    prepareIndexObservation (.error cause) lookup observe name = .error cause := rfl
+
+/-- An unknown name retains its original failure without invoking an observer. -/
+theorem prepareIndexObservation_missing (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (cause : E)
+    (missing : lookup name = .error cause) :
+    prepareIndexObservation (.ok ()) lookup observe name = .error cause := by
+  simp [prepareIndexObservation, missing, Except.bind]
+
+/-- A selected current backend receives exactly its admitted persistent root. -/
+theorem prepareIndexObservation_ready (lookup : Name → Except E Backend)
+    (observe : Backend → Except E Result) (name : Name) (backend : Backend)
+    (found : lookup name = .ok backend) :
+    prepareIndexObservation (.ok ()) lookup observe name = observe backend := by
+  simp [prepareIndexObservation, found, Except.bind]
+
+/-- Named bounded iteration composes the owning family's guard with the existing
+backend range guard. The persistent cursor state and payload representation remain
+unchanged; only the explicit family stamp is added at this boundary. -/
+def checkedIndexRangePull (familyIssued familyCurrent backendIssued backendCurrent : List Nat)
+    (accept : K → Bool) (state : Bool × List (K × V)) :
+    Except Unit (Option (K × V) × (Bool × List (K × V))) × Nat :=
+  if familyIssued = familyCurrent then
+    checkedRangeCursorPull backendIssued backendCurrent accept state
+  else (.error (), 0)
+
+/-- A changed sibling/source declaration rejects even a current selected backend,
+before any backend pull, including an already exhausted cursor. -/
+theorem checkedIndexRangePull_family_stale
+    (fi fc bi bc : List Nat) (accept : K → Bool) (state : Bool × List (K × V))
+    (stale : fi ≠ fc) :
+    checkedIndexRangePull fi fc bi bc accept state = (.error (), 0) := by
+  simp [checkedIndexRangePull, stale]
+
+/-- A current family does not hide the backend's own stale-origin refusal. -/
+theorem checkedIndexRangePull_backend_stale
+    (family bi bc : List Nat) (accept : K → Bool) (state : Bool × List (K × V))
+    (stale : bi ≠ bc) :
+    checkedIndexRangePull family family bi bc accept state = (.error (), 0) := by
+  simp [checkedIndexRangePull, checkedRangeCursor_stale bi bc accept state stale]
+
+/-- With both scopes current, named observation is exactly the existing bounded
+cursor step. It adds no mapping, sorting or normalization of Function leaves. -/
+theorem checkedIndexRangePull_current (family backend : List Nat) (accept : K → Bool)
+    (state : Bool × List (K × V)) :
+    checkedIndexRangePull family family backend backend accept state =
+      (.ok (tableRangeCursorPull accept state).1, (tableRangeCursorPull accept state).2) := by
+  simp [checkedIndexRangePull, checkedRangeCursor_current]
+
+/-- Repeated current EOF checks both scopes but consumes no additional backend row. -/
+theorem checkedIndexRangePull_terminal (family backend : List Nat) (accept : K → Bool)
+    (rest : List (K × V)) :
+    checkedIndexRangePull family family backend backend accept (true, rest) =
+      (.ok (none, (true, rest)), 0) := by
+  rw [checkedIndexRangePull_current]
+  rfl
+
+/-- Compare in declared union-key order, with absence before presence. Payload
+comparison is explicit and may equate distinct values; its original error survives. -/
+def compareBindingRows (key : K → K → Int) (value : V → V → Except E Int) :
+    List (K × V) → List (K × V) → Except E Int
+  | [], [] => .ok 0
+  | [], _ :: _ => .ok (-1)
+  | _ :: _, [] => .ok 1
+  | a :: left, b :: right =>
+    if key a.1 b.1 < 0 then .ok 1 else
+    if 0 < key a.1 b.1 then .ok (-1) else
+      match value a.2 b.2 with
+      | .error cause => .error cause
+      | .ok sign => if sign = 0 then compareBindingRows key value left right else .ok sign
+
+/-- Reflexive comparers give reflexive whole-map observations without an identity
+shortcut that could bypass callback failures or complete input admission. -/
+theorem compareBindingRows_self (key : K → K → Int) (value : V → V → Except E Int)
+    (keySelf : ∀ k, key k k = 0) (valueSelf : ∀ v, value v v = .ok 0) (rows : List (K × V)) :
+    compareBindingRows key value rows rows = .ok 0 := by
+  induction rows with
+  | nil => rfl
+  | cons head tail ih => simp [compareBindingRows, keySelf, valueSelf, ih]
+
+/-- A lower first key means this source is present at the first differing union
+key; no payload comparator or tail traversal can change that decision. -/
+theorem compareBindingRows_present_first (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (lower : key a.1 b.1 < 0) :
+    compareBindingRows key value (a :: left) (b :: right) = .ok 1 := by
+  simp [compareBindingRows, lower]
+
+/-- A value refusal at a common key is not converted to equality or absence. -/
+theorem compareBindingRows_value_refused (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (same : key a.1 b.1 = 0)
+    (cause : E) (refused : value a.2 b.2 = .error cause) :
+    compareBindingRows key value (a :: left) (b :: right) = .error cause := by
+  simp [compareBindingRows, same, refused]
+
+/-- A deciding common payload shields all later rows, retaining the exact Integer
+result, including signs with magnitude greater than one. -/
+theorem compareBindingRows_value_decides (key : K → K → Int) (value : V → V → Except E Int)
+    (a b : K × V) (left right : List (K × V)) (same : key a.1 b.1 = 0)
+    (sign : Int) (decided : value a.2 b.2 = .ok sign) (nonzero : sign ≠ 0) :
+    compareBindingRows key value (a :: left) (b :: right) = .ok sign := by
+  simp [compareBindingRows, same, decided, nonzero]
+
+/-- Reversing both comparison arguments negates success and retains original
+refusal, under explicit reversal laws for the supplied pure comparison actions. -/
+theorem compareBindingRows_reverse (key : K → K → Int) (value : V → V → Except E Int)
+    (keyReverse : ∀ a b, key b a = -(key a b))
+    (valueReverse : ∀ a b, value b a = (value a b).map (fun sign => -sign))
+    (left right : List (K × V)) :
+    compareBindingRows key value right left =
+      (compareBindingRows key value left right).map (fun sign => -sign) := by
+  induction left generalizing right with
+  | nil => cases right <;> rfl
+  | cons a left ih =>
+    cases right with
+    | nil => rfl
+    | cons b right =>
+      have kr := keyReverse a.1 b.1
+      by_cases less : key a.1 b.1 < 0
+      · have revPos : 0 < key b.1 a.1 := by omega
+        have revNotLess : ¬ key b.1 a.1 < 0 := by omega
+        simp [compareBindingRows, less, revPos, revNotLess, Except.map]
+      · by_cases more : 0 < key a.1 b.1
+        · have revLess : key b.1 a.1 < 0 := by omega
+          simp [compareBindingRows, less, more, revLess, Except.map]
+        · have zero : key a.1 b.1 = 0 := by omega
+          have revZero : key b.1 a.1 = 0 := by omega
+          rw [compareBindingRows, compareBindingRows]
+          simp only [zero, revZero, show ¬ (0 : Int) < 0 from by decide, ite_false,
+            valueReverse a.2 b.2]
+          cases hv : value a.2 b.2 with
+          | error cause => rfl
+          | ok sign =>
+            by_cases hs : sign = 0
+            · simpa [hs, Except.map] using ih right
+            · simp [hs, Except.map]
+
+/-- Representation transport preserves order and opaque payload identities. It
+reuses the existing key bridge/pullback instead of inferring target numeric order. -/
+theorem compareBindingRows_transport (keys : DictionaryBridge K L) (key : K → K → Int)
+    (value : V → V → Except E Int) (left right : List (K × V)) :
+    compareBindingRows (transportComparer keys key) value
+      (left.map (fun row => (keys.toFields row.1, row.2)))
+      (right.map (fun row => (keys.toFields row.1, row.2))) =
+    compareBindingRows key value left right := by
+  induction left generalizing right with
+  | nil => cases right <;> rfl
+  | cons a left ih =>
+    cases right with
+    | nil => rfl
+    | cons b right => simp [compareBindingRows, transportComparer, keys.from_to, ih]
+
+/-- Count paired decisions only. Full admission, sorting/positioning, backend
+work, conversion, allocation and GC are separately charged, not claimed free. -/
+def comparisonSteps (key : K → K → Int) (value : V → V → Except E Int) :
+    List (K × V) → List (K × V) → Nat
+  | [], _ => 0
+  | _, [] => 0
+  | a :: left, b :: right =>
+    1 + if key a.1 b.1 = 0 then
+      match value a.2 b.2 with
+      | .ok 0 => comparisonSteps key value left right
+      | _ => 0
+    else 0
+
+/-- Even complete equality compares at most the shorter source's row count. -/
+theorem comparisonSteps_bound (key : K → K → Int) (value : V → V → Except E Int)
+    (left right : List (K × V)) : comparisonSteps key value left right ≤ min left.length right.length := by
+  induction left generalizing right with
+  | nil => cases right <;> simp [comparisonSteps]
+  | cons a left ih =>
+    cases right with
+    | nil => simp [comparisonSteps]
+    | cons b right =>
+      have bound := ih right
+      simp only [comparisonSteps, List.length_cons]
+      split
+      · cases hv : value a.2 b.2 with
+        | error cause => simp
+        | ok sign => split <;> omega
+      · omega
+
+/-- Both complete roots are admitted left-to-right before any comparison action.
+The backend enumeration and comparator laws are explicit external premises. -/
+def prepareBindingComparison (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E R)
+    (left right : List (K × V)) : Except E R :=
+  match admit left with
+  | .error cause => .error cause
+  | .ok () => match admit right with
+    | .error cause => .error cause
+    | .ok () => compare left right
+
+/-- Left refusal precedes right admission and all user comparison callbacks. -/
+theorem prepareBindingComparison_left_refused (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E R)
+    (left right : List (K × V)) (cause : E) (refused : admit left = .error cause) :
+    prepareBindingComparison admit compare left right = .error cause := by
+  simp [prepareBindingComparison, refused]
+
+/-- Invalid right tails cannot hide behind an earlier deciding left entry. -/
+theorem prepareBindingComparison_right_refused (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E R)
+    (left right : List (K × V)) (cause : E) (ready : admit left = .ok ())
+    (refused : admit right = .error cause) :
+    prepareBindingComparison admit compare left right = .error cause := by
+  simp [prepareBindingComparison, ready, refused]
+
+/-- Successful admission preserves the exact result or original failure. -/
+theorem prepareBindingComparison_ready (admit : List (K × V) → Except E Unit)
+    (compare : List (K × V) → List (K × V) → Except E R)
+    (left right : List (K × V)) (first : admit left = .ok ()) (second : admit right = .ok ()) :
+    prepareBindingComparison admit compare left right = compare left right := by
+  simp [prepareBindingComparison, first, second]
+
+/-- Optional presence is checked before the supplied payload equality decision.
+A stored false is a payload, never absence; decisions may preserve a refusal. -/
+def equalBindingOption (same : V → V → Except E Bool) : Option V → Option V → Except E Bool
+  | none, none => .ok true
+  | some a, some b => same a b
+  | _, _ => .ok false
+
+/-- A lawful payload decision establishes exact optional lookup equality. -/
+theorem equalBindingOption_sound (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : Option V)
+    (accepted : equalBindingOption same left right = .ok true) : left = right := by
+  cases left with
+  | none => cases right <;> simp_all [equalBindingOption]
+  | some a => cases right with
+    | none => simp [equalBindingOption] at accepted
+    | some b => exact congrArg some (law a b accepted)
+
+/-- Reflexive payload decisions establish equality without normalizing any leaf. -/
+theorem equalBindingOption_refl (same : V → V → Except E Bool)
+    (law : ∀ a, same a a = .ok true) (value : Option V) :
+    equalBindingOption same value value = .ok true := by
+  cases value <;> simp [equalBindingOption, law]
+
+/-- The finite reference visits a declared covering key sequence and stops at
+its first false decision or refusal. Backend traversal/refinement laws are premises. -/
+def equalViewKeys (same : V → V → Except E Bool) (left right : K → Option V) :
+    List K → Except E Bool
+  | [] => .ok true
+  | key :: rest => match equalBindingOption same (left key) (right key) with
+    | .error cause => .error cause
+    | .ok false => .ok false
+    | .ok true => equalViewKeys same left right rest
+
+/-- A deciding false suppresses later equality actions, rather than accumulating
+truthy values or inspecting an unrelated tail. -/
+theorem equalViewKeys_decided (same : V → V → Except E Bool) (left right : K → Option V)
+    (key : K) (rest : List K) (decided : equalBindingOption same (left key) (right key) = .ok false) :
+    equalViewKeys same left right (key :: rest) = .ok false := by simp [equalViewKeys, decided]
+
+/-- Value refusal keeps the exact first cause; it is not inequality. -/
+theorem equalViewKeys_refused (same : V → V → Except E Bool) (left right : K → Option V)
+    (key : K) (rest : List K) (cause : E)
+    (refused : equalBindingOption same (left key) (right key) = .error cause) :
+    equalViewKeys same left right (key :: rest) = .error cause := by simp [equalViewKeys, refused]
+
+/-- Successful finite equality frames every observed key, including absent ones. -/
+theorem equalViewKeys_sound (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : K → Option V) (keys : List K)
+    (accepted : equalViewKeys same left right keys = .ok true) :
+    ∀ key ∈ keys, left key = right key := by
+  induction keys with
+  | nil => simp
+  | cons key rest ih =>
+    cases hd : equalBindingOption same (left key) (right key) with
+    | error cause => simp [equalViewKeys, hd] at accepted
+    | ok decision => cases decision with
+      | false => simp [equalViewKeys, hd] at accepted
+      | true =>
+        have tail : equalViewKeys same left right rest = .ok true := by
+          simpa [equalViewKeys, hd] using accepted
+        intro query member
+        rcases List.mem_cons.mp member with first | later
+        · subst query; exact equalBindingOption_sound same law _ _ hd
+        · exact ih tail query later
+
+/-- Equal observations are accepted when the supplied value equality is reflexive. -/
+theorem equalViewKeys_complete (same : V → V → Except E Bool)
+    (law : ∀ a, same a a = .ok true) (left right : K → Option V) (keys : List K)
+    (agree : ∀ key ∈ keys, left key = right key) :
+    equalViewKeys same left right keys = .ok true := by
+  induction keys with
+  | nil => rfl
+  | cons key rest ih =>
+    have first : equalBindingOption same (left key) (right key) = .ok true := by
+      rw [agree key (by simp)]; exact equalBindingOption_refl same law _
+    have tail := ih (fun query member => agree query (by simp [member]))
+    simp [equalViewKeys, first, tail]
+
+/-- Covering both finite domains upgrades successful key equality to full
+observation equality. No ordering, new empty root or payload normalization is needed. -/
+theorem equalViewKeys_extensional (same : V → V → Except E Bool)
+    (law : ∀ a b, same a b = .ok true → a = b) (left right : K → Option V) (keys : List K)
+    (outside : ∀ key, key ∉ keys → left key = none ∧ right key = none)
+    (accepted : equalViewKeys same left right keys = .ok true) : left = right := by
+  funext key
+  by_cases member : key ∈ keys
+  · exact equalViewKeys_sound same law left right keys accepted key member
+  · rcases outside key member with ⟨hl, hr⟩; exact hl.trans hr.symm
+
+/-- Key-decision work only. Source recognition, backend traversal, lookups,
+metadata preparation, payload comparison and runtime allocation remain charged. -/
+def equalitySteps (same : V → V → Except E Bool) (left right : K → Option V) : List K → Nat
+  | [] => 0
+  | key :: rest => 1 + match equalBindingOption same (left key) (right key) with
+    | .ok true => equalitySteps same left right rest
+    | _ => 0
+
+/-- The finite reference examines no more keys than its supplied domain cover. -/
+theorem equalitySteps_bound (same : V → V → Except E Bool) (left right : K → Option V)
+    (keys : List K) : equalitySteps same left right keys ≤ keys.length := by
+  induction keys with
+  | nil => simp [equalitySteps]
+  | cons key rest ih =>
+    cases hd : equalBindingOption same (left key) (right key) with
+    | error cause => simp [equalitySteps, hd]
+    | ok decision => cases decision <;> simp [equalitySteps, hd] <;> omega
+
+/-- A representation may have several keys for one backend key. Pulling the
+source order through an explicit projection preserves signs and strict order,
+while zero follows backend equivalence rather than structural representation. -/
+theorem projectedComparer_laws (project : L → K) (compare : K → K → Int)
+    (laws : TableComparerLaws compare) :
+    TableComparerLaws (fun a b => compare (project a) (project b))
+      (fun a b => project a = project b) where
+  sign a b := laws.sign (project a) (project b)
+  zero a b := laws.zero (project a) (project b)
+  reverse a b := laws.reverse (project a) (project b)
+  trans a b c := laws.trans (project a) (project b) (project c)
+
+/-- Equality after projection is a genuine equivalence, including tagged numeric
+representations that are structurally different but identify the same key. -/
+theorem projectedKey_equivalence (project : L → K) :
+    Equivalence (fun a b => project a = project b) := by
+  constructor
+  · intro a; rfl
+  · intro a b h; exact h.symm
+  · intro a b c first second; exact first.trans second
+
+/-- Explicit key isomorphisms transport a declared backend equivalence together
+with its order; they need not replace it with representation equality. -/
+theorem transportComparer_equivalence_laws (keys : DictionaryBridge K L)
+    (compare : K → K → Int) (equivalent : K → K → Prop)
+    (laws : TableComparerLaws compare equivalent) :
+    TableComparerLaws (transportComparer keys compare)
+      (fun a b => equivalent (keys.fromFields a) (keys.fromFields b)) where
+  sign a b := laws.sign (keys.fromFields a) (keys.fromFields b)
+  zero a b := laws.zero (keys.fromFields a) (keys.fromFields b)
+  reverse a b := laws.reverse (keys.fromFields a) (keys.fromFields b)
+  trans a b c := laws.trans (keys.fromFields a) (keys.fromFields b) (keys.fromFields c)
+
+/-- Stream a sorted backend through lower filtering and upper early stop. The
+second component counts visited backend rows, not root admission, sorting, guard
+work, EOF or the host Iterator's per-pull implementation cost. -/
+def tableLinearRange (lower upper : K → Bool) : List (K × V) → List (K × V) × Nat
+  | [] => ([], 0)
+  | row :: rest =>
+    if lower row.1 then
+      if upper row.1 then
+        let next := tableLinearRange lower upper rest
+        (row :: next.1, next.2 + 1)
+      else ([], 1)
+    else
+      let next := tableLinearRange lower upper rest
+      (next.1, next.2 + 1)
+
+/-- Streaming preserves precisely the existing positioned-prefix observation,
+including opaque payload identities. No sort is needed when the backend supplies
+an enumeration satisfying the same declared order window. -/
+theorem tableLinearRange_rows (lower upper : K → Bool) (rows : List (K × V)) :
+    (tableLinearRange lower upper rows).1 =
+      (rows.filter (fun row => lower row.1)).takeWhile (fun row => upper row.1) := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    cases hl : lower row.1 <;> cases hu : upper row.1 <;>
+      simp [tableLinearRange, hl, hu, ih]
+
+/-- The existing contiguous-window law equates the unsorted streaming path with
+full reference range filtering. A changed comparator needs a new window witness. -/
+theorem tableLinearRange_correct (lower upper : K → Bool) (rows : List (K × V))
+    (window : TableRangeWindow lower upper rows) :
+    (tableLinearRange lower upper rows).1 =
+      rows.filter (fun row => lower row.1 && upper row.1) := by
+  rw [tableLinearRange_rows]
+  rw [← tableRangePrefix_rows]
+  exact tableRangeWindow_correct lower upper rows window
+
+/-- Linear positioning visits each backend row at most once. This explicitly
+avoids attributing a logarithmic seek law to the standard in-order Iterator. -/
+theorem tableLinearRange_visits (lower upper : K → Bool) (rows : List (K × V)) :
+    (tableLinearRange lower upper rows).2 ≤ rows.length := by
+  induction rows with
+  | nil => simp [tableLinearRange]
+  | cons row rest ih =>
+    cases hl : lower row.1 <;> cases hu : upper row.1 <;>
+      simp [tableLinearRange, hl, hu] <;> omega
+
+/-- Charge complete preparation once, backend visits, output-row checking and
+metadata/EOF guards separately. Callback, allocation and GC prices are premises;
+there is no universal wall-clock or constant-time admission claim. -/
+theorem tableLinearRange_cost (lower upper : K → Bool) (rows : List (K × V))
+    (prepare visit guard rowCheck : Nat) :
+    prepare + (tableLinearRange lower upper rows).2 * visit +
+      ((tableLinearRange lower upper rows).1.length + 1) * guard +
+      ((tableLinearRange lower upper rows).1.length + 1) * rowCheck ≤
+    prepare + rows.length * visit +
+      ((tableLinearRange lower upper rows).1.length + 1) * guard +
+      ((tableLinearRange lower upper rows).1.length + 1) * rowCheck := by
+  have bound := Nat.mul_le_mul_right visit (tableLinearRange_visits lower upper rows)
+  omega
+
+end LeanPoo.Functional.OrderedDictionary

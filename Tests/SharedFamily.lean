@@ -83,29 +83,27 @@ private def metadataAndNames : Except C4.Error Bool := do
   let duplicate := match left.mixSharedWith right ["Seed"] "Left" with
     | .error (.c4 (.duplicateNode "Left")) => true
     | _ => false
+  let suffixNodes := right.plan.schema.graph.nodes.map (fun node => if node.name == "Seed" then { node with suffix := true } else node)
   let suffixed : Object.Schema String Value :=
-    { right.plan.schema with graph := { nodes :=
-        right.plan.schema.graph.nodes.map (fun node => if node.name == "Seed" then { node with suffix := true } else node) } }
+    { graph := { nodes := suffixNodes }, declaration := right.plan.schema.declaration }
   let suffixConflict := match left.plan.schema.mergeSharedFromLeft suffixed ["Seed"] with
     | .error (.conflictingMetadata "Seed") => true
     | _ => false
+  let parentNodes := right.plan.schema.graph.nodes.map (fun node => if node.name == "Seed" then { node with parentOrders := [["Other"]] } else node) ++ [{ name := "Other" }]
   let differentParents : Object.Schema String Value :=
-    { right.plan.schema with graph := { nodes :=
-        right.plan.schema.graph.nodes.map (fun node =>
-          if node.name == "Seed" then { node with parentOrders := [["Other"]] } else node)
-        ++ [{ name := "Other" }] } }
+    { graph := { nodes := parentNodes }, declaration := right.plan.schema.declaration }
   let parentConflict := match left.plan.schema.mergeSharedFromLeft differentParents ["Seed"] with
     | .error (.conflictingMetadata "Seed") => true
     | _ => false
+  let duplicateNodes := right.plan.schema.graph.nodes ++ [{ name := "Seed" }]
   let duplicated : Object.Schema String Value :=
-    { right.plan.schema with graph := { nodes := right.plan.schema.graph.nodes ++ [{ name := "Seed" }] } }
+    { graph := { nodes := duplicateNodes }, declaration := right.plan.schema.declaration }
   let malformed := match left.plan.schema.mergeSharedFromLeft duplicated ["Seed"] with
     | .error (.graph (.duplicateNode "Seed")) => true
     | _ => false
+  let missingNodes := right.plan.schema.graph.nodes.map (fun node => if node.name == "Seed" then { node with parentOrders := [["Missing"]] } else node)
   let missingParent : Object.Schema String Value :=
-    { right.plan.schema with graph := { nodes :=
-        right.plan.schema.graph.nodes.map (fun node =>
-          if node.name == "Seed" then { node with parentOrders := [["Missing"]] } else node) } }
+    { graph := { nodes := missingNodes }, declaration := right.plan.schema.declaration }
   let malformedParent := match left.plan.schema.mergeSharedFromLeft missingParent ["Seed"] with
     | .error (.graph (.unknownNode "Missing")) => true
     | _ => false

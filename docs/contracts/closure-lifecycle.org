@@ -1,0 +1,127 @@
+#+TITLE: Closure lifecycle costs — generalized protocol future work
+
+* Current construction extension
+
+[[file:closure-construction.org][Fused construction and publication]] adds direct visitor specialization, idempotent
+preparation, dependency-equal reshaping and a fixed native Scheme data format.
+The v4 observations below remain historical; no new JSON/version series is added.
+
+* Scope and construction modes
+
+This extends the paper's future generalized protocol work for the existing finite
+positive Boolean equations. It does not verify a Scheme compiler, GC, runtime or
+machine execution. Existing least-fixed-point, owned-state and queue refinement
+proofs remain the semantic basis.
+
+[[file:../../LeanPoo/Functional/ClosureLifecycle.lean][ClosureLifecycle]] caches the edge budget E and executes the existing engines with
+V+E fuel. The executable warm path does not recompute Plan.edgeCount. Proof-only
+reference executions are erased. CyclicPublication now uses the cold lifecycle
+assembly and retains canonical closure and pop bounds.
+
+Modes are explicit:
+
+- cold: skip degree-based selector preparation; choose min(A,C).
+- adaptive: prepare H once, then choose min(A,C,H).
+- append, chunked, hybrid: select the named engine without adaptive preparation.
+- upgrade: add adaptive metadata to a cold plan without rebuilding its AST/index.
+- reconfigure: privately copy and validate revised syntax, require unchanged
+  dependency topology, retain budget/ceilings/choice, then solve from bottom.
+
+A=4E, C=32V, H=V+4*sum(min(degree,8)). For modes that skip degree visits, use the
+conservative hybrid bound H0=V+min(4E,32V). This makes cold min(A,C) no greater
+than H0 as well. Literal values and workload names never select an engine.
+Dense 64 selects adaptive hybrid; dense 256 selects fixed chunked. Shared bursts
+can favor adaptive hybrid while sparse diamond, hub-chain and ring favor append.
+
+* What is proved
+
+run_core / canonical preserve the original exact store and five core counters.
+actual_bound bounds the executed copying/frame/decision charge. choose_minimum
+compares the declared ceilings, not alternate actual running times. Fixed modes
+have their own bound; only cold/adaptive receive the minimum theorem.
+
+Prices declares equation, descriptor, reverse-index, compilation-context,
+per-equation visitor, degree, additional list scan and publication costs.
+construction includes V, S descriptor nodes, E reverse links, one shared context
+and V read visitors. A revision skips building the reverse index and read visitors
+but still copies/checks its syntax; its descriptor price must cover validation
+and topology comparison. Cached-degree Scheme preparation visits V degrees;
+Lean's current list-based degree representation additionally requires E list
+traversal work. Those costs must receive backend-appropriate prices.
+
+core_bound includes initialization, queue pops, equation evaluation, descriptor
+visits and updates using existing operation-count ceilings. Backend descriptor
+prices cover tag dispatch and scalar read/join/literal operations.
+total_cost_bound combines these with queue, preparation and construction bounds.
+total_bound accounts for initial construction, optional preparation and repeated
+solve/publication. preparation_regret explicitly retains the selector surcharge
+relative to a direct candidate. cold_preparation and retained_preparation prove
+zero selector work for cold construction and retained revisions. cold_batch_bound
+and revision_batch_bound charge repeated construction/revision for every request.
+No theorem assumes that future reuse repays adaptive preparation. Allocation
+layout proofs in ClosureCosts remain source representation bounds; this ledger
+is a declared source cost model, not a proof of GC pauses, native latency or
+optimal machine instructions. It does not include equation generation or compiler
+startup in the declared operation ledger.
+
+* Idiomatic Gerbil implementation
+
+The Scheme implementation was checked against the installed Gerbil compiler and
+standard library sources (core/more-sugar.ss hash syntax; compiler/optimize-base.ss
+using contexts and list-sort). It uses hash literals, list->hash-table, map, cut,
+for/fold, in-vector, iota, standard JSON and standard process/port/digest libraries.
+One benchmark support module owns receipt IO, hashing, bounded process launch and
+statistics. Native executables emit JSON directly. There is no custom record
+builder or key=value parser. The copying visitor uses one private typed context
+instead of invoking a node-accounting callback on every descriptor; a higher-order
+read visitor remains per equation. Specialized solver loops remain explicit so
+queue operations and instrumentation can still be matched to the Lean model.
+
+* Native controls and boundaries
+
+Version 4 receipts extend the preserved v1/v2/v3 controls. Each runtime has 960
+rows: 10 sizes/topologies, both seeds, cold/warm/refresh, four rotated trials and
+four engines. Each child retains the 20-second deadline; Scheme retains its 1 GiB
+heap bound. The native comparator checks 23 fields per row (22,080 assertions),
+including chosen engine, all three ceilings, syntax/index sizes and selector
+visits. Duplicate, incomplete, failed, stale-source and mismatched inputs fail.
+
+Cold timings include private compilation and solve each iteration. Warm timings
+separate initial preparation from repeated solves; refresh timings separate an
+initial opposite-seed plan from repeated private syntax revision and fresh solve.
+One-off setup and setup+query lifecycle time are reported, not hidden. Scheme
+workload generation precedes the query clock; Lean's equation function is
+materialized during compilation. Therefore timings are compared within each
+runtime, not as a language ranking. The Lean syntax-size diagnostic is computed
+outside the query clock; Scheme obtains it during actual compilation.
+
+The same-process Scheme controls use five families, three scopes, eight balanced
+rotations, four engines (480 observations), and an untimed warmup per engine.
+CPU measurements are observations on this host. A minimum declared queue ceiling
+is neither a proof of fastest CPU execution nor a universal cold-start speedup.
+Historical negative outcomes and raw timings are retained.
+
+* Retained failures and matched observations
+
+The initial v4 Lean run is retained as closure-lifecycle-initial-v4.json: 941 rows
+passed and 19 children failed to launch while the executable was being relinked.
+It is not an accepted performance or parity receipt. The final matrix is rerun
+only after source and executable stabilization.
+
+Scheme's eight-rotation same-process means in milliseconds per request:
+
+| Family / scope | append | chunked | auto |
+|----------------+--------+---------+------|
+| dense 256 cold | 3.572 | 2.613 | 2.845 |
+| dense 256 warm | 1.204 | 0.846 | 0.852 |
+| dense 256 refresh | 3.602 | 2.909 | 3.135 |
+| diamond 1024 cold | 0.125 | 0.268 | 0.239 |
+| bursts 1024 warm | 0.059 | 0.069 | 0.052 |
+
+These are matched controls from one host, not stable speed guarantees. Even when
+auto chooses the same engine, dispatch, allocation and GC history can affect
+measurements. Fixed chunked remains faster than auto in the dense cold/refresh
+controls, and auto remains slower than append in diamond cold. The explicit
+compile modes remain useful for callers with known lifecycles. Initial setup is
+excluded from these query means; independent-process receipts separately report
+setup and amortized lifecycle totals.

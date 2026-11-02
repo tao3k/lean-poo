@@ -1,4 +1,4 @@
-import Lean
+import Lean.Data.Json
 import LeanPoo.Prototype.Object
 
 /-!

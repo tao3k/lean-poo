@@ -17,23 +17,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@just
+      - name: Reuse the declared release toolchain
+        uses: actions/cache@v5
+        with:
+          path: ~/.elan/toolchains
+          key: lean-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}
       - uses: leanprover/lean-action@v1
         with:
           auto-config: false
           build: false
           test: false
           lint: false
-      - name: Build public library and proofs
-        run: |
-          lake build LeanPoo indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale
-          lake env lean LeanPoo/C4/Types.lean
-          python3 -m unittest discover -s tools/tests -p 'test_*.py'
-      - name: Package this run's build
-        run: tar -czf lean-build.tar.gz .lake/build
-      - uses: actions/upload-artifact@v4
+          use-github-cache: false
+      - uses: actions/cache/restore@v5
+        id: library-cache
         with:
-          name: lean-build-${{ github.sha }}
-          path: lean-build.tar.gz
+          path: .lake/build
+          key: lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            lean-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
+      - name: Build public library, proofs and shared pressure implementation
+        run: lake build LeanPoo LeanPoo:shared Examples.Support.GeneralizedFork:dynlib Examples indexedRegistryScale scopedTransactionScale keyIndexScale cachedPreparationScale contextSlotScale resultIndexScale cyclicClosureScale closureLayoutScale hybridClosureScale
+      - name: Check standalone C4 types
+        run: lake env lean LeanPoo/C4/Types.lean
+      - name: Check validation supervisors
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'
+      - uses: actions/cache/save@v5
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        with:
+          path: .lake/build
+          key: ${{ steps.library-cache.outputs.cache-primary-key }}
+      - name: Package this run's compiler and build
+        run: |
+          cp lean-toolchain lean-toolchain-source.txt
+          lake env lean --version > lean-toolchain-version.txt
+          lake env lean --print-prefix > lean-toolchain-prefix.txt
+          toolchain_root="$(lake env lean --print-prefix)"
+          # Verify the complete producer compiler, including libraries and headers.
+          (cd "$toolchain_root" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > lean-toolchain-sha256.txt
+          tar -I 'zstd -T0 -3' -cf "lean-build-${GITHUB_SHA}.tar.zst" .lake/build \
+            lean-toolchain-source.txt lean-toolchain-version.txt lean-toolchain-prefix.txt lean-toolchain-sha256.txt
+          # Keep archive/manifest sizes visible without uploading the release twice.
+          du -sh "$toolchain_root" "lean-build-${GITHUB_SHA}.tar.zst" lean-toolchain-sha256.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          # For a raw artifact GitHub uses the file name as the artifact name.
+          path: lean-build-${{ github.sha }}.tar.zst
+          archive: false
           if-no-files-found: error
           retention-days: 1
 
@@ -49,18 +79,10 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
       - uses: taiki-e/install-action@just
-      - uses: actions/download-artifact@v4
+      - uses: ./.github/actions/restore-lean
         with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+          artifact: lean-build-${{ github.sha }}.tar.zst
       - name: Check independent file shard
         run: lake env python3 tools/check_atoms.py --shard ${{ matrix.shard }} --shards 12 --jobs 1
 
@@ -70,18 +92,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-        with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
       - uses: taiki-e/install-action@just
-      - uses: actions/download-artifact@v4
+      - uses: ./.github/actions/restore-lean
         with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+          artifact: lean-build-${{ github.sha }}.tar.zst
       - name: Check bounded diagnostics
         run: lake env just --set lean lean _check-diagnostics _check-native-registry _check-native-scoped _check-native-key-index _check-native-cached _check-native-context _check-native-result-index
 
@@ -91,8 +105,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@just
-      - name: Install Org parser
-        run: sudo apt-get update && sudo apt-get install -y emacs-nox
+      # Use the official precompiled Org reader; no editor installation.
+      - name: Install Org reader
+        uses: pandoc/actions/setup@v1
       - name: Parse maintained Org documents
         run: just check-docs
 
@@ -102,19 +117,17 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+      - uses: ./.github/actions/restore-lean
         with:
-          auto-config: false
-          build: false
-          test: false
-          lint: false
-      - uses: actions/download-artifact@v4
-        with:
-          name: lean-build-${{ github.sha }}
-      - name: Restore this run's build
-        run: tar -xzf lean-build.tar.gz
+          artifact: lean-build-${{ github.sha }}.tar.zst
+      # The source runner needs racket/list, json and srfi/1, not GUI or docs.
       - name: Install the source evaluator
-        run: sudo apt-get update && sudo apt-get install -y racket
+        uses: Bogdanp/setup-racket@8889db76ff6cdc86df8aa09fdd1729cd090b7144 # v1.16
+        with:
+          version: stable
+          distribution: minimal
+          variant: CS
+          packages: srfi-lite-lib
       - name: Compare all original checks against Lean
         run: lake env python3 tools/poof_source_check.py --compare-lean --receipt source-differential.json
       - uses: actions/upload-artifact@v4

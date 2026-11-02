@@ -66,3 +66,46 @@ The generic argument carrier can be a Lean type or the recursive dynamic Value
 universe. A kernel theorem preserves every existing value-only object read
 when it enters this protocol. Runtime FunctionOf descriptors and catalogs
 validate actual calls, with current-registry checks on hot results.
+
+* Standard finite prototype reduction review
+
+The original ~poof.scrbl~ composition at lines 486--545 uses the same final self,
+associative ~mix~ and identity-based right fold. Adding finite ~reducePrototypes~
+and ~composeReduced~ laws leaves ~identity~, ~compose~, typed ~Chain~, ~composeAll~
+and all fixed-point constructors unchanged. The new reduction is proved equal to
+that existing interpreter, with explicit singleton and current-suffix laws.
+The generalized Reader/method integration advances future work; host mutable-cell
+capture and standard list contracts are separate Scheme regression obligations.
+The existing receipt is rebound to the reviewed Compose source only; no original
+requirement, completeness flag or source-check expectation is promoted.
+
+* Direct combined-generic transport review
+
+The original discussion at ~poof.scrbl~ lines 2063--2089 separates sorted labelled
+fragments from their representation-dependent mixing function. Directly passing
+that function its resolved row does not change qualifier semantics. New
+~FunctionSignature~ laws remove only an identity relay, retaining monadic
+selection, fragment lookup and admission order. The source-operation cost model
+has explicit prices; host compilation, actual allocations and GC remain separate
+Scheme measurement obligations. Existing original checks and completeness flags
+are unchanged; generalized declaration/MOP integration remains future work.
+
+* Fixed-prefix generic row review
+
+The same article discussion at lines 2063--2089 permits representation-dependent
+mixing over labelled fragments. Fixed-prefix assembly preserves its complete
+resolved argument row and changes no method-combination policy. Lean proves
+value equality and arbitrary-monad substitution; mutable spine ownership and
+measured CPU costs remain Gerbil obligations. The generalized Reader/reflection
+integration continues future work. No completeness flag is changed.
+
+* Reader completion review
+
+Standard FUN Reader fusion removes environment-independent continuation
+materialization while retaining the article's same-self method combination and
+current reflected declarations. The model proves arbitrary-monad equality and a
+conditional complete-budget threshold. Its scope assumes standard Observation
+operations; arbitrary FUN overrides, host multiple values, mutable receiver
+identity and GC require Gerbil controls. The nested forecast/review integration
+advances the generalized-prototype future work; original completeness flags and
+source-check coverage are unchanged.

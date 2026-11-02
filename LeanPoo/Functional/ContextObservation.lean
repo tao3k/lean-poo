@@ -47,7 +47,7 @@ theorem ContextSlot.observe_retained (slot : ContextSlot ready) (context : Conte
       some ⟨context, data.observe expose Public derive⟩ := by
   simp [ContextSlot.observe, retained]
 
-theorem ContextSlot.observe_hit [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.observe_hit [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (context : Context) (data : Snapshot ready context)
     (retained : slot.retained = some ⟨context, data⟩)
     (expose : ∀ c key, Value c key → Observed c key) (Public) (derive) :
@@ -55,7 +55,7 @@ theorem ContextSlot.observe_hit [DecidableEq Context] (slot : ContextSlot ready)
   rw [ContextSlot.read_hit _ context (data.observe expose Public derive)
     (slot.observe_retained context data retained expose Public derive)]
 
-theorem ContextSlot.observe_consume [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.observe_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (expose : ∀ c key, Value c key → Observed c key) (Public) (derive)
     {Output : Context → Type z} (construct : ∀ c data, Public c data → Output c)
     (context : Context) :
@@ -82,7 +82,7 @@ def ContextSlot.replaceObservedPublic
       (Certified.replaceObserved_public keys expose reveal Public old candidate compatible))
 
 /-- Replacement preserves every public proof-aware consumer output. -/
-theorem ContextSlot.replaceObservedPublic_consume [DecidableEq Context]
+theorem ContextSlot.replaceObservedPublic_consume [BEq Context] [LawfulBEq Context]
     (expose : ∀ c key, Value c key → Observed c key)
     (reveal : ∀ c key, Other c key → Observed c key) (Public)
     {old : Certified keys (fun c data => Public c (observeResults expose data))}

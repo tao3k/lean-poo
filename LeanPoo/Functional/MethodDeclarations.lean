@@ -1,0 +1,975 @@
+import LeanPoo.Object.MethodCombinationSemantics
+import LeanPoo.Functional.DeclarativeMetadata
+import LeanPoo.Functional.PrototypeTypes
+import LeanPoo.Functional.RowTypes
+import LeanPoo.Functional.Parameters
+
+/-! Record and qualified method declarations share one fragment stream. This
+models source-order collection, inherited assembly and receiver-generic invocation;
+Gerbil syntax expansion, policy admission and mutable invalidation have controls. -/
+namespace LeanPoo.Object.MethodCombination
+variable {Self : Type}
+/-- One extensible declaration stream can contribute data and qualified methods. -/
+inductive Fragment (Data Receiver : Type) (M : Type → Type) (Result : Type) where
+  | slot (name : String) (value : Data)
+  | method (name : String) (parts : List (Contribution Receiver M Result))
+/-- Resolve only one method name, retaining every contribution in source order. -/
+def collectFragments (key : String) : List (Fragment Data Receiver M Result) → List (Contribution Receiver M Result)
+  | [] => []
+  | .slot _ _ :: rest => collectFragments key rest
+  | .method name parts :: rest =>
+      if name = key then parts ++ collectFragments key rest else collectFragments key rest
+/-- Splitting a declaration source cannot reorder, lose or duplicate its methods. -/
+theorem collectFragments_append (key : String) (first second : List (Fragment Data Receiver M Result)) :
+    collectFragments key (first ++ second) = collectFragments key first ++ collectFragments key second := by
+  induction first with
+  | nil => rfl
+  | cons head rest ih =>
+    cases head with
+    | slot => exact ih
+    | method name parts =>
+      by_cases same : name = key <;> simp [collectFragments, same, ih, List.append_assoc]
+/-- Coalescing equal-name fragments preserves every generic's contribution stream,
+not just the method that is being normalized. Bodies remain uninterpreted values. -/
+theorem collectFragments_coalesce (key name : String) (left right : List (Contribution Receiver M Result))
+    (rest : List (Fragment Data Receiver M Result)) :
+    collectFragments key (.method name left :: .method name right :: rest) =
+      collectFragments key (.method name (left ++ right) :: rest) := by
+  by_cases same : name = key <;> simp [collectFragments, same, List.append_assoc]
+/-- Local method declarations use the existing delayed inherited SlotSpec. -/
+def fragmentSpecification (key : String) (fragments : List (Fragment Data Receiver M Result)) :
+    Prototype.SlotSpec Self (Option (Methods Receiver M Result)) := specifications (collectFragments key fragments)
+/-- Assembling a child fragment block ahead of an inherited block preserves each
+qualifier's order. No contribution body runs during this assembly. -/
+theorem fragmentSpecification_append (key : String) (first second : List (Fragment Data Receiver M Result))
+    (self : Self) (inherited : Prototype.Next (Option (Methods Receiver M Result))) :
+    (fragmentSpecification key (first ++ second)).eval self inherited =
+      (fragmentSpecification key first).eval self
+        (fun _ => (fragmentSpecification key second).eval self inherited) := by
+  simp [fragmentSpecification, specifications, Prototype.SlotSpec.eval, collectFragments_append, List.foldr_append]
+/-- Record fragments never become method contributions, even if names coincide.
+Declaration publication separately rejects such collisions rather than silently hiding data. -/
+theorem collectFragments_slot (key name : String) (value : Data) (rest : List (Fragment Data Receiver M Result)) :
+    collectFragments key (.slot name value :: rest) = collectFragments key rest := rfl
+/-- A type-selected generic resolves metadata from the class while invoking with
+the ORIGINAL complete receiver/argument row. It does not invoke with the class. -/
+def declaredGeneric [Monad M] (typeOf : Receiver → Class)
+    (lookup : Class → Option (Methods Receiver M Result)) (fallback : Methods Receiver M Result)
+    (onMissing : Receiver → M Result) (receiver : Receiver) : M Result :=
+  effective ((lookup (typeOf receiver)).getD fallback) onMissing receiver
+/-- The generic bridge preserves the established standard qualifier semantics. -/
+theorem declaredGeneric_standard [Monad M] (typeOf : Receiver → Class)
+    (lookup : Class → Option (Methods Receiver M Result)) (fallback : Methods Receiver M Result)
+    (onMissing : Receiver → M Result) (receiver : Receiver) :
+    declaredGeneric typeOf lookup fallback onMissing receiver =
+      standard ((lookup (typeOf receiver)).getD fallback) onMissing receiver := by
+  unfold declaredGeneric
+  rw [effective_standard]
+/-- Supplied fragment blocks compose all the way through generic invocation. -/
+theorem declaredGeneric_fragments [Monad M] (key : String)
+    (first second : List (Fragment Data Receiver M Result)) (self : Self)
+    (inherited : Prototype.Next (Option (Methods Receiver M Result)))
+    (onMissing : Receiver → M Result) (receiver : Receiver) :
+    effective (((fragmentSpecification key (first ++ second)).eval self inherited).getD {}) onMissing receiver =
+      effective (((fragmentSpecification key first).eval self
+        (fun _ => (fragmentSpecification key second).eval self inherited)).getD {}) onMissing receiver := by
+  rw [fragmentSpecification_append]
+/-- Admission evidence contains immutable qualifier data and both revisions. It
+contains neither a receiver nor a callback, matching the weak-table payload. -/
+structure ContributionStamp where
+  revision : Nat
+  typeRevision : Nat
+  qualifier : Nat
+  deriving DecidableEq, Repr
+
+/-- A finite qualifier policy reuses evidence only at both current revisions.
+A miss executes the current checker; its result is never inserted here. -/
+def admitRegistered (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool) : Bool :=
+  match stamp with
+  | none => check ()
+  | some evidence =>
+    if evidence.revision = revision ∧ evidence.typeRevision = typeRevision
+    then policy evidence.qualifier else check ()
+
+/-- Soundness requires constructor admission and revision discipline: a matching
+stamp's qualifier agrees with the current descriptor/Type protocol. This does not
+assert that arbitrary effectful Type predicates can be cached. -/
+theorem admitRegistered_eq (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool)
+    (stable : ∀ evidence, stamp = some evidence →
+      evidence.revision = revision → evidence.typeRevision = typeRevision →
+      policy evidence.qualifier = check ()) :
+    admitRegistered stamp revision typeRevision policy check = check () := by
+  cases stamp with
+  | none => rfl
+  | some evidence =>
+    simp only [admitRegistered]
+    split
+    · rename_i current
+      exact stable evidence rfl current.1 current.2
+    · rfl
+
+/-- Admission substitution preserves an arbitrary subsequent effectful program,
+including its refusal and multiple-result carrier. No callback is stored in a stamp. -/
+theorem admitRegistered_execution {M : Type → Type} {Result : Type} (stamp : Option ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool) (invoke refuse : M Result)
+    (stable : ∀ evidence, stamp = some evidence →
+      evidence.revision = revision → evidence.typeRevision = typeRevision →
+      policy evidence.qualifier = check ()) :
+    (if admitRegistered stamp revision typeRevision policy check then invoke else refuse) =
+      (if check () then invoke else refuse) := by
+  rw [admitRegistered_eq stamp revision typeRevision policy check stable]
+
+/-- Changing either receiver or Type revision forces current validation, even
+if a later edit restores an earlier qualifier or function body. -/
+theorem admitRegistered_stale (evidence : ContributionStamp) (revision typeRevision : Nat)
+    (policy : Nat → Bool) (check : Unit → Bool)
+    (changed : evidence.revision ≠ revision ∨ evidence.typeRevision ≠ typeRevision) :
+    admitRegistered (some evidence) revision typeRevision policy check = check () := by
+  simp only [admitRegistered]
+  split
+  · rename_i current
+    rcases changed with h | h
+    · exact False.elim (h current.1)
+    · exact False.elim (h current.2)
+  · rfl
+
+/-- List admission preserves source order and every current-check result under
+per-element stability. Grouping and callback execution remain separate. -/
+theorem registered_admissions_eq (parts : List α) (cached current : α → Bool)
+    (sound : ∀ part ∈ parts, cached part = current part) :
+    parts.map cached = parts.map current := by
+  apply List.map_congr_left
+  exact sound
+
+/-- Full request accounting includes registration, guard/check work and supplied
+collector history. Prices are external inputs, not claims about machine time. -/
+def contributionCharge (setup calls guard check gc : Nat) : Nat :=
+  setup + calls * (guard + check) + gc
+
+/-- Reuse amortizes only when saved validation covers setup, guards and additional
+GC. The theorem deliberately permits a negative cold or complete-workflow result. -/
+theorem contributionCharge_threshold (setup calls guard check cachedGC checkedGC : Nat) :
+    contributionCharge setup calls guard 0 cachedGC ≤ contributionCharge 0 calls 0 check checkedGC ↔
+    setup + calls * guard + cachedGC ≤ calls * check + checkedGC := by
+  simp [contributionCharge]
+
+end LeanPoo.Object.MethodCombination
+
+/-! Certified typed declarations reuse the existing edit and negative-watch
+semantics. Args is the admitted argument carrier; Gerbil core formal binding,
+runtime Type normalization and metadata identity are checked by Scheme tests. -/
+namespace LeanPoo.Functional.DeclarativeMetadata
+open Object DispatchExtension
+variable {Args Method Result : Type}
+variable {seed : Multimethod Args Method Result} {watches : List (Watch Args)}
+variable {edits : List (Edit Args Method)}
+
+/-- Local and inherited fragments compile once into the existing transaction.
+The caller supplies one common certified signature; mismatched signatures never
+reach this typed operation. Ancestor edits precede local edits; each batch retains existing edit semantics. -/
+def assembleDeclared (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method)) :=
+  guard seed watches certified ((inherited ++ front).map Declaration.compile)
+
+/-- Acceptance requires both complete registration and every negative assumption
+on that exact completed candidate, rather than separate approvals of fragments. -/
+theorem assembleDeclared_ok_iff (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method)) :
+    (∃ revision, assembleDeclared seed watches certified front inherited = .ok revision) ↔
+      ∃ candidate, install seed (inherited ++ front) = .ok candidate ∧ AllAbsent candidate watches :=
+  guard_ok_iff seed watches certified _
+
+/-- Coalescing local blocks preserves the installed candidate and registration
+errors, while keeping ancestor edits ahead of both local blocks. -/
+theorem assembleDeclared_coalesce (seed : Multimethod Args Method Result)
+    (first second inherited : List (Declaration Args Method)) :
+    install seed (inherited ++ (first ++ second)) = install seed ((inherited ++ first) ++ second) := by
+  rw [List.append_assoc]
+
+/-- The compiled owner has a sound candidate cache whenever its seed does. -/
+theorem assembleDeclared_cacheSound (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (sound : seed.CacheSound) (revision : Revision seed watches edits) :
+    revision.snapshot.CacheSound := revision.cacheSound sound
+
+/-- Invocation uses the actual compiled snapshot and returns its complete cache
+successor with the transported absence proof. No declaration is reinstalled here. -/
+def invokeDeclared (revision : Revision seed watches edits) (args : Args) :=
+  revision.certificate.invoke args
+
+/-- A returned successor certifies every original watch at its own snapshot. -/
+theorem invokeDeclared_absent (revision : Revision seed watches edits) (args : Args)
+    (invocation : DispatchExtension.Invocation revision.snapshot watches args)
+    (_called : invokeDeclared revision args = .ok invocation) :
+    AllAbsent invocation.snapshot watches := invocation.certificate.absent
+
+/-- Refused declaration publication leaves the original generic/cache accessible.
+This is immutable state preservation, not rollback of arbitrary external effects. -/
+theorem declaredPublication_refused (seed : Multimethod Args Method Result) (watches : List (Watch Args))
+    (certified : Certificate seed watches) (front inherited : List (Declaration Args Method))
+    (failure : DispatchExtension.Failure seed watches ((inherited ++ front).map Declaration.compile))
+    (refused : assembleDeclared seed watches certified front inherited = .error failure) :
+    publish seed watches certified ((inherited ++ front).map Declaration.compile) = (.error failure, seed) :=
+  publish_refused seed watches certified _ failure refused
+
+/-- Only a unique COMPLETE bounded search can call the supplied declaration
+builder. Search and builder failures remain distinct, with no partial artifact. -/
+def inferDeclared (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (PrototypeTypes.Inference Assignment × Option Artifact) :=
+  match PrototypeTypes.inferBounded budget valid candidates with
+  | .error cause => .error (.inl cause)
+  | .ok (.unique assignment) =>
+    match build assignment with
+    | .error cause => .error (.inr cause)
+    | .ok artifact => .ok (.unique assignment, some artifact)
+  | .ok report => .ok (report, none)
+
+/-- Exhaustion never calls the declaration builder or exposes an accepted prefix. -/
+theorem inferDeclared_exhausted (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact) (incomplete : budget < candidates.length) :
+    inferDeclared budget valid candidates build = .error (.inl .exhausted) := by
+  simp [inferDeclared, PrototypeTypes.incomplete_refuses budget valid candidates incomplete]
+
+/-- Ambiguity is preserved as data without mapping an effectful builder over candidates. -/
+theorem inferDeclared_ambiguous (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok (.ambiguous assignments)) :
+    inferDeclared budget valid candidates build = .ok (.ambiguous assignments, none) := by
+  simp [inferDeclared, completed]
+
+/-- Complete no-solution classification also constructs no declaration artifact. -/
+theorem inferDeclared_none (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok .none) :
+    inferDeclared budget valid candidates build = .ok (.none, none) := by
+  simp [inferDeclared, completed]
+
+/-- A builder refusal retains its actual cause rather than becoming no-solution. -/
+theorem inferDeclared_build_error (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (completed : PrototypeTypes.inferBounded budget valid candidates = .ok (.unique assignment))
+    (failed : build assignment = .error cause) :
+    inferDeclared budget valid candidates build = .error (.inr cause) := by
+  simp [inferDeclared, completed, failed]
+
+/-- Returned artifacts have both an actual uniquely admitted assignment and a
+successful builder run. Combining this with assembleDeclared_ok_iff gives the
+completed-candidate negative assumptions; no new dispatch semantics is assumed. -/
+theorem inferDeclared_unique (budget : Nat) (valid : Assignment → Bool) (candidates : List Assignment)
+    (build : Assignment → Except Error Artifact)
+    (accepted : inferDeclared budget valid candidates build = .ok (.unique assignment, some artifact)) :
+    assignment ∈ candidates ∧ valid assignment = true ∧ build assignment = .ok artifact := by
+  unfold inferDeclared at accepted
+  cases completed : PrototypeTypes.inferBounded budget valid candidates with
+  | error cause => simp [completed] at accepted
+  | ok report =>
+    cases report with
+    | none => simp [completed] at accepted
+    | ambiguous assignments => simp [completed] at accepted
+    | unique selected =>
+      cases built : build selected with
+      | error cause => simp [completed, built] at accepted
+      | ok result =>
+        have same : selected = assignment ∧ result = artifact := by simpa [completed, built] using accepted
+        rcases same with ⟨rfl, rfl⟩
+        exact ⟨(PrototypeTypes.bounded_unique _ _ _ completed).1,
+          (PrototypeTypes.bounded_unique _ _ _ completed).2, built⟩
+
+/-- Positional binding uses the existing validated-name protocol before the
+builder. Receiver fields and remaining names follow checkedSpecialize exactly. -/
+def specializeDeclared [DecidableEq Name] (reserved : Name) (source : Parameters.Template Name Value)
+    (values : List Value) (build : Parameters.Template Name Value → Except Error Artifact) :
+    Except (Sum Parameters.Failure Error) Artifact :=
+  match Parameters.checkedSpecialize reserved source values with
+  | .error cause => .error (.inl cause)
+  | .ok bound => (build bound).mapError Sum.inr
+
+/-- Charge one protocol stage before exposing its result. Costs count admitted
+structural visits, not host callback steps, allocations, GC or elapsed time.
+A stage failure keeps its exact cause whenever its preceding work is available. -/
+def declarationStage (cost budget : Nat)
+    (step : Except (Sum PrototypeTypes.Failure Error) Value) :
+    Except (Sum PrototypeTypes.Failure Error) (Value × Nat) :=
+  if cost ≤ budget then step.map (fun value => (value, budget - cost))
+  else .error (.inl .exhausted)
+
+/-- The uniquely selected inference/binding and source-admission stage hands its
+remaining quota to final declaration admission. The builder runs between them;
+its own effects are not rolled back if the later protocol quota is exhausted.
+The existing inferDeclared laws independently establish unique-solve provenance. -/
+def completeDeclaredWork (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (Artifact × Nat) :=
+  (declarationStage before budget prepare).bind fun (context, remaining) =>
+    (build context).bind fun artifact => declarationStage after remaining (.ok artifact)
+
+/-- Splitting a successful work ledger across phases cannot refresh the quota. -/
+theorem declarationStage_compose (first second budget : Nat) (value : Value) :
+    ((declarationStage first budget (.ok value) :
+        Except (Sum PrototypeTypes.Failure Error) (Value × Nat)).bind
+      (fun (result, remaining) => declarationStage second remaining (.ok result))) =
+    declarationStage (first + second) budget (.ok value) := by
+  by_cases a : first ≤ budget
+  · by_cases b : second ≤ budget - first
+    · have total : first + second ≤ budget := by omega
+      simp [Except.map, Except.bind, declarationStage, a, b, total, Nat.sub_sub]
+    · have total : ¬first + second ≤ budget := by omega
+      simp [Except.map, Except.bind, declarationStage, a, b, total]
+  · have total : ¬first + second ≤ budget := by omega
+    simp [Except.bind, declarationStage, a, total]
+
+/-- Complete success entails both original semantic results and the total quota
+bound, with an exact remaining balance. No reset/default counter is admissible. -/
+theorem completeDeclaredWork_sound (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (accepted : completeDeclaredWork before after budget prepare build = .ok (artifact, remaining)) :
+    before + after ≤ budget ∧ remaining = budget - (before + after) ∧
+      ∃ context, prepare = .ok context ∧ build context = .ok artifact := by
+  unfold completeDeclaredWork declarationStage at accepted
+  split at accepted
+  · rename_i first
+    cases prepared : prepare with
+    | error cause => simp [prepared, Except.map, Except.bind] at accepted
+    | ok context =>
+      cases built : build context with
+      | error cause => simp [prepared, built, Except.map, Except.bind] at accepted
+      | ok result =>
+        simp only [prepared, Except.map, Except.bind, built] at accepted
+        split at accepted
+        · rename_i second
+          simp only [Except.ok.injEq, Prod.mk.injEq] at accepted
+          obtain ⟨rfl, balance⟩ := accepted
+          exact ⟨by omega, by omega, context, rfl, built⟩
+        · contradiction
+  · contradiction
+
+/-- Sufficient work preserves the exact artifact and balance, independent of
+phase partitioning. This is a protocol-work law, not a timing prediction. -/
+theorem completeDeclaredWork_ok (before after budget : Nat) (context : Context) (artifact : Artifact)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (built : build context = .ok artifact) (enough : before + after ≤ budget) :
+    completeDeclaredWork before after budget (.ok context) build =
+      .ok (artifact, budget - (before + after)) := by
+  have first : before ≤ budget := by omega
+  have second : after ≤ budget - before := by omega
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, second, built, Nat.sub_sub]
+
+/-- A late quota failure exposes neither the built artifact nor a successful
+prefix. A fresh request is modeled by a fresh numeric input, not a reused balance. -/
+theorem completeDeclaredWork_late_refusal (before after budget : Nat) (context : Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (artifact : Artifact)
+    (built : build context = .ok artifact) (first : before ≤ budget)
+    (short : budget < before + after) :
+    completeDeclaredWork before after budget (.ok context) build = .error (.inl .exhausted) := by
+  have second : ¬after ≤ budget - before := by omega
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, second, built]
+
+/-- A builder failure precedes final admission and retains its original cause,
+even when the remaining quota would not suffice for successful admission. -/
+theorem completeDeclaredWork_build_refusal (before after budget : Nat) (context : Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (cause)
+    (first : before ≤ budget) (failed : build context = .error cause) :
+    completeDeclaredWork before after budget (.ok context) build = .error cause := by
+  simp [Except.map, Except.bind, completeDeclaredWork, declarationStage, first, failed]
+
+/-- An exhausted preparation quota prevents the continuation and exposes no
+context or receiver, independently of whether the preparer would succeed. -/
+theorem completeDeclaredWork_early_refusal (before after budget : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact) (short : budget < before) :
+    completeDeclaredWork before after budget prepare build = .error (.inl .exhausted) := by
+  simp [completeDeclaredWork, declarationStage, Except.bind, Nat.not_le.mpr short]
+
+/-- Fresh requests with sufficient quota preserve the original successful
+artifact; no remaining balance from a failed request needs to be reused. -/
+theorem completeDeclaredWork_more (before after budget larger : Nat)
+    (prepare : Except (Sum PrototypeTypes.Failure Error) Context)
+    (build : Context → Except (Sum PrototypeTypes.Failure Error) Artifact)
+    (accepted : completeDeclaredWork before after budget prepare build = .ok (artifact, remaining))
+    (more : budget ≤ larger) :
+    completeDeclaredWork before after larger prepare build =
+      .ok (artifact, larger - (before + after)) := by
+  obtain ⟨enough, _, context, prepared, built⟩ := completeDeclaredWork_sound _ _ _ _ _ accepted
+  rw [prepared]
+  exact completeDeclaredWork_ok _ _ _ _ _ _ built (by omega)
+
+/-- Observe a captured descriptor without access to its ended request counter.
+The observer retains its own failure/effect interpretation. Host closure capture
+is an explicit correspondence premise, checked by the Scheme poison-counter test. -/
+def observeDeclaredWork (admitted : Except Error (Descriptor × Nat))
+    (observe : Descriptor → Except Error Value) : Except Error (Value × Nat) :=
+  admitted.bind fun (descriptor, remaining) =>
+    (observe descriptor).map fun value => (value, remaining)
+
+/-- Every successful observation keeps the exact ended-request balance and the
+same captured descriptor; observing it cannot charge or refresh that balance. -/
+theorem observeDeclaredWork_balance (admitted : Except Error (Descriptor × Nat))
+    (observe : Descriptor → Except Error Value)
+    (accepted : observeDeclaredWork admitted observe = .ok (value, remaining)) :
+    ∃ descriptor, admitted = .ok (descriptor, remaining) ∧ observe descriptor = .ok value := by
+  cases admitted with
+  | error cause => simp [observeDeclaredWork, Except.bind] at accepted
+  | ok pair =>
+    rcases pair with ⟨descriptor, balance⟩
+    cases observed : observe descriptor with
+    | error cause => simp [observeDeclaredWork, Except.bind, Except.map, observed] at accepted
+    | ok result =>
+      simp only [observeDeclaredWork, Except.bind, observed, Except.map,
+        Except.ok.injEq, Prod.mk.injEq] at accepted
+      obtain ⟨rfl, rfl⟩ := accepted
+      exact ⟨descriptor, rfl, observed⟩
+
+/-- Malformed parameter metadata refuses even for an empty prefix, before build. -/
+theorem specializeDeclared_invalid [DecidableEq Name] (reserved : Name)
+    (source : Parameters.Template Name Value) (values : List Value)
+    (build : Parameters.Template Name Value → Except Error Artifact)
+    (invalid : Parameters.validNames reserved source.remaining = false) :
+    specializeDeclared reserved source values build = .error (.inl .declaration) := by
+  simp [specializeDeclared, Parameters.checkedSpecialize, invalid]
+
+/-- Reusing checked positional binding keeps the exact remaining-name frame. -/
+theorem specializeDeclared_remaining [DecidableEq Name] (reserved : Name)
+    (source bound : Parameters.Template Name Value) (values : List Value)
+    (accepted : Parameters.checkedSpecialize reserved source values = .ok bound) :
+    bound.remaining = source.remaining.drop values.length := by
+  unfold Parameters.checkedSpecialize at accepted
+  split at accepted
+  · unfold Parameters.specialize at accepted
+    split at accepted
+    · cases accepted; rfl
+    · contradiction
+  · contradiction
+
+/-- Final source admission is separate from successful inference/installation.
+A revised descriptor cannot borrow an earlier bound-parameter snapshot. -/
+def admitDeclaredBindings [DecidableEq Descriptor] (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if Parameters.bindingsCurrent bindings fields revision then .ok artifact else .error .bounds
+
+/-- A returned artifact still has every bound descriptor identity and direct revision. -/
+theorem admitDeclaredBindings_stable [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact result : Artifact)
+    (accepted : admitDeclaredBindings bindings fields revision artifact = .ok result)
+    (binding : Parameters.BoundParameter Name Descriptor) (member : binding ∈ bindings) :
+    fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision := by
+  unfold admitDeclaredBindings at accepted
+  split at accepted
+  · rename_i current
+    exact Parameters.bindingsCurrent_sound bindings fields revision current binding member
+  · contradiction
+
+
+/-- Signature preparation uses the existing bound-source admission both before
+and after its callback. The host supplies actual post-callback observations;
+this does not prove arbitrary callback purity, termination or transitive sources.
+Syntax equality and closed-parameter checks remain additional host obligations. -/
+def prepareDeclaredSignature [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat)
+    (prepare : Unit → Except Cause Artifact)
+    (afterFields : Artifact → Name → Option Descriptor) (afterRevision : Artifact → Descriptor → Nat) :
+    Except (PrototypeTypes.Failure ⊕ Cause) Artifact :=
+  ((admitDeclaredBindings bindings fields revision ()).mapError Sum.inl).bind fun _ =>
+    ((prepare ()).mapError Sum.inr).bind fun artifact =>
+      (admitDeclaredBindings bindings (afterFields artifact) (afterRevision artifact) artifact).mapError Sum.inl
+
+/-- A stale input cannot enter preparation, irrespective of its effects. -/
+theorem prepareDeclaredSignature_stale [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision
+    (stale : Parameters.bindingsCurrent bindings fields revision = false) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inl .bounds) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, stale, Except.mapError, Except.bind]
+
+/-- Preparation errors retain their exact cause, preceding all success rechecks. -/
+theorem prepareDeclaredSignature_error [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (cause : Cause)
+    (current : Parameters.bindingsCurrent bindings fields revision = true)
+    (failed : prepare () = .error cause) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inr cause) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, current, failed, Except.mapError, Except.bind]
+
+/-- A callback that changes a bound source returns no signature artifact. -/
+theorem prepareDeclaredSignature_changed [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (artifact : Artifact)
+    (current : Parameters.bindingsCurrent bindings fields revision = true)
+    (built : prepare () = .ok artifact)
+    (changed : Parameters.bindingsCurrent bindings (afterFields artifact) (afterRevision artifact) = false) :
+    prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .error (.inl .bounds) := by
+  simp [prepareDeclaredSignature, admitDeclaredBindings, current, built, changed, Except.mapError, Except.bind]
+
+/-- Acceptance establishes source identity/revision at BOTH observations and
+retains the callback's exact artifact, under the supplied host snapshot model. -/
+theorem prepareDeclaredSignature_sound [DecidableEq Descriptor]
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision
+    (prepare : Unit → Except Cause Artifact) afterFields afterRevision (artifact : Artifact)
+    (accepted : prepareDeclaredSignature bindings fields revision prepare afterFields afterRevision = .ok artifact) :
+    prepare () = .ok artifact ∧
+      ∀ binding ∈ bindings,
+        (fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision) ∧
+        (afterFields artifact binding.name = some binding.descriptor ∧
+          afterRevision artifact binding.descriptor = binding.revision) := by
+  cases before : Parameters.bindingsCurrent bindings fields revision with
+  | false => simp [prepareDeclaredSignature_stale _ _ _ _ _ _ before] at accepted
+  | true =>
+    cases built : prepare () with
+    | error cause => simp [prepareDeclaredSignature_error _ _ _ _ _ _ cause before built] at accepted
+    | ok result =>
+      cases after : Parameters.bindingsCurrent bindings (afterFields result) (afterRevision result) with
+      | false => simp [prepareDeclaredSignature_changed _ _ _ _ _ _ result before built after] at accepted
+      | true =>
+        have same : result = artifact := by
+          simpa [prepareDeclaredSignature, admitDeclaredBindings, before, built, after, Except.mapError, Except.bind] using accepted
+        subst result
+        exact ⟨rfl, fun binding member =>
+          ⟨Parameters.bindingsCurrent_sound _ _ _ before binding member,
+           Parameters.bindingsCurrent_sound _ _ _ after binding member⟩⟩
+
+/-- A collected finite call batch enters the SAME inference/declaration driver.
+Collection failures keep their phase/cause; all siblings share one assignment and
+one complete builder result, never one independently inferred value per method. -/
+def inferDeclaredCalls (fuel budget : Nat) (bounds : List (PrototypeTypes.Expr × PrototypeTypes.Expr))
+    (collected : Except PrototypeTypes.Failure (List (PrototypeTypes.Expr × PrototypeTypes.Expr)))
+    (candidates : List (Nat → PrototypeTypes.Ty))
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error) (PrototypeTypes.Inference (Nat → PrototypeTypes.Ty) × Option Artifact) :=
+  match collected with
+  | .error cause => .error (.inl cause)
+  | .ok queries => inferDeclared budget (fun env => PrototypeTypes.satisfies fuel (bounds ++ queries) env) candidates build
+
+/-- No collection refusal can call the builder or expose a successful prefix. -/
+theorem inferDeclaredCalls_refused (fuel budget bounds candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (cause : PrototypeTypes.Failure) :
+    inferDeclaredCalls fuel budget bounds (.error cause) candidates build = .error (.inl cause) := rfl
+
+/-- Whole observation admission gates the existing constraint/declaration driver.
+A late malformed sibling keeps its refusal even if projecting the first sibling
+would fail bounds or the candidate universe is empty. The admitted host decoder
+is an explicit premise; this theorem does not verify Gerbil macro expansion. -/
+theorem inferDeclaredCalls_preflight_refused (fuel budget bounds candidates)
+    (admit : Call → Except PrototypeTypes.Failure Unit) (calls : List Call)
+    (project : Unit → Except PrototypeTypes.Failure (List (PrototypeTypes.Expr × PrototypeTypes.Expr)))
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (cause : PrototypeTypes.Failure)
+    (refused : PrototypeTypes.checkCalls admit calls = .error cause) :
+    inferDeclaredCalls fuel budget bounds (PrototypeTypes.projectCalls admit calls project)
+      candidates build = .error (.inl cause) := by
+  rw [PrototypeTypes.projectCalls_refused admit calls project cause refused]
+  rfl
+
+/-- Complete unique inference retains candidate and successful WHOLE builder provenance. -/
+theorem inferDeclaredCalls_provenance (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (env artifact)
+    (accepted : inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .ok (.unique env, some artifact)) :
+    env ∈ candidates ∧ build env = .ok artifact := by
+  obtain ⟨member, _, built⟩ := inferDeclared_unique _ _ _ _ accepted
+  exact ⟨member, built⟩
+
+/-- Every original bound and every call-derived input/output obligation holds
+under the SAME admitted environment, including variables on either side. -/
+theorem inferDeclaredCalls_constraints (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (env artifact)
+    (accepted : inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .ok (.unique env, some artifact))
+    (query : PrototypeTypes.Expr × PrototypeTypes.Expr) (member : query ∈ bounds ++ queries) :
+    PrototypeTypes.Subtype (PrototypeTypes.substitute env query.1) (PrototypeTypes.substitute env query.2) := by
+  obtain ⟨_, valid, _⟩ := inferDeclared_unique _ _ _ _ accepted
+  exact PrototypeTypes.satisfies_sound fuel (bounds ++ queries) env valid member
+
+/-- A shared environment cannot satisfy contradictory sibling obligations. -/
+theorem inferDeclaredCalls_inconsistent (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact)
+    (refused : ∀ env ∈ candidates, PrototypeTypes.satisfies fuel (bounds ++ queries) env = false) :
+    inferDeclaredCalls fuel budget bounds (.ok queries) candidates build ≠ .ok (.unique selected, some artifact) := by
+  intro accepted
+  obtain ⟨member, valid, _⟩ := inferDeclared_unique _ _ _ _ accepted
+  have invalid := refused selected member
+  rw [invalid] at valid
+  contradiction
+
+/-- Even after collection succeeds, incomplete enumeration refuses all artifacts. -/
+theorem inferDeclaredCalls_exhausted (fuel budget bounds queries candidates)
+    (build : (Nat → PrototypeTypes.Ty) → Except Error Artifact) (incomplete : budget < candidates.length) :
+    inferDeclaredCalls fuel budget bounds (.ok queries) candidates build = .error (.inl .exhausted) :=
+  inferDeclared_exhausted _ _ _ _ incomplete
+
+
+/-- Every named method requirement must resolve to a source stamp with the SAME
+path/expression, exact Function descriptor identity and direct revision. Reuse the
+existing bound-parameter snapshot predicate rather than a second revision engine. -/
+def catalogCurrent [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) : Bool :=
+  requirements.all fun required =>
+    match origin required.1 with
+    | none => false
+    | some source => decide (source.name = required) &&
+        Parameters.bindingsCurrent [source] (fun _ => actual required.1) revision
+
+/-- A completed named catalog has a matching, current source for EVERY required
+method, including siblings that supplied no inference observation. -/
+theorem catalogCurrent_sound [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat)
+    (accepted : catalogCurrent requirements origin actual revision = true)
+    (required : Path × Expression) (member : required ∈ requirements) :
+    ∃ source : Parameters.BoundParameter (Path × Expression) Descriptor,
+      origin required.1 = some source ∧ source.name = required ∧
+      actual required.1 = some source.descriptor ∧ revision source.descriptor = source.revision := by
+  have checked := List.all_eq_true.mp accepted required member
+  cases found : origin required.1 with
+  | none => simp [found] at checked
+  | some source =>
+    have both : source.name = required ∧
+        Parameters.bindingsCurrent [source] (fun _ => actual required.1) revision = true := by
+      simpa [found, Bool.and_eq_true] using checked
+    have stable := Parameters.bindingsCurrent_sound [source] (fun _ => actual required.1) revision
+      both.2 source (by simp)
+    exact ⟨source, rfl, both.1, stable⟩
+
+/-- Missing or mismatched provenance rejects the complete artifact, even if all
+observed calls were individually satisfiable. External effects are not undone. -/
+def admitDeclaredCatalog [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if catalogCurrent requirements origin actual revision then .ok artifact else .error .bounds
+
+/-- Returning an artifact requires complete named coverage, not a validated subset. -/
+theorem admitDeclaredCatalog_sound [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact result : Artifact)
+    (accepted : admitDeclaredCatalog requirements origin actual revision artifact = .ok result) :
+    catalogCurrent requirements origin actual revision = true := by
+  unfold admitDeclaredCatalog at accepted
+  split at accepted
+  · assumption
+  · contradiction
+
+/-- Capture and compare the declaration source separately from field revision
+checks. The host supplies finite AST/snapshot equality after bounded admission. -/
+def admitDeclaredSource [DecidableEq Source] (captured observed : Source) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  if captured = observed then .ok artifact else .error .bounds
+
+/-- Callback-side source changes cannot silently redefine the inferred contract. -/
+theorem admitDeclaredSource_stable [DecidableEq Source] (captured observed : Source) (artifact result : Artifact)
+    (accepted : admitDeclaredSource captured observed artifact = .ok result) : captured = observed := by
+  unfold admitDeclaredSource at accepted
+  split at accepted
+  · assumption
+  · contradiction
+
+/-- Exact source admission transports an already established syntax judgment.
+The host still bounds the observed mutable data before testing equality and
+keeps the captured snapshot private; this law does not admit changed syntax. -/
+theorem admitDeclaredSource_valid [DecidableEq Source] (captured observed : Source)
+    (valid : Source → Prop) (checked : valid captured) (artifact result : Artifact)
+    (accepted : admitDeclaredSource captured observed artifact = .ok result) : valid observed := by
+  rw [← admitDeclaredSource_stable captured observed artifact result accepted]
+  exact checked
+
+
+/-- Source preservation and full catalog coverage form one publication admission,
+with the same all-or-error boundary as the Scheme declaration constructor. -/
+def admitDeclaredInterface [DecidableEq Source] [DecidableEq Path] [DecidableEq Expression] [DecidableEq Descriptor]
+    (captured observed : Source) (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  match admitDeclaredSource captured observed artifact with
+  | .error cause => .error cause
+  | .ok checked => admitDeclaredCatalog requirements origin actual revision checked
+
+/-- A returned interface has BOTH its original source and all current required
+signatures. Successful inference or one successfully checked sibling is insufficient. -/
+theorem admitDeclaredInterface_sound [DecidableEq Source] [DecidableEq Path]
+    [DecidableEq Expression] [DecidableEq Descriptor]
+    (captured observed : Source) (requirements : List (Path × Expression))
+    (origin : Path → Option (Parameters.BoundParameter (Path × Expression) Descriptor))
+    (actual : Path → Option Descriptor) (revision : Descriptor → Nat)
+    (artifact result : Artifact)
+    (accepted : admitDeclaredInterface captured observed requirements origin actual revision artifact = .ok result) :
+    captured = observed ∧ catalogCurrent requirements origin actual revision = true := by
+  unfold admitDeclaredInterface at accepted
+  cases stage : admitDeclaredSource captured observed artifact with
+  | error cause => simp [stage] at accepted
+  | ok checked =>
+    simp only [stage] at accepted
+    exact ⟨admitDeclaredSource_stable _ _ _ _ stage, admitDeclaredCatalog_sound _ _ _ _ _ _ accepted⟩
+
+
+/-- Factory-owned signatures compare their direct revision before any invocation
+and again after successful output/cache completion. A source exception keeps its
+cause; source effects and unsynchronized writes beyond these observations are not
+rolled back or globally linearized by this finite model. -/
+def invokeDeclaredSource (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) :
+    Except (Sum PrototypeTypes.Failure Error) (Result × Owner) :=
+  if captured = before then
+    match execute () with
+    | .error cause => .error (.inr cause)
+    | .ok (result, owner, after) =>
+      if captured = after then .ok (result, owner) else .error (.inl .bounds)
+  else .error (.inl .bounds)
+
+/-- A directly stale signature cannot enter the callback at all. -/
+theorem invokeDeclaredSource_stale (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (different : captured ≠ before) :
+    invokeDeclaredSource captured before execute = .error (.inl .bounds) := by
+  simp [invokeDeclaredSource, different]
+
+/-- Original callback/validator errors have priority and keep the exact cause. -/
+theorem invokeDeclaredSource_error (captured : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (cause : Error)
+    (failed : execute () = .error cause) :
+    invokeDeclaredSource captured captured execute = .error (.inr cause) := by
+  simp [invokeDeclaredSource, failed]
+
+/-- A revision observed after successful work discards ALL returned values/owner. -/
+theorem invokeDeclaredSource_changed (captured after : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (result owner)
+    (returned : execute () = .ok (result, owner, after)) (different : captured ≠ after) :
+    invokeDeclaredSource captured captured execute = .error (.inl .bounds) := by
+  simp [invokeDeclaredSource, returned, different]
+
+/-- A returned owner comes from actual successful work between matching revision
+observations. This is not a proof of atomic concurrent metadata revocation. -/
+theorem invokeDeclaredSource_sound (captured before : Nat)
+    (execute : Unit → Except Error (Result × Owner × Nat)) (result owner)
+    (accepted : invokeDeclaredSource captured before execute = .ok (result, owner)) :
+    captured = before ∧ execute () = .ok (result, owner, captured) := by
+  unfold invokeDeclaredSource at accepted
+  split at accepted
+  · rename_i initial
+    cases run : execute () with
+    | error cause => simp [run] at accepted
+    | ok response =>
+      rcases response with ⟨value, next, after⟩
+      simp only [run] at accepted
+      split at accepted
+      · rename_i final
+        cases accepted
+        subst after
+        exact ⟨initial, rfl⟩
+      · contradiction
+  · contradiction
+
+variable {Layout : Type}
+
+/-- Complete candidate projection precedes the existing declaration publisher.
+The builder receives the selected assignment AND its own derived layout. No
+builder is reachable on projection errors, ambiguity or an incomplete scan. -/
+def inferDeclaredCandidates (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) :
+    Except (Sum PrototypeTypes.Failure Error)
+      (PrototypeTypes.Inference (Assignment × Layout) × Option Artifact) :=
+  match PrototypeTypes.collectCandidates derive valid budget candidates with
+  | .error cause => .error (.inl cause)
+  | .ok accepted => inferDeclared budget (fun _ => true) accepted build
+
+/-- Successful publication retains the exact candidate, projection, constraints
+and builder result. The projection must faithfully model the runtime normalized
+catalog; this theorem does not prove Gerbil macro expansion or arbitrary Types. -/
+theorem inferDeclaredCandidates_sound (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) (entry artifact)
+    (published : inferDeclaredCandidates budget derive valid candidates build =
+      .ok (.unique entry, some artifact)) :
+    entry.1 ∈ candidates ∧ derive entry.1 = .ok entry.2 ∧
+      valid entry.1 entry.2 = true ∧ build entry = .ok artifact := by
+  unfold inferDeclaredCandidates at published
+  cases collected : PrototypeTypes.collectCandidates derive valid budget candidates with
+  | error cause => simp [collected] at published
+  | ok accepted =>
+    simp only [collected] at published
+    obtain ⟨member, _, built⟩ := inferDeclared_unique _ _ _ _ published
+    obtain ⟨source, own, checked⟩ := PrototypeTypes.collectCandidates_sound _ _ _ _ _ collected entry member
+    exact ⟨source, own, checked, built⟩
+
+/-- Exhaustion, malformed syntax and unsupported projection escape before any
+artifact is constructed. A retry must start a new complete request. -/
+theorem inferDeclaredCandidates_refused (budget : Nat)
+    (derive : Assignment → Except PrototypeTypes.Failure Layout)
+    (valid : Assignment → Layout → Bool) (candidates : List Assignment)
+    (build : Assignment × Layout → Except Error Artifact) (cause)
+    (refused : PrototypeTypes.collectCandidates derive valid budget candidates = .error cause) :
+    inferDeclaredCandidates budget derive valid candidates build = .error (.inl cause) := by
+  simp [inferDeclaredCandidates, refused]
+
+/-- Reuse one reflected catalog across typed forcing and final admission. The
+constructor guard must keep registered catalog sources stable; the final admitter
+still observes the successor state and checks current source/revision metadata. -/
+def admitReflected (slots : List Slot) (force : List Slot → Except Error State)
+    (admit : State → List Slot → Except Error Artifact) : Except Error Artifact :=
+  (force slots).bind fun state => admit state slots
+/-- A private pure projection of the captured source can replace recomputation
+only after the existing exact source check. Both refusals and admission results
+remain identical; the host must prevent mutable aliases to the private snapshot. -/
+theorem admitDeclaredSource_project [DecidableEq Source] (captured observed : Source)
+    (project : Source → View) (admit : View → Except PrototypeTypes.Failure Artifact) :
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project captured)) =
+    (admitDeclaredSource captured observed ()).bind (fun _ => admit (project observed)) := by
+  by_cases same : captured = observed
+  · subst observed; rfl
+  · simp [admitDeclaredSource, same, Except.bind]
+/-- Reference path repeats reflection only after the same forcing phase. -/
+def admitReflectedAgain (slots : List Slot) (force : List Slot → Except Error State)
+    (reflect : State → List Slot) (admit : State → List Slot → Except Error Artifact) : Except Error Artifact :=
+  (force slots).bind fun state => admit state (reflect state)
+/-- Catalog reuse preserves every forcing/admission error and artifact whenever
+the guarded forcing phase preserves the effective catalog, including its order.
+This is an explicit stability premise, not a proof of arbitrary host callbacks. -/
+theorem admitReflected_eq (slots : List Slot) (force : List Slot → Except Error State)
+    (reflect : State → List Slot) (admit : State → List Slot → Except Error Artifact)
+    (stable : ∀ state, force slots = .ok state → reflect state = slots) :
+    admitReflected slots force admit = admitReflectedAgain slots force reflect admit := by
+  cases result : force slots with
+  | error cause => simp [admitReflected, admitReflectedAgain, result, Except.bind]
+  | ok state => simp [admitReflected, admitReflectedAgain, result, stable state result, Except.bind]
+/-- A failed forcing phase still prevents every subsequent admission callback. -/
+theorem admitReflected_refuses (slots : List Slot) (force : List Slot → Except Error State)
+    (admit : State → List Slot → Except Error Artifact) (failed : force slots = .error cause) :
+    admitReflected slots force admit = .error cause := by
+  simp [admitReflected, failed, Except.bind]
+/-- One catalog projection is removed. Remaining forcing, binding, admission and
+primitive costs are unchanged abstract charges; this does not bound GC or time. -/
+theorem reflected_catalog_work (reflect force admit : Nat) :
+    reflect + force + reflect + admit = (reflect + force + admit) + reflect ∧
+      reflect + force + admit ≤ reflect + force + reflect + admit := by omega
+/-- Captured AST copying is common work. One normalization and one reflection
+are removed; source validation, binding, callbacks and final admission remain. -/
+theorem declared_catalog_work (normalize reflect copy force admit : Nat) :
+    copy + normalize + reflect + force + normalize + reflect + admit =
+      (copy + normalize + reflect + force + admit) + (normalize + reflect) := by omega
+
+
+/-- Complete inference uses the existing declaration search and all-branch
+coverage. The artifact retains the captured signature, candidate and original
+ordered alternatives; only a unique complete solve is allowed to build it. -/
+def inferSourceUnion (signature : Signature) (included : Branch → Bool)
+    (branches : Candidate → List Branch) (candidates : List Candidate) :=
+  inferDeclared candidates.length (fun candidate => VariantValidation.sourceCoverage included (branches candidate))
+    candidates (fun candidate => (Except.ok (signature, candidate, branches candidate) :
+      Except String (Signature × Candidate × List Branch)))
+
+/-- A completed source-Union declaration preserves exact provenance and universal
+readable inclusion. Source interpretation and each intrinsic branch judgment are
+premises, rather than an inference about arbitrary callbacks or host syntax. -/
+theorem inferSourceUnion_sound (signature : Signature) (included : Branch → Bool)
+    (branches : Candidate → List Branch) (candidates : List Candidate)
+    (member : Branch → Value → Bool) (target : Value → Prop)
+    (sound : ∀ branch, included branch = true → ∀ value, member branch value = true → target value)
+    (candidate : Candidate) (artifact : Signature × Candidate × List Branch)
+    (published : inferSourceUnion signature included branches candidates = .ok (.unique candidate, some artifact)) :
+    artifact = (signature, candidate, branches candidate) ∧
+      ∀ value, (branches candidate).any (fun branch => member branch value) = true → target value := by
+  obtain ⟨_, valid, built⟩ := inferDeclared_unique candidates.length
+    (fun candidate => VariantValidation.sourceCoverage included (branches candidate)) candidates
+    (fun candidate => (Except.ok (signature, candidate, branches candidate) :
+      Except String (Signature × Candidate × List Branch))) published
+  exact ⟨(Except.ok.inj built).symm, fun value admitted =>
+    VariantValidation.sourceCoverage_sound included (branches candidate) member target
+      (fun branch _ => sound branch) valid value admitted⟩
+
+
+/-- Complete declaration inference checks one named layout against the target.
+Object layouts use requiredRow; original candidate/signature identities remain
+in the artifact, without replacing the host's Class or ObjectContract validator. -/
+def inferRowView [DecidableEq Key] (signature : Signature) (test : Field → Field → Bool) (empty : Field → Bool)
+    (layout : Candidate → RowTypes.Row Key (Field × Bool)) (target : RowTypes.Row Key (Field × Bool))
+    (candidates : List Candidate) :=
+  inferDeclared candidates.length (fun candidate => RowTypes.recordCheck test empty (layout candidate) target)
+    candidates (fun candidate => (Except.ok (signature, candidate, layout candidate) :
+      Except String (Signature × Candidate × RowTypes.Row Key (Field × Bool))))
+
+/-- A uniquely built declaration retains its original artifact and preserves
+all named observations under the supplied child inclusion and emptiness laws. This is readable
+replacement, not mutable-write variance or equality of arbitrary normalizers. -/
+theorem inferRowView_sound [DecidableEq Key] (signature : Signature) (test : Field → Field → Bool) (empty : Field → Bool)
+    (layout : Candidate → RowTypes.Row Key (Field × Bool)) (target : RowTypes.Row Key (Field × Bool))
+    (candidates : List Candidate) (accepts : Field → Value → Prop)
+    (sound : ∀ a b, test a b = true → ∀ value, accepts a value → accepts b value)
+    (emptySound : ∀ field, empty field = true → ∀ value, ¬ accepts field value)
+    (candidate : Candidate) (artifact : Signature × Candidate × RowTypes.Row Key (Field × Bool))
+    (published : inferRowView signature test empty layout target candidates = .ok (.unique candidate, some artifact)) :
+    artifact = (signature, candidate, layout candidate) ∧
+      ∀ observe, RowTypes.RecordAdmits accepts (layout candidate) observe → RowTypes.RecordAdmits accepts target observe := by
+  obtain ⟨_, valid, built⟩ := inferDeclared_unique candidates.length
+    (fun candidate => RowTypes.recordCheck test empty (layout candidate) target) candidates
+    (fun candidate => (Except.ok (signature, candidate, layout candidate) :
+      Except String (Signature × Candidate × RowTypes.Row Key (Field × Bool)))) published
+  exact ⟨(Except.ok.inj built).symm, fun observe admitted =>
+    RowTypes.recordCheck_sound test empty accepts sound emptySound (layout candidate) target valid observe admitted⟩
+
+/-- Compose the existing source-snapshot and bound-identity gates at the final
+post-callback observation. Source includes original syntax/closed suffix metadata;
+host revision fences must faithfully supply these observations without getters
+between the final checks. This is not a Scheme heap or callback-purity proof. -/
+def finalizeDeclaredSource [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    (fields : Name → Option Descriptor) (revision : Descriptor → Nat) (artifact : Artifact) :
+    Except PrototypeTypes.Failure Artifact :=
+  (admitDeclaredSource captured observed ()).bind fun _ =>
+    admitDeclaredBindings bindings fields revision artifact
+
+/-- Raw syntax edits cannot borrow previously successful binding checks. -/
+theorem finalizeDeclaredSource_changed [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact : Artifact) (changed : captured ≠ observed) :
+    finalizeDeclaredSource captured observed bindings fields revision artifact = .error .bounds := by
+  simp [finalizeDeclaredSource, admitDeclaredSource, changed, Except.bind]
+
+/-- Late direct descriptor changes refuse under the SAME final source snapshot. -/
+theorem finalizeDeclaredSource_stale [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact : Artifact) (stale : Parameters.bindingsCurrent bindings fields revision = false) :
+    finalizeDeclaredSource captured observed bindings fields revision artifact = .error .bounds := by
+  by_cases same : captured = observed <;>
+    simp [finalizeDeclaredSource, admitDeclaredSource, admitDeclaredBindings, same, stale, Except.bind]
+
+/-- Successful final admission retains the exact artifact and jointly establishes
+original syntax, a closed suffix and every original binding identity/revision. -/
+theorem finalizeDeclaredSource_sound [DecidableEq Source] [DecidableEq Descriptor]
+    (captured observed : Source) (bindings : List (Parameters.BoundParameter Name Descriptor))
+    fields revision (artifact result : Artifact)
+    (accepted : finalizeDeclaredSource captured observed bindings fields revision artifact = .ok result) :
+    captured = observed ∧ artifact = result ∧ ∀ binding ∈ bindings,
+      fields binding.name = some binding.descriptor ∧ revision binding.descriptor = binding.revision := by
+  cases stage : admitDeclaredSource captured observed () with
+  | error cause => simp [finalizeDeclaredSource, stage, Except.bind] at accepted
+  | ok checked =>
+    have final : admitDeclaredBindings bindings fields revision artifact = .ok result := by
+      simpa [finalizeDeclaredSource, stage, Except.bind] using accepted
+    have exactArtifact : artifact = result := by
+      unfold admitDeclaredBindings at final
+      split at final
+      · exact Except.ok.inj final
+      · contradiction
+    exact ⟨admitDeclaredSource_stable captured observed () checked stage, exactArtifact,
+      fun binding member => admitDeclaredBindings_stable bindings fields revision artifact result final binding member⟩
+
+/-- An original getter failure precedes every final-source refusal, retaining
+its exact cause. Effects before that failure are not modeled as rolled back. -/
+theorem finalizeDeclaredSource_error [DecidableEq Source] [DecidableEq Descriptor]
+    (inspect : Except Cause Source) (captured : Source)
+    (bindings : List (Parameters.BoundParameter Name Descriptor)) fields revision (artifact : Artifact)
+    (cause : Cause) (failed : inspect = .error cause) :
+    ((inspect.mapError Sum.inr).bind fun observed =>
+      (finalizeDeclaredSource captured observed bindings fields revision artifact).mapError Sum.inl) =
+        .error (Sum.inr cause) := by simp [failed, Except.mapError, Except.bind]
+
+end LeanPoo.Functional.DeclarativeMetadata

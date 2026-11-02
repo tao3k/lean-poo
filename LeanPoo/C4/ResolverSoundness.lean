@@ -116,7 +116,7 @@ namespace LeanPoo.C4
 caller trace, uniqueness, validation, or cache invariant premise. -/
 theorem linearizeChecked_graph_sound (success : linearizeChecked graph root = .ok output) :
     ∃ tail, GraphTrace graph root output tail := by
-  unfold linearizeChecked LinearizeState.linearizeWith at success
+  unfold linearizeChecked LinearizeState.linearizeWith LinearizeState.linearizeIndexed at success
   cases indexed : (LinearizeState.nodeIndex graph)[root]? with
   | none =>
     simp only [Std.HashMap.get?_eq_getElem?, indexed, Option.isNone_none, ↓reduceIte,

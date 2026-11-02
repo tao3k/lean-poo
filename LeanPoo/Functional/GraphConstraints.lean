@@ -39,7 +39,7 @@ structure ConstraintRead (cache : ConstraintCache provider positiveKeys negative
 /-- Use the same ContextSlot on a retained certified family. Changing context
 builds fresh data; changing a graph may retain this slot only through proved
 selection equality. Missing positive capabilities retain their exact error. -/
-def ConstraintCache.read [DecidableEq Context]
+def ConstraintCache.read [BEq Context] [LawfulBEq Context]
     (cache : ConstraintCache provider positiveKeys negativeKeys positiveClaim) (context : Context) :
     Except Key (ConstraintRead cache context) :=
   match outcome : cache.positive.outcome with

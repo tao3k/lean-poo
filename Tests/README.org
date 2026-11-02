@@ -654,3 +654,42 @@ publication. The corresponding guides describe universal proof boundaries.
 [[file:RecursiveDispatch.lean][RecursiveDispatch]] checks 240 complete workflow summaries against independent pricing, phase, trace and memo-size controls. Cold/warm dispatch and recursive reads are separate; current output admission and public ceilings remain fresh. Universal adapter success/failure/packing/state/ledger and actual receipt admission/observation laws are kernel theorems.
 
 [[file:ReceiptAdmission.lean][ReceiptAdmission]] compares 1080 admission/result/state summaries with direct price and first-error controls across current catalog removal, wrong signatures, missing named types, input bounds, output ceilings and validation fuel. Complete retained-state preservation, value/request identity, source observation, success completeness and four failure phases have kernel proofs.
+
+* Generalized protocol research controls
+
+[[file:GeneralizedPrototype.lean][GeneralizedPrototype]] compares 360 parameter combinations / 1080 executions with independent complete value/error/trace controls across original, raw-converted and raw/public-converted representations. It checks C3 refusal forwarding and an inherited method body left uncalled; universal assembly, view, frame, representation and witnessed-closure laws are kernel checked. This is research extension evidence, not a new original-source closure claim.
+
+[[file:GeneralizedComponents.lean][GeneralizedComponents]] checks 120 parameter combinations / 480 complete checkout observations across original/grouped/raw/public representations, 120 right revisions and retained billing traces. It discriminates changed local primary order and proves that an overlapping focus cannot satisfy independence. Universal mounting, partition, component closure/projection, frame and retained-interface laws are kernel checked.
+
+[[file:GeneralizedDependencies.lean][GeneralizedDependencies]] compares 128 parameter combinations / 512 closed checkout observations, 512 finite observations and 512 revisions against independent arithmetic, full-trace, dependency and first-refusal controls. Kernel clients prove retained shipping outcomes for arbitrary inputs/ledgers and reject an old raw fixed point under a changed tier. It also discriminates the previous-approximation dependency offset.
+
+[[file:GeneralizedChain.lean][GeneralizedChain]] checks 576 revisions (160 accepted / 416 refused), 4800 complete observations across grouped and reassociated representations, 420 finite observations and heterogeneous types. Independent controls check selected-view reuse, first refusal, retained old publications and previous-approximation timing; kernel clients prove whole closure, suffix-interface preservation and stale-edge rejection.
+
+[[file:GeneralizedFork.lean][GeneralizedFork]] checks 784 revisions, 4160 complete observations, 420 finite observations and 140 interleaving/grouping observations. Independent controls cover exact paired join metadata, one shared root, first refusal, heterogeneous branches and old-publication retention; kernel clients preserve reused method outcomes and reject swapped equal-sum join metadata.
+
+[[file:SharedSettlement.lean][SharedSettlement]] compares 3200 revisions across all 128 refusal masks, 20928 complete observations and 420 finite observations. Independent controls preserve direct shared dependencies across joins, exact first refusal, one shared pricing/reserve execution and complete ledger prefixes. Kernel clients prove whole closure, retained method outcomes and stale-final rejection under changed shared context.
+
+[[file:PolicyPublication.lean][PolicyPublication]] checks 7168 revisions over all 1024 refusal masks in seven scenarios, 21688 complete observations and 576 finite observations through depth eight. Independent controls distinguish configuration from data dependency, retain old publications and full failure prefixes, and compare nonidentity representations. Kernel laws preserve raw closure under compatible recooking and distinguish changed successful policy methods.
+
+[[file:ConstructionWorkflow.lean][ConstructionWorkflow]] independently checks 96 configurations, 4608 complete call observations, 96 accepted migrations, 1152 refusals and 468 finite node observations. It covers inference, transitive value/presence invalidation, whole closure, changed topology and source, policy/layout changes, warm old snapshots, unknown support, cycles, opaque branches, arity, negative watches and exact admission refusal.
+
+[[file:InheritedSettlement.lean][InheritedSettlement]] independently checks 96 configurations, 4608 call observations, 96 accepted migrations, 576 matrix refusals, five exact C3 failures, three shielded legacy hazards, conditional opaque rejection, within-class order and first-modifier failure. Kernel proofs connect analyzed compilation to actual delayed lens inheritance and bind source C3 order to the automatically closed MOP.
+
+[[file:ConstructionCache.lean][ConstructionCache]] checks dependent stored values, stable failures/absences, refusing cold/hot builders, duplicate visits and incomplete/unready schedules. [[file:ServiceBundle.lean][ServiceBundle]] checks 24 settings, 240 accepted migrations, 288 refusals and 7920 typed calls. Accepted revisions build 1320 nodes and retain 2304 with all retained builders refusing. Independent arithmetic/dirty sets and warm-cache comparisons cover changed shared dependencies, a newly declared coupon and cross-generic refusal.
+
+[[file:../docs/contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
+
+[[file:../docs/contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
+
+[[file:../docs/contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+- [[file:IncrementalClosure.lean][IncrementalClosure]] checks 72 array/worklist scenarios through 1024 facts, independent scalar results, primitive bounds, exact chain counts, retained dependency indices and least cyclic revocation.
+
+[[file:../docs/contracts/closure-layouts.org][Representation and allocation contracts]] add byte/write and chunked-queue refinements, operational frame/peak bounds, explicit layout/copy/primitive ledgers, finite policy selection, complex workloads and a separate Gerbil implementation with count-parity evidence.
+
+- [[file:HybridClosure.lean][HybridClosure]] checks 80 scenarios with four backend price profiles,
+  exact original work counters, scalar oracles, copying/frame fee ceilings,
+  requested pair bounds and singleton fast paths.
+
+- [[file:QueueSelection.lean][QueueSelection]] checks 96 scenarios across four cost profiles, exact reference
+  counters, both candidate ceilings, scalar oracles and topology-based engines.

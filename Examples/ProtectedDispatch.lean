@@ -1,5 +1,6 @@
 import LeanPoo.Functional.DispatchExtension
 import LeanPoo.Functional.DispatchHandling
+import LeanPoo.Functional.DeclarativeMetadata
 import LeanPoo.Object.MethodCombination
 
 /-! Independently installed document/payment extensions share a generic.
@@ -82,6 +83,36 @@ def run : Except String (List String) := do
 -- arbitrary callback functions and sound warm candidate caches.
 theorem accepted_sound (revision : Revision (Args := Args) (Method := Fragment) (Result := Action Nat) generic watches edits)
     (sound : generic.CacheSound) : revision.snapshot.CacheSound := revision.cacheSound sound
+
+/-- A runtime signature boundary checks an encoded request before dispatch and
+checks its result before exposing a warmed generic. Scheme reuses Type.validate;
+this abstract contract leaves each actual validator's cost and soundness explicit. -/
+theorem invalid_request_retains_no_cache
+    (contract : DeclarativeMetadata.Contract Atom Input Output)
+    (execute : Input → Except Error (Output × State)) (input : Input)
+    (invalid : ¬ contract.input.holds input) :
+    contract.invoke execute input = .error (.input contract.input.name) :=
+  contract.invoke_input execute input invalid
+
+theorem invalid_result_retains_no_cache
+    (contract : DeclarativeMetadata.Contract Atom Input Output)
+    (execute : Input → Except Error (Output × State)) (input : Input) (output : Output) (cache : State)
+    (valid : contract.input.holds input) (called : execute input = .ok (output,cache))
+    (invalid : ¬ contract.output.holds output) :
+    contract.invoke execute input = .error (.output contract.output.name) :=
+  contract.invoke_output execute input output cache valid called invalid
+
+-- A shape forbids a guarded candidate even when this particular call rejects it.
+-- Selection units remain on the warm path; they are not saved by candidate caching.
+#guard (selectCounted (0 : Nat) [.when (· > 100) "risk", .always "base"]).2 == 2
+#guard (selectCounted (150 : Nat) [.when (· > 100) "risk", .always "base"]).1 == ["risk", "base"]
+#guard (selectCounted (10 : Nat) [.when (· > 100) "risk", .always "base"]).1 == ["base"]
+#guard cacheComparisons [[ ["Invoice"], ["Card"] ], [ ["Invoice"], ["Bank"] ]] [["Report"], ["Bank"]] == 2
+#print axioms selectCounted_cached
+#print axioms observedCounted_result
+#print axioms cacheComparisons_capacity
+#print axioms invalid_request_retains_no_cache
+#print axioms invalid_result_retains_no_cache
 
 #eval IO.println s!"protected dispatch: {repr run.toOption}"
 #print axioms Functional.DispatchExtension.guard_ok_iff

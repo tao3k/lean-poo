@@ -1,0 +1,144 @@
+#+TITLE: Automatic positive cyclic component closure — future work
+
+* Source and proved range
+
+The pinned source's future-work section (1807–1827) proposes generalized MOPs,
+type/logical metadata and staged computation. Appendix B (2098–2154) sketches
+raw/cooked generalized prototype construction and explicitly leaves its full
+treatment for future work. Automatic cyclic component closure advances that
+proposal. It does not change the original concrete-construction closure map or
+~whole_paper_implemented=false~.
+
+The new automatic path accepts a finite number of Boolean facts and equations
+built from constants, fact reads, conjunction and disjunction. These equations
+are positive and monotone by construction. Multiple cycles, shared dependencies,
+branch joins and derived two-of-three quorum policies are supported. One component
+may be represented by several finite facts. Negation, arbitrary host callbacks,
+unbounded ascending numerical chains and arbitrary cyclic equations are outside
+this path. Existing acyclic scheduling continues to reject cycles; no dependency
+or locality check is disabled to admit them.
+
+* Automatic least fixed point
+
+[[file:../../LeanPoo/Prototype/FiniteClosure.lean][FiniteClosure]] reuses ~FiniteFix.iterate~ and supplies a total closure algorithm
+for an explicitly ordered carrier with bottom, monotone step, bounded information
+measure and strict measure growth for strictly increasing states. The positive
+Boolean carrier generates these laws automatically: weight counts true facts,
+and its height is the number of facts. Search starts from bottom, maintains an
+ascending chain and lower-bound relation to every fixed point, and stops exactly
+when the next state equals the current state. Its recursion is justified by the
+strictly decreasing remaining information height.
+
+A result carries:
+
+| Evidence | Scope |
+|----------+-------|
+| ~fixed~ | Actual whole-step equation, including cycles |
+| ~least~ | Below every other fixed point of the same equations |
+| ~depth~, ~bound~ | At most n strict state advances for n Boolean facts |
+| ~reached~ | Equality with existing finite-unfolding semantics at that depth |
+| ~stable~ | Every later finite unfolding has that same value |
+| ~least_unique~ | Uniqueness of the least solution; other fixed points may exist |
+
+No caller iteration budget or caller stabilization witness is needed. Strict
+state advances are not a wall-clock or individual-expression evaluation count.
+This is not a general convergence theorem for arbitrary functions.
+
+* Existing generalized lens construction
+
+[[file:../../LeanPoo/Functional/PositiveEquations.lean][PositiveEquations]] compiles the positive syntax to existing ~Computation~ and
+~GeneralizedGraph.Declaration~. ~Expr.compile_correct~ relates every Boolean state
+to its actual compiled computation. ~resolve~ and ~closed~ prove that the least
+solution is an actual fixed point of the existing generalized lens protocol.
+True/false are completed Boolean facts, not pending recursive observations.
+Compiled missing facts default to false by declared syntax; source errors in a
+supplied raw observation are preserved. Closure itself constructs a total pure
+Boolean state and does not infer convergence for arbitrary error-valued states.
+
+~materialize~ adapts that proved closure to the existing construction/publication
+boundary. It does not invoke the ordinary graph ~Builder~ API, so its builder
+execution/reuse traces are empty. This does not claim zero solving work. The
+reference solver's strict-state depth is separate metadata. Production uses the
+proved array/worklist runner described in [[file:cyclic-costs.org][cyclic costs]], retaining actual
+primitive counters. Dependency-index reuse requires exact dependency equality;
+each revised solution still starts from bottom.
+
+[[file:../../LeanPoo/Functional/CyclicPublication.lean][CyclicPublication]] passes the materialized closure to existing
+~StagedPublication.finish~, heterogeneous generic construction and exact-candidate
+admission. The new ~finish_cache~ law proves that this boundary cannot change the
+supplied materialization. A version retains exact equation source and equality
+with its least solution. Generic invocation reuses existing cache/negative-watch
+laws and refreshes approvals, while retaining those canonicality receipts.
+~Version.least~ applies to the actual published values after warming.
+
+Every source/configuration revision solves from bottom. An old larger fixed
+point is never used as the new seed. The existing atomic publication helper
+returns the complete old approved version on any refusal, including its source
+memo and warmed generic entries.
+
+* Safe recursion and practical cyclic workflow
+
+[[file:../../LeanPoo/Functional/CyclicAccess.lean][CyclicAccess]] combines:
+
+- An existing safe interaction/cached-evaluation engine. A supplied recursive
+  program's actual program/request receipt produces an attestation Boolean.
+  The reusable attestation example recursively checks a chain with shared
+  subrequests; ~attestation_active~ proves all active-chain evaluations.
+- Two cyclic equation groups for membership and review/team approval, shared
+  membership dependencies, a two-of-three quorum and the final compliance join.
+- Lossy public cooking to member/approved/release observations and active facts.
+- Heterogeneous grant and explanation generics using existing declarative methods,
+  registration, negative watches, warming and joint approval.
+
+~observed_source~ proves the exact external attestation observation independently
+of fixed-point closure. ~unseeded_release~ holds for every configuration and
+~revoked~ proves that a completed false attestation removes authority from the
+actual materialized public interface. A nonleast, self-supporting fixed point
+cannot grant release. This covers a concrete negative property of leastness,
+rather than extrapolating from a few successful probes.
+
+Input outcomes remain distinct:
+
+| Outcome | Meaning |
+|---------+---------|
+| Completed true/false | Seeds the equation declaration and gets least closure |
+| Completed source error | Refuses input admission as that source error |
+| Safe recursion budget exhaustion | Refuses without a divergence claim |
+| Safe recursion cycle | Retains the existing exact-program divergence proof |
+| Generic/consumer refusal | Preserves the whole old warm publication |
+
+Finite positive equation cycles can have well-defined least solutions even when
+an eager recursive demand on the same request would diverge. The two operations
+have different declared semantics; this extension does not identify them.
+
+* Independent executable evidence
+
+[[file:../../Tests/PositiveEquations.lean][PositiveEquations controls]] enumerate 512 three-fact systems and every one of
+4096 candidate assignments using independent clause truth tables. The oracle
+intersects actual fixed points to compare the least solution. Additional controls
+cover empty equations, nonleast fixed points, exact source errors, declared
+absence, the unchanged acyclic-cycle refusal, and 13 propagation chains whose
+strict update count reaches the carrier height.
+
+[[file:../../Tests/CyclicAccess.lean][CyclicAccess controls]] cover 64 source/configuration/depth settings, 192 public
+calls, 128 accepted revisions and 448 refused revisions. Independent arithmetic
+computes quorum and all ten facts. Controls distinguish safe input memo reuse
+from fresh equation/family reconstruction, verify the source and both generic
+caches are warm before refusal, and preserve their complete observations and
+cache summaries on input exhaustion/divergence/error, registration, negative-watch,
+coherence and required-release refusals.
+
+[[file:../../Examples/CyclicAccess.lean][Example]] composes shared recursive attestation, successful release, a trust
+revision with a hot source receipt, complete attestation revocation, required-
+release refusal and a semantically divergent source request. Existing bounded
+test limits remain 30 seconds / 2 GiB.
+
+* Remaining research boundaries
+
+Positive finite facts are the automatically solved class. General cyclic type,
+logical or numerical equations still need separate convergence/ordering evidence
+or remain unsupported. This work supplies neither arbitrary monotonicity inference
+nor a general cycle solver. It does not compute SCC schedules, retain cyclic
+values across revisions, equate graph cycles
+with recursive operational divergence, or roll back external effects. Original
+concrete closure and the future-proposal audit status remain unchanged.

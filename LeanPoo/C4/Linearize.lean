@@ -168,8 +168,8 @@ def reachable (graph : Graph) (index : Std.HashMap String Node)
   return reversed.reverse
 
 /-- Total finite-graph C4 translation. All iterations have bounds from graph size. -/
-def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Error (List String) := do
-  let index := nodeIndex graph
+def linearizeIndexed (graph : Graph) (index : Std.HashMap String Node)
+    (root : String) (checked : Bool) : Except Error (List String) := do
   if (index.get? root).isNone then
     throw (.unknownNode root)
   let names := reachable graph index root
@@ -180,6 +180,9 @@ def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Erro
   let table ← resolveNode index root root {} checked nodes.length
   let some result := lookup table root | throw (.cycle root)
   return result.precedence
+
+def linearizeWith (graph : Graph) (root : String) (checked : Bool) : Except Error (List String) :=
+  linearizeIndexed graph (nodeIndex graph) root checked
 
 end LinearizeState
 

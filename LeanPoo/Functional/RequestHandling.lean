@@ -20,7 +20,7 @@ namespace Requirements
 variable {Context : Type u} {Key : Type v} {Value : Context → Key → Type w}
 variable {keys : List Key} {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
 variable {Input : Type x} {Wire : Type y} {Error : Type z} {Output : Type q}
-variable [DecidableEq Context]
+variable [BEq Context] [LawfulBEq Context]
 
 def ContextSlot.call (slot : ContextSlot ready) (codec : Codec Input Wire Error)
     (project : Input → Context)

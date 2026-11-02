@@ -1,0 +1,49 @@
+#+TITLE: Constant-base metalevel bootstrap and nonlocal declarations
+
+* Source alignment
+
+The Racket discussion makes a prototype's metadata into an ordinary object,
+with a special constant base to break meta recursion. The native self-hosted
+hook root advances that construction toward the paper's generalized MOP future
+work; it is not a literal translation of a Racket hook API.
+
+* Checked model
+
+~Prototype.MetaPrototype.Bootstrap~ captures two operation values. Reserved
+~bootstrapLookup~ reads return those values independently of the ordinary source;
+~bootstrapReflect_fixed~ reconstructs the SAME root for every source/receiver.
+Other metadata is interpreted by its captured slot compiler. There is no axiom
+of an arbitrary recursive knot or claim of callback termination.
+
+~Functional.DeclarativeMetadata.Expansion~ uses one Reader context for each
+nonlocal fragment. ~expandForms_append~ proves ordered incremental composition;
+~expandForms_refused~ proves first-error suffix suppression. ~elaborate_source~
+binds an accepted catalog to the complete expansion and finalizer at that context.
+~Catalog.names_valid~ retains distinct names and reserved catalog boundaries.
+~publishDeclarations_refused~ preserves the caller's old publication on refusal.
+Native generated getters have separate execution controls; catalog theorems concern
+metadata and publication, not universal function behavior or I/O rollback.
+
+* Native integration
+
+~meta-prototype.ss~ uses ordinary inherited objects for both root and derived
+protocols. Only two pinned hook fields use the terminating base; non-anchor cycles
+retain normal guards. Root anchors are sealed snapshots, and changed kernels
+require fresh bootstrap. Non-anchor metadata uses existing source invalidation.
+
+~declaration.ss~ compiles the inherited expander/finalizer as a native FUN Reader
+chain. Static syntax and computed forms share the same entry point. Full validation
+precedes receiver publication; generated visibility catalogs demand metadata only.
+Current expander revisions and protected context sources prevent mixed-version
+elaboration through supported sequential writes. Unregistered external dependencies,
+raw struct mutation, concurrent changes and unrestricted lexical rewriting remain
+outside this concrete protocol.
+
+* Examples
+
+[[file:../../Examples/MetaBootstrap.lean][Meta bootstrap examples]] cover self-reflection, interpreted metadata, complete nonlocal catalogs,
+refusal, recovery, duplicate/reserved names and current-context checks. Matching
+Gerbil services add generated getters, private revision annotations and shared
+service branches. Original source coverage/statuses remain unchanged; new proof
+modules are added to the existing TOML audit inventory without a new JSON format.
+No performance tuning or benchmark result is supplied by this functional tranche.

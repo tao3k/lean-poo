@@ -38,17 +38,17 @@ theorem Snapshot.consumeView_value [DecidableEq Key] {context : Context} (data :
   rfl
 
 /-- Read once and give the same aligned snapshot to a composite consumer. -/
-def ContextSlot.consumeSnapshot [DecidableEq Context] (slot : ContextSlot ready)
+def ContextSlot.consumeSnapshot [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Output : Context → Type x} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     Output context × ContextSlot ready × Bool :=
   let (data, next, reused) := slot.read context
   (construct context data, next, reused)
 
-theorem ContextSlot.consumeSnapshot_state [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.consumeSnapshot_state [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Output : Context → Type x} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     (slot.consumeSnapshot construct context).2 = (slot.read context).2 := rfl
 
-theorem ContextSlot.consumeSnapshot_value [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.consumeSnapshot_value [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Output : Context → Type x} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     (slot.consumeSnapshot construct context).1 =
       construct context ⟨build ready.factories context, rfl, ready.valid context⟩ := by
@@ -59,18 +59,18 @@ theorem ContextSlot.consumeSnapshot_value [DecidableEq Context] (slot : ContextS
 
 /-- Fan out to two heterogeneous consumers while returning one broad next slot
 and one dependency-hit decision. Constructors run on hits as well as misses. -/
-def ContextSlot.consumePair [DecidableEq Context] (slot : ContextSlot ready)
+def ContextSlot.consumePair [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Left : Context → Type x} {Right : Context → Type y}
     (left : ∀ c, Snapshot ready c → Left c) (right : ∀ c, Snapshot ready c → Right c)
     (context : Context) : (Left context × Right context) × ContextSlot ready × Bool :=
   slot.consumeSnapshot (fun c data => (left c data, right c data)) context
 
-theorem ContextSlot.consumePair_state [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.consumePair_state [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Left : Context → Type x} {Right : Context → Type y}
     (left : ∀ c, Snapshot ready c → Left c) (right : ∀ c, Snapshot ready c → Right c) (context : Context) :
     (slot.consumePair left right context).2 = (slot.read context).2 := rfl
 
-theorem ContextSlot.consumePair_values [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.consumePair_values [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     {Left : Context → Type x} {Right : Context → Type y}
     (left : ∀ c, Snapshot ready c → Left c) (right : ∀ c, Snapshot ready c → Right c) (context : Context) :
     (slot.consumePair left right context).1 =

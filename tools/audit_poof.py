@@ -12,10 +12,11 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / 'docs/audits/poof/requirements-v1.json'
-RECEIPT = ROOT / 'docs/audits/poof/receipt-v1.json'
+RECEIPT = ROOT / 'docs/audits/poof/receipt.toml'
 CHECKS = ROOT / 'docs/audits/poof/checks-v1.json'
 CLOSURE = ROOT / 'docs/audits/poof/closure-v1.json'
 PAPER_CHECK_LINES = [272,328,332,336,344,352,362,376,456,465,715,731,792,797,839,842,869,878,1895,1896,1897,1974,1975,1976]
@@ -164,7 +165,7 @@ def generate(paper):
 
 def check():
     config = config_rows()
-    receipt = json.loads(RECEIPT.read_text())
+    receipt = tomllib.loads(RECEIPT.read_text())
     if receipt['schema'] != 'lean-poo.poof-audit.v1' or receipt['whole_paper_implemented'] is not False:
         raise ValueError('Unexpected receipt schema or completeness claim')
     if receipt['requirements_sha256'] != sha(CONFIG) or receipt['audit_tool_sha256'] != sha(Path(__file__)):
@@ -191,6 +192,38 @@ def check():
     return receipt
 
 
+def toml_value(value):
+    """Encode the receipt's finite JSON-compatible values as standard TOML values."""
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    if isinstance(value, str):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, list):
+        return '[' + ', '.join(toml_value(item) for item in value) + ']'
+    if isinstance(value, dict):
+        return '{' + ', '.join(toml_value(key) + ' = ' + toml_value(item)
+                               for key, item in value.items()) + '}'
+    raise ValueError(f'Unsupported receipt value: {type(value).__name__}')
+
+
+def receipt_toml(receipt):
+    """Keep collection entries on separate lines and verify exact round-trip identity."""
+    lines = ['# Source identities and manually reviewed coverage; not a performance record.']
+    for key, value in receipt.items():
+        if isinstance(value, list):
+            lines.append(toml_value(key) + ' = [')
+            lines.extend('  ' + toml_value(item) + ',' for item in value)
+            lines.append(']')
+        else:
+            lines.append(toml_value(key) + ' = ' + toml_value(value))
+    encoded = '\n'.join(lines) + '\n'
+    if tomllib.loads(encoded) != receipt:
+        raise ValueError('TOML receipt did not preserve reviewed data')
+    return encoded
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--paper', type=Path)
@@ -203,7 +236,7 @@ def main():
         if not args.paper:
             parser.error('Generation requires --paper pointing to the reviewed local poof.scrbl')
         result = generate(args.paper)
-        args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+        args.output.write_text(receipt_toml(result))
     print('POOF-AUDIT-OK ' + json.dumps({'review_units': len(result['review_units']),
           'headings': len(result['headings']), 'source_checks': len(result['source_checks']['paper_checks']), 'local_files': len(result['local_evidence']),
           'reviewed_constructive_path_closed': result['construction_closure']['reviewed_constructive_path_closed'],

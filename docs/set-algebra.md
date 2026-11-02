@@ -1,0 +1,368 @@
+# Finite set algebra over existing tables
+
+This closes a concrete collection-library unit in TODO.md and advances the
+[collection proposal](https://github.com/fare/projects/issues/10), part of the
+prototype paper's future work. `Set<-Table.` already presented table keys as set
+elements. Its difference operation omitted its operands, equality called a
+nonexistent backend method, and the general presentation lacked subset and
+disjointness. These were implementation gaps, not automatic algorithm-discovery
+or destructive-storage research questions.
+
+## One existing interface
+
+`Set<-Table.` stays in `clan/poo/table`; `table/sets.scm` is a standard compiler
+include tracked by `defbuild-script`. The set's `Table.Value` must be the standard
+`Unit` descriptor. The carrier stores an admitted element as a key and `(void)` as
+its value. The algebra uses existing backend merge, short-circuit traversal and
+membership operations; it does not create a new tree, set engine or namespace.
+
+| Operation | Membership rule |
+| --- | --- |
+| `.union a b` | In either operand. |
+| `.inter a b` | In both operands. |
+| `.diff a b` | In a and absent from b. |
+| `.symdiff a b` | In exactly one operand. |
+| `.subset? a b` | Every member of a belongs to b. |
+| `.disjoint? a b` | No member of a belongs to b. |
+| `.=? a b` | Mutual subset, independent of backend value equality. |
+
+`RationalSet` and `SimpleTrieSet` retain their existing representations. The Trie
+subset specialization retains its shared-subtree shortcut inside complete
+admission. Merge callbacks and backend traversal keep their existing order;
+extensional commutativity does not imply a new order for materialized lists.
+Subset/disjointness do not construct a merged carrier. Equality uses membership
+in both directions, not extensional equality of callable elements.
+
+`.compare` remains an explicit backend ordering capability. A backend without it
+raises `unsupported set comparison`; set membership alone does not certify an
+order. The finite algebra is not a new generic sorting policy.
+
+## Admission and failures
+
+Every algebra/relation operation admits both operands before backend work, even
+for empty or identical inputs. The `with-set-tables` scope uses existing table
+origin closure and construction protection. It recognizes admitted values without
+normalizing them, preserving exact Function key wrappers. Invalid carriers or
+children raise the existing TypeError. A non-Unit backing descriptor raises
+`set algebra requires Unit values` before merge. Inputs remain persistent.
+
+Backend errors retain their original causes and no partially merged result is
+returned. External callback effects are not rolled back. Supported descriptor
+writes are refused throughout the operation. A backend that captures another
+mutable descriptor in a closure must list it in `.sources`, following the existing
+table protocol; hidden mutable state is not inferred or certified. No operation
+caches approvals or silently replays a failed callback. Explicit retry runs against
+current admitted operands; retained table deltas keep their original revision and
+changed-key conflict checks.
+
+## Boolean membership lens and whole revisions
+
+`.lens element` now uses the project's `lens-of-get-set` constructor and its
+value-before-state setter convention:
+
+```scheme
+(def focus (.call set .lens element))
+(def added (.call focus .set #t admitted-set))
+(def nested (.call Lens .compose (.lens access) focus))
+(def changed-service (.call Lens .modify nested not service))
+```
+
+Both lens accessors admit the carrier and recognize the element without wrapping
+again; the setter uses Gerbil's Boolean contract. False deletes membership, true
+inserts the standard Unit payload. The get/put, put/get and last-put-wins laws
+compose with existing service lenses and preserve unrelated fields. The convention
+is corrected directly, with no reversed-argument compatibility path.
+
+Set `.diff` means set difference. The existing backing `Table` retains `.diff` as
+ordinary table-delta discovery. There is no second set-delta representation:
+
+```scheme
+(def desired (.call set .diff (.call set .union before grants) revoked))
+(def changes (.call (.@ set Table) .diff before desired))
+```
+
+`prepare-access-revision` in `examples/service-collection.ss` prepares that complete
+policy once and returns the existing Reader/FUN installation-plus-IO action.
+Revocation wins over simultaneous grant. The action can install on a current
+snapshot; a changed expected key refuses before the IO consumer. Retry explicitly
+captures against the winner. The same Unit-valued delta transfers to a compatible
+Trie, supports whole-batch/style publication and uses `invert-table-delta` for
+reverse recovery. Backend representation and logical Key/Value compatibility
+remain the original delta protocol's premises.
+
+## Proofs and checks
+
+`LeanPoo/Functional/SetAlgebra.lean` models membership as `K → Bool`, encodes it as
+`K → Option Unit`, and proves all four optional merge selectors refine pointwise
+set semantics. Backend merge/lookup laws are explicit premises. Finite enumeration
+completeness gives subset/disjointness, and mutual subset gives extensional
+equality without requiring decidable equality of Function keys. The module proves
+union/intersection commutativity, union idempotence, difference partition,
+symmetric-difference cancellation, revocation precedence, subset transitivity,
+disjointness symmetry, ordinary delta completeness/inverse and membership-lens laws.
+
+Top-level `Examples/SetAlgebra.lean` composes access grants/revocations, finite
+revision completeness over every key, first-conflict refusal, explicit retry,
+classy failure retention, inverse and a service membership lens. The public Lean
+entry imports the module so standard CI producer builds include its artifact.
+
+Scheme regressions exhaust every pair of four-element subsets on RationalDict and
+Trie against an independent list-membership oracle (512 operand pairs). Additional
+controls cover malformed/identical/empty operands, Unit refusal, Function wrapper
+identity, original backend error identity, declared-origin mutation refusal and
+retry, lens laws and type errors, cross-backend delta installation, linear reverse
+recovery, competing publication refusal and IO suppression.
+
+Admission may scan the operands, and generic merge performs backend lookups and
+persistent writes; no constant-time/sublinear or wall-time improvement is claimed.
+Finite laws do not verify Gerbil's tree implementation, structural equality,
+procedure extensionality, exception-safe foreign resources, GC or scheduling.
+Destructive backend reuse and automatic symmetry discovery remain separate scope.
+
+## Element-level collection styles
+
+`set-styles descriptor` derives `Pure`, `Mutable`, `Linear`, `Posh` and `Classy`
+from a `Set<-Table.` presentation. It stays in `clan/poo/table` and calls the same
+private derivation engine as `table-styles`. There is one reference type, capture
+operation, immutable-head conflict check and installation path; no second owner,
+lock, scheduler or conversion adapter is introduced.
+
+The constructor checks `descriptor.Elt` is the backing `Table.Key` and the backing
+Value is the standard Unit descriptor. The style protocol's `Domain` is the set
+Type. Both backing recognition and the set's possibly stricter `.element?` are
+required at admission and after every staged transformation. A broad custom
+predicate cannot bypass carrier admission; a narrow predicate cannot be bypassed
+by operating through the backing table. Declared `.sources` on the set and the
+backing table's origins are retained together. Revisions to any of them invalidate
+old protocols and cursors, including EOF.
+
+```scheme
+(def styles (set-styles RationalSet))
+(def classy (.@ styles Classy))
+(def current (.call classy .ap admitted-permissions))
+(def grants (.call classy .ap admitted-grants))
+(@@method current.union grants)
+(def next (@@method current.cons permission))
+(def elements (for/collect (element next) element))
+(def sum (@@method next.foldl + 0))
+```
+
+All five protocols supply `.elt? state element`, `.cons element state`,
+`.remove state element`, `.union/.inter/.diff/.symdiff left right`, and
+`.subset?/.disjoint?/.=? left right`. Binary operands are states of the same
+protocol/family; conversion or explicit pure-snapshot admission is required to
+cross owned families or styles. Pure snapshots remain shareable.
+
+A binary update captures the right snapshot, then stages and commits only the
+left capability. Pure/posh returns a successor and retains the old state;
+mutable/classy returns the same updated identity; linear retires the left aliases
+and returns a new capability. A distinct right owner is observed, not consumed.
+If both operands alias the same capability, successful owned retirement applies
+to every such alias. These are single-left-owner commits, not atomic publication
+of two independently mutable owners. Reentrant/competing updates still use the
+original head comparison. No callback is placed under the head lock.
+
+All 25 conversions retain the exact admitted persistent set root and wrapped
+Function elements. The existing FUN `.admit` boundary normalizes raw elements;
+`.ap`, operations and conversions recognize admitted values without wrapping them
+again. Inserted elements must already be admitted (validate a new Function before
+`.cons`, or use explicit `.admit` on a raw snapshot). Pure recognition cannot
+establish that an arbitrary raw procedure already has its Function wrapper.
+
+`.list<-`, `.iter<-`, `.foldl` and `.foldr` expose elements, not `(element . Unit)`
+entries. Folds use `(element accumulator)` callbacks. Posh/classy reuse Gerbil's
+existing Iterable registration. Ordered `.seek`, `.seek<-` and `.range` delegate
+to the backing table and project keys only; comparator direction, bounds, errors
+and positioned traversal are unchanged. No ordering capability is inferred for
+an unordered source. Retained cursors observe their captured root after ownership
+transfer, but source metadata remains checked at every pull and EOF.
+
+Set `.diff` remains set difference; backing `Table.diff` remains ordinary delta
+discovery. `.apply-delta` and `.apply-batch` use those existing table deltas in every
+set style, including inverse recovery and all original conflict/metadata rules.
+`access-style-action` in the existing service example composes grants/revocations,
+classy updates, linear transfer and a final posh receiver through Reader/FUN into
+an IO consumer. Intermediate owners are local to the action. Failure suppresses
+that consumer; retry explicitly starts from an admitted root, without replaying
+external effects automatically.
+
+`LeanPoo/Functional/SetStyle.lean` proves the binary update delegates to the existing
+style engine, exact backend refusal preserves independent owners, right ownership
+is retained, style changes leave results unchanged, and all 25 transfers preserve
+the carrier. Element fold and cursor proofs preserve order, opaque Function key
+identity, pull counts and EOF metadata refusal without requiring equality of
+functions. The preparation theorem retains ownership when specialized output
+recognition refuses. The top-level set example extends the same access revision
+chain; no new example namespace or Scheme checkout dependency is required.
+
+Regression controls cover the conversion matrix, four operations in every style,
+nonconsuming relations, standard Iterable/fold, owned and aliased retirement,
+foreign/retired operands, explicit retry, declared set origins, stricter custom
+recognizers, positioned element queries, Function wrapper identity, batch/inverse
+and Reader/IO suppression. Admission and backend merge costs remain visible;
+this feature does not assert destructive storage reuse or wall-time improvement.
+
+## Checked selection and atomic partition
+
+`methods.table` now implements `.filter` and `.partition`, previously declared
+only on `Set<-Table.` without a backing table method. Both use the backend's
+existing fold/insertion protocol. The predicate receives `(key value)` for tables
+and one element for sets, runs exactly once per visited binding in `.foldl` order,
+and must return a Boolean. Exceptions retain their original cause; non-Booleans
+raise Gerbil's contract violation. No child is normalized again: admitted Function
+keys and values keep their exact wrappers. Output enumeration uses backend order.
+
+Both operations are available on all five style protocols and via receiver
+`filter`/`partition`. Partition returns two values, selected then rejected. It
+recognizes both roots and prepares both presentations/capabilities before one
+head comparison and installation. Pure/posh keep the predecessor. Mutable/classy
+retain the original identity as the selected result and allocate an independent
+rejected owner. Linear retires its predecessor once and returns two fresh owners.
+Even an empty branch must satisfy the original descriptor/refinement; a custom
+nonempty descriptor may therefore refuse a partition. Late branch refusal leaves
+the original owner live. Reentrant/competing installations make the staged commit
+stale; the winner remains visible, and neither losing result escapes. Predicate
+side effects are observable and are not rolled back. This is not a two-object
+transaction after the operation returns.
+
+`partition-access-action` composes classification and complete branch admission
+with Reader/FUN map before IO. Tests cover two backends against all 16 four-key
+classifications, five table/set styles, receiver calls, exact wrapper identities,
+late refusal/retry, mutable reentrance, descriptor guards and delta inverse recovery.
+The Lean `TableSelection` model proves stable-filter agreement, coverage, exact
+refusal, one-owner style delegation, second-admission failure and stale-install
+rejection; examples combine classification, refusal/retry and inverse revision.
+These are finite backend/ownership laws advancing the collection proposal's future
+work, not a proof of host allocation or arbitrary callback rollback. The default
+implementation visits n bindings once and performs at most n backend insertions;
+there is no new tree algorithm or bound on custom recognizer costs. Ordinary
+single-result updates retain their direct path without partition list allocation.
+
+## Complete set descriptor admission
+
+A concrete omission remained after backing-table admission: a Set descriptor may
+refine its Table. Two valid two-member approval cohorts can have a three-member
+union. Previously direct algebra, normalization, constructors and membership
+setters could return that invalid set, and the Trie subset shortcut could accept
+an invalid identical operand. This is a protocol defect, not a request to infer
+that arbitrary refinements are closed under an algebra.
+
+The existing table module now shares `with-set-inputs`, `require-set` and
+`build-set`. Supported operations protect the Set, its declared `.sources`, the
+Table and its child/origin closure. Each input passes both backing recognition and
+the Set predicate before backend work. Each constructed result passes both before
+publication. Union/intersection/difference/symmetric difference, relations and
+comparison, selection/decomposition, normalization and membership setters share
+this boundary. A broad Set predicate cannot weaken backing admission. Existing
+backend failures and recognizer exceptions retain their original causes. Raw
+backend escape hatches are not made safe by this presentation.
+
+List, singleton and iterator construction reuse the Table's complete `.<-list`
+constructor. They do not replay checked point insertions through inadmissible
+intermediate roots. Explicit-seed iterator construction materializes the finite
+new elements and the existing bindings, then constructs once. Seedless construction
+does not demand an admitted empty seed. `.empty` is itself partial when the Set
+excludes emptiness. No streaming-space or sublinear constructor cost is claimed;
+backend construction, full recognition and iterator effects are charged separately.
+
+Membership focuses capture Set/Table/dependency revisions and reject old focuses
+after supported metadata changes. Get/put and put/get laws apply to admitted roots
+and admitted replacements; arbitrary whole-set predicates can refuse a change.
+Refusal does not weaken the predicate, install a partial root, consume a style
+owner or reach the FUN consumer. It does not roll back external callback effects.
+Rebuild an expired focus and explicitly retry a repaired request.
+
+`make-cohort-access` and the existing `access-style-action` compose Function-valued
+principals, whole approval cohorts, grant/revoke algebra, Classy ownership,
+Linear-to-Posh conversion and FUN/IO. Regressions cover both RationalDict and Trie,
+a represented backing table that forbids singleton roots, exact Function identity,
+all five styles, metadata writes, cause identity and fresh-focus retry.
+
+Lean `admitSetOperation` models ordered input admission, one complete constructor
+and final admission through standard Except/List sequencing. Universal laws prove
+first refusal, backend/refinement failure order, exact successor preservation and
+valid publication under a faithful recognizer. The admitted membership law reuses
+`setMembership`; the existing style failure theorem preserves every owner's
+predecessor. Finite approval examples exhibit valid operands with an invalid union,
+repaired publication, rejected membership insertion and cold pair construction.
+Backing construction/algebra laws, faithful recognition, finite traversal and
+stable declared callback dependencies remain premises. Arbitrary callback
+termination, hidden effects, compiler/runtime correctness and latency are not proved.
+
+The point-method family derives a single argument/result boundary from existing
+Function signatures and `Wrapper.map`. For arity-admitted calls, root recognition precedes element checks
+and lazy delegate lookup. Recognition returns original arguments (including
+Function closures); singleton uses the complete backing list constructor.
+`admitSetMethod_delegation` proves equivalence to operation admission under
+identity recognition and successful lookup. Separate refusal laws preserve the
+root/argument/lookup order, and the publication theorem retains final validity.
+Arity admission uses the existing Function signature matcher; the method laws
+start from an arity-admitted argument row. These laws assume faithful recognizers and do not establish host contract macro,
+metadata guard, compiler, GC or timing correctness.
+
+
+## Many-to-one Set images
+
+`setImage` observes the nonempty owner buckets of the existing `indexView`.
+Its finite inventory ranges over logical backend keys and must cover live owners.
+`setImage_present`, `setImage_retained` and `setImage_absent` establish existential
+membership, surviving-owner retention and last-owner removal. `setImage_revise`
+reuses `reviseIndex_correct`: a successful source edit supplies the untouched-key
+frame. `setImage_inverse` restores the source and its image using an explicit
+inverse edit sequence; it never inverts the many-to-one projector.
+
+Gerbil's `set-image` uses structural source key spaces for grouped buckets, keeps
+whole Set refinements at the operation boundary, and delivers an ordinary target
+delta through the existing publication protocol. `setImage_publish_refused`
+reuses its atomic style refusal law; successful, stale, conflict and inverse
+publication behavior remains governed by `TableProjection`/`TableStyle`.
+The top-level `Examples/CollectionStyles.lean` regional-grant examples retain
+one shared owner, erase the last, repair only changed owners and restore inverse
+edits. These laws assume faithful backend/recognizer behavior and stable pure
+projection; they do not prove Gerbil execution, arbitrary callback termination, GC
+or elapsed-time bounds. Complete source/target recognition and backend operations
+remain charged; no target snapshot diff is needed for warm delivery.
+
+
+## Two-input incremental algebra
+
+`reviseSetCombination` recomputes the existing `SetOperation.choose` decision only
+at the coalesced edit inventory. `combineSet_frame` and
+`reviseSetCombination_correct` reuse the two source frames; duplicates may be
+coalesced without altering the result. `setCombination_delta` invokes the existing
+finite `diff_complete` law to reconstruct the complete result using only edited
+keys. `setCombination_noop` proves that unchanged binary results require no target
+writes even when source ownership changes; explicit inverses use the existing
+ordered inverse law. `prepareSetCombination` retains left/right failure ordering
+and feeds the existing delivery/style publication gate without exposing a partial
+source pair. The top-level grant/revocation examples revise both services together.
+
+The Gerbil protocol is `set-combination` in the existing table module. It shares
+snapshot algebra's Option selector, typed key-space registries, persistent source
+installers and the existing Reader/FUN/IO target publication boundary. Source
+Pair shells and backend Option shells are copied; Function keys remain exact.
+Whole recognition, metadata preparation, backend work and public installation
+remain charged. Coherent backend logical equality and persistence are premises;
+these finite observation laws do not assert a runtime, GC or machine-cost theorem.
+
+
+## Finite multivalued image
+
+The existing `setImage` now has explicit finite-relation laws over
+`indexKeysView` and `reviseIndexKeys`, corresponding to Gerbil's existing multikey
+index declaration and `set-image multiple?: #t`. Each live owner contributes all
+members of a proper finite list; empty lists contribute nothing, duplicate outputs
+are idempotent, and a singleton list agrees with the single-output protocol.
+The finite owner inventory covers live sources and keys denote backend equality
+classes. Stable pure projection, lawful persistent backends and faithful admission
+remain premises; arbitrary projector termination and mutable relation discovery
+are not proved.
+
+Selective repair and successful checked source deltas agree with complete relation
+regrouping. Explicit source inverses restore the whole image, without inferring an
+inverse relation. Existing occupancy-edit, final admission and style-publication
+laws retain failure order, exact target transitions and immutable retry behavior.
+The service catalog in top-level `Examples/CollectionStyles.lean` gives duplicate,
+empty and shared permissions, surviving ownership, complete service migration and
+inverse recovery. This advances the collection proposal's future work; no runtime,
+GC or compiler correctness/speedup claim follows from these finite laws.

@@ -1,0 +1,98 @@
+#+TITLE: Scoped policy revisions after shared fork/join workflows — future work
+
+[[file:generalized-context.org][Shared context]] · [[file:generalized-fork.org][Fork/join components]]
+
+* Scope and missing scenario
+
+This advances the generalized-prototype/MOP future proposal at source lines
+1807–1827 and 2098–2154. The audit retains ~future_proposal~ and
+~whole_paper_implemented=false~; original concrete construction closure is unchanged.
+
+Earlier workflows fixed the component policies during dependency refresh. A
+policy revision can leave every numerical tariff projection equal while changing
+a public method's behavior. Equality of the old numerical dependency alone is
+then insufficient to admit the new component interface.
+
+~Closed.refreshConfiguration~ supplies the pair ~(configuration, dependency)~ to
+existing ~Closed.refreshDependency~. Both equalities are required for reuse.
+The error theorem forwards refusal when either changes. Configuration is actual
+protocol-family input; this is not automatic validation of a source-version tag.
+
+Fragments, bases, compiler-family code and topology are fixed in this API. Changing
+those requires another construction or explicit equality evidence. No arbitrary
+callback/source drift detection, cyclic dependency solver or external-effect
+rollback is inferred.
+
+* Preserve raw closure while changing public cooking
+
+~Closed.reindexSelf~ reuses existing ~Protocol.step_reindexSelf~: a supplied
+compatible self projection proves that richer public cooking does not change the
+raw fixed-point equation. The new witness retains the raw value. Its view theorem
+preserves the projected original interface, not every richer public method.
+
+The client applies existing ~EStateM.map~ to a successful component result, adding
+an explicit policy fee. The compiler still sees the same narrow tariff. Existing
+local closure evidence is projected to that narrow protocol, then recooked with
+the new fee policy. Fresh admission can therefore be analytical; it does not
+require a new evaluator or reconstructing an unchanged upstream workflow.
+
+~policyCook_ok~ preserves the complete successful state while changing its value.
+~policyCook_error~ preserves the exact error and already executed ledger.
+~changed_policy_observation~ proves that distinct fees yield distinct observations
+whenever the underlying method succeeds, even though tariff metadata is equal.
+A raw value may remain a valid fixed point under this recooking; the old cooked
+method observation is what cannot be retained as the revised interface.
+
+* Ten-component publication
+
+[[file:../../LeanPoo/Functional/PolicyPublication.lean][Functional.PolicyPublication]] reuses the entire seven-component
+[[file:generalized-context.org][SharedSettlement]] publication and revision functions as its upstream. It adds an
+invoice/audit fork and a release join through existing independent/dependent
+closure and contextual join refresh.
+
+| Component | Construction key |
+|-----------+------------------|
+| Invoice | Own fee policy, upstream settlement tariff / 10 |
+| Audit | Own fee policy, shared pricing tariff / 4 |
+| Release | Own fee policy, ordered invoice / 4 and audit / 4 |
+
+The wider cooked context carries one explicit Policy snapshot alongside the
+existing upstream interface. Its projection erases that policy before the
+upstream compiler sees final self, preserving the original raw construction.
+Each new component selects only the policy fields and numerical views it uses.
+An invoice-only upgrade therefore retains all seven upstream components, audit
+and release. Release's policy upgrade requires fresh release admission even when
+its two branch metadata values are unchanged.
+
+[[file:../../Examples/PolicyPublication.lean][PolicyPublication]] checks that adding invoice fee 5 changes successful
+checkout value by exactly 5 with the same tariff list and full ledger. Refusing
+constructors for retained components are bypassed. A refusing changed-policy
+constructor rejects the revision and leaves the old immutable publication usable.
+The whole assembly has actual fixed-point evidence, and retained audit/release
+methods preserve complete results for arbitrary quantities and initial ledgers.
+
+Constructor admission and public method execution remain distinct. Public guards
+exercise shipping, tax, upstream settlement, invoice and release failures with
+their actual executed prefixes. Policy mapping retains errors rather than adding
+a fee to a failed action or erasing its state.
+
+* Independent controls
+
+[[file:../../Tests/PolicyPublication.lean][PolicyPublication controls]] use independent arithmetic, fee addition,
+construction keys, first-refusal selection and full-ledger models. Seven scenarios
+cover no change, each individual policy upgrade, all three policies, a numerical
+revision and a combined policy/numerical revision. All 1024 constructor-refusal
+masks run for each scenario: 7168 revisions, with 2697 admitted and 4471 refused.
+
+There are 21688 complete value/error/ledger comparisons across original and
+nonidentity raw/public layouts, with separate coverage of all guard boundaries.
+The refusal controls also check the original service remains usable. The direct
+configuration API is tested against a refusing builder at unchanged numerical
+dependency and changed policy.
+
+Another 576 observations cover depths zero through eight for two policy settings
+and two numerical inputs. They preserve previous-approximation dependency and
+method-self timing through all ten components. At depth eight the complete
+observation is also checked against the independently calculated closed workflow,
+so the last invoice/release propagation steps are included. Kernel closure
+witnesses remain distinct from these finite controls.

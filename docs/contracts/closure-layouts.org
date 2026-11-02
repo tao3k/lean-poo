@@ -1,0 +1,116 @@
+#+TITLE: Representation and allocation contracts for positive closure — future work
+
+* Semantic representation refinement
+
+[[file:../../LeanPoo/Functional/ClosureCosts.lean][ClosureCosts]] encodes Boolean scratch state into 0/1 byte vectors.
+~decode_encode~ proves a complete state round trip; ~write_refines~ proves that
+setting an actual encoded byte corresponds to setting the Boolean fact. This
+models private scratch storage, not arbitrary serialized byte input. Fact indices
+must fit a declared fixnum payload range; ~index_fits~ transports finite index
+bounds. The Scheme compiler additionally checks a conservative operation cap
+before entering its fixnum-priced scope, with generic exact arithmetic in setup.
+
+Exclusive scratch ownership is an explicit representation premise. Lean's
+functional vector update law does not prove Scheme alias freedom or physical
+in-place mutation. The Gerbil API privately copies descriptors, hides scratch
+vectors, starts every solve from zero, and copies the result at publication.
+Its retained-index reconfiguration accepts equal tag/read topology with changed
+literals: a sufficient subset of Lean's dependency-equality condition. General
+reshaping requires recompilation. No ordinary graph cycle rejection is relaxed.
+
+* Allocation-saving executed queue
+
+[[file:../../LeanPoo/Functional/ChunkedClosure.lean][ChunkedClosure]] holds a current list and a stack of suspended tails.
+When a fact becomes true, it shares the plan's immutable watcher list and
+suspends one tail. It does not append/copy every outgoing edge into the queue.
+~next_queue~ relates this representation to the ordinary flattened worklist;
+~execute_refines~ proves exact final array AND existing work-counter equality.
+This was the initial production materialization; the current default refines it
+with [[file:hybrid-queues.org][per-write scheduling]].
+
+Ghost ~frameAllocations~ follows exactly the same executed branches.
+~frameAllocations_writes~ proves its allocation count equals actual writes;
+~frame_allocation_bound~ gives at most V new suspension cells. ~peakFrames~
+models reachable suspension depth, with a separate ~peak_frame_bound ≤ V~ proof.
+These ghost evaluators are not run by production code. The original runtime's
+V+E pop/evaluation bounds and V write bound transfer unchanged.
+
+| Requested queue pair cells during solve | Bound |
+|----------------------------------------+-------|
+| Append/copy watchers | V + actual pushes ≤ V+E |
+| Share watcher chunks | V + actual writes ≤ 2V |
+
+E counts every read occurrence, including duplicate operands. Chunking can
+allocate more cells for a zero-outdegree fact; this is not a universal per-input
+allocation domination theorem. Frame normalization adds work. No universal
+latency advantage follows from fewer requested cells.
+
+* Explicit layout, copying and primitive prices
+
+The target layout supplies bytes per word, vector/bytevector headers, pair words,
+descriptor words and fixed metadata words. Payloads are rounded to whole words.
+~setupWords~ is a declared cold layout ledger for private code/watch/degree vectors,
+compiled descriptor occurrences, reverse-list cells and one scratch bytevector.
+Input AST generation, validation control stack and implementation-specific
+allocator/hash/GC metadata are separate: no kernel theorem bounds their actual
+machine allocation or setup latency.
+
+~solveWords~ charges actual queue-cell requests, optional whole-state copies on
+writes, optional boxed AST results, and an explicit publication snapshot copy.
+A scalar-return evaluator has no result-pair requests in this target contract.
+~allocation_bound~ transports actual counter bounds through every represented
+policy. With owned bytes, scalar results and chunked watchers, cumulative solve
+requests are bounded by 2V pair cells plus the chosen snapshot's bytevector size.
+This excludes any claim about RSS, GC scheduling or allocator residency.
+
+The primitive ledger separately charges representation reads, writes, branches
+and requested allocation words. ~copyBytes~ separately charges old-state and
+publication copying as byte reads/writes and copy-loop branches; scratch
+initialization adds V byte writes. Copy work is not hidden inside allocation
+prices. Coefficients conservatively price queue walking,
+AST accesses, cached or scanned degree metadata and frame normalization. This is
+a declared abstract target instruction contract, not a mechanically extracted
+instruction trace of the Scheme source. ~backend_bound~ proves its weighted
+ceiling for actual solver counters. A backend using the bound must justify its
+implementation-specific charges, exclusive ownership, scalar return convention,
+fixnum range and layout; compiler/runtime correctness is not asserted here.
+Instrumentation counter updates and CPU measurement overhead remain in measured
+runs and are outside the semantic primitive ledger.
+
+[[file:../../LeanPoo/Functional/ClosurePolicy.lean][ClosurePolicy]] selects the smaller declared weighted ceiling among append
+and chunked queues. ~selected_bound~ bounds the executed selected solver by either
+candidate's ceiling. ~minimumAllocation_optimal~ proves the allocation-only
+specialization: append if E ≤ V, otherwise chunk. This finite optimum concerns
+the two declared worst-case bounds, not optimal machine time or all algorithms.
+Gerbil retains this as the explicit ~minimum-allocation~ policy. Its current
+default uses [[file:queue-selection.org][cached append/hybrid selection]] including a decision charge;
+[[file:hybrid-queues.org][per-write hybrid scheduling]] remains one candidate.
+
+* Executable evidence and boundaries
+
+[[file:../../Tests/ClosureCosts.lean][60 scenario controls]] cover empty declarations, multilevel diamond joins,
+dense shared reads, seeded/unseeded rings, deeply skewed syntax, partial gates
+and quorum chains, 16 representation policies and two word widths. Scalar
+oracles are independent of worklist execution. Tests check byte writes, exact
+reference counters, ghost frame allocation/peak, cost ceilings and policy minima.
+[[file:../../Examples/ClosureLayouts.lean][Cost-guided cyclic access]] reuses the concrete access/quorum workflow and
+retained dependencies for source revocation.
+
+Build ~lake build closureLayoutScale~ and run
+~python3 tools/benchmark_closure_layout.py --kind lean --binary .lake/build/bin/closureLayoutScale --output /tmp/layout.json~.
+The historical [[file:../performance/closure-layout-v1.json][96-run Lean receipt]] records three independent processes per variant/case,
+20-second deadlines, source/binary identities and every failure/timeout row.
+The [[https://github.com/tao3k/gerbil-poo/pull/13][separate Gerbil PR #13]] (source ~14706fc~) has 144 matched scenario/variant runs and real POO slot
+workflow controls. [[file:../performance/closure-parity-v1.json][Cross-runtime evidence]] checks 672 primitive/queue-count
+observations across 96 matched runs; its companion receipt hash identifies the
+Gerbil artifact. Reproduce with ~tools/compare_closure_receipts.py~ and both raw
+receipts. This is finite evidence, not a formal Scheme translation proof.
+
+Compare timing variants only within a runtime. Lean times cold source generation,
+compile and solve/materialization; Scheme times cold private compilation, solve
+and publication copy, with input AST generation before the clock and five solves
+per process. Scheme records CPU seconds, Lean monotonic elapsed nanoseconds.
+These clocks/scopes are not interchangeable and support no cross-runtime speed
+ratio. Every solve starts from bottom, and only compiler-protected dependency
+metadata can be reused. The existing original concrete-construction closure and
+~whole_paper_implemented=false~ remain unchanged; this advances future work.

@@ -1,6 +1,7 @@
 """Reject drift that could silently weaken a saved paper audit."""
 import copy
 import json
+import tomllib
 from pathlib import Path
 import tempfile
 import unittest
@@ -11,12 +12,12 @@ from tools import audit_poof
 
 class PoofAuditTests(unittest.TestCase):
     def setUp(self):
-        self.receipt = json.loads(audit_poof.RECEIPT.read_text())
+        self.receipt = tomllib.loads(audit_poof.RECEIPT.read_text())
 
     def check_bad_receipt(self, receipt, reason):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'receipt.json'
-            path.write_text(json.dumps(receipt))
+            path = Path(directory) / 'receipt.toml'
+            path.write_text(audit_poof.receipt_toml(receipt))
             with patch.object(audit_poof, 'RECEIPT', path):
                 with self.assertRaisesRegex(ValueError, reason):
                     audit_poof.check()
@@ -26,6 +27,16 @@ class PoofAuditTests(unittest.TestCase):
         changed = copy.deepcopy(self.receipt)
         changed['headings'].pop()
         self.check_bad_receipt(changed, 'Saved outline differs')
+
+    def test_removed_module_inventory_is_rejected(self):
+        changed = copy.deepcopy(self.receipt)
+        changed['source_file_inventory'].pop()
+        self.check_bad_receipt(changed, 'Baseline or source inventory changed')
+
+    def test_false_completeness_cannot_be_promoted(self):
+        changed = copy.deepcopy(self.receipt)
+        changed['whole_paper_implemented'] = True
+        self.check_bad_receipt(changed, 'Unexpected receipt schema or completeness claim')
 
     def test_changed_local_evidence_is_rejected(self):
         changed = copy.deepcopy(self.receipt)

@@ -1,11 +1,38 @@
 import LeanPoo.Object.Resolve
 import LeanPoo.Prototype.FixedPoint
+import LeanPoo.Functional.SlotScope
 
 /-! Topology-independent object composition. Both C3 and C4 orders use
 the same declaration, delayed inherited method and final-self semantics. -/
 namespace LeanPoo.Object
 
 universe u v
+
+/-- Omit unused syntax scopes while retaining the SELF recipe constructor and
+delayed value. Faithful self-quoting recognition and host hygiene remain premises. -/
+theorem literalSelfSlot_scope_eq {Receiver Name Lookup Value : Type} [DecidableEq Name]
+    (read : Receiver → Name → Lookup) (bindings : List (Name × Name))
+    (fields : Name → Lookup) (value : Value) :
+    (Prototype.SlotSpec.self (fun self =>
+      Functional.Parameters.withSlotScope read self (fun selected =>
+        Functional.Parameters.withSlotBindings selected bindings fields (fun _ => value))) :
+      Prototype.SlotSpec Receiver Value) = .self (fun _ => value) := by
+  congr 1
+  funext self
+  exact Functional.Parameters.withSlotBindings_unused _ _ _ _
+
+/-- A computed literal retains its COMPUTED constructor and delayed parent.
+Only the unused receiver scope is removed; the parent is never selected. -/
+theorem literalComputedSlot_scope_eq {Receiver Name Lookup Value : Type} [DecidableEq Name]
+    (read : Receiver → Name → Lookup) (bindings : List (Name × Name))
+    (fields : Name → Lookup) (value : Value) :
+    (Prototype.SlotSpec.computed (fun self _ =>
+      Functional.Parameters.withSlotScope read self (fun selected =>
+        Functional.Parameters.withSlotBindings selected bindings fields (fun _ => value))) :
+      Prototype.SlotSpec Receiver Value) = .computed (fun _ _ => value) := by
+  congr 1
+  funext self next
+  exact Functional.Parameters.withSlotBindings_unused _ _ _ _
 
 /-- A precedence order together with its actual object declarations. -/
 structure SlotSyntax (Key : Type u) (Value : Key → Type v) where

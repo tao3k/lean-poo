@@ -76,4 +76,113 @@ theorem sequenceExcept_append
     sequenceExcept (left ++ right) context =
       (sequenceExcept left context).bind (fun first => (sequenceExcept right context).map (first ++ ·)) := Validation.traverse_append _ left right
 end Factory
+namespace Validation
+variable {Input : Type u} {Checked : Type v} {Result : Type w} {Error : Type x}
+
+/-- The host contract's local refusal has a separate type from user exceptions. -/
+def hostGuard (accepted : Bool) (value : Input) : Except Unit Input :=
+  if accepted then .ok value else .error ()
+
+/-- Translate only the local guard refusal, preserving the accepted value. -/
+def refuseGuard (refusal : Error) (localResult : Except Unit Input) : Except Error Input :=
+  match localResult with
+  | .ok value => .ok value
+  | .error () => .error refusal
+
+/-- Observe the user predicate before entering the local guard translation. -/
+def checkArgument (predicate : Input → Except Error Bool) (refusal : Error) (value : Input) :
+    Except Error Input :=
+  (predicate value).bind fun accepted => refuseGuard refusal (hostGuard accepted value)
+
+/-- The previous directArgumentCheck predicate boundary, independent of the host guard. -/
+def directArgumentCheck (predicate : Input → Except Error Bool) (refusal : Error) (value : Input) :
+    Except Error Input :=
+  match predicate value with
+  | .error error => .error error
+  | .ok accepted => if accepted then .ok value else .error refusal
+
+/-- The core guard preserves every result and error, for arbitrary predicates and values. -/
+theorem checkArgument_eq_direct (predicate : Input → Except Error Bool) (refusal : Error) (value) :
+    checkArgument predicate refusal value = directArgumentCheck predicate refusal value := by
+  cases observed : predicate value with
+  | error error => simp [checkArgument, directArgumentCheck, observed, Except.bind]
+  | ok accepted => cases accepted <;> simp [checkArgument, directArgumentCheck, hostGuard, refuseGuard, observed, Except.bind]
+
+/-- A predicate error is unchanged even when it has the same family as a host error. -/
+theorem predicate_error (predicate : Input → Except Error Bool) (refusal error : Error)
+    (value) (failed : predicate value = .error error) :
+    checkArgument predicate refusal value = .error error := by
+  simp [checkArgument, failed, Except.bind]
+
+/-- Shape checks finish before recursive wrapping; consumers receive the wrapped value. -/
+def checkThen (predicate : Input → Except Error Bool) (refusal : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result)
+    (value : Input) : Except Error Result :=
+  (checkArgument predicate refusal value).bind fun original => (normalize original).bind consume
+
+/-- The entire workflow preserves the previous direct predicate boundary, including body errors. -/
+theorem checkThen_eq_direct (predicate : Input → Except Error Bool) (refusal : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result) (value) :
+    checkThen predicate refusal normalize consume value =
+      (directArgumentCheck predicate refusal value).bind (fun original => (normalize original).bind consume) := by
+  simp only [checkThen, checkArgument_eq_direct]
+
+/-- A failed shape check stops before normalization and observation. -/
+theorem rejected (predicate : Input → Except Error Bool) (refusal : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result)
+    (value) (failed : predicate value = .ok false) :
+    checkThen predicate refusal normalize consume value = .error refusal := by
+  simp [checkThen, checkArgument, failed, hostGuard, refuseGuard, Except.bind]
+
+/-- Successful wrapping feeds the checked result, rather than the original, to the consumer. -/
+theorem normalized (predicate : Input → Except Error Bool) (refusal : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result)
+    (value checked) (accepted : predicate value = .ok true)
+    (wrapped : normalize value = .ok checked) :
+    checkThen predicate refusal normalize consume value = consume checked := by
+  simp [checkThen, checkArgument, accepted, wrapped, hostGuard, refuseGuard, Except.bind]
+
+/-- Normalizer errors, including recursive budget/cycle refusals, are never remapped. -/
+theorem normalization_error (predicate : Input → Except Error Bool) (refusal error : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result)
+    (value) (accepted : predicate value = .ok true) (failed : normalize value = .error error) :
+    checkThen predicate refusal normalize consume value = .error error := by
+  simp [checkThen, checkArgument, accepted, failed, hostGuard, refuseGuard, Except.bind]
+
+/-- An error from a checked consumer is not caught by the local host guard. -/
+theorem consumer_error (predicate : Input → Except Error Bool) (refusal error : Error)
+    (normalize : Input → Except Error Checked) (consume : Checked → Except Error Result)
+    (value checked) (accepted : predicate value = .ok true)
+    (wrapped : normalize value = .ok checked) (failed : consume checked = .error error) :
+    checkThen predicate refusal normalize consume value = .error error := by
+  rw [normalized predicate refusal normalize consume value checked accepted wrapped, failed]
+
+/-- Ordered batches inherit the same equivalence without a second traversal implementation. -/
+theorem batchArgument_eq_direct (predicate : Input → Except Error Bool) (refusal : Error)
+    (values : List Input) :
+    Validation.traverse (checkArgument predicate refusal) values =
+      Validation.traverse (directArgumentCheck predicate refusal) values := by
+  have same : checkArgument predicate refusal = directArgumentCheck predicate refusal :=
+    funext (checkArgument_eq_direct predicate refusal)
+  rw [same]
+end Validation
+
+namespace Validation
+/-- Ordered diagnostic collection models the standard builder's append-one law.
+The callback returns a finite proper issue list for each child. -/
+def gatherIssues (check : Input → List Issue) (values : List Input) (initial : List Issue := []) : List Issue :=
+  values.foldl (fun collected value => collected ++ check value) initial
+
+/-- Replacing a list of intermediate lists with one builder preserves all issue
+positions, multiplicity and child order, including empty child diagnostics. -/
+theorem gatherIssues_eq_flatMap (check : Input → List Issue) (values : List Input) (initial : List Issue) :
+    gatherIssues check values initial = initial ++ values.flatMap check := by
+  induction values generalizing initial with
+  | nil => simp [gatherIssues]
+  | cons value rest ih =>
+    simpa only [gatherIssues, List.foldl_cons, List.flatMap_cons, List.append_assoc] using
+      ih (initial ++ check value)
+
+end Validation
+
 end LeanPoo.Functional

@@ -1,0 +1,114 @@
+#+TITLE: Generalized prototype protocol — research extension
+
+[[file:../reusable-contracts.org][Reusable APIs]] · [[file:../audits/poof/advanced.org][Source correspondence and research boundaries]]
+
+* Scope and construction
+
+This is an initial typed implementation advancing the original paper's future
+work on generalized prototypes and MOPs (1807–1827 and 2084–2154). It extends the
+project beyond the original concrete construction checklist. It does not mark
+that research proposal as fully resolved.
+
+~Prototype.Generalized.Protocol Raw Cooked Fragment~ separates three choices:
+
+- ~Raw~ stores the partially assembled representation and method groups.
+- ~cook : Raw → Cooked~ interprets those groups into a public self interface.
+- ~compile : Fragment → DelayedProto Cooked Raw Raw~ installs each fragment.
+
+~assemble~ uses existing ~DelayedProto.composeAll~ in child-over-parent order.
+~assemble_append~ proves successive fragment batches have exactly that delayed
+composition. Fragment families can use different payload types through
+~sumCompiler~ while sharing the same raw construction and cooked final self.
+
+~lensCompiler~ uses existing ~MonoLens~ and ~lensGen~. Nested focuses use the
+existing skew-lens composition. ~standardCompiler~ and ~simpleCompiler~ install
+existing method contributions. Cooking invokes the existing ~effective~ or
+~simpleEffective~ interpreter; no new inheritance or method evaluator is added.
+Arbitrary qualified/custom groups can be installed by supplying a compiler and
+cooking function using the same protocol.
+
+* Self views, finite observations and checked closure
+
+Fragments receive cooked self, not raw storage. ~Compiler.viewSelf~ and
+~Protocol.reindexSelf~ can further restrict the public self visible to a fragment
+family. ~assemble_reindexSelf~ describes exact delayed assembly; under the stated
+cooking compatibility premise, ~step_reindexSelf~ preserves the raw step.
+
+~step~ cooks the supplied raw self approximation and runs delayed assembly.
+~approximate~ uses the existing total ~FiniteFix.iterate~ with explicit base,
+seed and depth; ~observe~ cooks that raw approximation. A successful finite
+observation alone is not a fixed-point or termination certificate.
+
+~Closed~ instead stores a raw value and the actual fixed-point equation.
+~closeAt~ requires a proof that consecutive approximations agree. ~stable~ proves
+all later approximations agree after witnessed stabilization. ~stable_two~ is a
+useful triangular case: if cooking every one-step result yields one fixed public
+view, the raw computation stabilizes after two steps. ~Closed.assembly~ states
+that assembly receives exactly the closed value's cooked self.
+
+No unrestricted knot equation, new unsafe execution path or termination oracle
+is introduced. Application recursion and arbitrary compiler callbacks require
+their own semantics and closure evidence.
+
+* Inheritance and representation
+
+~Protocol.prepare~ delegates validation and ordering to the existing C3
+linearizer. ~Plan~ retains its exact graph, root, declaration function and order
+receipt. ~Plan.derivation~ and ~fragments_reference~ transfer every independent
+C3 derivation to the actual flattened fragment order. ~prepare_error~ preserves
+an existing C3 refusal before elaboration. Shared diamond ancestors occur once
+in that source order; each declaration's fragment order is retained.
+
+~Protocol.transport~ independently converts raw storage and the cooked public
+interface with existing inverse-bearing ~DictionaryBridge~ values. Theorems
+~assemble_transport~, ~step_transport~, ~approximate_transport~ and
+~observe_transport~ preserve complete assembly and every finite depth.
+~Closed.transport~ retains closure and preserves its cooked interface.
+~Plan.transport_program~ and ~transport_observe~ connect those laws to the same
+C3 plan. These are exact typed representation conversions, not closure wire
+serialization or arbitrary representation optimizations.
+
+~lensCompiler_frame~ and ~assemble_frame~ require an explicit preserved
+projection; ~approximate_frame~ carries that projection through every positive
+unfolding. An arbitrary supplied focus is not assumed lawful. Locality and
+frame proofs belong to each compiler's declared policy.
+
+* Complex clients and evidence
+
+[[file:../../Examples/GeneralizedService.lean][GeneralizedService]] joins a C3 diamond, nested tariff/method focuses,
+standard before/after/primary/around contributions, cooked final-self reads,
+retained method errors and immutable revisions. A seed-tariff observation costs
+5; the current-tariff quote costs 21. A manual source C3 derivation and a
+projected-self locality proof establish actual two-step closure for arbitrary
+tariff/fee/discount/limit parameters. ~quote_all_depth~ proves complete method
+value/error/state equality with that closed interface at every later depth,
+for every quantity and initial ledger. Replacing the tariff yields 13 and
+leaves the earlier interface usable. Derived dictionary bridges convert both
+function-bearing storage and the public interface.
+
+[[file:../../Examples/GeneralizedCheckout.lean][GeneralizedCheckout]] uses the same protocol for two independent method
+families: Boolean all checks and additive costs. The shared Base contributes
+once. The admitted quote is 26; stock or range refusal retains exactly its
+executed prefix and never runs cost methods. Existing short-circuit and
+method-failure policies own that behavior.
+
+[[file:../../Tests/GeneralizedPrototype.lean][GeneralizedPrototype]] compares 360 parameter combinations across three
+representations (1080 complete executions). Direct formulas and complete traces
+cover tariff, fee, discount, current limits, negative/zero/positive quantities,
+seed and two unfolding depths. It also checks exact C3 cycle/inconsistent-order/
+missing-root refusals and an overridden inherited method body left uncalled.
+These controls complement universal assembly, view, frame, transport and closure
+laws. They are not automatic proofs of arbitrary application policies.
+
+* Remaining research
+
+The protocol makes raw/cooked/lens/fragment choices explicit. It does not infer
+arbitrary host effects, synthesize lawful focuses, decide all cross-library
+extension conflicts, or provide a complete reflective language/MOP. Automatic
+dependency analysis, type inference and staging remain separate research work.
+
+* Mounted component protocols
+
+[[file:generalized-components.org][Independent component composition]] adds lawful mounting, grouping and closure reuse for separate protocols. Its premises distinguish construction independence from public method execution order.
+
+[[file:generalized-dependencies.org][Directional cooked dependencies]] extends mounted components with explicitly indexed downstream families, staged closure and proof-bearing equal-view reuse.

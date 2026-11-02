@@ -1,0 +1,745 @@
+import LeanPoo.Functional.PropertySequences
+
+/-! Shared finite product observation. Field callbacks and representation packing
+use the existing guarded stages; faithful captured topology is a host premise. -/
+namespace LeanPoo.Functional.PropertyTesting
+universe u
+
+/-- Capture a proper fixed-width row; none represents a malformed host spine.
+The immutable list models a faithful shallow copy, not arbitrary payload copying. -/
+def captureProductRow (width : Nat) (input : Option (List Value)) : Option (List Value) :=
+  input.filter (fun values => values.length == width)
+
+/-- A captured row always has exactly the declared field count. -/
+theorem captureProductRow_width (width : Nat) (input : Option (List Value)) (values : List Value)
+    (captured : captureProductRow width input = some values) : values.length = width := by
+  cases input with
+  | none => simp [captureProductRow] at captured
+  | some row =>
+    simp only [captureProductRow, Option.filter] at captured
+    split at captured <;> simp_all
+
+/-- Well-shaped rows keep their exact values and order. -/
+theorem captureProductRow_exact (values : List Value) :
+    captureProductRow values.length (some values) = some values := by simp [captureProductRow]
+
+/-- A wrong-width row cannot be salvaged as a shorter zipped prefix. -/
+theorem captureProductRow_refused (width : Nat) (values : List Value) (wrong : values.length ≠ width) :
+    captureProductRow width (some values) = none := by simp [captureProductRow, wrong]
+
+/-- Empty products distinguish a present empty row from malformed false data. -/
+theorem captureProductRow_empty : captureProductRow (Value := Value) 0 (some []) = some [] ∧
+    captureProductRow (Value := Value) 0 none = none := by simp [captureProductRow]
+
+/-- Error-valued consumers never enter a field after malformed decomposition. -/
+def prepareProductRow (invalid : Cause) (width : Nat) (input : Option (List Value))
+    (consume : List Value → Except (Option Cause) Output) : Except (Option Cause) Output :=
+  match captureProductRow width input with
+  | none => .error (some invalid)
+  | some row => consume row
+
+/-- Shape refusal skips measuring, shrinking and representation effects alike. -/
+theorem prepareProductRow_refused (invalid : Cause) (width : Nat) (input : Option (List Value))
+    (consume : List Value → Except (Option Cause) Output)
+    (refused : captureProductRow width input = none) :
+    prepareProductRow invalid width input consume = .error (some invalid) := by
+  simp [prepareProductRow, refused]
+
+/-- A fixed-width successful row enters its existing consumer unchanged. -/
+theorem prepareProductRow_exact (invalid : Cause) (row : List Value)
+    (consume : List Value → Except (Option Cause) Output) :
+    prepareProductRow invalid row.length (some row) consume = consume row := by
+  simp [prepareProductRow, captureProductRow_exact]
+
+/-- Reconstruct a coordinate in original order from a reversed visited prefix.
+Scheme materialization copies suffix pairs and folds cons over the prefix, so
+no packer receives the private remaining-coordinate spine. -/
+def productCoordinate (before : List Value) (replacement : Value) (after : List Value) : List Value :=
+  before.reverse ++ replacement :: after
+
+/-- Every packed coordinate preserves the product's width. -/
+theorem productCoordinate_length (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).length = before.length + 1 + after.length := by
+  simp [productCoordinate]; omega
+
+/-- A replacement does not modify the still-unvisited suffix values. -/
+theorem productCoordinate_suffix (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).drop (before.length + 1) = after := by
+  simp [productCoordinate, List.drop_append]
+
+/-- The accumulated prefix retains its original order. -/
+theorem productCoordinate_prefix (before after : List Value) (replacement : Value) :
+    (productCoordinate before replacement after).take before.length = before.reverse := by
+  simp [productCoordinate]
+
+/-- One finite child batch is admitted before any of its packing actions. The
+existing guarded stages retain interleaved packing effects and source checks. -/
+def finiteProductCoordinate (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state : State) :
+    Except (Option Cause) (List Output × State) :=
+  match finiteShrinkStage live invalid shrink value state with
+  | .error cause => .error cause
+  | .ok (children, next) => guardedStages live
+      (children.map (fun child => pack (productCoordinate before child after))) next
+
+/-- Invalid/stale child batches cannot invoke even the first packer. -/
+theorem finiteProductCoordinate_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state : State) (cause : Option Cause)
+    (refused : finiteShrinkStage live invalid shrink value state = .error cause) :
+    finiteProductCoordinate live invalid shrink pack before after value state = .error cause := by
+  simp [finiteProductCoordinate, refused]
+
+/-- A packing error never publishes an already materialized partial batch. -/
+theorem finiteProductCoordinate_pack_refused (live : State → Bool) (invalid : Cause)
+    (shrink : Value → State → Except Cause (Option (List Value) × State))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before after : List Value) (value : Value) (state next : State) (children : List Value)
+    (cause : Option Cause)
+    (prepared : finiteShrinkStage live invalid shrink value state = .ok (children, next))
+    (refused : guardedStages live (children.map (fun child => pack (productCoordinate before child after))) next =
+      .error cause) : finiteProductCoordinate live invalid shrink pack before after value state = .error cause := by
+  simp [finiteProductCoordinate, prepared, refused]
+
+/-- A common owner protects even zero fields. Each field is checked before/after
+execution, and packing cannot run after a refusal. -/
+def guardedProduct (live : State → Bool)
+    (fields : List (State → Except Cause (Value × State)))
+    (pack : List Value → State → Except Cause (Output × State)) (state : State) :
+    Except (Option Cause) (Output × State) :=
+  if live state then
+    match guardedStages live fields state with
+    | .error cause => .error cause
+    | .ok (values, next) => guardedGeneration live (pack values) next
+  else .error none
+
+/-- An obsolete owner suppresses all field and representation effects. -/
+theorem guardedProduct_preflight (live : State → Bool)
+    (fields : List (State → Except Cause (Value × State)))
+    (pack : List Value → State → Except Cause (Output × State)) (state : State)
+    (stale : live state = false) : guardedProduct live fields pack state = .error none := by
+  simp [guardedProduct, stale]
+
+/-- A field revision suppresses later fields and packing, rather than merely
+refusing after the complete product has already been evaluated. -/
+theorem guardedProduct_field_revised (live : State → Bool) (state next : State) (value : Value)
+    (rest : List (State → Except Cause (Value × State)))
+    (pack : List Value → State → Except Cause (Output × State))
+    (before : live state = true) (after : live next = false) :
+    guardedProduct live ((fun _ => .ok (value, next)) :: rest) pack state = .error none := by
+  simp [guardedProduct, before, guardedStages_revised live state next value rest before after]
+
+/-- An original field exception remains the exact exception and skips its tail. -/
+theorem guardedProduct_field_cause (live : State → Bool) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Value × State)))
+    (pack : List Value → State → Except Cause (Output × State)) (before : live state = true) :
+    guardedProduct live ((fun _ => .error cause) :: rest) pack state = .error (some cause) := by
+  simp [guardedProduct, before, guardedStages_cause live state cause rest before]
+
+/-- Zero fields still retain common owner checks around their representation. -/
+theorem guardedProduct_empty (live : State → Bool)
+    (pack : List Value → State → Except Cause (Output × State)) (state : State) :
+    guardedProduct live [] pack state = guardedGeneration live (pack []) state := by
+  cases fresh : live state <;> simp [guardedProduct, guardedStages, guardedGeneration, fresh]
+
+/-- A packing callback cannot publish a value after revising the product owner. -/
+theorem guardedProduct_packing_revised {Cause : Type u} (live : State → Bool)
+    (state next : State) (value : Output) (before : live state = true) (after : live next = false) :
+    guardedProduct live ([] : List (State → Except Cause (Value × State)))
+      (fun _ _ => .ok (value, next)) state =
+      .error none := by
+  rw [guardedProduct_empty]
+  exact guardedGeneration_revised live state next value before after
+
+/-- A packing error is not replaced by a source check or a fabricated product. -/
+theorem guardedProduct_packing_cause (live : State → Bool) (state : State) (cause : Cause)
+    (before : live state = true) :
+    guardedProduct live ([] : List (State → Except Cause (Value × State)))
+      (fun _ _ => (.error cause : Except Cause (Output × State))) state = .error (some cause) := by
+  rw [guardedProduct_empty]
+  exact guardedGeneration_cause live state cause before
+
+/-- Stable fields preserve their exact order and values in the shared evaluator. -/
+theorem guardedStages_constant {Cause : Type u} (live : State → Bool) (state : State)
+    (values : List Value) (before : live state = true) :
+    guardedStages (Cause := Cause) live (values.map (fun value => fun _ => .ok (value, state))) state =
+      .ok (values, state) := by
+  induction values with
+  | nil => rfl
+  | cons value rest ih =>
+    simp [guardedStages, guardedGeneration_state live state state value before before, ih]
+
+/-- Shared natural measures preserve the original sum without another typed fold. -/
+theorem guardedProduct_sum {Cause : Type u} (live : State → Bool) (state : State)
+    (values : List Nat) (before : live state = true) :
+    guardedProduct (Cause := Cause) live (values.map (fun value => fun _ => .ok (value, state)))
+      (fun values state => .ok (values.sum, state)) state = .ok (values.sum, state) := by
+  simp [guardedProduct, before, guardedStages_constant live state values before, guardedGeneration]
+
+/-- Fixed product fields declare their leaves before any draw. Identity
+deduplication assumes pure, truthful observers, as in `mergeSources`. -/
+def productSources [DecidableEq Source] (fields : List (List Source)) : List Source :=
+  fields.flatten.eraseDups
+
+/-- Flattening and sharing leaves preserves the conjunction of every fixed field. -/
+theorem productSources_current [DecidableEq Source] (live : Source → Bool)
+    (fields : List (List Source)) :
+    (productSources fields).all live = true ↔ fields.all (fun field => field.all live) = true := by
+  simp only [productSources, List.all_eq_true, List.mem_eraseDups, List.mem_flatten]
+  constructor
+  · intro h field present source owned
+    exact h source ⟨field, present, owned⟩
+  · intro h source ⟨field, present, owned⟩
+    exact h field present source owned
+
+/-- One stale leaf in any fixed field makes the complete producer obsolete. -/
+theorem productSources_stale [DecidableEq Source] (live : Source → Bool)
+    (fields : List (List Source)) (field : List Source) (source : Source)
+    (present : field ∈ fields) (owned : source ∈ field) (stale : live source = false) :
+    (productSources fields).all live = false := by
+  cases fresh : (productSources fields).all live with
+  | false => rfl
+  | true =>
+    have all := (productSources_current live fields).mp fresh
+    have yes := List.all_eq_true.mp (List.all_eq_true.mp all field present) source owned
+    simp [stale] at yes
+
+/-- The existing product evaluator suppresses every draw and pack even when the
+obsolete source belongs to a later field. The declared directory is a premise. -/
+theorem guardedProduct_sources_preflight [DecidableEq Source]
+    (live : State → Source → Bool) (fields : List (List Source))
+    (field : List Source) (source : Source) (state : State)
+    (draws : List (State → Except Cause (Value × State)))
+    (pack : List Value → State → Except Cause (Output × State))
+    (present : field ∈ fields) (owned : source ∈ field) (stale : live state source = false) :
+    guardedProduct (fun state => (productSources fields).all (live state)) draws pack state = .error none := by
+  exact guardedProduct_preflight _ draws pack state
+    (productSources_stale (live state) fields field source present owned stale)
+
+/-- Nested fixed products retain the same finite source judgment. -/
+theorem productSources_nested [DecidableEq Source] (live : Source → Bool)
+    (left right : List (List Source)) :
+    (productSources [productSources left, productSources right]).all live = true ↔
+      (productSources (left ++ right)).all live = true := by
+  simp only [productSources_current, List.all_cons, List.all_nil, Bool.and_true,
+    Bool.and_eq_true, List.all_append]
+
+/-- Repeating a shared field does not manufacture new authority. -/
+theorem productSources_shared [DecidableEq Source] (live : Source → Bool)
+    (fields : List (List Source)) :
+    (productSources (fields ++ fields)).all live = true ↔ (productSources fields).all live = true := by
+  simp only [productSources_current, List.all_append, Bool.and_eq_true, and_self]
+
+/-- No result row means no result producer is observed; an explicit common
+function/domain owner still uses `guardedProduct_empty`. -/
+theorem productSources_empty (live : Source → Bool) [DecidableEq Source] :
+    (productSources ([] : List (List Source))).all live = true := by
+  rfl
+
+/-- Supplied-field recognition is a source-checked Boolean conjunction, not an
+eager batch whose false result is discarded. The fixed ordered field topology
+and faithful host predicate/scope encoding remain premises. -/
+def guardedAll (live : State → Bool) :
+    List (State → Except Cause (Bool × State)) → State → Except (Option Cause) (Bool × State)
+  | [], state => if live state then .ok (true, state) else .error none
+  | first :: rest, state =>
+      match guardedGeneration live first state with
+      | .error cause => .error cause
+      | .ok (false, after) => .ok (false, after)
+      | .ok (true, after) => guardedAll live rest after
+
+/-- No supplied fields means true under the caller's admitted source scope. -/
+theorem guardedAll_empty (live : State → Bool) (state : State) (fresh : live state = true) :
+    guardedAll (Cause := Cause) live [] state = .ok (true, state) := by simp [guardedAll, fresh]
+
+/-- Obsolete scopes invoke no field predicates, even for empty rows. -/
+theorem guardedAll_preflight (live : State → Bool) (state : State)
+    (fields : List (State → Except Cause (Bool × State))) (stale : live state = false) :
+    guardedAll live fields state = .error none := by
+  cases fields <;> simp [guardedAll, guardedGeneration, stale]
+
+/-- Ordinary membership refusal is returned as false and never reaches the tail. -/
+theorem guardedAll_false (live : State → Bool) (state after : State)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (fresh : live after = true) :
+    guardedAll live ((fun _ => .ok (false, after)) :: rest) state = .ok (false, after) := by
+  simp [guardedAll, guardedGeneration, before, fresh]
+
+/-- A true supplied field passes only its actual state to the remaining fields. -/
+theorem guardedAll_true (live : State → Bool) (state after : State)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (fresh : live after = true) :
+    guardedAll live ((fun _ => .ok (true, after)) :: rest) state = guardedAll live rest after := by
+  simp [guardedAll, guardedGeneration, before, fresh]
+
+/-- Source revision outranks a normal predicate result, whether true or false. -/
+theorem guardedAll_revised (live : State → Bool) (state after : State) (accepted : Bool)
+    (rest : List (State → Except Cause (Bool × State)))
+    (before : live state = true) (stale : live after = false) :
+    guardedAll live ((fun _ => .ok (accepted, after)) :: rest) state = .error none := by
+  simp [guardedAll, guardedGeneration, before, stale]
+
+/-- Predicate exceptions remain exact rather than being coerced into false. -/
+theorem guardedAll_cause (live : State → Bool) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Bool × State))) (before : live state = true) :
+    guardedAll live ((fun _ => .error cause) :: rest) state = .error (some cause) := by
+  simp [guardedAll, guardedGeneration, before]
+
+/-- Fresh pure field outcomes agree with the standard Boolean all fold. -/
+theorem guardedAll_values (live : State → Bool) (state : State) (values : List Bool)
+    (fresh : live state = true) :
+    guardedAll live (values.map (fun value => fun next => (.ok (value, next) : Except Cause (Bool × State)))) state =
+      .ok (values.all id, state) := by
+  induction values with
+  | nil => simp [guardedAll, fresh]
+  | cons value rest ih =>
+    cases value <;> simp [guardedAll, guardedGeneration, fresh, ih]
+
+/-- A refused field sequence cannot enter a later declaration/property stage. -/
+theorem guardedAll_refused (live : State → Bool)
+    (fields : List (State → Except Cause (Bool × State))) (state : State)
+    (cause : Option Cause) (later : Bool × State → Except (Option Cause) Output)
+    (refused : guardedAll live fields state = .error cause) :
+    (guardedAll live fields state >>= later) = .error cause := by rw [refused]; rfl
+
+/-- An aggregate's fixed structural weight plus its observed field weights.
+This is a logical shrink measure, not a runtime cost model. -/
+def guardedMeasure (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State) :
+    Except (Option Cause) (Nat × State) :=
+  guardedProduct live fields (fun values next => .ok (base + values.sum, next)) state
+
+/-- Stale preparation cannot enter any component measure. -/
+theorem guardedMeasure_preflight (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State)
+    (stale : live state = false) : guardedMeasure live base fields state = .error none :=
+  guardedProduct_preflight live fields _ state stale
+
+/-- A revision in one measure suppresses all remaining measures and the total. -/
+theorem guardedMeasure_revised (live : State → Bool) (base : Nat)
+    (state next : State) (value : Nat) (rest : List (State → Except Cause (Nat × State)))
+    (before : live state = true) (after : live next = false) :
+    guardedMeasure live base ((fun _ => .ok (value, next)) :: rest) state = .error none :=
+  guardedProduct_field_revised live state next value rest _ before after
+
+/-- A measure exception retains its original cause even if its owner changed. -/
+theorem guardedMeasure_cause (live : State → Bool) (base : Nat) (state : State) (cause : Cause)
+    (rest : List (State → Except Cause (Nat × State))) (before : live state = true) :
+    guardedMeasure live base ((fun _ => .error cause) :: rest) state = .error (some cause) :=
+  guardedProduct_field_cause live state cause rest _ before
+
+/-- An empty aggregate retains its structural weight and performs no field call. -/
+theorem guardedMeasure_empty {Cause : Type u} (live : State → Bool) (base : Nat) (state : State)
+    (fresh : live state = true) :
+    guardedMeasure (Cause := Cause) live base [] state = .ok (base, state) := by
+  simp [guardedMeasure, guardedProduct, guardedStages, guardedGeneration, fresh]
+
+/-- Stable components yield exactly the original cardinality-plus-sum measure. -/
+theorem guardedMeasure_values {Cause : Type u} (live : State → Bool) (base : Nat) (state : State)
+    (values : List Nat) (fresh : live state = true) :
+    guardedMeasure (Cause := Cause) live base
+      (values.map (fun value => fun _ => .ok (value, state))) state = .ok (base + values.sum, state) := by
+  simp [guardedMeasure, guardedProduct, fresh,
+    guardedStages_constant live state values fresh, guardedGeneration]
+
+/-- Refused aggregate observation cannot continue into shrinking or reporting. -/
+theorem guardedMeasure_refused (live : State → Bool) (base : Nat)
+    (fields : List (State → Except Cause (Nat × State))) (state : State)
+    (cause : Option Cause) (later : Nat × State → Except (Option Cause) Output)
+    (refused : guardedMeasure live base fields state = .error cause) :
+    (guardedMeasure live base fields state >>= later) = .error cause := by rw [refused]; rfl
+
+/-- Reference fixed-product schedule. Each field receives the parent seed and
+its suffix receives the child seed. `split` abstracts the existing two draws;
+faithful SRFI-27 checkpoints and pure finite draws remain host premises. -/
+def drawProduct (split : Seed → Seed × Seed) (draw : Field → Seed → Value) :
+    List Field → Seed → List Value × Seed
+  | [], seed => ([], seed)
+  | field :: rest, seed =>
+    let seeds := split seed
+    let result := drawProduct split draw rest seeds.2
+    (draw field seeds.1 :: result.1, result.2)
+
+/-- Tail-position accumulation keeps retained field values and the continuation
+seed without constructing an executable bind/map spine. Source refusal still
+uses guardedProduct; this definition models only an admitted stable schedule. -/
+def drawProductRev (split : Seed → Seed × Seed) (draw : Field → Seed → Value) :
+    List Field → Seed → List Value → List Value × Seed
+  | [], seed, before => (before.reverse, seed)
+  | field :: rest, seed, before =>
+    let seeds := split seed
+    drawProductRev split draw rest seeds.2 (draw field seeds.1 :: before)
+
+/-- Every accumulator preserves both field order and the exact continuation seed. -/
+theorem drawProductRev_acc (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    drawProductRev split draw fields seed before =
+      (before.reverse ++ (drawProduct split draw fields seed).1,
+        (drawProduct split draw fields seed).2) := by
+  induction fields generalizing seed before with
+  | nil => simp [drawProductRev, drawProduct]
+  | cons field rest ih =>
+    simp [drawProductRev, drawProduct, ih, List.reverse_cons, List.append_assoc]
+
+/-- Empty accumulation implements the original split schedule exactly. -/
+theorem drawProductRev_eq (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) :
+    drawProductRev split draw fields seed [] = drawProduct split draw fields seed := by
+  simp [drawProductRev_acc]
+
+/-- Every admitted field contributes exactly one retained value, including width zero. -/
+theorem drawProduct_length (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) :
+    (drawProduct split draw fields seed).1.length = fields.length := by
+  induction fields generalizing seed with
+  | nil => rfl
+  | cons field rest ih => simp [drawProduct, ih]
+
+/-- Accumulation neither drops nor duplicates fields, irrespective of their values. -/
+theorem drawProductRev_length (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    (drawProductRev split draw fields seed before).1.length = before.length + fields.length := by
+  simp [drawProductRev_acc, drawProduct_length]
+
+/-- Suffix replay starts at the same seed even with a nonempty accumulator. -/
+theorem drawProductRev_seed (split : Seed → Seed × Seed) (draw : Field → Seed → Value)
+    (fields : List Field) (seed : Seed) (before : List Value) :
+    (drawProductRev split draw fields seed before).2 = (drawProduct split draw fields seed).2 := by
+  rw [drawProductRev_acc]
+
+/-- The report declaration and std/test delivery share one prepared execution.
+Delivery cannot alter the declaration's generator, dependent tree or replay seed;
+faithful hygienic macro expansion and host delivery remain explicit premises. -/
+def deliverDeclaration (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) : Except Cause Output :=
+  (prepare config).bind deliver
+
+/-- Preparation failures skip assertion/diagnostic delivery and keep exact causes. -/
+theorem deliverDeclaration_refused (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) (cause : Cause)
+    (refused : prepare config = .error cause) :
+    deliverDeclaration prepare deliver config = .error cause := by
+  simp [deliverDeclaration, refused, Except.bind]
+
+/-- Successful shared preparation gives the existing boundary the same receipt. -/
+theorem deliverDeclaration_receipt (prepare : Config → Except Cause Report)
+    (deliver : Report → Except Cause Output) (config : Config) (report : Report)
+    (prepared : prepare config = .ok report) :
+    deliverDeclaration prepare deliver config = deliver report := by
+  simp [deliverDeclaration, prepared, Except.bind]
+
+/-- A finite dependent declaration keeps exactly the same candidate order and
+captured seed as explicit bind composition; no independent shrinking exists. -/
+theorem dependentCandidates_append (left right : List Parent)
+    (select : Parent → Nat → List Child) (seed : Nat) :
+    dependentCandidates (left ++ right) select seed =
+      dependentCandidates left select seed ++ dependentCandidates right select seed := by
+  simp [dependentCandidates]
+
+/-- Finite function tables reuse the ordered, guarded finite-result traversal.
+Each tuple is captured before the next row stage; immutable lists model faithful
+host shallow copying, not freezing payloads or hidden generator preimages. -/
+def prepareFunctionTable (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state : State) :
+    Except (Option Cause) (List (Input × List Output) × State) :=
+  match finiteSequenceParameters live invalid draw rows state with
+  | .error cause => .error cause
+  | .ok (tuples, next) => .ok (rows.zip tuples, next)
+
+/-- Empty directories perform no row draws; the outer generator still owns its
+separate explicit source admission. -/
+theorem prepareFunctionTable_empty (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State)) (state : State) :
+    prepareFunctionTable live invalid draw [] state = .ok ([], state) := rfl
+
+/-- A malformed/stale/throwing first row suppresses every subsequent draw. -/
+theorem prepareFunctionTable_head_refused (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state : State) (cause : Option Cause)
+    (refused : finiteShrinkStage live invalid draw row state = .error cause) :
+    prepareFunctionTable live invalid draw (row :: rest) state = .error cause := by
+  simp [prepareFunctionTable, finiteSequenceParameters, refused]
+
+/-- Later row state cannot replace the tuple already captured for the head. -/
+theorem prepareFunctionTable_head (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next final : State)
+    (tuple : List Output) (tail : List (List Output))
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .ok (tail, final)) :
+    prepareFunctionTable live invalid draw (row :: rest) state =
+      .ok ((row, tuple) :: rest.zip tail, final) := by
+  simp [prepareFunctionTable, finiteSequenceParameters, head, after]
+
+/-- An error in a later row publishes no partial table and keeps its exact cause. -/
+theorem prepareFunctionTable_tail_refused (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next : State) (tuple : List Output)
+    (cause : Option Cause)
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .error cause) :
+    prepareFunctionTable live invalid draw (row :: rest) state = .error cause := by
+  simp [prepareFunctionTable, finiteSequenceParameters, head, after]
+
+/-- First-row lookup retains its admitted tuple regardless of later state changes. -/
+theorem prepareFunctionTable_head_lookup [DecidableEq Input] (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (row : Input) (rest : List Input) (state next final : State)
+    (tuple : List Output) (tail : List (List Output))
+    (head : finiteShrinkStage live invalid draw row state = .ok (tuple, next))
+    (after : finiteSequenceParameters live invalid draw rest next = .ok (tail, final)) :
+    (prepareFunctionTable live invalid draw (row :: rest) state).map
+      (fun result => lookupFunction result.1 row) = .ok (some tuple) := by
+  rw [prepareFunctionTable_head live invalid draw row rest state next final tuple tail head after]
+  change (Except.ok (lookupFunction ((row, tuple) :: rest.zip tail) row) :
+    Except (Option Cause) (Option (List Output))) = .ok (some tuple)
+  simp [lookupFunction]
+
+/-- Successful generation supplies exactly one tuple per declared argument row. -/
+theorem prepareFunctionTable_length (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state final : State) (table : List (Input × List Output))
+    (accepted : prepareFunctionTable live invalid draw rows state = .ok (table, final)) :
+    table.length = rows.length := by
+  cases sequence : finiteSequenceParameters live invalid draw rows state with
+  | error cause => simp [prepareFunctionTable, sequence] at accepted
+  | ok result =>
+    rcases result with ⟨tuples, next⟩
+    simp only [prepareFunctionTable, sequence] at accepted
+    have same := finiteSequenceParameters_length live invalid draw rows state next tuples sequence
+    cases accepted
+    simp [List.length_zip, same]
+
+/-- Equal tuple/row widths keep every key in declaration order during assembly. -/
+theorem functionTable_zip_keys (rows : List Input) (tuples : List (List Output))
+    (same : tuples.length = rows.length) : (rows.zip tuples).map Prod.fst = rows := by
+  induction rows generalizing tuples with
+  | nil => cases tuples <;> simp_all
+  | cons row rest ih =>
+    cases tuples with
+    | nil => simp at same
+    | cons tuple tail =>
+      have widths : tail.length = rest.length := by simpa using same
+      simpa using congrArg (List.cons row) (ih tail widths)
+
+/-- Admitted tables preserve the complete finite input language, without fallback keys. -/
+theorem prepareFunctionTable_keys (live : State → Bool) (invalid : Cause)
+    (draw : Input → State → Except Cause (Option (List Output) × State))
+    (rows : List Input) (state final : State) (table : List (Input × List Output))
+    (accepted : prepareFunctionTable live invalid draw rows state = .ok (table, final)) :
+    table.map Prod.fst = rows := by
+  cases sequence : finiteSequenceParameters live invalid draw rows state with
+  | error cause => simp [prepareFunctionTable, sequence] at accepted
+  | ok result =>
+    rcases result with ⟨tuples, next⟩
+    simp only [prepareFunctionTable, sequence] at accepted
+    have same := finiteSequenceParameters_length live invalid draw rows state next tuples sequence
+    cases accepted
+    exact functionTable_zip_keys rows tuples same
+
+/-- Capture a normalized finite call row before the existing guarded source
+observation. Source actions may update the state holding the caller's row;
+lookup retains the captured row. Host copying is shallow and faithful. -/
+def callFunctionRequest [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) :
+    Except (Option Cause) (Result × State) :=
+  match request state with
+  | none => .error (some invalid)
+  | some row => guardedGeneration live (fun before =>
+      match observe before with
+      | .error cause => .error cause
+      | .ok (_, next) => match lookupFunction table row with
+        | none => .error unknown
+        | some result => .ok (result, next)) state
+
+/-- Malformed topology skips all source actions, even when they would throw. -/
+theorem callFunctionRequest_malformed [DecidableEq Argument] (invalid unknown : Cause)
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) :
+    callFunctionRequest invalid unknown (fun _ => none) live observe table state = .error (some invalid) := rfl
+
+/-- A well-shaped request still cannot bypass inherited or table retirement. -/
+theorem callFunctionRequest_stale [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) (stale : live state = false) :
+    callFunctionRequest invalid unknown (fun _ => some row) live observe table state = .error none := by
+  simp [callFunctionRequest, guardedGeneration, stale]
+
+/-- Source callback exceptions retain their original cause, including false. -/
+theorem callFunctionRequest_cause [DecidableEq Argument] (invalid unknown cause : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state : State) (before : live state = true) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .error cause) table state =
+      .error (some cause) := by simp [callFunctionRequest, guardedGeneration, before]
+
+/-- Retirement refuses normal publication; lookup itself has no callback effects. -/
+theorem callFunctionRequest_revised [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state next : State) (value : Result) (before : live state = true) (after : live next = false)
+    (found : lookupFunction table row = some value) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .ok ((), next)) table state =
+      .error none := by simp [callFunctionRequest, guardedGeneration, before, after, found]
+
+/-- Lookup uses the initial captured row even if the observer changes its source. -/
+theorem callFunctionRequest_captured [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (row : List Argument) (live : State → Bool)
+    (table : List (List Argument × Result)) (value : Result) (state next : State)
+    (captured : request state = some row) (before : live state = true) (after : live next = true)
+    (found : lookupFunction table row = some value) :
+    callFunctionRequest invalid unknown request live (fun _ => .ok ((), next)) table state = .ok (value, next) := by
+  simp [callFunctionRequest, captured, guardedGeneration, before, after, found]
+
+/-- Retargeting cannot turn an unknown captured row into an admitted table entry. -/
+theorem callFunctionRequest_unknown [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state next : State) (before : live state = true)
+    (absent : lookupFunction table row = none) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .ok ((), next)) table state =
+      .error (some unknown) := by simp [callFunctionRequest, guardedGeneration, before, absent]
+
+/-- Already owned procedure rows reuse exactly the same lookup and source action.
+No raw keyword decoding, sorting or second row normalization is introduced. -/
+theorem callFunctionRequest_owned [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (row : List Argument) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (table : List (List Argument × Result))
+    (state : State) (captured : request state = some row) :
+    callFunctionRequest invalid unknown request live observe table state =
+      callFunctionRequest invalid unknown (fun _ => some row) live observe table state := by
+  simp only [callFunctionRequest, captured]
+
+/-- Capture a finite neighborhood's shape and topology before returning observers,
+then preserve the existing source/exception priority before reporting bad shape.
+The raw shrinker has returned; its invocation and original exceptions belong to
+the existing outer source gate. Host normalization/shallow-copy fidelity remain
+premises, and arbitrary payload identity/effects are not deep-frozen. -/
+def observeFiniteChildren (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State) :
+    Except (Option Cause) (List Value × State) :=
+  let owned := returned state
+  (guardedGeneration live observe state).bind (fun result =>
+    match owned with
+    | none => .error (some invalid)
+    | some row => .ok (row, result.2))
+
+/-- Bad shape refuses after a normally completed returning source check. -/
+theorem observeFiniteChildren_invalid (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (bad : returned state = none)
+    (before : live state = true) (after : live next = true) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .error (some invalid) := by
+  simp [observeFiniteChildren, bad, guardedGeneration_state live state next () before after, Except.bind]
+
+/-- Stale source priority remains even when the captured neighborhood is malformed. -/
+theorem observeFiniteChildren_stale (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (stale : live state = false) :
+    observeFiniteChildren invalid returned live observe state = .error none := by
+  simp [observeFiniteChildren, guardedGeneration_preflight live observe state stale, Except.bind]
+
+/-- Retiring the source while observing cannot publish any captured batch or turn
+retirement into a malformed-neighborhood error. -/
+theorem observeFiniteChildren_revised (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (before : live state = true) (after : live next = false) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .error none := by
+  simp [observeFiniteChildren, guardedGeneration_revised live state next () before after, Except.bind]
+
+/-- Original observer exceptions outrank bad shape and bypass trailing checks. -/
+theorem observeFiniteChildren_cause (invalid cause : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state : State) (before : live state = true) :
+    observeFiniteChildren invalid returned live (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeFiniteChildren, guardedGeneration_cause live state cause before, Except.bind]
+
+/-- Successful admission retains initial candidate order/multiplicity, regardless
+of how the returning observer changes the caller's later list spelling. -/
+theorem observeFiniteChildren_retained (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (row : List Value)
+    (captured : returned state = some row) (before : live state = true) (after : live next = true) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .ok (row, next) := by
+  simp [observeFiniteChildren, captured, guardedGeneration_state live state next () before after, Except.bind]
+
+/-- Capturing once is observationally identical to an immutable constant row. -/
+theorem observeFiniteChildren_snapshot (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (row : List Value) (captured : returned state = some row) :
+    observeFiniteChildren invalid returned live observe state =
+      observeFiniteChildren invalid (fun _ => some row) live observe state := by
+  simp only [observeFiniteChildren, captured]
+
+/-- Failed admission skips dependent candidate packing and property execution. -/
+theorem observeFiniteChildren_refused (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (consume : List Value × State → Except (Option Cause) Output) (cause : Option Cause)
+    (failed : observeFiniteChildren invalid returned live observe state = .error cause) :
+    (observeFiniteChildren invalid returned live observe state >>= consume) = .error cause := by
+  rw [failed]; rfl
+
+/-- Rebuild one data-list coordinate only after the existing finite capture/source
+boundary succeeds. Prefix and suffix denote the caller's already owned input row;
+only their spines are reconstructed, never arbitrary mutable payloads. -/
+def observeListCoordinate (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) : Except (Option Cause) (List (List Value) × State) :=
+  (observeFiniteChildren invalid returned live observe state).map
+    (fun result => (result.1.map (fun value => before ++ value :: after), result.2))
+
+/-- Any capture/observer refusal suppresses every rebuilt coordinate candidate. -/
+theorem observeListCoordinate_refused (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) (cause : Option Cause)
+    (failed : observeFiniteChildren invalid returned live observe state = .error cause) :
+    observeListCoordinate invalid returned live observe before after state = .error cause := by
+  simp [observeListCoordinate, failed, Except.map]
+
+/-- Original order, duplicates and false payloads reach exactly one ordered map. -/
+theorem observeListCoordinate_retained (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after row : List Value) (state next : State)
+    (captured : returned state = some row) (fresh : live state = true) (later : live next = true) :
+    observeListCoordinate invalid returned live (fun _ => .ok ((), next)) before after state =
+      .ok (row.map (fun value => before ++ value :: after), next) := by
+  simp [observeListCoordinate, observeFiniteChildren_retained invalid returned live state next row
+    captured fresh later, Except.map]
+
+/-- Coordinate reconstruction emits exactly one result for each captured proposal;
+this is a cardinality bound, not permission to skip the runner's attempt counter. -/
+theorem listCoordinate_count (before after row : List Value) :
+    (row.map (fun value => before ++ value :: after)).length = row.length := by simp
+
+/-- Every rebuilt candidate retains the complete fixed prefix and suffix width. -/
+theorem listCoordinate_width (before after row candidate : List Value)
+    (member : candidate ∈ row.map (fun value => before ++ value :: after)) :
+    candidate.length = before.length + 1 + after.length := by
+  obtain ⟨value, _, same⟩ := List.mem_map.mp member
+  subst candidate
+  simp [List.length_append, Nat.add_comm, Nat.add_left_comm]
+
+/-- A returning observer cannot repair the original malformed-row decision or
+replace an original successful row by changing its later source spelling. -/
+theorem observeListCoordinate_snapshot (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (before after : List Value) (state : State) :
+    observeListCoordinate invalid returned live observe before after state =
+      observeListCoordinate invalid (fun _ => returned state) live observe before after state := by
+  simp only [observeListCoordinate, observeFiniteChildren]
+
+/-- An original observer cause outranks any stored contract refusal. -/
+theorem observeListCoordinate_cause (invalid cause : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after : List Value) (state : State) (fresh : live state = true) :
+    observeListCoordinate invalid returned live (fun _ => .error cause) before after state =
+      .error (some cause) := by
+  exact observeListCoordinate_refused invalid returned live _ before after state (some cause)
+    (observeFiniteChildren_cause invalid cause returned live state fresh)
+
+/-- A legal empty neighborhood performs no candidate reconstruction. -/
+theorem observeListCoordinate_empty (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (before after : List Value) (state next : State)
+    (captured : returned state = some []) (fresh : live state = true) (later : live next = true) :
+    observeListCoordinate invalid returned live (fun _ => .ok ((), next)) before after state =
+      .ok ([], next) := by
+  simpa using observeListCoordinate_retained invalid returned live before after [] state next captured fresh later
+
+end LeanPoo.Functional.PropertyTesting

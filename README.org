@@ -1,121 +1,75 @@
 #+TITLE: LeanPoo
+#+OPTIONS: toc:2
 
 LeanPoo is a Lean 4 library for prototype-oriented object composition and
-incremental proof reuse. It implements the functional prototype construction
-described in [[https://github.com/metareflection/poof][POOF]] with Lean's types, functions, and thunks. Its C4
-linearization follows [[https://github.com/fare/c4-mixins][C4-Mixins]]. [[https://github.com/tao3k/gerbil-poo][Gerbil-POO]] informs the object-level design.
+incremental proof reuse. Applications supply typed fields, operations and
+obligations; the library composes their implementations and evidence.
 
-The reviewed Lean-native constructive path is implemented and checked, including
-Order/BST/AVL, source/Lean differential checks, C3 object composition, runtime
-descriptors and mutable hash slots. [[file:docs/contracts/recursive-objects.org][Safe recursive objects]] have sound/complete
-operational evaluation and divergence theorems.
-[[file:docs/contracts/shared-thunks.org][Checked shared thunks]] connect native execution of explicit recursive interactions
-to exact-program evaluation receipts and the existing C3 field/method observers.
-The existing ~sharedFix~ and its primitive model execute one shared constructor
-program; checked operation logs refine the shared-cell protocol.
-[[file:docs/contracts/c3-graph.org][C3 cache coherence]] proves complete cached/reference results for every finite
-graph and root list, including exact cyclic and validation failures.
-The [[file:docs/audits/poof/README.org][whole-paper audit]] records the precise typed scope. Whole-paper operational
-correspondence and unrestricted dynamic automation are not established.
+The construction model follows [[https://github.com/metareflection/poof][POOF]] and
+[[https://github.com/tao3k/gerbil-poo][Gerbil-POO]], with C4 resolution from
+[[https://github.com/fare/c4-mixins][C4-Mixins]]. The
+[[file:docs/audits/poof/README.org][paper audit]] distinguishes implemented typed
+contracts from remaining research.
 
-The library is domain-neutral: applications supply their own typed keys,
-values, obligations, and dependency graph. It does not define a policy
-language or a domain-specific proof system.
+* Architecture
 
-* What it provides
+| Layer | Responsibility | Start here |
+|-------+----------------+------------|
+| =LeanPoo.Prototype= | Open-recursive construction, delayed instances, descriptors and mutable slots. | [[file:docs/prototype-mvp.org][Prototype model]] |
+| =LeanPoo.C4= and =LeanPoo.Object= | Inheritance order, typed fields and methods, lazy reads, persistent revisions and dependency-aware reuse. | [[file:Examples/ObjectDefinition.lean][Typed object definition]] |
+| =LeanPoo.Functional= | Context-indexed factories, capability selection, Contracts, certified consumers and shared preparation. | [[file:Examples/FunctionalPipeline.lean][Functional pipeline]] |
+| =LeanPoo.Proof= | Proof objects, obligations, patches, invalidation and certificate closure. | [[file:Examples/ProofReuse.lean][Proof reuse]] |
+| =LeanPoo.Deriving= | Typed dictionary conversion with kernel-checked inverse laws. | [[file:docs/contracts/dictionary-classes.org][Dictionary contracts]] |
+| =LeanPoo.Object.Debug= | Bounded read tracing and recursive-read diagnostics. | [[file:Examples/DebugTrace.lean][Read tracing]] |
 
-| Layer | Public capability |
-|-------+-------------------|
-| ~LeanPoo.Prototype~ | Open-recursive prototypes, safe recursive observations, ordered composition, delayed instances, first-class descriptors, mutable slots and classes. |
-| ~LeanPoo.C4~ and ~LeanPoo.Object~ | Typed object definitions, explicit C3/C4 precedence, inheritance, override, mix, clone, lazy reads, persistent revisions, and checked incremental value and thunk reuse for finite dependencies. |
-| ~LeanPoo.Proof~ | Proof objects, patches, obligations, dependency-based invalidation, certificate reuse, and closure. |
-| ~LeanPoo.Functional~ | Context-indexed factories, positive and negative requirements, certified consumers, immutable registry transactions, verified graph migration, inferred pure dependencies, computed cache revisions and witness transformations. |
-| ~LeanPoo.Deriving~ | Automatic typed class/structure dictionary conversion with kernel inverse proofs and adapters for prototypes, descriptors and consumer caches. |
-| ~LeanPoo.Object.Debug~ | Public bounded read tracing and recursive-read diagnostics for object development. |
+The usual flow is to declare typed operations, compose their owners, prepare
+the selected capabilities, then consume the result at the current input.
+Revisions retain only evidence whose declared dependencies still hold.
+[[file:docs/usage.org][API usage]] gives the public entrypoints;
+[[file:docs/reusable-contracts.org][reusable contracts]] helps choose the appropriate abstraction.
 
-Lean's type system expresses slot families and composition boundaries. The
-general open-recursive fixed point is executable and may diverge; the debug
-API bounds reads made through that API, while the example runner adds process
-time and memory limits. The [[file:docs/replication.org][implementation assessment]] records the precise scope and
-runtime boundary.
+Shared C4 preparation belongs to an immutable graph owner; prepared consumers
+and context caches belong to their declared input lifetime. Their refinement
+laws preserve reference results and errors. Their first-use and retention costs
+remain part of application performance; see [[file:Benchmarks/README.org][benchmarks]].
 
-* Get started
+* Repository organization
 
-Install the Lean toolchain named in [[file:lean-toolchain][lean-toolchain]]. Build the library with
-~lake build~. The full project check uses ~just~, ~zsh~, Emacs for Org parsing,
-Python 3, and a ~timeout~ command. The complete local gate checks independent
-Lean files with automatically bounded workers after the public library build;
-[[file:docs/check-performance.org][check performance]] records the host-dependent worker limits:
+| Path | Contents |
+|------+----------|
+| =LeanPoo/= | Public library and its proof implementations. |
+| [[file:Examples/README.org][Examples/]] | Executable usage scenarios, grouped by capability. |
+| [[file:Tests/README.org][Tests/]] | Behavioral contracts, negative controls and proof checks. |
+| [[file:Benchmarks/README.org][Benchmarks/]] | Native algorithm workloads and separately scoped workflow observations. |
+| =docs/= | API guides, design contracts, reference studies and audits. |
+| =tools/= | Development and verification tooling. |
+
+* Build and verify
+
+Install the toolchain named in [[file:lean-toolchain][lean-toolchain]].
 
 #+begin_src sh
 lake build
 just check
 #+end_src
 
-The smaller Justfile targets include ~check-c4~, ~check-object~,
-~check-proof~, ~check-debug~, and ~check-docs~. Use ~just check-incremental true~
-or ~just check-debug true~ to print semantic diagnostics only when needed.
-Run ~just --list~ for the full command list. [[file:Examples/LayeredObject.lean][LayeredObject.lean]] shows C4
-composition, lazy reads, cloning, and revision. [[file:Examples/MethodDictionary.lean][MethodDictionary.lean]] shows an inherited formatter with dynamic and
-caller-selected method calls. [[file:Examples/LiveRevision.lean][LiveRevision.lean]] shows a live object's old and new snapshots.
-[[file:Examples/ObjectDefinition.lean][ObjectDefinition.lean]] shows typed object definitions, C4 parent orders, and an inherited method call.
-[[file:Examples/NestedObjectDefinition.lean][NestedObjectDefinition.lean]] composes an object-valued slot with an explicit error result.
-[[file:Examples/DebugTrace.lean][DebugTrace.lean]] shows the public tracing API on productive and recursive reads.
-[[file:Examples/ProofReuse.lean][ProofReuse.lean]] carries a certificate across an unrelated override, and
-[[file:Examples/ExtensibleDispatch.lean][ExtensibleDispatch.lean]] adds plugin methods selected by two C4 lineages.
-[[file:Examples/QualifiedCombination.lean][QualifiedCombination.lean]] defines a custom typed method combination over those dispatch
-shapes.
-[[file:Examples/BoundedDispatch.lean][BoundedDispatch.lean]] shows the eight-shape LRU cache under dynamic dispatch.
-[[file:Examples/DictionaryRecords.lean][DictionaryRecords.lean]] introduces AVL and delayed self/super records.
-[[file:Examples/MutableState.lean][MutableState.lean]] shows failure retention and linear recovery.
-[[file:Examples/FunctionalPipeline.lean][FunctionalPipeline.lean]] composes providers and prepares a reusable consumer.
-[[file:Examples/ValidationWorkflow.lean][ValidationWorkflow.lean]] composes bounded validation policies and ordered reports.
-[[file:Examples/ValidatedConfiguration.lean][ValidatedConfiguration.lean]] combines nested constraints and two proved wire layouts.
-[[file:Examples/IncrementalWorkflow.lean][IncrementalWorkflow.lean]] migrates validated workload caches through extensions and refusals.
-[[file:Examples/SharedReporting.lean][SharedReporting.lean]] bills and monitors one snapshot, then replaces its billing representation with a proved public cache transfer.
-[[file:Examples/DictionaryConsumers.lean][DictionaryConsumers.lean]] composes inherited price dictionaries and calls their methods from a converted cache with quota proofs.
-[[file:Examples/ValidatedOrders.lean][ValidatedOrders.lean]] joins price/stock certificates and checks request inputs and producer outputs around one dependency read.
-[[file:Examples/ResumableRequests.lean][ResumableRequests.lean]] resumes failed workload batches with matching pure, mutable and linear cache states.
-[[file:Examples/FocusedPricing.lean][FocusedPricing.lean]] composes nested pricing fragments and resumes admitted updates with complete supported-quantity bounds.
-[[file:Examples/FocusedAllocation.lean][FocusedAllocation.lean]] updates a budget-indexed allocation and its proof while preserving ledger metadata.
-[[file:Examples/DispatchWorkflow.lean][DispatchWorkflow.lean]] combines checked logistics dispatch, method phases, warm guarded candidates and retained ledger state.
-[[file:Examples/RecoverableDispatch.lean][RecoverableDispatch.lean]] runs fallback methods on actual failed progress and continues after checked refusal.
-[[file:Examples/RecursiveDispatchWorkflow.lean][RecursiveDispatchWorkflow.lean]] composes safe recursive billing with guarded multi-argument dispatch, current descriptor admission, recovery and retained method state.
-[[file:Examples/RecursiveBilling.lean][RecursiveBilling.lean]] shares C3 recursive pricing subrequests and resumes retained completed results under current descriptors.
-[[file:Examples/RecursiveCatalog.lean][RecursiveCatalog.lean]] revalidates recursive configuration schemas and nested function identities before publishing a shared result.
-[[file:Examples/ConfigurationUpgrade.lean][ConfigurationUpgrade.lean]] migrates reflective runtime configurations through explicit field maps and target defaults.
-[[file:Examples/AtomicConfiguration.lean][AtomicConfiguration.lean]] stages checked field updates with group rollback, atomic publication and continuation.
-[[file:Examples/LayeredRouting.lean][LayeredRouting.lean]] combines ordered AVL layers, prepared routing factories and a cached joint allowance proof.
-[[file:Examples/KeyedRebalance.lean][KeyedRebalance.lean]] transfers quantities across runtime keys with conservation, untouched-key and exact refusal-state proofs.
-[[file:Examples/ClosedDeployment.lean][ClosedDeployment.lean]] automatically closes checked C3 scheduling/reporting factories with final-self dependencies and retained context proofs.
-[[file:Examples/PolicyDispatch.lean][PolicyDispatch.lean]] combines pricing fragments with sums, ordered collection, extrema and short-circuit approval.
-[[file:Examples/JointPublication.lean][JointPublication.lean]] jointly publishes closed C3 factories and protected pricing extensions with exact-version admission and refusal retention.
-[[file:Examples/ProtectedDispatch.lean][ProtectedDispatch.lean]] protects multi-argument extension assumptions through stateful method combination, warm calls and refused publication.
-[[file:Examples/MetadataDeployment.lean][MetadataDeployment.lean]] applies checked C3 metadata to scheduling factories with noncommuting parent wrappers, typed bounds and a retained context cache.
-[[file:Examples/IntrospectiveExport.lean][IntrospectiveExport.lean]] prepares runtime heterogeneous declarations, builds a narrow record and generates inspection from the same key list.
-[[file:Examples/PreparedViews.lean][PreparedViews.lean]] shares a prepared family across named and narrow consumers.
-[[file:Examples/CertifiedContextCache.lean][CertifiedContextCache.lean]] shares certified dependencies across equal base contexts.
-Focused behavioral contracts are in [[file:Tests/README.org][Tests]], and performance programs are in
-[[file:Benchmarks/README.org][Benchmarks]].
+=lake build= builds the library. The complete =just check= gate also requires
+Just, zsh, Python 3, Pandoc and a =timeout= command. Documentation uses Pandoc's
+Org reader; source blocks are not executed. =just --list= lists focused checks
+and native benchmark recipes. [[file:docs/check-performance.org][Check performance]]
+explains worker limits and the distinction between local checks and CI.
 
-* Documentation
+* Reading paths
 
-- [[file:docs/usage.org][API usage]] maps constructors and operations to executable examples.
-- [[file:docs/reusable-contracts.org][Reusable API contracts]] indexes capability modules for verified compilation,
-  typed factories, proof reuse and retained consumer caches.
-- [[file:docs/contracts/dictionary-classes.org][Dictionary/class compilation]] generates dependent field representations and preserves prototype composition, validation and consumer proofs.
-- [[file:docs/use-cases/navier-stokes-euler.org][Euler budget factory study]] identifies actual upstream interfaces and
-  the evidence required to establish code reduction.
-- [[file:docs/prototype-mvp.org][Prototype MVP]], [[file:docs/prototype-computation.org][delayed computation]], and [[file:docs/first-class-object.org][first-class objects]] explain the
-  paper-model construction.
-- [[file:docs/replication.org][Implementation assessment]] states the Lean-native coverage and limits.
-- [[file:docs/audits/poof/README.org][Whole-paper POOF audit]] records the original source pin, chapter coverage and concrete closure gaps.
-- [[file:docs/audits/poof/functional.org][Functional paper questions]] maps the paper's design problems to Functional APIs, kernel evidence and remaining research.
-- [[file:docs/reference-study.org][Reference study]] maps the upstream sources to this implementation.
+- *Using the library:* [[file:docs/usage.org][API usage]] → [[file:Examples/README.org][examples]] → [[file:docs/reusable-contracts.org][contract index]].
+- *Understanding the model:* [[file:docs/prototype-computation.org][delayed computation]] → [[file:docs/first-class-object.org][first-class objects]] → [[file:docs/replication.org][implementation assessment]].
+- *Studying extensions:* [[file:docs/contracts/generalized-prototypes.org][generalized prototypes]], [[file:docs/contracts/dataflow-objects.org][materialized field objects]] and the [[file:docs/audits/poof/functional.org][Functional paper audit]]. Related workflows and their individual contracts are indexed in Examples.
+- *Evaluating performance:* [[file:Benchmarks/README.org][benchmark workloads and evidence boundaries]]. Focused algorithm gains do not establish whole-process latency or RSS improvements.
 
-Documentation is maintained in Org. [[file:Examples/README.org][Examples]] contains user-facing usage scenarios;
-~Tests/~ contains assertions; ~Benchmarks/~ contains measurements; the library
-modules live in ~LeanPoo/~.
+Kernel proofs establish the stated model laws. Native execution of unrestricted
+open recursion may diverge; bounded diagnostics and process supervision apply
+to their own entrypoints. Application authority, deployment effects and external
+implementation refinement remain consumer responsibilities.
 
 * Credits
 
@@ -136,26 +90,10 @@ implementation.
 This repository's [[file:LICENSE][LICENSE]] is Apache License 2.0. The Lean translations
 retain attribution to Faré and the applicable upstream license notices.
 
-* Certified witness transformations
+* Release scope
 
-=LeanPoo.Functional.Transformation= exports input-indexed =Problem= and
-=CertifiedTransformation=, identity, ordered composition, soundness, and
-forward/extraction associativity. =LeanPoo.Proof.Transformation= checks a
-concrete two-step transport. Runtime source authority, codec refinement,
-resource authorization, and publication remain consumer obligations.
-
-=LeanPoo.Functional.TransformationProfiles= adds separate certified laws for
-bidirectional decision reductions, successful partial transport, and optimality
-transport. An unavailable partial result is =none=; a witness proof alone cannot
-construct a decision equivalence or optimality reduction.
-
-=LeanPoo.Functional.TransformationResources= composes affine output-size and
-cost bounds at the actual intermediate input. =CertifiedResourceTransformation=
-requires bounds on the declared implementation's measured size and cost.
-=CertifiedEffectTransformation= composes the actual forward and reverse effect
-traces, retaining authorization at each state transition. These are generic
-proof interfaces: native consumers supply implementation refinement, measurements,
-authority and publication. The modules do not infer CPU complexity or permission
-from an unverified declaration.
-
-[[file:Examples/ReceiptWorkflow.lean][ReceiptWorkflow.lean]] re-admits completed recursive answers under current descriptors for around-method shortcuts, preserving their source proof without recursive reads.
+Version 0.1.2 includes finite generator, dependency-shrinking and replay laws,
+with executable Gerbil counterparts in the companion project. Generalized MOP
+constructions advance the original future-work direction. See the
+[[file:docs/pbt/architecture.md][abstraction and release review]] for explicit
+premises; these proofs do not verify arbitrary callbacks, GC or compiler code.

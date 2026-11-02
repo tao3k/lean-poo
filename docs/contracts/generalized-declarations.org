@@ -1,0 +1,40 @@
+#+TITLE: Generic lens fragments and non-record declarations
+
+* Racket, Lean and Gerbil construction
+
+Appendix B's ~$lens-gen~ packages getter/setter/wrapper/method and keeps raw
+construction separate from cooked self. This future-work extension uses that
+existing generalized compiler with ordinary extensible fragment descriptors and
+a declaration macro. It has no closed enumeration of supported raw carriers.
+
+~Generalized.Fragment~ existentially packages each descriptor's Focus and Method
+types. ~compile_eq~ proves exact lens construction; ~compile_frame~ and
+~fragments_frame~ prove preservation of an explicit frame condition for the actual
+fragment list. No arbitrary lens law is silently assumed or discovered.
+
+* Shared declarations
+
+The existing ~DeclarativeMetadata.expandForms~ now abstracts its entry type.
+Record and generalized consumers reuse the same ordered Reader expansion.
+~elaborateFragments_source~ binds complete admitted descriptors to expansion and
+finalization at the SAME current context. Native ~.prototype~ and ~.declare~ share
+~declaration-forms~, including static names and computed splicing.
+
+Native preparation admits labels/descriptors, captures versions and compiles
+without running wrappers or method bodies. Observation/cooking use existing
+finite self unfolding under supported-source guards. External callback metadata,
+including mutable components captured by composed lenses, needs explicit sources.
+Pure locally total callbacks and immutable inputs are correspondence premises.
+
+* Examples and scope
+
+[[file:../../Examples/DeclaredPrototypes.lean][Declared prototype examples]] prove heterogeneous nested-product construction,
+existing standard methods, seed-independent triangular charge after three stages
+and a function carrier using the identical protocol. Native counterparts execute
+nested vectors with persistent setters, audit preservation, callable cooking,
+source revisions, laziness and nonlocal multi-output expansion.
+
+Finite observations and the specific triangular observation law do not establish
+an arbitrary raw fixed point, function-identity equality, universal custom lens
+correctness, callback termination or Scheme compiler/runtime correctness.
+No performance claim or new benchmark data accompanies this functional tranche.

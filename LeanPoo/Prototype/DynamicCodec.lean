@@ -1,4 +1,4 @@
-import Lean
+import Lean.Data.Json
 import LeanPoo.Prototype.DynamicDescriptorSemantics
 
 /-! Strict structural JSON for dynamic values and descriptor-owned admission.

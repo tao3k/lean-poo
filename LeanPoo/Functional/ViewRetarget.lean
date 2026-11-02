@@ -51,7 +51,7 @@ def ContextSlot.retargetView (slot : ContextSlot ready) (keys : List Key)
     (congrArg Certified.factories (ready.replaceView_public keys included expose reveal Public derive candidate compatible))
 
 omit [DecidableEq Key] in
-theorem ContextSlot.rebind_read_reused [DecidableEq Context]
+theorem ContextSlot.rebind_read_reused [BEq Context] [LawfulBEq Context]
     {keys : List Key} {Public : ∀ c, Results Observed c keys → Prop}
     {left : Certified keys Public} (slot : ContextSlot left) (right : Certified keys Public)
     (same : left.factories = right.factories) (context : Context) :
@@ -60,7 +60,7 @@ theorem ContextSlot.rebind_read_reused [DecidableEq Context]
   subst right
   simp [ContextSlot.rebind]
 
-theorem ContextSlot.observeProject_read_reused [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.observeProject_read_reused [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (keys : List Key) (included : ∀ key ∈ keys, key ∈ source) (expose : ∀ c key, Value c key → Observed c key)
     (Public) (derive) (context : Context) :
     ((slot.observeProject keys included expose Public derive).read context).2.2 = (slot.read context).2.2 := by
@@ -72,7 +72,7 @@ theorem ContextSlot.observeProject_read_reused [DecidableEq Context] (slot : Con
       simp [ContextSlot.observeProject, ContextSlot.read, stored, same]
 
 /-- Retargeting preserves the exact hit decision at every context. -/
-theorem ContextSlot.retargetView_reused [DecidableEq Context] (slot : ContextSlot ready) (keys : List Key)
+theorem ContextSlot.retargetView_reused [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready) (keys : List Key)
     (included : ∀ key ∈ keys, key ∈ source) (expose : ∀ c key, Value c key → Observed c key)
     (reveal : ∀ c key, Other c key → Observed c key) (Public) (derive)
     (candidate : Factories Context Other keys) (compatible) (context : Context) :
@@ -83,7 +83,7 @@ theorem ContextSlot.retargetView_reused [DecidableEq Context] (slot : ContextSlo
   exact slot.observeProject_read_reused keys included expose Public derive context
 
 /-- Every proof-aware public consumer retains its output at every context. -/
-theorem ContextSlot.retargetView_consume [DecidableEq Context] (slot : ContextSlot ready) (keys : List Key)
+theorem ContextSlot.retargetView_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready) (keys : List Key)
     (included : ∀ key ∈ keys, key ∈ source) (expose : ∀ c key, Value c key → Observed c key)
     (reveal : ∀ c key, Other c key → Observed c key) (Public) (derive)
     (candidate : Factories Context Other keys) (compatible) {Output : Context → Type z}

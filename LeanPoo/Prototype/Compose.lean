@@ -103,6 +103,69 @@ def Chain.ofList (prototypes : List (Proto Self α α)) : Chain Self α α :=
 def composeAll (prototypes : List (Proto Self α α)) : Proto Self α α :=
   (Chain.ofList prototypes).toProto
 
+/-- The empty prototype list contributes no change to the inherited value. -/
+theorem composeAll_nil : composeAll ([] : List (Proto Self α α)) = identity := rfl
+
+/-- Head and suffix share the same final self, with the suffix evaluated first. -/
+theorem composeAll_cons (head : Proto Self α α) (tail) :
+    composeAll (head :: tail) = compose head (composeAll tail) := rfl
+
+/-- A finite model of standard reduce-right's nonempty reduction. None denotes
+an empty list; a singleton is retained without an identity composition wrapper.
+This models the host operation, rather than certifying its implementation. -/
+def reducePrototypes (prototypes : List (Proto Self α α)) : Option (Proto Self α α) :=
+  prototypes.foldr (fun head tail => some (tail.elim head (compose head))) none
+
+/-- Empty reduction has no supplied prototype. -/
+theorem reducePrototypes_nil : reducePrototypes ([] : List (Proto Self α α)) = none := rfl
+
+/-- The right reduction assembles a suffix before composing its head. -/
+theorem reducePrototypes_cons (head : Proto Self α α) (tail) :
+    reducePrototypes (head :: tail) =
+      some ((reducePrototypes tail).elim head (compose head)) := rfl
+
+/-- Apply the existing identity only when the standard reduction was empty. -/
+def composeReduced (prototypes : List (Proto Self α α)) : Proto Self α α :=
+  (reducePrototypes prototypes).getD identity
+
+/-- The nonempty right reduction preserves a singleton extension directly. -/
+theorem composeReduced_singleton (head : Proto Self α α) : composeReduced [head] = head := rfl
+
+/-- Nonempty reduction has the same composition equation as the typed chain. -/
+theorem composeReduced_cons (head : Proto Self α α) (tail) :
+    composeReduced (head :: tail) = compose head (composeReduced tail) := by
+  unfold composeReduced
+  rw [reducePrototypes_cons]
+  cases reducePrototypes tail <;> simp [compose_identity_right]
+
+/-- Standard right reduction and the existing prototype interpreter agree on
+every finite typed list, including its empty and singleton cases. -/
+theorem composeReduced_eq (prototypes : List (Proto Self α α)) :
+    composeReduced prototypes = composeAll prototypes := by
+  induction prototypes with
+  | nil => rfl
+  | cons head tail ih => rw [composeReduced_cons, ih, composeAll_cons]
+
+/-- Independently assembled batches compose in their original precedence order. -/
+theorem composeReduced_append (front back : List (Proto Self α α)) :
+    composeReduced (front ++ back) = compose (composeReduced front) (composeReduced back) := by
+  induction front with
+  | nil => simp [composeReduced, reducePrototypes, compose_identity_left]
+  | cons head tail ih => simp only [List.cons_append, composeReduced_cons, ih, compose_assoc]
+
+/-- A previously captured head composes with the suffix selected for this call.
+The suffix list is supplied explicitly: host cell mutation and capture timing are
+regression obligations, not consequences of this pure finite-list theorem. -/
+theorem compose_captured_suffix (head : Proto Self α α) (currentSuffix) :
+    compose head (composeReduced currentSuffix) = composeAll (head :: currentSuffix) := by
+  rw [composeReduced_eq, composeAll_cons]
+
+/-- Every layer sees the same final self; the inherited result flows inward out. -/
+theorem composeReduced_apply_cons (head : Proto Self α α) (tail) (self : Self) (base : α) :
+    composeReduced (head :: tail) self base = head self (composeReduced tail self base) := by
+  rw [composeReduced_cons]
+  rfl
+
 /-- A function instance with a runtime representation distinct from a bare
 function. The anchor prevents Lean from erasing the wrapper and eta-expanding
 prototype construction into every call. -/

@@ -1,0 +1,103 @@
+#+TITLE: Multi-level generalized dependencies — research extension
+
+[[file:generalized-dependencies.org][Directional dependencies]] · [[file:generalized-prototypes.org][Generalized protocol]]
+
+* Research boundary
+
+This advances the future-work proposal at source lines 1807–1827 and 2098–2154:
+generalized prototypes, method combination, explicit logical metadata, staging
+and cache invalidation. It does not reclassify those proposals as missing original
+concrete constructions. The audit keeps ~future_proposal~ and
+~whole_paper_implemented=false~.
+
+* Typed finite chains
+
+~DependencyChain~ is an inductive finite chain. A stage declares its protocol
+family, ordered fragments, base, selected cooked view and remaining chain.
+Storage, cooked interface, fragments and selected dependency types can differ
+between stages. Only dependency values compared by automatic refresh require
+~DecidableEq~; full interfaces can contain functions.
+
+~Publication~ carries a ~Closed~ witness for each stage. The type of the suffix
+uses exactly ~select head.interface~. ~publish~ sequences supplied builders at
+those indices. Builders return existing kernel-checked closure evidence; the
+chain neither invents a fixed-point evaluator nor infers a dependency graph.
+
+~refresh~ reuses ~Closed.refreshDependency~ at each edge. An unchanged selected
+view retains its raw closure and complete cooked interface. A changed view
+requires new closure evidence, after which the next selected view is checked.
+Invalidation can therefore stop after a rebuilt stage whose outgoing view did
+not change. A changed whole interface alone does not imply a changed suffix.
+
+~Refresh~ is recursively typed by the original publication and new dependency.
+It retains the underlying ~DependencyRefresh~ receipt at every stage; ~reused~
+merely exposes their Boolean markers. ~interfaces_same~ proves that a reused
+suffix retains every complete local interface, including captured methods.
+
+During refresh the chain shape, ordered fragments, bases, family functions and
+selectors are fixed. Reusing a receipt across a changed configuration needs
+separate equality or fresh closure evidence. No automatic dependency discovery,
+cycles, arbitrary callback invalidation or termination inference is supplied.
+
+* Whole construction and refusal
+
+~DependentComponents.pair~ installs existing lawful product focuses and explicit
+cooking compatibility. ~closePair~ groups the two fragment streams and reuses
+~DependentComponents.close~. Its interface theorem recovers both exact local
+interfaces. Repeatedly treating a closed prefix as the next upstream component
+constructs a whole multi-level fixed point with the original delayed assembly,
+method compiler and lens operations.
+
+~refresh_head_error~ makes the result independent of every suffix builder after
+a head refusal. ~refresh_tail_error~ propagates suffix refusal exactly after an
+accepted head. ~refresh_same_head~ proves an unchanged input bypasses the head
+builder, including a refusing builder. No partial publication is returned by
+~Except.error~. The old immutable publication remains usable; this pure operation
+does not roll back external effects performed by a caller's builder.
+
+Construction sequencing and public method execution are distinct. Public
+~EStateM~ errors retain their executed ledger prefix. Storage grouping and exact
+representation transfer preserve the same complete result and ledger.
+
+* Four-level checkout
+
+[[file:../../Examples/ChainedCheckout.lean][ChainedCheckout]] combines pricing → shipping → insurance → settlement permit.
+The tariff client in ~GeneralizedTariff~ is shared with the earlier two-component
+example; it retains the existing standard method combination and witnessed
+closure at depth two. Each edge selects a different integer tariff band.
+
+| External adjustment | Component tariffs | Reuse markers in order |
+|---------------------+-------------------+------------------------|
+|                   0 | 6, 3, 4, 3        | true, true, true, true |
+|                   2 | 8, 3, 4, 3        | false, true, true, true |
+|                   4 | 10, 4, 4, 3       | false, false, true, true |
+|                  14 | 20, 6, 5, 3       | false, false, false, true |
+|                  29 | 35, 9, 6, 4       | false, false, false, false |
+
+The table compares revisions against adjustment zero. Refusing insurance and
+permit builders are bypassed in the adjustment-four revision. A changed-view
+refusal leaves the original complete service usable. Kernel clients prove the
+assembled whole fixed point, its exact interface and retained permit outcomes
+for arbitrary quantities and initial ledgers.
+
+* Independent controls
+
+[[file:../../Tests/GeneralizedChain.lean][GeneralizedChain]] compares all 36 pairs from six external adjustments and all
+16 construction refusal masks: 576 revisions, comprising 160 accepted and 416
+refused. An independent arithmetic/control-flow model checks selected views,
+reuse flags, exact first refusal and old-publication behavior.
+
+Accepted revisions have 4800 complete value/error/ledger comparisons over five
+quantities, two initial ledgers and original/grouped/reassociated layouts.
+Negative quantities, shipping capacity and late permit refusal exercise distinct
+ledger prefixes. A different heterogeneous chain combines Nat and String storage,
+Nat interfaces, Unit and Bool fragments, and Int and Bool input dependencies.
+
+Another 420 complete observations inspect depths zero through six. The oracle
+uses each edge's previous raw approximation; methods capture the previous local
+rate. This distinguishes synchronous propagation from immediately substituting
+a newly computed upstream result. Those finite runs are controls; the ~Closed~
+witness supplies the fixed-point proof. The stale-edge theorem rejects any old
+tariff fixed point at a changed dependency, independently of its captured methods.
+
+[[file:generalized-fork.org][Shared-upstream forks and exact joins]] extends the same closure/refresh machinery to independent branches that reconverge.

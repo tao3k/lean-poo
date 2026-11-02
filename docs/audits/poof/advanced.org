@@ -162,3 +162,60 @@ arbitrary host closure properties or hidden cross-library assumptions.
 The [[file:../../contracts/alternative-combinations.org][alternative-combination contracts]] add eight reusable typed policies and universal ordered reference/failure-state proofs for source 2060–2083. Persistent append is not destructive nconc; empty extrema and last-result groups explicitly return none.
 
 The [[file:../../contracts/joint-publication.org][joint-publication contracts]] combine checked C3 factory closure and protected generic extension with an admission payload bound to both candidates. This is an explicit immutable application policy over existing constructions, rather than a new source-required generalized prototype protocol.
+
+* Research extension: initial unified protocol
+
+[[file:../../contracts/generalized-prototypes.org][Generalized protocols]] and its two complex clients advance the explicit future-work proposal at 1807–1827 and 2084–2154. Existing delayed inheritance, nested lenses, C3, standard/simple method groups and dictionary bridges now share one raw/cooked/fragment protocol. Assembly, frame, self-view, finite representation and witnessed-closure laws are proved. This remains a typed research extension: full reflective MOPs, arbitrary host effects, automatic type inference and staging are not claimed. The future-work review unit remains ~future_proposal~ and the original construction closure is unchanged.
+
+The [[file:../../contracts/generalized-components.org][component extension]] advances the same future proposal by mounting independently closed protocols through lawful nested focuses. Exact partition, finite projection, closure joining/projecting, independent regrouping and retained-left replacement laws reuse existing Focus and representation bridges. Regrouping changes construction layout only; it neither reorders public effects nor certifies an arbitrary new C3 topology.
+
+[[file:../../contracts/generalized-dependencies.org][Directional dependency protocols]] advance the same research unit. Shared storage partition is reused independently of cooking compatibility. Downstream closure is indexed by a selected upstream view; same-view reuse is proof-bearing and changed views require fresh evidence. The finite recurrence explicitly uses the previous approximation. This is a triangular protocol, not automatic arbitrary dependency/effect/termination inference.
+
+[[file:../../contracts/generalized-chain.org][Multi-level dependency chains]] continue the same future proposal: finite heterogeneous publications carry exact selected-view indices, existing refresh controls suffix reuse, and nested product mounting provides a whole fixed point. First-refusal laws and independent four-level controls qualify this extension. The original concrete closure map remains unchanged.
+
+[[file:../../contracts/generalized-fork.org][Shared-upstream fork/join composition]] advances the same future proposal: independent branches retain exact local closure evidence, joins inspect the complete refreshed pair, and nested existing close proofs certify a whole diamond with one shared root. Independent controls retain first-refusal and full-ledger observations; ordered metadata has a kernel negative swapping theorem.
+
+[[file:../../contracts/generalized-context.org][Shared context across multiple fork/join levels]] continues this future proposal. Explicit context projections and contextual join keys prevent a retained intermediate join or retained branches from hiding changed shared dependencies. A reusable seven-component workflow carries whole closure and retained-method proofs; full refusal-mask and finite-timing controls qualify the concrete composition.
+
+[[file:../../contracts/generalized-revision.org][Scoped policy publication]] continues the same future proposal: actual policy values join dependency keys, compatible-self recooking retains raw closure, and a ten-component client preserves full errors while distinguishing changed public methods. Numerical metadata equality alone does not license retaining a changed-policy interface.
+
+[[file:../../contracts/generalized-mop.org][Automatic generalized construction and checked MOP]] advances the same future proposal with finite declaration closure, inferred pure footprints and transitive invalidation, actual typed policy inspection and complete source/topology/base/layout/dispatch migration. Existing computation congruence, dependency scheduling, ranked closure, lens construction and multimethod reference semantics supply the proofs. Independent controls cover 96 configurations, 4608 call outcomes, 96 accepted migrations, 1152 refusals and 468 finite node observations. Opaque graph callbacks and cycles refuse construction; typed policy hooks remain explicit and candidates are fully rebuilt. This does not claim unrestricted reflection, arbitrary type/effect inference or external-effect rollback.
+
+[[file:../../contracts/inherited-mop.org][Inherited generalized fragments]] connect the future proposal’s delayed-super wrapper to automatic graph closure and protected MOP publication. Existing computation combinators elaborate replacement, strict modifiers and conditional inheritance; compilation is proved equal to existing delayed lens composition. Source C3 derivations bind exact class-local fragment order to actual closure/dispatch, with complete source/cache preservation on refusal. Independent controls cover 96 settings, 4608 call outcomes, 96 accepted migrations and 576 matrix refusals, plus exact C3 failures and dead-parent pruning. The same contract records remaining staged execution reuse, heterogeneous generic families, declarative metadata and carrier-changing integration boundaries. The future-work status and original concrete closure remain unchanged.
+
+[[file:../../contracts/staged-publication.org][Materialized construction and generic families]] advance the staged-computation/cache-invalidation future proposal. Actual cached results, including failures and absence, replace reevaluation for certified clean nodes; existing ranked uniqueness proves complete reference equality. Typed edit frames infer unchanged resolvers, and refusing retained builders discriminate actual skipping. Existing dependent DispatchTable entries carry per-generic origin, negative and cache-soundness receipts; exact-candidate approval publishes the entire heterogeneous family or the exact warm old version. Controls cover 24 settings, 240 accepted migrations, 288 refusals, 7920 calls and 1320 rebuilt/2304 retained nodes across accepted revisions. Arbitrary source callback equality, automatic type/effect inference, lossy/carrier-changing cooking and cyclic equation closure retain their earlier boundaries.
+
+[[file:../../contracts/declarative-metadata.org][Declarative method, type and logic metadata]] advances generalized-MOP future work with executable method declarations, typed refinement contracts, decidable logical formulas and exact-candidate service publication. Universal origin, invocation, rejection and construction-retention proofs accompany independent truth-table, arithmetic and warm-cache controls.
+
+[[file:../../contracts/lossy-migration.org][Lossy cooked self and typed carrier migration]] advances generalized-MOP future work with read-covered projections, existing lens/bridge correspondence, explicit checked field transfers and atomic publication of a differently typed account family. Independent arithmetic, all builder masks and warm-source refusal controls accompany conversion-origin and closure proofs.
+
+[[file:../../contracts/cyclic-closure.org][Automatic positive cyclic closure]] advances generalized-MOP future work with finite monotone Boolean equations, proved automatic termination and leastness, existing lens/finite-fix correspondence and safe-recursion-seeded atomic family publication. Includes independent fixed-point enumeration, quorum/revocation and whole warm-state refusal controls.
+
+* Runtime alignment: typed multi-dispatch and explicit negative watches
+
+This remains the generalized-prototype future-work construction, not a new
+claim of implementing the whole paper. The Scheme counterpart uses the existing
+POO MOP Type/validate boundary and C4 hierarchy, sparse tuple lookup, immutable
+candidate caches, shape/call watches and completed-edit publication. Its owners
+are Multimethod, DispatchExtension, CyclicPublication and ProtectedDispatch,
+matching the existing Lean definitions. Procedure callbacks are not inferred to
+be typed generics. Scheme remains independently buildable; no Lean checkout is
+required by its tests or native benchmark.
+
+[[file:../../../LeanPoo/Functional/DispatchExtension.lean][DispatchExtension]] now proves counted selection equals the ordered reference,
+one selection visit per candidate on warm/cold paths, zero value selection for
+shape watches, and the bounded association-cache lookup cost. Recency truncation
+bounds later lookup by eight shape comparisons. Structural shape equality,
+validators, C4/name lookup, method/guard/combination callbacks, index construction
+and snapshot allocation retain their own costs. These counts are not a total
+runtime or machine allocation bound. The Scheme representation uses a bounded
+persistent association list rather than Lean's hash map.
+
+[[file:../../../Examples/ProtectedDispatch.lean][ProtectedDispatch]] reuses the existing metadata-contract input/output refusal
+laws: rejected input precedes execution, and rejected output exposes no tentative
+cache. Runtime transport requires stable types/C4 graphs, immutable watched
+payloads and pure guards/validators/precedence. The private checked Scheme receipt
+is not a kernel proof; unrestricted mutation/effects and compiler correctness are
+outside the correspondence. Existing exact-refusal and family-frame theorems,
+576 independent extension controls, and additional counted/cache checks preserve
+the previously reviewed scope and status.

@@ -1,0 +1,119 @@
+#+TITLE: Automatic generalized construction and checked MOP — future work
+
+[[file:generalized-prototypes.org][Generalized protocol]] · [[file:generalized-revision.org][Earlier scoped revision]]
+
+* Scope
+
+This advances the future proposal at source lines 1807–1827 and 2098–2154.
+The original concrete construction closure remains unchanged. The review unit
+remains ~future_proposal~, and ~whole_paper_implemented~ remains false.
+
+The earlier component APIs join caller-supplied local closure witnesses. This
+extension closes a finite typed declaration graph automatically, infers its
+provider observations, selects actual public cooking and method combination,
+and publishes a checked replacement of the complete graph and generic function.
+
+* 1. Automatic closure
+
+[[file:../../LeanPoo/Functional/GeneralizedGraph.lean][GeneralizedGraph]] holds finite support, dependent per-key
+~Computation~ declarations and a base dictionary. Optional slots distinguish
+absence, a present successful component and a present component failure.
+Evaluation errors and component errors are flattened without discarding either.
+
+Each slot compiler uses the existing ~lensGen~ and ordinary delayed inheritance.
+The lens focuses a delayed slot accessor so unrelated slot bodies are not
+forced while constructing a dictionary. ~assemble_apply~ and ~step_eq~ prove
+the complete assembly equation, including keys outside the finite support.
+
+Existing ~dependencyOrder~ computes a schedule, each edge is checked, and existing
+~RankedResolver~ constructs the unique fixed point. ~Scheduled.closed~ returns an
+actual generalized ~Closed~ witness. ~Scheduled.unique~ proves equality with any
+other fixed point of this exact protocol. Clients supply neither a final provider
+nor a final cooked result nor a fuel/stability proof.
+
+Unknown dependencies, cycles and opaque computations refuse construction.
+An intentionally absent capability must remain in finite support; its base and
+code may both be absent. Removing a provider retains its key for observations.
+
+* 2. Dependency inference and invalidation
+
+Existing ~Computation.analyze~ and ~evaluate_congr~ infer and prove locality.
+Metadata exposes value reads, presence reads, required capabilities, forbidden
+capabilities and unknown footprints. Both conditional branches contribute,
+including an opaque branch that will not execute at current inputs.
+
+~Scheduled.invalidates~ computes transitive invalidation using the proved rank.
+Presence changes invalidate ~inspect~ and ~deny~ readers as well as value readers.
+~Scheduled.unaffected~ proves that a new closed construction preserves every
+unaffected result, provided resolvers marked unchanged are actually equal.
+A digest, version string or equality of one sampled output cannot replace that
+premise. The migration API reconstructs candidates; it does not claim selective
+execution reuse merely because metadata says a node is unaffected.
+
+* 3. Inspectable MOP
+
+[[file:../../LeanPoo/Functional/GeneralizedMOP.lean][GeneralizedMOP]] connects a typed policy value with its actual ~cook~,
+compatible public ~view~, existing multimethod constructor and method declarations.
+Policy interpretation hooks are explicit functions. The graph analyzer does not
+claim to inspect their hidden host-language reads. All method declarations are
+rebuilt from the new cooked construction whenever a request is reconstructed.
+
+~Prepared.closed~ transports the raw closure through the compatible self view.
+~Prepared.inspect~ returns actual selected policy, inferred node metadata,
+checked schedule, generic arity and method declaration count. ~Prepared.origin~
+binds the complete dispatch definition to the methods generated for this exact
+constructed graph. A cache-erased equality includes arity, precedence, combiner
+and method index, rather than an unchecked policy name.
+
+~Prepared.invoke~ uses ordinary multimethod invocation. Kernel laws preserve the
+complete dispatch definition, cooked interface, request and candidate-cache
+soundness. The existing negative certificate is transferred through cache changes.
+~Prepared.call_correct~ retains the existing ordered reference-call theorem.
+
+* 4. Whole construction migration and joint publication
+
+Typed ~Redefinition~ edits replace declarations, remove providers, change bases,
+change finite support/order and select policy. ~redefine~ applies them in order.
+~revise~ derives the new request from the old version, reconstructs graph closure,
+cooks the public interface, rebuilds methods, checks negative assumptions and
+runs admission bound to the exact completed candidate.
+
+| Stage | Failure | Published state |
+|-------+---------+-----------------|
+| Analyze/schedule/close | Opaque, missing support, cycle | Complete old snapshot |
+| Build generic | Registration arity | Complete old snapshot |
+| Check negative watches | Introduced candidate | Complete old snapshot |
+| Joint admission | Application refusal | Complete old snapshot |
+| All stages accepted | None | Complete new snapshot |
+
+The revision records the exact requested source and successful admission.
+~publish_refused~ and ~revise_refused~ preserve the full old snapshot by equality,
+including its warm cache and approval. ~publish_accepted~ identifies the complete
+new snapshot. This is immutable publication; no external effect rollback occurs.
+The typed raw carrier stays fixed during edits. Public layout/cooking may change
+under a compatible view; arbitrary carrier changes still use explicit existing
+representation bridges. No cyclic equation solver or arbitrary effect/type
+inference is supplied.
+
+* Complex workflow and controls
+
+[[file:../../LeanPoo/Functional/ConstructionWorkflow.lean][ConstructionWorkflow]] declares fifteen supported keys, including optional and
+forbidden capabilities. Freight/cover share input, reserve joins them, tax/risk
+join at settlement, invoice/audit join at release, and a forbidden-capability gate
+joins at total. Optional discount changes branch selection and can add a reserve
+edge. The generic dispatches on service and region, checks a value predicate,
+combines contributions with sum or peak, and wraps the result with an around fee.
+
+[[file:../../Examples/ConstructionWorkflow.lean][The example]] changes input, discount, reserve topology, invoice source, support
+order, public layout and combination policy in one publication. A forbidden
+method rejects the whole candidate while retaining a warm old version. A
+heterogeneous Nat/String graph separately demonstrates dependent slot types.
+
+[[file:../../Tests/ConstructionWorkflow.lean][Independent controls]] cover 96 configurations, 4608 complete call value/error
+observations, 96 accepted joint migrations and 1152 refusal cases. Arithmetic,
+matching, finite recurrence and first-refusal expectations are independent of the
+analyzer, graph evaluator and method-combination implementation. Three complete
+finite recurrences cover 468 node observations through depth twelve, including
+the full eight-step propagation path. Additional controls distinguish presence
+from successful evaluation, preserve a source failure, reject a failed forbidden
+provider and propagate a failing optional value when it is actually read. The same 30-second/2-GiB check bound applies.

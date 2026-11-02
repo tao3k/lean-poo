@@ -1,0 +1,224 @@
+#+TITLE: Declaration fragments and combined receiver generics
+
+* First-class prototype recipe reduction
+
+The Racket inheritance construction composes first-class modular extensions;
+its method section also folds continuation programs. Gerbil's ~compose-proto*~
+now delegates complete long-suffix reduction to standard ~reduce-right~, retaining
+the small-chain identities and captured-head/current-suffix boundary. The Reader
+recipe in ~examples/declared-methods.ss~ combines approval, current policy reflection,
+typed/default/keyword/rest forwarding, simple collection and standard C3 methods.
+Refusal/retry, source-spine capture and prior effects are exercised in Scheme.
+
+Ten laws in ~LeanPoo.Prototype.Compose~ prove finite optional-right-fold equivalence
+to the existing ~composeAll~, singleton/cons/append behavior and same-self application.
+~compose_captured_suffix~ takes the current finite suffix explicitly; it does not
+prove host pointer mutation or capture timing. Top-level ~Examples/DeclaredMethods.lean~
+uses ordinary Proto layers and the existing forwarded method trace to check current
+policy retry, present-false tag data and approval/metadata refusals. Its Except carrier
+does not assert effect rollback. Core list contracts, macro/ABI behavior and unrestricted
+fixed-point termination remain outside these pure laws. This integrated MOP use
+advances the article's future work; no new namespace or performance claim is introduced.
+
+* Source correspondence
+
+Racket's method-fragment section specifies standard qualifier order, and its
+generalized-prototype section proposes a common fragment construction beyond
+records. Gerbil ~MethodDeclaration.~ advances that future work: existing ~.declare~
+accepts both record metadata and method contributions, then ordinary Slot/C3
+assembly supplies ~.defgeneric~ with its raw group.
+
+* Pure laws
+
+~Object.MethodCombination.collectFragments_append/coalesce~ preserves the exact
+source stream for each selected method. ~fragmentSpecification_append~ connects
+fragment blocks to delayed inherited SlotSpec assembly; ~declaredGeneric_standard~
+and ~declaredGeneric_fragments~ preserve established qualifier semantics and the
+original complete receiver/argument row. Typed qualifiers and a valid supplied
+owner order are model premises; Gerbil grouping/linearization is tested separately.
+
+[[file:../../Examples/DeclaredMethods.lean][Declared method examples]] prove the full two-branch standard trace, current
+receiver data, around short-circuiting, failure-before-after and missing primary.
+Gerbil controls execute all five adapters, real C3 sharing, recursive declaration
+roots, source edits, conflicts and the actual generic macro.
+
+* Gerbil implementation limits
+
+Local methods coalesce only when their policies and visibility agree. Supported source edits invalidate the
+registered metadata and receiver graph; raw writes and concurrent mutation remain
+outside it. Generic defaults and empty inherited groups catch only their own
+receiver/slot absence. Compilation does not run method bodies; invocation sequences
+effects without rolling them back. Custom policies require their own laws.
+No new argument-based dispatch, arbitrary-carrier fragment macro, optional-formal
+grammar, compiler/runtime proof or performance claim is supplied by this bridge.
+
+* Shared macro binding and complete current reflection
+
+Gerbil's brace frontend now delegates its entire expression/match binding to
+core ~defalias~ and the existing ~.o~ match macro. The explicit host-method
+escape remains core syntax. Actual binding identity, renamed imports, nested
+receiver capture and matching are host regression obligations, not Lean theorems.
+
+~Object.CatalogReflection~ in the existing ~DescriptorReflection~ namespace
+models the complete right-fold metadata inspection before name selection and
+read. Its six laws retain ordered output, suffix failure, refusal before read,
+selected-entry/error identity, absence refusal and whole-call congruence.
+[[file:../../Examples/CatalogReflection.lean][Catalog examples]] connect current metadata to the retained method continuation
+program. An unrelated metadata failure must still prevent a front-slot read;
+early-exit reflection would change this observation. Effective declarations and
+stable supplied callbacks are explicit premises. Source invalidation, real macro
+expansion and retry execute in the Scheme FUN example and regression suite.
+This integration advances the article's future MOP work; it is not a runtime or
+compiler proof, and does not close the other TODO workstreams.
+
+* Ordered declaration traversal and complete finalization
+
+The Gerbil driver now uses standard ~map-in-order~ followed by ~foldr append []~
+inside the existing FUN Observation. Per-form proper-list checks precede the
+suffix; finalization receives the whole batch and current context. Preparation
+captures each form binding. Mutable chunk copying remains deferred until all
+callbacks complete, and source revisions retain their original rejection guards.
+The integrated Scheme example constructs tenant/private metadata and a complete
+qualifier group above the shared C3 family, then reflects and invokes it.
+
+~DeclarativeMetadata.collectForms~ delegates to Lean ~List.mapM~ and flattening.
+Six laws prove ordered same-context monadic sequencing, empty input, equivalence
+to the original ~expandForms~, refusal, batch concatenation and finalization.
+The monadic law assumes ~LawfulMonad~. ~Examples/MetaBootstrap.lean~ checks
+exception-over-state prefix effects and empty finalization; the expanded
+~Examples/DeclaredMethods.lean~ proves the complete approved qualifier trace and
+refusal/retry values. Finite immutable lists and supplied callback semantics are
+model premises. Gerbil tests separately exercise mutable spine ownership, actual
+macro expansion and registered source guards. No runtime/compiler or performance
+proof follows from the list laws.
+
+** Prefixed bindings through current method reflection
+
+Gerbil's existing prefixed field syntax now lowers complete binding groups through
+core lexical binding and definition sequences.  The declared-methods example
+retains an initial snapshot, reads current receiver fields, gates through FUN
+approval, then checks current public metadata before combined invocation.  Retry
+retains the original snapshot while observing revised fields and visibility.
+
+=Functional.Parameters.withSlotBindings= uses the standard right fold over already
+resolved alias/key pairs.  Its six laws prove recursive-nesting equivalence,
+composition, duplicate shadowing and unused/empty behavior.  Four snapshot laws
+add sequential binding, recursive equivalence and refusal.  =Examples/Parameters.lean=
+checks delayed revision reads versus snapshots and nested ownership.  Host syntax
+identity/hygiene, mutable storage, failed definition installation and nonlocal
+control are separate Gerbil obligations.  This is generalized-prototype/MOP future
+work, not compiler verification or completion of every original TODO.
+
+** Core formal projection and current combined invocation
+
+Gerbil's generic forwarder delegates binder projection and keyword partition to
+public core signature/dispatch mechanisms at expansion time.  Core definitions
+own dependent defaults and predicate contracts.  POO retains leading-receiver
+policy and escaped positional/rest data; incomplete projections refuse.
+
+The existing declared-methods workflow composes current reflection, a core-checked
+simple summary, FUN bind and standard C3 charging.  =FunctionSignature= adds eight
+laws for source-ordered keyword restoration and exact resolved call forwarding.
+Top-level =DeclaredMethods= examples check full qualifier order, retained false and
+keyword payloads, metadata/type refusal priority and retry.  Supplied argument and
+metadata admission, host syntax identity and numeric domains are premises.  These
+are not proofs of core parsing, macro hygiene, predicates or fixnum ranges.  This
+continues generalized-prototype/MOP and type-metadata future work.
+
+* Direct combined-generic forwarding
+
+The generic compiler delegates resolved-row construction to the same core
+signature projection and standard ~list~ / ~apply~ lowering used by ordinary
+calls. It selects the current combination expression, demands the raw inherited
+fragment slot, checks that the combiner is a procedure, then directly supplies
+both fragments and the complete row. The previous temporary variadic forwarding
+procedure is removed. Defaults, predicate contracts and keyword escape semantics
+remain owned by Gerbil. Selection/lookup failures retain precedence and identity;
+no successful metadata admission is cached across calls.
+
+~FunctionSignature.combineDirect_eq~ proves this relay elimination for arbitrary
+monadic effects. The refusal laws and matching top-level examples preserve the
+selection/lookup/admission boundaries and the full Reader/qualified-method trace.
+The explicit ~CombinationWork~ source-operation model keeps row cells unchanged
+and removes one relay closure/call at nonnegative supplied prices. This is not a
+compiler allocation theorem: the standard paired Scheme study separately tests
+single-operation allocation, hot calls and full Reader/reflection/C3 workflows.
+This supports the original article's user-defined method-combination and future
+MOP work; it does not replace its method-combination semantics.
+
+* Fixed-prefix row construction
+
+The combined generic now emits the resolved fixed prefix as core ~cons~ forms.
+Standard ~append~ with an empty final list copies the rest spine. This replaces
+runtime ~apply list~ without sharing mutable argument spines with callers.
+Core signature projection, defaults, checks and keyword escape placement are
+unchanged. Selection, lookup and combiner admission still precede row construction.
+No combiner, fragment or successful admission is frozen across calls.
+
+~assembleRow_eq~, ~assembleRow_length~, ~assembleRow_compose~ and
+~combineDirect_assembled~ establish complete-row equality and contextual
+substitution for arbitrary monadic combination. ~rowAssemblyCharge_difference~
+prices logical row cells, apply/list redistribution and rest copying separately.
+This proves neither heap identity nor CPU improvement. Gerbil regression tests
+mutate both the prefix and rest spine; the paired study measures transport,
+retained workflows, construction plus invocation and fixed-history sensitivity,
+with exact A/A controls, natural/collected GC and separate GC/residual CPU deltas.
+
+The implementation budget prices apply/list redistribution and append-based tail
+copying separately. ~rowAssemblyCharge_threshold~ proves the conditional transport
+criterion. ~rowAssemblyCharge_workflow~ additionally retains construction/setup
+and GC history on both sides: cheaper transport cannot by itself establish a
+cheaper complete workflow. These are supplied finite cost units; measured CPU
+and GC deltas, A/A spread and host interference remain separate evidence.
+
+* Environment-independent Reader completion
+
+The summary workflow now uses standard FUN ~map~ instead of constructing a
+nested ~map~ Reader inside ~bind~ on every request. This rewrite applies to the
+standard ~Observation.~ operations and a continuation which does not read the
+Reader environment again. It is not a general rewrite for arbitrary mutable FUN
+method overrides. Owner reflection, summary, then charge remain in order. The
+ordinary single-value context retains standard ~compose~ result projection
+(including additional-result behavior), while both final results remain intact.
+
+~FunctionSignature.observation_fusion~ proves equality with arbitrary monadic
+source/completion effects. Refusal/current-source laws preserve the failure and
+retry boundary. ~observationCharge_threshold~ retains separate dynamic map,
+completion, setup and GC prices; none is inferred from logical equivalence.
+~Examples/DeclaredMethods.lean~ checks a bounded nested forecast, fresh current
+rates, complete C3 traces and review failure. It proves neither Scheme pointer
+identity nor Gerbil multiple-value ABI or compiler/collector behavior.
+
+The Gerbil example ~reviewed-summary-action~ packages multiple values explicitly
+before FUN composition, permits reentrant requests and retries current metadata.
+Gerbil controls specify zero/single/multiple summary results, false data and
+charge effects directly through the core values->list observation. Opaque return
+carrier identity is not compared across independent invocations. Complete
+workflow pairs hold the current generic/contract/row lowering fixed on both sides;
+transport/hot scopes retain their separately labelled apply/list control. Account
+construction has its own identical-action measurement; independent phase medians
+must not be subtracted to manufacture an exact workflow cost decomposition.
+
+* Revision-checked contribution admission
+
+The qualifier interpreter from the article remains unchanged. The default Gerbil
+~contribution~ constructor now records immutable qualifier/revision evidence in a
+standard weak-key table. A matching object and Type revision can reuse that
+admission; current descriptor validation handles every miss. Registration is
+restricted to the original constructor/Type protocol and finite known symbols.
+Evidence contains neither a receiver nor a callback. Supported mutation must
+advance the existing transitive revision discipline; direct unsafe record mutation
+is outside this premise. Restoring old field values does not restore old revisions.
+
+~admitRegistered_eq~, ~admitRegistered_stale~ and ~admitRegistered_execution~ prove
+admission substitution and unchanged subsequent effects under explicit constructor
+admission and revision-stability assumptions. ~registered_admissions_eq~ preserves
+source order. These laws do not prove Gerbil object mutation, weak-table GC, macro
+expansion or runtime speed. Scheme regression controls execute current Type edits,
+body/qualifier edits, before-to-primary mutation, and shared-C3 FUN refusal/retry.
+
+~contributionCharge_threshold~ counts registration, repeated guards/checks and
+supplied GC history separately. Cold setup or extra collection can outweigh saved
+validation. Fair workflow controls use the same current FUN/generic implementation;
+only descriptor registration evidence differs. This is an implementation strategy
+for the generalized-prototype future work, not an additional article construction.

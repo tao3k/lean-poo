@@ -98,13 +98,13 @@ def slot (bridge : Family Value Fields) {ready : Certified keys Claim} (source :
   source.observe (expose bridge) (fun c data => Claim c (observeResults (reveal bridge) data))
     (fun _ data valid => by rw [results_from_to]; exact valid)
 
-theorem slot_read_value [DecidableEq Context] (bridge : Family Value Fields)
+theorem slot_read_value [BEq Context] [LawfulBEq Context] (bridge : Family Value Fields)
     {ready : Certified keys Claim} (source : ContextSlot ready) (context : Context) :
     observeResults (reveal bridge) ((slot bridge source).read context).1.val = (source.read context).1.val := by
   rw [ContextSlot.read_value, ContextSlot.read_value]
   simp only [certified, Certified.observe_factories, build_observe, results_from_to]
 
-theorem slot_read_reused [DecidableEq Context] (bridge : Family Value Fields)
+theorem slot_read_reused [BEq Context] [LawfulBEq Context] (bridge : Family Value Fields)
     {ready : Certified keys Claim} (source : ContextSlot ready) (context : Context) :
     ((slot bridge source).read context).2.2 = (source.read context).2.2 := by
   cases stored : source.retained with
@@ -126,20 +126,20 @@ def snapshot (bridge : Family Value Fields) {ready : Certified keys Claim} {cont
 
 /-- Read the generated-field cache once, decode one snapshot and invoke an
 original-dictionary consumer. The next cache remains in field representation. -/
-def consumeSnapshot [DecidableEq Context] (bridge : Family Value Fields)
+def consumeSnapshot [BEq Context] [LawfulBEq Context] (bridge : Family Value Fields)
     {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
     {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     Output context × ContextSlot (certified bridge ready) × Bool :=
   source.consumeSnapshot (fun c data => construct c (snapshot bridge data)) context
 
-theorem consumeSnapshot_state [DecidableEq Context] (bridge : Family Value Fields)
+theorem consumeSnapshot_state [BEq Context] [LawfulBEq Context] (bridge : Family Value Fields)
     {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
     {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     (consumeSnapshot bridge source construct context).2 = (source.read context).2 := rfl
 
 /-- Every dependent dictionary consumer agrees with the original uncached build,
 even when it invokes retained typeclass methods and their law fields. -/
-theorem consumeSnapshot_value [DecidableEq Context] (bridge : Family Value Fields)
+theorem consumeSnapshot_value [BEq Context] [LawfulBEq Context] (bridge : Family Value Fields)
     {ready : Certified keys Claim} (source : ContextSlot (certified bridge ready))
     {Output : Context → Type y} (construct : ∀ c, Snapshot ready c → Output c) (context : Context) :
     (consumeSnapshot bridge source construct context).1 =

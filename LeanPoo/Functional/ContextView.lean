@@ -47,7 +47,7 @@ theorem ContextSlot.project_retained (slot : ContextSlot ready) (context : Conte
   simp [ContextSlot.project, retained]
 
 /-- Reading the projected populated cache at the same context is a hit. -/
-theorem ContextSlot.project_hit [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.project_hit [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (context : Context) (data : Snapshot ready context)
     (retained : slot.retained = some ⟨context, data⟩)
     (keys : List Key) (included : ∀ key ∈ keys, key ∈ source) (Narrow) (derive) :
@@ -57,7 +57,7 @@ theorem ContextSlot.project_hit [DecidableEq Context] (slot : ContextSlot ready)
 
 /-- Narrow cached consumption agrees with projecting the original uncached data.
 The output constructor still executes on every call. -/
-theorem ContextSlot.project_consume [DecidableEq Context] (slot : ContextSlot ready)
+theorem ContextSlot.project_consume [BEq Context] [LawfulBEq Context] (slot : ContextSlot ready)
     (keys : List Key) (included : ∀ key ∈ keys, key ∈ source) (Narrow) (derive)
     {Output : Context → Type x} (construct : ∀ c data, Narrow c data → Output c)
     (context : Context) :

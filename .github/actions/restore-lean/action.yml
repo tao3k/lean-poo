@@ -1,0 +1,43 @@
+name: Restore run-owned Lean toolchain and build
+description: Use the declared cached release and exact proof artifacts produced by this run.
+inputs:
+  artifact:
+    description: Raw build archive name for this run and source revision.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Restore the declared release toolchain
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.elan/toolchains
+        key: lean-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain') }}
+    - uses: leanprover/lean-action@v1
+      with:
+        auto-config: false
+        build: false
+        test: false
+        lint: false
+        use-github-cache: false
+    - name: Download this run's build archive
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ inputs.artifact }}
+        skip-decompress: true
+        digest-mismatch: error
+    - name: Restore the producer build and verify its compiler
+      shell: bash
+      run: |
+        tar --zstd -xf '${{ inputs.artifact }}'
+        cmp lean-toolchain lean-toolchain-source.txt
+        producer_prefix="$(cat lean-toolchain-prefix.txt)"
+        toolchain_root="$(lake env lean --print-prefix)"
+        test "$toolchain_root" = "$producer_prefix"
+        # The cache is only transport: every compiler file must match this producer.
+        (cd "$toolchain_root" && sha256sum --quiet -c "$GITHUB_WORKSPACE/lean-toolchain-sha256.txt")
+        lake env lean --version | cmp - lean-toolchain-version.txt
+    - name: Verify restored compiler commands
+      shell: bash
+      run: |
+        lean --version | cmp - lean-toolchain-version.txt
+        lake --version

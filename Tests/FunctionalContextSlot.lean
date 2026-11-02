@@ -136,3 +136,24 @@ example (ready : Certified jointKeys Joint) (slot : ContextSlot ready) (c : Nat)
 #print axioms ContextSlot.consume_value
 
 #print axioms ContextSlot.rebind_consume
+
+private def StructuralValue (context : List Nat) (_ : Unit) := { n : Nat // n = context.length }
+private def structuralReady : Certified (Value := StructuralValue) [()]
+    (fun context data => data.1.val = context.length) :=
+  ⟨((fun context => ⟨context.length, rfl⟩), PUnit.unit), fun _ => rfl⟩
+
+#eval do
+  let base := List.range 64
+  let equal := base.reverse.reverse
+  let changed := base ++ [64]
+  let mut slot := ContextSlot.empty structuralReady
+  let mut hits := []
+  for context in [base, equal, changed, equal] do
+    let (value, next, reused) := slot.consume (fun _ data _ => data.1.val) context
+    unless value == context.length do throw (IO.userError "dependent structural snapshot mismatch")
+    slot := next
+    hits := hits ++ [reused]
+  unless hits == [false, true, false, false] do throw (IO.userError "structural reuse/replacement mismatch")
+  IO.println "FUNCTIONAL-CONTEXT-STRUCTURAL-OK reads=4 hits=1 equal=1 changed=1 evicted=1"
+
+#print axioms ContextSlot.read_reference

@@ -74,3 +74,87 @@ on every request. Factory loop allocation is part of this synthetic workload;
 this is not an Euler analytical computation. Observation, projection and rich
 outer-context adapters are not benchmarked here. Added measurement code costs
 63 Lean lines and 77 Python lines; no runtime library API is added.
+
+* Structural identity path and non-winning controls
+
+The existing native =contextSlotScale= executable also accepts
+=structural MODE SIZE READS=, where MODE is =same=, =equal= or =miss=.
+Use =lake build contextSlotScale= followed by, for example,
+=.lake/build/bin/contextSlotScale structural same 8192 256=.
+Lean owns construction, one warmup, three fixed samples, scalar checksum and
+reuse-policy guards, and emits official =measurement:= lines. Each sample includes
+warm snapshot construction and 256 reads; process startup is outside these clocks.
+The original scalar CLI and workloads are unchanged.
+
+The same workload was compiled before and after the standard checked identity
+shortcut. A noinline list copier creates the equal-context control outside the
+timed reads. The changed-context control alternates replacement. No workload is
+rerun to discard a slower observation.
+
+| Mode | Baseline milliseconds | Candidate milliseconds |
+|------+-----------------------+------------------------|
+| Same retained owner | 26.858416 / 26.921000 / 27.329709 | 0.027583 / 0.025667 / 0.027083 |
+| Independent equal context | 27.996583 / 28.702084 / 29.788084 | 51.590167 / 156.058542 / 56.726500 |
+| Changed context, all misses | 32.622250 / 29.795459 / 30.206583 | 29.432375 / 75.595125 / 301.812084 |
+
+Generated C places the identity comparison before allocating the structural
+comparison closure. The fallback contains one original structural decision,
+not two; slower equal/miss observations remain non-winning evidence. They are
+not assigned an exclusive host/scheduler cause. This qualifies the retained-owner
+case, not universal acceleration, a whole application, OS startup or peak memory.
+All data, slot, reuse flags and dependent Claims retain the original semantics;
+=ContextSlot.read_reference= uses only standard =propext= and all previous laws
+remain. Application/native pipeline evidence is recorded by its actual consumer.
+
+
+* Adopted owners and lawful short-circuit equality
+
+The next revision changes the existing slot, rather than adding a cache. An
+independent equal hit adopts the requested context index while keeping certified
+built data. The full reference theorem still compares the old snapshot/slot/hit
+tuple, for an arbitrary reference DecidableEq. All fourteen shared context modules
+pass computational =BEq= plus =LawfulBEq=; projections, requests, dictionary
+transport and Contract adapters no longer silently select decision-code fallback.
+Both read and consume are inline so a projected caller can remove result tuples.
+
+Static inspection of the original native =List= DecidableEq image identifies a
+costly negative path: it calls =List.hasDecEq= on the tail before the head decision.
+Thus the changed-head 8192-element workload still walks long tails on misses.
+The new compiled lawful List BEq checks the head before advancing. It establishes
+exact equality by LawfulBEq, not by an unchecked Boolean or a fingerprint.
+
+Keep every first candidate and final-candidate observation. All workloads retain
+one warmup and three samples; SIZE=8192 and READS=256. The original scalar CLI
+and original structural workload/checksum/hit expectations are unchanged.
+
+| Mode | Previous identity-only image ms | Adoption + inline, decision fallback ms | Final lawful BEq ms |
+|------+---------------------------------+-----------------------------------------+---------------------|
+| Same retained owner | 0.027291 / 0.026084 / 0.026417 | 0.022375 / 0.023166 / 0.032500 | 0.022917 / 0.022500 / 0.022708 |
+| Independent equal owner | 27.019083 / 26.927667 / 26.846333 | 0.127000 / 0.125959 / 0.127333 | 0.036125 / 0.035208 / 0.036000 |
+| Alternating misses | 33.096250 / 29.964541 / 33.670208 | 32.157125 / 41.254458 / 45.903292 | 2.790334 / 9.537250 / 10.794000 |
+
+The initial candidate retains a same-owner non-win and miss regressions. Final
+miss user CPU is 0.01 s versus 0.12 s for the original and initial candidate
+processes, including one warmup and all samples, at 10 ms OS precision. The final
+slow miss wall samples remain; coarse CPU accounting does not identify their
+exclusive scheduling cause. Same-owner baseline time -l cannot finish its clock
+sysctl query in the sandbox; its valid native samples and incomplete resource
+observation are retained without a rerun. Remaining resource queries use the
+permitted system observer.
+
+The additional =structural-reference SIZE READS= mode runs the same certified
+factory and alternating sources without a slot; it separately checks the warm
+value and scalar checksum. Final samples are 2.800583 / 2.787334 / 2.812208 ms,
+user CPU 0.01 s. The initial reference samples were
+2.953416 / 2.879833 / 2.968584 ms and are retained. Reference state bookkeeping
+differs from the cached triple and is not an exact subtraction of cache overhead.
+The final first miss sample is close to this computational floor; later miss
+wall samples do not win against it. Native CI guards cover all three structural
+modes and the reference at small fixed size, without timing thresholds.
+
+Measured images/source identities are recorded outside Git. The initial adoption
+image is frozen before adding the independent reference entrypoint; the final
+image binds the final lawful Boolean algorithm and common reference harness.
+No better-looking rerun replaces a previous observation. These are library
+algorithm observations; consumer cold builds, full-process clocks, allocations
+and pre-main require their separate exact-revision evidence.

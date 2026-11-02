@@ -11,18 +11,32 @@ without data. This memoizes built dependencies, unlike CachedPreparation which
 retains selected functions. It does not memoize the output constructor.
 
 ~slot.read c~ returns ~(snapshot, nextSlot, reused)~. A same-context hit returns
-the old snapshot and unchanged slot without building factories. A miss builds
+the old snapshot without building factories. Its next slot adopts the requested
+equal context owner, so repeated reads of that owner use the identity shortcut.
+The next slot is propositionally equal to the original slot. A miss builds
 once and replaces the old pair. ~read_hit~/~read_miss~ prove these branches;
 ~read_value~ equates every value with an uncached build. ~slot.consume construct c~
 returns ~(output, nextSlot, reused)~; ~consume_value~ proves equality with the
 uncached proof-aware consumer. Carry nextSlot into the next call. Returning to
-an evicted context is a miss. Context equality requires ~DecidableEq Context~;
-executable callers must provide a computable instance.
+an evicted context is a miss. Context equality requires ~BEq Context~ and
+~LawfulBEq Context~: callers provide a computational comparison and its exact
+equality law, rather than relying on proof-oriented decision code.
+
+Native reads use Lean's standard checked =withPtrEqDecEq= shortcut before the
+structural decision. The same immutable context owner can return its retained
+dependent snapshot without traversing the context or allocating comparison
+closures. Independent equal owners execute the caller's lawful Boolean comparison once;
+subsequent reads use their adopted identity. Changed owners use its short-circuit
+negative path. All shared view, pullback, dictionary, analysis, constraint, request
+and Contract adapters propagate the same Boolean comparison and law. Read and
+consume are inline so projected consumers can eliminate intermediate tuples. =read_reference=, for an arbitrary reference =DecidableEq=, proves the entire original tuple
+of data, next slot and reuse flag, not only a projected payload. Family alignment,
+joint Claims, eviction and output-constructor execution remain unchanged.
 
 #+begin_src lean
 import LeanPoo.Functional.ContextSlot
 open LeanPoo.Functional LeanPoo.Functional.Requirements
-example {Context Key : Type} {Value : Context → Key → Type} [DecidableEq Context]
+example {Context Key : Type} {Value : Context → Key → Type} [BEq Context] [LawfulBEq Context]
     {keys : List Key} {Claim : ∀ c, Results Value c keys → Prop}
     (ready : Certified keys Claim) (slot : ContextSlot ready)
     {Output : Context → Type} (construct : ∀ c data, Claim c data → Output c)
@@ -64,7 +78,7 @@ constructors execute every time. Keep the returned narrow slot for later calls.
 import LeanPoo.Functional.ContextView
 open LeanPoo.Functional.Requirements
 example {Context Key : Type} {Value : Context → Key → Type}
-    [DecidableEq Key] [DecidableEq Context]
+    [DecidableEq Key] [BEq Context] [LawfulBEq Context]
     {source : List Key} {Claim : ∀ c, Results Value c source → Prop}
     {ready : Certified source Claim} (slot : ContextSlot ready)
     (c : Context) (data : Snapshot ready c)
@@ -104,7 +118,7 @@ removes manual observation/alignment/slot reconstruction from the public route.
 import LeanPoo.Functional.ContextObservation
 open LeanPoo.Functional.Requirements
 example {Context Key : Type} {Value Observed : Context → Key → Type}
-    [DecidableEq Context] {keys : List Key}
+    [BEq Context] [LawfulBEq Context] {keys : List Key}
     {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
     (slot : ContextSlot ready) (c : Context) (data : Snapshot ready c)
     (saved : slot.retained = some ⟨c, data⟩)
@@ -138,7 +152,7 @@ Carry the returned base slot into subsequent outer calls.
 import LeanPoo.Functional.ContextPullback
 open LeanPoo.Functional.Requirements
 example {Context Outer Key : Type} {Value : Context → Key → Type}
-    [DecidableEq Context] {keys : List Key}
+    [BEq Context] [LawfulBEq Context] {keys : List Key}
     {Claim : ∀ c, Results Value c keys → Prop} {ready : Certified keys Claim}
     (slot : ContextSlot ready) (project : Outer → Context) (outer : Outer) :
     (slot.readAlong project outer).1.val = build ready.factories (project outer) :=

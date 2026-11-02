@@ -1,0 +1,109 @@
+#+TITLE: Shared upstream, independent branches and exact joins — research extension
+
+[[file:generalized-chain.org][Multi-level chains]] · [[file:generalized-components.org][Independent components]]
+
+* Research scope
+
+This continues the generalized-prototype / MOP future proposal at source lines
+1807–1827 and 2098–2154, especially declared logical metadata and staging/cache
+invalidation. The ~future-work~ audit stays ~future_proposal~ and
+~whole_paper_implemented=false~. The original concrete construction closure is
+unchanged.
+
+* Fork admission and reuse
+
+~DependencyFork Input leftFamily rightFamily~ declares two selectors, ordered
+local fragments and bases. Both branches derive their dependency from one
+~Input~; their selected dependency types, storage types, cooked types and
+fragment types can differ. ~Input~ itself may contain functions and need not have
+~DecidableEq~. Automatic refresh compares only the selected branch dependencies.
+
+~Publication input~ retains both exact ~Closed~ witnesses. ~publish~ admits them
+in left/right order. ~refresh~ reuses ~Closed.refreshDependency~ independently
+for each branch, yielding a ~Refresh~ receipt with the two underlying identity
+and equality proofs. A changed branch needs fresh closure evidence; an unchanged
+branch bypasses its supplied constructor even if that constructor would refuse.
+
+~Components.pair~ supplies existing lawful product focuses and independent
+cooking. ~Publication.closed~ uses the existing ~Components.close~ proof to
+assemble the complete pair, and its interface theorem recovers both exact local
+interfaces. ~closeInterleaved~ accepts an arbitrary interleaving only with equality
+of both complete ordered projections. The every-depth branch approximation laws
+reuse ~Components.approximate_left/right~. No new method evaluator or inheritance
+algorithm is introduced.
+
+* Join admission and failure
+
+~Refresh.join~ takes a declared view of the complete refreshed pair and applies
+existing dependency refresh to the old join closure at that exact new view.
+The next witness is indexed by the view of both newly published branches.
+~join_reuses~ proves that retaining both branches retains any selected join view.
+~join_same_view~ also covers freshly rebuilt branches whose selected join view
+remains equal: either supplied join constructor yields the same result, including
+a constructor that would refuse.
+
+~left_interface~ and ~right_interface~ preserve full cooked interfaces under their
+respective reuse markers. They preserve function-bearing methods as well as the
+selected metadata. Left refusal skips right construction; right refusal after an
+accepted left branch is forwarded exactly. The client sequences join admission
+after branch admission, so neither refusal returns a partial new service. Old
+immutable publications remain available. There is no external-effect rollback.
+
+Chain shape, selectors, family functions, bases and ordered fragments remain
+fixed during refresh. This is an explicitly declared finite fork/join shape;
+arbitrary graph discovery, cycles, callback effect inference and automatic
+termination inference remain outside scope. Sequential constructor admission is
+separate from the application-defined order of public method effects.
+
+* A shared-pricing diamond
+
+[[file:../../Examples/ForkedCheckout.lean][ForkedCheckout]] uses one shared pricing closure, independent shipping and
+insurance branches, and settlement depending on an ordered pair of their tariff
+bands. The whole storage is ~(pricing × (shipping × insurance)) × settlement~:
+pricing is installed once, not copied into the two branches.
+
+The existing tariff compiler, standard method combination and two-step local
+closure witness are reused. ~stageFragments~ is shared with the preceding chain
+example. Nested ~DependentComponents.closePair~ joins the root with the fork,
+then the resulting prefix with settlement, supplying an actual whole fixed point.
+The interface theorem exposes all four exact interfaces. Kernel clients preserve
+reused shipping and settlement results for every quantity and initial ledger.
+
+| Revision | Reuse: pricing, shipping, insurance, settlement |
+|----------+------------------------------------------------|
+| 0 → 0    | true, true, true, true                         |
+| 0 → 2    | false, true, false, true                       |
+| 2 → 4    | false, false, true, true                       |
+| 0 → 4    | false, false, false, true                      |
+| 0 → 14   | false, false, false, false                     |
+
+Revisions 2 → 4 bypass refusing insurance and settlement constructors. Revision
+0 → 4 rebuilds both branches while bypassing a refusing settlement constructor.
+An insurance construction refusal prevents a new diamond publication and leaves
+the old checkout usable. Public settlement refusal occurs after the completed
+pricing, shipping and insurance ledger prefixes.
+
+* Independent controls and negative evidence
+
+[[file:../../Tests/GeneralizedFork.lean][GeneralizedFork]] checks all 49 pairs from seven external adjustments and all
+16 refusal masks: 784 revisions, including 208 accepted and 576 refused. An
+independent arithmetic and ordered control-flow oracle checks both selected
+branch dependencies, the full ordered join key, exact first refusal, reuse flags
+and retained old-publication behavior.
+
+The 4160 complete value/error/ledger comparisons cover five quantities, two
+initial ledgers and original/reassociated raw and public representations. They
+check the shared root executes once, early shipping refusal and late settlement
+refusal. Another 420 observations cover depths zero through five: both siblings
+read the same preceding root, while settlement reads the preceding sibling pair;
+methods capture the preceding local rate. Finite controls are distinct from the
+whole fixed-point proof.
+
+A genuinely interleaved sibling construction is grouped using existing laws,
+with 140 complete branch-method comparisons. A heterogeneous client combines Bool
+and Int dependencies with Nat and String storage and Unit and Bool fragments.
+Finally, a kernel negative theorem shows that swapping distinct equal-sum join
+metadata cannot preserve the old fixed point for this ordered construction.
+Checking only the sum would lose a dependency that this construction uses.
+
+[[file:generalized-context.org][Shared context across multiple joins]] adds explicit context to join selection when later components retain direct dependencies on earlier shared inputs.
