@@ -3620,3 +3620,71 @@ another executor. This unit closes our P43 finite-call request boundary, not a
 missing Racket feature. The explicit P35 rule that invalid classification symbols
 are API errors was audited and retained as a design boundary. Complete checks,
 original heaps, natural compiler/test completion and cancellation stay unchanged.
+
+## P79: bounded known carrier directories before edge observation
+
+The audit reproduced two first-observation holes in Tuple/Union/Or discovery.
+An inherited checked action rewrote the returned child-list spine during its
+first edge: the graph silently replaced the originally declared sibling Type.
+A second probe changed a known unvisited sibling's revision at the same point;
+preparation captured that later epoch and returned a current graph. The reproduced
+outputs were `changed=#t original=#f` and `changed=#t current=#t`. These concern
+already returned finite directory topology and known identities, not arbitrary
+Type inference or discovery of hidden callback dependencies.
+
+The existing graph owner now prepares known child directories in one private
+operation. It admits a proper finite list, compares its entire occurrence width
+with remaining descriptor fuel, copies the spine and records every known Type's
+first epoch through the existing identity ledger. Only then does the SAME ordered
+discover/intern traversal run. No extra fuel is spent on registration: intern
+still charges every shared occurrence. A too-wide directory refuses with the
+existing descriptors category before copying or child checks; malformed shape
+keeps its existing error. This stage follows the parent's metadata getter and
+its existing initial scope: it does not suppress or infer that getter's effects.
+
+Tuple, Union and Or reuse this one operation; branch order and repeated edge
+positions are preserved. Known epochs cannot be refreshed by the first inherited
+checker. Dynamic Pair/Maybe/OrFalse fields and Sum payload getters keep their
+existing quota-before-getter path; their Types are not guessed before return.
+Per-edge source checks and original callback causes, including thrown false,
+remain. This is a shallow topology snapshot, not a freeze of mutable Type payloads
+or a substitute for explicit revision updates. Old reports cannot acquire new
+authority by repairing a declaration; callers prepare again under fresh epochs.
+
+Five focused regression cases cover all three carrier kinds, replaced/improper/
+cyclic caller spines, pre-edge sibling retirement with zero factories, occurrence
+fuel for repeated identities, legal empty Tuple directories at zero remaining
+edge fuel, malformed requests and exact callback causes. The complex standard
+recursive-trees example shares Record/Function leaves through Tuple, Pair, Union
+and List via FUN. Directory retargeting cannot change its declared carrier or
+produce an out-of-domain witness; sibling revision refuses before binding.
+Explicit corrected publication starts a fresh run, shrinks a real false witness,
+preserves Function contracts and both replay paths, rejects old root/owner epochs,
+and admits a corrected property only after fresh preparation. The independent
+standard-library PBT kernel is unchanged and retains all 231 cases.
+
+Existing Function-input and dynamic-edge discovery definitions/laws move from
+PropertyPreparation into the functionally named PropertyDiscovery module. The
+namespace and declaration names remain; Preparation imports that actual owner,
+without aliases or a compatibility layer. Nine new finite directory laws reuse
+captureSources and discoverCarrierEdge for malformed/quota refusal, complete row
+retention, empty rows, known-epoch retention, copied-width and ledger-growth bounds,
+stale-first-edge refusal and exact error causes. Six top-level examples distinguish
+repeated occurrences, exact fuel, an advanced sibling clock, false causes and
+empty versus malformed input.
+
+The copied directory width is bounded by remaining occurrence fuel, and source
+registration adds at most one entry per declaration. Full-list recognition and
+source checks still have costs; this is not a constant-time refusal, GC/RSS proof
+or latency improvement. Faithful host shape recognition/shallow copying, primitive
+revision reads, identity hashing, accurate observers and terminating sequential
+callbacks remain premises. Arbitrary untracked payload mutation, concurrent writes,
+Gerbil/Gambit and compiler verification remain outside the claim. This advances
+the paper's future work.
+
+The author/Racket comparison remains an abstraction reference: keep finite
+construction, source ownership and ordered higher-order traversal at their
+existing boundary, rather than add an executor or per-carrier wrappers. Gerbil's
+list-copy, for-each and map-in-order serve the implementation; the graph's existing
+registry and controlled recursive evaluator retain all runtime ownership. Complete
+checks, original heaps, natural compiler/test completion and cancellation stay.

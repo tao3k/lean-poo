@@ -1,0 +1,265 @@
+import LeanPoo.Functional.PropertyScopes
+
+/-! Finite metadata directories and first-observation revision ownership.
+Host shape normalization, shallow copies, primitive revision reads and terminating
+sequential callbacks remain premises; no runtime or compiler proof is claimed. -/
+namespace LeanPoo.Functional.PropertyTesting
+
+/-- Read one finite Function declaration row under the already captured epochs,
+then retain newly discovered clause/input identities. No child generator is run.
+The host supplies faithful terminating metadata reads and revision counters. -/
+def observeFunctionInputs [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat))
+    (read : State → Except Cause (List Source × State)) (state : State) :
+    Except (Option Cause) (List Source × (State × List (Source × Nat))) :=
+  (guardedGeneration (fun before => revisionsCurrent (current before) ledger) read state).map
+    (fun result => (result.1, (result.2, captureSources (current result.2) ledger result.1)))
+
+/-- A stale Function/clause/input skips the next getter, not merely child draws. -/
+theorem observeFunctionInputs_stale [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (List Source × State)) (state : State)
+    (stale : revisionsCurrent (current state) ledger = false) :
+    observeFunctionInputs current ledger read state = .error none := by
+  simp [observeFunctionInputs, guardedGeneration_preflight (fun before => revisionsCurrent (current before) ledger) read state stale, Except.map]
+
+/-- A computed field cannot retire a known participant and capture its new epoch. -/
+theorem observeFunctionInputs_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state next : State) (row : List Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = false) :
+    observeFunctionInputs (Cause := Cause) current ledger (fun _ => .ok (row, next)) state = .error none := by
+  simp [observeFunctionInputs, guardedGeneration_revised (fun before => revisionsCurrent (current before) ledger) state next row before after, Except.map]
+
+/-- Original metadata errors, including false, retain precedence over retirement. -/
+theorem observeFunctionInputs_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state : State) (cause : Cause)
+    (before : revisionsCurrent (current state) ledger = true) :
+    observeFunctionInputs current ledger (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeFunctionInputs, guardedGeneration_cause (fun before => revisionsCurrent (current before) ledger) state cause before, Except.map]
+
+/-- Stable discovery preserves exact row order and records each first observation. -/
+theorem observeFunctionInputs_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (state next : State) (row : List Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) :
+    observeFunctionInputs (Cause := Cause) current ledger (fun _ => .ok (row, next)) state =
+      .ok (row, (next, captureSources (current next) ledger row)) := by
+  simp [observeFunctionInputs, guardedGeneration_state (fun before => revisionsCurrent (current before) ledger) state next row before after, Except.map]
+
+/-- A later metadata field cannot repair retirement by rediscovering declarations.
+This applies equally to a cached layout or an unforced optional child. -/
+theorem functionInputs_retained_refusal [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source) (state : State)
+    (draw : State → Except Cause (Value × State))
+    (stale : revisionsCurrent (current state) ledger = false) :
+    guardedGeneration (fun before => revisionsCurrent (current before)
+      (captureSources (current state) ledger row)) draw state = .error none := by
+  exact guardedGeneration_preflight _ draw state (captureSources_stale _ row ledger stale)
+
+/-- Captured metadata bookkeeping is bounded by returned identities, not trials
+or cached-layout hits. This is a ledger-size bound, not a runtime latency claim. -/
+theorem functionInputs_capture_cost [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source) :
+    (captureSources current ledger row).length ≤ ledger.length + row.length :=
+  captureSources_cost current row ledger
+
+/-- Repeated known declarations do not refresh epochs even if callbacks advanced
+state; only explicit fresh preparation can establish a new initial ledger. -/
+theorem functionInputs_known [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (row : List Source)
+    (known : ∀ source ∈ row, source ∈ ledger.map Prod.fst) :
+    captureSources current ledger row = ledger := captureSources_known current row ledger known
+
+/-- Refused metadata acquisition cannot enter subsequent generator construction. -/
+theorem observeFunctionInputs_refused [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (read : State → Except Cause (List Source × State))
+    (state : State) (cause : Option Cause)
+    (build : List Source × (State × List (Source × Nat)) → Except (Option Cause) Value)
+    (refused : observeFunctionInputs current ledger read state = .error cause) :
+    (observeFunctionInputs current ledger read state >>= build) = .error cause := by
+  rw [refused]; rfl
+
+/-- A fixed carrier edge spends occurrence fuel before its metadata callback,
+then records the returned Type at first observation. Shared IDs still spend fuel.
+Host callbacks terminate and source revisions faithfully describe supported edits. -/
+def discoverCarrierEdge [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat)
+    (read : State → Except Cause (Source × State)) (state : State) :
+    Except (Option Cause) (Source × (State × Nat × List (Source × Nat))) :=
+  match fuel with
+  | 0 => .error (some quota)
+  | rest + 1 =>
+    (guardedGeneration (fun before => revisionsCurrent (current before) ledger) read state).map
+      (fun result => (result.1, (result.2, rest,
+        captureRevision ledger result.1 (current result.2 result.1))))
+
+/-- Exhausted discovery never evaluates a computed child declaration. -/
+theorem discoverCarrierEdge_empty [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause)
+    (read : State → Except Cause (Source × State)) (state : State) :
+    discoverCarrierEdge current ledger quota 0 read state = .error (some quota) := rfl
+
+/-- Available fuel does not authorize a getter under obsolete captured epochs. -/
+theorem discoverCarrierEdge_stale [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat)
+    (read : State → Except Cause (Source × State)) (state : State)
+    (stale : revisionsCurrent (current state) ledger = false) :
+    discoverCarrierEdge current ledger quota (fuel + 1) read state = .error none := by
+  simp [discoverCarrierEdge, guardedGeneration_preflight
+    (fun before => revisionsCurrent (current before) ledger) read state stale, Except.map]
+
+/-- Original exceptions, including false, bypass normal post-return refusal. -/
+theorem discoverCarrierEdge_cause [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota cause : Cause) (fuel : Nat) (state : State)
+    (before : revisionsCurrent (current state) ledger = true) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .error cause) state =
+      .error (some cause) := by
+  simp [discoverCarrierEdge, guardedGeneration_cause
+    (fun before => revisionsCurrent (current before) ledger) state cause before, Except.map]
+
+/-- A later Pair field cannot retire its earlier captured sibling and publish. -/
+theorem discoverCarrierEdge_revised [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = false) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state = .error none := by
+  simp [discoverCarrierEdge, guardedGeneration_revised
+    (fun before => revisionsCurrent (current before) ledger) state next child before after, Except.map]
+
+/-- Stable discovery returns the exact child, actual state and one fewer edge. -/
+theorem discoverCarrierEdge_stable [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state =
+      .ok (child, (next, fuel, captureRevision ledger child (current next child))) := by
+  simp [discoverCarrierEdge, guardedGeneration_state
+    (fun before => revisionsCurrent (current before) ledger) state next child before after, Except.map]
+
+/-- Shared child occurrences spend edge fuel without refreshing the old epoch. -/
+theorem discoverCarrierEdge_shared [DecidableEq Source] (current : State → Source → Nat)
+    (ledger : List (Source × Nat)) (quota : Cause) (fuel : Nat) (state next : State) (child : Source)
+    (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) (known : child ∈ ledger.map Prod.fst) :
+    discoverCarrierEdge current ledger quota (fuel + 1) (fun _ => .ok (child, next)) state =
+      .ok (child, (next, fuel, ledger)) := by
+  rw [discoverCarrierEdge_stable current ledger quota fuel state next child before after,
+    captureRevision_existing ledger child (current next child) known]
+
+/-- Capturing a child makes it current for the next field while retaining all
+prior authority; it never validates the child's generator or recursive payload. -/
+theorem discoverCarrierEdge_current [DecidableEq Source] (current : Source → Nat)
+    (ledger : List (Source × Nat)) (child : Source) (before : revisionsCurrent current ledger = true) :
+    revisionsCurrent current (captureRevision ledger child (current child)) = true :=
+  captureRevision_fresh current ledger child before
+
+/-- Registration grows by at most one identity per edge, independently of sharing.
+This bounds ledger cardinality, not callback runtime or hash-table latency. -/
+theorem discoverCarrierEdge_capture_cost [DecidableEq Source] (ledger : List (Source × Nat))
+    (child : Source) (epoch : Nat) :
+    (captureRevision ledger child epoch).length ≤ ledger.length + 1 :=
+  captureRevision_length ledger child epoch
+
+/-- Admit a complete known directory before copying or child callbacks. Shared
+occurrences spend width budget, while existing captureSources deduplicates epochs.
+The consumer is the existing ordered edge traversal, not a second visitor. -/
+def prepareCarrierDirectory [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat)
+    (input : Option (List Source))
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output) :
+    Except (Option Cause) Output :=
+  match input with
+  | none => .error (some invalid)
+  | some row => if row.length ≤ fuel then consume row (captureSources clock ledger row)
+      else .error (some quota)
+
+/-- Improper/cyclic host directories cannot enter any child traversal. -/
+theorem prepareCarrierDirectory_malformed [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat)
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output) :
+    prepareCarrierDirectory clock ledger invalid quota fuel none consume = .error (some invalid) := rfl
+
+/-- A complete row exceeding remaining occurrence fuel skips every consumer. -/
+theorem prepareCarrierDirectory_quota [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat) (row : List Source)
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output)
+    (large : fuel < row.length) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some row) consume = .error (some quota) := by
+  simp [prepareCarrierDirectory, Nat.not_le.mpr large]
+
+/-- An admitted row retains its exact order and captures all known epochs first. -/
+theorem prepareCarrierDirectory_admitted [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat) (row : List Source)
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output)
+    (fits : row.length ≤ fuel) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some row) consume =
+      consume row (captureSources clock ledger row) := by simp [prepareCarrierDirectory, fits]
+
+/-- Present empty rows are legal at zero fuel and add no child observations. -/
+theorem prepareCarrierDirectory_empty [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat)
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some []) consume = consume [] ledger := by
+  simp [prepareCarrierDirectory, captureSources]
+
+/-- Repeated known identities keep old epochs rather than renewing authority. -/
+theorem prepareCarrierDirectory_known [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat) (row : List Source)
+    (consume : List Source → List (Source × Nat) → Except (Option Cause) Output)
+    (fits : row.length ≤ fuel) (known : ∀ source ∈ row, source ∈ ledger.map Prod.fst) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some row) consume = consume row ledger := by
+  rw [prepareCarrierDirectory_admitted clock ledger invalid quota fuel row consume fits,
+    captureSources_known clock row ledger known]
+
+/-- Successful capture preserves the full input, bounds copied width by remaining
+fuel, and adds at most one source entry per occurrence. This is not RSS or time. -/
+theorem prepareCarrierDirectory_bounds [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid quota : Cause) (fuel : Nat)
+    (input : Option (List Source)) (result : List Source × List (Source × Nat))
+    (prepared : prepareCarrierDirectory clock ledger invalid quota fuel input
+      (fun row owned => .ok (row, owned)) = .ok result) :
+    input = some result.1 ∧ result.1.length ≤ fuel ∧ result.2.length ≤ ledger.length + result.1.length := by
+  cases input with
+  | none => simp [prepareCarrierDirectory] at prepared
+  | some row =>
+    dsimp only [prepareCarrierDirectory] at prepared
+    split at prepared
+    · rename_i fits
+      have same := Except.ok.inj prepared
+      subst result
+      exact ⟨rfl, fits, captureSources_cost clock row ledger⟩
+    · cases prepared
+
+/-- The existing edge gate refuses a revised known sibling before its getter. -/
+theorem prepareCarrierDirectory_edge_stale [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid quota : Cause)
+    (fuel edgeFuel : Nat) (row : List Source) (read : State → Except Cause (Source × State))
+    (state : State) (fits : row.length ≤ fuel)
+    (stale : revisionsCurrent (current state) (captureSources clock ledger row) = false) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some row)
+      (fun _ owned => discoverCarrierEdge current owned quota (edgeFuel + 1) read state) = .error none := by
+  rw [prepareCarrierDirectory_admitted _ _ _ _ _ _ _ fits]
+  exact discoverCarrierEdge_stale current _ quota edgeFuel read state stale
+
+/-- A live directory retains an original edge callback cause, including false. -/
+theorem prepareCarrierDirectory_edge_cause [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid quota cause : Cause)
+    (fuel edgeFuel : Nat) (row : List Source) (state : State) (fits : row.length ≤ fuel)
+    (fresh : revisionsCurrent (current state) (captureSources clock ledger row) = true) :
+    prepareCarrierDirectory clock ledger invalid quota fuel (some row)
+      (fun _ owned => discoverCarrierEdge current owned quota (edgeFuel + 1) (fun _ => .error cause) state) =
+      .error (some cause) := by
+  rw [prepareCarrierDirectory_admitted _ _ _ _ _ _ _ fits]
+  exact discoverCarrierEdge_cause current _ quota cause edgeFuel state fresh
+
+/-- Directory preparation cannot repair an obsolete incoming ledger by recapture. -/
+theorem prepareCarrierDirectory_prior_stale [DecidableEq Source]
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid quota : Cause)
+    (fuel edgeFuel : Nat) (row : List Source) (read : State → Except Cause (Source × State))
+    (state : State) (fits : row.length ≤ fuel) (stale : revisionsCurrent (current state) ledger = false) :
+    prepareCarrierDirectory (current state) ledger invalid quota fuel (some row)
+      (fun _ owned => discoverCarrierEdge current owned quota (edgeFuel + 1) read state) = .error none := by
+  exact prepareCarrierDirectory_edge_stale (current state) current ledger invalid quota fuel edgeFuel row
+    read state fits (captureSources_stale (current state) row ledger stale)
+
+end LeanPoo.Functional.PropertyTesting
