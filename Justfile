@@ -383,6 +383,7 @@ _check-examples:
     {{lean}} Examples/GeneratedCalls.lean
     {{lean}} Examples/CollectionTesting.lean
     {{lean}} Examples/PropertyGenerators.lean
+    {{lean}} Examples/PropertyDelay.lean
     {{lean}} Examples/PropertyProducts.lean
     {{lean}} Examples/PropertyFilters.lean
     {{lean}} Examples/PropertyScopes.lean

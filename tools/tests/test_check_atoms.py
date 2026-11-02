@@ -105,7 +105,7 @@ class CheckAtomsTests(unittest.TestCase):
         files = [atom['file'] for partition in partitions for atom in partition]
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
-        self.assertEqual(len(files), 360)
+        self.assertEqual(len(files), 361)
         self.assertIn('Examples/CheckedTransfer.lean', files)
         self.assertIn('Tests/C4Prepared.lean', files)
         self.assertIn('Examples/DataflowObject.lean', files)
@@ -113,6 +113,7 @@ class CheckAtomsTests(unittest.TestCase):
         self.assertIn('Examples/CollectionStyles.lean', files)
         self.assertIn('Examples/CollectionTesting.lean', files)
         self.assertIn('Examples/PropertyGenerators.lean', files)
+        self.assertIn('Examples/PropertyDelay.lean', files)
         self.assertIn('Examples/PropertyProducts.lean', files)
         self.assertIn('Examples/PropertyFilters.lean', files)
         self.assertIn('Examples/PropertyScopes.lean', files)

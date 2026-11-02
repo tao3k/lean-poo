@@ -8,6 +8,8 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
+- [Retained delayed-construction depth during dependency rebuilding](#retained-delayed-construction-depth-during-dependency-rebuilding)
+
 - [Generation and domain admission](#generation-and-domain-admission)
 - [Bounded filter retry ownership](#bounded-filter-retry-ownership)
 - [Transient checked-action scope](#transient-checked-action-scope)
@@ -318,3 +320,43 @@ sites and PRNG schedules are retained. No elapsed-
 time claim follows from a Boolean contract check; complete checks and all resource
 limits remain unchanged within the RFC's finite future-work scope.
 
+
+
+## Retained delayed-construction depth during dependency rebuilding
+
+The audit reproduced a depth-one delayed generator whose original draw used its
+only constructor credit, then forced another delayed constructor while shrinking
+a parent after the original dynamic scope ended. The old tree returned candidate
+zero and performed one extra construction. This evaded the explicit constructor
+depth during automatic dependency regeneration, rather than asking for a global
+minimum or a universal bound on handwritten callback execution.
+
+Bind now retains the remaining delay allowance beside its existing seed/size/
+source/random-checkpoint context. Only parent regeneration restores it with the
+standard parameterize form, meeting it with a stricter active caller. Descendants
+retain that effective allowance after the caller exits. False is unbounded; zero
+is exhausted. Fresh draws still get fresh contexts, and this is a nesting-depth
+bound, not a cumulative constructor-count budget for all shrink attempts.
+
+The existing generator-delay shares the same allowance-meet primitive. A normal
+unbounded bind does not acquire a parameterization frame. PRNG splitting, stored
+checkpoints, proposal order, charged attempts and original source/error priority
+remain unchanged. Exhaustion before a yielded proposal charges no attempt and
+retains the last confirmed witness without certifying a minimum. Source refusal
+still precedes quota exhaustion, and raw constructor causes remain exact.
+
+Five independent-library cases cover exhausted/sufficient retained depth, bounded
+inspection and replay, stricter consuming scopes retained across another shrink,
+source/false/object-error precedence and scope unwinding, and unbounded roots.
+A Record/Function/FUN service example refuses an exhausted raw witness, freshly
+prepares a sufficient constructor context, shrinks, seed/concrete/corpus replays,
+rejects retired report sources and explicitly prepares a corrected retry.
+
+The focused PropertyDelay module keeps the existing PropertyTesting namespace and
+reuses resolveDelayed. Laws cover optional allowance identity, commutativity,
+associativity/idempotence, both finite bounds, exhausted callback suppression and
+force-count bounds. Top-level examples distinguish zero, sufficient depth,
+stricter retained callers and unbounded contexts. Faithful host dynamic scope,
+immutable allowance capture and terminating individual callbacks are premises;
+these are not PRNG-quality, arbitrary termination, byte-allocation or latency
+proofs. Search/shrink limits and process/heap constraints remain unchanged.
