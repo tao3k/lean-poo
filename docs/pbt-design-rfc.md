@@ -3745,3 +3745,63 @@ then use the existing ordered traversal and shrink/replay machinery. No second
 executor or per-container validation chain is introduced. Existing complete checks,
 2 GiB main/1 GiB isolated limits and cancellation remain; compilation and semantic
 tests retain their already authorized natural-completion behavior.
+
+## P81: shared sampler declarations owned at first return
+
+The global PBT audit next traced the common generator-sources boundary used by
+explicit bridges, automatic recursive graphs, products and finite Maps. Its
+metadata readers acquired descriptor/bound-descriptor epochs and copied dependency
+spines only AFTER returning inherited source checks. The reproduced direct probe
+returned `retargeted=#t original=#f`: an observer replaced an already returned
+owner before the original list was copied. An observer could likewise revise a
+newly returned Type or dependency before its first epoch was registered. These
+are supported source declarations, not arbitrary dependency inference.
+
+The existing shared function now reads and retains descriptor/bound-descriptor
+inside the SAME with-sources action, through one private named source operation.
+The sources getter validates a proper finite list, copies its spine and registers
+every declared identity inside its existing action before its returning check.
+All consumers continue calling generator-sources; no additional bridge, sampler
+wrapper, source registry, public interface or namespace is introduced. Mandatory
+sampler/Type ownership, binding identity comparisons, source ordering and duplicate
+occurrences remain. The supplied retain! operations are existing pure first-epoch
+bookkeeping; arbitrary user callbacks are not certified by this change.
+
+Four regression cases cover replaced/improper/cyclic edits after dependency
+return, singleton Type and finite dependency retirement before snapshot delivery,
+malformed dependency spines and exact false/object getter causes, plus shared
+bridge/product/Map/graph refusal before any draw. Existing binding
+mismatch and invalid element cases remain unchanged. The existing recursive-trees
+suite adds a complete explicit Record/Function service through property-action:
+a returning observer retires a shared dependency before any draw or property,
+then explicit fresh declaration publication genuinely shrinks the witness, keeps
+nested Function validation, replays both seed and concrete failure, rejects old
+owner epochs and admits a corrected property after fresh preparation. The generic
+PBT kernel is unchanged; its independent standard-library acceptance stays 231
+cases. No additional module registration or runner is needed.
+
+Seven finite PropertyDiscovery laws expose the raw-getter-return / observer split
+that the previous whole-metadata-action abstraction left implicit. The new
+observeCapturedSources operation reuses captureSources and guardedGeneration for
+normalized malformed input, stale preflight, returning-observer retirement, exact
+causes, original row/order/duplicates, prior stale-ledger retention and refusal
+before a dependent binder. Singleton rows model the two Type declarations; finite
+rows model dependency lists. Four top-level examples distinguish repeated owners,
+a revised singleton, a thrown false and an admitted empty row. Existing
+captureSources_cost bounds ledger growth by row width; this does not introduce a
+new dependency quota or claim constant-time source checks.
+
+The captured clock is sampled at the getter's return. Host proper-list recognition,
+faithful shallow copying, accurate revision reads, pure registration and terminating
+sequential callbacks are premises. Payload mutation, opaque undeclared dependencies,
+concurrent writes, effect rollback and compiler/runtime verification remain outside
+the proof. Valid getters retain their original exceptions without a trailing check
+replacing them; malformed returned spines now fail at their admission boundary.
+This advances the paper's future work, without a runtime latency/GC/RSS claim.
+
+The author's ordered composition and the Racket map/bind comparison guide the
+same abstraction choice: establish finite source ownership once, then compose the
+existing generation/shrink/replay operations. Gerbil's list-copy and for-each do
+the list work; existing Record contracts and FUN retain application composition.
+All complete checks, 2 GiB main/1 GiB isolated guards and cancellation remain;
+already authorized compiler/test natural completion is unchanged.

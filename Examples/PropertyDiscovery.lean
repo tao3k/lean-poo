@@ -40,3 +40,17 @@ example : observeVariantDirectory (Value := Bool) (fun _ : Nat => 0)
 example : observeVariantDirectory (Value := Bool) (fun _ : Nat => 0)
     (fun (_state _source : Nat) => 0) [] 0 true true 1 (some ["primary"])
     (fun _ => .error false) 0 = .error (some false) := rfl
+
+-- A returned dependency row retains both occurrences and its first single stamp.
+example : observeCapturedSources (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] "invalid" (some [1, 1]) (fun state => .ok (false, state)) 0 =
+    .ok ([1, 1], (false, 0), [(1, 0)]) := rfl
+-- A singleton Type declaration is owned before the returning observer revises it.
+example : observeCapturedSources (fun _ : Nat => 0) (fun (state _source : Nat) => state)
+    [] "invalid" (some [1]) (fun _ => .ok (false, 1)) 0 = .error none := rfl
+-- False remains an exact observer exception, distinct from stale publication.
+example : observeCapturedSources (Value := Bool) (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] true (some [1]) (fun _ => .error false) 0 = .error (some false) := rfl
+-- Present empty dependencies are permitted; malformed input cannot run a binder.
+example : observeCapturedSources (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] "invalid" (some []) (fun state => .ok (false, state)) 0 = .ok ([], (false, 0), []) := rfl

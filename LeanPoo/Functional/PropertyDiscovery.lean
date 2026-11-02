@@ -350,4 +350,87 @@ theorem variantDirectory_capture_cost [DecidableEq Source] (ledger : List (Sourc
     (captureRevision ledger directory epoch).length ≤ ledger.length + 1 :=
   captureRevision_length ledger directory epoch
 
+/-- First-return ownership of a sampler declaration row, before the returning
+observer. A singleton models descriptor/bound-descriptor; finite rows model sources.
+The getter has already returned: clock and row are captured at that boundary.
+Host proper-list normalization, pure capture and shallow-copy fidelity are premises. -/
+def observeCapturedSources [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (input : Option (List Source)) (observe : State → Except Cause (Value × State)) (state : State) :
+    Except (Option Cause) (List Source × (Value × State) × List (Source × Nat)) :=
+  match input with
+  | none => .error (some invalid)
+  | some row =>
+    let owned := captureSources clock ledger row
+    (guardedGeneration (fun now => revisionsCurrent (current now) owned) observe state).map
+      (fun result => (row, result, owned))
+
+/-- Malformed dependencies cannot enter the returning observer or later binding. -/
+theorem observeCapturedSources_invalid [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (observe : State → Except Cause (Value × State)) (state : State) :
+    observeCapturedSources clock current ledger invalid none observe state = .error (some invalid) := rfl
+
+/-- Captured retirement suppresses subsequent observer/binder effects. -/
+theorem observeCapturedSources_stale [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (row : List Source) (observe : State → Except Cause (Value × State)) (state : State)
+    (stale : revisionsCurrent (current state) (captureSources clock ledger row) = false) :
+    observeCapturedSources clock current ledger invalid (some row) observe state = .error none := by
+  simp [observeCapturedSources, guardedGeneration_preflight
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) observe state stale, Except.map]
+
+/-- A returning observer cannot retire a newly returned participant then publish it. -/
+theorem observeCapturedSources_revised [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (row : List Source) (state next : State) (value : Value)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true)
+    (after : revisionsCurrent (current next) (captureSources clock ledger row) = false) :
+    observeCapturedSources clock current ledger invalid (some row) (fun _ => .ok (value, next)) state =
+      .error none := by
+  simp [observeCapturedSources, guardedGeneration_revised
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state next value before after, Except.map]
+
+/-- Accepted observation retains the complete original row, order and duplicates. -/
+theorem observeCapturedSources_retained [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (row : List Source) (state next : State) (value : Value)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true)
+    (after : revisionsCurrent (current next) (captureSources clock ledger row) = true) :
+    observeCapturedSources clock current ledger invalid (some row) (fun _ => .ok (value, next)) state =
+      .ok (row, (value, next), captureSources clock ledger row) := by
+  simp [observeCapturedSources, guardedGeneration_state
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state next value before after, Except.map]
+
+/-- Original observer causes bypass trailing freshness checks unchanged. -/
+theorem observeCapturedSources_cause [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid cause : Cause)
+    (row : List Source) (state : State)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true) :
+    observeCapturedSources (Value := Value) clock current ledger invalid (some row)
+      (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeCapturedSources, guardedGeneration_cause
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state cause before, Except.map]
+
+/-- New declarations cannot refresh an already stale owner captured by an outer run. -/
+theorem observeCapturedSources_prior_stale [DecidableEq Source] (clock : Source → Nat)
+    (ledger : List (Source × Nat)) (invalid : Cause) (row : List Source)
+    (observe : State → Except Cause (Value × State)) (state : State)
+    (current : State → Source → Nat) (same : current state = clock)
+    (stale : revisionsCurrent clock ledger = false) :
+    observeCapturedSources clock current ledger invalid (some row) observe state = .error none := by
+  apply observeCapturedSources_stale
+  rw [same]
+  exact captureSources_stale clock row ledger stale
+
+/-- Refusal cannot enter a dependent generator factory or replay binder. -/
+theorem observeCapturedSources_refused [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid : Cause)
+    (input : Option (List Source)) (observe : State → Except Cause (Value × State)) (state : State)
+    (bind : List Source × (Value × State) × List (Source × Nat) → Except (Option Cause) Output)
+    (cause : Option Cause)
+    (refused : observeCapturedSources clock current ledger invalid input observe state = .error cause) :
+    (observeCapturedSources clock current ledger invalid input observe state >>= bind) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting
