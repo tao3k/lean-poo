@@ -735,14 +735,14 @@ PropertySequences.finiteSequenceParameters composes finiteShrinkStage over captu
 coordinates; eight laws establish ordered forwarding, exact refusal/cause handling,
 no partial batches and independence from ambient input replacement. Faithful Scheme
 list-copy and source binding remain premises; these laws do not prove pair allocation
-or unrestricted mutable payload isolation. See [the RFC](pbt-design-rfc.md#p55-owned-finite-sequence-preparation).
+or unrestricted mutable payload isolation. See [the RFC](pbt/data-generation.md#p55-owned-finite-sequence-preparation).
 
 P56 places one-use fixture lifetime admission before raw/typed preparation.
 The existing generic model module owns the active use count, transient check and
 receipt identity. PropertyTraces.admitFixture and fixtureReceipt supply ten laws
 separating lifecycle errors, stale sources and actual callback causes. Host
 sequential scope/counter fidelity is assumed; concurrent and continuation reentry
-are outside these laws. See [the RFC](pbt-design-rfc.md#p56-fixture-lifetime-admission-before-typed-preparation).
+are outside these laws. See [the RFC](pbt/preparation.md#p56-fixture-lifetime-admission-before-typed-preparation).
 
 P57 closes fixed-width product row admission and finite child/packing ownership.
 PropertyProducts.captureProductRow / prepareProductRow establish shape before
@@ -750,7 +750,7 @@ consumers; productCoordinate / finiteProductCoordinate reuse finiteShrinkStage a
 guardedStages for ordered packing/refusal. Eleven laws retain empty/false-data
 separation and exact width/order. Faithful host shallow copying and user-defined
 Type/representation laws are premises, not inferred heap or compiler proofs. See
-[the RFC](pbt-design-rfc.md#p57-fixed-product-row-and-finite-expansion-ownership).
+[the RFC](pbt/data-generation.md#p57-fixed-product-row-and-finite-expansion-ownership).
 
 
 P58 closes portable handoff configuration and physical framing admission.
@@ -760,7 +760,7 @@ requests leave caller ports untouched; malformed input may be consumed and needs
 explicit fresh input. Revision/exception behavior and nested Function wrapping
 remain with their existing owners. Eleven finite Lean laws model request/source/
 framing order, assuming faithful host port operations rather than proving the
-reader or I/O rollback. See [P58](pbt-design-rfc.md#p58-portable-handoff-request-admission-and-physical-framing).
+reader or I/O rollback. See [P58](pbt/replay.md#p58-portable-handoff-request-admission-and-physical-framing).
 
 
 P59 closes static trace request admission before computed declarations and
@@ -769,7 +769,7 @@ typed finite limits/dependencies and trace-property binding. Existing model fold
 source checks, Record/Function wrapping and FUN delivery remain the execution
 owners. Eleven finite Lean laws reuse Boolean admission and guarded preparation;
 callback arity, termination and host cleanup are premises. See
-[P59](pbt-design-rfc.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
+[P59](pbt/model-traces.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
 
 
 P60 captures typed trace ingress before computed metadata and registers explicit
@@ -778,4 +778,4 @@ generation reuse the existing Record, source and FUN protocols. Caller spine edi
 cannot retarget commands or dependency identities; payloads remain shared. Eight
 finite Lean laws model the original request handoff and guarded preparation;
 faithful host copying/observers and callback termination remain premises. See
-[P60](pbt-design-rfc.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).
+[P60](pbt/model-traces.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).

@@ -16,7 +16,7 @@ The complete workflow remains `just _check-collections 2 1 4`. No Lean checkout,
 custom loader, extra environment variable or alternate test runner is required.
 Downstream projects can copy the example's domain model/fixture pattern into a
 local test module and export an ordinary `*-test` suite. Package imports and
-configuration follow [the PBT RFC](pbt-design-rfc.md#downstream-scheme-integration).
+configuration follow [the PBT RFC](pbt/integration.md#downstream-scheme-integration).
 
 ## Scenarios
 

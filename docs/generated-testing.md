@@ -71,7 +71,7 @@ requests leave caller ports untouched; malformed input may be consumed and needs
 explicit fresh input. Revision/exception behavior and nested Function wrapping
 remain with their existing owners. Eleven finite Lean laws model request/source/
 framing order, assuming faithful host port operations rather than proving the
-reader or I/O rollback. See [P58](pbt-design-rfc.md#p58-portable-handoff-request-admission-and-physical-framing).
+reader or I/O rollback. See [P58](pbt/replay.md#p58-portable-handoff-request-admission-and-physical-framing).
 
 
 P59 closes static trace request admission before computed declarations and
@@ -80,7 +80,7 @@ typed finite limits/dependencies and trace-property binding. Existing model fold
 source checks, Record/Function wrapping and FUN delivery remain the execution
 owners. Eleven finite Lean laws reuse Boolean admission and guarded preparation;
 callback arity, termination and host cleanup are premises. See
-[P59](pbt-design-rfc.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
+[P59](pbt/model-traces.md#p59-trace-request-admission-before-declarations-and-fixture-scope).
 
 
 P60 captures typed trace ingress before computed metadata and registers explicit
@@ -89,28 +89,28 @@ generation reuse the existing Record, source and FUN protocols. Caller spine edi
 cannot retarget commands or dependency identities; payloads remain shared. Eight
 finite Lean laws model the original request handoff and guarded preparation;
 faithful host copying/observers and callback termination remain premises. See
-[P60](pbt-design-rfc.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).
+[P60](pbt/model-traces.md#p60-owned-trace-ingress-and-first-observed-explicit-dependencies).
 
 P61 guards FunctionArguments metadata from its first Function/clause/input Type
 observation and carries that authority through cached layouts and lazy children.
-See [P61](pbt-design-rfc.md#p61-first-observed-function-input-declarations).
+See [P61](pbt/function-generation.md#p61-first-observed-function-input-declarations).
 
 P62 routes fixed recursive carrier fields through ordered edge discovery: quota
 precedes metadata, and each returned Type is captured before the next getter.
-See [P62](pbt-design-rfc.md#p62-ordered-fixed-carrier-edge-discovery).
+See [P62](pbt/type-discovery.md#p62-ordered-fixed-carrier-edge-discovery).
 
 P63 shares opaque sampler constructor/source admission between recursive graphs
 and typed bridges before optional availability metadata. See
-[P63](pbt-design-rfc.md#p63-shared-opaque-sampler-admission-before-optional-metadata).
+[P63](pbt/type-discovery.md#p63-shared-opaque-sampler-admission-before-optional-metadata).
 
 P64 shares the core's strict Boolean source contract across graph participants,
 direct typed checks and cached guards; malformed replies cannot authorize later
-work. See [P64](pbt-design-rfc.md#p64-strict-boolean-source-admission-across-typed-composition).
+work. See [P64](pbt/generator-control.md#p64-strict-boolean-source-admission-across-typed-composition).
 
 P65 reuses generic failure classification for typed initialization: secondary
 observation/classification cannot erase the primary cause or enter consumer IO.
-See [P65](pbt-design-rfc.md#p65-shared-primary-cause-ownership-during-typed-preparation-failure).
+See [P65](pbt/preparation.md#p65-shared-primary-cause-ownership-during-typed-preparation-failure).
 
 P66 admits diagnostic controls before typed preparation, sharing the generic
 request check without changing legal zero budgets or preparation exceptions.
-See [P66](pbt-design-rfc.md#p66-diagnostic-request-admission-before-typed-preparation).
+See [P66](pbt/diagnostics.md#p66-diagnostic-request-admission-before-typed-preparation).
