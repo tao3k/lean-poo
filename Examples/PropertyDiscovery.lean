@@ -54,3 +54,19 @@ example : observeCapturedSources (Value := Bool) (fun _ : Nat => 0) (fun (_state
 -- Present empty dependencies are permitted; malformed input cannot run a binder.
 example : observeCapturedSources (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
     [] "invalid" (some []) (fun state => .ok (false, state)) 0 = .ok ([], (false, 0), []) := rfl
+
+-- A returned input owns epoch zero before the observer advances it to one.
+example : observeCallDeclarations (fun _ : Nat => 0) (fun (state _source : Nat) => state)
+    [] (.ok ([1], true)) (fun _ => (.ok ((), 1) : Except String (Unit × Nat))) 0 = .error none := rfl
+-- Repeated Types keep one stamp, while the metadata payload remains unchanged.
+example : observeCallDeclarations (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] (.ok ([1, 1], false)) (fun state => (.ok ((), state) : Except String (Unit × Nat))) 0 =
+    .ok (false, 0, [(1, 0)]) := rfl
+-- Observer errors outrank stored member errors without erasing a false cause.
+example : observeCallDeclarations (Value := Bool) (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] (.error true) (fun _ => .error false) 0 = .error (some false) := rfl
+-- A false capture error is distinct from an ordinary absent rest value.
+example : observeCallDeclarations (Value := Bool) (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] (.error false) (fun state => .ok ((), state)) 0 = .error (some false) := rfl
+example : observeCallDeclarations (fun _ : Nat => 0) (fun (_state _source : Nat) => 0)
+    [] (.ok ([], false)) (fun state => (.ok ((), state) : Except String (Unit × Nat))) 0 = .ok (false, 0, []) := rfl

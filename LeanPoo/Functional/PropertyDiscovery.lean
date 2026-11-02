@@ -433,4 +433,106 @@ theorem observeCapturedSources_refused [DecidableEq Source] (clock : Source → 
     (observeCapturedSources clock current ledger invalid input observe state >>= bind) = .error cause := by
   rw [refused]; rfl
 
+/-- Normalize/capture call metadata before returning observers. Pure successful
+capture carries owned metadata plus its complete source row; failed capture has
+published no new stamps. Raw getter exceptions belong to the existing outer gate.
+Host shape/copy fidelity, pure bookkeeping and accurate revision clocks are premises. -/
+def observeCallDeclarations [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (captured : Except Cause (List Source × Value))
+    (observe : State → Except Cause (Unit × State)) (state : State) :
+    Except (Option Cause) (Value × State × List (Source × Nat)) :=
+  let owned := match captured with
+    | .error _ => ledger
+    | .ok row => captureSources clock ledger row.1
+  (guardedGeneration (fun now => revisionsCurrent (current now) owned) observe state).bind
+    (fun result => match captured with
+      | .error cause => .error (some cause)
+      | .ok row => .ok (row.2, result.2, owned))
+
+/-- Successful declaration returns its exact captured payload and first epochs. -/
+theorem observeCallDeclarations_stable [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (row : List Source) (value : Value) (state next : State)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true)
+    (after : revisionsCurrent (current next) (captureSources clock ledger row) = true) :
+    observeCallDeclarations (Cause := Cause) clock current ledger (.ok (row, value))
+      (fun _ => .ok ((), next)) state = .ok (value, next, captureSources clock ledger row) := by
+  simp [observeCallDeclarations, guardedGeneration_state
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state next () before after,
+    Except.bind]
+
+/-- A returning observer cannot revise a newly declared Type then publish it. -/
+theorem observeCallDeclarations_revised [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (row : List Source) (value : Value) (state next : State)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true)
+    (after : revisionsCurrent (current next) (captureSources clock ledger row) = false) :
+    observeCallDeclarations (Cause := Cause) clock current ledger (.ok (row, value))
+      (fun _ => .ok ((), next)) state = .error none := by
+  simp [observeCallDeclarations, guardedGeneration_revised
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state next () before after,
+    Except.bind]
+
+/-- Stored grammar/member refusal is raised only after the normal source gate. -/
+theorem observeCallDeclarations_invalid [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (cause : Cause) (state next : State) (before : revisionsCurrent (current state) ledger = true)
+    (after : revisionsCurrent (current next) ledger = true) :
+    observeCallDeclarations (Value := Value) clock current ledger (.error cause)
+      (fun _ => .ok ((), next)) state = .error (some cause) := by
+  simp [observeCallDeclarations, guardedGeneration_state
+    (fun now => revisionsCurrent (current now) ledger) state next () before after, Except.bind]
+
+/-- Original observer causes keep priority over a stored capture failure. -/
+theorem observeCallDeclarations_invalid_observer [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (invalid cause : Cause)
+    (state : State) (before : revisionsCurrent (current state) ledger = true) :
+    observeCallDeclarations (Value := Value) clock current ledger (.error invalid)
+      (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeCallDeclarations, guardedGeneration_cause
+    (fun now => revisionsCurrent (current now) ledger) state cause before, Except.bind]
+
+/-- An admitted row also preserves an exact observer exception, including false. -/
+theorem observeCallDeclarations_observer [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (row : List Source) (value : Value) (cause : Cause) (state : State)
+    (before : revisionsCurrent (current state) (captureSources clock ledger row) = true) :
+    observeCallDeclarations clock current ledger (.ok (row, value))
+      (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeCallDeclarations, guardedGeneration_cause
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) state cause before, Except.bind]
+
+/-- Rediscovering known clause/input Types cannot renew any old stamp. -/
+theorem observeCallDeclarations_known [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (row : List Source) (value : Value) (observe : State → Except Cause (Unit × State)) (state : State)
+    (known : ∀ source ∈ row, source ∈ ledger.map Prod.fst) :
+    observeCallDeclarations clock current ledger (.ok (row, value)) observe state =
+      (guardedGeneration (fun now => revisionsCurrent (current now) ledger) observe state).map
+        (fun result => (value, result.2, ledger)) := by
+  simp only [observeCallDeclarations, captureSources_known clock row ledger known]
+  cases guardedGeneration (fun now => revisionsCurrent (current now) ledger) observe state <;> rfl
+
+/-- New capture cannot repair an already stale incoming source ledger. -/
+theorem observeCallDeclarations_prior_stale [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (row : List Source) (value : Value) (observe : State → Except Cause (Unit × State)) (state : State)
+    (same : current state = clock) (stale : revisionsCurrent clock ledger = false) :
+    observeCallDeclarations clock current ledger (.ok (row, value)) observe state = .error none := by
+  have expired : revisionsCurrent (current state) (captureSources clock ledger row) = false := by
+    rw [same]; exact captureSources_stale clock row ledger stale
+  simp [observeCallDeclarations, guardedGeneration_preflight
+    (fun now => revisionsCurrent (current now) (captureSources clock ledger row)) observe state expired, Except.bind]
+
+/-- Refused metadata cannot invoke a child promise, layout factory or target. -/
+theorem observeCallDeclarations_refused [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat))
+    (captured : Except Cause (List Source × Value)) (observe : State → Except Cause (Unit × State))
+    (state : State) (cause : Option Cause)
+    (build : Value × State × List (Source × Nat) → Except (Option Cause) Output)
+    (failed : observeCallDeclarations clock current ledger captured observe state = .error cause) :
+    (observeCallDeclarations clock current ledger captured observe state >>= build) = .error cause := by
+  rw [failed]; rfl
+
 end LeanPoo.Functional.PropertyTesting

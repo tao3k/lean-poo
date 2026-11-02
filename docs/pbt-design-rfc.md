@@ -3996,3 +3996,71 @@ Gerbil using, with-catch, values and list-copy implement it; Record and FUN expr
 the typed application. Complete checks, 2 GiB main/1 GiB isolated limits and
 cancellation remain, with the already authorized natural compiler/test completion.
 No full benchmark artifact, versioned JSON or upstream change is introduced.
+
+## P85: first-return ownership of Function call declarations
+
+The next audit checked call generation alongside dependency shrinking and replay.
+P45 owned declarations before LATER metadata getters, but its read action returned
+through inherited source observers before signatures/input/keyword/rest owners
+were registered. A supported .set! revision at that exact boundary produced
+`changed=#t accepted-current=#t`. A complex optional/keyword CaseFunction probe
+then entered an input factory and the target instead of refusing preparation:
+`first-status=failed factories=1 properties=2`. This is a declared-source version
+hole, not unrestricted inference or an untracked payload-mutation request.
+
+FunctionArguments now performs each metadata capture inside its existing read
+action. A complete source row first passes ordinary Object admission, then pure
+identity/revision bookkeeping extends the existing ledger before any returning
+observer. Required/optional input and clause rows own their copied spines; keyword
+capture constructs its owned spine and entry pairs directly with one map, then
+registers the Types. Present rest Types use the same action; false remains absence.
+There is no speculative child derivation. The early keyword pass and existing
+metadata read order, including repeated rest reads, stay intact.
+
+One read operation carries either the captured metadata or its stored preparation
+failure using standard multiple values and an explicit refusal Boolean. Raw getter
+exceptions remain outside that catch and bypass trailing checks unchanged. Pure
+shape/member errors are raised only after the original source gate; observer
+causes retain priority, including a thrown false. Whole-row member admission
+precedes stamp publication, so invalid later members do not partially publish a
+new row. The previous nested snapshot/observer passes in retain! are removed;
+the getter boundary now owns those checks. No new registry, record, namespace,
+framework, public API or compatibility path is introduced.
+
+Four focused cases cover signatures, inputs, optional, keywords and rest; first
+return revision before all factories; exact getter/observer false and object
+causes; Object member refusal before later fields; and one shared promised Type
+across multiple positional, optional, rest and keyword positions. The existing
+signature-service suite adds a complete ordered CaseFunction with optional nested
+Function callbacks, keywords, host defaults, layout caching and a shadowed unsupported
+input Type. Initial retirement is a stale preparation report with zero factories,
+properties, defaults and attempts. Fresh preparation genuinely shrinks the input,
+reuses one child factory, never forces the shadowed child, preserves checked target
+admission, replays both seed and concrete failure, rejects old owners and retries
+a corrected property through FUN. Generic kernel code and its 239-case independent
+standard-library suite are unchanged; module registration/entrypoints are reused.
+
+Eight PropertyDiscovery laws model successful pure capture with source rows and
+owned payloads, or failed capture with no published new stamps. They prove exact
+successful delivery, retirement before publication, delayed member failure,
+observer priority over failed and successful capture, known-epoch retention,
+prior-stale refusal and suppression of dependent factories/targets. Five top-level
+examples distinguish newly revised Types, duplicate identities, false observer
+causes, false capture causes and ordinary false rest metadata. Existing
+captureSources_cost supplies ledger growth bounds. Object recognition, primitive
+revision reads, pure bookkeeping, faithful row copying and terminating sequential
+callbacks remain premises; validation of arbitrary redefined fundamental Object
+behavior or compiler/runtime semantics is not claimed.
+
+Shape selection and runtime Function admission still use the declared Function
+under the existing explicit revision discipline. This does not freeze arbitrary
+Type payload mutation without revision, clone the entire call language, infer
+opaque callback dependencies or prove callback termination, GC/RSS or latency.
+The source-epoch gate is the concrete future-work construction being closed here.
+
+The author/Racket composition reference remains one owned declaration boundary,
+then the existing promise, product, LRU and replay algebra. Gerbil using, with-catch,
+values and standard hash/list operations implement it; Record/Function and FUN
+express the downstream workflow. Complete checks, 2 GiB main/1 GiB isolated guards,
+cancellation and authorized natural compiler/test completion remain unchanged.
+No upstream edits, versioned JSON, full benchmark artifacts or subagents are added.
