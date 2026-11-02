@@ -1,4 +1,4 @@
-import LeanPoo.Functional.PropertySequences
+import LeanPoo.Functional.PropertyScopes
 
 /-! Portable authority and bounded-copy preparation. Boolean source judgments
 share their owner with typed preparation; child costs include roots and compact
@@ -354,5 +354,130 @@ theorem replayTokens_failure (interned : Token → Bool) (roundtrip : Token → 
     property (tokens.map roundtrip) = false := by
   rw [replayTokens_roundtrip interned roundtrip stable tokens ready]
   exact failed
+
+/-- A typed replay's metadata revision and optional sampler judgment supplement
+its captured declared epochs. No clock is refreshed during the handoff. -/
+def replayOwnerCurrent (metadata sampler : State → Bool) (clock : State → Source → Nat)
+    (sources : List (Source × Nat)) (state : State) : Bool :=
+  metadata state && revisionsCurrent (clock state) sources && sampler state
+
+/-- After declaration capture, execution metadata is a checked action. The runner receives
+its owner predicate explicitly and keeps classification of every returned receipt.
+No outer post-check can replace a receipt's original cause. The source row is
+published unchanged, without adding metadata objects or callback-wrapper chains.
+Faithful host capture/scope and a runner honoring the supplied predicate are
+premises; this boundary does not verify arbitrary host callbacks. -/
+def replayHandoff (metadata sampler : State → Bool) (clock : State → Source → Nat)
+    (sources : List (Source × Nat)) (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State) :
+    Except (Option Cause) (Output × List (Source × Nat)) :=
+  let live := replayOwnerCurrent metadata sampler clock sources
+  (guardedGeneration live read state).bind fun (value, after) =>
+    (run live value after).map fun result => (result, sources)
+
+/-- Known obsolete metadata cannot enter execution lookup or any replay variant. -/
+theorem replayHandoff_metadata_stale (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State)
+    (stale : metadata state = false) :
+    replayHandoff metadata sampler clock sources read run state = .error none := by
+  simp [Except.bind, replayHandoff, replayOwnerCurrent, guardedGeneration, stale]
+
+/-- Fresh report metadata cannot authorize a revised declared source. -/
+theorem replayHandoff_sources_stale (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State)
+    (stale : revisionsCurrent (clock state) sources = false) :
+    replayHandoff metadata sampler clock sources read run state = .error none := by
+  simp [Except.bind, replayHandoff, replayOwnerCurrent, guardedGeneration, stale]
+
+/-- An optional sampler's false judgment still refuses before execution. -/
+theorem replayHandoff_sampler_stale (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State)
+    (stale : sampler state = false) :
+    replayHandoff metadata sampler clock sources read run state = .error none := by
+  simp [Except.bind, replayHandoff, replayOwnerCurrent, guardedGeneration, stale]
+
+/-- Normal metadata retirement skips property, encoder and output continuations. -/
+theorem replayHandoff_metadata_revised (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat))
+    (value : Value) (state after : State)
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output)
+    (before : replayOwnerCurrent metadata sampler clock sources state = true)
+    (stale : replayOwnerCurrent metadata sampler clock sources after = false) :
+    replayHandoff metadata sampler clock sources (fun _ => .ok (value, after)) run state = .error none := by
+  simp [Except.bind, replayHandoff, guardedGeneration_revised
+    (replayOwnerCurrent metadata sampler clock sources) state after value before stale]
+
+/-- Raw metadata causes retain exact identity and bypass normal-return checks. -/
+theorem replayHandoff_getter_cause (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat)) (state : State) (cause : Cause)
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output)
+    (before : replayOwnerCurrent metadata sampler clock sources state = true) :
+    replayHandoff metadata sampler clock sources (fun _ => .error cause) run state = .error (some cause) := by
+  simp [Except.bind, replayHandoff, guardedGeneration_cause
+    (replayOwnerCurrent metadata sampler clock sources) state cause before]
+
+/-- An admitted handoff supplies the exact combined owner, metadata and state. -/
+theorem replayHandoff_run (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat)) (state after : State) (value : Value)
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output)
+    (before : replayOwnerCurrent metadata sampler clock sources state = true)
+    (fresh : replayOwnerCurrent metadata sampler clock sources after = true) :
+    replayHandoff metadata sampler clock sources (fun _ => .ok (value, after)) run state =
+      (run (replayOwnerCurrent metadata sampler clock sources) value after).map
+        (fun result => (result, sources)) := by
+  simp [Except.bind, Except.map, replayHandoff, guardedGeneration_state
+    (replayOwnerCurrent metadata sampler clock sources) state after value before fresh]
+
+/-- An already classified runner failure is not replaced by a later owner check. -/
+theorem replayHandoff_run_cause (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat)) (state after : State) (value : Value)
+    (cause : Option Cause) (before : replayOwnerCurrent metadata sampler clock sources state = true)
+    (fresh : replayOwnerCurrent metadata sampler clock sources after = true) :
+    replayHandoff metadata sampler clock sources (fun _ => .ok (value, after))
+      (fun _ _ _ => (.error cause : Except (Option Cause) Output)) state = .error cause := by
+  rw [replayHandoff_run metadata sampler clock sources state after value _ before fresh]; rfl
+
+/-- Published source identity/order/epochs are exactly the captured declaration. -/
+theorem replayHandoff_sources (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources owned : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State) (value : Output)
+    (returned : replayHandoff metadata sampler clock sources read run state = .ok (value, owned)) :
+    owned = sources := by
+  unfold replayHandoff at returned
+  cases ready : guardedGeneration (replayOwnerCurrent metadata sampler clock sources) read state with
+  | error cause => simp [ready, Except.bind] at returned
+  | ok row =>
+    cases finished : run (replayOwnerCurrent metadata sampler clock sources) row.1 row.2 with
+    | error cause => simp [ready, finished, Except.bind, Except.map] at returned
+    | ok output =>
+      have same : (output, sources) = (value, owned) := by
+        simpa [ready, finished, Except.bind, Except.map] using returned
+      exact (congrArg Prod.snd same).symm
+
+/-- Repeated publication adds no metadata report or guard to the source directory. -/
+theorem replayHandoff_source_count (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources owned : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State) (value : Output)
+    (returned : replayHandoff metadata sampler clock sources read run state = .ok (value, owned)) :
+    owned.length = sources.length := by
+  rw [replayHandoff_sources metadata sampler clock sources owned read run state value returned]
+
+/-- Refused metadata cannot enter any later publication or consumer IO. -/
+theorem replayHandoff_refused (metadata sampler : State → Bool)
+    (clock : State → Source → Nat) (sources : List (Source × Nat))
+    (read : State → Except Cause (Value × State))
+    (run : (State → Bool) → Value → State → Except (Option Cause) Output) (state : State)
+    (cause : Option Cause) (next : Output × List (Source × Nat) → Except (Option Cause) Other)
+    (refused : replayHandoff metadata sampler clock sources read run state = .error cause) :
+    (replayHandoff metadata sampler clock sources read run state >>= next) = .error cause := by
+  rw [refused]; rfl
 
 end LeanPoo.Functional.PropertyTesting
