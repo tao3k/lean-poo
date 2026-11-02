@@ -384,4 +384,50 @@ def growthNamedProbes (bulk : Bool) (width : Nat) : Nat := if bulk then 0 else w
 theorem growthNamedProbes_saved (width : Nat) :
     growthNamedProbes false width = growthNamedProbes true width + width := by simp [growthNamedProbes]
 
+
+/-- A public runtime name is admitted before observation, preparation or a named
+HashTable operation. String keys denote symbol identities, not display spelling.
+The host standard contract supplies admission; callbacks here are terminating. -/
+def withAdmittedName (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) : Except Error Result × State :=
+  match admit raw with
+  | .error cause => (.error cause, state)
+  | .ok name => operation name state
+
+/-- Refused names preserve the exact entire receiver/cache/observation state.
+In particular, no symbolic hash, updater or fallback can run in this model. -/
+theorem withAdmittedName_refused (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) (cause : Error)
+    (refused : admit raw = .error cause) :
+    withAdmittedName admit operation raw state = (.error cause, state) := by
+  simp [withAdmittedName, refused]
+
+/-- Accepted symbolic identities delegate unchanged, including offset zero,
+missing-name fallback, false/Function values and original callback failures. -/
+theorem withAdmittedName_accepted (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) (name : String) (accepted : admit raw = .ok name) :
+    withAdmittedName admit operation raw state = operation name state := by
+  simp [withAdmittedName, accepted]
+
+/-- Normal and indexed implementations keep their established equivalence when
+placed behind the same runtime admission boundary; neither route needs a cache. -/
+theorem withAdmittedName_congr (admit : RawName → Except Error String)
+    (ordinary indexed : String → State → Except Error Result × State)
+    (same : ∀ name state, ordinary name state = indexed name state)
+    (raw : RawName) (state : State) :
+    withAdmittedName admit ordinary raw state = withAdmittedName admit indexed raw state := by
+  cases h : admit raw <;> simp [withAdmittedName, h, same]
+
+/-- Successful dispatch witnesses an admitted symbol and the actual operation's
+result/state. Admission cannot turn an unknown name or failed callback into success. -/
+theorem withAdmittedName_success (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state final : State) (value : Result) :
+    withAdmittedName admit operation raw state = (.ok value, final) ↔
+      ∃ name, admit raw = .ok name ∧ operation name state = (.ok value, final) := by
+  cases h : admit raw <;> simp [withAdmittedName, h]
+
 end LeanPoo.Prototype.Representation

@@ -824,3 +824,21 @@ gates. Scheme regressions exercise real port/interface dispatch, outer refinemen
 before and after normalization, current validators and unchanged carrier identity.
 Scheme continues to build/test independently of a Lean checkout. These changes
 are follow-up work on new branches and do not alter the released v0.1.2 tags.
+
+Runtime Slot names are another public admission boundary. Gerbil's optimized
+symbolic hash uses an unchecked primitive; it is not a validator for arbitrary
+runtime values. Ordinary/cached object reads must admit symbols before read
+observers, bootstrap lookup or preparation. The existing static layout's common
+named-index operation owns the same admission for HashTable ref/key/update/delete;
+its store path reuses that boundary rather than duplicating the key check.
+Shape-hit inline reads retain their established fast path.
+
+`Prototype.Representation.withAdmittedName` interprets this boundary over explicit
+receiver/cache/observation state. Refusal preserves the exact cause and state;
+acceptance delegates the actual symbolic identity, and ordinary/indexed agreement
+is preserved. Success witnesses admission and the actual downstream outcome.
+String model keys denote symbol identities, not display spelling. The host must
+faithfully interpret `symbol?`; these laws do not certify the compiler's hash.
+`Examples/CheckedTransfer.lean` distinguishes symbols from strings/keywords/numbers
+and retains false at ordinal zero. Scheme exercises the real HashTable interface,
+both value backends, dependency observers, loaded FUN service and revision retry.

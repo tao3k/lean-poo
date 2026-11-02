@@ -1,5 +1,6 @@
 import LeanPoo.Functional.WrapperValidation
 import LeanPoo.Functional.ByteIO
+import LeanPoo.Prototype.ValueStorage
 
 /-! Alignment fixtures for standard byte endpoints and FUN checked carriers.
 No parser, host pointer equality, transport rollback or OS cleanup is proved. -/
@@ -64,4 +65,39 @@ example : invoke none 7 = .error "outer carrier" := by rfl
 example : WrapperValidation.validate Option.isSome (fun value => value.getD true)
     (fun value => Except.ok (ε := String) value) (fun _ value => some value)
     "outer carrier" (some false) = .ok (some false) := by rfl
+
+/-- Runtime strings and keywords are data, not symbolic Slot identities. -/
+inductive RuntimeName where
+  | symbol : String → RuntimeName
+  | text : String → RuntimeName
+  | keyword : String → RuntimeName
+  | number : Int → RuntimeName
+
+/-- The host interpretation follows the standard symbol-only Slot contract. -/
+def admitName : RuntimeName → Except String String
+  | .symbol name => .ok name
+  | _ => .error "symbol required"
+
+/-- A warmed receiver keeps its one authoritative false cell at ordinal zero. -/
+def warmed : Prototype.Representation.View Bool :=
+  ⟨1, 4, 9, ["disabled"], fun name => if name = "disabled" then some false else none⟩
+
+/-- Ordinary named access invokes its original fallback only for admitted names. -/
+def namedRead (name : String) (view : Prototype.Representation.View Bool) :
+    Except String Bool × Prototype.Representation.View Bool :=
+  (Prototype.Representation.primaryRead view name (fun _ => .error "missing"), view)
+
+-- Refusal cannot retire a warmed receiver or forge a successful default.
+example : Prototype.Representation.withAdmittedName admitName namedRead
+    (.number 17) warmed = (.error "symbol required", warmed) := rfl
+example : Prototype.Representation.withAdmittedName admitName namedRead
+    (.text "disabled") warmed = (.error "symbol required", warmed) := rfl
+example : Prototype.Representation.withAdmittedName admitName namedRead
+    (.keyword "disabled") warmed = (.error "symbol required", warmed) := rfl
+-- Reusing the operation with a valid runtime symbol retains false at offset zero.
+example : Prototype.Representation.withAdmittedName admitName namedRead
+    (.symbol "disabled") warmed = (.ok false, warmed) := rfl
+example : Prototype.Representation.withAdmittedName admitName namedRead
+    (.symbol "unknown") warmed = (.error "missing", warmed) := rfl
+
 end LeanPoo.Examples.CheckedTransfer
