@@ -139,3 +139,18 @@ example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some ([] : Lis
 example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some [2])
     (fun state => state = 0) (fun _ => .ok ((), 1)) [([0], false)] 0 =
       .error (some "unknown") := rfl
+
+-- Post-return mutation cannot replace the captured candidate zero with one.
+example : observeFiniteChildren "invalid" (fun state : Nat => some [state])
+    (fun _ => true) (fun _ => .ok ((), 1)) 0 = .ok ([0], 1) := rfl
+-- An observer exception retains priority over malformed neighborhood shape.
+example : observeFiniteChildren "invalid" (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => true) (fun _ => .error "observer") 0 = .error (some "observer") := rfl
+-- A valid batch is not authority to publish after its source is retired.
+example : observeFiniteChildren "invalid" (fun _ : Nat => some [0])
+    (fun state => state = 0) (fun _ => .ok ((), 1)) 0 = .error none := rfl
+-- False is an actual observer cause; an empty neighborhood is valid data.
+example : observeFiniteChildren true (fun _ : Nat => some [0])
+    (fun _ => true) (fun _ => .error false) 0 = .error (some false) := rfl
+example : observeFiniteChildren "invalid" (fun _ : Nat => some ([] : List Nat))
+    (fun _ => true) (fun state => .ok ((), state)) 0 = .ok ([], 0) := rfl

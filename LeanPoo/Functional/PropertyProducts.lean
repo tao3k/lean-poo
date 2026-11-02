@@ -613,4 +613,69 @@ theorem callFunctionRequest_owned [DecidableEq Argument] (invalid unknown : Caus
       callFunctionRequest invalid unknown (fun _ => some row) live observe table state := by
   simp only [callFunctionRequest, captured]
 
+/-- Capture a finite neighborhood's shape and topology before returning observers,
+then preserve the existing source/exception priority before reporting bad shape.
+The raw shrinker has returned; its invocation and original exceptions belong to
+the existing outer source gate. Host normalization/shallow-copy fidelity remain
+premises, and arbitrary payload identity/effects are not deep-frozen. -/
+def observeFiniteChildren (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State) :
+    Except (Option Cause) (List Value × State) :=
+  let owned := returned state
+  (guardedGeneration live observe state).bind (fun result =>
+    match owned with
+    | none => .error (some invalid)
+    | some row => .ok (row, result.2))
+
+/-- Bad shape refuses after a normally completed returning source check. -/
+theorem observeFiniteChildren_invalid (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (bad : returned state = none)
+    (before : live state = true) (after : live next = true) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .error (some invalid) := by
+  simp [observeFiniteChildren, bad, guardedGeneration_state live state next () before after, Except.bind]
+
+/-- Stale source priority remains even when the captured neighborhood is malformed. -/
+theorem observeFiniteChildren_stale (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (stale : live state = false) :
+    observeFiniteChildren invalid returned live observe state = .error none := by
+  simp [observeFiniteChildren, guardedGeneration_preflight live observe state stale, Except.bind]
+
+/-- Retiring the source while observing cannot publish any captured batch or turn
+retirement into a malformed-neighborhood error. -/
+theorem observeFiniteChildren_revised (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (before : live state = true) (after : live next = false) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .error none := by
+  simp [observeFiniteChildren, guardedGeneration_revised live state next () before after, Except.bind]
+
+/-- Original observer exceptions outrank bad shape and bypass trailing checks. -/
+theorem observeFiniteChildren_cause (invalid cause : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state : State) (before : live state = true) :
+    observeFiniteChildren invalid returned live (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeFiniteChildren, guardedGeneration_cause live state cause before, Except.bind]
+
+/-- Successful admission retains initial candidate order/multiplicity, regardless
+of how the returning observer changes the caller's later list spelling. -/
+theorem observeFiniteChildren_retained (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (state next : State) (row : List Value)
+    (captured : returned state = some row) (before : live state = true) (after : live next = true) :
+    observeFiniteChildren invalid returned live (fun _ => .ok ((), next)) state = .ok (row, next) := by
+  simp [observeFiniteChildren, captured, guardedGeneration_state live state next () before after, Except.bind]
+
+/-- Capturing once is observationally identical to an immutable constant row. -/
+theorem observeFiniteChildren_snapshot (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (row : List Value) (captured : returned state = some row) :
+    observeFiniteChildren invalid returned live observe state =
+      observeFiniteChildren invalid (fun _ => some row) live observe state := by
+  simp only [observeFiniteChildren, captured]
+
+/-- Failed admission skips dependent candidate packing and property execution. -/
+theorem observeFiniteChildren_refused (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State)
+    (consume : List Value × State → Except (Option Cause) Output) (cause : Option Cause)
+    (failed : observeFiniteChildren invalid returned live observe state = .error cause) :
+    (observeFiniteChildren invalid returned live observe state >>= consume) = .error cause := by
+  rw [failed]; rfl
+
 end LeanPoo.Functional.PropertyTesting

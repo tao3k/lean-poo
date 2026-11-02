@@ -3805,3 +3805,63 @@ existing generation/shrink/replay operations. Gerbil's list-copy and for-each do
 the list work; existing Record contracts and FUN retain application composition.
 All complete checks, 2 GiB main/1 GiB isolated guards and cancellation remain;
 already authorized compiler/test natural completion is unchanged.
+
+## P82: finite POO shrink neighborhoods captured before returning checks
+
+The audit followed finite proposal ownership beyond P57 product rows. A raw UInt
+sampler returned `(0)`; a returning inherited observer rewrote that spine to `(1)`
+before sampler-children copied it. The reproduced child was `candidate=(1)`.
+Products had the same checked-call/copy order, and recursive leaf shrinking had
+an independent return path. This changes the actual proposed witness rather than
+merely diagnostics, and is a concrete finite-POO-protocol gap.
+
+The existing sampler-children operation now owns invocation, shallow capture and
+final admission together. Its local capture action remembers a proper row as a
+copy and malformed shape as false. It runs inside the caller's existing checked
+action; only after that action's original source/current checks succeed does
+false become the existing finite-proper-list error. Thus stale/observer causes
+retain priority even for malformed output, original shrinker exceptions still
+bypass trailing checks unchanged, and valid empty rows/false payloads are data.
+There is one copy for each immediate finite neighborhood, without a second walk
+or wrapper record after the returning observer.
+
+Raw bridges use the same default inherited source action. Products supply their
+already existing checked action, so current checks, pack ordering and later-child
+suppression stay with the product owner. Recursive construction receives the
+same finite admission operation as its other supplied scalar capabilities; its
+old redundant continuation list validation is removed. This changes an internal
+constructor capability, not the public typed generator API. Search, structural,
+candidate and strict-rank accounting remain unchanged. No recursive child tree
+is traversed eagerly. The independent generic Iterator API and data-list-shrinks
+callback contract are not claimed by this finite POO unit; the latter's separate
+return-ownership audit remains future acceptance work, not a proved design law.
+
+Four regressions cover bridge/product/recursive paths, replaced/improper/cyclic
+post-return spines, empty and malformed neighborhoods, exact false/object causes,
+malformed-output stale and observer-exception precedence, and suppression of
+packing/later child effects after source retirement. The existing generated-products
+suite adds a complete Record/Function service via property-action: the returning
+observer substitutes a different service witness but the original zero witness
+is retained; real shrinking, Function validation, concrete replay, seed replay
+after explicit callback-data repair, old-owner refusal and fresh corrected retry
+all use the ordinary runner and FUN. Mutable closure data remains the caller's
+source obligation. No new framework, namespace, module registration or cache is
+introduced, and the independent standard-library kernel retains all 231 cases.
+
+Seven finite PropertyProducts laws model normalized shape/topology capture before
+returning observation while deferring shape errors until the existing guard has
+completed. They prove malformed refusal under fresh normal observation, stale
+preflight and retirement priority, exact observer causes, original ordered row,
+snapshot equivalence and suppression of a dependent consumer on refusal. Five
+top-level examples distinguish post-return replacement, malformed/observer-error
+priority, retirement, false causes and an empty neighborhood. Host list recognition,
+shallow-copy fidelity, accurate source observations and terminating sequential
+callbacks remain premises. This is not a deep payload snapshot, callback termination,
+concurrent mutation or compiler/runtime proof, nor a performance/GC/RSS claim.
+
+The author's ordered composition and Rackcheck retained-child direction remain
+the design reference: keep proposal ownership at one callback owner and reuse the
+existing lazy tree, checked packer and replay algebra. Record, FUN and standard
+Gerbil list-copy do the concrete work. Complete checks, 2 GiB main/1 GiB isolated
+limits and process cancellation are unchanged, as is authorized natural compiler
+and test completion. These are finite future-work constructions.
