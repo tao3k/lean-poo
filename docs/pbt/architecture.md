@@ -16,6 +16,8 @@ On this page:
 - [Scope and explicit boundaries](#scope-and-explicit-boundaries)
 - [Abstraction and implementation review](#abstraction-and-implementation-review)
 
+- [Release readiness and abstraction review](#release-readiness-and-abstraction-review)
+
 ## Earlier acceptance summary
 
 Current finite acceptance includes the finite protocol features. The companion Gerbil RFC owns the
@@ -228,4 +230,65 @@ The executable examples are `examples/collection-testing.ss` and
 backends, including adapters deliberately broken at stale admission, index
 observation, inverse installation and atomic failure. Their reference oracle uses
 logical handles and ordinary lists, independent of backend mutation algorithms.
+
+
+## Release readiness and abstraction review
+
+Review date: 2026-11-02. The v0.1.2 admission covers the functional POO modules,
+typed contract/collection integration and the complete PBT call chain. It is a
+finite-protocol release, not a statement that every TODO or research direction
+is complete. Generalized MOP constructions advance the original future work.
+
+| Boundary | Existing mechanism retained | POO-specific responsibility |
+| --- | --- | --- |
+| Composition | `fun.ss`, `io.ss`, standard `compose`, ordinary closures and hygienic binding forms | Reader configuration, checked effects and report delivery |
+| Public types | Existing Type/Record/Function declarations and Gerbil `using`/procedure contracts | Recursive wrapping, declared epochs, bounded membership and evidence |
+| Generic PBT data | Standard private Gerbil structs, hash tables and list algorithms | Explicit domain/measure callbacks; no POO dependency in the generic kernel |
+| Lazy traversal | Official `std/iter` Iterable/Iterator interfaces, `iter`, `for`, `in-coroutine` | Source authority at creation, conversion and every pull; proposal accounting |
+| Prepared call layouts | Official `std/struct/lru`, standard promises and signature decoding | Bounded layout reuse without retaining arguments or renewing old epochs |
+| Randomness | Invocation-owned SRFI-27 sources and opaque state checkpoints | Explicit seed ownership and dependent regeneration, without a second PRNG |
+| Replay | Standard ports and reader/writer with explicit codec identity | Finite data admission, source-current handoff and exact failure priority |
+| Build and tests | `defbuild-script`, standard `gerbil clean/build/test`, `:std/test` | Complete case/module receipts, heap/cancellation guards and integration assertions |
+
+The source review inspected installed Gerbil v0.19 `std/iter/interface.ss`,
+`std/iter/iterators.ss`, `std/iter/macros.ss`, `std/struct/lru.ss`, `std/func.ss`
+and the core contract surface alongside the project FUN/IO implementations.
+`Iterable.iter` is an application callback; the new preparation boundary corrects
+the previously missing inherited authority without replacing official dispatch.
+The application fixture returns the checked `Iterator` interface required by
+Gerbil's compiled interface method. No parallel interface or stream library is
+introduced. Functional definitions added for this fix carry their own comments.
+
+The core PBT modules remain below 1,000 lines and keep distinct responsibilities:
+generation/trees, execution/accounting, models/repair, portable replay and test
+registration. Typed derivation, recursive graph discovery and Function call
+layouts remain separate modules. The active production collection/type/object
+modules reviewed also remain below that bound. Stateful search loops express
+budget/progress control; the surrounding reusable abstraction is the existing
+map/bind/sequence algebra and declaration macros, rather than a second driver.
+
+The private recursive interaction transport still uses an erased carrier, written
+`Any` inside the closed program. That transport is not a fallback inference or
+public generation descriptor: graph-directed parsing, node/depth/search admission
+and captured source checks authorize every public result. This release does not
+claim an independent static type theorem for arbitrary intermediate host values.
+It also does not claim unrestricted recursive types, arbitrary callback
+termination/purity, invisible payload-mutation detection, general concurrent
+linearizability, compiler/collector verification or universal performance gains.
+These explicit premises must not be recorded as missing finite PBT features.
+
+Two concrete admission defects were corrected: standard Iterable conversion now
+inherits the same source scope as the surrounding action, and Scheme's push CI
+now names its actual default/release branch, `master`. Lean already checks `main`.
+Before squash, both exact PR heads must pass their unchanged complete workflows.
+After squash, both resulting default-branch commits must pass CI again before
+v0.1.2 tags/releases are created. The Lean package version and both release tags
+identify the same release series; Scheme continues to use its ordinary package
+and Git release identity, without an extra version manifest.
+
+The main 2 GiB and isolated 1 GiB bounds, cancellation, complete case coverage
+and natural compiler/test completion remain unchanged. Full benchmark data,
+compressed archives and build products stay out of Git. Audit receipts and Git
+history retain provenance; feature names, rather than phase numbers, organize
+this design.
 

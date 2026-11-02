@@ -89,3 +89,11 @@ implementation.
 
 This repository's [[file:LICENSE][LICENSE]] is Apache License 2.0. The Lean translations
 retain attribution to Faré and the applicable upstream license notices.
+
+* Release scope
+
+Version 0.1.2 includes finite generator, dependency-shrinking and replay laws,
+with executable Gerbil counterparts in the companion project. Generalized MOP
+constructions advance the original future-work direction. See the
+[[file:docs/pbt/architecture.md][abstraction and release review]] for explicit
+premises; these proofs do not verify arbitrary callbacks, GC or compiler code.
