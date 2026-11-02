@@ -790,3 +790,13 @@ refusal. Executable Gerbil controls cover conversion-time nested actions, lazy
 map/bind/products, diagnostics and indexed Record/FUN trace repair/replay. The
 finite model assumes faithful host dynamic scope and terminating callbacks. See
 [Source-owned Iterable preparation](pbt/shrinking.md#source-owned-iterable-preparation).
+
+
+## Typed replay handoff ownership
+
+PropertyReplay's `replayHandoff` composes prepared execution metadata with the
+runner's explicit invocation predicate. Ten laws retain exact failures and the
+declared owner row, with no added post-check over classified receipts or growth
+in report/guard chains. Generic `current?:` is transient; typed publication owns
+the captured declared epochs. See [the replay protocol](pbt/replay.md#source-owned-typed-replay-handoff)
+for executable Record/FUN controls and the explicit host/runner premises.
