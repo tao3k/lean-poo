@@ -364,3 +364,6 @@ import LeanPoo.Functional.BuildCache
 import LeanPoo.Functional.InferenceReports
 
 import LeanPoo.Object.SlotObservation
+
+import LeanPoo.Functional.WrapperValidation
+import LeanPoo.Functional.ByteIO

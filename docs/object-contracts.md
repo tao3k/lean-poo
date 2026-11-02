@@ -796,3 +796,31 @@ and normalized-value behavior, while the existing diagnostic phase laws retain
 ordered refusal. Gerbil regression suites exercise the directly migrated public
 imports, higher-order wrappers, multiple results and exception identities. These
 Lean laws do not certify the Gerbil module loader or compiler.
+
+## FUN carriers and standard byte I/O
+
+`Functional.WrapperValidation` models the existing Wrap./IdWrap boundary: admit
+outer membership, normalize the underlying Type once, reconstruct according to
+the host identity-reuse policy, then admit the actual returned carrier. Its laws
+cover early refusal, exact payload errors, success membership, unchanged-carrier
+reuse and retention of the checked payload. The last law requires faithful
+unwrap/rebuild operations. Function carriers require no decidable equality; the
+existing `Functional.FunctionValidation` input/output laws govern their calls.
+The host `eq?` reuse decision itself is not verified by this model.
+
+`Functional.ByteIO` gives a finite state interpretation of Gerbil standard ports
+and Reader/Writer endpoints. Natural spans represent nonnegative fixnums already
+admitted by Gerbil contracts; negative/non-fixnum rejection is covered by host
+regressions. Standard Reader/Writer implementations must satisfy their declared
+span/count/minimum obligations. Empty spans skip transport. Exact success has the
+requested length; refusal can retain consumed input and written prefixes. FUN
+transfer suppresses output after input failure and retains the exact failing
+cause/state. No resource ownership, rollback, flushing, closing, scheduling or
+compiler/runtime theorem is inferred from these finite laws.
+
+The top-level `Examples/CheckedTransfer.lean` checks short reads, partial writes,
+opaque false errors, fresh retry, present false payloads and both Function call
+gates. Scheme regressions exercise real port/interface dispatch, outer refinement
+before and after normalization, current validators and unchanged carrier identity.
+Scheme continues to build/test independently of a Lean checkout. These changes
+are follow-up work on new branches and do not alter the released v0.1.2 tags.
