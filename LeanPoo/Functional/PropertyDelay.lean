@@ -1,8 +1,8 @@
 import LeanPoo.Functional.PropertyGenerators
 
 /-! Retained delayed-construction allowances for dependent sample regeneration.
-None is an unbounded context, some zero is exhausted. Host dynamic scope and
-faithful capture of these immutable credits remain explicit premises. -/
+None is an unbounded context, some zero is exhausted. Faithful host capture and per-resume transfer of the incoming numeric credits
+remain explicit premises; this does not verify host continuation implementation. -/
 namespace LeanPoo.Functional.PropertyTesting
 
 /-- Meet original and active depth allowances without renewing either one. -/
@@ -67,5 +67,46 @@ theorem restoredDelayed_zero (step : State → Sum Value State) (limit : Nat)
 theorem restoredDelayed_unbounded (step : State → Sum Value State) (limit : Nat) (state : State) :
     restoredDelayed step limit none none state = resolveDelayed step limit state := by
   simp [restoredDelayed, delayCredits, delayMeet]
+
+/-- Resume a suspended dependent iterator under both saved and incoming limits.
+The saved continuation may restore its dynamic limit, but cannot erase the caller. -/
+def resumedDelayed (step : State → Sum Value State) (limit : Nat)
+    (retained saved incoming : Option Nat) (state : State) : Option Value × Nat :=
+  restoredDelayed step limit retained (delayMeet saved incoming) state
+
+/-- Per-resume transfer is precisely the same meet as ordinary nested scopes. -/
+theorem resumedDelayed_flatten (step : State → Sum Value State) (limit : Nat)
+    (retained saved incoming : Option Nat) (state : State) :
+    resumedDelayed step limit retained saved incoming state =
+      restoredDelayed step limit (delayMeet retained saved) incoming state := by
+  simp only [resumedDelayed, restoredDelayed, delayCredits, delayMeet_assoc]
+
+/-- Restoring a looser saved continuation cannot manufacture incoming credits. -/
+theorem resumedDelayed_incoming_budget (step : State → Sum Value State) (limit incoming : Nat)
+    (retained saved : Option Nat) (state : State) :
+    (resumedDelayed step limit retained saved (some incoming) state).2 ≤ incoming := by
+  rw [resumedDelayed_flatten]
+  exact Nat.le_trans (restoredDelayed_budget step limit _ _ state)
+    (delayCredits_active limit incoming _)
+
+/-- The original saved finite limit also remains authoritative after resuming. -/
+theorem resumedDelayed_saved_budget (step : State → Sum Value State) (limit saved : Nat)
+    (retained incoming : Option Nat) (state : State) :
+    (resumedDelayed step limit retained (some saved) incoming state).2 ≤ saved := by
+  rw [resumedDelayed, delayMeet_comm (some saved) incoming]
+  exact resumedDelayed_incoming_budget step limit saved retained incoming state
+
+/-- An exhausted incoming caller skips the constructor despite a saved allowance. -/
+theorem resumedDelayed_zero (step : State → Sum Value State) (limit : Nat)
+    (retained saved : Option Nat) (state : State) :
+    resumedDelayed step limit retained saved (some 0) state = (none, 0) := by
+  cases retained <;> cases saved <;>
+    simp [resumedDelayed, restoredDelayed, delayCredits, delayMeet, resolveDelayed]
+
+/-- Resuming without an additional bound preserves the original force semantics. -/
+theorem resumedDelayed_unbounded (step : State → Sum Value State) (limit : Nat)
+    (retained saved : Option Nat) (state : State) :
+    resumedDelayed step limit retained saved none state = restoredDelayed step limit retained saved state := by
+  simp [resumedDelayed, delayMeet_unbounded_right]
 
 end LeanPoo.Functional.PropertyTesting

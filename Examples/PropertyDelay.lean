@@ -16,3 +16,13 @@ example : restoredDelayed (fun state : Nat => if state = 0 then Sum.inr 1 else S
 -- Unbounded contexts preserve ordinary independent finite construction.
 example : restoredDelayed (fun state : Nat => if state = 0 then Sum.inr 1 else Sum.inl 7)
     2 none none 0 = (some 7, 2) := rfl
+
+-- A paused producer with three saved credits cannot force inside a zero-credit caller.
+example : resumedDelayed (fun _ : Nat => (Sum.inl 0 : Sum Nat Nat))
+    1 (some 3) (some 3) (some 0) 0 = (none, 0) := rfl
+-- One incoming credit permits the same constructor, independently of prior suspension.
+example : resumedDelayed (fun _ : Nat => (Sum.inl 0 : Sum Nat Nat))
+    1 (some 3) none (some 1) 0 = (some 0, 1) := rfl
+-- A two-stage constructor still cannot renew the incoming caller's single credit.
+example : resumedDelayed (fun state : Nat => if state = 0 then Sum.inr 1 else Sum.inl 7)
+    2 (some 3) (some 3) (some 1) 0 = (none, 1) := rfl

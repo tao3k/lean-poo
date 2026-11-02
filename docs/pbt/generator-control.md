@@ -9,6 +9,7 @@ be checked separately. The finite laws retain their stated runtime premises.
 On this page:
 
 - [Retained delayed-construction depth during dependency rebuilding](#retained-delayed-construction-depth-during-dependency-rebuilding)
+- [Incoming delay allowance across suspended dependency cursors](#incoming-delay-allowance-across-suspended-dependency-cursors)
 
 - [Generation and domain admission](#generation-and-domain-admission)
 - [Bounded filter retry ownership](#bounded-filter-retry-ownership)
@@ -360,3 +361,55 @@ stricter retained callers and unbounded contexts. Faithful host dynamic scope,
 immutable allowance capture and terminating individual callbacks are premises;
 these are not PRNG-quality, arbitrary termination, byte-allocation or latency
 proofs. Search/shrink limits and process/heap constraints remain unchanged.
+
+## Incoming delay allowance across suspended dependency cursors
+
+The next audit reproduced a separate gap on the *same* retained iterator: pull
+candidate 2 without a tighter caller, then resume it in a depth-one delayed
+constructor (zero remaining credits). Previously the saved standard coroutine
+restored its earlier dynamic context, emitted candidate 0 and forced its delayed
+constructor once. Capturing the allowance only when the child factory is created
+cannot protect later pulls.
+
+Bind now returns a private standard Iterator delegate carrying one numeric relay.
+Its first pull installs the relay in the producer's dynamic scope; every pull
+updates that scalar from the incoming caller before resuming the unchanged
+`in-coroutine`. Effective depth meets retained, saved and incoming allowances.
+Normal returns clear the relay. It captures no additional source observers,
+reports or caller continuations; later pulls add no parameterization frame.
+The delegate neither prefetches candidates nor moves Iterable conversion or
+proposal charging to another stage. Raw exceptions retain the standard coroutine
+handler lifetime: catch around the entire traversal, not merely a later pull.
+Serial Iterator use remains a premise; this adds no concurrent cursor protocol.
+
+The existing source gate still runs before exhaustion or construction. An
+exhausted pull yields no candidate and charges no proposal; constructor exceptions
+retain exact identity, including false. This is the existing nesting-depth bound,
+not a total count budget across independent branches. Freshly prepared draws may
+use their explicitly declared allowance; old trees never renew themselves.
+
+Four independent-library regressions exercise an unbounded or bounded first
+pull followed by a stricter resume, sufficient allowance and exact EOF, false/
+object causes, and source refusal before exhaustion with fresh-scope recovery.
+The Record/Function service example previews a dependency, refuses exhausted
+resumption, then freshly prepares, checks through FUN, seed/concrete/portable
+replays, rejects retired sources and explicitly retries a corrected property.
+
+PropertyDelay formalizes resumed evaluation as the meet of retained, saved and
+incoming optional limits. The flattening law and incoming/saved force bounds
+prove that suspension cannot renew credits; incoming zero suppresses the
+constructor. Top-level examples cover zero, one sufficient credit and a two-stage
+constructor needing more. Faithful host relay transfer and terminating individual
+callbacks are premises: these are not proofs of Gerbil continuations, GC, byte
+allocation or wall time. The complete checks retain their existing heap/process
+and search limits.
+
+Design reflection: Rackcheck's pinned [core bind implementation](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/core.rkt#L98-L107)
+composes mapped/joined shrink trees and a reproducible RNG. We retain that algebra;
+explicit delayed depth and revision admission are our additional protocols.
+Gerbil's standard coroutine continues to own suspension, EOF and exception
+routing. A single private Iterator delegate is needed at that suspension boundary;
+adding wrappers to each generator operation or replacing the coroutine would
+spread the same policy across the algebra. The original prototype fixed-point
+construction remains unchanged; bounded PBT construction is an engineering
+extension, not an unimplemented requirement of the author's fixed-point section.
