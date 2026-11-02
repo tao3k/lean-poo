@@ -8,6 +8,8 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
+- [Returning typed observer epoch admission](#returning-typed-observer-epoch-admission)
+
 - [Source-consistent scalar stages in recursive derivation](#source-consistent-scalar-stages-in-recursive-derivation)
 - [First-observation snapshots during recursive descriptor discovery](#first-observation-snapshots-during-recursive-descriptor-discovery)
 - [Constructor-bound typed sampler declarations and mandatory owners](#constructor-bound-typed-sampler-declarations-and-mandatory-owners)
@@ -703,3 +705,39 @@ the list work; existing Record contracts and FUN retain application composition.
 All complete checks, 2 GiB main/1 GiB isolated guards and cancellation remain;
 already authorized compiler/test natural completion is unchanged.
 
+
+
+## Returning typed observer epoch admission
+
+The audit reproduced a closed typed guard returning true after its optional hook
+retired a known declared owner. A portable import consumed its entire caller input
+before reporting stale context. Map already modeled the hook as an action between
+pure epoch reads; the general typed guard, discovery participant fold and replay
+invocation scope lacked that same returning-epoch discipline.
+
+Those existing boundaries now recheck their captured epoch row after each true
+hook reply. Recursive graph observation stops before a later participant; replay
+also protects the invocation report and an additional derived sampler. False
+still refuses directly; a non-Boolean reply or original thrown cause is checked
+before any post-epoch refusal and keeps its identity. An absent hook adds no
+second epoch walk. There is no new namespace, wrapper registry, source capture,
+clock renewal or persistent guard chain. Known rows alone are checked: hidden
+sources, callback termination and concurrent publication remain outside scope.
+
+The hook is the observed action, while revision reads remain pure. This aligns
+with the existing mapObserver_revised law; it does not claim to prove arbitrary
+hook purity. Bound guard/replay admission adds at most one known-row walk after a
+true hook. Graph observation adds one such walk per true participant. These are
+finite traversal costs, not a latency, GC or byte-allocation theorem.
+
+Regression controls cover dependency/sampler/report retirement, graph tail
+suppression, unchanged input ports and zero property/encoder/output work, plus
+false, malformed and original false/object exceptions. The Record/Function/FUN
+example composes ordinary shrinking, seed/concrete/corpus replay, refused export,
+old-report refusal and explicit fresh preparation. Generic PBT remains independent.
+
+Eight observeSourceEpochs/sourceEpochConsumer laws and five top-level examples in
+PropertyReplay model preflight refusal, true-reply retirement, false/malformed/raw
+cause precedence, stable observation and suppressed/unchanged consumers. Faithful
+host Boolean recognition, captured epochs, pure clock reads and terminating serial
+hooks are premises. Complete checks and existing process/heap bounds remain.

@@ -480,4 +480,78 @@ theorem replayHandoff_refused (metadata sampler : State → Bool)
     (replayHandoff metadata sampler clock sources read run state >>= next) = .error cause := by
   rw [refused]; rfl
 
+/-- An optional typed observer is an action between pure known-epoch reads.
+Validate its reply before the post-read: malformed/thrown causes stay exact;
+false is ordinary refusal. Only a true reply needs another epoch walk. -/
+def observeSourceEpochs (malformed : Cause) (live : State → Bool)
+    (observe : State → Except Cause (Option Bool × State)) (state : State) : Except Cause (Bool × State) :=
+  if live state then
+    match observe state with
+    | .error cause => .error cause
+    | .ok (reply, next) => match sourceReply malformed reply with
+      | .error cause => .error cause
+      | .ok false => .ok (false, next)
+      | .ok true => .ok (live next, next)
+  else .ok (false, state)
+
+/-- Already retired known epochs skip the hook completely. -/
+theorem observeSourceEpochs_stale (malformed : Cause) (live : State → Bool)
+    (observe : State → Except Cause (Option Bool × State)) (state : State) (stale : live state = false) :
+    observeSourceEpochs malformed live observe state = .ok (false, state) := by
+  simp [observeSourceEpochs, stale]
+
+/-- A true hook reply cannot renew an owner retired during that observation. -/
+theorem observeSourceEpochs_revised (malformed : Cause) (live : State → Bool) (state next : State)
+    (before : live state = true) (after : live next = false) :
+    observeSourceEpochs malformed live (fun _ => .ok (some true, next)) state = .ok (false, next) := by
+  simp [observeSourceEpochs, before, after, sourceReply]
+
+/-- False remains refusal independently of the post-hook epochs. -/
+theorem observeSourceEpochs_false (malformed : Cause) (live : State → Bool) (state next : State)
+    (before : live state = true) :
+    observeSourceEpochs malformed live (fun _ => .ok (some false, next)) state = .ok (false, next) := by
+  simp [observeSourceEpochs, before, sourceReply]
+
+/-- Malformed replies precede any later epoch refusal; they are not retirement. -/
+theorem observeSourceEpochs_malformed (malformed : Cause) (live : State → Bool) (state next : State)
+    (before : live state = true) :
+    observeSourceEpochs malformed live (fun _ => .ok (none, next)) state = .error malformed := by
+  simp [observeSourceEpochs, before, sourceReply]
+
+/-- The exact thrown cause is preserved, including false in a Boolean model. -/
+theorem observeSourceEpochs_cause (malformed cause : Cause) (live : State → Bool) (state : State)
+    (before : live state = true) :
+    observeSourceEpochs malformed live (fun _ => .error cause) state = .error cause := by
+  simp [observeSourceEpochs, before]
+
+/-- Stable true observations retain their actual state and authorize later work. -/
+theorem observeSourceEpochs_fresh (malformed : Cause) (live : State → Bool) (state next : State)
+    (before : live state = true) (after : live next = true) :
+    observeSourceEpochs malformed live (fun _ => .ok (some true, next)) state = .ok (true, next) := by
+  simp [observeSourceEpochs, before, after, sourceReply]
+
+/-- Existing consumers enter only on true; read/encode/draw effects are not rolled
+back by this boundary, but a refused observation cannot start them. -/
+def sourceEpochConsumer (malformed stale : Cause) (live : State → Bool)
+    (observe : State → Except Cause (Option Bool × State))
+    (consume : State → Except Cause Output) (state : State) : Except Cause Output :=
+  match observeSourceEpochs malformed live observe state with
+  | .error cause => .error cause
+  | .ok (false, _) => .error stale
+  | .ok (true, next) => consume next
+
+/-- A retiring true observer suppresses input reads, encoders and properties alike. -/
+theorem sourceEpochConsumer_revised (malformed stale : Cause) (live : State → Bool)
+    (consume : State → Except Cause Output) (state next : State)
+    (before : live state = true) (after : live next = false) :
+    sourceEpochConsumer malformed stale live (fun _ => .ok (some true, next)) consume state = .error stale := by
+  simp [sourceEpochConsumer, observeSourceEpochs_revised malformed live state next before after]
+
+/-- Stable admission passes the real observed state once to the existing consumer. -/
+theorem sourceEpochConsumer_fresh (malformed stale : Cause) (live : State → Bool)
+    (consume : State → Except Cause Output) (state next : State)
+    (before : live state = true) (after : live next = true) :
+    sourceEpochConsumer malformed stale live (fun _ => .ok (some true, next)) consume state = consume next := by
+  simp [sourceEpochConsumer, observeSourceEpochs_fresh malformed live state next before after]
+
 end LeanPoo.Functional.PropertyTesting
