@@ -134,3 +134,8 @@ example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => (none : Option
 -- Empty rows and false results are data, not malformed requests or missing entries.
 example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some ([] : List Nat))
     (fun _ => true) (fun _ => .ok ((), 0)) [([], false)] 0 = .ok (false, 0) := rfl
+
+-- An unknown-row exception outranks the source check after an interrupted action.
+example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some [2])
+    (fun state => state = 0) (fun _ => .ok ((), 1)) [([0], false)] 0 =
+      .error (some "unknown") := rfl

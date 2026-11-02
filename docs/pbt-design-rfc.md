@@ -3604,9 +3604,10 @@ uses the standard codec and existing service factory rather than a new adapter.
 
 Seven finite PropertyProducts laws reuse guardedGeneration and lookupFunction:
 malformed requests skip source actions; stale preflight, observer exceptions and
-post-observation retirement retain their original refusals; admitted lookup uses
+post-observation retirement refuses normal publication; lookup errors keep their
+cause without a trailing check replacing it; admitted lookup uses
 the initially captured row; missing rows cannot be retargeted into known rows;
-and an already owned procedure row delegates to the identical operation. Four
+and an already owned procedure row delegates to the identical operation. Five
 top-level examples distinguish changed caller state, unknown rows, skipped throwing
 observers, empty rows and false results. Faithful proper-list recognition/shallow
 copying, standard rest ownership, source normalization, terminating sequential
