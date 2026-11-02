@@ -809,4 +809,78 @@ theorem prepareObserverBinding_refused (live : State → Bool) (invalid : Cause)
     (prepareObserverBinding live invalid read state).bind nextAction = .error cause := by
   rw [refused]; rfl
 
+/-- Child creation and standard Iterable conversion are distinct checked stages.
+The first normal-return gate precedes conversion; the returned cursor is not a
+proposal, so no pull/accounting continuation runs until both stages succeed.
+Accurate source predicates, host dynamic-scope inheritance and terminating serial
+callbacks remain premises, as in guardedThen and nestedActions. -/
+def prepareShrinkIterator (live : State → Bool)
+    (factory : State → Except Cause (Value × State))
+    (convert : Value → State → Except Cause (Cursor × State)) (state : State) :
+    Except (Option Cause) (Cursor × State) :=
+  guardedThen live factory convert state
+
+/-- An already obsolete request cannot create a sequence or convert it. -/
+theorem prepareShrinkIterator_stale (live : State → Bool)
+    (factory : State → Except Cause (Value × State))
+    (convert : Value → State → Except Cause (Cursor × State)) (state : State)
+    (stale : live state = false) : prepareShrinkIterator live factory convert state = .error none :=
+  guardedThen_preflight live factory convert state stale
+
+/-- A factory's normal retirement is checked before Iterable.iter can run. -/
+theorem prepareShrinkIterator_factory_revised (live : State → Bool) (state after : State)
+    (value : Value) (convert : Value → State → Except Cause (Cursor × State))
+    (before : live state = true) (stale : live after = false) :
+    prepareShrinkIterator live (fun _ => .ok (value, after)) convert state = .error none :=
+  guardedThen_revised live state after value convert before stale
+
+/-- A factory exception is exact and does not authorize conversion. -/
+theorem prepareShrinkIterator_factory_cause (live : State → Bool) (state : State)
+    (cause : Cause) (convert : Value → State → Except Cause (Cursor × State))
+    (before : live state = true) :
+    prepareShrinkIterator live (fun _ => .error cause) convert state = .error (some cause) :=
+  guardedThen_cause live state cause convert before
+
+/-- Stable child creation forwards its exact object and state to conversion. -/
+theorem prepareShrinkIterator_convert (live : State → Bool) (state after : State)
+    (value : Value) (convert : Value → State → Except Cause (Cursor × State))
+    (before : live state = true) (fresh : live after = true) :
+    prepareShrinkIterator live (fun _ => .ok (value, after)) convert state =
+      guardedGeneration live (convert value) after :=
+  guardedThen_continue live state after value convert before fresh
+
+/-- Conversion retirement cannot publish a cursor or imply an observed EOF. -/
+theorem prepareShrinkIterator_conversion_revised (live : State → Bool)
+    (state middle after : State) (value : Value) (cursor : Cursor)
+    (before : live state = true) (fresh : live middle = true) (stale : live after = false) :
+    prepareShrinkIterator (Cause := Cause) live (fun _ => .ok (value, middle))
+      (fun _ _ => .ok (cursor, after)) state = .error none :=
+  guardedThen_last_revised live state middle after value cursor before fresh stale
+
+/-- Original conversion causes, including a false-like payload, bypass post-checks. -/
+theorem prepareShrinkIterator_conversion_cause (live : State → Bool)
+    (state middle : State) (value : Value) (cause : Cause)
+    (before : live state = true) (fresh : live middle = true) :
+    prepareShrinkIterator (Cursor := Cursor) live (fun _ => .ok (value, middle))
+      (fun _ _ => .error cause) state = .error (some cause) := by
+  rw [prepareShrinkIterator_convert live state middle value _ before fresh]
+  exact guardedGeneration_cause live middle cause fresh
+
+/-- Stable preparation retains the exact cursor, including an empty one. -/
+theorem prepareShrinkIterator_present (live : State → Bool) (state middle after : State)
+    (value : Value) (cursor : Cursor) (before : live state = true)
+    (fresh : live middle = true) (current : live after = true) :
+    prepareShrinkIterator (Cause := Cause) live (fun _ => .ok (value, middle))
+      (fun _ _ => .ok (cursor, after)) state = .ok (cursor, after) :=
+  guardedThen_present live state middle after value cursor before fresh current
+
+/-- Refusal cannot enter next!, charge a proposal or replace a confirmed witness. -/
+theorem prepareShrinkIterator_refused (live : State → Bool)
+    (factory : State → Except Cause (Value × State))
+    (convert : Value → State → Except Cause (Cursor × State)) (state : State)
+    (cause : Option Cause) (pull : Cursor × State → Except (Option Cause) Output)
+    (refused : prepareShrinkIterator live factory convert state = .error cause) :
+    (prepareShrinkIterator live factory convert state >>= pull) = .error cause := by
+  rw [refused]; rfl
+
 end LeanPoo.Functional.PropertyTesting

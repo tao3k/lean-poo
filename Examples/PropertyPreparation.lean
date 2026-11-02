@@ -252,3 +252,26 @@ example : prepareInspection
     (propertyRequestReady [some 0, some 0, some 0] (some 1) (some 0) false true)
     true (fun _ : Nat => true)
     (fun _ => (.error false : Except Bool (Nat × Nat))) 0 = .error (some false) := rfl
+
+
+-- A factory that retires its owner cannot invoke even a deliberately bad Iterable.
+example : prepareShrinkIterator (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ _ => (.error "must not convert" : Except String (Unit × Nat))) 0 = .error none := rfl
+-- Retirement during conversion cannot deliver a cursor to a later pull.
+example : (prepareShrinkIterator (fun epoch : Nat => epoch == 0)
+    (fun _ => (.ok (false, 0) : Except String (Bool × Nat)))
+    (fun _ _ => (.ok ([], 1) : Except String (List Nat × Nat))) 0).bind
+      (fun _ => (.error (some "must not pull") : Except (Option String) Nat)) = .error none := rfl
+-- A thrown false remains a present original cause rather than a stale sentinel.
+example : prepareShrinkIterator (Cursor := Unit) (fun _ : Nat => true)
+    (fun state => (.ok (false, state) : Except Bool (Bool × Nat)))
+    (fun _ _ => .error false) 0 = .error (some false) := rfl
+-- An admitted empty iterator is successful preparation; no proposal is implied.
+example : prepareShrinkIterator (Cause := String) (fun _ : Nat => true)
+    (fun state => .ok (false, state)) (fun _ state => .ok ([], state)) 0 =
+      .ok (([] : List Nat), 0) := rfl
+-- Inherited parent authority suppresses a nested child after local retirement.
+example : nestedActions (fun epoch : Nat => epoch == 0) (fun _ => true)
+    (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ _ => (.error "must not enter nested draw" : Except String (Unit × Nat))) 0 = .error none := rfl

@@ -779,3 +779,14 @@ cannot retarget commands or dependency identities; payloads remain shared. Eight
 finite Lean laws model the original request handoff and guarded preparation;
 faithful host copying/observers and callback termination remain premises. See
 [Owned trace ingress and first-observed explicit dependencies](pbt/model-traces.md#owned-trace-ingress-and-first-observed-explicit-dependencies).
+
+
+## Iterable preparation authority
+
+`prepareShrinkIterator` in PropertyPreparation models child creation followed by
+standard Iterable conversion under the same inherited authority. Its eight laws
+retain exact causes and cursor values while excluding pulls/accounting after
+refusal. Executable Gerbil controls cover conversion-time nested actions, lazy
+map/bind/products, diagnostics and indexed Record/FUN trace repair/replay. The
+finite model assumes faithful host dynamic scope and terminating callbacks. See
+[Source-owned Iterable preparation](pbt/shrinking.md#source-owned-iterable-preparation).

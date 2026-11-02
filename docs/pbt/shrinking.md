@@ -15,6 +15,8 @@ On this page:
 - [Generic data-list candidate capture with contract failure precedence](#generic-data-list-candidate-capture-with-contract-failure-precedence)
 - [Shared finite parameter ownership in lazy dependency shrinking](#shared-finite-parameter-ownership-in-lazy-dependency-shrinking)
 
+- [Source-owned Iterable preparation](#source-owned-iterable-preparation)
+
 ## Checked actions and interrupted shrink receipts
 
 The execution layer uses one private hygienic `with-current` form around domain
@@ -332,4 +334,56 @@ Gerbil using, with-catch, values and list-copy implement it; Record and FUN expr
 the typed application. Complete checks, 2 GiB main/1 GiB isolated limits and
 cancellation remain, with the already authorized natural compiler/test completion.
 No full benchmark artifact, versioned JSON or upstream change is introduced.
+
+
+## Source-owned Iterable preparation
+
+Gerbil's standard `iter` may invoke an application's `Iterable.iter` method.
+Child creation and iterator preparation are therefore distinct user actions.
+The audit reproduced `status=stale opens=1 nested-effects=1 attempts=0`: conversion
+retired the source and then ran a nested generator before the next pull noticed
+retirement. The stale final verdict did not undo that already executed effect.
+
+Execution, bounded inspection and the generator algebra now put standard `iter`
+inside their existing `with-current` or `with-sources` action scope. The child
+factory remains a separate checked action before conversion. This preserves the
+old factory-return refusal: moving both operations into one unchecked callback
+would let an obsolete factory enter `Iterable.iter`. No alternate Iterator,
+conversion API, stream framework, namespace or scheduler is introduced.
+
+The standard Iterator returned by conversion is unchanged. Preparation itself is
+not a proposal: zero budget still skips child creation/conversion, and conversion
+failure consumes no attempt. Successful `next!` results keep the existing charge
+before post-checks; EOF and throws keep their original accounting. Factory and
+conversion exceptions retain exact causes, including a thrown false. A failed
+conversion cannot replace the last confirmed witness or authorize replay of a
+stale/error report. Empty iterators remain valid and can establish exhausted
+neighborhoods when EOF is actually requested.
+
+Four independent-library cases cover execution, bounded inspection, direct map/
+bind/product child traversal and factory/conversion/EOF/error priorities. They
+use a small application Iterable implemented through Gerbil's official interface.
+The standalone library now requires 243 cases, still without POO imports. The
+Record/FUN collection example retains the real indexed-table trace tree, retires
+its owner during conversion, proves zero forbidden nested effects, then freshly
+prepares a genuine atomicity fault. Dependency-repaired shrinking, concrete/seed/
+portable replay, later owner retirement and corrected fresh retry use the existing
+collection model, samplers and scoped fixtures.
+
+`prepareShrinkIterator` reuses `guardedThen` in PropertyPreparation. Eight laws
+cover stale preflight, factory retirement/cause, exact handoff, conversion
+retirement/cause, exact cursor delivery and suppression of pull/accounting
+continuations on refusal. Five top-level examples include empty cursors, thrown
+false and inherited-parent refusal; existing `nestedActions` laws supply the
+parent/child authority relation. Host dynamic-scope/interface fidelity, accurate
+source predicates and terminating serial callbacks remain premises. These laws
+do not prove arbitrary callback termination, thread scheduling, GC or latency.
+
+This extends the established lazy-tree and application-owned action design.
+Gerbil's `std/iter/iterators.ss` owns dispatch and `std/iter/interface.ss` owns
+Iterable/Iterator; POO only retains its source and failure protocol around them.
+The additional admission occurs once per conversion, without another draw,
+proposal lookahead, cache or witness wrapper. Whole-workflow speedup is not claimed.
+Main 2 GiB and isolated 1 GiB bounds, cancellation and complete standard checks
+remain; natural compiler/test completion follows the existing authorized policy.
 
