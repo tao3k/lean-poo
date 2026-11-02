@@ -3688,3 +3688,60 @@ existing boundary, rather than add an executor or per-carrier wrappers. Gerbil's
 list-copy, for-each and map-in-order serve the implementation; the graph's existing
 registry and controlled recursive evaluator retain all runtime ownership. Complete
 checks, original heaps, natural compiler/test completion and cancellation stay.
+
+## P80: first-observed Sum metadata and bounded tag directories
+
+The next audit reproduced a first-observation gap in the existing tagged Sum
+compiler: a checked inherited observer changed a returned `(first second)` tag
+spine before discovery copied it, and the resulting graph used `(first foreign)`.
+The variants object also acquired its revision only after the returning observer,
+so that observer could retire the returned directory before its first capture.
+These are existing supported metadata boundaries, not requests for unrestricted
+inference or a new recursive carrier language.
+
+Sum now captures the variants object's first epoch inside its existing checked
+getter action. The subsequent returning observer therefore sees that participant.
+The tag getter uses the SAME checked boundary to admit proper distinct symbol
+labels, enforce complete occurrence width, and copy the spine before its returning
+observer runs. Tag order and identity remain unchanged. Payload Types are still
+dynamic: each original ordered edge is read through discover, and shared payload
+identities still spend one descriptor credit per occurrence. No hidden payload
+Types are guessed, and no payload getter runs when the entire tag width exceeds
+remaining occurrence fuel.
+
+The graph's private own-directory operation serves both this tag admission and
+P79 known Type rows. It replaces the earlier inline proper-list/width/copy steps,
+with an optional semantic grammar predicate; it adds no runtime wrapper, registry,
+public interface or namespace. Invalid Sum grammar retains the existing message;
+valid over-width rows now refuse with descriptors before child effects. Accepted
+rows retain ordinary source checks, exact original callback causes (including
+false), payload sharing and explicit fresh preparation. Shallow copying owns only
+the label spine, not arbitrary mutable payloads or callback effects.
+
+Four discovery regressions cover replacement/improper/cyclic edits after return,
+directory retirement before any label/payload/factory access, insufficient versus
+exact fuel for three shared payload occurrences, and malformed/duplicate/nonsymbol
+labels plus exact throwing getters. The existing recursive-trees TestSuite adds a
+complete shared Record/Function Sum service through property-action: returning
+directory retirement yields a non-replayable stale report with zero factories;
+explicit fresh publication then really shrinks, retains Function validation,
+replays the seed and concrete witness, refuses obsolete owner epochs and retries
+a corrected property. It reuses standard module registration, FUN, Record and the
+current typed generator; the independent generic PBT package is unchanged.
+
+Eight finite PropertyDiscovery laws model normalized tag admission, width refusal,
+first-epoch observation, post-observer retirement, exact causes and retained ordered
+labels, plus known-epoch retention and at-most-one directory ledger growth. Four
+top-level examples distinguish revised metadata, shared-label order, quota before
+a throwing observer and a thrown false. The clock is sampled at metadata return;
+Option normalization of host grammar, shallow-copy fidelity, accurate primitive
+revision reads and terminating sequential observers are premises. These are not
+Gerbil/Gambit/compiler, concurrent-mutation, callback termination, GC/RSS or latency
+proofs. This continues the paper's future work.
+
+The author's ordered prototype composition and the Racket map/bind comparison
+remain the abstraction reference: capture finite declarations at their owner,
+then use the existing ordered traversal and shrink/replay machinery. No second
+executor or per-container validation chain is introduced. Existing complete checks,
+2 GiB main/1 GiB isolated limits and cancellation remain; compilation and semantic
+tests retain their already authorized natural-completion behavior.

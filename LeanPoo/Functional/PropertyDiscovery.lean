@@ -262,4 +262,92 @@ theorem prepareCarrierDirectory_prior_stale [DecidableEq Source]
   exact prepareCarrierDirectory_edge_stale (current state) current ledger invalid quota fuel edgeFuel row
     read state fits (captureSources_stale (current state) row ledger stale)
 
+/-- Own a finite Sum tag row and the returned directory epoch before the next
+source observer. None represents host grammar refusal (shape, symbol or duplicate).
+The clock is sampled at getter return; observe models the following checked action.
+Payload getters remain the existing discoverCarrierEdge operation. -/
+def observeVariantDirectory [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat) (input : Option (List Tag))
+    (observe : State → Except Cause (Value × State)) (state : State) :
+    Except (Option Cause) (List Tag × (Value × State) × List (Source × Nat)) :=
+  match input with
+  | none => .error (some invalid)
+  | some tags => if tags.length ≤ fuel then
+      let owned := captureRevision ledger directory (clock directory)
+      (guardedGeneration (fun now => revisionsCurrent (current now) owned) observe state).map
+        (fun result => (tags, result, owned))
+    else .error (some quota)
+
+/-- Invalid tag grammar keeps precedence and skips source observers and payloads. -/
+theorem observeVariantDirectory_invalid [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat)
+    (observe : State → Except Cause (Value × State)) (state : State) :
+    observeVariantDirectory (Tag := Tag) clock current ledger directory invalid quota fuel none observe state =
+      .error (some invalid) := rfl
+
+/-- Complete occurrence width refuses before any returning observer or payload. -/
+theorem observeVariantDirectory_quota [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat) (tags : List Tag)
+    (observe : State → Except Cause (Value × State)) (state : State) (large : fuel < tags.length) :
+    observeVariantDirectory clock current ledger directory invalid quota fuel (some tags) observe state =
+      .error (some quota) := by simp [observeVariantDirectory, Nat.not_le.mpr large]
+
+/-- A directory already retired before observation cannot enter its next action. -/
+theorem observeVariantDirectory_stale [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat) (tags : List Tag)
+    (observe : State → Except Cause (Value × State)) (state : State) (fits : tags.length ≤ fuel)
+    (stale : revisionsCurrent (current state) (captureRevision ledger directory (clock directory)) = false) :
+    observeVariantDirectory clock current ledger directory invalid quota fuel (some tags) observe state =
+      .error none := by
+  simp [observeVariantDirectory, fits, guardedGeneration_preflight (fun now => revisionsCurrent (current now) (captureRevision ledger directory (clock directory))) observe state stale, Except.map]
+
+/-- Revising the captured directory during observation refuses normal publication. -/
+theorem observeVariantDirectory_revised [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat) (tags : List Tag) (value : Value) (state next : State)
+    (fits : tags.length ≤ fuel)
+    (before : revisionsCurrent (current state) (captureRevision ledger directory (clock directory)) = true)
+    (after : revisionsCurrent (current next) (captureRevision ledger directory (clock directory)) = false) :
+    observeVariantDirectory clock current ledger directory invalid quota fuel (some tags)
+      (fun _ => .ok (value, next)) state = .error none := by
+  simp [observeVariantDirectory, fits, guardedGeneration_revised (fun now => revisionsCurrent (current now) (captureRevision ledger directory (clock directory))) state next value before after, Except.map]
+
+/-- A live observer's original cause survives, including a thrown false value. -/
+theorem observeVariantDirectory_cause [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota cause : Cause) (fuel : Nat) (tags : List Tag) (state : State) (fits : tags.length ≤ fuel)
+    (before : revisionsCurrent (current state) (captureRevision ledger directory (clock directory)) = true) :
+    observeVariantDirectory (Value := Value) clock current ledger directory invalid quota fuel (some tags)
+      (fun _ => .error cause) state = .error (some cause) := by
+  simp [observeVariantDirectory, fits, guardedGeneration_cause (fun now => revisionsCurrent (current now) (captureRevision ledger directory (clock directory))) state cause before, Except.map]
+
+/-- Successful observation retains original labels/order rather than an observer's
+mutable list spelling. Host shallow-copy fidelity is an explicit premise. -/
+theorem observeVariantDirectory_retained [DecidableEq Source] (clock : Source → Nat)
+    (current : State → Source → Nat) (ledger : List (Source × Nat)) (directory : Source)
+    (invalid quota : Cause) (fuel : Nat) (tags : List Tag) (value : Value) (state next : State)
+    (fits : tags.length ≤ fuel)
+    (before : revisionsCurrent (current state) (captureRevision ledger directory (clock directory)) = true)
+    (after : revisionsCurrent (current next) (captureRevision ledger directory (clock directory)) = true) :
+    observeVariantDirectory clock current ledger directory invalid quota fuel (some tags)
+      (fun _ => .ok (value, next)) state =
+      .ok (tags, (value, next), captureRevision ledger directory (clock directory)) := by
+  simp [observeVariantDirectory, fits, guardedGeneration_state (fun now => revisionsCurrent (current now) (captureRevision ledger directory (clock directory))) state next value before after, Except.map]
+
+/-- Capturing an already known directory never renews its epoch. -/
+theorem variantDirectory_known [DecidableEq Source] (ledger : List (Source × Nat))
+    (directory : Source) (epoch : Nat) (known : directory ∈ ledger.map Prod.fst) :
+    captureRevision ledger directory epoch = ledger := captureRevision_existing ledger directory epoch known
+
+/-- The extra Sum participant costs at most one ledger entry, independently of
+shared payload count; copied tag width is admitted separately by occurrence fuel. -/
+theorem variantDirectory_capture_cost [DecidableEq Source] (ledger : List (Source × Nat))
+    (directory : Source) (epoch : Nat) :
+    (captureRevision ledger directory epoch).length ≤ ledger.length + 1 :=
+  captureRevision_length ledger directory epoch
+
 end LeanPoo.Functional.PropertyTesting

@@ -23,3 +23,20 @@ example : prepareCarrierDirectory (fun _ : Nat => 0) [] "invalid" "quota" 0 (som
 example : prepareCarrierDirectory (fun _ : Nat => 0) [] "invalid" "quota" 0 none
     (fun _ _ => (.error (some "must not visit") : Except (Option String) Bool)) =
       .error (some "invalid") := rfl
+
+-- Returning observers cannot revise a freshly owned Sum directory and publish it.
+example : observeVariantDirectory (fun _ : Nat => 0)
+    (fun (state _source : Nat) => state) [] 0 "invalid" "quota" 2 (some ["primary", "backup"])
+    (fun _ => .ok (false, 1)) 0 = .error none := rfl
+-- Repeated payload Types do not erase distinct labels or their occurrence cost.
+example : observeVariantDirectory (fun _ : Nat => 0)
+    (fun (_state _source : Nat) => 0) [] 0 "invalid" "quota" 2 (some ["primary", "backup"])
+    (fun state => .ok (false, state)) 0 = .ok (["primary", "backup"], (false, 0), [(0, 0)]) := rfl
+-- Width overflow precedes any throwing observer, preserving the quota category.
+example : observeVariantDirectory (Value := Bool) (fun _ : Nat => 0)
+    (fun (_state _source : Nat) => 0) [] 0 "invalid" "quota" 1 (some ["primary", "backup"])
+    (fun _ => .error "observer") 0 = .error (some "quota") := rfl
+-- False is an actual callback cause, not the stale sentinel.
+example : observeVariantDirectory (Value := Bool) (fun _ : Nat => 0)
+    (fun (_state _source : Nat) => 0) [] 0 true true 1 (some ["primary"])
+    (fun _ => .error false) 0 = .error (some false) := rfl
