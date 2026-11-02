@@ -3555,3 +3555,67 @@ kept capture at the one assertion boundary rather than adding copy/validation
 wrappers to typed reports or FUN consumers. Complete checks, original heaps,
 natural compiler/test completion and cancellation behavior remain unchanged.
 No latency or universal allocation improvement is claimed.
+
+## P78: captured finite Function call requests
+
+The audit reproduced a request-ownership defect through public function-apply.
+The caller supplied `(declared)` to a table containing declared and retargeted
+rows. Its table observer rewrote that caller-owned spine before lookup, and the
+call returned the retargeted row's `(2)` instead of the requested `(1)`. The same
+ordering allowed malformed direct request spines to enter source observation.
+This concerns finite request topology, not inference about arbitrary Functions
+or deep immutability of argument payloads.
+
+The generator module now has one private function-results operation containing
+the existing with-function source boundary, exact-row lookup and detached result
+tuple. Public function-apply admits a proper finite list and shallow-copies its
+spine before entering that operation. The ordinary function-procedure passes its
+already owned rest row directly to the SAME operation. There is no second lookup,
+per-call Type wrapper, new record, module or namespace. The procedure path adds
+no request recopy; the direct public path pays for one copy of its row width.
+Gerbil still owns rest construction, keyword forwarding and multiple values.
+No host allocation/time theorem or latency improvement is claimed.
+
+A malformed direct row refuses through the standard contract before inherited
+or table observers. Well-shaped requests retain their existing inherited/table
+source priority, strict Boolean judgments and exact callback exceptions. Unknown
+rows keep the ordinary finite-domain Error, now carrying the captured request
+rather than a retargeted spine. Raw keyword order and escape representation stay
+part of row identity; no call-language decoding or value normalization is added.
+Source changes still refuse normal publication. Payloads, including false values,
+mutable domain objects and procedures, retain their identities and declared source
+laws. This does not freeze nested mutable payloads or roll back observer effects.
+
+Four generic regression cases cover source-side head/improper/cyclic spine edits,
+pre-observer refusal of malformed direct requests, captured unknown-row diagnostics
+with payload identity, and shared direct/procedure behavior for empty rows, zero
+and multiple values, raw keywords, false/object causes and stale tables. The cases
+join the existing PropertyProducts example module and ordinary kernel suite;
+there is no new runner/module inventory. The isolated standard-library package
+requires 231 cases. Existing P43 inherited-scope and P74 result-tuple tests remain.
+
+The existing finite-service Record/Function example composes FUN preparation,
+first-row malformed-result refusal, real shrinking, seed/concrete replay and
+portable Tuple restoration. Its decoder deliberately exposes a raw call row to
+the restored table's observer; the direct call must retain the requested first
+result before normal Record construction wraps the Function. Owner revision still
+rejects the old report/codec and explicit fresh preparation retries. The example
+uses the standard codec and existing service factory rather than a new adapter.
+
+Seven finite PropertyProducts laws reuse guardedGeneration and lookupFunction:
+malformed requests skip source actions; stale preflight, observer exceptions and
+post-observation retirement retain their original refusals; admitted lookup uses
+the initially captured row; missing rows cannot be retargeted into known rows;
+and an already owned procedure row delegates to the identical operation. Four
+top-level examples distinguish changed caller state, unknown rows, skipped throwing
+observers, empty rows and false results. Faithful proper-list recognition/shallow
+copying, standard rest ownership, source normalization, terminating sequential
+actions and lawful payload equality remain premises. No compiler/runtime or
+unrestricted concurrent-mutation proof is claimed. This advances future work.
+
+The Rackcheck/Quickcheck map/bind comparison remains the abstraction reference:
+retain the same finite value/tree and ownership boundary rather than introduce
+another executor. This unit closes our P43 finite-call request boundary, not a
+missing Racket feature. The explicit P35 rule that invalid classification symbols
+are API errors was audited and retained as a design boundary. Complete checks,
+original heaps, natural compiler/test completion and cancellation stay unchanged.

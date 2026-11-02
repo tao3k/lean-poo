@@ -121,3 +121,16 @@ example : prepareFunctionTable (fun _ : Nat => true) "tuple"
 example : prepareFunctionTable (fun _ : Nat => true) "tuple"
     (fun _ state => (.ok (some [], state + 1) : Except String (Option (List Bool) × Nat))) [10] 0 =
       .ok ([(10, [])], 1) := rfl
+
+-- An observer may overwrite the source row; the captured call still selects 1.
+example : callFunctionRequest "invalid" "unknown" (fun state : Nat => some [state])
+    (fun _ => true) (fun _ => .ok ((), 1)) [([0], 1), ([1], 2)] 0 = .ok (1, 1) := rfl
+-- A normal row outside the directory cannot be repaired by observer retargeting.
+example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some [2])
+    (fun _ => true) (fun _ => .ok ((), 0)) [([0], false)] 2 = .error (some "unknown") := rfl
+-- Malformed rows refuse before a deliberately throwing source callback.
+example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => true) (fun _ => .error "must not observe") [([], false)] 0 = .error (some "invalid") := rfl
+-- Empty rows and false results are data, not malformed requests or missing entries.
+example : callFunctionRequest "invalid" "unknown" (fun _ : Nat => some ([] : List Nat))
+    (fun _ => true) (fun _ => .ok ((), 0)) [([], false)] 0 = .ok (false, 0) := rfl

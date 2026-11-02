@@ -541,4 +541,74 @@ theorem prepareFunctionTable_keys (live : State → Bool) (invalid : Cause)
     cases accepted
     exact functionTable_zip_keys rows tuples same
 
+/-- Capture a normalized finite call row before the existing guarded source
+observation. Source actions may update the state holding the caller's row;
+lookup retains the captured row. Host copying is shallow and faithful. -/
+def callFunctionRequest [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) :
+    Except (Option Cause) (Result × State) :=
+  match request state with
+  | none => .error (some invalid)
+  | some row => match guardedGeneration live observe state with
+    | .error cause => .error cause
+    | .ok (_, next) => match lookupFunction table row with
+      | none => .error (some unknown)
+      | some result => .ok (result, next)
+
+/-- Malformed topology skips all source actions, even when they would throw. -/
+theorem callFunctionRequest_malformed [DecidableEq Argument] (invalid unknown : Cause)
+    (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) :
+    callFunctionRequest invalid unknown (fun _ => none) live observe table state = .error (some invalid) := rfl
+
+/-- A well-shaped request still cannot bypass inherited or table retirement. -/
+theorem callFunctionRequest_stale [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (observe : State → Except Cause (Unit × State))
+    (table : List (List Argument × Result)) (state : State) (stale : live state = false) :
+    callFunctionRequest invalid unknown (fun _ => some row) live observe table state = .error none := by
+  simp [callFunctionRequest, guardedGeneration, stale]
+
+/-- Source callback exceptions retain their original cause, including false. -/
+theorem callFunctionRequest_cause [DecidableEq Argument] (invalid unknown cause : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state : State) (before : live state = true) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .error cause) table state =
+      .error (some cause) := by simp [callFunctionRequest, guardedGeneration, before]
+
+/-- A normal observer return that retires the source never reaches lookup. -/
+theorem callFunctionRequest_revised [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state next : State) (before : live state = true) (after : live next = false) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .ok ((), next)) table state =
+      .error none := by simp [callFunctionRequest, guardedGeneration, before, after]
+
+/-- Lookup uses the initial captured row even if the observer changes its source. -/
+theorem callFunctionRequest_captured [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (row : List Argument) (live : State → Bool)
+    (table : List (List Argument × Result)) (value : Result) (state next : State)
+    (captured : request state = some row) (before : live state = true) (after : live next = true)
+    (found : lookupFunction table row = some value) :
+    callFunctionRequest invalid unknown request live (fun _ => .ok ((), next)) table state = .ok (value, next) := by
+  simp [callFunctionRequest, captured, guardedGeneration, before, after, found]
+
+/-- Retargeting cannot turn an unknown captured row into an admitted table entry. -/
+theorem callFunctionRequest_unknown [DecidableEq Argument] (invalid unknown : Cause)
+    (row : List Argument) (live : State → Bool) (table : List (List Argument × Result))
+    (state next : State) (before : live state = true) (after : live next = true)
+    (absent : lookupFunction table row = none) :
+    callFunctionRequest invalid unknown (fun _ => some row) live (fun _ => .ok ((), next)) table state =
+      .error (some unknown) := by simp [callFunctionRequest, guardedGeneration, before, after, absent]
+
+/-- Already owned procedure rows reuse exactly the same lookup and source action.
+No raw keyword decoding, sorting or second row normalization is introduced. -/
+theorem callFunctionRequest_owned [DecidableEq Argument] (invalid unknown : Cause)
+    (request : State → Option (List Argument)) (row : List Argument) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (table : List (List Argument × Result))
+    (state : State) (captured : request state = some row) :
+    callFunctionRequest invalid unknown request live observe table state =
+      callFunctionRequest invalid unknown (fun _ => some row) live observe table state := by
+  simp only [callFunctionRequest, captured]
+
 end LeanPoo.Functional.PropertyTesting
