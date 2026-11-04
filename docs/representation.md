@@ -1269,3 +1269,26 @@ The length bound charges logical weak writes only: it is not an allocation, GC,
 hash-table worst-case or wall-clock theorem. One-shot projection elimination is
 a host implementation refinement using the same DFS, not language/compiler
 verification or a claim that captured reads are permanently current.
+
+### Bounded batch shape directory reconciliation
+
+`RepresentationIndex` models mixed additions, deletions and replacements by
+retaining old identities in canonical order, sorting only fresh identities and
+merging the runs. It proves inventory preservation, canonical ordering and exact
+equality with ordinary sorting under distinct-request/distinct-old and ordered-old
+premises. Strong contraction uses ordinary sorting. The Scheme implementation
+reuses its existing symbol-identity index, standard `list-sort`, `append-reverse`
+and weak interning; the model assumes a faithful total identity ranking.
+
+`revisionOldVisits_bound` bounds old-directory filtering by twice the target
+width. `revisionTraversalWork_bound` includes logical merge/prefix copying and
+bounds that explicit work by four times target width. Neither law includes
+admission, sort comparisons, hashing, allocation, GC or physical latency. No host
+primitive, compiler, dynamic library loader or collector verification is claimed.
+
+The examples combine canonical equality with `seedPrimaryCells` for arbitrary
+current values, including functions and false-like values. No previous value
+store or value equality premise is used. Gerbil regressions additionally exercise
+seed refusal order, distinct symbols with identical spelling, and loader-selected
+FUN/IO retry. Paired host measurements retain natural/post-GC, reverse order and
+identical-arm controls; noisy tails are not promoted into a performance theorem.

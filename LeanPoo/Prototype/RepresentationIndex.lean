@@ -676,4 +676,134 @@ theorem checkedLayoutPreparation_refused_frame (leading : List String)
   rw [checkedLayoutPreparation_key_refused]
   rfl
 
+
+/-- New symbol identities are selected with the existing previous-shape index.
+No old receiver value is an input to directory reconciliation. -/
+def freshShapeRanks (requested old : List Nat) : List Nat :=
+  requested.filter (fun rank => decide (rank ∉ old))
+
+/-- Tail-recursive merge mirrors the host's owned reversed acc and borrowed
+suffix. The standard sort supplies the fresh run; neither source list is mutated. -/
+def mergeShapeRanks (left right acc : List Nat) : List Nat :=
+  match left, right with
+  | [], right => acc.reverse ++ right
+  | left, [] => acc.reverse ++ left
+  | a :: left, b :: right =>
+    if a ≤ b then mergeShapeRanks left (b :: right) (a :: acc)
+    else mergeShapeRanks (a :: left) right (b :: acc)
+termination_by left.length + right.length
+
+/-- Accumulating the copied acc agrees exactly with Lean's standard merge. -/
+theorem mergeShapeRanks_eq (left right acc : List Nat) :
+    mergeShapeRanks left right acc = acc.reverse ++
+      List.merge left right (fun a b => decide (a ≤ b)) := by
+  induction left generalizing right acc with
+  | nil => simp [mergeShapeRanks]
+  | cons a left ih =>
+    induction right generalizing acc with
+    | nil => simp [mergeShapeRanks]
+    | cons b right ihr =>
+      by_cases h : a ≤ b
+      · simp [mergeShapeRanks, h, ih, List.reverse_cons, List.append_assoc]
+      · simp [mergeShapeRanks, h, ihr, List.reverse_cons, List.append_assoc]
+
+/-- A mixed revision keeps requested old identities in their canonical order,
+sorts only new identities, then interns one final merged directory. -/
+def reconcileShapeRanks (requested old : List Nat) : List Nat :=
+  mergeShapeRanks (narrowShapeRanks requested old)
+    ((freshShapeRanks requested old).mergeSort (fun a b => decide (a ≤ b))) []
+
+/-- Kept old names and the corresponding request subset have the same identities. -/
+theorem retainedShapeRanks_perm (requested old : List Nat)
+    (requestUnique : requested.Nodup) (oldUnique : old.Nodup) :
+    (narrowShapeRanks requested old).Perm (requested.filter (fun rank => decide (rank ∈ old))) := by
+  apply (List.perm_ext_iff_of_nodup (oldUnique.filter _) (requestUnique.filter _)).mpr
+  intro rank
+  simp [and_comm]
+
+/-- Mixed replacement cannot lose, duplicate or alias a requested identity. -/
+theorem reconcileShapeRanks_perm (requested old : List Nat)
+    (requestUnique : requested.Nodup) (oldUnique : old.Nodup) :
+    (reconcileShapeRanks requested old).Perm requested := by
+  rw [reconcileShapeRanks, mergeShapeRanks_eq]
+  simp only [List.reverse_nil, List.nil_append]
+  exact (List.merge_perm_append (fun a b : Nat => decide (a ≤ b))).trans
+    (((retainedShapeRanks_perm requested old requestUnique oldUnique).append
+      (List.mergeSort_perm _ _)).trans (by
+        simpa [freshShapeRanks] using
+          (List.filter_append_perm (fun rank => decide (rank ∈ old)) requested)))
+
+/-- Both sorted runs retain canonical order through the standard merge laws. -/
+theorem reconcileShapeRanks_ordered (requested old : List Nat)
+    (ordered : old.Pairwise (· ≤ ·)) :
+    (reconcileShapeRanks requested old).Pairwise (· ≤ ·) := by
+  have trans : ∀ a b c : Nat, decide (a ≤ b) → decide (b ≤ c) → decide (a ≤ c) := by
+    intro a b c; simp only [decide_eq_true_eq]; exact Nat.le_trans
+  have total : ∀ a b : Nat, decide (a ≤ b) || decide (b ≤ a) := by
+    intro a b; simp only [Bool.or_eq_true, decide_eq_true_eq]; omega
+  have kept : (narrowShapeRanks requested old).Pairwise (fun a b => decide (a ≤ b) = true) := by
+    simpa [narrowShapeRanks] using ordered.filter (fun rank => decide (rank ∈ requested))
+  have fresh := List.pairwise_mergeSort trans total (freshShapeRanks requested old)
+  simpa [reconcileShapeRanks, mergeShapeRanks_eq] using
+    List.pairwise_merge trans total _ _ kept fresh
+
+/-- Complete ordinary sorting and mixed reconciliation produce the same directory,
+so the existing name/ordinal and independent value-seeding laws apply unchanged. -/
+theorem reconcileShapeRanks_eq_canonical (requested old canonical : List Nat)
+    (requestUnique : requested.Nodup) (oldUnique : old.Nodup)
+    (oldOrdered : old.Pairwise (· ≤ ·)) (ordered : canonical.Pairwise (· ≤ ·))
+    (inventory : canonical.Perm requested) : reconcileShapeRanks requested old = canonical := by
+  exact List.Perm.eq_of_pairwise (le := (· ≤ ·))
+    (fun _ _ _ _ ab ba => Nat.le_antisymm ab ba)
+    (reconcileShapeRanks_ordered _ _ oldOrdered) ordered
+    ((reconcileShapeRanks_perm _ _ requestUnique oldUnique).trans inventory.symm)
+
+/-- New sorting never includes a retained symbol. The caller still pays admission,
+merge, allocation, hashing and seeding; this is not a physical wall-time claim. -/
+theorem freshShapeRanks_length_le (requested old : List Nat) :
+    (freshShapeRanks requested old).length ≤ requested.length := List.length_filter_le _ _
+
+/-- A certified bounded strategy avoids scanning a huge old directory for a tiny
+replacement. Zero denotes the standard full-sort branch's old-directory visits. -/
+def revisionOldVisits (oldWidth targetWidth : Nat) : Nat :=
+  if oldWidth > 2 * targetWidth then 0 else oldWidth
+
+/-- The old-directory filter visits at most two names per unique target identity.
+Merge/copy, admission, hashing, value allocation and seeding are separate costs. -/
+theorem revisionOldVisits_bound (oldWidth targetWidth : Nat) :
+    revisionOldVisits oldWidth targetWidth ≤ 2 * targetWidth := by
+  unfold revisionOldVisits; split <;> omega
+
+/-- Logical directory traversal includes the old filter plus at most two target
+passes for merge selection and reversed-prefix copying. It excludes sorting,
+raw-input admission, index creation, allocation and host/collector costs. -/
+def revisionTraversalWork (oldWidth targetWidth : Nat) : Nat :=
+  revisionOldVisits oldWidth targetWidth + 2 * targetWidth
+
+/-- The bounded reuse strategy has linear directory traversal after admission. -/
+theorem revisionTraversalWork_bound (oldWidth targetWidth : Nat) :
+    revisionTraversalWork oldWidth targetWidth ≤ 4 * targetWidth := by
+  have h := revisionOldVisits_bound oldWidth targetWidth
+  unfold revisionTraversalWork; omega
+
+/-- The strong-contraction fallback uses the same standard canonical sort. -/
+def boundedShapeRanks (requested old : List Nat) : List Nat :=
+  if old.length > 2 * requested.length then requested.mergeSort (fun a b => decide (a ≤ b))
+  else reconcileShapeRanks requested old
+
+/-- The strategy changes preparation work, never canonical symbolic meaning. -/
+theorem boundedShapeRanks_eq_sort (requested old : List Nat)
+    (requestUnique : requested.Nodup) (oldUnique : old.Nodup) (oldOrdered : old.Pairwise (· ≤ ·)) :
+    boundedShapeRanks requested old = requested.mergeSort (fun a b => decide (a ≤ b)) := by
+  unfold boundedShapeRanks
+  split
+  · rfl
+  · apply reconcileShapeRanks_eq_canonical _ _ _ requestUnique oldUnique oldOrdered
+    · have trans : ∀ a b c : Nat, decide (a ≤ b) → decide (b ≤ c) → decide (a ≤ c) := by
+        intro a b c; simp only [decide_eq_true_eq]; exact Nat.le_trans
+      have total : ∀ a b : Nat, decide (a ≤ b) || decide (b ≤ a) := by
+        intro a b; simp only [Bool.or_eq_true, decide_eq_true_eq]; omega
+      simpa only [decide_eq_true_eq] using List.pairwise_mergeSort trans total requested
+    · exact List.mergeSort_perm _ _
+
 end LeanPoo.Prototype.Representation
