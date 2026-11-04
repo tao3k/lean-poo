@@ -238,6 +238,24 @@ metadata, initialization order, final membership and inherited refinement.
 `Examples/ClassContracts.lean` executes a corresponding finite service workflow;
 existing normalization/refinement/binding laws supply the publication boundary.
 
+Declared reflection now uses the same selected Slot normalization protocol.
+`read-slot` checks the raw value, calls `.slot.validate`, checks the returned
+value and returns it. `write-slot!` performs those steps before the existing
+revision fence and installs the checked value. This closes a reproduced nested
+Function escape through an already-cached List field. Constants and custom Slot
+predicates still govern the wrapped result; raw checker and normalizer failures
+retain their first cause. Read validation does not replace the raw cache or
+persist an admission verdict. The private one-field receiver is deliberately
+field-local; whole-Class relations remain the Class validation boundary.
+
+`examples/inherited-services.ss` exercises a shared callback declaration across
+a diamond, FUN publication, refusal without a source revision, and retry.
+The six `ClassValidation.reflect_*` laws establish normalization/error order,
+checked-result retention and revision-gated installation. `ClassContracts.lean`
+executes the nested Function input/result negative controls and stale/retry path.
+These are finite sequential protocol laws, not proofs of host C3, callback
+purity, GC cost, concurrent atomicity or the Scheme compiler.
+
 This advances the paper's section 5 type-descriptor construction and generalized
 MOP future work, rather than closing all future work. Inherited metadata resolution,
 prototype defaults and host identity are supplied interfaces. Computed functions

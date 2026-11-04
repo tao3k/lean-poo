@@ -231,6 +231,35 @@ example (candidates : List (Nat → PrototypeTypes.Ty)) (target : ClassValidatio
 /-- Optional absence remains absence, and cannot satisfy a required target. -/
 example : ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () true none := rfl
 example : ¬ ClassValidation.slotAdmits (fun (_ : Unit) (n : Nat) => n > 0) () false none := by simp [ClassValidation.slotAdmits, RowTypes.slotAdmits]
+/-- Reflective access retains the same nested Function boundary as Class
+initialization. Procedure membership alone would accept the negative controls. -/
+def reflectedPlugins (source : List Value) : Except String (List Value) :=
+  ClassValidation.reflectValue
+    (fun values => if values.all callable then .ok () else .error "not callable")
+    (Validation.traverse (wrap integerRow)) source
+
+/-- An inherited plugin is read, a bad-result replacement is installed, and a
+retry restores a checked callback. The publication state is an explicit list;
+host C3, mutable getters and revision production remain supplied premises. -/
+def reflectedWorkflow : Except String Unit := do
+  let source := [Value.function (fun _ => .ok [.integer 7])]
+  let [Value.function first] ← reflectedPlugins source | throw "plugin shape"
+  unless (← first [.integer 2]) == [.integer 7] do throw "good call"
+  match first [.flag false] with
+  | .error "integer row" => pure () | _ => throw "argument escaped"
+  let bad := [Value.function (fun _ => .ok [.flag false])]
+  let installed ← ClassValidation.reflectWrite reflectedPlugins (.ok ()) (fun next _ => next) bad source
+  let [Value.function broken] := installed | throw "installed shape"
+  match broken [.integer 2] with
+  | .error "integer row" => pure () | _ => throw "result escaped"
+  match ClassValidation.reflectWrite reflectedPlugins (.error "stale") (fun next _ => next) bad source with
+  | .error "stale" => pure () | _ => throw "stale publication"
+  let [Value.function retry] ← reflectedPlugins source | throw "retry shape"
+  unless (← retry [.integer 2]) == [.integer 7] do throw "retry lost"
+
+example : reflectedWorkflow = .ok () := by rfl
+#print axioms ClassValidation.reflect_installs_checked
+#print axioms ClassValidation.reflect_stale
 #print axioms ClassValidation.recordFieldsCheck_sound
 #print axioms ClassValidation.recordCheck_sound
 #print axioms ClassValidation.record_field_replacement
