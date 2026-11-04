@@ -139,4 +139,27 @@ theorem recordCapturedReads_append (before roots : List Read) (observers : List 
     (recordCapturedReads (⟨some before, observers, checks⟩ : ReadScope (List Read) Observer Check)
       roots (· ++ ·)).frame = some (before ++ roots) := rfl
 
+/-- Run prechecks in scope order, supplying the original query key to each.
+A callback's edited copy can appear in its effects but does not become the
+next callback's input. The supplied step models those external effects. -/
+def checkDemand (key : Key) (checks : List (Key → State → Except Error State))
+    (state : State) : Except Error (Key × State) :=
+  (checks.foldlM (fun current (check : Key → State → Except Error State) => check key current) state).map (key, ·)
+
+/-- A successful demand preserves the canonical key for lookup and issuance. -/
+theorem checkDemand_key (key : Key) (checks : List (Key → State → Except Error State))
+    (state final : State) (published : Key)
+    (ready : checkDemand key checks state = .ok (published, final)) : published = key := by
+  unfold checkDemand at ready
+  cases h : checks.foldlM (m := Except Error)
+    (fun current (check : Key → State → Except Error State) => check key current) state <;>
+    simp_all [Except.map]
+
+/-- The first precheck's refusal prevents later checks and keeps its cause. -/
+theorem checkDemand_refusal (key : Key) (check : Key → State → Except Error State)
+    (rest : List (Key → State → Except Error State)) (state : State)
+    (refused : check key state = .error cause) :
+    checkDemand key (check :: rest) state = .error cause := by
+  simp [checkDemand, List.foldlM, refused, bind, Except.bind, Except.map]
+
 end LeanPoo.Object

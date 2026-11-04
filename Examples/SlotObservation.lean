@@ -120,3 +120,11 @@ example (old : Nat → Nat) : publishEdit old
 example : invalidationClosureWork ["late", "shared", "right", "left", "root"]
     currentInvalidationChildren = 11 := by
   simp [invalidationClosureWork, currentInvalidationChildren]
+
+/-- An inner observer retains an edited key while the outer observer and the
+structural query both keep the original name. -/
+example : checkDemand ["presence", "port"]
+    ([fun _ trace => .ok (trace ++ [["presence", "missing"]]),
+      fun key trace => .ok (trace ++ [key])] :
+      List (List String → List (List String) → Except String (List (List String))))
+    [] = .ok (["presence", "port"], [["presence", "missing"], ["presence", "port"]]) := rfl
