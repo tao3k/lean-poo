@@ -1319,3 +1319,37 @@ serialized host handoffs remain premises. These laws do not snapshot source tabl
 contents, deep-copy arbitrary payloads, reverse callback effects or verify the
 compiler. Later source mutation still requires explicit reconstruction/invalidation
 in the author's purity-default caching design.
+
+### Current invalidation closure admission
+
+The visited-state table must describe the graph after all preflight callbacks. A
+later callback can register a descendant on a previously completed subtree, or
+replace a known child's state identity. The existing Scheme object-state engine
+now checks all current outgoing edges against its existing visited map before any
+revision advance/clear. Standard hash-for-each avoids iterator entry-pair copying;
+there is no second map, snapshot, retry loop or loader. The pristine post-check
+leaf route is unchanged.
+
+CacheInvalidation proves that successful current-edge/state checks cover every
+registered transitive descendant, including shared joins and cycles. The inventory
+premise binds prepared map entries to visited owners; faithful edge/state-identity
+interpretation and finite serialized traversal are host premises. A new owner or
+replaced identity refuses before clearing. Original preflight errors outrank this
+refusal, successful admission retains the exact unique reverse-discovery order,
+and clear callbacks retain the existing partial-effect/failure protocol. Callback
+registration effects remain visible so an explicit new traversal can retry.
+
+SlotObservation examples cover a shared diamond followed by a late cyclic edge,
+missing and replaced state identities, preserved original false refusal, retained
+Function caches on rejection and successful closure after a fresh traversal. The
+host service example composes ordinary source-state/check/clear functions with
+lazy tariff cells, old-read rejection, checked FUN delivery and standard module
+selection. No alternative evaluator or cache authority is introduced.
+
+The retained-graph admission pass charges one owner and each outgoing edge once,
+with a bound of owners times (maximum fanout + 1). This deliberately excludes
+primitive hash/iteration costs, closures, weak collection, callback work, allocation,
+GC and physical latency. The theorem certifies closure at admission, assuming
+serialized checks through commit; arbitrary graph mutation during clear callbacks
+and concurrent races are outside this claim. It advances the author's explicit
+cache-invalidation future work, without claiming pervasive language-level tracking.

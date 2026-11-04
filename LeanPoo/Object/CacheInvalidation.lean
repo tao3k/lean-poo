@@ -1,8 +1,8 @@
 import LeanPoo.Proof.Invalidation
 
-/-! Mutable native sources clear derived state together. The graph models all
+/-! Mutable sources clear derived state together. The graph models all
 registered source edges (parents, hooks and descriptors). Correct registration,
-sequential evaluation and graph finiteness are explicit native obligations. -/
+sequential evaluation and graph finiteness are explicit host obligations. -/
 namespace LeanPoo.Object
 /-- One retained derived cache cell, tagged by the source's logical revision. -/
 structure RevisionCache (Value : Type) where
@@ -31,7 +31,7 @@ theorem invalidateCaches_frame (graph : C4.Graph) (changed : List String)
     (cache : String → RevisionCache Value) (name : String)
     (untouched : name ∉ Proof.invalidatedNodes graph changed) :
     invalidateCaches graph changed cache name = cache name := by simp [invalidateCaches, untouched]
-/-- Native preflight rejects sealed sources or edits during any affected computation. -/
+/-- Preflight rejects sealed sources or edits during any affected computation. -/
 def guardedEdit (sealed active : Bool) (old : State) (edit : State → State) : Except String State :=
   if sealed then .error "sealed prototype" else
   if active then .error "object mutation during computation" else .ok (edit old)
@@ -429,5 +429,112 @@ theorem withSlotDependencies_distinct_ok (graph : C4.Graph) (owner : String)
       .ok (value, registerSlotSources graph owner (distinctSlotSources owner sources)) := by
   simp [withSlotDependencies, nonempty, ready, bind, Except.bind]
   rfl
+
+/-- Reuse the traversal's owner/state identity map to check every current
+outgoing edge. Children describe the world after all preflight effects; this
+neither repeats those callbacks nor restores the earlier dependency graph. -/
+def invalidationClosureReady [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp)) : Bool :=
+  owners.all (fun owner => (children owner).all
+    (fun edge => decide (prepared edge.1 = some edge.2)))
+
+/-- A successful check certifies both owner coverage and the exact child state. -/
+theorem invalidationClosureReady_iff [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp)) :
+    invalidationClosureReady owners prepared children = true ↔
+      ∀ owner ∈ owners, ∀ edge ∈ children owner, prepared edge.1 = some edge.2 := by
+  simp [invalidationClosureReady, List.all_eq_true]
+
+/-- Checking current edges of prepared owners suffices for every transitive path,
+including shared joins and cycles. The host map contains only visited owners;
+faithful current edge enumeration and state-identity interpretation are premises. -/
+theorem invalidationClosureReady_descendant [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp))
+    (graph : C4.Graph) (root target : String) (steps : Nat)
+    (ready : invalidationClosureReady owners prepared children = true)
+    (inventory : ∀ name stamp, prepared name = some stamp → name ∈ owners)
+    (represented : ∀ node ∈ graph.nodes, ∀ parent ∈ node.parentOrders.flatten,
+      ∃ stamp, (node.name, stamp) ∈ children parent)
+    (rootOwned : root ∈ owners) (path : Proof.Descendant graph root steps target) :
+    target ∈ owners := by
+  induction path with
+  | self => exact rootOwned
+  | child path node member edge ih =>
+    obtain ⟨stamp, present⟩ := represented node member _ edge
+    exact inventory node.name stamp
+      ((invalidationClosureReady_iff owners prepared children).mp ready _ ih _ present)
+
+/-- A late edge or replaced state cannot hide behind an already visited owner. -/
+theorem invalidationClosureReady_mismatch [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp))
+    (owner child : String) (stamp : Stamp) (owned : owner ∈ owners)
+    (edge : (child, stamp) ∈ children owner) (different : prepared child ≠ some stamp) :
+    invalidationClosureReady owners prepared children = false := by
+  cases result : invalidationClosureReady owners prepared children with
+  | false => rfl
+  | true =>
+    exact False.elim (different
+      ((invalidationClosureReady_iff owners prepared children).mp result owner owned _ edge))
+
+/-- Traversal refusal has priority over closure refusal. On success the unchanged
+ordered list reaches the existing clear loop only after current-graph admission.
+Clear-callback effects/failures retain the existing finishInvalidation semantics. -/
+def checkedInvalidationClosure [DecidableEq Stamp]
+    (checked : Except Cause (List String × (String → Option Stamp)))
+    (children : String → List (String × Stamp)) (stale : Cause) : Except Cause (List String) := do
+  let (owners, prepared) ← checked
+  if invalidationClosureReady owners prepared children then .ok owners else .error stale
+
+/-- Original false-like or opaque preflight failures suppress every later stage. -/
+theorem checkedInvalidationClosure_refused [DecidableEq Stamp] (cause stale : Cause)
+    (children : String → List (String × Stamp)) :
+    checkedInvalidationClosure (.error cause) children stale = .error cause := rfl
+
+/-- Admission keeps the exact existing commit order, without another traversal. -/
+theorem checkedInvalidationClosure_ready [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp)) (stale : Cause)
+    (ready : invalidationClosureReady owners prepared children = true) :
+    checkedInvalidationClosure (.ok (owners, prepared)) children stale = .ok owners := by
+  simp [checkedInvalidationClosure, ready, bind, Except.bind]
+
+/-- An unclosed graph refuses before any clear and retains its explicit cause. -/
+theorem checkedInvalidationClosure_changed [DecidableEq Stamp] (owners : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp)) (stale : Cause)
+    (changed : invalidationClosureReady owners prepared children = false) :
+    checkedInvalidationClosure (.ok (owners, prepared)) children stale = .error stale := by
+  simp [checkedInvalidationClosure, changed, bind, Except.bind]
+
+/-- A successful closure check never manufactures duplicates in the visited list. -/
+theorem checkedInvalidationClosure_unique [DecidableEq Stamp] (owners result : List String)
+    (prepared : String → Option Stamp) (children : String → List (String × Stamp)) (stale : Cause)
+    (unique : owners.Nodup)
+    (accepted : checkedInvalidationClosure (.ok (owners, prepared)) children stale = .ok result) :
+    result.Nodup := by
+  cases ready : invalidationClosureReady owners prepared children with
+  | false => simp [checkedInvalidationClosure, ready, bind, Except.bind] at accepted
+  | true =>
+    have same : owners = result := by simpa [checkedInvalidationClosure, ready, bind, Except.bind] using accepted
+    simpa [← same] using unique
+
+/-- Logical validation visits one owner and each of its current outgoing edges.
+The existing seen table is reused; hashing, iteration wrappers, allocation, weak
+collection, callback work and physical latency are not certified by this count. -/
+def invalidationClosureWork (owners : List String)
+    (children : String → List (String × Stamp)) : Nat :=
+  owners.length + (owners.map (fun owner => (children owner).length)).sum
+
+/-- A finite fanout bounds the additional admission pass linearly in visited owners. -/
+theorem invalidationClosureWork_bound (owners : List String)
+    (children : String → List (String × Stamp)) (fanout : Nat)
+    (bounded : ∀ owner ∈ owners, (children owner).length ≤ fanout) :
+    invalidationClosureWork owners children ≤ owners.length * (fanout + 1) := by
+  induction owners with
+  | nil => simp [invalidationClosureWork]
+  | cons owner rest ih =>
+    have head := bounded owner (by simp)
+    have tail := ih (fun name member => bounded name (by simp [member]))
+    simp only [invalidationClosureWork, List.length_cons, List.map_cons, List.sum_cons,
+      Nat.add_mul, Nat.one_mul] at *
+    omega
 
 end LeanPoo.Object

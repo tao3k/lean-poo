@@ -1,3 +1,4 @@
+import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.SlotObservation
 import LeanPoo.Object.Instantiation
 
@@ -68,3 +69,54 @@ example : (recordCapturedReads (⟨some [1], [7], [8]⟩ : ReadScope (List Nat) 
 /-- An existing unique-root collector retains its own identity policy. -/
 example : (recordCapturedReads (⟨some [1], [7], [8]⟩ : ReadScope (List Nat) Nat Nat)
     [2, 2] (fun before roots => (before ++ roots).eraseDups)).frame = some [1, 2] := by decide
+
+/-- A diamond joins at shared, then a late edge closes a cycle back to root. -/
+def currentInvalidationChildren (owner : String) : List (String × Nat) :=
+  if owner = "root" then [("left", 10), ("right", 20)] else
+  if owner = "left" ∨ owner = "right" then [("shared", 30)] else
+  if owner = "shared" then [("late", 40)] else
+  if owner = "late" then [("root", 0)] else []
+
+/-- Identity stamps distinguish live states even when revision counters agree. -/
+def preparedInvalidationState (includeLate : Bool) (owner : String) : Option Nat :=
+  if owner = "root" then some 0 else
+  if owner = "left" then some 10 else
+  if owner = "right" then some 20 else
+  if owner = "shared" then some 30 else
+  if owner = "late" ∧ includeLate then some 40 else none
+
+/-- A completed earlier subtree cannot silently omit its new descendant. -/
+example : invalidationClosureReady ["shared", "right", "left", "root"]
+    (preparedInvalidationState false) currentInvalidationChildren = false := by
+  simp [invalidationClosureReady, preparedInvalidationState, currentInvalidationChildren]
+
+/-- Fresh traversal includes the late shared dependency and accepts the cycle. -/
+example : checkedInvalidationClosure
+    (.ok (["late", "shared", "right", "left", "root"], preparedInvalidationState true))
+    currentInvalidationChildren false = .ok ["late", "shared", "right", "left", "root"] := by
+  simp [checkedInvalidationClosure, invalidationClosureReady, preparedInvalidationState,
+    currentInvalidationChildren, bind, Except.bind]
+
+/-- The same owner with a replacement state is not covered by an older visit. -/
+example : invalidationClosureReady ["late", "shared", "right", "left", "root"]
+    (preparedInvalidationState true)
+    (fun owner => if owner = "shared" then [("late", 41)] else currentInvalidationChildren owner) = false := by
+  simp [invalidationClosureReady, preparedInvalidationState, currentInvalidationChildren]
+
+/-- Original false refusal outranks an unclosed current graph. -/
+example : checkedInvalidationClosure
+    (.error false : Except Bool (List String × (String → Option Nat)))
+    currentInvalidationChildren true = .error false := rfl
+
+/-- Closure refusal cannot invoke a clear or replace a retained Function cache. -/
+example (old : Nat → Nat) : publishEdit old
+    ((checkedInvalidationClosure
+      (.ok (["shared", "right", "left", "root"], preparedInvalidationState false))
+      currentInvalidationChildren "changed").map (fun _ => fun value => value + 1)) = old := by
+  simp [checkedInvalidationClosure, invalidationClosureReady, preparedInvalidationState,
+    currentInvalidationChildren, publishEdit, Except.map, bind, Except.bind]
+
+/-- Five owners and six current edges require eleven logical validation visits. -/
+example : invalidationClosureWork ["late", "shared", "right", "left", "root"]
+    currentInvalidationChildren = 11 := by
+  simp [invalidationClosureWork, currentInvalidationChildren]
