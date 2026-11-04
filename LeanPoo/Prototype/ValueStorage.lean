@@ -168,24 +168,35 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
 
-/-- Read through a bound site on its retained layout. The current view is of
-that same allocation. A different shape refuses before accessing a cell. -/
-def readBoundOffset (site : Site) (view : View Value) (stale : Error) :
-    Except Error (Option Value) :=
-  if site.names = view.names then .ok (cell view site.index) else .error stale
+/-- Read a materialized cell on the retained allocation. Shape growth refuses
+before accessing the cell. Eviction leaves the offset valid but delivers no value. -/
+def readBoundOffset (site : Site) (view : View Value) (stale empty : Error) :
+    Except Error Value :=
+  if site.names = view.names then
+    match cell view site.index with
+    | some value => .ok value
+    | none => .error empty
+  else .error stale
 
 /-- Layout growth rejects an old offset even when it remains in bounds. -/
-theorem readBoundOffset_stale (site : Site) (view : View Value) (stale : Error)
+theorem readBoundOffset_stale (site : Site) (view : View Value) (stale empty : Error)
     (changed : site.names ≠ view.names) :
-    readBoundOffset site view stale = .error stale := by
+    readBoundOffset site view stale empty = .error stale := by
   simp [readBoundOffset, changed]
 
-/-- A site bound to the current shape reads its named cell, including false. -/
-theorem readBoundOffset_current (site : Site) (view : View Value) (stale : Error)
-    (same : site.names = view.names) :
-    readBoundOffset site view stale = .ok (view.fields site.name) := by
+/-- Even with a certified offset, an evicted cell refuses direct delivery. -/
+theorem readBoundOffset_empty (site : Site) (view : View Value) (stale empty : Error)
+    (same : site.names = view.names) (evicted : view.fields site.name = none) :
+    readBoundOffset site view stale empty = .error empty := by
   have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
-  simp [readBoundOffset, same, cell, indexed]
+  simp [readBoundOffset, same, cell, indexed, evicted]
+
+/-- A filled cell delivers its exact named value, including false or a function. -/
+theorem readBoundOffset_current (site : Site) (view : View Value) (stale empty : Error)
+    (same : site.names = view.names) (value : Value) (present : view.fields site.name = some value) :
+    readBoundOffset site view stale empty = .ok value := by
+  have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
+  simp [readBoundOffset, same, cell, indexed, present]
 
 /-- Computed cardinality counts present cells, including false and functions.
 The runtime sentinel must be disjoint from successful values. This is scalar
@@ -320,12 +331,13 @@ theorem bindValueOffset_refused (prior : Option Site) (view : View Value) (name 
     bindValueOffset prior view name (some index) invalid = (prior, .error invalid) := by
   simp [bindValueOffset, wrong]
 
-/-- An admitted offset binds the current layout and reads only its named cell. -/
+/-- An admitted offset on the current layout delivers only the materialized named value. -/
 theorem bindValueOffset_read (prior : Option Site) (view : View Value) (name : String)
-    (index : Nat) (invalid stale : Error) (indexed : view.names[index]? = some name) :
+    (index : Nat) (invalid stale empty : Error) (indexed : view.names[index]? = some name)
+    (value : Value) (present : view.fields name = some value) :
     (bindValueOffset prior view name (some index) invalid).1.map
-      (fun site => readBoundOffset site view stale) = some (.ok (view.fields name)) := by
-  simp [bindValueOffset, indexed, readBoundOffset, currentValueSite, cell]
+      (fun site => readBoundOffset site view stale empty) = some (.ok value) := by
+  simp [bindValueOffset, indexed, readBoundOffset, currentValueSite, cell, present]
 
 /-- Cold demand and an evicted warm cell share this metadata publication step.
 The supplied view is after ordinary evaluation and its primary value writes.

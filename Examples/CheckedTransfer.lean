@@ -203,8 +203,8 @@ example :
       ⟨1, 4, 9, ["added", "disabled"], fun name => some (name == "added")⟩
     let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
     let rebound := Prototype.Representation.currentValueSite current "disabled" 1 rfl
-    Prototype.Representation.readBoundOffset old current "stale" = .error "stale" ∧
-      Prototype.Representation.readBoundOffset rebound current "stale" = .ok (some false) := by
+    Prototype.Representation.readBoundOffset old current "stale" "empty" = .error "stale" ∧
+      Prototype.Representation.readBoundOffset rebound current "stale" "empty" = .ok false := by
   simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.cell]
 
@@ -216,14 +216,28 @@ example :
     let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
     let refused := Prototype.Representation.bindValueOffset (some old) current "disabled" (some 0) "invalid"
     refused = (some old, .error "invalid") ∧
-      refused.1.map (fun site => Prototype.Representation.readBoundOffset site current "stale") =
+      refused.1.map (fun site => Prototype.Representation.readBoundOffset site current "stale" "empty") =
         some (.error "stale") ∧
       (Prototype.Representation.bindValueOffset refused.1 current "disabled" (some 1) "invalid").1.map
-        (fun site => Prototype.Representation.readBoundOffset site current "stale") = some (.ok (some false)) := by
+        (fun site => Prototype.Representation.readBoundOffset site current "stale" "empty") = some (.ok false) := by
   simp [Prototype.Representation.bindValueOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.readBoundOffset, Prototype.Representation.cell]
 
 #print axioms Prototype.Representation.bindValueOffset_refused
 #print axioms Prototype.Representation.bindValueOffset_read
+
+/-- Same-shape eviction refuses. Ordinary demand can refill the very same
+offset with a false value, which is delivered successfully on retry. -/
+example :
+    let filled : Prototype.Representation.View Bool :=
+      ⟨1, 4, 9, ["disabled"], fun _ => some false⟩
+    let evicted : Prototype.Representation.View Bool := {filled with fields := fun _ => none}
+    let site := Prototype.Representation.currentValueSite filled "disabled" 0 rfl
+    Prototype.Representation.readBoundOffset site evicted "stale" "empty" = .error "empty" ∧
+      Prototype.Representation.readBoundOffset site filled "stale" "empty" = .ok false := by
+  simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
+    Prototype.Representation.cell]
+
+#print axioms Prototype.Representation.readBoundOffset_empty
 
 end LeanPoo.Examples.CheckedTransfer
