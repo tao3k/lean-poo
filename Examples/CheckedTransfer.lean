@@ -196,4 +196,16 @@ example : Prototype.Representation.withAdmittedName admitName reflectedQuery
 #print axioms Prototype.Representation.withAdmittedName_failure
 #print axioms Prototype.Representation.withAdmittedName_false
 #print axioms Prototype.Representation.withAdmittedName_refused_preparation
+
+/-- Growth inserts a true cell at zero and moves the original false cell to one. -/
+example :
+    let current : Prototype.Representation.View Bool :=
+      ⟨1, 4, 9, ["added", "disabled"], fun name => some (name == "added")⟩
+    let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
+    let rebound := Prototype.Representation.currentValueSite current "disabled" 1 rfl
+    Prototype.Representation.readBoundOffset old current "stale" = .error "stale" ∧
+      Prototype.Representation.readBoundOffset rebound current "stale" = .ok (some false) := by
+  simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
+    Prototype.Representation.cell]
+
 end LeanPoo.Examples.CheckedTransfer

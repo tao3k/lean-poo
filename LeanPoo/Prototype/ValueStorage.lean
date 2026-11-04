@@ -168,6 +168,25 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
 
+/-- Read through a bound site on its retained layout. The current view is of
+that same allocation. A different shape refuses before accessing a cell. -/
+def readBoundOffset (site : Site) (view : View Value) (stale : Error) :
+    Except Error (Option Value) :=
+  if site.names = view.names then .ok (cell view site.index) else .error stale
+
+/-- Layout growth rejects an old offset even when it remains in bounds. -/
+theorem readBoundOffset_stale (site : Site) (view : View Value) (stale : Error)
+    (changed : site.names ≠ view.names) :
+    readBoundOffset site view stale = .error stale := by
+  simp [readBoundOffset, changed]
+
+/-- A site bound to the current shape reads its named cell, including false. -/
+theorem readBoundOffset_current (site : Site) (view : View Value) (stale : Error)
+    (same : site.names = view.names) :
+    readBoundOffset site view stale = .ok (view.fields site.name) := by
+  have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
+  simp [readBoundOffset, same, cell, indexed]
+
 /-- Computed cardinality counts present cells, including false and functions.
 The runtime sentinel must be disjoint from successful values. This is scalar
 metadata over the single primary store, never a second store of values. -/
