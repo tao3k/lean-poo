@@ -208,4 +208,22 @@ example :
   simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.cell]
 
+/-- An in-bounds sibling proposal after growth leaves the old guard intact and
+stale. Retrying the named offset reads false from the current layout. -/
+example :
+    let current : Prototype.Representation.View Bool :=
+      ⟨1, 4, 9, ["added", "disabled"], fun name => some (name == "added")⟩
+    let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
+    let refused := Prototype.Representation.bindValueOffset (some old) current "disabled" (some 0) "invalid"
+    refused = (some old, .error "invalid") ∧
+      refused.1.map (fun site => Prototype.Representation.readBoundOffset site current "stale") =
+        some (.error "stale") ∧
+      (Prototype.Representation.bindValueOffset refused.1 current "disabled" (some 1) "invalid").1.map
+        (fun site => Prototype.Representation.readBoundOffset site current "stale") = some (.ok (some false)) := by
+  simp [Prototype.Representation.bindValueOffset, Prototype.Representation.currentValueSite,
+    Prototype.Representation.readBoundOffset, Prototype.Representation.cell]
+
+#print axioms Prototype.Representation.bindValueOffset_refused
+#print axioms Prototype.Representation.bindValueOffset_read
+
 end LeanPoo.Examples.CheckedTransfer

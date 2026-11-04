@@ -302,6 +302,31 @@ def currentValueSite (view : View Value) (name : String) (index : Nat)
     (indexed : view.names[index]? = some name) : Site :=
   ⟨view.owner, view.revision, view.token, view.names, name, index, indexed⟩
 
+/-- Admit a proposed offset for a fixed name before replacing the current site.
+An absent proposal clears the guard. An invalid proposal retains the old site. -/
+def bindValueOffset (prior : Option Site) (view : View Value) (name : String)
+    (proposal : Option Nat) (invalid : Error) : Option Site × Except Error Unit :=
+  match proposal with
+  | none => (none, .ok ())
+  | some index =>
+    if indexed : view.names[index]? = some name then
+      (some (currentValueSite view name index indexed), .ok ())
+    else (prior, .error invalid)
+
+/-- An in-bounds sibling offset and an out-of-bounds offset both refuse without
+changing the existing binding. -/
+theorem bindValueOffset_refused (prior : Option Site) (view : View Value) (name : String)
+    (index : Nat) (invalid : Error) (wrong : view.names[index]? ≠ some name) :
+    bindValueOffset prior view name (some index) invalid = (prior, .error invalid) := by
+  simp [bindValueOffset, wrong]
+
+/-- An admitted offset binds the current layout and reads only its named cell. -/
+theorem bindValueOffset_read (prior : Option Site) (view : View Value) (name : String)
+    (index : Nat) (invalid stale : Error) (indexed : view.names[index]? = some name) :
+    (bindValueOffset prior view name (some index) invalid).1.map
+      (fun site => readBoundOffset site view stale) = some (.ok (view.fields name)) := by
+  simp [bindValueOffset, indexed, readBoundOffset, currentValueSite, cell]
+
 /-- Cold demand and an evicted warm cell share this metadata publication step.
 The supplied view is after ordinary evaluation and its primary value writes.
 An error preserves the prior credential and exact cause; no successful site is
