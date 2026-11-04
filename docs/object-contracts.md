@@ -860,3 +860,19 @@ faithfully interpret `symbol?`; these laws do not certify the compiler's hash.
 `Examples/CheckedTransfer.lean` distinguishes symbols from strings/keywords/numbers
 and retains false at ordinal zero. Scheme exercises the real HashTable interface,
 both value backends, dependency observers, loaded FUN service and revision retry.
+
+Structural presence and declared reflection now share that same public grammar
+discipline. `.slot?` admits before bootstrap/observer/MOP work; `public-slot`
+admits once for both reflective read and write before catalog/visibility work.
+The unchecked presence continuation is private. Safe sentinel controls reproduce
+the old effects without sending an invalid key to the host symbolic primitive.
+Warm regression checks preserve vector/layout/index/revision and retained reads;
+the existing inherited-service FUN workflow retries after an explicit revision.
+
+Three additional `withAdmittedName` laws distinguish syntax refusal from admitted
+operation failure, retain successful false presence, and suppress a whole
+prepare/observe pipeline after syntax rejection. CheckedTransfer models those
+distinct effects: a false-valued field is present, a missing symbol has false
+presence, and valid missing reflection keeps its own error and preparation effects.
+These are finite sequential laws over supplied state/callback interpretations,
+not proofs of host C3, callback termination, concurrent atomicity or GC cost.

@@ -430,6 +430,40 @@ theorem withAdmittedName_success (admit : RawName → Except Error String)
       ∃ name, admit raw = .ok name ∧ operation name state = (.ok value, final) := by
   cases h : admit raw <;> simp [withAdmittedName, h]
 
+/-- Failures distinguish rejected syntax, which leaves the complete state alone,
+from an admitted query's own failure and effects. A missing/hidden symbol is not
+silently reclassified as malformed syntax. -/
+theorem withAdmittedName_failure (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state final : State) (cause : Error) :
+    withAdmittedName admit operation raw state = (.error cause, final) ↔
+      (admit raw = .error cause ∧ state = final) ∨
+      ∃ name, admit raw = .ok name ∧ operation name state = (.error cause, final) := by
+  cases h : admit raw <;> simp [withAdmittedName, h]
+
+/-- An admitted presence predicate's false is a successful value. Name admission
+neither forces a fallback nor confuses structural absence with an exception. -/
+theorem withAdmittedName_false (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Bool × State)
+    (raw : RawName) (state final : State) (name : String)
+    (accepted : admit raw = .ok name) (absent : operation name state = (.ok false, final)) :
+    withAdmittedName admit operation raw state = (.ok false, final) := by
+  simp [withAdmittedName, accepted, absent]
+
+/-- Standard name admission surrounds the entire receiver-bound preparation and
+observation protocol. Rejection suppresses both phases without needing another
+cache or a separately admitted internal helper. -/
+theorem withAdmittedName_refused_preparation (admit : RawName → Except Error String)
+    (prepare : String → State → Except Error Prepared × State)
+    (observe : String → Prepared → State → Except Error Result × State)
+    (raw : RawName) (state : State) (refused : admit raw = .error cause) :
+    withAdmittedName admit (fun name initial =>
+      let (result, preparedState) := prepare name initial
+      match result with
+      | .error error => (.error error, preparedState)
+      | .ok prepared => observe name prepared preparedState) raw state = (.error cause, state) := by
+  simp [withAdmittedName, refused]
+
 /-- The finite constructor request owns names and entry pairs, while values
 remain opaque. In the host this is one shallow capture before source callbacks. -/
 structure SeedRequest (Value : Type) where

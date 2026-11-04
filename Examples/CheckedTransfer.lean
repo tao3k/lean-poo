@@ -149,4 +149,51 @@ example (replacement : Nat → Nat) : (seedHandoff replacement false).1 =
     .ok (["declared", "seed", "callback", "disabled"],
       [("seed", .inr false), ("callback", .inl replacement), ("disabled", .inr false)]) := rfl
 
+/-- Finite query effects distinguish preparation/visibility from delivery. The
+name inventory is structural: a false-valued field is still present. -/
+structure QueryState where
+  names : List String
+  prepared : Nat
+  visibility : Nat
+  delivered : Nat
+  deriving DecidableEq, Repr
+
+/-- Presence uses declaration membership, not the truth of a cached payload. -/
+def presenceQuery (name : String) (state : QueryState) : Except String Bool × QueryState :=
+  (.ok (state.names.contains name),
+    {state with prepared := state.prepared + 1, delivered := state.delivered + 1})
+
+/-- Declared reflection may prepare visibility before a valid missing-name
+refusal. Malformed names must never reach this supplied interpretation. -/
+def reflectedQuery (name : String) (state : QueryState) : Except String Bool × QueryState :=
+  let prepared := {state with prepared := state.prepared + 1, visibility := state.visibility + 1}
+  if name = "disabled" then (.ok false, {prepared with delivered := prepared.delivered + 1})
+  else (.error "hidden or undeclared", prepared)
+
+/-- A warmed finite directory carries explicit receiver and query effects. -/
+def warmQueries : QueryState := ⟨["disabled"], 2, 1, 3⟩
+
+-- Both protocols reject malformed runtime names without any new query effect.
+example : Prototype.Representation.withAdmittedName admitName presenceQuery
+    (.number 17) warmQueries = (.error "symbol required", warmQueries) := rfl
+example : Prototype.Representation.withAdmittedName admitName reflectedQuery
+    (.text "disabled") warmQueries = (.error "symbol required", warmQueries) := rfl
+example : Prototype.Representation.withAdmittedName admitName reflectedQuery
+    (.keyword "disabled") warmQueries = (.error "symbol required", warmQueries) := rfl
+-- Presence of false and successful delivery of false remain distinct results.
+example : Prototype.Representation.withAdmittedName admitName presenceQuery
+    (.symbol "disabled") warmQueries = (.ok true, ⟨["disabled"], 3, 1, 4⟩) := rfl
+example : Prototype.Representation.withAdmittedName admitName reflectedQuery
+    (.symbol "disabled") warmQueries = (.ok false, ⟨["disabled"], 3, 2, 4⟩) := by
+  simp [Prototype.Representation.withAdmittedName, admitName, reflectedQuery, warmQueries]
+-- A valid absent symbol is false for presence, but an error for public reflection.
+example : Prototype.Representation.withAdmittedName admitName presenceQuery
+    (.symbol "missing") warmQueries = (.ok false, ⟨["disabled"], 3, 1, 4⟩) := rfl
+example : Prototype.Representation.withAdmittedName admitName reflectedQuery
+    (.symbol "missing") warmQueries = (.error "hidden or undeclared", ⟨["disabled"], 3, 2, 3⟩) := by
+  simp [Prototype.Representation.withAdmittedName, admitName, reflectedQuery, warmQueries]
+
+#print axioms Prototype.Representation.withAdmittedName_failure
+#print axioms Prototype.Representation.withAdmittedName_false
+#print axioms Prototype.Representation.withAdmittedName_refused_preparation
 end LeanPoo.Examples.CheckedTransfer
