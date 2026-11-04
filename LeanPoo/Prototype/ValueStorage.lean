@@ -430,4 +430,112 @@ theorem withAdmittedName_success (admit : RawName → Except Error String)
       ∃ name, admit raw = .ok name ∧ operation name state = (.ok value, final) := by
   cases h : admit raw <;> simp [withAdmittedName, h]
 
+/-- The finite constructor request owns names and entry pairs, while values
+remain opaque. In the host this is one shallow capture before source callbacks. -/
+structure SeedRequest (Value : Type) where
+  names : List String
+  entries : List (String × Value)
+
+/-- Source-discovered keys extend the captured request; later caller metadata
+cannot retarget its original names or entry identities. -/
+def seedRequestNames (request : SeedRequest Value) (discovered : List String) : List String :=
+  request.names ++ discovered ++ request.entries.map Prod.fst
+
+/-- Seed values are installed first; captured explicit rows retain last-write
+precedence, order and exact payload identity, without equality on Function values. -/
+def seedRequestEntries (request : SeedRequest Value) (seed : List (String × Value)) :
+    List (String × Value) := seed ++ request.entries
+
+/-- Two standard source enumeration handoffs share an explicit external world.
+Allocation/install are the existing private store operations. Their finite,
+faithful interpretation is a premise; no callback effects are rolled back. -/
+def prepareSeedRequest (request : SeedRequest Value) (world : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store) :
+    Except Error Store × World :=
+  let (keys, afterDiscovery) := discover world
+  match keys with
+  | .error cause => (.error cause, afterDiscovery)
+  | .ok keys =>
+    match allocate (seedRequestNames request keys) with
+    | .error cause => (.error cause, afterDiscovery)
+    | .ok candidate =>
+      let (rows, afterSeed) := enumerate afterDiscovery
+      match rows with
+      | .error cause => (.error cause, afterSeed)
+      | .ok rows => (install candidate (seedRequestEntries request rows), afterSeed)
+
+/-- Capture and install retain the original explicit payloads even when source
+callbacks replace the complete externally visible request during enumeration. -/
+theorem seedRequest_success (request : SeedRequest Value) (world first last : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (rows : List (String × Value)) (candidate : Store)
+    (discovered : discover world = (.ok keys, first))
+    (allocated : allocate (seedRequestNames request keys) = .ok candidate)
+    (seeded : enumerate first = (.ok rows, last)) :
+    prepareSeedRequest request world discover allocate enumerate install =
+      (install candidate (rows ++ request.entries), last) := by
+  simp [prepareSeedRequest, discovered, allocated, seeded, seedRequestEntries]
+
+/-- Discovery refusal wins before allocation, seeding or installation, while
+preserving exactly the source effects already performed. -/
+theorem seedRequest_discovery_refused (request : SeedRequest Value) (world after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store) (cause : Error)
+    (refused : discover world = (.error cause, after)) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, refused]
+
+/-- Allocation refusal suppresses the second source handoff and all entry writes. -/
+theorem seedRequest_allocation_refused (request : SeedRequest Value) (world after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (cause : Error)
+    (discovered : discover world = (.ok keys, after))
+    (refused : allocate (seedRequestNames request keys) = .error cause) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, discovered, refused]
+
+/-- A seed refusal cannot publish captured rows, but its external effects remain. -/
+theorem seedRequest_enumeration_refused (request : SeedRequest Value) (world first after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (candidate : Store) (cause : Error)
+    (discovered : discover world = (.ok keys, first))
+    (allocated : allocate (seedRequestNames request keys) = .ok candidate)
+    (refused : enumerate first = (.error cause, after)) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, discovered, allocated, refused]
+
+/-- Source effects cannot change the explicit suffix installed after seed rows. -/
+theorem seedRequest_explicit_suffix (request : SeedRequest Value) (seed : List (String × Value)) :
+    (seedRequestEntries request seed).drop seed.length = request.entries := by
+  simp [seedRequestEntries]
+
+/-- No new observer or cache is introduced: the conditional capture copies names,
+entry-spine cells and entry pairs once. Opaque values and source enumeration,
+indexing, vector allocation, primitive/GC and wall-clock costs are excluded. -/
+def seedRequestCaptureCells (hasSource : Bool) (names entries : Nat) : Nat :=
+  if hasSource then names + 2 * entries else 0
+
+/-- The source-free path performs no additional metadata copying. -/
+theorem seedRequestCaptureCells_without_source (names entries : Nat) :
+    seedRequestCaptureCells false names entries = 0 := rfl
+
+/-- Capturing a source-backed request is linear in its explicit metadata width. -/
+theorem seedRequestCaptureCells_bound (hasSource : Bool) (names entries : Nat) :
+    seedRequestCaptureCells hasSource names entries ≤ 2 * (names + entries) := by
+  cases hasSource <;> simp [seedRequestCaptureCells] <;> omega
+
 end LeanPoo.Prototype.Representation

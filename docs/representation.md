@@ -1292,3 +1292,30 @@ store or value equality premise is used. Gerbil regressions additionally exercis
 seed refusal order, distinct symbols with identical spelling, and loader-selected
 FUN/IO retry. Paired host measurements retain natural/post-GC, reverse order and
 identical-arm controls; noisy tails are not promoted into a performance theorem.
+
+### Owned source-backed Slot initialization requests
+
+The standard HashTable interface permits application-defined enumeration. The
+existing value-store constructor performs key discovery and later seed traversal;
+a source callback could rewrite borrowed request names or explicit entry pairs
+between those stages. Host regression reproduced loss of an original Function
+field before this repair. `make-slot-values` now uses standard `list-copy`, `map`
+and `cons` to own that finite metadata before the first source handoff. Values
+remain shared opaque leaves. No-source construction avoids the additional copies.
+
+`SeedRequest` and `prepareSeedRequest` model this boundary in the existing
+ValueStorage module. Names and explicit rows come from the captured invocation;
+the source world flows through discovery and seed enumeration. The laws preserve
+exact stage refusals and already performed external effects, original explicit
+row order/payloads, and suppression of later stages on refusal. CheckedTransfer
+examples retain a Function handle and false even after external request replacement,
+then compose failure with the existing unpublished-store/retry protocol.
+
+The logical capture count is names + twice the entry count when a source exists,
+and zero without a source. It excludes source traversal, key/index preparation,
+vector allocation, primitive costs, GC and physical latency. Faithful finite
+HashTable enumeration, standard shallow-copy behavior, admitted symbolic keys and
+serialized host handoffs remain premises. These laws do not snapshot source table
+contents, deep-copy arbitrary payloads, reverse callback effects or verify the
+compiler. Later source mutation still requires explicit reconstruction/invalidation
+in the author's purity-default caching design.

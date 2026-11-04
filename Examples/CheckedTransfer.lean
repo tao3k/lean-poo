@@ -100,4 +100,53 @@ example : Prototype.Representation.withAdmittedName admitName namedRead
 example : Prototype.Representation.withAdmittedName admitName namedRead
     (.symbol "unknown") warmed = (.error "missing", warmed) := rfl
 
+/-- Callback handles and false-valued fields remain distinct opaque payloads. -/
+abbrev SeedPayload := (Nat → Nat) ⊕ Bool
+
+/-- The original finite names and explicit values belong to this invocation. -/
+def originalSeedRequest (callback : Nat → Nat) : Prototype.Representation.SeedRequest SeedPayload :=
+  ⟨["declared"], [("callback", .inl callback), ("disabled", .inr false)]⟩
+
+/-- A source callback can replace the entire external request without changing
+what the current constructor already captured. This is not effect rollback. -/
+def rewrittenSeedRequest : Prototype.Representation.SeedRequest SeedPayload :=
+  ⟨["late-name"], [("late-callback", .inl (fun _ => 0))]⟩
+
+/-- Discovery and seeding both retain their external effects. The second stage
+may refuse with false; a fresh invocation supplies its own Function handle. -/
+def seedHandoff (callback : Nat → Nat) (refuse : Bool) :
+    Except Bool (List String × List (String × SeedPayload)) ×
+      (Nat × Prototype.Representation.SeedRequest SeedPayload) :=
+  Prototype.Representation.prepareSeedRequest (originalSeedRequest callback)
+    (0, originalSeedRequest callback)
+    (fun _ => (.ok ["seed"], (1, rewrittenSeedRequest)))
+    (fun names => .ok (names, []))
+    (fun _ => ((if refuse then .error false else .ok [("seed", .inr false)]),
+      (2, rewrittenSeedRequest)))
+    (fun store rows => .ok (store.1, rows))
+
+/-- Neither discovery nor seed effects may install their rewritten field layout. -/
+example (callback : Nat → Nat) : (seedHandoff callback false).1 =
+    .ok (["declared", "seed", "callback", "disabled"],
+      [("seed", .inr false), ("callback", .inl callback), ("disabled", .inr false)]) := rfl
+
+/-- The externally rewritten request and both observed source stages remain visible. -/
+example (callback : Nat → Nat) : (seedHandoff callback false).2 =
+    (2, rewrittenSeedRequest) := rfl
+
+/-- Exact false refusal is retained alongside already performed source effects. -/
+example (callback : Nat → Nat) : seedHandoff callback true =
+    (.error false, (2, rewrittenSeedRequest)) := rfl
+
+/-- A failed candidate cannot replace an existing authoritative value store. -/
+example (callback : Nat → Nat) (current : List (Option SeedPayload)) :
+    Prototype.Representation.publishSeed current
+      ((seedHandoff callback true).1.map (fun store => store.2.map (some ∘ Prod.snd))) = current := rfl
+
+/-- Retrying with a fresh invocation preserves the replacement Function itself;
+no function equality instance, stale seed or cached refusal is used. -/
+example (replacement : Nat → Nat) : (seedHandoff replacement false).1 =
+    .ok (["declared", "seed", "callback", "disabled"],
+      [("seed", .inr false), ("callback", .inl replacement), ("disabled", .inr false)]) := rfl
+
 end LeanPoo.Examples.CheckedTransfer
