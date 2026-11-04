@@ -138,3 +138,10 @@ example :
     second.2 = [["presence", "missing"], ["presence", "port"]] ∧
       second.1.current 7 ∧ ¬ second.1.current 8 := by
   simp [IssuedReadKey.deliver, IssuedReadKey.current]
+
+/-- Work can damage a signed dependency list after initial admission. A
+delivery-time check preserves the refusal before any observer is called. -/
+example : reobserveRead (fun (_ : List Nat) => [9])
+    (fun edges => if edges = [1, 2] then .ok edges else .error "unissued")
+    (fun read state => state ++ read) [1, 2] = .error "unissued" := by
+  simp [reobserveRead, Except.map]

@@ -199,4 +199,25 @@ theorem IssuedReadKey.revision_stale [DecidableEq Name] (read : IssuedReadKey Na
     (revision : Nat) (changed : read.revision ≠ revision) : ¬ read.current revision :=
   fun accepted => changed accepted.2
 
+/-- Reobservation runs its work first, then admits the record at delivery.
+The admission result is supplied by the existing issuance and revision checks. -/
+def reobserveRead (work : State → State) (admit : State → Except Error Record)
+    (deliver : Record → State → State) (state : State) : Except Error State :=
+  let next := work state
+  (admit next).map (fun read => deliver read next)
+
+/-- A record damaged by work cannot reach its delivery callback. -/
+theorem reobserveRead_refusal (work : State → State) (admit : State → Except Error Record)
+    (deliver : Record → State → State) (state : State)
+    (refused : admit (work state) = .error cause) :
+    reobserveRead work admit deliver state = .error cause := by
+  simp [reobserveRead, refused, Except.map]
+
+/-- A consumer can edit its own names and parent lists. The same original lists
+and parent identities remain available to a later replay. Lists model contents,
+and the host provides detached mutable spines. -/
+theorem issuedRead_payload_frame (names : List Name) (parents : List Parent)
+    (consume : List Name → List Parent → State → State) (state : State) :
+    ((names, parents), consume names parents state).1 = (names, parents) := rfl
+
 end LeanPoo.Object
