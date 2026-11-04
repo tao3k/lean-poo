@@ -128,3 +128,13 @@ example : checkDemand ["presence", "port"]
       fun key trace => .ok (trace ++ [key])] :
       List (List String → List (List String) → Except String (List (List String))))
     [] = .ok (["presence", "port"], [["presence", "missing"], ["presence", "port"]]) := rfl
+
+/-- A retained service presence record is replayed twice. The first consumer
+renames its copy, while the second still receives the originally issued name. -/
+example :
+    let read : IssuedReadKey String := ⟨["presence", "port"], ["presence", "port"], 7⟩
+    let first := read.deliver (fun _ _ => [["presence", "missing"]]) []
+    let second := first.1.deliver (fun key trace => trace ++ [key]) first.2
+    second.2 = [["presence", "missing"], ["presence", "port"]] ∧
+      second.1.current 7 ∧ ¬ second.1.current 8 := by
+  simp [IssuedReadKey.deliver, IssuedReadKey.current]

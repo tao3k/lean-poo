@@ -162,4 +162,41 @@ theorem checkDemand_refusal (key : Key) (check : Key → State → Except Error 
     checkDemand key (check :: rest) state = .error cause := by
   simp [checkDemand, List.foldlM, refused, bind, Except.bind, Except.map]
 
+/-- A structural read separates the index key, presented key and source
+revision. Lists model finite spines by value. Host allocation must provide
+separate mutable spines at issuance and public delivery. -/
+structure IssuedReadKey (Name : Type u) where
+  indexed : List Name
+  presented : List Name
+  revision : Nat
+
+/-- Authenticate the presented key and check the current source revision. -/
+def IssuedReadKey.current [DecidableEq Name] (read : IssuedReadKey Name)
+    (revision : Nat) : Prop :=
+  read.presented = read.indexed ∧ read.revision = revision
+
+/-- A public consumer sees only a copy of the key. Its returned state does
+not replace any of the signed record or index fields. -/
+def IssuedReadKey.deliver (read : IssuedReadKey Name)
+    (consume : List Name → State → State) (state : State) : IssuedReadKey Name × State :=
+  (read, consume read.presented state)
+
+/-- Editing a delivered key preserves both credentials and indexed identity. -/
+theorem IssuedReadKey.deliver_current [DecidableEq Name] (read : IssuedReadKey Name)
+    (consume : List Name → State → State) (state : State) (revision : Nat) :
+    (read.deliver consume state).1.current revision ↔ read.current revision := Iff.rfl
+
+/-- Direct tampering cannot change the independent index or authenticate the
+new name. This models raw mutation of the stored presented spine. -/
+theorem IssuedReadKey.tampered [DecidableEq Name] (read : IssuedReadKey Name)
+    (edited : List Name) (different : edited ≠ read.indexed) (revision : Nat) :
+    ({read with presented := edited}).indexed = read.indexed ∧
+      ¬ ({read with presented := edited}).current revision :=
+  ⟨rfl, fun accepted => different accepted.1⟩
+
+/-- Even unmodified credentials become stale on a source revision change. -/
+theorem IssuedReadKey.revision_stale [DecidableEq Name] (read : IssuedReadKey Name)
+    (revision : Nat) (changed : read.revision ≠ revision) : ¬ read.current revision :=
+  fun accepted => changed accepted.2
+
 end LeanPoo.Object
