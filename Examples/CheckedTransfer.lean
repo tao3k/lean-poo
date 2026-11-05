@@ -203,8 +203,8 @@ example :
       ⟨1, 4, 9, ["added", "disabled"], fun name => some (name == "added")⟩
     let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
     let rebound := Prototype.Representation.currentValueSite current "disabled" 1 rfl
-    Prototype.Representation.readBoundOffset old current "stale" "empty" = .error "stale" ∧
-      Prototype.Representation.readBoundOffset rebound current "stale" "empty" = .ok false := by
+    Prototype.Representation.readBoundOffset old current 4 "stale" "empty" = .error "stale" ∧
+      Prototype.Representation.readBoundOffset rebound current 4 "stale" "empty" = .ok false := by
   simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.cell]
 
@@ -214,12 +214,12 @@ example :
     let current : Prototype.Representation.View Bool :=
       ⟨1, 4, 9, ["added", "disabled"], fun name => some (name == "added")⟩
     let old : Prototype.Representation.Site := ⟨1, 4, 9, ["disabled"], "disabled", 0, rfl⟩
-    let refused := Prototype.Representation.bindValueOffset (some old) current "disabled" (some 0) "invalid"
+    let refused := Prototype.Representation.bindValueOffset (some old) current "disabled" (some 0) 4 4 "stale" "invalid"
     refused = (some old, .error "invalid") ∧
-      refused.1.map (fun site => Prototype.Representation.readBoundOffset site current "stale" "empty") =
+      refused.1.map (fun site => Prototype.Representation.readBoundOffset site current 4 "stale" "empty") =
         some (.error "stale") ∧
-      (Prototype.Representation.bindValueOffset refused.1 current "disabled" (some 1) "invalid").1.map
-        (fun site => Prototype.Representation.readBoundOffset site current "stale" "empty") = some (.ok false) := by
+      (Prototype.Representation.bindValueOffset refused.1 current "disabled" (some 1) 4 4 "stale" "invalid").1.map
+        (fun site => Prototype.Representation.readBoundOffset site current 4 "stale" "empty") = some (.ok false) := by
   simp [Prototype.Representation.bindValueOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.readBoundOffset, Prototype.Representation.cell]
 
@@ -233,11 +233,40 @@ example :
       ⟨1, 4, 9, ["disabled"], fun _ => some false⟩
     let evicted : Prototype.Representation.View Bool := {filled with fields := fun _ => none}
     let site := Prototype.Representation.currentValueSite filled "disabled" 0 rfl
-    Prototype.Representation.readBoundOffset site evicted "stale" "empty" = .error "empty" ∧
-      Prototype.Representation.readBoundOffset site filled "stale" "empty" = .ok false := by
+    Prototype.Representation.readBoundOffset site evicted 4 "stale" "empty" = .error "empty" ∧
+      Prototype.Representation.readBoundOffset site filled 4 "stale" "empty" = .ok false := by
   simp [Prototype.Representation.readBoundOffset, Prototype.Representation.currentValueSite,
     Prototype.Representation.cell]
 
 #print axioms Prototype.Representation.readBoundOffset_empty
+
+/-- A shared parent revision retires both branches and their join. Same-shape
+refusal precedes rebinding to the new generation, including a false payload. -/
+example :
+    let graph : C4.Graph := ⟨[⟨"root", [], false⟩, ⟨"left", [["root"]], false⟩,
+      ⟨"right", [["root"]], false⟩, ⟨"join", [["left", "right"]], false⟩,
+      ⟨"unrelated", [], false⟩]⟩
+    let cache : String → Object.RevisionCache Bool := fun _ => ⟨4, some true⟩
+    let current name := (Object.invalidateCaches graph ["root"] cache name).revision
+    let retained : Prototype.Representation.View Bool :=
+      ⟨1, 4, 9, ["enabled"], fun _ => some true⟩
+    let fresh : Prototype.Representation.View Bool :=
+      ⟨1, 5, 10, ["enabled"], fun _ => some false⟩
+    let old := Prototype.Representation.currentValueSite retained "enabled" 0 rfl
+    (["left", "right", "join"].map fun name =>
+      Prototype.Representation.readBoundOffset old retained (current name) "stale" "empty") =
+        [.error "stale", .error "stale", .error "stale"] ∧
+    Prototype.Representation.readBoundOffset old retained (current "unrelated") "stale" "empty" =
+        .ok true ∧
+    Prototype.Representation.bindValueOffset (some old) retained "enabled" (some 0)
+        (current "join") (current "join") "stale" "invalid" = (some old, .error "stale") ∧
+    (Prototype.Representation.bindValueOffset (some old) fresh "enabled" (some 0)
+        (current "join") (current "join") "stale" "invalid").1.map
+      (fun site => Prototype.Representation.readBoundOffset site fresh (current "join") "stale" "empty")
+        = some (.ok false) := by
+  exact ⟨rfl, rfl, rfl, rfl⟩
+
+#print axioms Prototype.Representation.readBoundOffset_invalidated
+#print axioms Prototype.Representation.bindValueOffset_retired
 
 end LeanPoo.Examples.CheckedTransfer

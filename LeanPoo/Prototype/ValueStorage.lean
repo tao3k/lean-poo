@@ -168,35 +168,55 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
 
-/-- Read a materialized cell on the retained allocation. Shape growth refuses
-before accessing the cell. Eviction leaves the offset valid but delivers no value. -/
-def readBoundOffset (site : Site) (view : View Value) (stale empty : Error) :
+/-- Read a materialized cell on the retained allocation only at its live revision.
+A shape change, a retired allocation, or eviction refuses before delivery. -/
+def readBoundOffset (site : Site) (view : View Value) (current : Nat) (stale empty : Error) :
     Except Error Value :=
-  if site.names = view.names then
+  if site.names = view.names ∧ site.revision = view.revision ∧ view.revision = current then
     match cell view site.index with
     | some value => .ok value
     | none => .error empty
   else .error stale
 
 /-- Layout growth rejects an old offset even when it remains in bounds. -/
-theorem readBoundOffset_stale (site : Site) (view : View Value) (stale empty : Error)
-    (changed : site.names ≠ view.names) :
-    readBoundOffset site view stale empty = .error stale := by
+theorem readBoundOffset_stale (site : Site) (view : View Value) (current : Nat)
+    (stale empty : Error) (changed : site.names ≠ view.names) :
+    readBoundOffset site view current stale empty = .error stale := by
   simp [readBoundOffset, changed]
+
+/-- A retained layout cannot read after its owning revision advances. -/
+theorem readBoundOffset_retired (site : Site) (view : View Value) (current : Nat)
+    (stale empty : Error) (advanced : view.revision ≠ current) :
+    readBoundOffset site view current stale empty = .error stale := by
+  simp [readBoundOffset, advanced]
+
+/-- Every affected descendant rejects its old allocation after shared invalidation. -/
+theorem readBoundOffset_invalidated (graph : C4.Graph) (changed : List String)
+    (cache : String → Object.RevisionCache Value) (name : String)
+    (site : Site) (view : View Value) (stale empty : Error)
+    (captured : view.revision = (cache name).revision)
+    (affected : name ∈ Proof.invalidatedNodes graph changed) :
+    readBoundOffset site view (Object.invalidateCaches graph changed cache name).revision
+      stale empty = .error stale := by
+  apply readBoundOffset_retired
+  rw [captured]
+  exact descendant_revision_rejected graph changed cache name affected
 
 /-- Even with a certified offset, an evicted cell refuses direct delivery. -/
 theorem readBoundOffset_empty (site : Site) (view : View Value) (stale empty : Error)
-    (same : site.names = view.names) (evicted : view.fields site.name = none) :
-    readBoundOffset site view stale empty = .error empty := by
+    (same : site.names = view.names) (bound : site.revision = view.revision)
+    (evicted : view.fields site.name = none) :
+    readBoundOffset site view view.revision stale empty = .error empty := by
   have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
-  simp [readBoundOffset, same, cell, indexed, evicted]
+  simp [readBoundOffset, same, bound, cell, indexed, evicted]
 
-/-- A filled cell delivers its exact named value, including false or a function. -/
+/-- A filled live cell delivers its exact named value, including false or a function. -/
 theorem readBoundOffset_current (site : Site) (view : View Value) (stale empty : Error)
-    (same : site.names = view.names) (value : Value) (present : view.fields site.name = some value) :
-    readBoundOffset site view stale empty = .ok value := by
+    (same : site.names = view.names) (bound : site.revision = view.revision)
+    (value : Value) (present : view.fields site.name = some value) :
+    readBoundOffset site view view.revision stale empty = .ok value := by
   have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
-  simp [readBoundOffset, same, cell, indexed, present]
+  simp [readBoundOffset, same, bound, cell, indexed, present]
 
 /-- Computed cardinality counts present cells, including false and functions.
 The runtime sentinel must be disjoint from successful values. This is scalar
@@ -313,30 +333,41 @@ def currentValueSite (view : View Value) (name : String) (index : Nat)
     (indexed : view.names[index]? = some name) : Site :=
   ⟨view.owner, view.revision, view.token, view.names, name, index, indexed⟩
 
-/-- Admit a proposed offset for a fixed name before replacing the current site.
-An absent proposal clears the guard. An invalid proposal retains the old site. -/
+/-- Admit an offset and claimed revision before replacing the current site.
+An absent proposal clears the guard. A refusal retains the prior binding. -/
 def bindValueOffset (prior : Option Site) (view : View Value) (name : String)
-    (proposal : Option Nat) (invalid : Error) : Option Site × Except Error Unit :=
+    (proposal : Option Nat) (claimed current : Nat) (stale invalid : Error) :
+    Option Site × Except Error Unit :=
   match proposal with
   | none => (none, .ok ())
   | some index =>
-    if indexed : view.names[index]? = some name then
-      (some (currentValueSite view name index indexed), .ok ())
-    else (prior, .error invalid)
+    if claimed = view.revision ∧ view.revision = current then
+      if indexed : view.names[index]? = some name then
+        (some (currentValueSite view name index indexed), .ok ())
+      else (prior, .error invalid)
+    else (prior, .error stale)
 
 /-- An in-bounds sibling offset and an out-of-bounds offset both refuse without
 changing the existing binding. -/
 theorem bindValueOffset_refused (prior : Option Site) (view : View Value) (name : String)
-    (index : Nat) (invalid : Error) (wrong : view.names[index]? ≠ some name) :
-    bindValueOffset prior view name (some index) invalid = (prior, .error invalid) := by
+    (index : Nat) (stale invalid : Error) (wrong : view.names[index]? ≠ some name) :
+    bindValueOffset prior view name (some index) view.revision view.revision stale invalid =
+      (prior, .error invalid) := by
   simp [bindValueOffset, wrong]
+
+/-- Claiming the new revision cannot reauthorize a retained old layout. -/
+theorem bindValueOffset_retired (prior : Option Site) (view : View Value) (name : String)
+    (index claimed current : Nat) (stale invalid : Error) (advanced : view.revision ≠ current) :
+    bindValueOffset prior view name (some index) claimed current stale invalid =
+      (prior, .error stale) := by
+  simp [bindValueOffset, advanced]
 
 /-- An admitted offset on the current layout delivers only the materialized named value. -/
 theorem bindValueOffset_read (prior : Option Site) (view : View Value) (name : String)
     (index : Nat) (invalid stale empty : Error) (indexed : view.names[index]? = some name)
     (value : Value) (present : view.fields name = some value) :
-    (bindValueOffset prior view name (some index) invalid).1.map
-      (fun site => readBoundOffset site view stale empty) = some (.ok value) := by
+    (bindValueOffset prior view name (some index) view.revision view.revision stale invalid).1.map
+      (fun site => readBoundOffset site view view.revision stale empty) = some (.ok value) := by
   simp [bindValueOffset, indexed, readBoundOffset, currentValueSite, cell, present]
 
 /-- Cold demand and an evicted warm cell share this metadata publication step.
