@@ -168,6 +168,27 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
 
+/-- A retained view can certify an offset only while its receiver revision is live.
+The caller's matching revision and token do not make an older view current. -/
+def retainedValueHit (site : Site) (view : View Value) (current : Nat) : Option Nat :=
+  if valid site view ∧ view.revision = current then some site.index else none
+
+/-- Invalidation rejects the hit even when the caller supplies every old stamp. -/
+theorem retainedValueHit_invalidated (graph : C4.Graph) (changed : List String)
+    (cache : String → Object.RevisionCache Value) (name : String)
+    (site : Site) (view : View Value) (captured : view.revision = (cache name).revision)
+    (affected : name ∈ Proof.invalidatedNodes graph changed) :
+    retainedValueHit site view (Object.invalidateCaches graph changed cache name).revision = none := by
+  have retired : view.revision ≠ (Object.invalidateCaches graph changed cache name).revision := by
+    rw [captured]
+    exact descendant_revision_rejected graph changed cache name affected
+  simp [retainedValueHit, retired]
+
+/-- A fresh binding still delivers its exact offset, including zero. -/
+theorem retainedValueHit_current (site : Site) (view : View Value) (admitted : valid site view) :
+    retainedValueHit site view view.revision = some site.index := by
+  simp [retainedValueHit, admitted]
+
 /-- Read a materialized cell on the retained allocation only at its live revision.
 A shape change, a retired allocation, or eviction refuses before delivery. -/
 def readBoundOffset (site : Site) (view : View Value) (current : Nat) (stale empty : Error) :

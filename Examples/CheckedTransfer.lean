@@ -254,6 +254,9 @@ example :
       ⟨1, 5, 10, ["enabled"], fun _ => some false⟩
     let old := Prototype.Representation.currentValueSite retained "enabled" 0 rfl
     (["left", "right", "join"].map fun name =>
+      Prototype.Representation.retainedValueHit old retained (current name)) = [none, none, none] ∧
+    Prototype.Representation.retainedValueHit old retained (current "unrelated") = some 0 ∧
+    (["left", "right", "join"].map fun name =>
       Prototype.Representation.readBoundOffset old retained (current name) "stale" "empty") =
         [.error "stale", .error "stale", .error "stale"] ∧
     Prototype.Representation.readBoundOffset old retained (current "unrelated") "stale" "empty" =
@@ -264,8 +267,9 @@ example :
         (current "join") (current "join") "stale" "invalid").1.map
       (fun site => Prototype.Representation.readBoundOffset site fresh (current "join") "stale" "empty")
         = some (.ok false) := by
-  exact ⟨rfl, rfl, rfl, rfl⟩
+  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
 
+#print axioms Prototype.Representation.retainedValueHit_invalidated
 #print axioms Prototype.Representation.readBoundOffset_invalidated
 #print axioms Prototype.Representation.bindValueOffset_retired
 
