@@ -169,3 +169,18 @@ example : observeListCoordinate "contract" (fun _ : Nat => some [false, false])
     (fun _ => true) (fun state => .ok ((), state)) [] [] 0 = .ok ([[false], [false]], 0) := rfl
 example : observeListCoordinate "contract" (fun _ : Nat => some ([] : List Nat))
     (fun _ => true) (fun state => .ok ((), state)) [8] [9] 0 = .ok ([], 0) := rfl
+
+-- Returning staging edits do not change the captured fixed-width measurement row.
+example : observeProductRow "shape" 2 (fun state : Nat => some [4 + state, 9])
+    (fun _ => true) (fun _ => .ok ((), 100)) 0 = .ok ([4, 9], 100) := rfl
+-- Repairing the later staging width cannot authorize the original malformed row.
+example : observeProductRow "shape" 2 (fun state : Nat => if state = 0 then some [4] else some [4, 9])
+    (fun _ => true) (fun _ => .ok ((), 1)) 0 = .error (some "shape") := rfl
+-- Retirement and exact false observer causes outrank stored shape refusal.
+example : observeProductRow "shape" 2 (fun _ : Nat => (none : Option (List Nat)))
+    (fun state => state = 0) (fun _ => .ok ((), 1)) 0 = .error none := rfl
+example : observeProductRow true 2 (fun _ : Nat => (none : Option (List Nat)))
+    (fun _ => true) (fun _ => .error false) 0 = .error (some false) := rfl
+-- A zero-field row is present data, not malformed input.
+example : observeProductRow "shape" 0 (fun _ : Nat => some ([] : List Nat))
+    (fun _ => true) (fun state => .ok ((), state)) 0 = .ok ([], 0) := rfl

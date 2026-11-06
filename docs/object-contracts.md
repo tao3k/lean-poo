@@ -238,6 +238,24 @@ metadata, initialization order, final membership and inherited refinement.
 `Examples/ClassContracts.lean` executes a corresponding finite service workflow;
 existing normalization/refinement/binding laws supply the publication boundary.
 
+Declared reflection now uses the same selected Slot normalization protocol.
+`read-slot` checks the raw value, calls `.slot.validate`, checks the returned
+value and returns it. `write-slot!` performs those steps before the existing
+revision fence and installs the checked value. This closes a reproduced nested
+Function escape through an already-cached List field. Constants and custom Slot
+predicates still govern the wrapped result; raw checker and normalizer failures
+retain their first cause. Read validation does not replace the raw cache or
+persist an admission verdict. The private one-field receiver is deliberately
+field-local; whole-Class relations remain the Class validation boundary.
+
+`examples/inherited-services.ss` exercises a shared callback declaration across
+a diamond, FUN publication, refusal without a source revision, and retry.
+The six `ClassValidation.reflect_*` laws establish normalization/error order,
+checked-result retention and revision-gated installation. `ClassContracts.lean`
+executes the nested Function input/result negative controls and stale/retry path.
+These are finite sequential protocol laws, not proofs of host C3, callback
+purity, GC cost, concurrent atomicity or the Scheme compiler.
+
 This advances the paper's section 5 type-descriptor construction and generalized
 MOP future work, rather than closing all future work. Inherited metadata resolution,
 prototype defaults and host identity are supplied interfaces. Computed functions
@@ -796,3 +814,65 @@ and normalized-value behavior, while the existing diagnostic phase laws retain
 ordered refusal. Gerbil regression suites exercise the directly migrated public
 imports, higher-order wrappers, multiple results and exception identities. These
 Lean laws do not certify the Gerbil module loader or compiler.
+
+## FUN carriers and standard byte I/O
+
+`Functional.WrapperValidation` models the existing Wrap./IdWrap boundary: admit
+outer membership, normalize the underlying Type once, reconstruct according to
+the host identity-reuse policy, then admit the actual returned carrier. Its laws
+cover early refusal, exact payload errors, success membership, unchanged-carrier
+reuse and retention of the checked payload. The last law requires faithful
+unwrap/rebuild operations. Function carriers require no decidable equality; the
+existing `Functional.FunctionValidation` input/output laws govern their calls.
+The host `eq?` reuse decision itself is not verified by this model.
+
+`Functional.ByteIO` gives a finite state interpretation of Gerbil standard ports
+and Reader/Writer endpoints. Natural spans represent nonnegative fixnums already
+admitted by Gerbil contracts; negative/non-fixnum rejection is covered by host
+regressions. Standard Reader/Writer implementations must satisfy their declared
+span/count/minimum obligations. Empty spans skip transport. Exact success has the
+requested length; refusal can retain consumed input and written prefixes. FUN
+transfer suppresses output after input failure and retains the exact failing
+cause/state. No resource ownership, rollback, flushing, closing, scheduling or
+compiler/runtime theorem is inferred from these finite laws.
+
+The top-level `Examples/CheckedTransfer.lean` checks short reads, partial writes,
+opaque false errors, fresh retry, present false payloads and both Function call
+gates. Scheme regressions exercise real port/interface dispatch, outer refinement
+before and after normalization, current validators and unchanged carrier identity.
+Scheme continues to build/test independently of a Lean checkout. These changes
+are follow-up work on new branches and do not alter the released v0.1.2 tags.
+
+Runtime Slot names are another public admission boundary. Gerbil's optimized
+symbolic hash uses an unchecked primitive; it is not a validator for arbitrary
+runtime values. Ordinary/cached object reads must admit symbols before read
+observers, bootstrap lookup or preparation. The existing static layout's common
+named-index operation owns the same admission for HashTable ref/key/update/delete;
+its store path reuses that boundary rather than duplicating the key check.
+Shape-hit inline reads retain their established fast path.
+
+`Prototype.Representation.withAdmittedName` interprets this boundary over explicit
+receiver/cache/observation state. Refusal preserves the exact cause and state;
+acceptance delegates the actual symbolic identity, and ordinary/indexed agreement
+is preserved. Success witnesses admission and the actual downstream outcome.
+String model keys denote symbol identities, not display spelling. The host must
+faithfully interpret `symbol?`; these laws do not certify the compiler's hash.
+`Examples/CheckedTransfer.lean` distinguishes symbols from strings/keywords/numbers
+and retains false at ordinal zero. Scheme exercises the real HashTable interface,
+both value backends, dependency observers, loaded FUN service and revision retry.
+
+Structural presence and declared reflection now share that same public grammar
+discipline. `.slot?` admits before bootstrap/observer/MOP work; `public-slot`
+admits once for both reflective read and write before catalog/visibility work.
+The unchecked presence continuation is private. Safe sentinel controls reproduce
+the old effects without sending an invalid key to the host symbolic primitive.
+Warm regression checks preserve vector/layout/index/revision and retained reads;
+the existing inherited-service FUN workflow retries after an explicit revision.
+
+Three additional `withAdmittedName` laws distinguish syntax refusal from admitted
+operation failure, retain successful false presence, and suppress a whole
+prepare/observe pipeline after syntax rejection. CheckedTransfer models those
+distinct effects: a false-valued field is present, a missing symbol has false
+presence, and valid missing reflection keeps its own error and preparation effects.
+These are finite sequential laws over supplied state/callback interpretations,
+not proofs of host C3, callback termination, concurrent atomicity or GC cost.

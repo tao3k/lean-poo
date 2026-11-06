@@ -16,6 +16,8 @@ On this page:
 - [Stable symbol and keyword identities in portable replay](#stable-symbol-and-keyword-identities-in-portable-replay)
 - [Shared Boolean source admission during portable replay](#shared-boolean-source-admission-during-portable-replay)
 
+- [Source-owned typed replay handoff](#source-owned-typed-replay-handoff)
+
 ## Revisions, failures and replay
 
 Specification sources and system-under-test state have different roles:
@@ -351,4 +353,77 @@ Design review kept the change at the existing action owner rather than adding
 validation to each reader/writer stage. Complete checks, heap limits, natural
 compiler/test completion and cancellation behavior remain unchanged. No timing
 improvement is claimed.
+
+
+## Source-owned typed replay handoff
+
+A typed report may explicitly add source epochs beyond its opaque kernel
+execution. In v0.1.2, the three typed replay/export functions checked that row
+once, then read computed `execution` metadata outside its authority. A getter
+could retire an added owner and still enter seed replay, concrete replay or
+export. The frozen probe observed one property call in all three paths and one
+encoder call/45 emitted characters on export, despite retirement.
+
+`call-with-replay-execution` now owns one higher-order metadata preparation.
+Report revision is captured before getters; declared stamp pairs are detached
+before later metadata can edit the caller's row. An undeclared derived sampler's
+revision is captured at first return for this invocation, while its optional
+observer is bound through the existing source-observer operation. Metadata
+lookup and its normal return keep public stale refusal; original getter causes,
+including thrown false, bypass trailing checks. Existing source-guard uses the
+same private pair copier. No new context Record, namespace, registry or runner
+is introduced.
+
+After preparation, the metadata check scope unwinds. The captured predicate is
+passed explicitly through ordinary `current?:` arguments on generic seed replay,
+concrete replay and portable export. These entrypoints compose it with their
+existing authority. The runner, not an outer typed post-check, keeps classification
+of stale/error receipts and the original callback cause. Codec confirmation,
+encoding and delivery retain their existing guarded stages, with no format change.
+Object/procedure/codec/port request contracts still precede computed declarations.
+
+Seed replay publishes the detached declared epochs and captured sampler. It does
+not publish the transient report/derived-sampler metadata stamps or another guard
+wrapper. Source identity, order and epochs are unchanged, and repeated publication
+keeps the same source count. The explicit generic `current?:` predicate is
+invocation authority, not a persistent new owner on the returned kernel report.
+Lasting generic ownership belongs on the producer/domain; typed report source
+rows retain it explicitly. No old snapshot can be renewed by later row mutation.
+
+For an independently imported generic module, the ordinary calls are:
+
+```scheme
+;; current? is an explicit Boolean source predicate owned by this invocation.
+(property.replay-property report current?: current?)
+(property.replay-counterexample report current?: current?)
+(replay.write-counterexample report codec output current?: current?)
+```
+
+Three generic cases cover false preflight across all entrypoints, nested-effect
+suppression, exact failure classification, transient guard lifetime and permanent
+domain ownership. The isolated standard-library-only suite now requires 246 cases.
+Four typed cases cover computed execution retirement, source-pair rewriting,
+report/derived-sampler revision, exact getter/property causes, existing memoized
+slot reuse with fresh source judgments, and bounded owner publication. The
+indexed Record/FUN example uses a real shrunk atomicity fault with dependency
+repair, adds a report owner, rejects obsolete handoffs before property/encoder/IO,
+then exercises seed/concrete/portable replay, later refusal and fresh correction.
+
+PropertyReplay reuses revisionsCurrent and guardedGeneration for the prepared
+execution-metadata boundary, then hands the exact owner predicate to the runner.
+Ten laws prove refusal for metadata/source/sampler retirement, normal getter
+retirement, exact causes, exact handoff, retained runner failure, captured source
+publication, stable source count and suppressed continuations. Five examples
+cover changed epochs, false causes/data and classified error receipts. The model
+begins after declaration capture; faithful host copying/dynamic scope, truthful
+source predicates and the runner honoring its predicate remain premises. Existing
+per-action/shrink laws supply the execution model. No arbitrary callback,
+collector/compiler, concurrent mutation or universal latency proof is claimed.
+
+This extends the existing action algebra and standard Gerbil contracts/modules,
+without another framework or per-function wrapper chain. Source capture costs
+one finite row copy per invocation; fresh judgments are not cached as true.
+The main 2 GiB and isolated 1 GiB bounds, cancellation, complete standard checks
+and authorized natural compiler/test completion remain unchanged. The next PRs
+start from the v0.1.2 default branches; they do not amend the merged release PRs.
 

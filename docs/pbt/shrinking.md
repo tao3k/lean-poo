@@ -8,6 +8,8 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
+- [Captured fixed-width product decomposition](#captured-fixed-width-product-decomposition)
+
 - [Checked actions and interrupted shrink receipts](#checked-actions-and-interrupted-shrink-receipts)
 - [Dependency-preserving sequence shrinking](#dependency-preserving-sequence-shrinking)
 - [Source-owned resumable shrink traversal](#source-owned-resumable-shrink-traversal)
@@ -387,3 +389,32 @@ proposal lookahead, cache or witness wrapper. Whole-workflow speedup is not clai
 Main 2 GiB and isolated 1 GiB bounds, cancellation and complete standard checks
 remain; natural compiler/test completion follows the existing authorized policy.
 
+
+## Captured fixed-width product decomposition
+
+The typed product audit reproduced a weight of 300 instead of 13: an unpacker
+returned staging `(4 9)`, then a returning source observer changed it to
+`(100 200)` before the product copied the row. The same gap could retarget
+value-only coordinate shrinking or repair an originally malformed/wrong-width row.
+
+The existing `unpack-row` now recognizes width and copies the finite spine inside
+its existing checked action. Only after returning source checks does it raise the
+ordinary invalid-product-row error. Both measurement and coordinate shrinking use
+that one boundary. No new wrapper, namespace, cache or core protocol is introduced.
+Raw unpack exceptions keep their cause; observer errors/retirement outrank stored
+shape refusal. Payloads remain shared under their declared source laws.
+
+Seven `observeProductRow` laws in `PropertyProducts` compose `captureProductRow`
+and `observeFiniteChildren`: exact retained row, immutable snapshot equivalence,
+wrong-width refusal, consumer suppression, retirement, original observer cause and
+stale refusal. Five top-level examples distinguish staging edits, later shape
+repair, retirement, false causes and zero-field data. The model starts after a raw
+unpacker returns; its original exceptions are handled by the existing guarded
+callback laws. Faithful host copying/width recognition, truthful sources and
+terminating sequential callbacks remain premises, not runtime/compiler proofs.
+
+Regression tests cover measure/shrink under replacement, improper and cyclic
+staging edits, malformed/wrong-width repairs and exact false/object causes. A
+Record/Function/FUN workflow forces the value-only path, shrinks to `(0 0)`,
+exports/imports its witness, replays seed/concrete evidence, refuses retirement and
+performs a fresh corrected retry. Complete checks and resource bounds remain.

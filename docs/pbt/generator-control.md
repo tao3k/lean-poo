@@ -8,6 +8,10 @@ be checked separately. The finite laws retain their stated runtime premises.
 
 On this page:
 
+- [Retained delayed-construction depth during dependency rebuilding](#retained-delayed-construction-depth-during-dependency-rebuilding)
+- [Incoming delay allowance across suspended dependency cursors](#incoming-delay-allowance-across-suspended-dependency-cursors)
+- [Compositional delay allowance through sample layers](#compositional-delay-allowance-through-sample-layers)
+
 - [Generation and domain admission](#generation-and-domain-admission)
 - [Bounded filter retry ownership](#bounded-filter-retry-ownership)
 - [Transient checked-action scope](#transient-checked-action-scope)
@@ -318,3 +322,142 @@ sites and PRNG schedules are retained. No elapsed-
 time claim follows from a Boolean contract check; complete checks and all resource
 limits remain unchanged within the RFC's finite future-work scope.
 
+
+
+## Retained delayed-construction depth during dependency rebuilding
+
+The audit reproduced a depth-one delayed generator whose original draw used its
+only constructor credit, then forced another delayed constructor while shrinking
+a parent after the original dynamic scope ended. The old tree returned candidate
+zero and performed one extra construction. This evaded the explicit constructor
+depth during automatic dependency regeneration, rather than asking for a global
+minimum or a universal bound on handwritten callback execution.
+
+Bind now retains the remaining delay allowance beside its existing seed/size/
+source/random-checkpoint context. Only parent regeneration restores it with the
+standard parameterize form, meeting it with a stricter active caller. Descendants
+retain that effective allowance after the caller exits. False is unbounded; zero
+is exhausted. Fresh draws still get fresh contexts, and this is a nesting-depth
+bound, not a cumulative constructor-count budget for all shrink attempts.
+
+The existing generator-delay shares the same allowance-meet primitive. A normal
+unbounded bind does not acquire a parameterization frame. PRNG splitting, stored
+checkpoints, proposal order, charged attempts and original source/error priority
+remain unchanged. Exhaustion before a yielded proposal charges no attempt and
+retains the last confirmed witness without certifying a minimum. Source refusal
+still precedes quota exhaustion, and raw constructor causes remain exact.
+
+Five independent-library cases cover exhausted/sufficient retained depth, bounded
+inspection and replay, stricter consuming scopes retained across another shrink,
+source/false/object-error precedence and scope unwinding, and unbounded roots.
+A Record/Function/FUN service example refuses an exhausted raw witness, freshly
+prepares a sufficient constructor context, shrinks, seed/concrete/corpus replays,
+rejects retired report sources and explicitly prepares a corrected retry.
+
+The focused PropertyDelay module keeps the existing PropertyTesting namespace and
+reuses resolveDelayed. Laws cover optional allowance identity, commutativity,
+associativity/idempotence, both finite bounds, exhausted callback suppression and
+force-count bounds. Top-level examples distinguish zero, sufficient depth,
+stricter retained callers and unbounded contexts. Faithful host dynamic scope,
+immutable allowance capture and terminating individual callbacks are premises;
+these are not PRNG-quality, arbitrary termination, byte-allocation or latency
+proofs. Search/shrink limits and process/heap constraints remain unchanged.
+
+## Incoming delay allowance across suspended dependency cursors
+
+The next audit reproduced a separate gap on the *same* retained iterator: pull
+candidate 2 without a tighter caller, then resume it in a depth-one delayed
+constructor (zero remaining credits). Previously the saved standard coroutine
+restored its earlier dynamic context, emitted candidate 0 and forced its delayed
+constructor once. Capturing the allowance only when the child factory is created
+cannot protect later pulls.
+
+Bind now returns a private standard Iterator delegate carrying one numeric relay.
+Its first pull installs the relay in the producer's dynamic scope; every pull
+updates that scalar from the incoming caller before resuming the unchanged
+`in-coroutine`. Effective depth meets retained, saved and incoming allowances.
+Normal returns clear the relay. It captures no additional source observers,
+reports or caller continuations; later pulls add no parameterization frame.
+The delegate neither prefetches candidates nor moves Iterable conversion or
+proposal charging to another stage. Raw exceptions retain the standard coroutine
+handler lifetime: catch around the entire traversal, not merely a later pull.
+Serial Iterator use remains a premise; this adds no concurrent cursor protocol.
+
+The existing source gate still runs before exhaustion or construction. An
+exhausted pull yields no candidate and charges no proposal; constructor exceptions
+retain exact identity, including false. This is the existing nesting-depth bound,
+not a total count budget across independent branches. Freshly prepared draws may
+use their explicitly declared allowance; old trees never renew themselves.
+
+Four independent-library regressions exercise an unbounded or bounded first
+pull followed by a stricter resume, sufficient allowance and exact EOF, false/
+object causes, and source refusal before exhaustion with fresh-scope recovery.
+The Record/Function service example previews a dependency, refuses exhausted
+resumption, then freshly prepares, checks through FUN, seed/concrete/portable
+replays, rejects retired sources and explicitly retries a corrected property.
+
+PropertyDelay formalizes resumed evaluation as the meet of retained, saved and
+incoming optional limits. The flattening law and incoming/saved force bounds
+prove that suspension cannot renew credits; incoming zero suppresses the
+constructor. Top-level examples cover zero, one sufficient credit and a two-stage
+constructor needing more. Faithful host relay transfer and terminating individual
+callbacks are premises: these are not proofs of Gerbil continuations, GC, byte
+allocation or wall time. The complete checks retain their existing heap/process
+and search limits.
+
+Design reflection: Rackcheck's pinned [core bind implementation](https://github.com/Bogdanp/rackcheck/blob/ffbddb7a9edef6ce1d9e0930adae1bd7033f1db7/rackcheck-lib/gen/core.rkt#L98-L107)
+composes mapped/joined shrink trees and a reproducible RNG. We retain that algebra;
+explicit delayed depth and revision admission are our additional protocols.
+Gerbil's standard coroutine continues to own suspension, EOF and exception
+routing. A single private Iterator delegate is needed at that suspension boundary;
+adding wrappers to each generator operation or replacing the coroutine would
+spread the same policy across the algebra. The original prototype fixed-point
+construction remains unchanged; bounded PBT construction is an engineering
+extension, not an unimplemented requirement of the author's fixed-point section.
+
+## Compositional delay allowance through sample layers
+
+A direct bind cursor is insufficient when another sample coroutine encloses it.
+The audit mapped the existing two-candidate dependency: its first pull returned
+12; resuming under zero remaining caller credits returned 10 and forced the next
+constructor once. The outer map restored its earlier dynamic context before the
+inner bind could observe the new caller. This is a reproduced violation of our
+explicit delayed-depth protocol, not a demand for unrestricted callback analysis.
+
+The existing private numeric relay is now constructed by one `sample-iterator`
+combinator. Value policies, map, bind, filter, retained products and finite Function
+sample factories all use that entry before restoring a producer continuation.
+Each layer transfers the incoming meet to the next, rather than relying on the
+innermost bind to rediscover a lost dynamic binding. There is one delegate per
+callback-bearing sample iterator, no additional per-yield wrapper or new public
+protocol. Pure structural deletions invoke no user callbacks and retain the
+standard coroutine directly. Child factories remain lazy, including zero-budget
+checking; PRNG splitting/checkpoints and candidate order are unchanged.
+
+Five generic regression groups cover map/filter/product/Function/value-policy
+composition: zero-credit refusal without extra construction, sufficient credit
+with exact order and EOF, original false/object causes, source refusal before
+exhaustion, and zero-budget demand plus seed/concrete replay. First pulls occur
+outside assertion handlers, and the enclosing handler spans the entire standard
+coroutine lifetime. The existing Record/Function/FUN service workflow now packs
+checked records inside the mapped/filtered dependency before pausing. It covers
+exhaustion, explicit sufficient-depth preparation, seed/concrete/portable replay,
+source retirement and a freshly prepared corrected property.
+
+PropertyDelay models a finite path of saved optional allowances. Path append and
+meet/collapse laws reduce composition to the existing single-resume protocol;
+force counts stay below the incoming finite limit and zero suppresses construction.
+The interpreter remains resolveDelayed. Three top-level fixtures cover exhausted,
+sufficient and regrouped paths. Faithful numeric transfer at every host sample
+layer, serial Iterator use and terminating individual callbacks are premises.
+These are neither host-continuation/GC proofs nor cumulative force budgets over
+independent shrink attempts. Existing source checks and all resource limits remain.
+
+Design reflection: Rackcheck's pinned core bind maps and joins retained shrink
+trees rather than adding a second executor. The author's fixed-point appendix
+similarly separates eager and delayed construction explicitly. We retain these
+compositional boundaries: move the existing numeric transfer to the common sample
+constructor instead of patching each higher-level container with its own policy.
+Gerbil still owns coroutine suspension, EOF, interface dispatch and exception
+handler lifetime. The explicit PBT depth protocol is this project's extension;
+no upstream compiler/runtime changes or original-paper completeness claim follow.

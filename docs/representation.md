@@ -1269,3 +1269,87 @@ The length bound charges logical weak writes only: it is not an allocation, GC,
 hash-table worst-case or wall-clock theorem. One-shot projection elimination is
 a host implementation refinement using the same DFS, not language/compiler
 verification or a claim that captured reads are permanently current.
+
+### Bounded batch shape directory reconciliation
+
+`RepresentationIndex` models mixed additions, deletions and replacements by
+retaining old identities in canonical order, sorting only fresh identities and
+merging the runs. It proves inventory preservation, canonical ordering and exact
+equality with ordinary sorting under distinct-request/distinct-old and ordered-old
+premises. Strong contraction uses ordinary sorting. The Scheme implementation
+reuses its existing symbol-identity index, standard `list-sort`, `append-reverse`
+and weak interning; the model assumes a faithful total identity ranking.
+
+`revisionOldVisits_bound` bounds old-directory filtering by twice the target
+width. `revisionTraversalWork_bound` includes logical merge/prefix copying and
+bounds that explicit work by four times target width. Neither law includes
+admission, sort comparisons, hashing, allocation, GC or physical latency. No host
+primitive, compiler, dynamic library loader or collector verification is claimed.
+
+The examples combine canonical equality with `seedPrimaryCells` for arbitrary
+current values, including functions and false-like values. No previous value
+store or value equality premise is used. Gerbil regressions additionally exercise
+seed refusal order, distinct symbols with identical spelling, and loader-selected
+FUN/IO retry. Paired host measurements retain natural/post-GC, reverse order and
+identical-arm controls; noisy tails are not promoted into a performance theorem.
+
+### Owned source-backed Slot initialization requests
+
+The standard HashTable interface permits application-defined enumeration. The
+existing value-store constructor performs key discovery and later seed traversal;
+a source callback could rewrite borrowed request names or explicit entry pairs
+between those stages. Host regression reproduced loss of an original Function
+field before this repair. `make-slot-values` now uses standard `list-copy`, `map`
+and `cons` to own that finite metadata before the first source handoff. Values
+remain shared opaque leaves. No-source construction avoids the additional copies.
+
+`SeedRequest` and `prepareSeedRequest` model this boundary in the existing
+ValueStorage module. Names and explicit rows come from the captured invocation;
+the source world flows through discovery and seed enumeration. The laws preserve
+exact stage refusals and already performed external effects, original explicit
+row order/payloads, and suppression of later stages on refusal. CheckedTransfer
+examples retain a Function handle and false even after external request replacement,
+then compose failure with the existing unpublished-store/retry protocol.
+
+The logical capture count is names + twice the entry count when a source exists,
+and zero without a source. It excludes source traversal, key/index preparation,
+vector allocation, primitive costs, GC and physical latency. Faithful finite
+HashTable enumeration, standard shallow-copy behavior, admitted symbolic keys and
+serialized host handoffs remain premises. These laws do not snapshot source table
+contents, deep-copy arbitrary payloads, reverse callback effects or verify the
+compiler. Later source mutation still requires explicit reconstruction/invalidation
+in the author's purity-default caching design.
+
+### Current invalidation closure admission
+
+The visited-state table must describe the graph after all preflight callbacks. A
+later callback can register a descendant on a previously completed subtree, or
+replace a known child's state identity. The existing Scheme object-state engine
+now checks all current outgoing edges against its existing visited map before any
+revision advance/clear. Standard hash-for-each avoids iterator entry-pair copying;
+there is no second map, snapshot, retry loop or loader. The pristine post-check
+leaf route is unchanged.
+
+CacheInvalidation proves that successful current-edge/state checks cover every
+registered transitive descendant, including shared joins and cycles. The inventory
+premise binds prepared map entries to visited owners; faithful edge/state-identity
+interpretation and finite serialized traversal are host premises. A new owner or
+replaced identity refuses before clearing. Original preflight errors outrank this
+refusal, successful admission retains the exact unique reverse-discovery order,
+and clear callbacks retain the existing partial-effect/failure protocol. Callback
+registration effects remain visible so an explicit new traversal can retry.
+
+SlotObservation examples cover a shared diamond followed by a late cyclic edge,
+missing and replaced state identities, preserved original false refusal, retained
+Function caches on rejection and successful closure after a fresh traversal. The
+host service example composes ordinary source-state/check/clear functions with
+lazy tariff cells, old-read rejection, checked FUN delivery and standard module
+selection. No alternative evaluator or cache authority is introduced.
+
+The retained-graph admission pass charges one owner and each outgoing edge once,
+with a bound of owners times (maximum fanout + 1). This deliberately excludes
+primitive hash/iteration costs, closures, weak collection, callback work, allocation,
+GC and physical latency. The theorem certifies closure at admission, assuming
+serialized checks through commit; arbitrary graph mutation during clear callbacks
+and concurrent races are outside this claim. It advances the author's explicit
+cache-invalidation future work, without claiming pervasive language-level tracking.

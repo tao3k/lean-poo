@@ -742,4 +742,65 @@ theorem observeListCoordinate_empty (invalid : Cause) (returned : State → Opti
       .ok ([], next) := by
   simpa using observeListCoordinate_retained invalid returned live before after [] state next captured fresh later
 
+/-- Own a fixed-width decomposition before returning observation. This reuses
+finite capture rather than a second validation interpreter; raw unpack exceptions
+belong to the enclosing guarded action, as in the host implementation. -/
+def observeProductRow (invalid : Cause) (width : Nat) (returned : State → Option (List Value))
+    (live : State → Bool) (observe : State → Except Cause (Unit × State)) (state : State) :
+    Except (Option Cause) (List Value × State) :=
+  observeFiniteChildren invalid (fun current => captureProductRow width (returned current)) live observe state
+
+/-- Successful decomposition publishes exactly the initially returned row. -/
+theorem observeProductRow_retained (invalid : Cause) (returned : State → Option (List Value))
+    (live : State → Bool) (row : List Value) (state next : State)
+    (captured : returned state = some row) (before : live state = true) (after : live next = true) :
+    observeProductRow invalid row.length returned live (fun _ => .ok ((), next)) state = .ok (row, next) := by
+  apply observeFiniteChildren_retained <;> simp_all [captureProductRow_exact]
+
+/-- Capturing shape and topology is equivalent to the same immutable decomposition. -/
+theorem observeProductRow_snapshot (invalid : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (state : State) :
+    observeProductRow invalid width returned live observe state =
+      observeProductRow invalid width (fun _ => returned state) live observe state := by
+  simp only [observeProductRow, observeFiniteChildren]
+
+/-- A returning observer cannot repair an originally wrong-width row. -/
+theorem observeProductRow_wrongWidth (invalid : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool) (row : List Value) (state next : State)
+    (captured : returned state = some row) (wrong : row.length ≠ width)
+    (before : live state = true) (after : live next = true) :
+    observeProductRow invalid width returned live (fun _ => .ok ((), next)) state = .error (some invalid) := by
+  apply observeFiniteChildren_invalid <;> simp_all [captureProductRow_refused]
+
+/-- Source refusal suppresses measurement, shrinking and packing consumers alike. -/
+theorem observeProductRow_refused (invalid : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (state : State) (cause : Option Cause)
+    (consume : List Value × State → Except (Option Cause) Output)
+    (failed : observeProductRow invalid width returned live observe state = .error cause) :
+    (observeProductRow invalid width returned live observe state >>= consume) = .error cause := by
+  rw [failed]; rfl
+
+/-- A normal observer retirement outranks either valid or malformed decomposition. -/
+theorem observeProductRow_revised (invalid : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool) (state next : State)
+    (before : live state = true) (after : live next = false) :
+    observeProductRow invalid width returned live (fun _ => .ok ((), next)) state = .error none :=
+  observeFiniteChildren_revised invalid _ live state next before after
+
+/-- Observer causes remain exact, including a false cause under Boolean instantiation. -/
+theorem observeProductRow_cause (invalid cause : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool) (state : State)
+    (before : live state = true) :
+    observeProductRow invalid width returned live (fun _ => .error cause) state = .error (some cause) :=
+  observeFiniteChildren_cause invalid cause _ live state before
+
+/-- Already obsolete scopes cannot authorize a decomposition consumer. -/
+theorem observeProductRow_stale (invalid : Cause) (width : Nat)
+    (returned : State → Option (List Value)) (live : State → Bool)
+    (observe : State → Except Cause (Unit × State)) (state : State) (stale : live state = false) :
+    observeProductRow invalid width returned live observe state = .error none :=
+  observeFiniteChildren_stale invalid _ live observe state stale
+
 end LeanPoo.Functional.PropertyTesting

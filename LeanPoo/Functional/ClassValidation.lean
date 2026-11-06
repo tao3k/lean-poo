@@ -257,4 +257,68 @@ theorem record_field_replacement [DecidableEq Key] (test : Field → Field → B
         exact ⟨slot_replacement accepts _ _ _ _ derived.2.1 (behavior _ _ derived.2.2.1) value valid.1,
           ih rest' values valid.2 derived.2.2.2⟩
 
+/-- A declared reflective field uses the selected Slot's raw admission,
+normalizer and final admission in that order. Unlike a Boolean membership test,
+the result retains higher-order wrappers. Receiver construction and host effects
+are supplied boundaries; this law does not certify arbitrary callback purity. -/
+def reflectValue (admit : Value → Except Error Unit)
+    (wrap : Value → Except Error Value) (source : Value) : Except Error Value := do
+  admit source
+  let checked ← wrap source
+  admit checked
+  .ok checked
+
+/-- The first admission refusal prevents normalization and preserves its cause. -/
+theorem reflect_raw_error (admit : Value → Except Error Unit)
+    (wrap : Value → Except Error Value) (source : Value)
+    (failed : admit source = .error cause) :
+    reflectValue admit wrap source = .error cause := by
+  simp [reflectValue, failed, bind, Except.bind]
+
+/-- A normalizer refusal is not replaced by a later membership failure. -/
+theorem reflect_wrap_error (admit : Value → Except Error Unit)
+    (wrap : Value → Except Error Value) (source : Value)
+    (before : admit source = .ok ()) (failed : wrap source = .error cause) :
+    reflectValue admit wrap source = .error cause := by
+  simp [reflectValue, before, failed, bind, Except.bind]
+
+/-- Constants and custom Slot predicates must also admit the checked value. -/
+theorem reflect_checked_error (admit : Value → Except Error Unit)
+    (wrap : Value → Except Error Value) (source checked : Value)
+    (before : admit source = .ok ()) (wrapped : wrap source = .ok checked)
+    (after : admit checked = .error cause) :
+    reflectValue admit wrap source = .error cause := by
+  simp [reflectValue, before, wrapped, after, bind, Except.bind]
+
+/-- A successful read returns exactly the normalized child, never the raw one. -/
+theorem reflect_success (admit : Value → Except Error Unit)
+    (wrap : Value → Except Error Value) (source checked : Value)
+    (before : admit source = .ok ()) (wrapped : wrap source = .ok checked)
+    (after : admit checked = .ok ()) :
+    reflectValue admit wrap source = .ok checked := by
+  simp [reflectValue, before, wrapped, after, bind, Except.bind]
+
+/-- The existing revision fence precedes installation. A refusal returns no new
+state; external callback effects and the host's revision implementation are not
+rolled back or proved by this finite sequential model. -/
+def reflectWrite (prepare : Value → Except Error Value) (current : Except Error Unit)
+    (install : Value → State → State) (source : Value) (old : State) : Except Error State := do
+  let checked ← prepare source
+  current
+  .ok (install checked old)
+
+/-- Stale metadata cannot reach the write, even after successful wrapping. -/
+theorem reflect_stale (prepare : Value → Except Error Value)
+    (install : Value → State → State) (source checked : Value) (old : State)
+    (prepared : prepare source = .ok checked) :
+    reflectWrite prepare (.error cause) install source old = .error cause := by
+  simp [reflectWrite, prepared, bind, Except.bind]
+
+/-- Successful publication installs the checked value, not its source. -/
+theorem reflect_installs_checked (prepare : Value → Except Error Value)
+    (install : Value → State → State) (source checked : Value) (old : State)
+    (prepared : prepare source = .ok checked) :
+    reflectWrite prepare (.ok ()) install source old = .ok (install checked old) := by
+  simp [reflectWrite, prepared, bind, Except.bind]
+
 end LeanPoo.Functional.ClassValidation

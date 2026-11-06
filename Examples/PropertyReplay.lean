@@ -76,3 +76,41 @@ example : checkedReplayAction true true true
 example : checkedReplayAction "malformed" "codec stale" "context stale"
     (fun _ : Nat => .ok (some true)) (fun _ => .ok (some true))
     (fun _ => .ok (false, 1)) 0 = .ok (false, 1) := rfl
+
+
+-- A computed execution getter retires an explicit extra owner before handoff.
+example : replayHandoff (fun _ : Nat => true) (fun _ => true) (fun epoch _ : Nat => epoch)
+    [(7, 0)] (fun _ => (.ok (false, 1) : Except String (Bool × Nat)))
+    (fun _ _ _ => (.error (some "must not replay") : Except (Option String) Bool)) 0 = .error none := rfl
+-- Thrown false remains an exact getter cause, not the absent stale sentinel.
+example : replayHandoff (fun _ : Nat => true) (fun _ => true) (fun _ _ : Nat => 0)
+    [(7, 0)] (fun _ => (.error false : Except Bool (Bool × Nat)))
+    (fun _ _ _ => (.ok true : Except (Option Bool) Bool)) 0 = .error (some false) := rfl
+-- Publication retains the old captured row even if later host metadata differs.
+example : replayHandoff (fun _ : Nat => true) (fun _ => true) (fun _ _ : Nat => 0)
+    [(7, 0)] (fun state => (.ok (false, state) : Except String (Bool × Nat)))
+    (fun _ _ _ => (.ok false : Except (Option String) Bool)) 0 = .ok (false, [(7, 0)]) := rfl
+-- A classified error receipt is data; no added post-check masks its original cause.
+example : replayHandoff (fun epoch : Nat => epoch == 0) (fun _ => true) (fun _ _ : Nat => 0)
+    [(7, 0)] (fun state => (.ok (false, state) : Except Bool (Bool × Nat)))
+    (fun _ _ _ => (.ok (Except.error false) : Except (Option Bool) (Except Bool Bool))) 0 =
+      .ok (Except.error false, [(7, 0)]) := rfl
+-- A new clock cannot turn an old declared epoch into a fresh source snapshot.
+example : replayHandoff (fun _ : Nat => true) (fun _ => true) (fun epoch _ : Nat => epoch)
+    [(7, 0)] (fun state => (.ok (false, state) : Except String (Bool × Nat)))
+    (fun _ _ _ => (.ok false : Except (Option String) Bool)) 1 = .error none := rfl
+
+-- A hook is an observed action; pure epoch reads on each side retain authority.
+example : observeSourceEpochs "malformed" (fun state : Nat => state = 0)
+    (fun _ => .ok (some true, 1)) 0 = .ok (false, 1) := rfl
+-- Malformed and original false causes do not become stale-source errors.
+example : observeSourceEpochs "malformed" (fun state : Nat => state = 0)
+    (fun _ => .ok (none, 1)) 0 = .error "malformed" := rfl
+example : observeSourceEpochs true (fun _ : Nat => true)
+    (fun _ => .error false) 0 = .error false := rfl
+-- A rejected observation cannot consume the caller's input state.
+example : sourceEpochConsumer "malformed" "stale" (fun state : Nat => state = 0)
+    (fun _ => .ok (some true, 1)) (fun state => .ok (state + 100)) 0 = .error "stale" := rfl
+-- Stable acceptance passes the observed state, without refreshing any epochs.
+example : sourceEpochConsumer "malformed" "stale" (fun _ : Nat => true)
+    (fun _ => .ok (some true, 1)) (fun state => .ok (state + 100)) 0 = .ok 101 := rfl

@@ -36,6 +36,7 @@ import LeanPoo.Functional.KeywordCoverage
 import LeanPoo.Functional.RawArguments
 import LeanPoo.Functional.PropertyTesting
 import LeanPoo.Functional.PropertyGenerators
+import LeanPoo.Functional.PropertyDelay
 import LeanPoo.Functional.PropertyProducts
 import LeanPoo.Functional.PropertyFilters
 import LeanPoo.Functional.PropertyScopes
@@ -364,3 +365,6 @@ import LeanPoo.Functional.BuildCache
 import LeanPoo.Functional.InferenceReports
 
 import LeanPoo.Object.SlotObservation
+
+import LeanPoo.Functional.WrapperValidation
+import LeanPoo.Functional.ByteIO

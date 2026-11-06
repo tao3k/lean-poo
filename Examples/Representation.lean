@@ -920,4 +920,36 @@ example : invalidateCaches
     ["rates", "unused"] (fun _ => (⟨7, some false⟩ : RevisionCache Bool)) :=
   distinctSlotSources_invalidate_eq _ _ _ _ _
 
+
+
+/-- Mixed additions and removals agree with canonical full sorting. -/
+example : boundedShapeRanks [8, 1, 6, 4, 3] [1, 2, 4, 7] = [1, 3, 4, 6, 8] := by
+  rw [boundedShapeRanks_eq_sort _ _ (by decide) (by decide) (by decide)]
+  simp [List.mergeSort]
+
+/-- Strong contraction has no old-directory visits. -/
+example : revisionOldVisits 4096 2 = 0 := by simp [revisionOldVisits]
+
+/-- Contraction still keeps exactly the requested identities. -/
+example : boundedShapeRanks [9, 1] [1, 2, 3, 4, 5, 6] = [1, 9] := by
+  rw [boundedShapeRanks_eq_sort _ _ (by decide) (by decide) (by decide)]
+  simp [List.mergeSort]
+
+/-- Same-width replacement cannot be mistaken for unchanged identity. -/
+example : boundedShapeRanks [1, 4, 6] [1, 2, 3] = [1, 4, 6] := by
+  rw [boundedShapeRanks_eq_sort _ _ (by decide) (by decide) (by decide)]
+  simp [List.mergeSort]
+
+/-- Removing every name leaves an empty directory. -/
+example : boundedShapeRanks [] [1, 2, 3] = [] := by
+  simp [boundedShapeRanks]
+
+/-- Canonical directory equality composes with the existing seeding protocol.
+The current resolver alone supplies arbitrary values, including functions/false;
+no decidable equality or previous value-store premise is introduced. -/
+example (requested old : List Nat) (label : Nat → String) (resolve : String → Option Value)
+    (requestUnique : requested.Nodup) (oldUnique : old.Nodup) (ordered : old.Pairwise (· ≤ ·)) :
+    seedPrimaryCells ((boundedShapeRanks requested old).map label) resolve =
+      seedPrimaryCells ((requested.mergeSort (fun a b => decide (a ≤ b))).map label) resolve := by
+  rw [boundedShapeRanks_eq_sort requested old requestUnique oldUnique ordered]
 end LeanPoo.Examples.Representation

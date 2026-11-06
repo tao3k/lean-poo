@@ -168,6 +168,77 @@ theorem finalValueOffset_sound (before current : List String) (prior : Nat)
   · simpa [finalValueOffset, same] using (same ▸ oldIndex)
   · simpa [finalValueOffset, same] using newIndex
 
+/-- A retained view can certify an offset only while its receiver revision is live.
+The caller's matching revision and token do not make an older view current. -/
+def retainedValueHit (site : Site) (view : View Value) (current : Nat) : Option Nat :=
+  if valid site view ∧ view.revision = current then some site.index else none
+
+/-- Invalidation rejects the hit even when the caller supplies every old stamp. -/
+theorem retainedValueHit_invalidated (graph : C4.Graph) (changed : List String)
+    (cache : String → Object.RevisionCache Value) (name : String)
+    (site : Site) (view : View Value) (captured : view.revision = (cache name).revision)
+    (affected : name ∈ Proof.invalidatedNodes graph changed) :
+    retainedValueHit site view (Object.invalidateCaches graph changed cache name).revision = none := by
+  have retired : view.revision ≠ (Object.invalidateCaches graph changed cache name).revision := by
+    rw [captured]
+    exact descendant_revision_rejected graph changed cache name affected
+  simp [retainedValueHit, retired]
+
+/-- A fresh binding still delivers its exact offset, including zero. -/
+theorem retainedValueHit_current (site : Site) (view : View Value) (admitted : valid site view) :
+    retainedValueHit site view view.revision = some site.index := by
+  simp [retainedValueHit, admitted]
+
+/-- Read a materialized cell on the retained allocation only at its live revision.
+A shape change, a retired allocation, or eviction refuses before delivery. -/
+def readBoundOffset (site : Site) (view : View Value) (current : Nat) (stale empty : Error) :
+    Except Error Value :=
+  if site.names = view.names ∧ site.revision = view.revision ∧ view.revision = current then
+    match cell view site.index with
+    | some value => .ok value
+    | none => .error empty
+  else .error stale
+
+/-- Layout growth rejects an old offset even when it remains in bounds. -/
+theorem readBoundOffset_stale (site : Site) (view : View Value) (current : Nat)
+    (stale empty : Error) (changed : site.names ≠ view.names) :
+    readBoundOffset site view current stale empty = .error stale := by
+  simp [readBoundOffset, changed]
+
+/-- A retained layout cannot read after its owning revision advances. -/
+theorem readBoundOffset_retired (site : Site) (view : View Value) (current : Nat)
+    (stale empty : Error) (advanced : view.revision ≠ current) :
+    readBoundOffset site view current stale empty = .error stale := by
+  simp [readBoundOffset, advanced]
+
+/-- Every affected descendant rejects its old allocation after shared invalidation. -/
+theorem readBoundOffset_invalidated (graph : C4.Graph) (changed : List String)
+    (cache : String → Object.RevisionCache Value) (name : String)
+    (site : Site) (view : View Value) (stale empty : Error)
+    (captured : view.revision = (cache name).revision)
+    (affected : name ∈ Proof.invalidatedNodes graph changed) :
+    readBoundOffset site view (Object.invalidateCaches graph changed cache name).revision
+      stale empty = .error stale := by
+  apply readBoundOffset_retired
+  rw [captured]
+  exact descendant_revision_rejected graph changed cache name affected
+
+/-- Even with a certified offset, an evicted cell refuses direct delivery. -/
+theorem readBoundOffset_empty (site : Site) (view : View Value) (stale empty : Error)
+    (same : site.names = view.names) (bound : site.revision = view.revision)
+    (evicted : view.fields site.name = none) :
+    readBoundOffset site view view.revision stale empty = .error empty := by
+  have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
+  simp [readBoundOffset, same, bound, cell, indexed, evicted]
+
+/-- A filled live cell delivers its exact named value, including false or a function. -/
+theorem readBoundOffset_current (site : Site) (view : View Value) (stale empty : Error)
+    (same : site.names = view.names) (bound : site.revision = view.revision)
+    (value : Value) (present : view.fields site.name = some value) :
+    readBoundOffset site view view.revision stale empty = .ok value := by
+  have indexed : view.names[site.index]? = some site.name := same ▸ site.indexed
+  simp [readBoundOffset, same, bound, cell, indexed, present]
+
 /-- Computed cardinality counts present cells, including false and functions.
 The runtime sentinel must be disjoint from successful values. This is scalar
 metadata over the single primary store, never a second store of values. -/
@@ -283,6 +354,43 @@ def currentValueSite (view : View Value) (name : String) (index : Nat)
     (indexed : view.names[index]? = some name) : Site :=
   ⟨view.owner, view.revision, view.token, view.names, name, index, indexed⟩
 
+/-- Admit an offset and claimed revision before replacing the current site.
+An absent proposal clears the guard. A refusal retains the prior binding. -/
+def bindValueOffset (prior : Option Site) (view : View Value) (name : String)
+    (proposal : Option Nat) (claimed current : Nat) (stale invalid : Error) :
+    Option Site × Except Error Unit :=
+  match proposal with
+  | none => (none, .ok ())
+  | some index =>
+    if claimed = view.revision ∧ view.revision = current then
+      if indexed : view.names[index]? = some name then
+        (some (currentValueSite view name index indexed), .ok ())
+      else (prior, .error invalid)
+    else (prior, .error stale)
+
+/-- An in-bounds sibling offset and an out-of-bounds offset both refuse without
+changing the existing binding. -/
+theorem bindValueOffset_refused (prior : Option Site) (view : View Value) (name : String)
+    (index : Nat) (stale invalid : Error) (wrong : view.names[index]? ≠ some name) :
+    bindValueOffset prior view name (some index) view.revision view.revision stale invalid =
+      (prior, .error invalid) := by
+  simp [bindValueOffset, wrong]
+
+/-- Claiming the new revision cannot reauthorize a retained old layout. -/
+theorem bindValueOffset_retired (prior : Option Site) (view : View Value) (name : String)
+    (index claimed current : Nat) (stale invalid : Error) (advanced : view.revision ≠ current) :
+    bindValueOffset prior view name (some index) claimed current stale invalid =
+      (prior, .error stale) := by
+  simp [bindValueOffset, advanced]
+
+/-- An admitted offset on the current layout delivers only the materialized named value. -/
+theorem bindValueOffset_read (prior : Option Site) (view : View Value) (name : String)
+    (index : Nat) (invalid stale empty : Error) (indexed : view.names[index]? = some name)
+    (value : Value) (present : view.fields name = some value) :
+    (bindValueOffset prior view name (some index) view.revision view.revision stale invalid).1.map
+      (fun site => readBoundOffset site view view.revision stale empty) = some (.ok value) := by
+  simp [bindValueOffset, indexed, readBoundOffset, currentValueSite, cell, present]
+
 /-- Cold demand and an evicted warm cell share this metadata publication step.
 The supplied view is after ordinary evaluation and its primary value writes.
 An error preserves the prior credential and exact cause; no successful site is
@@ -383,5 +491,193 @@ def growthNamedProbes (bulk : Bool) (width : Nat) : Nat := if bulk then 0 else w
 /-- Bulk copying removes name probes, not all preparation work or wall time. -/
 theorem growthNamedProbes_saved (width : Nat) :
     growthNamedProbes false width = growthNamedProbes true width + width := by simp [growthNamedProbes]
+
+
+/-- A public runtime name is admitted before observation, preparation or a named
+HashTable operation. String keys denote symbol identities, not display spelling.
+The host standard contract supplies admission; callbacks here are terminating. -/
+def withAdmittedName (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) : Except Error Result × State :=
+  match admit raw with
+  | .error cause => (.error cause, state)
+  | .ok name => operation name state
+
+/-- Refused names preserve the exact entire receiver/cache/observation state.
+In particular, no symbolic hash, updater or fallback can run in this model. -/
+theorem withAdmittedName_refused (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) (cause : Error)
+    (refused : admit raw = .error cause) :
+    withAdmittedName admit operation raw state = (.error cause, state) := by
+  simp [withAdmittedName, refused]
+
+/-- Accepted symbolic identities delegate unchanged, including offset zero,
+missing-name fallback, false/Function values and original callback failures. -/
+theorem withAdmittedName_accepted (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state : State) (name : String) (accepted : admit raw = .ok name) :
+    withAdmittedName admit operation raw state = operation name state := by
+  simp [withAdmittedName, accepted]
+
+/-- Normal and indexed implementations keep their established equivalence when
+placed behind the same runtime admission boundary; neither route needs a cache. -/
+theorem withAdmittedName_congr (admit : RawName → Except Error String)
+    (ordinary indexed : String → State → Except Error Result × State)
+    (same : ∀ name state, ordinary name state = indexed name state)
+    (raw : RawName) (state : State) :
+    withAdmittedName admit ordinary raw state = withAdmittedName admit indexed raw state := by
+  cases h : admit raw <;> simp [withAdmittedName, h, same]
+
+/-- Successful dispatch witnesses an admitted symbol and the actual operation's
+result/state. Admission cannot turn an unknown name or failed callback into success. -/
+theorem withAdmittedName_success (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state final : State) (value : Result) :
+    withAdmittedName admit operation raw state = (.ok value, final) ↔
+      ∃ name, admit raw = .ok name ∧ operation name state = (.ok value, final) := by
+  cases h : admit raw <;> simp [withAdmittedName, h]
+
+/-- Failures distinguish rejected syntax, which leaves the complete state alone,
+from an admitted query's own failure and effects. A missing/hidden symbol is not
+silently reclassified as malformed syntax. -/
+theorem withAdmittedName_failure (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Result × State)
+    (raw : RawName) (state final : State) (cause : Error) :
+    withAdmittedName admit operation raw state = (.error cause, final) ↔
+      (admit raw = .error cause ∧ state = final) ∨
+      ∃ name, admit raw = .ok name ∧ operation name state = (.error cause, final) := by
+  cases h : admit raw <;> simp [withAdmittedName, h]
+
+/-- An admitted presence predicate's false is a successful value. Name admission
+neither forces a fallback nor confuses structural absence with an exception. -/
+theorem withAdmittedName_false (admit : RawName → Except Error String)
+    (operation : String → State → Except Error Bool × State)
+    (raw : RawName) (state final : State) (name : String)
+    (accepted : admit raw = .ok name) (absent : operation name state = (.ok false, final)) :
+    withAdmittedName admit operation raw state = (.ok false, final) := by
+  simp [withAdmittedName, accepted, absent]
+
+/-- Standard name admission surrounds the entire receiver-bound preparation and
+observation protocol. Rejection suppresses both phases without needing another
+cache or a separately admitted internal helper. -/
+theorem withAdmittedName_refused_preparation (admit : RawName → Except Error String)
+    (prepare : String → State → Except Error Prepared × State)
+    (observe : String → Prepared → State → Except Error Result × State)
+    (raw : RawName) (state : State) (refused : admit raw = .error cause) :
+    withAdmittedName admit (fun name initial =>
+      let (result, preparedState) := prepare name initial
+      match result with
+      | .error error => (.error error, preparedState)
+      | .ok prepared => observe name prepared preparedState) raw state = (.error cause, state) := by
+  simp [withAdmittedName, refused]
+
+/-- The finite constructor request owns names and entry pairs, while values
+remain opaque. In the host this is one shallow capture before source callbacks. -/
+structure SeedRequest (Value : Type) where
+  names : List String
+  entries : List (String × Value)
+
+/-- Source-discovered keys extend the captured request; later caller metadata
+cannot retarget its original names or entry identities. -/
+def seedRequestNames (request : SeedRequest Value) (discovered : List String) : List String :=
+  request.names ++ discovered ++ request.entries.map Prod.fst
+
+/-- Seed values are installed first; captured explicit rows retain last-write
+precedence, order and exact payload identity, without equality on Function values. -/
+def seedRequestEntries (request : SeedRequest Value) (seed : List (String × Value)) :
+    List (String × Value) := seed ++ request.entries
+
+/-- Two standard source enumeration handoffs share an explicit external world.
+Allocation/install are the existing private store operations. Their finite,
+faithful interpretation is a premise; no callback effects are rolled back. -/
+def prepareSeedRequest (request : SeedRequest Value) (world : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store) :
+    Except Error Store × World :=
+  let (keys, afterDiscovery) := discover world
+  match keys with
+  | .error cause => (.error cause, afterDiscovery)
+  | .ok keys =>
+    match allocate (seedRequestNames request keys) with
+    | .error cause => (.error cause, afterDiscovery)
+    | .ok candidate =>
+      let (rows, afterSeed) := enumerate afterDiscovery
+      match rows with
+      | .error cause => (.error cause, afterSeed)
+      | .ok rows => (install candidate (seedRequestEntries request rows), afterSeed)
+
+/-- Capture and install retain the original explicit payloads even when source
+callbacks replace the complete externally visible request during enumeration. -/
+theorem seedRequest_success (request : SeedRequest Value) (world first last : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (rows : List (String × Value)) (candidate : Store)
+    (discovered : discover world = (.ok keys, first))
+    (allocated : allocate (seedRequestNames request keys) = .ok candidate)
+    (seeded : enumerate first = (.ok rows, last)) :
+    prepareSeedRequest request world discover allocate enumerate install =
+      (install candidate (rows ++ request.entries), last) := by
+  simp [prepareSeedRequest, discovered, allocated, seeded, seedRequestEntries]
+
+/-- Discovery refusal wins before allocation, seeding or installation, while
+preserving exactly the source effects already performed. -/
+theorem seedRequest_discovery_refused (request : SeedRequest Value) (world after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store) (cause : Error)
+    (refused : discover world = (.error cause, after)) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, refused]
+
+/-- Allocation refusal suppresses the second source handoff and all entry writes. -/
+theorem seedRequest_allocation_refused (request : SeedRequest Value) (world after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (cause : Error)
+    (discovered : discover world = (.ok keys, after))
+    (refused : allocate (seedRequestNames request keys) = .error cause) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, discovered, refused]
+
+/-- A seed refusal cannot publish captured rows, but its external effects remain. -/
+theorem seedRequest_enumeration_refused (request : SeedRequest Value) (world first after : World)
+    (discover : World → Except Error (List String) × World)
+    (allocate : List String → Except Error Store)
+    (enumerate : World → Except Error (List (String × Value)) × World)
+    (install : Store → List (String × Value) → Except Error Store)
+    (keys : List String) (candidate : Store) (cause : Error)
+    (discovered : discover world = (.ok keys, first))
+    (allocated : allocate (seedRequestNames request keys) = .ok candidate)
+    (refused : enumerate first = (.error cause, after)) :
+    prepareSeedRequest request world discover allocate enumerate install = (.error cause, after) := by
+  simp [prepareSeedRequest, discovered, allocated, refused]
+
+/-- Source effects cannot change the explicit suffix installed after seed rows. -/
+theorem seedRequest_explicit_suffix (request : SeedRequest Value) (seed : List (String × Value)) :
+    (seedRequestEntries request seed).drop seed.length = request.entries := by
+  simp [seedRequestEntries]
+
+/-- No new observer or cache is introduced: the conditional capture copies names,
+entry-spine cells and entry pairs once. Opaque values and source enumeration,
+indexing, vector allocation, primitive/GC and wall-clock costs are excluded. -/
+def seedRequestCaptureCells (hasSource : Bool) (names entries : Nat) : Nat :=
+  if hasSource then names + 2 * entries else 0
+
+/-- The source-free path performs no additional metadata copying. -/
+theorem seedRequestCaptureCells_without_source (names entries : Nat) :
+    seedRequestCaptureCells false names entries = 0 := rfl
+
+/-- Capturing a source-backed request is linear in its explicit metadata width. -/
+theorem seedRequestCaptureCells_bound (hasSource : Bool) (names entries : Nat) :
+    seedRequestCaptureCells hasSource names entries ≤ 2 * (names + entries) := by
+  cases hasSource <;> simp [seedRequestCaptureCells] <;> omega
 
 end LeanPoo.Prototype.Representation

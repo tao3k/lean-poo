@@ -362,6 +362,7 @@ _check-examples:
     {{lean}} Examples/ObjectContracts.lean
     {{lean}} Examples/ContainerContracts.lean
     {{lean}} Examples/VariantContracts.lean
+    {{lean}} Examples/CheckedTransfer.lean
     {{lean}} Examples/OptionalContracts.lean
     {{lean}} Examples/ClassContracts.lean
     {{lean}} Examples/ComputedContracts.lean
@@ -382,6 +383,7 @@ _check-examples:
     {{lean}} Examples/GeneratedCalls.lean
     {{lean}} Examples/CollectionTesting.lean
     {{lean}} Examples/PropertyGenerators.lean
+    {{lean}} Examples/PropertyDelay.lean
     {{lean}} Examples/PropertyProducts.lean
     {{lean}} Examples/PropertyFilters.lean
     {{lean}} Examples/PropertyScopes.lean

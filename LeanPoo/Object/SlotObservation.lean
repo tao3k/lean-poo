@@ -139,4 +139,85 @@ theorem recordCapturedReads_append (before roots : List Read) (observers : List 
     (recordCapturedReads (⟨some before, observers, checks⟩ : ReadScope (List Read) Observer Check)
       roots (· ++ ·)).frame = some (before ++ roots) := rfl
 
+/-- Run prechecks in scope order, supplying the original query key to each.
+A callback's edited copy can appear in its effects but does not become the
+next callback's input. The supplied step models those external effects. -/
+def checkDemand (key : Key) (checks : List (Key → State → Except Error State))
+    (state : State) : Except Error (Key × State) :=
+  (checks.foldlM (fun current (check : Key → State → Except Error State) => check key current) state).map (key, ·)
+
+/-- A successful demand preserves the canonical key for lookup and issuance. -/
+theorem checkDemand_key (key : Key) (checks : List (Key → State → Except Error State))
+    (state final : State) (published : Key)
+    (ready : checkDemand key checks state = .ok (published, final)) : published = key := by
+  unfold checkDemand at ready
+  cases h : checks.foldlM (m := Except Error)
+    (fun current (check : Key → State → Except Error State) => check key current) state <;>
+    simp_all [Except.map]
+
+/-- The first precheck's refusal prevents later checks and keeps its cause. -/
+theorem checkDemand_refusal (key : Key) (check : Key → State → Except Error State)
+    (rest : List (Key → State → Except Error State)) (state : State)
+    (refused : check key state = .error cause) :
+    checkDemand key (check :: rest) state = .error cause := by
+  simp [checkDemand, List.foldlM, refused, bind, Except.bind, Except.map]
+
+/-- A structural read separates the index key, presented key and source
+revision. Lists model finite spines by value. Host allocation must provide
+separate mutable spines at issuance and public delivery. -/
+structure IssuedReadKey (Name : Type u) where
+  indexed : List Name
+  presented : List Name
+  revision : Nat
+
+/-- Authenticate the presented key and check the current source revision. -/
+def IssuedReadKey.current [DecidableEq Name] (read : IssuedReadKey Name)
+    (revision : Nat) : Prop :=
+  read.presented = read.indexed ∧ read.revision = revision
+
+/-- A public consumer sees only a copy of the key. Its returned state does
+not replace any of the signed record or index fields. -/
+def IssuedReadKey.deliver (read : IssuedReadKey Name)
+    (consume : List Name → State → State) (state : State) : IssuedReadKey Name × State :=
+  (read, consume read.presented state)
+
+/-- Editing a delivered key preserves both credentials and indexed identity. -/
+theorem IssuedReadKey.deliver_current [DecidableEq Name] (read : IssuedReadKey Name)
+    (consume : List Name → State → State) (state : State) (revision : Nat) :
+    (read.deliver consume state).1.current revision ↔ read.current revision := Iff.rfl
+
+/-- Direct tampering cannot change the independent index or authenticate the
+new name. This models raw mutation of the stored presented spine. -/
+theorem IssuedReadKey.tampered [DecidableEq Name] (read : IssuedReadKey Name)
+    (edited : List Name) (different : edited ≠ read.indexed) (revision : Nat) :
+    ({read with presented := edited}).indexed = read.indexed ∧
+      ¬ ({read with presented := edited}).current revision :=
+  ⟨rfl, fun accepted => different accepted.1⟩
+
+/-- Even unmodified credentials become stale on a source revision change. -/
+theorem IssuedReadKey.revision_stale [DecidableEq Name] (read : IssuedReadKey Name)
+    (revision : Nat) (changed : read.revision ≠ revision) : ¬ read.current revision :=
+  fun accepted => changed accepted.2
+
+/-- Reobservation runs its work first, then admits the record at delivery.
+The admission result is supplied by the existing issuance and revision checks. -/
+def reobserveRead (work : State → State) (admit : State → Except Error Record)
+    (deliver : Record → State → State) (state : State) : Except Error State :=
+  let next := work state
+  (admit next).map (fun read => deliver read next)
+
+/-- A record damaged by work cannot reach its delivery callback. -/
+theorem reobserveRead_refusal (work : State → State) (admit : State → Except Error Record)
+    (deliver : Record → State → State) (state : State)
+    (refused : admit (work state) = .error cause) :
+    reobserveRead work admit deliver state = .error cause := by
+  simp [reobserveRead, refused, Except.map]
+
+/-- A consumer can edit its own names and parent lists. The same original lists
+and parent identities remain available to a later replay. Lists model contents,
+and the host provides detached mutable spines. -/
+theorem issuedRead_payload_frame (names : List Name) (parents : List Parent)
+    (consume : List Name → List Parent → State → State) (state : State) :
+    ((names, parents), consume names parents state).1 = (names, parents) := rfl
+
 end LeanPoo.Object
