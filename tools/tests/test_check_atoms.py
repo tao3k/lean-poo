@@ -105,7 +105,8 @@ class CheckAtomsTests(unittest.TestCase):
         files = [atom['file'] for partition in partitions for atom in partition]
         self.assertEqual(len(files), len(set(files)))
         self.assertEqual(set(files), {atom['file'] for atom in atoms})
-        self.assertEqual(len(files), 361)
+        self.assertEqual(len(files), 362)
+        self.assertIn('Tests/GraphAlgorithms.lean', files)
         self.assertIn('Examples/CheckedTransfer.lean', files)
         self.assertIn('Tests/C4Prepared.lean', files)
         self.assertIn('Examples/DataflowObject.lean', files)
