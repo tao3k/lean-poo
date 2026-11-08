@@ -226,3 +226,41 @@ theorem fresh_frame_capacity {entered : List Nat} {owner support : Nat}
   simpa only [List.length_cons, List.length_range, Nat.add_one_le_iff] using size
 
 end LeanPoo.Functional.OrderedReachability
+namespace LeanPoo.Functional.OrderedReachability
+
+-- Normalization remains within the pure captured-row boundary. It may share
+-- support lookup with ID encoding, but cannot move or omit an author callback.
+theorem normalized_support_iff (row : List Nat) (supported : Nat → Prop) :
+    (∀ key ∈ row.eraseDups, supported key) ↔ (∀ key ∈ row, supported key) := by
+  simp
+
+def captureDecisions (supported : Nat → Bool) : List (Nat × List Nat) → List (Nat × Bool)
+  | [] => []
+  | (owner, row) :: rest =>
+    if row.all supported then (owner, true) :: captureDecisions supported rest
+    else [(owner, false)]
+
+theorem normalized_all (row : List Nat) (supported : Nat → Bool) :
+    row.eraseDups.all supported = row.all supported := by
+  apply Bool.eq_iff_iff.mpr
+  simp
+
+theorem normalized_capture_trace (supported : Nat → Bool)
+    (rows : List (Nat × List Nat)) :
+    captureDecisions supported (rows.map (fun row => (row.1, row.2.eraseDups))) =
+      captureDecisions supported rows := by
+  induction rows with
+  | nil => rfl
+  | cons row rest ih =>
+    rcases row with ⟨owner, deps⟩
+    simp only [List.map_cons, captureDecisions, normalized_all]
+    split
+    · rw [ih]
+    · rfl
+
+-- This proves same admission and first rejected owner on captured data. It
+-- does not authenticate a callback, mutable input, source version or Context.
+example : captureDecisions (fun key => key < 3)
+    [(0, [1, 1]), (1, [4, 4]), (2, [0])] = [(0, true), (1, false)] := by decide
+
+end LeanPoo.Functional.OrderedReachability
