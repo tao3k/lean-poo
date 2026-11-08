@@ -598,3 +598,185 @@ theorem rejected_order_checks_zero {α : Type} (down up : α → Bool)
   cases rest <;> simp [orderChecks]
 
 end LeanPoo.Functional.ComponentWitness
+
+
+namespace LeanPoo.Functional.ComponentWitness.SharedDiscovery
+
+-- The mutable implementation keeps the current low value in a local register.
+-- These laws concern physical encoding and workspace roles, not an extracted
+-- proof that a native DFS implementation generates every mathematical witness.
+def lowerCode (current target : Nat) : Nat :=
+  if target < current then target ||| 1 else current
+
+theorem mark_follower_rank (value : Nat) : (value ||| 1) / 2 = value / 2 := by
+  simp [Nat.or_div_two]
+
+theorem mark_follower_odd (value : Nat) : (value ||| 1) % 2 = 1 := by simp
+
+theorem mark_follower_code (value : Nat) : value ||| 1 = 2 * (value / 2) + 1 := by
+  have rank := mark_follower_rank value
+  have odd := mark_follower_odd value
+  omega
+
+theorem lower_rank_is_minimum (current target : Nat) :
+    lowerCode current target / 2 = min (current / 2) (target / 2) := by
+  unfold lowerCode
+  split
+  · rw [mark_follower_rank]
+    have ordered : target / 2 ≤ current / 2 := by omega
+    exact (Nat.min_eq_right ordered).symm
+  · have ordered : current / 2 ≤ target / 2 := by omega
+    exact (Nat.min_eq_left ordered).symm
+
+theorem lower_code_never_increases (current target : Nat) :
+    lowerCode current target ≤ current := by
+  unfold lowerCode
+  split
+  · rw [mark_follower_code]
+    omega
+  · exact Nat.le_refl _
+
+theorem strict_lower_marks_follower (current target : Nat)
+    (decreased : lowerCode current target / 2 < current / 2) :
+    lowerCode current target % 2 = 1 := by
+  by_cases lower : target < current
+  · simp [lowerCode, lower]
+  · simp [lowerCode, lower] at decreased
+
+theorem positive_low_stays_visited {current target : Nat}
+    (currentPositive : 0 < current) :
+    0 < lowerCode current target := by
+  unfold lowerCode
+  split
+  · rw [mark_follower_code]
+    omega
+  · exact currentPositive
+
+theorem active_rank_stays_positive {current target : Nat}
+    (currentPositive : 0 < current / 2) (targetPositive : 0 < target / 2) :
+    0 < lowerCode current target / 2 := by
+  rw [lower_rank_is_minimum]
+  omega
+
+theorem no_rank_decrease_keeps_code {current target : Nat}
+    (ordered : current / 2 ≤ target / 2) : lowerCode current target = current := by
+  unfold lowerCode
+  split
+  · rw [mark_follower_code]
+    omega
+  · rfl
+
+theorem initial_low_is_leader (rank : Nat) : (2 * rank) % 2 = 0 := by omega
+
+theorem self_edge_keeps_low (current : Nat) : lowerCode current current = current := by
+  simp [lowerCode]
+
+-- Only the current register may be newer than its RAM cell. Every suspended
+-- ancestor was stored before descent; all other targets read the stored vector.
+theorem older_current_cell_cannot_lower {current stored : Nat} (older : current ≤ stored) :
+    lowerCode current stored = lowerCode current current := by
+  have noLower : ¬ stored < current := by omega
+  simp [lowerCode, noLower]
+
+theorem local_low_view_preserves_other_targets {n : Nat} (stored : Vector Nat n)
+    (current target : Fin n) (low : Nat) (different : target ≠ current) :
+    (stored.set current.val low)[target.val] = stored[target.val] := by
+  rw [Vector.getElem_set]
+  have unequal : current.val ≠ target.val := fun same => different (Fin.ext same.symm)
+  simp [unequal]
+
+theorem retired_target_never_lowers {n current : Nat} (active : current ≤ 2 * n) :
+    lowerCode current (2 * n + 1) = current := by
+  have notLower : ¬ 2 * n + 1 < current := by omega
+  simp [lowerCode, notLower]
+
+theorem sentinel_fits_existing_word_domain {n : Nat} (bound : 2 * n ≤ 4294967295) :
+    2 * n + 1 ≤ 4294967295 := by omega
+
+-- Native pointer cells change role only after their parent arc is saved.
+-- There is no dynamically allocated public tagged object in the Scheme layout.
+inductive PointerUse (n m : Nat) where
+  | fresh
+  | active (parent : Option (Fin m))
+  | follower (next : Option (Fin n))
+  | retired (component : Fin n)
+
+def pointerWord {n m : Nat} : PointerUse n m → Nat
+  | .fresh => 0
+  | .active none => 0
+  | .active (some arc) => arc.val + 1
+  | .follower none => 0
+  | .follower (some owner) => owner.val + 1
+  | .retired component => n + 1 + component.val
+
+def Realizes {n m : Nat} (roles : Fin n → PointerUse n m) (slots : Vector Nat n) : Prop :=
+  ∀ owner, slots[owner.val] = pointerWord (roles owner)
+
+def replaceRole {n m : Nat} (roles : Fin n → PointerUse n m) (owner : Fin n)
+    (next : PointerUse n m) : Fin n → PointerUse n m :=
+  fun other => if other = owner then next else roles other
+
+theorem repurpose_preserves_other_roles {n m : Nat}
+    (roles : Fin n → PointerUse n m) (slots : Vector Nat n)
+    (valid : Realizes roles slots) (owner : Fin n) (next : PointerUse n m) :
+    Realizes (replaceRole roles owner next) (slots.set owner.val (pointerWord next)) := by
+  intro other
+  rw [Vector.getElem_set]
+  by_cases same : other = owner
+  · subst other
+    simp [replaceRole]
+  · have different : owner.val ≠ other.val := fun equal => same (Fin.ext equal.symm)
+    simp [replaceRole, same, different, valid other]
+
+def saveAndRepurpose {n m : Nat} (slots : Vector Nat n) (owner : Fin n)
+    (next : PointerUse n m) : Nat × Vector Nat n :=
+  (slots[owner.val], slots.set owner.val (pointerWord next))
+
+theorem postvisit_saves_active_parent {n m : Nat}
+    (roles : Fin n → PointerUse n m) (slots : Vector Nat n)
+    (valid : Realizes roles slots) (owner : Fin n) (parent : Option (Fin m))
+    (active : roles owner = .active parent) (next : PointerUse n m) :
+    (saveAndRepurpose slots owner next).1 = pointerWord (n := n) (.active parent) ∧
+      Realizes (replaceRole roles owner next) (saveAndRepurpose slots owner next).2 := by
+  constructor
+  · simpa [saveAndRepurpose, active] using valid owner
+  · exact repurpose_preserves_other_roles roles slots valid owner next
+
+theorem active_arc_word_bound {n m : Nat} (arc : Fin m) :
+    pointerWord (PointerUse.active (n := n) (some arc)) ≤ m := by
+  simp [pointerWord]
+  exact arc.isLt
+
+theorem follower_word_bound {n m : Nat} (owner : Fin n) :
+    pointerWord (PointerUse.follower (m := m) (some owner)) ≤ n := by
+  simp [pointerWord]
+  exact owner.isLt
+
+theorem retired_word_bound {n m : Nat} (component : Fin n) :
+    n < pointerWord (PointerUse.retired (m := m) component) ∧
+      pointerWord (PointerUse.retired (m := m) component) ≤ 2 * n := by
+  have bounded := component.isLt
+  simp only [pointerWord]
+  omega
+
+-- All owner identities move between roles. No visited owner needs a second
+-- stack cell, and retirement is a transfer rather than deletion from support.
+theorem transfer_keeps_roster {α : Type} (beforePart middle suffix roster : List α) (owner : α)
+    (before : (beforePart ++ owner :: (middle ++ suffix)).Perm roster) :
+    (beforePart ++ middle ++ owner :: suffix).Perm roster := by
+  have move := List.Perm.append_left beforePart
+    (List.perm_middle (a := owner) (l₁ := middle) (l₂ := suffix))
+  simpa [List.append_assoc] using move.trans before
+
+theorem live_frontiers_fit_owner_support {n : Nat}
+    (unseen active followers retired : List (Fin n))
+    (partition : (unseen ++ active ++ followers ++ retired).Perm (List.finRange n)) :
+    active.length + followers.length ≤ n := by
+  have sizes := partition.length_eq
+  simp only [List.length_append, List.length_finRange] at sizes
+  omega
+
+theorem two_vectors_workspace {n : Nat} (low pointers : Vector Nat n) :
+    low.toArray.size + pointers.toArray.size = 2 * n := by simp; omega
+
+end LeanPoo.Functional.ComponentWitness.SharedDiscovery
