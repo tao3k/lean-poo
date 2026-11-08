@@ -820,3 +820,100 @@ theorem indexed_catalog_capture_trace (catalog : List (Nat × Nat))
   rw [equal]
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- A completed captured prefix may discard its symbolic row copies only while
+-- the private packed words and row lengths still reconstruct exactly that
+-- prefix. Extra words in the unfinished owner must not become a completed row.
+-- This is a semantic projection; native reconstruction streams existing chunks.
+def restoreRows : List Nat → List Nat → List (List Nat)
+  | [], _ => []
+  | size :: sizes, targets =>
+      targets.take size :: restoreRows sizes (targets.drop size)
+
+theorem restore_completed_prefix (rows : List (List Nat)) (unfinished : List Nat) :
+    restoreRows (rows.map List.length) (rows.flatten ++ unfinished) = rows := by
+  induction rows with
+  | nil => rfl
+  | cons row rows ih =>
+    simp only [List.map_cons, List.flatten_cons, List.append_assoc, restoreRows,
+      List.take_left, List.drop_left]
+    exact congrArg (List.cons row) ih
+
+theorem restore_before_wide_fallback (rows : List (List Nat))
+    (unfinished current : List Nat) :
+    restoreRows (rows.map List.length) (rows.flatten ++ unfinished) ++ [current] =
+      rows ++ [current] := by
+  rw [restore_completed_prefix]
+
+theorem restore_empty_rows :
+    restoreRows [0, 0, 0] [] = [[], [], []] := rfl
+
+-- Original symbols are decoded from the same owner roster; numeric words do
+-- not become public identities. Row order, not just set membership, survives.
+theorem restore_original_owners (rows : List (List Nat))
+    (encode decode : Nat → Nat) (roundtrip : ∀ key, decode (encode key) = key) :
+    (restoreRows ((rows.map (List.map encode)).map List.length)
+      (rows.map (List.map encode)).flatten).map (List.map decode) = rows := by
+  have restored := restore_completed_prefix (rows.map (List.map encode)) []
+  simp only [List.append_nil] at restored
+  rw [restored]
+  simp only [List.map_map]
+  have identity : (fun row : List Nat => List.map decode (List.map encode row)) = id := by
+    funext row
+    simp only [List.map_map]
+    have same : decode ∘ encode = id := by funext key; exact roundtrip key
+    rw [same]
+    simp
+  change List.map (fun row => List.map decode (List.map encode row)) rows = rows
+  rw [identity]
+  simp
+
+def projectedRow (rows : List (List Nat)) (owner : Nat) : List Nat :=
+  (restoreRows (rows.map List.length) rows.flatten)[owner]?.getD []
+
+theorem projected_row_exact (rows : List (List Nat)) (owner : Nat) :
+    projectedRow rows owner = rows[owner]?.getD [] := by
+  have restored := restore_completed_prefix rows []
+  simp only [List.append_nil] at restored
+  simp only [projectedRow, restored]
+
+theorem projected_missing_owner (rows : List (List Nat)) (owner : Nat)
+    (missing : rows[owner]? = none) : projectedRow rows owner = [] := by
+  rw [projected_row_exact, missing]
+  rfl
+
+theorem projected_query_prefix (rows : List (List Nat)) (fuel : Nat)
+    (todo seen : List Nat) :
+    listRun (projectedRow rows) fuel todo seen =
+      listRun (fun owner => rows[owner]?.getD []) fuel todo seen := by
+  have equal : projectedRow rows = (fun owner => rows[owner]?.getD []) := by
+    funext owner
+    exact projected_row_exact rows owner
+  rw [equal]
+
+-- The pure fallback does not call authors. Once each effectful owner read has
+-- independently completed, reconstructing its rows preserves the ordinary
+-- first-refusal trace. It is not permission to cache or merge those reads.
+theorem restored_admission_trace (owners : List Nat) (rows : List (List Nat))
+    (unfinished : List Nat) (supported : Nat → Bool) :
+    captureDecisions supported
+      (owners.zip (restoreRows (rows.map List.length) (rows.flatten ++ unfinished))) =
+      captureDecisions supported (owners.zip rows) := by
+  rw [restore_completed_prefix]
+
+-- Modeled symbolic retention is a separate charge from original author reads,
+-- packed edges, decoding at a real fallback, and the final query output.
+def retainedSymbolicEdges (required : Bool) (rows : List (List Nat)) : Nat :=
+  if required then rows.flatten.length else 0
+
+theorem query_projection_retains_no_symbolic_edges (rows : List (List Nat)) :
+    retainedSymbolicEdges false rows = 0 := rfl
+
+theorem required_rows_charge_every_edge (rows : List (List Nat)) :
+    retainedSymbolicEdges true rows = rows.flatten.length := rfl
+
+example : restoreRows [0, 2, 1] [2, 1, 0, 7, 8] = [[], [2, 1], [0]] := by decide
+
+end LeanPoo.Functional.OrderedReachability
