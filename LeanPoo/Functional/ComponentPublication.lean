@@ -78,3 +78,96 @@ theorem metadata_batch {Revision : Type} [DecidableEq Revision]
     simp only [List.foldl_cons, metadata_stale expected current candidate staged live approved drift]
     exact ih current
 end LeanPoo.Functional.ComponentPublication
+
+namespace LeanPoo.Functional.ComponentPublication
+
+/-- One private native snapshot identity covers both payload projections. The
+counter models fresh object identity even for an equal-valued publication. -/
+structure Published where
+  identity : Nat
+  graph : Nat
+  metadata : Nat
+  deriving DecidableEq
+
+/-- Families are issued by the coordinator. Advancing one explicit continuation
+cannot invalidate an independently staged family merely sharing its head. -/
+def advanceFamily (versions : Nat → Nat) (family : Nat) : Nat → Nat :=
+  fun query => if query = family then versions query + 1 else versions query
+
+theorem continuation_advances (versions : Nat → Nat) (family : Nat) :
+    advanceFamily versions family family = versions family + 1 := by
+  simp [advanceFamily]
+
+theorem independent_family_keeps_ticket (versions : Nat → Nat)
+    (first second : Nat) (different : first ≠ second) :
+    advanceFamily versions second first = versions first := by
+  simp [advanceFamily, different]
+
+theorem continuation_rejects_old_result
+    (expected current candidate : Published) (versions : Nat → Nat) (family : Nat)
+    (approved : Bool) :
+    installChecked expected current candidate (family, versions family)
+      (family, advanceFamily versions family family) approved = ⟨current, false⟩ := by
+  apply metadata_stale
+  simp [advanceFamily]
+
+theorem independent_family_keeps_result
+    (expected current candidate : Published) (versions : Nat → Nat)
+    (first second : Nat) (different : first ≠ second) (approved : Bool) :
+    installChecked expected current candidate (first, versions first)
+      (first, advanceFamily versions second first) approved =
+    install expected current candidate approved := by
+  rw [independent_family_keeps_ticket versions first second different]
+  simp [installChecked]
+
+/-- A rejected refreshed proposal never rearms the predecessor family ticket. -/
+theorem failed_continuation_does_not_rearm
+    (expected current rejected oldCandidate : Published)
+    (versions : Nat → Nat) (family : Nat) :
+    installChecked expected
+      (install expected current rejected false).head oldCandidate
+      (family, versions family) (family, advanceFamily versions family family) true =
+      ⟨current, false⟩ := by
+  rw [refused]
+  exact continuation_rejects_old_result _ _ _ _ _ _
+
+def replacement (current : Published) (graph metadata : Nat) : Published :=
+  ⟨current.identity + 1, graph, metadata⟩
+
+theorem replacement_binds_both (current : Published) (graph metadata : Nat) :
+    (replacement current graph metadata).graph = graph ∧
+      (replacement current graph metadata).metadata = metadata := ⟨rfl, rfl⟩
+
+theorem no_op_still_retires_old_snapshot (old : Published) :
+    replacement old old.graph old.metadata ≠ old := by
+  intro same
+  have impossible := congrArg Published.identity same
+  simp [replacement] at impossible
+
+/-- Source/approval entry and return checks remain independent premises. The
+captured private snapshot is the sole source of both returned projections. -/
+def readPublished (captured live : Published) (entryOK returnOK : Bool) :
+    Option (Nat × Nat) :=
+  if entryOK && returnOK && decide (captured = live) then
+    some (captured.graph, captured.metadata) else none
+
+theorem read_one_snapshot (captured live : Published) (entryOK returnOK : Bool)
+    (graph metadata : Nat)
+    (accepted : readPublished captured live entryOK returnOK = some (graph, metadata)) :
+    captured = live ∧ graph = captured.graph ∧ metadata = captured.metadata ∧
+      entryOK = true ∧ returnOK = true := by
+  unfold readPublished at accepted
+  split at accepted
+  · rename_i checks
+    have values : captured.graph = graph ∧ captured.metadata = metadata := by
+      simpa only [Option.some.injEq, Prod.mk.injEq] using accepted
+    simp only [Bool.and_eq_true, decide_eq_true_eq] at checks
+    exact ⟨checks.2, values.1.symm, values.2.symm, checks.1.1, checks.1.2⟩
+  · contradiction
+
+theorem stale_read_has_no_payload (captured live : Published)
+    (different : captured ≠ live) (entryOK returnOK : Bool) :
+    readPublished captured live entryOK returnOK = none := by
+  simp [readPublished, different]
+
+end LeanPoo.Functional.ComponentPublication
