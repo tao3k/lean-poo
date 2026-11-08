@@ -311,3 +311,112 @@ theorem encoded_owner_identity {n m : Nat} (encode : Fin n → Fin m)
   simpa only [roundtrip] using congrArg decode sameID
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- Candidate: reuse private owner-indexed mark cells for row normalization.
+-- A fresh row token denotes membership only in THAT row, never an admission
+-- certificate. This candidate has not been installed in Scheme.
+def RowCovers (marks : Std.HashMap Nat Nat) (token : Nat) (seen : List Nat) : Prop :=
+  ∀ key, marks[key]? = some token ↔ key ∈ seen
+
+theorem fresh_row_token (marks : Std.HashMap Nat Nat) (token : Nat)
+    (older : ∀ (key value : Nat), marks[key]? = some value → value < token) :
+    RowCovers marks token [] := by
+  intro key
+  simp only [List.not_mem_nil, iff_false]
+  intro found
+  exact Nat.lt_irrefl token (older key token found)
+
+theorem row_insert_covers {marks : Std.HashMap Nat Nat} {token : Nat}
+    {seen : List Nat} (covered : RowCovers marks token seen) (key : Nat) :
+    RowCovers (marks.insert key token) token (key :: seen) := by
+  intro query
+  by_cases same : key = query
+  · subst query; simp
+  · have read : (marks.insert key token)[query]? = marks[query]? := by
+      simp [Std.HashMap.getElem?_insert, same]
+    rw [read]
+    simpa [List.mem_cons, Ne.symm same] using covered query
+
+-- List membership is the exact reverse-scan reference used by Gerbil's
+-- delete-duplicates/hash default: prepend each previously unseen source key.
+def referenceRow : List Nat → List Nat → List Nat → List Nat × List Nat
+  | [], seen, output => (seen, output)
+  | key :: rest, seen, output =>
+    if key ∈ seen then referenceRow rest seen output
+    else referenceRow rest (key :: seen) (key :: output)
+
+def markedRow (token : Nat) : List Nat → List Nat → List Nat → Std.HashMap Nat Nat →
+    List Nat × List Nat × Std.HashMap Nat Nat
+  | [], seen, output, marks => (seen, output, marks)
+  | key :: rest, seen, output, marks =>
+    if marks[key]? = some token then markedRow token rest seen output marks
+    else markedRow token rest (key :: seen) (key :: output) (marks.insert key token)
+
+theorem marked_row_exact (token : Nat) (pending seen output : List Nat)
+    (marks : Std.HashMap Nat Nat) (covered : RowCovers marks token seen) :
+    let result := markedRow token pending seen output marks
+    (result.1, result.2.1) = referenceRow pending seen output ∧
+      RowCovers result.2.2 token result.1 := by
+  induction pending generalizing seen output marks with
+  | nil => exact ⟨rfl, covered⟩
+  | cons key rest ih =>
+    by_cases present : key ∈ seen
+    · have indexed := (covered key).mpr present
+      simp only [markedRow, referenceRow, ite_eq_left indexed, ite_eq_left present]
+      exact ih seen output marks covered
+    · have absent : marks[key]? ≠ some token := fun found => present ((covered key).mp found)
+      simp only [markedRow, referenceRow, ite_eq_right absent, ite_eq_right present]
+      exact ih (key :: seen) (key :: output) (marks.insert key token) (row_insert_covers covered key)
+
+theorem row_mark_preserves_bound (marks : Std.HashMap Nat Nat) (key token : Nat)
+    (bounded : ∀ (owner value : Nat), marks[owner]? = some value → value ≤ token) :
+    ∀ (owner value : Nat), (marks.insert key token)[owner]? = some value → value ≤ token := by
+  intro owner value found
+  by_cases same : key = owner
+  · subst owner
+    have equal : token = value := by simpa using found
+    omega
+  · have prior : marks[owner]? = some value := by
+      simpa [Std.HashMap.getElem?_insert, same] using found
+    exact bounded owner value prior
+
+theorem next_owner_token_is_fresh (marks : Std.HashMap Nat Nat) (owner : Nat)
+    (bounded : ∀ (key value : Nat), marks[key]? = some value → value ≤ owner) :
+    RowCovers marks (owner + 1) [] := by
+  apply fresh_row_token
+  intro key value found
+  have := bounded key value found
+  omega
+
+theorem marked_row_preserves_bound (token : Nat) (pending seen output : List Nat)
+    (marks : Std.HashMap Nat Nat)
+    (bounded : ∀ (key value : Nat), marks[key]? = some value → value ≤ token) :
+    ∀ (key value : Nat), (markedRow token pending seen output marks).2.2[key]? = some value →
+      value ≤ token := by
+  induction pending generalizing seen output marks with
+  | nil => exact bounded
+  | cons key rest ih =>
+    by_cases known : marks[key]? = some token
+    · simpa only [markedRow, ite_eq_left known] using ih seen output marks bounded
+    · simpa only [markedRow, ite_eq_right known] using
+        ih (key :: seen) (key :: output) (marks.insert key token)
+          (row_mark_preserves_bound marks key token bounded)
+
+-- No whole-support clearing pass is required between rows: the previous bound
+-- establishes a fresh token. Only the current row's key cells are written.
+theorem completed_row_allows_next_token (token : Nat) (pending seen output : List Nat)
+    (marks : Std.HashMap Nat Nat)
+    (bounded : ∀ (key value : Nat), marks[key]? = some value → value ≤ token) :
+    RowCovers (markedRow token pending seen output marks).2.2 (token + 1) [] := by
+  exact next_owner_token_is_fresh _ token
+    (marked_row_preserves_bound token pending seen output marks bounded)
+
+theorem owner_token_word_bound {owner support : Nat}
+    (ownerBound : owner < support) (supportBound : support ≤ 4294967295) :
+    0 < owner + 1 ∧ owner + 1 ≤ 4294967295 := by omega
+
+example : (referenceRow [1, 2, 1].reverse [] []).2 = [2, 1] := by decide
+
+end LeanPoo.Functional.OrderedReachability
