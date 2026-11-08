@@ -69,6 +69,8 @@ check-merge: check-types
         LeanPoo.Prototype.GeneralizedContext \
         LeanPoo.Prototype.GeneralizedRevision \
         LeanPoo.Functional.GeneralizedGraph \
+        LeanPoo.Functional.StableOrderRepair \
+        LeanPoo.Functional.ComponentWitness \
         LeanPoo.Functional.GeneralizedMOP \
         LeanPoo.Functional.GeneralizedFragments \
         LeanPoo.Functional.InheritedMOP \
@@ -439,6 +441,7 @@ check-tests: check-proof
 
 [private]
 _check-contracts:
+    {{lean}} Tests/GraphAlgorithms.lean
     {{lean}} Tests/RecordCodec.lean
     {{lean}} Tests/CheckedMeta.lean
     {{lean}} Tests/DescriptorReflection.lean

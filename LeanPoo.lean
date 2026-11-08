@@ -368,3 +368,6 @@ import LeanPoo.Object.SlotObservation
 
 import LeanPoo.Functional.WrapperValidation
 import LeanPoo.Functional.ByteIO
+
+import LeanPoo.Functional.StableOrderRepair
+import LeanPoo.Functional.ComponentWitness

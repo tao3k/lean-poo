@@ -1,0 +1,37 @@
+#+title: Indexed graph algorithms and Scheme correspondence
+
+* Owners and entrypoints
+
+Generic graph contracts live in LeanPoo; Gerbil Scheme implementations live in
+gerbil-poo. Yuanxu owns Module selection, source admission and build/test projection.
+Do not make a second loader or cache. The companion gerbil-poo change uses the
+existing GeneralizedGraph, StrongComponents, ConstructionCache and publication APIs.
+
+* Sparse dependency order repair
+
+Edges point from consumers to providers. DependencyOrderRepair proves the exact
+insertion-cycle condition, bounded searches and incident-edge checks. RankLabels
+and HashRankLabels prove stable movement, real HashMap slot assignment, label
+permutation, injectivity and outside-owner preservation. StableOrderRepair proves
+construction completeness for finite exact frontiers and a valid injective old
+order, without assuming that all proposed edges have already passed a checker.
+After batch deletions, an insertion prefix inside an acyclic final graph cannot
+be refused for a transient cycle. Order intervals never replace value invalidation.
+
+* SCC certificates
+
+ComponentWitness reuses StrongComponents.Reach. Forward/reverse spanning paths
+inside groups, plus strictly decreasing ranks across groups, establish exact mutual
+reachability. Representative renaming preserves components. The Scheme Tarjan path
+checks those structural conditions in linear passes over captured indexed edges.
+This is a certificate law, not a theorem about arbitrary native hash complexity,
+compiler behavior, callback purity, termination or physical latency.
+
+* Tests and measurement
+
+Tests/GraphAlgorithms.lean participates in the existing contract gate and includes
+the 10000-label sparse patch plus overlap/duplicate-label and false-cycle controls.
+The Scheme companion retains exhaustive and typed properties, complete graph-family
+oracles, phase counters, paired CPU/wall/GC/allocation studies and mutation controls.
+Initial metadata preparation, hot queries and full Module EVAL remain separate
+measurements. Source/currentness, approval and effect guards remain independent.
