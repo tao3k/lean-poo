@@ -83,3 +83,12 @@ After that complete phase, numeric rank storage may be retired into coverage
 markers; the concrete HashMap laws prove replacement, numeric-rank refusal and
 unrelated-key preservation. They do not prove native liveness or GC behavior.
 This is structure-dependent work reduction, not a node-count dispatch threshold.
+
+* Source-order singleton applicability
+
+ranked_singletons_exact supplies the same exact SCC contract when every non-self
+edge decreases a rank. The source-order corollaries prove both increasing and
+decreasing orders, with self loops permitted. This can establish an applicability
+condition during a normal metadata capture; a graph with a multi-owner cycle
+cannot satisfy it. It is a proved candidate, not an installed Scheme selector
+or a measured claim of speed. Failed applicability requires the general engine.

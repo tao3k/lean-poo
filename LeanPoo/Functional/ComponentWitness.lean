@@ -426,3 +426,34 @@ theorem coverage_other_group_preserved (state : Std.HashMap Nat (Sum Nat Unit))
   simp [markCovered, Std.HashMap.getElem?_insert, Ne.symm different]
 
 end LeanPoo.Functional.ComponentWitness
+
+
+namespace LeanPoo.Functional.ComponentWitness
+open LeanPoo.Functional.StrongComponents
+
+-- If the captured edge order itself supplies a strict quotient rank, every
+-- claimed singleton is certified. Self loops are allowed. No DFS or SCC-based
+-- selector is needed to establish applicability.
+theorem ranked_singletons_exact {n} (edge : Fin n → Fin n → Bool)
+    (rank : Fin n → Nat)
+    (lower : ∀ a b, edge a b = true → a ≠ b → rank b < rank a) :
+    ∀ a b, a = b ↔ (Reach edge a b ∧ Reach edge b a) := by
+  let witness : Witness edge :=
+    ⟨id, rank, fun x => .refl x, fun x => .refl x, lower⟩
+  exact exact_components witness
+
+theorem decreasing_source_singletons {n} (edge : Fin n → Fin n → Bool)
+    (decreasing : ∀ a b, edge a b = true → a ≠ b → b.val < a.val) :
+    ∀ a b, a = b ↔ (Reach edge a b ∧ Reach edge b a) :=
+  ranked_singletons_exact edge Fin.val decreasing
+
+theorem increasing_source_singletons {n} (edge : Fin n → Fin n → Bool)
+    (increasing : ∀ a b, edge a b = true → a ≠ b → a.val < b.val) :
+    ∀ a b, a = b ↔ (Reach edge a b ∧ Reach edge b a) := by
+  apply ranked_singletons_exact edge (fun x => n - 1 - x.val)
+  intro a b direct different
+  have greater := increasing a b direct different
+  have bounded := b.isLt
+  omega
+
+end LeanPoo.Functional.ComponentWitness
