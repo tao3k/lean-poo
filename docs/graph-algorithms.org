@@ -35,3 +35,20 @@ The Scheme companion retains exhaustive and typed properties, complete graph-fam
 oracles, phase counters, paired CPU/wall/GC/allocation studies and mutation controls.
 Initial metadata preparation, hot queries and full Module EVAL remain separate
 measurements. Source/currentness, approval and effect guards remain independent.
+
+* Component index comparison
+
+Finite unique group lists have equal membership exactly when their cardinalities
+agree and every old member occurs in the new group. A cached cardinality belongs
+to the captured partition index; recomputing a large new group's length for each
+old singleton would restore quadratic work.
+
+The component verdict is uniform over an entire old group. One exact comparison
+can therefore classify its members together. Missing owners remain changed,
+including the case where both lookup results are absent; injective representative
+renaming preserves membership. These are pure captured-index laws. They do not
+authorize value reuse or omit source/currentness/effect checks.
+
+The companion Scheme optimization is not established by these laws alone.
+Its real many-group merges, splits and giant components require native properties
+and Benchmark evidence against the existing implementation.
