@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import Std.Data.HashMap.Lemmas
+import LeanPoo.Functional.StrongComponents
 
 namespace LeanPoo.Functional.OrderedReachability
 
@@ -262,5 +263,51 @@ theorem normalized_capture_trace (supported : Nat → Bool)
 -- does not authenticate a callback, mutable input, source version or Context.
 example : captureDecisions (fun key => key < 3)
     [(0, [1, 1]), (1, [4, 4]), (2, [0])] = [(0, true), (1, false)] := by decide
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+open LeanPoo.Functional.StrongComponents
+
+-- Reuse the existing unbounded Graph path relation, rather than creating a
+-- second model for numeric IDs. Every edge is transported in the same direction.
+theorem transport_reach {n m : Nat} {source : Fin n → Fin n → Bool}
+    {target : Fin m → Fin m → Bool} (encode : Fin n → Fin m)
+    (direct : ∀ a b, source a b = true → target (encode a) (encode b) = true)
+    {a b : Fin n} (path : Reach source a b) : Reach target (encode a) (encode b) := by
+  induction path with
+  | refl a => exact .refl (encode a)
+  | @step a next b edge _ ih => exact .step (direct a next edge) ih
+
+def encodedEdge {n m : Nat} (source : Fin n → Fin n → Bool)
+    (decode : Fin m → Fin n) : Fin m → Fin m → Bool :=
+  fun a b => source (decode a) (decode b)
+
+theorem encoded_reach_exact {n m : Nat} (source : Fin n → Fin n → Bool)
+    (encode : Fin n → Fin m) (decode : Fin m → Fin n)
+    (roundtrip : ∀ owner, decode (encode owner) = owner) (a b : Fin n) :
+    Reach (encodedEdge source decode) (encode a) (encode b) ↔ Reach source a b := by
+  constructor
+  · intro path
+    have mapped := transport_reach decode (fun _ _ edge => edge) path
+    simpa only [roundtrip] using mapped
+  · intro path
+    exact transport_reach encode (by
+      intro left right edge
+      simpa only [encodedEdge, roundtrip] using edge) path
+
+theorem encoded_components_exact {n m : Nat} (source : Fin n → Fin n → Bool)
+    (encode : Fin n → Fin m) (decode : Fin m → Fin n)
+    (roundtrip : ∀ owner, decode (encode owner) = owner) (a b : Fin n) :
+    (Reach (encodedEdge source decode) (encode a) (encode b) ∧
+     Reach (encodedEdge source decode) (encode b) (encode a)) ↔
+      (Reach source a b ∧ Reach source b a) := by
+  rw [encoded_reach_exact source encode decode roundtrip a b,
+      encoded_reach_exact source encode decode roundtrip b a]
+
+theorem encoded_owner_identity {n m : Nat} (encode : Fin n → Fin m)
+    (decode : Fin m → Fin n) (roundtrip : ∀ owner, decode (encode owner) = owner)
+    {a b : Fin n} (sameID : encode a = encode b) : a = b := by
+  simpa only [roundtrip] using congrArg decode sameID
 
 end LeanPoo.Functional.OrderedReachability
