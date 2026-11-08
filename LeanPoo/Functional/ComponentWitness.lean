@@ -354,3 +354,75 @@ example : (choosePair 5 referenceCharge {conversionCharge with conversion := 0})
 example : choosePair 4 referenceCharge conversionCharge = none := rfl
 
 end LeanPoo.Functional.ComponentWitness
+
+
+namespace LeanPoo.Functional.ComponentWitness
+open LeanPoo.Functional.StrongComponents
+
+def withinGroupEdge {n} (edge : Fin n → Fin n → Bool)
+    (owner : Fin n → Fin n) (a b : Fin n) : Bool :=
+  edge a b && decide (owner a = owner b)
+
+theorem within_edge_is_original {n} {edge : Fin n → Fin n → Bool}
+    {owner : Fin n → Fin n} {a b : Fin n}
+    (present : withinGroupEdge edge owner a b = true) : edge a b = true := by
+  simp only [withinGroupEdge, Bool.and_eq_true] at present
+  exact present.1
+
+theorem within_path_is_original {n} {edge : Fin n → Fin n → Bool}
+    {owner : Fin n → Fin n} {a b : Fin n}
+    (path : Reach (withinGroupEdge edge owner) a b) : Reach edge a b := by
+  induction path with
+  | refl => exact .refl _
+  | step direct _ tail => exact .step (within_edge_is_original direct) tail
+
+-- Restricting to the claimed group commutes with reversing an edge. This
+-- supplies precisely the reverse rows needed by an intra-group spanning walk.
+theorem reverse_within_same_group {n} (edge : Fin n → Fin n → Bool)
+    (owner : Fin n → Fin n) (a b : Fin n) :
+    withinGroupEdge (fun x y => edge y x) owner a b =
+      withinGroupEdge edge owner b a := by
+  by_cases same : owner a = owner b
+  · simp [withinGroupEdge, same]
+  · simp [withinGroupEdge, same, Ne.symm same]
+
+-- A certified singleton owner has both spanning paths without inspecting an
+-- adjacency bucket; cross-group edges still need the independent rank check.
+theorem singleton_spans_without_edges {n} (edge : Fin n → Fin n → Bool)
+    (owner : Fin n → Fin n) (key : Fin n) (self : owner key = key) :
+    Reach edge key (owner key) ∧ Reach edge (owner key) key := by
+  rw [self]
+  exact ⟨.refl key, .refl key⟩
+
+-- The unchanged quotient law completes the SAME certificate. Pruning reverse
+-- rows or singleton visits never permits dropping the cross-group obligation.
+theorem pruned_spans_keep_certificate {n} {edge : Fin n → Fin n → Bool}
+    (owner : Fin n → Fin n) (rank : Fin n → Nat)
+    (forward : ∀ x, Reach (withinGroupEdge edge owner) x (owner x))
+    (backward : ∀ x, Reach (withinGroupEdge edge owner) (owner x) x)
+    (lower : ∀ a b, edge a b = true → owner a ≠ owner b → rank (owner b) < rank (owner a)) :
+    ∀ a b, owner a = owner b ↔ (Reach edge a b ∧ Reach edge b a) := by
+  let witness : Witness edge := ⟨owner, rank,
+    fun x => within_path_is_original (forward x),
+    fun x => within_path_is_original (backward x), lower⟩
+  exact exact_components witness
+
+-- Rank storage is retired only after the complete quotient pass. Its later
+-- coverage markers cannot be mistaken for numeric rank evidence.
+def markCovered (state : Std.HashMap Nat (Sum Nat Unit)) (root : Nat) :=
+  state.insert root (.inr ())
+
+theorem coverage_replaces_rank (state : Std.HashMap Nat (Sum Nat Unit)) (root : Nat) :
+    (markCovered state root)[root]? = some (.inr ()) := by
+  simp [markCovered]
+
+theorem coverage_cannot_supply_rank (state : Std.HashMap Nat (Sum Nat Unit))
+    (root rank : Nat) : (markCovered state root)[root]? ≠ some (.inl rank) := by
+  simp [markCovered]
+
+theorem coverage_other_group_preserved (state : Std.HashMap Nat (Sum Nat Unit))
+    (root other : Nat) (different : other ≠ root) :
+    (markCovered state root)[other]? = state[other]? := by
+  simp [markCovered, Std.HashMap.getElem?_insert, Ne.symm different]
+
+end LeanPoo.Functional.ComponentWitness

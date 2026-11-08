@@ -68,3 +68,18 @@ QueueSelection supplies the proof pattern, not an SCC implementation. The POO
 state representation is a Scheme candidate; a million-node bounded-degree band
 exceeded the existing 2-GiB heap on the prior hash-state implementation. Retain
 that failure and qualify case, density, preparation, GC and memory separately.
+
+* Structure-dependent certificate storage
+
+withinGroupEdge retains only edges inside a claimed component. Paths in that
+restricted graph are original paths, and restriction commutes with reversal.
+A singleton whose owner is itself has both reflexive spanning paths without
+reading an adjacency bucket. pruned_spans_keep_certificate retains the complete
+cross-group rank obligation and concludes the same exact SCC equivalence.
+
+The Scheme candidate can therefore avoid singleton walks and retain reverse
+rows only inside nontrivial groups. Every captured quotient edge is still checked.
+After that complete phase, numeric rank storage may be retired into coverage
+markers; the concrete HashMap laws prove replacement, numeric-rank refusal and
+unrelated-key preservation. They do not prove native liveness or GC behavior.
+This is structure-dependent work reduction, not a node-count dispatch threshold.
