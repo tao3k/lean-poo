@@ -314,9 +314,9 @@ end LeanPoo.Functional.OrderedReachability
 
 namespace LeanPoo.Functional.OrderedReachability
 
--- Candidate: reuse private owner-indexed mark cells for row normalization.
+-- Invocation-local owner-indexed marks refine row normalization in POO.
 -- A fresh row token denotes membership only in THAT row, never an admission
--- certificate. This candidate has not been installed in Scheme.
+-- certificate. Scheme uses checked vector cells; this is the abstract map model.
 def RowCovers (marks : Std.HashMap Nat Nat) (token : Nat) (seen : List Nat) : Prop :=
   ∀ key, marks[key]? = some token ↔ key ∈ seen
 
@@ -449,5 +449,20 @@ theorem reference_row_map (encode : Nat → Nat) (injective : Function.Injective
       simp only [ite_eq_right known, ite_eq_right missing]
       exact ih (key :: seen) (key :: output)
 
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- The Scheme vector is filled with ZERO rather than absent HashMap entries.
+-- Positive row tokens make both representations fresh, including owner ID 0.
+theorem zero_marks_fresh (marks : Std.HashMap Nat Nat) (token : Nat)
+    (positive : 0 < token)
+    (zeroed : ∀ (key value : Nat), marks[key]? = some value → value = 0) :
+    RowCovers marks token [] := by
+  apply fresh_row_token
+  intro key value found
+  rw [zeroed key value found]
+  exact positive
 
 end LeanPoo.Functional.OrderedReachability
