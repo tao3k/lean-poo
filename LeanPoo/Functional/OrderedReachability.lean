@@ -539,3 +539,175 @@ theorem row_copy_chunk_bounds (cursor stop used capacity : Nat)
   · constructor <;> omega
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- Representation switching consumes no source, builder, or approval callback.
+-- Any bounded list prefix can hand its EXACT state to native indexed visitation.
+theorem list_run_add (reads : Nat → List Nat) (first rest : Nat)
+    (todo seen : List Nat) :
+    listRun reads (first + rest) todo seen =
+      listRun reads rest (listRun reads first todo seen).1
+        (listRun reads first todo seen).2 := by
+  induction first generalizing todo seen with
+  | zero => simp [listRun]
+  | succ first ih =>
+    cases todo with
+    | nil =>
+      cases rest <;> simp [listRun]
+    | cons key tail =>
+      by_cases found : key ∈ seen
+      · simpa [listRun, found, Nat.succ_add] using ih tail seen
+      · simpa [listRun, found, Nat.succ_add] using
+          ih (reads key ++ tail) (key :: seen)
+
+theorem indexed_handoff_exact (reads : Nat → List Nat) (first rest : Nat)
+    (todo seen : List Nat) (index : Std.HashMap Nat Unit)
+    (covered : Covers index (listRun reads first todo seen).2) :
+    let prior := listRun reads first todo seen
+    let result := indexedRun reads rest prior.1 prior.2 index
+    (result.1, result.2.1) = listRun reads (first + rest) todo seen := by
+  rw [list_run_add]
+  exact (indexed_prefix_exact reads rest _ _ index covered).1
+
+-- Dense storage is installed only when its whole directory is bounded by the
+-- reached support. The multiplier is a private resource policy, not a latency
+-- theorem or public tuning flag. Small/sparse queries allocate no full bitmap.
+theorem dense_workspace_charged_to_reached (support entered capacity : Nat)
+    (density : support ≤ 32 * entered) (frames : capacity ≤ 2 * entered) :
+    support + 8 * capacity ≤ 48 * entered := by omega
+
+theorem sparse_state_below_switch (support entered multiplier : Nat)
+    (below : multiplier * entered < support) :
+    ¬ support ≤ multiplier * entered := by omega
+
+-- Parent cursor storage grows geometrically. Only active depth is copied;
+-- retained capacity remains bounded by twice the newly required depth.
+theorem frame_growth_capacity (depth capacity : Nat)
+    (full : depth = capacity) (positive : 0 < capacity) :
+    depth + 1 ≤ 2 * capacity ∧ 2 * capacity < 2 * (depth + 1) := by omega
+
+-- Historical graph indices retain exact owner identity. They are structural
+-- data only; ownership never turns them into successful currentness evidence.
+theorem graph_index_owner_separation {Owner : Type} {indexed current : Owner}
+    (bound : indexed = current) {other : Owner} (different : other ≠ current) :
+    indexed ≠ other := by
+  intro same
+  exact different (same.symm.trans bound)
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+theorem clipped_frame_growth (depth capacity support : Nat)
+    (full : depth = capacity) (positive : 0 < capacity)
+    (fresh : depth + 1 ≤ support) :
+    depth + 1 ≤ min support (2 * capacity) ∧
+      min support (2 * capacity) ≤ 2 * capacity := by omega
+
+def capturedQuery (lookup : Nat → Option Nat) (walk : Nat → List Nat) (root : Nat) :
+    Option (List Nat) := (lookup root).map walk
+
+theorem missing_root_refuses (lookup : Nat → Option Nat) (walk : Nat → List Nat)
+    (root : Nat) (missing : lookup root = none) :
+    capturedQuery lookup walk root = none := by simp [capturedQuery, missing]
+
+theorem zero_root_is_present (lookup : Nat → Option Nat) (walk : Nat → List Nat)
+    (root : Nat) (present : lookup root = some 0) :
+    capturedQuery lookup walk root = some (walk 0) := by simp [capturedQuery, present]
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- A proof-only potential: captured owner rows are finite and all targets belong
+-- to the catalog. Runtime queries do NOT enumerate this catalog or use fuel.
+def unreadCharge (reads : Nat → List Nat) (seen : List Nat) : List Nat → Nat
+  | [] => 0
+  | key :: rest => (if key ∈ seen then 0 else (reads key).length + 1) +
+      unreadCharge reads seen rest
+
+theorem absent_mark_charge (reads : Nat → List Nat) (seen catalog : List Nat)
+    (key : Nat) (absent : key ∉ catalog) :
+    unreadCharge reads (key :: seen) catalog = unreadCharge reads seen catalog := by
+  induction catalog with
+  | nil => rfl
+  | cons head tail ih =>
+    have different : head ≠ key := by intro same; subst head; exact absent (by simp)
+    have missing : key ∉ tail := by intro member; exact absent (by simp [member])
+    simpa [unreadCharge, List.mem_cons, different] using
+      congrArg (fun n => (if head ∈ seen then 0 else (reads head).length + 1) + n) (ih missing)
+
+theorem fresh_mark_charge (reads : Nat → List Nat) (seen catalog : List Nat)
+    (unique : catalog.Nodup) (key : Nat) (member : key ∈ catalog) (fresh : key ∉ seen) :
+    unreadCharge reads seen catalog =
+      (reads key).length + 1 + unreadCharge reads (key :: seen) catalog := by
+  induction catalog with
+  | nil => simp at member
+  | cons head tail ih =>
+    rcases List.nodup_cons.mp unique with ⟨headAbsent, tailUnique⟩
+    by_cases same : head = key
+    · subst head
+      have unchanged := absent_mark_charge reads seen tail key headAbsent
+      simp [unreadCharge, fresh, unchanged]
+    · have inTail : key ∈ tail := by simpa [Ne.symm same] using member
+      have step := ih tailUnique inTail
+      have absentHead : head ≠ key := same
+      by_cases known : head ∈ seen
+      · simpa [unreadCharge, List.mem_cons, absentHead, known] using step
+      · simp only [unreadCharge, List.mem_cons, absentHead, false_or, known, ite_false]
+        omega
+
+def queryPotential (reads : Nat → List Nat) (catalog todo seen : List Nat) : Nat :=
+  todo.length + unreadCharge reads seen catalog
+
+theorem visited_step_decreases (reads : Nat → List Nat) (catalog tail seen : List Nat)
+    (key : Nat) :
+    queryPotential reads catalog tail seen <
+      queryPotential reads catalog (key :: tail) seen := by
+  simp [queryPotential]
+
+theorem fresh_step_decreases (reads : Nat → List Nat) (catalog tail seen : List Nat)
+    (unique : catalog.Nodup) (key : Nat) (member : key ∈ catalog) (fresh : key ∉ seen) :
+    queryPotential reads catalog (reads key ++ tail) (key :: seen) <
+      queryPotential reads catalog (key :: tail) seen := by
+  have charged := fresh_mark_charge reads seen catalog unique key member fresh
+  simp only [queryPotential, List.length_append, List.length_cons]
+  omega
+
+theorem finite_ordered_query_finishes (reads : Nat → List Nat) (catalog : List Nat)
+    (unique : catalog.Nodup)
+    (closed : ∀ key ∈ catalog, ∀ dep ∈ reads key, dep ∈ catalog)
+    (fuel : Nat) (todo seen : List Nat)
+    (supported : ∀ key ∈ todo, key ∈ catalog)
+    (budget : queryPotential reads catalog todo seen ≤ fuel) :
+    (listRun reads fuel todo seen).1 = [] := by
+  induction fuel generalizing todo seen with
+  | zero =>
+    have empty : todo = [] := by
+      cases todo with
+      | nil => rfl
+      | cons head tail => simp only [queryPotential, List.length_cons] at budget; omega
+    simp [empty, listRun]
+  | succ fuel ih =>
+    cases todo with
+    | nil => simp [listRun]
+    | cons key tail =>
+      have tailSupported : ∀ dep ∈ tail, dep ∈ catalog := by
+        intro dep member
+        exact supported dep (by simp [member])
+      by_cases known : key ∈ seen
+      · have decreases := visited_step_decreases reads catalog tail seen key
+        have enough : queryPotential reads catalog tail seen ≤ fuel := by omega
+        simpa [listRun, known] using ih tail seen tailSupported enough
+      · have member : key ∈ catalog := supported key (by simp)
+        have decreases := fresh_step_decreases reads catalog tail seen unique key member known
+        have enough : queryPotential reads catalog (reads key ++ tail) (key :: seen) ≤ fuel := by omega
+        have nextSupported : ∀ dep ∈ reads key ++ tail, dep ∈ catalog := by
+          intro dep inNext
+          rcases List.mem_append.mp inNext with inRow | inTail
+          · exact closed key member dep inRow
+          · exact tailSupported dep inTail
+        simpa [listRun, known] using ih (reads key ++ tail) (key :: seen) nextSupported enough
+
+end LeanPoo.Functional.OrderedReachability
