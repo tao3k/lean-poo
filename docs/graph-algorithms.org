@@ -105,3 +105,18 @@ the exact singleton SCC contract, including self loops. Both directions have
 proved corollaries. Completeness of captured input remains an explicit premise;
 source/currentness and publication effects are outside this pure scan theorem.
 This is a candidate applicability contract, not an installed Scheme fast path.
+
+Exact captured rows give both directions of the classification iff laws. A
+separate work function counts at most E predicate checks and zero remaining
+checks after both candidates fail. This never licenses skipping input capture.
+
+* Indexed ordered reachability
+
+OrderedReachability refines the old list-membership DFS with a private HashMap
+visited set. Every finite prefix retains the exact pending and reverse-discovery
+lists; the insertion invariant relates markers to membership. From an empty
+set, no owner occurs twice in the returned discovery list. These laws preserve
+visit/refusal order for captured pure adjacency; they do not cache currentness
+or remove any author/effect or final admission checks. Fuel is a proof device,
+not a runtime deadline or a native stopping policy. Unbounded termination and
+physical hash complexity are not asserted by this prefix refinement theorem.

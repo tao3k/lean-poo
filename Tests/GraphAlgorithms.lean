@@ -1,3 +1,4 @@
+import LeanPoo.Functional.OrderedReachability
 import LeanPoo.Functional.StableOrderRepair
 import LeanPoo.Functional.ComponentWitness
 
@@ -30,3 +31,15 @@ example : ([0, 1, 2] : List Nat).length = [2, 0, 1].length ∧
 example : ¬ LeanPoo.Functional.ComponentWitness.SameComponent
     (fun _ => none) (fun _ => none) 7 :=
   LeanPoo.Functional.ComponentWitness.absent_before_changed rfl
+
+-- Duplicated edges and a cycle preserve the legacy reverse-discovery order.
+example : (LeanPoo.Functional.OrderedReachability.indexedRun
+    (fun key => if key = 0 then [1, 1] else [0]) 6 [0] [] ∅).2.1 = [1, 0] := by
+  let reads : Nat → List Nat := fun key => if key = 0 then [1, 1] else [0]
+  have same := congrArg Prod.snd
+    (LeanPoo.Functional.OrderedReachability.indexed_prefix_exact reads 6 [0] [] ∅
+      LeanPoo.Functional.OrderedReachability.empty_covers).1
+  change (LeanPoo.Functional.OrderedReachability.indexedRun reads 6 [0] [] ∅).2.1 =
+    (LeanPoo.Functional.OrderedReachability.listRun reads 6 [0] []).2 at same
+  rw [same]
+  decide

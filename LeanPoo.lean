@@ -371,3 +371,5 @@ import LeanPoo.Functional.ByteIO
 
 import LeanPoo.Functional.StableOrderRepair
 import LeanPoo.Functional.ComponentWitness
+
+import LeanPoo.Functional.OrderedReachability

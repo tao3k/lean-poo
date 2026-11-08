@@ -529,3 +529,72 @@ theorem up_classification_certifies_singletons {n}
   exact ordered.resolve_left different
 
 end LeanPoo.Functional.ComponentWitness
+
+namespace LeanPoo.Functional.ComponentWitness
+
+-- Exact captured rows establish both soundness AND applicability completeness.
+-- A conservative roster with extra edges still has the prior soundness law.
+theorem down_classification_iff {n} (edge : Fin n → Fin n → Bool)
+    (captured : List (Fin n × Fin n))
+    (exactRows : ∀ a b, (a, b) ∈ captured ↔ edge a b = true) :
+    (orderFlags sourceDown sourceUp (true, true) captured).1 = true ↔
+      (∀ a b, edge a b = true → a ≠ b → b.val < a.val) := by
+  constructor
+  · intro accepted a b direct different
+    have found := accepted_down_edge ((exactRows a b).mpr direct) accepted
+    have ordered : a = b ∨ b.val < a.val := of_decide_eq_true found
+    exact ordered.resolve_left different
+  · intro decreasing
+    have all : captured.all sourceDown = true := by
+      apply List.all_eq_true.mpr
+      rintro ⟨a, b⟩ member
+      apply decide_eq_true
+      by_cases same : a = b
+      · exact Or.inl same
+      · exact Or.inr (decreasing a b ((exactRows a b).mp member) same)
+    simpa [order_flags_exact] using all
+
+theorem up_classification_iff {n} (edge : Fin n → Fin n → Bool)
+    (captured : List (Fin n × Fin n))
+    (exactRows : ∀ a b, (a, b) ∈ captured ↔ edge a b = true) :
+    (orderFlags sourceDown sourceUp (true, true) captured).2 = true ↔
+      (∀ a b, edge a b = true → a ≠ b → a.val < b.val) := by
+  constructor
+  · intro accepted a b direct different
+    have found := accepted_up_edge ((exactRows a b).mpr direct) accepted
+    have ordered : a = b ∨ a.val < b.val := of_decide_eq_true found
+    exact ordered.resolve_left different
+  · intro increasing
+    have all : captured.all sourceUp = true := by
+      apply List.all_eq_true.mpr
+      rintro ⟨a, b⟩ member
+      apply decide_eq_true
+      by_cases same : a = b
+      · exact Or.inl same
+      · exact Or.inr (increasing a b ((exactRows a b).mp member) same)
+    simpa [order_flags_exact] using all
+
+def orderChecks {α : Type} (down up : α → Bool) (state : Bool × Bool) : List α → Nat
+  | [] => 0
+  | edge :: rest =>
+    if state.1 || state.2 then
+      1 + orderChecks down up (state.1 && down edge, state.2 && up edge) rest
+    else 0
+
+theorem order_checks_bounded {α : Type} (down up : α → Bool)
+    (state : Bool × Bool) (edges : List α) :
+    orderChecks down up state edges ≤ edges.length := by
+  induction edges generalizing state with
+  | nil => simp [orderChecks]
+  | cons edge rest ih =>
+    simp only [orderChecks, List.length_cons]
+    split
+    · have bound := ih (state.1 && down edge, state.2 && up edge)
+      omega
+    · omega
+
+theorem rejected_order_checks_zero {α : Type} (down up : α → Bool)
+    (rest : List α) : orderChecks down up (false, false) rest = 0 := by
+  cases rest <;> simp [orderChecks]
+
+end LeanPoo.Functional.ComponentWitness
