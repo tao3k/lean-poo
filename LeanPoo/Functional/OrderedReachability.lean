@@ -711,3 +711,112 @@ theorem finite_ordered_query_finishes (reads : Nat → List Nat) (catalog : List
         simpa [listRun, known] using ih (reads key ++ tail) (key :: seen) nextSupported enough
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+open LeanPoo.Functional.StrongComponents
+
+-- Opaque recipe tokens model HOST IDENTITY, not equality of build outputs.
+theorem unique_catalog_member_lookup (catalog : List (Nat × Nat))
+    (unique : catalog.Pairwise (fun a b => a.1 ≠ b.1))
+    (key token : Nat) (member : (key, token) ∈ catalog) :
+    (Std.HashMap.ofList catalog)[key]? = some token := by
+  have distinct : catalog.Pairwise (fun a b => (a.1 == b.1) = false) := by
+    simpa using unique
+  exact Std.HashMap.getElem?_ofList_of_mem (by simp) distinct member
+
+theorem indexed_first_recipe (catalog : List (Nat × Nat))
+    (unique : catalog.Pairwise (fun a b => a.1 ≠ b.1)) (key : Nat) :
+    (Std.HashMap.ofList catalog)[key]? =
+      ((catalog.find? (fun entry => entry.1 == key)).map Prod.snd) := by
+  cases found : catalog.find? (fun entry => entry.1 == key) with
+  | none =>
+    have missing : ∀ entry ∈ catalog, entry.1 ≠ key := by
+      simpa using (List.find?_eq_none.mp found)
+    apply Std.HashMap.getElem?_ofList_of_contains_eq_false
+    apply Bool.eq_false_iff.mpr
+    intro present
+    have member := List.contains_iff_mem.mp present
+    rcases List.mem_map.mp member with ⟨entry, inCatalog, same⟩
+    exact missing entry inCatalog same
+  | some entry =>
+    have inCatalog := List.mem_of_find?_eq_some found
+    have same : entry.1 = key := by simpa using List.find?_some found
+    simpa only [same, Option.map_some] using
+      unique_catalog_member_lookup catalog unique entry.1 entry.2 inCatalog
+
+-- Replacing list membership by a captured index cannot reorder selected owners.
+theorem indexed_filter_exact (keys seen : List Nat) (index : Std.HashMap Nat Unit)
+    (covered : Covers index seen) :
+    keys.filter (fun key => decide (index[key]? = some ())) =
+      keys.filter (fun key => decide (key ∈ seen)) := by
+  apply List.filter_congr
+  intro key _
+  simp only [covered key]
+
+def affectedBy {n : Nat} (edge : Fin n → Fin n → Bool) (roots : Fin n → Prop)
+    (owner : Fin n) : Prop := ∃ root, roots root ∧ Reach edge owner root
+
+theorem affected_seed {n : Nat} (edge : Fin n → Fin n → Bool) (roots : Fin n → Prop)
+    (owner : Fin n) (seed : roots owner) : affectedBy edge roots owner :=
+  ⟨owner, seed, .refl owner⟩
+
+theorem affected_reader {n : Nat} (edge : Fin n → Fin n → Bool) (roots : Fin n → Prop)
+    {consumer provider : Fin n} (direct : edge consumer provider = true)
+    (dirty : affectedBy edge roots provider) : affectedBy edge roots consumer := by
+  rcases dirty with ⟨root, seed, path⟩
+  exact ⟨root, seed, .step direct path⟩
+
+theorem affected_least {n : Nat} (edge : Fin n → Fin n → Bool)
+    (roots included : Fin n → Prop)
+    (seed : ∀ owner, roots owner → included owner)
+    (reader : ∀ consumer provider, edge consumer provider = true →
+      included provider → included consumer)
+    {owner : Fin n} (dirty : affectedBy edge roots owner) : included owner := by
+  rcases dirty with ⟨root, isRoot, path⟩
+  induction path with
+  | refl vertex => exact seed vertex isRoot
+  | @step consumer provider _ direct _ ih => exact reader consumer provider direct (ih isRoot)
+
+-- Every consumer whose recipe/dependency declaration changed is a seed.
+-- Therefore the OLD reverse index and the NEW graph have identical affected
+-- closure over the union catalog. Added/removed owners are also seeds; absence
+-- is encoded as an empty row. This never reuses successful admission evidence.
+theorem affected_dependency_rewrite {n : Nat}
+    (old fresh : Fin n → Fin n → Bool) (roots : Fin n → Prop)
+    (unchanged : ∀ consumer, ¬ roots consumer → ∀ provider,
+      old consumer provider = fresh consumer provider) (owner : Fin n) :
+    affectedBy old roots owner ↔ affectedBy fresh roots owner := by
+  constructor
+  · intro dirty
+    apply affected_least old roots (affectedBy fresh roots)
+      (affected_seed fresh roots) _ dirty
+    intro consumer provider direct affected
+    by_cases changed : roots consumer
+    · exact affected_seed fresh roots consumer changed
+    · apply affected_reader fresh roots _ affected
+      simpa only [← unchanged consumer changed provider] using direct
+  · intro dirty
+    apply affected_least fresh roots (affectedBy old roots)
+      (affected_seed old roots) _ dirty
+    intro consumer provider direct affected
+    by_cases changed : roots consumer
+    · exact affected_seed old roots consumer changed
+    · apply affected_reader old roots _ affected
+      simpa only [unchanged consumer changed provider] using direct
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+theorem indexed_catalog_capture_trace (catalog : List (Nat × Nat))
+    (rows : List (Nat × List Nat)) :
+    captureDecisions (fun key => (Std.HashMap.ofList catalog).contains key) rows =
+      captureDecisions (fun key => decide (key ∈ catalog.map Prod.fst)) rows := by
+  have equal : (fun key => (Std.HashMap.ofList catalog).contains key) =
+      (fun key => decide (key ∈ catalog.map Prod.fst)) := by
+    funext key
+    apply Bool.eq_iff_iff.mpr
+    simp
+  rw [equal]
+
+end LeanPoo.Functional.OrderedReachability
