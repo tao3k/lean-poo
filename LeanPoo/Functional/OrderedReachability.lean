@@ -420,3 +420,34 @@ theorem owner_token_word_bound {owner support : Nat}
 example : (referenceRow [1, 2, 1].reverse [] []).2 = [2, 1] := by decide
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+-- Dense owner IDs preserve equality, so normalizing encoded rows cannot
+-- reorder, merge or drop a different source owner. The decoder round trip
+-- transports this exact order back to the public owner identity.
+theorem reference_row_map (encode : Nat → Nat) (injective : Function.Injective encode)
+    (pending seen output : List Nat) :
+    referenceRow (pending.map encode) (seen.map encode) (output.map encode) =
+      ((referenceRow pending seen output).1.map encode,
+       (referenceRow pending seen output).2.map encode) := by
+  induction pending generalizing seen output with
+  | nil => rfl
+  | cons key rest ih =>
+    have present : encode key ∈ seen.map encode ↔ key ∈ seen := by
+      constructor
+      · intro found
+        rcases List.mem_map.mp found with ⟨prior, member, same⟩
+        have equal := injective same
+        simpa only [equal] using member
+      · intro found
+        exact List.mem_map.mpr ⟨key, found, rfl⟩
+    simp only [List.map_cons, referenceRow]
+    by_cases known : key ∈ seen
+    · simp only [ite_eq_left known, ite_eq_left (present.mpr known)]
+      exact ih seen output
+    · have missing : encode key ∉ seen.map encode := fun h => known (present.mp h)
+      simp only [ite_eq_right known, ite_eq_right missing]
+      exact ih (key :: seen) (key :: output)
+
+
+end LeanPoo.Functional.OrderedReachability
