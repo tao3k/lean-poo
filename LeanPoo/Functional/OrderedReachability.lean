@@ -466,3 +466,76 @@ theorem zero_marks_fresh (marks : Std.HashMap Nat Nat) (token : Nat)
   exact positive
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- Invocation-local row workspace: [0, read) is unread input and [write, end)
+-- is the already retained suffix. Keeping read ≤ write prevents a compacting
+-- store from changing ANY future read. This is storage, not source evidence.
+def RowSuffix (buffer : Array Nat) (write : Nat) (output : List Nat) : Prop :=
+  write + output.length ≤ buffer.size ∧
+    ∀ offset, offset < output.length → buffer[write + offset]! = output[offset]!
+
+theorem row_buffer_store_preserves_unread (buffer : Array Nat) (read write key : Nat)
+    (ordered : read ≤ write) (positive : 0 < read) :
+    ∀ offset, offset < read - 1 →
+      (buffer.set! (write - 1) key)[offset]! = buffer[offset]! := by
+  intro offset before
+  exact Array.getElem!_set!_ne buffer (write - 1) offset key (by omega)
+
+theorem row_buffer_store_prepends (buffer : Array Nat) (write key : Nat)
+    (output : List Nat) (suffix : RowSuffix buffer write output) (positive : 0 < write) :
+    RowSuffix (buffer.set! (write - 1) key) (write - 1) (key :: output) := by
+  rcases suffix with ⟨bounded, cells⟩
+  constructor
+  · simp only [List.length_cons, Array.size_set!]; omega
+  · intro offset before
+    cases offset with
+    | zero =>
+      simp only [Nat.add_zero, List.getElem!_cons_zero]
+      apply Array.getElem!_set!_self
+      omega
+    | succ offset =>
+      have location : write - 1 + (offset + 1) = write + offset := by omega
+      rw [location, Array.getElem!_set!_ne buffer (write - 1) (write + offset) key (by omega)]
+      simpa using cells offset (by simpa using before)
+
+theorem row_buffer_next_cursors (read write capacity : Nat)
+    (ordered : read ≤ write) (bounded : write ≤ capacity) (positive : 0 < read) :
+    read - 1 ≤ write - 1 ∧ write - 1 < capacity ∧
+      read - 1 ≤ write ∧ write ≤ capacity := by omega
+
+-- Decoding after ID normalization gives the same PUBLIC owner order. This
+-- composes with marked_row_exact and reference_row_map, including owner ID 0.
+theorem decode_normalized_row (encode decode : Nat → Nat)
+    (roundtrip : ∀ owner, decode (encode owner) = owner) (pending : List Nat) :
+    ((referenceRow (pending.map encode) [] []).2.map decode) =
+      (referenceRow pending [] []).2 := by
+  have injective : Function.Injective encode := by
+    intro a b same
+    simpa only [roundtrip] using congrArg decode same
+  have mapped := reference_row_map encode injective pending [] []
+  simp only [List.map_nil] at mapped
+  rw [mapped]
+  simp [List.map_map, Function.comp_def, roundtrip]
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- A standard vector-copy chunk consumes exactly the corresponding row preceding.
+-- Concatenating chunks cannot reorder/drop/duplicate a retained numeric ID.
+theorem chunked_row_exact (preceding row : List Nat) (count : Nat) :
+    (preceding ++ row.take count) ++ row.drop count = preceding ++ row := by
+  rw [List.append_assoc, List.take_append_drop]
+
+theorem row_copy_chunk_bounds (cursor stop used capacity : Nat)
+    (pending : cursor < stop) (available : used < capacity) :
+    let count := min (stop - cursor) (capacity - used)
+    0 < count ∧ cursor + count ≤ stop ∧ used + count ≤ capacity := by
+  dsimp
+  constructor
+  · omega
+  · constructor <;> omega
+
+end LeanPoo.Functional.OrderedReachability
