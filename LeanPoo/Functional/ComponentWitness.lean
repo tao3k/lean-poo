@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import LeanPoo.Functional.DependencyOrderRepair
+import Std.Data.HashMap.Lemmas
 
 /-! SCC certificates over the existing LeanPoo path relation. Spanning paths
 prove within-group connectivity; strictly decreasing quotient ranks exclude
@@ -142,5 +143,214 @@ theorem representative_rename_keeps_membership (owner rename : Nat → Nat)
   intro node
   simp only [Option.some.injEq]
   exact injective.eq_iff.symm
+
+-- Private discovery representation: concrete HashMap/Array laws.
+theorem fresh_discovery_has_capacity {α} {keys entered : List α} {owner : α}
+    (unique : entered.Nodup) (supported : entered ⊆ keys)
+    (present : owner ∈ keys) (fresh : owner ∉ entered) :
+    entered.length < keys.length := by
+  have distinct : (owner :: entered).Nodup := List.nodup_cons.mpr ⟨fresh, unique⟩
+  have room := distinct.length_le_of_subset (by
+    intro key member
+    rcases List.mem_cons.mp member with equal | prior
+    · simpa only [equal] using present
+    · exact supported prior)
+  simpa only [List.length_cons, Nat.add_one_le_iff] using room
+
+section IndexedCells
+variable {α β : Type} [BEq α] [Hashable α]
+
+def indexedCell (index : Std.HashMap α Nat) (cells : Array β) (owner : α) : Option β :=
+  index[owner]?.bind (fun slot => cells[slot]?)
+
+theorem unvisited_has_no_cell (index : Std.HashMap α Nat) (cells : Array β)
+    (owner : α) (missing : index[owner]? = none) :
+    indexedCell index cells owner = none := by
+  simp [indexedCell, missing]
+
+theorem discovered_cell_exact (index : Std.HashMap α Nat) (cells : Array β)
+    (owner : α) (slot : Nat) (found : index[owner]? = some slot)
+    (bounded : slot < cells.size) :
+    indexedCell index cells owner = some cells[slot] := by
+  simp [indexedCell, found, bounded]
+
+theorem discovered_write_exact (index : Std.HashMap α Nat) (cells : Array β)
+    (owner : α) (slot : Nat) (found : index[owner]? = some slot)
+    (bounded : slot < cells.size) (value : β) :
+    indexedCell index (cells.set slot value) owner = some value := by
+  simp [indexedCell, found, bounded]
+
+theorem other_cell_write_preserves (index : Std.HashMap α Nat) (cells : Array β)
+    (owner : α) (slot other : Nat) (found : index[owner]? = some other)
+    (bounded : slot < cells.size) (different : slot ≠ other) (value : β) :
+    indexedCell index (cells.set slot value) owner = indexedCell index cells owner := by
+  simp only [indexedCell, found, Option.bind_some]
+  exact Array.getElem?_set_ne bounded different
+
+theorem zero_discovery_is_present [LawfulBEq α] [LawfulHashable α]
+    (index : Std.HashMap α Nat) (owner : α) :
+    indexedCell (index.insert owner 0) #[true] owner = some true := by
+  simp [indexedCell]
+
+theorem next_slot_is_unused (index : Std.HashMap α Nat) (next : Nat)
+    (bounded : ∀ (owner : α) (slot : Nat), index[owner]? = some slot → slot < next) :
+    ∀ owner : α, index[owner]? ≠ some next := by
+  intro owner found
+  exact Nat.lt_irrefl next (bounded owner next found)
+
+theorem fresh_slot_preserves_separation [LawfulBEq α] [LawfulHashable α]
+    (index : Std.HashMap α Nat) (owner : α) (slot : Nat)
+    (separate : ∀ (a b : α) (i : Nat), index[a]? = some i → index[b]? = some i → a = b)
+    (unused : ∀ key : α, index[key]? ≠ some slot) :
+    ∀ (a b : α) (i : Nat), (index.insert owner slot)[a]? = some i →
+      (index.insert owner slot)[b]? = some i → a = b := by
+  intro a b i left right
+  by_cases aOwner : a = owner
+  · subst a
+    have same : slot = i := by simpa using left
+    subst i
+    by_cases bOwner : b = owner
+    · exact bOwner.symm
+    · have old : index[b]? = some slot := by
+        simpa [Std.HashMap.getElem?_insert, bOwner, Ne.symm bOwner] using right
+      exact False.elim (unused b old)
+  · by_cases bOwner : b = owner
+    · subst b
+      have same : slot = i := by simpa using right
+      subst i
+      have old : index[a]? = some slot := by
+        simpa [Std.HashMap.getElem?_insert, aOwner, Ne.symm aOwner] using left
+      exact False.elim (unused a old)
+    · apply separate a b i
+      · simpa [Std.HashMap.getElem?_insert, aOwner, Ne.symm aOwner] using left
+      · simpa [Std.HashMap.getElem?_insert, bOwner, Ne.symm bOwner] using right
+end IndexedCells
+
+structure DiscoveryFrame (α : Type) where
+  owner : α
+  slot : Nat
+  pending : List α
+
+-- The SCC stack and DFS stack may share a private frame. Advancing only the
+-- pending tail cannot change the owner/slot observed later when an SCC pops.
+theorem frame_advance_preserves_stack_view {α} (frame : DiscoveryFrame α)
+    (rest : List α) :
+    (({frame with pending := rest}).owner, ({frame with pending := rest}).slot) =
+      (frame.owner, frame.slot) := rfl
+
+example : indexedCell ((∅ : Std.HashMap Nat Nat).insert 9 0) #[false] 9 = some false := by
+  simp [indexedCell]
+
+-- Algorithm-independent canonical output and conditional selection charges.
+def canonicalRepresentative {n} (roster : List (Fin n))
+    (owner : Fin n → Fin n) (key : Fin n) : Option (Fin n) :=
+  roster.find? (fun member => decide (owner member = owner key))
+
+theorem supported_owner_has_representative {n} (roster : List (Fin n))
+    (owner : Fin n → Fin n) (key : Fin n) (present : key ∈ roster) :
+    ∃ representative, canonicalRepresentative roster owner key = some representative := by
+  induction roster with
+  | nil => simp at present
+  | cons head tail ih =>
+    by_cases same : owner head = owner key
+    · exact ⟨head, by simp [canonicalRepresentative, same]⟩
+    · have inTail : key ∈ tail := by
+        rcases List.mem_cons.mp present with equal | member
+        · subst key
+          exact False.elim (same rfl)
+        · exact member
+      obtain ⟨representative, found⟩ := ih inTail
+      exact ⟨representative, by simpa [canonicalRepresentative, same] using found⟩
+
+theorem certified_engines_same_representative {n} {edge : Fin n → Fin n → Bool}
+    (left right : Witness edge) (roster : List (Fin n)) (key : Fin n) :
+    canonicalRepresentative roster left.owner key =
+      canonicalRepresentative roster right.owner key := by
+  have predicates : (fun member => decide (left.owner member = left.owner key)) =
+      (fun member => decide (right.owner member = right.owner key)) := by
+    funext member
+    have same := (exact_components left member key).trans
+      (exact_components right member key).symm
+    by_cases present : left.owner member = left.owner key
+    · have other := same.mp present
+      simp [present, other]
+    · have other : right.owner member ≠ right.owner key := fun h => present (same.mpr h)
+      simp [present, other]
+  unfold canonicalRepresentative
+  rw [predicates]
+
+structure EngineCharge where
+  capture : Nat
+  conversion : Nat
+  discovery : Nat
+  normalization : Nat
+  certificate : Nat
+  selection : Nat
+  switching : Nat
+  peakCells : Nat
+  applicable : Bool
+
+def EngineCharge.total (cost : EngineCharge) : Nat :=
+  cost.capture + cost.conversion + cost.discovery + cost.normalization +
+    cost.certificate + cost.selection + cost.switching
+
+def EngineCharge.admitted (cost : EngineCharge) (budget : Nat) : Prop :=
+  cost.applicable = true ∧ cost.peakCells ≤ budget
+
+instance (cost : EngineCharge) (budget : Nat) : Decidable (cost.admitted budget) :=
+  inferInstanceAs (Decidable (cost.applicable = true ∧ cost.peakCells ≤ budget))
+
+-- Stable preference: retain the first plan on equal total charge. An operation
+-- or memory mismatch is not a reason to silently use an inadmissible fallback.
+def choosePair (budget : Nat) (left right : EngineCharge) : Option EngineCharge :=
+  if left.admitted budget then
+    if right.admitted budget ∧ right.total < left.total then some right else some left
+  else if right.admitted budget then some right else none
+
+theorem pair_choice_admitted (budget : Nat) (left right selected : EngineCharge)
+    (found : choosePair budget left right = some selected) :
+    selected.admitted budget := by
+  unfold choosePair at found
+  split at found
+  · split at found <;> simp_all
+  · split at found <;> simp_all
+
+theorem pair_choice_is_candidate (budget : Nat) (left right selected : EngineCharge)
+    (found : choosePair budget left right = some selected) :
+    selected = left ∨ selected = right := by
+  unfold choosePair at found
+  split at found
+  · split at found <;> simp_all
+  · split at found <;> simp_all
+
+theorem pair_choice_minimum (budget : Nat) (left right selected : EngineCharge)
+    (found : choosePair budget left right = some selected) :
+    (left.admitted budget → selected.total ≤ left.total) ∧
+    (right.admitted budget → selected.total ≤ right.total) := by
+  unfold choosePair at found
+  split at found
+  · split at found <;> simp_all <;> omega
+  · split at found <;> simp_all
+
+theorem both_refused_is_none (budget : Nat) (left right : EngineCharge)
+    (leftNo : ¬left.admitted budget) (rightNo : ¬right.admitted budget) :
+    choosePair budget left right = none := by
+  simp [choosePair, leftNo, rightNo]
+
+theorem conversion_is_not_free (cost : EngineCharge) :
+    cost.total = (cost.capture + cost.discovery + cost.normalization +
+      cost.certificate + cost.selection + cost.switching) + cost.conversion := by
+  unfold EngineCharge.total
+  omega
+
+private def referenceCharge : EngineCharge := ⟨0, 0, 8, 0, 1, 1, 0, 5, true⟩
+private def conversionCharge : EngineCharge := ⟨0, 10, 1, 0, 1, 1, 0, 5, true⟩
+
+-- Omitting conversion chooses a different, apparently cheaper plan. This is
+-- a modeled counterexample, not a timing threshold for any graph size.
+example : (choosePair 5 referenceCharge conversionCharge).map EngineCharge.total = some 10 := rfl
+example : (choosePair 5 referenceCharge {conversionCharge with conversion := 0}).map
+    EngineCharge.total = some 3 := rfl
+example : choosePair 4 referenceCharge conversionCharge = none := rfl
 
 end LeanPoo.Functional.ComponentWitness

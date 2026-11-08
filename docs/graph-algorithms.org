@@ -52,3 +52,19 @@ authorize value reuse or omit source/currentness/effect checks.
 The companion Scheme optimization is not established by these laws alone.
 Its real many-group merges, splits and giant components require native properties
 and Benchmark evidence against the existing implementation.
+
+* Size and case dependent Graph research
+
+ComponentWitness now also states concrete HashMap/Array discovery-cell laws,
+fresh-slot capacity and separation, shared-frame owner/slot preservation, and
+canonical source-order representative equality for independently certified SCC
+engines. A conditional plan comparison admits only applicable memory-bounded
+plans and includes capture, conversion, discovery, normalization, certification,
+decision and switching charges. Omitting conversion is an explicit counterexample.
+
+These laws do not select an empirically fastest engine or install a threshold.
+QueueSelection supplies the proof pattern, not an SCC implementation. The POO
+100K/1M node workload remains distinct from Yuanxu real-Module EVAL. The dense
+state representation is a Scheme candidate; a million-node bounded-degree band
+exceeded the existing 2-GiB heap on the prior hash-state implementation. Retain
+that failure and qualify case, density, preparation, GC and memory separately.
