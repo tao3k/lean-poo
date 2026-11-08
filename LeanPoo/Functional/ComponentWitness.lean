@@ -457,3 +457,75 @@ theorem increasing_source_singletons {n} (edge : Fin n → Fin n → Bool)
   omega
 
 end LeanPoo.Functional.ComponentWitness
+
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+namespace LeanPoo.Functional.ComponentWitness
+open LeanPoo.Functional.StrongComponents
+
+-- Classification may stop after both possibilities fail. Capture itself must
+-- still acquire and validate every remaining author footprint independently.
+def orderFlags {α : Type} (down up : α → Bool) (state : Bool × Bool) :
+    List α → Bool × Bool
+  | [] => state
+  | edge :: rest =>
+    if state.1 || state.2 then
+      orderFlags down up (state.1 && down edge, state.2 && up edge) rest
+    else state
+
+theorem order_flags_exact {α : Type} (down up : α → Bool)
+    (state : Bool × Bool) (edges : List α) :
+    orderFlags down up state edges =
+      (state.1 && edges.all down, state.2 && edges.all up) := by
+  induction edges generalizing state with
+  | nil => simp [orderFlags]
+  | cons edge rest ih =>
+    rcases state with ⟨d, u⟩
+    cases d <;> cases u <;> simp [orderFlags, ih, List.all_cons]
+
+theorem rejected_flags_remain_rejected {α : Type} (down up : α → Bool)
+    (rest : List α) : orderFlags down up (false, false) rest = (false, false) := by
+  simp [order_flags_exact]
+
+theorem accepted_down_edge {α : Type} {down up : α → Bool}
+    {edges : List α} {edge : α} (member : edge ∈ edges)
+    (accepted : (orderFlags down up (true, true) edges).1 = true) :
+    down edge = true := by
+  have all : edges.all down = true := by simpa [order_flags_exact] using accepted
+  exact List.all_eq_true.mp all edge member
+
+theorem accepted_up_edge {α : Type} {down up : α → Bool}
+    {edges : List α} {edge : α} (member : edge ∈ edges)
+    (accepted : (orderFlags down up (true, true) edges).2 = true) :
+    up edge = true := by
+  have all : edges.all up = true := by simpa [order_flags_exact] using accepted
+  exact List.all_eq_true.mp all edge member
+
+def sourceDown {n} (edge : Fin n × Fin n) : Bool :=
+  decide (edge.1 = edge.2 ∨ edge.2.val < edge.1.val)
+
+def sourceUp {n} (edge : Fin n × Fin n) : Bool :=
+  decide (edge.1 = edge.2 ∨ edge.1.val < edge.2.val)
+
+theorem down_classification_certifies_singletons {n}
+    (edge : Fin n → Fin n → Bool) (captured : List (Fin n × Fin n))
+    (complete : ∀ a b, edge a b = true → (a, b) ∈ captured)
+    (accepted : (orderFlags sourceDown sourceUp (true, true) captured).1 = true) :
+    ∀ a b, a = b ↔ (Reach edge a b ∧ Reach edge b a) := by
+  apply decreasing_source_singletons edge
+  intro a b direct different
+  have found := accepted_down_edge (complete a b direct) accepted
+  have ordered : a = b ∨ b.val < a.val := of_decide_eq_true found
+  exact ordered.resolve_left different
+
+theorem up_classification_certifies_singletons {n}
+    (edge : Fin n → Fin n → Bool) (captured : List (Fin n × Fin n))
+    (complete : ∀ a b, edge a b = true → (a, b) ∈ captured)
+    (accepted : (orderFlags sourceDown sourceUp (true, true) captured).2 = true) :
+    ∀ a b, a = b ↔ (Reach edge a b ∧ Reach edge b a) := by
+  apply increasing_source_singletons edge
+  intro a b direct different
+  have found := accepted_up_edge (complete a b direct) accepted
+  have ordered : a = b ∨ a.val < b.val := of_decide_eq_true found
+  exact ordered.resolve_left different
+
+end LeanPoo.Functional.ComponentWitness

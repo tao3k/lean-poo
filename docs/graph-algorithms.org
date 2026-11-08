@@ -92,3 +92,16 @@ decreasing orders, with self loops permitted. This can establish an applicabilit
 condition during a normal metadata capture; a graph with a multi-owner cycle
 cannot satisfy it. It is a proved candidate, not an installed Scheme selector
 or a measured claim of speed. Failed applicability requires the general engine.
+
+* Executable source-order classification contract
+
+orderFlags has the same result as the conjunction of all per-edge directional
+predicates. Once both predicates are false, classification may stop; it cannot
+become true again. Capture must still acquire and validate every remaining
+author footprint. The classifier never authorizes early termination of capture.
+
+Given a complete captured edge roster, the accepted directional bit implies
+the exact singleton SCC contract, including self loops. Both directions have
+proved corollaries. Completeness of captured input remains an explicit premise;
+source/currentness and publication effects are outside this pure scan theorem.
+This is a candidate applicability contract, not an installed Scheme fast path.
