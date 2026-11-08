@@ -453,6 +453,7 @@
   "LeanPoo/Functional/ObservedView.lean",
   "LeanPoo/Functional/OptionalValidation.lean",
   "LeanPoo/Functional/OrderedDictionary.lean",
+  "LeanPoo/Functional/OrderedReachability.lean",
   "LeanPoo/Functional/Overlay.lean",
   "LeanPoo/Functional/Parameters.lean",
   "LeanPoo/Functional/PolicyPublication.lean",
