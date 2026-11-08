@@ -917,3 +917,36 @@ theorem required_rows_charge_every_edge (rows : List (List Nat)) :
 example : restoreRows [0, 2, 1] [2, 1, 0, 7, 8] = [[], [2, 1], [0]] := by decide
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+-- Root admission must retain Option presence. The total row helper used in
+-- finite-prefix algebra is not permission to turn a missing owner into an empty
+-- present row. Native queries keep the existing owner-index refusal first.
+def projectedRowOption (rows : List (List Nat)) (owner : Nat) : Option (List Nat) :=
+  (restoreRows (rows.map List.length) rows.flatten)[owner]?
+
+theorem projected_row_presence (rows : List (List Nat)) (owner : Nat) :
+    projectedRowOption rows owner = rows[owner]? := by
+  have restored := restore_completed_prefix rows []
+  simp only [List.append_nil] at restored
+  simp only [projectedRowOption, restored]
+
+theorem projected_missing_refused (rows : List (List Nat)) (owner : Nat)
+    (missing : rows[owner]? = none) : projectedRowOption rows owner = none := by
+  rw [projected_row_presence, missing]
+
+theorem projected_empty_owner_present (rows : List (List Nat)) (owner : Nat)
+    (present : rows[owner]? = some []) : projectedRowOption rows owner = some [] := by
+  rw [projected_row_presence, present]
+
+theorem guarded_projected_query (rows : List (List Nat)) (fuel root : Nat) :
+    (projectedRowOption rows root).map
+      (fun _ => listRun (projectedRow rows) fuel [root] []) =
+    rows[root]?.map (fun _ => listRun (fun owner => rows[owner]?.getD []) fuel [root] []) := by
+  rw [projected_row_presence, projected_query_prefix]
+
+example : projectedRowOption [[], [0]] 0 = some [] := by decide
+example : projectedRowOption [[], [0]] 2 = none := by decide
+
+end LeanPoo.Functional.OrderedReachability
