@@ -950,3 +950,115 @@ example : projectedRowOption [[], [0]] 0 = some [] := by decide
 example : projectedRowOption [[], [0]] 2 = none := by decide
 
 end LeanPoo.Functional.OrderedReachability
+
+
+namespace LeanPoo.Functional.OrderedReachability
+
+/-- Pure captured data only. The Scheme proper-list/cycle check remains before
+this interval; no author, object getter or source approval is shared here. -/
+def stagedRow {α β : Type} (symbolic : α → Bool) (lookup : α → Option β)
+    (row : List α) : Option (List β) :=
+  if row.all symbolic then row.mapM lookup else none
+
+def fusedRow {α β : Type} (symbolic : α → Bool) (lookup : α → Option β)
+    (row : List α) : Option (List β) :=
+  row.mapM (fun key => if symbolic key then lookup key else none)
+
+theorem fused_row_eq {α β : Type} (symbolic : α → Bool) (lookup : α → Option β)
+    (row : List α) : fusedRow symbolic lookup row = stagedRow symbolic lookup row := by
+  induction row with
+  | nil => rfl
+  | cons key rest ih =>
+    cases hs : symbolic key <;> cases ht : rest.all symbolic <;>
+      cases hv : lookup key <;>
+      simp only [fusedRow, stagedRow, ht, ↓reduceIte] at ih <;>
+      simp [fusedRow, stagedRow, List.mapM_cons, List.all_cons, hs, ht, hv, ih]
+
+/-- Both paths stop at the same first rejected owner. A refused row never
+permits the next author callback, even when its first invalid item differs. -/
+def admissionTrace {α β : Type} (encode : List α → Option (List β)) :
+    List (Nat × List α) → List (Nat × Bool)
+  | [] => []
+  | (owner, row) :: rest =>
+    if (encode row).isSome then (owner, true) :: admissionTrace encode rest
+    else [(owner, false)]
+
+theorem fused_owner_trace {α β : Type} (symbolic : α → Bool) (lookup : α → Option β)
+    (rows : List (Nat × List α)) :
+    admissionTrace (fusedRow symbolic lookup) rows =
+      admissionTrace (stagedRow symbolic lookup) rows := by
+  have same : fusedRow symbolic lookup = stagedRow symbolic lookup := by
+    funext row
+    exact fused_row_eq symbolic lookup row
+  rw [same]
+
+/-- The same owner-to-ID table used for edge encoding also admits the roster.
+No separate duplicate table is required before author acquisition. -/
+def assignOwners (index : Std.HashMap Nat Nat) (position : Nat) :
+    List Nat → Std.HashMap Nat Nat
+  | [] => index
+  | key :: rest => assignOwners (index.insert key position) (position + 1) rest
+
+theorem assigned_size_bound (index : Std.HashMap Nat Nat) (position : Nat)
+    (keys : List Nat) :
+    (assignOwners index position keys).size ≤ index.size + keys.length := by
+  induction keys generalizing index position with
+  | nil => simp [assignOwners]
+  | cons key rest ih =>
+    have tail := ih (index.insert key position) (position + 1)
+    have head := Std.HashMap.size_insert_le (m := index) (k := key) (v := position)
+    simp only [assignOwners, List.length_cons]
+    omega
+
+theorem assigned_size_exact (index : Std.HashMap Nat Nat) (position : Nat)
+    (keys : List Nat) :
+    (assignOwners index position keys).size = index.size + keys.length ↔
+      keys.Nodup ∧ ∀ key ∈ keys, key ∉ index := by
+  induction keys generalizing index position with
+  | nil => simp [assignOwners]
+  | cons key rest ih =>
+    have bound := assigned_size_bound (index.insert key position) (position + 1) rest
+    by_cases present : key ∈ index
+    · have size : (index.insert key position).size = index.size := by
+        simp [Std.HashMap.size_insert, present]
+      simp only [assignOwners, List.length_cons]
+      constructor
+      · intro exactSize
+        omega
+      · intro valid
+        exact False.elim (valid.2 key (by simp) present)
+    · have size : (index.insert key position).size = index.size + 1 := by
+        simp [Std.HashMap.size_insert, present]
+      constructor
+      · intro exactSize
+        have tailSize :
+            (assignOwners (index.insert key position) (position + 1) rest).size =
+              (index.insert key position).size + rest.length := by
+          simpa [assignOwners, size, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+            using exactSize
+        obtain ⟨unique, fresh⟩ := (ih (index.insert key position) (position + 1)).mp tailSize
+        refine ⟨List.nodup_cons.mpr ⟨?_, unique⟩, ?_⟩
+        · intro repeated
+          exact fresh key repeated (by simp)
+        · intro other member
+          rcases List.mem_cons.mp member with same | tail
+          · simpa [same] using present
+          · intro old
+            exact fresh other tail (by simp [old])
+      · rintro ⟨unique, fresh⟩
+        obtain ⟨notRepeated, uniqueTail⟩ := List.nodup_cons.mp unique
+        have freshTail : ∀ other ∈ rest, other ∉ index.insert key position := by
+          intro other member prior
+          have alternatives := Std.HashMap.mem_insert.mp prior
+          rcases alternatives with same | old
+          · have eqKey : key = other := by simpa using same
+            exact notRepeated (eqKey ▸ member)
+          · exact fresh other (by simp [member]) old
+        have tailSize := (ih (index.insert key position) (position + 1)).mpr ⟨uniqueTail, freshTail⟩
+        simpa [assignOwners, size, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using tailSize
+
+theorem empty_owner_index_admits_exactly_nodup (keys : List Nat) :
+    (assignOwners ∅ 0 keys).size = keys.length ↔ keys.Nodup := by
+  simpa using assigned_size_exact (∅ : Std.HashMap Nat Nat) 0 keys
+
+end LeanPoo.Functional.OrderedReachability
