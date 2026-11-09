@@ -780,3 +780,49 @@ theorem two_vectors_workspace {n : Nat} (low pointers : Vector Nat n) :
     low.toArray.size + pointers.toArray.size = 2 * n := by simp; omega
 
 end LeanPoo.Functional.ComponentWitness.SharedDiscovery
+
+namespace LeanPoo.Functional.StrongComponents
+
+/-- A suspended search keeps the low-word's target reachable. The active path
+and postponed followers are the live owners. If the first DFS search has
+entered the entire roster and the current nonleader reaches the root, the
+whole admitted graph is one component. -/
+theorem first_search_is_whole_component {n : Nat}
+    {edge : Fin n → Fin n → Bool} (root current : Fin n)
+    (active followers : List (Fin n))
+    (allLive : (active ++ followers).Perm (List.finRange n))
+    (activePaths : ∀ v ∈ active, Reach edge root v ∧ Reach edge v current)
+    (followerPaths : ∀ v ∈ followers,
+      Reach edge root v ∧ ∃ ancestor ∈ active, Reach edge v ancestor)
+    (rootLowPath : Reach edge current root) :
+    ∀ a b : Fin n, Reach edge a b ∧ Reach edge b a := by
+  have paths : ∀ v, Reach edge root v ∧ Reach edge v root := by
+    intro v
+    have member : v ∈ active ++ followers := allLive.mem_iff.mpr (by simp)
+    rcases List.mem_append.mp member with onPath | follower
+    · obtain ⟨down, toCurrent⟩ := activePaths v onPath
+      exact ⟨down, toCurrent.trans rootLowPath⟩
+    · obtain ⟨down, ancestor, onPath, up⟩ := followerPaths v follower
+      exact ⟨down, up.trans ((activePaths ancestor onPath).2.trans rootLowPath)⟩
+  intro a b
+  exact ⟨(paths a).2.trans (paths b).1, (paths b).2.trans (paths a).1⟩
+
+/-- Even discovery words and odd nonleader low words identify the same target
+precisely when the marked low equals the first discovery word with its bit set. -/
+theorem marked_first_low_exact (pre : Nat) : 2 * pre + 1 = 3 ↔ pre = 1 := by omega
+
+/-- Complete entry and zero prior retirement mean every roster item is live.
+The bound that permits writing one component word to every packed cell is
+independent of the input edge count. -/
+theorem complete_unretired_frontier {n : Nat}
+    (unseen active followers retired : List (Fin n))
+    (coverage : (unseen ++ active ++ followers ++ retired).Perm (List.finRange n))
+    (entered : (active ++ followers ++ retired).length = n)
+    (nothingRetired : retired = []) :
+    (active ++ followers).Perm (List.finRange n) := by
+  have size := coverage.length_eq
+  simp only [List.length_append, List.length_finRange] at size entered
+  have noneUnseen : unseen = [] := List.length_eq_zero_iff.mp (by omega)
+  simpa [noneUnseen, nothingRetired] using coverage
+
+end LeanPoo.Functional.StrongComponents
