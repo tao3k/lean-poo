@@ -262,3 +262,43 @@ theorem open_count_needs_return_validation (record : Nat) :
 end FixedReplay
 
 end LeanPoo.Object
+
+namespace LeanPoo.Object.PassiveDelivery
+
+def invoke (effect : Observer → State → State) (observers : List Observer) (state : State) : State :=
+  observers.foldl (fun state observe => effect observe state) state
+
+def selected [DecidableEq Observer] (passive : Observer) (effect : Observer → State → State)
+    (observers : List Observer) (state : State) : State :=
+  if observers = [passive] then state else invoke effect observers state
+
+theorem singleton_delivery_exact [DecidableEq Observer] (passive : Observer)
+    (effect : Observer → State → State) (passiveEffect : ∀ state, effect passive state = state)
+    (observers : List Observer) (state : State) :
+    selected passive effect observers state = invoke effect observers state := by
+  by_cases exactPassive : observers = [passive]
+  · simp [selected, exactPassive, invoke, passiveEffect]
+  · simp [selected, exactPassive]
+
+end LeanPoo.Object.PassiveDelivery
+namespace LeanPoo.Object.CheckpointEntry
+
+/-- The signed read sequence and its fields are stable between native
+issuance preflight and the first live check. Every admitted member has
+already passed issuance, so removing only that immediate duplicate
+check preserves the first refused read. The checkpoint can change
+state, and its post-check therefore starts with independent evidence. -/
+theorem first_refusal_after_issuance (reads : List Read)
+    (issued live : Read → Bool)
+    (preflight : ∀ read ∈ reads, issued read = true) :
+    reads.find? (fun read => !(issued read && live read)) =
+      reads.find? (fun read => !live read) := by
+  induction reads with
+  | nil => rfl
+  | cons first rest ih =>
+    have firstIssued := preflight first (by simp)
+    have restIssued : ∀ read ∈ rest, issued read = true :=
+      fun read member => preflight read (List.mem_cons_of_mem _ member)
+    simp only [List.find?_cons, firstIssued, Bool.true_and, ih restIssued]
+
+end LeanPoo.Object.CheckpointEntry
