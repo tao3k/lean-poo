@@ -1158,3 +1158,152 @@ theorem two_unique_rows_reenable_forward :
     nextFreshStreak 0 true < 2 ∧ nextFreshStreak (nextFreshStreak 0 true) true = 2 := by decide
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+def boundedRow (position : α → Option Nat) (before : Nat → Nat → Bool)
+    (budget : Nat) (previous : Nat) (keys : List α) : Option (List Nat) :=
+  match keys, budget with
+  | [], _ => some []
+  | _ :: _, 0 => none
+  | key :: rest, fuel + 1 => do
+    let id ← position key
+    if before previous id then
+      let tail ← boundedRow position before fuel id rest
+      some (id :: tail)
+    else none
+
+theorem boundedRow_exact {position : α → Option Nat} {before : Nat → Nat → Bool}
+    (transitive : ∀ {a b c}, before a b = true → before b c = true → before a c = true)
+    {fuel previous keys ids}
+    (ok : boundedRow position before fuel previous keys = some ids) :
+    keys.mapM position = some ids ∧ keys.length ≤ fuel ∧
+      (previous :: ids).Pairwise (fun a b => before a b = true) := by
+  induction keys generalizing fuel previous ids with
+  | nil => simp [boundedRow] at ok; subst ids; simp
+  | cons key rest ih =>
+    cases fuel with
+    | zero => simp [boundedRow] at ok
+    | succ fuel =>
+      cases found : position key with
+      | none => simp [boundedRow, found] at ok
+      | some id =>
+        by_cases ordered : before previous id = true
+        · cases tail : boundedRow position before fuel id rest with
+          | none => simp [boundedRow, found, ordered, tail] at ok
+          | some packed =>
+            simp [boundedRow, found, ordered, tail] at ok
+            subst ids
+            obtain ⟨mapped, bound, chain⟩ := ih tail
+            refine ⟨?_, Nat.succ_le_succ bound, List.pairwise_cons.mpr ⟨?_, chain⟩⟩
+            · simp [List.mapM_cons, found, mapped]
+            · intro v member
+              rcases List.mem_cons.mp member with rfl | inTail
+              · exact ordered
+              · exact transitive ordered ((List.pairwise_cons.mp chain).1 v inTail)
+        · simp [boundedRow, found, ordered] at ok
+
+theorem ordered_row_nodup {before : Nat → Nat → Bool}
+    (irreflexive : ∀ a, before a a = false)
+    {ids : List Nat} (ordered : ids.Pairwise (fun a b => before a b = true)) :
+    ids.Nodup := ordered.imp (fun {a b} lt eq => by
+      subst b
+      simp [irreflexive] at lt)
+
+theorem ordered_row_extrema {before : Nat → Nat → Bool} {first : Nat} {rest : List Nat}
+    (ordered : (first :: rest).Pairwise (fun a b => before a b = true))
+    {last : Nat} (endIs : (first :: rest).getLast? = some last) :
+    ∀ id ∈ first :: rest, (first = id ∨ before first id = true) ∧
+      (id = last ∨ before id last = true) := by
+  intro id member
+  constructor
+  · rcases List.mem_cons.mp member with rfl | inner
+    · exact Or.inl rfl
+    · exact Or.inr ((List.pairwise_cons.mp ordered).1 id inner)
+  · have suffix : ∀ xs : List Nat,
+        xs.Pairwise (fun a b => before a b = true) →
+        xs.getLast? = some last → id ∈ xs →
+        id = last ∨ before id last = true := by
+      intro xs chain stop present
+      induction xs with
+      | nil => simp at present
+      | cons head tail ih =>
+        cases tail with
+        | nil =>
+          have eq : head = last := by simpa using stop
+          simpa [eq] using Or.inl (show id = head by simpa using present)
+        | cons next rest =>
+          have tailStop : (next :: rest).getLast? = some last := by simpa using stop
+          obtain ⟨dominates, tailChain⟩ := List.pairwise_cons.mp chain
+          rcases List.mem_cons.mp present with rfl | inner
+          · exact Or.inr (dominates last (List.mem_of_getLast? tailStop))
+          · exact ih tailChain tailStop inner
+    exact suffix _ ordered endIs member
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+/-- A failed speculative write changes only the unpublished suffix. The
+logical product still ends at the old cursor, including on wide fallback. -/
+theorem unpublished_suffix {published scratch : List α} :
+    (published ++ scratch).take published.length = published := by
+  simp
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+def hintedPosition [DecidableEq α] (names : Array α) (position : α → Option Nat)
+    (hint : Nat) (name : α) : Option Nat :=
+  if names[hint]? = some name then some hint else position name
+
+/-- An ordinal prediction can route through the existing roster. A match is
+identity evidence from the admitted inverse, not an assumption about order. -/
+theorem hintedPosition_exact [DecidableEq α] (names : Array α)
+    (position : α → Option Nat)
+    (inverse : ∀ {id name}, names[id]? = some name → position name = some id)
+    (hint : Nat) (name : α) :
+    hintedPosition names position hint name = position name := by
+  unfold hintedPosition
+  split
+  · next hit => exact (inverse hit).symm
+  · rfl
+
+end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+theorem ordered_row_normalized {before : Nat → Nat → Bool}
+    (irreflexive : ∀ a, before a a = false)
+    {ids : List Nat} (ordered : ids.Pairwise (fun a b => before a b = true)) :
+    (referenceRow ids.reverse [] []).2 = ids := by
+  have unique := ordered_row_nodup irreflexive ordered
+  have reversed : ids.reverse.Nodup := List.pairwise_reverse.mpr (unique.imp Ne.symm)
+  simpa using congrArg Prod.snd (reference_row_unique ids.reverse [] [] reversed (by simp))
+
+theorem complete_seen_covers {support : Nat} {seen : List Nat}
+    (unique : seen.Nodup) (inside : ∀ key ∈ seen, key < support)
+    (complete : seen.length = support) {target : Nat} (supported : target < support) :
+    target ∈ seen := by
+  by_cases found : target ∈ seen
+  · exact found
+  · have space := fresh_frame_capacity unique inside supported found
+    omega
+
+theorem complete_ordered_walk (reads : Nat → List Nat) (fuel : Nat)
+    {support : Nat} {seen pending : List Nat}
+    (unique : seen.Nodup) (inside : ∀ key ∈ seen, key < support)
+    (complete : seen.length = support) (bounded : ∀ key ∈ pending, key < support) :
+    (listRun reads fuel pending seen).2 = seen := by
+  induction fuel generalizing pending with
+  | zero => rfl
+  | succ fuel ih =>
+    cases pending with
+    | nil => rfl
+    | cons key rest =>
+      have found : key ∈ seen := complete_seen_covers unique inside complete (bounded key (by simp))
+      simp only [listRun, ite_eq_left found]
+      exact ih (fun target member => bounded target (by simp [member]))
+
+end LeanPoo.Functional.OrderedReachability
