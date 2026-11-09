@@ -220,4 +220,45 @@ theorem issuedRead_payload_frame (names : List Name) (parents : List Parent)
     (consume : List Name → List Parent → State → State) (state : State) :
     ((names, parents), consume names parents state).1 = (names, parents) := rfl
 
+namespace FixedReplay
+
+inductive Failure where
+  | unissued (record : Nat)
+  | stale (record : Nat)
+  deriving DecidableEq
+
+structure Record where
+  identity : Nat
+  issued : Bool
+  current : Bool
+
+def validate (records : List Record) : Except Failure Nat := do
+  match records.find? (fun read => !read.issued) with
+  | some read => throw (.unissued read.identity)
+  | none =>
+    match records.find? (fun read => !read.current) with
+    | some read => throw (.stale read.identity)
+    | none => pure records.length
+
+def protectedCount (before after : List Record) : Except Failure Nat := do
+  let count ← validate before
+  let _ ← validate after
+  pure count
+
+/-- The callback-free case may use one live validation. An arbitrary callback
+may change any record and therefore supplies an independent return state. -/
+theorem fixed_count_eq_protected (reads : List Record) :
+    protectedCount reads reads = validate reads := by
+  cases result : validate reads <;> simp [protectedCount, result] <;> rfl
+
+theorem issuance_precedes_live_refusal (older forged : Nat) :
+    validate [⟨older, true, false⟩, ⟨forged, false, true⟩] =
+      .error (.unissued forged) := rfl
+
+theorem open_count_needs_return_validation (record : Nat) :
+    protectedCount [⟨record, true, true⟩] [⟨record, true, false⟩] =
+      .error (.stale record) := rfl
+
+end FixedReplay
+
 end LeanPoo.Object
