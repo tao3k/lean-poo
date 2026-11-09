@@ -164,6 +164,94 @@ theorem marked_checkpoint_eq_serial (before : Window) (reads : List Read)
       checkpoint serial before reads action := by
   simp [checkpoint, marked_eq_serial]
 
+/-- Native acquisition authenticates the complete traversal before checking
+any receiver route. Keeping this phase outside the sweep preserves refusals
+when a later record is unissued but an earlier receiver route is invalid. -/
+def preflight (window : Window) : List Read → Except Refusal Unit
+  | [] => .ok ()
+  | read :: tail => (window.issue read).bind fun _ => preflight window tail
+
+def issuedAt (window : Window) (reads : List Read) : Prop :=
+  ∀ read ∈ reads, window.issue read = .ok ()
+
+theorem preflight_ok_iff (window : Window) (reads : List Read) :
+    preflight window reads = .ok () ↔ issuedAt window reads := by
+  induction reads with
+  | nil => simp [preflight, issuedAt]
+  | cons read tail ih =>
+    cases checked : window.issue read <;>
+      simp [preflight, issuedAt, checked, ih, Except.bind]
+
+/-- Only the actual successful preflight in this same pure window permits
+omitting duplicate issuance checks. This is not a retained approval. -/
+def preissued (window : Window) : Window :=
+  { window with issue := fun _ => .ok () }
+
+theorem serial_preissued_eq (window : Window) (reads : List Read)
+    (issued : issuedAt window reads) :
+    serial (preissued window) reads = serial window reads := by
+  induction reads with
+  | nil => rfl
+  | cons read tail ih =>
+    have head := issued read (by simp)
+    have rest : issuedAt window tail := fun child member => issued child (by simp [member])
+    simp only [serial]
+    rw [ih rest]
+    simp [current, preissued, head]
+
+def nativeFixed (window : Window) (reads : List Read) : Except Refusal Unit := do
+  preflight window reads
+  serial (preissued window) reads
+
+def nativeMarked (window : Window) (reads : List Read) : Except Refusal Unit := do
+  preflight window reads
+  marked (preissued window) (markRoutes reads [])
+
+theorem native_fixed_refusals_exact (window : Window) (reads : List Read) :
+    nativeMarked window reads = nativeFixed window reads := by
+  simp [nativeMarked, nativeFixed, marked_eq_serial]
+
+theorem native_preflight_skip_exact (window : Window) (reads : List Read) :
+    nativeFixed window reads = (do preflight window reads; serial window reads) := by
+  unfold nativeFixed
+  cases result : preflight window reads with
+  | error cause => rfl
+  | ok value =>
+    cases value
+    simpa only [Except.bind, Bind.bind] using
+      serial_preissued_eq window reads ((preflight_ok_iff window reads).mp result)
+
+/-- An action may change every guard without changing the traversal. Native
+callback return therefore uses fresh issuance, key, route and live checks. -/
+def nativeCallback (returnCheck : Window → List Read → Except Refusal Unit)
+    (before : Window) (reads : List Read) (action : Unit → Window × Nat) :
+    Except Refusal Nat := do
+  preflight before reads
+  serial before reads
+  let (after, value) := action ()
+  returnCheck after reads
+  pure value
+
+theorem native_callback_return_exact (before : Window) (reads : List Read)
+    (action : Unit → Window × Nat) :
+    nativeCallback (fun window reads => marked window (markRoutes reads [])) before reads action =
+      nativeCallback serial before reads action := by
+  simp [nativeCallback, marked_eq_serial]
+
+private def competingRefusals : Window where
+  issue read := if read.key = 1 then .error .issuance else .ok ()
+  key _ := .ok ()
+  route _ := .error .route
+  live _ := .ok ()
+
+-- Interleaving issuance with route checking would incorrectly prefer route.
+#guard match nativeFixed competingRefusals [⟨0, false, 0⟩, ⟨1, false, 1⟩] with
+  | .error .issuance => true | _ => false
+#guard match serial competingRefusals [⟨0, false, 0⟩, ⟨1, false, 1⟩] with
+  | .error .route => true | _ => false
+#guard match nativeMarked competingRefusals [⟨0, false, 0⟩, ⟨1, false, 1⟩] with
+  | .error .issuance => true | _ => false
+
 def routeMarkers (reads : List Read) (seen : List Nat) : List Nat :=
   (markRoutes reads seen).filterMap fun (read, first) => if first then some read.receiver else none
 
