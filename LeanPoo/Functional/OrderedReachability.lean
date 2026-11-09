@@ -1062,3 +1062,99 @@ theorem empty_owner_index_admits_exactly_nodup (keys : List Nat) :
   simpa using assigned_size_exact (∅ : Std.HashMap Nat Nat) 0 keys
 
 end LeanPoo.Functional.OrderedReachability
+
+namespace LeanPoo.Functional.OrderedReachability
+
+/-- Stop marking at the first duplicate. This makes arbitrary unique rows
+eligible, independent of source order, degree or graph size. -/
+def freshRow (token : Nat) (marks : Std.HashMap Nat Nat) : List Nat → Bool
+  | [] => true
+  | key :: rest =>
+    if marks[key]? = some token then false
+    else freshRow token (marks.insert key token) rest
+
+theorem fresh_row_exact (token : Nat) (marks : Std.HashMap Nat Nat)
+    (seen row : List Nat) (covered : RowCovers marks token seen) :
+    freshRow token marks row = true ↔ row.Nodup ∧ ∀ key ∈ row, key ∉ seen := by
+  induction row generalizing marks seen with
+  | nil => simp [freshRow]
+  | cons key rest ih =>
+    by_cases present : key ∈ seen
+    · rw [freshRow, ite_eq_left ((covered key).mpr present)]
+      constructor
+      · simp
+      · intro unique
+        exact False.elim (unique.2 key (by simp) present)
+    · have miss : marks[key]? ≠ some token := fun found => present ((covered key).mp found)
+      rw [freshRow, ite_eq_right miss, ih _ _ (row_insert_covers covered key)]
+      constructor
+      · rintro ⟨unique, fresh⟩
+        refine ⟨List.nodup_cons.mpr ⟨fun repeated => fresh key repeated (by simp), unique⟩, ?_⟩
+        intro other member
+        rcases List.mem_cons.mp member with same | tail
+        · simpa [same] using present
+        · intro old
+          exact fresh other tail (by simp [old])
+      · rintro ⟨unique, fresh⟩
+        obtain ⟨notRepeated, uniqueTail⟩ := List.nodup_cons.mp unique
+        refine ⟨uniqueTail, ?_⟩
+        intro other member prior
+        rcases List.mem_cons.mp prior with same | old
+        · exact notRepeated (same ▸ member)
+        · exact fresh other (by simp [member]) old
+
+theorem reference_row_unique (pending seen output : List Nat)
+    (unique : pending.Nodup) (fresh : ∀ a ∈ pending, a ∉ seen) :
+    referenceRow pending seen output = (pending.reverse ++ seen, pending.reverse ++ output) := by
+  induction pending generalizing seen output with
+  | nil => simp [referenceRow]
+  | cons a rest ih =>
+    obtain ⟨notRepeated, uniqueTail⟩ := List.nodup_cons.mp unique
+    have absent := fresh a (by simp)
+    have tailFresh : ∀ b ∈ rest, b ∉ a :: seen := by
+      intro b member prior
+      rcases List.mem_cons.mp prior with same | old
+      · exact notRepeated (same ▸ member)
+      · exact fresh b (by simp [member]) old
+    rw [referenceRow, ite_eq_right absent, ih _ _ uniqueTail tailFresh]
+    simp [List.reverse_cons, List.append_assoc]
+
+theorem fresh_row_skips_normalization (token : Nat) (marks : Std.HashMap Nat Nat)
+    (row : List Nat) (emptyEpoch : RowCovers marks token [])
+    (unique : freshRow token marks row = true) : (referenceRow row.reverse [] []).2 = row := by
+  have nodup := ((fresh_row_exact token marks [] row emptyEpoch).mp unique).1
+  have reversed : row.reverse.Nodup := List.pairwise_reverse.mpr (nodup.imp Ne.symm)
+  have result := reference_row_unique row.reverse [] [] reversed (by simp)
+  simpa using congrArg Prod.snd result
+
+/-- Forward and reverse passes can share the existing word table. Epochs for
+prior rows are strictly smaller; neither zero nor the next owner's epoch can
+be mistaken for a present target. -/
+theorem two_row_epochs_fit {owner support : Nat} (inside : owner < support)
+    (bound : 2 * support ≤ 4294967295) :
+    2 * owner < 2 * owner + 1 ∧ 2 * owner + 1 < 2 * owner + 2 ∧
+      2 * owner + 2 ≤ 4294967295 := by omega
+
+/-- Previous row shape only selects which check to attempt; it cannot certify
+the current row. Either choice returns the same rightmost normalization. -/
+theorem choose_row_normalizer (tryForward : Bool) (token : Nat)
+    (marks : Std.HashMap Nat Nat) (row : List Nat)
+    (emptyEpoch : RowCovers marks token []) :
+    (if tryForward && freshRow token marks row then row
+      else (referenceRow row.reverse [] []).2) = (referenceRow row.reverse [] []).2 := by
+  split
+  · rename_i selected
+    simp only [Bool.and_eq_true] at selected
+    exact (fresh_row_skips_normalization token marks row emptyEpoch
+      selected.2).symm
+  · rfl
+
+def nextFreshStreak (streak : Nat) (unique : Bool) : Nat :=
+  if unique then min 2 (streak + 1) else 0
+
+theorem repeat_disables_forward (streak : Nat) : nextFreshStreak streak false = 0 := rfl
+
+theorem two_unique_rows_reenable_forward :
+    nextFreshStreak 0 true < 2 ∧ nextFreshStreak (nextFreshStreak 0 true) true = 2 := by decide
+
+end LeanPoo.Functional.OrderedReachability
