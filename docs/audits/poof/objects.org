@@ -63,6 +63,17 @@ self/super/error record contexts (80 reads).
 
 * Executable representation and meta controls
 
+The =Indexed= key-preparation refinement uses the already admitted C4 layer
+indexes. =prepareKey_sound= preserves the original default pass, inherited
+method chain and arbitrary final self. Concrete other-key method/default
+edits preserve the selected payload projection. =prepareKey_frame= shares
+only the unbound recipe; different receivers can still produce different
+values. Five controls distinguish final self, inherited defaults, false and
+absence. The projection length counts C4 layers rather than all field names.
+This refines the representation unit at paper lines 980–1038. Native payload
+capture, hooks, raw exposure, index construction and latency remain separate
+obligations; no Scheme implementation or speedup follows from these laws.
+
 [[file:../../../Tests/DictionaryRecord.lean][DictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
 inherited values, missing-slot refusals and a cold failing slot.
 [[file:../../../Tests/MetaPrototype.lean][MetaPrototype]] guards all three ordinary metadata slot overrides,
