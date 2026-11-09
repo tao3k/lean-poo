@@ -606,6 +606,7 @@
   "LeanPoo/Object/SimpleCombinationSemantics.lean",
   "LeanPoo/Object/SimplePolicies.lean",
   "LeanPoo/Object/SlotObservation.lean",
+  "LeanPoo/Object/SlotPreparation.lean",
   "LeanPoo/Object/SlotReflection.lean",
   "LeanPoo/Object/SlotSyntax.lean",
   "LeanPoo/Object/SortedInheritance.lean",

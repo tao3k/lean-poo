@@ -74,6 +74,16 @@ This refines the representation unit at paper lines 980–1038. Native payload
 capture, hooks, raw exposure, index construction and latency remain separate
 obligations; no Scheme implementation or speedup follows from these laws.
 
+The =SlotPreparation.EffectfulAdmission= refinement makes installation
+effects explicit. =without_hooks_exact= preserves ordered results, errors
+and final state when each selected write preserves protocol absence.
+=initial_absence_is_insufficient= refutes hoisting on initial absence alone:
+a write between two entries can install a protocol seen by the second entry.
+Gerbil's selected HashTable write route must supply this frame before the
+Scheme loop can use the law. This is an implementation obligation under
+the paper's representation and mutation discussion, not additional coverage
+of a paper algorithm or a measured latency improvement.
+
 [[file:../../../Tests/DictionaryRecord.lean][DictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
 inherited values, missing-slot refusals and a cold failing slot.
 [[file:../../../Tests/MetaPrototype.lean][MetaPrototype]] guards all three ordinary metadata slot overrides,
