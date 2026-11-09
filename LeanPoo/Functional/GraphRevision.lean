@@ -149,3 +149,83 @@ theorem simultaneous_revision_dirty {n : Nat} {oldEdge newEdge : Fin n → Fin n
   obtain ⟨node,member,reads⟩ := affected
   exact migration_reader_dirty old next body node reader (changes node member) reads
 end LeanPoo.Functional.StrongComponents
+
+/-! The owned Graph index and Slot directory order Scheme symbols by their
+stored hash and exact identity. A different symbol with equal hash needs
+the serial comparison. The comparison never observes symbol spelling. -/
+namespace LeanPoo.Functional.GeneralizedGraph.OwnerOrder
+
+attribute [local instance] lexOrd
+
+variable {Owner Value : Type}
+
+def ownerKey (hash : Owner → Int) (serial : Owner → Nat) (owner : Owner) : Int × Nat :=
+  (hash owner, serial owner)
+
+def fastCompare [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat)
+    (left right : Owner) : Ordering :=
+  if left = right then .eq
+  else (compare (hash left) (hash right)).then (compare (serial left) (serial right))
+
+theorem fast_eq_lex [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat) :
+    fastCompare hash serial = compareOn (ownerKey hash serial) := by
+  funext left right
+  by_cases same : left = right
+  · subst right
+    rw [show fastCompare hash serial left left = .eq by simp [fastCompare]]
+    exact (Std.ReflCmp.compare_self (cmp := compareOn (ownerKey hash serial)) (a := left)).symm
+  · simp only [fastCompare, same, ite_false]
+    rfl
+
+theorem owner_order [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat) :
+    Std.TransCmp (fastCompare hash serial) := by
+  rw [fast_eq_lex]
+  infer_instance
+
+theorem compares_equal_iff [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat)
+    (unique : ∀ {a b}, serial a = serial b → a = b) (left right : Owner) :
+    fastCompare hash serial left right = .eq ↔ left = right := by
+  rw [fast_eq_lex, compareOn, Std.compare_eq_iff_eq]
+  constructor
+  · intro h
+    exact unique (congrArg Prod.snd h)
+  · exact congrArg (ownerKey hash serial)
+
+theorem lookup_after_write [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat)
+    (unique : ∀ {a b}, serial a = serial b → a = b)
+    (base : Owner → Value) (key query : Owner) (value : Value) :
+    (if fastCompare hash serial key query = .eq then value else base query) =
+    (if key = query then value else base query) := by
+  simp only [compares_equal_iff hash serial unique]
+
+theorem hash_branch [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat)
+    {left right : Owner} (different : hash left ≠ hash right) :
+    fastCompare hash serial left right = compare (hash left) (hash right) := by
+  have identity : left ≠ right := fun same => different (congrArg hash same)
+  have unequal : compare (hash left) (hash right) ≠ .eq :=
+    fun equal => different (Std.compare_eq_iff_eq.mp equal)
+  unfold fastCompare
+  rw [ite_eq_right identity]
+  generalize h : compare (hash left) (hash right) = order at unequal ⊢
+  cases order <;> simp_all [Ordering.then]
+
+theorem hash_collision_uses_serial [DecidableEq Owner] (hash : Owner → Int)
+    (serial : Owner → Nat) {left right : Owner}
+    (different : left ≠ right) (sameHash : hash left = hash right) :
+    fastCompare hash serial left right = compare (serial left) (serial right) := by
+  simp [fastCompare, different, sameHash, Std.ReflCmp.compare_self, Ordering.then]
+
+/-- Full construction and a local insertion agree when both preserve the
+exact directory and produce a sorted shape under the shared comparator. -/
+theorem canonical_shape [DecidableEq Owner] (hash : Owner → Int) (serial : Owner → Nat)
+    (unique : ∀ {a b}, serial a = serial b → a = b) {full edited : List Owner}
+    (fullSorted : full.Pairwise (fun a b => (fastCompare hash serial a b).isLE))
+    (editedSorted : edited.Pairwise (fun a b => (fastCompare hash serial a b).isLE))
+    (sameOwners : full.Perm edited) : full = edited := by
+  letI : Std.TransCmp (fastCompare hash serial) := owner_order hash serial
+  refine sameOwners.eq_of_pairwise ?_ fullSorted editedSorted
+  intro a b _ _ forward reverse
+  exact (compares_equal_iff hash serial unique a b).mp
+    (Std.OrientedCmp.isLE_antisymm forward reverse)
+
+end LeanPoo.Functional.GeneralizedGraph.OwnerOrder
