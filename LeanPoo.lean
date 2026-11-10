@@ -305,6 +305,7 @@ import LeanPoo.Functional.FeedbackCache
 import LeanPoo.Functional.NonlocalDeclarations
 
 import LeanPoo.Functional.StrongComponents
+import LeanPoo.Functional.LocalSccRegion
 
 import LeanPoo.Functional.GraphRevision
 import LeanPoo.Prototype.ComponentClosure
