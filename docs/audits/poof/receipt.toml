@@ -569,6 +569,7 @@
   "LeanPoo/Object/DeclarationOrder.lean",
   "LeanPoo/Object/Definition.lean",
   "LeanPoo/Object/DispatchTable.lean",
+  "LeanPoo/Object/FixedFieldLayout.lean",
   "LeanPoo/Object/FreshReadRoots.lean",
   "LeanPoo/Object/Generic.lean",
   "LeanPoo/Object/Incremental.lean",
