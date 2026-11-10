@@ -145,6 +145,17 @@ The native source capsule, exact ordinal issuer and persistent index handoff
 remain implementation obligations. No native source-sharing speedup follows
 from these proofs alone.
 
+=AdmissionBoundary= supplies a general adaptive-query lower bound. If an
+audit is sound for every unknown input, each accepted run reads every required
+independent admission fact; repeated reads cannot reduce that N-read bound.
+Agreement on an executed trace preserves both acceptance and adaptive choices.
+The generated-recipe domain instead derives callability from actual typed
+constructors without probing arbitrary raw fields or evaluating bodies.
+The no-read verdict is proved unsound for universal unknown-source admission.
+This is a query-model boundary, not native timing or source custody evidence.
+Payload capture, refusal order, actual writers, shared metadata and independent
+callback checks remain the separate contracts above.
+
 =SlotObservation.NameCapture= makes the producer/canonical/presentation
 boundary explicit. A borrowed producer spine can authenticate two coordinated
 heap edits as if they were the original payload. A captured private spine
