@@ -74,6 +74,25 @@ This refines the representation unit at paper lines 980–1038. Native payload
 capture, hooks, raw exposure, index construction and latency remain separate
 obligations; no Scheme implementation or speedup follows from these laws.
 
+The =SlotPreparation.PayloadCapture= extension specifies the preceding
+closed source phase. A handle names an actual required validation/capture
+field, not a whole receiver revision. Successful capture reads the complete
+scheduled support and preserves its order; append composition preserves the
+first error. Equality of the actual field reads transports that captured
+result across a source change outside its support. Constructive controls
+reject skipping an invalid unrelated contribution, reordering two failures,
+and moving a constant payload capture across an author callback.
+
+This is a project capture contract, not an additional implemented paper unit
+or a complete Scheme source issuer. Its read schedule must be derived from
+the actual preparation phases: stock validation can inspect a shadowed tag
+without capturing a discarded payload. The model does not authorize reading
+all discarded fields, freezing every reachable value, sharing receiver
+results, skipping hooks, or treating a sealed container as immutable support.
+The existing =Indexed= laws still own demanded method resolution. Native
+write coverage, raw method-table exposure and phase correspondence remain
+integration obligations before a point-preparation runtime can use it.
+
 The =SlotPreparation.EffectfulAdmission= refinement makes installation
 effects explicit. =without_hooks_exact= preserves ordered results, errors
 and final state when each selected write preserves protocol absence.
