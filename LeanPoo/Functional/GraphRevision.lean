@@ -1,4 +1,5 @@
 import LeanPoo.Functional.StrongComponents
+import Std.Data.HashSet.Lemmas
 
 /-! Immutable batches precede whole SCC reconstruction and joint admission.
 Future-work laws require accepted finite graph certificates and declared reads. -/
@@ -78,6 +79,14 @@ def Revision.apply {spec : Declaration Key Value} (revision : Revision spec) : D
 theorem Revision.apply_keys {spec : Declaration Key Value} (revision : Revision spec) :
     revision.apply.keys = spec.keys := rfl
 
+/-- Only a code-row edit can change declared dependencies. Base-value edits
+may seed invalidation, but cannot silently introduce a new consumer row. -/
+theorem Revision.apply_reads_frame {spec : Declaration Key Value} (revision : Revision spec)
+    (key : Key) (noCode : key ∉ revision.codes.map Sigma.fst) :
+    revision.apply.reads key = spec.reads key := by
+  simp [Declaration.reads, Declaration.footprint, Revision.apply,
+    selectEdit_none revision.codes key noCode]
+
 /-- All staged method bodies appear together in the source used for reconstruction. -/
 theorem Revision.apply_code_at {spec : Declaration Key Value} (revision : Revision spec)
     (key : Key) (code : Option (Code Key Value key)) (member : ⟨key,code⟩ ∈ revision.codes) :
@@ -99,6 +108,101 @@ theorem Revision.apply_resolve_frame {spec : Declaration Key Value} (revision : 
 end LeanPoo.Functional.GeneralizedGraph
 
 namespace LeanPoo.Functional.StrongComponents
+
+/-- Follow an old path until its first edited consumer row. That vertex is
+already an invalidation root, so its changed outgoing edges need not be reused.
+This proof works with cycles and does not require a topological order. -/
+private theorem transfer_to_edited_root {n : Nat}
+    (old next : Fin n → Fin n → Bool) (edited : Fin n → Bool)
+    (frame : ∀ owner, edited owner = false → ∀ provider, old owner provider = next owner provider)
+    {owner root : Fin n} (path : Reach old owner root) (changed : edited root = true) :
+    ∃ target, edited target = true ∧ Reach next owner target := by
+  induction path with
+  | refl root => exact ⟨root, changed, .refl root⟩
+  | @step owner provider root edge rest ih =>
+    cases selected : edited owner with
+    | true => exact ⟨owner, selected, .refl owner⟩
+    | false =>
+      obtain ⟨target, dirty, reached⟩ := ih changed
+      exact ⟨target, dirty, .step ((frame owner selected provider) ▸ edge) reached⟩
+
+/-- If every changed row's owner is a root, the OLD reverse index finds exactly
+the same invalidated owners as the successor graph. New/deleted dependencies
+on edited consumers do not require a second reverse traversal. Node identity
+and support must be unchanged; SCC membership changes need their own adapter. -/
+theorem edited_root_closure_exact {n : Nat}
+    (old next : Fin n → Fin n → Bool) (edited : Fin n → Bool)
+    (frame : ∀ owner, edited owner = false → ∀ provider, old owner provider = next owner provider)
+    (owner : Fin n) :
+    (∃ root, edited root = true ∧ Reach old owner root) ↔
+      ∃ root, edited root = true ∧ Reach next owner root := by
+  constructor
+  · rintro ⟨root, changed, reached⟩
+    exact transfer_to_edited_root old next edited frame reached changed
+  · rintro ⟨root, changed, reached⟩
+    exact transfer_to_edited_root next old edited
+      (fun node clean provider => (frame node clean provider).symm) reached changed
+
+/-- Omitting the consumer whose row changed invalidates the old-index reuse
+premise. A new edge can otherwise introduce a previously unreachable reader. -/
+theorem missing_edited_consumer_is_unsound :
+    let old : Fin 2 → Fin 2 → Bool := fun _ _ => false
+    let next : Fin 2 → Fin 2 → Bool := fun a b => decide (a = 0 ∧ b = 1)
+    let edited : Fin 2 → Bool := fun node => decide (node = 1)
+    (¬ ∃ root, edited root = true ∧ Reach old 0 root) ∧
+      (∃ root, edited root = true ∧ Reach next 0 root) := by
+  dsimp only
+  constructor
+  · rintro ⟨root, changed, reached⟩
+    cases reached with
+    | refl => simp at changed
+    | step edge _ => cases edge
+  · exact ⟨1, by decide, .step (by decide) (.refl 1)⟩
+
+/-- Count matching DISTINCT replacement roots in the native hash index. Hash
+collisions do not confer membership: lawful key equality is still required. -/
+theorem retained_root_count_exact {Key : Type} [BEq Key] [LawfulBEq Key]
+    [Hashable Key] [LawfulHashable Key] (previous current : Std.HashSet Key) :
+    (current.filter previous.contains).size = previous.size ↔
+      ∀ root, root ∈ previous → root ∈ current := by
+  have same : (current.filter previous.contains).size =
+      (previous.filter current.contains).size := by
+    apply Std.HashSet.Equiv.size_eq
+    apply Std.HashSet.equiv_iff_forall_mem_iff.mpr
+    intro root
+    simp [Std.HashSet.mem_filter, Std.HashSet.contains_iff_mem, and_comm]
+  rw [same, Std.HashSet.size_filter_eq_size_iff]
+  simp [Std.HashSet.get_eq, Std.HashSet.contains_iff_mem]
+
+/-- The resumed work's cumulative roots equal the replacement closure only
+when all preceding roots remain. This condition comes from the real root set. -/
+theorem accumulated_roots_exact {n : Nat}
+    (edge : Fin n → Fin n → Bool) (previous current : Fin n → Bool)
+    (retained : ∀ root, previous root = true → current root = true) (owner : Fin n) :
+    (∃ root, (previous root || current root) = true ∧ Reach edge owner root) ↔
+      ∃ root, current root = true ∧ Reach edge owner root := by
+  constructor
+  · rintro ⟨root, selected, reached⟩
+    exact ⟨root, (Bool.or_eq_true_iff.mp selected).elim (retained root) id, reached⟩
+  · rintro ⟨root, selected, reached⟩
+    exact ⟨root, Bool.or_eq_true_iff.mpr (.inr selected), reached⟩
+
+/-- A revoked root must not survive just because its old bucket was visited.
+A nonmonotone complete proposal therefore needs fresh old-index work. -/
+theorem dropped_roots_require_restart :
+    let edge : Fin 2 → Fin 2 → Bool := fun _ _ => false
+    let previous : Fin 2 → Bool := fun root => decide (root = 0)
+    let current : Fin 2 → Bool := fun root => decide (root = 1)
+    (∃ root, (previous root || current root) = true ∧ Reach edge 0 root) ∧
+      ¬ (∃ root, current root = true ∧ Reach edge 0 root) := by
+  dsimp only
+  constructor
+  · exact ⟨0, by decide, .refl 0⟩
+  · rintro ⟨root, changed, reached⟩
+    cases reached with
+    | refl => simp at changed
+    | step edge _ => cases edge
+
 /-- Independent revision reasons combine by union, with no lost dirty reader. -/
 theorem Checked.dirty_union {n : Nat} {edge : Fin n → Fin n → Bool} (graph : Checked edge)
     (left right : Fin n → Bool) (key : Fin n) :
