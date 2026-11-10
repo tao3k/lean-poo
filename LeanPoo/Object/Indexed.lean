@@ -237,6 +237,128 @@ theorem IndexedPlan.keyProjection_length {Key : Type u} {Value : Key → Type v}
     (indexed.keyProjection key).length = indexed.layers.length := by
   simp [IndexedPlan.keyProjection]
 
+namespace OrderedContributions
+
+/- The native prototype map permits multiple contributions at the same key.
+The last-write-wins declaration model above cannot justify dropping those
+rows: every computed contribution may request sup. This index retains the
+whole chronological bucket, without binding it to a receiver. -/
+
+def matching {Key Payload : Type} [DecidableEq Key]
+    (rows : List (Key × Payload)) (key : Key) : List Payload :=
+  rows.filterMap fun row => if row.1 = key then some row.2 else none
+
+def push {Key Payload : Type} [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (table : Std.DHashMap Key (fun _ => List Payload)) (row : Key × Payload) :=
+  table.insert row.1 (row.2 :: (table.get? row.1).getD [])
+
+/-- One chronological admission pass. Each contribution uses a cons, never
+append to a growing bucket. This is an algorithm, not a latency theorem for
+the host's hash implementation. -/
+def build {Key Payload : Type} [BEq Key] [LawfulBEq Key] [Hashable Key]
+    (rows : List (Key × Payload)) : Std.DHashMap Key (fun _ => List Payload) :=
+  rows.foldl push {}
+
+private theorem fold_bucket {Key Payload : Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq Key]
+    (rows : List (Key × Payload))
+    (table : Std.DHashMap Key (fun _ => List Payload)) (key : Key) :
+    ((rows.foldl push table).get? key).getD [] =
+      (matching rows key).reverse ++ (table.get? key).getD [] := by
+  induction rows generalizing table with
+  | nil => simp [matching]
+  | cons row rest ih =>
+    simp only [List.foldl_cons]
+    rw [ih]
+    rcases row with ⟨name, payload⟩
+    by_cases same : name = key
+    · subst name
+      simp [push, matching, List.reverse_cons,
+        List.append_assoc]
+    · simp [push, Std.DHashMap.get?_insert, matching, same]
+
+/-- Reversing only the selected bucket reproduces every contribution in
+its original order, including duplicates. No receiver/value state is stored. -/
+theorem bucket_exact {Key Payload : Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq Key]
+    (rows : List (Key × Payload)) (key : Key) :
+    (((build rows).get? key).getD []).reverse = matching rows key := by
+  rw [build, fold_bucket]
+  simp
+
+/-- A concrete sibling insertion changes neither the ordered payloads nor
+their multiplicity. An issuer must still authenticate that source edit. -/
+theorem other_key_frame {Key Payload : Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq Key]
+    (before after : List (Key × Payload)) (key changed : Key)
+    (payload : Payload) (other : changed ≠ key) :
+    (((build (before ++ (changed, payload) :: after)).get? key).getD []).reverse =
+      (((build (before ++ after)).get? key).getD []).reverse := by
+  simp [bucket_exact, matching, List.filterMap_append, other]
+
+/-- Native prototype-map stores the first ordinal followed by later ordinals
+in reverse insertion order. That spine is not already chronological. The
+singleton physical representation is a scalar, normalized here to one item. -/
+def chronologicalPositions : List Nat → List Nat
+  | [] => []
+  | first :: later => first :: later.reverse
+
+def addPosition : List Nat → Nat → List Nat
+  | [], position => [position]
+  | first :: later, position => first :: position :: later
+
+theorem positions_append_exact (positions : List Nat) (position : Nat) :
+    chronologicalPositions (addPosition positions position) =
+      chronologicalPositions positions ++ [position] := by
+  cases positions <;> simp [chronologicalPositions, addPosition, List.reverse_cons]
+
+theorem duplicate_position_control :
+    chronologicalPositions [0, 3, 2, 1] = [0, 1, 2, 3] := rfl
+
+def reference {Key Receiver Result : Type} [DecidableEq Key]
+    (rows : List (Key × Prototype.SlotSpec Receiver Result)) (key : Key)
+    (parent : Prototype.Method Receiver Result) : Prototype.Method Receiver Result :=
+  rows.foldl (fun inherited row =>
+    if row.1 = key then row.2.withParent inherited else inherited) parent
+
+theorem matching_fold {Key Receiver Result : Type} [DecidableEq Key]
+    (rows : List (Key × Prototype.SlotSpec Receiver Result)) (key : Key)
+    (parent : Prototype.Method Receiver Result) :
+    (matching rows key).foldl (fun inherited spec => spec.withParent inherited) parent =
+      reference rows key parent := by
+  induction rows generalizing parent with
+  | nil => rfl
+  | cons row rest ih =>
+    by_cases same : row.1 = key <;>
+      simp [matching, reference, same, List.foldl_cons] at *
+    · exact ih _
+    · exact ih _
+
+/-- The indexed bucket composes the exact same methods for arbitrary final
+self and delayed sup. This does not certify native admission, source capture,
+default-pass ordering, hooks, or the cost of building the index. -/
+theorem indexed_fold_exact {Key Receiver Result : Type}
+    [BEq Key] [LawfulBEq Key] [Hashable Key] [DecidableEq Key]
+    (rows : List (Key × Prototype.SlotSpec Receiver Result)) (key : Key)
+    (parent : Prototype.Method Receiver Result) :
+    ((((build rows).get? key).getD []).reverse).foldl
+      (fun inherited spec => spec.withParent inherited) parent =
+      reference rows key parent := by
+  rw [bucket_exact, matching_fold]
+
+private def repeated : List (Nat × Prototype.SlotSpec Unit Nat) :=
+  [(0, .constant 1), (0, .modify (· + 2)), (1, .constant 99), (0, .modify (· * 3))]
+
+/-- Collapsing a native bucket to either its first or last method loses sup.
+The indexed resolver must preserve all three contributions: (1 + 2) * 3. -/
+theorem duplicate_methods_are_not_last_write_wins :
+    reference repeated 0 Prototype.Method.identity () (fun _ => 0) = 9 ∧
+    (Prototype.SlotSpec.modify (· * 3)).withParent
+      Prototype.Method.identity () (fun _ => 0) = 0 := by
+  constructor <;> rfl
+
+end OrderedContributions
+
 private def preparedReceiverControl : Self Nat (fun _ => Nat) → Option Nat :=
   prepareProjectedKey (key := 0)
     [(some 10, none), (none, some (.self fun self => self 1)),

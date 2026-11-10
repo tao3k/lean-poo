@@ -74,6 +74,19 @@ This refines the representation unit at paper lines 980–1038. Native payload
 capture, hooks, raw exposure, index construction and latency remain separate
 obligations; no Scheme implementation or speedup follows from these laws.
 
+The =OrderedContributions= refinement separates native ordered method buckets
+from the last-write-wins declaration model above. =bucket_exact= retains every
+same-key contribution in chronological order; =indexed_fold_exact= preserves
+the original =SlotSpec.withParent= fold for arbitrary final self and delayed
+super. =other_key_frame= covers an actual unrelated-key insertion. The native
+name/ordinal directory stores the first ordinal followed by later ordinals in
+reverse insertion order; =positions_append_exact= proves its exact decoding.
+The duplicate-method control computes =(1 + 2) * 3 = 9=, where last-only
+selection against a zero base gives 0. These are typed row/index laws, not
+permission to skip original admission, capture defaults early or bypass hooks.
+The native index primitive still needs integration with the preparation issuer
+before it can qualify sparse first demand.
+
 The =SlotPreparation.PayloadCapture= extension specifies the preceding
 closed source phase. A handle names an actual required validation/capture
 field, not a whole receiver revision. Successful capture reads the complete
@@ -103,6 +116,15 @@ no body is evaluated by this classification. A hook-repair counterexample
 requires the original hookful path: an author hook may turn a non-callable
 next result into a valid procedure. Native capture issuance, method-cell
 storage/reflection, supported concurrency and actual performance remain open.
+
+The =PendingMethod= refinement models one existing method cell as pending
+captured recipe or ready procedure. Successful publication installs exactly
+the returned procedure identity and retires the recipe in one transition.
+Later linearized forces retain that identity even after unrelated allocation.
+Body invocation follows publication: it may have effects or return errors,
+without changing the bound method into a cached business result. These are
+sequential/linearization laws; the native mutex and continuation frame require
+their own qualification. They introduce no second evaluator or value cache.
 
 The =SlotPreparation.EffectfulAdmission= refinement makes installation
 effects explicit. =without_hooks_exact= preserves ordered results, errors

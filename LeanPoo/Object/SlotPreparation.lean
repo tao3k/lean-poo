@@ -358,6 +358,107 @@ theorem hooks_can_repair_a_noncallable_result :
 
 end CapturedBinding
 
+namespace PendingMethod
+
+/-- One existing method cell, not a second store of business results. A
+successful atomic publication retires the captured recipe in the same step. -/
+inductive Cell (Recipe Method : Type) where
+  | pending (recipe : Recipe)
+  | ready (method : Method)
+
+/-- Binding may allocate a fresh procedure identity. Only private allocation
+state is available to it; native correspondence must derive this frame from
+the captured SlotSpec kernel, not a caller purity declaration. -/
+def force {Recipe Method Alloc Error : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (cell : Cell Recipe Method) (allocation : Alloc) :
+    Except Error Method × Cell Recipe Method × Alloc :=
+  match cell with
+  | .ready method => (.ok method, cell, allocation)
+  | .pending recipe =>
+      let (result, next) := materialize recipe allocation
+      match result with
+      | .error cause => (.error cause, cell, next)
+      | .ok method => (.ok method, .ready method, next)
+
+theorem force_ready {Recipe Method Alloc Error : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (method : Method) (allocation : Alloc) :
+    force materialize (.ready method) allocation =
+      (.ok method, .ready method, allocation) := rfl
+
+/-- The successful cell contains exactly the returned identity, even when
+the allocator can create a different identity on every materialization. -/
+theorem success_installs_identity {Recipe Method Alloc Error : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (cell : Cell Recipe Method) (allocation : Alloc) (method : Method)
+    (accepted : (force materialize cell allocation).1 = .ok method) :
+    (force materialize cell allocation).2.1 = .ready method := by
+  cases cell with
+  | ready previous => cases accepted; rfl
+  | pending recipe =>
+    cases result : materialize recipe allocation with
+    | mk value next =>
+      cases value with
+      | error cause => simp [force, result] at accepted
+      | ok found =>
+        simp only [force, result, Except.ok.injEq] at accepted
+        cases accepted
+        simp [force, result]
+
+/-- Every linearization of concurrent first forces returns the winner after
+one success. Unrelated intervening allocations cannot change that identity. -/
+theorem force_after_success {Recipe Method Alloc Error : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (cell : Cell Recipe Method) (allocation nextAllocation : Alloc) (method : Method)
+    (accepted : (force materialize cell allocation).1 = .ok method) :
+    force materialize (force materialize cell allocation).2.1 nextAllocation =
+      (.ok method, .ready method, nextAllocation) := by
+  rw [success_installs_identity materialize cell allocation method accepted]
+  rfl
+
+/-- User invocation follows the method publication boundary. Its arbitrary
+result may itself encode body errors; its world effects are not rolled back.
+The method cell never contains that result. -/
+def call {Recipe Method Alloc Error World Result : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (invoke : Method → World → Result × World)
+    (cell : Cell Recipe Method) (allocation : Alloc) (world : World) :
+    (Except Error Result × World) × Cell Recipe Method × Alloc :=
+  let (bound, nextCell, nextAllocation) := force materialize cell allocation
+  match bound with
+  | .error cause => ((.error cause, world), nextCell, nextAllocation)
+  | .ok method =>
+      let (result, nextWorld) := invoke method world
+      ((.ok result, nextWorld), nextCell, nextAllocation)
+
+theorem call_ready {Recipe Method Alloc Error World Result : Type}
+    (materialize : Recipe → Alloc → Except Error Method × Alloc)
+    (invoke : Method → World → Result × World)
+    (method : Method) (allocation : Alloc) (world : World) :
+    call materialize invoke (.ready method) allocation world =
+      ((.ok (invoke method world).1, (invoke method world).2), .ready method, allocation) := rfl
+
+private def freshMethod (_ : Unit) (allocation : Nat) : Except Unit Nat × Nat :=
+  (.ok allocation, allocation + 1)
+
+/-- Repeated body invocation has different results and effects while method
+identity remains stable. Memoizing the business result in this cell is wrong. -/
+theorem method_memoization_is_not_result_memoization :
+    call freshMethod (fun _ count => (count, count + 1))
+      (.pending ()) 0 0 = ((.ok 0, 1), .ready 0, 1) ∧
+    call freshMethod (fun _ count => (count, count + 1))
+      (.ready 0) 17 1 = ((.ok 1, 2), .ready 0, 17) := by
+  constructor <;> rfl
+
+/-- A body failure retains the published method and the body's world effect.
+It must not turn the method cell into a cached failure or rerun binding. -/
+theorem body_failure_retains_method :
+    call freshMethod (fun _ count => ((Except.error 7 : Except Nat Nat), count + 1))
+      (.pending ()) 0 0 = ((.ok (.error 7), 1), .ready 0, 1) := rfl
+
+end PendingMethod
+
 -- In the absence of a protocol, the old per-slot C4 walk visits the complete
 -- receiver precedence list. The stock lane makes that same check once.
 def stockProtocolVisits (precedence slots : Nat) : Nat :=
