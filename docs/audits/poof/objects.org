@@ -93,6 +93,17 @@ The existing =Indexed= laws still own demanded method resolution. Native
 write coverage, raw method-table exposure and phase correspondence remain
 integration obligations before a point-preparation runtime can use it.
 
+The =CapturedBinding= refinement supplies a narrower constructive step.
+After original tag admission and payload capture, =newest_callable_exact=
+classifies each native most-specific-first chain from its captured head,
+without constructing receiver method closures. =all_keys_refusal_exact=
+preserves the complete ordered callable-check result and first failing key.
+Unused malformed thunk payloads remain hidden by the same retained wrappers;
+no body is evaluated by this classification. A hook-repair counterexample
+requires the original hookful path: an author hook may turn a non-callable
+next result into a valid procedure. Native capture issuance, method-cell
+storage/reflection, supported concurrency and actual performance remain open.
+
 The =SlotPreparation.EffectfulAdmission= refinement makes installation
 effects explicit. =without_hooks_exact= preserves ordered results, errors
 and final state when each selected write preserves protocol absence.

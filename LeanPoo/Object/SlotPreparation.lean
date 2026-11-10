@@ -235,6 +235,129 @@ theorem capture_cannot_move_across_callback :
 
 end PayloadCapture
 
+namespace CapturedBinding
+
+/-- Method cells distinguish a procedure from a malformed thunk payload.
+Computed bodies may inspect or invoke their exact inherited cell. A bad
+self/computed function is represented by a body that fails when invoked,
+not an invented preparation-time rejection. -/
+inductive Target (Value : Type) where
+  | procedure (body : Unit → Value)
+  | nonCallable
+
+def Target.callable {Value : Type} : Target Value → Bool
+  | .procedure _ => true
+  | .nonCallable => false
+
+/-- The four stock SlotSpec constructors AFTER their original tag admission
+and payload capture. No author getter, declaration callback or hook runs here.
+Opaque Value may include references or an effectful computation; binding
+does not invoke any slot body. -/
+inductive Spec (Self Value : Type) where
+  | constant (value : Value)
+  | thunk (target : Target Value)
+  | self (body : Self → Value)
+  | computed (body : Self → Target Value → Value)
+
+/-- The ordinary apply-slot-spec step, retaining native lazy parent behavior.
+The inherited cell is not invoked while constructing a child procedure. -/
+def bind {Self Value : Type} (receiver : Self) :
+    Spec Self Value → Target Value → Target Value
+  | .constant value, _ => .procedure (fun _ => value)
+  | .thunk target, _ => target
+  | .self body, _ => .procedure (fun _ => body receiver)
+  | .computed body, inherited => .procedure (fun _ => body receiver inherited)
+
+/-- Classify the final procedure without constructing its receiver closure.
+This checks only what stock binding checks: a malformed inner thunk may be
+hidden, whereas a malformed final thunk must refuse on the hook-free path. -/
+def classified {Self Value : Type} : Spec Self Value → Bool
+  | .thunk target => target.callable
+  | _ => true
+
+theorem bind_callable {Self Value : Type} (receiver : Self)
+    (spec : Spec Self Value) (inherited : Target Value) :
+    (bind receiver spec inherited).callable = classified spec := by
+  cases spec <;> rfl
+
+def bindChain {Self Value : Type} (receiver : Self)
+    (specs : List (Spec Self Value)) (inherited : Target Value) : Target Value :=
+  specs.foldl (fun previous spec => bind receiver spec previous) inherited
+
+def classifyChain {Self Value : Type}
+    (specs : List (Spec Self Value)) (inherited : Bool) : Bool :=
+  specs.foldl (fun _ spec => classified spec) inherited
+
+/-- An exact rejection test for arbitrary captured chains, receivers and
+inherited cells. It allocates no receiver method closure and evaluates no
+business body. The law does not omit earlier source/tag admission. -/
+theorem chain_callable_exact {Self Value : Type} (receiver : Self)
+    (specs : List (Spec Self Value)) (inherited : Target Value) :
+    (bindChain receiver specs inherited).callable =
+      classifyChain specs inherited.callable := by
+  induction specs generalizing inherited with
+  | nil => rfl
+  | cons spec rest ih =>
+    change (bindChain receiver rest (bind receiver spec inherited)).callable =
+      classifyChain rest (classified spec)
+    rw [ih, bind_callable]
+
+/-- Native contribution chains already store the most-specific entry first.
+Checking that captured head is constant structural work per key; no scan of
+the retained suffix and no receiver closure is needed. -/
+def classifyNewest {Self Value : Type} : List (Spec Self Value) → Bool → Bool
+  | [], inherited => inherited
+  | spec :: _, _ => classified spec
+
+theorem newest_callable_exact {Self Value : Type} (receiver : Self)
+    (newestFirst : List (Spec Self Value)) (inherited : Target Value) :
+    (bindChain receiver newestFirst.reverse inherited).callable =
+      classifyNewest newestFirst inherited.callable := by
+  cases newestFirst with
+  | nil => rfl
+  | cons spec rest =>
+    simp only [bindChain, List.reverse_cons, List.foldl_append,
+      List.foldl_cons, List.foldl_nil, bind_callable, classifyNewest]
+
+def firstRefusal {Key : Type} : List (Key × Bool) → Except Key Unit
+  | [] => .ok ()
+  | (key, callable) :: rest => if callable then firstRefusal rest else .error key
+
+/-- Eager binding for every key followed by the original ordered callable
+checks has exactly the same acceptance/first error as classification of the
+captured chains. Native enumeration and callback-free routes remain premises
+of the adapter; no protocol-presence Boolean is trusted from a caller. -/
+theorem all_keys_refusal_exact {Key Self Value : Type} (receiver : Self)
+    (rows : List (Key × List (Spec Self Value))) (inherited : Target Value) :
+    firstRefusal (rows.map fun row =>
+      (row.1, (bindChain receiver row.2.reverse inherited).callable)) =
+    firstRefusal (rows.map fun row =>
+      (row.1, classifyNewest row.2 inherited.callable)) := by
+  congr 1
+  apply List.map_congr_left
+  intro row _
+  rw [newest_callable_exact]
+
+/-- A final constant hides a malformed thunk; a computed wrapper is itself
+callable even if its body will later report a failure. Neither case permits
+inventing an eager validation of unused author functions. -/
+theorem retained_wrapper_is_not_an_eager_body_check :
+    classifyChain (Self := Unit) (Value := Nat)
+      [.thunk .nonCallable, .constant 7] true = true ∧
+    classifyChain (Self := Unit) (Value := Nat)
+      [.thunk .nonCallable, .computed (fun _ _ => 9)] true = true := by
+  constructor <;> rfl
+
+/-- The classifier is invalid across an author hook: a hook can replace a
+non-callable next result with a valid procedure before stock validation. -/
+theorem hooks_can_repair_a_noncallable_result :
+    Target.callable (Target.nonCallable : Target Nat) = false ∧
+    Target.callable ((fun (_ : Target Nat) => .procedure (fun _ => 7))
+      .nonCallable) = true := by
+  constructor <;> rfl
+
+end CapturedBinding
+
 -- In the absence of a protocol, the old per-slot C4 walk visits the complete
 -- receiver precedence list. The stock lane makes that same check once.
 def stockProtocolVisits (precedence slots : Nat) : Nat :=
