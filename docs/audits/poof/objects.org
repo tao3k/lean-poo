@@ -87,6 +87,26 @@ permission to skip original admission, capture defaults early or bypass hooks.
 The native index primitive still needs integration with the preparation issuer
 before it can qualify sparse first demand.
 
+The =SourcePreparation= extension derives a private source cut from the four
+constructors emitted by =object/init=. Creation normalizes payloads once;
+issuance borrows that retained array rather than mapping the complete source
+again. Reachable allocation/exposure/write operations derive writer coverage.
+An unexposed cell cannot be changed through that writer; exposure precedes
+raw access and revokes future private issuance. Writes preserve the old
+prepared receiver's immutable recipes, while ordinary new capture sees the
+changed raw field. A constructive malformed-thunk trace shows that equal
+source identity is insufficient and that the old cut cannot authorize new
+capture. Foreign source handles refuse even after a fresh source exposes the
+same ordinal. Ordered capture equivalence reuses =PayloadCapture.capture_frame=.
+
+This is a constructor/exposure contract, not verification of arbitrary Scheme
+heap writes. The native issuer must derive fresh identity from allocation and
+cover every public raw exposure route before using it. Raw caller-supplied
+SlotSpecs, declarations, protocols, names and default-pass rules retain their
+own admission. Captured source recipes are not receiver values or currentness
+approvals across an author effect. The runtime representation and complete
+first-demand path remain open.
+
 The =SlotPreparation.PayloadCapture= extension specifies the preceding
 closed source phase. A handle names an actual required validation/capture
 field, not a whole receiver revision. Successful capture reads the complete
