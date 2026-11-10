@@ -301,4 +301,119 @@ theorem old_cut_cannot_certify_new_capture :
   simp [rawAt, changedControl, exposedControl, freshControl, allocate,
     Recipe.capture, CapturedBinding.classified, CapturedBinding.Target.callable] at classified
 
+/-- An uncovered runtime/MOP field write bypasses `expose` and `write`.
+This is deliberately NOT a supported Source transition. It models the gap
+that must be closed before applying this model to mutable Scheme SlotSpecs. -/
+private def runtimeBypassControl : Source Unit Nat :=
+  { freshControl with writes := fun index =>
+      if index = 0 then some (.thunk .nonCallable) else none }
+
+/-- Neither allocation identity nor an unexposed marker detects an uncovered
+runtime write. An issuance guard using those facts alone would still pass. -/
+theorem runtime_bypass_preserves_identity_and_issuance :
+    runtimeBypassControl.identity = freshControl.identity ∧
+    runtimeBypassControl.exposed = [] ∧
+    issue runtimeBypassControl = some freshControl.captured := by
+  exact ⟨rfl, rfl, rfl⟩
+
+theorem runtime_bypass_breaks_writer_coverage : ¬ Invariant runtimeBypassControl := by
+  intro covered
+  have unwritten := covered 0 (by simp [runtimeBypassControl, freshControl, allocate])
+  simp [runtimeBypassControl] at unwritten
+
+/-- The original capture equivalence fails even though the naive issuance
+guard succeeds. This is a concrete malformed-thunk counterexample, not an
+assumption that arbitrary mutation is harmless. -/
+theorem runtime_bypass_breaks_issued_field_equivalence :
+    rawAt runtimeBypassControl 0 ≠ freshControl.captured[0]? := by
+  intro equal
+  have classified := congrArg (Option.map CapturedBinding.classified) equal
+  simp [rawAt, runtimeBypassControl, freshControl, allocate, Recipe.capture,
+    CapturedBinding.classified, CapturedBinding.Target.callable] at classified
+
+/-- Reachability is a substantive native correspondence obligation. A model
+that simply omits an available runtime writer does not qualify that writer. -/
+theorem runtime_bypass_not_reachable
+    {recipes : Array (Recipe Unit Nat)} {seed : Nat} :
+    ¬ Reachable recipes seed runtimeBypassControl := by
+  intro path
+  exact runtime_bypass_breaks_writer_coverage path.invariant
+
+/-- A clone/namespace view has its own identity but may retain another view's
+raw storage allocation. The storage owner, not this view's identity, fences
+new issuance. A composite clone registers each retained storage fragment. -/
+structure View where
+  identity : Nat
+  owner : Nat
+
+abbrev Storage (Self Value : Type) := Nat → Option (Source Self Value)
+
+def View.issue {Self Value : Type} (storage : Storage Self Value) (view : View) :=
+  match storage view.owner with
+  | none => none
+  | some source => if source.identity = view.owner then SourcePreparation.issue source else none
+
+def View.expose {Self Value : Type} (storage : Storage Self Value) (view : View)
+    (index : Nat) : Option (Storage Self Value × Handle) :=
+  match storage view.owner with
+  | none => none
+  | some source =>
+      if source.identity = view.owner then
+        match SourcePreparation.expose source index with
+        | none => none
+        | some (next, handle) =>
+            some ((fun owner => if owner = view.owner then some next else storage owner), handle)
+      else none
+
+theorem View.identity_is_not_storage_authority {Self Value : Type}
+    (storage : Storage Self Value) (view : View) (identity : Nat) :
+    View.issue storage { view with identity := identity } = View.issue storage view := rfl
+
+theorem View.exposure_witness {Self Value : Type}
+    (storage next : Storage Self Value) (view : View) (index : Nat) (handle : Handle)
+    (step : View.expose storage view index = some (next, handle)) :
+    ∃ before after, storage view.owner = some before ∧ before.identity = view.owner ∧
+      SourcePreparation.expose before index = some (after, handle) ∧
+      next = (fun owner => if owner = view.owner then some after else storage owner) := by
+  unfold View.expose at step
+  cases found : storage view.owner with
+  | none => simp [found] at step
+  | some before =>
+      simp only [found] at step
+      split at step
+      · rename_i owned
+        cases exposed : SourcePreparation.expose before index with
+        | none => simp [exposed] at step
+        | some result =>
+            rcases result with ⟨after, ticket⟩
+            simp only [exposed, Option.some.injEq, Prod.mk.injEq] at step
+            rcases step with ⟨sameStorage, sameHandle⟩
+            subst ticket
+            exact ⟨before, after, rfl, owned, exposed, sameStorage.symm⟩
+      · simp_all
+
+/-- Reflecting through either alias fences new capture through BOTH views.
+It does not revoke the immutable recipes held by an already prepared receiver. -/
+theorem View.exposure_revokes_alias_issuance {Self Value : Type}
+    (storage next : Storage Self Value) (view alias : View) (index : Nat) (handle : Handle)
+    (sameOwner : alias.owner = view.owner)
+    (step : View.expose storage view index = some (next, handle)) :
+    View.issue next alias = none := by
+  rcases View.exposure_witness _ _ _ _ _ step with
+    ⟨before, after, _found, owned, exposed, rfl⟩
+  have currentOwner : after.identity = view.owner :=
+    (exposure_keeps_producer_snapshot _ _ _ _ exposed).2.trans owned
+  simp [View.issue, sameOwner, currentOwner, exposure_revokes_new_issuance _ _ _ _ exposed]
+
+/-- The update touches one registered storage owner; unrelated storage/views
+retain their exact issuance result without enumerating the other owners. -/
+theorem View.exposure_other_owner_frame {Self Value : Type}
+    (storage next : Storage Self Value) (view other : View) (index : Nat) (handle : Handle)
+    (separate : other.owner ≠ view.owner)
+    (step : View.expose storage view index = some (next, handle)) :
+    View.issue next other = View.issue storage other := by
+  rcases View.exposure_witness _ _ _ _ _ step with
+    ⟨_before, _after, _found, _owned, _exposed, rfl⟩
+  simp only [View.issue, separate, ↓reduceIte]
+
 end LeanPoo.Object.SourcePreparation

@@ -302,3 +302,50 @@ theorem first_refusal_after_issuance (reads : List Read)
     simp only [List.find?_cons, firstIssued, Bool.true_and, ih restIssued]
 
 end LeanPoo.Object.CheckpointEntry
+
+namespace LeanPoo.Object.NameCapture
+
+/-- Contents of the producer's mutable name-cache spine and the record's
+distinct public spine. They are separate native locations, even when equal. -/
+structure Memory (Name : Type) where
+  producer : List Name
+  presented : List Name
+
+inductive Seal (Name : Type) where
+  | borrowedProducer
+  | captured (names : List Name)
+
+/-- A captured seal owns contents inaccessible through either mutable spine.
+Native correspondence requires a detached copy held only by the birth closure. -/
+def Verifies {Name : Type} (signature : Seal Name) (memory : Memory Name) : Prop :=
+  match signature with
+  | .borrowedProducer => memory.presented = memory.producer
+  | .captured names => memory.presented = names
+
+def overwriteBoth {Name : Type} (memory : Memory Name) (names : List Name) : Memory Name :=
+  { memory with producer := names, presented := names }
+
+/-- A producer-owned list is not a frozen birth snapshot: two ordinary heap
+edits can make altered presentation and canonical alias agree again. -/
+theorem borrowed_canonical_accepts_changed_payload {Name : Type}
+    (original changed : List Name) (different : changed ≠ original) :
+    Verifies (.borrowedProducer : Seal Name)
+      (overwriteBoth ⟨original, original⟩ changed) ∧ changed ≠ original := ⟨rfl, different⟩
+
+theorem owned_canonical_refuses_changed_payload {Name : Type}
+    (original changed : List Name) (different : changed ≠ original) :
+    ¬ Verifies (.captured original) (overwriteBoth ⟨original, original⟩ changed) := different
+
+/-- The producer may subsequently change; issuance authentication remains
+bound to the original snapshot. Actual receiver currentness is a SEPARATE check. -/
+theorem producer_change_preserves_birth_contents {Name : Type}
+    (original producer presented : List Name) :
+    Verifies (.captured original) ⟨producer, presented⟩ ↔ presented = original := Iff.rfl
+
+/-- Authentication is not a sticky refusal/success cache. Restoring the exact
+original presentation restores its issuance; live route/state checks still run. -/
+theorem restored_presentation_is_issued {Name : Type}
+    (original producer : List Name) :
+    Verifies (.captured original) ⟨producer, original⟩ := rfl
+
+end LeanPoo.Object.NameCapture

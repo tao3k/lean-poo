@@ -462,6 +462,7 @@
       "implementation": [
         "LeanPoo/Object/Indexed.lean",
         "LeanPoo/Object/SourcePreparation.lean",
+        "LeanPoo/Object/SourceViews.lean",
         "LeanPoo/Object/Prepare.lean",
         "LeanPoo/Prototype/Record.lean",
         "LeanPoo/Prototype/DictionaryRecord.lean",

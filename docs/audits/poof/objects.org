@@ -107,6 +107,53 @@ own admission. Captured source recipes are not receiver values or currentness
 approvals across an author effect. The runtime representation and complete
 first-demand path remain open.
 
+The =runtime_bypass_*= counterexamples model an available but untracked runtime
+field write. Allocation identity and an unexposed marker remain unchanged,
+so the naive issuance guard still passes while raw capture equivalence fails.
+The source is not reachable by the modeled writer: native correspondence must
+cover the actual Gerbil MOP routes, rather than excluding them by omission.
+An exposure flag around selected public accessors alone does not establish it.
+
+=SourcePreparation.View= separates clone/namespace identity from shared raw
+storage ownership. The actual exposure transition updates one storage owner;
+=exposure_revokes_alias_issuance= fences new capture through every alias of
+that owner. =exposure_other_owner_frame= preserves unrelated issuance exactly,
+and changing a view identity alone changes no source authority. Existing
+prepared receiver cuts remain immutable. This is one retained storage fragment,
+not yet the exact registration proof for a composite clone with overlays.
+The =Storage= map models the existing owner state; it does not introduce a
+runtime source registry or another cache. Native capsule lowering and exact
+composite-view dependency registration remain open.
+
+The =SourceViews= refinement derives raw-storage occurrence counts in one
+admission fold and updates only removed/added owners after an actual indexed
+edit. Native first-ordinal replacement preserves later same-key contributions;
+retiring an owner merely because its slot name was overridden is unsound.
+Single replacements, batch removals/additions, unrelated-owner frames and
+checked underflow are proved. A constructive counterexample also shows that
+counts cannot authenticate distinct view ordinals: the native source issuer
+must bind the exact ordinal selection to the original snapshot.
+
+=old_inverse_closure_exact= derives the changed-consumer row frame and applies
+the existing Graph theorem, including cycles. =exposure_rejects_pending_capture=
+derives guard drift from the actual registered owner frontier and uses the
+existing component publication check, even when the head is unchanged.
+Exposure outside the frontier leaves its stamp unchanged. These fences govern
+NEW capture eligibility; they must not invalidate the immutable methods of an
+already prepared receiver merely because raw reflection became possible.
+The native source capsule, exact ordinal issuer and persistent index handoff
+remain implementation obligations. No native source-sharing speedup follows
+from these proofs alone.
+
+=SlotObservation.NameCapture= makes the producer/canonical/presentation
+boundary explicit. A borrowed producer spine can authenticate two coordinated
+heap edits as if they were the original payload. A captured private spine
+rejects that trace; producer mutation cannot rewrite its birth contents and
+restoring the exact presentation restores issuance. Current receiver/route
+validation is separate. Native structural-name issuance therefore needs its
+own detached canonical copy, in addition to its existing public copy. Ordinary
+opaque business values retain their identities and are not deep-copied.
+
 The =SlotPreparation.PayloadCapture= extension specifies the preceding
 closed source phase. A handle names an actual required validation/capture
 field, not a whole receiver revision. Successful capture reads the complete
