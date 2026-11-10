@@ -441,6 +441,7 @@
   "LeanPoo/Functional/KeyIndex.lean",
   "LeanPoo/Functional/KeywordArguments.lean",
   "LeanPoo/Functional/KeywordCoverage.lean",
+  "LeanPoo/Functional/LocalSccRegion.lean",
   "LeanPoo/Functional/MetadataClosure.lean",
   "LeanPoo/Functional/MetadataFamily.lean",
   "LeanPoo/Functional/MethodDeclarations.lean",
