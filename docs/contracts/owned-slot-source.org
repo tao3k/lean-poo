@@ -142,8 +142,11 @@ installation additionally requires exactly self in precedence, no parents,
 defaults, declarations, protocol, overrides or bootstrap, and the actual pure
 symbolic write route. Independent capture fences bracket installation. Full
 preparation remains mandatory for every other source, including any raw record
-that has been exposed. Source construction's additional administrative metadata
-effects still need qualification before the public object<-fun producer changes.
+that has been exposed. The local object<-fun candidate is staged for native
+qualification; it is not released or adopted by consumer pins. Unknown source
+reference/object construction keeps the original row route. The additional
+reference and original construction boundaries require matched native evidence
+before adoption; the Lean value model alone does not establish VM effects.
 
 OwnedSlotSource derives allocation/transition coverage, immutable capture,
 pre-handoff revocation, exact issued reads, visible raw edits, unchanged

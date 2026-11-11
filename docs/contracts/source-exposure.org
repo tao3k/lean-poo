@@ -49,24 +49,27 @@ controlled incremental recipe writer or a locally updated owned-source index.
 
 The local Scheme candidate lives in object/owned-source.scm, included in the
 existing object namespace. It keeps copied payload identities and original raw
-records inside lexical closures. Its carrier is an ordinary POO object. The
-existing issuer signs a source-storage structural record for the control
-procedure; no second issuer or source registry is created. Source operations
-authenticate the actual carrier routes and registered signature before invoking
-the control. A live record binds the procedure identity to the carrier's state
-cell, not to a cached decision that the source is still private. Each new borrow
+records inside lexical closures. One internal reference from the existing issuer
+binds a fresh symbolic receiver and the source-storage control procedure; no
+administrative object, second issuer or source registry is created. Source
+operations authenticate the actual registered signature before invoking the
+control. A live record binds procedure identity, not a cached decision that the
+source is still private. Each new borrow
 must inspect the current exposure bit and stock/type frame again.
 
 The candidate preserves all four binding forms. Binding a method executes no
 Slot body; opaque business values keep their original identities. Exposing raw
 records is atomic under the existing native mutex primitive. Reservations bind
-the actual carrier, epoch and pending index; abort never restores eligibility.
+the actual reference, epoch and pending index; abort never restores eligibility.
 Raw field mutation changes none of these private counters. Old captures retain
 their copied payload identities. An exposed malformed sibling returns to the
 original object's complete preparation and is still refused before selection.
 
 This remains a PRIVATE CANDIDATE, not a released interface or an adopted
-optimization. Normal .o/object<-fun producers are not connected to it. The
+optimization. The local object<-fun candidate now attempts the view only for
+nonempty symbolic keys without parents/defaults and with stock constructors and
+no author observation callbacks. Every failed qualification retains the original
+rows, constructors and complete preparation. Normal .o is unchanged. The
 existing compute-slot-funs path can now install already-admitted generated
 thunk rows from a qualified view into its ONE ordinary method table. It keeps
 the actual function identities, evaluates no body, and uses independent entry/
@@ -74,6 +77,6 @@ return admission. Parents, defaults, declarations, protocols, overrides and
 unknown/unowned sources retain complete preparation. Their full constructor/
 effect correspondence, controlled edits, native property controls, CPU studies,
 Core10K and downstream gates remain required. In particular, arbitrary metadata
-method changes and administrative initialization effects must be qualified
-before connecting the producer path. Preserve the original Gerbil expansion
+method changes must retain the ordinary effect boundary. A controlled recipe
+writer and its Graph registration remain open. Preserve the original Gerbil expansion
 and author callback checkpoints and the existing QNT effect-window owners.
