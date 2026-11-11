@@ -20,4 +20,11 @@ package SourceExposure {
                It does not certify that exposure never occurred. Check live
                eligibility on each new capture; old cuts remain immutable. */
     }
+    requirement def NameAndValueViews {
+        doc /* Name/index metadata and missing lookup publish no raw address.
+               A successful value lookup commits exposure before delivering the
+               original record. Authenticate the actual view and dispatcher
+               through the existing issuer; copied receipts refuse. Explicit
+               raw edits retain the full ordinary admission path. */
+    }
 }

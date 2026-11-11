@@ -107,6 +107,24 @@ indexes; do not introduce another registry, loader, evaluator or result cache.
 
 * Evidence and open work
 
+SourcePreparation.ThunkRows proves direct chronological installation of the
+canonical thunk functions equals ordinary thunk-chain compilation at every
+key. Duplicate names retain the newest actual function; missing names retain
+the original missing-method target. No body is invoked. This is a generated-
+source theorem AFTER complete source admission, not permission to skip raw or
+malformed sibling checks. Native construction validates the actual retained
+input vector and initializes original records in one pass without a temporary
+raw-record list. Caller-owned input spines do not certify the retained payloads.
+
+The private native method-table path keeps ordinary C4 and the primary method
+and value stores. It does not introduce a lazy method-table cache. Fast
+installation additionally requires exactly self in precedence, no parents,
+defaults, declarations, protocol, overrides or bootstrap, and the actual pure
+symbolic write route. Independent capture fences bracket installation. Full
+preparation remains mandatory for every other source, including any raw record
+that has been exposed. Source construction's additional administrative metadata
+effects still need qualification before the public object<-fun producer changes.
+
 OwnedSlotSource derives allocation/transition coverage, immutable capture,
 pre-handoff revocation, exact issued reads, visible raw edits, unchanged
 raw-write metadata, stale/foreign/index-mismatched result refusal, second-change

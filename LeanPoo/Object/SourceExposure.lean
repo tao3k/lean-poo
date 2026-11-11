@@ -150,4 +150,48 @@ theorem projection_invariant {Self Value : Type}
   intro index
   simp [project, path.invariant.2 closed index]
 
+/-- A view's index stores ordinals, not raw references. Its storage/index may
+be shared by retained views; reading names alone publishes no address. -/
+def enumerate {Key Self Value : Type} (heap : Heap Self Value) (rows : List (Key × Nat)) :
+    Heap Self Value × List Key := (heap, rows.map Prod.fst)
+
+def reflectKey {Key Self Value : Type} [DecidableEq Key]
+    (heap : Heap Self Value) (rows : List (Key × Nat)) (key : Key) :
+    Heap Self Value × Option (CapturedBinding.Spec Self Value) :=
+  match rows.lookup key with
+  | none => (heap, none)
+  | some index =>
+    match expose heap index with
+    | none => (heap, none)
+    | some (after, address) => (after, heap.fields address)
+
+theorem names_publish_no_reference {Key Self Value : Type}
+    (heap : Heap Self Value) (rows : List (Key × Nat)) :
+    (enumerate heap rows).1 = heap := rfl
+
+theorem missing_key_keeps_source {Key Self Value : Type} [DecidableEq Key]
+    (heap : Heap Self Value) (rows : List (Key × Nat)) (key : Key)
+    (missing : rows.lookup key = none) :
+    reflectKey heap rows key = (heap, none) := by simp [reflectKey, missing]
+
+/-- The original field is returned, with exposure already committed. No new
+constructor, replacement raw record or business evaluation is introduced. -/
+theorem hit_commits_before_delivery {Key Self Value : Type} [DecidableEq Key]
+    (heap : Heap Self Value) (rows : List (Key × Nat)) (key : Key) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) (hit : rows.lookup key = some index)
+    (field : heap.fields index = some payload) :
+    reflectKey heap rows key =
+      ({ heap with exposed := true
+                   published := fun query => if query = index then true else heap.published query },
+       some payload) := by
+  simp [reflectKey, hit, expose, field]
+
+theorem hit_revokes_new_issue {Key Self Value : Type} [DecidableEq Key]
+    (heap : Heap Self Value) (rows : List (Key × Nat)) (key : Key) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) (hit : rows.lookup key = some index)
+    (field : heap.fields index = some payload) :
+    issue (reflectKey heap rows key).1 = none := by
+  rw [hit_commits_before_delivery heap rows key index payload hit field]
+  rfl
+
 end LeanPoo.Object.SourceExposure

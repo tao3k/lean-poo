@@ -416,4 +416,48 @@ theorem View.exposure_other_owner_frame {Self Value : Type}
     ⟨_before, _after, _found, _owned, _exposed, rfl⟩
   simp only [View.issue, separate, ↓reduceIte]
 
+namespace ThunkRows
+
+def assign {Key Value : Type} [DecidableEq Key]
+    (before : Key → CapturedBinding.Target Value) (row : Key × (Unit → Value)) :
+    Key → CapturedBinding.Target Value :=
+  fun key => if key = row.1 then .procedure row.2 else before key
+
+def install {Key Value : Type} [DecidableEq Key]
+    (rows : List (Key × (Unit → Value))) (before : Key → CapturedBinding.Target Value) :
+    Key → CapturedBinding.Target Value :=
+  match rows with
+  | [] => before
+  | row :: rest => install rest (assign before row)
+
+/-- Ordinary chronological independent-thunk binding after complete generated
+source admission. This does not model an unknown/raw SlotSpec admission skip. -/
+def compile {Key Self Value : Type} [DecidableEq Key] (receiver : Self) (key : Key)
+    (rows : List (Key × (Unit → Value))) (before : CapturedBinding.Target Value) :
+    CapturedBinding.Target Value :=
+  match rows with
+  | [] => before
+  | row :: rest => compile receiver key rest
+      (if key = row.1 then CapturedBinding.bind receiver (.thunk (.procedure row.2)) before else before)
+
+theorem install_equals_compile {Key Self Value : Type} [DecidableEq Key]
+    (receiver : Self) (key : Key) (rows : List (Key × (Unit → Value)))
+    (before : Key → CapturedBinding.Target Value) :
+    install rows before key = compile receiver key rows (before key) := by
+  induction rows generalizing before with
+  | nil => rfl
+  | cons row rest ih =>
+    simp only [install, compile, ih, assign, CapturedBinding.bind]
+
+/-- Duplicate names keep the newest actual function, and names not installed
+retain the original missing-method target. No thunk body is invoked. -/
+theorem duplicate_and_absent_control :
+    let before : Nat → CapturedBinding.Target Nat := fun _ => .nonCallable
+    let first : Unit → Nat := fun _ => 7
+    let last : Unit → Nat := fun _ => 11
+    install [(0, first), (0, last)] before 0 = .procedure last ∧
+      install [(0, first), (0, last)] before 1 = .nonCallable := by
+  simp [install, assign]
+
+end ThunkRows
 end LeanPoo.Object.SourcePreparation

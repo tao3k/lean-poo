@@ -46,4 +46,12 @@ package OwnedSlotSource {
                and successful result arity; never hold the source mutex across it.
                Retained immutable cuts do not authorize new publication. */
     }
+    requirement def GeneratedThunkInstallation {
+        doc /* After canonical generated-source admission, chronological direct
+               installation equals ordinary independent-thunk compilation at
+               every key, including duplicate and missing keys. Preserve the
+               actual functions, ordinary C4 and the sole method/value stores.
+               Parents, hooks, defaults, declarations, overrides, unknown or
+               exposed sources retain full preparation. No body is evaluated. */
+    }
 }

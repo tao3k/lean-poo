@@ -24,6 +24,29 @@ does not pretend to implement that whole state machine.
 
 * Scheme correspondence under qualification
 
+The view index contains names and ordinals, not raw records. enumerate and
+names_publish_no_reference preserve the entire heap. A missing key preserves
+the source exactly. hit_commits_before_delivery returns the original field
+after marking its address published; hit_revokes_new_issue derives refusal of
+a later private capture. Bounds and exact index/source provenance remain
+construction duties, not consequences of finding a name.
+
+The private prototype-map candidate retains its existing specifications shape
+and standard compact/RBTree indexes. Its dispatcher closes over an ordinal-only
+index and a source exposure function. An internal source-map record from the
+existing issuer binds the actual view, dispatcher and source. Authenticate that
+registered record and live layout/fields before calling the dispatcher; a
+copied receipt cannot authorize another map. This internal record is not a
+business observation or a Graph dependency root. No extra registry is created.
+
+Public keys, missing queries and absent removal expose no raw reference.
+Public ref, list, for-each, matching contribution folds and filter predicates
+commit exposure before a raw value reaches the caller. Names/spines remain
+caller-owned copies. Repeated payload access returns the same raw address.
+Explicit raw edits and policy conversion currently materialize the ordinary
+persistent representation and keep full admission. They are NOT a completed
+controlled incremental recipe writer or a locally updated owned-source index.
+
 The local Scheme candidate lives in object/owned-source.scm, included in the
 existing object namespace. It keeps copied payload identities and original raw
 records inside lexical closures. Its carrier is an ordinary POO object. The
@@ -43,9 +66,13 @@ their copied payload identities. An exposed malformed sibling returns to the
 original object's complete preparation and is still refused before selection.
 
 This remains a PRIVATE CANDIDATE, not a released interface or an adopted
-optimization. Normal .o/object<-fun producers and method-table preparation are
-not connected to it. Their full constructor/effect correspondence, indexed
-binding, metadata lifetime/collection, native property controls, CPU studies,
+optimization. Normal .o/object<-fun producers are not connected to it. The
+existing compute-slot-funs path can now install already-admitted generated
+thunk rows from a qualified view into its ONE ordinary method table. It keeps
+the actual function identities, evaluates no body, and uses independent entry/
+return admission. Parents, defaults, declarations, protocols, overrides and
+unknown/unowned sources retain complete preparation. Their full constructor/
+effect correspondence, controlled edits, native property controls, CPU studies,
 Core10K and downstream gates remain required. In particular, arbitrary metadata
 method changes and administrative initialization effects must be qualified
 before connecting the producer path. Preserve the original Gerbil expansion
