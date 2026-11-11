@@ -594,6 +594,7 @@
   "LeanPoo/Object/MultimethodSemantics.lean",
   "LeanPoo/Object/Mutable.lean",
   "LeanPoo/Object/Nested.lean",
+  "LeanPoo/Object/OwnedSlotSource.lean",
   "LeanPoo/Object/Prepare.lean",
   "LeanPoo/Object/PreparedMultimethod.lean",
   "LeanPoo/Object/Prototype.lean",
