@@ -20,4 +20,14 @@ package SourceReadWindow {
                Returning void does not confer purity. No stale enclosing table
                is reinstated after a callback or independent check. */
     }
+    requirement def QueryWork {
+        attribute fixedWorld : Boolean;
+        attribute completeQueryIdentity : Boolean;
+        require constraint { fixedWorld and completeQueryIdentity }
+        doc /* Count actual oracle calls, including failed misses. Repeated
+               successful same-key requests in ONE admitted window issue once;
+               cached hits issue zero. First refusal stops later requests.
+               Independent worlds issue independently. No elapsed-time, Graph
+               complexity or Module capacity claim follows from these counts. */
+    }
 }

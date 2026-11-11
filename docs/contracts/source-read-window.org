@@ -34,9 +34,28 @@ joined_interval_exact permits sharing metadata and byte queries. The callback
 example starts new empty windows on both sides and sees the changed world.
 
 The functional table is a semantic model, not the Scheme table algorithm or
-a complexity theorem. Native implementation continues using its current hash
+a general complexity theorem. Native implementation continues using its current hash
 table. Native tests must establish callback boundaries and query enrollment;
 this proof does not certify arbitrary callbacks as pure or grant approval.
+
+** Actual query work
+
+=counted= instruments that same sequential =fetch=, recording actual oracle
+invocations even when the first miss refuses. It does not count requests as
+reads and does not create a second runtime table. =counted_result_exact=
+preserves the entire ordered value/error result. =hits_issue_no_queries=
+proves zero oracle calls for already admitted keys. A successful key requested
+any positive number of times within one fixed world issues exactly one query
+(=repeated_success_issues_once=); a failing first key issues one query and
+executes none of the remaining requests (=failed_first_query_stops=).
+
+=independent_windows_issue_twice= proves the complementary boundary: successful
+requests in two independently authenticated worlds issue two queries, even
+when their key names agree. A writer, author callback or Gerbil expansion is
+not classified as a fixed world by these theorems. Proving the actual Scheme
+interval closed remains an implementation obligation. The call-count result
+does not bound oracle CPU, hash lookup cost, allocations or filesystem races;
+in particular it does not establish a 10K Module acceptance or a Graph gain.
 
 * Required evidence
 
