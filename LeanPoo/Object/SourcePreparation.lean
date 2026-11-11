@@ -460,4 +460,76 @@ theorem duplicate_and_absent_control :
   simp [install, assign]
 
 end ThunkRows
+
+namespace RecipeRows
+
+/-- Chronological source contributions bind the final receiver. The index is
+the existing method dictionary; no computed business result is installed here. -/
+def assign {Key Self Value : Type} [DecidableEq Key] (receiver : Self)
+    (before : Key → CapturedBinding.Target Value) (row : Key × Recipe Self Value) :
+    Key → CapturedBinding.Target Value :=
+  fun key => if key = row.1 then
+    CapturedBinding.bind receiver row.2.capture (before key) else before key
+
+def install {Key Self Value : Type} [DecidableEq Key] (receiver : Self) :
+    List (Key × Recipe Self Value) →
+      (Key → CapturedBinding.Target Value) → Key → CapturedBinding.Target Value
+  | [], before => before
+  | row :: rest, before => install receiver rest (assign receiver before row)
+
+/-- Reference per-key binding in the same contribution order. C4 establishes
+this schedule before either interpretation; it is not inferred from a tree. -/
+def compile {Key Self Value : Type} [DecidableEq Key] (receiver : Self) (key : Key) :
+    List (Key × Recipe Self Value) → CapturedBinding.Target Value → CapturedBinding.Target Value
+  | [], before => before
+  | row :: rest, before => compile receiver key rest
+      (if key = row.1 then CapturedBinding.bind receiver row.2.capture before else before)
+
+theorem install_equals_compile {Key Self Value : Type} [DecidableEq Key]
+    (receiver : Self) (key : Key) (rows : List (Key × Recipe Self Value))
+    (before : Key → CapturedBinding.Target Value) :
+    install receiver rows before key = compile receiver key rows (before key) := by
+  induction rows generalizing before with
+  | nil => rfl
+  | cons row rest ih =>
+    simp only [install, compile, ih, assign]
+
+/-- The ordinary generated self form captures its actual function and final
+receiver without evaluating that function or inspecting an inherited value. -/
+theorem self_binds_final_receiver {Key Self Value : Type} [DecidableEq Key]
+    (receiver : Self) (key : Key) (body : Self → Value)
+    (before : Key → CapturedBinding.Target Value) :
+    install receiver [(key, .self body)] before key =
+      .procedure (fun _ => body receiver) := by
+  simp [install, assign, Recipe.capture, CapturedBinding.bind]
+
+/-- Computed contributions retain the exact inherited target; even a missing
+parent remains delayed. This does not authorize skipping earlier tag admission. -/
+theorem computed_keeps_delayed_parent {Key Self Value : Type} [DecidableEq Key]
+    (receiver : Self) (key : Key)
+    (body : Self → CapturedBinding.Target Value → Value)
+    (before : Key → CapturedBinding.Target Value) :
+    install receiver [(key, .computed body)] before key =
+      .procedure (fun _ => body receiver (before key)) := by
+  simp [install, assign, Recipe.capture, CapturedBinding.bind]
+
+theorem unrelated_key_unchanged {Key Self Value : Type} [DecidableEq Key]
+    (receiver : Self) (key other : Key) (different : key ≠ other)
+    (body : Recipe Self Value) (before : Key → CapturedBinding.Target Value) :
+    install receiver [(other, body)] before key = before key := by
+  simp [install, assign, different]
+
+/-- Source reuse does not reuse a receiver-bound method. Two mounts of one
+recipe still bind their own final self, while duplicate keys keep the last
+super-independent contribution. No source body is run during installation. -/
+theorem final_receiver_and_duplicate_control :
+    let before : Nat → CapturedBinding.Target Nat := fun _ => .nonCallable
+    let rows : List (Nat × Recipe Nat Nat) :=
+      [(0, .self (fun self => self + 1)), (0, .self (fun self => self + 7))]
+    install 3 rows before 0 = .procedure (fun _ => 10) ∧
+      install 5 rows before 0 = .procedure (fun _ => 12) ∧
+      install 3 rows before 1 = .nonCallable := by
+  simp [install, assign, Recipe.capture, CapturedBinding.bind]
+
+end RecipeRows
 end LeanPoo.Object.SourcePreparation
