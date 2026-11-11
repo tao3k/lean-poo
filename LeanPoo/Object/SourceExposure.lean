@@ -194,4 +194,57 @@ theorem hit_revokes_new_issue {Key Self Value : Type} [DecidableEq Key]
   rw [hit_commits_before_delivery heap rows key index payload hit field]
   rfl
 
+namespace BirthAndCapture
+
+/-- Construction is admitted at the original allocation point. A later
+constructor cannot certify an unknown allocation retroactively. -/
+def construct {Self Value : Type} (stock : Bool) (recipes : Array (Recipe Self Value)) :
+    Option (Heap Self Value) := if stock then some (allocate recipes) else none
+
+structure Runtime (Self Value Constructor : Type) where
+  heap : Heap Self Value
+  futureConstructor : Constructor
+  layoutCurrent : Bool
+  tagsCurrent : Bool
+  viewCurrent : Bool
+
+/-- These are actual current shape/tag/view facts. They are not constructor
+identity or caller purity flags. Field privacy comes from Reachable below. -/
+def capture {Self Value Constructor : Type} (runtime : Runtime Self Value Constructor) :
+    Option (Array (CapturedBinding.Spec Self Value)) :=
+  if runtime.layoutCurrent && runtime.tagsCurrent && runtime.viewCurrent then
+    issue runtime.heap else none
+
+/-- Replacing only future allocation policy changes neither existing fields
+nor their interpretation. Runtime correspondence must establish that frame. -/
+theorem future_constructor_does_not_change_capture {Self Value Constructor : Type}
+    (runtime : Runtime Self Value Constructor) (next : Constructor) :
+    capture { runtime with futureConstructor := next } = capture runtime := rfl
+
+theorem unknown_birth_is_not_admitted {Self Value : Type}
+    (recipes : Array (Recipe Self Value)) : construct false recipes = none := rfl
+
+theorem changed_layout_is_not_admitted {Self Value Constructor : Type}
+    (runtime : Runtime Self Value Constructor) :
+    capture { runtime with layoutCurrent := false } = none := rfl
+
+theorem exposed_heap_is_not_admitted {Self Value Constructor : Type}
+    (runtime : Runtime Self Value Constructor) (exposed : runtime.heap.exposed = true) :
+    capture runtime = none := by
+  simp [capture, issue, exposed]
+
+/-- Constructor independence derives from the already established private
+field frame; it does not make mutated layouts or raw exposures trustworthy. -/
+theorem captured_fields_exact {Self Value Constructor : Type}
+    (runtime : Runtime Self Value Constructor) (recipes : Array (Recipe Self Value))
+    (reachable : Reachable recipes runtime.heap)
+    (captured : Array (CapturedBinding.Spec Self Value))
+    (accepted : capture runtime = some captured) (index : Nat) :
+    runtime.heap.fields index = captured[index]? := by
+  unfold capture at accepted
+  split at accepted
+  · exact issued_private_fields_exact reachable captured accepted index
+  · cases accepted
+
+end BirthAndCapture
 end LeanPoo.Object.SourceExposure

@@ -73,10 +73,36 @@ rows, constructors and complete preparation. Normal .o is unchanged. The
 existing compute-slot-funs path can now install already-admitted generated
 thunk rows from a qualified view into its ONE ordinary method table. It keeps
 the actual function identities, evaluates no body, and uses independent entry/
-return admission. Parents, defaults, declarations, protocols, overrides and
-unknown/unowned sources retain complete preparation. Their full constructor/
+return admission. The qualified inherited path borrows independent generated
+recipes through the same ordinal index; raw/default/declaration/protocol and
+unknown sources retain complete preparation. Their full constructor/
 effect correspondence, controlled edits, native property controls, CPU studies,
 Core10K and downstream gates remain required. In particular, arbitrary metadata
 method changes must retain the ordinary effect boundary. A controlled recipe
 writer and its Graph registration remain open. Preserve the original Gerbil expansion
 and author callback checkpoints and the existing QNT effect-window owners.
+
+* Constructor admission belongs to birth
+
+SourceExposure.BirthAndCapture separates future allocation policy from the
+already allocated private heap. future_constructor_does_not_change_capture
+holds only when the actual storage-shape, tag interpretation and view facts
+remain unchanged. captured_fields_exact derives ordinary field equality from
+Reachable, rather than trusting a constructor name or a private marker.
+
+The native candidate keeps stock-frame? at make-source's original allocation
+point, and again when a first view allocates its map receipt. Returning an
+existing view introduces no new receipt. Capture instead checks current struct/metaclass/field-count shapes,
+actual raw kind relations, current view provenance and exposure/epoch. It does
+not invoke an Object, SlotRead or SlotSpec constructor. Rechecking their current
+constructor methods cannot establish additional facts about those old fields.
+Changed constructors still refuse NEW owned births; old private fields remain
+the same as ordinary raw preparation. Arbitrary layout/tag/view edits do not
+get this independence law. It is not a theorem about VM metadata mutation.
+
+Keep actual source authentication and capture checks independently at entry and
+return. A callback which only changes future constructor policy preserves an
+old field cut; a callback that exposes/writes raw fields or changes the current
+shape/view still revokes new capture. Constructor calls are never postponed
+until reflection, replayed or hidden. Native fault and consumer gates remain
+required before adopting this separation.

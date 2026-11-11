@@ -36,4 +36,12 @@ package SourceExposure {
                through the existing issuer; copied receipts refuse. Explicit
                raw edits retain the full ordinary admission path. */
     }
+    requirement def BirthAndCaptureFrames {
+        doc /* Admit stock constructors at the original allocation point.
+               BirthAndCapture preserves existing field capture when only
+               future constructor policy changes. Keep actual current storage
+               shape, tag relations, view provenance, exposure and epoch checks
+               independently at entry and return. Unknown new births refuse;
+               raw exposure and changed interpretation never gain approval. */
+    }
 }
