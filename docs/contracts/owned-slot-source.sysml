@@ -60,6 +60,20 @@ package OwnedSlotSource {
                and successful result arity; never hold the source mutex across it.
                Retained immutable cuts do not authorize new publication. */
     }
+    requirement def SameCallMapFrame {
+        attribute liveLayoutChecked : Boolean;
+        attribute issuerAndRouteChecked : Boolean;
+        attribute canonicalFieldsChecked : Boolean;
+        require constraint {
+            liveLayoutChecked and issuerAndRouteChecked and canonicalFieldsChecked
+        }
+        doc /* Reference.MapFrame shares repeated layout decisions only in one
+               fixed read-only interval with no intervening metadata writes.
+               Keep first-refusal order and false owner probes. The private
+               marker is not stored or exported. Standalone calls and checks
+               after author effects obtain a fresh live layout decision.
+               This is not a proof of concurrent writer synchronization. */
+    }
     requirement def GeneratedThunkInstallation {
         doc /* After canonical generated-source admission, chronological direct
                installation equals ordinary independent-thunk compilation at

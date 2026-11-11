@@ -570,5 +570,66 @@ theorem map_receipt_not_source (authority : Nat → Option Data)
     sourceControl authority reference ⟨.map identity, purpose, control⟩ = none := by
   simp [sourceControl, registered]
 
+namespace MapFrame
+
+inductive Refusal where
+  | layout | issuance | receiver | purpose | route | fields
+  deriving DecidableEq
+
+/-- Actual read-only decisions in one fixed metadata interval. The issuer
+and registered private checker execute no author callback in this interval. -/
+structure Checks where
+  layout : Except Refusal Unit
+  issuance : Except Refusal Unit
+  receiver : Except Refusal Unit
+  purpose : Except Refusal Unit
+  route : Except Refusal Unit
+  fields : Except Refusal Unit
+
+def standalone (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.fields
+
+def original (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.issuance
+  checks.receiver
+  checks.purpose
+  checks.route
+  standalone checks
+
+def shared (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.issuance
+  checks.receiver
+  checks.purpose
+  checks.route
+  checks.fields
+
+/-- Share the repeated layout decision only after this operation checked it.
+All field decisions and the complete first refusal remain in original order. -/
+theorem shared_equals_original (checks : Checks) : shared checks = original checks := by
+  cases checks with
+  | mk layout issuance receiver purpose route fields =>
+    cases layout <;> cases issuance <;> cases receiver <;>
+      cases purpose <;> cases route <;> rfl
+
+/-- The owner probe had one further identical layout check in front. -/
+theorem probe_equals_original (checks : Checks) :
+    (do checks.layout; original checks) = shared checks := by
+  rw [shared_equals_original]
+  cases outcome : checks.layout <;> simp [original, standalone, outcome, Except.bind, Bind.bind]
+
+/-- A private in-call marker is not a successful verdict. Another invocation
+uses its own live decisions; standalone checks never receive that marker. -/
+theorem fresh_after_boundary (before after : Checks) :
+    (do shared before; shared after) = (do original before; original after) := by
+  rw [shared_equals_original, shared_equals_original]
+
+theorem standalone_rejects_layout (checks : Checks)
+    (bad : checks.layout = .error .layout) : standalone checks = .error .layout := by
+  simp [standalone, bad, Except.bind, Bind.bind]
+
+end MapFrame
 end Reference
 end LeanPoo.Object.OwnedSlotSource

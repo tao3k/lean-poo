@@ -26,6 +26,27 @@ needs a captured stock implementation and its native layout correspondence;
 if that cannot be established, keep ordinary construction/capture. Source
 identity is a fresh storage allocation, not a Module ID or namespace mount.
 
+* Same-call map layout checks
+
+Reference.MapFrame models the existing map receipt path as ordered layout,
+issuance, receiver, purpose, dispatcher and canonical-field decisions. The
+registered private checker repeats the same layout decision inside that pure
+interval. shared_equals_original preserves every result and first refusal when
+that repeated decision is shared within this invocation. probe_equals_original
+covers the additional outer owner probe. An unknown layout still produces false
+from the owner probe and refusal from the ordinary map operation.
+
+The Scheme candidate uses a private in-call marker after checking the live
+frame; it neither stores nor exports a successful verdict. Issuance and route
+checks precede the registered checker. Canonical entries, receipt, count, next
+and compactness are still read each time. The standalone checker checks layout
+itself. fresh_after_boundary uses separate decisions on either side of an
+author callback; standalone_rejects_layout rejects a changed layout. This
+proof assumes the identified interval has no author callbacks or intervening
+metadata writes; it does not establish concurrent writer synchronization or
+permit sharing across effects. The native candidate needs its own mutation,
+matched-fault and complete-cost qualification before adoption.
+
 * Exposure, physical writes and lifetime
 
 reserve commits exposure and a source/index/generation ticket BEFORE a raw
