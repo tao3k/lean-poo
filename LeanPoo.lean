@@ -381,5 +381,6 @@ import LeanPoo.Functional.OrderedReachability
 import LeanPoo.Object.ReadRouteRuns
 import LeanPoo.Object.SlotPreparation
 import LeanPoo.Object.SourcePreparation
+import LeanPoo.Object.OwnedSlotSource
 import LeanPoo.Object.SourceViews
 import LeanPoo.Object.AdmissionBoundary

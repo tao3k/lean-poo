@@ -1,0 +1,88 @@
+#+title: Generator-owned recipes and raw SlotSpec exposure
+
+* Problem and representation
+
+SourcePreparation.runtime_bypass_breaks_issued_field_equivalence shows why an
+unexposed flag cannot certify already allocated mutable SlotSpecs. This model
+uses a stronger representation: constructor-owned private recipes exist before
+reflection, but the corresponding raw SlotSpecs do not. An ordinary MOP field
+writer cannot mutate a raw object that has not been allocated. The canonical
+recipes must remain inaccessible to raw field writes in the Scheme adapter;
+merely renaming or hiding a mutable struct field does not establish that fact.
+
+Only generated stock-constructor cases may enter this representation. Qualify
+the actual constructor at the original call point; preserve argument evaluation,
+foreign constructor effects, errors, duplicates and contribution order. Caller-
+supplied SlotSpecs, unknown constructors, hooks and unowned sources retain the
+original full capture. No user purity flag grants ownership. This document and
+the Lean model do not yet implement those native construction obligations.
+
+Original constructor calls cannot simply move to reflection. The generated
+stock branch must preserve their original observation point, and later raw
+materialization must not dispatch a newly installed author constructor. It
+needs a captured stock implementation and its native layout correspondence;
+if that cannot be established, keep ordinary construction/capture. Source
+identity is a fresh storage allocation, not a Module ID or namespace mount.
+
+* Exposure, physical writes and lifetime
+
+reserve commits exposure and a source/index/generation ticket BEFORE raw record
+construction or any possible callback. A second reservation supersedes the old
+ticket. finish verifies all three bindings and the exact pending index, installs
+the actual constructor result and retires the ticket. abort clears the pending
+result but never restores private status. Existing raw references must be reused
+on repeated reflection, not reconstructed with different identities.
+
+The raw map models published raw cells. A constructor-local object may already
+exist during a callback after reservation; finish accepts its actual resulting
+payload. Such intermediate constructor effects are not modeled individually.
+Exposure has already revoked private issuance throughout that interval.
+
+rawWrite requires a physically allocated raw cell. It changes its payload only:
+it does NOT advance the owner epoch, set an exposure bit, or notify dependents.
+This models ordinary MOP writes honestly. The allocation protocol derives the
+coverage invariant across every reachable sequence. issued_capture_exact then
+derives equality with ordinary field capture, including missing fields. It does
+not assume that a marker, class identity or revision implies immutable fields.
+
+Old prepared receivers retain their immutable captured recipes. After exposure,
+new requests cannot issue a private cut; they capture actual raw fields. The
+concrete thunk-field edit control preserves the old callable cut while future
+ordinary capture sees the malformed raw thunk. An old cut cannot certify a new
+source merely because its allocation identity remains the same.
+
+* Boundaries with the existing owners
+
+This source/index ticket owns raw allocation only. It is NOT a POO Graph
+publication ticket, a proof of current raw contents, or a license to skip
+callback-return checks. A raw MOP write deliberately leaves its epoch unchanged.
+POO's existing issuer, dependency registrations and publication fences must
+continue to authenticate their own facts. SourceViews owns exact raw-storage
+alias counts and the existing reverse frontier across .cc/.mix views. Retained
+captures and not-yet-established capture candidates are different lifetimes;
+do not invalidate old business results merely because reflection occurs.
+
+Native integration belongs in the existing object/prototype-map path. Private
+borrowing and public payload reflection must differ internally: name-only
+enumeration needs no raw allocation; exposing a payload commits the owner fence
+before handing it to a visitor. io.ss's name enumeration must remain name-only.
+Public object-slots, exported map access, traversal callbacks and raw MOP access
+to returned SlotSpecs must all preserve this contract. No private mutable recipe
+may leak through an exported field accessor. Reuse the existing issuer and
+indexes; do not introduce another registry, loader, evaluator or result cache.
+
+* Evidence and open work
+
+OwnedSlotSource derives allocation/transition coverage, immutable capture,
+pre-constructor revocation, exact issued reads, visible raw edits, unchanged
+raw-write metadata, stale/foreign/index-mismatched result refusal, second-change
+and post-commit ticket retirement, and failure conservatism. Two concrete
+controls cover malformed thunk mutation and overlapping reservations.
+
+This is a new representation contract, not a proof about the current Scheme
+storage. It does not qualify the withdrawn C4 or method-snapshot candidates,
+source currentness across Gerbil expansion, Core 10K EVAL, or any speed claim.
+The existing Core SourceWindows and ReplayCheckpoint QNT models continue to own
+independent effect boundaries. They are not replaced or claimed rerun here.
+Scheme adoption still requires native constructor/exposure correspondence,
+matching failures, original cold/hot/clone controls and the actual consumer gates.
