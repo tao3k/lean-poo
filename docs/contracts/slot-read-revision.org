@@ -1,0 +1,112 @@
+#+title: Covered revisions for the existing POO observation store
+
+* Problem and scope
+
+Fast Graph lookup does not make an arbitrary read certificate immutable.
+The existing read walker authenticates mutable record fields, metadata routes
+and receiver cells. A raw MOP write can change those fields without advancing
+the public object revision. Caching a successful verdict by that revision is
+unsound; ReadRevision.untracked_write_counterexample constructs this failure.
+The earlier AdmissionBoundary lower bound still applies to independent unknown
+facts. This contract does not erase that lower bound or any effect checkpoint.
+
+ReadRevision in Object/SlotObservation.lean models the EXISTING observation/value
+store. Memory.values and Memory.versions are logical projections of the same
+cells, not two runtime tables. Snapshot is a ghost view of an existing generation,
+not an instruction to copy all cells. A native implementation must use the
+current POO store and its existing index and issuer, with no second evaluator,
+result cache, registry or public module-loading abstraction.
+The user path remains the existing POO actions, including .get, .ref and .mix;
+applications do not supply revision flags or ownership assertions.
+
+* Derived writer and exposure coverage
+
+allocate establishes private storage with no published cell references.
+put updates one cell and advances both the owner generation and that cell's
+version. Even a same-value put retires the old observation. expose commits
+revocation BEFORE returning the original raw reference. A raw writer needs that
+reference but need not notify the version at all; rawPut models this honestly.
+
+Frame and CellFrame are derived from allocation and every covered transition.
+reaches_frames proves preservation for arbitrary finite histories. Cell versions
+are bounded by the owner generation and monotone across histories. Admission
+reads source identity, the selected cell's version and exposure state. Under the
+derived frame, admitted_cell_exact equates the selected value with its original
+observation; renewed_cell_exact permits an observation at any later generation.
+The result covers absent cells and opaque values, including successful false.
+It does not require caching business exceptions or invoke a business provider.
+
+unaffected_cell_remains_live proves a write to another cell preserves this
+cell's observation despite advancing the whole-owner generation. Conversely,
+changed_cell_stays_retired proves rejection after any later covered transitions,
+including ABA, deletion, reinsertion and restoration of the old payload.
+exposed_cell_stays_refused proves raw exposure cannot silently regain private
+status. Deletion must retain a version tombstone in the existing cell/index;
+reusing the old missing-cell version would violate the transition contract.
+
+Native allocation identity is an actual fresh store/control identity, not a
+Module ID, mount name or package version. Clearing/replacing a store cannot
+reset its version under the old identity. Only the existing issuer can bind a
+snapshot to its canonical source. A caller-supplied stamp, private flag or
+counter cannot establish the frame.
+
+The observed key must route to its actual cell through the authenticated POO
+index. A caller-provided ordinal, matching vector length or unchanged class
+identity is not that proof. Preserve issuer field checks and live layout/route
+authentication before consulting the version. SourceViews owns exact alias and
+ordinal correspondence; this cell theorem does not establish it. Parent read
+records/dependency metadata also need covered ownership before their traversal
+can be replaced by a group certificate.
+Receiver-to-instance/read-store bindings and the public revision state must
+still match the canonical control. A single source header cannot certify an
+arbitrary parent DAG or conceal a raw replacement of another receiver's store.
+
+* What this permits, and what remains unimplemented
+
+The current publicly reachable vector/cache fields do NOT satisfy this private
+frame merely because they have a revision. Values AND read-record metadata must
+have covered writers and reference handoffs before any grouped replay shortcut
+is enabled. Ordinary imports, MOP access, record dependencies, reflection and
+observer delivery are exposure paths to account for. Unknown or exposed stores
+retain full actual-field validation and its original first refusal.
+
+This is a value-observation reuse theorem, not a replacement for Graph repair,
+dependency registration or construction semantics. The existing Graph index
+must identify affected consumers; ConstructionCache must still supply its
+resolver/dependency equations. Structural observations (names, C4, declarations,
+types and missing-method membership) must have their own correctly invalidated
+cells. This theorem does not make an unrecorded dependency or stale structural
+cell valid. Nor does it authorize skipping immutable-source admission itself.
+
+Admission and value capture must observe one actual state, through the existing
+atomic owner operation. Native locking/linearization, constructor effects,
+read-record exposure and header-layout authenticity remain correspondence
+obligations. Graph publication generations/snapshot tickets remain independently
+authenticated. Recheck after Gerbil expansion and author callbacks; no previous
+positive header check crosses an effect. Preserve original errors and results.
+Existing QNT effect-window models are not replaced or claimed rerun here.
+
+No Scheme shortcut is enabled by these proofs. Required implementation gates:
+
+- Keep the raw-vector/MOP mutation controls and full-validation fallback.
+- Cover actual allocation, all internal writes and every raw-reference escape;
+  store cell versions alongside the current values, not in another cache.
+- Check selected/unselected cells, absence, false, same-value writes, ABA,
+  delete/reinsert, structural observations, snapshots and aliasing.
+- Check entry/return effects, concurrent publication and failed admission.
+- Match cold results and dependency closures, with a compiled fault that removes
+  writer retirement or exposure revocation and fails a semantic assertion.
+- Measure actual authenticated groups, record visits, CPU, wall, GC, allocation
+  and worker RSS. Then retain Core10K180s/4GiB and real downstream120s gates.
+
+* Diagnostic evidence, not a capacity pass
+
+The existing observer-free Core module-runtime-attribution-test.ss passes all
+16/64/64-open cases against the staged native producer. For64 closed owners,
+metadata replay uses0.504500user+0.027282system seconds; value admission uses
+0.276623user+0.208818system; wrapper expansion0.040689user+0.087735system.
+For64 open payload owners, wrapper expansion rises to2.821127user+0.141477system
+seconds. These spans are inclusive and overlap: do not sum them as disjoint
+costs, extrapolate small init files to the full large-source workload, or claim
+a speedup from this diagnostic. The prior complete10K run still failed180s.
+The native producer and these revision contracts remain unadopted by Core pins.
