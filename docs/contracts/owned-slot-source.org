@@ -47,6 +47,30 @@ metadata writes; it does not establish concurrent writer synchronization or
 permit sharing across effects. The native candidate needs its own mutation,
 matched-fault and complete-cost qualification before adoption.
 
+* Closed native installation and author boundaries
+
+ClosedInstallation.install_equals_original proves that a fixed internal program
+consuming canonical bindings, without mutating the source, has exactly the same
+result, error and call count as the stamp/admit/fenced path. This is not a purity
+annotation for user functions. The Scheme candidate implements only its fixed
+index-to-method-table write loop; provider bodies are never called. It checks
+the actual standard writer, protocol absence, source eligibility and exact
+owner view, under the existing source gate. Unknown routes decline this path.
+
+The gate remains held for this closed operation. exposure_first_refuses and
+installation_cut_survives_exposure describe the two possible serial orders with
+raw-reference exposure: exposure first refuses new installation; installation
+first retains the old immutable recipe cut. Other thread metadata writes are
+not certified by that source gate. The supported native route still needs its
+runtime correspondence and mutation controls.
+
+The general with-capture operation is unchanged: unlock before any author
+callback and independently authenticate and admit on return. Neither a cached
+value nor a successful internal installation permits skipping those checks.
+No source stamp is allocated or replayed for the closed operation, and no new
+method cache, lock, issuer or evaluator is introduced. Native complete-cost
+and downstream qualification remain separate from this conditional proof.
+
 * Exposure, physical writes and lifetime
 
 reserve commits exposure and a source/index/generation ticket BEFORE a raw

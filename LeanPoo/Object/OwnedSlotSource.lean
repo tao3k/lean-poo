@@ -480,6 +480,63 @@ theorem exposure_retires_capture {Self Value : Type} (before after : Source Self
   have closed := reused.1
   simp [exposed] at closed
 
+namespace ClosedInstallation
+
+/-- The closed native program consumes canonical bindings without changing the
+source or calling an author action. Its method-table result may still fail.
+The native source gate excludes exposure throughout this whole operation. -/
+def original {Self Value Error Result : Type} (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  match stamp source with
+  | none => (source, .error .stale, 0)
+  | some ticket => fenced source ticket fun current => (current, program current.captured)
+
+def install {Self Value Error Result : Type} (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  if source.exposed then (source, .error .stale, 0)
+  else
+    match program source.captured with
+    | .error error => (source, .error (.body error), 1)
+    | .ok result => (source, .ok result, 1)
+
+/-- One admission under the source gate replaces repeated capture admission
+only for the fixed program above. No result, error or actual call is removed. -/
+theorem install_equals_original {Self Value Error Result : Type}
+    (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    install source program = original source program := by
+  cases exposed : source.exposed <;>
+    simp [install, original, stamp, fenced, Admits, exposed]
+
+theorem failed_admission_calls_no_program {Self Value Error Result : Type}
+    (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (exposed : source.exposed = true) :
+    install source program = (source, .error .stale, 0) := by
+  simp [install, exposed]
+
+theorem exposure_first_refuses {Self Value Error Result : Type}
+    (before after : Source Self Value) (index : Nat) (ticket : Ticket)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (step : reserve before index = some (after, ticket)) :
+    install after program = (after, .error .stale, 0) := by
+  exact failed_admission_calls_no_program after program
+    (reserve_exposes before after index ticket step).1
+
+/-- If installation wins the gate, later exposure preserves the exact retained
+recipe cut. If exposure wins, the preceding theorem refuses new installation.
+The two complete operations have a serial order, not interleaved source state. -/
+theorem installation_cut_survives_exposure {Self Value Error Result : Type}
+    (before after : Source Self Value) (index : Nat) (ticket : Ticket)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (step : reserve before index = some (after, ticket)) :
+    program before.captured = program after.captured := by
+  rw [(reserve_exposes before after index ticket step).2]
+
+end ClosedInstallation
+
 namespace Reference
 
 /-- Native receiver domains are derived from actual receiver representation,

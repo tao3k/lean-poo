@@ -82,4 +82,20 @@ package OwnedSlotSource {
                Parents, hooks, defaults, declarations, overrides, unknown or
                exposed sources retain full preparation. No body is evaluated. */
     }
+    requirement def ClosedNativeInstallation {
+        attribute standardWriterCurrent : Boolean;
+        attribute exactOwnerView : Boolean;
+        attribute sourceGateHeld : Boolean;
+        attribute noAuthorCall : Boolean;
+        require constraint {
+            standardWriterCurrent and exactOwnerView and sourceGateHeld and noAuthorCall
+        }
+        doc /* ClosedInstallation preserves results and errors for the fixed
+               index-to-method installation program. Exposure and installation
+               serialize on the existing source gate. Exposure first declines;
+               installation first retains immutable cuts. General author calls
+               still unlock and independently authenticate/admit at return.
+               The gate does not certify arbitrary concurrent metadata writes.
+               Unknown writers and protocols retain ordinary preparation. */
+    }
 }
