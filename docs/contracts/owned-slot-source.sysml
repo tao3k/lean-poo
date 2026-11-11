@@ -2,10 +2,10 @@ package OwnedSlotSource {
     private import ScalarValues::*;
     requirement def PrivateRecipeStorage {
         attribute generatedStockConstructor : Boolean;
-        attribute rawObjectsAbsent : Boolean;
+        attribute rawReferencesUnpublished : Boolean;
         attribute privateCaptureUnchanged : Boolean;
         require constraint {
-            generatedStockConstructor and rawObjectsAbsent and privateCaptureUnchanged
+            generatedStockConstructor and rawReferencesUnpublished and privateCaptureUnchanged
         }
         doc /* A flag over already allocated mutable SlotSpecs is insufficient.
                Unknown or caller-owned sources use ordinary complete capture. */
@@ -18,7 +18,7 @@ package OwnedSlotSource {
         require constraint {
             exposureCommitted and ticketSourceMatches and ticketEpochMatches and pendingIndexMatches
         }
-        doc /* Reserve before construction/callbacks. Success retires the
+        doc /* Reserve before reference handoff/callbacks. Success retires the
                ticket; failure never restores private capture eligibility. */
     }
     requirement def RawWriteAndSnapshot {

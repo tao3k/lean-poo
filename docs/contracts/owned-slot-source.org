@@ -5,8 +5,10 @@
 SourcePreparation.runtime_bypass_breaks_issued_field_equivalence shows why an
 unexposed flag cannot certify already allocated mutable SlotSpecs. This model
 uses a stronger representation: constructor-owned private recipes exist before
-reflection, but the corresponding raw SlotSpecs do not. An ordinary MOP field
-writer cannot mutate a raw object that has not been allocated. The canonical
+reflection, but references to the corresponding raw SlotSpecs are unpublished.
+An ordinary MOP writer needs a reference to the raw object. SourceExposure
+models private records allocated at the original constructor point and derives
+the reference-reachability frame. The canonical
 recipes must remain inaccessible to raw field writes in the Scheme adapter;
 merely renaming or hiding a mutable struct field does not establish that fact.
 
@@ -26,17 +28,19 @@ identity is a fresh storage allocation, not a Module ID or namespace mount.
 
 * Exposure, physical writes and lifetime
 
-reserve commits exposure and a source/index/generation ticket BEFORE raw record
-construction or any possible callback. A second reservation supersedes the old
+reserve commits exposure and a source/index/generation ticket BEFORE a raw
+reference handoff or any visitor callback. A second reservation supersedes the old
 ticket. finish verifies all three bindings and the exact pending index, installs
 the actual constructor result and retires the ticket. abort clears the pending
 result but never restores private status. Existing raw references must be reused
 on repeated reflection, not reconstructed with different identities.
 
-The raw map models published raw cells. A constructor-local object may already
-exist during a callback after reservation; finish accepts its actual resulting
-payload. Such intermediate constructor effects are not modeled individually.
-Exposure has already revoked private issuance throughout that interval.
+The raw map models published raw cells, not all physical heap allocations.
+SourceExposure permits stock constructor records in private storage from birth;
+it proves equality with ordinary private-field capture before any reference
+escapes. Unknown constructors which can leak their records are outside that
+owned allocation route. A handoff callback runs only after revocation. The
+existing ticket protocol still governs pending publication and retirement.
 
 rawWrite requires a physically allocated raw cell. It changes its payload only:
 it does NOT advance the owner epoch, set an exposure bit, or notify dependents.

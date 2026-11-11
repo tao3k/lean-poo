@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
 import LeanPoo.Object.SourcePreparation
 
-/-! Raw SlotSpecs are allocated only on exposure. Ordinary raw field writes do
+/-! Raw SlotSpec references are published only on exposure. Ordinary raw field writes do
 not notify a source, advance its revision, or repair its private marker. -/
 namespace LeanPoo.Object.OwnedSlotSource
 
@@ -36,7 +36,7 @@ theorem fresh_allocations_distinct {Self Value : Type}
       (allocateFresh right (allocateFresh left seed).2).1.identity := by
   simp [allocateFresh, allocate]
 
-/-- A private source has no raw objects to mutate and no author construction
+/-- A private source has no published raw references and no exposure
 in flight. This is derived from the allocation/operation sequence below. -/
 def Invariant {Self Value : Type} (source : Source Self Value) : Prop :=
   source.exposed = false → source.pending = none ∧ ∀ index, source.raw index = none
@@ -46,8 +46,9 @@ def issue {Self Value : Type} (source : Source Self Value) :
   if source.exposed then none else some source.captured
 
 /-- Repeated reflection first returns an existing raw address unchanged.
-Only a genuinely missing, in-range raw cell reserves a constructor call. The
-exposure bit is committed BEFORE that call, including callbacks or failure. -/
+Only a genuinely missing, in-range published cell reserves a handoff. The
+exposure bit is committed BEFORE that handoff, including callbacks or failure.
+Physical construction may have happened earlier in private storage. -/
 def reserve {Self Value : Type} (source : Source Self Value) (index : Nat) :
     Option (Source Self Value × Ticket) :=
   if index < source.captured.size ∧ (source.raw index).isNone then
@@ -56,7 +57,7 @@ def reserve {Self Value : Type} (source : Source Self Value) (index : Nat) :
       ⟨source.identity, next, index⟩)
   else none
 
-/-- Publish the actual constructor result, not a successful purity claim.
+/-- Publish the actual raw record, not a successful purity claim.
 An exposed source never uses this raw result to issue a private capture. -/
 def finish {Self Value : Type} (source : Source Self Value) (ticket : Ticket)
     (payload : CapturedBinding.Spec Self Value) : Option (Source Self Value) :=
@@ -108,7 +109,7 @@ theorem reserve_exposes {Self Value : Type} (source next : Source Self Value)
   · cases step; exact ⟨rfl, rfl⟩
   · cases step
 
-theorem reserve_revokes_before_constructor {Self Value : Type}
+theorem reserve_revokes_before_handoff {Self Value : Type}
     (source next : Source Self Value) (index : Nat) (ticket : Ticket)
     (step : reserve source index = some (next, ticket)) : issue next = none := by
   simp [issue, (reserve_exposes source next index ticket step).1]
@@ -186,7 +187,7 @@ theorem Reachable.capture_unchanged {Self Value : Type}
   | aborted _ ih => exact ih
   | written _ step ih => exact (raw_write_keeps_metadata _ _ _ _ step).1.trans ih
 
-/-- This rejects a raw write because no raw address exists, not because a raw
+/-- This rejects a raw write because no raw address is published, not because a raw
 writer cooperatively checks a private exposure flag. -/
 theorem closed_has_no_raw_write {Self Value : Type}
     {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}

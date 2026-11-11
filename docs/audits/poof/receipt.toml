@@ -617,6 +617,7 @@
   "LeanPoo/Object/SlotReflection.lean",
   "LeanPoo/Object/SlotSyntax.lean",
   "LeanPoo/Object/SortedInheritance.lean",
+  "LeanPoo/Object/SourceExposure.lean",
   "LeanPoo/Object/SourcePreparation.lean",
   "LeanPoo/Object/SourceViews.lean",
   "LeanPoo/Object/SpecificationComposition.lean",

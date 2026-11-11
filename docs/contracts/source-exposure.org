@@ -1,0 +1,52 @@
+#+title: Private raw storage and published references
+
+* Constructor timing
+
+OwnedSlotSource.raw denotes published raw references, not all physical heap
+objects. SourceExposure refines that distinction: stock constructors may run at
+their original observation point and their actual records remain in private
+storage. Reflection publishes the original address, never creates a replacement
+record or invokes a newly installed constructor. Foreign constructors which can
+leak a record cannot enter this owned route.
+
+The unpublished fields equal the private captured recipes. Exposure commits the
+public-reference boundary before a visitor can receive an address. A raw MOP
+writer needs such a reference; it does not cooperatively check a source marker
+or announce a revision. expose/write preserve the derived invariant across all
+Reachable sequences. issued_private_fields_exact equates complete ordinary
+private-field capture with the borrowed recipe array. private_record_control
+shows a physically allocated record while no public write is possible.
+
+project maps only published addresses to OwnedSlotSource.raw. issue_projection
+and projection_invariant connect the capture laws. Ticket epochs and pending
+publication remain OwnedSlotSource's separate control protocol; this projection
+does not pretend to implement that whole state machine.
+
+* Scheme correspondence under qualification
+
+The local Scheme candidate lives in object/owned-source.scm, included in the
+existing object namespace. It keeps copied payload identities and original raw
+records inside lexical closures. Its carrier is an ordinary POO object. The
+existing issuer signs a source-storage structural record for the control
+procedure; no second issuer or source registry is created. Source operations
+authenticate the actual carrier routes and registered signature before invoking
+the control. A live record binds the procedure identity to the carrier's state
+cell, not to a cached decision that the source is still private. Each new borrow
+must inspect the current exposure bit and stock/type frame again.
+
+The candidate preserves all four binding forms. Binding a method executes no
+Slot body; opaque business values keep their original identities. Exposing raw
+records is atomic under the existing native mutex primitive. Reservations bind
+the actual carrier, epoch and pending index; abort never restores eligibility.
+Raw field mutation changes none of these private counters. Old captures retain
+their copied payload identities. An exposed malformed sibling returns to the
+original object's complete preparation and is still refused before selection.
+
+This remains a PRIVATE CANDIDATE, not a released interface or an adopted
+optimization. Normal .o/object<-fun producers and method-table preparation are
+not connected to it. Their full constructor/effect correspondence, indexed
+binding, metadata lifetime/collection, native property controls, CPU studies,
+Core10K and downstream gates remain required. In particular, arbitrary metadata
+method changes and administrative initialization effects must be qualified
+before connecting the producer path. Preserve the original Gerbil expansion
+and author callback checkpoints and the existing QNT effect-window owners.
