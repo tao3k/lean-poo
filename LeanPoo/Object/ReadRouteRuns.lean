@@ -238,6 +238,21 @@ theorem native_callback_return_exact (before : Window) (reads : List Read)
       nativeCallback serial before reads action := by
   simp [nativeCallback, marked_eq_serial]
 
+/-- Entry and return independently validate the structural route markers and
+repeat issuance. No successful validation crosses the author action. -/
+def nativeMarkedCallback (before : Window) (reads : List Read)
+    (action : Unit → Window × Nat) : Except Refusal Nat := do
+  preflight before reads
+  marked before (markRoutes reads [])
+  let (after, value) := action ()
+  marked after (markRoutes reads [])
+  pure value
+
+theorem native_marked_callback_exact (before : Window) (reads : List Read)
+    (action : Unit → Window × Nat) :
+    nativeMarkedCallback before reads action = nativeCallback serial before reads action := by
+  simp [nativeMarkedCallback, nativeCallback, marked_eq_serial]
+
 private def competingRefusals : Window where
   issue read := if read.key = 1 then .error .issuance else .ok ()
   key _ := .ok ()
