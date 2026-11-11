@@ -55,6 +55,36 @@ concrete thunk-field edit control preserves the old callable cut while future
 ordinary capture sees the malformed raw thunk. An old cut cannot certify a new
 source merely because its allocation identity remains the same.
 
+* Capture admission across the author boundary
+
+CaptureStamp binds the source allocation and its current epoch. admit returns
+the source's canonical captured array, never a binder carried by a presented
+ticket. The native private stamp additionally checks the canonical binder's
+procedure identity before accepting it. Copy the caller-owned presented stamp
+before admission; both checks use that same private copy. A callback must not
+renew an in-flight operation by editing its original ticket's epoch. Lean's
+CaptureStamp is immutable; this copying boundary is a native correspondence
+obligation, not a property of a mutable presented vector.
+An old immutable cut can remain callable
+without authorizing a new preparation publication.
+
+fenced checks admission before the body, runs it exactly once, then independently
+checks the returned source. A failed entry runs no body. A changed return rejects
+publication but preserves the body's effects. A body exception retains its exact
+error and effects; it is not replaced by a stale-source error. Successful false
+values are ordinary results. Native multiple/zero-value returns retain their
+arity. No author action executes under the source mutex.
+
+abort_retires_capture derives rejection even when abort leaves storage private;
+exposure_retires_capture derives rejection from reserve's actual transition.
+The native entry and return each authenticate the carrier's current registered
+read and live state value before checking its source epoch. The pre-action
+procedure or successful validation is not reused as return evidence.
+
+These source fences precede a future connection to existing indexed preparation.
+They do not themselves register Graph dependency edges or replace the independent
+checks across Gerbil expansion and author effects.
+
 * Boundaries with the existing owners
 
 This source/index ticket owns raw allocation only. It is NOT a POO Graph
@@ -78,7 +108,7 @@ indexes; do not introduce another registry, loader, evaluator or result cache.
 * Evidence and open work
 
 OwnedSlotSource derives allocation/transition coverage, immutable capture,
-pre-constructor revocation, exact issued reads, visible raw edits, unchanged
+pre-handoff revocation, exact issued reads, visible raw edits, unchanged
 raw-write metadata, stale/foreign/index-mismatched result refusal, second-change
 and post-commit ticket retirement, and failure conservatism. Two concrete
 controls cover malformed thunk mutation and overlapping reservations.

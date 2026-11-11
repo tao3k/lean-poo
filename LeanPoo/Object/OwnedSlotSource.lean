@@ -373,4 +373,111 @@ theorem replacement_and_failure_control :
     finish (abort second) ⟨4, 2, 1⟩ (.constant 9) = none := by
   simp [allocate, reserve, finish, issue, abort]
 
+/-- A retained binding is an immutable cut. Publishing NEW preparation also
+requires the source's current admission generation; it is not implied by that
+cut remaining callable. Native admission must return its own canonical binder,
+never a procedure supplied by a presented stamp. -/
+structure CaptureStamp where
+  source : Nat
+  epoch : Nat
+  deriving DecidableEq
+
+abbrev Admits {Self Value : Type} (source : Source Self Value) (stamp : CaptureStamp) : Prop :=
+  source.exposed = false ∧ stamp.source = source.identity ∧ stamp.epoch = source.epoch
+
+def stamp {Self Value : Type} (source : Source Self Value) : Option CaptureStamp :=
+  if source.exposed then none else some ⟨source.identity, source.epoch⟩
+
+def admit {Self Value : Type} (source : Source Self Value) (ticket : CaptureStamp) :
+    Option (Array (CapturedBinding.Spec Self Value)) :=
+  if Admits source ticket then some source.captured else none
+
+inductive FenceError (Error : Type) where
+  | stale
+  | body (error : Error)
+  deriving DecidableEq
+
+/-- The callback owns all its effects, even on refusal or exception. There is
+no rollback and no callback under a source lock. A successful return requires
+an independent post-callback admission. Calls counts the actual body boundary. -/
+def fenced {Self Value Error Result : Type} (before : Source Self Value)
+    (ticket : CaptureStamp)
+    (action : Source Self Value → Source Self Value × Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  if Admits before ticket then
+    let (after, result) := action before
+    match result with
+    | .error error => (after, .error (.body error), 1)
+    | .ok value =>
+      if Admits after ticket then (after, .ok value, 1)
+      else (after, .error .stale, 1)
+  else (before, .error .stale, 0)
+
+theorem admit_canonical {Self Value : Type} (source : Source Self Value)
+    (ticket : CaptureStamp) (accepted : Admits source ticket) :
+    admit source ticket = some source.captured := by simp [admit, accepted]
+
+theorem admitted_fields_exact {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) (ticket : CaptureStamp)
+    (accepted : Admits source ticket) (index : Nat) :
+    readField source index = source.captured[index]? := by
+  exact issued_capture_exact path source.captured (by simp [issue, accepted.1]) index
+
+theorem admitted_siblings_callable {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) (ticket : CaptureStamp)
+    (accepted : Admits source ticket) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) (found : source.captured[index]? = some payload) :
+    CapturedBinding.classified payload = true := by
+  exact issued_callable path source.captured (by simp [issue, accepted.1]) index payload found
+
+theorem failed_entry_calls_no_body {Self Value Error Result : Type}
+    (before : Source Self Value) (ticket : CaptureStamp)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (refused : ¬ Admits before ticket) :
+    fenced before ticket action = (before, .error .stale, 0) := by
+  simp [fenced, refused]
+
+theorem callback_failure_preserved {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (error : Error)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .error error)) :
+    fenced before ticket action = (after, .error (.body error), 1) := by
+  simp [fenced, entry, body]
+
+theorem changed_return_refused_without_rollback {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (value : Result)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .ok value))
+    (changed : ¬ Admits after ticket) :
+    fenced before ticket action = (after, .error .stale, 1) := by
+  simp [fenced, entry, body, changed]
+
+theorem unchanged_return_exact {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (value : Result)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .ok value))
+    (returned : Admits after ticket) :
+    fenced before ticket action = (after, .ok value, 1) := by
+  simp only [fenced, ite_eq_left entry, body, ite_eq_left returned]
+
+theorem abort_retires_capture {Self Value : Type} (source : Source Self Value)
+    (ticket : CaptureStamp) (entry : Admits source ticket) :
+    ¬ Admits (abort source) ticket := by
+  intro reused
+  have previous := entry.2.2
+  have next := reused.2.2
+  simp only [abort] at next
+  omega
+
+theorem exposure_retires_capture {Self Value : Type} (before after : Source Self Value)
+    (index : Nat) (ticket : Ticket) (capture : CaptureStamp)
+    (step : reserve before index = some (after, ticket)) :
+    ¬ Admits after capture := by
+  intro reused
+  have exposed := (reserve_exposes before after index ticket step).1
+  have closed := reused.1
+  simp [exposed] at closed
+
 end LeanPoo.Object.OwnedSlotSource

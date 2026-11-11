@@ -31,4 +31,19 @@ package OwnedSlotSource {
                replace POO publication/read authority. Preserve independent
                Gerbil expansion and author callback entry/return checks. */
     }
+    requirement def CaptureReturnFence {
+        attribute sourceMatches : Boolean;
+        attribute epochMatches : Boolean;
+        attribute stillPrivate : Boolean;
+        attribute canonicalBinding : Boolean;
+        attribute presentedStampCopied : Boolean;
+        require constraint {
+            sourceMatches and epochMatches and stillPrivate and canonicalBinding and presentedStampCopied
+        }
+        doc /* Check independently before and after the author action. Failure
+               before entry calls no action; failure at return preserves effects
+               and rejects new publication. Preserve the original body exception
+               and successful result arity; never hold the source mutex across it.
+               Retained immutable cuts do not authorize new publication. */
+    }
 }
