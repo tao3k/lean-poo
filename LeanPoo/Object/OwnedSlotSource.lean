@@ -480,4 +480,95 @@ theorem exposure_retires_capture {Self Value : Type} (before after : Source Self
   have closed := reused.1
   simp [exposed] at closed
 
+namespace Reference
+
+/-- Native receiver domains are derived from actual receiver representation,
+not a caller-supplied approval bit. These records use the ONE existing issuer. -/
+inductive Receiver where
+  | object (identity : Nat)
+  | source (identity : Nat)
+  | map (identity : Nat)
+  deriving DecidableEq
+
+inductive Purpose where
+  | business | source | map
+  deriving DecidableEq
+
+structure Data where
+  receiver : Receiver
+  purpose : Purpose
+  control : Nat
+  deriving DecidableEq
+
+def sourceControl (authority : Nat → Option Data) (reference : Nat) (shown : Data) : Option Nat :=
+  match authority reference with
+  | none => none
+  | some original =>
+    if shown = original then
+      match original.receiver, original.purpose with
+      | .source _, .source => some original.control
+      | _, _ => none
+    else none
+
+def businessRead (authority : Nat → Option Data) (reference : Nat) (shown : Data) : Bool :=
+  match authority reference with
+  | none => false
+  | some original =>
+    if shown = original then
+      match original.receiver with | .object _ => true | _ => false
+    else false
+
+def dispatch {Result : Type} (authority : Nat → Option Data) (reference : Nat)
+    (shown : Data) (invoke : Nat → Result) : Option Result :=
+  (sourceControl authority reference shown).map invoke
+
+theorem unregistered_never_dispatches {Result : Type} (authority : Nat → Option Data)
+    (reference : Nat) (shown : Data) (invoke : Nat → Result)
+    (missing : authority reference = none) : dispatch authority reference shown invoke = none := by
+  simp [dispatch, sourceControl, missing]
+
+theorem changed_presentation_never_dispatches {Result : Type}
+    (authority : Nat → Option Data) (reference : Nat) (original shown : Data)
+    (invoke : Nat → Result) (registered : authority reference = some original)
+    (changed : shown ≠ original) : dispatch authority reference shown invoke = none := by
+  simp [dispatch, sourceControl, registered, changed]
+
+theorem canonical_source_dispatch {Result : Type} (authority : Nat → Option Data)
+    (reference identity control : Nat) (invoke : Nat → Result)
+    (registered : authority reference = some ⟨.source identity, .source, control⟩) :
+    dispatch authority reference ⟨.source identity, .source, control⟩ invoke = some (invoke control) := by
+  simp [dispatch, sourceControl, registered]
+
+theorem internal_receivers_not_business_reads (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.source identity, purpose, control⟩) :
+    businessRead authority reference ⟨.source identity, purpose, control⟩ = false := by
+  simp [businessRead, registered]
+
+theorem object_receipt_not_source (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.object identity, purpose, control⟩) :
+    sourceControl authority reference ⟨.object identity, purpose, control⟩ = none := by
+  simp [sourceControl, registered]
+
+theorem map_receivers_not_business_reads (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.map identity, purpose, control⟩) :
+    businessRead authority reference ⟨.map identity, purpose, control⟩ = false := by
+  simp [businessRead, registered]
+
+theorem source_requires_own_purpose (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.source identity, purpose, control⟩)
+    (different : purpose ≠ .source) :
+    sourceControl authority reference ⟨.source identity, purpose, control⟩ = none := by
+  cases purpose <;> simp_all [sourceControl]
+
+theorem map_receipt_not_source (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.map identity, purpose, control⟩) :
+    sourceControl authority reference ⟨.map identity, purpose, control⟩ = none := by
+  simp [sourceControl, registered]
+
+end Reference
 end LeanPoo.Object.OwnedSlotSource

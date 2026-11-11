@@ -31,6 +31,20 @@ package OwnedSlotSource {
                replace POO publication/read authority. Preserve independent
                Gerbil expansion and author callback entry/return checks. */
     }
+    requirement def InternalReferenceDomain {
+        attribute registeredFieldsMatch : Boolean;
+        attribute sourceReceiver : Boolean;
+        attribute sourcePurpose : Boolean;
+        require constraint {
+            registeredFieldsMatch and sourceReceiver and sourcePurpose
+        }
+        doc /* Reference.sourceControl uses the existing issuer before control
+               extraction. Copied or changed records do not dispatch. Internal
+               source/map references are not business reads. No administrative
+               POO object, second authority or result cache is introduced.
+               Identity does not replace live epoch checks across callbacks.
+               Gerbil constructor/layout correspondence remains a native gate. */
+    }
     requirement def CaptureReturnFence {
         attribute sourceMatches : Boolean;
         attribute epochMatches : Boolean;
