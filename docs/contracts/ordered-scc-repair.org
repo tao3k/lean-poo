@@ -1,5 +1,33 @@
 #+title: Rank-preserving SCC row edits on an admitted owned partition
 
+* Component-preserving effective edits
+
+The existing certified owner index also classifies edits to nontrivial SCCs.
+Every effective insertion must join owners already in the same old component.
+Every effective deletion must cross old components or remove a self edge.
+Unchanged edges are outside this classification. This rule applies to batches
+and preserves all SCC equivalence, not general graph reachability.
+
+=internal_path_preserved= proves paths within an old SCC survive: a non-self
+edge on such a path is internal and cannot be deleted. =added_internal_path=
+replaces every new internal edge with an old path. =component_stable_edit=
+combines these facts into old/new SCC equivalence. =owner_classified_edit=
+connects effective edge differences and the certified native owner premise to
+the exact next owner relation. Complete delta coverage and source admission
+remain separate obligations; edit counts are not evidence of either.
+
+Scheme must share the old owner/member indices, write only changed forward
+rows and affected reverse buckets, and retain ordinary quotient/value
+invalidation. A preserved partition does not preserve its functional-cycle
+certificate after adding a chord. Lean's finite three-node counterexample
+distinguishes SCC membership from one-successor shape. Native controls must
+add a chord, then delete another internal edge and compare the split to cold
+discovery. Unknown or failed classifications keep the existing repair path.
+The directional case avoids these additional owner-index queries entirely.
+
+This is a candidate contract; no latency or full Module EVAL claim follows
+from the proof. Benchmark explicit SCC output separately from local revision.
+
 * Actual path and current gap
 
 At POO7cf5caf, strong-components.ss:revise-partition records exact row and

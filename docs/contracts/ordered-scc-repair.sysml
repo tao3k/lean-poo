@@ -11,6 +11,20 @@ package OrderedSccRepair {
                Self edges do not merge distinct owners. Changed rows must
                preserve one certified direction before reusing SCC maps. */
     }
+    requirement def RetainedComponents {
+        attribute certifiedOldOwnerIndex : Boolean;
+        attribute exactEffectiveEdgeDifference : Boolean;
+        attribute additionsInsideOldComponents : Boolean;
+        attribute removalsExternalOrSelf : Boolean;
+        attribute cycleCertificateRetired : Boolean;
+        require constraint { certifiedOldOwnerIndex and exactEffectiveEdgeDifference
+            and additionsInsideOldComponents and removalsExternalOrSelf
+            and cycleCertificateRetired }
+        doc /* Preserve SCC equivalence and share old owner/member indices.
+               Update adjacency and ordinary invalidation separately. A chord
+               preserves membership but not the one-successor certificate.
+               This classification grants no source or publication approval. */
+    }
     requirement def SnapshotAndFallback {
         attribute oldSnapshotUnchanged : Boolean;
         attribute unsupportedRefused : Boolean;

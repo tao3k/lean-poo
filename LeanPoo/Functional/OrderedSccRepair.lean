@@ -86,4 +86,72 @@ example (ascending : Bool) : Ordered (fun _ _ : Fin 1 => true) (fun a => a.val) 
   subst b
   cases ascending <;> exact Nat.le_refl _
 
+/-- Inside one old component, a path can discard self edges. Every other
+    edge on it has endpoints in that component and must survive the edit. -/
+theorem internal_path_preserved {n : Nat} {old next : Edge n}
+    (keep : ∀ a b, old a b = true → a ≠ b → Same old a b → next a b = true)
+    {a b : Fin n} (path : Reach old a b) : Reach old b a → Reach next a b := by
+  induction path with
+  | refl a => intro _; exact .refl a
+  | @step a middle b direct tail ih =>
+    intro back
+    have first : Reach old a middle := .step direct (.refl middle)
+    have rest := ih (back.trans first)
+    by_cases equal : a = middle
+    · subst middle; exact rest
+    · exact .step (keep a middle direct equal ⟨first, tail.trans back⟩) rest
+
+theorem added_internal_path {n : Nat} {old next : Edge n}
+    (added : ∀ a b, next a b = true → old a b = true ∨ Same old a b)
+    {a b : Fin n} (path : Reach next a b) : Reach old a b := by
+  induction path with
+  | refl a => exact .refl a
+  | @step a middle b direct _ ih =>
+    rcases added a middle direct with prior | internal
+    · exact .step prior ih
+    · exact internal.1.trans ih
+
+/-- Insertions internal to old SCCs and deletions only between old SCCs
+    (or self edges) preserve exact SCC membership in both directions. -/
+theorem component_stable_edit {n : Nat} {old next : Edge n}
+    (keep : ∀ a b, old a b = true → a ≠ b → Same old a b → next a b = true)
+    (added : ∀ a b, next a b = true → old a b = true ∨ Same old a b)
+    (a b : Fin n) : Same old a b ↔ Same next a b := by
+  constructor
+  · rintro ⟨forward, backward⟩
+    exact ⟨internal_path_preserved keep forward backward,
+      internal_path_preserved keep backward forward⟩
+  · rintro ⟨forward, backward⟩
+    exact ⟨added_internal_path added forward, added_internal_path added backward⟩
+
+/-- The native classifier inspects only effective additions/removals against
+    the predecessor's already certified owner index. Row capture/authentication
+    and complete delta coverage remain independent premises. -/
+theorem owner_classified_edit {n : Nat} {old next : Edge n} (owner : Fin n → Fin n)
+    (exactOwner : ∀ a b, Same old a b ↔ owner a = owner b)
+    (inserted : ∀ a b, next a b = true → old a b ≠ true → owner a = owner b)
+    (removed : ∀ a b, old a b = true → next a b ≠ true → a = b ∨ owner a ≠ owner b)
+    (a b : Fin n) : Same next a b ↔ owner a = owner b := by
+  have keep : ∀ a b, old a b = true → a ≠ b → Same old a b → next a b = true := by
+    intro x y direct distinct same
+    apply Classical.byContradiction
+    intro missing
+    rcases removed x y direct missing with equal | separated
+    · exact distinct equal
+    · exact separated ((exactOwner x y).mp same)
+  have added : ∀ a b, next a b = true → old a b = true ∨ Same old a b := by
+    intro x y direct
+    by_cases prior : old x y = true
+    · exact Or.inl prior
+    · exact Or.inr ((exactOwner x y).mpr (inserted x y direct prior))
+  exact (component_stable_edit keep added a b).symm.trans (exactOwner a b)
+
+-- A retained SCC partition does NOT retain the functional-cycle certificate.
+private def cycle3 : Edge 3 := fun a b => decide ((a.val + 1) % 3 = b.val)
+private def chord3 : Edge 3 := fun a b => cycle3 a b || decide (a.val = 0 ∧ b.val = 2)
+private def SingleSuccessor {n : Nat} (edge : Edge n) : Prop :=
+  ∀ a b c, edge a b = true → edge a c = true → b = c
+example : SingleSuccessor cycle3 := by unfold SingleSuccessor cycle3; decide
+example : ¬ SingleSuccessor chord3 := by unfold SingleSuccessor chord3 cycle3; decide
+
 end LeanPoo.Functional.OrderedSccRepair
