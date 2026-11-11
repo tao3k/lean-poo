@@ -23,4 +23,12 @@ package OrdinarySlotRecipes {
                directly; a macro-only speedup is not Module acceptance.
                No source, consumer pin or budget promotion follows. */
     }
+    requirement def BorrowedInheritedTail {
+        doc /* newest_equals_original and newest_append preserve newer raw
+               prefixes above captured parent methods. Only generated
+               independent forms discard older tails. Bind final child self.
+               Borrow through the existing source fences and ordinal index;
+               public iteration still exposes raw records. Publish only the
+               complete method table and retain raw refusal/effect order. */
+    }
 }

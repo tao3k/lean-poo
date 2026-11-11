@@ -59,3 +59,29 @@ remain unchanged until their owning libraries are rebuilt. A macro-only change
 cannot certify improvement of that actual Interface factory. Preserve ordinary
 syntax rejection of duplicate direct methods; duplicate contributions in this
 model refer to the already admitted chronological source schedule.
+
+* Borrowing inherited recipes
+
+RecipeRows.newest_equals_original and newest_append prove that a newer raw
+contribution prefix can end in the already captured inherited method without
+changing binding order. independent_discards_tail permits replacing the older
+chain only for generated constant/thunk/self contributions. Computed recipes
+retain the exact delayed parent and every binding uses the final child self.
+
+The adapter under qualification traverses the EXISTING ordinal index under the
+source's existing entry/return fences. Its binder returns canonical methods;
+no raw SlotSpec leaves source storage. The ordinary method table temporarily
+holds either a raw contribution prefix or a captured inherited method tail;
+only the complete final function table is published. No second method store,
+source index or business-result cache is introduced.
+
+Raw/default/declaration processing and tag refusal order remain ordinary. The
+native symbolic write route and protocol absence must be checked before this
+closed borrowing operation; author hooks retain full original capture. Public
+prototype-map-for-each still exposes the original raw records. A later genuine
+exposure revokes new borrowing while already prepared children retain their
+old cuts. Tests must force an uncached child field after exposure as well as
+check fresh children, otherwise a value-cache hit can conceal recapture bugs.
+
+This kernel work is distinct from the rejected global .o producer. Its source
+producer and actual consumer call path remain explicit qualification gates.

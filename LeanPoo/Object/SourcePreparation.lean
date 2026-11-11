@@ -531,5 +531,45 @@ theorem final_receiver_and_duplicate_control :
       install 3 rows before 1 = .nonCallable := by
   simp [install, assign, Recipe.capture, CapturedBinding.bind]
 
+/-- A newer raw prefix can end in an already captured inherited method.
+This is still the original binding kernel, not a second method evaluator. -/
+def newest {Self Value : Type} (receiver : Self) :
+    List (CapturedBinding.Spec Self Value) → CapturedBinding.Target Value →
+      CapturedBinding.Target Value
+  | [], inherited => inherited
+  | spec :: rest, inherited => CapturedBinding.bind receiver spec (newest receiver rest inherited)
+
+theorem newest_equals_original {Self Value : Type} (receiver : Self)
+    (specs : List (CapturedBinding.Spec Self Value)) (inherited : CapturedBinding.Target Value) :
+    newest receiver specs inherited = CapturedBinding.bindChain receiver specs.reverse inherited := by
+  induction specs with
+  | nil => rfl
+  | cons spec rest ih =>
+    simp only [newest, ih, CapturedBinding.bindChain, List.reverse_cons,
+      List.foldl_append, List.foldl_cons, List.foldl_nil]
+
+/-- Sharing a captured tail preserves the full contribution order, including
+several computed modifiers above it. Final receiver remains an explicit input. -/
+theorem newest_append {Self Value : Type} (receiver : Self)
+    (outer inner : List (CapturedBinding.Spec Self Value)) (inherited : CapturedBinding.Target Value) :
+    newest receiver (outer ++ inner) inherited =
+      newest receiver outer (newest receiver inner inherited) := by
+  induction outer with
+  | nil => rfl
+  | cons spec rest ih => simp only [List.cons_append, newest, ih]
+
+def independent {Self Value : Type} : Recipe Self Value → Prop
+  | .constant _ | .thunk _ | .self _ => True
+  | .computed _ => False
+
+/-- Only a generated independent contribution may replace its older chain
+with a bound method. Ordinary raw tag admission still precedes this operation. -/
+theorem independent_discards_tail {Self Value : Type} (receiver : Self)
+    (recipe : Recipe Self Value) (supported : independent recipe)
+    (left right : CapturedBinding.Target Value) :
+    CapturedBinding.bind receiver recipe.capture left =
+      CapturedBinding.bind receiver recipe.capture right := by
+  cases recipe <;> simp_all [independent, Recipe.capture, CapturedBinding.bind]
+
 end RecipeRows
 end LeanPoo.Object.SourcePreparation
