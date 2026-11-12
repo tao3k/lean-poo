@@ -385,3 +385,7 @@ import LeanPoo.Object.OwnedSlotSource
 import LeanPoo.Object.SourceExposure
 import LeanPoo.Object.SourceViews
 import LeanPoo.Object.AdmissionBoundary
+
+import LeanPoo.Object.AdmittedInterfaceRead
+
+import LeanPoo.Object.ReadRouteSharing
