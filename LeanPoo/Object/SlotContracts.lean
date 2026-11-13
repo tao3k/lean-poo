@@ -56,6 +56,44 @@ theorem absent_slot_preserves_presence_effect (present : K → Action S E Bool)
     slot present demand name check before = (.ok false, after) := by
   simp [slot, bind, pureAction, absent]
 
+-- A live prepared positive lookup uses the same method table as ordinary
+-- presence. Absence still enters reflection, which may delegate to a hook.
+-- No result or permission is kept across a predicate or caller callback.
+structure PresenceRoute where
+  prepared : Bool
+  standardLookup : Bool
+  observed : Bool
+  localSlot : Bool
+
+def directPresence (route : PresenceRoute) : Bool :=
+  route.prepared && route.standardLookup && !route.observed && route.localSlot
+
+def checkPresence (route : PresenceRoute) (ordinary : Action S E Bool) : Action S E Bool :=
+  if directPresence route then pureAction true else ordinary
+
+theorem direct_presence_preserves_outcome_and_effects (route : PresenceRoute)
+    (ordinary : Action S E Bool)
+    (positive : directPresence route = true → ordinary = pureAction true) :
+    checkPresence route ordinary = ordinary := by
+  unfold checkPresence
+  split
+  · rename_i hit
+    exact (positive hit).symm
+  · rfl
+
+theorem observed_presence_keeps_all_checks (route : PresenceRoute) (ordinary : Action S E Bool) :
+    checkPresence { route with observed := true } ordinary = ordinary := by
+  simp [checkPresence, directPresence]
+
+theorem missing_local_slot_can_delegate (route : PresenceRoute) (ordinary : Action S E Bool) :
+    checkPresence { route with localSlot := false } ordinary = ordinary := by
+  simp [checkPresence, directPresence]
+
+theorem route_rechecked_after_callback (route : PresenceRoute) (ordinary : Action S E Bool)
+    (changed : PresenceRoute) (invalid : directPresence changed = false) :
+    (checkPresence route ordinary, checkPresence changed ordinary).2 = ordinary := by
+  simp [checkPresence, invalid]
+
 -- The storage route must already be admitted. A missing or cold cell has no
 -- stored value; a stored Scheme false is still a present value.
 def storedSlot (admitted : Bool) (stored : Option V) (check : V → Bool) : Bool :=
