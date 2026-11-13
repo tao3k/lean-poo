@@ -123,6 +123,24 @@ theorem capture_prepared_presence_exact (before : Action S E Unit) (localHit : S
       · simp [hit, positive after hit]
       · simp [hit]
 
+-- A recorder keeps the original occurrence before observer delivery. Filtering
+-- the runtime's no-op removes no delivery effects, including on failure.
+def deliver (run : Observer → Action S E Unit) : List Observer → Action S E Unit
+  | [] => pureAction ()
+  | observer :: rest => bind (run observer) (fun _ => deliver run rest)
+
+theorem drop_noop_observers (run : Observer → Action S E Unit)
+    (noop : Observer → Bool) (observers : List Observer)
+    (pure : ∀ observer, noop observer = true → run observer = pureAction ()) :
+    deliver run (observers.filter (fun observer => !noop observer)) = deliver run observers := by
+  induction observers with
+  | nil => rfl
+  | cons observer rest ih =>
+    cases hit : noop observer
+    · simp [hit, deliver, ih]
+    · simp [hit, deliver, ih, pure observer hit]
+      rfl
+
 -- The storage route must already be admitted. A missing or cold cell has no
 -- stored value; a stored Scheme false is still a present value.
 def storedSlot (admitted : Bool) (stored : Option V) (check : V → Bool) : Bool :=
