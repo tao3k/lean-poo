@@ -51,6 +51,12 @@ theorem no_applicable_precedes_keyword_checks (generic : Signature)
     (tail : Option (List Nat)) (allowInCall : Bool) :
     admitCall generic [] tail allowInCall = .noApplicable := rfl
 
+-- A lookup returns presence independently of the value, including false.
+theorem share_keyword_lookup (find : Nat → Option V) (key : Nat) (fallback : Unit → V) :
+    ((find key).getD (fallback ()), (find key).isSome) =
+      (let entry := find key
+       (entry.getD (fallback ()), entry.isSome)) := rfl
+
 structure Method where
   id : Nat
   signature : Nat
