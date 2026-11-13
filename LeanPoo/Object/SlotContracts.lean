@@ -94,6 +94,35 @@ theorem route_rechecked_after_callback (route : PresenceRoute) (ordinary : Actio
     (checkPresence route ordinary, checkPresence changed ordinary).2 = ordinary := by
   simp [checkPresence, invalid]
 
+-- Structural capture runs the precheck before selecting the live query.
+-- The fast query is limited to a prepared local hit on the standard index.
+-- Signing and delivery still run, including every observer callback.
+def capturePresence (before : Action S E Unit) (query : Action S E (Bool × List R))
+    (finish : (Bool × List R) → Action S E A) : Action S E A :=
+  bind before fun _ => bind query finish
+
+def capturePreparedPresence (before : Action S E Unit) (localHit : S → Bool)
+    (query : Action S E (Bool × List R))
+    (finish : (Bool × List R) → Action S E A) : Action S E A :=
+  bind before fun _ state =>
+    if localHit state then finish (true, []) state
+    else bind query finish state
+
+theorem capture_prepared_presence_exact (before : Action S E Unit) (localHit : S → Bool)
+    (query : Action S E (Bool × List R)) (finish : (Bool × List R) → Action S E A)
+    (positive : ∀ state, localHit state = true → query state = (.ok (true, []), state)) :
+    capturePreparedPresence before localHit query finish = capturePresence before query finish := by
+  funext state
+  unfold capturePreparedPresence capturePresence bind
+  cases before state with
+  | mk result after =>
+    cases result with
+    | error cause => rfl
+    | ok _ =>
+      by_cases hit : localHit after = true
+      · simp [hit, positive after hit]
+      · simp [hit]
+
 -- The storage route must already be admitted. A missing or cold cell has no
 -- stored value; a stored Scheme false is still a present value.
 def storedSlot (admitted : Bool) (stored : Option V) (check : V → Bool) : Bool :=

@@ -211,6 +211,24 @@ theorem native_fixed_refusals_exact (window : Window) (reads : List Read) :
     nativeMarked window reads = nativeFixed window reads := by
   simp [nativeMarked, nativeFixed, marked_eq_serial]
 
+-- Replay with the runtime's exact void procedure has neither a state change
+-- between rows nor a return value to preserve other than Unit. Both the
+-- second issuance sweep and the repeated return validation are redundant.
+def voidReplay (window : Window) (reads : List Read) : Except Refusal Unit := do
+  preflight window reads
+  serial window reads
+  serial window reads
+
+theorem fixed_void_replay_exact (window : Window) (reads : List Read) :
+    nativeMarked window reads = voidReplay window reads := by
+  rw [native_fixed_refusals_exact]
+  unfold nativeFixed voidReplay
+  cases admitted : preflight window reads <;> simp only [Bind.bind, Except.bind]
+  case ok value =>
+    cases value
+    rw [serial_preissued_eq window reads ((preflight_ok_iff window reads).mp admitted)]
+    cases serial window reads <;> rfl
+
 theorem native_preflight_skip_exact (window : Window) (reads : List Read) :
     nativeFixed window reads = (do preflight window reads; serial window reads) := by
   unfold nativeFixed
