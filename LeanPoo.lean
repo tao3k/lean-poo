@@ -371,6 +371,7 @@ import LeanPoo.Object.SlotObservation
 import LeanPoo.Object.FreshReadRoots
 import LeanPoo.Object.FixedFieldLayout
 import LeanPoo.Object.SlotContracts
+import LeanPoo.Object.ClosAdmission
 
 import LeanPoo.Functional.WrapperValidation
 import LeanPoo.Functional.ByteIO
