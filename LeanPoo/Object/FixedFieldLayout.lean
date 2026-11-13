@@ -31,6 +31,26 @@ example : checked "changed metadata ref" 0 1
 example : checked true 0 0
     (fun _ => (.error false : Except Bool Nat)) = .error false := rfl
 
+-- Ordinary hash access first converts through the live HashTable descriptor.
+-- The wrapper's own fields can all agree while that conversion has changed.
+def checkedLookup {Value Error : Type} (interfaceError fieldError : Error)
+    (wrapper descriptor expectedOffset currentOffset : Nat)
+    (lookup : Nat → Except Error Value) : Except Error Value :=
+  if descriptor = wrapper then checked fieldError expectedOffset currentOffset lookup
+  else .error interfaceError
+
+theorem changed_descriptor_refused {Value Error : Type} (interfaceError fieldError : Error)
+    (wrapper descriptor expectedOffset currentOffset : Nat)
+    (lookup : Nat → Except Error Value) (changed : descriptor ≠ wrapper) :
+    checkedLookup interfaceError fieldError wrapper descriptor expectedOffset currentOffset lookup =
+      .error interfaceError := by simp [checkedLookup, changed]
+
+theorem matching_descriptor_preserves_field_check {Value Error : Type}
+    (interfaceError fieldError : Error) (wrapper expectedOffset currentOffset : Nat)
+    (lookup : Nat → Except Error Value) :
+    checkedLookup interfaceError fieldError wrapper wrapper expectedOffset currentOffset lookup =
+      checked fieldError expectedOffset currentOffset lookup := by simp [checkedLookup]
+
 def around {Value Error World : Type} (check : World → Except Error Value)
     (effect : World → Except Error World) (world : World) : Except Error Value := do
   let _ ← check world
