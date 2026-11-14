@@ -841,3 +841,39 @@ theorem reflection_preserves_dispatch (store : Store K V R)
     dispatch edited.live edited.liveRoute = dispatch store.live store.liveRoute := rfl
 
 end LeanPoo.Object.ClosAdmission.StoreReflection
+
+namespace LeanPoo.Object.ClosAdmission.SharedRoute
+
+/-- A prepared row belongs to a receiver generation and to one shared
+    interface epoch. A shared mutation rejects every row from the earlier
+    epoch. An ordinary receiver edit rejects only reverse dependents. -/
+structure Stamp where
+  route : Nat
+  receiver : Nat
+  deriving DecidableEq
+
+def current (published live : Stamp) : Bool :=
+  decide (published = live)
+
+theorem route_change_rejects_every_row (published live : Stamp)
+    (changed : published.route ≠ live.route) : current published live = false := by
+  have different : published ≠ live := fun eq => changed (congrArg Stamp.route eq)
+  simp [current, different]
+
+theorem unchanged_route_preserves_local_hit (route revision : Nat)
+    (dirty : Bool) :
+    current ⟨route, revision⟩
+      ⟨route, PublishedRoute.publish true (fun _ => dirty) (fun _ => revision) 0⟩ =
+      !dirty := by
+  cases dirty <;> simp [current, PublishedRoute.publish,
+    show ({ route := route, receiver := revision } : Stamp) ≠
+      { route := route, receiver := revision + 1 } from
+      fun h => Nat.ne_of_lt (Nat.lt_succ_self revision) (congrArg Stamp.receiver h)]
+
+/-- A mutable adapter outside the publishing write boundary may change the
+    route while keeping both integers. In this case the stamp proves only
+    equality of the integers. -/
+example : current ⟨0, 0⟩ ⟨0, 0⟩ = true ∧
+    (fun (_ : Unit) => true) () ≠ (fun (_ : Unit) => false) () := by decide
+
+end LeanPoo.Object.ClosAdmission.SharedRoute
