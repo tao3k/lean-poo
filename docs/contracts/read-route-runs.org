@@ -1,0 +1,56 @@
+#+title: Receiver route markers in the existing read traversal
+
+* Contract
+
+ReadRouteRuns.marked_eq_serial preserves the complete ordered result, including
+issuance, key rejection, route rejection and stale values. markRoutes marks the
+first non-bootstrap read for each receiver. Bootstrap neither checks nor
+establishes an ordinary route. route_markers_unique covers interleaved receivers.
+
+native_fixed_refusals_exact preserves complete issuance preflight before the
+fixed-result live pass. native_marked_callback_exact retains preflight, repeated
+per-record entry issuance, action and independent return checks. The before and
+after Windows may differ arbitrarily. Every pass checks its first markers again;
+markers store structure, not a previously successful validation result.
+
+The route oracle must remain fixed within a closed native loop. Every key,
+actual value, revision, instance binding and registration is checked per record.
+The model does not cover concurrent unsynchronized MOP protocol edits, arbitrary
+callbacks inside the loop, VM constructor effects or native locking by itself.
+Ordinary observer delivery keeps independent checks between callbacks.
+
+* Scheme correspondence under qualification
+
+The EXISTING projection receiver index stores its first non-bootstrap record
+instead of a true membership value. Bootstrap-only receivers retain true. This
+same map still owns mutation protection and dependency registration. No new
+index, marker vector, journal or cache is allocated.
+
+Cold construction authenticates records before indexing. Every warm acquisition
+reauthenticates receiver, key and dependency sequences before using preorder and
+marker identities. Root reordering rebuilds both. Weak ownership is unchanged.
+
+Only fixed-result validation, the closed pre-action checkpoint loop and the
+closed post-action loop use markers. The first record checks its complete
+wrapper/backend/offset/hash/test/cells/shape route. Subsequent records still
+admit their keys and check actual values/registration. A first route failure
+ends the pass; the marker is never treated as success by itself. After an
+author callback the traversal checks every first marker afresh.
+
+The ordinary public require-read-route! remains independent. Authors receive
+no checker or purity flag. The private key/scoped checkers stay absent from
+ordinary imports; public POO actions do not change. This does not enable
+ReadRevision's epoch-only admission for the existing public vector backend.
+
+* Acceptance
+
+Use owner Just/Gerbil heap fences and retain negative controls. Check bootstrap
+before ordinary reads, interleaved owners, reordered roots, changed signatures,
+actual values/routes, first refusal and weak release. A matched fault must
+omit return marker checks and fail a semantic mutation assertion.
+
+Compare complete native validation on identical records in one process. Record
+CPU, wall, GC, admitted allocation and worker resources. A route-only synthetic
+speedup does not establish a real Module improvement. Preserve Core10K180s/4GiB,
+Source currentness, Gerbil expansion boundaries, zero build scopes and actual
+downstream120s gates. No native performance adoption before corresponding gates.

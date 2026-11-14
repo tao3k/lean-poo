@@ -1,0 +1,208 @@
+#+title: Generator-owned recipes and raw SlotSpec exposure
+
+* Problem and representation
+
+SourcePreparation.runtime_bypass_breaks_issued_field_equivalence shows why an
+unexposed flag cannot certify already allocated mutable SlotSpecs. This model
+uses a stronger representation: constructor-owned private recipes exist before
+reflection, but references to the corresponding raw SlotSpecs are unpublished.
+An ordinary MOP writer needs a reference to the raw object. SourceExposure
+models private records allocated at the original constructor point and derives
+the reference-reachability frame. The canonical
+recipes must remain inaccessible to raw field writes in the Scheme adapter;
+merely renaming or hiding a mutable struct field does not establish that fact.
+
+Only generated stock-constructor cases may enter this representation. Qualify
+the actual constructor at the original call point; preserve argument evaluation,
+foreign constructor effects, errors, duplicates and contribution order. Caller-
+supplied SlotSpecs, unknown constructors, hooks and unowned sources retain the
+original full capture. No user purity flag grants ownership. This document and
+the Lean model do not yet implement those native construction obligations.
+
+Original constructor calls cannot simply move to reflection. The generated
+stock branch must preserve their original observation point, and later raw
+materialization must not dispatch a newly installed author constructor. It
+needs a captured stock implementation and its native layout correspondence;
+if that cannot be established, keep ordinary construction/capture. Source
+identity is a fresh storage allocation, not a Module ID or namespace mount.
+
+* Same-call map layout checks
+
+Reference.MapFrame models the existing map receipt path as ordered layout,
+issuance, receiver, purpose, dispatcher and canonical-field decisions. The
+registered private checker repeats the same layout decision inside that pure
+interval. shared_equals_original preserves every result and first refusal when
+that repeated decision is shared within this invocation. probe_equals_original
+covers the additional outer owner probe. An unknown layout still produces false
+from the owner probe and refusal from the ordinary map operation.
+
+The Scheme candidate uses a private in-call marker after checking the live
+frame; it neither stores nor exports a successful verdict. Issuance and route
+checks precede the registered checker. Canonical entries, receipt, count, next
+and compactness are still read each time. The standalone checker checks layout
+itself. fresh_after_boundary uses separate decisions on either side of an
+author callback; standalone_rejects_layout rejects a changed layout. This
+proof assumes the identified interval has no author callbacks or intervening
+metadata writes; it does not establish concurrent writer synchronization or
+permit sharing across effects. The native candidate needs its own mutation,
+matched-fault and complete-cost qualification before adoption.
+
+* Closed native installation and author boundaries
+
+ClosedInstallation.install_equals_original proves that a fixed internal program
+consuming canonical bindings, without mutating the source, has exactly the same
+result, error and call count as the stamp/admit/fenced path. This is not a purity
+annotation for user functions. The Scheme candidate implements only its fixed
+index-to-method-table write loop; provider bodies are never called. It checks
+the actual standard writer, protocol absence, source eligibility and exact
+owner view, under the existing source gate. Unknown routes decline this path.
+
+The gate remains held for this closed operation. exposure_first_refuses and
+installation_cut_survives_exposure describe the two possible serial orders with
+raw-reference exposure: exposure first refuses new installation; installation
+first retains the old immutable recipe cut. Other thread metadata writes are
+not certified by that source gate. The supported native route still needs its
+runtime correspondence and mutation controls.
+
+The general with-capture operation is unchanged: unlock before any author
+callback and independently authenticate and admit on return. Neither a cached
+value nor a successful internal installation permits skipping those checks.
+No source stamp is allocated or replayed for the closed operation, and no new
+method cache, lock, issuer or evaluator is introduced. Native complete-cost
+and downstream qualification remain separate from this conditional proof.
+
+* Exposure, physical writes and lifetime
+
+reserve commits exposure and a source/index/generation ticket BEFORE a raw
+reference handoff or any visitor callback. A second reservation supersedes the old
+ticket. finish verifies all three bindings and the exact pending index, installs
+the actual constructor result and retires the ticket. abort clears the pending
+result but never restores private status. Existing raw references must be reused
+on repeated reflection, not reconstructed with different identities.
+
+The raw map models published raw cells, not all physical heap allocations.
+SourceExposure permits stock constructor records in private storage from birth;
+it proves equality with ordinary private-field capture before any reference
+escapes. Unknown constructors which can leak their records are outside that
+owned allocation route. A handoff callback runs only after revocation. The
+existing ticket protocol still governs pending publication and retirement.
+
+rawWrite requires a physically allocated raw cell. It changes its payload only:
+it does NOT advance the owner epoch, set an exposure bit, or notify dependents.
+This models ordinary MOP writes honestly. The allocation protocol derives the
+coverage invariant across every reachable sequence. issued_capture_exact then
+derives equality with ordinary field capture, including missing fields. It does
+not assume that a marker, class identity or revision implies immutable fields.
+
+Old prepared receivers retain their immutable captured recipes. After exposure,
+new requests cannot issue a private cut; they capture actual raw fields. The
+concrete thunk-field edit control preserves the old callable cut while future
+ordinary capture sees the malformed raw thunk. An old cut cannot certify a new
+source merely because its allocation identity remains the same.
+
+* Capture admission across the author boundary
+
+CaptureStamp binds the source allocation and its current epoch. admit returns
+the source's canonical captured array, never a binder carried by a presented
+ticket. The native private stamp additionally checks the canonical binder's
+procedure identity before accepting it. Copy the caller-owned presented stamp
+before admission; both checks use that same private copy. A callback must not
+renew an in-flight operation by editing its original ticket's epoch. Lean's
+CaptureStamp is immutable; this copying boundary is a native correspondence
+obligation, not a property of a mutable presented vector.
+An old immutable cut can remain callable
+without authorizing a new preparation publication.
+
+fenced checks admission before the body, runs it exactly once, then independently
+checks the returned source. A failed entry runs no body. A changed return rejects
+publication but preserves the body's effects. A body exception retains its exact
+error and effects; it is not replaced by a stale-source error. Successful false
+values are ordinary results. Native multiple/zero-value returns retain their
+arity. No author action executes under the source mutex.
+
+abort_retires_capture derives rejection even when abort leaves storage private;
+exposure_retires_capture derives rejection from reserve's actual transition.
+The native entry and return each authenticate the internal reference's actual
+registered fields and control identity before checking its source epoch. The pre-action
+procedure or successful validation is not reused as return evidence.
+
+* Internal references and business reads
+
+Reference.sourceControl authenticates the presented record against the ONE
+existing issuer before extracting its control value. A copied or changed
+presentation cannot invoke an alleged control. Object and map receipts are not
+source references; source references also require their own purpose. Internal
+source and map receivers are outside businessRead. The representation does not
+add a public object or a second authority, registry or validation cache.
+
+The Scheme candidate uses a fresh symbolic receiver for each private source and
+the existing issuer's source-storage key. Public extension APIs remain POO;
+normal object demands still record their actual reads. This reference replaces
+an unnecessary two-slot administrative object, not the user's prototype.
+Its signature authenticates identity, NOT current eligibility: exposure and
+generation admission remain independent live checks on entry and return.
+The immutable Lean authority model abstracts the existing issuer's field check;
+it does not prove Gerbil's struct layout, constructor purity or thread scheduler.
+Scheme must qualify the actual SlotRead constructor before issuing an additional
+reference and refuse unknown construction without invoking that constructor.
+
+These source fences precede a future connection to existing indexed preparation.
+They do not themselves register Graph dependency edges or replace the independent
+checks across Gerbil expansion and author effects.
+
+* Boundaries with the existing owners
+
+This source/index ticket owns raw allocation only. It is NOT a POO Graph
+publication ticket, a proof of current raw contents, or a license to skip
+callback-return checks. A raw MOP write deliberately leaves its epoch unchanged.
+POO's existing issuer, dependency registrations and publication fences must
+continue to authenticate their own facts. SourceViews owns exact raw-storage
+alias counts and the existing reverse frontier across .cc/.mix views. Retained
+captures and not-yet-established capture candidates are different lifetimes;
+do not invalidate old business results merely because reflection occurs.
+
+Native integration belongs in the existing object/prototype-map path. Private
+borrowing and public payload reflection must differ internally: name-only
+enumeration needs no raw allocation; exposing a payload commits the owner fence
+before handing it to a visitor. io.ss's name enumeration must remain name-only.
+Public object-slots, exported map access, traversal callbacks and raw MOP access
+to returned SlotSpecs must all preserve this contract. No private mutable recipe
+may leak through an exported field accessor. Reuse the existing issuer and
+indexes; do not introduce another registry, loader, evaluator or result cache.
+
+* Evidence and open work
+
+SourcePreparation.ThunkRows proves direct chronological installation of the
+canonical thunk functions equals ordinary thunk-chain compilation at every
+key. Duplicate names retain the newest actual function; missing names retain
+the original missing-method target. No body is invoked. This is a generated-
+source theorem AFTER complete source admission, not permission to skip raw or
+malformed sibling checks. Native construction validates the actual retained
+input vector and initializes original records in one pass without a temporary
+raw-record list. Caller-owned input spines do not certify the retained payloads.
+
+The private native method-table path keeps ordinary C4 and the primary method
+and value stores. It does not introduce a lazy method-table cache. Fast
+installation additionally requires exactly self in precedence, no parents,
+defaults, declarations, protocol, overrides or bootstrap, and the actual pure
+symbolic write route. Independent capture fences bracket installation. Full
+preparation remains mandatory for every other source, including any raw record
+that has been exposed. The local object<-fun candidate is staged for native
+qualification; it is not released or adopted by consumer pins. Unknown source
+reference/object construction keeps the original row route. The additional
+reference and original construction boundaries require matched native evidence
+before adoption; the Lean value model alone does not establish VM effects.
+
+OwnedSlotSource derives allocation/transition coverage, immutable capture,
+pre-handoff revocation, exact issued reads, visible raw edits, unchanged
+raw-write metadata, stale/foreign/index-mismatched result refusal, second-change
+and post-commit ticket retirement, and failure conservatism. Two concrete
+controls cover malformed thunk mutation and overlapping reservations.
+
+This is a new representation contract, not a proof about the current Scheme
+storage. It does not qualify the withdrawn C4 or method-snapshot candidates,
+source currentness across Gerbil expansion, Core 10K EVAL, or any speed claim.
+The existing Core SourceWindows and ReplayCheckpoint QNT models continue to own
+independent effect boundaries. They are not replaced or claimed rerun here.
+Scheme adoption still requires native constructor/exposure correspondence,
+matching failures, original cold/hot/clone controls and the actual consumer gates.

@@ -1,0 +1,692 @@
+-- SPDX-License-Identifier: Apache-2.0 AND LGPL-2.1-or-later
+import LeanPoo.Object.SourcePreparation
+
+/-! Raw SlotSpec references are published only on exposure. Ordinary raw field writes do
+not notify a source, advance its revision, or repair its private marker. -/
+namespace LeanPoo.Object.OwnedSlotSource
+
+open SlotPreparation SourcePreparation
+
+structure Source (Self Value : Type) where
+  identity : Nat
+  captured : Array (CapturedBinding.Spec Self Value)
+  exposed : Bool
+  epoch : Nat
+  pending : Option (Nat × Nat)
+  raw : Nat → Option (CapturedBinding.Spec Self Value)
+
+structure Ticket where
+  source : Nat
+  epoch : Nat
+  index : Nat
+  deriving DecidableEq
+
+def allocate {Self Value : Type} (recipes : Array (Recipe Self Value)) (seed : Nat) :
+    Source Self Value :=
+  ⟨seed, recipes.map Recipe.capture, false, 0, none, fun _ => none⟩
+
+/-- Thread fresh allocation identity; a Module ID or view name is not a
+storage allocation identity. The native adapter uses its actual allocation. -/
+def allocateFresh {Self Value : Type} (recipes : Array (Recipe Self Value)) (seed : Nat) :
+    Source Self Value × Nat := (allocate recipes seed, seed + 1)
+
+theorem fresh_allocations_distinct {Self Value : Type}
+    (left right : Array (Recipe Self Value)) (seed : Nat) :
+    (allocateFresh left seed).1.identity ≠
+      (allocateFresh right (allocateFresh left seed).2).1.identity := by
+  simp [allocateFresh, allocate]
+
+/-- A private source has no published raw references and no exposure
+in flight. This is derived from the allocation/operation sequence below. -/
+def Invariant {Self Value : Type} (source : Source Self Value) : Prop :=
+  source.exposed = false → source.pending = none ∧ ∀ index, source.raw index = none
+
+def issue {Self Value : Type} (source : Source Self Value) :
+    Option (Array (CapturedBinding.Spec Self Value)) :=
+  if source.exposed then none else some source.captured
+
+/-- Repeated reflection first returns an existing raw address unchanged.
+Only a genuinely missing, in-range published cell reserves a handoff. The
+exposure bit is committed BEFORE that handoff, including callbacks or failure.
+Physical construction may have happened earlier in private storage. -/
+def reserve {Self Value : Type} (source : Source Self Value) (index : Nat) :
+    Option (Source Self Value × Ticket) :=
+  if index < source.captured.size ∧ (source.raw index).isNone then
+    let next := source.epoch + 1
+    some ({ source with exposed := true, epoch := next, pending := some (next, index) },
+      ⟨source.identity, next, index⟩)
+  else none
+
+/-- Publish the actual raw record, not a successful purity claim.
+An exposed source never uses this raw result to issue a private capture. -/
+def finish {Self Value : Type} (source : Source Self Value) (ticket : Ticket)
+    (payload : CapturedBinding.Spec Self Value) : Option (Source Self Value) :=
+  if ticket.source = source.identity ∧ ticket.epoch = source.epoch ∧
+      source.pending = some (ticket.epoch, ticket.index) ∧ source.exposed = true ∧
+      ticket.index < source.captured.size ∧ (source.raw ticket.index).isNone then
+    some { source with
+      epoch := source.epoch + 1
+      pending := none
+      raw := fun index => if index = ticket.index then some payload else source.raw index }
+  else none
+
+/-- Failure abandons the pending result without restoring private status.
+The constructor may already have performed effects. -/
+def abort {Self Value : Type} (source : Source Self Value) : Source Self Value :=
+  { source with epoch := source.epoch + 1, pending := none }
+
+/-- A raw MOP writer needs an actually allocated raw object. It changes ONLY
+that payload: no fictitious source notification or generation bump is assumed. -/
+def rawWrite {Self Value : Type} (source : Source Self Value) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) : Option (Source Self Value) :=
+  match source.raw index with
+  | none => none
+  | some _ => some { source with
+      raw := fun query => if query = index then some payload else source.raw query }
+
+def readField {Self Value : Type} (source : Source Self Value) (index : Nat) :
+    Option (CapturedBinding.Spec Self Value) :=
+  match source.raw index with
+  | some payload => some payload
+  | none => source.captured[index]?
+
+/-- The index denotes one actual published raw record. Field updates keep its
+address; reflection first reuses this address instead of running a constructor. -/
+def rawAddress {Self Value : Type} (source : Source Self Value) (index : Nat) :
+    Option (Nat × Nat) :=
+  (source.raw index).map fun _ => (source.identity, index)
+
+theorem allocation_invariant {Self Value : Type} (recipes : Array (Recipe Self Value))
+    (seed : Nat) : Invariant (allocate recipes seed) := by
+  intro _
+  exact ⟨rfl, fun _ => rfl⟩
+
+theorem reserve_exposes {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (ticket : Ticket) (step : reserve source index = some (next, ticket)) :
+    next.exposed = true ∧ next.captured = source.captured := by
+  unfold reserve at step
+  split at step
+  · cases step; exact ⟨rfl, rfl⟩
+  · cases step
+
+theorem reserve_revokes_before_handoff {Self Value : Type}
+    (source next : Source Self Value) (index : Nat) (ticket : Ticket)
+    (step : reserve source index = some (next, ticket)) : issue next = none := by
+  simp [issue, (reserve_exposes source next index ticket step).1]
+
+theorem finish_exposed {Self Value : Type} (source next : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value)
+    (step : finish source ticket payload = some next) :
+    next.exposed = true ∧ next.captured = source.captured := by
+  unfold finish at step
+  split at step
+  · rename_i accepted
+    cases step
+    exact ⟨accepted.2.2.2.1, rfl⟩
+  · cases step
+
+theorem raw_write_keeps_metadata {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value)
+    (step : rawWrite source index payload = some next) :
+    next.captured = source.captured ∧ next.exposed = source.exposed ∧
+      next.epoch = source.epoch ∧ next.pending = source.pending := by
+  unfold rawWrite at step
+  split at step
+  · cases step
+  · cases step; exact ⟨rfl, rfl, rfl, rfl⟩
+
+theorem raw_write_invariant {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value) (valid : Invariant source)
+    (step : rawWrite source index payload = some next) : Invariant next := by
+  unfold rawWrite at step
+  split at step
+  · cases step
+  · rename_i old present
+    cases step
+    intro closed
+    have absent := (valid closed).2 index
+    rw [absent] at present
+    contradiction
+
+inductive Reachable {Self Value : Type} (recipes : Array (Recipe Self Value))
+    (seed : Nat) : Source Self Value → Prop where
+  | allocated : Reachable recipes seed (allocate recipes seed)
+  | reserved {before after index ticket} : Reachable recipes seed before →
+      reserve before index = some (after, ticket) → Reachable recipes seed after
+  | finished {before after ticket payload} : Reachable recipes seed before →
+      finish before ticket payload = some after → Reachable recipes seed after
+  | aborted {before} : Reachable recipes seed before → Reachable recipes seed (abort before)
+  | written {before after index payload} : Reachable recipes seed before →
+      rawWrite before index payload = some after → Reachable recipes seed after
+
+theorem Reachable.invariant {Self Value : Type} {recipes : Array (Recipe Self Value)}
+    {seed : Nat} {source : Source Self Value} (path : Reachable recipes seed source) :
+    Invariant source := by
+  induction path with
+  | allocated => exact allocation_invariant recipes seed
+  | reserved _ step _ =>
+    intro closed
+    have exposed := (reserve_exposes _ _ _ _ step).1
+    simp [exposed] at closed
+  | finished _ step _ =>
+    intro closed
+    have exposed := (finish_exposed _ _ _ _ step).1
+    simp [exposed] at closed
+  | aborted _ ih =>
+    intro closed
+    exact ⟨rfl, (ih closed).2⟩
+  | written _ step ih => exact raw_write_invariant _ _ _ _ ih step
+
+theorem Reachable.capture_unchanged {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) : source.captured = recipes.map Recipe.capture := by
+  induction path with
+  | allocated => rfl
+  | reserved _ step ih => exact (reserve_exposes _ _ _ _ step).2.trans ih
+  | finished _ step ih => exact (finish_exposed _ _ _ _ step).2.trans ih
+  | aborted _ ih => exact ih
+  | written _ step ih => exact (raw_write_keeps_metadata _ _ _ _ step).1.trans ih
+
+/-- This rejects a raw write because no raw address is published, not because a raw
+writer cooperatively checks a private exposure flag. -/
+theorem closed_has_no_raw_write {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) (closed : source.exposed = false)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value) :
+    rawWrite source index payload = none := by
+  simp [rawWrite, (path.invariant closed).2 index]
+
+theorem issued_capture_exact {Self Value : Type} {recipes : Array (Recipe Self Value)}
+    {seed : Nat} {source : Source Self Value} (path : Reachable recipes seed source)
+    (captured : Array (CapturedBinding.Spec Self Value))
+    (issued : issue source = some captured) (index : Nat) :
+    readField source index = captured[index]? := by
+  unfold issue at issued
+  split at issued
+  · cases issued
+  · rename_i closed
+    have privateSource : source.exposed = false := Bool.eq_false_iff.mpr closed
+    cases issued
+    simp [readField, (path.invariant privateSource).2 index]
+
+/-- Derive sibling installation callability from the actual generator forms.
+No Slot body is evaluated and no user assertion of purity is trusted. -/
+theorem issued_callable {Self Value : Type} {recipes : Array (Recipe Self Value)}
+    {seed : Nat} {source : Source Self Value} (path : Reachable recipes seed source)
+    (captured : Array (CapturedBinding.Spec Self Value))
+    (issued : issue source = some captured) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) (found : captured[index]? = some payload) :
+    CapturedBinding.classified payload = true := by
+  have same : captured = source.captured := by
+    unfold issue at issued
+    split at issued
+    · cases issued
+    · cases issued; rfl
+  rw [same, path.capture_unchanged] at found
+  simp only [Array.getElem?_map] at found
+  cases atIndex : recipes[index]? with
+  | none => simp [atIndex] at found
+  | some recipe =>
+    simp only [atIndex, Option.map_some, Option.some.injEq] at found
+    cases found
+    exact recipe.callable
+
+theorem stale_finish_refused {Self Value : Type} (source : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value)
+    (stale : ticket.epoch ≠ source.epoch) : finish source ticket payload = none := by
+  simp [finish, stale]
+
+theorem foreign_finish_refused {Self Value : Type} (source : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value)
+    (foreign : ticket.source ≠ source.identity) : finish source ticket payload = none := by
+  simp [finish, foreign]
+
+theorem aborted_finish_refused {Self Value : Type} (source : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value) :
+    finish (abort source) ticket payload = none := by
+  simp [finish, abort]
+
+theorem pending_index_mismatch_refused {Self Value : Type} (source : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value)
+    (different : source.pending ≠ some (ticket.epoch, ticket.index)) :
+    finish source ticket payload = none := by
+  simp [finish, different]
+
+theorem reserve_ticket {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (ticket : Ticket) (step : reserve source index = some (next, ticket)) :
+    ticket.source = source.identity ∧ ticket.epoch = source.epoch + 1 ∧
+      next.epoch = ticket.epoch ∧ next.pending = some (ticket.epoch, ticket.index) := by
+  unfold reserve at step
+  split at step
+  · cases step; exact ⟨rfl, rfl, rfl, rfl⟩
+  · cases step
+
+/-- A second reservation is a structural source operation. It supersedes the
+first ticket; raw MOP payload writes, in contrast, do not report such an epoch. -/
+theorem second_reservation_retires_ticket {Self Value : Type}
+    (source next : Source Self Value) (oldTicket newTicket : Ticket) (index : Nat)
+    (oldCurrent : oldTicket.epoch = source.epoch)
+    (step : reserve source index = some (next, newTicket))
+    (payload : CapturedBinding.Spec Self Value) : finish next oldTicket payload = none := by
+  have fact := reserve_ticket source next index newTicket step
+  apply stale_finish_refused
+  omega
+
+theorem finish_retires_ticket {Self Value : Type} (source next : Source Self Value)
+    (ticket : Ticket) (payload : CapturedBinding.Spec Self Value)
+    (step : finish source ticket payload = some next) :
+    finish next ticket payload = none := by
+  unfold finish at step
+  split at step
+  · rename_i accepted
+    cases step
+    apply stale_finish_refused
+    change ticket.epoch ≠ source.epoch + 1
+    omega
+  · cases step
+
+theorem absent_raw_write_refused {Self Value : Type} (source : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value)
+    (absent : source.raw index = none) : rawWrite source index payload = none := by
+  simp [rawWrite, absent]
+
+theorem raw_write_visible {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value)
+    (step : rawWrite source index payload = some next) :
+    readField next index = some payload := by
+  unfold rawWrite at step
+  split at step
+  · cases step
+  · cases step; simp [readField]
+
+theorem raw_write_keeps_addresses {Self Value : Type} (source next : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value)
+    (step : rawWrite source index payload = some next) (query : Nat) :
+    rawAddress next query = rawAddress source query := by
+  unfold rawWrite at step
+  split at step
+  · cases step
+  · rename_i old found
+    cases step
+    by_cases same : query = index
+    · simp [rawAddress, same, found]
+    · simp [rawAddress, same]
+
+theorem existing_raw_not_reconstructed {Self Value : Type} (source : Source Self Value)
+    (index : Nat) (payload : CapturedBinding.Spec Self Value)
+    (found : source.raw index = some payload) :
+    reserve source index = none ∧ rawAddress source index = some (source.identity, index) := by
+  simp [reserve, rawAddress, found]
+
+/-- Failed reflection cannot reactivate an old private capture approval. -/
+theorem abort_keeps_exposure {Self Value : Type} (source : Source Self Value)
+    (exposed : source.exposed = true) : issue (abort source) = none := by
+  simp [issue, abort, exposed]
+
+private def originalThunk : CapturedBinding.Spec Unit Nat :=
+  .thunk (.procedure (fun _ => 7))
+private def original : Source Unit Nat := allocate #[.thunk (fun _ => 7)] 0
+private def requested : Source Unit Nat :=
+  { original with exposed := true, epoch := 1, pending := some (1, 0) }
+private def requestTicket : Ticket := ⟨0, 1, 0⟩
+private def materialized : Source Unit Nat :=
+  { requested with
+    epoch := 2
+    pending := none
+    raw := fun index => if index = 0 then some originalThunk else none }
+private def modified : Source Unit Nat :=
+  { materialized with raw := fun index =>
+      if index = 0 then some (.thunk .nonCallable) else none }
+
+/-- A real same-variant thunk field edit is visible to future ordinary capture.
+No raw object exists before reflection; the old immutable cut remains valid
+for a receiver that already captured it. Raw writes do not advance epochs. -/
+theorem exposure_raw_write_control :
+    rawWrite original 0 (.thunk .nonCallable) = none ∧
+    reserve original 0 = some (requested, requestTicket) ∧
+    issue requested = none ∧
+    finish requested requestTicket originalThunk = some materialized ∧
+    rawWrite materialized 0 (.thunk .nonCallable) = some modified ∧
+    modified.epoch = materialized.epoch ∧
+    modified.captured = original.captured ∧
+    (readField modified 0).map CapturedBinding.classified = some false ∧
+    (original.captured[0]?).map CapturedBinding.classified = some true ∧
+    issue modified = none := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;>
+    simp [rawWrite, original, allocate, requested, requestTicket, issue, reserve,
+      finish, materialized, modified, originalThunk, Recipe.capture, readField,
+      CapturedBinding.classified, CapturedBinding.Target.callable]
+  funext query
+  by_cases same : query = 0 <;> simp [same]
+
+/-- An in-flight result cannot overwrite another reserved index in the same
+source, and failure cannot make the source private again. -/
+theorem replacement_and_failure_control :
+    let source : Source Unit Nat := allocate #[.constant 7, .constant 9] 4
+    let first := { source with exposed := true, epoch := 1, pending := some (1, 0) }
+    let second := { first with epoch := 2, pending := some (2, 1) }
+    reserve source 0 = some (first, ⟨4, 1, 0⟩) ∧
+    reserve first 1 = some (second, ⟨4, 2, 1⟩) ∧
+    finish second ⟨4, 1, 0⟩ (.constant 7) = none ∧
+    finish second ⟨4, 2, 0⟩ (.constant 7) = none ∧
+    issue (abort second) = none ∧
+    finish (abort second) ⟨4, 2, 1⟩ (.constant 9) = none := by
+  simp [allocate, reserve, finish, issue, abort]
+
+/-- A retained binding is an immutable cut. Publishing NEW preparation also
+requires the source's current admission generation; it is not implied by that
+cut remaining callable. Native admission must return its own canonical binder,
+never a procedure supplied by a presented stamp. -/
+structure CaptureStamp where
+  source : Nat
+  epoch : Nat
+  deriving DecidableEq
+
+abbrev Admits {Self Value : Type} (source : Source Self Value) (stamp : CaptureStamp) : Prop :=
+  source.exposed = false ∧ stamp.source = source.identity ∧ stamp.epoch = source.epoch
+
+def stamp {Self Value : Type} (source : Source Self Value) : Option CaptureStamp :=
+  if source.exposed then none else some ⟨source.identity, source.epoch⟩
+
+def admit {Self Value : Type} (source : Source Self Value) (ticket : CaptureStamp) :
+    Option (Array (CapturedBinding.Spec Self Value)) :=
+  if Admits source ticket then some source.captured else none
+
+inductive FenceError (Error : Type) where
+  | stale
+  | body (error : Error)
+  deriving DecidableEq
+
+/-- The callback owns all its effects, even on refusal or exception. There is
+no rollback and no callback under a source lock. A successful return requires
+an independent post-callback admission. Calls counts the actual body boundary. -/
+def fenced {Self Value Error Result : Type} (before : Source Self Value)
+    (ticket : CaptureStamp)
+    (action : Source Self Value → Source Self Value × Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  if Admits before ticket then
+    let (after, result) := action before
+    match result with
+    | .error error => (after, .error (.body error), 1)
+    | .ok value =>
+      if Admits after ticket then (after, .ok value, 1)
+      else (after, .error .stale, 1)
+  else (before, .error .stale, 0)
+
+theorem admit_canonical {Self Value : Type} (source : Source Self Value)
+    (ticket : CaptureStamp) (accepted : Admits source ticket) :
+    admit source ticket = some source.captured := by simp [admit, accepted]
+
+theorem admitted_fields_exact {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) (ticket : CaptureStamp)
+    (accepted : Admits source ticket) (index : Nat) :
+    readField source index = source.captured[index]? := by
+  exact issued_capture_exact path source.captured (by simp [issue, accepted.1]) index
+
+theorem admitted_siblings_callable {Self Value : Type}
+    {recipes : Array (Recipe Self Value)} {seed : Nat} {source : Source Self Value}
+    (path : Reachable recipes seed source) (ticket : CaptureStamp)
+    (accepted : Admits source ticket) (index : Nat)
+    (payload : CapturedBinding.Spec Self Value) (found : source.captured[index]? = some payload) :
+    CapturedBinding.classified payload = true := by
+  exact issued_callable path source.captured (by simp [issue, accepted.1]) index payload found
+
+theorem failed_entry_calls_no_body {Self Value Error Result : Type}
+    (before : Source Self Value) (ticket : CaptureStamp)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (refused : ¬ Admits before ticket) :
+    fenced before ticket action = (before, .error .stale, 0) := by
+  simp [fenced, refused]
+
+theorem callback_failure_preserved {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (error : Error)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .error error)) :
+    fenced before ticket action = (after, .error (.body error), 1) := by
+  simp [fenced, entry, body]
+
+theorem changed_return_refused_without_rollback {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (value : Result)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .ok value))
+    (changed : ¬ Admits after ticket) :
+    fenced before ticket action = (after, .error .stale, 1) := by
+  simp [fenced, entry, body, changed]
+
+theorem unchanged_return_exact {Self Value Error Result : Type}
+    (before after : Source Self Value) (ticket : CaptureStamp) (value : Result)
+    (action : Source Self Value → Source Self Value × Except Error Result)
+    (entry : Admits before ticket) (body : action before = (after, .ok value))
+    (returned : Admits after ticket) :
+    fenced before ticket action = (after, .ok value, 1) := by
+  simp only [fenced, ite_eq_left entry, body, ite_eq_left returned]
+
+theorem abort_retires_capture {Self Value : Type} (source : Source Self Value)
+    (ticket : CaptureStamp) (entry : Admits source ticket) :
+    ¬ Admits (abort source) ticket := by
+  intro reused
+  have previous := entry.2.2
+  have next := reused.2.2
+  simp only [abort] at next
+  omega
+
+theorem exposure_retires_capture {Self Value : Type} (before after : Source Self Value)
+    (index : Nat) (ticket : Ticket) (capture : CaptureStamp)
+    (step : reserve before index = some (after, ticket)) :
+    ¬ Admits after capture := by
+  intro reused
+  have exposed := (reserve_exposes before after index ticket step).1
+  have closed := reused.1
+  simp [exposed] at closed
+
+namespace ClosedInstallation
+
+/-- The closed native program consumes canonical bindings without changing the
+source or calling an author action. Its method-table result may still fail.
+The native source gate excludes exposure throughout this whole operation. -/
+def original {Self Value Error Result : Type} (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  match stamp source with
+  | none => (source, .error .stale, 0)
+  | some ticket => fenced source ticket fun current => (current, program current.captured)
+
+def install {Self Value Error Result : Type} (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    Source Self Value × Except (FenceError Error) Result × Nat :=
+  if source.exposed then (source, .error .stale, 0)
+  else
+    match program source.captured with
+    | .error error => (source, .error (.body error), 1)
+    | .ok result => (source, .ok result, 1)
+
+/-- One admission under the source gate replaces repeated capture admission
+only for the fixed program above. No result, error or actual call is removed. -/
+theorem install_equals_original {Self Value Error Result : Type}
+    (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result) :
+    install source program = original source program := by
+  cases exposed : source.exposed <;>
+    simp [install, original, stamp, fenced, Admits, exposed]
+
+theorem failed_admission_calls_no_program {Self Value Error Result : Type}
+    (source : Source Self Value)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (exposed : source.exposed = true) :
+    install source program = (source, .error .stale, 0) := by
+  simp [install, exposed]
+
+theorem exposure_first_refuses {Self Value Error Result : Type}
+    (before after : Source Self Value) (index : Nat) (ticket : Ticket)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (step : reserve before index = some (after, ticket)) :
+    install after program = (after, .error .stale, 0) := by
+  exact failed_admission_calls_no_program after program
+    (reserve_exposes before after index ticket step).1
+
+/-- If installation wins the gate, later exposure preserves the exact retained
+recipe cut. If exposure wins, the preceding theorem refuses new installation.
+The two complete operations have a serial order, not interleaved source state. -/
+theorem installation_cut_survives_exposure {Self Value Error Result : Type}
+    (before after : Source Self Value) (index : Nat) (ticket : Ticket)
+    (program : Array (CapturedBinding.Spec Self Value) → Except Error Result)
+    (step : reserve before index = some (after, ticket)) :
+    program before.captured = program after.captured := by
+  rw [(reserve_exposes before after index ticket step).2]
+
+end ClosedInstallation
+
+namespace Reference
+
+/-- Native receiver domains are derived from actual receiver representation,
+not a caller-supplied approval bit. These records use the ONE existing issuer. -/
+inductive Receiver where
+  | object (identity : Nat)
+  | source (identity : Nat)
+  | map (identity : Nat)
+  deriving DecidableEq
+
+inductive Purpose where
+  | business | source | map
+  deriving DecidableEq
+
+structure Data where
+  receiver : Receiver
+  purpose : Purpose
+  control : Nat
+  deriving DecidableEq
+
+def sourceControl (authority : Nat → Option Data) (reference : Nat) (shown : Data) : Option Nat :=
+  match authority reference with
+  | none => none
+  | some original =>
+    if shown = original then
+      match original.receiver, original.purpose with
+      | .source _, .source => some original.control
+      | _, _ => none
+    else none
+
+def businessRead (authority : Nat → Option Data) (reference : Nat) (shown : Data) : Bool :=
+  match authority reference with
+  | none => false
+  | some original =>
+    if shown = original then
+      match original.receiver with | .object _ => true | _ => false
+    else false
+
+def dispatch {Result : Type} (authority : Nat → Option Data) (reference : Nat)
+    (shown : Data) (invoke : Nat → Result) : Option Result :=
+  (sourceControl authority reference shown).map invoke
+
+theorem unregistered_never_dispatches {Result : Type} (authority : Nat → Option Data)
+    (reference : Nat) (shown : Data) (invoke : Nat → Result)
+    (missing : authority reference = none) : dispatch authority reference shown invoke = none := by
+  simp [dispatch, sourceControl, missing]
+
+theorem changed_presentation_never_dispatches {Result : Type}
+    (authority : Nat → Option Data) (reference : Nat) (original shown : Data)
+    (invoke : Nat → Result) (registered : authority reference = some original)
+    (changed : shown ≠ original) : dispatch authority reference shown invoke = none := by
+  simp [dispatch, sourceControl, registered, changed]
+
+theorem canonical_source_dispatch {Result : Type} (authority : Nat → Option Data)
+    (reference identity control : Nat) (invoke : Nat → Result)
+    (registered : authority reference = some ⟨.source identity, .source, control⟩) :
+    dispatch authority reference ⟨.source identity, .source, control⟩ invoke = some (invoke control) := by
+  simp [dispatch, sourceControl, registered]
+
+theorem internal_receivers_not_business_reads (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.source identity, purpose, control⟩) :
+    businessRead authority reference ⟨.source identity, purpose, control⟩ = false := by
+  simp [businessRead, registered]
+
+theorem object_receipt_not_source (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.object identity, purpose, control⟩) :
+    sourceControl authority reference ⟨.object identity, purpose, control⟩ = none := by
+  simp [sourceControl, registered]
+
+theorem map_receivers_not_business_reads (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.map identity, purpose, control⟩) :
+    businessRead authority reference ⟨.map identity, purpose, control⟩ = false := by
+  simp [businessRead, registered]
+
+theorem source_requires_own_purpose (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.source identity, purpose, control⟩)
+    (different : purpose ≠ .source) :
+    sourceControl authority reference ⟨.source identity, purpose, control⟩ = none := by
+  cases purpose <;> simp_all [sourceControl]
+
+theorem map_receipt_not_source (authority : Nat → Option Data)
+    (reference identity control : Nat) (purpose : Purpose)
+    (registered : authority reference = some ⟨.map identity, purpose, control⟩) :
+    sourceControl authority reference ⟨.map identity, purpose, control⟩ = none := by
+  simp [sourceControl, registered]
+
+namespace MapFrame
+
+inductive Refusal where
+  | layout | issuance | receiver | purpose | route | fields
+  deriving DecidableEq
+
+/-- Actual read-only decisions in one fixed metadata interval. The issuer
+and registered private checker execute no author callback in this interval. -/
+structure Checks where
+  layout : Except Refusal Unit
+  issuance : Except Refusal Unit
+  receiver : Except Refusal Unit
+  purpose : Except Refusal Unit
+  route : Except Refusal Unit
+  fields : Except Refusal Unit
+
+def standalone (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.fields
+
+def original (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.issuance
+  checks.receiver
+  checks.purpose
+  checks.route
+  standalone checks
+
+def shared (checks : Checks) : Except Refusal Unit := do
+  checks.layout
+  checks.issuance
+  checks.receiver
+  checks.purpose
+  checks.route
+  checks.fields
+
+/-- Share the repeated layout decision only after this operation checked it.
+All field decisions and the complete first refusal remain in original order. -/
+theorem shared_equals_original (checks : Checks) : shared checks = original checks := by
+  cases checks with
+  | mk layout issuance receiver purpose route fields =>
+    cases layout <;> cases issuance <;> cases receiver <;>
+      cases purpose <;> cases route <;> rfl
+
+/-- The owner probe had one further identical layout check in front. -/
+theorem probe_equals_original (checks : Checks) :
+    (do checks.layout; original checks) = shared checks := by
+  rw [shared_equals_original]
+  cases outcome : checks.layout <;> simp [original, standalone, outcome, Except.bind, Bind.bind]
+
+/-- A private in-call marker is not a successful verdict. Another invocation
+uses its own live decisions; standalone checks never receive that marker. -/
+theorem fresh_after_boundary (before after : Checks) :
+    (do shared before; shared after) = (do original before; original after) := by
+  rw [shared_equals_original, shared_equals_original]
+
+theorem standalone_rejects_layout (checks : Checks)
+    (bad : checks.layout = .error .layout) : standalone checks = .error .layout := by
+  simp [standalone, bad, Except.bind, Bind.bind]
+
+end MapFrame
+end Reference
+end LeanPoo.Object.OwnedSlotSource

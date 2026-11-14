@@ -1,0 +1,208 @@
+#+title: Receiver route sharing within one pure replay sweep
+
+* Scope and invariant
+
+This contract concerns POO replay, not another evaluator, loader or cache.
+A sweep examines the original ordered read records. Issuance, key grammar
+and live slot state remain per record. Only a receiver route already proved
+valid earlier in the same pure, stable sweep may be shared. The local index
+contains only successfully checked receivers and expires at the sweep end.
+Bootstrap does not check receiver tables and cannot certify an index entry.
+
+There is no author callback, observer delivery, interface reification, custom
+hash method or writer inside an admitted sweep. A descriptor mutation or any
+unknown route requires the original path. Entry and return sweeps are separate;
+never carry the local index across an opaque callback or Gerbil expansion.
+Native scheduling/interrupt correspondence is an explicit open obligation.
+
+* Proof
+
+=LeanPoo.Object.ReadRouteSharing.exact= is induction over the original record
+order. The invariant is that each indexed receiver's route returns success
+in the same world. No key, live-state or error-producing operation is reordered.
+The result is equality in =Except=, including the first rejection, not merely
+agreement when both paths succeed. =fresh_exact= starts with an empty index.
+
+Examples retain an earlier live failure and a later invalid key on the same
+receiver. A counterexample shows an index retained across a route change
+accepting when the original refuses. Thus the invariant is necessary.
+=routeMisses_le_length= bounds route calls by the number of records. Membership
+uses a list in this semantic model; it is not a claim of constant-time list
+lookup. A Scheme implementation must use POO's existing hash/index facilities
+with sweep-local state and account for that lookup/allocation cost.
+
+=mark_certified= proves that setting a dense index flag after a successful
+route check preserves certification, assuming distinct admitted receivers
+have distinct indices. =empty_certified= starts every sweep with false flags.
+The topology owns the index; each sweep owns its flags. Neither the topology
+nor its receiver hash stores a reusable currentness result.
+
+=newRoutes_mem_iff= proves exact coverage of receivers appearing in the
+original records but absent from the initial index. =newRoutes_fresh= and
+=newRoutes_nodup= exclude already certified receivers and repeated admission.
+=routeMisses_eq_unique_routes= equates the planned route-call count to this
+list's length. Thus a complete successful sweep checks each new receiver
+route once; a failing sweep stops at its original first error. The index/hash
+lookup and vector initialization still require their own accounting.
+
+* Actual input, not synthetic node counts
+
+The compiled d7b fixed-field producer and Core RuntimeValueFixture yielded
+8,858 read records from 64 real Interface declarations, 1,305 distinct receivers,
+and at most 27 records per receiver. There are 91 names records, maximum width
+14. They do not contain the whole module directory. Issuance-only median CPU
+for 24 traversals is about 0.105 ms for names, 13.5355 ms for other records.
+This excludes namespace-wide name comparison as the dominant cost for THIS
+captured batch; it does not establish the shape of every 10K admission prefix.
+
+* Adoption gate
+
+The production-path candidate replaces the boolean values of the existing
+private projection receiver map with stable dense indices. Its callers use
+membership or ignore the values; no public interface receives that map.
+=require-current-read-sweep!= allocates a fresh vector for each invocation.
+Only the fixed =call-with-current-slot-reads= entry and the independent
+=call-with-issued-reads= return use it. Observer/work delivery remains
+per-record. Fixed-result entry preserves the original issuance preflight;
+opaque-action entry and return retain per-record issuance as before.
+
+The private read-route =%pure-read-sweep?= tests current HashTable interface
+class identity. It permits Gerbil's existing identity conversion only; a
+different descriptor delegates to the original checker without accessing
+the receiver index. =guarded_exact= models this choice. First-use metadata
+routes still admit their actual method/backend/hash/test/lock/vector shape.
+The existing route guard's serial supported-runtime assumption remains;
+this is not a new promise about concurrent raw edits to runtime internals.
+Existing publication snapshot/concurrency gates remain separate obligations.
+
+Bootstrap is modelled as routing identity =none=, ordinary receiver tables
+as =some receiver=. Its no-table route cannot certify a later ordinary read
+of the same object. In Scheme it checks the key/anchor without marking flags.
+The expanded existing issued-read suite checks dense index positions,
+private export exclusion and native descriptor fallback. It does not add
+a new test entry or public sweep API.
+
+The local Scheme study measures original versus receiver-shared route sweeps
+on the same records, always checking issuance, key grammar and live state.
+Each repetition allocates its own set; preparation is outside timing. It is a
+fixed-world diagnostic, not a production implementation or concurrency proof.
+Before production adoption, establish native pure-sweep admission and scheduling,
+exercise key/revision/route/descriptor faults and callbacks on both sides, retain
+the original first rejection, then run the full original 10K/180s/4GiB gate.
+
+* Native diagnostic result
+
+Two ABBA blocks per comparison, four samples per arm, 24 passes per sample:
+
+| Paired comparison | Original CPU median ms | Shared CPU median ms |
+| Fresh receiver hash | 265.5895 | 158.516 |
+| Dense index and fresh vector | 226.8865 | 127.5705 |
+
+The indexed pair reduces CPU about 43.8 percent in this measurement. Its wall
+medians are 2184.9154 and 1297.7694 ms, with large scheduling gaps; do not use
+them as isolated algorithm latency. No collections occurred in these samples.
+The recorded allocation medians are 336032/538544 bytes for the indexed pair;
+the hash-sharing arm recorded 2931728 bytes in its own paired block. These are
+exec-stats observations including asynchronous work, not attributed allocator
+measurements. The vector creates 24 times 1305 flag elements per sample; the
+diagnostic's dense index construction is outside timing. Production integration
+must account for forming or reusing the topology index. No RSS was collected.
+
+Changing a receiver metadata ref between sweeps is refused before dispatch by
+the original, fresh-hash and fresh-vector paths. A matching retained-index fault
+sets all flags true: it reaches the replacement method, making the negative
+control observable. The mutation is restored with dynamic-wind before further
+normal measurements. Official MODULE-OK/HARNESS-OK/final OK passed, no errors
+or overflows. These are diagnostic controls, not full production qualification.
+
+The process reports 128.37 wall, 13.77 user and 3.45 system seconds, including
+fixture admission, other diagnostic stages and process return. No timing budget
+was widened. The fixed-world optimization remains unadopted pending native
+pure-sweep admission, actual POO publication integration and full acceptance.
+
+* Production-path qualification result
+
+The integrated candidate passes 35 compiled issuance/replay cases, including
+descriptor fallback and private export checks, and 207 Graph/construction/
+representation cases. The matched fault initializes all flags true: three
+route/class-layout/callback-return cases fail at semantic assertions, exit 42.
+Normal suites pass their official markers and naturally exit zero. Initial
+preparation failures and the duplicate-test compilation timeout are retained;
+they are not negative controls or successful qualification.
+
+The actual protected-checkpoint paired study shares current issuer/state
+machinery in both arms and keeps the frozen public topology reference. CPU
+medians over 12 iterations per sample are warm 152.4985/81.098 ms and cold
+195.042/119.6345 ms. Four samples per arm, original order, no GC filtering.
+Cold original/candidate collection totals are 0/1; warm are 0/0. Ordinary warm
+complete traversal is 71.8475/73.5245 ms: do not claim universal improvement.
+
+The original complete 10K Case still FAILS at 180003 ms (budget 180000), with
+2937 completed owners and 2938 started. First Graph phase: 167.688367 wall,
+53.021642 user, 29.309506 system seconds, 21 collections. Complete process:
+209.49 wall, 60.46 user, 41.57 system, ru_maxrss 2219655168 bytes. This is a
+partial prefix, not full EVAL or memory qualification. The VM allocation counter
+is explicitly unqualified; no attributed allocation result is inferred. Business
+scope and warm/incremental EVAL phases were not reached. Do not adopt/publish
+this candidate as an accepted optimization.
+
+* Actual sweep work and next binding obligation
+
+A separate scalar-only native measurement image, using the same existing real
+64-module fixture, has no source observer and constructs zero business scopes.
+It counts work, not CPU. First admission: 1800 sweeps, 762038 records, 98220
+first-use receiver routes, 663818 shared hits; fallback and bootstrap counts zero.
+All nonempty sweeps have more than four records per receiver. Thus lack of
+receiver reuse is refuted for this workload; a sparse-density threshold is not
+justified by these data. Currentness: two sweeps, 15184 records, 2080 route checks,
+13104 hits, no cold topology rebuild. Cold admission builds 136 projections,
+144795 index probes and 18780 receiver entries.
+
+This first integration also introduces one receiver-to-index hash lookup per
+ordinary record, including 762038 such lookups in that admission. Bind these
+positions once during the existing authenticated topology construction instead
+of rediscovering them on every hit. =bound_position_exact= proves the binding
+equals the receiver index at each position of the original ordered records.
+The native refinement is pending; preserve record/signature and key/live checks,
+fresh per-sweep flags, bootstrap handling, descriptor fallback and failure order.
+This identifies removable work, not proof that it dominates the whole EVAL.
+Source reads and expanded/admitted owner work remain separate bottleneck audits.
+
+* Prebound position refinement
+
+The next Scheme candidate attaches the aligned position vector to the SAME
+existing authenticated projection. It computes a receiver's index once when
+the ordered DFS record is added. Zero is a valid Scheme-truthy index. Both
+record and position stacks are reversed together. =reverse_binding_exact=
+proves alignment after reversal; =extended_index_preserves_bindings= preserves
+old positions when new receivers are added without changing earlier entries.
+
+The internal projection continuation supplies the vector to the protected
+entry and independent return. The original three-argument private consumer
+protocol and all public entrypoints remain unchanged. The vector is structural
+data shared with the topology, not a currentness result. Each sweep's approval
+flags are still fresh. Unsupported descriptors do not inspect either index.
+The cold allocation/copy cost of the new position vector must be measured.
+
+Source and compiled issuance suites both pass 35 cases. The matching index
+fault binds every record to position zero: the alternating-receiver/return
+case fails at its intended assertion, 34 pass, exit 42. No compiler failure,
+timeout or overflow is used as that negative result. Graph integration and
+paired/native full-EVAL qualification remain pending for this refinement.
+
+* Publication checkpoint
+
+The compact candidate constructs one final position vector after the DFS,
+without an extra index list. Descending fill is modelled by
+=descending_fill_exact=. Unsupported conversion builds retain the original
+receiver-map operations and carry no binding vector; later restoration does
+not grant a binding that was never constructed. The private consumer API is
+unchanged. This is a draft implementation checkpoint, not adoption.
+
+The compact native issuance suite passes 35 cases. Its incorrect-position
+control passes 34 and fails the intended alternating-receiver case, exit 42.
+The same-record protected CPU medians are warm 152.433/73.0165 ms and cold
+198.0415/116.7685 ms; cold allocation observations are 17990144/19067040 bytes.
+The 207-case integration passed the earlier list-built binding; compact full
+integration and original complete 10K/180s/4GiB acceptance remain open. No
+consumer pin, release, Ascent or Parser promotion follows from this publication.
