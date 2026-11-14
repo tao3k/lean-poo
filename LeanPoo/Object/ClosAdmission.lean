@@ -815,3 +815,29 @@ theorem preflight_native_table
   rw [show readTable = readModel from funext same]
 
 end LeanPoo.Object.ClosAdmission.PublishedRoute
+
+namespace LeanPoo.Object.ClosAdmission.StoreReflection
+
+/-- Reflected entries retain values but have distinct writable cells and
+    adapter state. Editing the reflected table cannot address either
+    authoritative cells or its adapter. -/
+structure Store (Key Value Route : Type) where
+  live : Key → Value
+  liveRoute : Route
+  reflected : Key → Value
+  reflectedRoute : Route
+
+def snapshot (store : Store K V R) : Store K V R :=
+  { store with reflected := store.live, reflectedRoute := store.liveRoute }
+
+def editSnapshot (store : Store K V R) (cells : (K → V) → K → V)
+    (route : R → R) : Store K V R :=
+  { store with reflected := cells store.reflected, reflectedRoute := route store.reflectedRoute }
+
+theorem reflection_preserves_dispatch (store : Store K V R)
+    (cells : (K → V) → K → V) (route : R → R)
+    (dispatch : (K → V) → R → Result) :
+    let edited := editSnapshot (snapshot store) cells route
+    dispatch edited.live edited.liveRoute = dispatch store.live store.liveRoute := rfl
+
+end LeanPoo.Object.ClosAdmission.StoreReflection
