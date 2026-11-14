@@ -667,3 +667,67 @@ theorem unaffected_row_matches_after_edit (source : Specializer)
     simp [unchanged key absent, ih tail]
 
 end LeanPoo.Object.ClosAdmission.OwnedMethods
+
+namespace LeanPoo.Object.ClosAdmission.SharedRoute
+
+variable {Owner Key Value State Error : Type}
+
+/-- Route authentication is scoped to the exact receiver store. A batch
+    consumes its authenticated lookup in an interval with no effects. -/
+def separate (authenticate : State → Owner → Except Error Unit)
+    (lookup : State → Owner → Key → Option Value)
+    (state : State) (owner : Owner) : List Key → Except Error (List (Option Value))
+  | [] => .ok []
+  | key :: rest => do
+    authenticate state owner
+    let value := lookup state owner key
+    let later ← separate authenticate lookup state owner rest
+    return value :: later
+
+def shared (authenticate : State → Owner → Except Error Unit)
+    (lookup : State → Owner → Key → Option Value)
+    (state : State) (owner : Owner) (keys : List Key) :
+    Except Error (List (Option Value)) :=
+  if keys.isEmpty then .ok [] else do
+    authenticate state owner
+    return keys.map (lookup state owner)
+
+theorem same_store_closed_interval
+    (authenticate : State → Owner → Except Error Unit)
+    (lookup : State → Owner → Key → Option Value)
+    (state : State) (owner : Owner) (keys : List Key) :
+    shared authenticate lookup state owner keys = separate authenticate lookup state owner keys := by
+  induction keys with
+  | nil => rfl
+  | cons key rest ih =>
+    simp only [shared, List.isEmpty_cons, Bool.false_eq_true, ite_false, separate]
+    rw [← ih]
+    cases h : authenticate state owner <;> cases rest <;> simp [shared, h] <;> rfl
+
+/-- A successful authentication on one receiver says nothing about another
+    receiver or the same receiver after a callback changes its route. -/
+example : let auth := fun (edited receiver : Bool) =>
+            if edited || receiver then Except.error () else Except.ok ()
+          auth false false = .ok () ∧ auth false true = .error () ∧
+          auth true false = .error () := ⟨rfl, rfl, rfl⟩
+
+end LeanPoo.Object.ClosAdmission.SharedRoute
+
+namespace LeanPoo.Object.ClosAdmission.SharedRoute
+
+/-- The runtime pins the wrapper layout once. Each value store still has
+    its own binding, cells, shape and index to authenticate. -/
+def routeCheck (sharedCurrent receiverCurrent : Bool) :=
+  sharedCurrent && receiverCurrent
+
+theorem share_wrapper_only (sharedCurrent : Bool) (methodStore specializerStore : Bool) :
+    (routeCheck sharedCurrent methodStore && routeCheck sharedCurrent specializerStore) =
+      (sharedCurrent && methodStore && specializerStore) := by
+  cases sharedCurrent <;> cases methodStore <;> cases specializerStore <;> rfl
+
+theorem owner_invalidation_requires_fresh_support (published live : Nat)
+    (metadata store : Bool) (edited : live ≠ published) :
+    (decide (live = published) && routeCheck metadata store) = false := by
+  simp [edited]
+
+end LeanPoo.Object.ClosAdmission.SharedRoute
