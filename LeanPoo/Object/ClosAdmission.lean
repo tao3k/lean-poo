@@ -486,3 +486,95 @@ theorem affected_row_is_in_reverse_bucket [DecidableEq K] (source : K)
   simp [reverseOwners, member, affected]
 
 end LeanPoo.Object.ClosAdmission.IndexedRank
+
+namespace LeanPoo.Object.ClosAdmission.IndexedRank
+
+variable {M R S E O : Type}
+
+abbrev Attempt (S E O R : Type) := S → Except E (Option R) × S × List O
+
+def scan (evaluate : M → Attempt S E O R) :
+    List M → S → Except E (List R) × S × List O
+  | [], state => (.ok [], state, [])
+  | row :: rest, state =>
+    match evaluate row state with
+    | (.error refusal, after, reads) => (.error refusal, after, reads)
+    | (.ok result, after, reads) =>
+      let (later, final, more) := scan evaluate rest after
+      (later.map (fun accepted => result.toList ++ accepted), final, reads ++ more)
+
+/-- A bucket may remove only proven misses with no observable delivery or
+    state change. Equality includes the first refusal and the prefix of
+    reads delivered before it. -/
+theorem prune_closed_misses (evaluate : M → Attempt S E O R)
+    (keep : M → Bool) (rows : List M)
+    (skippable : ∀ row, keep row = false → ∀ state,
+      evaluate row state = (.ok none, state, [])) (state : S) :
+    scan evaluate (rows.filter keep) state = scan evaluate rows state := by
+  induction rows generalizing state with
+  | nil => rfl
+  | cons row rest ih =>
+    cases kept : keep row with
+    | false =>
+      simp [kept, scan, skippable row kept state, ih]
+      cases h : scan evaluate rest state with
+      | mk result tail => cases result <;> rfl
+    | true =>
+      simp only [List.filter_cons, kept, ite_true, scan]
+      cases h : evaluate row state with
+      | mk result tail =>
+        rcases tail with ⟨after, reads⟩
+        cases result <;> simp only [ih]
+
+/-- A Scheme pair write may change a row without advancing the Generic's
+    epoch. Both a new match and an effectful refusal are possible. -/
+theorem mutable_roster_epoch_insufficient :
+    let row : Attempt Bool Nat Nat Nat := fun changed =>
+      if changed then (.error 17, changed, [42]) else (.ok none, changed, [])
+    scan (fun _ : Unit => row) [] true ≠ scan (fun _ : Unit => row) [()] true := by
+  dsimp [scan]
+  intro same
+  cases same
+
+/-- For a slotted projection of the ranked sequence, two candidates assigned
+    the same position must be the same owner. Filling a position only once
+    therefore gives the same first-match result as a linear lookup. -/
+theorem first_position_lookup [DecidableEq M] [DecidableEq K]
+    (position : M → K) (owner : R → M)
+    (unique : Function.Injective position) (ranked : List R) (method : M) :
+    ranked.find? (fun row => position (owner row) == position method) =
+      ranked.find? (fun row => owner row == method) := by
+  congr 1
+  funext row
+  by_cases same : owner row = method
+  · simp [same]
+  · have different : position (owner row) ≠ position method :=
+      fun h => same (unique h)
+    have left : (position (owner row) == position method) = false := beq_eq_false_iff_ne.mpr different
+    have right : (owner row == method) = false := beq_eq_false_iff_ne.mpr same
+    rw [left, right]
+
+end LeanPoo.Object.ClosAdmission.IndexedRank
+
+namespace LeanPoo.Object.ClosAdmission.IndexedRank
+
+/-- A publication position is only a hint for a live rank. Even an arbitrary
+    stale position cannot inject a row or change which duplicate wins. -/
+theorem checked_position_falls_back [DecidableEq M]
+    (owner : R → M) (ranked : List R) (method : M)
+    (hint : Option R)
+    (validHint : ∀ row, hint = some row → owner row = method →
+      ranked.find? (fun entry => owner entry == method) = some row) :
+    (match hint with
+     | some row =>
+       if owner row = method then some row else ranked.find? (fun entry => owner entry == method)
+     | none => ranked.find? (fun entry => owner entry == method)) =
+      ranked.find? (fun entry => owner entry == method) := by
+  cases hint with
+  | none => rfl
+  | some row =>
+    by_cases same : owner row = method
+    · simp [same, validHint row rfl same]
+    · simp [same]
+
+end LeanPoo.Object.ClosAdmission.IndexedRank
