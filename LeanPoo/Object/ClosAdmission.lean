@@ -784,3 +784,34 @@ theorem method_revision_does_not_certify_carrier_policy :
   cases same
 
 end LeanPoo.Object.ClosAdmission.PublishedRoute
+
+namespace LeanPoo.Object.ClosAdmission.PublishedRoute
+
+/-- The existing reverse traversal supplies the affected set. Both source and
+    row visibility are decided by the same admitted write. -/
+def publish (admitted : Bool) (affected : Nat → Bool)
+    (before : Nat → Nat) : Nat → Nat :=
+  fun id => if admitted && affected id then before id + 1 else before id
+
+theorem refused_write_preserves_all (affected : Nat → Bool) (before : Nat → Nat) :
+    publish false affected before = before := by
+  funext id
+  simp [publish]
+
+theorem successful_write_changes_exactly_the_reverse_closure
+    (affected : Nat → Bool) (before : Nat → Nat) (id : Nat) :
+    publish true affected before id ≠ before id ↔ affected id = true := by
+  cases h : affected id <;> simp [publish, h]
+
+/-- A table-backed visited set can change the implementation of membership
+    without changing the reverse closure admitted by preflight. The equality
+    covers replacement of the state attached to a previously seen owner. -/
+theorem preflight_native_table
+    (readTable readModel : Nat → Option Nat)
+    (same : ∀ id, readTable id = readModel id)
+    (edges : List (Nat × Nat)) :
+    edges.all (fun (id, state) => readTable id == some state) =
+    edges.all (fun (id, state) => readModel id == some state) := by
+  rw [show readTable = readModel from funext same]
+
+end LeanPoo.Object.ClosAdmission.PublishedRoute
