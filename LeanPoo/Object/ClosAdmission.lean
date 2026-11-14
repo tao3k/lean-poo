@@ -578,3 +578,92 @@ theorem checked_position_falls_back [DecidableEq M]
     · simp [same]
 
 end LeanPoo.Object.ClosAdmission.IndexedRank
+
+namespace LeanPoo.Object.ClosAdmission.OwnedMethods
+
+abbrev Method := Nat
+abbrev Specializer := Nat
+
+structure Row where
+  method : Method
+  specializers : List Specializer
+  deriving DecidableEq
+
+structure Publication where
+  generation : Nat
+  rows : List Row
+  deriving DecidableEq
+
+structure Reflection where
+  methods : List Method
+  specializers : List (List Specializer)
+
+def reflect (publication : Publication) : Reflection :=
+  ⟨publication.rows.map (·.method), publication.rows.map (·.specializers)⟩
+
+/-- Reflection gives the caller a fresh spine at each level. Scheme preserves
+    the identities in the spines. A pair write addresses only the reflection. -/
+def editReflection (publication : Publication) (edit : Reflection → Reflection) :
+    Publication × Reflection :=
+  (publication, edit (reflect publication))
+
+theorem reflection_edit_preserves_published_inputs
+    (publication : Publication) (edit : Reflection → Reflection) :
+    (editReflection publication edit).1 = publication := rfl
+
+/-- A reflected spine consists of newly allocated cells. The writer edits
+    only those addresses. Car values may still be shared descriptor identities. -/
+def writeCell (heap : Nat → V) (address : Nat) (value : V) : Nat → V :=
+  fun key => if key = address then value else heap key
+
+theorem reflected_cell_write_preserves_owned_cells (heap : Nat → V)
+    (owned reflected : List Nat) (disjoint : ∀ a ∈ reflected, a ∉ owned)
+    (address : Nat) (member : address ∈ reflected) (value : V) :
+    owned.map (writeCell heap address value) = owned.map heap := by
+  apply List.map_congr_left
+  intro key inOwned
+  have separate : key ≠ address := by
+    intro same
+    exact disjoint address member (same ▸ inOwned)
+  simp [writeCell, separate]
+
+def replace (publication : Publication) (method : Method)
+    (specializers : List Specializer) : Publication :=
+  ⟨publication.generation + 1, publication.rows.map fun row =>
+    if row.method = method then { row with specializers } else row⟩
+
+theorem replacement_preserves_unrelated_rows
+    (publication : Publication) (method : Method) (specializers : List Specializer)
+    (row : Row) (member : row ∈ publication.rows) (unrelated : row.method ≠ method) :
+    row ∈ (replace publication method specializers).rows := by
+  apply List.mem_map.mpr
+  exact ⟨row, member, by simp [unrelated]⟩
+
+/-- The reverse index transposes the dependencies used to certify a row. A
+    source edit revokes exactly its registered rows. A clean row's witnesses
+    can therefore still certify applicability for the same arguments. -/
+def reverseBucket (source : Specializer) (publication : Publication) : List Row :=
+  publication.rows.filter fun row => row.specializers.contains source
+
+theorem dirty_row_iff_registered (source : Specializer) (publication : Publication) (row : Row) :
+    row ∈ reverseBucket source publication ↔
+      row ∈ publication.rows ∧ source ∈ row.specializers := by
+  simp [reverseBucket]
+
+theorem unaffected_row_matches_after_edit (source : Specializer)
+    (before after : Specializer → Bool) (row : Row)
+    (unchanged : ∀ key, key ≠ source → before key = after key)
+    (unaffected : source ∉ row.specializers) :
+    row.specializers.all before = row.specializers.all after := by
+
+  obtain ⟨id, keys⟩ := row
+  change source ∉ keys at unaffected
+  change keys.all before = keys.all after
+  induction keys with
+  | nil => rfl
+  | cons key rest ih =>
+    have absent : key ≠ source := fun same => unaffected (by simp [same])
+    have tail : source ∉ rest := fun mem => unaffected (List.mem_cons_of_mem _ mem)
+    simp [unchanged key absent, ih tail]
+
+end LeanPoo.Object.ClosAdmission.OwnedMethods
