@@ -731,3 +731,56 @@ theorem owner_invalidation_requires_fresh_support (published live : Nat)
   simp [edited]
 
 end LeanPoo.Object.ClosAdmission.SharedRoute
+
+namespace LeanPoo.Object.ClosAdmission.PublishedRoute
+
+structure Source where
+  revision : Nat
+  route : Bool
+  value : Nat
+  deriving DecidableEq
+
+structure Evidence where
+  observed : Source
+  deriving DecidableEq
+
+def canUse (e : Evidence) (live : Source) : Bool :=
+  live.revision == e.observed.revision
+
+/-- The reverse index may replace receiver checks precisely when every route
+    or value edit reaches the revision checked by the published row. -/
+theorem revision_accepts_only_original_evidence
+    (e : Evidence) (live : Source)
+    (editsAdvance : live.route ≠ e.observed.route ∨ live.value ≠ e.observed.value →
+      live.revision ≠ e.observed.revision)
+    (hit : canUse e live = true) :
+    live.route = e.observed.route ∧ live.value = e.observed.value := by
+  have sameRev : live.revision = e.observed.revision := by simpa [canUse] using hit
+  constructor
+  · apply Classical.byContradiction
+    intro changed
+    exact editsAdvance (.inl changed) sameRev
+  · apply Classical.byContradiction
+    intro changed
+    exact editsAdvance (.inr changed) sameRev
+
+/-- Direct writes through an exposed HashTable and writes to the wrapper
+    method are two distinct violations of the revision premise. -/
+theorem untracked_store_and_wrapper_edits :
+    let published : Evidence := ⟨⟨1, true, 3⟩⟩
+    let changedCell : Source := ⟨1, true, 4⟩
+    let changedWrapper : Source := ⟨1, false, 3⟩
+    canUse published changedCell = true ∧ canUse published changedWrapper = true ∧
+      changedCell.value ≠ published.observed.value ∧
+      changedWrapper.route ≠ published.observed.route := by decide
+
+/-- A real carrier predicate can be replaced by a rejecting policy. A
+    revision certificate for the method alone cannot erase that refusal. -/
+theorem method_revision_does_not_certify_carrier_policy :
+    let call := fun (allows : Bool) => if allows then Except.ok 42 else Except.error 7
+    call false ≠ (Except.ok 42 : Except Nat Nat) := by
+  dsimp
+  intro same
+  cases same
+
+end LeanPoo.Object.ClosAdmission.PublishedRoute
