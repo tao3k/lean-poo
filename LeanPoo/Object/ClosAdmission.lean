@@ -405,3 +405,84 @@ example (admission : Phase Unit Unit) (body : Phase Unit Unit) :
   exact ⟨(), [.privateCarrier 0], rfl, rfl, rfl⟩
 
 end LeanPoo.Object.ClosAdmission.DirectPrimary
+
+namespace LeanPoo.Object.ClosAdmission.IndexedRank
+
+variable {K M R S E : Type}
+
+/-- A prepared index replaces only a pure identity-position lookup. Slot
+    demand and the independent applicability steps remain in the same order. -/
+theorem indexed_rank_preserves_scan
+    (slow fast : K → Option Nat) (same : ∀ key, fast key = slow key)
+    (scan : (K → Option Nat) → List M → S → Except E (List R) × S)
+    (methods : List M) (state : S) :
+    scan fast methods state = scan slow methods state := by
+  rw [show fast = slow from funext same]
+
+/-- A previously prepared row is legal only for the identical live roster.
+    A changed roster or epoch recomputes through the current order. -/
+def selectRoster [DecidableEq M] (oldEpoch liveEpoch : Nat)
+    (previous current : List M) : List M :=
+  if oldEpoch = liveEpoch ∧ previous = current then previous else current
+
+theorem replacement_keeps_current_roster [DecidableEq M] (oldEpoch liveEpoch : Nat)
+    (previous current : List M) :
+    selectRoster oldEpoch liveEpoch previous current = current := by
+  unfold selectRoster
+  split
+  · rename_i h
+    exact h.2
+  · rfl
+
+/-- The selected bucket is a stable restriction of the roster, with positions
+    preserved even when candidate keys collide. -/
+theorem indexed_bucket_positions (roster : List M) (select : M → Bool) :
+    ∀ start, ((roster.zipIdx start).filter (fun row => select row.1)).map Prod.fst =
+      roster.filter select := by
+  induction roster with
+  | nil => intro start; rfl
+  | cons head tail ih =>
+    intro start
+    cases h : select head <;> simp [List.zipIdx_cons, h, ih]
+
+end LeanPoo.Object.ClosAdmission.IndexedRank
+
+namespace LeanPoo.Object.ClosAdmission.IndexedRank
+
+def position [DecidableEq K] (key : K) : List K → Option Nat
+  | [] => none
+  | head :: tail => if head = key then some 0 else (position key tail).map (· + 1)
+
+/-- Supported POO invalidations discard the canonical spine. A row can
+    accelerate lookup only while its recorded spine is the current one. -/
+theorem live_spine_rank [DecidableEq K] (key : K) (current installed : List K)
+    (sameOwner : Bool) (indexed : K → Option Nat)
+    (correct : ∀ k, indexed k = position k installed) :
+    (if sameOwner && decide (installed = current) then indexed key else position key current) =
+      position key current := by
+  split
+  · rename_i h
+    have same : installed = current := by simpa using (Bool.and_eq_true_iff.mp h).2
+    simpa [same] using correct key
+  · rfl
+
+end LeanPoo.Object.ClosAdmission.IndexedRank
+
+namespace LeanPoo.Object.ClosAdmission.IndexedRank
+
+private def reverseOwners [DecidableEq K] (source : K) (rows : List (M × List K)) :=
+  rows.filter fun row => row.2.contains source
+
+theorem unrelated_row_survives_invalidation [DecidableEq K] (source : K)
+    (rows : List (M × List K)) (row : M × List K)
+    (member : row ∈ rows) (unrelated : source ∉ row.2) :
+    row ∈ (rows.filter fun entry => !(entry.2.contains source)) := by
+  simp [member, unrelated]
+
+theorem affected_row_is_in_reverse_bucket [DecidableEq K] (source : K)
+    (rows : List (M × List K)) (row : M × List K)
+    (member : row ∈ rows) (affected : source ∈ row.2) :
+    row ∈ reverseOwners source rows := by
+  simp [reverseOwners, member, affected]
+
+end LeanPoo.Object.ClosAdmission.IndexedRank
