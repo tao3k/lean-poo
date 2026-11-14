@@ -391,3 +391,26 @@ import LeanPoo.Object.AdmissionBoundary
 import LeanPoo.Object.AdmittedInterfaceRead
 
 import LeanPoo.Object.ReadRouteSharing
+import LeanPoo.Proof.Gerbil.ColdComponentPreparation
+import LeanPoo.Proof.Gerbil.ColdObjectBaseCases
+import LeanPoo.Proof.Gerbil.ComponentFamily
+import LeanPoo.Proof.Gerbil.ComponentPublication
+import LeanPoo.Proof.Gerbil.ComponentReadRouting
+import LeanPoo.Proof.Gerbil.ComponentRouting
+import LeanPoo.Proof.Gerbil.ConstructorCall
+import LeanPoo.Proof.Gerbil.FallbackReflection
+import LeanPoo.Proof.Gerbil.GraphBucketWalk
+import LeanPoo.Proof.Gerbil.GraphColdHandoff
+import LeanPoo.Proof.Gerbil.GraphColdIndex
+import LeanPoo.Proof.Gerbil.GraphForwardRows
+import LeanPoo.Proof.Gerbil.GraphFrontier
+import LeanPoo.Proof.Gerbil.GraphRankBounds
+import LeanPoo.Proof.Gerbil.GraphRoster
+import LeanPoo.Proof.Gerbil.InvalidationKeySnapshot
+import LeanPoo.Proof.Gerbil.ModuleCatalog
+import LeanPoo.Proof.Gerbil.QuotientRoutes
+import LeanPoo.Proof.Gerbil.ReplacementLensCheck
+import LeanPoo.Proof.Gerbil.RevisionStream
+import LeanPoo.Proof.Gerbil.SccEditRegion
+import LeanPoo.Proof.Gerbil.ShapeAdmission
+import LeanPoo.Proof.Gerbil.SlotAssembly
