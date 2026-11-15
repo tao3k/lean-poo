@@ -877,3 +877,68 @@ example : current ⟨0, 0⟩ ⟨0, 0⟩ = true ∧
     (fun (_ : Unit) => true) () ≠ (fun (_ : Unit) => false) () := by decide
 
 end LeanPoo.Object.ClosAdmission.SharedRoute
+
+namespace LeanPoo.Object.ClosAdmission.OwnedMetadata
+
+/-- An alist owns both its outer spine and the key/value entry cells.
+Keys and values (including initform closures) retain their Scheme identities. -/
+structure Cells where
+  spine : List Nat
+  entries : List Nat
+
+def footprint (cells : Cells) : List Nat := cells.spine ++ cells.entries
+
+def observe (heap : Nat → V) (cells : Cells) : List V :=
+  (footprint cells).map heap
+
+/-- Ordinary allocation supplies fresh cells; separating only the outer
+spines does not establish ownership of an alist. -/
+def Separate (owned external : Cells) : Prop :=
+  ∀ address ∈ footprint external, address ∉ footprint owned
+
+theorem fresh_cells_are_separate (owned external : Cells) (cut : Nat)
+    (before : ∀ address ∈ footprint owned, address < cut)
+    (after : ∀ address ∈ footprint external, cut ≤ address) :
+    Separate owned external := by
+  intro address inExternal inOwned
+  have := before address inOwned
+  have := after address inExternal
+  omega
+
+theorem external_pair_write_preserves_metadata (heap : Nat → V)
+    (owned external : Cells) (separate : Separate owned external)
+    (address : Nat) (member : address ∈ footprint external) (value : V) :
+    observe (OwnedMethods.writeCell heap address value) owned = observe heap owned := by
+  exact OwnedMethods.reflected_cell_write_preserves_owned_cells
+    heap (footprint owned) (footprint external) separate address member value
+
+/-- Input mutation, reflection and observer callbacks may write any number
+of external cells. None can mutate captured declarations without a Slot edit. -/
+def writeMany (heap : Nat → V) (edits : List (Nat × V)) : Nat → V :=
+  edits.foldl (fun current edit => OwnedMethods.writeCell current edit.1 edit.2) heap
+
+theorem external_writes_preserve_metadata (heap : Nat → V) (owned external : Cells)
+    (separate : Separate owned external) (edits : List (Nat × V))
+    (allowed : ∀ edit ∈ edits, edit.1 ∈ footprint external) :
+    observe (writeMany heap edits) owned = observe heap owned := by
+  induction edits generalizing heap with
+  | nil => rfl
+  | cons edit rest ih =>
+    rw [writeMany, List.foldl_cons]
+    change observe (writeMany (OwnedMethods.writeCell heap edit.1 edit.2) rest) owned = _
+    rw [ih _ (fun e member => allowed e (List.mem_cons_of_mem _ member))]
+    exact external_pair_write_preserves_metadata heap owned external separate
+      edit.1 (allowed edit (by simp)) edit.2
+
+/-- Copying cons cells preserves entry order and the actual thunk values;
+there is no evaluation, serialization or replacement of a closure. -/
+theorem copy_entries_preserves_values (entries : List (K × V)) :
+    entries.map (fun entry => (entry.1, entry.2)) = entries := by
+  simp
+
+/-- A shallow reflected spine can still write a published entry. -/
+theorem shallow_copy_does_not_protect_entries :
+    observe (OwnedMethods.writeCell (fun _ => 0) 1 9) ⟨[0], [1]⟩ ≠
+      observe (fun _ => 0) ⟨[0], [1]⟩ := by decide
+
+end LeanPoo.Object.ClosAdmission.OwnedMetadata
