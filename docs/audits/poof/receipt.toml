@@ -568,6 +568,7 @@
   "LeanPoo/Object/CatalogReflection.lean",
   "LeanPoo/Object/Class.lean",
   "LeanPoo/Object/ClosAdmission.lean",
+  "LeanPoo/Object/ClosClassPublication.lean",
   "LeanPoo/Object/Dataflow.lean",
   "LeanPoo/Object/Debug.lean",
   "LeanPoo/Object/DeclarationOrder.lean",
