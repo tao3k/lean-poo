@@ -373,6 +373,8 @@ import LeanPoo.Object.FixedFieldLayout
 import LeanPoo.Object.SlotContracts
 import LeanPoo.Object.ClosAdmission
 import LeanPoo.Object.ClosClassPublication
+import LeanPoo.Object.ClosLifecycle
+import LeanPoo.Object.ClosInstancePublication
 
 import LeanPoo.Functional.WrapperValidation
 import LeanPoo.Functional.ByteIO
