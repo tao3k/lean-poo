@@ -825,6 +825,27 @@ theorem shared_issuance_equals_repeated (first second third : Store Data)
       data thirdFixed issued
     simp [repeatedAdmission, admit, issued, secondIssued, thirdIssued]
 
+/-- Only this already accepted reference must retain its binding. Unrelated
+weak rows may disappear; a global append-only-store invariant is unnecessary. -/
+def StableIssuance (before after : Store Data) (scope : Nat)
+    (reference : Reference Data) : Prop :=
+  ∀ data, authenticate before scope .read reference = some data →
+    authenticate after scope .read reference = some data
+
+theorem shared_issuance_equals_framed (first second third : Store Data)
+    (scope : Nat) (reference : Reference Data)
+    (route revision slot : World → Data → Bool) (world : World)
+    (secondFixed : StableIssuance first second scope reference)
+    (thirdFixed : StableIssuance first third scope reference) :
+    repeatedAdmission first second third scope reference route revision slot world =
+      admit first scope reference route revision slot world := by
+  cases issued : authenticate first scope .read reference with
+  | none => simp [repeatedAdmission, admit, issued]
+  | some data =>
+    have secondIssued := secondFixed data issued
+    have thirdIssued := thirdFixed data issued
+    simp [repeatedAdmission, admit, issued, secondIssued, thirdIssued]
+
 /-- Weak association is not a global lifetime root. A live token's closure
 must retain its payload; dead keys are discarded even if a payload stays live. -/
 def collect (store : Store Data) (tokenLive payloadLive : Nat → Bool) : Store Data :=
@@ -836,12 +857,25 @@ theorem live_token_keeps_payload (store : Store Data) (tokenLive payloadLive : N
     collect store tokenLive payloadLive token = store token := by
   simp [collect, live, captured token live]
 
+/-- Native replay retains its input token and that token's sole payload. Weak
+collection of unrelated rows cannot invalidate this accepted read. -/
+theorem live_collection_preserves_issuance (store : Store Data)
+    (tokenLive payloadLive : Nat → Bool)
+    (captured : ∀ token, tokenLive token = true → payloadLive token = true)
+    (scope token : Nat) (live : tokenLive token = true) :
+    StableIssuance store (collect store tokenLive payloadLive) scope (.published token) := by
+  intro data accepted
+  have kept := live_token_keeps_payload store tokenLive payloadLive captured token live
+  simpa [authenticate, kept] using accepted
+
 theorem dead_token_drops_index_row (store : Store Data) (tokenLive payloadLive : Nat → Bool)
     (token : Nat) (dead : tokenLive token = false) :
     collect store tokenLive payloadLive token = none := by simp [collect, dead]
 
 #print axioms publish_extends
 #print axioms published_payload_fixed
+#print axioms shared_issuance_equals_framed
+#print axioms live_collection_preserves_issuance
 #print axioms shared_issuance_equals_repeated
 #print axioms snapshot_write_preserves_issuance
 #print axioms callback_slot_refused

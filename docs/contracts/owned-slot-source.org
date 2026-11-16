@@ -281,3 +281,15 @@ SourceRole acceptance. The changed representation requires rebuilding matching
 consumers because old compiled field getters may be inlined. Full proof audit,
 mutation/return controls, coherent native compilation and alternating original
 complete-call CPU/allocation evidence remain required before production adoption.
+
+** Weak retirement needs a local frame
+
+Global Extends is a sufficient publication-only lemma, not the invariant of a
+weak index across GC. StableIssuance states the needed property for this one
+already accepted reference. shared_issuance_equals_framed preserves the same
+ordered live decisions using that local premise. For a retained token whose
+closure retains its payload, live_collection_preserves_issuance derives the
+premise despite collection of unrelated rows. No scan, renewed certificate or
+per-reference lifetime cache is required. Native callers must retain their
+actual input roots through later replay; a dead-token verdict is not reusable.
+The collector implementation and concurrent scheduler remain native obligations.

@@ -135,5 +135,15 @@ package OwnedSlotSource {
                callback. This does not certify concurrent writes, seed/read
                equivalence, native GC or complete-call performance. */
     }
+    requirement def LiveReferenceRetirementFrame {
+        attribute inputTokenRetained : Boolean;
+        attribute solePayloadRetained : Boolean;
+        require constraint { inputTokenRetained and solePayloadRetained }
+        doc /* StableIssuance applies to the current reference only. Collection
+               may retire unrelated weak rows; global Extends is not required.
+               live_collection_preserves_issuance derives the local premise.
+               Native root retention and collector conformance remain required;
+               do not cache a verdict after its input token has died. */
+    }
 
 }
