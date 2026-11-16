@@ -570,6 +570,7 @@
   "LeanPoo/Object/Class.lean",
   "LeanPoo/Object/ClosAdmission.lean",
   "LeanPoo/Object/ClosClassPublication.lean",
+  "LeanPoo/Object/ClosConstruction.lean",
   "LeanPoo/Object/ClosInstancePublication.lean",
   "LeanPoo/Object/ClosLifecycle.lean",
   "LeanPoo/Object/ClosQualifiers.lean",

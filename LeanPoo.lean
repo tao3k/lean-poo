@@ -421,3 +421,5 @@ import LeanPoo.Proof.Gerbil.RevisionStream
 import LeanPoo.Proof.Gerbil.SccEditRegion
 import LeanPoo.Proof.Gerbil.ShapeAdmission
 import LeanPoo.Proof.Gerbil.SlotAssembly
+
+import LeanPoo.Object.ClosConstruction

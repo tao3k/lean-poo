@@ -1,0 +1,21 @@
+#+TITLE: CLOS-like construction on the POO MOP
+
+Allocation establishes identity and nominal class membership. Effective slots
+may remain unbound; membership does not imply completed initialization.
+
+=make-instance= runs the complete initialization method combination, including
+=shared-initialize= extensions, before checking the final Class contract.
+A symbolic class designator resolves its class and re-enters the same generic.
+
+Slot normalization precedes the existing callback-free cell publication batch.
+A refused write preserves the cell and revision. Effects already performed by
+an initform or author method are not rolled back. Checks cannot be reused across
+an intervening owner edit or callback without independent currentness evidence.
+
+The implementation reuses POO Type, Class, Slot, C4, dependency indexes and read
+observation. Allocation does not evaluate native lazy slots or initform thunks.
+Explicit initialization controls initform effects. No second evaluator is added.
+
+Proofs: [[file:../../LeanPoo/Object/ClosConstruction.lean][construction boundaries]],
+[[file:../../LeanPoo/Object/ClosLifecycle.lean][keyword admission and slot masks]],
+[[file:../../LeanPoo/Object/ClosInstancePublication.lean][identity and layout publication]].
