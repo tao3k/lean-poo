@@ -571,6 +571,7 @@
   "LeanPoo/Object/ClosClassPublication.lean",
   "LeanPoo/Object/ClosInstancePublication.lean",
   "LeanPoo/Object/ClosLifecycle.lean",
+  "LeanPoo/Object/ClosQualifiers.lean",
   "LeanPoo/Object/Dataflow.lean",
   "LeanPoo/Object/Debug.lean",
   "LeanPoo/Object/DeclarationOrder.lean",
