@@ -279,4 +279,136 @@ example : scalar accept publish 0 = (.ok (), 0) := rfl
 #print axioms framed_seed_guard_shared
 #print axioms closed_selects_current_methods
 #print axioms closed_method_effects_empty
+
+namespace BoundedNames
+
+structure Acc where
+  members : Nat → Bool
+  values : List Nat
+
+def Related (acc : Acc) : Prop := ∀ key, acc.members key = acc.values.contains key
+
+def hashInsert (key : Nat) (acc : Acc) : Acc :=
+  if acc.members key then acc
+  else ⟨fun query => (query == key) || acc.members query, key :: acc.values⟩
+
+def listInsert (key : Nat) (values : List Nat) : List Nat :=
+  if values.contains key then values else key :: values
+
+theorem insert_values (key : Nat) (acc : Acc) (related : Related acc) :
+    (hashInsert key acc).values = listInsert key acc.values := by
+  simp only [hashInsert, listInsert, ← related key]
+  split <;> rfl
+
+theorem insert_related (key : Nat) (acc : Acc) (related : Related acc) :
+    Related (hashInsert key acc) := by
+  cases found : acc.members key with
+  | true => simpa [hashInsert, found] using related
+  | false =>
+      intro query
+      simp only [hashInsert, found, Bool.false_eq_true, ↓reduceIte]
+      change (query == key || acc.members query) = (key :: acc.values).contains query
+      rw [List.contains_cons, related query]
+
+abbrev Owned := { acc : Acc // Related acc }
+
+def empty : Owned := ⟨⟨fun _ => false, []⟩, by intro key; rfl⟩
+def insert (key : Nat) (acc : Owned) : Owned :=
+  ⟨hashInsert key acc.val, insert_related key acc.val acc.property⟩
+
+def returned (value : A) : Action S E A := fun state => (.ok value, state)
+def project (action : Action S E Owned) : Action S E (List Nat) :=
+  fun state => let observed := action state
+    (observed.1.map (fun acc => acc.val.values), observed.2)
+
+def hashStep (admit : Key → Action S E Nat)
+    (action : Action S E Owned) (key : Key) : Action S E Owned :=
+  bind action (fun acc => bind (admit key) (fun symbol => returned (insert symbol acc)))
+
+def listStep (admit : Key → Action S E Nat)
+    (action : Action S E (List Nat)) (key : Key) : Action S E (List Nat) :=
+  bind action (fun values => bind (admit key) (fun symbol =>
+    returned (listInsert symbol values)))
+
+/-- Native hash membership and memq see the same identity set. Admission,
+including its state/error, runs before either membership implementation. -/
+theorem project_step (admit : Key → Action S E Nat)
+    (action : Action S E Owned) (key : Key) :
+    project (hashStep admit action key) = listStep admit (project action) key := by
+  funext state
+  cases ran : action state with
+  | mk outcome after =>
+      cases outcome with
+      | error cause =>
+          simp [project, hashStep, listStep, bind, ran, Except.map]
+      | ok acc =>
+          cases checked : admit key after with
+          | mk result finalState =>
+              cases result with
+              | error cause =>
+                  simp [project, hashStep, listStep, bind, ran, checked, Except.map]
+              | ok symbol =>
+                  simp [project, hashStep, listStep, bind, returned, ran, checked,
+                    Except.map, insert, insert_values symbol acc.val acc.property]
+
+theorem project_fold (admit : Key → Action S E Nat)
+    (keys : List Key) (action : Action S E Owned) :
+    project (keys.foldl (hashStep admit) action) =
+      keys.foldl (listStep admit) (project action) := by
+  induction keys generalizing action with
+  | nil => rfl
+  | cons key rest ih =>
+      simp only [List.foldl_cons]
+      rw [ih, project_step]
+
+def reference (admit : Key → Action S E Nat) (keys : List Key) :=
+  project (keys.reverse.foldl (hashStep admit) (returned empty))
+
+def direct (admit : Key → Action S E Nat) (keys : List Key) :=
+  keys.foldr (fun key action => listStep admit action key) (returned [])
+
+/-- This is a state-and-first-error equality for arbitrary admitted keys,
+including duplicates. Std foldr preserves the original right-to-left order. -/
+theorem exact (admit : Key → Action S E Nat) (keys : List Key) :
+    reference admit keys = direct admit keys := by
+  rw [reference, project_fold]
+  have initial : project (returned empty : Action S E Owned) = returned [] := rfl
+  rw [initial]
+  exact List.foldl_reverse
+
+def adaptive (limit : Nat) (admit : Key → Action S E Nat) (keys : List Key) :=
+  if keys.length ≤ limit then direct admit keys else reference admit keys
+
+theorem adaptive_exact (limit : Nat) (admit : Key → Action S E Nat) (keys : List Key) :
+    adaptive limit admit keys = reference admit keys := by
+  unfold adaptive
+  split
+  · exact (BoundedNames.exact admit keys).symm
+  · rfl
+
+/-- Sorting, publication, fresh receiver cells and their exceptions are the
+same arbitrary continuation after equal normalization. -/
+theorem continuation_exact (admit : Key → Action S E Nat) (keys : List Key)
+    (finish : List Nat → Action S E Result) :
+    bind (reference admit keys) finish = bind (direct admit keys) finish := by
+  rw [BoundedNames.exact]
+
+theorem seed_prefix_exact (seed : Action S E Seed)
+    (admit : Seed → Key → Action S E Nat) (keys : List Key) :
+    bind seed (fun token => reference (admit token) keys) =
+      bind seed (fun token => direct (admit token) keys) := by
+  apply congrArg (bind seed)
+  funext token
+  exact BoundedNames.exact (admit token) keys
+
+private def accept (key : Nat) : Action Unit Nat Nat := returned key
+private def reject (key : Except Nat Nat) : Action Unit Nat Nat := fun state => (key, state)
+
+example : direct accept [1, 2, 1] () = (.ok [2, 1], ()) := rfl
+example : direct reject [.error 17, .ok 1, .error 23] () = (.error 23, ()) := rfl
+
+#print axioms exact
+#print axioms seed_prefix_exact
+end BoundedNames
+
 end ShapeAdmission
