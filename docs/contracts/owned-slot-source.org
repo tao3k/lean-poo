@@ -233,3 +233,51 @@ result, first refusal, visible-read order/multiplicity and seed behavior. In
 particular, wrapping an effectful validator in a computed Slot must not introduce
 a new mutation-during-computation rejection. This bridge is a proved prerequisite;
 it is not evidence of a runtime implementation, cold EVAL acceptance or speedup.
+
+* Published read storage and replay
+
+PublishedRead models one existing issuance index, not a second authority or a
+cached successful currentness verdict. Each fresh published identity binds its
+issuer scope, metadata kind and sole private payload. Raw construction remains
+unissued. publish_extends and published_payload_fixed prove that supported fresh
+publication preserves an existing binding; foreign_scope_refused and
+foreign_kind_refused exclude unrelated issuer domains and owned metadata.
+
+The native candidate represents a signed read by an opaque procedure retaining
+its payload. Public getters copy structural spines while preserving opaque
+business identities. The existing weak issuance index returns the private data;
+getters and authentication never invoke a caller-presented procedure. Owned
+metadata uses the same index with a distinct kind and checked anchor identity.
+There is no separately editable signed presentation or duplicate signature copy.
+Ordinary MOP field writes to a published token refuse. Raw, unissued records
+remain inspectable. snapshot_write_preserves_issuance models public snapshots;
+copy non-aliasing remains a native implementation obligation.
+
+shared_issuance_equals_repeated proves equality between repeated issuance checks
+and one issuance check within a fixed, effect-free replay interval. Later index
+states must extend the first: this permits fresh unrelated publication, never
+replacement of a live binding. Route, revision and Slot decisions still execute
+in the same order and against the same current world. It does not move checks
+past a callback, authorize concurrent writes or prove the whole SourceRole call
+pure. Authentication needs one identity lookup; this model does not claim a
+worst-case constant-time hash table implementation.
+
+After every open callback, re-enter native admission independently: authenticate
+identity and scope, check routing, then revision and Slot state. The model retains
+unissued-first refusal and separately proves callback_revision_refused and
+callback_slot_refused. Business results, observation delivery, random-source
+advancement and replacement arguments retain their existing controls; this model
+alone does not establish their Scheme correspondence.
+
+collect describes weak retention, conditional on a live token retaining its
+payload. live_token_keeps_payload and dead_token_drops_index_row prove the model
+properties. They do not prove the Gambit collector, atomic table publication or
+thread scheduling. Native GC/ownership controls and the actual supported writer
+boundary must establish those obligations. Unrestricted heap primitives are not
+part of this public mutation contract.
+
+Current native evidence is eight focused storage controls, not complete CLOS or
+SourceRole acceptance. The changed representation requires rebuilding matching
+consumers because old compiled field getters may be inlined. Full proof audit,
+mutation/return controls, coherent native compilation and alternating original
+complete-call CPU/allocation evidence remain required before production adoption.

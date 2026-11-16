@@ -652,3 +652,197 @@ theorem exposed_cell_stays_refused (stamp : Snapshot Value) (memory after : Memo
   simp [committed] at closed
 
 end LeanPoo.Object.ReadRevision
+
+namespace LeanPoo.Object.PublishedRead
+
+/-- One existing signing index may contain distinct issuer domains and owned
+metadata. Scope/kind are private identity capabilities in Scheme, not hashes. -/
+inductive Kind where
+  | read | owned
+  deriving DecidableEq
+
+structure Binding (Data : Type) where
+  scope : Nat
+  kind : Kind
+  data : Data
+
+abbrev Store (Data : Type) := Nat → Option (Binding Data)
+
+/-- Raw construction never grants a signing identity. Published references
+are opaque token identities; the actual token retains its sole private payload. -/
+inductive Reference (Data : Type) where
+  | raw (data : Data)
+  | published (token : Nat)
+
+def authenticate (store : Store Data) (scope : Nat) (kind : Kind) :
+    Reference Data → Option Data
+  | .raw _ => none
+  | .published token => do
+    let binding ← store token
+    if binding.scope = scope ∧ binding.kind = kind then some binding.data else none
+
+/-- The supported signing operation inserts fresh identities; no successful
+operation can replace the payload of an already published live token. -/
+def publish (store : Store Data) (token : Nat) (binding : Binding Data) :
+    Option (Store Data) :=
+  match store token with
+  | some _ => none
+  | none => some (fun key => if key = token then some binding else store key)
+
+def Extends (before after : Store Data) : Prop :=
+  ∀ token binding, before token = some binding → after token = some binding
+
+theorem publish_extends (store : Store Data) (token : Nat) (binding : Binding Data)
+    (after : Store Data) (success : publish store token binding = some after) :
+    Extends store after := by
+  unfold publish at success
+  split at success
+  · contradiction
+  · cases success
+    intro key old present
+    by_cases same : key = token
+    · subst key; simp_all
+    · simp [same, present]
+
+theorem published_payload_fixed (before after : Store Data) (scope : Nat) (kind : Kind)
+    (reference : Reference Data) (data : Data) (appendOnly : Extends before after)
+    (accepted : authenticate before scope kind reference = some data) :
+    authenticate after scope kind reference = some data := by
+  cases reference with
+  | raw _ => simp [authenticate] at accepted
+  | published token =>
+    cases found : before token with
+    | none => simp [authenticate, found] at accepted
+    | some binding =>
+      have preserved := appendOnly token binding found
+      simpa [authenticate, found, preserved] using accepted
+
+theorem raw_never_issued (store : Store Data) (scope : Nat) (kind : Kind) (data : Data) :
+    authenticate store scope kind (.raw data) = none := rfl
+
+theorem foreign_scope_refused (store : Store Data) (scope token : Nat)
+    (kind : Kind) (binding : Binding Data) (found : store token = some binding)
+    (foreign : binding.scope ≠ scope) :
+    authenticate store scope kind (.published token) = none := by
+  simp [authenticate, found, foreign]
+
+theorem foreign_kind_refused (store : Store Data) (scope token : Nat)
+    (kind : Kind) (binding : Binding Data) (found : store token = some binding)
+    (foreign : binding.kind ≠ kind) :
+    authenticate store scope kind (.published token) = none := by
+  simp [authenticate, found, foreign]
+
+/-- Public snapshot edits have their own storage; the signing index is NOT a
+mutable presentation. Snapshot copying and non-aliasing are native obligations. -/
+structure Exposed (Data View : Type) where
+  store : Store Data
+  snapshots : Nat → Option View
+
+def writeSnapshot (world : Exposed Data View) (address : Nat) (view : View) :
+    Exposed Data View :=
+  { world with snapshots := fun key => if key = address then some view else world.snapshots key }
+
+theorem snapshot_write_preserves_issuance (world : Exposed Data View) (address : Nat)
+    (view : View) (scope : Nat) (kind : Kind) (reference : Reference Data) :
+    authenticate (writeSnapshot world address view).store scope kind reference =
+      authenticate world.store scope kind reference := rfl
+
+/-- There are no public metadata fields on the opaque published token.
+Unsupported MOP writes refuse rather than editing a second presentation. -/
+def writeMetadata (reference : Reference Data) (edit : Data → Data) : Option (Reference Data) :=
+  match reference with
+  | .raw data => some (.raw (edit data))
+  | .published _ => none
+
+theorem published_write_refused (token : Nat) (edit : Data → Data) :
+    writeMetadata (.published token) edit = none := rfl
+
+inductive Refusal where
+  | unissued | route | revision | slot
+  deriving DecidableEq
+
+/-- Fixed issuance does not certify CURRENT receiver routing, revision or Slot
+state. Every boundary re-enters this operation in its actual current world. -/
+def admit (store : Store Data) (scope : Nat) (reference : Reference Data)
+    (route revision slot : World → Data → Bool) (world : World) : Except Refusal Data :=
+  match authenticate store scope .read reference with
+  | none => .error .unissued
+  | some data => if !route world data then .error .route else
+      if !revision world data then .error .revision else
+      if !slot world data then .error .slot else .ok data
+
+theorem refusal_order (store : Store Data) (scope : Nat) (reference : Reference Data)
+    (route revision slot : World → Data → Bool) (world : World)
+    (missing : authenticate store scope .read reference = none) :
+    admit store scope reference route revision slot world = .error .unissued := by
+  simp [admit, missing]
+
+theorem callback_revision_refused (store : Store Data) (scope : Nat)
+    (reference : Reference Data) (data : Data) (route revision slot : World → Data → Bool)
+    (after : World) (issued : authenticate store scope .read reference = some data)
+    (routing : route after data = true) (changed : revision after data = false) :
+    admit store scope reference route revision slot after = .error .revision := by
+  simp [admit, issued, routing, changed]
+
+theorem callback_slot_refused (store : Store Data) (scope : Nat)
+    (reference : Reference Data) (data : Data) (route revision slot : World → Data → Bool)
+    (after : World) (issued : authenticate store scope .read reference = some data)
+    (routing : route after data = true) (current : revision after data = true)
+    (changed : slot after data = false) :
+    admit store scope reference route revision slot after = .error .slot := by
+  simp [admit, issued, routing, current, changed]
+
+/-- Reference replay repeats issuance before each live decision. The two later
+stores model internal append-only publication, not arbitrary callback effects. -/
+def repeatedAdmission (first second third : Store Data) (scope : Nat)
+    (reference : Reference Data) (route revision slot : World → Data → Bool)
+    (world : World) : Except Refusal Data :=
+  match authenticate first scope .read reference with
+  | none => .error .unissued
+  | some data => if !route world data then .error .route else
+      match authenticate second scope .read reference with
+      | none => .error .unissued
+      | some secondData => if !revision world secondData then .error .revision else
+          match authenticate third scope .read reference with
+          | none => .error .unissued
+          | some thirdData => if !slot world thirdData then .error .slot else .ok thirdData
+
+/-- Sharing issuance does not share any live decision: route, revision and Slot
+still run in the original refusal order against this interval's current world.
+No callback or concurrent write is licensed by Extends. -/
+theorem shared_issuance_equals_repeated (first second third : Store Data)
+    (scope : Nat) (reference : Reference Data)
+    (route revision slot : World → Data → Bool) (world : World)
+    (secondFixed : Extends first second) (thirdFixed : Extends first third) :
+    repeatedAdmission first second third scope reference route revision slot world =
+      admit first scope reference route revision slot world := by
+  cases issued : authenticate first scope .read reference with
+  | none => simp [repeatedAdmission, admit, issued]
+  | some data =>
+    have secondIssued := published_payload_fixed first second scope .read reference
+      data secondFixed issued
+    have thirdIssued := published_payload_fixed first third scope .read reference
+      data thirdFixed issued
+    simp [repeatedAdmission, admit, issued, secondIssued, thirdIssued]
+
+/-- Weak association is not a global lifetime root. A live token's closure
+must retain its payload; dead keys are discarded even if a payload stays live. -/
+def collect (store : Store Data) (tokenLive payloadLive : Nat → Bool) : Store Data :=
+  fun token => if tokenLive token && payloadLive token then store token else none
+
+theorem live_token_keeps_payload (store : Store Data) (tokenLive payloadLive : Nat → Bool)
+    (captured : ∀ token, tokenLive token = true → payloadLive token = true)
+    (token : Nat) (live : tokenLive token = true) :
+    collect store tokenLive payloadLive token = store token := by
+  simp [collect, live, captured token live]
+
+theorem dead_token_drops_index_row (store : Store Data) (tokenLive payloadLive : Nat → Bool)
+    (token : Nat) (dead : tokenLive token = false) :
+    collect store tokenLive payloadLive token = none := by simp [collect, dead]
+
+#print axioms publish_extends
+#print axioms published_payload_fixed
+#print axioms shared_issuance_equals_repeated
+#print axioms snapshot_write_preserves_issuance
+#print axioms callback_slot_refused
+end LeanPoo.Object.PublishedRead

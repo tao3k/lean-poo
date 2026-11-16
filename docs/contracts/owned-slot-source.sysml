@@ -108,4 +108,32 @@ package OwnedSlotSource {
                refusal, seed and independent effect fences. No owner scan,
                second cache or runtime speed claim follows from the model. */
     }
+    requirement def PublishedReadStorage {
+        attribute oneIssuanceIndex : Boolean;
+        attribute freshIdentity : Boolean;
+        attribute privatePayload : Boolean;
+        attribute scopeAndKindChecked : Boolean;
+        require constraint {
+            oneIssuanceIndex and freshIdentity and privatePayload and scopeAndKindChecked
+        }
+        doc /* PublishedRead fixes the sole payload at fresh publication. Raw
+               construction never issues a read. Snapshot edits cannot mutate
+               signing storage; public MOP writes to signed metadata refuse.
+               Private weak retention and structural copying require native
+               conformance. Do not add a second signature cache or registry. */
+    }
+    requirement def FixedIssuanceLiveReplay {
+        attribute effectFreeInterval : Boolean;
+        attribute appendOnlyPublication : Boolean;
+        attribute originalLiveChecks : Boolean;
+        require constraint {
+            effectFreeInterval and appendOnlyPublication and originalLiveChecks
+        }
+        doc /* shared_issuance_equals_repeated shares fixed issuance only within
+               this interval. Preserve first refusal and routing/revision/Slot
+               decision order. Reauthenticate independently after every open
+               callback. This does not certify concurrent writes, seed/read
+               equivalence, native GC or complete-call performance. */
+    }
+
 }
