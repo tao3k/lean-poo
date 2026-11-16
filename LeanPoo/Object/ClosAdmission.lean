@@ -942,3 +942,38 @@ theorem shallow_copy_does_not_protect_entries :
       observe (fun _ => 0) ⟨[0], [1]⟩ := by decide
 
 end LeanPoo.Object.ClosAdmission.OwnedMetadata
+
+namespace LeanPoo.Object.ClosAdmission.ProtocolSelection
+
+/-- The open hook may omit or reorder eligible rows. Each method identity
+can occur only once; different qualifiers remain different method identities. -/
+def admit [DecidableEq Method] (eligible selection : List Method) : Option (List Method) :=
+  if selection.Nodup ∧ (∀ m ∈ selection, m ∈ eligible) then some selection else none
+
+theorem accepted_selection_preserves_order [DecidableEq Method]
+    (eligible selection result : List Method) (h : admit eligible selection = some result) :
+    result = selection ∧ result.Nodup ∧ (∀ m ∈ result, m ∈ eligible) := by
+  unfold admit at h
+  split at h
+  · rename_i valid
+    cases h
+    exact ⟨rfl, valid.1, valid.2⟩
+  · contradiction
+
+theorem repeated_method_is_refused [DecidableEq Method]
+    (eligible rest : List Method) (method : Method) (h : method ∈ rest) :
+    admit eligible (method :: rest) = none := by
+  simp [admit, List.nodup_cons, h]
+
+theorem reordered_subset_is_accepted [DecidableEq Method] (a b c : Method) (h : b ≠ a) :
+    admit [a, c, b] [b, a] = some [b, a] := by
+  simp [admit, List.nodup_cons, h]
+
+/-- Rejected plans never enter method combination or run a lifecycle method. -/
+theorem rejected_selection_skips_execution [DecidableEq Method]
+    (eligible selection : List Method) (run : List Method → Result)
+    (h : admit eligible selection = none) : (admit eligible selection).map run = none := by
+  rw [h]
+  rfl
+
+end LeanPoo.Object.ClosAdmission.ProtocolSelection

@@ -22,4 +22,7 @@ package ClosConstruction {
   requirement def Effects {
     doc /* Refused writes preserve cells; external callback effects are not rolled back. */
   }
+  requirement def ApplicableMethods {
+    doc /* An applicability hook selects distinct eligible methods in its chosen order before combination or execution. */
+  }
 }
