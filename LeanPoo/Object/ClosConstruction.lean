@@ -58,17 +58,19 @@ structure Completed (Value : Type) where
   stamp : Ticket
   initialized : Bool
   valid : Bool
+  currentGeneration : Nat
 
 def publish (prepared : Completed Value) : Option (Instance Value) :=
   if prepared.initialized && prepared.valid &&
-     decide (prepared.stamp = ticket prepared.receiver)
+     decide (prepared.stamp = ticket prepared.receiver) &&
+     decide (prepared.receiver.generation = prepared.currentGeneration)
   then some prepared.receiver else none
 
 theorem membership_alone_cannot_publish (x : Instance Value) :
-    publish ⟨x, ticket x, false, true⟩ = none := by simp [publish]
+    publish ⟨x, ticket x, false, true, x.generation⟩ = none := by simp [publish]
 
 theorem final_check_required (x : Instance Value) :
-    publish ⟨x, ticket x, true, false⟩ = none := by simp [publish]
+    publish ⟨x, ticket x, true, false, x.generation⟩ = none := by simp [publish]
 
 theorem publish_preserves_identity (p : Completed Value) (result : Instance Value)
     (accepted : publish p = some result) : result.identity = p.receiver.identity := by
@@ -79,13 +81,31 @@ theorem publish_preserves_identity (p : Completed Value) (result : Instance Valu
 
 theorem callback_edit_rejects_old_check (old next : Instance Value)
     (changed : ticket old ≠ ticket next) :
-    publish ⟨next, ticket old, true, true⟩ = none := by
+    publish ⟨next, ticket old, true, true, next.generation⟩ = none := by
   simp [publish, changed]
 
-theorem completed_unbound_slot_is_legal (i c g : Nat) :
+/-- Class redefinition can advance the schema before the stored instance layout.
+A native Slot read does not run the mutating migration protocol implicitly. -/
+def readCurrent (x : Instance Value) (currentGeneration name : Nat) : Option (Option Value) :=
+  if x.generation = currentGeneration then some (x.slots name) else none
+
+theorem outdated_layout_cannot_publish (x : Instance Value) (current : Nat)
+    (outdated : x.generation ≠ current) :
+    publish ⟨x, ticket x, true, true, current⟩ = none := by
+  simp [publish, outdated]
+
+theorem outdated_read_does_not_expose_old_slot (x : Instance Value) (current name : Nat)
+    (outdated : x.generation ≠ current) : readCurrent x current name = none := by
+  simp [readCurrent, outdated]
+
+theorem current_read_keeps_unbound_distinct (x : Instance Value) (name : Nat) :
+    readCurrent x x.generation name = some (x.slots name) := by simp [readCurrent]
+
+theorem completed_unbound_slot_is_legal
+ (i c g : Nat) :
     publish ⟨allocate (Value := Value) i c g,
-      ticket (allocate (Value := Value) i c g), true, true⟩ =
-      some (allocate i c g) := by simp [publish]
+      ticket (allocate (Value := Value) i c g), true, true, g⟩ =
+      some (allocate i c g) := by simp [publish, allocate]
 
 /-- Unrequested native lazy slots are untouched by allocation and checking
 metadata. Explicit initforms remain effects of the initializer, not allocation. -/

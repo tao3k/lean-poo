@@ -12,6 +12,10 @@ A refused write preserves the cell and revision. Effects already performed by
 an initform or author method are not rolled back. Checks cannot be reused across
 an intervening owner edit or callback without independent currentness evidence.
 
+Native Slot reads require the stored layout to match the current class generation.
+They do not invoke mutating migration methods during getter evaluation. The
+existing CLOS lifecycle operations perform migration before accessing cells.
+
 The implementation reuses POO Type, Class, Slot, C4, dependency indexes and read
 observation. Allocation does not evaluate native lazy slots or initform thunks.
 Explicit initialization controls initform effects. No second evaluator is added.
