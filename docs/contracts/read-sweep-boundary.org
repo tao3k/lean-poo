@@ -1,0 +1,34 @@
+#+title: Read-sweep index sizing effect boundary
+
+* Contract
+
+Issuance preflight covers only the same no-effect interval. Gerbil HashTable
+length is an interface delegate, even when the final replay action is void.
+Only a live native delegate qualification permits reusing that preflight.
+Otherwise invoke the original delegate once, preserve its exception, then
+independently authenticate each read before key/route/live checks in record order.
+Do not move preflight behind sizing or share approval across a return callback.
+
+* Correspondence
+
+=LeanPoo/Object/ReadSweepBoundary.lean= extends =ReadRouteRuns= and proves
+=Sizing.guarded_exact= against the fully authenticating reference. The native
+premise is equality of actual issuance checks at every read across sizing,
+not a receiver revision or a caller purity Boolean. A concrete counterexample
+accepts a changed checker when this premise is omitted; the fallback refuses.
+The model abstracts a successful native sizing operation and error propagation;
+it does not claim rollback of arbitrary callback effects.
+
+=read-route.ss= checks the live HashTable wrapper, current descriptor, length
+field offset and exact gc-table-length procedure. Gerbil's gc-table-length
+implementation reads native counts without invoking author callbacks.
+=object/observation.ss= decides eligibility before sizing and forces issuance
+when sizing is foreign. Existing entry/return checks are not deleted.
+=t/objects/read-index-boundary-test.ss= contains four matched runtime controls.
+The prior baseline fails the changed-issuance case and passes the other three;
+the corrected path passes all four and the prior 111 regression cases.
+
+No loader, cache, method evaluator or public adapter is introduced. No successful
+certificate is retained. Runtime delegate qualification and actual native import
+identity remain executable obligations rather than assumptions discharged by
+an abstract state theorem.
