@@ -206,3 +206,30 @@ The existing Core SourceWindows and ReplayCheckpoint QNT models continue to own
 independent effect boundaries. They are not replaced or claimed rerun here.
 Scheme adoption still requires native constructor/exposure correspondence,
 matching failures, original cold/hot/clone controls and the actual consumer gates.
+
+* Registered support transports an existing obligation
+
+=CacheInvalidation.registeredSupport_affected= connects actual captured source
+edges, including the receiver itself, to the OLD reverse invalidation closure.
+=registeredSupport_unaffected= derives =Proof.unaffected= from an untouched owner.
+=registeredSupport_reuse= then applies the existing =Proof.reuse= theorem rather
+than defining a new cache, proof authority, evaluator or Graph implementation.
+
+The premises are substantive: every dependency of the checked obligation is
+the owner or a registered captured source; =Obligation.stable= covers the actual
+payload/validator policy; and =Patch.frame= describes every supported write.
+Opaque writes, external mutable pair contents, missing registry dependencies
+and callbacks do not satisfy these premises merely because a Generic generation
+is unchanged. Registration is committed only after complete source admission.
+
+The trace may retain duplicate observations while the native reverse index
+stores unique edges. Absence observations and validator/Method/LambdaList/
+Specializer support are not optional. Scheme must use its existing indexed
+registration; the list graph in this theorem is a specification, not permission
+to scan all owners. Existing publication and return fences remain independent.
+
+For CLOS adoption, instantiate the owned obligation with the original successful
+result, first refusal, visible-read order/multiplicity and seed behavior. In
+particular, wrapping an effectful validator in a computed Slot must not introduce
+a new mutation-during-computation rejection. This bridge is a proved prerequisite;
+it is not evidence of a runtime implementation, cold EVAL acceptance or speedup.

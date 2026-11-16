@@ -98,4 +98,14 @@ package OwnedSlotSource {
                The gate does not certify arbitrary concurrent metadata writes.
                Unknown writers and protocols retain ordinary preparation. */
     }
+    requirement def RegisteredValidationTransport {
+        doc /* Derive Proof.unaffected from the OLD registered reverse closure,
+               with the receiver itself and COMPLETE transitive support.
+               Reuse existing Proof.reuse and native Slot invalidation only.
+               Obligation.stable and Patch.frame remain host obligations;
+               a generation or registration mark does not authenticate them.
+               Preserve duplicate deliveries, absence/policy reads, first
+               refusal, seed and independent effect fences. No owner scan,
+               second cache or runtime speed claim follows from the model. */
+    }
 }
