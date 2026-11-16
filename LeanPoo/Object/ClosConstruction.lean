@@ -124,4 +124,41 @@ theorem class_name_reenters_generic (resolve : Name → Class)
     (generic : Class → Result) (name : Name) :
     namedDefault resolve generic name = generic (resolve name) := rfl
 
+variable {Value : Type}
+
+/-- Absence is metadata, not an invented top-type declaration. The host Slot
+protocol accepts untyped values; an explicitly declared constraint is retained. -/
+def effectiveConstraint (checks : List (Value → Bool)) : Option (Value → Bool) :=
+  match checks with
+  | [] => none
+  | _ :: _ => some (fun value => checks.all (fun check => check value))
+
+def accepts (constraint : Option (Value → Bool)) (value : Value) : Bool :=
+  match constraint with
+  | none => true
+  | some check => check value
+
+theorem absent_type_has_no_synthetic_descriptor :
+    effectiveConstraint (Value := Value) [] = none := rfl
+
+theorem effective_constraint_checks_all (checks : List (Value → Bool)) (value : Value) :
+    accepts (effectiveConstraint checks) value = checks.all (fun check => check value) := by
+  cases checks <;> rfl
+
+theorem omitted_child_preserves_inherited_constraints
+    (inherited : List (Value → Bool)) :
+    effectiveConstraint ([] ++ inherited) = effectiveConstraint inherited := rfl
+
+theorem child_cannot_weaken_parent (child inherited : List (Value → Bool)) (value : Value)
+    (accepted : accepts (effectiveConstraint (child ++ inherited)) value = true) :
+    accepts (effectiveConstraint inherited) value = true := by
+  simp only [effective_constraint_checks_all, List.all_append, Bool.and_eq_true] at accepted
+  simpa only [effective_constraint_checks_all] using accepted.2
+
+theorem inherited_rejection_survives_untyped_child
+    (inherited : List (Value → Bool)) (value : Value)
+    (refused : accepts (effectiveConstraint inherited) value = false) :
+    accepts (effectiveConstraint ([] ++ inherited)) value = false := refused
+
 end LeanPoo.Object.ClosConstruction
+
