@@ -56,6 +56,31 @@ def publish (world : World) (plan : Plan) : World :=
       | some candidate => nextLayout (world.layout cls) candidate
     subclasses := fun cls => (plan.subclasses cls).getD (world.subclasses cls) }
 
+/-- Initial creation publishes the same complete projection as redefinition,
+but retains the requested initial generation and has no prior layouts. -/
+def initialLayout (generation : Generation) (candidate : Projection) : Layout :=
+  { toProjection := candidate
+    generation := generation
+    lookup := lookupSlot candidate.effective
+    history := fun _ => none }
+
+theorem initial_projection_complete (generation : Generation) (candidate : Projection) :
+    (initialLayout generation candidate).complete ∧
+    (initialLayout generation candidate).prototype = candidate.prototype ∧
+    (initialLayout generation candidate).precedence = candidate.precedence := by
+  exact ⟨rfl, rfl, rfl⟩
+
+/-- Registering children changes bookkeeping, not a class's own ancestry.
+No per-generation prototype or index is reconstructed by a lazy getter. -/
+theorem subclass_bookkeeping_preserves_layout (world : World)
+    (updates : ClassId → Option (List ClassId)) :
+    (publish world ⟨fun _ => none, updates⟩).layout = world.layout := rfl
+
+theorem subclass_bookkeeping_preserves_prototype (world : World)
+    (updates : ClassId → Option (List ClassId)) (cls : ClassId) :
+    ((publish world ⟨fun _ => none, updates⟩).layout cls).prototype =
+      (world.layout cls).prototype := rfl
+
 inductive ObservationPoint where
   | staging
   | published

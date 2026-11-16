@@ -41,3 +41,10 @@ Mutable lifecycle cells normalize on write. Checking their Class preserves the
 instance and its stored FUN wrappers; pure POO values retain functional Class
 rebinding. Original signed reads are checked after author callbacks before cell
 publication. These are the =NativeTypes= laws in the construction proof.
+
+Initial Class creation and redefinition use the same prepared projection and
+field-publication path. Adding a direct subclass is roster bookkeeping; it must
+not allocate another prototype or change the existing precedence/index for a
+class generation. =ClosClassPublication= proves initial completeness and roster
+invariance. The Scheme regression retains a prototype across unrelated class
+registration and then uses the original Class as a Slot Type.
