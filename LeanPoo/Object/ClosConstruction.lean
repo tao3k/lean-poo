@@ -160,5 +160,75 @@ theorem inherited_rejection_survives_untyped_child
     (refused : accepts (effectiveConstraint inherited) value = false) :
     accepts (effectiveConstraint ([] ++ inherited)) value = false := refused
 
+namespace NativeTypes
+
+structure Contract (Value Error : Type) where
+  normalize : Value → Except Error Value
+  member : Value → Bool
+
+def normalizeAll (types : List (Contract Value Error)) (value : Value) : Except Error Value :=
+  match types with
+  | [] => .ok value
+  | type :: rest => (type.normalize value).bind (normalizeAll rest)
+
+def validateAll (types : List (Contract Value Error)) (invalid : Error)
+    (value : Value) : Except Error Value :=
+  (normalizeAll types value).bind fun checked =>
+    if types.all (fun type => type.member checked) then .ok checked else .error invalid
+
+theorem rejected_child_stops_following_normalizers (type : Contract Value Error)
+    (rest : List (Contract Value Error)) (value : Value) (cause : Error)
+    (failed : type.normalize value = .error cause) :
+    normalizeAll (type :: rest) value = .error cause := by
+  simp [normalizeAll, failed, Except.bind]
+
+theorem accepted_result_satisfies_every_type (types : List (Contract Value Error))
+    (invalid : Error) (value checked : Value)
+    (accepted : validateAll types invalid value = .ok checked) :
+    types.all (fun type => type.member checked) = true := by
+  unfold validateAll at accepted
+  cases normal : normalizeAll types value with
+  | error cause => simp [normal, Except.bind] at accepted
+  | ok result =>
+    simp only [normal, Except.bind] at accepted
+    split at accepted
+    · cases accepted; assumption
+    · contradiction
+
+/-- A later normalizer may undo an earlier type's invariant. Running only each
+validator once without final membership is insufficient for an intersection. -/
+theorem normalization_alone_does_not_establish_intersection :
+    let zero : Contract Nat Unit := ⟨fun _ => .ok 0, fun n => n == 0⟩
+    let one : Contract Nat Unit := ⟨fun _ => .ok 1, fun n => n == 1⟩
+    normalizeAll [zero, one] 3 = .ok 1 ∧
+    validateAll [zero, one] () 3 = .error () := by
+  simp [normalizeAll, validateAll, Except.bind]
+
+/-- A canonical mutable instance has already normalized its cells on write.
+Type validation checks membership and preserves identity, without running the
+field normalizers again. Pure functional receivers use native Class rebinding. -/
+def validateLive (types : List (Contract Value Error)) (invalid : Error)
+    (value : Value) : Except Error Value :=
+  if types.all (fun type => type.member value) then .ok value else .error invalid
+
+theorem live_validation_preserves_value (types : List (Contract Value Error))
+    (invalid : Error) (value checked : Value)
+    (accepted : validateLive types invalid value = .ok checked) : checked = value := by
+  unfold validateLive at accepted
+  split at accepted
+  · cases accepted; rfl
+  · contradiction
+
+/-- Freshness is supplied by POO's original signed read records. A successful
+normalizer cannot excuse changed evidence after an author callback. -/
+def checkedEvidence (result : Except Error Value) (current : Bool) (stale : Error) :
+    Except Error Value := if current then result else .error stale
+
+theorem changed_evidence_cannot_publish (value : Value) (stale : Error) :
+    checkedEvidence (.ok value) false stale = .error stale := rfl
+
+end NativeTypes
+
 end LeanPoo.Object.ClosConstruction
+
 

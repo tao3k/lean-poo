@@ -29,3 +29,15 @@ not synthesize a top Type and does not constrain values. Explicit constraints
 from every inherited declaration remain conjunctive; an untyped child cannot
 erase a parent constraint. The descriptor admits optional type metadata through
 the existing Slot contract.
+
+Slot declarations carry existing POO Type objects, including Class, Record and
+FUN. No predicate-to-Type adapter is maintained by CLOS. A single effective
+Type keeps its identity; multiple inherited Types use the shared =And= Type.
+Its validators run left-to-right, then every Type checks the final value. A later
+normalizer cannot silently invalidate an earlier constraint. Failures preserve
+original causes and suppress subsequent normalizers.
+
+Mutable lifecycle cells normalize on write. Checking their Class preserves the
+instance and its stored FUN wrappers; pure POO values retain functional Class
+rebinding. Original signed reads are checked after author callbacks before cell
+publication. These are the =NativeTypes= laws in the construction proof.

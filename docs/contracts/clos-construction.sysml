@@ -13,6 +13,12 @@ package ClosConstruction {
   requirement def Publication {
     doc /* Complete initializer combination and current Class/Slot checks precede return. */
   }
+  requirement def NativeSlotTypes {
+    doc /* Slot declarations reuse POO Type objects; ordered normalization ends with every inherited membership check. */
+  }
+  requirement def CanonicalCells {
+    doc /* Live Class validation preserves instance identity and does not normalize canonical cells twice. */
+  }
   requirement def Effects {
     doc /* Refused writes preserve cells; external callback effects are not rolled back. */
   }
