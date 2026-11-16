@@ -609,6 +609,7 @@
   "LeanPoo/Object/ReadRouteRuns.lean",
   "LeanPoo/Object/ReadVisitWorkspace.lean",
   "LeanPoo/Object/ReadSweepBoundary.lean",
+  "LeanPoo/Object/BorrowedReadCurrentness.lean",
   "LeanPoo/Object/ReadRouteSharing.lean",
   "LeanPoo/Object/Recursive.lean",
   "LeanPoo/Object/RecursiveInstance.lean",
