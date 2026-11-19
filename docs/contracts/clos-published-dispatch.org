@@ -58,3 +58,65 @@ sequence a lower bound on deliveries. Extract the pure stage boundaries
 from dispatch and the existing issued-read path before applying this
 design. Do not replace a repeated observed check with a receipt from
 before a callback.
+
+* Refinement by dispatch stage
+
+The reference is Gerbil-POO =d7d438e= and the local =a3add7b=
+effective-route variant. The latter has the same distance calculation
+and standard combination order.
+
+| Scheme boundary | What can be prepared | What runs at the original boundary |
+|-
+| =method-distances=, =sort-ranked= | Shape ranks, argument-precedence projection and the stable candidate order | Read each required specializer. Match =eql= against this call's argument. Evaluate guard and rejection conditions. |
+| =protocol-ranked-methods= | C4 candidate lookup for an admitted shape | Author filtering, reordering and result validation. A reordered or otherwise open result uses the returned order directly. |
+| =clos-methods-with-qualifier= | Normalize admitted declarations once and stably partition the ordered candidates | Deliver the four ordered qualifier read passes where observable. Only a valid phase plan may consume the resulting selection. |
+| =select-effective-method=, =execute-standard-effective-method= | Standard group layout and least-specific-first after order | Keyword checks, the no-applicable decision, current arguments and carriers, body reads, method effects and the early no-primary refusal. |
+| =call-next-method= and lifecycle write guards | The owner's pure descriptor and plan | Renew applicability for replacement arguments. Authenticate each class and slot check at its own boundary, including after a callback. |
+
+[[file:../../LeanPoo/Object/ClosAdmission/CandidateShape.lean][CandidateShape]]
+models the two C4 position domains used in Scheme and the zero rank for
+=eql=. Class and prototype targets are kept distinct even when their ranks
+tie. The stable filtering theorem in
+[[file:../../LeanPoo/Object/ClosAdmission/CandidateOrder.lean][CandidateOrder]]
+proves that a pure selection mask gives the same order before or after
+sorting, including tied methods. Its sparse lookup corollary uses the
+existing prototype-trie proof. A Scheme refinement must account for
+both position domains and the original declaration order when admitting
+CLOS index entries. The admitted argument-precedence permutation supplies
+in-bounds distance indices.
+
+[[file:../../LeanPoo/Object/ClosAdmission/DispatchPreparation.lean][DispatchPreparation]]
+composes the candidate proof with one-pass qualifier grouping and
+standard recipe selection. A live order-preserving mask may remove an
+=eql= candidate without repeating sort, normalization, partition or
+after-list reversal. A live hook that can reorder is outside that
+equivalence. The grouping theorem takes the admitted qualifier values.
+If an observable qualifier read disagrees, prepare the active stage
+from the live values and keep the observations it already delivered.
+The published plan keeps the most-specific-first reflective
+groups and the execution order separately. It contains no current
+invocation, prototype validation result, or call outcome.
+
+An effect boundary ends the scope of any plan guard that precedes it.
+[[file:../../LeanPoo/Object/ClosAdmission/ObservationResume.lean][ObservationResume]]
+proves that completion of one stage hands its world and exact read prefix
+to the next stage, and that a post-callback authentication failure
+keeps all earlier observations. On a stale hit the new stage is
+prepared in that world. Observed specializer reads are sequenced
+before combining their truth values, so an earlier =eql= miss cannot
+short-circuit the remaining read actions. Preserve the same emitted
+records, order and refusal point, with the 570-event fixture as a
+conformance oracle.
+
+* Exact invalidation
+
+[[file:../../LeanPoo/Object/ClosAdmission/DispatchInvalidation.lean][DispatchInvalidation]]
+uses the existing old-inverse rewrite theorem and the SCC region
+theorem. The affected set corresponds to the reverse cursor walk in
+=generalized-graph.ss= (=affected-work=). Its epoch-change set equals the old indexed dependent closure
+when edited class or method inputs and every changed dependency row
+are seeded. The old/new edge union is for the SCC repair envelope.
+Consumers on acyclic paths still invalidate, and all owners of an
+affected SCC agree on reachability. These theorems establish the
+logical sets. Enumeration and mutation costs belong to the existing
+Scheme index implementation and its eventual refinement.
