@@ -378,6 +378,9 @@ import LeanPoo.Object.ClosAdmission.PublishedDispatch
 import LeanPoo.Object.ClosAdmission.DispatchPreparation
 import LeanPoo.Object.ClosAdmission.DispatchInvalidation
 import LeanPoo.Object.ClosAdmission.ObservationResume
+import LeanPoo.Object.ClosAdmission.SingletonTraversal
+import LeanPoo.Object.ClosAdmission.SingletonSavedTails
+import LeanPoo.Object.ClosAdmission.EffectiveMethodPreparation
 import LeanPoo.Object.ClosQualifiers
 import LeanPoo.Object.ClosClassPublication
 import LeanPoo.Object.ClosLifecycle
