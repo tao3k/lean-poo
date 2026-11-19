@@ -379,6 +379,7 @@ import LeanPoo.Object.ClosAdmission.DispatchPreparation
 import LeanPoo.Object.ClosAdmission.DispatchInvalidation
 import LeanPoo.Object.ClosAdmission.ClassDispatchDependencies
 import LeanPoo.Object.ClosAdmission.ObservationResume
+import LeanPoo.Object.ClosAdmission.LiveQualifierGroups
 import LeanPoo.Object.ClosQualifiers
 import LeanPoo.Object.ClosClassPublication
 import LeanPoo.Object.ClosLifecycle
