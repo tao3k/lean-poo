@@ -120,3 +120,11 @@ Consumers on acyclic paths still invalidate, and all owners of an
 affected SCC agree on reachability. These theorems establish the
 logical sets. Enumeration and mutation costs belong to the existing
 Scheme index implementation and its eventual refinement.
+
+A materialized Class precedence assignment excludes native
+=direct-subclasses= writes from its dispatch dependency. The Class
+receiver itself still invalidates so ordinary read evidence follows the
+new roster. A Class generation change or a changed specializer follows
+the whole reverse row. Reaching a scoped receiver through another
+dependency widens the visit to its whole row, with one revision advance.
+See [[file:../../LeanPoo/Object/ClosAdmission/ClassDispatchDependencies.lean][Class dispatch dependencies]].
