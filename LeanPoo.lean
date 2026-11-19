@@ -372,6 +372,8 @@ import LeanPoo.Object.FreshReadRoots
 import LeanPoo.Object.FixedFieldLayout
 import LeanPoo.Object.SlotContracts
 import LeanPoo.Object.ClosAdmission
+import LeanPoo.Object.ClosAdmission.SingletonTraversal
+import LeanPoo.Object.ClosAdmission.SingletonSavedTails
 import LeanPoo.Object.ClosQualifiers
 import LeanPoo.Object.ClosClassPublication
 import LeanPoo.Object.ClosLifecycle
