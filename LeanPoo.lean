@@ -289,6 +289,7 @@ import LeanPoo.Functional.InheritanceHooks
 import LeanPoo.Functional.ProtocolSelection
 import LeanPoo.Object.CacheInvalidation
 import LeanPoo.Object.ReverseIndexTraversal
+import LeanPoo.Object.CompactPrototypeMap
 import LeanPoo.Object.SlotReflection
 import LeanPoo.Object.CatalogReflection
 import LeanPoo.Prototype.MetaBootstrap
