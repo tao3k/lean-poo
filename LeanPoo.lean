@@ -374,6 +374,7 @@ import LeanPoo.Object.SlotContracts
 import LeanPoo.Object.ClosAdmission
 import LeanPoo.Object.ClosAdmission.StandardEffectiveMethodCost
 import LeanPoo.Object.ClosAdmission.InitargMembership
+import LeanPoo.Object.ClosAdmission.PublishedDispatch
 import LeanPoo.Object.ClosQualifiers
 import LeanPoo.Object.ClosClassPublication
 import LeanPoo.Object.ClosLifecycle

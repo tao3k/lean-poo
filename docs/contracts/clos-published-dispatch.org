@@ -1,0 +1,60 @@
+#+TITLE: Preparing CLOS dispatch at publication
+
+* Research basis
+
+Fare describes staging as guarding a precomputed result before reuse, and lists
+precomputation of effective methods under Efficient Dispatch. The CLOS design
+here stages the pure program of a method combination. A public
+=ClosEffectiveMethod= holds the live arguments and has its own identity.
+Construction, invocation and observers therefore remain call-time operations.
+See [[https://github.com/metareflection/poof/blob/59cecf050c8f2fab480175278c439410f3151cd6/ltuo_10_efficient_object_implementation.scrbl#L666-L673][staging]]
+and [[https://github.com/metareflection/poof/blob/59cecf050c8f2fab480175278c439410f3151cd6/ltuo_10_efficient_object_implementation.scrbl#L2199-L2214][Efficient Dispatch]].
+
+* Algorithm
+
+- Reuse the [[file:../../LeanPoo/Object/Multimethod.lean][C4 sparse candidate index]].
+  Class and generic generations determine eligible pure input. For an
+  unconditional shape, the existing
+  [[file:../../LeanPoo/Object/PreparedMultimethod.lean][prepared multimethod proof]]
+  permits precomputing the ordered selection. When =eql= or another live guard
+  participates, it still selects against the actual arguments.
+- Publish a recipe for each proved pure phase over its declared support.
+  A recipe can encode arrangement of method groups and the standard
+  continuation structure. Slot observations, observer callbacks, hook
+  invocation, read issuance, argument carriers and write guards stay live.
+- Check the owner identity and its current epoch at the phase's original effect boundary. A hit
+  consumes the recipe and skips pure preparation. A stale entry resumes the
+  cold calculation at the same phase with the effects already performed.
+- After a class, generic, method or dependency edit, advance epochs of owners
+  in the dependent closure on the conservative union of old and admitted new
+  edges. A change to stage identity or dependency roster dirties its owner.
+  Publish graph metadata and epochs as one snapshot using the existing
+  component publication path. Retained owners preserve their epochs.
+
+* Graph and proof obligations
+
+[[https://arxiv.org/html/2201.07197v3#S4][Tarjan and Zwick's Algorithm T]]
+supplies a cold SCC algorithm with linear graph work. Existing
+[[file:../../LeanPoo/Functional/LocalSccRegion.lean][local SCC repair]]
+proves equivalence of component replacement and cold construction.
+Propagation to dependent owners also follows acyclic paths outside the
+SCC repair region. Keep the existing POO reverse index and SCC accelerator.
+
+[[file:../../LeanPoo/Object/ClosAdmission/PublishedDispatch.lean][PublishedDispatch]]
+proves stable support from the affected-closure rule, zero preparation
+calls on a current hit, and equality to cold computation of the entire
+event trace, outcome and world. The model assumes dependency registration
+is complete and epoch reads see the corresponding published snapshot.
+Each observed action is executed once with live state. The finite control
+includes a callback that changes a later phase's input and forces a
+rejection without repeating the earlier event.
+
+* Scheme boundary
+
+The model counts pure preparation calls. It leaves the real number of
+stages, dependency enumeration costs, and the cost of observable reads to
+the Scheme refinement. The 570-event contract makes the ordered event
+sequence a lower bound on deliveries. Extract the pure stage boundaries
+from dispatch and the existing issued-read path before applying this
+design. Do not replace a repeated observed check with a receipt from
+before a callback.
