@@ -417,7 +417,11 @@ import LeanPoo.Proof.Gerbil.ConstructorCall
 import LeanPoo.Proof.Gerbil.FallbackReflection
 import LeanPoo.Proof.Gerbil.GraphBucketWalk
 import LeanPoo.Proof.Gerbil.GraphColdHandoff
+import LeanPoo.Proof.Gerbil.GraphOwnerRoster
+import LeanPoo.Proof.Gerbil.GraphOwnerAcquisition
+import LeanPoo.Proof.Gerbil.GraphOrdinalBuckets
 import LeanPoo.Proof.Gerbil.GraphColdIndex
+import LeanPoo.Proof.Gerbil.PlainSlotPreparation
 import LeanPoo.Proof.Gerbil.GraphForwardRows
 import LeanPoo.Proof.Gerbil.GraphFrontier
 import LeanPoo.Proof.Gerbil.GraphRankBounds
@@ -427,7 +431,16 @@ import LeanPoo.Proof.Gerbil.ModuleCatalog
 import LeanPoo.Proof.Gerbil.QuotientRoutes
 import LeanPoo.Proof.Gerbil.ReplacementLensCheck
 import LeanPoo.Proof.Gerbil.RevisionStream
+import LeanPoo.Proof.Gerbil.SccAdmittedRoster
 import LeanPoo.Proof.Gerbil.SccEditRegion
+import LeanPoo.Proof.Gerbil.SccOrdinalRows
+import LeanPoo.Proof.Gerbil.SccOwnerRetirement
+import LeanPoo.Proof.Gerbil.SccPackedCapture
+import LeanPoo.Proof.Gerbil.SccPackedSingletons
+import LeanPoo.Proof.Gerbil.SccPublicProjection
+import LeanPoo.Proof.Gerbil.SccRankGroups
+import LeanPoo.Proof.Gerbil.SccRankPublication
+import LeanPoo.Proof.Gerbil.SccSingletonProjection
 import LeanPoo.Proof.Gerbil.ShapeAdmission
 import LeanPoo.Proof.Gerbil.SlotAssembly
 

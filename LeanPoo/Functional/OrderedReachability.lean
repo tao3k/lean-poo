@@ -827,12 +827,12 @@ namespace LeanPoo.Functional.OrderedReachability
 -- the private packed words and row lengths still reconstruct exactly that
 -- prefix. Extra words in the unfinished owner must not become a completed row.
 -- This is a semantic projection; native reconstruction streams existing chunks.
-def restoreRows : List Nat → List Nat → List (List Nat)
+def restoreRows {Word : Type} : List Nat → List Word → List (List Word)
   | [], _ => []
   | size :: sizes, targets =>
       targets.take size :: restoreRows sizes (targets.drop size)
 
-theorem restore_completed_prefix (rows : List (List Nat)) (unfinished : List Nat) :
+theorem restore_completed_prefix {Word : Type} (rows : List (List Word)) (unfinished : List Word) :
     restoreRows (rows.map List.length) (rows.flatten ++ unfinished) = rows := by
   induction rows with
   | nil => rfl
@@ -848,7 +848,7 @@ theorem restore_before_wide_fallback (rows : List (List Nat))
   rw [restore_completed_prefix]
 
 theorem restore_empty_rows :
-    restoreRows [0, 0, 0] [] = [[], [], []] := rfl
+    restoreRows (Word := Nat) [0, 0, 0] [] = [[], [], []] := rfl
 
 -- Original symbols are decoded from the same owner roster; numeric words do
 -- not become public identities. Row order, not just set membership, survives.
