@@ -396,6 +396,7 @@ import LeanPoo.Functional.ComponentWitness
 
 import LeanPoo.Functional.OrderedReachability
 import LeanPoo.Object.ReadRouteRuns
+import LeanPoo.Object.PublishedReadPreorder
 import LeanPoo.Object.ReadVisitWorkspace
 import LeanPoo.Object.ReadSweepBoundary
 import LeanPoo.Object.BorrowedReadCurrentness
