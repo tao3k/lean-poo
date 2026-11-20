@@ -1,0 +1,122 @@
+#+title: Indexed graph algorithms and Scheme correspondence
+
+* Owners and entrypoints
+
+Generic graph contracts live in LeanPoo; Gerbil Scheme implementations live in
+gerbil-poo. Yuanxu owns Module selection, source admission and build/test projection.
+Do not make a second loader or cache. The companion gerbil-poo change uses the
+existing GeneralizedGraph, StrongComponents, ConstructionCache and publication APIs.
+
+* Sparse dependency order repair
+
+Edges point from consumers to providers. DependencyOrderRepair proves the exact
+insertion-cycle condition, bounded searches and incident-edge checks. RankLabels
+and HashRankLabels prove stable movement, real HashMap slot assignment, label
+permutation, injectivity and outside-owner preservation. StableOrderRepair proves
+construction completeness for finite exact frontiers and a valid injective old
+order, without assuming that all proposed edges have already passed a checker.
+After batch deletions, an insertion prefix inside an acyclic final graph cannot
+be refused for a transient cycle. Order intervals never replace value invalidation.
+
+* SCC certificates
+
+ComponentWitness reuses StrongComponents.Reach. Forward/reverse spanning paths
+inside groups, plus strictly decreasing ranks across groups, establish exact mutual
+reachability. Representative renaming preserves components. The Scheme Tarjan path
+checks those structural conditions in linear passes over captured indexed edges.
+This is a certificate law, not a theorem about arbitrary native hash complexity,
+compiler behavior, callback purity, termination or physical latency.
+
+* Tests and measurement
+
+Tests/GraphAlgorithms.lean participates in the existing contract gate and includes
+the 10000-label sparse patch plus overlap/duplicate-label and false-cycle controls.
+The Scheme companion retains exhaustive and typed properties, complete graph-family
+oracles, phase counters, paired CPU/wall/GC/allocation studies and mutation controls.
+Initial metadata preparation, hot queries and full Module EVAL remain separate
+measurements. Source/currentness, approval and effect guards remain independent.
+
+* Component index comparison
+
+Finite unique group lists have equal membership exactly when their cardinalities
+agree and every old member occurs in the new group. A cached cardinality belongs
+to the captured partition index; recomputing a large new group's length for each
+old singleton would restore quadratic work.
+
+The component verdict is uniform over an entire old group. One exact comparison
+can therefore classify its members together. Missing owners remain changed,
+including the case where both lookup results are absent; injective representative
+renaming preserves membership. These are pure captured-index laws. They do not
+authorize value reuse or omit source/currentness/effect checks.
+
+The companion Scheme optimization is not established by these laws alone.
+Its real many-group merges, splits and giant components require native properties
+and Benchmark evidence against the existing implementation.
+
+* Size and case dependent Graph research
+
+ComponentWitness now also states concrete HashMap/Array discovery-cell laws,
+fresh-slot capacity and separation, shared-frame owner/slot preservation, and
+canonical source-order representative equality for independently certified SCC
+engines. A conditional plan comparison admits only applicable memory-bounded
+plans and includes capture, conversion, discovery, normalization, certification,
+decision and switching charges. Omitting conversion is an explicit counterexample.
+
+These laws do not select an empirically fastest engine or install a threshold.
+QueueSelection supplies the proof pattern, not an SCC implementation. The POO
+100K/1M node workload remains distinct from Yuanxu real-Module EVAL. The dense
+state representation is a Scheme candidate; a million-node bounded-degree band
+exceeded the existing 2-GiB heap on the prior hash-state implementation. Retain
+that failure and qualify case, density, preparation, GC and memory separately.
+
+* Structure-dependent certificate storage
+
+withinGroupEdge retains only edges inside a claimed component. Paths in that
+restricted graph are original paths, and restriction commutes with reversal.
+A singleton whose owner is itself has both reflexive spanning paths without
+reading an adjacency bucket. pruned_spans_keep_certificate retains the complete
+cross-group rank obligation and concludes the same exact SCC equivalence.
+
+The Scheme candidate can therefore avoid singleton walks and retain reverse
+rows only inside nontrivial groups. Every captured quotient edge is still checked.
+After that complete phase, numeric rank storage may be retired into coverage
+markers; the concrete HashMap laws prove replacement, numeric-rank refusal and
+unrelated-key preservation. They do not prove native liveness or GC behavior.
+This is structure-dependent work reduction, not a node-count dispatch threshold.
+
+* Source-order singleton applicability
+
+ranked_singletons_exact supplies the same exact SCC contract when every non-self
+edge decreases a rank. The source-order corollaries prove both increasing and
+decreasing orders, with self loops permitted. This can establish an applicability
+condition during a normal metadata capture; a graph with a multi-owner cycle
+cannot satisfy it. It is a proved candidate, not an installed Scheme selector
+or a measured claim of speed. Failed applicability requires the general engine.
+
+* Executable source-order classification contract
+
+orderFlags has the same result as the conjunction of all per-edge directional
+predicates. Once both predicates are false, classification may stop; it cannot
+become true again. Capture must still acquire and validate every remaining
+author footprint. The classifier never authorizes early termination of capture.
+
+Given a complete captured edge roster, the accepted directional bit implies
+the exact singleton SCC contract, including self loops. Both directions have
+proved corollaries. Completeness of captured input remains an explicit premise;
+source/currentness and publication effects are outside this pure scan theorem.
+This is a candidate applicability contract, not an installed Scheme fast path.
+
+Exact captured rows give both directions of the classification iff laws. A
+separate work function counts at most E predicate checks and zero remaining
+checks after both candidates fail. This never licenses skipping input capture.
+
+* Indexed ordered reachability
+
+OrderedReachability refines the old list-membership DFS with a private HashMap
+visited set. Every finite prefix retains the exact pending and reverse-discovery
+lists; the insertion invariant relates markers to membership. From an empty
+set, no owner occurs twice in the returned discovery list. These laws preserve
+visit/refusal order for captured pure adjacency; they do not cache currentness
+or remove any author/effect or final admission checks. Fuel is a proof device,
+not a runtime deadline or a native stopping policy. Unbounded termination and
+physical hash complexity are not asserted by this prefix refinement theorem.

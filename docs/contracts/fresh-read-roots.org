@@ -1,0 +1,49 @@
+#+title: Fresh authoring support roots
+
+* Measured input
+
+At POO6a742cd and Core0fc1a866, the existing source-admission test's explicit
+trace reports726distinct read records,5076edges and a3571-entry parent row
+on %authoring-interface. That row contains only583distinct record identities.
+The normal timing path installs no such trace. These are structural counts,
+not a performance result or permission to drop a shared Profile subtree.
+
+* Producer contract
+
+The stock cached authoring Interface getter may collect its freshly produced
+support with the existing POO unique-roots? option. All actual computations,
+validation methods, observers and prechecks execute in their original order.
+Forward the original distinct read objects once in first-occurrence order.
+Return the exact constructed value. On failure, forward partial support and
+raise the exact original cause, including a raised false value.
+
+Normalization occurs before POO signs the parent read. No already signed
+dependency spine is edited, copied into shadow evidence or reissued. Native
+.get dependency capture remains unchanged everywhere else. Distinct records
+for the same owner/slot, including old/new revisions, are never merged.
+
+* Correspondence
+
+FreshReadRoots.lean reuses Functional.Parameters.uniqueBindings. Its
+fresh_roots_preserve_selection theorem preserves the entire Except result
+of an exact-identity visited selector. State may contain the full preorder.
+The assumptions match POO's existing collect: an already seen identity is
+skipped, a successful root is marked, and successful visits preserve marks.
+No commutativity of work is required. root_count_bound bounds stored roots.
+
+Existing Object.SlotObservation laws retain observer and precheck identities
+when replacing the capture frame and forwarding roots. original_outcome and
+every_delivery_preserved separate the result/event trace from stored support.
+independent_boundaries permits only pointwise replacement of each check;
+it never carries an entry approval across an intervening effect. The changed
+return-state example still refuses. Native failure/observer tests supply the
+implementation correspondence; abstract events alone do not prove the VM.
+
+* Gates and scope
+
+Keep all Interface/Role validation, original issued evidence and receipt
+mutation controls. Check node preservation, shorter root rows, identical
+observer events and exact failure causes in focused native tests. Then use
+the original180s/4GiB full10K cases and120s Lab aggregate. Do not rerun an
+unchanged large workload merely to refresh numbers. No new loader, result
+cache, metadata format, user interface or compatibility path is introduced.

@@ -1,0 +1,55 @@
+#+TITLE: CLOS-like construction on the POO MOP
+
+Allocation establishes identity and nominal class membership. Effective slots
+may remain unbound; membership does not imply completed initialization.
+
+=make-instance= runs the complete initialization method combination, including
+=shared-initialize= extensions, before checking the final Class contract.
+A symbolic class designator resolves its class and re-enters the same generic.
+
+Slot normalization precedes the existing callback-free cell publication batch.
+A refused write preserves the cell and revision. Effects already performed by
+an initform or author method are not rolled back. Checks cannot be reused across
+an intervening owner edit or callback without independent currentness evidence.
+
+Native Slot reads require the stored layout to match the current class generation.
+They do not invoke mutating migration methods during getter evaluation. The
+existing CLOS lifecycle operations perform migration before accessing cells.
+
+The implementation reuses POO Type, Class, Slot, C4, dependency indexes and read
+observation. Allocation does not evaluate native lazy slots or initform thunks.
+Explicit initialization controls initform effects. No second evaluator is added.
+
+Proofs: [[file:../../LeanPoo/Object/ClosConstruction.lean][construction boundaries]],
+[[file:../../LeanPoo/Object/ClosLifecycle.lean][keyword admission and slot masks]],
+[[file:../../LeanPoo/Object/ClosInstancePublication.lean][identity and layout publication]].
+
+An applicability hook may filter or reorder eligible methods. Each method
+identity can appear only once. A repeated identity refuses the selection before
+method combination or lifecycle execution. See
+[[file:../../LeanPoo/Object/ClosAdmission.lean][ProtocolSelection]].
+
+A Slot type may be omitted, as in the existing POO Slot contract. Omission does
+not synthesize a top Type and does not constrain values. Explicit constraints
+from every inherited declaration remain conjunctive; an untyped child cannot
+erase a parent constraint. The descriptor admits optional type metadata through
+the existing Slot contract.
+
+Slot declarations carry existing POO Type objects, including Class, Record and
+FUN. No predicate-to-Type adapter is maintained by CLOS. A single effective
+Type keeps its identity; multiple inherited Types use the shared =And= Type.
+Its validators run left-to-right, then every Type checks the final value. A later
+normalizer cannot silently invalidate an earlier constraint. Failures preserve
+original causes and suppress subsequent normalizers.
+
+Mutable lifecycle cells normalize on write. Checking their Class preserves the
+instance and its stored FUN wrappers; pure POO values retain functional Class
+rebinding. Original signed reads are checked after author callbacks before cell
+publication. These are the =NativeTypes= laws in the construction proof.
+
+Initial Class creation and redefinition use the same prepared projection and
+field-publication path. Adding a direct subclass is roster bookkeeping; it must
+not allocate another prototype or change the existing precedence/index for a
+class generation. =ClosClassPublication= proves initial completeness and roster
+invariance. The Scheme regression retains a prototype across unrelated class
+registration and then uses the original Class as a Slot Type.

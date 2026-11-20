@@ -63,6 +63,157 @@ self/super/error record contexts (80 reads).
 
 * Executable representation and meta controls
 
+The =Indexed= key-preparation refinement uses the already admitted C4 layer
+indexes. =prepareKey_sound= preserves the original default pass, inherited
+method chain and arbitrary final self. Concrete other-key method/default
+edits preserve the selected payload projection. =prepareKey_frame= shares
+only the unbound recipe; different receivers can still produce different
+values. Five controls distinguish final self, inherited defaults, false and
+absence. The projection length counts C4 layers rather than all field names.
+This refines the representation unit at paper lines 980–1038. Native payload
+capture, hooks, raw exposure, index construction and latency remain separate
+obligations; no Scheme implementation or speedup follows from these laws.
+
+The =OrderedContributions= refinement separates native ordered method buckets
+from the last-write-wins declaration model above. =bucket_exact= retains every
+same-key contribution in chronological order; =indexed_fold_exact= preserves
+the original =SlotSpec.withParent= fold for arbitrary final self and delayed
+super. =other_key_frame= covers an actual unrelated-key insertion. The native
+name/ordinal directory stores the first ordinal followed by later ordinals in
+reverse insertion order; =positions_append_exact= proves its exact decoding.
+The duplicate-method control computes =(1 + 2) * 3 = 9=, where last-only
+selection against a zero base gives 0. These are typed row/index laws, not
+permission to skip original admission, capture defaults early or bypass hooks.
+The native index primitive still needs integration with the preparation issuer
+before it can qualify sparse first demand.
+
+The =SourcePreparation= extension derives a private source cut from the four
+constructors emitted by =object/init=. Creation normalizes payloads once;
+issuance borrows that retained array rather than mapping the complete source
+again. Reachable allocation/exposure/write operations derive writer coverage.
+An unexposed cell cannot be changed through that writer; exposure precedes
+raw access and revokes future private issuance. Writes preserve the old
+prepared receiver's immutable recipes, while ordinary new capture sees the
+changed raw field. A constructive malformed-thunk trace shows that equal
+source identity is insufficient and that the old cut cannot authorize new
+capture. Foreign source handles refuse even after a fresh source exposes the
+same ordinal. Ordered capture equivalence reuses =PayloadCapture.capture_frame=.
+
+This is a constructor/exposure contract, not verification of arbitrary Scheme
+heap writes. The native issuer must derive fresh identity from allocation and
+cover every public raw exposure route before using it. Raw caller-supplied
+SlotSpecs, declarations, protocols, names and default-pass rules retain their
+own admission. Captured source recipes are not receiver values or currentness
+approvals across an author effect. The runtime representation and complete
+first-demand path remain open.
+
+The =runtime_bypass_*= counterexamples model an available but untracked runtime
+field write. Allocation identity and an unexposed marker remain unchanged,
+so the naive issuance guard still passes while raw capture equivalence fails.
+The source is not reachable by the modeled writer: native correspondence must
+cover the actual Gerbil MOP routes, rather than excluding them by omission.
+An exposure flag around selected public accessors alone does not establish it.
+
+=SourcePreparation.View= separates clone/namespace identity from shared raw
+storage ownership. The actual exposure transition updates one storage owner;
+=exposure_revokes_alias_issuance= fences new capture through every alias of
+that owner. =exposure_other_owner_frame= preserves unrelated issuance exactly,
+and changing a view identity alone changes no source authority. Existing
+prepared receiver cuts remain immutable. This is one retained storage fragment,
+not yet the exact registration proof for a composite clone with overlays.
+The =Storage= map models the existing owner state; it does not introduce a
+runtime source registry or another cache. Native capsule lowering and exact
+composite-view dependency registration remain open.
+
+The =SourceViews= refinement derives raw-storage occurrence counts in one
+admission fold and updates only removed/added owners after an actual indexed
+edit. Native first-ordinal replacement preserves later same-key contributions;
+retiring an owner merely because its slot name was overridden is unsound.
+Single replacements, batch removals/additions, unrelated-owner frames and
+checked underflow are proved. A constructive counterexample also shows that
+counts cannot authenticate distinct view ordinals: the native source issuer
+must bind the exact ordinal selection to the original snapshot.
+
+=old_inverse_closure_exact= derives the changed-consumer row frame and applies
+the existing Graph theorem, including cycles. =exposure_rejects_pending_capture=
+derives guard drift from the actual registered owner frontier and uses the
+existing component publication check, even when the head is unchanged.
+Exposure outside the frontier leaves its stamp unchanged. These fences govern
+NEW capture eligibility; they must not invalidate the immutable methods of an
+already prepared receiver merely because raw reflection became possible.
+The native source capsule, exact ordinal issuer and persistent index handoff
+remain implementation obligations. No native source-sharing speedup follows
+from these proofs alone.
+
+=AdmissionBoundary= supplies a general adaptive-query lower bound. If an
+audit is sound for every unknown input, each accepted run reads every required
+independent admission fact; repeated reads cannot reduce that N-read bound.
+Agreement on an executed trace preserves both acceptance and adaptive choices.
+The generated-recipe domain instead derives callability from actual typed
+constructors without probing arbitrary raw fields or evaluating bodies.
+The no-read verdict is proved unsound for universal unknown-source admission.
+This is a query-model boundary, not native timing or source custody evidence.
+Payload capture, refusal order, actual writers, shared metadata and independent
+callback checks remain the separate contracts above.
+
+=SlotObservation.NameCapture= makes the producer/canonical/presentation
+boundary explicit. A borrowed producer spine can authenticate two coordinated
+heap edits as if they were the original payload. A captured private spine
+rejects that trace; producer mutation cannot rewrite its birth contents and
+restoring the exact presentation restores issuance. Current receiver/route
+validation is separate. Native structural-name issuance therefore needs its
+own detached canonical copy, in addition to its existing public copy. Ordinary
+opaque business values retain their identities and are not deep-copied.
+
+The =SlotPreparation.PayloadCapture= extension specifies the preceding
+closed source phase. A handle names an actual required validation/capture
+field, not a whole receiver revision. Successful capture reads the complete
+scheduled support and preserves its order; append composition preserves the
+first error. Equality of the actual field reads transports that captured
+result across a source change outside its support. Constructive controls
+reject skipping an invalid unrelated contribution, reordering two failures,
+and moving a constant payload capture across an author callback.
+
+This is a project capture contract, not an additional implemented paper unit
+or a complete Scheme source issuer. Its read schedule must be derived from
+the actual preparation phases: stock validation can inspect a shadowed tag
+without capturing a discarded payload. The model does not authorize reading
+all discarded fields, freezing every reachable value, sharing receiver
+results, skipping hooks, or treating a sealed container as immutable support.
+The existing =Indexed= laws still own demanded method resolution. Native
+write coverage, raw method-table exposure and phase correspondence remain
+integration obligations before a point-preparation runtime can use it.
+
+The =CapturedBinding= refinement supplies a narrower constructive step.
+After original tag admission and payload capture, =newest_callable_exact=
+classifies each native most-specific-first chain from its captured head,
+without constructing receiver method closures. =all_keys_refusal_exact=
+preserves the complete ordered callable-check result and first failing key.
+Unused malformed thunk payloads remain hidden by the same retained wrappers;
+no body is evaluated by this classification. A hook-repair counterexample
+requires the original hookful path: an author hook may turn a non-callable
+next result into a valid procedure. Native capture issuance, method-cell
+storage/reflection, supported concurrency and actual performance remain open.
+
+The =PendingMethod= refinement models one existing method cell as pending
+captured recipe or ready procedure. Successful publication installs exactly
+the returned procedure identity and retires the recipe in one transition.
+Later linearized forces retain that identity even after unrelated allocation.
+Body invocation follows publication: it may have effects or return errors,
+without changing the bound method into a cached business result. These are
+sequential/linearization laws; the native mutex and continuation frame require
+their own qualification. They introduce no second evaluator or value cache.
+
+The =SlotPreparation.EffectfulAdmission= refinement makes installation
+effects explicit. =without_hooks_exact= preserves ordered results, errors
+and final state when each selected write preserves protocol absence.
+=initial_absence_is_insufficient= refutes hoisting on initial absence alone:
+a write between two entries can install a protocol seen by the second entry.
+Gerbil's selected HashTable write route must supply this frame before the
+Scheme loop can use the law. This is an implementation obligation under
+the paper's representation and mutation discussion, not additional coverage
+of a paper algorithm or a measured latency improvement.
+
 [[file:../../../Tests/DictionaryRecord.lean][DictionaryRecord]] guards 33 contexts, 528 scalar reads, final self,
 inherited values, missing-slot refusals and a cold failing slot.
 [[file:../../../Tests/MetaPrototype.lean][MetaPrototype]] guards all three ordinary metadata slot overrides,

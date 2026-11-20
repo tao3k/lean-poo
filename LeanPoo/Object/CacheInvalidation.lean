@@ -537,4 +537,73 @@ theorem invalidationClosureWork_bound (owners : List String)
       Nat.add_mul, Nat.one_mul] at *
     omega
 
+/-- Connect the existing Slot source index to the existing proof-reuse
+footprint. The owner itself is support even when no external source was read.
+Registration uses the OLD complete support before a structured edit. -/
+theorem registeredSupport_affected (graph : C4.Graph) (owner source : String)
+    (sources changed : List String) (node : C4.Node) (member : node ∈ graph.nodes)
+    (named : node.name = owner) (covered : source = owner ∨ source ∈ sources)
+    (touched : source ∈ changed) :
+    owner ∈ Proof.invalidatedNodes (registerSlotSources graph owner sources) changed := by
+  by_cases localSource : source = owner
+  · subst source
+    exact Proof.mem_invalidated_of_descendant _ changed owner owner 0 touched .self (by omega)
+  · have captured : source ∈ sources := covered.resolve_left localSource
+    have width := congrArg List.length (registerSlotSources_names graph owner sources)
+    simp only [List.length_map] at width
+    apply Proof.mem_invalidated_of_descendant _ changed source owner 1 touched
+      (registerSlotSources_path graph owner source sources node member named captured localSource)
+    rw [width]
+    cases shape : graph.nodes with
+    | nil => simp [shape] at member
+    | cons first rest => simp
+
+/-- No new validation cache is defined. This transports an already owned
+obligation through Proof.reuse using the actual registered reverse closure.
+The obligation's stability law and the patch's frame remain explicit host
+obligations; owner generation or a registration mark does not supply them. -/
+theorem registeredSupport_unaffected (Payload : String → Type)
+    (graph : C4.Graph) (owner : String) (sources : List String)
+    (node : C4.Node) (member : node ∈ graph.nodes) (named : node.name = owner)
+    (obligation : Proof.Obligation String Payload) (patch : Proof.Patch String Payload)
+    (complete : ∀ source ∈ obligation.dependencies, source = owner ∨ source ∈ sources)
+    (untouched : owner ∉ Proof.invalidatedNodes (registerSlotSources graph owner sources) patch.touched) :
+    Proof.unaffected obligation patch := by
+  intro source dependency touched
+  exact untouched (registeredSupport_affected graph owner source sources patch.touched
+    node member named (complete source dependency) touched)
+
+/-- Reuse the library's proof transport, not a second evaluator. A consumer
+may instantiate holds with full result/error/trace/seed equality; the bridge
+does not assume those correspondences for an arbitrary Scheme validator. -/
+theorem registeredSupport_reuse (Payload : String → Type)
+    (graph : C4.Graph) (owner : String) (sources : List String)
+    (node : C4.Node) (member : node ∈ graph.nodes) (named : node.name = owner)
+    (object : Proof.ProofObject String Payload) (patch : Proof.Patch String Payload)
+    (certificate : Proof.Certificate object) (obligation : Proof.Obligation String Payload)
+    (owned : obligation ∈ object.obligations)
+    (complete : ∀ source ∈ obligation.dependencies, source = owner ∨ source ∈ sources)
+    (untouched : owner ∉ Proof.invalidatedNodes (registerSlotSources graph owner sources) patch.touched) :
+    obligation.holds (Proof.append object patch).state :=
+  Proof.reuse object patch certificate obligation owned
+    (registeredSupport_unaffected Payload graph owner sources node member named
+      obligation patch complete untouched)
+
+/-- Missing source registration is NOT repaired by an unchanged owner.
+The child's payload can change while the old owner lies outside invalidation. -/
+example :
+    let graph : C4.Graph := ⟨[{ name := "generic" }]⟩
+    let before : String → Nat := fun _ => 0
+    let after : String → Nat := fun name => if name = "policy" then 1 else 0
+    "generic" ∉ Proof.invalidatedNodes graph ["policy"] ∧
+      before "generic" = after "generic" ∧ before "policy" ≠ after "policy" := by decide
+
+/-- Registering that actual source makes the SAME old-index edit affect owner. -/
+example :
+    let graph : C4.Graph := ⟨[{ name := "generic" }]⟩
+    "generic" ∈ Proof.invalidatedNodes
+      (registerSlotSources graph "generic" ["policy"]) ["policy"] := by decide
+
+#print axioms registeredSupport_reuse
+
 end LeanPoo.Object

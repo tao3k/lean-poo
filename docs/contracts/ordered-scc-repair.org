@@ -1,0 +1,74 @@
+#+title: Rank-preserving SCC row edits on an admitted owned partition
+
+* Component-preserving effective edits
+
+The existing certified owner index also classifies edits to nontrivial SCCs.
+Every effective insertion must join owners already in the same old component.
+Every effective deletion must cross old components or remove a self edge.
+Unchanged edges are outside this classification. This rule applies to batches
+and preserves all SCC equivalence, not general graph reachability.
+
+=internal_path_preserved= proves paths within an old SCC survive: a non-self
+edge on such a path is internal and cannot be deleted. =added_internal_path=
+replaces every new internal edge with an old path. =component_stable_edit=
+combines these facts into old/new SCC equivalence. =owner_classified_edit=
+connects effective edge differences and the certified native owner premise to
+the exact next owner relation. Complete delta coverage and source admission
+remain separate obligations; edit counts are not evidence of either.
+
+Scheme must share the old owner/member indices, write only changed forward
+rows and affected reverse buckets, and retain ordinary quotient/value
+invalidation. A preserved partition does not preserve its functional-cycle
+certificate after adding a chord. Lean's finite three-node counterexample
+distinguishes SCC membership from one-successor shape. Native controls must
+add a chord, then delete another internal edge and compare the split to cold
+discovery. Unknown or failed classifications keep the existing repair path.
+The directional case avoids these additional owner-index queries entirely.
+
+This is a candidate contract; no latency or full Module EVAL claim follows
+from the proof. Benchmark explicit SCC output separately from local revision.
+
+* Actual path and current gap
+
+At POO7cf5caf, strong-components.ss:revise-partition records exact row and
+reverse-bucket edits. For additions it walks forward/backward union closures
+and intersects them. A large ordered DAG can have a tiny SCC repair region
+but large closure walks. The existing single-row deletion shortcut does not
+cover rank-preserving additions or batches.
+
+* Proposed existing-index use
+
+The owned partition already has private input positions. Its packed capture
+ALREADY computes direction bits for every non-self edge (1decreasing,
+2increasing,3both). Carry that evidence through the existing private shape
+field, rather than discard it. Self edges keep either bit and remain singleton
+SCCs. No new cold scan, rank index, user tag or graph layer is needed. The wide
+fallback without this certificate remains unchanged.
+
+For a fixed owner universe and authenticated replacement rows, verify only
+the changed rows against the retained positions. If a direction bit survives,
+old owner/member maps remain exact singleton SCC maps. Fork/edit the
+existing forward/reverse indices, preserve old snapshots and retain ordinary
+quotient/publication invalidation. Do not traverse forward/backward closures
+or recompute SCCs for this case. Full order/groups remain explicit demands.
+
+If the old input order is uncertified, any new edge violates it, or provenance
+is unknown, keep the existing complete fallback. A functional cycle cut's
+singleton result does NOT automatically certify its original input order.
+
+* Formal and native obligations
+
+OrderedSccRepair.lean proves either monotone rank direction excludes nontrivial SCCs,
+changed-row checks preserve order, membership equals cold computation and
+each representative is its own owner. A two-node cycle rejects the rank
+premise. This is not a native algorithm/work proof or a timing result.
+
+Before adoption, add deterministic cold-difference controls for ordered DAG
+deletions/additions/batches, invalidating back edges, unsupported owners and
+an old cut whose input positions are not topological. Retain outside-reader
+quotient invalidation and immutable old snapshots. Benchmark100K/1M chain,
+Hub and skewed ordered DAGs, separately from million-node cyclic cases.
+Report actual touched buckets/edges and zero SCC owner/member rewrites for
+the certified case, not merely a small wall time. Native changes remain a
+candidate until these gates pass. Structural rank evidence never certifies
+current source code or replaces publication lineage/admission checks.

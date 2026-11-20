@@ -1,0 +1,122 @@
+#+TITLE: Preparing CLOS dispatch at publication
+
+* Research basis
+
+Fare describes staging as guarding a precomputed result before reuse, and lists
+precomputation of effective methods under Efficient Dispatch. The CLOS design
+here stages the pure program of a method combination. A public
+=ClosEffectiveMethod= holds the live arguments and has its own identity.
+Construction, invocation and observers therefore remain call-time operations.
+See [[https://github.com/metareflection/poof/blob/59cecf050c8f2fab480175278c439410f3151cd6/ltuo_10_efficient_object_implementation.scrbl#L666-L673][staging]]
+and [[https://github.com/metareflection/poof/blob/59cecf050c8f2fab480175278c439410f3151cd6/ltuo_10_efficient_object_implementation.scrbl#L2199-L2214][Efficient Dispatch]].
+
+* Algorithm
+
+- Reuse the [[file:../../LeanPoo/Object/Multimethod.lean][C4 sparse candidate index]].
+  Class and generic generations determine eligible pure input. For an
+  unconditional shape, the existing
+  [[file:../../LeanPoo/Object/PreparedMultimethod.lean][prepared multimethod proof]]
+  permits precomputing the ordered selection. When =eql= or another live guard
+  participates, it still selects against the actual arguments.
+- Publish a recipe for each proved pure phase over its declared support.
+  A recipe can encode arrangement of method groups and the standard
+  continuation structure. Slot observations, observer callbacks, hook
+  invocation, read issuance, argument carriers and write guards stay live.
+- Check the owner identity and its current epoch at the phase's original effect boundary. A hit
+  consumes the recipe and skips pure preparation. A stale entry resumes the
+  cold calculation at the same phase with the effects already performed.
+- After a class, generic, method or dependency edit, advance epochs of owners
+  in the dependent closure on the conservative union of old and admitted new
+  edges. A change to stage identity or dependency roster dirties its owner.
+  Publish graph metadata and epochs as one snapshot using the existing
+  component publication path. Retained owners preserve their epochs.
+
+* Graph and proof obligations
+
+[[https://arxiv.org/html/2201.07197v3#S4][Tarjan and Zwick's Algorithm T]]
+supplies a cold SCC algorithm with linear graph work. Existing
+[[file:../../LeanPoo/Functional/LocalSccRegion.lean][local SCC repair]]
+proves equivalence of component replacement and cold construction.
+Propagation to dependent owners also follows acyclic paths outside the
+SCC repair region. Keep the existing POO reverse index and SCC accelerator.
+
+[[file:../../LeanPoo/Object/ClosAdmission/PublishedDispatch.lean][PublishedDispatch]]
+proves stable support from the affected-closure rule, zero preparation
+calls on a current hit, and equality to cold computation of the entire
+event trace, outcome and world. The model assumes dependency registration
+is complete and epoch reads see the corresponding published snapshot.
+Each observed action is executed once with live state. The finite control
+includes a callback that changes a later phase's input and forces a
+rejection without repeating the earlier event.
+
+* Scheme boundary
+
+The model counts pure preparation calls. It leaves the real number of
+stages, dependency enumeration costs, and the cost of observable reads to
+the Scheme refinement. The 570-event contract makes the ordered event
+sequence a lower bound on deliveries. Extract the pure stage boundaries
+from dispatch and the existing issued-read path before applying this
+design. Do not replace a repeated observed check with a receipt from
+before a callback.
+
+* Refinement by dispatch stage
+
+The reference is Gerbil-POO =d7d438e= and the local =a3add7b=
+effective-route variant. The latter has the same distance calculation
+and standard combination order.
+
+| Scheme boundary | What can be prepared | What runs at the original boundary |
+|-
+| =method-distances=, =sort-ranked= | Shape ranks, argument-precedence projection and the stable candidate order | Read each required specializer. Match =eql= against this call's argument. Evaluate guard and rejection conditions. |
+| =protocol-ranked-methods= | C4 candidate lookup for an admitted shape | Author filtering, reordering and result validation. A reordered or otherwise open result uses the returned order directly. |
+| =clos-methods-with-qualifier= | Normalize admitted declarations once and stably partition the ordered candidates | Deliver the four ordered qualifier read passes where observable. Only a valid phase plan may consume the resulting selection. |
+| =select-effective-method=, =execute-standard-effective-method= | Standard group layout and least-specific-first after order | Keyword checks, the no-applicable decision, current arguments and carriers, body reads, method effects and the early no-primary refusal. |
+| =call-next-method= and lifecycle write guards | The owner's pure descriptor and plan | Renew applicability for replacement arguments. Authenticate each class and slot check at its own boundary, including after a callback. |
+
+[[file:../../LeanPoo/Object/ClosAdmission/CandidateShape.lean][CandidateShape]]
+models the two C4 position domains used in Scheme and the zero rank for
+=eql=. Class and prototype targets are kept distinct even when their ranks
+tie. The stable filtering theorem in
+[[file:../../LeanPoo/Object/ClosAdmission/CandidateOrder.lean][CandidateOrder]]
+proves that a pure selection mask gives the same order before or after
+sorting, including tied methods. Its sparse lookup corollary uses the
+existing prototype-trie proof. A Scheme refinement must account for
+both position domains and the original declaration order when admitting
+CLOS index entries. The admitted argument-precedence permutation supplies
+in-bounds distance indices.
+
+[[file:../../LeanPoo/Object/ClosAdmission/DispatchPreparation.lean][DispatchPreparation]]
+composes the candidate proof with one-pass qualifier grouping and
+standard recipe selection. A live order-preserving mask may remove an
+=eql= candidate without repeating sort, normalization, partition or
+after-list reversal. A live hook that can reorder is outside that
+equivalence. The grouping theorem takes the admitted qualifier values.
+If an observable qualifier read disagrees, prepare the active stage
+from the live values and keep the observations it already delivered.
+The published plan keeps the most-specific-first reflective
+groups and the execution order separately. It contains no current
+invocation, prototype validation result, or call outcome.
+
+An effect boundary ends the scope of any plan guard that precedes it.
+[[file:../../LeanPoo/Object/ClosAdmission/ObservationResume.lean][ObservationResume]]
+proves that completion of one stage hands its world and exact read prefix
+to the next stage, and that a post-callback authentication failure
+keeps all earlier observations. On a stale hit the new stage is
+prepared in that world. Observed specializer reads are sequenced
+before combining their truth values, so an earlier =eql= miss cannot
+short-circuit the remaining read actions. Preserve the same emitted
+records, order and refusal point, with the 570-event fixture as a
+conformance oracle.
+
+* Exact invalidation
+
+[[file:../../LeanPoo/Object/ClosAdmission/DispatchInvalidation.lean][DispatchInvalidation]]
+uses the existing old-inverse rewrite theorem and the SCC region
+theorem. The affected set corresponds to the reverse cursor walk in
+=generalized-graph.ss= (=affected-work=). Its epoch-change set equals the old indexed dependent closure
+when edited class or method inputs and every changed dependency row
+are seeded. The old/new edge union is for the SCC repair envelope.
+Consumers on acyclic paths still invalidate, and all owners of an
+affected SCC agree on reachability. These theorems establish the
+logical sets. Enumeration and mutation costs belong to the existing
+Scheme index implementation and its eventual refinement.

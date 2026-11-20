@@ -1,0 +1,58 @@
+#+title: Admitted interface reads: identity, effects and measurement
+
+* Contract
+
+The existing Gerbil HashTable body owns lookup defaults and missing-value
+errors. Eliminating interface conversion must retain that body. Admission
+must imply that the current conversion returns the same object, leaves the
+world unchanged and emits no effects. Returning the same receiver alone is
+insufficient. An unsupported descriptor takes the complete original path.
+
+An opaque action ends this admission interval. Return validation obtains
+fresh facts in its own world. No entry fact certifies callback return.
+The guard and body also require a stable interval: this model does not
+establish atomicity against a concurrent descriptor edit or an interrupt.
+
+* Lean and runtime correspondence
+
+=LeanPoo.Object.AdmittedInterfaceRead.exact= preserves an arbitrary existing
+body's result or error under a pure identity conversion. =independent_worlds=
+requires separate admission premises on both sides of an effect boundary.
+=Effects.exact= additionally preserves world and ordered effect trace.
+The changed-descriptor example returns the original conversion failure.
+
+Gerbil 2591dcd's =runtime/interface.ss= =@cast= has an identity branch for
+equal class type IDs. The diagnostic checks the current interface descriptor
+class and uses existing =__hash-get=, =__hash-key?= and =__hash-ref__%= bodies.
+This source inspection is a correspondence premise, not a machine proof of
+the runtime or of scheduling. There is no new POO export or production path.
+
+* Same-process experiment
+
+Base producer: public d7b561df827dfade2b40683053d12a3863067e31's fixed fields.
+Use the same 8,858 actual read records from 64 Interface declarations, with
+zero business scopes. Two ABBA blocks per stage, four samples per arm; each sample repeats the
+same records 24 times. Both arms use the same issuer, graph, keys and values.
+Compilation precedes measurement. Natural GC and wall gaps are retained.
+
+| Stage | Original CPU median ms | Guarded CPU median ms |
+| Slot state query | 47.087 | 47.218 |
+| Route plus slot state | 134.127 | 133.7245 |
+
+All samples had zero collections. End-to-end process: 16.10 wall seconds,
+7.10 user and 1.88 system seconds, including fixture admission. These numbers
+are diagnostic process costs, not cold Module EVAL acceptance. Allocation
+reported by exec-stats includes asynchronous runtime work; it is not attributed
+to the lookup. Peak RSS was not collected for this experiment.
+
+Both native cases and official MODULE-OK, HARNESS-OK and final OK passed;
+no ERROR or overflow markers. Missing/default/false checks passed. This does
+not establish the full malformed-route, descriptor-mutation or concurrency gate.
+
+* Decision
+
+Do not adopt. The CPU comparison shows no meaningful gain, and guard/body
+atomicity is not established. Do not rerun unchanged 10K acceptance to search
+for a favorable wall-clock sample. Retain the production implementation and
+the failing 180-second 10K evidence; continue reducing repeated work through
+the existing publication and dependency-index contracts.

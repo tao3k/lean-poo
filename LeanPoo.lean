@@ -305,6 +305,9 @@ import LeanPoo.Functional.FeedbackCache
 import LeanPoo.Functional.NonlocalDeclarations
 
 import LeanPoo.Functional.StrongComponents
+import LeanPoo.Functional.LocalSccRegion
+import LeanPoo.Functional.OrderedSccRepair
+import LeanPoo.Functional.SourceReadWindow
 
 import LeanPoo.Functional.GraphRevision
 import LeanPoo.Prototype.ComponentClosure
@@ -365,6 +368,81 @@ import LeanPoo.Functional.BuildCache
 import LeanPoo.Functional.InferenceReports
 
 import LeanPoo.Object.SlotObservation
+import LeanPoo.Object.FreshReadRoots
+import LeanPoo.Object.FixedFieldLayout
+import LeanPoo.Object.SlotContracts
+import LeanPoo.Object.ClosAdmission
+import LeanPoo.Object.ClosAdmission.StandardEffectiveMethodCost
+import LeanPoo.Object.ClosAdmission.InitargMembership
+import LeanPoo.Object.ClosAdmission.PublishedDispatch
+import LeanPoo.Object.ClosAdmission.DispatchPreparation
+import LeanPoo.Object.ClosAdmission.DispatchInvalidation
+import LeanPoo.Object.ClosAdmission.ObservationResume
+import LeanPoo.Object.ClosAdmission.SingletonTraversal
+import LeanPoo.Object.ClosAdmission.SingletonSavedTails
+import LeanPoo.Object.ClosAdmission.EffectiveMethodPreparation
+import LeanPoo.Object.ClosQualifiers
+import LeanPoo.Object.ClosClassPublication
+import LeanPoo.Object.ClosLifecycle
+import LeanPoo.Object.ClosInstancePublication
 
 import LeanPoo.Functional.WrapperValidation
 import LeanPoo.Functional.ByteIO
+
+import LeanPoo.Functional.StableOrderRepair
+import LeanPoo.Functional.ComponentWitness
+
+import LeanPoo.Functional.OrderedReachability
+import LeanPoo.Object.ReadRouteRuns
+import LeanPoo.Object.ReadVisitWorkspace
+import LeanPoo.Object.ReadSweepBoundary
+import LeanPoo.Object.BorrowedReadCurrentness
+import LeanPoo.Object.SlotPreparation
+import LeanPoo.Object.SourcePreparation
+import LeanPoo.Object.OwnedSlotSource
+import LeanPoo.Object.SourceExposure
+import LeanPoo.Object.SourceViews
+import LeanPoo.Object.AdmissionBoundary
+
+import LeanPoo.Object.AdmittedInterfaceRead
+
+import LeanPoo.Object.ReadRouteSharing
+import LeanPoo.Proof.Gerbil.ClosedConstantDemand
+import LeanPoo.Proof.Gerbil.ColdComponentPreparation
+import LeanPoo.Proof.Gerbil.ColdObjectBaseCases
+import LeanPoo.Proof.Gerbil.ComponentFamily
+import LeanPoo.Proof.Gerbil.ComponentPublication
+import LeanPoo.Proof.Gerbil.ComponentReadRouting
+import LeanPoo.Proof.Gerbil.ComponentRouting
+import LeanPoo.Proof.Gerbil.ConstructorCall
+import LeanPoo.Proof.Gerbil.FallbackReflection
+import LeanPoo.Proof.Gerbil.GraphBucketWalk
+import LeanPoo.Proof.Gerbil.GraphColdHandoff
+import LeanPoo.Proof.Gerbil.GraphOwnerRoster
+import LeanPoo.Proof.Gerbil.GraphOwnerAcquisition
+import LeanPoo.Proof.Gerbil.GraphOrdinalBuckets
+import LeanPoo.Proof.Gerbil.GraphColdIndex
+import LeanPoo.Proof.Gerbil.PlainSlotPreparation
+import LeanPoo.Proof.Gerbil.GraphForwardRows
+import LeanPoo.Proof.Gerbil.GraphFrontier
+import LeanPoo.Proof.Gerbil.GraphRankBounds
+import LeanPoo.Proof.Gerbil.GraphRoster
+import LeanPoo.Proof.Gerbil.InvalidationKeySnapshot
+import LeanPoo.Proof.Gerbil.ModuleCatalog
+import LeanPoo.Proof.Gerbil.QuotientRoutes
+import LeanPoo.Proof.Gerbil.ReplacementLensCheck
+import LeanPoo.Proof.Gerbil.RevisionStream
+import LeanPoo.Proof.Gerbil.SccAdmittedRoster
+import LeanPoo.Proof.Gerbil.SccEditRegion
+import LeanPoo.Proof.Gerbil.SccOrdinalRows
+import LeanPoo.Proof.Gerbil.SccOwnerRetirement
+import LeanPoo.Proof.Gerbil.SccPackedCapture
+import LeanPoo.Proof.Gerbil.SccPackedSingletons
+import LeanPoo.Proof.Gerbil.SccPublicProjection
+import LeanPoo.Proof.Gerbil.SccRankGroups
+import LeanPoo.Proof.Gerbil.SccRankPublication
+import LeanPoo.Proof.Gerbil.SccSingletonProjection
+import LeanPoo.Proof.Gerbil.ShapeAdmission
+import LeanPoo.Proof.Gerbil.SlotAssembly
+
+import LeanPoo.Object.ClosConstruction

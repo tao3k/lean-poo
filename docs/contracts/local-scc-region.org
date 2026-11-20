@@ -1,0 +1,57 @@
+#+title: Local SCC replacement and cold equivalence
+
+* Scope and ownership
+
+POO owns the Graph and its captured edit rows. Yuanxu consumes that Graph;
+this proof adds no Module loading, evaluator, index or cache. Gerbil continues
+to own packages and compilation. Interface and ordinary .get are unchanged.
+
+The proof uses the existing LeanPoo StrongComponents.Reach relation, not a
+second graph algorithm. It is structural for arbitrary finite graph size.
+The local check uses Lean4.34.0 and the existing StrongComponents.Reach
+API. Native Graph and Module acceptance remain separate gates.
+
+* Contract
+
+The owner universe is fixed. Replacements cover every changed row. The
+envelope contains both old and successor edges. The repair region is the
+intersection of forward reachability from all edit roots and reverse
+reachability to all edit roots. The two witnessing roots may differ.
+
+| Scheme responsibility | Lean theorem |
+| old forward + admitted additions, corresponding inverse | lift_path |
+| unchanged rows outside roots; unchanged region-exterior SCCs | outside_components_preserved |
+| induced successor graph inside the computed region | inside_components_exact |
+| replace local SCC relation and retain old relation elsewhere | local_replacement_equals_cold |
+
+In strong-components.ss:revise-partition the two edit-region-walk calls
+implement the envelope searches. The single-row deletion branch uses its
+old SCC, which is precisely that singleton-root intersection. New rows in
+local-part are restricted to the region. The existing old owner index and
+new local owner index implement the relation replacement.
+
+The region proof does not infer native traversal completeness, snapshot
+immutability, resource bounds or representative ordering. The existing
+128-step deterministic compound-edit differential, old-snapshot checks and
+ordered-group comparisons remain separate implementation evidence. The
+functional-cycle cut shortcut and owner support insertion/retirement are
+separate obligations, not proved by this fixed-universe theorem.
+
+* Matched negative control
+
+Two owners initially form a cycle. Delete edge0->1, with root0. If the
+envelope incorrectly contains only successor edges, owner1 looks outside
+the region and its old SCC would be retained incorrectly. Four checked
+Lean #guard expressions exhibit this case. Correct old+new capture includes
+owner1 and permits the split. No timeout counts as this negative control.
+
+* Evidence and remaining work
+
+LocalSccRegion.lean compiles with no sorry, axiom or partial proof. The
+noncomputable restriction only states the mathematical induced relation;
+it is not executable production code or a proposed evaluator.
+
+LocalSccRegion.sysml declares the input and output contract. Parser success
+does not prove it. The Lean theorem, native implementation correspondence,
+Quint interleavings and exact-PR CI remain distinct evidence categories.
+No Scheme algorithm was changed while adding this proof.

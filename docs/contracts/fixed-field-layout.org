@@ -1,0 +1,79 @@
+#+title: Fixed field access and mutable class layouts
+
+* Contract
+
+A Gerbil class identity does not freeze its mutable field-offset table.
+Before using a pinned metadata accessor, authenticate the current offset
+of the field. A moved ref field must refuse before invoking the metadata
+lookup. An admitted layout preserves the original value or exact exception.
+Class identity refusal remains before layout and payload checks.
+
+* Correspondence
+
+Object.FixedFieldLayout.current_field_exact proves agreement with current
+field access under an admitted offset. moved_field_refused rejects a changed
+offset before access; the changed-return example keeps independent checks
+across an arbitrary action. These are offset laws, not a proof of Gerbil's
+runtime implementation or a claim that every class field is authenticated.
+
+In gerbil-poo/read-route.ss the existing receiver-route guard checks the
+HashTable wrapper's object offset before object access, and its ref offset
+before reading the selected method. Constructor-captured class identity,
+offsets and methods do not retain a receiver or an approval. Public POO
+getters and the native module interface stay unchanged.
+
+* Native evidence
+
+Core mop-route-mutation-test.ss reproduced the missed refusal both with
+POO6a742cd and the separate receiver-route sharing candidate. The latter
+does not run in this callback-bearing path. A matched producer control also
+fails with the original native artifact. Neither failure is a timeout or
+compilation failure. Keep these controls; do not remove class-offset mutation
+from the contract to recover a green result. Fixed artifact and full EVAL
+qualification remain separate gates.
+
+* Signed record fields
+
+The final =slot-read= constructor has a separate authority from reflective
+HashTable interface routes. Its signature binds the declared physical key,
+revision, receiver, instance, value, checker and ordered parent identities.
+Cold traversal must read exactly those parents after authenticating the record.
+The mutable symbolic class inspection map is not an alternate dependency graph.
+HashTable route offset admission above remains unchanged.
+
+=SignedRecord.rows_exact= proves that the authenticated physical-row oracle
+equals the registered signed-row oracle. =consumer_exact= transfers that equality
+to an arbitrary existing consumer, preserving its ordering and failure behavior;
+no new walker/evaluator is introduced. =unissued_refused_before_children= keeps
+issuance refusal before child extraction. Gerbil final-class/declaring-module
+correspondence remains a native implementation premise, not proved by these
+abstract row equalities.
+
+The public7f6e68a reproduction changes only the symbolic =dependencies= mapping
+to the =value= position. A cold closure shrinks from four records to two. A
+modified signed parent then goes unexamined, although ordinary traversal refuses
+it. The two regression cases fail at their intended semantic assertions, exit42;
+neither is an import/compiler failure or timeout.
+
+The separate issued-fields candidate uses =extern= aliases to the declaring
+=slot-observation= module's existing generated private field operations. Issuer
+factories capture those operations, and the native issuer stamps the declared
+birth field through the same module's generated setter. Object key/state/DFS
+and redelivery use the corresponding physical getters. No factory recaptures
+these signed fields through a possibly edited symbolic map; all live signature
+and slot-state checks remain. Public key/value/dependency inspectors retain
+their structural copies. Raw getters/setter remain absent from ordinary exports.
+
+This candidate is based directly on public7f6e68a. It includes none of the
+unadopted layout-sweep, retained-origin vector or checkpoint-entry experiments.
+Cold/warm/real-Core timing, matched faults, integration, full10K and downstream
+qualification are separate obligations; the abstract proof is not a claim that
+those gates have passed.
+
+The repaired artifact passes all three regression cases and the original
+32 issuance cases, including ordinary-export checks for the private field
+operations. Matched faults isolate reflective cold traversal (first two cases
+fail, third passes) and issuer field recapture (third fails, first two pass).
+After restoration, 242 relevant integration cases pass. The affected pair
+also passes through compiled Gerbil interfaces, rather than source-only
+evaluation. No budget was increased and failure artifacts remain local.

@@ -1,0 +1,149 @@
+package OwnedSlotSource {
+    private import ScalarValues::*;
+    requirement def PrivateRecipeStorage {
+        attribute generatedStockConstructor : Boolean;
+        attribute rawReferencesUnpublished : Boolean;
+        attribute privateCaptureUnchanged : Boolean;
+        require constraint {
+            generatedStockConstructor and rawReferencesUnpublished and privateCaptureUnchanged
+        }
+        doc /* A flag over already allocated mutable SlotSpecs is insufficient.
+               Unknown or caller-owned sources use ordinary complete capture. */
+    }
+    requirement def ExposureBeforeHandoff {
+        attribute exposureCommitted : Boolean;
+        attribute ticketSourceMatches : Boolean;
+        attribute ticketEpochMatches : Boolean;
+        attribute pendingIndexMatches : Boolean;
+        require constraint {
+            exposureCommitted and ticketSourceMatches and ticketEpochMatches and pendingIndexMatches
+        }
+        doc /* Reserve before reference handoff/callbacks. Success retires the
+               ticket; failure never restores private capture eligibility. */
+    }
+    requirement def RawWriteAndSnapshot {
+        doc /* Raw field writes need an allocated record and do not notify
+               source metadata. Old captured recipes remain unchanged.
+               New capture after exposure reads actual raw fields. */
+    }
+    requirement def ExistingPublicationBoundary {
+        doc /* Raw allocation tickets do not certify current raw contents or
+               replace POO publication/read authority. Preserve independent
+               Gerbil expansion and author callback entry/return checks. */
+    }
+    requirement def InternalReferenceDomain {
+        attribute registeredFieldsMatch : Boolean;
+        attribute sourceReceiver : Boolean;
+        attribute sourcePurpose : Boolean;
+        require constraint {
+            registeredFieldsMatch and sourceReceiver and sourcePurpose
+        }
+        doc /* Reference.sourceControl uses the existing issuer before control
+               extraction. Copied or changed records do not dispatch. Internal
+               source/map references are not business reads. No administrative
+               POO object, second authority or result cache is introduced.
+               Identity does not replace live epoch checks across callbacks.
+               Gerbil constructor/layout correspondence remains a native gate. */
+    }
+    requirement def CaptureReturnFence {
+        attribute sourceMatches : Boolean;
+        attribute epochMatches : Boolean;
+        attribute stillPrivate : Boolean;
+        attribute canonicalBinding : Boolean;
+        attribute presentedStampCopied : Boolean;
+        require constraint {
+            sourceMatches and epochMatches and stillPrivate and canonicalBinding and presentedStampCopied
+        }
+        doc /* Check independently before and after the author action. Failure
+               before entry calls no action; failure at return preserves effects
+               and rejects new publication. Preserve the original body exception
+               and successful result arity; never hold the source mutex across it.
+               Retained immutable cuts do not authorize new publication. */
+    }
+    requirement def SameCallMapFrame {
+        attribute liveLayoutChecked : Boolean;
+        attribute issuerAndRouteChecked : Boolean;
+        attribute canonicalFieldsChecked : Boolean;
+        require constraint {
+            liveLayoutChecked and issuerAndRouteChecked and canonicalFieldsChecked
+        }
+        doc /* Reference.MapFrame shares repeated layout decisions only in one
+               fixed read-only interval with no intervening metadata writes.
+               Keep first-refusal order and false owner probes. The private
+               marker is not stored or exported. Standalone calls and checks
+               after author effects obtain a fresh live layout decision.
+               This is not a proof of concurrent writer synchronization. */
+    }
+    requirement def GeneratedThunkInstallation {
+        doc /* After canonical generated-source admission, chronological direct
+               installation equals ordinary independent-thunk compilation at
+               every key, including duplicate and missing keys. Preserve the
+               actual functions, ordinary C4 and the sole method/value stores.
+               Parents, hooks, defaults, declarations, overrides, unknown or
+               exposed sources retain full preparation. No body is evaluated. */
+    }
+    requirement def ClosedNativeInstallation {
+        attribute standardWriterCurrent : Boolean;
+        attribute exactOwnerView : Boolean;
+        attribute sourceGateHeld : Boolean;
+        attribute noAuthorCall : Boolean;
+        require constraint {
+            standardWriterCurrent and exactOwnerView and sourceGateHeld and noAuthorCall
+        }
+        doc /* ClosedInstallation preserves results and errors for the fixed
+               index-to-method installation program. Exposure and installation
+               serialize on the existing source gate. Exposure first declines;
+               installation first retains immutable cuts. General author calls
+               still unlock and independently authenticate/admit at return.
+               The gate does not certify arbitrary concurrent metadata writes.
+               Unknown writers and protocols retain ordinary preparation. */
+    }
+    requirement def RegisteredValidationTransport {
+        doc /* Derive Proof.unaffected from the OLD registered reverse closure,
+               with the receiver itself and COMPLETE transitive support.
+               Reuse existing Proof.reuse and native Slot invalidation only.
+               Obligation.stable and Patch.frame remain host obligations;
+               a generation or registration mark does not authenticate them.
+               Preserve duplicate deliveries, absence/policy reads, first
+               refusal, seed and independent effect fences. No owner scan,
+               second cache or runtime speed claim follows from the model. */
+    }
+    requirement def PublishedReadStorage {
+        attribute oneIssuanceIndex : Boolean;
+        attribute freshIdentity : Boolean;
+        attribute privatePayload : Boolean;
+        attribute scopeAndKindChecked : Boolean;
+        require constraint {
+            oneIssuanceIndex and freshIdentity and privatePayload and scopeAndKindChecked
+        }
+        doc /* PublishedRead fixes the sole payload at fresh publication. Raw
+               construction never issues a read. Snapshot edits cannot mutate
+               signing storage; public MOP writes to signed metadata refuse.
+               Private weak retention and structural copying require native
+               conformance. Do not add a second signature cache or registry. */
+    }
+    requirement def FixedIssuanceLiveReplay {
+        attribute effectFreeInterval : Boolean;
+        attribute appendOnlyPublication : Boolean;
+        attribute originalLiveChecks : Boolean;
+        require constraint {
+            effectFreeInterval and appendOnlyPublication and originalLiveChecks
+        }
+        doc /* shared_issuance_equals_repeated shares fixed issuance only within
+               this interval. Preserve first refusal and routing/revision/Slot
+               decision order. Reauthenticate independently after every open
+               callback. This does not certify concurrent writes, seed/read
+               equivalence, native GC or complete-call performance. */
+    }
+    requirement def LiveReferenceRetirementFrame {
+        attribute inputTokenRetained : Boolean;
+        attribute solePayloadRetained : Boolean;
+        require constraint { inputTokenRetained and solePayloadRetained }
+        doc /* StableIssuance applies to the current reference only. Collection
+               may retire unrelated weak rows; global Extends is not required.
+               live_collection_preserves_issuance derives the local premise.
+               Native root retention and collector conformance remain required;
+               do not cache a verdict after its input token has died. */
+    }
+
+}
