@@ -651,6 +651,7 @@
   "LeanPoo/Object/Subjective.lean",
   "LeanPoo/Object/Upgrade.lean",
   "LeanPoo/Proof/Batch.lean",
+  "LeanPoo/Proof/Gerbil/ClosedConstantDemand.lean",
   "LeanPoo/Proof/Gerbil/ColdComponentPreparation.lean",
   "LeanPoo/Proof/Gerbil/ColdObjectBaseCases.lean",
   "LeanPoo/Proof/Gerbil/ComponentFamily.lean",

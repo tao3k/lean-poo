@@ -407,6 +407,7 @@ import LeanPoo.Object.AdmissionBoundary
 import LeanPoo.Object.AdmittedInterfaceRead
 
 import LeanPoo.Object.ReadRouteSharing
+import LeanPoo.Proof.Gerbil.ClosedConstantDemand
 import LeanPoo.Proof.Gerbil.ColdComponentPreparation
 import LeanPoo.Proof.Gerbil.ColdObjectBaseCases
 import LeanPoo.Proof.Gerbil.ComponentFamily
