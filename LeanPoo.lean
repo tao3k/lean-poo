@@ -399,6 +399,7 @@ import LeanPoo.Object.ReadRouteRuns
 import LeanPoo.Object.PublishedReadPreorder
 import LeanPoo.Object.PublishedReadEligibility
 import LeanPoo.Object.PackedReadRoutes
+import LeanPoo.Object.FixedReadRouteArity
 import LeanPoo.Object.ReadVisitWorkspace
 import LeanPoo.Object.ReadSweepBoundary
 import LeanPoo.Object.BorrowedReadCurrentness
