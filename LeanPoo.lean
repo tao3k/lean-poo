@@ -422,6 +422,7 @@ import LeanPoo.Proof.Gerbil.GraphOwnerRoster
 import LeanPoo.Proof.Gerbil.GraphOwnerAcquisition
 import LeanPoo.Proof.Gerbil.GraphOrdinalBuckets
 import LeanPoo.Proof.Gerbil.GraphColdIndex
+import LeanPoo.Proof.Gerbil.FunflowDag
 import LeanPoo.Proof.Gerbil.PlainSlotPreparation
 import LeanPoo.Proof.Gerbil.GraphForwardRows
 import LeanPoo.Proof.Gerbil.GraphFrontier
