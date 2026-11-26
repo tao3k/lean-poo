@@ -1,0 +1,84 @@
+#+title: One reader check, one source observation window
+
+* Scope
+
+reader-current! currently runs its metadata guard before opening the existing
+source-read-cache for the byte check. These are parts of the same reader check.
+A possible joined interval requires an actual closed candidate, compatible
+POO read scope, unchanged runtime constructor and no source observer. Every
+POO metadata check still runs. This does not reuse a currentness verdict.
+
+The query identity includes its procedure, arguments and active source
+collectors. Preserve enrollment: a new collector remains a distinct query.
+No table survives an independent reader check, Gerbil expansion or author
+callback. Filesystem concurrency/atomicity is not proved by this model.
+
+* Effect boundary
+
+Directory guards have private constructor provenance. Unknown location
+procedures are callbacks, even when they return void. Invoke them through
+the existing call-with-module-source-callback boundary, which clears the
+enclosing table on entry and resumption and runs their queries fresh.
+Native void remains the existing no-effect case. No user purity tag is used.
+
+If a callback opens a closed candidate, do not restore its old table after
+return. Observers and open/custom paths keep their original dispatch order.
+
+* Formal correspondence
+
+SourceReadWindow.lean represents one fixed observation world with an oracle
+and a table containing only observations made in that world. fetch_value_exact
+preserves value/error results; ordered_result_exact preserves the entire
+ordered sequence and first refusal, including a raised false cause.
+joined_interval_exact permits sharing metadata and byte queries. The callback
+example starts new empty windows on both sides and sees the changed world.
+
+The functional table is a semantic model, not the Scheme table algorithm or
+a general complexity theorem. Native implementation continues using its current hash
+table. Native tests must establish callback boundaries and query enrollment;
+this proof does not certify arbitrary callbacks as pure or grant approval.
+
+** Actual query work
+
+=counted= instruments that same sequential =fetch=, recording actual oracle
+invocations even when the first miss refuses. It does not count requests as
+reads and does not create a second runtime table. =counted_result_exact=
+preserves the entire ordered value/error result. =hits_issue_no_queries=
+proves zero oracle calls for already admitted keys. A successful key requested
+any positive number of times within one fixed world issues exactly one query
+(=repeated_success_issues_once=); a failing first key issues one query and
+executes none of the remaining requests (=failed_first_query_stops=).
+
+=independent_windows_issue_twice= proves the complementary boundary: successful
+requests in two independently authenticated worlds issue two queries, even
+when their key names agree. A writer, author callback or Gerbil expansion is
+not classified as a fixed world by these theorems. Proving the actual Scheme
+interval closed remains an implementation obligation. The call-count result
+does not bound oracle CPU, hash lookup cost, allocations or filesystem races;
+in particular it does not establish a 10K Module acceptance or a Graph gain.
+
+* Required evidence
+
+An opaque location callback changes a value between two same-key source
+queries. Both reads must see the new value, and its enclosing cached query
+must not survive the callback. Run the original implementation as a matched
+negative, then the corrected artifact. Preserve effect/support and Context
+mutation controls, normal counter-only EVAL and original180s/4GiB full10K
+and120sLab gates. No result permits budget changes or consumer promotion.
+
+* Measured disposition
+
+The original native callback control returned0instead of1after the foreign
+location changed its observation world. The corrected callback boundary passes
+the complete candidate-stage, reader-effect-support and source-cost suites.
+
+A matched serial study kept that callback correction in BOTH arms and varied
+only the proposed joined interval. Existing attribution cases (16modules,
+64modules and64open-payload modules) all passed. At64modules the interval
+count fell1221to901, but physical source reads stayed834and metadata visits
+stayed383451. The16-module physical reads stayed210. Currentness and scope
+read counts were also unchanged. No timing ratio qualifies a speedup.
+
+The join is therefore NOT adopted and does not justify another10K timing run.
+Keep only the opaque callback boundary correction. The formal join theorem
+remains conditional semantics, not a runtime optimization or a capacity pass.

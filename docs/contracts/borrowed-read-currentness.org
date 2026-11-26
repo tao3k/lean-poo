@@ -1,0 +1,43 @@
+#+title: Native read currentness views
+#+date: 2026-11-16
+
+* Scope
+
+=LeanPoo/Object/BorrowedReadCurrentness.lean= models a native value store
+as shape indices and cells, plus owner revision, instance identity and
+read-table membership. A missing sentinel is distinct from a present value.
+Bootstrap bypasses the vector view and reads the live anchor.
+
+=same_window_exact= proves the ordinary and vector expressions agree.
+=interval_exact= requires explicit agreement of revision, instance, read
+membership, indices and cells across the interval. Revision agreement alone
+is insufficient. =sweep_exact= retains the original guard prefix and first
+failure. =independent_return= uses separate views before and after the action.
+A counterexample fills a missing cell without advancing the revision: a
+retained earlier view accepts it while live currentness refuses.
+
+The model is conditional on admitted native fields and total, valid index
+access. Runtime layout admission, malformed vector access exceptions, source
+guards, thread synchronization and POO observation delivery are not proved by
+this field model. The unchanged surrounding guards own those obligations.
+It models no effectful checker and makes no CPU or allocation guarantee.
+
+* Runtime correspondence and decision
+
+The existing POO =object/observation.ss= direct-group checker already borrows
+native fields after route admission. Its ordinary batch sweep instead uses
+the public HashTable queries. Two experiments applied the expression to the
+batch sweep, keeping issuance, key and route guards, bootstrap fallback,
+foreign-route fallback and fresh return checks.
+
+Both passed 117 native controls, including sizing callback mutation,
+cache-miss fill without a revision change, read-record mutation, ordering,
+CLOS evolution and method combinations. Both were rejected on the original
+compiled 10,000-program complete capture: their first capture was slower.
+The per-receiver view allocated more closures; immediate field extraction
+still allocated through multiple-value transport. Scheme was restored.
+These successful semantic controls do not establish performance acceptance.
+
+The model is retained as a reusable equivalence boundary, not evidence that
+either rejected Scheme candidate should ship. POO PR #17 records the measured
+decision. No new loader, cache, public query API or compatibility layer exists.

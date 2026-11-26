@@ -1,0 +1,87 @@
+#+title: Ordinary object declaration recipes and final receiver binding
+
+* Existing path and scope
+
+Gerbil POO object/configured lowers ordinary .o through object/init, creating
+SlotSpecs and a compact prototype-map. object<-fun is a different functional
+producer; improving it does not automatically improve ordinary declarations.
+
+SourcePreparation.RecipeRows.install_equals_compile proves chronological
+installation equals the existing per-key binding for all four generated forms.
+C4 supplies that order. A computed contribution retains its exact inherited
+target; self binds the final receiver. Duplicate keys and absence retain their
+ordinary meaning. The dictionary contains methods, never business results.
+
+* Scheme admission contract
+
+An initial adapter may use only nonempty parentless, default-free ordinary
+declarations whose normalized direct slots all have the generated self form.
+The macro owns the closure construction; no user purity flag grants admission.
+Keep the existing shared lexical-slot bindings and argument evaluation order.
+Use the actual self SlotSpec constructor at birth, and retain the original
+empty compact defaults identity. Source identity is not a namespace identity.
+
+The existing SourceExposure/SourceReference checks own birth, layout, exposure,
+epoch and issuance. Reuse that source and its existing prototype index, and the
+ordinary method table. Bind every selected function to the final receiver under
+the independently checked capture boundary. C4 still executes normally.
+
+Raw specifications, changed constructors, observations, protocols, declarations,
+nonempty defaults and inheritance retain ordinary preparation. Any author hook
+still sees the complete original method capture. Do not delay unknown invalid
+sibling errors, recapture raw payloads after callbacks or reuse an old ticket.
+
+* Acceptance and limits
+
+Check zero construction-time body evaluations, shared slot aliases, final self,
+repeated keys, legitimate false, missing slots, exposure before and after first
+preparation, raw field edits, changed constructors, inherited sup and hooks.
+Matched source/refinement faults must fail assertions rather than imports.
+Measure the actual ordinary .o path against a frozen original constructor.
+Then inspect real Interface preparation before another full capacity run.
+Keep Core10K180s/4GiB and independent effects; no native adoption from this
+algebra alone. It neither proves VM layout nor removes source currentness.
+
+* Qualification decision
+
+The staged parentless self adapter passed 96 relevant native cases, including
+lexical aliases, final receiver identity, old cuts and exposure before a later
+inherited capture. Its matched benchmark used four ABBA samples per arm and
+1024 fresh receivers per sample, natural GC, one native compilation unit.
+Construction plus first demand CPU medians were 7.941ms versus 18.1145ms for
+one slot, and 18.910ms versus 40.9085ms for sixteen slots. The 64-slot cohort
+improved, but does not justify selecting a threshold or accepting regressions.
+The adapter was withdrawn; the algebra is retained, not a runtime adoption.
+
+Core's deferred-payload-object and deferred-role-values construct self specs
+through make-object directly. Previously compiled ordinary .o call sites also
+remain unchanged until their owning libraries are rebuilt. A macro-only change
+cannot certify improvement of that actual Interface factory. Preserve ordinary
+syntax rejection of duplicate direct methods; duplicate contributions in this
+model refer to the already admitted chronological source schedule.
+
+* Borrowing inherited recipes
+
+RecipeRows.newest_equals_original and newest_append prove that a newer raw
+contribution prefix can end in the already captured inherited method without
+changing binding order. independent_discards_tail permits replacing the older
+chain only for generated constant/thunk/self contributions. Computed recipes
+retain the exact delayed parent and every binding uses the final child self.
+
+The adapter under qualification traverses the EXISTING ordinal index under the
+source's existing entry/return fences. Its binder returns canonical methods;
+no raw SlotSpec leaves source storage. The ordinary method table temporarily
+holds either a raw contribution prefix or a captured inherited method tail;
+only the complete final function table is published. No second method store,
+source index or business-result cache is introduced.
+
+Raw/default/declaration processing and tag refusal order remain ordinary. The
+native symbolic write route and protocol absence must be checked before this
+closed borrowing operation; author hooks retain full original capture. Public
+prototype-map-for-each still exposes the original raw records. A later genuine
+exposure revokes new borrowing while already prepared children retain their
+old cuts. Tests must force an uncached child field after exposure as well as
+check fresh children, otherwise a value-cache hit can conceal recapture bugs.
+
+This kernel work is distinct from the rejected global .o producer. Its source
+producer and actual consumer call path remain explicit qualification gates.

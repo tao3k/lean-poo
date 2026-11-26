@@ -269,3 +269,54 @@ theorem Checked.clean_no_seed {n : Nat} {edge : Fin n → Fin n → Bool} (graph
     simp [clean] at dirty
 
 end LeanPoo.Functional.StrongComponents
+
+namespace LeanPoo.Functional.StrongComponents
+
+/-- Closing the old reverse worklist means old clean vertices cannot reach a
+changed row. The checked editor can therefore transport a clean-root path. -/
+theorem clean_path_transport {n : Nat} {old next : Fin n → Fin n → Bool}
+    {clean : Fin n → Prop}
+    (closed : ∀ a b, clean a → old a b = true → clean b)
+    (sameRows : ∀ a, clean a → ∀ b, old a b = next a b)
+    {start finish : Fin n} (path : Reach old start finish) (stable : clean start) :
+    Reach next start finish ∧ clean finish := by
+  induction path with
+  | refl a => exact ⟨Reach.refl a, stable⟩
+  | @step a b c edge tail ih =>
+    have mid := closed a b stable edge
+    obtain ⟨suffix, last⟩ := ih mid
+    exact ⟨Reach.step ((sameRows a stable b) ▸ edge) suffix, last⟩
+
+theorem clean_reachability_preserved {n : Nat} {old next : Fin n → Fin n → Bool}
+    {clean : Fin n → Prop}
+    (closed : ∀ a b, clean a → old a b = true → clean b)
+    (sameRows : ∀ a, clean a → ∀ b, old a b = next a b)
+    {start finish : Fin n} (stable : clean start) :
+    Reach old start finish ↔ Reach next start finish := by
+  constructor
+  · intro path
+    exact (clean_path_transport closed sameRows path stable).1
+  · intro path
+    have nextClosed : ∀ a b, clean a → next a b = true → clean b := by
+      intro a b owner edge
+      exact closed a b owner ((sameRows a owner b).symm ▸ edge)
+    exact (clean_path_transport nextClosed (fun a owner b => (sameRows a owner b).symm) path stable).1
+
+theorem clean_component_preserved {n : Nat} {old next : Fin n → Fin n → Bool}
+    {clean : Fin n → Prop}
+    (closed : ∀ a b, clean a → old a b = true → clean b)
+    (sameRows : ∀ a, clean a → ∀ b, old a b = next a b)
+    {start finish : Fin n} (stable : clean start) :
+    (Reach old start finish ∧ Reach old finish start) ↔
+      (Reach next start finish ∧ Reach next finish start) := by
+  have out := clean_reachability_preserved closed sameRows (finish := finish) stable
+  constructor
+  · rintro ⟨there, back⟩
+    have cleanFinish := (clean_path_transport closed sameRows there stable).2
+    exact ⟨out.mp there, (clean_reachability_preserved closed sameRows cleanFinish).mp back⟩
+  · rintro ⟨there, back⟩
+    have prior := out.mpr there
+    have cleanFinish := (clean_path_transport closed sameRows prior stable).2
+    exact ⟨prior, (clean_reachability_preserved closed sameRows cleanFinish).mpr back⟩
+
+end LeanPoo.Functional.StrongComponents

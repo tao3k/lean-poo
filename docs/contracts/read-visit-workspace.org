@@ -1,0 +1,50 @@
+#+title: Capture-local read traversal workspace
+
+* Contract and runtime owner
+
+POO owns one transient visitation workspace inside its existing unique-root
+capture frame. Every bound projection receives a fresh private identity as its
+visit generation. The old marks may remain physically present until capture
+exit, but no mark from another generation can skip an issuance check. Source
+revisions, read signatures, routes and Slot state are never stored as approval.
+The receiver index, dense positions, signed dependencies and read order retain
+the existing representation and downstream protocol.
+
+Only the creating thread can borrow the workspace. Open observer/precheck scopes,
+nonunique captures, no capture, and unsupported native metadata retain the old
+per-build traversal. Native capture exit retires the workspace on normal return,
+exception and continuation unwind. Bound actions retain their own projection,
+not the capture workspace. Entry and callback-return guards remain independent.
+
+* Lean correspondence
+
+=LeanPoo/Object/ReadVisitWorkspace.lean= proves:
+
+- =mark_exact=: only the named read gains this generation's visit mark;
+- =fresh_is_empty=: a fresh generation presents an empty logical visited set;
+- =stamped_exact=: identical checked record order and first error, including
+  repeated roots, rather than only equal final membership;
+- =receiver_unchanged=: the existing receiver index is separate;
+- =foreign_thread=: another thread cannot borrow the frame's workspace;
+- =table_allocations=: for a nonempty capture, the two-table-per-build count
+  becomes one receiver table per build plus one shared visitation table.
+
+The allocation theorem counts abstract table constructions. It is not an
+assumption about hash latency, GC or wall-clock speed. Native object identity,
+Gerbil hash behavior, source/API binding and actual GC release remain executable
+obligations; they are not established by an abstract map theorem alone.
+
+* Scheme controls and measurement
+
+=slot-observation.ss= owns the frame/thread/retirement state;
+=object/observation.ss= borrows only visitation storage when binding a projection.
+No call to issuance, live checking or callback-return checking is deleted.
+The sparse/wide receiver, RNG, fresh-generation, observer, thread-inheritance
+and weak-GC controls live in =t/objects/read-projection-index-test.ss=.
+The existing issued-read and Graph-order suites retain their negative controls.
+
+The optional =benchmarks/graph-capture-test.ss= must be compiled. Its production
+arm repeats the original compiled capture loop and retains all programs in the
+same native table through source construction and order validation. Its
+attribution arm keeps unique-root capture, call order and output lifetime, but
+inserted clocks add overhead and cannot be used as a whole-operation speedup.
